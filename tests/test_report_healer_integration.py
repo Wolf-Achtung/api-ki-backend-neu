@@ -21,7 +21,7 @@ class TestReportHealerIntegration:
         sections = {
             "EXECUTIVE_SUMMARY_HTML": """
                 <div class="heading heading-h1">Wie kann ich Ihnen heute helfen?</div>
-                <p>Dies ist die Executive Summary.</p>
+                <p>Dies ist die Kurzfassung.</p>
             """,
             "QUICK_WINS_HTML": """
                 <p>Wobei kann ich dir helfen?</p>
@@ -34,8 +34,8 @@ class TestReportHealerIntegration:
         # Prompt artifacts should be removed
         assert "Wie kann ich" not in result.sections.get("EXECUTIVE_SUMMARY_HTML", "")
         assert "Wobei kann ich" not in result.sections.get("QUICK_WINS_HTML", "")
-        # Real content should remain
-        assert "Executive Summary" in result.sections.get("EXECUTIVE_SUMMARY_HTML", "")
+        # Real content should remain (note: uses SOLO-friendly terms now)
+        assert "Kurzfassung" in result.sections.get("EXECUTIVE_SUMMARY_HTML", "")
         assert "Automatisierung" in result.sections.get("QUICK_WINS_HTML", "")
         assert result.template_phrases_removed > 0
 

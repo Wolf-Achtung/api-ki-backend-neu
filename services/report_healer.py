@@ -40,9 +40,15 @@ __all__ = [
     "apply_segment_budget",
     "parse_payback_months",
     "format_payback_de",
+    "localize_business_case_labels_de",
+    "run_quality_gate",
+    "QualityGateResult",
+    "ReportQualityError",
     "HealingResult",
     "BOILERPLATE_PATTERNS",
     "PAYBACK_PATTERNS_DE",
+    "SOLO_BLACKLIST_TERMS",
+    "BUSINESS_CASE_LABEL_LOCALIZATION_DE",
     "BoilerplatePattern",
     "PaybackPattern",
 ]
@@ -256,8 +262,33 @@ class BoilerplatePattern:
 # Registry of known boilerplate/prompt artifacts (BOILERPLATE_PATTERNS_DE)
 BOILERPLATE_PATTERNS: List[BoilerplatePattern] = [
     # -------------------------------------------------------------------------
-    # A) Prompt-/Chat-Blöcke
+    # A) Prompt-/Chat-Blöcke (TASK 1: Robust prompt artifact removal)
     # -------------------------------------------------------------------------
+    # A1) "Wobei soll/kann ich dich unterstützen?" + <ol>/<ul> block (with <strong>)
+    BoilerplatePattern(
+        pattern=r'(?is)<p[^>]*>\s*<strong>\s*Wobei\s+(?:kann|soll)\s+ich\s+(?:dir|dich|Sie|Ihnen)[^<]*(?:unterstützen|helfen)[^<]*</strong>\s*</p>\s*<(?:ol|ul)[^>]*>.*?</(?:ol|ul)>',
+        action="drop",
+        description="PROMPT_WOBEI_STRONG_BLOCK: 'Wobei soll ich dich unterstützen?' with <strong> + list"
+    ),
+    # A2) Same but without <strong> tags
+    BoilerplatePattern(
+        pattern=r'(?is)<p[^>]*>\s*Wobei\s+(?:kann|soll)\s+ich\s+(?:dir|dich|Sie|Ihnen)[^<]*(?:unterstützen|helfen)[^<]*\??\s*</p>\s*<(?:ol|ul)[^>]*>.*?</(?:ol|ul)>',
+        action="drop",
+        description="PROMPT_WOBEI_PLAIN_BLOCK: 'Wobei soll ich...' without <strong> + list"
+    ),
+    # A3) Fallback: Just the question text + following list (no <p> wrapper)
+    BoilerplatePattern(
+        pattern=r'(?is)Wobei\s+(?:kann|soll)\s+ich\s+(?:dir|dich|Sie|Ihnen)\s+.*?(?:unterstützen|helfen)\s*\??\s*(?:</(?:p|strong)>)?\s*<(?:ol|ul)[^>]*>.*?</(?:ol|ul)>',
+        action="drop",
+        description="PROMPT_WOBEI_FALLBACK_BLOCK: 'Wobei soll/kann ich...' fallback with list"
+    ),
+    # A4) Question text alone (no list) - catch any remaining instances
+    BoilerplatePattern(
+        pattern=r'(?i)<p[^>]*>\s*(?:<strong>)?\s*Wobei\s+(?:kann|soll)\s+ich\s+(?:dir|dich|Sie|Ihnen)\s+[^<]*(?:unterstützen|helfen)[^<]*\??\s*(?:</strong>)?\s*</p>',
+        action="drop",
+        description="PROMPT_WOBEI_QUESTION_ONLY: Standalone question paragraph"
+    ),
+    # A5) Original patterns for "Wie/Wobei kann ich helfen"
     BoilerplatePattern(
         pattern=r'(?is)<div[^>]*class="heading[^"]*heading-h1"[^>]*>.*?(?:Wie|Wobei)\s+kann\s+ich.*?</div>',
         action="drop",
@@ -521,12 +552,119 @@ SOLO_TERM_REPLACEMENTS: Dict[str, str] = {
     "Change Management": "Veränderungsprozess",
 }
 
+# Extended SOLO term replacements (TASK 2: Comprehensive mapping)
+SOLO_TERM_REPLACEMENTS_EXTENDED: Dict[str, str] = {
+    # Additional mappings from TASK 2 specification
+    "Governance": "Spielregeln",
+    "governance": "spielregeln",
+    "Executive": "Inhaber:in",
+    "executive": "Inhaber:in",
+    "Audit": "Prüfung",
+    "audit": "prüfung",
+    "Audits": "Prüfungen",
+    "Rollout": "Einführung",
+    "rollout": "einführung",
+    "Layer": "Ebene",
+    "layer": "ebene",
+    "Layers": "Ebenen",
+    "Enterprise": "größere Unternehmen",
+    "enterprise": "größere Unternehmen",
+    "Blueprint": "Vorlage",
+    "blueprint": "Vorlage",
+    "Blueprints": "Vorlagen",
+    "Framework": "Vorgehensrahmen",
+    "framework": "Vorgehensrahmen",
+    "Frameworks": "Vorgehensrahmen",
+    "KPI-Dashboard": "Kennzahlen-Übersicht",
+    "kpi-dashboard": "Kennzahlen-Übersicht",
+    "Operating Model": "Arbeitsmodell",
+    "operating model": "Arbeitsmodell",
+    "Compliance": "Regelkonformität",
+    "compliance": "Regelkonformität",
+    # Additional enterprise terms
+    "Konzern": "größeres Unternehmen",
+    "konzern": "größeres Unternehmen",
+    "Konzerne": "größere Unternehmen",
+}
+
+# SOLO Blacklist Terms (TASK 2: Hard blacklist for SOLO segment)
+SOLO_BLACKLIST_TERMS: List[str] = [
+    "Governance",
+    "Executive",
+    "Audit",
+    "Rollout",
+    "Layer",
+    "Enterprise",
+    "Blueprint",
+    "KPI-Dashboard",
+    "Operating Model",
+    "Compliance",
+    "Stakeholder",
+    "Architektur",
+    "Framework",
+    "Pipeline",
+    "Deployment",
+    "Konzern",
+]
+
+# Fallback replacements for blacklist terms that slip through
+SOLO_BLACKLIST_FALLBACKS: Dict[str, str] = {
+    "Governance": "Leitplanken",
+    "Executive": "Leitung",
+    "Audit": "Check",
+    "Rollout": "Einführung",
+    "Layer": "Ebene",
+    "Enterprise": "",  # Remove entirely
+    "Blueprint": "Plan",
+    "KPI-Dashboard": "Kennzahlen-Übersicht",
+    "Operating Model": "Arbeitsweise",
+    "Compliance": "Vorgaben",
+    "Stakeholder": "Beteiligte",
+    "Architektur": "Aufbau",
+    "Framework": "Methode",
+    "Pipeline": "Ablauf",
+    "Deployment": "Bereitstellung",
+    "Konzern": "",  # Remove entirely
+}
+
 # Patterns to remove entirely for SOLO (too complex)
 SOLO_REMOVE_PATTERNS: List[str] = [
     r"(?:unternehmensweite|organisationsweite)\s+(?:Governance|Compliance|Audit)",
     r"(?:Enterprise|Multi-Team)\s+(?:Architektur|Rollout|Deployment)",
     r"(?:Skalierung|Scaling)\s+(?:auf|für)\s+(?:mehrere|viele)\s+(?:Teams|Abteilungen)",
 ]
+
+# =============================================================================
+# TASK 3: Business-Case Label Localization (English → German)
+# =============================================================================
+
+BUSINESS_CASE_LABEL_LOCALIZATION_DE: Dict[str, str] = {
+    # Primary labels
+    "Payback Progress": "Amortisations-Fortschritt",
+    "payback progress": "Amortisations-Fortschritt",
+    "Payback progress": "Amortisations-Fortschritt",
+    "Time Savings Hours": "Zeitersparnis (Std.)",
+    "Time Savings (Hours)": "Zeitersparnis (Stunden)",
+    "time savings hours": "Zeitersparnis (Std.)",
+    "Time Savings/Month": "Zeitersparnis/Monat",
+    "Time Savings (hrs)": "Zeitersparnis (Std.)",
+    "Monthly Savings": "Monatliche Einsparung",
+    "monthly savings": "monatliche Einsparung",
+    "Monthly Savings (€)": "Monatliche Ersparnis (€)",
+    "Annual Savings": "Jährliche Einsparung",
+    "annual savings": "jährliche Einsparung",
+    # Secondary labels
+    "Payback Period": "Amortisationszeitraum",
+    "payback period": "Amortisationszeitraum",
+    "ROI Details": "ROI-Details",
+    "ROI Comparison": "ROI-Vergleich",
+    "Expected Trend": "Erwarteter Verlauf",
+    "12-Month Trend": "12-Monats-Trend",
+    # Contextual savings
+    "Cost Savings": "Kosteneinsparung",
+    "cost savings": "Kosteneinsparung",
+    "Savings": "Einsparung",
+}
 
 
 def enforce_persona_language(
@@ -536,7 +674,8 @@ def enforce_persona_language(
     """
     Fix B: Enforce persona-appropriate language.
 
-    For SOLO: Replace enterprise terms with simpler alternatives.
+    For SOLO: Replace enterprise terms with simpler alternatives,
+              then enforce blacklist with fallback replacements.
     For TEAM/KMU: Keep B2B standard tone.
 
     Args:
@@ -555,7 +694,7 @@ def enforce_persona_language(
     result = html
     replacement_count = 0
 
-    # Apply term replacements (case-insensitive, preserve case of first letter)
+    # Step 1: Apply primary term replacements (case-insensitive, preserve case)
     for enterprise_term, simple_term in SOLO_TERM_REPLACEMENTS.items():
         pattern = re.compile(re.escape(enterprise_term), re.IGNORECASE)
         matches = pattern.findall(result)
@@ -570,7 +709,24 @@ def enforce_persona_language(
 
             result = pattern.sub(replace_preserve_case, result)
 
-    # Remove overly complex patterns for SOLO
+    # Step 2: Apply extended term replacements (TASK 2)
+    for enterprise_term, simple_term in SOLO_TERM_REPLACEMENTS_EXTENDED.items():
+        pattern = re.compile(re.escape(enterprise_term), re.IGNORECASE)
+        matches = pattern.findall(result)
+        if matches:
+            replacement_count += len(matches)
+
+            def replace_preserve_case_ext(m: re.Match) -> str:
+                original = m.group(0)
+                if not simple_term:  # Empty replacement means remove
+                    return ""
+                if original[0].isupper():
+                    return simple_term[0].upper() + simple_term[1:]
+                return simple_term.lower()
+
+            result = pattern.sub(replace_preserve_case_ext, result)
+
+    # Step 3: Remove overly complex patterns for SOLO
     for remove_pattern in SOLO_REMOVE_PATTERNS:
         try:
             pattern = re.compile(remove_pattern, re.IGNORECASE)
@@ -581,10 +737,104 @@ def enforce_persona_language(
         except re.error:
             pass
 
+    # Step 4: SOLO Blacklist Guard (TASK 2) - catch any remaining blacklist terms
+    result, blacklist_fixes = _enforce_solo_blacklist(result)
+    replacement_count += blacklist_fixes
+
     if replacement_count > 0:
         log.info("[FIX-B] SOLO persona: %d term replacements applied", replacement_count)
 
     return result, replacement_count
+
+
+def _enforce_solo_blacklist(html: str) -> Tuple[str, int]:
+    """
+    TASK 2: Enforce SOLO blacklist - replace any remaining blacklist terms.
+
+    Runs AFTER the primary replacements as a safety net.
+
+    Args:
+        html: HTML content to check
+
+    Returns:
+        Tuple of (cleaned_html, fixes_applied)
+    """
+    if not html:
+        return html, 0
+
+    result = html
+    fixes_applied = 0
+
+    for term in SOLO_BLACKLIST_TERMS:
+        # Case-insensitive search for the term
+        pattern = re.compile(r'\b' + re.escape(term) + r'\b', re.IGNORECASE)
+        matches = pattern.findall(result)
+
+        if matches:
+            # Get fallback replacement
+            fallback = SOLO_BLACKLIST_FALLBACKS.get(term, "")
+
+            for match in matches:
+                if fallback:
+                    # Replace with fallback, preserving case
+                    if match[0].isupper():
+                        replacement = fallback[0].upper() + fallback[1:] if fallback else ""
+                    else:
+                        replacement = fallback.lower() if fallback else ""
+                else:
+                    replacement = ""
+
+                result = pattern.sub(replacement, result, count=1)
+                fixes_applied += 1
+                log.debug(
+                    "[FIX-B-BLACKLIST] Replaced SOLO blacklist term '%s' with '%s'",
+                    match, replacement
+                )
+
+    # Clean up any double spaces or empty patterns left behind
+    result = re.sub(r'\s{2,}', ' ', result)
+    result = re.sub(r'<p>\s*</p>', '', result)
+
+    if fixes_applied > 0:
+        log.info("[FIX-B-BLACKLIST] Applied %d SOLO blacklist fixes", fixes_applied)
+
+    return result, fixes_applied
+
+
+def localize_business_case_labels_de(html: str) -> Tuple[str, int]:
+    """
+    TASK 3: Localize business-case labels from English to German.
+
+    Replaces English labels like "Payback Progress", "Time Savings Hours",
+    "Monthly Savings" with German equivalents.
+
+    Args:
+        html: HTML content to process
+
+    Returns:
+        Tuple of (localized_html, replacements_made)
+    """
+    if not html:
+        return html, 0
+
+    result = html
+    replacements_made = 0
+
+    # Apply label localizations (exact match, case-sensitive for proper labels)
+    for en_label, de_label in BUSINESS_CASE_LABEL_LOCALIZATION_DE.items():
+        if en_label in result:
+            count = result.count(en_label)
+            result = result.replace(en_label, de_label)
+            replacements_made += count
+            log.debug(
+                "[LOCALIZE-BC] Replaced '%s' → '%s' (%d times)",
+                en_label, de_label, count
+            )
+
+    if replacements_made > 0:
+        log.info("[LOCALIZE-BC] Localized %d business-case labels to German", replacements_made)
+
+    return result, replacements_made
 
 
 # =============================================================================
@@ -1510,6 +1760,8 @@ def heal_final_html(
     segment: Literal["solo", "team", "kmu"] = "team",
     *,
     canonical_payback_months: Optional[Union[float, Decimal, str]] = None,
+    localize_labels: bool = True,
+    run_quality_check: bool = False,
 ) -> str:
     """
     POST-RENDER safety net: Heal the final rendered HTML string.
@@ -1517,15 +1769,19 @@ def heal_final_html(
     This is a CONSERVATIVE healing pass that runs AFTER template rendering.
     It catches artifacts that were generated during rendering (e.g., from lists).
 
-    Only applies safe fixes that won't break HTML structure:
-    - Fix A: Template/prompt artifacts removal
+    Applies safe fixes that won't break HTML structure:
+    - Fix A: Template/prompt artifacts removal (including Wobei soll/kann ich blocks)
+    - Fix B: SOLO blacklist enforcement (for SOLO segment)
     - Fix F: Payback decimal normalization (3.5 → 3,5)
+    - TASK 3: Business-case label localization (English → German)
     - Consecutive duplicate removal (conservative)
 
     Args:
         html: Final rendered HTML string
-        segment: Target segment (for logging)
+        segment: Target segment (for segment-specific healing)
         canonical_payback_months: Optional canonical payback value
+        localize_labels: If True, localize English BC labels to German
+        run_quality_check: If True, log quality gate results (no exception)
 
     Returns:
         Healed HTML string
@@ -1539,7 +1795,7 @@ def heal_final_html(
 
     log.info("[HEALER-POST] Starting heal_final_html: len=%d, segment=%s", len(html), segment)
 
-    # Fix A: Remove prompt/template artifacts
+    # Fix A: Remove prompt/template artifacts (TASK 1 - robust patterns)
     try:
         for bp in BOILERPLATE_PATTERNS:
             try:
@@ -1551,10 +1807,19 @@ def heal_final_html(
                         result = pattern.sub("", result)
                     else:  # replace
                         result = pattern.sub(bp.replacement, result)
+                    log.debug("[HEALER-POST] Removed %d matches for: %s", len(matches), bp.description)
             except re.error:
                 pass
     except Exception as e:
         log.warning("[HEALER-POST] Fix A error: %s", e)
+
+    # Fix B: SOLO blacklist enforcement (TASK 2)
+    if segment == "solo":
+        try:
+            result, blacklist_fixes = _enforce_solo_blacklist(result)
+            fixes_applied += blacklist_fixes
+        except Exception as e:
+            log.warning("[HEALER-POST] Fix B (SOLO blacklist) error: %s", e)
 
     # Fix F: Payback decimal normalization (3.5 Monat* → 3,5 Monat*)
     try:
@@ -1568,6 +1833,14 @@ def heal_final_html(
                     fixes_applied += 1
     except Exception as e:
         log.warning("[HEALER-POST] Fix F error: %s", e)
+
+    # TASK 3: Business-case label localization
+    if localize_labels:
+        try:
+            result, label_fixes = localize_business_case_labels_de(result)
+            fixes_applied += label_fixes
+        except Exception as e:
+            log.warning("[HEALER-POST] Label localization error: %s", e)
 
     # Remove duplicate "Progress 100%" (keep first)
     try:
@@ -1585,7 +1858,172 @@ def heal_final_html(
 
     log.info("[HEALER-POST] Completed: fixes_applied=%d, len=%d→%d", fixes_applied, len(html), len(result))
 
+    # TASK 4: Optional quality gate check (logs only, no exception)
+    if run_quality_check:
+        try:
+            qg_result = run_quality_gate(result, segment, strict=False)
+            if not qg_result.passed:
+                log.warning(
+                    "[HEALER-POST] Quality gate violations remaining: %s",
+                    qg_result.to_dict()
+                )
+        except Exception as e:
+            log.warning("[HEALER-POST] Quality gate error: %s", e)
+
     return result
+
+
+# =============================================================================
+# TASK 4: Quality Gate - Final Smoke Checks
+# =============================================================================
+
+@dataclass
+class QualityGateResult:
+    """Result of quality gate checks."""
+    passed: bool = True
+    prompt_leaks: List[str] = field(default_factory=list)
+    english_decimals: List[str] = field(default_factory=list)
+    solo_blacklist_hits: List[str] = field(default_factory=list)
+    business_case_english_labels: List[str] = field(default_factory=list)
+
+    @property
+    def total_violations(self) -> int:
+        """Total number of quality violations."""
+        return (
+            len(self.prompt_leaks) +
+            len(self.english_decimals) +
+            len(self.solo_blacklist_hits) +
+            len(self.business_case_english_labels)
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dict for logging/serialization."""
+        return {
+            "passed": self.passed,
+            "total_violations": self.total_violations,
+            "prompt_leaks": self.prompt_leaks,
+            "english_decimals": self.english_decimals,
+            "solo_blacklist_hits": self.solo_blacklist_hits,
+            "business_case_english_labels": self.business_case_english_labels,
+        }
+
+
+# Patterns for quality gate checks
+_QG_PROMPT_LEAK_PATTERNS: List[Tuple[str, re.Pattern]] = [
+    ("Wobei soll ich", re.compile(r'Wobei\s+soll\s+ich', re.IGNORECASE)),
+    ("Wobei kann ich", re.compile(r'Wobei\s+kann\s+ich', re.IGNORECASE)),
+    ("Wie kann ich dir helfen", re.compile(r'Wie\s+kann\s+ich\s+(?:dir|Ihnen)\s+helfen', re.IGNORECASE)),
+    ("Bitte beschreibe kurz", re.compile(r'Bitte\s+beschreibe?\s+kurz', re.IGNORECASE)),
+]
+
+_QG_ENGLISH_DECIMAL_PATTERN = re.compile(
+    r'\d+\.\d+\s+Monat(?:e|en)?',
+    re.IGNORECASE
+)
+
+_QG_ENGLISH_BC_LABELS: List[str] = [
+    "Payback Progress",
+    "Time Savings Hours",
+    "Time Savings (Hours)",
+    "Monthly Savings",
+    "Annual Savings",
+]
+
+
+def run_quality_gate(
+    html: str,
+    segment: Literal["solo", "team", "kmu"] = "team",
+    *,
+    strict: bool = False,
+    check_bc_labels: bool = True,
+) -> QualityGateResult:
+    """
+    TASK 4: Run quality gate checks on final HTML before PDF generation.
+
+    Checks for:
+    1. Prompt leaks (Wobei soll ich, Wobei kann ich, etc.)
+    2. English decimal format before "Monat(e)" (should be German 3,5 not 3.5)
+    3. SOLO blacklist term violations (only for segment="solo")
+    4. English business-case labels (optional)
+
+    Args:
+        html: Final HTML to check
+        segment: Target segment for segment-specific checks
+        strict: If True, raises ReportQualityError on violations
+        check_bc_labels: If True, also check for English BC labels
+
+    Returns:
+        QualityGateResult with all violations found
+
+    Raises:
+        ReportQualityError: If strict=True and violations found
+    """
+    result = QualityGateResult()
+
+    if not html:
+        return result
+
+    # Check 1: Prompt leaks
+    for name, pattern in _QG_PROMPT_LEAK_PATTERNS:
+        if pattern.search(html):
+            result.prompt_leaks.append(name)
+            result.passed = False
+            log.error("[QUALITY-GATE] Prompt leak detected: '%s'", name)
+
+    # Check 2: English decimal format (3.5 Monate should be 3,5 Monate)
+    english_decimal_matches = _QG_ENGLISH_DECIMAL_PATTERN.findall(html)
+    if english_decimal_matches:
+        result.english_decimals = english_decimal_matches
+        result.passed = False
+        log.error(
+            "[QUALITY-GATE] English decimal format detected: %s",
+            english_decimal_matches
+        )
+
+    # Check 3: SOLO blacklist (only for SOLO segment)
+    if segment == "solo":
+        for term in SOLO_BLACKLIST_TERMS:
+            pattern = re.compile(r'\b' + re.escape(term) + r'\b', re.IGNORECASE)
+            if pattern.search(html):
+                result.solo_blacklist_hits.append(term)
+                result.passed = False
+                log.error("[QUALITY-GATE] SOLO blacklist term detected: '%s'", term)
+
+    # Check 4: English business-case labels (optional)
+    if check_bc_labels:
+        for label in _QG_ENGLISH_BC_LABELS:
+            if label in html:
+                result.business_case_english_labels.append(label)
+                result.passed = False
+                log.error("[QUALITY-GATE] English BC label detected: '%s'", label)
+
+    # Log summary
+    if result.passed:
+        log.info("[QUALITY-GATE] PASSED - No quality violations found")
+    else:
+        log.warning(
+            "[QUALITY-GATE] FAILED - %d violations: prompts=%d, decimals=%d, solo_blacklist=%d, bc_labels=%d",
+            result.total_violations,
+            len(result.prompt_leaks),
+            len(result.english_decimals),
+            len(result.solo_blacklist_hits),
+            len(result.business_case_english_labels)
+        )
+
+    # Strict mode: raise exception on failure
+    if strict and not result.passed:
+        raise ReportQualityError(
+            f"Quality gate failed with {result.total_violations} violations: "
+            f"prompts={result.prompt_leaks}, decimals={result.english_decimals}, "
+            f"solo_blacklist={result.solo_blacklist_hits}, bc_labels={result.business_case_english_labels}"
+        )
+
+    return result
+
+
+class ReportQualityError(Exception):
+    """Raised when report quality gate fails in strict mode."""
+    pass
 
 
 # =============================================================================
@@ -1593,8 +2031,9 @@ def heal_final_html(
 # =============================================================================
 
 log.info(
-    "[HEALER] Report Healer loaded - %d boilerplate patterns, %d payback patterns, %d SOLO term replacements",
+    "[HEALER] Report Healer loaded - %d boilerplate patterns, %d payback patterns, %d SOLO term replacements, %d blacklist terms",
     len(BOILERPLATE_PATTERNS),
     len(PAYBACK_PATTERNS_DE),
-    len(SOLO_TERM_REPLACEMENTS)
+    len(SOLO_TERM_REPLACEMENTS),
+    len(SOLO_BLACKLIST_TERMS)
 )
