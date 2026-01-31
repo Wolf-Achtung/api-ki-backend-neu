@@ -484,6 +484,62 @@ BOILERPLATE_PATTERNS: List[BoilerplatePattern] = [
         description="TEXTAREA_BLOCK: Any textarea element"
     ),
 
+    # -----------------------------------------------------------------
+    # TASK 3 (FINAL FIX): Additional Prompt Leak Patterns
+    # -----------------------------------------------------------------
+    # A9) "Strategische Empfehlungen ? Bitte beschreibe kurz:" + list (complete block)
+    BoilerplatePattern(
+        pattern=r'(?is)<h[1-6][^>]*>\s*Strategische\s+Empfehlungen\s*\??\s*</h[1-6]>\s*(?:<p>)?\s*Bitte\s+beschreibe?\s+kurz\s*:?\s*(?:</p>)?\s*(?:<(?:ul|ol)[^>]*>.*?</(?:ul|ol)>)?',
+        action="drop",
+        description="PROMPT_STRATEGISCHE_EMPFEHLUNGEN_BLOCK: 'Strategische Empfehlungen? Bitte beschreibe kurz:' + list"
+    ),
+    # A9b) "Strategische Empfehlungen?" heading alone (with ?)
+    BoilerplatePattern(
+        pattern=r'(?is)<h[1-6][^>]*>\s*Strategische\s+Empfehlungen\s*\?\s*</h[1-6]>',
+        action="drop",
+        description="PROMPT_STRATEGISCHE_EMPFEHLUNGEN_HEADING_Q: 'Strategische Empfehlungen?' heading with question mark"
+    ),
+    # A10) Generic "Bitte beschreibe kurz:" standalone (with optional ? before)
+    BoilerplatePattern(
+        pattern=r'(?im)^\s*\??\s*Bitte\s+beschreibe?\s+kurz\s*:?\s*$',
+        action="drop",
+        description="PROMPT_BITTE_BESCHREIBE_STANDALONE: Standalone 'Bitte beschreibe kurz:'"
+    ),
+    # A10b) <p>Bitte beschreibe kurz:</p> paragraph block
+    BoilerplatePattern(
+        pattern=r'(?is)<p[^>]*>\s*Bitte\s+beschreibe?\s+kurz\s*:?\s*</p>',
+        action="drop",
+        description="PROMPT_BITTE_BESCHREIBE_P: 'Bitte beschreibe kurz:' paragraph"
+    ),
+    # A11) "Wenn du magst" chatty sentences (outside code blocks)
+    BoilerplatePattern(
+        pattern=r'(?is)<p[^>]*>\s*Wenn\s+du\s+magst[^<]*</p>',
+        action="drop",
+        description="CHATTY_WENN_DU_MAGST_P: 'Wenn du magst...' paragraph"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?is)<li[^>]*>\s*Wenn\s+du\s+magst[^<]*</li>',
+        action="drop",
+        description="CHATTY_WENN_DU_MAGST_LI: 'Wenn du magst...' list item"
+    ),
+    BoilerplatePattern(
+        pattern=r'(?im)^\s*Wenn\s+du\s+magst\s*,.*$',
+        action="drop",
+        description="CHATTY_WENN_DU_MAGST_LINE: 'Wenn du magst,' line"
+    ),
+    # A12) "Falls du möchtest" / "Wenn du möchtest" variants
+    BoilerplatePattern(
+        pattern=r'(?is)<p[^>]*>\s*(?:Falls|Wenn)\s+du\s+m[öo]chtest[^<]*</p>',
+        action="drop",
+        description="CHATTY_FALLS_DU_MOECHTEST_P: 'Falls/Wenn du möchtest...' paragraph"
+    ),
+    # A13) Prompt leak with "?" before description
+    BoilerplatePattern(
+        pattern=r'(?is)<p[^>]*>\s*\?\s*Bitte\s+beschreibe?\s+kurz[^<]*</p>',
+        action="drop",
+        description="PROMPT_QUESTION_BITTE_BESCHREIBE: '? Bitte beschreibe kurz' paragraph"
+    ),
+
     # -------------------------------------------------------------------------
     # B) Platzhalter in eckigen Klammern
     # -------------------------------------------------------------------------
@@ -960,6 +1016,7 @@ def _enforce_solo_blacklist(html: str) -> Tuple[str, int]:
     TASK 2: Enforce SOLO blacklist - replace any remaining blacklist terms.
 
     Runs AFTER the primary replacements as a safety net.
+    TASK 4 (FINAL FIX): Properly handles ALL-CAPS (EXECUTIVE → KURZFASSUNG).
 
     Args:
         html: HTML content to check
@@ -976,28 +1033,38 @@ def _enforce_solo_blacklist(html: str) -> Tuple[str, int]:
     for term in SOLO_BLACKLIST_TERMS:
         # Case-insensitive search for the term
         pattern = re.compile(r'\b' + re.escape(term) + r'\b', re.IGNORECASE)
-        matches = pattern.findall(result)
 
-        if matches:
-            # Get fallback replacement
+        def replace_with_case(m: re.Match[str]) -> str:
+            """Replace match preserving case: ALL-CAPS, Title Case, or lowercase."""
+            nonlocal fixes_applied
+            matched = m.group(0)
             fallback = SOLO_BLACKLIST_FALLBACKS.get(term, "")
 
-            for match in matches:
-                if fallback:
-                    # Replace with fallback, preserving case
-                    if match[0].isupper():
-                        replacement = fallback[0].upper() + fallback[1:] if fallback else ""
-                    else:
-                        replacement = fallback.lower() if fallback else ""
-                else:
-                    replacement = ""
-
-                result = pattern.sub(replacement, result, count=1)
+            if not fallback:
                 fixes_applied += 1
-                log.debug(
-                    "[FIX-B-BLACKLIST] Replaced SOLO blacklist term '%s' with '%s'",
-                    match, replacement
-                )
+                return ""
+
+            # Determine case pattern of the matched term
+            if matched.isupper():
+                # ALL-CAPS: EXECUTIVE → KURZFASSUNG
+                replacement = fallback.upper()
+            elif matched.islower():
+                # all lowercase: executive → kurzfassung
+                replacement = fallback.lower()
+            elif matched[0].isupper():
+                # Title Case: Executive → Kurzfassung
+                replacement = fallback[0].upper() + fallback[1:].lower() if len(fallback) > 1 else fallback.upper()
+            else:
+                replacement = fallback
+
+            fixes_applied += 1
+            log.debug(
+                "[FIX-B-BLACKLIST] Replaced SOLO blacklist term '%s' with '%s'",
+                matched, replacement
+            )
+            return replacement
+
+        result = pattern.sub(replace_with_case, result)
 
     # Clean up any double spaces or empty patterns left behind
     result = re.sub(r'\s{2,}', ' ', result)
@@ -2250,11 +2317,16 @@ class QualityGateResult:
 
 
 # Patterns for quality gate checks
-_QG_PROMPT_LEAK_PATTERNS: List[Tuple[str, re.Pattern]] = [
+_QG_PROMPT_LEAK_PATTERNS: List[Tuple[str, re.Pattern[str]]] = [
     ("Wobei soll ich", re.compile(r'Wobei\s+soll\s+ich', re.IGNORECASE)),
     ("Wobei kann ich", re.compile(r'Wobei\s+kann\s+ich', re.IGNORECASE)),
     ("Wie kann ich dir helfen", re.compile(r'Wie\s+kann\s+ich\s+(?:dir|Ihnen)\s+helfen', re.IGNORECASE)),
     ("Bitte beschreibe kurz", re.compile(r'Bitte\s+beschreibe?\s+kurz', re.IGNORECASE)),
+    # TASK 3 (FINAL FIX): Additional prompt leak patterns
+    ("Wenn du magst", re.compile(r'Wenn\s+du\s+magst', re.IGNORECASE)),
+    ("Falls du möchtest", re.compile(r'Falls\s+du\s+m[öo]chtest', re.IGNORECASE)),
+    ("Wenn du möchtest", re.compile(r'Wenn\s+du\s+m[öo]chtest', re.IGNORECASE)),
+    ("Strategische Empfehlungen ?", re.compile(r'Strategische\s+Empfehlungen\s*\?', re.IGNORECASE)),
 ]
 
 _QG_ENGLISH_DECIMAL_PATTERN = re.compile(
@@ -2273,7 +2345,7 @@ _QG_ENGLISH_BC_LABELS: List[str] = [
 
 def run_quality_gate(
     html: str,
-    segment: Literal["solo", "team", "kmu"] = "team",
+    segment: Literal["solo", "team", "kmu", "SOLO", "TEAM", "KMU"] = "team",
     *,
     strict: bool = False,
     check_bc_labels: bool = True,
@@ -2282,14 +2354,14 @@ def run_quality_gate(
     TASK 4: Run quality gate checks on final HTML before PDF generation.
 
     Checks for:
-    1. Prompt leaks (Wobei soll ich, Wobei kann ich, etc.)
+    1. Prompt leaks (Wobei soll ich, Wobei kann ich, Wenn du magst, etc.)
     2. English decimal format before "Monat(e)" (should be German 3,5 not 3.5)
     3. SOLO blacklist term violations (only for segment="solo")
     4. English business-case labels (optional)
 
     Args:
         html: Final HTML to check
-        segment: Target segment for segment-specific checks
+        segment: Target segment for segment-specific checks (any case accepted)
         strict: If True, raises ReportQualityError on violations
         check_bc_labels: If True, also check for English BC labels
 
@@ -2303,6 +2375,9 @@ def run_quality_gate(
 
     if not html:
         return result
+
+    # Canonicalize segment for consistent checking
+    canonical_segment = canonicalize_segment(segment)
 
     # Check 1: Prompt leaks
     for name, pattern in _QG_PROMPT_LEAK_PATTERNS:
@@ -2322,7 +2397,7 @@ def run_quality_gate(
         )
 
     # Check 3: SOLO blacklist (only for SOLO segment)
-    if segment == "solo":
+    if canonical_segment == "SOLO":
         for term in SOLO_BLACKLIST_TERMS:
             pattern = re.compile(r'\b' + re.escape(term) + r'\b', re.IGNORECASE)
             if pattern.search(html):
