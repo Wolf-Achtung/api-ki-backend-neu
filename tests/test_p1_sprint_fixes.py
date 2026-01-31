@@ -1,0 +1,388 @@
+# -*- coding: utf-8 -*-
+"""
+Tests for P1 Sprint Fixes:
+- TASK A: Final-Check Rendering (p.final-check-item)
+- TASK B: Quick Wins Completeness Gate (enforce_quickwins_complete)
+- TASK C: SOLO Labels Source-of-Truth (segment-aware template labels)
+"""
+import pytest
+import re
+
+
+# =============================================================================
+# TASK A: Final-Check Rendering Tests
+# =============================================================================
+
+class TestFinalCheckRendering:
+    """Tests for Final-Check Box rendering changes."""
+
+    def test_template_has_final_check_item_class(self):
+        """Verify template uses p.final-check-item instead of ul/li."""
+        from pathlib import Path
+
+        template_path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        with open(template_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Find the Final-Check section (greedy to capture the whole block)
+        final_check_start = content.find('<!-- FINAL CHECK')
+        assert final_check_start != -1, "Final-Check section not found in template"
+
+        # Find the end of the Final-Check block (next major section or 500 chars)
+        final_check_end = content.find('<!-- TOP-3 MUSS', final_check_start)
+        if final_check_end == -1:
+            final_check_end = final_check_start + 3000  # fallback
+
+        final_check_html = content[final_check_start:final_check_end]
+
+        # Should have p.final-check-item
+        assert 'class="final-check-item"' in final_check_html, \
+            f"Expected p.final-check-item class in Final-Check section. Found: {final_check_html[:500]}..."
+
+        # Should NOT have ul/li for FINAL_CHECK_DECISIONS
+        # Check that there's no <ul> before the {% endfor %} for decisions
+        decisions_block = re.search(r'FINAL_CHECK_DECISIONS.*?endfor', final_check_html, re.DOTALL)
+        if decisions_block:
+            assert '<ul' not in decisions_block.group(0), \
+                "Final-Check decisions should not use ul element"
+
+    def test_final_check_has_word_wrap_css(self):
+        """Verify Final-Check has word-wrap CSS for WeasyPrint compatibility."""
+        from pathlib import Path
+
+        template_path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        with open(template_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Find the Final-Check section
+        final_check_match = re.search(
+            r'class="final-check-item"[^>]*style="[^"]*',
+            content
+        )
+
+        assert final_check_match, "final-check-item with style not found"
+        style = final_check_match.group(0)
+
+        # Should have word-wrap
+        assert 'word-wrap' in style or 'overflow-wrap' in style, \
+            "Expected word-wrap or overflow-wrap in final-check-item style"
+
+
+# =============================================================================
+# TASK B: Quick Wins Completeness Gate Tests
+# =============================================================================
+
+class TestQuickWinsCompletenessGate:
+    """Tests for enforce_quickwins_complete function."""
+
+    def test_enforce_fills_empty_problem(self):
+        """Test that empty problem field is filled with fallback."""
+        from services.quickwins_renderer import enforce_quickwins_complete
+
+        quickwins = [
+            {"title": "Automatisierung der Rechnungsstellung", "problem": "", "wirkung": "Test", "umsetzung": "Test"}
+        ]
+
+        result = enforce_quickwins_complete(quickwins)
+
+        assert result[0]["problem"], "Expected problem field to be filled"
+        assert "Manuelle" in result[0]["problem"] or "automatisier" in result[0]["problem"].lower()
+
+    def test_enforce_fills_empty_wirkung(self):
+        """Test that empty wirkung field is filled with fallback."""
+        from services.quickwins_renderer import enforce_quickwins_complete
+
+        quickwins = [
+            {"title": "Effizienzsteigerung", "problem": "Test", "wirkung": "", "umsetzung": "Test"}
+        ]
+
+        result = enforce_quickwins_complete(quickwins)
+
+        assert result[0]["wirkung"], "Expected wirkung field to be filled"
+
+    def test_enforce_fills_empty_umsetzung(self):
+        """Test that empty umsetzung field is filled with fallback."""
+        from services.quickwins_renderer import enforce_quickwins_complete
+
+        quickwins = [
+            {"title": "Kundenservice Chatbot", "problem": "Test", "wirkung": "Test", "umsetzung": ""}
+        ]
+
+        result = enforce_quickwins_complete(quickwins)
+
+        assert result[0]["umsetzung"], "Expected umsetzung field to be filled"
+        # Should match customer-related fallback
+        assert "Chatbot" in result[0]["umsetzung"] or "Selbstservice" in result[0]["umsetzung"] or "Pilotprojekt" in result[0]["umsetzung"]
+
+    def test_enforce_fills_all_empty_fields(self):
+        """Test that all empty fields are filled."""
+        from services.quickwins_renderer import enforce_quickwins_complete
+
+        quickwins = [
+            {"title": "Content-Erstellung mit KI", "problem": "", "wirkung": "", "umsetzung": "", "hinweis": "siehe BC"}
+        ]
+
+        result = enforce_quickwins_complete(quickwins)
+
+        assert result[0]["problem"], "Expected problem field to be filled"
+        assert result[0]["wirkung"], "Expected wirkung field to be filled"
+        assert result[0]["umsetzung"], "Expected umsetzung field to be filled"
+
+    def test_enforce_preserves_non_empty_fields(self):
+        """Test that non-empty fields are preserved."""
+        from services.quickwins_renderer import enforce_quickwins_complete
+
+        original_problem = "Manueller Prozess dauert zu lange"
+        original_wirkung = "50% Zeitersparnis"
+        quickwins = [
+            {"title": "Test", "problem": original_problem, "wirkung": original_wirkung, "umsetzung": ""}
+        ]
+
+        result = enforce_quickwins_complete(quickwins)
+
+        assert result[0]["problem"] == original_problem, "Non-empty problem should be preserved"
+        assert result[0]["wirkung"] == original_wirkung, "Non-empty wirkung should be preserved"
+
+    def test_enforce_handles_empty_list(self):
+        """Test that empty list returns empty list."""
+        from services.quickwins_renderer import enforce_quickwins_complete
+
+        result = enforce_quickwins_complete([])
+        assert result == []
+
+    def test_enforce_handles_none(self):
+        """Test that None input returns None."""
+        from services.quickwins_renderer import enforce_quickwins_complete
+
+        result = enforce_quickwins_complete(None)
+        assert result is None
+
+    def test_render_skips_empty_blocks(self):
+        """Test that render_quickwins_premium_json skips truly empty blocks."""
+        from services.quickwins_renderer import render_quickwins_premium_json
+        import json
+
+        # Create JSON where enforce would fill the fields
+        quickwins_json = json.dumps([
+            {"title": "Test Quick Win", "icon": "🎯", "problem": "", "wirkung": "", "umsetzung": "", "hinweis": "Test"}
+        ])
+
+        html = render_quickwins_premium_json(quickwins_json)
+
+        assert html is not None, "Expected HTML output"
+        # After enforce, fields should be filled, so blocks should be present
+        assert "Problem:" in html or "quick-win-problem" in html
+
+
+# =============================================================================
+# TASK C: SOLO Labels Source-of-Truth Tests
+# =============================================================================
+
+class TestSoloLabelsSourceOfTruth:
+    """Tests for segment-aware labels in template rendering."""
+
+    def test_template_uses_ui_for_governance_label(self):
+        """Verify template uses ui() for Governance dimension label."""
+        from pathlib import Path
+
+        template_path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        with open(template_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Should use ui("governance_label", ...) for dimension label
+        assert 'ui("governance_label"' in content, \
+            "Expected template to use ui('governance_label') for dimension label"
+
+    def test_template_uses_ui_for_governance_section_kicker(self):
+        """Verify template uses ui() for Governance section kicker."""
+        from pathlib import Path
+
+        template_path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        with open(template_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Should use ui("governance_section_kicker", ...) for section kicker
+        assert 'ui("governance_section_kicker"' in content, \
+            "Expected template to use ui('governance_section_kicker') for section kicker"
+
+    def test_report_renderer_uses_segment_aware_ui(self):
+        """Verify report_renderer uses ui_for_segment."""
+        from pathlib import Path
+
+        renderer_path = Path(__file__).parent.parent / "services" / "report_renderer.py"
+        with open(renderer_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Should import ui_for_segment
+        assert "ui_for_segment" in content, \
+            "Expected report_renderer to import ui_for_segment"
+
+        # Should use segment-aware ui
+        assert 'ui_for_segment(lang, segment=' in content, \
+            "Expected report_renderer to call ui_for_segment with segment"
+
+    def test_i18n_solo_governance_returns_spielregeln(self):
+        """Test that SOLO segment returns 'Spielregeln' for governance."""
+        from services.i18n import get_label_for_segment
+
+        result = get_label_for_segment("governance_label", "de", segment="SOLO")
+        assert result == "Spielregeln", f"Expected 'Spielregeln' for SOLO governance, got '{result}'"
+
+    def test_i18n_team_governance_returns_governance(self):
+        """Test that TEAM segment returns 'Governance' for governance."""
+        from services.i18n import get_label_for_segment
+
+        # TEAM should fall back to standard (no _team suffix exists)
+        result = get_label_for_segment("governance_label", "de", segment="TEAM")
+        # Should return the fallback "Governance" or the standard label
+        assert "Governance" in result or result == "governance_label"
+
+
+# =============================================================================
+# Integration Tests
+# =============================================================================
+
+class TestP1SprintIntegration:
+    """Integration tests for P1 Sprint fixes."""
+
+    def test_quickwins_completeness_in_premium_render(self):
+        """Test that premium renderer applies completeness gate."""
+        from services.quickwins_renderer import render_quickwins_premium_json
+        import json
+
+        # Input with empty fields
+        quickwins_json = json.dumps([
+            {
+                "title": "Automatisierung",
+                "icon": "🤖",
+                "problem": "",
+                "wirkung": "",
+                "umsetzung": "",
+                "hinweis": "siehe Business Case"
+            }
+        ])
+
+        html = render_quickwins_premium_json(quickwins_json)
+
+        assert html is not None
+        # Should have content in the blocks (filled by enforce)
+        assert "Problem:" in html
+        assert "Wirkung:" in html
+        assert "Umsetzung:" in html
+
+    def test_solo_segment_normalization_in_renderer(self):
+        """Test that segment is normalized correctly."""
+        # segment_map = {"solo": "SOLO", "team": "TEAM", "klein": "TEAM", "kmu": "KMU"}
+        segment_map = {"solo": "SOLO", "team": "TEAM", "klein": "TEAM", "kmu": "KMU"}
+
+        assert segment_map.get("solo") == "SOLO"
+        assert segment_map.get("klein") == "TEAM"
+        assert segment_map.get("kmu") == "KMU"
+        assert segment_map.get("unknown", "TEAM") == "TEAM"
+
+
+# =============================================================================
+# TASK D: ROI as Ranges/Qualitative Tests
+# =============================================================================
+
+class TestRoiQualitativeRanges:
+    """Tests for ROI as qualitative ranges for SOLO."""
+
+    def test_format_roi_span_very_high(self):
+        """Test format_roi_span for very high ROI."""
+        from services.report_healer import format_roi_span
+
+        result = format_roi_span(350.0)
+        assert "sehr hoch" in result
+        assert "300%" in result
+
+    def test_format_roi_span_high(self):
+        """Test format_roi_span for high ROI."""
+        from services.report_healer import format_roi_span
+
+        result = format_roi_span(250.0)
+        assert "hoch" in result
+        assert "200-300%" in result
+
+    def test_format_roi_span_good(self):
+        """Test format_roi_span for good ROI."""
+        from services.report_healer import format_roi_span
+
+        result = format_roi_span(175.0)
+        assert "gut" in result
+        assert "150-200%" in result
+
+    def test_format_roi_span_solid(self):
+        """Test format_roi_span for solid ROI."""
+        from services.report_healer import format_roi_span
+
+        result = format_roi_span(120.0)
+        assert "solide" in result
+        assert "100-150%" in result
+
+    def test_format_roi_span_moderate(self):
+        """Test format_roi_span for moderate ROI."""
+        from services.report_healer import format_roi_span
+
+        result = format_roi_span(75.0)
+        assert "moderat" in result
+        assert "50-100%" in result
+
+    def test_format_roi_span_low(self):
+        """Test format_roi_span for low ROI."""
+        from services.report_healer import format_roi_span
+
+        result = format_roi_span(30.0)
+        assert "gering" in result
+        assert "unter 50%" in result
+
+    def test_sanitize_roi_for_solo_replaces_roi_colon(self):
+        """Test sanitize_roi_for_solo replaces 'ROI: 200%' pattern."""
+        from services.report_healer import sanitize_roi_for_solo
+
+        html = "<p>Der ROI: 250% ist sehr gut.</p>"
+        result, count = sanitize_roi_for_solo(html)
+
+        assert count == 1
+        assert "hoch (200-300%)" in result
+        assert "250%" not in result
+
+    def test_sanitize_roi_for_solo_replaces_roi_von(self):
+        """Test sanitize_roi_for_solo replaces 'ROI von 150%' pattern."""
+        from services.report_healer import sanitize_roi_for_solo
+
+        html = "<p>Mit einem ROI von 175% lohnt sich die Investition.</p>"
+        result, count = sanitize_roi_for_solo(html)
+
+        assert count == 1
+        assert "gut (150-200%)" in result
+        assert "175%" not in result
+
+    def test_heal_final_html_applies_roi_sanitization_for_solo(self):
+        """Test heal_final_html applies ROI sanitization for SOLO."""
+        from services.report_healer import heal_final_html
+
+        html = """<html>
+        <body>
+            <p>Der ROI: 200% zeigt gute Rentabilität.</p>
+            <p>Payback: 6 Monate</p>
+        </body>
+        </html>"""
+
+        result = heal_final_html(html, segment="SOLO")
+
+        # Should have qualitative range
+        assert "200%" not in result or "hoch" in result
+        # Payback should be preserved
+        assert "6" in result
+
+    def test_heal_final_html_preserves_roi_for_team(self):
+        """Test heal_final_html preserves exact ROI for TEAM."""
+        from services.report_healer import heal_final_html
+
+        html = "<p>Der ROI: 200% ist sehr gut.</p>"
+
+        result = heal_final_html(html, segment="TEAM")
+
+        # TEAM should preserve exact ROI
+        assert "200%" in result

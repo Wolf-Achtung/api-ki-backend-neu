@@ -21,7 +21,7 @@ from services.html_minifier import optimize_html_for_pdf, strip_unused_sections
 from services.report_validator import GENERIC_LLM_LEAK_PHRASES, remove_leak_phrases_from_html
 from services.html_sanitizer import sanitize_en_locale_tokens
 from services.lang_utils import normalize_lang
-from services.i18n import ui as ui_factory
+from services.i18n import ui as ui_factory, ui_for_segment
 from services.locale_rewriter import apply_locale_v2
 from services.debug_503d import build_debug_503d_attachments, build_debug_503d_summary, is_debug_render_enabled
 
@@ -658,9 +658,16 @@ def render(briefing_obj: Any,
 
     # =========================================================================
     # Multilingual v1 Step 4: Inject ui() into template context
+    # TASK C: Use segment-aware ui_for_segment() for SOLO label localization
     # =========================================================================
-    ctx["ui"] = ui_factory(lang)
+    segment = sections.get("COMPANY_SIZE", "team")
+    # Normalize segment to canonical form (SOLO, TEAM, KMU)
+    segment_map = {"solo": "SOLO", "team": "TEAM", "klein": "TEAM", "kmu": "KMU"}
+    segment_canonical = segment_map.get(str(segment).lower(), "TEAM")
+    ctx["ui"] = ui_for_segment(lang, segment=segment_canonical)
     ctx["report_lang"] = lang
+    ctx["report_segment"] = segment_canonical
+    log.debug("[RENDER] Using segment-aware labels: segment=%s, lang=%s", segment_canonical, lang)
 
     # Log what we're rendering (for debugging)
     log.info(f"🎨 Rendering report {run_id} with {len(sections)} sections (lang={lang})")

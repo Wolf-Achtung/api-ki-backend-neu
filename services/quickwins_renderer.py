@@ -403,6 +403,135 @@ def get_quickwin_enrichment(title: str, icon: str = "") -> dict:
     return QUICKWIN_ENRICHMENT_MAP["default"]
 
 
+# =============================================================================
+# TASK B (P0): Quick Wins Completeness Gate
+# =============================================================================
+# Ensures all Quick Wins have non-empty problem/wirkung/umsetzung fields.
+# Uses deterministic heuristics to fill missing fields from available context.
+
+# Default fallback texts for empty fields based on title keywords
+QUICKWIN_FIELD_FALLBACKS = {
+    "problem": {
+        "automatisierung": "Manuelle Prozesse binden Zeit und erhöhen Fehlerquoten.",
+        "effizienz": "Ineffiziente Abläufe verursachen vermeidbare Kosten.",
+        "kommunikation": "Inkonsistente Kommunikation mindert Professionalität.",
+        "content": "Content-Erstellung ist zeitintensiv und ressourcenbindend.",
+        "daten": "Datensilos verhindern fundierte Entscheidungen.",
+        "kund": "Langsame Reaktionszeiten beeinträchtigen Kundenzufriedenheit.",
+        "service": "Support-Anfragen überlasten das Team.",
+        "default": "Aktueller Prozess ist zeitintensiv und fehleranfällig.",
+    },
+    "wirkung": {
+        "automatisierung": "Automatisierte Abläufe reduzieren Zeitaufwand um 50-70%.",
+        "effizienz": "Effizientere Prozesse steigern Durchsatz messbar.",
+        "kommunikation": "Konsistente, professionelle Kommunikation stärkt Markenwahrnehmung.",
+        "content": "Schnellere Content-Erstellung bei gleichbleibender Qualität.",
+        "daten": "Bessere Datenverfügbarkeit ermöglicht schnellere Entscheidungen.",
+        "kund": "Kürzere Reaktionszeiten erhöhen Kundenbindung.",
+        "service": "Entlastung des Support-Teams bei Routineanfragen.",
+        "default": "Spürbare Zeit- und Kostenersparnis bei höherer Qualität.",
+    },
+    "umsetzung": {
+        "automatisierung": "Schrittweise Automatisierung der häufigsten Abläufe starten.",
+        "effizienz": "Pilotprojekt mit höchstem Optimierungspotenzial beginnen.",
+        "kommunikation": "Templates und Vorlagen für häufige Kommunikationsfälle erstellen.",
+        "content": "KI-Unterstützung für Content-Workflows einrichten.",
+        "daten": "Datenquellen verknüpfen und Dashboard aufsetzen.",
+        "kund": "Chatbot oder Selbstservice-Portal für Standardanfragen implementieren.",
+        "service": "FAQ-basierte Automatisierung für häufige Fragen einführen.",
+        "default": "Pilotprojekt mit kleinem Scope starten, dann skalieren.",
+    },
+}
+
+
+def _get_field_fallback(field: str, title: str, hinweis: str = "") -> str:
+    """
+    Get deterministic fallback text for a missing Quick Win field.
+
+    Args:
+        field: Field name (problem, wirkung, umsetzung)
+        title: Quick Win title for keyword matching
+        hinweis: Optional hint text that might contain useful info
+
+    Returns:
+        Fallback text for the field
+    """
+    if field not in QUICKWIN_FIELD_FALLBACKS:
+        return ""
+
+    field_fallbacks = QUICKWIN_FIELD_FALLBACKS[field]
+    combined = f"{title} {hinweis}".lower()
+
+    # Try to match a keyword
+    for keyword, text in field_fallbacks.items():
+        if keyword != "default" and keyword in combined:
+            return text
+
+    return field_fallbacks.get("default", "")
+
+
+def enforce_quickwins_complete(quickwins: list) -> list:
+    """
+    TASK B (P0): Ensure all Quick Wins have complete problem/wirkung/umsetzung fields.
+
+    For each Quick Win:
+    1. Check if problem, wirkung, umsetzung are non-empty
+    2. If empty, use deterministic heuristics to fill from title/hinweis
+    3. Log completeness actions for debugging
+
+    Args:
+        quickwins: List of Quick Win dicts with fields:
+            - title, icon, problem, wirkung, umsetzung, hinweis
+
+    Returns:
+        List of Quick Wins with all fields completed (non-empty)
+
+    Example:
+        >>> qw = [{"title": "Automatisierung", "problem": "", "wirkung": "", "umsetzung": ""}]
+        >>> result = enforce_quickwins_complete(qw)
+        >>> all(result[0][f] for f in ["problem", "wirkung", "umsetzung"])
+        True
+    """
+    if not quickwins or not isinstance(quickwins, list):
+        return quickwins
+
+    completed = []
+    completions_made = 0
+
+    for i, qw in enumerate(quickwins):
+        if not isinstance(qw, dict):
+            completed.append(qw)
+            continue
+
+        qw_copy = dict(qw)  # Don't mutate original
+        title = str(qw_copy.get("title", "")).strip()
+        hinweis = str(qw_copy.get("hinweis", "")).strip()
+
+        # Check and fill each required field
+        for field in ["problem", "wirkung", "umsetzung"]:
+            current_value = str(qw_copy.get(field, "")).strip()
+
+            if not current_value:
+                # Field is empty - fill with deterministic fallback
+                fallback = _get_field_fallback(field, title, hinweis)
+                qw_copy[field] = fallback
+                completions_made += 1
+                log.debug(
+                    "[QUICKWINS-COMPLETE] QW#%d '%s': filled empty %s with fallback",
+                    i + 1, title[:30], field
+                )
+
+        completed.append(qw_copy)
+
+    if completions_made > 0:
+        log.info(
+            "[QUICKWINS-COMPLETE] Filled %d empty fields across %d Quick Wins",
+            completions_made, len(quickwins)
+        )
+
+    return completed
+
+
 def enrich_quickwin_card(html: str) -> str:
     """
     FIX-506: Enrich a single Quick Win card with Nutzen and Aufwand sublines.
@@ -551,6 +680,9 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL") ->
         if not isinstance(data, list) or len(data) == 0:
             return None
 
+        # TASK B (P0): Apply completeness gate - fill empty fields with deterministic fallbacks
+        data = enforce_quickwins_complete(data)
+
         # Build premium cards
         cards_html = []
         total_words = 0
@@ -571,26 +703,39 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL") ->
             card_words = len(card_text.split())
             total_words += card_words
 
-            # Build rich card HTML
+            # TASK B: Build field blocks only if they have content (skip empty)
+            problem_block = ""
+            if problem:
+                problem_block = f'''
+        <div class="quick-win-problem" style="margin-bottom:10px;padding:10px;background:#fef2f2;border-radius:8px;border-left:3px solid #ef4444;">
+            <strong style="color:#dc2626;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Problem:</strong>
+            <p style="margin:4px 0 0 0;">{problem}</p>
+        </div>'''
+
+            wirkung_block = ""
+            if wirkung:
+                wirkung_block = f'''
+        <div class="quick-win-wirkung" style="margin-bottom:10px;padding:10px;background:#f0fdf4;border-radius:8px;border-left:3px solid #22c55e;">
+            <strong style="color:#16a34a;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Wirkung:</strong>
+            <p style="margin:4px 0 0 0;">{wirkung}</p>
+        </div>'''
+
+            umsetzung_block = ""
+            if umsetzung:
+                umsetzung_block = f'''
+        <div class="quick-win-umsetzung" style="margin-bottom:10px;padding:10px;background:#eff6ff;border-radius:8px;border-left:3px solid #3b82f6;">
+            <strong style="color:#2563eb;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Umsetzung:</strong>
+            <p style="margin:4px 0 0 0;">{umsetzung}</p>
+        </div>'''
+
+            # TASK B: Build card HTML with conditional blocks (skip empty ones)
             card_html = f'''
 <div class="quick-win quick-win-card-premium" data-qw-json-rendered="true" data-qw-premium="true" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px;break-inside:avoid;page-break-inside:avoid;">
     <div class="quick-win-header" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
         <span class="quick-win-icon" style="font-size:24px;flex-shrink:0;">{icon}</span>
         <h4 class="quick-win-title" style="margin:0;font-size:14px;font-weight:600;color:#1e293b;line-height:1.3;">{title}</h4>
     </div>
-    <div class="quick-win-body" style="font-size:12px;line-height:1.5;color:#475569;">
-        <div class="quick-win-problem" style="margin-bottom:10px;padding:10px;background:#fef2f2;border-radius:8px;border-left:3px solid #ef4444;">
-            <strong style="color:#dc2626;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Problem:</strong>
-            <p style="margin:4px 0 0 0;">{problem}</p>
-        </div>
-        <div class="quick-win-wirkung" style="margin-bottom:10px;padding:10px;background:#f0fdf4;border-radius:8px;border-left:3px solid #22c55e;">
-            <strong style="color:#16a34a;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Wirkung:</strong>
-            <p style="margin:4px 0 0 0;">{wirkung}</p>
-        </div>
-        <div class="quick-win-umsetzung" style="margin-bottom:10px;padding:10px;background:#eff6ff;border-radius:8px;border-left:3px solid #3b82f6;">
-            <strong style="color:#2563eb;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Umsetzung:</strong>
-            <p style="margin:4px 0 0 0;">{umsetzung}</p>
-        </div>
+    <div class="quick-win-body" style="font-size:12px;line-height:1.5;color:#475569;">{problem_block}{wirkung_block}{umsetzung_block}
         <div class="quick-win-hinweis" style="font-size:11px;color:#6b7280;font-style:italic;padding-top:8px;border-top:1px solid #e5e7eb;">
             💡 {hinweis}
         </div>
