@@ -28,6 +28,19 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Set, Tuple, Typ
 
 log = logging.getLogger(__name__)
 
+# TASK 1 (P0 FINAL): Import Quick Wins debug pipeline
+try:
+    from services.quickwins_debug import (
+        dump_after_section_heal,
+        dump_after_final_heal,
+        is_debug_enabled,
+    )
+except ImportError:
+    # Fallback if debug module not available
+    def dump_after_section_heal(*args, **kwargs): return None
+    def dump_after_final_heal(*args, **kwargs): return None
+    def is_debug_enabled(): return False
+
 __all__ = [
     "heal_report_html",
     "heal_final_html",
@@ -1345,6 +1358,7 @@ def sanitize_quickwin_empty_fields(html: str) -> Tuple[str, int]:
 # =============================================================================
 
 # Patterns to detect input checklist prompts (often leaked into output)
+# TASK 4 (P0 FINAL): Enhanced patterns for input checklist detection
 INPUT_CHECKLIST_PATTERNS = [
     # Pattern: <ul> containing items like "Branche und Ziel", "Datenlage", "Tool-Übersicht"
     (
@@ -1355,6 +1369,11 @@ INPUT_CHECKLIST_PATTERNS = [
     (
         r'<ol[^>]*>\s*(?:<li[^>]*>[^<]*(?:Branche\s+und\s+Ziel|Datenlage|Tool-Übersicht|Zielgruppe)[^<]*</li>\s*)+</ol>',
         "Input checklist (ordered) with Branche/Datenlage/Tool items"
+    ),
+    # TASK 4: "Branche/Use Case" variation
+    (
+        r'<li[^>]*>\s*(?:Branche\s*/\s*Use\s*Case(?:\s*\([^)]*\))?)\s*</li>',
+        "Branche/Use Case item"
     ),
     # Standalone items (if list structure is different)
     (
@@ -1369,19 +1388,32 @@ INPUT_CHECKLIST_PATTERNS = [
         r'<li[^>]*>\s*(?:Tool-Übersicht(?:\s*\([^)]*\))?)\s*</li>',
         "Tool-Übersicht item"
     ),
+    # TASK 4: Catch plain text versions (no list structure)
+    (
+        r'(?:^|\n)\s*[-•*]\s*(?:Branche\s*/\s*Use\s*Case|Branche\s+und\s+Ziel|Datenlage|Tool-Übersicht)(?:\s*\([^)]*\))?(?:\s*$|\n)',
+        "Plain text input checklist item"
+    ),
+    # TASK 4: Catch numbered list versions
+    (
+        r'(?:^|\n)\s*\d+[.)]\s*(?:Branche\s*/\s*Use\s*Case|Branche\s+und\s+Ziel|Datenlage|Tool-Übersicht)(?:\s*\([^)]*\))?(?:\s*$|\n)',
+        "Numbered input checklist item"
+    ),
 ]
 
 
 def sanitize_input_checklist(html: str) -> Tuple[str, int]:
     """
-    TASK 3 (P1 Final Solo Polish): Remove input checklist prompts from HTML.
+    TASK 3 (P1 Final Solo Polish) + TASK 4 (P0 FINAL): Remove input checklist prompts from HTML.
 
     Detects and removes leaked input checklists that contain items like:
-    - Branche und Ziel
+    - Branche und Ziel / Branche/Use Case
     - Datenlage
     - Tool-Übersicht
 
     These are input prompts that should not appear in the final PDF.
+
+    TASK 4 Enhancement: Specifically targets checklists under "Strategische Empfehlungen"
+    section which has been observed leaking input prompts.
 
     Args:
         html: HTML content to process
@@ -1395,6 +1427,29 @@ def sanitize_input_checklist(html: str) -> Tuple[str, int]:
     result = html
     removal_count = 0
 
+    # TASK 4 (P0 FINAL): First handle specific context - input checklist under Strategische Empfehlungen
+    # This pattern catches input checklists that appear directly after the Strategische Empfehlungen heading
+    strategische_checklist_pattern = re.compile(
+        r'(Strategische\s+Empfehlungen.*?)'  # Context: heading
+        r'(<(?:ul|ol)[^>]*>\s*'  # List start
+        r'(?:<li[^>]*>[^<]*(?:Branche|Datenlage|Tool-Übersicht|Use\s*Case|Zielgruppe)[^<]*</li>\s*)+'  # Checklist items
+        r'</(?:ul|ol)>)',  # List end
+        re.IGNORECASE | re.DOTALL
+    )
+    try:
+        matches = strategische_checklist_pattern.findall(result)
+        if matches:
+            # Remove the checklist part but keep the heading
+            result = strategische_checklist_pattern.sub(r'\1', result)
+            removal_count += len(matches)
+            log.info(
+                "[INPUT-CHECKLIST] Removed %d input checklist(s) under 'Strategische Empfehlungen'",
+                len(matches)
+            )
+    except re.error as e:
+        log.warning("[INPUT-CHECKLIST] Strategische Empfehlungen checklist regex error: %s", e)
+
+    # Standard patterns
     for pattern, description in INPUT_CHECKLIST_PATTERNS:
         try:
             regex = re.compile(pattern, re.IGNORECASE | re.DOTALL)
@@ -1411,7 +1466,7 @@ def sanitize_input_checklist(html: str) -> Tuple[str, int]:
 
     if removal_count > 0:
         log.info(
-            "[INPUT-CHECKLIST] Removed %d input checklist item(s)",
+            "[INPUT-CHECKLIST] Total removed: %d input checklist item(s)",
             removal_count
         )
 
@@ -1673,6 +1728,9 @@ def reduce_redundancy(
     """
     Fix C: Reduce redundant content across sections.
 
+    TASK 2 (P0 FINAL): Quick Wins sections are PROTECTED from deduplication
+    to ensure "NEVER EMPTY" guarantee.
+
     Args:
         sections: Dict of section_name -> HTML content
         min_chars: Minimum block length to consider for deduplication
@@ -1685,10 +1743,22 @@ def reduce_redundancy(
     result: Dict[str, str] = {}
     seen_fingerprints: Dict[str, str] = {}  # fingerprint -> first section
 
+    # TASK 2 (P0 FINAL): Sections protected from deduplication (NEVER EMPTY guarantee)
+    PROTECTED_SECTION_KEYS = {"QUICK_WINS_HTML", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT"}
+
     # Process sections in order (earlier sections have priority)
     for section_name, html in sections.items():
         if not html:
             result[section_name] = html
+            continue
+
+        # TASK 2 (P0 FINAL): Skip Quick Wins sections entirely - NEVER EMPTY guarantee
+        if section_name in PROTECTED_SECTION_KEYS:
+            result[section_name] = html
+            log.debug(
+                "[FIX-C] PROTECTED: Skipping dedup for %s (NEVER EMPTY guarantee)",
+                section_name
+            )
             continue
 
         processed = html
@@ -1859,6 +1929,9 @@ def trim_incomplete_sentences(html: str) -> Tuple[str, int]:
     """
     Fix E: Trim incomplete sentence fragments from end of blocks.
 
+    TASK 2 (P0 FINAL): Quick Wins content is PROTECTED from trimming
+    to ensure "NEVER EMPTY" guarantee.
+
     Args:
         html: HTML content to process
 
@@ -1867,6 +1940,21 @@ def trim_incomplete_sentences(html: str) -> Tuple[str, int]:
     """
     if not html:
         return html, 0
+
+    # TASK 2 (P0 FINAL): Protect Quick Wins content from trimming
+    # Extract and temporarily replace Quick Wins blocks with placeholders
+    quickwin_blocks: List[str] = []
+    quickwin_pattern = re.compile(
+        r'(<div[^>]*class="[^"]*quick-win[^"]*"[^>]*>.*?</div>\s*</div>\s*</div>)',
+        re.DOTALL | re.IGNORECASE
+    )
+
+    def protect_quickwin(m: re.Match) -> str:
+        idx = len(quickwin_blocks)
+        quickwin_blocks.append(m.group(0))
+        return f"<!-- QUICKWIN_PLACEHOLDER_{idx} -->"
+
+    protected_html = quickwin_pattern.sub(protect_quickwin, html)
 
     fragments_trimmed = 0
 
@@ -1919,9 +2007,17 @@ def trim_incomplete_sentences(html: str) -> Tuple[str, int]:
         trimmed = trim_block_content(content)
         return full_tag.replace(content, trimmed)
 
+    # TASK 2 (P0 FINAL): Work on protected HTML (Quick Wins replaced with placeholders)
     result = re.sub(r"(<p[^>]*>)(.*?)(</p>)",
                     lambda m: str(m.group(1)) + trim_block_content(str(m.group(2))) + str(m.group(3)),
-                    html, flags=re.DOTALL)
+                    protected_html, flags=re.DOTALL)
+
+    # TASK 2 (P0 FINAL): Restore Quick Wins blocks from placeholders
+    for idx, qw_block in enumerate(quickwin_blocks):
+        result = result.replace(f"<!-- QUICKWIN_PLACEHOLDER_{idx} -->", qw_block)
+
+    if quickwin_blocks:
+        log.debug("[FIX-E] Protected %d Quick Wins blocks from trimming", len(quickwin_blocks))
 
     if fragments_trimmed > 0:
         log.info("[FIX-E] Trimmed %d incomplete sentence fragments", fragments_trimmed)
@@ -2684,6 +2780,16 @@ def heal_report_html(
         result.sections_budget_trimmed
     )
 
+    # TASK 1 (P0 FINAL): DUMP POINT 3 - After section heal
+    # Extract Quick Wins HTML for debug dump
+    qw_html_after_heal = ""
+    for key in ["QUICK_WINS_HTML", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT"]:
+        qw_content = healed_sections.get(key)
+        if qw_content and isinstance(qw_content, str) and len(qw_content) > 50:
+            qw_html_after_heal += f"<!-- {key} -->\n{qw_content}\n\n"
+    if qw_html_after_heal:
+        dump_after_section_heal(qw_html_after_heal, segment=canonical_segment)
+
     return result
 
 
@@ -2919,6 +3025,9 @@ def heal_final_html(
                 )
         except Exception as e:
             log.warning("[HEALER-POST] Quality gate error: %s", e)
+
+    # TASK 1 (P0 FINAL): DUMP POINT 4 - After final heal (final output)
+    dump_after_final_heal(result, segment=canonical_segment)
 
     return result
 
