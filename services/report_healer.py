@@ -1153,6 +1153,42 @@ QUICKWIN_EMPTY_BLOCK_PATTERNS = [
     ),
 ]
 
+# TASK 2 (P0 FINAL): Label-only div patterns (no <p> tag at all, just <strong>LABEL:</strong>)
+QUICKWIN_LABEL_ONLY_PATTERNS = [
+    # Pattern: <div class="quick-win-problem" ...><strong>PROBLEM:</strong></div> (no <p> at all)
+    (
+        r'(<div\s+class="quick-win-problem"[^>]*>\s*<strong[^>]*>[^<]*</strong>)\s*(</div>)',
+        "problem",
+        "Problem (label-only)"
+    ),
+    (
+        r'(<div\s+class="quick-win-wirkung"[^>]*>\s*<strong[^>]*>[^<]*</strong>)\s*(</div>)',
+        "wirkung",
+        "Wirkung (label-only)"
+    ),
+    (
+        r'(<div\s+class="quick-win-umsetzung"[^>]*>\s*<strong[^>]*>[^<]*</strong>)\s*(</div>)',
+        "umsetzung",
+        "Umsetzung (label-only)"
+    ),
+    # Pattern: with only whitespace/<br> between label and closing div
+    (
+        r'(<div\s+class="quick-win-problem"[^>]*>\s*<strong[^>]*>[^<]*</strong>)\s*(?:<br\s*/?>|\s)*\s*(</div>)',
+        "problem",
+        "Problem (label + br only)"
+    ),
+    (
+        r'(<div\s+class="quick-win-wirkung"[^>]*>\s*<strong[^>]*>[^<]*</strong>)\s*(?:<br\s*/?>|\s)*\s*(</div>)',
+        "wirkung",
+        "Wirkung (label + br only)"
+    ),
+    (
+        r'(<div\s+class="quick-win-umsetzung"[^>]*>\s*<strong[^>]*>[^<]*</strong>)\s*(?:<br\s*/?>|\s)*\s*(</div>)',
+        "umsetzung",
+        "Umsetzung (label + br only)"
+    ),
+]
+
 # Text-level patterns that indicate empty Quick Win fields (found in PDF extraction)
 QUICKWIN_EMPTY_TEXT_PATTERNS = [
     # Pattern: "Problem:" immediately followed by "Wirkung:" (no content between)
@@ -1242,11 +1278,30 @@ def sanitize_quickwin_empty_fields(html: str) -> Tuple[str, int]:
                     result = regex.sub(rf'\1{fallback}\2', result)
                     modification_count += len(matches)
                     log.info(
-                        "[QUICKWIN-FAILSAFE] Filled %d empty %s block(s) with fallback",
+                        "[QUICKWIN-FAILSAFE] PHASE 1: Filled %d empty %s block(s) with fallback",
                         len(matches), field
                     )
         except re.error as e:
             log.warning("[QUICKWIN-FAILSAFE] Fill regex error for %s: %s", field, e)
+
+    # PHASE 1.5 (TASK 2 P0 FINAL): Fix label-only divs (no <p> tag, just <strong>LABEL:</strong>)
+    # These are divs that only contain the label without any content paragraph
+    for pattern, field, description in QUICKWIN_LABEL_ONLY_PATTERNS:
+        try:
+            fallback = QUICKWIN_FALLBACK_TEXTS_DE.get(field, "")
+            if fallback:
+                regex = re.compile(pattern, re.IGNORECASE | re.DOTALL)
+                matches = regex.findall(result)
+                if matches:
+                    # Insert <p>fallback</p> between label and closing div
+                    result = regex.sub(rf'\1<p style="margin:4px 0 0 0;">{fallback}</p>\2', result)
+                    modification_count += len(matches)
+                    log.info(
+                        "[QUICKWIN-FAILSAFE] PHASE 1.5: Fixed %d %s (inserted <p> with fallback)",
+                        len(matches), description
+                    )
+        except re.error as e:
+            log.warning("[QUICKWIN-FAILSAFE] Label-only fix error for %s: %s", description, e)
 
     # PHASE 2: Remove any remaining empty blocks that couldn't be filled
     for pattern, field_name in QUICKWIN_EMPTY_BLOCK_PATTERNS:
@@ -2765,10 +2820,46 @@ def heal_final_html(
     except Exception as e:
         log.warning("[HEALER-POST] Input checklist removal error: %s", e)
 
-    # TASK B (P1): Final Governance catch-all for SOLO (absolute last safety net)
+    # TASK 3 (P0 FINAL) + TASK B (P1): Final Governance catch-all for SOLO
+    # Includes split-tag handling for patterns like Gover</span><span>nance
     if segment_lower == "solo":
+        governance_replacements = 0
+
+        # STEP 1: Handle split-tag patterns (Gover</span><span>nance, Gover</b><b>nance, etc.)
         try:
-            # Final regex catch-all: replace any remaining \bGovernance\b with Spielregeln
+            # Pattern: Gover followed by HTML tags, then nance
+            split_tag_patterns = [
+                # Gover</span><span>nance, Gover</span> <span>nance
+                (r'Gover\s*</\s*span\s*>\s*<\s*span[^>]*>\s*nance', 'Spielregeln'),
+                (r'GOVER\s*</\s*SPAN\s*>\s*<\s*SPAN[^>]*>\s*NANCE', 'SPIELREGELN'),
+                # Gover</b><b>nance
+                (r'Gover\s*</\s*b\s*>\s*<\s*b[^>]*>\s*nance', 'Spielregeln'),
+                # Gover</strong><strong>nance
+                (r'Gover\s*</\s*strong\s*>\s*<\s*strong[^>]*>\s*nance', 'Spielregeln'),
+                # Gover</em><em>nance
+                (r'Gover\s*</\s*em\s*>\s*<\s*em[^>]*>\s*nance', 'Spielregeln'),
+                # Generic: Gover + any closing tag + any opening tag + nance
+                (r'Gover\s*</[^>]+>\s*<[^>]+>\s*nance', 'Spielregeln'),
+                (r'GOVER\s*</[^>]+>\s*<[^>]+>\s*NANCE', 'SPIELREGELN'),
+            ]
+
+            for pat_str, replacement in split_tag_patterns:
+                # Use case-insensitive flag only for patterns starting with lowercase
+                flags = re.IGNORECASE if pat_str[0].islower() else 0
+                regex = re.compile(pat_str, flags)
+                matches = regex.findall(result)
+                if matches:
+                    result = regex.sub(replacement, result)
+                    governance_replacements += len(matches)
+                    log.info(
+                        "[HEALER-POST] SPLIT-TAG: Replaced %d split-tag Governance patterns",
+                        len(matches)
+                    )
+        except Exception as e:
+            log.warning("[HEALER-POST] Split-tag Governance error: %s", e)
+
+        # STEP 2: Handle standard word-boundary patterns
+        try:
             governance_pattern = re.compile(r'\bGovernance\b', re.IGNORECASE)
             governance_matches = governance_pattern.findall(result)
             if governance_matches:
@@ -2781,13 +2872,25 @@ def heal_final_html(
                     else:
                         return "Spielregeln"
                 result = governance_pattern.sub(governance_replace, result)
-                fixes_applied += len(governance_matches)
-                log.warning(
-                    "[HEALER-POST] FINAL CATCHALL: Replaced %d remaining 'Governance' instances for SOLO",
-                    len(governance_matches)
-                )
+                governance_replacements += len(governance_matches)
         except Exception as e:
-            log.warning("[HEALER-POST] Final Governance catch-all error: %s", e)
+            log.warning("[HEALER-POST] Standard Governance catch-all error: %s", e)
+
+        # Log total replacements
+        if governance_replacements > 0:
+            fixes_applied += governance_replacements
+            log.warning(
+                "[HEALER-POST] GOVERNANCE FINAL: Replaced %d total 'Governance' instances for SOLO",
+                governance_replacements
+            )
+
+        # STEP 3: Final verification - check if any Governance remains (for logging only)
+        remaining = len(re.findall(r'Governance', result, re.IGNORECASE))
+        if remaining > 0:
+            log.error(
+                "[HEALER-POST] CRITICAL: %d 'Governance' instances still remain after all processing!",
+                remaining
+            )
 
     # Remove duplicate "Progress 100%" (keep first) - legacy pattern
     try:

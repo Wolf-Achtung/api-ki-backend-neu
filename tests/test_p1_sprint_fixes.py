@@ -766,3 +766,385 @@ class TestAcceptanceCriteria:
         ))
 
         assert not has_empty_pattern, "DoD FAILED: Empty Quick Win label pattern detected"
+
+
+# =============================================================================
+# TASK 4 (P0 FINAL): E2E PDF Gate Tests
+# =============================================================================
+
+class TestE2EPdfGateQuickWins:
+    """TASK 4 Test A: Quick Wins completeness in final output."""
+
+    def test_quickwins_with_empty_fields_get_filled(self):
+        """Test A: Quick Win with empty fields gets filled with fallback content."""
+        from services.quickwins_renderer import enforce_quickwins_complete
+
+        # Simulate Quick Win with empty/None/whitespace fields
+        quickwins = [{
+            "title": "Automatisierung",
+            "icon": "🤖",
+            "problem": "",
+            "wirkung": None,
+            "umsetzung": "   ",
+            "hinweis": "siehe Business Case"
+        }]
+
+        result = enforce_quickwins_complete(quickwins)
+
+        # All fields must have real content (>20 chars each)
+        assert len(result[0]["problem"]) > 20, "Problem field not filled"
+        assert len(result[0]["wirkung"]) > 20, "Wirkung field not filled"
+        assert len(result[0]["umsetzung"]) > 20, "Umsetzung field not filled"
+
+    def test_quickwins_field_alias_mapping(self):
+        """Test A: Quick Win with alternative field names gets mapped correctly."""
+        from services.quickwins_renderer import enforce_quickwins_complete
+
+        # Use alternative field names that LLM might generate
+        quickwins = [{
+            "title": "Datenanalyse",
+            "icon": "📊",
+            "pain": "Datensilos verhindern Entscheidungen.",  # alias for "problem"
+            "benefit": "Bessere Datenverfügbarkeit.",  # alias for "wirkung"
+            "implementation": "Dashboard aufsetzen.",  # alias for "umsetzung"
+        }]
+
+        result = enforce_quickwins_complete(quickwins)
+
+        # Canonical fields should be filled from aliases
+        assert result[0]["problem"] == "Datensilos verhindern Entscheidungen."
+        assert result[0]["wirkung"] == "Bessere Datenverfügbarkeit."
+        assert result[0]["umsetzung"] == "Dashboard aufsetzen."
+
+    def test_quickwins_renderer_output_has_content(self):
+        """Test C: Renderer output structure has content after labels."""
+        from services.quickwins_renderer import render_quickwins_premium_json
+        import json
+        import re
+
+        quickwins_data = [{
+            "title": "Automatisierung",
+            "icon": "🤖",
+            "problem": "",  # Empty - should be filled
+            "wirkung": "",  # Empty - should be filled
+            "umsetzung": "",  # Empty - should be filled
+        }]
+
+        json_str = json.dumps(quickwins_data)
+        html = render_quickwins_premium_json(json_str)
+
+        # Renderer should produce HTML (not None/empty)
+        assert html is not None, "Renderer returned None"
+        assert len(html) > 100, "Renderer output too short"
+
+        # Each block should have content after the label
+        # Pattern: <strong>PROBLEM:</strong> followed by <p> with content
+        problem_content = re.search(
+            r'<strong[^>]*>Problem:</strong>\s*<p[^>]*>([^<]+)</p>',
+            html,
+            re.IGNORECASE
+        )
+        assert problem_content and len(problem_content.group(1).strip()) > 10, \
+            "Problem block has no content after label"
+
+    def test_healer_fixes_label_only_divs(self):
+        """Test: Healer fixes label-only divs (no <p> tag)."""
+        from services.report_healer import heal_final_html
+
+        # Real structure from debug output: label-only div
+        html = '''
+        <div class="quick-win-problem" style="margin-bottom:10px;">
+            <strong style="color:#dc2626;">PROBLEM:</strong>
+        </div>
+        <div class="quick-win-wirkung" style="margin-bottom:10px;">
+            <strong style="color:#16a34a;">WIRKUNG:</strong>
+        </div>
+        <div class="quick-win-umsetzung" style="margin-bottom:10px;">
+            <strong style="color:#2563eb;">UMSETZUNG:</strong>
+        </div>
+        '''
+
+        result = heal_final_html(html, segment="SOLO")
+
+        # Should have inserted <p> with fallback content
+        assert '<p style="margin:4px 0 0 0;">' in result, \
+            "Healer should insert <p> tags with fallback content"
+
+        # Should NOT have empty labels anymore
+        assert not re.search(r'PROBLEM:</strong>\s*</div>', result, re.IGNORECASE), \
+            "Problem label-only still present"
+
+    def test_e2e_no_consecutive_labels(self):
+        """E2E Gate: After processing, PROBLEM:/WIRKUNG:/UMSETZUNG: should not appear consecutively."""
+        from services.report_healer import heal_final_html
+        import re
+
+        html = '''
+        <div class="quick-win">
+            <div class="quick-win-problem"><strong>PROBLEM:</strong></div>
+            <div class="quick-win-wirkung"><strong>WIRKUNG:</strong></div>
+            <div class="quick-win-umsetzung"><strong>UMSETZUNG:</strong></div>
+        </div>
+        '''
+
+        result = heal_final_html(html, segment="SOLO")
+
+        # These patterns indicate empty fields - should NOT be present
+        has_problem_wirkung_empty = bool(re.search(
+            r'PROBLEM:\s*(?:</[^>]+>\s*)*(?:<[^>]+>\s*)*WIRKUNG:',
+            result,
+            re.IGNORECASE
+        ))
+        has_wirkung_umsetzung_empty = bool(re.search(
+            r'WIRKUNG:\s*(?:</[^>]+>\s*)*(?:<[^>]+>\s*)*UMSETZUNG:',
+            result,
+            re.IGNORECASE
+        ))
+
+        assert not has_problem_wirkung_empty, \
+            "E2E GATE FAILED: PROBLEM: immediately followed by WIRKUNG:"
+        assert not has_wirkung_umsetzung_empty, \
+            "E2E GATE FAILED: WIRKUNG: immediately followed by UMSETZUNG:"
+
+
+class TestE2EPdfGateGovernance:
+    """TASK 4 Test B: Governance not present in final SOLO output."""
+
+    def test_governance_in_llm_text_gets_replaced(self):
+        """Test B: Governance in LLM-generated text gets replaced for SOLO."""
+        from services.report_healer import heal_final_html
+        import re
+
+        # Simulate LLM output containing "Governance"
+        html = """
+        <div class="roi-interpretation">
+            <p>Mit starker Governance erreichen Sie eine bessere ROI-Interpretation.</p>
+            <p>Die Governance-Strukturen sollten klar definiert sein.</p>
+            <p>Achten Sie auf gute Governance bei der Implementierung.</p>
+        </div>
+        """
+
+        result = heal_final_html(html, segment="SOLO")
+
+        # No "Governance" should remain
+        governance_count = len(re.findall(r'\bGovernance\b', result, re.IGNORECASE))
+        assert governance_count == 0, \
+            f"Test B FAILED: Found {governance_count} Governance in output"
+
+        # "Spielregeln" should appear instead
+        assert "Spielregeln" in result or "spielregeln" in result, \
+            "Governance should be replaced with Spielregeln"
+
+    def test_governance_split_tag_gets_replaced(self):
+        """Test: Split-tag Governance (Gover</span><span>nance) gets replaced."""
+        from services.report_healer import heal_final_html
+        import re
+
+        # Simulate split-tag Governance
+        html = """
+        <p>Die <span class="highlight">Gover</span><span>nance</span> ist wichtig.</p>
+        """
+
+        result = heal_final_html(html, segment="SOLO")
+
+        # Should not contain Governance in any form
+        assert "Governance" not in result and "governance" not in result, \
+            "Split-tag Governance not replaced"
+        assert "Spielregeln" in result, \
+            "Split-tag Governance should become Spielregeln"
+
+    def test_governance_case_preservation(self):
+        """Test: Governance replacement preserves case."""
+        from services.report_healer import heal_final_html
+
+        html = """
+        <p>GOVERNANCE ist wichtig.</p>
+        <p>governance auch.</p>
+        <p>Governance ebenfalls.</p>
+        """
+
+        result = heal_final_html(html, segment="SOLO")
+
+        # Check case preservation
+        assert "SPIELREGELN" in result, "GOVERNANCE should become SPIELREGELN"
+        assert "spielregeln" in result, "governance should become spielregeln"
+        assert "Spielregeln" in result, "Governance should become Spielregeln"
+
+    def test_e2e_zero_governance_in_solo_final(self):
+        """E2E Gate Test B: Final SOLO output has 0× Governance."""
+        from services.report_healer import heal_final_html
+        import re
+
+        # Comprehensive test with various Governance patterns
+        html = """
+        <div>
+            <p>starker Governance</p>
+            <p>und Governance</p>
+            <p>ROI-Interpretation mit Governance</p>
+            <p>Governance-Framework</p>
+            <p>GOVERNANCE</p>
+            <p>governance</p>
+            <span>Gover</span><span>nance</span>
+        </div>
+        """
+
+        result = heal_final_html(html, segment="SOLO")
+
+        governance_matches = re.findall(r'Governance', result, re.IGNORECASE)
+        assert len(governance_matches) == 0, \
+            f"E2E GATE FAILED: Found {len(governance_matches)} Governance: {governance_matches}"
+
+
+class TestE2ERendererOutputStructure:
+    """TASK 4 Test C: Renderer output structure validation."""
+
+    def test_renderer_never_produces_label_only_blocks(self):
+        """Test C: render_quickwins_premium_json never produces label-only blocks."""
+        from services.quickwins_renderer import render_quickwins_premium_json
+        import json
+        import re
+
+        # Test with completely empty Quick Win
+        quickwins = [{
+            "title": "Test",
+            "icon": "🎯",
+            # All fields missing/empty
+        }]
+
+        json_str = json.dumps(quickwins)
+        html = render_quickwins_premium_json(json_str)
+
+        if html:  # Renderer might return None for invalid data
+            # Should not have label-only patterns
+            label_only_problem = re.search(
+                r'<strong[^>]*>Problem:</strong>\s*</div>',
+                html,
+                re.IGNORECASE
+            )
+            label_only_wirkung = re.search(
+                r'<strong[^>]*>Wirkung:</strong>\s*</div>',
+                html,
+                re.IGNORECASE
+            )
+            label_only_umsetzung = re.search(
+                r'<strong[^>]*>Umsetzung:</strong>\s*</div>',
+                html,
+                re.IGNORECASE
+            )
+
+            assert not label_only_problem, "Renderer produced label-only Problem block"
+            assert not label_only_wirkung, "Renderer produced label-only Wirkung block"
+            assert not label_only_umsetzung, "Renderer produced label-only Umsetzung block"
+
+    def test_enforce_quickwins_complete_never_returns_empty_fields(self):
+        """Test C: enforce_quickwins_complete always returns non-empty fields."""
+        from services.quickwins_renderer import enforce_quickwins_complete
+
+        # Various edge cases
+        test_cases = [
+            {"title": "Test1", "problem": "", "wirkung": "", "umsetzung": ""},
+            {"title": "Test2", "problem": None, "wirkung": None, "umsetzung": None},
+            {"title": "Test3", "problem": "   ", "wirkung": "—", "umsetzung": "..."},
+            {"title": "Test4"},  # No fields at all
+        ]
+
+        for qw in test_cases:
+            result = enforce_quickwins_complete([qw])
+            assert result[0]["problem"], f"Empty problem for {qw}"
+            assert result[0]["wirkung"], f"Empty wirkung for {qw}"
+            assert result[0]["umsetzung"], f"Empty umsetzung for {qw}"
+
+
+# =============================================================================
+# TASK 5 (P0 FINAL): CI Quality Gate Strict Mode
+# =============================================================================
+
+class TestCIQualityGateStrict:
+    """TASK 5: CI Quality Gate tests that should fail the pipeline if bugs return."""
+
+    def test_strict_gate_quickwins_completeness(self):
+        """STRICT GATE: Quick Wins must have content in all fields."""
+        from services.quickwins_renderer import enforce_quickwins_complete, render_quickwins_premium_json
+        import json
+        import re
+
+        # This represents the worst possible input
+        worst_case_quickwin = [{
+            "title": "Automatisierung",
+            "icon": "🤖",
+            "problem": "",
+            "wirkung": None,
+            "umsetzung": "   ",
+        }]
+
+        # After enforcement, all fields must be filled
+        completed = enforce_quickwins_complete(worst_case_quickwin)
+
+        for field in ["problem", "wirkung", "umsetzung"]:
+            value = completed[0].get(field, "")
+            assert value and len(value.strip()) > 10, \
+                f"STRICT GATE FAILED: {field} is empty after enforce_quickwins_complete"
+
+        # Render and verify HTML structure
+        json_str = json.dumps(completed)
+        html = render_quickwins_premium_json(json_str)
+
+        if html:
+            # Verify each field block has content
+            for label in ["Problem:", "Wirkung:", "Umsetzung:"]:
+                # Should have content after label, not just label alone
+                pattern = rf'{label}</strong>\s*<p[^>]*>([^<]+)</p>'
+                match = re.search(pattern, html, re.IGNORECASE)
+                assert match and len(match.group(1).strip()) > 5, \
+                    f"STRICT GATE FAILED: {label} has no content in rendered HTML"
+
+    def test_strict_gate_solo_zero_governance(self):
+        """STRICT GATE: SOLO output must have 0× Governance."""
+        from services.report_healer import heal_final_html
+        import re
+
+        # Comprehensive input with all known Governance patterns
+        test_html = """
+        <div>
+            <p>Mit starker Governance</p>
+            <p>Die Governance-Strukturen</p>
+            <p>Governance-Framework nutzen</p>
+            <p>GOVERNANCE als Basis</p>
+            <p>governance wichtig</p>
+            <p><span>Gover</span><span>nance</span> auch</p>
+            <p>ROI bei guter Governance</p>
+        </div>
+        """
+
+        result = heal_final_html(test_html, segment="SOLO")
+
+        # Count all Governance occurrences
+        governance_count = len(re.findall(r'Governance', result, re.IGNORECASE))
+
+        assert governance_count == 0, \
+            f"STRICT GATE FAILED: {governance_count}× Governance found in SOLO output"
+
+    def test_strict_gate_no_label_only_quickwins(self):
+        """STRICT GATE: No Quick Win should have label-only structure."""
+        from services.report_healer import heal_final_html
+        import re
+
+        # Label-only structure that came from debug output
+        label_only_html = '''
+        <div class="quick-win-problem"><strong>PROBLEM:</strong></div>
+        <div class="quick-win-wirkung"><strong>WIRKUNG:</strong></div>
+        <div class="quick-win-umsetzung"><strong>UMSETZUNG:</strong></div>
+        '''
+
+        result = heal_final_html(label_only_html, segment="SOLO")
+
+        # Should not have any label-only patterns remaining
+        label_only_patterns = [
+            r'<strong[^>]*>PROBLEM:</strong>\s*</div>',
+            r'<strong[^>]*>WIRKUNG:</strong>\s*</div>',
+            r'<strong[^>]*>UMSETZUNG:</strong>\s*</div>',
+        ]
+
+        for pattern in label_only_patterns:
+            assert not re.search(pattern, result, re.IGNORECASE), \
+                f"STRICT GATE FAILED: Label-only pattern still present: {pattern}"

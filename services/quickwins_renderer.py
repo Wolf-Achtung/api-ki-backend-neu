@@ -404,6 +404,130 @@ def get_quickwin_enrichment(title: str, icon: str = "") -> dict:
 
 
 # =============================================================================
+# TASK 1 (P0 FINAL): Robust Quick Win Field Mapping
+# =============================================================================
+# Maps various field name variants to canonical names: problem, wirkung, umsetzung
+# This ensures we capture data regardless of how the LLM named the fields.
+
+QUICKWIN_FIELD_ALIASES = {
+    "problem": [
+        "problem", "Problem", "PROBLEM",
+        "pain", "Pain", "pain_point", "painpoint", "pain-point",
+        "problemstellung", "Problemstellung",
+        "ausgangslage", "Ausgangslage",
+        "herausforderung", "Herausforderung",
+        "issue", "Issue",
+        "challenge", "Challenge",
+        "current_state", "ist_zustand", "ist-zustand",
+    ],
+    "wirkung": [
+        "wirkung", "Wirkung", "WIRKUNG",
+        "benefit", "Benefit", "benefits",
+        "impact", "Impact",
+        "nutzen", "Nutzen",
+        "effekt", "Effekt",
+        "ergebnis", "Ergebnis",
+        "outcome", "Outcome",
+        "value", "Value", "mehrwert", "Mehrwert",
+        "effect", "Effect",
+    ],
+    "umsetzung": [
+        "umsetzung", "Umsetzung", "UMSETZUNG",
+        "how", "How",
+        "implementation", "Implementation",
+        "vorgehen", "Vorgehen",
+        "next_steps", "next-steps", "nextSteps",
+        "action", "Action", "actions", "Actions",
+        "steps", "Steps", "schritte", "Schritte",
+        "todo", "Todo", "TODO",
+        "approach", "Approach",
+        "howto", "how_to", "how-to",
+    ],
+}
+
+# Values that count as "empty" (should trigger fallback)
+EMPTY_VALUE_PATTERNS = ["", "—", "–", "-", "...", "…", "n/a", "N/A", "none", "None", "TBD", "tbd"]
+
+
+def get_quickwin_field(qw: dict, canonical_field: str) -> str:
+    """
+    TASK 1 (P0 FINAL): Get Quick Win field value with robust alias mapping.
+
+    Searches for the field using multiple possible key names and returns
+    the first non-empty value found. Treats whitespace-only, dashes, and
+    placeholder strings as empty.
+
+    Args:
+        qw: Quick Win dict with potentially varied field names
+        canonical_field: Target field name (problem, wirkung, umsetzung)
+
+    Returns:
+        Field value (stripped) or empty string if not found/empty
+    """
+    if canonical_field not in QUICKWIN_FIELD_ALIASES:
+        return str(qw.get(canonical_field, "")).strip()
+
+    aliases = QUICKWIN_FIELD_ALIASES[canonical_field]
+
+    for alias in aliases:
+        value = qw.get(alias)
+        if value is not None:
+            value_str = str(value).strip()
+            # Check if value is "empty" by our definition
+            if value_str and value_str not in EMPTY_VALUE_PATTERNS:
+                return value_str
+
+    return ""
+
+
+def normalize_quickwin_fields(qw: dict) -> dict:
+    """
+    TASK 1 (P0 FINAL): Normalize Quick Win field names to canonical names.
+
+    Takes a Quick Win dict with potentially varied field names and returns
+    a new dict with canonical field names (problem, wirkung, umsetzung).
+
+    Args:
+        qw: Quick Win dict with varied field names
+
+    Returns:
+        New dict with canonical field names and original values preserved
+    """
+    normalized = dict(qw)  # Copy original
+
+    # Map aliases to canonical names
+    for canonical_field in ["problem", "wirkung", "umsetzung"]:
+        value = get_quickwin_field(qw, canonical_field)
+        normalized[canonical_field] = value
+
+    return normalized
+
+
+def debug_quickwin_fields(qw: dict, index: int) -> None:
+    """
+    TASK 1 (P0 FINAL): Debug logging for Quick Win field mapping.
+
+    Logs which fields exist in the Quick Win and their values.
+    Helps diagnose why fields might be empty.
+    """
+    log.info("[QW-DEBUG] Quick Win #%d fields:", index + 1)
+    log.info("[QW-DEBUG]   title=%r", qw.get("title", ""))
+
+    for canonical_field in ["problem", "wirkung", "umsetzung"]:
+        # Log all matching aliases found
+        aliases_found = []
+        for alias in QUICKWIN_FIELD_ALIASES.get(canonical_field, []):
+            if alias in qw:
+                aliases_found.append(f"{alias}={qw[alias]!r:.50}")
+
+        resolved = get_quickwin_field(qw, canonical_field)
+        log.info(
+            "[QW-DEBUG]   %s: resolved=%r, aliases_found=%s",
+            canonical_field, resolved[:50] if resolved else "(empty)", aliases_found or "(none)"
+        )
+
+
+# =============================================================================
 # TASK B (P0): Quick Wins Completeness Gate
 # =============================================================================
 # Ensures all Quick Wins have non-empty problem/wirkung/umsetzung fields.
@@ -472,23 +596,25 @@ def _get_field_fallback(field: str, title: str, hinweis: str = "") -> str:
 
 def enforce_quickwins_complete(quickwins: list) -> list:
     """
-    TASK B (P0): Ensure all Quick Wins have complete problem/wirkung/umsetzung fields.
+    TASK B (P0) + TASK 1 (P0 FINAL): Ensure all Quick Wins have complete fields.
 
     For each Quick Win:
-    1. Check if problem, wirkung, umsetzung are non-empty
-    2. If empty, use deterministic heuristics to fill from title/hinweis
-    3. Log completeness actions for debugging
+    1. TASK 1: Use robust field mapping to find values under various key names
+    2. Normalize fields to canonical names (problem, wirkung, umsetzung)
+    3. If still empty, use deterministic heuristics to fill from title/hinweis
+    4. Log completeness actions for debugging
 
     Args:
-        quickwins: List of Quick Win dicts with fields:
-            - title, icon, problem, wirkung, umsetzung, hinweis
+        quickwins: List of Quick Win dicts with potentially varied field names
 
     Returns:
         List of Quick Wins with all fields completed (non-empty)
 
     Example:
-        >>> qw = [{"title": "Automatisierung", "problem": "", "wirkung": "", "umsetzung": ""}]
+        >>> qw = [{"title": "Automatisierung", "pain": "Test", "wirkung": "", "umsetzung": ""}]
         >>> result = enforce_quickwins_complete(qw)
+        >>> result[0]["problem"]  # "pain" mapped to "problem"
+        'Test'
         >>> all(result[0][f] for f in ["problem", "wirkung", "umsetzung"])
         True
     """
@@ -497,37 +623,52 @@ def enforce_quickwins_complete(quickwins: list) -> list:
 
     completed = []
     completions_made = 0
+    mappings_made = 0
 
     for i, qw in enumerate(quickwins):
         if not isinstance(qw, dict):
             completed.append(qw)
             continue
 
-        qw_copy = dict(qw)  # Don't mutate original
+        # TASK 1: Debug log the raw fields
+        debug_quickwin_fields(qw, i)
+
+        # TASK 1: First normalize field names using robust mapping
+        qw_copy = normalize_quickwin_fields(qw)
+
         title = str(qw_copy.get("title", "")).strip()
         hinweis = str(qw_copy.get("hinweis", "")).strip()
 
         # Check and fill each required field
         for field in ["problem", "wirkung", "umsetzung"]:
-            current_value = str(qw_copy.get(field, "")).strip()
+            # TASK 1: Use robust getter that checks multiple aliases
+            current_value = get_quickwin_field(qw_copy, field)
 
-            if not current_value:
-                # Field is empty - fill with deterministic fallback
+            if current_value:
+                # Value found via alias mapping
+                if qw_copy.get(field) != current_value:
+                    mappings_made += 1
+                    log.debug(
+                        "[QUICKWINS-COMPLETE] QW#%d '%s': mapped alias to %s=%r",
+                        i + 1, title[:30], field, current_value[:50]
+                    )
+                qw_copy[field] = current_value
+            else:
+                # Field is truly empty - fill with deterministic fallback
                 fallback = _get_field_fallback(field, title, hinweis)
                 qw_copy[field] = fallback
                 completions_made += 1
-                log.debug(
-                    "[QUICKWINS-COMPLETE] QW#%d '%s': filled empty %s with fallback",
-                    i + 1, title[:30], field
+                log.info(
+                    "[QUICKWINS-COMPLETE] QW#%d '%s': filled empty %s with fallback: %r",
+                    i + 1, title[:30], field, fallback[:50] if fallback else "(no fallback)"
                 )
 
         completed.append(qw_copy)
 
-    if completions_made > 0:
-        log.info(
-            "[QUICKWINS-COMPLETE] Filled %d empty fields across %d Quick Wins",
-            completions_made, len(quickwins)
-        )
+    log.info(
+        "[QUICKWINS-COMPLETE] Processed %d Quick Wins: %d fields mapped, %d filled with fallbacks",
+        len(quickwins), mappings_made, completions_made
+    )
 
     return completed
 
