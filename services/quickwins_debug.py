@@ -23,7 +23,7 @@ import os
 import re
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 log = logging.getLogger(__name__)
 
@@ -340,13 +340,12 @@ def analyze_quickwins_field_status(html: str) -> Dict[str, Any]:
 
     Returns detailed analysis of each Quick Win card's field status.
     """
-    analysis = {
-        "total_cards": 0,
-        "cards_with_all_fields": 0,
-        "cards_with_empty_fields": 0,
-        "field_status": [],
-        "issues": [],
-    }
+    # Use explicit typed variables to satisfy mypy
+    total_cards: int = 0
+    cards_with_all_fields: int = 0
+    cards_with_empty_fields: int = 0
+    field_status: List[Dict[str, Any]] = []
+    issues: List[str] = []
 
     # Find all Quick Win cards
     card_pattern = re.compile(
@@ -355,16 +354,13 @@ def analyze_quickwins_field_status(html: str) -> Dict[str, Any]:
     )
 
     cards = card_pattern.findall(html)
-    analysis["total_cards"] = len(cards)
+    total_cards = len(cards)
 
     for i, card_html in enumerate(cards):
-        card_status = {
-            "card_index": i + 1,
-            "problem_filled": False,
-            "wirkung_filled": False,
-            "umsetzung_filled": False,
-            "issues": [],
-        }
+        card_issues: List[str] = []
+        problem_filled = False
+        wirkung_filled = False
+        umsetzung_filled = False
 
         # Check Problem field
         problem_match = re.search(
@@ -372,9 +368,9 @@ def analyze_quickwins_field_status(html: str) -> Dict[str, Any]:
             card_html, re.DOTALL | re.IGNORECASE
         )
         if problem_match and problem_match.group(1).strip():
-            card_status["problem_filled"] = True
+            problem_filled = True
         else:
-            card_status["issues"].append("Empty Problem field")
+            card_issues.append("Empty Problem field")
 
         # Check Wirkung field
         wirkung_match = re.search(
@@ -382,9 +378,9 @@ def analyze_quickwins_field_status(html: str) -> Dict[str, Any]:
             card_html, re.DOTALL | re.IGNORECASE
         )
         if wirkung_match and wirkung_match.group(1).strip():
-            card_status["wirkung_filled"] = True
+            wirkung_filled = True
         else:
-            card_status["issues"].append("Empty Wirkung field")
+            card_issues.append("Empty Wirkung field")
 
         # Check Umsetzung field
         umsetzung_match = re.search(
@@ -392,20 +388,32 @@ def analyze_quickwins_field_status(html: str) -> Dict[str, Any]:
             card_html, re.DOTALL | re.IGNORECASE
         )
         if umsetzung_match and umsetzung_match.group(1).strip():
-            card_status["umsetzung_filled"] = True
+            umsetzung_filled = True
         else:
-            card_status["issues"].append("Empty Umsetzung field")
+            card_issues.append("Empty Umsetzung field")
 
         # Count complete vs incomplete
-        if all([card_status["problem_filled"], card_status["wirkung_filled"], card_status["umsetzung_filled"]]):
-            analysis["cards_with_all_fields"] += 1
+        if all([problem_filled, wirkung_filled, umsetzung_filled]):
+            cards_with_all_fields += 1
         else:
-            analysis["cards_with_empty_fields"] += 1
-            analysis["issues"].extend([f"Card {i+1}: {issue}" for issue in card_status["issues"]])
+            cards_with_empty_fields += 1
+            issues.extend([f"Card {i+1}: {issue}" for issue in card_issues])
 
-        analysis["field_status"].append(card_status)
+        field_status.append({
+            "card_index": i + 1,
+            "problem_filled": problem_filled,
+            "wirkung_filled": wirkung_filled,
+            "umsetzung_filled": umsetzung_filled,
+            "issues": card_issues,
+        })
 
-    return analysis
+    return {
+        "total_cards": total_cards,
+        "cards_with_all_fields": cards_with_all_fields,
+        "cards_with_empty_fields": cards_with_empty_fields,
+        "field_status": field_status,
+        "issues": issues,
+    }
 
 
 def get_debug_summary() -> Dict[str, Any]:
