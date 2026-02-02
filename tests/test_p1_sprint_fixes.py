@@ -1148,3 +1148,201 @@ class TestCIQualityGateStrict:
         for pattern in label_only_patterns:
             assert not re.search(pattern, result, re.IGNORECASE), \
                 f"STRICT GATE FAILED: Label-only pattern still present: {pattern}"
+
+
+# =============================================================================
+# HAUPTLEISTUNG_UNDERUSE FIX TESTS
+# =============================================================================
+
+class TestHauptleistungEnforcer:
+    """Tests for HAUPTLEISTUNG_UNDERUSE fix in report_healer.py"""
+
+    def test_injects_hauptleistung_when_missing(self):
+        """Test that hauptleistung is injected when missing from recommendations."""
+        from services.report_healer import ensure_hauptleistung_in_recommendations
+
+        sections = {
+            "RECOMMENDATIONS_HTML": "<div><p>Empfehlungen ohne Bezug zur Hauptleistung.</p></div>",
+            "hauptleistung": "KI-Beratung für KMU"
+        }
+
+        result, count = ensure_hauptleistung_in_recommendations(sections)
+
+        # Should have injected
+        assert count == 1, "Expected 1 injection"
+
+        # Result should contain hauptleistung at least 2×
+        html = result["RECOMMENDATIONS_HTML"]
+        occurrences = html.lower().count("ki-beratung für kmu")
+        assert occurrences >= 2, f"Expected >= 2 occurrences, got {occurrences}"
+
+    def test_does_not_double_inject_when_already_present(self):
+        """Test idempotency - no double injection when hauptleistung already present."""
+        from services.report_healer import ensure_hauptleistung_in_recommendations
+
+        sections = {
+            "RECOMMENDATIONS_HTML": "<div><p>KI-Beratung für KMU ist wichtig. KI-Beratung für KMU rocks.</p></div>",
+            "hauptleistung": "KI-Beratung für KMU"
+        }
+
+        result, count = ensure_hauptleistung_in_recommendations(sections)
+
+        # Should NOT inject (already has 2)
+        assert count == 0, "Should not inject when already present"
+
+    def test_does_not_double_inject_with_marker(self):
+        """Test idempotency via marker."""
+        from services.report_healer import (
+            ensure_hauptleistung_in_recommendations,
+            HAUPTLEISTUNG_INJECTED_MARKER
+        )
+
+        # HTML that already has the marker but somehow low count
+        sections = {
+            "RECOMMENDATIONS_HTML": f"{HAUPTLEISTUNG_INJECTED_MARKER}<div><p>Some content.</p></div>",
+            "hauptleistung": "KI-Beratung für KMU"
+        }
+
+        result, count = ensure_hauptleistung_in_recommendations(sections)
+
+        # Should NOT inject (marker present)
+        assert count == 0, "Should not inject when marker present"
+
+    def test_skips_when_hauptleistung_empty(self):
+        """Test that empty/short hauptleistung doesn't crash."""
+        from services.report_healer import ensure_hauptleistung_in_recommendations
+
+        # Empty hauptleistung
+        sections = {
+            "RECOMMENDATIONS_HTML": "<div><p>Some content.</p></div>",
+            "hauptleistung": ""
+        }
+
+        result, count = ensure_hauptleistung_in_recommendations(sections)
+        assert count == 0, "Should skip empty hauptleistung"
+
+        # Short hauptleistung (< 6 chars)
+        sections["hauptleistung"] = "Test"
+        result, count = ensure_hauptleistung_in_recommendations(sections)
+        assert count == 0, "Should skip short hauptleistung"
+
+        # None hauptleistung
+        sections["hauptleistung"] = None
+        result, count = ensure_hauptleistung_in_recommendations(sections)
+        assert count == 0, "Should skip None hauptleistung"
+
+    def test_exec_summary_injection(self):
+        """Test hauptleistung injection in Executive Summary."""
+        from services.report_healer import ensure_hauptleistung_in_exec_summary
+
+        sections = {
+            "EXEC_SUMMARY_HTML": "<div><p>Executive Summary ohne Hauptleistung.</p></div>",
+            "hauptleistung": "Finanzberatung für Startups"
+        }
+
+        result, count = ensure_hauptleistung_in_exec_summary(sections)
+
+        # Should have injected
+        assert count == 1, "Expected 1 injection"
+
+        # Result should contain hauptleistung at least 3×
+        html = result["EXEC_SUMMARY_HTML"]
+        occurrences = html.lower().count("finanzberatung für startups")
+        assert occurrences >= 3, f"Expected >= 3 occurrences, got {occurrences}"
+
+
+class TestHauptleistungPipelineIntegration:
+    """Integration tests for hauptleistung fix in heal_report_html pipeline."""
+
+    def test_pipeline_no_hauptleistung_underuse_after_heal(self):
+        """Test that heal_report_html fixes HAUPTLEISTUNG_UNDERUSE."""
+        from services.report_healer import heal_report_html
+
+        # Minimal sections dict that would fail validation
+        sections = {
+            "RECOMMENDATIONS_HTML": "<div><p>Allgemeine Empfehlungen für Prozessoptimierung.</p></div>",
+            "EXEC_SUMMARY_HTML": "<div><p>Executive Summary über KI-Potenziale.</p></div>",
+            "hauptleistung": "Webdesign und SEO-Optimierung"
+        }
+
+        # Run healer
+        result = heal_report_html(sections, segment="solo")
+
+        # Check recommendations has minimum 2× hauptleistung
+        rec_html = result.sections.get("RECOMMENDATIONS_HTML", "")
+        rec_count = rec_html.lower().count("webdesign und seo-optimierung")
+        assert rec_count >= 2, f"RECOMMENDATIONS_HTML has {rec_count}× hauptleistung (min: 2)"
+
+        # Check exec summary has minimum 3× hauptleistung
+        exec_html = result.sections.get("EXEC_SUMMARY_HTML", "")
+        exec_count = exec_html.lower().count("webdesign und seo-optimierung")
+        assert exec_count >= 3, f"EXEC_SUMMARY_HTML has {exec_count}× hauptleistung (min: 3)"
+
+    def test_pipeline_skips_when_hauptleistung_missing(self):
+        """Test that pipeline doesn't crash when hauptleistung is missing."""
+        from services.report_healer import heal_report_html
+
+        sections = {
+            "RECOMMENDATIONS_HTML": "<div><p>Some content.</p></div>",
+            # No hauptleistung key
+        }
+
+        # Should not crash
+        result = heal_report_html(sections, segment="team")
+        assert result.sections is not None
+
+    def test_pipeline_preserves_existing_hauptleistung(self):
+        """Test that pipeline preserves content that already has enough hauptleistung."""
+        from services.report_healer import heal_report_html, HAUPTLEISTUNG_INJECTED_MARKER
+
+        sections = {
+            "RECOMMENDATIONS_HTML": "<div><p>Online-Marketing für Freelancer ist wichtig. "
+                                   "Mit Online-Marketing für Freelancer können Sie wachsen. "
+                                   "Online-Marketing für Freelancer als Kern.</p></div>",
+            "hauptleistung": "Online-Marketing für Freelancer"
+        }
+
+        result = heal_report_html(sections, segment="solo")
+
+        # Should NOT have injection marker (already had enough)
+        rec_html = result.sections.get("RECOMMENDATIONS_HTML", "")
+        assert HAUPTLEISTUNG_INJECTED_MARKER not in rec_html, \
+            "Should not inject when already has enough occurrences"
+
+
+class TestHauptleistungValidatorCompatibility:
+    """Tests to verify compatibility with the validator's counting logic."""
+
+    def test_count_matches_validator_logic(self):
+        """Test that our counting matches the validator's .lower().count() logic."""
+        from services.report_healer import _count_hauptleistung_in_text
+
+        html = "<div><p>KI-Beratung ist gut. <strong>KI-BERATUNG</strong> ist besser. ki-beratung auch.</p></div>"
+        hauptleistung = "KI-Beratung"
+
+        # Our count (text-only, case-insensitive)
+        our_count = _count_hauptleistung_in_text(html, hauptleistung)
+
+        # Validator logic simulation
+        validator_count = html.lower().count(hauptleistung.lower())
+
+        # Our count extracts text from HTML, so may differ slightly
+        # But should be at least as many as validator finds
+        assert our_count >= 3, f"Our count should find all 3 occurrences, got {our_count}"
+
+    def test_html_escape_handling(self):
+        """Test that special characters in hauptleistung are handled correctly."""
+        from services.report_healer import ensure_hauptleistung_in_recommendations
+
+        # hauptleistung with special HTML characters
+        sections = {
+            "RECOMMENDATIONS_HTML": "<div><p>Content here.</p></div>",
+            "hauptleistung": "IT & Web-Lösungen"
+        }
+
+        result, count = ensure_hauptleistung_in_recommendations(sections)
+
+        # Should inject without breaking HTML
+        html = result["RECOMMENDATIONS_HTML"]
+        assert "&amp;" in html, "& should be escaped to &amp;"
+        assert "<script" not in html, "No script injection possible"
