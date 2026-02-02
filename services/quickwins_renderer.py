@@ -17,6 +17,20 @@ from typing import Tuple, Optional
 
 log = logging.getLogger(__name__)
 
+# TASK 1 (P0 FINAL): Import debug pipeline
+try:
+    from services.quickwins_debug import (
+        dump_raw_json,
+        dump_renderer_output,
+        is_debug_enabled,
+    )
+except ImportError:
+    # Fallback if debug module not available - signatures must match originals for mypy
+    from typing import Any as _Any, Optional as _Opt
+    def dump_raw_json(raw_data: _Any, context: str = "unknown") -> _Opt[str]: return None
+    def dump_renderer_output(html: str, renderer_name: str = "unknown") -> _Opt[str]: return None
+    def is_debug_enabled() -> bool: return False
+
 
 # =============================================================================
 # P0.7: Quick Wins € Calculation Helper
@@ -821,6 +835,9 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL") ->
         if not isinstance(data, list) or len(data) == 0:
             return None
 
+        # TASK 1 (P0 FINAL): DUMP POINT 1 - Raw JSON after parsing
+        dump_raw_json(data, context="render_quickwins_premium_json")
+
         # TASK B (P0): Apply completeness gate - fill empty fields with deterministic fallbacks
         data = enforce_quickwins_complete(data)
 
@@ -915,6 +932,9 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL") ->
             "[FIX-510-QW] premium_render items=%d words=%d mode=%s has_marker=%d has_class=%d",
             len(cards_html), total_words, template_mode, has_marker, has_class
         )
+
+        # TASK 1 (P0 FINAL): DUMP POINT 2 - Renderer output HTML
+        dump_renderer_output(html_out, renderer_name="render_quickwins_premium_json")
 
         return html_out
 
