@@ -14763,6 +14763,33 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         log.warning(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Failed: {e}")
 
     # =========================================================================
+    # HAUPTLEISTUNG_UNDERUSE FIX: Robust failsafe AFTER Quality Enforcer
+    # Ensures minimum hauptleistung occurrences BEFORE final validation
+    # =========================================================================
+    try:
+        from services.report_healer import (
+            ensure_hauptleistung_in_recommendations,
+            ensure_hauptleistung_in_exec_summary,
+        )
+        hl_value = hauptleistung_render or answers.get("hauptleistung", "")
+        if hl_value and len(hl_value.strip()) >= 6:
+            # Fix Recommendations (minimum 2 for CRITICAL threshold)
+            sections, rec_inj = ensure_hauptleistung_in_recommendations(
+                sections, hauptleistung=hl_value, min_mentions=2
+            )
+            if rec_inj > 0:
+                log.info(f"[{run_id}] [HAUPTLEISTUNG-FIX] Injected hauptleistung into RECOMMENDATIONS_HTML")
+
+            # Fix Executive Summary (minimum 3 for CRITICAL threshold)
+            sections, exec_inj = ensure_hauptleistung_in_exec_summary(
+                sections, hauptleistung=hl_value, min_mentions=3
+            )
+            if exec_inj > 0:
+                log.info(f"[{run_id}] [HAUPTLEISTUNG-FIX] Injected hauptleistung into EXEC_SUMMARY_HTML")
+    except Exception as e:
+        log.warning(f"[{run_id}] [HAUPTLEISTUNG-FIX] Failed: {e}")
+
+    # =========================================================================
     # FIX-528: PIPELINE SANITIZATION (decode HTML entities + complete sentences)
     # Applied after quality enforcer, before final validation
     # =========================================================================
