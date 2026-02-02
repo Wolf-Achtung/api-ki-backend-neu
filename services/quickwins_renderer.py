@@ -25,10 +25,11 @@ try:
         is_debug_enabled,
     )
 except ImportError:
-    # Fallback if debug module not available
-    def dump_raw_json(*args, **kwargs): return None
-    def dump_renderer_output(*args, **kwargs): return None
-    def is_debug_enabled(): return False
+    # Fallback if debug module not available - signatures must match originals for mypy
+    from typing import Any as _Any, Optional as _Opt
+    def dump_raw_json(raw_data: _Any, context: str = "unknown") -> _Opt[str]: return None
+    def dump_renderer_output(html: str, renderer_name: str = "unknown") -> _Opt[str]: return None
+    def is_debug_enabled() -> bool: return False
 
 
 # =============================================================================
