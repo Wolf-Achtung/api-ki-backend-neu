@@ -14305,6 +14305,34 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
                 log.info("[%s] [PROMPT-TRACE] injected %d trace entries into meta", run_id, len(_prompt_trace_data))
                 _prompt_trace_data.clear()
 
+    # =========================================================================
+    # HAUPTLEISTUNG_UNDERUSE FIX: Robust failsafe BEFORE validation
+    # Ensures minimum hauptleistung occurrences to prevent CRITICAL errors
+    # MUST run BEFORE validate_and_heal() at line ~14312
+    # =========================================================================
+    try:
+        from services.report_healer import (
+            ensure_hauptleistung_in_recommendations,
+            ensure_hauptleistung_in_exec_summary,
+        )
+        hl_value = answers.get("hauptleistung", "")
+        if hl_value and len(hl_value.strip()) >= 6:
+            # Fix Recommendations (minimum 2 for CRITICAL threshold)
+            sections, rec_inj = ensure_hauptleistung_in_recommendations(
+                sections, hauptleistung=hl_value, min_mentions=2
+            )
+            if rec_inj > 0:
+                log.info(f"[{run_id}] [HAUPTLEISTUNG-FIX] Injected hauptleistung into RECOMMENDATIONS_HTML (before validation)")
+
+            # Fix Executive Summary (minimum 3 for CRITICAL threshold)
+            sections, exec_inj = ensure_hauptleistung_in_exec_summary(
+                sections, hauptleistung=hl_value, min_mentions=3
+            )
+            if exec_inj > 0:
+                log.info(f"[{run_id}] [HAUPTLEISTUNG-FIX] Injected hauptleistung into EXEC_SUMMARY_HTML (before validation)")
+    except Exception as e:
+        log.warning(f"[{run_id}] [HAUPTLEISTUNG-FIX] Pre-validation fix failed: {e}")
+
     # === SPRINT N2: VALIDATE AND HEAL - Wolf 2025-12 ===
     # FIX-517C TASK 4: Two-stage validation (raw = pre-final-enforcer, final = post-final-enforcer)
     # Stage 1 (RAW): validate BEFORE final enforcer pass → truthful pre-cleanup metrics
@@ -14762,32 +14790,6 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     except Exception as e:
         log.warning(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Failed: {e}")
 
-    # =========================================================================
-    # HAUPTLEISTUNG_UNDERUSE FIX: Robust failsafe AFTER Quality Enforcer
-    # Ensures minimum hauptleistung occurrences BEFORE final validation
-    # =========================================================================
-    try:
-        from services.report_healer import (
-            ensure_hauptleistung_in_recommendations,
-            ensure_hauptleistung_in_exec_summary,
-        )
-        hl_value = hauptleistung_render or answers.get("hauptleistung", "")
-        if hl_value and len(hl_value.strip()) >= 6:
-            # Fix Recommendations (minimum 2 for CRITICAL threshold)
-            sections, rec_inj = ensure_hauptleistung_in_recommendations(
-                sections, hauptleistung=hl_value, min_mentions=2
-            )
-            if rec_inj > 0:
-                log.info(f"[{run_id}] [HAUPTLEISTUNG-FIX] Injected hauptleistung into RECOMMENDATIONS_HTML")
-
-            # Fix Executive Summary (minimum 3 for CRITICAL threshold)
-            sections, exec_inj = ensure_hauptleistung_in_exec_summary(
-                sections, hauptleistung=hl_value, min_mentions=3
-            )
-            if exec_inj > 0:
-                log.info(f"[{run_id}] [HAUPTLEISTUNG-FIX] Injected hauptleistung into EXEC_SUMMARY_HTML")
-    except Exception as e:
-        log.warning(f"[{run_id}] [HAUPTLEISTUNG-FIX] Failed: {e}")
 
     # =========================================================================
     # FIX-528: PIPELINE SANITIZATION (decode HTML entities + complete sentences)
