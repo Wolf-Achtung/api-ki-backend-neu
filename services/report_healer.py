@@ -62,6 +62,7 @@ __all__ = [
     "sanitize_quickwin_empty_fields",
     "sanitize_input_checklist",
     "ensure_hauptleistung_in_recommendations",
+    "ensure_hauptleistung_in_exec_summary",
     "format_roi_span",
     "sanitize_roi_for_solo",
     "QualityGateResult",
