@@ -54,6 +54,12 @@ log = logging.getLogger("briefings-worker")
 POLL_INTERVAL = float(os.getenv("WORKER_POLL_INTERVAL", "2"))
 WORKER_ID = os.getenv("WORKER_ID", f"worker-{uuid.uuid4().hex[:8]}")
 
+# Stale briefing recovery: briefings stuck in "processing" for longer than this are reset
+# Default: 10 minutes (600 seconds)
+STALE_BRIEFING_TIMEOUT_SECONDS = int(os.getenv("STALE_BRIEFING_TIMEOUT", "600"))
+# How often to check for stale briefings (in poll cycles)
+STALE_CHECK_INTERVAL_CYCLES = 15  # Every ~30 seconds at default poll interval
+
 # Graceful shutdown flag
 _shutdown_requested = False
 
@@ -63,6 +69,78 @@ def _handle_shutdown(signum, frame):
     global _shutdown_requested
     log.info("Shutdown signal received (sig=%s), finishing current job...", signum)
     _shutdown_requested = True
+
+
+def recover_stale_briefings(db: Session) -> int:
+    """
+    Recover briefings stuck in 'processing' status for too long.
+
+    This handles cases where a worker dies mid-processing (e.g., container restart,
+    OOM kill, crash). Briefings older than STALE_BRIEFING_TIMEOUT_SECONDS are
+    reset to 'accepted' so they can be re-processed.
+
+    Args:
+        db: SQLAlchemy session
+
+    Returns:
+        Number of briefings recovered
+    """
+    from datetime import timedelta
+
+    cutoff_time = datetime.now(timezone.utc) - timedelta(seconds=STALE_BRIEFING_TIMEOUT_SECONDS)
+
+    try:
+        if is_sqlite:
+            # SQLite: Simple update
+            stale_briefings = db.query(Briefing).filter(
+                Briefing.status == "processing",
+                Briefing.processing_at < cutoff_time
+            ).all()
+
+            count = 0
+            for briefing in stale_briefings:
+                log.warning(
+                    "🔄 Recovering stale briefing %s (stuck since %s, worker=%s)",
+                    briefing.id, briefing.processing_at, briefing.worker_id
+                )
+                briefing.status = "accepted"
+                briefing.processing_at = None
+                briefing.worker_id = None
+                count += 1
+
+            if count > 0:
+                db.commit()
+            return count
+
+        # PostgreSQL: Use raw SQL for efficiency
+        result = db.execute(
+            text("""
+                UPDATE briefings
+                SET status = 'accepted',
+                    processing_at = NULL,
+                    worker_id = NULL
+                WHERE status = 'processing'
+                  AND processing_at < :cutoff
+                RETURNING id, processing_at, worker_id
+            """),
+            {"cutoff": cutoff_time}
+        ).fetchall()
+
+        for row in result:
+            log.warning(
+                "🔄 Recovered stale briefing %s (stuck since %s, worker=%s)",
+                row[0], row[1], row[2]
+            )
+
+        if result:
+            db.commit()
+
+        return len(result)
+
+    except Exception as e:
+        log.error("Error recovering stale briefings: %s", e)
+        db.rollback()
+        return 0
 
 
 def claim_next_briefing(db: Session) -> Optional[Briefing]:
@@ -190,6 +268,7 @@ def run_worker_loop():
     log.info("Briefings Worker starting...")
     log.info("Worker ID: %s", WORKER_ID)
     log.info("Poll interval: %s seconds", POLL_INTERVAL)
+    log.info("Stale briefing timeout: %s seconds", STALE_BRIEFING_TIMEOUT_SECONDS)
     log.info("Database: %s", "SQLite" if is_sqlite else "PostgreSQL")
     log.info("=" * 60)
 
@@ -199,10 +278,21 @@ def run_worker_loop():
 
     jobs_processed = 0
     jobs_failed = 0
+    jobs_recovered = 0
+    poll_cycle = 0
 
     while not _shutdown_requested:
         db = SessionLocal()
         try:
+            poll_cycle += 1
+
+            # Periodically check for stale briefings (not every cycle to reduce DB load)
+            if poll_cycle % STALE_CHECK_INTERVAL_CYCLES == 0:
+                recovered = recover_stale_briefings(db)
+                if recovered > 0:
+                    jobs_recovered += recovered
+                    log.info("🔄 Recovered %s stale briefing(s)", recovered)
+
             # Try to claim a job
             briefing = claim_next_briefing(db)
 
@@ -228,6 +318,7 @@ def run_worker_loop():
     log.info("Worker shutdown complete")
     log.info("Jobs processed: %s", jobs_processed)
     log.info("Jobs failed: %s", jobs_failed)
+    log.info("Jobs recovered: %s", jobs_recovered)
     log.info("=" * 60)
 
 
