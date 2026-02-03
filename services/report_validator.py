@@ -105,6 +105,50 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
+
+# =============================================================================
+# HELPER: Robust hauptleistung counting (strips HTML tags before counting)
+# =============================================================================
+def _strip_html_for_text_count(html: str) -> str:
+    """
+    Strip HTML tags and normalize whitespace for text counting.
+    Ensures that HTML tag splits (e.g., 'auto<span>matisierung</span>')
+    don't break substring counting.
+    """
+    if not html:
+        return ""
+    # Replace HTML tags with space (not empty string) to prevent word concatenation
+    text = re.sub(r'<[^>]+>', ' ', html)
+    # Decode common HTML entities
+    text = text.replace('&nbsp;', ' ')
+    text = text.replace('&amp;', '&')
+    text = text.replace('&lt;', '<')
+    text = text.replace('&gt;', '>')
+    text = text.replace('&quot;', '"')
+    text = text.replace('&#39;', "'")
+    # Normalize whitespace
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+
+def _count_hauptleistung_robust(html: str, hauptleistung: str) -> int:
+    """
+    Count hauptleistung occurrences in HTML content, robustly handling:
+    - HTML tag splits (e.g., 'Integration von <span>KI</span> in...')
+    - HTML entities
+    - Case variations
+
+    Returns the count of occurrences in the visible text content.
+    """
+    if not html or not hauptleistung:
+        return 0
+    # Strip HTML tags and normalize both strings
+    text = _strip_html_for_text_count(html)
+    hl_normalized = _strip_html_for_text_count(hauptleistung)
+    # Case-insensitive count
+    return text.lower().count(hl_normalized.lower())
+
+
 __all__ = [
     "ValidationError",
     "ReportValidator",
@@ -2070,7 +2114,9 @@ class ReportValidator:
         # Check Executive Summary (minimum 3, recommended 4)
         exec_summary = self.sections.get("EXEC_SUMMARY_HTML", "")
         if exec_summary and isinstance(exec_summary, str):
-            count = exec_summary.lower().count(hauptleistung.lower())
+            # FIX: Use robust counting that strips HTML tags first
+            # This handles cases like "Integration von <span>KI</span> in..."
+            count = _count_hauptleistung_robust(exec_summary, hauptleistung)
             if count < 3:  # CRITICAL: less than 3 is unacceptable
                 self.errors.append(
                     ValidationError(
@@ -2095,7 +2141,8 @@ class ReportValidator:
         # Check Recommendations (minimum 2, recommended 3)
         recommendations = self.sections.get("RECOMMENDATIONS_HTML", "")
         if recommendations and isinstance(recommendations, str):
-            count = recommendations.lower().count(hauptleistung.lower())
+            # FIX: Use robust counting that strips HTML tags first
+            count = _count_hauptleistung_robust(recommendations, hauptleistung)
             if count < 2:  # CRITICAL: less than 2 is unacceptable
                 self.errors.append(
                     ValidationError(
@@ -2130,7 +2177,8 @@ class ReportValidator:
         # Check Roadmap (maximum 5, hard limit 10)
         roadmap = self.sections.get("ROADMAP_90D_HTML", "")
         if roadmap and isinstance(roadmap, str):
-            count = roadmap.lower().count(hauptleistung.lower())
+            # FIX: Use robust counting that strips HTML tags first
+            count = _count_hauptleistung_robust(roadmap, hauptleistung)
             if count > 10:  # CRITICAL: excessive repetition
                 self.errors.append(
                     ValidationError(
