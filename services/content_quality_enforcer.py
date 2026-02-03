@@ -1322,6 +1322,15 @@ EXTENDED_SIEZEN_PATTERNS = [
     # v14.29: Skill-Fahrplan Fixes
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Etabliere\b', r'\1Etablieren Sie'),
     # "du" → "Sie" in bestimmten Kontexten
+    # FIX: Complete phrases first (before generic "wenn du" → "wenn Sie")
+    (r'\bWenn du magst\b', 'Wenn Sie möchten'),
+    (r'\bwenn du magst\b', 'wenn Sie möchten'),
+    (r'\bFalls du magst\b', 'Falls Sie möchten'),
+    (r'\bfalls du magst\b', 'falls Sie möchten'),
+    (r'\bWenn du möchtest\b', 'Wenn Sie möchten'),
+    (r'\bwenn du möchtest\b', 'wenn Sie möchten'),
+    (r'\bFalls du möchtest\b', 'Falls Sie möchten'),
+    (r'\bfalls du möchtest\b', 'falls Sie möchten'),
     (r'\bwie du\b', 'wie Sie'),
     (r'\bdass du\b', 'dass Sie'),
     (r'\bwenn du\b', 'wenn Sie'),
@@ -4267,6 +4276,16 @@ _TEMPLATE_PHRASE_PATTERNS = [
     (re.compile(r'\[TEMPLATE\]', re.IGNORECASE), ''),
     (re.compile(r'\[Beispieltext(?::\s*[^\]]*?)?\]', re.IGNORECASE), ''),
     (re.compile(r'\[Mustertext(?::\s*[^\]]*?)?\]', re.IGNORECASE), ''),
+    # FIX: Prompt-Template placeholders that may leak from Sofort-Start generator
+    (re.compile(r'\[ANFRAGE HIER EINFÜGEN\]', re.IGNORECASE), ''),
+    (re.compile(r'\[NOTIZEN HIER EINFÜGEN\]', re.IGNORECASE), ''),
+    (re.compile(r'\[CODE HIER EINFÜGEN\]', re.IGNORECASE), ''),
+    (re.compile(r'\[DATEN HIER EINFÜGEN\]', re.IGNORECASE), ''),
+    (re.compile(r'\[TEXT HIER EINFÜGEN\]', re.IGNORECASE), ''),
+    (re.compile(r'\[[A-ZÄÖÜ][A-ZÄÖÜ\s]*HIER EINFÜGEN\]', re.IGNORECASE), ''),  # Generic pattern
+    (re.compile(r'\[NAME/BRANCHE\]', re.IGNORECASE), ''),
+    (re.compile(r'\[KURZBESCHREIBUNG\]', re.IGNORECASE), ''),
+    (re.compile(r'\[FALLS BEKANNT\]', re.IGNORECASE), ''),
     # Mustache/Jinja-style template variables: {{variable}}, {{ variable }}
     (re.compile(r'\{\{\s*\w+\s*\}\}'), ''),
     # German template instructions that LLMs sometimes leave in

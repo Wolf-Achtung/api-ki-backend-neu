@@ -943,6 +943,7 @@ SOLO_BLACKLIST_TERMS: List[str] = [
     "Governance",
     "Executive",
     "Audit",
+    "Audit-Trail",  # FIX: Added - must be before "Audit" replacement kicks in
     "Rollout",
     "Layer",
     "Enterprise",
@@ -956,6 +957,10 @@ SOLO_BLACKLIST_TERMS: List[str] = [
     "Pipeline",
     "Deployment",
     "Konzern",
+    # FIX: Added Stack variants - commonly leak in SOLO reports
+    "Tech-Stack",
+    "KI-Stack",
+    "Stack",  # Generic - MUST be after specific variants for correct replacement
 ]
 
 # Fallback replacements for blacklist terms that slip through
@@ -963,6 +968,7 @@ SOLO_BLACKLIST_FALLBACKS: Dict[str, str] = {
     "Governance": "Spielregeln",
     "Executive": "Kurzfassung",
     "Audit": "Prüfung",
+    "Audit-Trail": "Protokoll",  # FIX: Explicit - before generic "Audit"
     "Rollout": "Einführung",
     "Layer": "Ebene",
     "Enterprise": "größere Firma",
@@ -981,7 +987,10 @@ SOLO_BLACKLIST_FALLBACKS: Dict[str, str] = {
     "Skalierung": "Wachstum",
     "Engine": "Modul",
     "Baukasten": "Werkzeugkasten",
-    "Audit-Trail": "Protokoll",
+    # FIX: Stack variants - commonly leak in SOLO reports
+    "Tech-Stack": "Werkzeugkasten",
+    "KI-Stack": "Werkzeugkasten",
+    "Stack": "Werkzeugkasten",
 }
 
 # Patterns to remove entirely for SOLO (too complex)
