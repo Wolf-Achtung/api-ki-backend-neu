@@ -25,10 +25,11 @@ log = logging.getLogger(__name__)
 # =============================================================================
 
 # Bucket definitions with employee ranges
+# "segment" maps to the canonical key used by healer, validator, and final-pass
 SIZE_BUCKETS = {
-    "solo": {"min": 1, "max": 1, "label_de": "Einzelunternehmer", "label_en": "Solo"},
-    "small_team": {"min": 2, "max": 10, "label_de": "Kleines Team", "label_en": "Small Team"},
-    "kmu": {"min": 11, "max": 100, "label_de": "KMU", "label_en": "SME"},
+    "solo": {"min": 1, "max": 1, "label_de": "Einzelunternehmer", "label_en": "Solo", "segment": "solo"},
+    "small_team": {"min": 2, "max": 10, "label_de": "Kleines Team", "label_en": "Small Team", "segment": "team"},
+    "kmu": {"min": 11, "max": 100, "label_de": "KMU", "label_en": "SME", "segment": "kmu"},
 }
 
 # Direct value mappings (normalized - all dashes converted to hyphen)
@@ -93,6 +94,7 @@ def normalize_company_size(value: str) -> Dict[str, Any]:
         log.warning("[FIX-BRANCH-13] Empty company_size, defaulting to 'solo'")
         return {
             "bucket": "solo",
+            "segment": "solo",
             "min": 1,
             "max": 1,
             "label_de": "Einzelunternehmer",
@@ -111,6 +113,7 @@ def normalize_company_size(value: str) -> Dict[str, Any]:
         log.debug("[FIX-BRANCH-13] Direct match: '%s' → '%s'", value, bucket)
         return {
             "bucket": bucket,
+            "segment": bucket_data["segment"],
             "min": bucket_data["min"],
             "max": bucket_data["max"],
             "label_de": bucket_data["label_de"],
@@ -137,6 +140,7 @@ def normalize_company_size(value: str) -> Dict[str, Any]:
         log.debug("[FIX-BRANCH-13] Parsed range: '%s' → '%s' (%d-%d)", value, bucket, min_val, max_val)
         return {
             "bucket": bucket,
+            "segment": bucket_data["segment"],
             "min": min_val,
             "max": max_val,
             "label_de": bucket_data["label_de"],
@@ -162,6 +166,7 @@ def normalize_company_size(value: str) -> Dict[str, Any]:
         log.debug("[FIX-BRANCH-13] Parsed single: '%s' → '%s' (count=%d)", value, bucket, num)
         return {
             "bucket": bucket,
+            "segment": bucket_data["segment"],
             "min": num,
             "max": num,
             "label_de": bucket_data["label_de"],
@@ -186,6 +191,7 @@ def normalize_company_size(value: str) -> Dict[str, Any]:
     bucket_data = SIZE_BUCKETS[bucket]
     return {
         "bucket": bucket,
+        "segment": bucket_data["segment"],
         "min": bucket_data["min"],
         "max": bucket_data["max"],
         "label_de": bucket_data["label_de"],
@@ -209,6 +215,22 @@ def get_company_size_bucket(value: str) -> str:
     """
     result = normalize_company_size(value)["bucket"]
     return str(result)  # Explicit cast for mypy
+
+
+def get_segment(value: str) -> str:
+    """
+    Get the canonical segment key for healer/validator/final-pass.
+
+    Maps small_team → team so downstream code can use 'team' consistently.
+
+    Args:
+        value: Raw company size value
+
+    Returns:
+        Segment key: "solo" | "team" | "kmu"
+    """
+    result = normalize_company_size(value)["segment"]
+    return str(result)
 
 
 # =============================================================================
