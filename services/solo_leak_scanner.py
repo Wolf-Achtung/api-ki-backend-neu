@@ -96,6 +96,7 @@ CRITICAL_LEAK_TERMS: Dict[str, str] = {
     r"\bunternehmensweit(e[rnsm]?)?\b": "unternehmensweit → 'für Sie'",
     r"\bKonzern(e|s)?\b": "Konzern → entfernen",
     r"\bGovernance[\-\s]?Board\b": "Governance Board → 'Ihre Steuerung'",
+    r"\bGovernance\b": "Governance → 'Leitplanken' oder 'Spielregeln'",
     r"\bChange[\-\s]?Management\b": "Change-Management → 'Umstellung'",
 
     # Process complexity (not suitable for solo)
@@ -110,6 +111,11 @@ CRITICAL_LEAK_TERMS: Dict[str, str] = {
 
     # KPI/Dashboard enterprise terms
     r"\bKPI[\-\s]?Dashboard\b": "KPI-Dashboard → 'Kennzahlen-Übersicht'",
+
+    # FIX-554: Additional enterprise terms for solo reports
+    r"\bArchitektur(?:en)?\b": "Architektur → 'Aufbau' oder 'Struktur'",
+    r"\bLayer(?:s)?\b": "Layer → 'Ebene(n)'",
+    r"\bProzesslandschaft(?:en)?\b": "Prozesslandschaft → 'Arbeitsabläufe'",
 }
 
 # Warning-level terms (review but don't fail gate)
