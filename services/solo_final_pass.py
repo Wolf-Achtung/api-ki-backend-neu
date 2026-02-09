@@ -583,8 +583,7 @@ def verify_solo_report_clean(
                 result["total_violations"] += len(matches)
 
     if check_duz:
-        matches = FORBIDDEN_DUZ_TOKENS_PATTERN.finditer(text)
-        for m in matches:
+        for m in FORBIDDEN_DUZ_TOKENS_PATTERN.finditer(text):
             start = max(0, m.start() - 30)
             end = min(len(text), m.end() + 30)
             context = text[start:end]
