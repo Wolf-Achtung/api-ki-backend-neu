@@ -64,6 +64,14 @@
     {"pattern": "\\bKapazitaet\\b", "replacement": "Zeitbudget", "description": "Kapazitaet->Zeitbudget"},
     {"pattern": "\\bKollegen\\b", "replacement": "Partner", "description": "Kollegen->Partner"},
     {"pattern": "\\bTeammitglieder\\b", "replacement": "Partner", "description": "Teammitglieder->Partner"},
-    {"pattern": "\\bAbteilung\\b", "replacement": "Bereich", "description": "Abteilung->Bereich"}
+    {"pattern": "\\bAbteilung\\b", "replacement": "Bereich", "description": "Abteilung->Bereich"},
+    {"pattern": "\\bProzesslandschaften\\b", "replacement": "Arbeitsablaeufe", "description": "Prozesslandschaften->Arbeitsablaeufe"},
+    {"pattern": "\\bProzesslandschaft\\b", "replacement": "Arbeitsablaeufe", "description": "Prozesslandschaft->Arbeitsablaeufe"},
+    {"pattern": "\\bKPI-Forecasts?\\b", "replacement": "Kennzahlen-Prognosen", "description": "KPI-Forecast(s)->Kennzahlen-Prognosen"},
+    {"pattern": "starke[rns]? Governance", "replacement": "klare Spielregeln", "description": "starke(r) Governance->klare Spielregeln"},
+    {"pattern": "klare[rns]? Governance", "replacement": "klare Spielregeln", "description": "klare(r) Governance->klare Spielregeln"},
+    {"pattern": "gute[rns]? Governance", "replacement": "gute Spielregeln", "description": "gute(r) Governance->gute Spielregeln"},
+    {"pattern": "\\bGovernance-Board\\b", "replacement": "Ihre Steuerung", "description": "Governance-Board->Ihre Steuerung"},
+    {"pattern": "\\bGovernance-Modell\\b", "replacement": "Regelwerk", "description": "Governance-Modell->Regelwerk"}
   ]
 }

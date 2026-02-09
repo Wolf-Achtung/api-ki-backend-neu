@@ -13,7 +13,17 @@
     "governance": "Leitplanken",
     "Governance-Framework": "Grundregeln",
     "Governance-Prozess": "Abstimmungsregeln",
+    "Governance-Prozesse": "Abstimmungsregeln",
     "Governance-Struktur": "Regelwerk",
+    "Governance-Strukturen": "Regelwerke",
+    "Governance-Board": "Ihre Steuerung",
+    "Governance-Modell": "Regelwerk",
+    "starker Governance": "klaren Spielregeln",
+    "starke Governance": "klare Spielregeln",
+    "guter Governance": "guten Spielregeln",
+    "gute Governance": "gute Spielregeln",
+    "klarer Governance": "klaren Spielregeln",
+    "klare Governance": "klare Spielregeln",
 
     "Roadmap": "Plan",
     "roadmap": "Plan",
@@ -126,7 +136,14 @@
     "Compliance-Anforderungen": "rechtliche Anforderungen",
 
     "Assessment": "Bewertung",
-    "assessments": "Bewertungen"
+    "assessments": "Bewertungen",
+
+    "Prozesslandschaft": "Arbeitsabläufe",
+    "Prozesslandschaften": "Arbeitsabläufe",
+    "prozesslandschaft": "Arbeitsabläufe",
+
+    "KPI-Forecasts": "Kennzahlen-Prognosen",
+    "KPI-Forecast": "Kennzahlen-Prognose"
   },
 
   "blacklist_headlines": [
@@ -137,13 +154,19 @@
     "Executive",
     "Change Management",
     "Audit",
+    "Audit-Trail",
     "Enterprise",
     "Deployment",
     "Pipeline",
     "Framework",
     "Skalierung",
     "Architektur",
-    "Rollout"
+    "Rollout",
+    "Roll-out",
+    "Stack",
+    "Layer",
+    "Prozesslandschaft",
+    "Baukasten"
   ],
 
   "whitelist_preferred": [
