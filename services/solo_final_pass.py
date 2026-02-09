@@ -502,6 +502,137 @@ def apply_solo_final_pass_to_sections(
 
 
 # =============================================================================
+# SIZE-AWARE FINAL PASS (Team/KMU support)
+# =============================================================================
+
+# Team gets softer enterprise term filtering (only the most jarring terms)
+TEAM_ENTERPRISE_TERM_REPLACEMENTS: List[Tuple[str, str, str]] = [
+    # Team still avoids the worst enterprise jargon
+    (r"\bMatrixorganisation\b", "Teamstruktur", "Matrixorganisation → Teamstruktur"),
+    (r"\bWertschöpfungskette\b", "Leistungskette", "Wertschöpfungskette → Leistungskette"),
+    (r"\bEnterprise[-\s]?Software\b", "Business-Software", "Enterprise-Software → Business-Software"),
+    (r"\bUnternehmensarchitektur\b", "Unternehmensstruktur", "Unternehmensarchitektur → Unternehmensstruktur"),
+    (r"\bCompliance[-\s]?Framework\b", "Regelwerk", "Compliance-Framework → Regelwerk"),
+]
+
+# KMU gets minimal filtering (only truly inappropriate terms)
+KMU_ENTERPRISE_TERM_REPLACEMENTS: List[Tuple[str, str, str]] = [
+    (r"\bMatrixorganisation\b", "Organisationsstruktur", "Matrixorganisation → Organisationsstruktur"),
+]
+
+
+def apply_size_final_pass(
+    html: str,
+    segment: str = "solo",
+    run_id: str = "",
+) -> Tuple[str, Dict[str, int]]:
+    """
+    Size-aware final pass: applies appropriate cleanup rules per segment.
+
+    - solo: Full enterprise elimination + Duz→Sie + KPI→Kennzahlen
+    - team: Soft enterprise filtering + Duz→Sie (no KPI replacement)
+    - kmu:  Minimal filtering + Duz→Sie (no KPI replacement)
+
+    Args:
+        html: Final assembled HTML
+        segment: "solo" | "team" | "kmu"
+        run_id: For logging
+
+    Returns:
+        Tuple of (cleaned_html, stats_dict)
+    """
+    seg = segment.lower().strip()
+
+    if seg == "solo":
+        return apply_solo_final_pass(
+            html, run_id=run_id,
+            enable_enterprise_elimination=True,
+            enable_duz_conversion=True,
+            enable_kpi_replacement=True,
+        )
+
+    if not html:
+        return html, {"enterprise": 0, "duz_sie": 0, "kpi": 0, "total": 0}
+
+    result = html
+    stats: Dict[str, int] = {"enterprise": 0, "duz_sie": 0, "kpi": 0, "total": 0}
+
+    try:
+        # Enterprise term filtering (softer for team, minimal for kmu)
+        if seg == "team":
+            result, count = _apply_replacements_to_html(
+                result, TEAM_ENTERPRISE_TERM_REPLACEMENTS, "TEAM-ENTERPRISE"
+            )
+            stats["enterprise"] = count
+            stats["total"] += count
+        elif seg == "kmu":
+            result, count = _apply_replacements_to_html(
+                result, KMU_ENTERPRISE_TERM_REPLACEMENTS, "KMU-ENTERPRISE"
+            )
+            stats["enterprise"] = count
+            stats["total"] += count
+
+        # Duz→Sie conversion (all sizes get this)
+        result, count = convert_duz_to_sie(result, run_id)
+        stats["duz_sie"] = count
+        stats["total"] += count
+
+        if stats["total"] > 0:
+            log.info(
+                "[SIZE-PASS] %s final pass: %d replacements (enterprise=%d, duz_sie=%d) run=%s",
+                seg.upper(), stats["total"], stats["enterprise"], stats["duz_sie"], run_id
+            )
+
+    except Exception as e:
+        log.error("[SIZE-PASS] %s final pass failed: %s (run=%s)", seg.upper(), e, run_id)
+        return html, stats
+
+    return result, stats
+
+
+def apply_size_final_pass_to_sections(
+    sections: Dict[str, Any],
+    segment: str = "solo",
+    run_id: str = "",
+) -> Tuple[Dict[str, Any], Dict[str, int]]:
+    """
+    Size-aware final pass applied to all string sections (pre-render).
+
+    Args:
+        sections: Dict of section_key → content
+        segment: "solo" | "team" | "kmu"
+        run_id: For logging
+
+    Returns:
+        Tuple of (processed_sections, aggregated_stats)
+    """
+    processed = dict(sections)
+    total_stats: Dict[str, int] = {"enterprise": 0, "duz_sie": 0, "kpi": 0, "total": 0}
+
+    for key, content in sections.items():
+        if not isinstance(content, str):
+            continue
+        if len(content) < 30:
+            continue
+        if key.startswith("_"):
+            continue
+
+        result, stats = apply_size_final_pass(content, segment=segment, run_id=f"{run_id}/{key}")
+        if stats["total"] > 0:
+            processed[key] = result
+            for stat_key in total_stats:
+                total_stats[stat_key] += stats[stat_key]
+
+    if total_stats["total"] > 0:
+        log.info(
+            "[SIZE-PASS] %s section pass: %d total replacements (run=%s)",
+            segment.upper(), total_stats["total"], run_id
+        )
+
+    return processed, total_stats
+
+
+# =============================================================================
 # VERIFICATION FUNCTION (for CI/testing)
 # =============================================================================
 

@@ -25,6 +25,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from services.solo_final_pass import (
     apply_solo_final_pass,
     apply_solo_final_pass_to_sections,
+    apply_size_final_pass,
+    apply_size_final_pass_to_sections,
     eliminate_enterprise_terms,
     convert_duz_to_sie,
     replace_kpi_terms,
@@ -525,6 +527,503 @@ class TestEdgeCases:
         assert "Governance" not in text
         assert "Stakeholder" not in text
         assert not re.search(r'\bDu\b', text)
+
+
+# =============================================================================
+# WP0: Regression-Schutz Solo – Full Report Scan
+# =============================================================================
+
+# Realistic sample Solo report HTML (simulates a post-render Solo report)
+_SAMPLE_SOLO_REPORT_HTML = """
+<!DOCTYPE html>
+<html lang="de">
+<head><title>KI-Status-Report – Solo</title></head>
+<body>
+<div class="report-container" data-size="solo" data-variant="solo_compact">
+
+<section class="executive-summary">
+  <h2>Zusammenfassung</h2>
+  <p>Ihr Unternehmen kann durch den Einsatz von KI-Werkzeugen erhebliche
+  Zeitersparnis erzielen. Die wichtigsten Kennzahlen zeigen ein positives Bild
+  für Ihre nächsten Schritte.</p>
+  <p>Wir empfehlen Ihnen, mit drei konkreten Maßnahmen zu starten, die sich
+  innerhalb von 3 Monaten amortisieren.</p>
+</section>
+
+<section class="quick-wins">
+  <h2>Schnelle Erfolge</h2>
+  <div class="quick-win-card">
+    <h3>E-Mail-Automatisierung mit KI</h3>
+    <p><strong>PROBLEM:</strong> Sie verbringen täglich 2 Stunden mit
+    wiederkehrenden E-Mails.</p>
+    <p><strong>WIRKUNG:</strong> Zeitersparnis von ca. 8 Stunden pro Monat.</p>
+    <p><strong>UMSETZUNG:</strong> Nutzen Sie ein einfaches Automatisierungstool
+    wie Make oder Zapier, um Standardantworten vorzubereiten.</p>
+  </div>
+</section>
+
+<section class="roadmap-90d">
+  <h2>Ihr 90-Tage-Fahrplan</h2>
+  <p>In den ersten 30 Tagen richten Sie Ihre Grundausstattung ein.
+  Danach erweitern Sie schrittweise Ihre Arbeitsabläufe.</p>
+  <table class="roadmap-table">
+    <tr><th>Zeitraum</th><th>Maßnahme</th><th>Erwartetes Ergebnis</th></tr>
+    <tr><td>Monat 1</td><td>Einrichtung Werkzeugkasten</td><td>Basis steht</td></tr>
+    <tr><td>Monat 2</td><td>Arbeitsabläufe optimieren</td><td>Erste Ersparnisse</td></tr>
+    <tr><td>Monat 3</td><td>Evaluation &amp; Ausbau</td><td>Stabilisierung</td></tr>
+  </table>
+</section>
+
+<section class="tools">
+  <h2>Empfohlene Werkzeuge</h2>
+  <p>Für Sie als Einzelperson sind diese Tools besonders geeignet:</p>
+  <ul>
+    <li>ChatGPT Plus – für Texterstellung und Recherche</li>
+    <li>Make.com – für Arbeitsabläufe und Automatisierung</li>
+    <li>Notion – für Ihr Wissensmanagement</li>
+  </ul>
+</section>
+
+<section class="risks">
+  <h2>Risiken und Hinweise</h2>
+  <p>Beachten Sie folgende Punkte bei der Einführung:</p>
+  <ul>
+    <li>Datenschutz: Nutzen Sie nur DSGVO-konforme Anbieter.</li>
+    <li>Abhängigkeit: Vermeiden Sie Einzelabhängigkeiten.</li>
+    <li>Qualitätskontrolle: Prüfen Sie KI-generierte Inhalte stets manuell.</li>
+  </ul>
+</section>
+
+</div>
+</body>
+</html>
+"""
+
+
+class TestSoloRegressionScan:
+    """WP0: Regression tests ensuring Solo reports are free of forbidden tokens."""
+
+    def test_sample_solo_report_passes_scan(self):
+        """A clean Solo report HTML must pass verify_solo_report_clean."""
+        result = verify_solo_report_clean(_SAMPLE_SOLO_REPORT_HTML)
+        assert result["passed"] is True, (
+            f"Sample solo report should be clean but found violations: "
+            f"enterprise={result['enterprise_violations']}, "
+            f"duz={result['duz_violations']}"
+        )
+        assert result["total_violations"] == 0
+
+    def test_sample_report_no_enterprise_terms(self):
+        """Sample Solo report must not contain any FORBIDDEN_SOLO_TOKENS."""
+        text = re.sub(r'<[^>]+>', ' ', _SAMPLE_SOLO_REPORT_HTML)
+        text = re.sub(r'\s+', ' ', text)
+        for token in FORBIDDEN_SOLO_TOKENS:
+            assert not re.search(
+                re.escape(token), text, re.IGNORECASE
+            ), f"Forbidden token '{token}' found in sample report"
+
+    def test_sample_report_no_duz_forms(self):
+        """Sample Solo report must not contain any Duz-forms."""
+        text = re.sub(r'<[^>]+>', ' ', _SAMPLE_SOLO_REPORT_HTML)
+        duz_pattern = re.compile(
+            r"\b(du|dir|dein|deine|deinem|deinen|deiner|deines|dich"
+            r"|euch|euer|eure|eurem|euren|eurer|eures)\b",
+            re.IGNORECASE,
+        )
+        matches = duz_pattern.findall(text)
+        assert len(matches) == 0, f"Duz-forms found in sample report: {matches}"
+
+    def test_dirty_report_gets_cleaned_by_pipeline(self):
+        """A report with violations gets cleaned by apply_solo_final_pass."""
+        dirty_html = """
+        <div class="report">
+          <h2>Governance-Übersicht</h2>
+          <p>Die Governance-Struktur und der Stakeholder steuern den Rollout
+          des Tech-Stacks. Du musst dir dein KPI-Dashboard einrichten.</p>
+          <p>Die Architektur des Layers wird durch den Audit-Trail gesichert.</p>
+          <p>Die Prozesslandschaft zeigt euer Baukasten-Prinzip.</p>
+        </div>
+        """
+        # Verify it's dirty first
+        pre_check = verify_solo_report_clean(dirty_html, check_kpi=True)
+        assert pre_check["passed"] is False, "Pre-check should find violations"
+        assert pre_check["total_violations"] >= 5
+
+        # Clean it
+        cleaned, stats = apply_solo_final_pass(dirty_html)
+        assert stats["total"] > 0, "Pipeline should have made replacements"
+
+        # Verify it's clean after pipeline
+        post_check = verify_solo_report_clean(cleaned, check_kpi=True)
+        assert post_check["passed"] is True, (
+            f"Post-pipeline should be clean but found: "
+            f"enterprise={post_check['enterprise_violations']}, "
+            f"duz={post_check['duz_violations']}, "
+            f"kpi={post_check['kpi_violations']}"
+        )
+
+    def test_forbidden_tokens_cover_validator_size_forbidden(self):
+        """FORBIDDEN_SOLO_TOKENS must cover key terms from validator SIZE_FORBIDDEN."""
+        # These are the critical enterprise terms that the validator also bans
+        critical_terms_from_validator = [
+            "Governance",  # Governance-Struktur partial
+            "Stakeholder",
+            "Stack",
+            "Layer",
+            "Architektur",
+            "Rollout",
+            "Audit-Trail",
+            "Prozesslandschaft",
+        ]
+        for term in critical_terms_from_validator:
+            found = any(
+                term.lower() in ft.lower() for ft in FORBIDDEN_SOLO_TOKENS
+            )
+            assert found, (
+                f"Critical validator term '{term}' not covered by FORBIDDEN_SOLO_TOKENS"
+            )
+
+    def test_full_pipeline_idempotent(self):
+        """Running the pipeline twice produces the same result."""
+        html = "<p>Die Governance und dein Stakeholder steuern den Rollout.</p>"
+        first_pass, stats1 = apply_solo_final_pass(html)
+        second_pass, stats2 = apply_solo_final_pass(first_pass)
+        assert first_pass == second_pass, "Pipeline should be idempotent"
+        assert stats2["total"] == 0, "Second pass should find nothing to replace"
+
+    def test_verify_scan_context_output(self):
+        """Verification function provides useful context for violations."""
+        html = "<p>Die Governance ist wichtig für den Stakeholder.</p>"
+        result = verify_solo_report_clean(html)
+        assert not result["passed"]
+        for violation in result["enterprise_violations"]:
+            assert "token" in violation
+            assert "context" in violation
+            assert "..." in violation["context"]  # Has context markers
+
+    def test_solo_final_pass_preserves_sie_ansprache(self):
+        """Pipeline preserves correct Sie-Ansprache that's already present."""
+        html = "<p>Für Sie als Selbstständige ist Ihr Zeitbudget entscheidend.</p>"
+        result, stats = apply_solo_final_pass(html)
+        text = re.sub(r'<[^>]+>', '', result)
+        assert "Sie" in text
+        assert "Ihr" in text
+
+
+# =============================================================================
+# WP1: Company Size Normalization Tests
+# =============================================================================
+
+class TestCompanySizeNormalization:
+    """WP1: Test that company size normalization is consistent."""
+
+    def test_solo_values_normalize_correctly(self):
+        """All solo-indicating values map to solo bucket."""
+        from services.company_size_normalizer import normalize_company_size
+        for val in ["1", "solo", "Einzelunternehmer", "Selbstständig", "Freiberufler"]:
+            result = normalize_company_size(val)
+            assert result["bucket"] == "solo", f"'{val}' should map to solo, got {result['bucket']}"
+
+    def test_team_values_normalize_correctly(self):
+        """All team-indicating values map to small_team bucket."""
+        from services.company_size_normalizer import normalize_company_size
+        for val in ["2-10", "2\u201310", "team", "kleines team"]:
+            result = normalize_company_size(val)
+            assert result["bucket"] == "small_team", f"'{val}' should map to small_team, got {result['bucket']}"
+
+    def test_kmu_values_normalize_correctly(self):
+        """All KMU-indicating values map to kmu bucket."""
+        from services.company_size_normalizer import normalize_company_size
+        for val in ["11-100", "11\u2013100", "kmu", "mittelstand"]:
+            result = normalize_company_size(val)
+            assert result["bucket"] == "kmu", f"'{val}' should map to kmu, got {result['bucket']}"
+
+    def test_normalizer_returns_segment_field(self):
+        """Normalizer result includes segment field mapping to healer-compatible values."""
+        from services.company_size_normalizer import normalize_company_size
+        # Solo
+        assert normalize_company_size("1")["segment"] == "solo"
+        # Team
+        assert normalize_company_size("2-10")["segment"] == "team"
+        # KMU
+        assert normalize_company_size("11-100")["segment"] == "kmu"
+
+    def test_empty_value_defaults_to_solo(self):
+        """Empty or missing value defaults to solo."""
+        from services.company_size_normalizer import normalize_company_size
+        result = normalize_company_size("")
+        assert result["bucket"] == "solo"
+
+
+# =============================================================================
+# WP2: Size Profiles Configuration Tests
+# =============================================================================
+
+class TestSizeProfiles:
+    """WP2: Test centralized size profile configuration."""
+
+    def test_all_three_profiles_exist(self):
+        """solo, team, kmu profiles must all be defined."""
+        from config.size_profiles import SIZE_PROFILES
+        assert "solo" in SIZE_PROFILES
+        assert "team" in SIZE_PROFILES
+        assert "kmu" in SIZE_PROFILES
+
+    def test_profile_has_required_keys(self):
+        """Each profile must have tonality, forbidden_terms, section_budgets, min_words."""
+        from config.size_profiles import SIZE_PROFILES
+        required_keys = ["tonality", "forbidden_enterprise_terms", "section_budgets", "min_words", "max_pages"]
+        for size, profile in SIZE_PROFILES.items():
+            for key in required_keys:
+                assert key in profile, f"Profile '{size}' missing key '{key}'"
+
+    def test_solo_has_strict_forbidden_terms(self):
+        """Solo profile must have the most forbidden enterprise terms."""
+        from config.size_profiles import SIZE_PROFILES
+        solo_terms = SIZE_PROFILES["solo"]["forbidden_enterprise_terms"]
+        team_terms = SIZE_PROFILES["team"]["forbidden_enterprise_terms"]
+        assert len(solo_terms) > len(team_terms), (
+            f"Solo should have more forbidden terms ({len(solo_terms)}) than Team ({len(team_terms)})"
+        )
+
+    def test_solo_tonality_is_sie(self):
+        """Solo tonality must enforce Sie-Ansprache."""
+        from config.size_profiles import SIZE_PROFILES
+        assert SIZE_PROFILES["solo"]["tonality"]["ansprache"] == "Sie"
+
+    def test_kmu_allows_enterprise_terms(self):
+        """KMU profile allows terms that Solo bans."""
+        from config.size_profiles import SIZE_PROFILES
+        kmu_terms = SIZE_PROFILES["kmu"]["forbidden_enterprise_terms"]
+        # KMU should allow Governance, Stakeholder, Architektur etc
+        assert "Governance" not in kmu_terms, "KMU should allow Governance"
+        assert "Stakeholder" not in kmu_terms, "KMU should allow Stakeholder"
+
+    def test_get_profile_function(self):
+        """get_size_profile() returns correct profile for any raw size value."""
+        from config.size_profiles import get_size_profile
+        assert get_size_profile("1")["tonality"]["ansprache"] == "Sie"
+        assert get_size_profile("2-10")["max_pages"] > 0
+        assert get_size_profile("11-100")["max_pages"] > 0
+
+    def test_section_budgets_increase_with_size(self):
+        """Section budgets should generally increase from solo → team → kmu."""
+        from config.size_profiles import SIZE_PROFILES
+        solo_default = SIZE_PROFILES["solo"]["section_budgets"].get("_default", 0)
+        team_default = SIZE_PROFILES["team"]["section_budgets"].get("_default", 0)
+        kmu_default = SIZE_PROFILES["kmu"]["section_budgets"].get("_default", 0)
+        assert solo_default <= team_default <= kmu_default
+
+
+# =============================================================================
+# WP4: Team-Report Final Pass Tests
+# =============================================================================
+
+class TestTeamFinalPass:
+    """WP4: Test that Team reports get appropriate final pass processing."""
+
+    def test_team_duz_converted_to_sie(self):
+        """Team reports also get Duz→Sie conversion."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Wenn du das Tool nutzt, sparst du Zeit für dein Team.</p>"
+        result, stats = apply_size_final_pass(html, segment="team")
+        text = re.sub(r'<[^>]+>', '', result)
+        assert not re.search(r'\bdu\b', text, re.IGNORECASE)
+        assert not re.search(r'\bdein\b', text, re.IGNORECASE)
+        assert stats["duz_sie"] > 0
+
+    def test_team_allows_governance(self):
+        """Team reports allow Governance (it's not in team's forbidden list)."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Die Governance ist für Teams wichtig.</p>"
+        result, stats = apply_size_final_pass(html, segment="team")
+        text = re.sub(r'<[^>]+>', '', result)
+        # Governance should remain for team reports
+        assert "Governance" in text
+
+    def test_team_allows_stakeholder(self):
+        """Team reports allow Stakeholder."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Die Stakeholder müssen eingebunden werden.</p>"
+        result, stats = apply_size_final_pass(html, segment="team")
+        assert "Stakeholder" in result
+
+    def test_team_replaces_matrixorganisation(self):
+        """Team reports replace Matrixorganisation (too complex for small teams)."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Eine Matrixorganisation ist nicht empfehlenswert.</p>"
+        result, stats = apply_size_final_pass(html, segment="team")
+        assert "Matrixorganisation" not in result
+        assert stats["enterprise"] > 0
+
+    def test_team_no_kpi_replacement(self):
+        """Team reports keep KPI as-is (no KPI→Kennzahl conversion)."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Die KPIs zeigen positive Trends im KPI-Dashboard.</p>"
+        result, stats = apply_size_final_pass(html, segment="team")
+        assert "KPI" in result
+        assert stats["kpi"] == 0
+
+    def test_team_allows_architektur(self):
+        """Team reports allow Architektur."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Die IT-Architektur sollte überprüft werden.</p>"
+        result, stats = apply_size_final_pass(html, segment="team")
+        assert "Architektur" in result
+
+    def test_team_sample_report_clean(self):
+        """A representative Team report passes through with appropriate changes."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = """
+        <section>
+          <h2>Zusammenfassung für Ihr Team</h2>
+          <p>Die Governance und der Stakeholder-Prozess helfen Ihrem Team,
+          die Architektur und den Tech-Stack zu optimieren.</p>
+          <p>Folgende KPIs sind relevant für Ihre Roadmap.</p>
+        </section>
+        """
+        result, stats = apply_size_final_pass(html, segment="team")
+        text = re.sub(r'<[^>]+>', ' ', result)
+        # Governance, Stakeholder, Architektur, KPIs should remain
+        assert "Governance" in text
+        assert "Stakeholder" in text
+        assert "Architektur" in text
+        assert "KPIs" in text
+
+
+# =============================================================================
+# WP5: KMU-Report Final Pass Tests
+# =============================================================================
+
+class TestKMUFinalPass:
+    """WP5: Test that KMU reports get appropriate final pass processing."""
+
+    def test_kmu_duz_converted_to_sie(self):
+        """KMU reports also get Duz→Sie conversion."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Wenn du die Software einführst, profitiert dein Unternehmen.</p>"
+        result, stats = apply_size_final_pass(html, segment="kmu")
+        text = re.sub(r'<[^>]+>', '', result)
+        assert not re.search(r'\bdu\b', text, re.IGNORECASE)
+        assert not re.search(r'\bdein\b', text, re.IGNORECASE)
+        assert stats["duz_sie"] > 0
+
+    def test_kmu_allows_governance(self):
+        """KMU reports fully allow Governance."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Die Governance-Struktur ist ein wichtiger Bestandteil.</p>"
+        result, stats = apply_size_final_pass(html, segment="kmu")
+        assert "Governance" in result
+
+    def test_kmu_allows_stakeholder(self):
+        """KMU reports allow Stakeholder."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Die Stakeholder des Projekts müssen informiert werden.</p>"
+        result, stats = apply_size_final_pass(html, segment="kmu")
+        assert "Stakeholder" in result
+
+    def test_kmu_allows_architektur(self):
+        """KMU reports allow Architektur."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Die Enterprise-Architektur muss geplant werden.</p>"
+        result, stats = apply_size_final_pass(html, segment="kmu")
+        assert "Architektur" in result
+
+    def test_kmu_allows_kpi(self):
+        """KMU reports keep KPI as-is."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Das KPI-Dashboard und die KPIs sind zentral.</p>"
+        result, stats = apply_size_final_pass(html, segment="kmu")
+        assert "KPI" in result
+        assert stats["kpi"] == 0
+
+    def test_kmu_allows_compliance(self):
+        """KMU reports allow Compliance and Framework."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Das Compliance-Framework muss beachtet werden.</p>"
+        result, stats = apply_size_final_pass(html, segment="kmu")
+        assert "Compliance" in result
+        assert "Framework" in result
+
+    def test_kmu_replaces_matrixorganisation(self):
+        """KMU reports replace Matrixorganisation."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Eine Matrixorganisation ist komplex.</p>"
+        result, stats = apply_size_final_pass(html, segment="kmu")
+        assert "Matrixorganisation" not in result
+        assert stats["enterprise"] > 0
+
+    def test_kmu_sample_report_clean(self):
+        """A representative KMU report passes through with Duz→Sie only."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = """
+        <section>
+          <h2>Zusammenfassung für Ihr Unternehmen</h2>
+          <p>Die Governance und der Stakeholder-Prozess helfen Ihrem Unternehmen,
+          die IT-Architektur zu optimieren.</p>
+          <p>Ihr Compliance-Framework und die KPI-Dashboards sind zentral.</p>
+          <p>Der Roll-out erfolgt planmäßig gemäß der Roadmap.</p>
+        </section>
+        """
+        result, stats = apply_size_final_pass(html, segment="kmu")
+        text = re.sub(r'<[^>]+>', ' ', result)
+        # All enterprise terms should remain for KMU
+        assert "Governance" in text
+        assert "Stakeholder" in text
+        assert "Architektur" in text
+        assert "KPI" in text
+        assert "Compliance" in text
+        assert "Roll-out" in text or "Rollout" in text
+
+
+# =============================================================================
+# Cross-Size Comparison Tests
+# =============================================================================
+
+class TestCrossSizeComparison:
+    """Tests comparing behavior across all three sizes."""
+
+    def test_solo_most_restrictive(self):
+        """Solo applies the most replacements for the same input."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Die Governance und der Stakeholder steuern den Rollout des Tech-Stacks.</p>"
+        _, solo_stats = apply_size_final_pass(html, segment="solo")
+        _, team_stats = apply_size_final_pass(html, segment="team")
+        _, kmu_stats = apply_size_final_pass(html, segment="kmu")
+        assert solo_stats["enterprise"] >= team_stats["enterprise"] >= kmu_stats["enterprise"]
+
+    def test_all_sizes_enforce_sie(self):
+        """All three sizes convert Duz→Sie."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Wenn du das Tool nutzt, sparst du Zeit.</p>"
+        for segment in ("solo", "team", "kmu"):
+            result, stats = apply_size_final_pass(html, segment=segment)
+            text = re.sub(r'<[^>]+>', '', result)
+            assert not re.search(r'\bdu\b', text, re.IGNORECASE), (
+                f"Segment '{segment}' should convert du→Sie"
+            )
+            assert stats["duz_sie"] > 0
+
+    def test_only_solo_replaces_kpi(self):
+        """Only Solo replaces KPI→Kennzahlen."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Die KPIs zeigen positive Trends.</p>"
+        _, solo_stats = apply_size_final_pass(html, segment="solo")
+        _, team_stats = apply_size_final_pass(html, segment="team")
+        _, kmu_stats = apply_size_final_pass(html, segment="kmu")
+        assert solo_stats["kpi"] > 0
+        assert team_stats["kpi"] == 0
+        assert kmu_stats["kpi"] == 0
+
+    def test_size_final_pass_unknown_still_converts_duz(self):
+        """Unknown segment still converts Duz→Sie at minimum."""
+        from services.solo_final_pass import apply_size_final_pass
+        html = "<p>Wenn du das Tool nutzt, hilft dir das.</p>"
+        result, stats = apply_size_final_pass(html, segment="unknown")
+        text = re.sub(r'<[^>]+>', '', result)
+        # At minimum, Duz→Sie should be applied
+        assert not re.search(r'\bdu\b', text, re.IGNORECASE)
+        assert stats["duz_sie"] > 0
 
 
 if __name__ == "__main__":
