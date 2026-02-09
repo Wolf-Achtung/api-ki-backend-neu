@@ -15778,6 +15778,24 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         except Exception as e:
             log.warning(f"[{run_id}] [LEAK-KILL] Scan failed: {e} - continuing without leak validation")
 
+        # =================================================================
+        # FIX-554: Pre-render Solo Final Pass on sections
+        # Cleans enterprise terms, Duz→Sie, KPI from individual sections
+        # before they go into template rendering.
+        # =================================================================
+        try:
+            from services.solo_final_pass import apply_solo_final_pass_to_sections
+            sections, solo_section_stats = apply_solo_final_pass_to_sections(sections, run_id=run_id)
+            if solo_section_stats.get("total", 0) > 0:
+                log.info(
+                    f"[{run_id}] [FIX-554] Pre-render solo section pass: "
+                    f"{solo_section_stats['total']} replacements"
+                )
+        except ImportError:
+            log.debug(f"[{run_id}] [FIX-554] solo_final_pass not available for section-level pass")
+        except Exception as e:
+            log.warning(f"[{run_id}] [FIX-554] Section-level solo pass failed: {e}")
+
     # =========================================================================
     # FIX-A-G: REPORT HEALER - Sanitize and heal sections before rendering
     # Runs AFTER all LLM content generation, BEFORE template rendering
@@ -16120,6 +16138,31 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     except Exception as e:
         log.warning(f"[{run_id}] ⚠️ [GLOBAL-FINAL-ENFORCER] Failed: {e}")
     # === END GLOBAL FINAL ENFORCER ===
+
+    # =========================================================================
+    # FIX-554: SOLO FINAL PASS - Last-mile cleanup for solo reports
+    # Eliminates enterprise terms, converts Duz→Sie, replaces KPI→Kennzahlen
+    # Runs AFTER all other processing, BEFORE database storage
+    # =========================================================================
+    if report_variant == "solo_compact" or persona == "solo":
+        try:
+            from services.solo_final_pass import apply_solo_final_pass
+            solo_html = result["html"]
+            solo_html, solo_stats = apply_solo_final_pass(solo_html, run_id=run_id)
+            result["html"] = solo_html
+            if solo_stats.get("total", 0) > 0:
+                log.info(
+                    f"[{run_id}] [FIX-554] Solo final pass: {solo_stats['total']} replacements "
+                    f"(enterprise={solo_stats['enterprise']}, duz_sie={solo_stats['duz_sie']}, "
+                    f"kpi={solo_stats['kpi']})"
+                )
+            else:
+                log.debug(f"[{run_id}] [FIX-554] Solo final pass: no replacements needed")
+        except ImportError:
+            log.debug(f"[{run_id}] [FIX-554] solo_final_pass module not available")
+        except Exception as e:
+            log.warning(f"[{run_id}] [FIX-554] Solo final pass failed: {e} - continuing with original")
+    # === END FIX-554: SOLO FINAL PASS ===
 
     an = Analysis(
         user_id=br.user_id, 
