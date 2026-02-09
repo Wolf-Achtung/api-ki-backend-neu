@@ -1284,6 +1284,56 @@ class ReportValidator:
                     )
                 )
 
+    # FIX-554: Technical context indicators for "Platzhalter"
+    # When "Platzhalter" appears near these terms, it's used in a technical
+    # explanation (e.g., "Templates mit Variablenfeldern") and should NOT trigger.
+    PLATZHALTER_TECHNICAL_CONTEXT_TERMS = [
+        "template", "vorlage", "variablenfeld", "variable",
+        "{{", "}}", "z. b.", "z.b.", "beispiel",
+        "feldname", "textbaustein", "dokument",
+    ]
+
+    def _is_platzhalter_in_technical_context(self, content: str, phrase: str) -> bool:
+        """
+        FIX-554: Check if 'Platzhalter' is used in a technical/explanatory context.
+
+        Returns True if the phrase appears near technical context indicators,
+        meaning it's describing template functionality (not an actual placeholder).
+        """
+        content_lower = content.lower()
+        phrase_lower = phrase.lower()
+
+        # Only applies to the standalone "Platzhalter" phrase
+        if phrase_lower not in ("platzhalter",):
+            return False
+
+        pos = 0
+        all_in_context = True
+        found_any = False
+
+        while True:
+            idx = content_lower.find(phrase_lower, pos)
+            if idx == -1:
+                break
+            found_any = True
+
+            # Check 200 chars window around the occurrence
+            window_start = max(0, idx - 100)
+            window_end = min(len(content_lower), idx + len(phrase_lower) + 100)
+            window = content_lower[window_start:window_end]
+
+            has_technical_context = any(
+                term in window for term in self.PLATZHALTER_TECHNICAL_CONTEXT_TERMS
+            )
+
+            if not has_technical_context:
+                all_in_context = False
+                break
+
+            pos = idx + len(phrase_lower)
+
+        return found_any and all_in_context
+
     def _check_template_phrases(self) -> None:
         """
         Check for template phrases that shouldn't appear in final reports.
@@ -1291,6 +1341,9 @@ class ReportValidator:
         FIX-LEAK-OPTION-A: "hier einfügen" and similar phrases are allowed
         in template sections (prompt_framework, templates_start, etc.)
         ONLY within codeblocks (```) or placeholder syntax ([[...]]).
+
+        FIX-554: "Platzhalter" is allowed when used in technical context
+        (e.g., "Templates mit Variablenfeldern (z. B. {{KUNDENNAME}})").
         """
         # FIX-526: Use canonical_sections to avoid duplicate warnings for shadow keys
         for section_name, content in self.canonical_sections.items():
@@ -1302,6 +1355,14 @@ class ReportValidator:
 
             for phrase in self.TEMPLATE_PHRASES:
                 if phrase not in content:
+                    continue
+
+                # FIX-554: Allow "Platzhalter" in technical/explanatory context
+                if self._is_platzhalter_in_technical_context(content, phrase):
+                    log.debug(
+                        "[FIX-554] Allowed '%s' in technical context in %s",
+                        phrase, section_name
+                    )
                     continue
 
                 # FIX-LEAK-OPTION-A: Special handling for controlled placeholders
