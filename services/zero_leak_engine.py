@@ -286,6 +286,15 @@ DETERMINISTIC_PRESCRUB_PHRASES: List[str] = [
     "Beispiel-Workflow",
     "Beispiel-Ablauf",
     "Platzhalter",
+    "Template-Text",
+    # FIX-620: Move help-offer phrases from EXECUTIVE_CRITICAL to prescrub
+    # to avoid expensive FAIL-CLOSED regeneration (same pattern as FIX-526)
+    "wobei kann ich helfen",
+    "wobei ich dir helfen",
+    "wobei ich Ihnen helfen",
+    "wie kann ich dir helfen",
+    "wie kann ich Ihnen helfen",
+    "wie kann ich ihnen helfen",
     # Chat introduction artifacts
     "Hier ist",
     "Natürlich,",
