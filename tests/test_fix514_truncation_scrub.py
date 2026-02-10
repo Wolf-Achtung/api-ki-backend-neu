@@ -60,11 +60,11 @@ class TestFix514TruncationGuard:
 
         assert word_count >= min_words, "Should be above threshold"
 
-    def test_truncation_guard_source_has_fix514_log(self):
-        """gpt_analyze.py must contain [FIX-514][TRUNCATION-GUARD] log line."""
+    def test_truncation_guard_source_has_trunc_guard_log(self):
+        """gpt_analyze.py must contain truncation guard log line (FIX-514 or FIX-TEAM-KMU)."""
         from pathlib import Path
         source = Path("gpt_analyze.py").read_text()
-        assert "[FIX-514][TRUNCATION-GUARD]" in source
+        assert "[FIX-TEAM-KMU][TRUNC-GUARD]" in source or "[FIX-514][TRUNCATION-GUARD]" in source
 
 
 class TestFix514ForbiddenTokenScrub:

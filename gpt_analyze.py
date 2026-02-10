@@ -12550,15 +12550,33 @@ ERWEITERUNGSANFORDERUNGEN:
             sections["hero"] = ""
             sections["HERO_HTML"] = ""
 
-    # ========== GLOBAL AGGRESSIVE TRUNCATION (v10.0 + FIX-506 TASK 5) ==========
+    # ========== GLOBAL SIZE-AWARE TRUNCATION (v10.0 + FIX-515 + FIX-TEAM-KMU) ==========
     # Apply to ALL major content sections FIRST
+    # FIX-TEAM-KMU: Now budget-based and min-words-safe per segment
     truncation_targets = [
         "RISKS_HTML", "GAMECHANGER_HTML", "FOERDERPOTENZIAL_HTML", "RECOMMENDATIONS_HTML",
         "ORG_CHANGE_HTML", "BUSINESS_CASE_HTML", "PILOT_PLAN_HTML", "ROADMAP_12M_HTML",
         "DATA_READINESS_HTML", "STRATEGIE_GOVERNANCE_HTML", "UNTERNEHMENSPROFIL_MARKT_HTML",
         "MONETARISIERUNG_HTML", "KI_SKILLPLAN_HTML", "QUICK_WINS_HTML"
     ]
-    log.info("[GLOBAL-TRUNCATION] Starting aggressive truncation for %d sections", len(truncation_targets))
+
+    # FIX-TEAM-KMU: Derive segment for budget-based truncation
+    try:
+        from config.size_profiles import get_section_budget, get_min_words, get_segment_for_size
+        from services.section_keys import logical_name as _sk_logical_name, html_word_count as _sk_word_count
+        _trunc_size_raw = briefing.get("unternehmensgroesse", briefing.get("UNTERNEHMENSGROESSE", "1"))
+        _trunc_segment = get_segment_for_size(str(_trunc_size_raw))
+        log.info(
+            "[GLOBAL-TRUNCATION] Size-aware truncation: segment=%s size_raw=%s targets=%d",
+            _trunc_segment, _trunc_size_raw, len(truncation_targets),
+        )
+    except Exception as _trunc_import_err:
+        log.warning("[GLOBAL-TRUNCATION] Size-aware import failed (%s), using solo defaults", _trunc_import_err)
+        _trunc_segment = "solo"
+        get_section_budget = None
+        get_min_words = None
+        _sk_logical_name = None
+        _sk_word_count = None
 
     # FIX-506 TASK 5: Import cleanup function for post-truncation artifacts
     try:
@@ -12568,53 +12586,179 @@ ERWEITERUNGSANFORDERUNGEN:
         _cleanup_available = False
         log.warning("[GLOBAL-TRUNCATION] cleanup_truncation_artifacts not available")
 
+    import re as _re_trunc
+
     for key in truncation_targets:
         html = sections.get(key, "")
         if html and len(html) > 200:
             try:
                 original_len = len(html)
+
+                # FIX-TEAM-KMU: Get budget and min_words for this section
+                if get_section_budget is not None:
+                    _budget = get_section_budget(_trunc_segment, key)
+                else:
+                    _budget = int(original_len * 0.5)  # Legacy: 50% cap fallback
+
+                if get_min_words is not None and _sk_logical_name is not None:
+                    _logical = _sk_logical_name(key)
+                    _min_w = get_min_words(_trunc_segment, _logical)
+                else:
+                    _min_w = 600  # Legacy safe default
+
+                # Skip truncation if section is already within budget
+                if original_len <= _budget:
+                    log.debug(
+                        "[GLOBAL-TRUNCATION] %s within budget (%d <= %d), skipping",
+                        key, original_len, _budget,
+                    )
+                    continue
+
                 truncated = _aggressive_text_truncation(html)
 
-                # FIX-506 TASK 5: Clean up truncation artifacts to prevent TEMPLATE_PHRASE hits
+                # FIX-506 TASK 5: Clean up truncation artifacts
                 if _cleanup_available:
                     truncated = cleanup_truncation_artifacts(truncated)
 
-                # FIX-514 CHANGE 1: Truncation guard for ROADMAP_12M_HTML
-                # Never let truncation drop word count below minimum (600 for solo)
-                if key == "ROADMAP_12M_HTML":
-                    import re as _re_trunc
-                    stripped_text = _re_trunc.sub(r'<[^>]+>', '', truncated)
-                    word_count = len(stripped_text.split())
-                    min_words = 600  # solo minimum (strictest threshold)
-                    if word_count < min_words:
-                        log.warning(
-                            "[FIX-514][TRUNCATION-GUARD] Reverted truncation for %s "
-                            "(would_drop_below_min_words: %d < %d)",
-                            key, word_count, min_words
-                        )
-                        continue  # Skip this key, keep original
-
-                # FIX-515 TASK 1: Cap truncation at max 50% cut to prevent extreme shrinking
-                # FIX-52x: Instead of reverting, cap at 50% (keep at least half)
-                trunc_pct = (1 - len(truncated) / original_len) * 100 if original_len > 0 else 0
-                if trunc_pct > 50:
-                    # Cap to 50% of original instead of reverting
-                    min_len = int(original_len * 0.5)
-                    truncated = html[:min_len]
+                # FIX-TEAM-KMU: Budget-based cap (replaces blind 50% cap)
+                # If truncation cut too aggressively, cap at budget instead of 50%
+                if len(truncated) < _budget and original_len > _budget:
+                    # Truncation went below budget - cap at budget
+                    truncated = html[:_budget]
                     log.info(
-                        "[FIX-52x][TRUNC] capped_to_half section=%s before=%d target=%d effective=%d",
-                        key, original_len, len(truncated), min_len
+                        "[FIX-TEAM-KMU][TRUNC] budget_cap section=%s budget=%d before=%d after=%d",
+                        key, _budget, original_len, len(truncated),
                     )
+
+                # FIX-TEAM-KMU: Min-words guard (replaces ROADMAP_12M-only guard)
+                # Never let truncation drop word count below the section's min_words
+                stripped_text = _re_trunc.sub(r'<[^>]+>', '', truncated)
+                word_count = len(stripped_text.split())
+                if word_count < _min_w:
+                    log.warning(
+                        "[FIX-TEAM-KMU][TRUNC-GUARD] Reverted truncation for %s "
+                        "(words=%d < min_words=%d, segment=%s)",
+                        key, word_count, _min_w, _trunc_segment,
+                    )
+                    continue  # Keep original content
 
                 sections[key] = truncated
                 delta = len(truncated) - original_len
                 if delta != 0:
+                    trunc_pct = (1 - len(truncated) / original_len) * 100 if original_len > 0 else 0
                     log.info(
-                        "[FIX-515][TRUNC] section=%s before=%d after=%d delta=%d pct=%.0f%%",
-                        key, original_len, len(truncated), delta, trunc_pct
+                        "[FIX-515][TRUNC] section=%s before=%d after=%d delta=%d pct=%.0f%% "
+                        "budget=%d min_words=%d segment=%s",
+                        key, original_len, len(truncated), delta, trunc_pct,
+                        _budget, _min_w, _trunc_segment,
                     )
             except Exception as e:
                 log.warning(f"[GLOBAL-TRUNCATION] {key} failed: {e}")
+
+    # ========== POST-TRIM HEALING LOOP (FIX-TEAM-KMU WP-D) ==========
+    # After truncation, check if any critical section dropped below min_words.
+    # If so, re-expand those sections (max 2 iterations).
+    try:
+        _heal_critical_sections = ["gamechanger", "roadmap_12m", "executive_summary", "tools_empfehlungen"]
+        _heal_max_iterations = 2
+
+        for _heal_iter in range(_heal_max_iterations):
+            _heal_needed = []
+
+            for _heal_logical in _heal_critical_sections:
+                if get_min_words is not None and _sk_logical_name is not None and _sk_word_count is not None:
+                    from services.section_keys import canonical_key as _sk_canonical_key
+                    _heal_html_key = _sk_canonical_key(_heal_logical)
+                    _heal_content = sections.get(_heal_html_key, "")
+                    if not _heal_content or not isinstance(_heal_content, str):
+                        continue
+                    _heal_wc = _sk_word_count(_heal_content)
+                    _heal_min = get_min_words(_trunc_segment, _heal_logical)
+                    if _heal_wc < _heal_min:
+                        _heal_needed.append((_heal_logical, _heal_html_key, _heal_wc, _heal_min))
+
+            if not _heal_needed:
+                if _heal_iter == 0:
+                    log.info("[POST-TRIM-HEAL] All critical sections above min_words, no healing needed")
+                break
+
+            log.info(
+                "[POST-TRIM-HEAL] Iteration %d: %d sections need healing: %s",
+                _heal_iter + 1,
+                len(_heal_needed),
+                [(n, wc, mw) for n, _, wc, mw in _heal_needed],
+            )
+
+            for _heal_logical, _heal_html_key, _heal_wc, _heal_min in _heal_needed:
+                _heal_target_words = _heal_min + 50  # Buffer above minimum
+                _heal_existing = sections.get(_heal_html_key, "")
+                try:
+                    _heal_expand_prompt = f"""
+Der folgende Inhalt ist zu kurz und muss erweitert werden.
+Ziel-Wortanzahl: mindestens {_heal_target_words} Wörter (aktuell: {_heal_wc}).
+
+REGELN FÜR ERWEITERUNG:
+- Behalte ALLE bestehenden Informationen und Strukturen
+- Füge MEHR Details, Beispiele und Erklärungen hinzu
+- Vertiefe jeden Punkt mit konkreten Maßnahmen
+- Verwende die gleiche HTML-Struktur
+- KEINE Assistenten-Sprache, KEINE Fragen an den Leser
+
+Bestehender Inhalt zum Erweitern:
+{_heal_existing}
+
+Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
+"""
+                    _heal_llm = _llm_params_for(_heal_logical)
+                    _heal_expanded = _call_llm_for_section(
+                        section_key=f"{_heal_logical}_post_trim_heal_{_heal_iter}",
+                        prompt=_heal_expand_prompt,
+                        system_prompt="Du bist ein Senior-KI-Berater. Erweitere den Inhalt mit mehr Details. Nur valides HTML.",
+                        temperature=_heal_llm["temperature"],
+                        max_tokens=_heal_llm["max_tokens"] + 500,
+                        model=_heal_llm["model"],
+                    ) or ""
+
+                    _heal_expanded = _clean_html(_heal_expanded)
+                    if _needs_repair(_heal_expanded):
+                        _heal_expanded = _repair_html(_heal_logical, _heal_expanded)
+
+                    _heal_expanded_wc = _sk_word_count(_heal_expanded)
+                    if _heal_expanded_wc >= _heal_min:
+                        # Budget-safe: cap at budget if needed
+                        if get_section_budget is not None:
+                            _heal_budget = get_section_budget(_trunc_segment, _heal_html_key)
+                            if len(_heal_expanded) > _heal_budget:
+                                _heal_expanded = _heal_expanded[:_heal_budget]
+                                # Re-check words after budget cap
+                                _heal_recapped_wc = _sk_word_count(_heal_expanded)
+                                if _heal_recapped_wc < _heal_min:
+                                    log.warning(
+                                        "[POST-TRIM-HEAL] Budget cap dropped %s below min_words "
+                                        "(%d < %d), keeping expanded version",
+                                        _heal_html_key, _heal_recapped_wc, _heal_min,
+                                    )
+                                    # Don't apply budget cap in this case
+                                    _heal_expanded = sections.get(_heal_html_key, _heal_expanded)
+
+                        sections[_heal_html_key] = _heal_expanded
+                        # Also update shadow key if it exists
+                        if _heal_logical in sections:
+                            sections[_heal_logical] = _heal_expanded
+                        log.info(
+                            "[POST-TRIM-HEAL] Healed %s: %d -> %d words (min=%d, iter=%d)",
+                            _heal_html_key, _heal_wc, _heal_expanded_wc, _heal_min, _heal_iter + 1,
+                        )
+                    else:
+                        log.warning(
+                            "[POST-TRIM-HEAL] Expansion insufficient for %s: %d words (need %d)",
+                            _heal_html_key, _heal_expanded_wc, _heal_min,
+                        )
+                except Exception as _heal_err:
+                    log.warning("[POST-TRIM-HEAL] Failed to heal %s: %s", _heal_html_key, _heal_err)
+
+    except Exception as _heal_loop_err:
+        log.warning("[POST-TRIM-HEAL] Healing loop failed: %s", _heal_loop_err)
 
     # ========== SAFE RISKS FORMATTING ==========
     risks_html = sections.get("RISKS_HTML", "")

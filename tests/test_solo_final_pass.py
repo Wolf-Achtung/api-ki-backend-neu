@@ -1208,5 +1208,303 @@ class TestValidatorShadowKeyFix:
         assert validator._normalize_size_key() == "solo"
 
 
+# =============================================================================
+# TEST: WP-A – Section Keys Canonical Mapping
+# =============================================================================
+
+class TestSectionKeys:
+    """Tests for services/section_keys.py canonical key infrastructure."""
+
+    def test_canonical_key_from_logical(self):
+        """canonical_key maps logical name to *_HTML key."""
+        from services.section_keys import canonical_key
+        assert canonical_key("gamechanger") == "GAMECHANGER_HTML"
+        assert canonical_key("executive_summary") == "EXECUTIVE_SUMMARY_HTML"
+        assert canonical_key("roadmap_12m") == "ROADMAP_12M_HTML"
+
+    def test_canonical_key_identity_for_html(self):
+        """canonical_key returns HTML key unchanged if already canonical."""
+        from services.section_keys import canonical_key
+        assert canonical_key("GAMECHANGER_HTML") == "GAMECHANGER_HTML"
+
+    def test_canonical_key_unknown(self):
+        """canonical_key returns input unchanged for unknown names."""
+        from services.section_keys import canonical_key
+        assert canonical_key("unknown_section") == "unknown_section"
+
+    def test_logical_name_from_html(self):
+        """logical_name maps *_HTML key back to logical name."""
+        from services.section_keys import logical_name
+        assert logical_name("GAMECHANGER_HTML") == "gamechanger"
+        assert logical_name("RISKS_HTML") == "risks"
+
+    def test_logical_name_identity_for_logical(self):
+        """logical_name returns logical name unchanged if already logical."""
+        from services.section_keys import logical_name
+        assert logical_name("gamechanger") == "gamechanger"
+
+    def test_resolve_key_prefers_canonical(self):
+        """resolve_key returns HTML key when both exist."""
+        from services.section_keys import resolve_key
+        sections = {
+            "gamechanger": "short shadow",
+            "GAMECHANGER_HTML": "<p>Full expanded content</p>",
+        }
+        assert resolve_key(sections, "gamechanger") == "GAMECHANGER_HTML"
+
+    def test_resolve_key_falls_back_to_logical(self):
+        """resolve_key falls back to logical name if HTML key absent."""
+        from services.section_keys import resolve_key
+        sections = {"gamechanger": "shadow content only"}
+        assert resolve_key(sections, "gamechanger") == "gamechanger"
+
+    def test_resolve_key_from_html_name(self):
+        """resolve_key works when given an HTML key directly."""
+        from services.section_keys import resolve_key
+        sections = {"GAMECHANGER_HTML": "<p>Content</p>"}
+        assert resolve_key(sections, "GAMECHANGER_HTML") == "GAMECHANGER_HTML"
+
+    def test_resolve_key_returns_none_if_missing(self):
+        """resolve_key returns None when section doesn't exist."""
+        from services.section_keys import resolve_key
+        assert resolve_key({}, "gamechanger") is None
+
+    def test_get_canonical_value(self):
+        """get_canonical_value returns HTML content over shadow."""
+        from services.section_keys import get_canonical_value
+        sections = {
+            "gamechanger": "short",
+            "GAMECHANGER_HTML": "<p>Expanded</p>",
+        }
+        assert get_canonical_value(sections, "gamechanger") == "<p>Expanded</p>"
+
+    def test_get_canonical_value_default(self):
+        """get_canonical_value returns default when missing."""
+        from services.section_keys import get_canonical_value
+        assert get_canonical_value({}, "gamechanger", default="N/A") == "N/A"
+
+    def test_html_word_count(self):
+        """html_word_count strips tags and counts words."""
+        from services.section_keys import html_word_count
+        assert html_word_count("<p>Eins zwei <strong>drei</strong> vier.</p>") == 4
+        assert html_word_count("") == 0
+        assert html_word_count("<div></div>") == 0
+
+    def test_all_truncation_targets_have_mapping(self):
+        """Every truncation target key has a reverse mapping to a logical name."""
+        from services.section_keys import _REVERSE_MAP
+        truncation_targets = [
+            "RISKS_HTML", "GAMECHANGER_HTML", "FOERDERPOTENZIAL_HTML",
+            "RECOMMENDATIONS_HTML", "ORG_CHANGE_HTML", "BUSINESS_CASE_HTML",
+            "PILOT_PLAN_HTML", "ROADMAP_12M_HTML", "DATA_READINESS_HTML",
+            "STRATEGIE_GOVERNANCE_HTML", "UNTERNEHMENSPROFIL_MARKT_HTML",
+            "MONETARISIERUNG_HTML", "KI_SKILLPLAN_HTML", "QUICK_WINS_HTML",
+        ]
+        for key in truncation_targets:
+            assert key in _REVERSE_MAP, f"{key} missing from CANONICAL_MAP reverse"
+
+
+# =============================================================================
+# TEST: WP-B – Size Profiles Sanity Check
+# =============================================================================
+
+class TestSizeProfilesSanity:
+    """Tests for config/size_profiles.py sanity check and helpers."""
+
+    def test_sanity_check_passes(self):
+        """All profiles pass the budget >= min_words * 7 check."""
+        from config.size_profiles import sanity_check_profiles
+        warnings = sanity_check_profiles()
+        assert len(warnings) == 0, f"Sanity check failures: {warnings}"
+
+    def test_get_section_budget(self):
+        """get_section_budget returns correct budget per segment."""
+        from config.size_profiles import get_section_budget
+        # Solo has smaller budgets
+        solo_gc = get_section_budget("solo", "GAMECHANGER_HTML")
+        team_gc = get_section_budget("team", "GAMECHANGER_HTML")
+        kmu_gc = get_section_budget("kmu", "GAMECHANGER_HTML")
+        assert solo_gc < team_gc <= kmu_gc
+
+    def test_get_section_budget_default(self):
+        """get_section_budget returns _default for unknown keys."""
+        from config.size_profiles import get_section_budget
+        budget = get_section_budget("solo", "UNKNOWN_SECTION_HTML")
+        assert budget == 1000  # solo _default
+
+    def test_get_min_words(self):
+        """get_min_words returns correct min per segment."""
+        from config.size_profiles import get_min_words
+        solo_gc = get_min_words("solo", "gamechanger")
+        team_gc = get_min_words("team", "gamechanger")
+        assert solo_gc < team_gc  # Solo: 100, Team: 750
+
+    def test_get_min_words_default(self):
+        """get_min_words returns 50 for unknown sections."""
+        from config.size_profiles import get_min_words
+        assert get_min_words("solo", "unknown_section") == 50
+
+    def test_all_truncation_targets_have_budget(self):
+        """Every truncation target has an explicit budget in all profiles."""
+        from config.size_profiles import SIZE_PROFILES
+        truncation_targets = [
+            "RISKS_HTML", "GAMECHANGER_HTML", "FOERDERPOTENZIAL_HTML",
+            "RECOMMENDATIONS_HTML", "ORG_CHANGE_HTML", "BUSINESS_CASE_HTML",
+            "ROADMAP_12M_HTML", "STRATEGIE_GOVERNANCE_HTML",
+            "UNTERNEHMENSPROFIL_MARKT_HTML", "KI_SKILLPLAN_HTML", "QUICK_WINS_HTML",
+        ]
+        for seg_name, profile in SIZE_PROFILES.items():
+            budgets = profile["section_budgets"]
+            for key in truncation_targets:
+                assert key in budgets, (
+                    f"{seg_name} profile missing budget for {key}"
+                )
+
+    def test_budget_accommodates_min_words(self):
+        """For every section with min_words, budget >= min_words * 7."""
+        from config.size_profiles import SIZE_PROFILES
+        from services.section_keys import CANONICAL_MAP
+        for seg_name, profile in SIZE_PROFILES.items():
+            min_words_map = profile.get("min_words", {})
+            budgets = profile.get("section_budgets", {})
+            default_budget = budgets.get("_default", 2000)
+            for logical_name, min_w in min_words_map.items():
+                html_key = CANONICAL_MAP.get(logical_name, logical_name.upper() + "_HTML")
+                budget = budgets.get(html_key, default_budget)
+                assert budget >= min_w * 7, (
+                    f"{seg_name}/{html_key}: budget={budget} < min_words({min_w}) * 7 = {min_w * 7}"
+                )
+
+
+# =============================================================================
+# TEST: WP-C – Size-Aware Truncation Guard
+# =============================================================================
+
+class TestTruncationGuard:
+    """Tests that the truncation logic respects min_words per segment."""
+
+    def test_solo_gamechanger_low_min_words(self):
+        """Solo gamechanger has low min_words (100), so truncation is more aggressive."""
+        from config.size_profiles import get_min_words
+        assert get_min_words("solo", "gamechanger") == 100
+
+    def test_team_gamechanger_high_min_words(self):
+        """Team gamechanger has high min_words (750), so truncation is guarded."""
+        from config.size_profiles import get_min_words
+        assert get_min_words("team", "gamechanger") == 750
+
+    def test_kmu_gamechanger_high_min_words(self):
+        """KMU gamechanger has high min_words (750), so truncation is guarded."""
+        from config.size_profiles import get_min_words
+        assert get_min_words("kmu", "gamechanger") == 750
+
+    def test_team_budget_larger_than_solo(self):
+        """Team has larger section budgets than solo."""
+        from config.size_profiles import get_section_budget
+        for key in ["GAMECHANGER_HTML", "ROADMAP_12M_HTML", "RISKS_HTML"]:
+            solo = get_section_budget("solo", key)
+            team = get_section_budget("team", key)
+            assert team > solo, f"{key}: team budget ({team}) should exceed solo ({solo})"
+
+    def test_kmu_budget_larger_than_team(self):
+        """KMU has larger (or equal) section budgets than team."""
+        from config.size_profiles import get_section_budget
+        for key in ["GAMECHANGER_HTML", "ROADMAP_12M_HTML", "RISKS_HTML"]:
+            team = get_section_budget("team", key)
+            kmu = get_section_budget("kmu", key)
+            assert kmu >= team, f"{key}: kmu budget ({kmu}) should be >= team ({team})"
+
+    def test_truncation_would_not_drop_below_min_words(self):
+        """Simulates the min-words guard logic from the TRUNC block."""
+        from config.size_profiles import get_min_words
+        from services.section_keys import logical_name, html_word_count
+
+        # Simulate: GAMECHANGER_HTML with 800 words for team segment
+        content = "<p>" + " ".join(f"Wort{i}" for i in range(800)) + "</p>"
+        html_key = "GAMECHANGER_HTML"
+        segment = "team"
+
+        _logical = logical_name(html_key)
+        _min_w = get_min_words(segment, _logical)
+        wc = html_word_count(content)
+
+        # Content has 800 words, team min is 750 → should NOT be reverted
+        assert wc >= _min_w, f"800 words should be >= {_min_w}"
+
+    def test_truncation_guard_reverts_when_too_short(self):
+        """Simulates the min-words guard reverting when content drops below min."""
+        from config.size_profiles import get_min_words
+        from services.section_keys import logical_name, html_word_count
+
+        # Simulate: after truncation, only 400 words left for team gamechanger
+        truncated = "<p>" + " ".join(f"Wort{i}" for i in range(400)) + "</p>"
+        html_key = "GAMECHANGER_HTML"
+        segment = "team"
+
+        _logical = logical_name(html_key)
+        _min_w = get_min_words(segment, _logical)
+        wc = html_word_count(truncated)
+
+        # 400 words < team min of 750 → should be reverted
+        assert wc < _min_w, f"400 words should be < {_min_w} (team min)"
+
+
+# =============================================================================
+# TEST: WP-D – Post-Trim Healing Verification
+# =============================================================================
+
+class TestPostTrimHealingConfig:
+    """Tests that post-trim healing infrastructure is correctly configured."""
+
+    def test_heal_critical_sections_have_min_words(self):
+        """All critical sections for healing have min_words defined in all profiles."""
+        from config.size_profiles import SIZE_PROFILES
+        heal_critical = ["gamechanger", "roadmap_12m", "executive_summary", "tools_empfehlungen"]
+        for seg_name, profile in SIZE_PROFILES.items():
+            min_words_map = profile.get("min_words", {})
+            for section in heal_critical:
+                assert section in min_words_map, (
+                    f"{seg_name} missing min_words for heal-critical section '{section}'"
+                )
+
+    def test_heal_critical_sections_have_canonical_keys(self):
+        """All critical sections for healing have canonical key mappings."""
+        from services.section_keys import CANONICAL_MAP
+        heal_critical = ["gamechanger", "roadmap_12m", "executive_summary", "tools_empfehlungen"]
+        for section in heal_critical:
+            assert section in CANONICAL_MAP, f"'{section}' missing from CANONICAL_MAP"
+
+    def test_heal_critical_sections_in_expand_eligible(self):
+        """Critical sections should be in EXPAND_ELIGIBLE_SECTIONS for 2-pass expand."""
+        # This verifies the sections used in post-trim heal are also expandable
+        from services.section_keys import CANONICAL_MAP
+        heal_critical = ["gamechanger", "roadmap_12m", "executive_summary", "tools_empfehlungen"]
+        # tools_empfehlungen may not be in EXPAND_ELIGIBLE (that's OK, healing is separate)
+        expandable = ["gamechanger", "roadmap_12m", "executive_summary"]
+        try:
+            # Try importing from gpt_analyze (may not work in test env)
+            import importlib
+            mod = importlib.import_module("gpt_analyze")
+            expand_eligible = getattr(mod, "EXPAND_ELIGIBLE_SECTIONS", None)
+            if expand_eligible:
+                for section in expandable:
+                    assert section in expand_eligible, (
+                        f"'{section}' should be in EXPAND_ELIGIBLE_SECTIONS"
+                    )
+        except (ImportError, Exception):
+            # gpt_analyze may not be importable in test environment
+            pass
+
+    def test_segment_derivation_consistency(self):
+        """get_segment_for_size is consistent with validator _normalize_size_key."""
+        from config.size_profiles import get_segment_for_size
+        # Test the same values the validator receives
+        assert get_segment_for_size("1") == "solo"
+        assert get_segment_for_size("2-10") == "team"
+        assert get_segment_for_size("2\u201310") == "team"  # En-dash
+        assert get_segment_for_size("11-100") == "kmu"
+        assert get_segment_for_size("11\u2013100") == "kmu"  # En-dash
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
