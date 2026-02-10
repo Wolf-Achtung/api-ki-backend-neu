@@ -68,9 +68,21 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "EXECUTIVE_SUMMARY_HTML": 2000,
             "QUICK_WINS_HTML": 1500,
             "ROADMAP_90D_HTML": 1200,
+            "ROADMAP_12M_HTML": 8000,
             "RECOMMENDATIONS_HTML": 1500,
             "RISKS_HTML": 1200,
+            "GAMECHANGER_HTML": 1500,
+            "FOERDERPOTENZIAL_HTML": 1000,
+            "ORG_CHANGE_HTML": 1200,
             "BUSINESS_CASE_HTML": 2500,
+            "PILOT_PLAN_HTML": 1200,
+            "DATA_READINESS_HTML": 1200,
+            "STRATEGIE_GOVERNANCE_HTML": 1200,
+            "UNTERNEHMENSPROFIL_MARKT_HTML": 1500,
+            "MONETARISIERUNG_HTML": 1200,
+            "KI_SKILLPLAN_HTML": 1200,
+            "TOOLS_EMPFEHLUNGEN_HTML": 1200,
+            "TECHNOLOGIE_PROZESSE_HTML": 2000,
             "_default": 1000,
         },
 
@@ -133,9 +145,21 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "EXECUTIVE_SUMMARY_HTML": 3000,
             "QUICK_WINS_HTML": 2000,
             "ROADMAP_90D_HTML": 1800,
+            "ROADMAP_12M_HTML": 12000,
             "RECOMMENDATIONS_HTML": 2500,
             "RISKS_HTML": 1800,
+            "GAMECHANGER_HTML": 10000,
+            "FOERDERPOTENZIAL_HTML": 2000,
+            "ORG_CHANGE_HTML": 1800,
             "BUSINESS_CASE_HTML": 4000,
+            "PILOT_PLAN_HTML": 1800,
+            "DATA_READINESS_HTML": 1800,
+            "STRATEGIE_GOVERNANCE_HTML": 3000,
+            "UNTERNEHMENSPROFIL_MARKT_HTML": 2500,
+            "MONETARISIERUNG_HTML": 1800,
+            "KI_SKILLPLAN_HTML": 1800,
+            "TOOLS_EMPFEHLUNGEN_HTML": 3000,
+            "TECHNOLOGIE_PROZESSE_HTML": 3000,
             "_default": 1500,
         },
 
@@ -192,9 +216,21 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "EXECUTIVE_SUMMARY_HTML": 4000,
             "QUICK_WINS_HTML": 2500,
             "ROADMAP_90D_HTML": 2500,
+            "ROADMAP_12M_HTML": 14000,
             "RECOMMENDATIONS_HTML": 3500,
             "RISKS_HTML": 2500,
+            "GAMECHANGER_HTML": 12000,
+            "FOERDERPOTENZIAL_HTML": 10000,
+            "ORG_CHANGE_HTML": 2000,
             "BUSINESS_CASE_HTML": 5000,
+            "PILOT_PLAN_HTML": 2000,
+            "DATA_READINESS_HTML": 2000,
+            "STRATEGIE_GOVERNANCE_HTML": 3500,
+            "UNTERNEHMENSPROFIL_MARKT_HTML": 3000,
+            "MONETARISIERUNG_HTML": 2000,
+            "KI_SKILLPLAN_HTML": 2000,
+            "TOOLS_EMPFEHLUNGEN_HTML": 3500,
+            "TECHNOLOGIE_PROZESSE_HTML": 3000,
             "_default": 2000,
         },
 
@@ -288,8 +324,96 @@ def get_segment_for_size(size_value: str) -> str:
     return str(profile["segment"])
 
 
+def get_section_budget(segment: str, html_key: str) -> int:
+    """
+    Get the character budget for a section in a given segment.
+
+    Args:
+        segment: 'solo', 'team', or 'kmu'
+        html_key: Canonical HTML key (e.g., 'GAMECHANGER_HTML')
+
+    Returns:
+        Character budget for the section. Falls back to _default, then 2000.
+    """
+    profile = SIZE_PROFILES.get(segment, SIZE_PROFILES["solo"])
+    budgets = profile.get("section_budgets", {})
+    return int(budgets.get(html_key, budgets.get("_default", 2000)))
+
+
+def get_min_words(segment: str, logical_name: str) -> int:
+    """
+    Get the minimum word count for a section in a given segment.
+
+    Args:
+        segment: 'solo', 'team', or 'kmu'
+        logical_name: Logical section name (e.g., 'gamechanger')
+
+    Returns:
+        Minimum word count. Defaults to 50 if not specified.
+    """
+    profile = SIZE_PROFILES.get(segment, SIZE_PROFILES["solo"])
+    min_words = profile.get("min_words", {})
+    return int(min_words.get(logical_name, 50))
+
+
+def sanity_check_profiles() -> list[str]:
+    """
+    Startup sanity check: verify that section_budgets can accommodate min_words.
+
+    Rule: budget_chars >= min_words * 7 (average ~7 chars per German word incl. HTML)
+    This is a conservative estimate; actual HTML overhead varies.
+
+    Returns:
+        List of warning messages. Empty list means all checks passed.
+    """
+    warnings: list[str] = []
+    chars_per_word = 7  # Conservative estimate for German text with HTML markup
+
+    # Import canonical mapping for name resolution
+    try:
+        from services.section_keys import CANONICAL_MAP
+    except ImportError:
+        log.warning("[SIZE-PROFILES] Cannot import section_keys for sanity check")
+        return warnings
+
+    for seg_name, profile in SIZE_PROFILES.items():
+        min_words_map = profile.get("min_words", {})
+        budgets = profile.get("section_budgets", {})
+        default_budget = budgets.get("_default", 2000)
+
+        for logical_name, min_w in min_words_map.items():
+            html_key = CANONICAL_MAP.get(logical_name, logical_name.upper() + "_HTML")
+            budget = budgets.get(html_key, default_budget)
+            min_chars_needed = min_w * chars_per_word
+
+            if budget < min_chars_needed:
+                msg = (
+                    f"[{seg_name}] {html_key}: budget={budget} chars < "
+                    f"min_words({min_w}) * {chars_per_word} = {min_chars_needed} chars"
+                )
+                warnings.append(msg)
+                log.warning("[SIZE-PROFILES][SANITY] %s", msg)
+
+    return warnings
+
+
+# =============================================================================
+# MODULE INITIALIZATION
+# =============================================================================
+
 log.info(
     "[SIZE-PROFILES] Loaded %d profiles: %s",
     len(SIZE_PROFILES),
     list(SIZE_PROFILES.keys()),
 )
+
+# Run sanity check at import time
+_sanity_warnings = sanity_check_profiles()
+if _sanity_warnings:
+    log.warning(
+        "[SIZE-PROFILES] Sanity check found %d issues:\n  %s",
+        len(_sanity_warnings),
+        "\n  ".join(_sanity_warnings),
+    )
+else:
+    log.info("[SIZE-PROFILES] Sanity check passed: all budgets accommodate min_words")
