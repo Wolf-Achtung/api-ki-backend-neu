@@ -12564,7 +12564,7 @@ ERWEITERUNGSANFORDERUNGEN:
     try:
         from config.size_profiles import get_section_budget, get_min_words, get_segment_for_size
         from services.section_keys import logical_name as _sk_logical_name, html_word_count as _sk_word_count
-        _trunc_size_raw = answers.get("unternehmensgroesse", "1")
+        _trunc_size_raw = briefing.get("unternehmensgroesse", briefing.get("UNTERNEHMENSGROESSE", "1"))
         _trunc_segment = get_segment_for_size(str(_trunc_size_raw))
         log.info(
             "[GLOBAL-TRUNCATION] Size-aware truncation: segment=%s size_raw=%s targets=%d",
@@ -12573,10 +12573,10 @@ ERWEITERUNGSANFORDERUNGEN:
     except Exception as _trunc_import_err:
         log.warning("[GLOBAL-TRUNCATION] Size-aware import failed (%s), using solo defaults", _trunc_import_err)
         _trunc_segment = "solo"
-        get_section_budget = None  # type: ignore[assignment]
-        get_min_words = None  # type: ignore[assignment]
-        _sk_logical_name = None  # type: ignore[assignment]
-        _sk_word_count = None  # type: ignore[assignment]
+        get_section_budget = None
+        get_min_words = None
+        _sk_logical_name = None
+        _sk_word_count = None
 
     # FIX-506 TASK 5: Import cleanup function for post-truncation artifacts
     try:
@@ -12709,13 +12709,14 @@ Bestehender Inhalt zum Erweitern:
 
 Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
 """
+                    _heal_llm = _llm_params_for(_heal_logical)
                     _heal_expanded = _call_llm_for_section(
                         section_key=f"{_heal_logical}_post_trim_heal_{_heal_iter}",
                         prompt=_heal_expand_prompt,
                         system_prompt="Du bist ein Senior-KI-Berater. Erweitere den Inhalt mit mehr Details. Nur valides HTML.",
-                        temperature=llm["temperature"],
-                        max_tokens=llm["max_tokens"] + 500,
-                        model=llm["model"],
+                        temperature=_heal_llm["temperature"],
+                        max_tokens=_heal_llm["max_tokens"] + 500,
+                        model=_heal_llm["model"],
                     ) or ""
 
                     _heal_expanded = _clean_html(_heal_expanded)
