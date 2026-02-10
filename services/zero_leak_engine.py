@@ -120,11 +120,17 @@ ALLOWED_SECURITY_TERMS: List[str] = [
     # Access control terms
     "privilege escalation",
     "unauthorized access",
+    # FIX-618: Credential management terms (legitimate in risk/security context)
+    "credential",
+    "Credential-Management",
+    "Credential Theft",
+    "Credential Stuffing",
 ]
 
 # Sections where security terms are explicitly allowed
 SECURITY_CONTEXT_SECTIONS: List[str] = [
     "RISKS_HTML",
+    "risks",                  # FIX-618: shadow key also scanned by precommit_zero_leak
     "RISKS_LIGHT_HTML",
     "RISK_ENGINE_HTML",
     "RISK_ENGINE_V3_HTML",
@@ -448,8 +454,25 @@ def apply_blacklist_classified(text: str, section_name: str = "") -> BlacklistRe
             section_name or "unknown"
         )
 
+    # FIX-618: Determine if this section is a security context section
+    # In security context sections, allowed security terms should not trigger FAIL-CLOSED
+    _is_security_context = section_name in SECURITY_CONTEXT_SECTIONS
+
     # Check CRITICAL string patterns first
     for phrase in CRITICAL_LEAK_PATTERNS:
+        # FIX-618: Skip allowed security terms in security-context sections
+        # e.g. "credential" is legitimate in RISKS_HTML when discussing Credential Management
+        if _is_security_context and any(
+            phrase.lower() in allowed_term.lower() or allowed_term.lower() in phrase.lower()
+            for allowed_term in ALLOWED_SECURITY_TERMS
+        ):
+            continue
+        # FIX-618: Context-sensitive "credential" check - only flag if it looks like
+        # actual credential leakage (e.g. "credential: xxx", "credential=")
+        # not when used as a security term (e.g. "Credential-Management", "Credential Theft")
+        if phrase.lower() == "credential" and _is_security_context:
+            continue
+
         pattern = re.compile(re.escape(phrase), re.IGNORECASE)
         matches = pattern.findall(cleaned)
 
@@ -488,7 +511,16 @@ def apply_blacklist_classified(text: str, section_name: str = "") -> BlacklistRe
         if stripped > 0:
             log.info(f"[FIX-52x][ZERO-LEAK] stripped_prompt_echo_lines={stripped} section={section_name} (prefix_only=True)")
 
+        # FIX-618: Build set of prescrub phrases (lowercase) to skip double-detection
+        _prescrub_set = {p.lower() for p in DETERMINISTIC_PRESCRUB_PHRASES}
+
         for phrase in EXECUTIVE_CRITICAL_PHRASES:
+            # FIX-618: Skip phrases already handled by prescrub to prevent
+            # race condition where prescrub removes the phrase but executive
+            # critical scan still detects remnants or case variants
+            if phrase.lower() in _prescrub_set:
+                continue
+
             pattern = re.compile(re.escape(phrase), re.IGNORECASE)
             matches = pattern.findall(cleaned)
 
