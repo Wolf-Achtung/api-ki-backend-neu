@@ -1026,5 +1026,187 @@ class TestCrossSizeComparison:
         assert stats["duz_sie"] > 0
 
 
+# =============================================================================
+# WP4: Validator Shadow-Key Regression Tests (FIX-TEAM-KMU)
+# =============================================================================
+
+class TestValidatorShadowKeyFix:
+    """
+    FIX-TEAM-KMU: Validator must NOT block on shadow keys when HTML versions exist.
+
+    Root cause: gamechanger (268 words, shadow) blocked Team/KMU runs even though
+    GAMECHANGER_HTML (1105 words, expanded) was present. The validator checked
+    the shadow key instead of the canonical HTML key.
+    """
+
+    def test_shadow_gamechanger_not_blocking_when_html_exists(self):
+        """gamechanger shadow (short) must not block when GAMECHANGER_HTML (long) exists."""
+        from services.report_validator import ReportValidator
+        # Generate exactly 800 words for GAMECHANGER_HTML (above team min of 750)
+        long_content = " ".join([f"Gamechanger{i}" for i in range(800)])
+        sections = {
+            "gamechanger": "<p>Short shadow content with only a few words.</p>",
+            "GAMECHANGER_HTML": f"<p>{long_content}</p>",
+            "EXECUTIVE_SUMMARY_HTML": "<p>" + ("Executive summary content here. " * 50) + "</p>",
+        }
+        meta = {"unternehmensgroesse": "2-10"}
+        validator = ReportValidator(sections, meta)
+        validator._check_empty_or_short_sections()
+
+        # No CRITICAL SECTION_TOO_SHORT for gamechanger
+        gamechanger_criticals = [
+            e for e in validator.errors
+            if e.category == "SECTION_TOO_SHORT"
+            and "gamechanger" in e.section.lower()
+            and e.severity == "CRITICAL"
+        ]
+        assert len(gamechanger_criticals) == 0, (
+            f"gamechanger shadow key should NOT block when GAMECHANGER_HTML exists. "
+            f"Got: {gamechanger_criticals}"
+        )
+
+    def test_shadow_roadmap_12m_not_blocking_when_html_exists(self):
+        """roadmap_12m shadow (short) must not block when ROADMAP_12M_HTML (long) exists."""
+        from services.report_validator import ReportValidator
+        sections = {
+            "roadmap_12m": "<p>Short roadmap shadow.</p>",
+            "ROADMAP_12M_HTML": "<p>" + ("Detailed 12-month roadmap content. " * 200) + "</p>",
+            "EXECUTIVE_SUMMARY_HTML": "<p>" + ("Executive summary content here. " * 50) + "</p>",
+        }
+        meta = {"unternehmensgroesse": "11-100"}
+        validator = ReportValidator(sections, meta)
+        validator._check_empty_or_short_sections()
+
+        roadmap_criticals = [
+            e for e in validator.errors
+            if e.category == "SECTION_TOO_SHORT"
+            and "roadmap_12m" in e.section.lower()
+            and e.severity == "CRITICAL"
+        ]
+        assert len(roadmap_criticals) == 0, (
+            f"roadmap_12m shadow should NOT block when ROADMAP_12M_HTML exists. "
+            f"Got: {roadmap_criticals}"
+        )
+
+    def test_html_key_validated_when_both_exist(self):
+        """When both shadow and HTML exist, validator uses HTML key for word count."""
+        from services.report_validator import ReportValidator
+        short_text = "<p>Too short.</p>"
+        long_text = "<p>" + ("Long expanded content word. " * 250) + "</p>"
+        sections = {
+            "gamechanger": short_text,
+            "GAMECHANGER_HTML": long_text,
+            "EXECUTIVE_SUMMARY_HTML": "<p>" + ("Summary content. " * 50) + "</p>",
+        }
+        meta = {"unternehmensgroesse": "2-10"}  # team: gamechanger min 750
+        validator = ReportValidator(sections, meta)
+        validator._check_empty_or_short_sections()
+
+        # GAMECHANGER_HTML has ~250 words * 4 = ~1000 words, well above 750
+        gamechanger_errors = [
+            e for e in validator.errors
+            if e.category == "SECTION_TOO_SHORT"
+            and "gamechanger" in e.section.lower()
+        ]
+        assert len(gamechanger_errors) == 0, (
+            f"Should validate against GAMECHANGER_HTML (long), not gamechanger (short). "
+            f"Got: {gamechanger_errors}"
+        )
+
+    def test_fallback_to_shadow_when_no_html_key(self):
+        """When only shadow key exists (no HTML version), still validate it."""
+        from services.report_validator import ReportValidator
+        sections = {
+            "gamechanger": "<p>Short content only in shadow key.</p>",
+            "EXECUTIVE_SUMMARY_HTML": "<p>" + ("Summary. " * 50) + "</p>",
+        }
+        meta = {"unternehmensgroesse": "2-10"}  # team: gamechanger min 750
+        validator = ReportValidator(sections, meta)
+        validator._check_empty_or_short_sections()
+
+        # Should detect gamechanger as too short (only shadow key, no HTML)
+        gamechanger_errors = [
+            e for e in validator.errors
+            if e.category == "SECTION_TOO_SHORT"
+            and "gamechanger" in e.section.lower()
+        ]
+        assert len(gamechanger_errors) > 0, (
+            "When only shadow key exists, it should still be validated"
+        )
+
+    def test_executive_summary_lowered_minimum_team(self):
+        """Team executive_summary minimum should be 140 (lowered from 180)."""
+        from services.report_validator import ReportValidator
+        # Create content with ~145 words (above 140, below old 180)
+        words = " ".join([f"Wort{i}" for i in range(145)])
+        content = f"<p>{words}</p>"
+        sections = {"EXECUTIVE_SUMMARY_HTML": content}
+        meta = {"unternehmensgroesse": "2\u201310"}  # Team (en-dash)
+        validator = ReportValidator(sections, meta)
+        validator._check_empty_or_short_sections()
+
+        exec_errors = [
+            e for e in validator.errors
+            if e.category == "SECTION_TOO_SHORT"
+            and "EXECUTIVE_SUMMARY" in e.section
+        ]
+        assert len(exec_errors) == 0, (
+            f"Executive summary with 145 words should pass for team (min=140). "
+            f"Got: {exec_errors}"
+        )
+
+    def test_executive_summary_lowered_minimum_kmu(self):
+        """KMU executive_summary minimum should be 140 (lowered from 200)."""
+        from services.report_validator import ReportValidator
+        words = " ".join([f"Wort{i}" for i in range(145)])
+        content = f"<p>{words}</p>"
+        sections = {"EXECUTIVE_SUMMARY_HTML": content}
+        meta = {"unternehmensgroesse": "11\u2013100"}  # KMU (en-dash)
+        validator = ReportValidator(sections, meta)
+        validator._check_empty_or_short_sections()
+
+        exec_errors = [
+            e for e in validator.errors
+            if e.category == "SECTION_TOO_SHORT"
+            and "EXECUTIVE_SUMMARY" in e.section
+        ]
+        assert len(exec_errors) == 0, (
+            f"Executive summary with 145 words should pass for KMU (min=140). "
+            f"Got: {exec_errors}"
+        )
+
+    def test_size_normalization_team_not_mapped_to_solo(self):
+        """FIX-TEAM-KMU: '2-10' must NOT map to solo (was broken by '1' in '2-10')."""
+        from services.report_validator import ReportValidator
+        meta = {"unternehmensgroesse": "2-10"}
+        validator = ReportValidator({}, meta)
+        assert validator._normalize_size_key() == "team", (
+            "'2-10' should normalize to 'team', not 'solo'"
+        )
+
+    def test_size_normalization_kmu_not_mapped_to_solo(self):
+        """FIX-TEAM-KMU: '11-100' must NOT map to solo (was broken by '1' in '11-100')."""
+        from services.report_validator import ReportValidator
+        meta = {"unternehmensgroesse": "11-100"}
+        validator = ReportValidator({}, meta)
+        assert validator._normalize_size_key() == "kmu", (
+            "'11-100' should normalize to 'kmu', not 'solo'"
+        )
+
+    def test_size_normalization_endash_team(self):
+        """En-dash variant '2\u201310' maps to team."""
+        from services.report_validator import ReportValidator
+        meta = {"unternehmensgroesse": "2\u201310"}
+        validator = ReportValidator({}, meta)
+        assert validator._normalize_size_key() == "team"
+
+    def test_size_normalization_solo_exact(self):
+        """'1' maps to solo correctly."""
+        from services.report_validator import ReportValidator
+        meta = {"unternehmensgroesse": "1"}
+        validator = ReportValidator({}, meta)
+        assert validator._normalize_size_key() == "solo"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
