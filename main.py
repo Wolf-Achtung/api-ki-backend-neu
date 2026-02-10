@@ -38,11 +38,14 @@ def _bool_env(name: str, default: str = "0") -> bool:
     return (os.getenv(name, default) or "").strip().lower() in {"1", "true", "yes"}
 
 
+import sys
+
 log_level = (os.getenv("LOG_LEVEL") or "INFO").upper()
 logging.basicConfig(
     level=log_level,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
+    stream=sys.stdout,  # FIX-618: Write to stdout so Railway classifies INFO logs correctly (not as [err])
 )
 log = logging.getLogger("ki-backend")
 
