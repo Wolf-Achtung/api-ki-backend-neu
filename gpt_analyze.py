@@ -6682,7 +6682,9 @@ LEAK_PHRASES = [
 ]
 
 # Sections eligible for 2-pass expand (per Batch 3 spec)
+# FIX-TEAM-KMU: Added executive_summary to expand-eligible list
 EXPAND_ELIGIBLE_SECTIONS = [
+    "executive_summary",
     "foerderpotenzial",
     "risks",
     "recommendations",
@@ -11094,6 +11096,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             # HINWEIS: Prompt fordert 900+ Wörter für roadmap_12m, aber wir prüfen
             # konservativ auf 800 Wörter – so verschwinden False Negatives bei Zähldifferenzen.
             platin_min_words = {
+                "executive_summary": 150,     # FIX-TEAM-KMU: Expand if too short
                 "roadmap": 100,               # ~600 Zeichen
                 "roadmap_90d": 100,           # ~600 Zeichen
                 "roadmap_12m": 800,           # PLATIN+: Prompt fordert 900, prüfen auf 800 (Sicherheitsmarge)
