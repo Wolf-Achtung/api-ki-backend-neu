@@ -1744,6 +1744,11 @@ _SIZE_CAPS = {
         "enablement": 92,
     },
 }
+# FIX-620: Add segment-name aliases so calibration resolves correctly
+# The system uses segment names (team, kmu) but _SIZE_CAPS uses German names (klein, mittel)
+_SIZE_CAPS["team"] = _SIZE_CAPS["klein"]
+_SIZE_CAPS["kmu"] = _SIZE_CAPS["mittel"]
+_SIZE_CAPS["enterprise"] = _SIZE_CAPS["gross"]
 
 # Project status factors: Reduce scores for early-stage projects
 _STATUS_FACTORS = {
@@ -1799,11 +1804,11 @@ def _infer_project_status(answers: Dict[str, Any]) -> str:
         if ind in projekt_status or ind in ki_projekte or ind in ki_einsatz:
             return "production"
 
-    # Default: assume testphase for solo, pilotphase for klein
+    # Default: assume testphase for solo, pilotphase for klein/team
     size = _safe_lower(answers.get("unternehmensgroesse", "solo"))
-    if size == "solo":
+    if size in ("solo", "freiberufler", "1"):
         return "testphase"
-    elif size == "klein":
+    elif size in ("klein", "team", "2-10"):
         return "pilotphase"
 
     return "unknown"
@@ -12796,25 +12801,46 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     if gamechanger_html and len(gamechanger_html) > 100:
         try:
             if use_compact_design:
-                # FIX-618: Check word count BEFORE compact to prevent validator SECTION_TOO_SHORT
+                # FIX-618/FIX-620: Check word count BEFORE compact to prevent validator SECTION_TOO_SHORT
                 _gc_text_before = re.sub(r"<[^>]+>", "", gamechanger_html).strip()
                 _gc_words_before = len(_gc_text_before.split()) if _gc_text_before else 0
-                # Compact reduces content drastically - only apply if we have enough headroom
-                # Validator requires 750 words for team, compact typically yields ~500 words
-                _gc_compact_safe = _gc_words_before >= 1200  # Need 1200+ words to survive compact
+                # FIX-620: Get min_words for current segment to calculate safe threshold
+                _gc_min_words = 750  # default
+                try:
+                    if get_min_words is not None:
+                        _gc_min_words = get_min_words(_trunc_segment, "gamechanger")
+                except Exception:
+                    pass
+                # Compact reduces content to ~40-50% of input words
+                # Need enough headroom so output stays above min_words
+                _gc_compact_threshold = max(1200, int(_gc_min_words * 2.5))
+                _gc_compact_safe = _gc_words_before >= _gc_compact_threshold
                 if _gc_compact_safe:
                     # NEU: Kompakte CI-Design v2.0 Darstellung
+                    _gc_pre_compact = gamechanger_html  # preserve for rollback
                     gamechanger_html = _generate_gamechanger_compact_from_html(
                         raw_html=gamechanger_html,
                         company_size=sections.get("UNTERNEHMENSGROESSE", "1"),
                         industry=sections.get("BRANCHE", ""),
                         hauptleistung=sections.get("HAUPTLEISTUNG", "")
                     )
-                    log.info(f"[CI-DESIGN] Gamechanger compact: {len(gamechanger_html)} chars")
+                    # FIX-620: Post-compact word count check - revert if below min_words
+                    _gc_text_after = re.sub(r"<[^>]+>", "", gamechanger_html).strip()
+                    _gc_words_after = len(_gc_text_after.split()) if _gc_text_after else 0
+                    if _gc_words_after < _gc_min_words:
+                        log.warning(
+                            "[CI-DESIGN][FIX-620] Gamechanger compact OUTPUT too short: "
+                            "%d words < %d min_words → reverting to pre-compact version (%d words)",
+                            _gc_words_after, _gc_min_words, _gc_words_before,
+                        )
+                        gamechanger_html = _gc_pre_compact
+                    else:
+                        log.info(f"[CI-DESIGN] Gamechanger compact: {len(gamechanger_html)} chars ({_gc_words_after} words)")
                 else:
                     log.info(
-                        f"[CI-DESIGN][FIX-618] Gamechanger compact SKIPPED: "
-                        f"{_gc_words_before} words < 1200 threshold (preserving full content for validator)"
+                        f"[CI-DESIGN][FIX-620] Gamechanger compact SKIPPED: "
+                        f"{_gc_words_before} words < {_gc_compact_threshold} threshold "
+                        f"(min_words={_gc_min_words}, preserving full content for validator)"
                     )
             else:
                 # Fallback: Alter Flow
@@ -12836,13 +12862,34 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     if foerderpotenzial_html and len(foerderpotenzial_html) > 100:
         try:
             if use_compact_design:
+                # FIX-620: Get min_words for current segment
+                _fp_min_words = 600  # default
+                try:
+                    if get_min_words is not None:
+                        _fp_min_words = get_min_words(_trunc_segment, "foerderpotenzial")
+                except Exception:
+                    pass
+                _fp_pre_compact = foerderpotenzial_html  # preserve for rollback
                 # NEU: Kompakte CI-Design v2.0 Darstellung
                 foerderpotenzial_html = _generate_funding_compact_from_html(
                     raw_html=foerderpotenzial_html,
                     bundesland=sections.get("BUNDESLAND", ""),
                     company_size=sections.get("UNTERNEHMENSGROESSE", "1")
                 )
-                log.info(f"[CI-DESIGN] Funding compact: {len(foerderpotenzial_html)} chars")
+                # FIX-620: Post-compact word count check - revert if below min_words
+                _fp_text_after = re.sub(r"<[^>]+>", "", foerderpotenzial_html).strip()
+                _fp_words_after = len(_fp_text_after.split()) if _fp_text_after else 0
+                _fp_text_before = re.sub(r"<[^>]+>", "", _fp_pre_compact).strip()
+                _fp_words_before = len(_fp_text_before.split()) if _fp_text_before else 0
+                if _fp_words_after < _fp_min_words and _fp_words_before >= _fp_min_words:
+                    log.warning(
+                        "[CI-DESIGN][FIX-620] Funding compact OUTPUT too short: "
+                        "%d words < %d min_words → reverting to pre-compact version (%d words)",
+                        _fp_words_after, _fp_min_words, _fp_words_before,
+                    )
+                    foerderpotenzial_html = _fp_pre_compact
+                else:
+                    log.info(f"[CI-DESIGN] Funding compact: {len(foerderpotenzial_html)} chars ({_fp_words_after} words)")
             else:
                 # Fallback: Alter Flow
                 foerderpotenzial_html = _enhance_text_readability(foerderpotenzial_html)
