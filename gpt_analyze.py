@@ -11105,7 +11105,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 "strategie_governance": 120,  # ~700 Zeichen
                 "risks": 800,                 # PLATIN+: 800 Wörter
                 "recommendations": 800,       # PLATIN+: 800 Wörter
-                "gamechanger": 700,           # PLATIN+: 700 Wörter
+                "gamechanger": 850,           # FIX-618: 700→850 (align with validator 750 + post-processing margin)
                 "tools_empfehlungen": 80,     # FIX-517B: solo-min safety net (align with validator)
                 "unternehmensprofil_markt": 600,  # N4.6: Added for 2-pass expand
             }
@@ -12142,7 +12142,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                 prompt=prompt_text,
                 system_prompt=sys_prompt,
                 temperature=params["temperature"],
-                max_tokens=min(params["max_tokens"], 600),
+                max_tokens=min(params["max_tokens"], 1200),  # FIX-618: 600→1200 to prevent reason=length truncation
                 model=params["model"],
             ) or ""
             sections["NEXT_ACTIONS_HTML"] = (
@@ -12165,7 +12165,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             prompt=f"""Erstelle 3–7 **Next Actions (30 Tage)** in <ol>. ...""",
             system_prompt="Du bist PMO-Lead. Antworte nur mit HTML.",
             temperature=params["temperature"],
-            max_tokens=min(params["max_tokens"], 600),
+            max_tokens=min(params["max_tokens"], 1200),  # FIX-618: 600→1200 to prevent reason=length truncation
             model=params["model"],
         ) or ""
         sections["NEXT_ACTIONS_HTML"] = (
@@ -12796,14 +12796,26 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     if gamechanger_html and len(gamechanger_html) > 100:
         try:
             if use_compact_design:
-                # NEU: Kompakte CI-Design v2.0 Darstellung
-                gamechanger_html = _generate_gamechanger_compact_from_html(
-                    raw_html=gamechanger_html,
-                    company_size=sections.get("UNTERNEHMENSGROESSE", "1"),
-                    industry=sections.get("BRANCHE", ""),
-                    hauptleistung=sections.get("HAUPTLEISTUNG", "")
-                )
-                log.info(f"[CI-DESIGN] Gamechanger compact: {len(gamechanger_html)} chars")
+                # FIX-618: Check word count BEFORE compact to prevent validator SECTION_TOO_SHORT
+                _gc_text_before = re.sub(r"<[^>]+>", "", gamechanger_html).strip()
+                _gc_words_before = len(_gc_text_before.split()) if _gc_text_before else 0
+                # Compact reduces content drastically - only apply if we have enough headroom
+                # Validator requires 750 words for team, compact typically yields ~500 words
+                _gc_compact_safe = _gc_words_before >= 1200  # Need 1200+ words to survive compact
+                if _gc_compact_safe:
+                    # NEU: Kompakte CI-Design v2.0 Darstellung
+                    gamechanger_html = _generate_gamechanger_compact_from_html(
+                        raw_html=gamechanger_html,
+                        company_size=sections.get("UNTERNEHMENSGROESSE", "1"),
+                        industry=sections.get("BRANCHE", ""),
+                        hauptleistung=sections.get("HAUPTLEISTUNG", "")
+                    )
+                    log.info(f"[CI-DESIGN] Gamechanger compact: {len(gamechanger_html)} chars")
+                else:
+                    log.info(
+                        f"[CI-DESIGN][FIX-618] Gamechanger compact SKIPPED: "
+                        f"{_gc_words_before} words < 1200 threshold (preserving full content for validator)"
+                    )
             else:
                 # Fallback: Alter Flow
                 gamechanger_html = _enhance_text_readability(gamechanger_html)

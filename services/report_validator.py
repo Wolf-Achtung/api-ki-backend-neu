@@ -807,16 +807,16 @@ class ReportValidator:
         "quick_wins": "QUICK_WINS_HTML",  # FIX-503B: Use HTML key, not text key
         "roadmap_90d": "ROADMAP_90D_HTML",          # FIX-TEAM-KMU: was shadow key
         "roadmap_12m": "ROADMAP_12M_HTML",           # FIX-TEAM-KMU: was shadow key
-        "strategie_governance": "strategie_governance",
+        "strategie_governance": "STRATEGIE_GOVERNANCE_HTML",  # FIX-618: prefer HTML key (was shadow key)
         "org_change": "org_change",
         "tools_empfehlungen": "TOOLS_EMPFEHLUNGEN_HTML",  # FIX-TEAM-KMU: prefer HTML
-        "foerderpotenzial": "foerderpotenzial",
+        "foerderpotenzial": "FOERDERPOTENZIAL_HTML",       # FIX-618: prefer HTML key (was shadow key, caused 45-word false alarm)
         "risks": "RISKS_HTML",                       # FIX-TEAM-KMU: was shadow key
         "recommendations": "RECOMMENDATIONS_HTML",   # FIX-TEAM-KMU: was shadow key
         "gamechanger": "GAMECHANGER_HTML",            # FIX-TEAM-KMU: was shadow key
-        "unternehmensprofil_markt": "unternehmensprofil_markt",
+        "unternehmensprofil_markt": "UNTERNEHMENSPROFIL_MARKT_HTML",  # FIX-618: prefer HTML key (was shadow key)
         "transparency_box": "transparency_box",
-        "technologie_prozesse": "technologie_prozesse",
+        "technologie_prozesse": "TECHNOLOGIE_PROZESSE_HTML",  # FIX-618: prefer HTML key
         # SPRINT N: Additional section mappings
         "wettbewerb_benchmark": "wettbewerb_benchmark",
         "monetarisierung": "monetarisierung",
@@ -868,6 +868,11 @@ class ReportValidator:
         "next_actions": "NEXT_ACTIONS_HTML",
         "ki_stack_summary": "KI_STACK_SUMMARY_HTML",
         "pilot_plan": "PILOT_PLAN_HTML",
+        # FIX-618: Additional shadow keys that have HTML counterparts
+        "foerderpotenzial": "FOERDERPOTENZIAL_HTML",
+        "strategie_governance": "STRATEGIE_GOVERNANCE_HTML",
+        "unternehmensprofil_markt": "UNTERNEHMENSPROFIL_MARKT_HTML",
+        "technologie_prozesse": "TECHNOLOGIE_PROZESSE_HTML",
     }
 
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:
