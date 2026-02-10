@@ -6688,6 +6688,7 @@ LEAK_PHRASES = [
 
 # Sections eligible for 2-pass expand (per Batch 3 spec)
 # FIX-TEAM-KMU: Added executive_summary to expand-eligible list
+# FIX-620: Added quick_wins - KMU requires 120+ words but LLM sometimes generates only 1 item
 EXPAND_ELIGIBLE_SECTIONS = [
     "executive_summary",
     "foerderpotenzial",
@@ -6696,6 +6697,7 @@ EXPAND_ELIGIBLE_SECTIONS = [
     "roadmap_12m",
     "gamechanger",
     "unternehmensprofil_markt",
+    "quick_wins",
 ]
 
 # FIX-511 CHANGE 1: Healable leak phrases that can be deterministically replaced

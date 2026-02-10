@@ -1957,6 +1957,21 @@ def _normalize_for_fingerprint(text: str) -> str:
     return result.strip()
 
 
+def _jaccard_word_similarity(text_a: str, text_b: str) -> float:
+    """
+    FIX-620: Jaccard similarity on word sets for near-duplicate detection.
+
+    Returns value between 0.0 (no overlap) and 1.0 (identical word sets).
+    """
+    words_a = set(text_a.split())
+    words_b = set(text_b.split())
+    if not words_a or not words_b:
+        return 0.0
+    intersection = words_a & words_b
+    union = words_a | words_b
+    return len(intersection) / len(union)
+
+
 def _extract_blocks(html: str) -> List[Tuple[str, str, int, int]]:
     """
     Extract text blocks from HTML.
@@ -2004,7 +2019,9 @@ def reduce_redundancy(
     """
     stats = RedundancyStats()
     result: Dict[str, str] = {}
-    seen_fingerprints: Dict[str, str] = {}  # fingerprint -> first section
+    seen_fingerprints: Dict[str, str] = {}  # fp_hash -> first section
+    # FIX-620: Store normalized text per hash for near-duplicate Jaccard comparison
+    seen_fp_texts: Dict[str, str] = {}  # fp_hash -> normalized text
 
     # TASK 2 (P0 FINAL): Sections protected from deduplication (NEVER EMPTY guarantee)
     PROTECTED_SECTION_KEYS = {"QUICK_WINS_HTML", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT"}
@@ -2044,14 +2061,36 @@ def reduce_redundancy(
             if fp_hash in seen_fingerprints:
                 first_section = seen_fingerprints[fp_hash]
                 if first_section != section_name:
-                    # Cross-section duplicate
+                    # Cross-section exact duplicate
                     removals.append((start, end, f"duplicate from {first_section}"))
                     log.debug(
                         "[FIX-C] Cross-section duplicate: %s (first in %s)",
                         content[:50], first_section
                     )
             else:
-                seen_fingerprints[fp_hash] = section_name
+                # FIX-620: Check near-duplicates via Jaccard similarity
+                # Only for blocks with enough words to make comparison meaningful
+                near_dup_found = False
+                if len(fingerprint.split()) >= 15:
+                    for prev_hash, prev_text in seen_fp_texts.items():
+                        prev_section = seen_fingerprints[prev_hash]
+                        if prev_section == section_name:
+                            continue
+                        if len(prev_text.split()) < 15:
+                            continue
+                        sim = _jaccard_word_similarity(fingerprint, prev_text)
+                        if sim >= similarity_threshold:
+                            removals.append((start, end, f"near-dup ({sim:.0%}) from {prev_section}"))
+                            log.debug(
+                                "[FIX-C] Near-duplicate (%.0f%%): '%s' ~ '%s' (in %s)",
+                                sim * 100, content[:40], prev_text[:40], prev_section
+                            )
+                            near_dup_found = True
+                            break
+
+                if not near_dup_found:
+                    seen_fingerprints[fp_hash] = section_name
+                    seen_fp_texts[fp_hash] = fingerprint
 
         # Also check for intra-section duplicates
         section_fps: Dict[str, int] = {}
@@ -2607,27 +2646,97 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "EXECUTIVE_SUMMARY_HTML": 2000,
         "QUICK_WINS_HTML": 1500,
         "ROADMAP_90D_HTML": 1200,
+        "ROADMAP_12M_HTML": 8000,
         "RECOMMENDATIONS_HTML": 1500,
         "RISKS_HTML": 1200,
+        "GAMECHANGER_HTML": 1500,
+        "FOERDERPOTENZIAL_HTML": 1000,
+        "ORG_CHANGE_HTML": 1200,
         "BUSINESS_CASE_HTML": 2500,
+        "PILOT_PLAN_HTML": 1200,
+        "DATA_READINESS_HTML": 1200,
+        "STRATEGIE_GOVERNANCE_HTML": 1200,
+        "UNTERNEHMENSPROFIL_MARKT_HTML": 1500,
+        "MONETARISIERUNG_HTML": 1200,
+        "KI_SKILLPLAN_HTML": 1200,
+        "TOOLS_EMPFEHLUNGEN_HTML": 1200,
+        "TECHNOLOGIE_PROZESSE_HTML": 2000,
+        # Engine-generated sections (structured output, not LLM free-text)
+        "AUTOMATION_ROADMAP_HTML": 8000,
+        "BENCHMARK_ENGINE_HTML": 6000,
+        "RESPONSIBLE_AI_HTML": 6000,
+        "BUSINESS_CASE_ENGINE_HTML": 5000,
+        "BUSINESS_CASE_SIM_HTML": 4000,
+        "VENDOR_AUDIT_HTML": 3000,
+        "RISK_ENGINE_HTML": 5000,
+        "RISK_ENGINE_V3_HTML": 4000,
+        "RECOMMENDATIONS_ENGINE_HTML": 6000,
         "_default": 1000,
     },
     "team": {
         "EXECUTIVE_SUMMARY_HTML": 3000,
         "QUICK_WINS_HTML": 2000,
         "ROADMAP_90D_HTML": 1800,
+        "ROADMAP_12M_HTML": 12000,
         "RECOMMENDATIONS_HTML": 2500,
         "RISKS_HTML": 1800,
+        "GAMECHANGER_HTML": 10000,
+        "FOERDERPOTENZIAL_HTML": 2000,
+        "ORG_CHANGE_HTML": 1800,
         "BUSINESS_CASE_HTML": 4000,
+        "PILOT_PLAN_HTML": 1800,
+        "DATA_READINESS_HTML": 1800,
+        "STRATEGIE_GOVERNANCE_HTML": 3000,
+        "UNTERNEHMENSPROFIL_MARKT_HTML": 2500,
+        "MONETARISIERUNG_HTML": 1800,
+        "KI_SKILLPLAN_HTML": 1800,
+        "TOOLS_EMPFEHLUNGEN_HTML": 3000,
+        "TECHNOLOGIE_PROZESSE_HTML": 3000,
+        # Engine-generated sections (structured output, not LLM free-text)
+        "AUTOMATION_ROADMAP_HTML": 18000,
+        "BENCHMARK_ENGINE_HTML": 12000,
+        "RESPONSIBLE_AI_HTML": 12000,
+        "BUSINESS_CASE_ENGINE_HTML": 8000,
+        "BUSINESS_CASE_SIM_HTML": 6000,
+        "VENDOR_AUDIT_HTML": 4000,
+        "RISK_ENGINE_HTML": 7000,
+        "RISK_ENGINE_V3_HTML": 5000,
+        "RECOMMENDATIONS_ENGINE_HTML": 10000,
         "_default": 1500,
     },
     "kmu": {
         "EXECUTIVE_SUMMARY_HTML": 4000,
         "QUICK_WINS_HTML": 2500,
         "ROADMAP_90D_HTML": 2500,
+        "ROADMAP_12M_HTML": 14000,
         "RECOMMENDATIONS_HTML": 3500,
         "RISKS_HTML": 2500,
+        "GAMECHANGER_HTML": 12000,
+        "FOERDERPOTENZIAL_HTML": 10000,
+        "ORG_CHANGE_HTML": 2000,
         "BUSINESS_CASE_HTML": 5000,
+        "PILOT_PLAN_HTML": 2000,
+        "DATA_READINESS_HTML": 2000,
+        "STRATEGIE_GOVERNANCE_HTML": 3500,
+        "UNTERNEHMENSPROFIL_MARKT_HTML": 3000,
+        "MONETARISIERUNG_HTML": 2000,
+        "KI_SKILLPLAN_HTML": 2000,
+        "TOOLS_EMPFEHLUNGEN_HTML": 3500,
+        "TECHNOLOGIE_PROZESSE_HTML": 3000,
+        # FIX-620: Engine-generated sections need generous budgets
+        # These are structurally generated (not LLM free-text) and produce
+        # well-structured content that shouldn't be aggressively trimmed.
+        # Observed sizes from Railway log: AUTOMATION=22k, BENCHMARK=15k,
+        # RESPONSIBLE_AI=14.8k, BC_ENGINE=8.2k, BC_SIM=7k, RISK=8k
+        "AUTOMATION_ROADMAP_HTML": 25000,
+        "BENCHMARK_ENGINE_HTML": 16000,
+        "RESPONSIBLE_AI_HTML": 15000,
+        "BUSINESS_CASE_ENGINE_HTML": 10000,
+        "BUSINESS_CASE_SIM_HTML": 8000,
+        "VENDOR_AUDIT_HTML": 5000,
+        "RISK_ENGINE_HTML": 8000,
+        "RISK_ENGINE_V3_HTML": 5000,
+        "RECOMMENDATIONS_ENGINE_HTML": 12000,
         "_default": 2000,
     },
 }
