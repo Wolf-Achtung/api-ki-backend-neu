@@ -1214,16 +1214,16 @@ def normalize_quickwins_to_html(raw: str, strict: bool = False) -> tuple[str, di
     return result_html, meta
 
 
-def _generate_minimal_quickwins_fallback() -> str:
+def _generate_minimal_quickwins_fallback(company_size: str = "solo") -> str:
     """
     Generate minimal Quick Wins fallback HTML when normalization fails.
 
     FIX-PIPELINE: This ensures Quick Wins NEVER crashes the pipeline.
-    Returns a valid HTML structure with 3 generic but useful items.
+    FIX-620: Size-aware - generates 3 items for solo, 4 for team, 5 for KMU.
+    Returns a valid HTML structure with generic but useful items.
     """
-    return '''<!-- RENDERED:quick_wins -->
-<div class="quick-wins-container" data-qw-json-rendered="true">
-  <div class="quick-win" data-fallback="true">
+    items = [
+        '''  <div class="quick-win" data-fallback="true">
     <h4>1. KI-Assistenten für Alltagsaufgaben einsetzen</h4>
     <p><strong>Nutzen:</strong> Zeitersparnis bei wiederkehrenden Texten, E-Mails und Recherchen.</p>
     <p><strong>Aufwand:</strong> S (wenige Stunden Einarbeitung)</p>
@@ -1233,8 +1233,8 @@ def _generate_minimal_quickwins_fallback() -> str:
       <li>Erste Anwendungsfälle identifizieren</li>
       <li>Prompt-Templates für häufige Aufgaben erstellen</li>
     </ol>
-  </div>
-  <div class="quick-win" data-fallback="true">
+  </div>''',
+        '''  <div class="quick-win" data-fallback="true">
     <h4>2. Dokumentation und Wissensbasis aufbauen</h4>
     <p><strong>Nutzen:</strong> Schnellerer Zugriff auf wichtige Informationen, weniger Suchzeit.</p>
     <p><strong>Aufwand:</strong> M (1-2 Wochen schrittweise)</p>
@@ -1244,8 +1244,8 @@ def _generate_minimal_quickwins_fallback() -> str:
       <li>Wichtigste Prozesse dokumentieren</li>
       <li>Suchfunktion optimieren oder KI-Suche integrieren</li>
     </ol>
-  </div>
-  <div class="quick-win" data-fallback="true">
+  </div>''',
+        '''  <div class="quick-win" data-fallback="true">
     <h4>3. Erste Automatisierung einrichten</h4>
     <p><strong>Nutzen:</strong> Manuelle Routineaufgaben eliminieren, Fehler reduzieren.</p>
     <p><strong>Aufwand:</strong> M (wenige Tage Setup)</p>
@@ -1255,5 +1255,43 @@ def _generate_minimal_quickwins_fallback() -> str:
       <li>Automatisierungstool auswählen (Make, Zapier, n8n)</li>
       <li>Ersten Workflow aufsetzen und testen</li>
     </ol>
-  </div>
+  </div>''',
+        '''  <div class="quick-win" data-fallback="true">
+    <h4>4. KI-gestützte Qualitätssicherung etablieren</h4>
+    <p><strong>Nutzen:</strong> Konsistentere Ergebnisse, weniger manuelle Nacharbeit bei Dokumenten und Prozessen.</p>
+    <p><strong>Aufwand:</strong> S (wenige Stunden Setup)</p>
+    <p><strong>Nächste Schritte:</strong></p>
+    <ol>
+      <li>Prüfchecklisten für KI-Outputs definieren</li>
+      <li>Korrektur-Workflows mit KI-Unterstützung aufsetzen</li>
+      <li>Feedback-Schleife für kontinuierliche Verbesserung einrichten</li>
+    </ol>
+  </div>''',
+        '''  <div class="quick-win" data-fallback="true">
+    <h4>5. Datenbasierte Entscheidungsgrundlagen schaffen</h4>
+    <p><strong>Nutzen:</strong> Bessere Entscheidungen durch KI-Analyse vorhandener Geschäftsdaten und Marktinformationen.</p>
+    <p><strong>Aufwand:</strong> M (1-2 Wochen schrittweise)</p>
+    <p><strong>Nächste Schritte:</strong></p>
+    <ol>
+      <li>Relevante Datenquellen identifizieren und konsolidieren</li>
+      <li>KI-Analysetool für Ihr Datenformat auswählen</li>
+      <li>Erste Dashboard-Vorlage mit KI-Unterstützung erstellen</li>
+    </ol>
+  </div>''',
+    ]
+
+    # FIX-620: Size-aware item count
+    size_lower = (company_size or "").lower()
+    if any(x in size_lower for x in ("kmu", "mittel", "11-100", "100")):
+        item_count = 5
+    elif any(x in size_lower for x in ("team", "klein", "2-10")):
+        item_count = 4
+    else:
+        item_count = 3
+
+    selected = items[:item_count]
+    inner = "\n".join(selected)
+    return f'''<!-- RENDERED:quick_wins -->
+<div class="quick-wins-container" data-qw-json-rendered="true">
+{inner}
 </div>'''
