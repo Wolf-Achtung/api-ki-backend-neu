@@ -138,6 +138,10 @@ SECURITY_CONTEXT_SECTIONS: List[str] = [
     "SECURITY_HTML",
     "DATA_SECURITY_HTML",
     "COMPLIANCE_HTML",
+    # FIX-620: TOOLS_EMPFEHLUNGEN legitimately discusses Credential-Management,
+    # Identity & Access Management, etc. - not actual credential leaks
+    "TOOLS_EMPFEHLUNGEN_HTML",
+    "tools_empfehlungen",
 ]
 
 # =============================================================================
