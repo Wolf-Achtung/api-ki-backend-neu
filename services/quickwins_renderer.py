@@ -1091,7 +1091,7 @@ def _inject_markers_into_html(html_content: str) -> str:
     return modified
 
 
-def normalize_quickwins_to_html(raw: str, strict: bool = False) -> tuple[str, dict]:
+def normalize_quickwins_to_html(raw: str, strict: bool = False, company_size: str = "solo") -> tuple[str, dict]:
     """
     FIX-512: Deterministic QuickWins normalization (Text/Bullets → HTML).
 
@@ -1101,6 +1101,7 @@ def normalize_quickwins_to_html(raw: str, strict: bool = False) -> tuple[str, di
     Args:
         raw: Raw Quick Wins content (JSON, HTML, or plain text)
         strict: If True and normalization fails, raise RuntimeError
+        company_size: Company size for size-aware fallback (solo/team/kmu)
 
     Returns:
         Tuple of (normalized_html, meta_dict) where meta_dict contains:
@@ -1114,7 +1115,7 @@ def normalize_quickwins_to_html(raw: str, strict: bool = False) -> tuple[str, di
         if strict:
             # FIX-PIPELINE: Empty input in STRICT mode → return fallback (no raise)
             log.warning("[QW-NORMALIZE] ⚠️ empty input in STRICT mode - generating fallback")
-            fallback_html = _generate_minimal_quickwins_fallback()
+            fallback_html = _generate_minimal_quickwins_fallback(company_size)
             fallback_meta = {
                 "path": "FALLBACK_STRICT",
                 "items": 3,
@@ -1193,7 +1194,7 @@ def normalize_quickwins_to_html(raw: str, strict: bool = False) -> tuple[str, di
             item_count, len(result_html)
         )
         # Generate minimal fallback HTML instead of raising
-        fallback_html = _generate_minimal_quickwins_fallback()
+        fallback_html = _generate_minimal_quickwins_fallback(company_size)
         fallback_meta = {
             "path": "FALLBACK_STRICT",
             "items": 3,

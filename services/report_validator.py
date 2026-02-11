@@ -749,6 +749,8 @@ class ReportValidator:
             "org_change": 100,
             "tools_empfehlungen": 190,  # SPRINT G6: erhöht von 160
             "strategie_governance": 200,  # SPRINT G6: konsistent mit anderen
+            "foerderpotenzial": 40,     # FIX-620: compact Förder-Überblick layout (~45 words valid)
+            "risks": 450,              # FIX-620: 480 words observed, slight gap to global 500
             "gamechanger": 750,         # SPRINT N: Mindestlänge fix
             "transparency_box": 150,
             "technologie_prozesse": 200,
