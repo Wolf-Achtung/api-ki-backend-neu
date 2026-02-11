@@ -416,11 +416,8 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     roi_raw_str = _fmt_roi(roi_12m_percent_raw)
     roi_capped_str = _fmt_roi(roi_12m_percent_capped)
 
-    # v14.35.23: Show both raw and capped ROI if different
-    if roi_was_capped:
-        roi_display = f"{roi_raw_str} % (berechnet) / {roi_capped_str} % (Planwert, gedeckelt)"
-    else:
-        roi_display = f"{roi_capped_str} %"
+    # FIX-620: Show only capped ROI to avoid N4.3 numerical=2 (dual value confusion)
+    roi_display = f"{roi_capped_str} %"
 
     table = f"""
 <section class="card">
@@ -577,11 +574,8 @@ def _generate_ai_act_adjusted_table(
             return "—"
         return f"{val:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-    # v14.35.23: Show both raw and capped ROI if different
-    if roi_was_capped and roi_12m_pct_raw is not None:
-        roi_percent_str = f"{_fmt_roi_val(roi_12m_pct_raw)} % (berechnet) / {_fmt_roi_val(roi_12m_pct)} % (Planwert)"
-    else:
-        roi_percent_str = "—" if roi_12m_pct is None else f"{_fmt_roi_val(roi_12m_pct)} %"
+    # FIX-620: Show only capped ROI to avoid N4.3 numerical=2 (dual value confusion)
+    roi_percent_str = "—" if roi_12m_pct is None else f"{_fmt_roi_val(roi_12m_pct)} %"
     payback_str = "—" if payback is None else f"{payback:.1f}".replace(".", ",") + " Monate"
 
     # Compliance note based on risk level
