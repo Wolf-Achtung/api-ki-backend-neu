@@ -4117,7 +4117,7 @@ def _enforce_quickwins_no_raw_json(qw_html: str, branche: str, groesse: str) -> 
         # FIX-512: Instead of STRICT blocker, normalize the content deterministically
         release_strict = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
         log.info("[FIX-512] JSON unparseable - attempting deterministic normalization (strict=%s)", release_strict)
-        normalized, meta = normalize_quickwins_to_html(qw_html, strict=release_strict)
+        normalized, meta = normalize_quickwins_to_html(qw_html, strict=release_strict, company_size=groesse)
         if normalized:
             return normalized
         log.warning("[QW-FALLBACK] JSON unparseable, normalization empty - using compact fallback")
@@ -4127,7 +4127,7 @@ def _enforce_quickwins_no_raw_json(qw_html: str, branche: str, groesse: str) -> 
     if not has_html_structure:
         release_strict = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
         log.info("[FIX-512] No HTML structure - attempting deterministic normalization (strict=%s)", release_strict)
-        normalized, meta = normalize_quickwins_to_html(qw_html, strict=release_strict)
+        normalized, meta = normalize_quickwins_to_html(qw_html, strict=release_strict, company_size=groesse)
         if normalized:
             return normalized
         log.info("[QW-FALLBACK] Normalization empty - generating compact fallback")
@@ -8751,16 +8751,9 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     roi_capped_str: str = f"{float(roi_capped_val):.0f}"
     roi_raw_str: str = f"{float(roi_raw_val):.0f}"
 
-    # v14.35.24: Show both raw and capped ROI if different (Option A implementation)
-    if roi_was_capped and roi_raw_val != roi_capped_val:
-        # German: "241 (berechnet) / 200 (Planwert)"
-        # English: "241 (calculated) / 200 (capped)"
-        if briefing_lang == "en":
-            roi_12m = f"{roi_raw_str} (calculated) / {roi_capped_str} (capped)"
-        else:
-            roi_12m = f"{roi_raw_str} (berechnet) / {roi_capped_str} (Planwert)"
-    else:
-        roi_12m = roi_capped_str
+    # FIX-620: Show only capped ROI to avoid N4.3 numerical=2 (dual display confusion)
+    # The raw (berechnet) value is shown in the Business Case engine detail section.
+    roi_12m = roi_capped_str
 
     # ════════════════════════════════════════════════════════════════════════════
     # 🎯 PLATIN+ FALLBACK: FOERDERPOTENZIAL (900+ Wörter)
@@ -9899,11 +9892,8 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
             except (ValueError, TypeError):
                 return str(val)
 
-        # v14.35.23: Show both raw and capped ROI if different
-        if roi_was_capped and roi_raw_val is not None:
-            roi_display = f"{_fmt_roi_pct(roi_raw_val)} % (berechnet) / {_fmt_roi_pct(roi_capped_val)} % (Planwert)"
-        else:
-            roi_display = f"{_fmt_roi_pct(roi_capped_val)} %"
+        # FIX-620: Show only capped ROI to avoid N4.3 numerical=2 (dual value confusion)
+        roi_display = f"{_fmt_roi_pct(roi_capped_val)} %"
 
         return f"""<div class="business-case-summary">
   <h3>Business Case Übersicht</h3>
@@ -14832,19 +14822,11 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         sections["monatsersparnis_stunden"] = time_hours_capped
         sections["qw_hours_total"] = time_hours_capped
 
-        # 3. ROI_12M_DISPLAY_DE - Option A: "241 % (berechnet) / 200 % (Planwert)" if capped
+        # 3. ROI_12M_DISPLAY_DE - FIX-620: Show only capped value (avoids N4.3 numerical=2)
+        # The raw (berechnet) value is still available in Business Case engine detail.
         roi_capped = sections.get("ROI_12M", 0)
-        roi_raw = sections.get("ROI_12M_RAW", roi_capped)
-        roi_was_capped = sections.get("ROI_WAS_CAPPED", False)
-
         roi_capped_str = _fmt_int_no_float(roi_capped)
-        roi_raw_str = _fmt_int_no_float(roi_raw)
-
-        if roi_was_capped and float(roi_raw or 0) != float(roi_capped or 0):
-            # Option A: Show both raw (computed) and capped (planning value)
-            sections["ROI_12M_DISPLAY_DE"] = f"{roi_raw_str} % (berechnet) / {roi_capped_str} % (Planwert)"
-        else:
-            sections["ROI_12M_DISPLAY_DE"] = f"{roi_capped_str} %"
+        sections["ROI_12M_DISPLAY_DE"] = f"{roi_capped_str} %"
 
         log.info(f"[{run_id}] ✅ [P0.1] Template bindings: PAYBACK={sections['PAYBACK_MONTHS_FMT_DE']}, "
                  f"HOURS={sections['TIME_SAVINGS_MONTH_HOURS_FMT']}, ROI_DISPLAY={sections['ROI_12M_DISPLAY_DE']}")

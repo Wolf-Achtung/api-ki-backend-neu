@@ -291,15 +291,12 @@ class TestP01TemplateBindings:
         roi_capped = 200.0
         roi_was_capped = True
 
-        roi_raw_str = _fmt_int_no_float(roi_raw)
         roi_capped_str = _fmt_int_no_float(roi_capped)
 
-        if roi_was_capped and float(roi_raw) != float(roi_capped):
-            roi_display = f"{roi_raw_str} % (berechnet) / {roi_capped_str} % (Planwert)"
-        else:
-            roi_display = f"{roi_capped_str} %"
+        # FIX-620: Show only capped ROI to avoid N4.3 numerical=2
+        roi_display = f"{roi_capped_str} %"
 
-        assert roi_display == "240 % (berechnet) / 200 % (Planwert)"
+        assert roi_display == "200 %"
 
     def test_roi_display_de_uncapped(self):
         """Test ROI display format when not capped."""
@@ -315,10 +312,8 @@ class TestP01TemplateBindings:
 
         roi_capped_str = _fmt_int_no_float(roi_capped)
 
-        if roi_was_capped and float(roi_raw) != float(roi_capped):
-            roi_display = f"{_fmt_int_no_float(roi_raw)} % (berechnet) / {roi_capped_str} % (Planwert)"
-        else:
-            roi_display = f"{roi_capped_str} %"
+        # FIX-620: Show only capped ROI to avoid N4.3 numerical=2
+        roi_display = f"{roi_capped_str} %"
 
         assert roi_display == "80 %"
 
