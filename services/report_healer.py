@@ -74,7 +74,75 @@ __all__ = [
     "BUSINESS_CASE_LABEL_LOCALIZATION_DE",
     "BoilerplatePattern",
     "PaybackPattern",
+    "sanitize_business_case_empty_values",
 ]
+
+
+# =============================================================================
+# WP1: Business-Case Empty Value Sanitizer
+# =============================================================================
+# Catches residual "€.", "bei %", ": %" artifacts from template rendering
+# when business case numeric values are missing or empty.
+
+_BC_EMPTY_VALUE_PATTERNS: List[Tuple[str, str]] = [
+    # "€." or "€ ." → "n. v."
+    (r'<strong>\s*€\s*</strong>\s*\.', 'n.&thinsp;v.'),
+    (r'<strong>\s*&nbsp;\s*€\s*</strong>', '<strong>n.&thinsp;v.</strong>'),
+    (r'(?<!\d)\s*€\s*\.(?!\d)', ' n.&thinsp;v.'),
+    # "bei %" or "bei  %" → "bei n. v."
+    (r'bei\s+<strong>\s*&nbsp;\s*%\s*</strong>', 'bei <strong>n.&thinsp;v.</strong>'),
+    (r'bei\s+<strong>\s*%\s*</strong>', 'bei <strong>n.&thinsp;v.</strong>'),
+    (r'bei\s+%', 'bei n.&thinsp;v.'),
+    # ": €." → ": n. v."
+    (r':\s*€\s*\.', ': n.&thinsp;v.'),
+    (r':\s+%', ': n.&thinsp;v.'),
+    # Standalone "€." at end of sentence / before period
+    (r'\b€\s*\.\s', 'n.&thinsp;v. '),
+    # "0 €" or "0€" → keep (zero is a valid value, not empty)
+    # Empty table cells: ">€</td>" or "> €</td>"
+    (r'>\s*€\s*</', '>n.&thinsp;v.</', ),
+    (r'>\s*€/Monat\s*</', '>n.&thinsp;v.</'),
+    # "— %" with dash → keep as is (already handled)
+]
+
+
+def sanitize_business_case_empty_values(html: str) -> Tuple[str, int]:
+    """
+    WP1: Remove empty currency/percentage artifacts from business case HTML.
+
+    Catches patterns like "€.", "bei %", ": %" that result from template
+    variables resolving to empty strings.
+
+    Args:
+        html: HTML string to sanitize
+
+    Returns:
+        Tuple of (sanitized_html, number_of_fixes_applied)
+    """
+    if not html or not isinstance(html, str):
+        return html or "", 0
+
+    result = html
+    fixes = 0
+
+    for pattern_str, replacement in _BC_EMPTY_VALUE_PATTERNS:
+        try:
+            pattern = re.compile(pattern_str, re.IGNORECASE)
+            matches = pattern.findall(result)
+            if matches:
+                result = pattern.sub(replacement, result)
+                fixes += len(matches)
+                log.debug(
+                    "[WP1-BC-SANITIZE] Replaced %d empty value artifacts: %s",
+                    len(matches), pattern_str[:40]
+                )
+        except re.error as e:
+            log.warning("[WP1-BC-SANITIZE] Regex error: %s for pattern: %s", e, pattern_str[:40])
+
+    if fixes > 0:
+        log.info("[WP1-BC-SANITIZE] Fixed %d empty business case value artifacts", fixes)
+
+    return result, fixes
 
 
 # =============================================================================
@@ -3298,6 +3366,13 @@ def heal_final_html(
             fixes_applied += label_fixes
         except Exception as e:
             log.warning("[HEALER-POST] Label localization error: %s", e)
+
+    # WP1: Business-case empty value sanitizer (€., bei %, : %)
+    try:
+        result, bc_empty_fixes = sanitize_business_case_empty_values(result)
+        fixes_applied += bc_empty_fixes
+    except Exception as e:
+        log.warning("[HEALER-POST] WP1 business case empty value sanitizer error: %s", e)
 
     # TASK D: ROI as qualitative ranges for SOLO (P1 optional)
     if segment_lower == "solo":

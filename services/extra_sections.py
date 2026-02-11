@@ -159,7 +159,8 @@ def _fmt_eur(value: Optional[float | int]) -> str:
     try:
         v = float(value)
     except Exception:
-        return str(value)
+        sv = str(value).strip()
+        return sv if sv else "—"
     s = f"{v:,.0f}"
     return s.replace(",", "X").replace(".", ",").replace("X", ".")
 
@@ -574,9 +575,9 @@ def _generate_ai_act_adjusted_table(
             return "—"
         return f"{val:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-    # FIX-620: Show only capped ROI to avoid N4.3 numerical=2 (dual value confusion)
-    roi_percent_str = "—" if roi_12m_pct is None else f"{_fmt_roi_val(roi_12m_pct)} %"
-    payback_str = "—" if payback is None else f"{payback:.1f}".replace(".", ",") + " Monate"
+    # FIX-620 + WP1: Show only capped ROI, never produce empty "%" artifact
+    roi_percent_str = "n.&thinsp;v." if roi_12m_pct is None else f"{_fmt_roi_val(roi_12m_pct)} %"
+    payback_str = "n.&thinsp;v." if payback is None else f"{payback:.1f}".replace(".", ",") + " Monate"
 
     # Compliance note based on risk level
     if capex_factor > 1.0 or opex_factor > 1.0:
@@ -604,7 +605,7 @@ def _generate_ai_act_adjusted_table(
       <tr><td>Laufende Kosten (OPEX)</td><td>{_fmt_eur(opex)} €/Monat</td><td>Inkl. Governance & Monitoring</td></tr>
       <tr><td>Amortisation</td><td>{payback_str}</td><td>CAPEX ÷ (Nutzen − OPEX)</td></tr>
       <tr><td>ROI nach 12&nbsp;Monaten</td>
-          <td>{_fmt_eur(roi_12m_eur)} € ({roi_percent_str} %)</td>
+          <td>{_fmt_eur(roi_12m_eur)} € ({roi_percent_str})</td>
           <td>Nettonutzen nach Abzug aller Kosten</td></tr>{compliance_note}
     </tbody>
   </table>
