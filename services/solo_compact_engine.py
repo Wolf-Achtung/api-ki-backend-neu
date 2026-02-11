@@ -20,6 +20,7 @@ Total: 12-16 pages (hard gate)
 """
 
 import logging
+import os
 import re
 from dataclasses import dataclass, field
 from enum import Enum
@@ -627,10 +628,138 @@ def process_for_solo_compact(
 
 
 # =============================================================================
+# WP4: TEAM/KMU COMPACT PAYLOAD GUARD
+# =============================================================================
+# Auto-compact mode for Team (2-10) and KMU (11-100) reports when HTML
+# payload exceeds thresholds. Prevents 9MB/92-page PDF monsters.
+
+# Max pages per size profile before auto-compact triggers
+MAX_PAGES_BY_SIZE: Dict[str, int] = {
+    "solo": 16,
+    "team": 35,
+    "kmu": 45,
+}
+
+# HTML size thresholds (KB) for auto-compact
+HTML_COMPACT_THRESHOLD_KB: int = int(os.getenv("HTML_COMPACT_THRESHOLD_KB", "450"))
+
+# Low-priority sections to drop when auto-compacting Team/KMU
+TEAM_KMU_LOW_PRIORITY_SECTIONS: List[str] = [
+    "VENDOR_AUDIT_HTML",
+    "AUTOMATION_ROADMAP_HTML",
+    "FUNDING_BRANCH_ALIGNMENT_HTML",
+    "TOOLS_FUNDING_ALIGNMENT_HTML",
+    "TOOLS_BRANCH_ALIGNMENT_HTML",
+    "ROI_TRACKING_HTML",
+    "KICKOFF_HTML",
+    "PROMPT_FRAMEWORK_HTML",
+    "BUSINESS_CASE_SIM_HTML",
+]
+
+
+@dataclass
+class CompactGuardResult:
+    """Result of compact/payload guard check."""
+    compacted: bool = False
+    original_size_kb: float = 0.0
+    final_size_kb: float = 0.0
+    original_pages: int = 0
+    final_pages: int = 0
+    sections_dropped: List[str] = field(default_factory=list)
+    reason: str = ""
+
+
+def check_and_apply_compact_guard(
+    html: str,
+    sections: Dict[str, Any],
+    company_size: str = "team",
+) -> Tuple[str, Dict[str, Any], CompactGuardResult]:
+    """
+    WP4: Check if report HTML exceeds size/page thresholds and apply
+    auto-compact if needed.
+
+    Args:
+        html: Rendered HTML string
+        sections: Report sections dict
+        company_size: Company size identifier (solo/team/kmu)
+
+    Returns:
+        Tuple of (possibly_compacted_html, updated_sections, guard_result)
+    """
+    size_lower = company_size.lower().strip()
+    size_kb = len(html.encode("utf-8")) / 1024
+    estimated_pages = estimate_page_count(html)
+    max_pages = MAX_PAGES_BY_SIZE.get(size_lower, 45)
+
+    result = CompactGuardResult(
+        original_size_kb=size_kb,
+        original_pages=estimated_pages,
+    )
+
+    needs_compact = False
+    reasons: List[str] = []
+
+    if size_kb > HTML_COMPACT_THRESHOLD_KB:
+        needs_compact = True
+        reasons.append(f"HTML size {size_kb:.0f}KB > {HTML_COMPACT_THRESHOLD_KB}KB threshold")
+
+    if estimated_pages > max_pages:
+        needs_compact = True
+        reasons.append(f"Page count {estimated_pages} > {max_pages} max for {size_lower}")
+
+    if not needs_compact:
+        result.final_size_kb = size_kb
+        result.final_pages = estimated_pages
+        log.info(
+            "[WP4-GUARD] No compaction needed: %.1fKB, ~%d pages (size=%s)",
+            size_kb, estimated_pages, size_lower
+        )
+        return html, sections, result
+
+    result.reason = "; ".join(reasons)
+    log.warning("[WP4-GUARD] Auto-compact triggered: %s", result.reason)
+
+    # Drop low-priority sections
+    updated_sections = dict(sections)
+    for section_key in TEAM_KMU_LOW_PRIORITY_SECTIONS:
+        if section_key in updated_sections:
+            val = updated_sections[section_key]
+            if isinstance(val, str) and len(val) > 100:
+                result.sections_dropped.append(section_key)
+                updated_sections[section_key] = ""
+                log.info("[WP4-GUARD] Dropped low-priority section: %s", section_key)
+
+    # Re-estimate after dropping sections
+    # For the HTML string, remove dropped section content
+    compacted_html = html
+    for dropped_key in result.sections_dropped:
+        # Try to find and remove the section content in the rendered HTML
+        # This is a conservative approach - remove clearly marked sections
+        section_pattern = re.compile(
+            rf'<!-- BEGIN {dropped_key} -->.*?<!-- END {dropped_key} -->',
+            re.DOTALL | re.IGNORECASE
+        )
+        compacted_html = section_pattern.sub('', compacted_html)
+
+    result.compacted = True
+    result.final_size_kb = len(compacted_html.encode("utf-8")) / 1024
+    result.final_pages = estimate_page_count(compacted_html)
+
+    log.info(
+        "[WP4-GUARD] Compaction complete: %.1fKB→%.1fKB, %d→%d pages, %d sections dropped",
+        result.original_size_kb, result.final_size_kb,
+        result.original_pages, result.final_pages,
+        len(result.sections_dropped)
+    )
+
+    return compacted_html, updated_sections, result
+
+
+# =============================================================================
 # INITIALIZATION
 # =============================================================================
 
 log.info(
     "[FIX-528] solo_compact_engine loaded: ReportType, SoloCompactConfig, "
-    "process_for_solo_compact, validate_page_count"
+    "process_for_solo_compact, validate_page_count, check_and_apply_compact_guard"
 )
