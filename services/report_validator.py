@@ -2323,10 +2323,17 @@ class ReportValidator:
         """
         Phase 2: ROI PROHIBITION - No ROI percentages allowed outside Business Case.
         Per prompt requirement: ROI-Werte sind in diesen Sektionen VERBOTEN.
+
+        WP2: Now strips HTML tags, style attributes, and CSS before scanning
+        to prevent false positives from CSS values like linear-gradient(...100%).
+        Only visible text content is checked for ROI percentages.
         """
         # Pattern to find ROI percentages (e.g., "284%", "337%", "200%", "150%")
         # Matches 2-3 digit numbers followed by %
         roi_pattern = r"(\d{2,3})\s*%"
+
+        # WP2: Context-aware ROI pattern - only flag percentages near ROI keywords
+        roi_context_pattern = r"(?:ROI|Rendite|Return|Amortis)[^.]{0,30}(\d{2,3})\s*%"
 
         # Sections where ROI is PROHIBITED (per prompt requirement)
         prohibited_roi_sections = [
@@ -2341,14 +2348,41 @@ class ReportValidator:
             if not content or not isinstance(content, str):
                 continue
 
-            # Find all percentage values
-            matches = re.findall(roi_pattern, content)
-            # Filter for ROI-like ranges (100-500%) - typical ROI values
+            # WP2: Strip HTML to only check visible text content
+            # Remove <style>...</style> and <script>...</script> blocks
+            text_only = re.sub(r'<style[^>]*>.*?</style>', ' ', content, flags=re.IGNORECASE | re.DOTALL)
+            text_only = re.sub(r'<script[^>]*>.*?</script>', ' ', text_only, flags=re.IGNORECASE | re.DOTALL)
+            # Remove style="..." attributes (catches linear-gradient 100% etc.)
+            text_only = re.sub(r'style\s*=\s*"[^"]*"', ' ', text_only, flags=re.IGNORECASE)
+            text_only = re.sub(r"style\s*=\s*'[^']*'", ' ', text_only, flags=re.IGNORECASE)
+            # Remove class="..." attributes
+            text_only = re.sub(r'class\s*=\s*"[^"]*"', ' ', text_only, flags=re.IGNORECASE)
+            # Remove all remaining HTML tags
+            text_only = re.sub(r'<[^>]+>', ' ', text_only)
+            # Decode common HTML entities
+            text_only = text_only.replace('&nbsp;', ' ').replace('&thinsp;', ' ')
+
+            # WP2: First check context-aware pattern (ROI keyword nearby)
+            context_matches = re.findall(roi_context_pattern, text_only, re.IGNORECASE)
+            roi_values_context = [int(m) for m in context_matches if 100 <= int(m) <= 500]
+
+            if roi_values_context:
+                self.errors.append(
+                    ValidationError(
+                        severity="WARNING",
+                        category="ROI_PROHIBITED",
+                        section=section_name,
+                        message=f"ROI-Prozentsatz {roi_values_context[0]}% in verbotenem Abschnitt gefunden",
+                        details="ROI-Werte sind nur im Business Case erlaubt. Entfernen oder durch '→ siehe Business Case' ersetzen.",
+                    )
+                )
+                continue
+
+            # Fallback: Check plain percentage pattern on visible text only
+            matches = re.findall(roi_pattern, text_only)
             roi_values = [int(m) for m in matches if 100 <= int(m) <= 500]
 
             if roi_values:
-                # ANY ROI percentage in these sections - temporarily WARNING
-                # Per prompt: "ROI PROHIBITION - ZERO TOLERANCE" (relaxed temporarily)
                 self.errors.append(
                     ValidationError(
                         severity="WARNING",

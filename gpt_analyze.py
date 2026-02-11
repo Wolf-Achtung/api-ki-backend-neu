@@ -9883,36 +9883,65 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         roi_raw_val = briefing.get("ROI_12M_RAW")
         roi_was_capped = briefing.get("ROI_WAS_CAPPED", False)
 
+        # WP1: Safe formatting helper - never produce empty €/% artifacts
+        def _safe_eur(val) -> str:
+            if val is None or val == "" or val == "—":
+                return "n.&thinsp;v."
+            try:
+                v = float(val)
+                s = f"{v:,.0f}"
+                return s.replace(",", "X").replace(".", ",").replace("X", ".") + " €"
+            except (ValueError, TypeError):
+                return str(val) + " €" if str(val).strip() else "n.&thinsp;v."
+
+        def _safe_eur_monat(val) -> str:
+            if val is None or val == "" or val == "—":
+                return "n.&thinsp;v."
+            try:
+                v = float(val)
+                s = f"{v:,.0f}"
+                return s.replace(",", "X").replace(".", ",").replace("X", ".") + " €/Monat"
+            except (ValueError, TypeError):
+                return str(val) + " €/Monat" if str(val).strip() else "n.&thinsp;v."
+
+        def _safe_payback(val) -> str:
+            if val is None or val == "" or val == "—":
+                return "n.&thinsp;v."
+            try:
+                return f"{float(val):.1f}".replace(".", ",") + " Monate"
+            except (ValueError, TypeError):
+                return str(val) + " Monate" if str(val).strip() else "n.&thinsp;v."
+
         # Format ROI values (German decimals)
         def _fmt_roi_pct(val) -> str:
-            if val is None or val == "—":
-                return "—"
+            if val is None or val == "—" or val == "":
+                return "n.&thinsp;v."
             try:
-                return f"{float(val):.0f}".replace(".", ",")
+                return f"{float(val):.0f}".replace(".", ",") + " %"
             except (ValueError, TypeError):
-                return str(val)
+                return str(val) if str(val).strip() else "n.&thinsp;v."
 
         # FIX-620: Show only capped ROI to avoid N4.3 numerical=2 (dual value confusion)
-        roi_display = f"{_fmt_roi_pct(roi_capped_val)} %"
+        roi_display = _fmt_roi_pct(roi_capped_val)
 
         return f"""<div class="business-case-summary">
   <h3>Business Case Übersicht</h3>
   <table class="table table-modern">
     <tr>
       <td><strong>Einführungskosten (CAPEX)</strong></td>
-      <td class="text-right">{capex} €</td>
+      <td class="text-right">{_safe_eur(capex)}</td>
     </tr>
     <tr>
       <td><strong>Laufende Kosten (OPEX)</strong></td>
-      <td class="text-right">{opex} €/Monat</td>
+      <td class="text-right">{_safe_eur_monat(opex)}</td>
     </tr>
     <tr>
       <td><strong>Erwartete Einsparung</strong></td>
-      <td class="text-right">{einsparung} €/Monat</td>
+      <td class="text-right">{_safe_eur_monat(einsparung)}</td>
     </tr>
     <tr>
       <td><strong>Amortisation</strong></td>
-      <td class="text-right">{payback} Monate</td>
+      <td class="text-right">{_safe_payback(payback)}</td>
     </tr>
     <tr>
       <td><strong>ROI nach 12 Monaten</strong></td>
@@ -10599,15 +10628,35 @@ Für jede Kategorie: 2-3 Standard-Prompts'''
     </div>
 </div>'''
 
-    # Helper function to format numbers with specified decimal places
+    # WP1: Safe formatting helpers - never produce empty €/% artifacts in fallbacks
     def _fmt_num(val: Any, decimals: int = 0) -> str:
         try:
-            return f"{float(val):.{decimals}f}"
+            v = float(val)
+            return f"{v:.{decimals}f}"
         except (ValueError, TypeError):
             return str(val) if val else "0"
 
-    _payback_fmt = _fmt_num(briefing.get("PAYBACK_MONTHS"), 1)
-    _roi_fmt = _fmt_num(briefing.get("ROI_12M"), 0)
+    def _safe_bc_val(val, suffix: str = "") -> str:
+        """WP1: Format business case value safely - never produce '€.' or 'bei %' artifacts."""
+        if val is None or val == "" or val == "—":
+            return "n.&thinsp;v."
+        try:
+            v = float(val)
+            s = f"{v:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            return f"{s} {suffix}".strip() if suffix else s
+        except (ValueError, TypeError):
+            sv = str(val).strip()
+            return f"{sv} {suffix}".strip() if sv and suffix else (sv or "n.&thinsp;v.")
+
+    _payback_raw = briefing.get("PAYBACK_MONTHS")
+    _payback_fmt = _safe_bc_val(_payback_raw, "Monate") if _payback_raw not in (None, "", "—") else "n.&thinsp;v."
+    if _payback_raw not in (None, "", "—"):
+        try:
+            _payback_fmt = f"{float(_payback_raw):.1f} Monate"
+        except (ValueError, TypeError):
+            _payback_fmt = "n.&thinsp;v."
+    _roi_raw = briefing.get("ROI_12M")
+    _roi_fmt = _safe_bc_val(_roi_raw, "%") if _roi_raw not in (None, "", "—") else "n.&thinsp;v."
 
     # Statische Fallbacks (HINWEIS: quick_wins wird jetzt dynamisch generiert - siehe Block oben bei Zeile 4366)
     fallbacks = {
@@ -10623,23 +10672,23 @@ Für jede Kategorie: 2-3 Standard-Prompts'''
   <table class="table table-modern">
     <tr>
       <td><strong>Einführungskosten (CAPEX)</strong></td>
-      <td class="text-right">{briefing.get("CAPEX_REALISTISCH_EUR", "—")} €</td>
+      <td class="text-right">{_safe_bc_val(briefing.get("CAPEX_REALISTISCH_EUR"), "€")}</td>
     </tr>
     <tr>
       <td><strong>Laufende Kosten (OPEX)</strong></td>
-      <td class="text-right">{briefing.get("OPEX_REALISTISCH_EUR", "—")} €/Monat</td>
+      <td class="text-right">{_safe_bc_val(briefing.get("OPEX_REALISTISCH_EUR"), "€/Monat")}</td>
     </tr>
     <tr>
       <td><strong>Erwartete Einsparung</strong></td>
-      <td class="text-right">{briefing.get("EINSPARUNG_MONAT_EUR", "—")} €/Monat</td>
+      <td class="text-right">{_safe_bc_val(briefing.get("EINSPARUNG_MONAT_EUR"), "€/Monat")}</td>
     </tr>
     <tr>
       <td><strong>Amortisation</strong></td>
-      <td class="text-right">{_payback_fmt} Monate</td>
+      <td class="text-right">{_payback_fmt}</td>
     </tr>
     <tr>
       <td><strong>ROI nach 12 Monaten</strong></td>
-      <td class="text-right">{_roi_fmt} %</td>
+      <td class="text-right">{_roi_fmt}</td>
     </tr>
   </table>
   <p>
@@ -16693,6 +16742,29 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
 
         # Apply inline styles for Puppeteer PDF compatibility (table headers, etc.)
         html = _apply_pdf_inline_styles(html)
+
+        # WP4: Auto-compact guard for oversized Team/KMU reports
+        try:
+            from services.solo_compact_engine import check_and_apply_compact_guard
+            _wp4_size = (meta.get("unternehmensgroesse", "") or "").lower()
+            if "solo" in _wp4_size or "freiberuf" in _wp4_size:
+                _wp4_persona = "solo"
+            elif "kmu" in _wp4_size or "11" in _wp4_size:
+                _wp4_persona = "kmu"
+            else:
+                _wp4_persona = "team"
+            html, _wp4_sections, compact_result = check_and_apply_compact_guard(
+                html, {}, company_size=_wp4_persona
+            )
+            if compact_result.compacted:
+                log.info(
+                    "[%s] [WP4] Auto-compact applied: %.0fKB→%.0fKB, %d→%d pages, dropped=%s",
+                    run_id, compact_result.original_size_kb, compact_result.final_size_kb,
+                    compact_result.original_pages, compact_result.final_pages,
+                    compact_result.sections_dropped
+                )
+        except Exception as e:
+            log.warning("[%s] [WP4] Compact guard error (non-fatal): %s", run_id, e)
 
         pdf_info = render_pdf_from_html(
             html,
