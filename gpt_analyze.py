@@ -16746,8 +16746,15 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
         # WP4: Auto-compact guard for oversized Team/KMU reports
         try:
             from services.solo_compact_engine import check_and_apply_compact_guard
-            html, sections, compact_result = check_and_apply_compact_guard(
-                html, sections, company_size=persona
+            _wp4_size = (meta.get("unternehmensgroesse", "") or "").lower()
+            if "solo" in _wp4_size or "freiberuf" in _wp4_size:
+                _wp4_persona = "solo"
+            elif "kmu" in _wp4_size or "11" in _wp4_size:
+                _wp4_persona = "kmu"
+            else:
+                _wp4_persona = "team"
+            html, _wp4_sections, compact_result = check_and_apply_compact_guard(
+                html, {}, company_size=_wp4_persona
             )
             if compact_result.compacted:
                 log.info(
