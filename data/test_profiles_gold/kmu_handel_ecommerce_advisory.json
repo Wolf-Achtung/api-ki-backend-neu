@@ -2,9 +2,9 @@
   "profile_id": "kmu_handel_ecommerce_advisory",
   "description": "KMU im Handel/E-Commerce Bereich mit Fokus auf Produktdatenqualität und Conversion-Optimierung",
   "lang": "de",
-  "country": "Germany",
+  "country": "DE",
   "BRANCHE_LABEL": "Handel & E-Commerce",
-  "UNTERNEHMENSGROESSE_LABEL": "11-50 (KMU)",
+  "UNTERNEHMENSGROESSE_LABEL": "11–100 (KMU)",
   "HAUPTLEISTUNG": "Beratung für mittelständische Online-Händler und Omnichannel-Einzelhändler zu Produktdatenqualität, Conversion-Optimierung, KI-gestützten Kampagnenstrategien, Automatisierung von Produkttexten sowie Analyse und Optimierung digitaler Vertriebskanäle.",
   "expected_validation": {
     "funding_flow": "DE",
@@ -16,7 +16,7 @@
   "answers": {
     "branche": "handel_ecommerce",
     "unternehmensgroesse": "kmu",
-    "bundesland": "Berlin",
+    "bundesland": "be",
     "hauptleistung": "Beratung für mittelständische Online-Händler und Omnichannel-Einzelhändler zu Produktdatenqualität, Conversion-Optimierung, KI-gestützten Kampagnenstrategien, Automatisierung von Produkttexten sowie Analyse und Optimierung digitaler Vertriebskanäle.",
     "zielgruppen": [
       "B2B",

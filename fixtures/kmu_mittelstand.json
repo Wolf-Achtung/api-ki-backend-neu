@@ -6,8 +6,8 @@
   "expected_pages": "25-40",
   "answers": {
     "branche": "industrie",
-    "unternehmensgroesse": "kmu",
-    "UNTERNEHMENSGROESSE_LABEL": "51-250 Mitarbeiter",
+    "unternehmensgroesse": "11–100",
+    "UNTERNEHMENSGROESSE_LABEL": "11–100 (KMU)",
     "bundesland": "nw",
     "BUNDESLAND_LABEL": "Nordrhein-Westfalen",
     "hauptleistung": "Maschinenbau und Fertigungstechnik fuer die Automobilindustrie",

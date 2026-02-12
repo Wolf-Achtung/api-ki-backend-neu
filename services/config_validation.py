@@ -197,21 +197,9 @@ def get_min_words(size: str, section_key: str) -> int:
     Returns:
         Minimum word count for the section
     """
-    size_lower = size.lower()
-
-    # Normalize size based on actual categories:
-    # - Solo: 1 (Solo-Selbstständig/Freiberuflich)
-    # - Team: 2-10 (kleines Team)
-    # - KMU: 11-100 (KMU)
-    if "kmu" in size_lower or "11-100" in size_lower or "mittel" in size_lower:
-        size_key = "kmu"
-    elif "team" in size_lower or "klein" in size_lower or "2-10" in size_lower:
-        size_key = "team"
-    elif "solo" in size_lower or "freiberuf" in size_lower or "selbstständig" in size_lower or "selbständig" in size_lower:
-        size_key = "solo"
-    else:
-        # Default to kmu for unknown sizes (safer than under-delivering)
-        size_key = "kmu"
+    # Normalize size using canonical normalizer (handles en-dash, form values, etc.)
+    from services.company_size_normalizer import get_segment
+    size_key = get_segment(size) if size else "kmu"
 
     # Normalize section key
     section_normalized = section_key.lower().replace("-", "_")
@@ -239,15 +227,9 @@ def get_all_min_words_for_size(size: str) -> Dict[str, int]:
     Returns:
         Dict mapping section_key -> min_words
     """
-    size_lower = size.lower()
-
-    # Normalize size
-    if "solo" in size_lower or "freiberuf" in size_lower:
-        size_key = "solo"
-    elif "team" in size_lower or "klein" in size_lower:
-        size_key = "team"
-    else:
-        size_key = "kmu"
+    # Normalize size using canonical normalizer
+    from services.company_size_normalizer import get_segment
+    size_key = get_segment(size) if size else "kmu"
 
     result = {}
     for (s, section), min_words in SECTION_MIN_WORDS.items():

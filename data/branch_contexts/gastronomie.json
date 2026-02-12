@@ -1,0 +1,133 @@
+{
+  "branche": "gastronomie",
+  "display_name": "Gastronomie & Tourismus",
+  "description": "Restaurants, Hotels, Cafés, Catering, Eventgastronomie, Tourismus-Anbieter, Reiseveranstalter",
+
+  "typical_workflows": [
+    "Reservierungsmanagement: Buchungen, Tischplanung, Zimmerbelegung",
+    "Warenwirtschaft: Einkauf, Lager, Kalkulation, Inventur",
+    "Personalplanung: Dienstpläne, Aushilfen, Saisonkräfte",
+    "Gästebetreuung: Check-in/Check-out, Sonderwünsche, Beschwerden",
+    "Marketing: Social Media, Bewertungsportale, Newsletter",
+    "Speisekartenplanung: Saisonale Anpassung, Kalkulation, Allergene",
+    "Buchhaltung: Kassenbuch, TSE, Steuern, Trinkgeld"
+  ],
+
+  "common_pain_points": [
+    "Hoher Personalaufwand: Dienstpläne, Schulung, Fluktuation",
+    "Bewertungsmanagement: Google, TripAdvisor, Yelp zeitnah beantworten",
+    "Wareneinsatz optimieren: Lebensmittelverschwendung reduzieren",
+    "Saisonale Schwankungen: Auslastung in Nebensaison",
+    "Mehrsprachigkeit: Gäste aus verschiedenen Ländern bedienen",
+    "Reservierungs-No-Shows: Umsatzverlust durch nicht erschienene Gäste",
+    "Social Media Präsenz: Regelmäßig Content erstellen"
+  ],
+
+  "ai_opportunities": [
+    "Reservierungs-Chatbot: Buchungen 24/7 über Messenger/Web",
+    "Speisekarten-Optimierung: Margen-Analyse, Bestseller-Empfehlungen",
+    "Bewertungs-Antwortassistent: Professionelle Antworten auf Reviews",
+    "Personalplanung: KI-gestützte Dienstplanoptimierung",
+    "Übersetzung: Speisekarten und Gästekommunikation mehrsprachig",
+    "Social Media Content: Food-Fotos beschriften, Posts generieren",
+    "Demand Forecasting: Gästeaufkommen vorhersagen, Einkauf planen",
+    "Allergen-Management: Automatische Kennzeichnung und Auskunft"
+  ],
+
+  "typical_tools": [
+    "Kassensystem: orderbird, Lightspeed, Gastrofix",
+    "Reservierung: OpenTable, Resmio, TheFork",
+    "Hotelsoftware: Apaleo, Mews, Protel",
+    "Warenwirtschaft: FoodNotify, Chefkoch Pro, Excel",
+    "Personalplanung: Planday, Papershift, Shiftbase",
+    "Bewertungen: Google Business, TripAdvisor, Yelp",
+    "Social Media: Instagram, Facebook, Google Maps",
+    "Buchhaltung: DATEV, Lexoffice, sevDesk"
+  ],
+
+  "tool_ecosystem": {
+    "communication": ["Email", "WhatsApp Business", "Messenger"],
+    "pos": ["orderbird", "Lightspeed", "Gastrofix"],
+    "reservation": ["OpenTable", "Resmio", "TheFork"],
+    "staff": ["Planday", "Papershift", "Shiftbase"],
+    "marketing": ["Instagram", "Google Business", "TripAdvisor"],
+    "accounting": ["DATEV", "Lexoffice", "sevDesk"]
+  },
+
+  "realistic_quick_wins_solo": [
+    {
+      "title": "KI-Antworten auf Bewertungen",
+      "description": "Professionelle, individuelle Antworten auf Google/TripAdvisor-Bewertungen per KI generieren.",
+      "hours_saved": 5,
+      "tool": "ChatGPT oder Claude mit Prompt-Templates",
+      "implementation": "Bewertungs-Monitoring einrichten, Antwort-Prompts nach Kategorie, Review vor Veröffentlichung",
+      "difficulty": "niedrig",
+      "investment": "20-50€/Monat"
+    },
+    {
+      "title": "Speisekarten-Übersetzung",
+      "description": "Speisekarte automatisch in 3-5 Sprachen übersetzen inkl. Allergen-Hinweise.",
+      "hours_saved": 8,
+      "tool": "DeepL API oder ChatGPT",
+      "implementation": "Speisekarte als Vorlage, Übersetzungs-Workflow, regelmäßige Aktualisierung",
+      "difficulty": "niedrig",
+      "investment": "10-30€/Monat"
+    },
+    {
+      "title": "Social Media Content-Assistent",
+      "description": "Aus Food-Fotos automatisch Instagram-Captions und Google-Posts generieren.",
+      "hours_saved": 6,
+      "tool": "Canva + GPT für Texte",
+      "implementation": "Templates für verschiedene Post-Typen, Hashtag-Sets, Posting-Plan",
+      "difficulty": "niedrig",
+      "investment": "12-30€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_team": [
+    {
+      "title": "Reservierungs-Chatbot",
+      "description": "24/7 Buchungen über Website/Messenger, automatische Bestätigungen und Erinnerungen.",
+      "hours_saved": 15,
+      "tool": "Resmio + Chatbot oder Tidio",
+      "implementation": "Buchungssystem anbinden, FAQ trainieren, Eskalationsregeln",
+      "difficulty": "mittel",
+      "investment": "50-150€/Monat"
+    }
+  ],
+
+  "realistic_quick_wins_kmu": [
+    {
+      "title": "Integrierte Gästemanagement-Plattform",
+      "description": "CRM, Reservierung, Feedback und Marketing in einem System mit KI-Empfehlungen.",
+      "hours_saved": 30,
+      "tool": "Apaleo oder Mews mit KI-Modulen",
+      "implementation": "Systemintegration, Mitarbeiterschulung, Daten-Migration",
+      "difficulty": "hoch",
+      "investment": "500-2000€/Monat"
+    }
+  ],
+
+  "industry_specific_notes": {
+    "restaurant": "Tischplanung, Küchen-Workflow, Lieferdienst-Anbindung",
+    "hotel": "Channel-Management, Revenue-Management, Housekeeping",
+    "cafe": "Take-away, Stammkunden-Bindung, Frühstücks-Catering",
+    "catering": "Event-Planung, Menü-Konfiguration, Logistik"
+  },
+
+  "success_metrics": [
+    "Auslastungsrate: % belegte Plätze/Zimmer",
+    "Durchschnittlicher Bon: Umsatz pro Gast",
+    "No-Show-Rate: % nicht erschienene Reservierungen",
+    "Bewertungsdurchschnitt: Sterne auf Google/TripAdvisor",
+    "Wareneinsatz: % des Umsatzes für Rohstoffe"
+  ],
+
+  "typical_pricing_models": [
+    "Speisekarten-Preise mit fester Kalkulation",
+    "Saisonale Preisgestaltung (Hotel/Tourismus)",
+    "Happy Hour / Mittagsangebote",
+    "Catering-Pauschalen pro Person",
+    "Abo-Modelle (z.B. Mittagstisch, Coffee-Abo)"
+  ]
+}

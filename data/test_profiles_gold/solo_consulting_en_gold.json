@@ -2,10 +2,10 @@
   "profile_id": "solo_consulting_en_gold",
   "description": "Solo consultant specializing in AI readiness assessments (EN test profile)",
   "lang": "en",
-  "country": "Germany",
+  "country": "DE",
   "test_profile": true,
   "BRANCHE_LABEL": "Consulting & Services",
-  "UNTERNEHMENSGROESSE_LABEL": "1 (Solo)",
+  "UNTERNEHMENSGROESSE_LABEL": "1 (Solo-Selbstständig/Freiberuflich)",
   "HAUPTLEISTUNG": "AI readiness consulting, process diagnostics, and implementation support for small businesses and teams. Focus on workflow automation, documentation optimization, knowledge management, and practical AI integration strategies.",
   "expected_validation": {
     "funding_flow": "EN-DE",

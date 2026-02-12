@@ -2,9 +2,9 @@
   "profile_id": "kmu_industrie_production_advisory",
   "description": "KMU in der Industrie/Produktion mit Fokus auf Qualitätskontrolle und Fertigungsoptimierung",
   "lang": "de",
-  "country": "Germany",
+  "country": "DE",
   "BRANCHE_LABEL": "Industrie & Produktion",
-  "UNTERNEHMENSGROESSE_LABEL": "11-50 (KMU)",
+  "UNTERNEHMENSGROESSE_LABEL": "11–100 (KMU)",
   "HAUPTLEISTUNG": "Beratung und operative Begleitung von kleinen und mittelständischen Produktionsunternehmen bei der Digitalisierung, der Prozessanalyse, der Optimierung von Fertigungsabläufen, der Einführung KI-gestützter Qualitätskontrolle sowie beim Aufbau datengestützter Entscheidungsprozesse in Planung, Logistik und Fertigungssteuerung.",
   "expected_validation": {
     "funding_flow": "DE",

@@ -2,15 +2,15 @@
   "profile_id": "kmu_france_eu_core_en",
   "description": "French SME (EN report) - tests Phase 2 EU-Core Funding routing (Horizon, EIC, Digital Europe, ESF+)",
   "lang": "en",
-  "country": "France",
+  "country": "FR",
   "BRANCHE_LABEL": "Consulting & Services",
-  "UNTERNEHMENSGROESSE_LABEL": "11-50 (SME)",
+  "UNTERNEHMENSGROESSE_LABEL": "11–100 (KMU)",
   "HAUPTLEISTUNG": "Business and digital transformation consulting for European enterprises, specializing in AI adoption strategies, process optimization, and cross-border digital service delivery.",
 
   "answers": {
     "branche": "consulting",
     "unternehmensgroesse": "kmu",
-    "country": "France",
+    "country": "FR",
     "hauptleistung": "Business and digital transformation consulting for European enterprises, specializing in AI adoption strategies, process optimization, and cross-border digital service delivery.",
     "zielgruppen": ["B2B", "enterprises", "sme", "public_sector"],
     "jahresumsatz": "1m_to_2m",

@@ -2,10 +2,10 @@
   "profile_id": "kmu_industry_en_gold",
   "description": "SME manufacturing company exploring AI for production optimization (EN test profile)",
   "lang": "en",
-  "country": "Germany",
+  "country": "DE",
   "test_profile": true,
   "BRANCHE_LABEL": "Manufacturing & Production",
-  "UNTERNEHMENSGROESSE_LABEL": "11-100 (SME)",
+  "UNTERNEHMENSGROESSE_LABEL": "11–100 (KMU)",
   "HAUPTLEISTUNG": "Precision manufacturing of industrial components, including CNC machining, quality control, supply chain management, and custom production runs for automotive and aerospace clients.",
   "expected_validation": {
     "funding_flow": "EN-DE",
