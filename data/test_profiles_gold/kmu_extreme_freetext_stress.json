@@ -2,9 +2,9 @@
   "profile_id": "kmu_extreme_freetext_stress",
   "description": "KMU Stress-Test Profile with extremely long freetext fields to test PDF size monitoring thresholds",
   "lang": "de",
-  "country": "Germany",
+  "country": "DE",
   "BRANCHE_LABEL": "IT & Technologie",
-  "UNTERNEHMENSGROESSE_LABEL": "11-50 (KMU)",
+  "UNTERNEHMENSGROESSE_LABEL": "11–100 (KMU)",
   "HAUPTLEISTUNG": "Full-Service IT-Dienstleistungen mit Fokus auf Cloud-Migration, DevOps-Implementierung, Cybersecurity-Audits und digitale Transformation für mittelständische Unternehmen in regulierten Branchen wie Finanzdienstleistungen, Gesundheitswesen und öffentliche Verwaltung.",
   "expected_validation": {
     "funding_flow": "DE",

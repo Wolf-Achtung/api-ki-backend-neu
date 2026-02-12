@@ -18,8 +18,8 @@
     }
   },
   "size_mapping": {
-    "solo": ["solo", "freiberufler", "selbständig", "1 mitarbeiter", "freelancer", "self-employed", "solopreneur"],
-    "team": ["team", "2-10", "2-10 mitarbeiter", "kleines team", "small team", "startup"],
-    "kmu": ["kmu", "sme", "11-100", "11-100 mitarbeiter", "mittelstand", "medium-sized"]
+    "solo": ["solo", "freiberufler", "selbständig", "1", "1 mitarbeiter", "freelancer", "self-employed", "solopreneur"],
+    "team": ["team", "2-10", "2–10", "2-10 mitarbeiter", "2–10 mitarbeiter", "kleines team", "small team", "startup"],
+    "kmu": ["kmu", "sme", "11-100", "11–100", "11-100 mitarbeiter", "11–100 mitarbeiter", "mittelstand", "medium-sized"]
   }
 }

@@ -2,10 +2,10 @@
   "profile_id": "team_it_en_gold",
   "description": "Small IT/Software team building SaaS products (EN test profile)",
   "lang": "en",
-  "country": "Germany",
+  "country": "DE",
   "test_profile": true,
   "BRANCHE_LABEL": "IT & Software",
-  "UNTERNEHMENSGROESSE_LABEL": "2-10 (Small Team)",
+  "UNTERNEHMENSGROESSE_LABEL": "2–10 (Kleines Team)",
   "HAUPTLEISTUNG": "Development of SaaS solutions for B2B clients, including custom software development, API integrations, cloud infrastructure setup, and technical consulting for digital transformation projects.",
   "expected_validation": {
     "funding_flow": "EN-DE",

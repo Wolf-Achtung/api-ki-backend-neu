@@ -2,9 +2,9 @@
   "profile_id": "solo_marketing_content_solo_agency",
   "description": "Solo-Content-Agentur im Marketing-Bereich mit Fokus auf Content-Produktion und Kampagnen",
   "lang": "de",
-  "country": "Germany",
+  "country": "DE",
   "BRANCHE_LABEL": "Marketing & Werbung",
-  "UNTERNEHMENSGROESSE_LABEL": "1 (Solo)",
+  "UNTERNEHMENSGROESSE_LABEL": "1 (Solo-Selbstständig/Freiberuflich)",
   "HAUPTLEISTUNG": "Konzeption, Erstellung und Optimierung von daten- und KI-gestütztem Content für B2B- und B2C-Marken. Schwerpunkte sind Storytelling, Social-Media-Content, Performance-Kampagnen, Shortform-Video, Marken-Positionierung, Landingpages, Newsletter sowie systematische Content-Repurposing-Workflows für kleine Unternehmen, Startups und Einzelunternehmer.",
   "expected_validation": {
     "funding_flow": "DE",
@@ -16,7 +16,7 @@
   "answers": {
     "branche": "marketing",
     "unternehmensgroesse": "solo",
-    "bundesland": "Berlin",
+    "bundesland": "be",
     "hauptleistung": "Konzeption, Erstellung und Optimierung von daten- und KI-gestütztem Content für B2B- und B2C-Marken. Schwerpunkte sind Storytelling, Social-Media-Content, Performance-Kampagnen, Shortform-Video, Marken-Positionierung, Landingpages, Newsletter sowie systematische Content-Repurposing-Workflows für kleine Unternehmen, Startups und Einzelunternehmer.",
     "zielgruppen": [
       "b2b",

@@ -6,8 +6,8 @@
   "expected_pages": "12-16",
   "answers": {
     "branche": "beratung",
-    "unternehmensgroesse": "solo",
-    "UNTERNEHMENSGROESSE_LABEL": "Solo / Freiberufler",
+    "unternehmensgroesse": "1",
+    "UNTERNEHMENSGROESSE_LABEL": "1 (Solo-Selbstständig/Freiberuflich)",
     "bundesland": "by",
     "BUNDESLAND_LABEL": "Bayern",
     "hauptleistung": "IT-Beratung und Softwareentwicklung für KMU",

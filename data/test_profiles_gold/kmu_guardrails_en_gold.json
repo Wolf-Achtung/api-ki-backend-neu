@@ -2,10 +2,10 @@
   "profile_id": "kmu_guardrails_en_gold",
   "description": "SME with explicit AI guardrails for QA validation (EN test profile)",
   "lang": "en",
-  "country": "Germany",
+  "country": "DE",
   "test_profile": true,
   "BRANCHE_LABEL": "Healthcare & Care",
-  "UNTERNEHMENSGROESSE_LABEL": "11-100 (SME)",
+  "UNTERNEHMENSGROESSE_LABEL": "11–100 (KMU)",
   "HAUPTLEISTUNG": "Home healthcare services including patient care coordination, medical documentation, staff scheduling, and quality management for elderly and chronic care patients.",
   "expected_validation": {
     "funding_flow": "EN-DE",
