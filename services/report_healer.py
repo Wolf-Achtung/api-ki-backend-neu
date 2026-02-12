@@ -3374,6 +3374,25 @@ def heal_final_html(
     except Exception as e:
         log.warning("[HEALER-POST] WP1 business case empty value sanitizer error: %s", e)
 
+    # FIX-RC3: Remove LLM empty-input fallback phrases (all segments)
+    try:
+        _rc3_patterns: List[Tuple[str, str]] = [
+            # Chatbot "no input" fallbacks — must never appear in report
+            (r'(?:Ich habe keine (?:Frage|Aufgabe|Informationen?|Angaben)[^.]*\.)', ''),
+            (r'(?:keine Frage oder Aufgabe von Ihnen[^.]*\.)', ''),
+            (r'(?:[Ww]obei (?:soll|kann) ich (?:dir|Ihnen) helfen[^.]*[.?])', ''),
+            # "Datenlage" as standalone input-checklist leak
+            (r'<li[^>]*>\s*Datenlage\s*</li>', ''),
+        ]
+        for pat, repl in _rc3_patterns:
+            _rc3_matches = re.findall(pat, result, flags=re.IGNORECASE)
+            if _rc3_matches:
+                result = re.sub(pat, repl, result, flags=re.IGNORECASE)
+                fixes_applied += len(_rc3_matches)
+                log.info("[HEALER-POST] [FIX-RC3] Removed %d LLM fallback phrase(s)", len(_rc3_matches))
+    except Exception as e:
+        log.warning("[HEALER-POST] FIX-RC3 error: %s", e)
+
     # TASK D: ROI as qualitative ranges for SOLO (P1 optional)
     if segment_lower == "solo":
         try:
