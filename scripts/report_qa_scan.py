@@ -127,6 +127,26 @@ DEFAULT_RULES: List[Rule] = [
         where='text',
         pattern=r"\b(?:how\s+can\s+I\s+help|as\s+an\s+AI|I(?:'m| am)\s+an?\s+AI)\b",
     ),
+    # --- RC3: Empty-input LLM fallback (confirmed blocker in Report #561) ---
+    Rule(
+        id='PLACEHOLDER_EMPTY_INPUT_FALLBACK',
+        description='LLM-Fallback: Chatbot meldet fehlende Eingabe statt Report-Content',
+        severity='error',
+        where='text',
+        pattern=r'\bIch\s+habe\s+keine\s+(?:Frage|Aufgabe|Information(?:en)?|Angaben)\b'
+                r'|\bkeine\s+Frage\s+oder\s+Aufgabe\s+von\s+Ihnen\b'
+                r'|\bwobei\s+kann\s+ich\s+(?:dir|Ihnen)\s+helfen\b',
+    ),
+    # --- RC3: Prompt-/Input-Checklist leak (confirmed in Report #561 PDF) ---
+    Rule(
+        id='LEAK_INPUT_CHECKLIST',
+        description='Prompt-Leak: Input-Checklist-Begriff im Fliesstext (Datenlage/Tool-Uebersicht)',
+        severity='warning',
+        where='text',
+        # "Datenlage" and "Tool-Übersicht" are pipeline input terms that shouldn't
+        # appear verbatim in rendered reports. "Branche und Ziel" excluded (too broad).
+        pattern=r'\b(?:Input-Checkliste|Datenlage|Tool-Übersicht)\b',
+    ),
     # --- Du-form (informal address) ---
     Rule(
         id='DU_FORM_PRONOUNS',
