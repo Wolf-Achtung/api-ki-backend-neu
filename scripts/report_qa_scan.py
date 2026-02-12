@@ -10,7 +10,13 @@ Checks:
 - Leakage phrases (prompt echoes, template phrases)
 - Du-forms (informal address in formal reports)
 - Placeholders (TODO, Lorem ipsum, unrendered {{...}})
-- Segment-specific rules (Solo: no Governance/Enterprise terms)
+- Truncation artifacts (ellipsis 'daue…', 'Le…', incomplete sentences)
+- Un-localized English BC labels ('Payback Progress', 'Time Savings')
+- Excessive n.v. values (indicates BC calculation failure)
+- Segment-specific rules:
+  - Solo: no Governance/Enterprise terms
+  - Team: no Solo-specific terms, Team-adequate complexity
+  - KMU: no Solo terms, KMU-adequate governance depth
 
 Exit codes:
 - 0: no violations (or warnings-only when --fail-on=error)
@@ -148,6 +154,45 @@ DEFAULT_RULES: List[Rule] = [
         where='raw',
         pattern=r'(\{\{[^}]+\}\}|\{%\s*[^%]+%\})',
     ),
+    # --- Truncation artifacts (survive content_quality_enforcer) ---
+    Rule(
+        id='TRUNCATION_ELLIPSIS',
+        description='Trunkierungs-Artefakt: abgeschnittenes Wort mit Ellipse',
+        severity='error',
+        where='text',
+        # Words ending with … or ... that indicate LLM/post-processing truncation
+        # Exclude legitimate "..." at sentence end (3+ chars before dots)
+        pattern=r'\b[A-Za-zÄÖÜäöüß]{1,4}[…]',
+        flags=0,
+    ),
+    Rule(
+        id='INCOMPLETE_SENTENCE_FRAGMENT',
+        description='Unvollstaendiger Satz: Konjunktion/Artikel am Satzende ohne Fortsetzung',
+        severity='warning',
+        where='text',
+        # A conjunction/article immediately followed by a period — indicates truncation
+        pattern=r'\b(?:jedoch|darüber hinaus|allerdings|zudem|sowie|eines|einer|einem)\s*\.',
+    ),
+    # --- Un-localized English BC labels (should have been translated by healer) ---
+    Rule(
+        id='ENGLISH_BC_LABEL',
+        description='Nicht lokalisiertes englisches Business-Case-Label',
+        severity='error',
+        where='text',
+        pattern=r'\b(?:Payback\s+Progress|Time\s+Savings\s+(?:Hours|\(Hours\))|Monthly\s+Savings|Net\s+Present\s+Value)\b',
+    ),
+    # --- Excessive "n.v." indicating BC calculation failure ---
+    Rule(
+        id='NV_PLACEHOLDER_CLUSTER',
+        description='Gehaeufte n.v.-Platzhalter (>3): Business-Case-Berechnung vermutlich fehlgeschlagen',
+        severity='warning',
+        where='text',
+        # Matches 4th+ occurrence of "n. v." / "n.v." in text — the scan_content
+        # loop handles first 3 as benign, 4th+ triggers this rule via post-scan check.
+        # This pattern matches every single "n. v." / "n.v." occurrence;
+        # the _check_nv_cluster post-scan step evaluates the count.
+        pattern=r'n\.[\s\xa0]?v\.',
+    ),
 ]
 
 # Segment-specific rules
@@ -168,8 +213,46 @@ SEGMENT_RULES: Dict[str, List[Rule]] = {
             pattern=r'\b(?:Stakeholder|Audit[-\s]?Trail|Matrixorganisation)\b',
         ),
     ],
-    'team': [],
-    'kmu': [],
+    'team': [
+        Rule(
+            id='TEAM_SOLO_LANGUAGE',
+            description='TEAM: Solo-spezifische Sprache erkannt (Einzelunternehmer/Freelancer/Solopreneur)',
+            severity='warning',
+            where='text',
+            pattern=r'\b(?:Einzelunternehmer(?:in)?|Freelancer(?:in)?|Solopreneur(?:in)?|Solo-Selbstst[äa]ndige[rn]?|Ihre\s+Agilit[äa]t\s+als\s+Einzelperson)\b',
+        ),
+        Rule(
+            id='TEAM_PAYBACK_PROGRESS_RAW',
+            description='TEAM: Un-lokalisiertes "Payback Progress" Label (sollte deutsch sein)',
+            severity='error',
+            where='text',
+            pattern=r'Payback\s+Progress\s*:?\s*\d+\s*%',
+        ),
+    ],
+    'kmu': [
+        Rule(
+            id='KMU_SOLO_LANGUAGE',
+            description='KMU: Solo-spezifische Sprache erkannt (Einzelunternehmer/Freelancer/Solopreneur)',
+            severity='warning',
+            where='text',
+            pattern=r'\b(?:Einzelunternehmer(?:in)?|Freelancer(?:in)?|Solopreneur(?:in)?|Solo-Selbstst[äa]ndige[rn]?|Ihre\s+Agilit[äa]t\s+als\s+Einzelperson)\b',
+        ),
+        Rule(
+            id='KMU_PAYBACK_PROGRESS_RAW',
+            description='KMU: Un-lokalisiertes "Payback Progress" Label (sollte deutsch sein)',
+            severity='error',
+            where='text',
+            pattern=r'Payback\s+Progress\s*:?\s*\d+\s*%',
+        ),
+        Rule(
+            id='KMU_GOVERNANCE_DEPTH',
+            description='KMU: "Spielregeln" statt "Governance" — KMU benoetigt Enterprise-Terminologie',
+            severity='warning',
+            where='text',
+            # Inverse of Solo rule: KMU should use Governance, not Solo-simplified "Spielregeln"
+            pattern=r'\bSpielregeln\b',
+        ),
+    ],
 }
 
 
@@ -272,6 +355,9 @@ def _snippet(text: str, start: int, end: int, radius: int = 60) -> str:
     return re.sub(r'\s{2,}', ' ', sn)
 
 
+_NV_CLUSTER_THRESHOLD = 3  # 1-3 "n.v." is normal; 4+ indicates BC failure
+
+
 def scan_content(
     *,
     file_path: Path,
@@ -287,6 +373,28 @@ def scan_content(
         haystack = text if rule.where == 'text' else raw
         if not haystack:
             continue
+
+        # NV_PLACEHOLDER_CLUSTER: only emit findings if count exceeds threshold
+        if rule.id == 'NV_PLACEHOLDER_CLUSTER':
+            rx = rule.compile()
+            matches = list(rx.finditer(haystack))
+            if len(matches) > _NV_CLUSTER_THRESHOLD:
+                # Report a single aggregated finding
+                first = matches[0]
+                findings.append(
+                    Finding(
+                        file=str(file_path),
+                        file_type=file_type,
+                        rule_id=rule.id,
+                        severity=rule.severity,
+                        description=f'{rule.description} ({len(matches)}x gefunden)',
+                        match=f'n.v. x{len(matches)}',
+                        snippet=_snippet(haystack, first.start(), first.end()),
+                        position=first.start(),
+                    )
+                )
+            continue
+
         rx = rule.compile()
         count = 0
         for m in rx.finditer(haystack):
