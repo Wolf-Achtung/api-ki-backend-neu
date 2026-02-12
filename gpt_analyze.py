@@ -13479,15 +13479,10 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     log.info("=" * 80)
 
     # === PLATIN+++ v5.4.3: COMPACT REPORT MODE for streamlined reports ===
-    # Derive company_size from answers — use canonical segment (solo/team/kmu)
-    size_raw = (answers.get("unternehmensgroesse") or "solo").lower()
-    # FIX-RC1: Normalize to canonical segment (never use "klein" internally)
-    if "solo" in size_raw or "freiberuf" in size_raw or "einzelunt" in size_raw:
-        company_size = "solo"
-    elif "kmu" in size_raw or "11" in size_raw or "mittel" in size_raw:
-        company_size = "kmu"
-    else:
-        company_size = "team"  # "klein", "kleines team", etc. → "team"
+    # FIX-RC1: Use canonical normalizer for company_size (handles en-dash, form values, etc.)
+    from services.company_size_normalizer import get_segment
+    size_raw = answers.get("unternehmensgroesse") or "solo"
+    company_size = get_segment(size_raw)  # "1"→"solo", "2–10"→"team", "11–100"→"kmu"
 
     # Read ENV variable PLATIN_APPENDIX_MODE
     # - "all"  = compact mode for solo+klein (≤25 pages), full for kmu (~43 pages)
