@@ -13479,10 +13479,15 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     log.info("=" * 80)
 
     # === PLATIN+++ v5.4.3: COMPACT REPORT MODE for streamlined reports ===
-    # Derive company_size from answers
+    # Derive company_size from answers — use canonical segment (solo/team/kmu)
     size_raw = (answers.get("unternehmensgroesse") or "solo").lower()
-    size_map = {"solo": "solo", "klein": "klein", "kmu": "kmu"}
-    company_size = size_map.get(size_raw, "klein")
+    # FIX-RC1: Normalize to canonical segment (never use "klein" internally)
+    if "solo" in size_raw or "freiberuf" in size_raw or "einzelunt" in size_raw:
+        company_size = "solo"
+    elif "kmu" in size_raw or "11" in size_raw or "mittel" in size_raw:
+        company_size = "kmu"
+    else:
+        company_size = "team"  # "klein", "kleines team", etc. → "team"
 
     # Read ENV variable PLATIN_APPENDIX_MODE
     # - "all"  = compact mode for solo+klein (≤25 pages), full for kmu (~43 pages)
@@ -16115,6 +16120,8 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             "score_details": score_wrap.get("details", {}),
             "research_last_updated": sections["research_last_updated"],
             "sections": serializable_sections,  # Store sections for summary gate
+            "unternehmensgroesse": answers.get("unternehmensgroesse", ""),  # FIX-RC1: Pass for WP4 guard
+            "company_size": sections.get("COMPANY_SIZE", "team"),  # FIX-RC1: Canonical segment
         }
     )
 
@@ -16746,15 +16753,10 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
         # WP4: Auto-compact guard for oversized Team/KMU reports
         try:
             from services.solo_compact_engine import check_and_apply_compact_guard
-            _wp4_size = (meta.get("unternehmensgroesse", "") or "").lower()
-            if "solo" in _wp4_size or "freiberuf" in _wp4_size:
-                _wp4_persona = "solo"
-            elif "kmu" in _wp4_size or "11" in _wp4_size:
-                _wp4_persona = "kmu"
-            else:
-                _wp4_persona = "team"
+            # FIX-RC1: Use canonical company_size from meta (populated from sections)
+            _wp4_persona = meta.get("company_size", "team")
             html, _wp4_sections, compact_result = check_and_apply_compact_guard(
-                html, {}, company_size=_wp4_persona
+                html, meta.get("sections", {}), company_size=_wp4_persona
             )
             if compact_result.compacted:
                 log.info(

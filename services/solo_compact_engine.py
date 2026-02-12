@@ -719,7 +719,7 @@ def check_and_apply_compact_guard(
     result.reason = "; ".join(reasons)
     log.warning("[WP4-GUARD] Auto-compact triggered: %s", result.reason)
 
-    # Drop low-priority sections
+    # Step 1: Drop low-priority sections from sections dict
     updated_sections = dict(sections)
     for section_key in TEAM_KMU_LOW_PRIORITY_SECTIONS:
         if section_key in updated_sections:
@@ -729,17 +729,42 @@ def check_and_apply_compact_guard(
                 updated_sections[section_key] = ""
                 log.info("[WP4-GUARD] Dropped low-priority section: %s", section_key)
 
-    # Re-estimate after dropping sections
-    # For the HTML string, remove dropped section content
+    # Step 2: Remove dropped sections from rendered HTML
+    # FIX-RC2: Use <section> block matching instead of non-existent <!-- markers -->
     compacted_html = html
     for dropped_key in result.sections_dropped:
-        # Try to find and remove the section content in the rendered HTML
-        # This is a conservative approach - remove clearly marked sections
+        # Try CSS class-based pattern: <section class="report-section vendor-audit-section ...">...</section>
+        css_slug = dropped_key.replace("_HTML", "").replace("_", "-").lower()
         section_pattern = re.compile(
-            rf'<!-- BEGIN {dropped_key} -->.*?<!-- END {dropped_key} -->',
-            re.DOTALL | re.IGNORECASE
+            rf'<section[^>]*class="[^"]*{re.escape(css_slug)}[^"]*"[^>]*>.*?</section>',
+            re.DOTALL | re.IGNORECASE,
         )
-        compacted_html = section_pattern.sub('', compacted_html)
+        new_html = section_pattern.sub('', compacted_html)
+        if len(new_html) < len(compacted_html):
+            compacted_html = new_html
+            log.info("[WP4-GUARD] Removed section block via CSS class: %s", css_slug)
+
+    # Step 3: If still too large, trim excessively long text blocks (hard budget)
+    _target_kb = MAX_PAGES_BY_SIZE.get(size_lower, 45) * 3.5  # ~3.5KB per page estimate
+    if len(compacted_html.encode("utf-8")) / 1024 > _target_kb * 1.5:
+        # Aggressively shorten very long <li> and <p> blocks (> 800 chars)
+        def _trim_long_block(m: re.Match[str]) -> str:
+            tag = m.group(1)
+            content = m.group(2)
+            close = m.group(3)
+            if len(content) > 800:
+                # Cut at sentence boundary near 600 chars
+                cut = content[:600]
+                last_period = cut.rfind(".")
+                if last_period > 300:
+                    return f"<{tag}>{content[:last_period + 1]}</{close}>"
+            return m.group(0)
+        compacted_html = re.sub(
+            r'<((?:li|p)[^>]*)>(.*?)</(\1|li|p)>',
+            _trim_long_block,
+            compacted_html,
+            flags=re.DOTALL,
+        )
 
     result.compacted = True
     result.final_size_kb = len(compacted_html.encode("utf-8")) / 1024
