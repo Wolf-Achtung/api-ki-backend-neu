@@ -235,6 +235,52 @@ jobs:
           name: reports-${{ github.run_number }}
           path: ${{ env.ARTIFACTS_DIR }}/
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: QA Scan Report Artifacts
+        id: qa-scan
+        if: always()
+        run: |
+          echo "::group::QA Scan - Post-Render Artifact Validation"
+          QA_PASSED=true
+
+          # Scan each segment's PDF/HTML artifacts
+          for segment in solo team kmu; do
+            pdf=$(ls ${{ env.ARTIFACTS_DIR }}/*${segment}*.pdf 2>/dev/null | head -1)
+            html_file=$(ls ${{ env.ARTIFACTS_DIR }}/*${segment}*.html 2>/dev/null | head -1)
+            target="${pdf:-$html_file}"
+
+            if [ -n "$target" ] && [ -f "$target" ]; then
+              echo "--- Scanning $segment: $target ---"
+              python scripts/report_qa_scan.py "$target" \
+                --segment "$segment" \
+                --junit "${{ env.ARTIFACTS_DIR }}/qa_scan_${segment}.xml" \
+                --json > "${{ env.ARTIFACTS_DIR }}/qa_scan_${segment}.json" 2>&1 && SCAN_EXIT=0 || SCAN_EXIT=$?
+
+              if [ "$SCAN_EXIT" -eq 2 ]; then
+                echo "::warning ::QA scan found errors in $segment report"
+                QA_PASSED=false
+              elif [ "$SCAN_EXIT" -eq 0 ]; then
+                echo "::notice ::QA scan passed for $segment"
+              else
+                echo "::warning ::QA scan runtime error for $segment (exit=$SCAN_EXIT)"
+              fi
+            else
+              echo "::notice ::No $segment artifact found to scan"
+            fi
+          done
+
+          echo "::endgroup::"
+
+          if [ "$QA_PASSED" = "true" ]; then
+            echo "qa_scan=passed" >> $GITHUB_OUTPUT
+          else
+            echo "qa_scan=failed" >> $GITHUB_OUTPUT
+          fi
+
       - name: Validate Solo-Compact gates
         id: solo-gates
         run: |
@@ -288,6 +334,7 @@ jobs:
             echo "|------|--------|"
             echo "| Solo Leak Count = 0 | ${{ steps.solo-gates.outputs.solo_gates == 'passed' && '✅ Passed' || '❌ Failed' }} |"
             echo "| Solo Report Generated | ${{ needs.generate-reports.outputs.solo_status == 'success' && '✅ Passed' || '❌ Failed' }} |"
+            echo "| QA Scan (post-render) | ${{ steps.qa-scan.outputs.qa_scan == 'passed' && '✅ Passed' || '⚠️ Issues' }} |"
             echo ""
           } >> $GITHUB_STEP_SUMMARY
 
