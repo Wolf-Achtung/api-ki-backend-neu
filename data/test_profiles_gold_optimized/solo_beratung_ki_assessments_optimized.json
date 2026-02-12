@@ -2,10 +2,10 @@
   "profile_id": "solo_beratung_ki_assessments",
   "description": "Solo-Selbstständiger im Beratungsbereich mit Fokus auf KI-Readiness-Analysen",
   "lang": "de",
-  "country": "Germany",
+  "country": "DE",
   "ai_act_override_risk_level": "minimal",
   "BRANCHE_LABEL": "Beratung & Dienstleistungen",
-  "UNTERNEHMENSGROESSE_LABEL": "1 (Solo)",
+  "UNTERNEHMENSGROESSE_LABEL": "1 (Solo-Selbstständig/Freiberuflich)",
   "HAUPTLEISTUNG": "Beratung, Durchführung und Operationalisierung von KI-Readiness-Analysen für Solo-Selbstständige, kleine Unternehmen und Teams. Fokus auf Prozessdiagnose, Potenzialanalysen, KI-gestützte Dokumentations- und Textautomatisierung, Governance-Setup und der Entwicklung von pragmatischen, schnell umsetzbaren KI-Workflows.",
   "expected_validation": {
     "funding_flow": "DE",
@@ -17,7 +17,7 @@
   "answers": {
     "branche": "beratung",
     "unternehmensgroesse": "solo",
-    "bundesland": "Berlin",
+    "bundesland": "be",
     "hauptleistung": "Beratung, Durchführung und Operationalisierung von KI-Readiness-Analysen für Solo-Selbstständige, kleine Unternehmen und Teams. Fokus auf Prozessdiagnose, Potenzialanalysen, KI-gestützte Dokumentations- und Textautomatisierung, Governance-Setup und der Entwicklung von pragmatischen, schnell umsetzbaren KI-Workflows.",
     "zielgruppen": [
       "B2B",

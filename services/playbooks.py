@@ -56,6 +56,12 @@ _BRANCHE_MAP = {
     "medien & kreativwirtschaft": "medien",
     "medien": "medien",
     "kreativwirtschaft": "medien",
+    "gastronomie & tourismus": "gastronomie",
+    "gastronomie": "gastronomie",
+    "tourismus": "gastronomie",
+    "hotel": "gastronomie",
+    "hotellerie": "gastronomie",
+    "restaurant": "gastronomie",
 }
 
 
@@ -448,6 +454,46 @@ Playbooks: Dict[str, List[Dict[str, Any]]] = {
             "tools": ["Vision‑AI", "Ticketing", "Planserver"],
             "kpis": ["📉 Mängelquote", "⏱️ Reaktionszeit", "💶 Nachträge"],
             "risks": [("Haftung", "Beweisführung/Audit"), ("Datenschutz", "Personen/Nummern unkenntlich")],
+        },
+    ],
+
+    # Gastronomie & Tourismus
+    "gastronomie": [
+        {
+            "title": "Reservierungs‑ & Gäste‑Assist",
+            "goal": "Buchungen automatisieren, No‑Shows reduzieren, Gästebindung erhöhen.",
+            "steps": [
+                "Online‑Buchungssystem mit Echtzeit‑Verfügbarkeit anbinden.",
+                "KI‑Chatbot für Reservierungen, FAQ & Sonderwünsche.",
+                "Automatische Erinnerungen & Feedback‑Abfrage nach Besuch.",
+            ],
+            "tools": ["Booking‑Engine (EU‑SaaS)", "Chatbot/Messenger", "CRM/Gästedatenbank"],
+            "kpis": ["📅 Buchungsrate", "📉 No‑Show‑Rate", "😊 Gästezufriedenheit"],
+            "risks": [("Datenschutz", "DSGVO‑konforme Gästedaten, Löschkonzept"), ("Fehlbuchungen", "Validierung & Override")],
+        },
+        {
+            "title": "Speisekarten‑ & Angebotsoptimierung",
+            "goal": "Margen verbessern, saisonale Anpassungen beschleunigen.",
+            "steps": [
+                "Verkaufsdaten & Wareneinsatz analysieren.",
+                "KI‑gestützte Menü‑Empfehlungen & Preisoptimierung.",
+                "Automatische Übersetzung & Allergen‑Kennzeichnung.",
+            ],
+            "tools": ["POS‑Analytics", "Kalkulations‑Tool", "Übersetzungs‑API"],
+            "kpis": ["💶 Deckungsbeitrag/Gericht", "📈 Durchschnittlicher Bon", "⏱️ Menü‑Update‑Zeit"],
+            "risks": [("Fehlkalkulation", "Warenwirtschafts‑Abgleich"), ("Allergene", "Pflicht‑Review durch Küche")],
+        },
+        {
+            "title": "Bewertungsmanagement & Reputation",
+            "goal": "Online‑Reputation aktiv steuern, Gästefeedback nutzen.",
+            "steps": [
+                "Bewertungsportale zentral monitoren (Google, TripAdvisor, etc.).",
+                "KI‑Antwortvorschläge für Bewertungen generieren.",
+                "Sentiment‑Analyse für Verbesserungsmaßnahmen.",
+            ],
+            "tools": ["Review‑Monitoring", "KI‑Textassistent", "Dashboard"],
+            "kpis": ["⭐ Durchschnittsbewertung", "⏱️ Antwortzeit", "📈 Bewertungsanzahl"],
+            "risks": [("Authentizität", "Menschliche Freigabe"), ("Negative PR", "Eskalationsregeln")],
         },
     ],
 

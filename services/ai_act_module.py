@@ -101,11 +101,13 @@ def determine_risk_level(
         return "limited"
 
     # Rule 5: Solo with low automation → minimal
-    if "solo" in size_lower or "freiberuf" in size_lower or "1" in size_lower:
+    from services.company_size_normalizer import get_segment
+    _segment = get_segment(size)
+    if _segment == "solo":
         return "minimal"
 
     # Rule 6: Team with low automation (<30%) → minimal
-    if ("team" in size_lower or "klein" in size_lower) and automatisierung_prozent < 30:
+    if _segment == "team" and automatisierung_prozent < 30:
         return "minimal"
 
     # Default: limited
@@ -123,9 +125,10 @@ def generate_risk_reasoning(
     Generate 80-120 word reasoning for the risk level determination.
     Size-aware, no persona leaks.
     """
-    size_lower = size.lower()
-    is_solo = "solo" in size_lower or "freiberuf" in size_lower or "1" in size_lower
-    is_team = "team" in size_lower or "klein" in size_lower or "2" in size_lower
+    from services.company_size_normalizer import get_segment
+    _seg = get_segment(size)
+    is_solo = _seg == "solo"
+    is_team = _seg == "team"
 
     usecases_str = ", ".join(usecases[:3]) if usecases else "allgemeine KI-Nutzung"
 

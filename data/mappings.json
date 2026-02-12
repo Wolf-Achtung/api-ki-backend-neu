@@ -22,7 +22,10 @@
     "logistik": "logistik",
     "transport": "logistik",
     "marketing": "marketing",
-    "werbung": "marketing"
+    "werbung": "marketing",
+    "gastronomie & tourismus": "gastronomie",
+    "gastronomie": "gastronomie",
+    "tourismus": "gastronomie"
   },
   "size_mapping": {
     "solo": "solo",
@@ -30,11 +33,12 @@
     "selbststaendig": "solo",
     "1": "solo",
     "team": "team",
-    "klein": "team",
     "2-10": "team",
+    "2–10": "team",
     "kmu": "kmu",
     "mittelstand": "kmu",
-    "11-100": "kmu"
+    "11-100": "kmu",
+    "11–100": "kmu"
   },
   "bundesland_names": {
     "bw": "Baden-Württemberg",
