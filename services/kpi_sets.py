@@ -99,6 +99,14 @@ KPI_SETS: Dict[str, List[dict]] = {
         {"name": "Angebotserstellung", "definition": "LV → Angebot",
          "formula": "Median (Tage)", "target": "↓ im Trend"},
     ],
+    "gastronomie": [
+        {"name": "Auslastung", "definition": "Belegungsrate der Plätze/Zimmer",
+         "formula": "Belegte Plätze / Kapazität", "target": "≥ 75 %"},
+        {"name": "Durchschnittlicher Bon", "definition": "Umsatz pro Gast",
+         "formula": "Gesamtumsatz / Gäste", "target": "↑ im Trend"},
+        {"name": "No‑Show‑Rate", "definition": "Nicht erschienene Reservierungen",
+         "formula": "No‑Shows / Reservierungen", "target": "≤ 5 %"},
+    ],
     "medien": [
         {"name": "Produktionstime", "definition": "Rohmaterial → finaler Export",
          "formula": "Median (h)", "target": "↓ um 30 %"},

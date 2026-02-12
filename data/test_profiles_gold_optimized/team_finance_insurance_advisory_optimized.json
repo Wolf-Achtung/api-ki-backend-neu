@@ -2,10 +2,10 @@
   "profile_id": "team_finance_insurance_advisory",
   "description": "Team im Finanz-/Versicherungsbereich mit Fokus auf Compliance und Risikoanalyse",
   "lang": "de",
-  "country": "Germany",
+  "country": "DE",
   "ai_act_override_risk_level": "high-risk",
   "BRANCHE_LABEL": "Finanzen & Versicherungen",
-  "UNTERNEHMENSGROESSE_LABEL": "2-10 (Team)",
+  "UNTERNEHMENSGROESSE_LABEL": "2–10 (Kleines Team)",
   "HAUPTLEISTUNG": "Beratung für Banken, Versicherer, Finanzdienstleister und FinTechs mit Schwerpunkt auf Prozessoptimierung, regulatorischer Compliance (BAIT, VAIT, MaRisk, DSGVO), Datenqualität, Risikoanalyse, Reporting-Automatisierung und Einführung von KI-gestützten Entscheidungs- und Analyseverfahren. Zusätzlich werden Workshops, Audits, Gap-Analysen, Risiko-Scorings sowie Einführung digitaler Beratungsprozesse angeboten.",
   "expected_validation": {
     "funding_flow": "DE",
@@ -17,7 +17,7 @@
   "answers": {
     "branche": "finanzen",
     "unternehmensgroesse": "team",
-    "bundesland": "Hessen",
+    "bundesland": "he",
     "hauptleistung": "Beratung für Banken, Versicherer, Finanzdienstleister und FinTechs mit Schwerpunkt auf Prozessoptimierung, regulatorischer Compliance (BAIT, VAIT, MaRisk, DSGVO), Datenqualität, Risikoanalyse, Reporting-Automatisierung und Einführung von KI-gestützten Entscheidungs- und Analyseverfahren. Zusätzlich werden Workshops, Audits, Gap-Analysen, Risiko-Scorings sowie Einführung digitaler Beratungsprozesse angeboten.",
     "zielgruppen": [
       "banken",
