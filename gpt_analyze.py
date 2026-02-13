@@ -15007,8 +15007,11 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             else:
                 log.warning(f"[{run_id}] ⚠️ N4.3: DoD FAILED - conflicts={n43_report.governance_conflicts}, issues={len(n43_report.issues)}")
                 # PLATIN+++ FIX 5.2: Trigger additional healing pass on DoD failure
+                # FIX-629: Do NOT re-import process_n43_governance here – a local
+                # `from … import` makes Python treat the name as local for the
+                # ENTIRE function, causing UnboundLocalError at the earlier
+                # reference on line ~14979.  The module-level import is sufficient.
                 try:
-                    from services.n43_integration import process_n43_governance
                     sections, _n43_retry_report = process_n43_governance(
                         sections=sections,
                         briefing=answers,
