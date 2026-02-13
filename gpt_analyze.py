@@ -15180,6 +15180,10 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         # 1. PAYBACK_MONTHS_FMT_DE - German decimal, 1 digit (e.g., "3,5")
         payback_raw = sections.get("PAYBACK_MONTHS", 0)
         sections["PAYBACK_MONTHS_FMT_DE"] = _fmt_de_decimal(payback_raw, 1)
+        # FIX-R4-1: Also overwrite PAYBACK_MONTHS itself with formatted string.
+        # The raw float (e.g. 1.6286644951140066) leaks through Jinja2 fallback
+        # and report_renderer placeholder replacement. Clean string prevents this.
+        sections["PAYBACK_MONTHS"] = sections["PAYBACK_MONTHS_FMT_DE"]
 
         # 2. TIME_SAVINGS_MONTH_HOURS_FMT - Integer, no ".0" (e.g., "25" not "25.0")
         # P0.3: Apply safety cap to ensure consistent hours display (25h → 20h for solo)
@@ -15209,6 +15213,85 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
 
         log.info(f"[{run_id}] ✅ [P0.1] Template bindings: PAYBACK={sections['PAYBACK_MONTHS_FMT_DE']}, "
                  f"HOURS={sections['TIME_SAVINGS_MONTH_HOURS_FMT']}, ROI_DISPLAY={sections['ROI_12M_DISPLAY_DE']}")
+
+        # =================================================================
+        # [FIX-R4-2] Statischen BC-Fließtext einsetzen — NACH Canonical-Injection.
+        # Ersetzt den LLM-generierten Fließtext (der leere €/%/Monaten-Felder hat)
+        # durch ein statisches Template mit Canonical-Werten.
+        # =================================================================
+        import re as _re_bc
+        bc_html = sections.get('BUSINESS_CASE_HTML', '')
+        if bc_html and isinstance(bc_html, str) and len(bc_html) > 50:
+            _bc_capex = str(sections.get('CAPEX_REALISTISCH_EUR', '5.000'))
+            _bc_opex = str(sections.get('OPEX_REALISTISCH_EUR', '350'))
+            _bc_einsparung = str(sections.get('EINSPARUNG_MONAT_EUR', '3.420'))
+            _bc_roi = str(sections.get('ROI_12M', '200'))
+            _bc_payback = str(sections.get('PAYBACK_MONTHS_FMT_DE', '1,6'))
+            _bc_hours = str(sections.get('CANON_HOURS_MONTH', '36'))
+            _bc_rate = str(sections.get('CANON_RATE_EUR', '95'))
+            _bc_bundesland = str(
+                sections.get('BUNDESLAND_LABEL', '')
+                or sections.get('bundesland_label', '')
+                or sections.get('bundesland', '')
+                or 'Ihrem Bundesland'
+            ).strip()
+            # Float-Payback formatieren falls nötig
+            try:
+                _pb = float(str(_bc_payback).replace(',', '.'))
+                _bc_payback = f"{_pb:.1f}".replace('.', ',')
+            except (ValueError, TypeError):
+                pass
+            # Format integers with dot-separator for German (5000 → 5.000)
+            try:
+                _bc_capex = f"{int(float(str(_bc_capex).replace('.', '').replace(',', '.'))):,}".replace(",", ".")
+            except (ValueError, TypeError):
+                pass
+            try:
+                _bc_einsparung = f"{int(float(str(_bc_einsparung).replace('.', '').replace(',', '.'))):,}".replace(",", ".")
+            except (ValueError, TypeError):
+                pass
+            try:
+                _bc_roi = f"{float(str(_bc_roi).replace(',', '.')):.0f}"
+            except (ValueError, TypeError):
+                pass
+
+            bc_prose = (
+                f'<h3>Investition und laufende Kosten</h3>\n'
+                f'<p>Die einmaligen Aufwände (CAPEX) für Aufbau und Einführung liegen bei rund '
+                f'<strong>{_bc_capex} €</strong>. Hinzu kommen monatliche Betriebskosten (OPEX) von rund '
+                f'<strong>{_bc_opex} €/Monat</strong> – hauptsächlich für KI-Tools, Infrastruktur und Lizenzen.</p>\n'
+                f'\n'
+                f'<h3>Monatlicher Effekt</h3>\n'
+                f'<p>Im täglichen Einsatz ist eine realistische Entlastung von rund '
+                f'<strong>{_bc_einsparung} € pro Monat</strong> erreichbar '
+                f'({_bc_hours} Stunden × {_bc_rate} €/Stunde). Sie entsteht aus '
+                f'Zeitgewinn in Kernprozessen, weniger manuellen Schleifen und '
+                f'konsistenterer Ergebnisqualität.</p>\n'
+                f'\n'
+                f'<h3>Amortisation und ROI</h3>\n'
+                f'<p><strong>Payback-Formel:</strong> Investition ({_bc_capex} €) ÷ '
+                f'monatliche Einsparung ({_bc_einsparung} €) = '
+                f'<strong>{_bc_payback} Monate</strong>.<br>\n'
+                f'<strong>ROI (12 Monate):</strong> <strong>{_bc_roi} %</strong> (gedeckelt).</p>\n'
+                f'\n'
+                f'<h3>Fördermöglichkeiten</h3>\n'
+                f'<p>In <strong>{_bc_bundesland}</strong> können Programme für Digitalisierungs- und '
+                f'KI-Vorhaben relevant sein (→ siehe Förderpotenzial).</p>'
+            )
+
+            # Ersetze den Fließtext-Teil, behalte die BC-Tabelle
+            table_match = _re_bc.search(r'<table', bc_html, _re_bc.IGNORECASE)
+            first_h3 = _re_bc.search(r'<h3', bc_html, _re_bc.IGNORECASE)
+
+            if table_match and first_h3:
+                sections['BUSINESS_CASE_HTML'] = bc_prose + '\n' + bc_html[table_match.start():]
+                sections['business_case'] = sections['BUSINESS_CASE_HTML']
+                log.info('[FIX-R4-2] BC prose replaced with static template')
+            elif first_h3:
+                # No table, replace everything
+                sections['BUSINESS_CASE_HTML'] = bc_prose
+                sections['business_case'] = sections['BUSINESS_CASE_HTML']
+                log.info('[FIX-R4-2] BC prose replaced with static template (no table found)')
 
     except Exception as e:
         log.warning(f"[{run_id}] ⚠️ [CANONICAL-BC] Failed to inject canonical values: {e}")
