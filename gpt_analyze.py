@@ -9912,7 +9912,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         # v14.35.23: Get both raw and capped ROI values
         roi_capped_val = briefing.get("ROI_12M", "—")
         roi_raw_val = briefing.get("ROI_12M_RAW")
-        roi_was_capped = briefing.get("ROI_WAS_CAPPED", False)
+        roi_was_capped = bool(briefing.get("ROI_WAS_CAPPED", False))
 
         # WP1: Safe formatting helper - never produce empty €/% artifacts
         def _safe_eur(val) -> str:
@@ -15306,11 +15306,12 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         # =================================================================
         _canon_h = sections.get('CANON_HOURS_MONTH') or sections.get('monatsersparnis_stunden') or 36
         _canon_einsparung_m = sections.get('EINSPARUNG_MONAT_EUR', '')
+        _canon_h_display: str = str(_canon_h)
         try:
-            _canon_h_f = float(_canon_h)
+            _canon_h_f = float(str(_canon_h))
             _canon_h_display = str(int(_canon_h_f)) if _canon_h_f == int(_canon_h_f) else f"{_canon_h_f:.1f}"
         except (ValueError, TypeError):
-            _canon_h_display = str(_canon_h)
+            pass
         try:
             _jahresersparnis = f"{int(float(str(_canon_einsparung_m).replace('.', '').replace(',', '.')) * 12):,}".replace(",", ".")
         except (ValueError, TypeError):
