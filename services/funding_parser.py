@@ -7,14 +7,16 @@ from typing import List, Dict, Any
 from ._normalize import _briefing_to_dict
 
 DEFAULT_PROGRAMS: List[Dict[str, Any]] = [
+    # FIX-R2-6B: go-digital removed (Programm eingestellt seit Dez 2024)
+    # Replaced with BAFA Unternehmensberatung as active alternative
     {
-        "name": "go-digital (BMWK)",
+        "name": "BAFA Unternehmensberatung",
         "region": "DE",
-        "target": "Beratungszuschuss für KMU",
-        "amount": "bis 16.500 € (50%)",
+        "target": "Beratungsförderung für KMU",
+        "amount": "bis 3.200 € (50-80%)",
         "deadline": "laufend",
-        "url": "https://www.bmwk.de",
-        "notes": "Module: Digitalisierungsstrategie, IT-Sicherheit, Datenkompetenz",
+        "url": "https://www.bafa.de",
+        "notes": "Beratungsförderung für KMU bis 249 MA; ersetzt go-digital",
     },
     {
         "name": "Berlin – Pro FIT (IBB)",

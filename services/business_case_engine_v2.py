@@ -690,6 +690,45 @@ def inject_canonical_to_sections(
     # After canonical injection, the BC prose HTML may still have empty labels
     _repair_empty_strong_tags(sections, canonical)
 
+    # FIX-R2-1: Final safety net — if BC prose STILL has empty € placeholders,
+    # replace the entire Fließtext block with a canonical template.
+    _bc_html = sections.get("BUSINESS_CASE_HTML", "")
+    if _bc_html and isinstance(_bc_html, str):
+        import re as _re
+        _has_empty = bool(_re.search(r'<strong>\s*€?\s*</strong>', _bc_html)) or \
+                     bool(_re.search(r'rund\s+€[\s.,;)]', _bc_html)) or \
+                     bool(_re.search(r'\(\s*€\s*\)', _bc_html))
+        if _has_empty:
+            _capex = f"{canonical.capex_eur:,.0f}".replace(",", ".")
+            _opex = f"{canonical.opex_month_eur:,.0f}".replace(",", ".")
+            _savings = f"{canonical.monthly_gross:,.0f}".replace(",", ".")
+            _payback = f"{canonical.payback_months:.1f}"
+            _roi = f"{canonical.roi_12m_net:.0f}"
+            _bc_prose = (
+                f'<h3>Investition und laufende Kosten</h3>'
+                f'<p>Die einmaligen Aufwände für Aufbau und Einführung liegen bei rund '
+                f'<strong>{_capex} €</strong>. Hinzu kommen monatliche Betriebskosten von rund '
+                f'<strong>{_opex} €</strong> – hauptsächlich für KI-Nutzung, Infrastruktur, '
+                f'Tools und Lizenzen.</p>'
+                f'<h3>Monatlicher Effekt</h3>'
+                f'<p>Im täglichen Einsatz ist eine realistische Entlastung von rund '
+                f'<strong>{_savings} €</strong> pro Monat erreichbar. Sie entsteht aus '
+                f'Zeitgewinn in Kernprozessen, weniger manuellen Schleifen und '
+                f'konsistenterer Ergebnisqualität.</p>'
+                f'<h3>Amortisation und ROI</h3>'
+                f'<p><strong>Einfache Rechnung:</strong> Investition ({_capex} €) '
+                f'geteilt durch monatliche Einsparung ({_savings} €) ergibt eine '
+                f'Amortisation nach <strong>{_payback} Monaten</strong>. '
+                f'Der ROI nach 12 Monaten liegt bei <strong>{_roi} %</strong>.</p>'
+            )
+            # Replace the prose section but keep any BC table that might follow
+            # Look for the prose block (from first <h3> to the table or end)
+            _table_match = _re.search(r'(<table[\s\S]*)', _bc_html)
+            _table_part = _table_match.group(1) if _table_match else ""
+            sections["BUSINESS_CASE_HTML"] = _bc_prose + _table_part
+            sections["business_case"] = sections["BUSINESS_CASE_HTML"]
+            log.info("[FIX-R2-1] Replaced BC prose with canonical template (empty placeholders detected)")
+
     return updates
 
 
@@ -726,17 +765,49 @@ def _repair_empty_strong_tags(sections: Dict[str, Any], canonical: "BusinessCase
             continue
 
         original = html
-        # Pattern: label text followed by empty <strong></strong>
+        # Pattern: label text followed by empty or partially-empty <strong></strong>
+        # FIX-R2-1: Also match <strong> €</strong>, <strong> %</strong>, <strong> Monaten</strong>
         for keyword, value in field_mapping.items():
+            # Original: empty strong tag
             pattern = re.compile(
                 rf'({re.escape(keyword)}[^<]{{0,30}})<strong>\s*</strong>',
                 re.IGNORECASE
             )
             html = pattern.sub(rf'\1<strong>{value}</strong>', html)
+            # FIX-R2-1: Strong tag with only unit symbol (€, %, Monat/Monaten)
+            pattern_unit = re.compile(
+                rf'({re.escape(keyword)}[^<]{{0,30}})<strong>\s*(?:€|%|Monaten?)\s*</strong>',
+                re.IGNORECASE
+            )
+            html = pattern_unit.sub(rf'\1<strong>{value}</strong>', html)
+
+        # FIX-R2-1: Context-based fallback patterns (no keyword needed)
+        _capex_val = f"{canonical.capex_eur:,.0f} €".replace(",", ".")
+        _opex_val = f"{canonical.opex_month_eur:,.0f} €".replace(",", ".")
+        _savings_val = f"{canonical.monthly_gross:,.0f} €".replace(",", ".")
+        _payback_val = f"{canonical.payback_months:.1f} Monate"
+        _roi_val = f"{canonical.roi_12m_net:.0f} %"
+        _context_patterns = [
+            (r'(einmalig\w*\s+Aufwände[^<]{0,60})<strong>\s*€?\s*</strong>', _capex_val),
+            (r'(Betriebskosten[^<]{0,40})<strong>\s*€?\s*</strong>', _opex_val),
+            (r'(Entlastung[^<]{0,40})<strong>\s*€?\s*</strong>', _savings_val),
+            (r'(Amortisation[^<]{0,40})<strong>\s*\d*\s*Monaten?\s*</strong>', _payback_val),
+            # FIX-R2-1: Parenthesised placeholders like "Investition ( €)"
+            (r'(Investition\s*)\(\s*(?:<strong>)?\s*€?\s*(?:</strong>)?\s*\)', f'({_capex_val})'),
+            (r'(Einsparung\s*)\(\s*(?:<strong>)?\s*€?\s*(?:</strong>)?\s*\)', f'({_savings_val})'),
+        ]
+        for ctx_pattern, ctx_value in _context_patterns:
+            if '<strong>' in ctx_value:
+                html = re.sub(ctx_pattern, rf'\1<strong>{ctx_value}</strong>', html, flags=re.IGNORECASE)
+            else:
+                html = re.sub(ctx_pattern, rf'\1{ctx_value}', html, flags=re.IGNORECASE)
 
         # Also fix standalone "€ " without value (e.g., "€ / Monat")
         html = re.sub(r':\s*€\s*/\s*Monat', f': {canonical.opex_month_eur:,.0f} € / Monat'.replace(",", "."), html)
         html = re.sub(r':\s*€\s*$', f': {canonical.capex_eur:,.0f} €'.replace(",", "."), html, flags=re.MULTILINE)
+        # FIX-R2-1: Fix "rund €" without value
+        html = re.sub(r'rund\s+<strong>\s*€\s*</strong>', f'rund <strong>{_capex_val}</strong>', html)
+        html = re.sub(r'rund\s+€(?=[\s.,;)])', f'rund {_capex_val}', html)
 
         if html != original:
             sections[section_key] = html

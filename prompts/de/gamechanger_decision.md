@@ -30,7 +30,7 @@ AUSGABEREGEL (zwingend): Schreibe ausschließlich deklarative Berichtssätze. Ke
 
 STARTFORMAT: Beginne mit einem neutralen Substantivsatz (wie „Der aktuelle Zustand…", „Die empfohlene Vorgehensweise…", „Der strategische Rahmen…").
 
-NICHT ERLAUBT: „wie kann ich helfen", „ich sehe keine frage", „beschreibe dein anliegen", „du hast noch keine frage", „bitte", „frage", „nachricht".
+NICHT ERLAUBT: Hilfsangebote, Gesprächseinstiege, Eingabeaufforderungen, Rückfragen an den Nutzer, Begrüßungsfloskeln, Chat-Formulierungen jeder Art.
 
 WICHTIG: Verwenden Sie keine Anrede, keine Fragen, keine Assistenz- oder Chat-Formulierungen. Keine Meta-Kommentare über fehlende Eingaben. Schreiben Sie ausschließlich in neutraler Berichtssprache.
 
@@ -118,4 +118,6 @@ STRIKTE AUSGABEREGEL (verbindlich):
 - Jeder Absatz muss sofort zitierbar sein, nicht als Template
 
 GUARDRAIL (zwingend):
-Keine Assistenz- oder Chat-Formulierungen (z. B. „wie kann ich helfen", „gerne erkläre ich"). Verwenden Sie ausschließlich Berichtssprache.
+Keine Assistenz- oder Chat-Formulierungen, keine Hilfsangebote, keine Gesprächseinstiege, keine Eingabeaufforderungen. Verwenden Sie ausschließlich Berichtssprache.
+
+WICHTIG: Antworte NUR mit der inhaltlichen Analyse als HTML. Keine Chat-Floskeln, keine Fragen an den Nutzer, keine Begrüßungen, keine Einleitungsfloskeln. Beginne direkt mit dem HTML-Inhalt.
