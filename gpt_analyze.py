@@ -9908,7 +9908,11 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         capex = briefing.get("CAPEX_REALISTISCH_EUR", "—")
         opex = briefing.get("OPEX_REALISTISCH_EUR", "—")
         einsparung = briefing.get("EINSPARUNG_MONAT_EUR", "—")
-        payback = briefing.get("PAYBACK_MONTHS", "—")
+        payback_raw = briefing.get("PAYBACK_MONTHS", "—")
+        try:
+            payback = f"{float(str(payback_raw).replace(',', '.')):.1f}".replace('.', ',')
+        except (ValueError, TypeError):
+            payback = payback_raw
         # v14.35.23: Get both raw and capped ROI values
         roi_capped_val = briefing.get("ROI_12M", "—")
         roi_raw_val = briefing.get("ROI_12M_RAW")
@@ -14603,7 +14607,64 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     log.info("[%s] FINAL_CHECK_INTRO: '%s'", run_id, str(sections.get("FINAL_CHECK_INTRO", "NOT SET"))[:150])
     log.info("[%s] FINAL_CHECK_DECISIONS: %s", run_id, sections.get("FINAL_CHECK_DECISIONS", "NOT SET"))
     log.info("=" * 80)
+    # =========================================================================
+    # [FIX-R4-2] Statischer BC-Fließtext — ersetzt LLM-Platzhalter mit leeren €/%
+    # =========================================================================
+    try:
+        import re as _re
+        _bc_html = sections.get('BUSINESS_CASE_HTML', '')
+        _capex = sections.get('CAPEX_REALISTISCH_EUR', '5.000')
+        _opex = sections.get('OPEX_REALISTISCH_EUR', '350')
+        _einsparung = sections.get('EINSPARUNG_MONAT_EUR', '3.420')
+        _roi = sections.get('ROI_12M_RATE', '200')
+        _pb_raw = sections.get('PAYBACK_MONTHS', '1,6')
+        _hours = sections.get('CANON_HOURS_MONTH', '36')
+        _rate = sections.get('CANON_RATE_EUR', '95')
+        _bundesland = sections.get('BUNDESLAND_LABEL', 'Ihrem Bundesland')
+        try:
+            _pb = f"{float(str(_pb_raw).replace(',', '.')):.1f}".replace('.', ',')
+        except (ValueError, TypeError):
+            _pb = _pb_raw
 
+        _bc_prose = f"""<h3>Investition und laufende Kosten</h3>
+<p>Die einmaligen Aufwände (CAPEX) für Aufbau und Einführung liegen bei rund
+<strong>{_capex} €</strong>. Hinzu kommen monatliche Betriebskosten (OPEX) von rund
+<strong>{_opex} €/Monat</strong> – hauptsächlich für KI-Tools, Infrastruktur
+und Lizenzen.</p>
+
+<h3>Monatlicher Effekt</h3>
+<p>Im täglichen Einsatz ist eine realistische Entlastung von rund
+<strong>{_einsparung} € pro Monat</strong> erreichbar
+({_hours} Stunden × {_rate} €/Stunde). Sie entsteht aus Zeitgewinn
+in Kernprozessen, weniger manuellen Schleifen und konsistenterer
+Ergebnisqualität.</p>
+
+<h3>Amortisation und ROI</h3>
+<p><strong>Payback-Formel:</strong> Investition ({_capex} €) ÷
+monatliche Einsparung ({_einsparung} €) =
+<strong>{_pb} Monate</strong>.<br>
+<strong>ROI (12 Monate):</strong>
+<strong>{_roi} %</strong> (gedeckelt).</p>
+
+<h3>Fördermöglichkeiten</h3>
+<p>In <strong>{_bundesland}</strong> können Programme für
+Digitalisierungs- und KI-Vorhaben relevant sein
+(→ siehe Förderpotenzial).</p>"""
+
+        _table_match = _re.search(r'<table', _bc_html, _re.IGNORECASE)
+        _first_h3 = _re.search(r'<h3', _bc_html, _re.IGNORECASE)
+        if _table_match and _first_h3:
+            sections['BUSINESS_CASE_HTML'] = _bc_prose + '\n' + _bc_html[_table_match.start():]
+            sections['business_case'] = sections['BUSINESS_CASE_HTML']
+            log.info('[%s] [FIX-R4-2] BC prose replaced with static template', run_id)
+    except Exception as _e:
+        log.warning('[%s] [FIX-R4-2] BC prose replacement failed: %s', run_id, _e)
+    # [FIX-R4-1] Set PAYBACK_MONTHS_FMT_DE (template expects it, was never set)
+    try:
+        _pb_raw = sections.get('PAYBACK_MONTHS', 0)
+        sections['PAYBACK_MONTHS_FMT_DE'] = f"{float(str(_pb_raw).replace(',', '.')):.1f}".replace('.', ',')
+    except (ValueError, TypeError):
+        sections['PAYBACK_MONTHS_FMT_DE'] = str(sections.get('PAYBACK_MONTHS', 'n/a'))
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
     # 3.1.4.16: Pass lang for EN locale sanitization (lastline guardrail)
@@ -14662,7 +14723,12 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
                      sections['PAYBACK_MONTHS_PESSIMISTIC'], sections['PAYBACK_MONTHS_OPTIMISTIC'])
         except (ValueError, ZeroDivisionError) as e:
             log.warning("[%s] ⚠️ Sensitivity calculation failed: %s", run_id, e)
-
+        # [FIX-R4-1b] Re-set PAYBACK_MONTHS_FMT_DE after BC values copied from answers
+        try:
+            _pb_raw2 = sections.get('PAYBACK_MONTHS', 0)
+            sections['PAYBACK_MONTHS_FMT_DE'] = f"{float(str(_pb_raw2).replace(',', '.')):.1f}".replace('.', ',')
+        except (ValueError, TypeError):
+            sections['PAYBACK_MONTHS_FMT_DE'] = str(sections.get('PAYBACK_MONTHS', 'n/a'))
         # FIX: Apply calculated values to HTML sections
         # Include both UPPERCASE (template keys) and lowercase (logical keys)
         sections_to_fix = [

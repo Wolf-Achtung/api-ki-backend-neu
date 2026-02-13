@@ -6702,7 +6702,7 @@
                                     {{ ui("kpi_roi_details", "ROI-Details") }}
                                 </div>
                                 <div style="font-size: 11px; color: var(--color-text-muted);">
-                                    {{ ui("kpi_payback_months", "Amortisation") }}: {{ PAYBACK_MONTHS_FMT_DE or PAYBACK_MONTHS or 'n/a' }} {{ ui("months", "Monate") }}
+                                    {{ ui("kpi_payback_months", "Amortisation") }}: {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS|round(1)|string|replace('.', ',') }}{% else %}n/a{% endif %} {{ ui("months", "Monate") }}
                                 </div>
                             </div>
                             <div style="text-align: center;">
