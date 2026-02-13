@@ -478,7 +478,7 @@ class CycleDetectingLoader:
 
     def list_templates(self) -> List[str]:
         """List available templates."""
-        return self._inner_loader.list_templates()
+        return list(self._inner_loader.list_templates())
 
     def load(self, environment: Any, name: str, globals: Optional[Dict[str, Any]] = None) -> Any:
         """
@@ -593,7 +593,7 @@ def _interpolate_text(
             # FIX-505: Disable template cache to ensure cycle detection works
             # (otherwise cached templates bypass get_source and our detection)
             env = Environment(
-                loader=cycle_loader,  # type: ignore[arg-type]
+                loader=cycle_loader,  # type: ignore[arg-type,unused-ignore]
                 autoescape=False,
                 cache_size=0,  # Disable cache to ensure get_source is called each time
             )
