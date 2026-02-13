@@ -630,6 +630,17 @@ def render(briefing_obj: Any,
                 sections["ki_stack_summary"] = ""
                 break
 
+    # FIX-R5-6: Filter effectively empty _HTML sections to prevent blank pages.
+    # Sections that are only whitespace / empty tags still render page-break containers.
+    _EMPTY_HTML_PATTERNS = {'', '<div></div>', '<p></p>', '<section></section>'}
+    for key in list(sections.keys()):
+        if key.endswith('_HTML') and isinstance(sections.get(key), str):
+            _stripped = sections[key].strip()
+            if len(_stripped) < 50 or _stripped in _EMPTY_HTML_PATTERNS:
+                if _stripped:  # only log non-empty being cleared
+                    log.debug("[FIX-R5-6] Cleared near-empty section: %s (%d chars)", key, len(_stripped))
+                sections[key] = ''
+
     # Mark HTML sections as safe (prevent escaping)
     safe_sections = {}
     for key, value in sections.items():

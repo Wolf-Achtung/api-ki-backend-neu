@@ -350,6 +350,17 @@ DETERMINISTIC_PRESCRUB_PHRASES: List[str] = [
     "I would be happy to",
     "Certainly,",
     "Certainly!",
+    # FIX-R5-2: Prompt-Leak patterns (Ziel/Branche/Daten/KPI prompt fragments)
+    "Ihr Ziel (z. B.",
+    "Ihr Ziel (z.B.",
+    "Kontext/Branche",
+    "Welche Daten/Quellen",
+    "Erfolgskriterien (KPIs)",
+    "Erfolgskriterien (KPI)",
+    "nenne auch Ihre größten",
+    # FIX-R5-3: Duzen/Siezen-Mix — grammatically broken prompt leak
+    "Wenn Sie magst",
+    "wenn Sie magst",
 ]
 
 

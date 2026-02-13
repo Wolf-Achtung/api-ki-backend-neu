@@ -9912,11 +9912,11 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         try:
             payback = f"{float(str(payback_raw).replace(',', '.')):.1f}".replace('.', ',')
         except (ValueError, TypeError):
-            payback = payback_raw
+            payback = str(payback_raw)
         # v14.35.23: Get both raw and capped ROI values
         roi_capped_val = briefing.get("ROI_12M", "—")
         roi_raw_val = briefing.get("ROI_12M_RAW")
-        roi_was_capped = briefing.get("ROI_WAS_CAPPED", False)
+        roi_was_capped = bool(briefing.get("ROI_WAS_CAPPED") or False)
 
         # WP1: Safe formatting helper - never produce empty €/% artifacts
         def _safe_eur(val) -> str:
@@ -13172,9 +13172,12 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     # =========================================================================
     _FOERDER_BLACKLIST = ["go-digital", "go_digital", "digital jetzt", "digital_jetzt"]
     # FIX-R3-5A: Extend blacklist scope to ALL text sections that might reference go-digital
+    # FIX-R5-5: Added FUNDING_HTML, TOOLS_FUNDING_ALIGNMENT_HTML, STARTER_KIT_HTML
     for _fp_key in ["FOERDERPOTENZIAL_HTML", "foerderpotenzial",
                      "RECOMMENDATIONS_HTML", "recommendations",
-                     "ROADMAP_90D_HTML", "ROADMAP_12M_HTML"]:
+                     "ROADMAP_90D_HTML", "ROADMAP_12M_HTML",
+                     "FUNDING_HTML", "TOOLS_FUNDING_ALIGNMENT_HTML",
+                     "STARTER_KIT_HTML"]:
         _fp_html = sections.get(_fp_key, "")
         if _fp_html and isinstance(_fp_html, str):
             for _discontinued in _FOERDER_BLACKLIST:
@@ -15289,13 +15292,15 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         import re as _re_bc
         bc_html = sections.get('BUSINESS_CASE_HTML', '')
         if bc_html and isinstance(bc_html, str) and len(bc_html) > 50:
+            # FIX-R5-1: Read from answers first (has canonical values earlier),
+            # fall back to sections (which canonical injection already updated above).
             _bc_capex = str(sections.get('CAPEX_REALISTISCH_EUR', '5.000'))
             _bc_opex = str(sections.get('OPEX_REALISTISCH_EUR', '350'))
             _bc_einsparung = str(sections.get('EINSPARUNG_MONAT_EUR', '3.420'))
             _bc_roi = str(sections.get('ROI_12M', '200'))
-            _bc_payback = str(sections.get('PAYBACK_MONTHS_FMT_DE', '1,6'))
-            _bc_hours = str(sections.get('CANON_HOURS_MONTH', '36'))
-            _bc_rate = str(sections.get('CANON_RATE_EUR', '95'))
+            _bc_payback = str(answers.get('PAYBACK_MONTHS') or sections.get('PAYBACK_MONTHS_FMT_DE', '1,6'))
+            _bc_hours = str(answers.get('CANON_HOURS_MONTH') or sections.get('CANON_HOURS_MONTH', '36'))
+            _bc_rate = str(answers.get('CANON_RATE_EUR') or sections.get('CANON_RATE_EUR', '95'))
             _bc_bundesland = str(
                 sections.get('BUNDESLAND_LABEL', '')
                 or sections.get('bundesland_label', '')
@@ -15304,8 +15309,8 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             ).strip()
             # Float-Payback formatieren falls nötig
             try:
-                _pb = float(str(_bc_payback).replace(',', '.'))
-                _bc_payback = f"{_pb:.1f}".replace('.', ',')
+                _pb_val = float(str(_bc_payback).replace(',', '.'))
+                _bc_payback = f"{_pb_val:.1f}".replace('.', ',')
             except (ValueError, TypeError):
                 pass
             # Format integers with dot-separator for German (5000 → 5.000)
@@ -15359,6 +15364,62 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 sections['BUSINESS_CASE_HTML'] = bc_prose
                 sections['business_case'] = sections['BUSINESS_CASE_HTML']
                 log.info('[FIX-R4-2] BC prose replaced with static template (no table found)')
+
+        # =================================================================
+        # [FIX-R5-7] Replace LLM-generated "X Stunden/Woche" with canonical hours/Monat.
+        # The LLM sometimes converts 36h/Monat → "9 Stunden/Woche" or invents numbers.
+        # Also fix "36.0 Std." → "36 Std." (integer formatting for whole numbers).
+        # =================================================================
+        _canon_h = sections.get('CANON_HOURS_MONTH') or sections.get('monatsersparnis_stunden') or 36
+        _canon_einsparung_m = sections.get('EINSPARUNG_MONAT_EUR', '')
+        _canon_h_display: str = str(_canon_h)
+        try:
+            _canon_h_f = float(str(_canon_h))
+            if _canon_h_f == int(_canon_h_f):
+                _canon_h_display = str(int(_canon_h_f))
+            else:
+                _canon_h_display = f"{_canon_h_f:.1f}"
+        except (ValueError, TypeError):
+            pass
+        try:
+            _jahresersparnis = f"{int(float(str(_canon_einsparung_m).replace('.', '').replace(',', '.')) * 12):,}".replace(",", ".")
+        except (ValueError, TypeError):
+            _jahresersparnis = ""
+
+        import re as _re_r57
+        _r57_count = 0
+        for _r57_key in ['KI_STACK_SUMMARY_HTML', 'EXECUTIVE_SUMMARY_HTML',
+                         'ki_stack_summary', 'executive_summary',
+                         'HERO_KPI_HTML', 'RECOMMENDATIONS_HTML']:
+            _r57_html = sections.get(_r57_key, '')
+            if not _r57_html or not isinstance(_r57_html, str):
+                continue
+            _r57_before = _r57_html
+            # Replace "X Stunden/Woche" or "X Stunden pro Woche" → canonical h/Monat
+            _r57_html = _re_r57.sub(
+                r'\d+\s*Stunden?\s*/\s*Woche',
+                f"{_canon_h_display} Stunden/Monat",
+                _r57_html,
+            )
+            _r57_html = _re_r57.sub(
+                r'\d+\s*Stunden?\s+pro\s+Woche',
+                f"{_canon_h_display} Stunden pro Monat",
+                _r57_html,
+            )
+            # Fix "36.0 Std." → "36 Std." for whole numbers
+            _r57_html = _re_r57.sub(r'(\d+)\.0(\s*Std)', r'\1\2', _r57_html)
+            # Replace wrong Jahresersparnis if we have a canonical value
+            if _jahresersparnis:
+                _r57_html = _re_r57.sub(
+                    r'[\d.]+\s*€?\s*Jahresersparnis',
+                    f"{_jahresersparnis} € Jahresersparnis",
+                    _r57_html,
+                )
+            if _r57_html != _r57_before:
+                sections[_r57_key] = _r57_html
+                _r57_count += 1
+        if _r57_count > 0:
+            log.info(f'[FIX-R5-7] Replaced Stunden/Woche→Monat in {_r57_count} sections (canonical={_canon_h_display}h/Mo)')
 
     except Exception as e:
         log.warning(f"[{run_id}] ⚠️ [CANONICAL-BC] Failed to inject canonical values: {e}")
@@ -15579,6 +15640,47 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             log.info(f"[{run_id}] [FIX-R3-4B] Applied final hauptleistung limiter + concat repair")
     except Exception as _hl_err:
         log.warning(f"[{run_id}] [FIX-R3-4B] Failed: {_hl_err}")
+
+    # =========================================================================
+    # FIX-R5-4: GLOBAL hauptleistung limiter — max 5 total across ALL sections.
+    # FIX-R3-4B limits per-section (1 per section), but with 8-9 sections each
+    # keeping one occurrence, the report still has 8-9. This pass enforces a
+    # hard global maximum of 5.
+    # =========================================================================
+    try:
+        _hl_r54 = answers.get("hauptleistung", "")
+        if _hl_r54 and len(_hl_r54) > 50:
+            _short_hl = _hl_r54[:60].rsplit(" ", 1)[0] + "..." if len(_hl_r54) > 60 else _hl_r54
+            for _sep in [",", ";", ".", " und ", " mit "]:
+                _pos = _hl_r54.find(_sep)
+                if 15 < _pos < 80:
+                    _short_hl = _hl_r54[:_pos]
+                    break
+            _global_count = 0
+            _global_replaced = 0
+            _MAX_GLOBAL_HL = 5
+            for _hk in list(sections.keys()):
+                _hv = sections.get(_hk, "")
+                if not isinstance(_hv, str) or _hk.startswith("_"):
+                    continue
+                _occ = _hv.count(_hl_r54)
+                if _occ <= 0:
+                    continue
+                _parts = _hv.split(_hl_r54)
+                _rebuilt_parts = [_parts[0]]
+                for _pi in range(1, len(_parts)):
+                    _global_count += 1
+                    if _global_count <= _MAX_GLOBAL_HL:
+                        _rebuilt_parts.append(_hl_r54)
+                    else:
+                        _rebuilt_parts.append(_short_hl)
+                        _global_replaced += 1
+                    _rebuilt_parts.append(_parts[_pi])
+                sections[_hk] = "".join(_rebuilt_parts)
+            if _global_replaced > 0:
+                log.info(f"[{run_id}] [FIX-R5-4] Global hauptleistung limiter: kept {_MAX_GLOBAL_HL}, replaced {_global_replaced} excess (total was {_global_count})")
+    except Exception as _hl54_err:
+        log.warning(f"[{run_id}] [FIX-R5-4] Global hauptleistung limiter failed: {_hl54_err}")
 
     # =========================================================================
     # FIX-528: PIPELINE SANITIZATION (decode HTML entities + complete sentences)
