@@ -12979,6 +12979,38 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
             if _old in _risks_final:
                 _risks_final = _risks_final.replace(_old, _new)
                 log.info("[FIX-2.4] Replaced '%s' with '%s' in RISKS_HTML", _old, _new)
+
+        # FIX-R2-5: Also handle HTML-wrapped score placeholders
+        # e.g., <strong>nicht angegeben</strong> or <td>nicht angegeben</td>
+        _score_label_map = {
+            "Governance": _score_gov,
+            "Sicherheit": _score_sec,
+            "Security": _score_sec,
+        }
+        for _label, _score_val in _score_label_map.items():
+            for _placeholder in ["nicht angegeben", "nicht erhoben", "n/a", "N/A"]:
+                # Pattern: "Governance-Score: <strong>nicht angegeben</strong>"
+                _risks_final = _risks_final.replace(
+                    f"{_label}-Score: <strong>{_placeholder}</strong>",
+                    f"{_label}-Score: <strong>{_score_val}/100</strong>"
+                )
+                # Pattern: <strong>Governance-Score: nicht angegeben</strong>
+                _risks_final = _risks_final.replace(
+                    f"<strong>{_label}-Score: {_placeholder}</strong>",
+                    f"<strong>{_label}-Score: {_score_val}/100</strong>"
+                )
+                # Pattern: standalone "nicht angegeben" after label in a <td>
+                _risks_final = _risks_final.replace(
+                    f"{_label}-Score</td><td>{_placeholder}",
+                    f"{_label}-Score</td><td>{_score_val}/100"
+                )
+                # Also handle "Sicherheits-Score" with extra s
+                if _label == "Sicherheit":
+                    _risks_final = _risks_final.replace(
+                        f"Sicherheits-Score: <strong>{_placeholder}</strong>",
+                        f"Sicherheits-Score: <strong>{_score_val}/100</strong>"
+                    )
+
         sections["RISKS_HTML"] = _risks_final
         sections["risks"] = _risks_final
 
@@ -13092,6 +13124,52 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     else:
         log.warning("[CI-DESIGN] Förderpotenzial HTML empty or too short")
     sections["foerderpotenzial"] = foerderpotenzial_html
+
+    # =========================================================================
+    # FIX-R2-6A: Resolve Bundesland codes to full labels in Förder + Risk HTML
+    # Problem: LLM renders "In be existieren..." instead of "In Berlin existieren..."
+    # =========================================================================
+    _bl_raw = str(briefing.get("bundesland", "") or "").strip().lower()
+    _bl_label = BUNDESLAND_MAPPING.get(_bl_raw, "")
+    if _bl_raw and _bl_label and len(_bl_raw) == 2:
+        for _bl_key in ["FOERDERPOTENZIAL_HTML", "foerderpotenzial", "RISKS_HTML", "risks"]:
+            _bl_html = sections.get(_bl_key, "")
+            if _bl_html and isinstance(_bl_html, str):
+                _bl_changed = False
+                # "In be existieren" → "In Berlin existieren"
+                for _bl_pattern in [f"In {_bl_raw} ", f"in {_bl_raw} ", f"Im {_bl_raw} ", f"im {_bl_raw} "]:
+                    if _bl_pattern in _bl_html:
+                        _bl_html = _bl_html.replace(_bl_pattern, _bl_pattern[:3].replace(_bl_raw, _bl_label))
+                        _bl_changed = True
+                # "In  existieren" (completely empty bundesland)
+                _bl_html = re.sub(r'In\s+existieren\s+Förderprogramme', f'In {_bl_label} existieren Förderprogramme', _bl_html)
+                # Replace raw code in strong tags: <strong>be</strong> → <strong>Berlin</strong>
+                _bl_html = _bl_html.replace(f"<strong>{_bl_raw}</strong>", f"<strong>{_bl_label}</strong>")
+                _bl_html = _bl_html.replace(f"<strong>{_bl_raw.upper()}</strong>", f"<strong>{_bl_label}</strong>")
+                if _bl_changed or sections.get(_bl_key) != _bl_html:
+                    sections[_bl_key] = _bl_html
+                    log.info("[FIX-R2-6A] Resolved bundesland '%s' → '%s' in %s", _bl_raw, _bl_label, _bl_key)
+
+    # =========================================================================
+    # FIX-R2-6B: Filter discontinued Förderprogramme (go-digital, Digital Jetzt)
+    # These programs are no longer available; replace with discontinuation notice
+    # =========================================================================
+    _FOERDER_BLACKLIST = ["go-digital", "go_digital", "digital jetzt", "digital_jetzt"]
+    for _fp_key in ["FOERDERPOTENZIAL_HTML", "foerderpotenzial"]:
+        _fp_html = sections.get(_fp_key, "")
+        if _fp_html and isinstance(_fp_html, str):
+            for _discontinued in _FOERDER_BLACKLIST:
+                if _discontinued.lower() in _fp_html.lower():
+                    # Add discontinuation notice instead of removing entirely
+                    _fp_html = re.sub(
+                        rf'({re.escape(_discontinued)}(?:\s*\([^)]*\))?)',
+                        r'\1 (Programm eingestellt)',
+                        _fp_html,
+                        flags=re.IGNORECASE,
+                        count=1,
+                    )
+                    log.info("[FIX-R2-6B] Marked '%s' as discontinued in %s", _discontinued, _fp_key)
+            sections[_fp_key] = _fp_html
 
     # ========== SAFE RECOMMENDATIONS FORMATTING (v9.0 - Maßnahme 5) ==========
     recommendations_html = sections.get("RECOMMENDATIONS_HTML", "")
@@ -15301,6 +15379,24 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     except Exception as e:
         log.warning(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Failed: {e}")
 
+    # =========================================================================
+    # FIX-R2-3: QUICK-WINS RECONCILIATION
+    # QUICK_WINS_HTML may have been shortened by enforcer passes, losing the
+    # premium-rendered PROBLEM/WIRKUNG/UMSETZUNG blocks.  QUICK_WINS_HTML_LEFT
+    # preserves the original premium render.  If LEFT is significantly richer,
+    # prefer it for the final template.
+    # =========================================================================
+    _qw_left = sections.get("QUICK_WINS_HTML_LEFT", "") or ""
+    _qw_main = sections.get("QUICK_WINS_HTML", "") or ""
+    if (isinstance(_qw_left, str) and isinstance(_qw_main, str)
+            and len(_qw_left) > len(_qw_main) + 500
+            and 'data-qw-json-rendered="true"' in _qw_left):
+        log.info(
+            "[FIX-R2-3] QUICK_WINS_HTML_LEFT is richer (%d chars) than QUICK_WINS_HTML (%d chars) — using LEFT version",
+            len(_qw_left), len(_qw_main),
+        )
+        sections["QUICK_WINS_HTML"] = _qw_left
+        sections["quick_wins"] = _qw_left
 
     # =========================================================================
     # FIX-528: PIPELINE SANITIZATION (decode HTML entities + complete sentences)

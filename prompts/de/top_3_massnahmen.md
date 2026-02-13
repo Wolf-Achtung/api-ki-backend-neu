@@ -38,7 +38,7 @@ MAßNAHME 3: Adressiert Risiken/Guardrails
 VERBOTEN:
 - Generische Phrasen: "Minimal-Stack", "Standard-Workflow", "Review-Regel"
 - Einleitungen wie "Hier sind die Top-3..."
-- Chat-Phrasen wie "Wie kann ich helfen?" oder "Bitte beschreibe..."
+- Chat-Phrasen, Hilfsangebote, Eingabeaufforderungen oder Gesprächseinstiege
 - Überschriften oder Absätze
 - Mehr als 3 Listenelemente
 
