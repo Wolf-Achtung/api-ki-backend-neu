@@ -1145,6 +1145,31 @@ def inject_hauptleistung_recommendations(html: str, hauptleistung: str, current_
     return result
 
 
+def _count_hauptleistung_combined(html: str, hauptleistung: str) -> int:
+    """
+    FIX-R2-4: Count both full-text AND short-form hauptleistung occurrences.
+
+    After FIX-3.1 replaces excess full-text with a short form, the combined
+    count (full + short) is the true density.  The enforcer must use this to
+    avoid re-injecting text that was deliberately shortened.
+    """
+    if not html or not hauptleistung:
+        return 0
+    full_count = len(re.findall(re.escape(hauptleistung), html, re.IGNORECASE))
+    # Derive the same short form that FIX-3.1 uses
+    short = hauptleistung[:60].rsplit(" ", 1)[0] + "..." if len(hauptleistung) > 60 else hauptleistung
+    for sep in [",", ";", ".", " und ", " mit "]:
+        pos = hauptleistung.find(sep)
+        if 15 < pos < 80:
+            short = hauptleistung[:pos]
+            break
+    if short != hauptleistung and len(short) > 10:
+        short_count = len(re.findall(re.escape(short), html, re.IGNORECASE))
+        # Subtract full occurrences that also match short prefix
+        return max(full_count, short_count)
+    return full_count
+
+
 def apply_hauptleistung_enforcer(sections: dict, hauptleistung: str) -> dict:
     """
     Enforced hauptleistung Minimum in Executive Summary und Recommendations.
@@ -1152,11 +1177,18 @@ def apply_hauptleistung_enforcer(sections: dict, hauptleistung: str) -> dict:
     if not hauptleistung or len(hauptleistung) < 3:
         log.warning("[HAUPTLEISTUNG-ENFORCER] No hauptleistung provided, skipping")
         return sections
-    
-    # Executive Summary: Minimum 4x
+
+    # FIX-R2-4: Skip enforcer if FIX-3.1 has already limited repetitions.
+    # Re-injecting after FIX-3.1 causes garbled text ("...UnternehmenBeratung
+    # und Unterstützung...").
+    if sections.get("_fix_3_1_applied"):
+        log.info("[HAUPTLEISTUNG-ENFORCER] Skipped — FIX-3.1 already applied, re-injection would cause garbling")
+        return sections
+
+    # Executive Summary: Minimum 4x (count full + short combined)
     for key in ["EXECUTIVE_SUMMARY_HTML", "executive_summary", "EXEC_SUMMARY_HTML"]:  # v14.23: FINAL_CHECK entfernt (ist Plain Text, nicht HTML)
         if key in sections and sections[key]:
-            current = count_hauptleistung(sections[key], hauptleistung)
+            current = _count_hauptleistung_combined(sections[key], hauptleistung) if len(hauptleistung) > 50 else count_hauptleistung(sections[key], hauptleistung)
             if current < 4:
                 log.info(f"[HAUPTLEISTUNG-ENFORCER] {key}: {current}/4 → enforcing")
                 sections[key] = inject_hauptleistung_executive(
@@ -1164,11 +1196,11 @@ def apply_hauptleistung_enforcer(sections: dict, hauptleistung: str) -> dict:
                 )
                 new_count = count_hauptleistung(sections[key], hauptleistung)
                 log.info(f"[HAUPTLEISTUNG-ENFORCER] {key}: Now {new_count}/4")
-    
+
     # Recommendations: Minimum 3x
     for key in ["RECOMMENDATIONS_HTML", "recommendations"]:
         if key in sections and sections[key]:
-            current = count_hauptleistung(sections[key], hauptleistung)
+            current = _count_hauptleistung_combined(sections[key], hauptleistung) if len(hauptleistung) > 50 else count_hauptleistung(sections[key], hauptleistung)
             if current < 3:
                 log.info(f"[HAUPTLEISTUNG-ENFORCER] {key}: {current}/3 → enforcing")
                 sections[key] = inject_hauptleistung_recommendations(
@@ -1176,7 +1208,7 @@ def apply_hauptleistung_enforcer(sections: dict, hauptleistung: str) -> dict:
                 )
                 new_count = count_hauptleistung(sections[key], hauptleistung)
                 log.info(f"[HAUPTLEISTUNG-ENFORCER] {key}: Now {new_count}/3")
-    
+
     return sections
 
 
@@ -2678,6 +2710,8 @@ def _limit_hauptleistung_repetitions(sections: dict, hauptleistung: str, max_ful
 
     if total_replaced > 0:
         log.info("[FIX-3.1] hauptleistung repetition limited: replaced %d occurrences with short form", total_replaced)
+        # FIX-R2-4: Set flag so the enforcer in subsequent passes won't re-inject
+        sections["_fix_3_1_applied"] = True
 
     return sections
 
@@ -2776,6 +2810,9 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
 
     # 15. Chat Artefact Filter (Fix-Batch J4) - Remove "Schreib mir", "Frag mich" etc.
     sections = apply_chat_artefact_filter(sections)
+
+    # 15.5 FIX-R2-2: Prompt-Leak Hard-Block (removes entire HTML blocks with prompt leaks)
+    sections = apply_prompt_leak_hard_block(sections)
 
     # 16. FIX-514: Forbidden-Token Scrub (Rollout/Skalierung/Stack in decision+stack sections)
     sections = apply_forbidden_token_scrub(sections)
@@ -3599,6 +3636,97 @@ def apply_chat_artefact_filter(sections: dict) -> dict:
 
     if total_removals > 0:
         log.info(f"[CHAT-ARTEFACT-FILTER] Complete: {total_removals} total artefacts removed")
+
+    return sections
+
+
+# =============================================================================
+# FIX-R2-2: PROMPT-LEAK HARD-BLOCK
+# =============================================================================
+# Problem: LLM sometimes renders the prompt template itself instead of the
+# generated content, showing "Wie kann ich helfen? Bitte beschreibe kurz..."
+# in the final report.  The existing chat-artefact filter (regex patterns)
+# misses multi-sentence prompt leaks.
+#
+# Solution: Detect known prompt-leak phrases and remove the entire
+# containing HTML block (<p>…</p> or <h3>…) to avoid partial remnants.
+# =============================================================================
+
+PROMPT_LEAK_HARD_BLOCK_PHRASES = [
+    "Wie kann ich helfen",
+    "Wie kann ich dir helfen",
+    "Wie kann ich Ihnen helfen",
+    "Bitte beschreibe kurz",
+    "Ihr Ziel (z. B.",
+    "Ihre Daten/Quellen (z. B.",
+    "Ihre Umgebung (Cloud/On-Prem",
+    "Erfolgskriterien (KPIs), Budgetrahmen",
+    "nenne auch Branche und Stakeholder",
+    "Wenn Sie magst",
+    "Wobei kann ich helfen",
+    "beschreibe dein anliegen",
+    "du hast noch keine frage",
+    "ich sehe keine frage",
+]
+
+
+def _remove_html_block_containing(html: str, phrase: str) -> tuple[str, bool]:
+    """Remove the HTML block (<p>…</p>, <li>…</li>, or <div>…</div>) that contains *phrase*."""
+    lower_html = html.lower()
+    lower_phrase = phrase.lower()
+    if lower_phrase not in lower_html:
+        return html, False
+
+    # Try to remove containing <p>…</p>, <li>…</li>, <div>…</div> blocks
+    for tag in ("p", "li", "div"):
+        pattern = re.compile(
+            rf'<{tag}[^>]*>[^<]*(?:<(?!/{tag}>)[^<]*)*{re.escape(phrase)}.*?</{tag}>',
+            re.IGNORECASE | re.DOTALL,
+        )
+        new_html, n = pattern.subn("", html)
+        if n > 0:
+            return new_html, True
+
+    # Fallback: remove the sentence containing the phrase
+    pattern_sent = re.compile(
+        rf'[^.!?]*{re.escape(phrase)}[^.!?]*[.!?]?\s*',
+        re.IGNORECASE,
+    )
+    new_html, n = pattern_sent.subn("", html)
+    return new_html, n > 0
+
+
+def apply_prompt_leak_hard_block(sections: dict) -> dict:
+    """
+    FIX-R2-2: Remove entire HTML blocks that contain prompt-leak phrases.
+
+    These are multi-sentence prompt template leaks that the regex-based
+    chat-artefact filter doesn't catch.
+    """
+    total_removed = 0
+    checked_keys = [
+        k for k in sections
+        if isinstance(sections.get(k), str)
+        and sections[k]
+        and (k.endswith("_HTML") or k.islower())
+        and not k.startswith("_")
+    ]
+
+    for key in checked_keys:
+        html = sections[key]
+        for phrase in PROMPT_LEAK_HARD_BLOCK_PHRASES:
+            html, removed = _remove_html_block_containing(html, phrase)
+            if removed:
+                total_removed += 1
+                log.info("[FIX-R2-2][HARD-BLOCK] Removed block containing '%s' from %s", phrase, key)
+        if total_removed > 0:
+            # Clean up empty paragraphs left behind
+            html = re.sub(r'<p[^>]*>\s*</p>', '', html)
+            html = re.sub(r'\n\s*\n\s*\n', '\n\n', html)
+            sections[key] = html
+
+    if total_removed > 0:
+        log.info("[FIX-R2-2] PROMPT-LEAK HARD-BLOCK: removed %d leak blocks total", total_removed)
 
     return sections
 
