@@ -65,19 +65,22 @@ class TestScenarioKPIs:
         assert scenario.name == "realistic"
 
     def test_roi_clamped_to_max(self) -> None:
-        """Test ROI is clamped to maximum value."""
-        from services.business_case_engine_v2 import ScenarioKPIs, MAX_ROI
+        """FIX-R3-5C: __post_init__ only applies MIN_ROI floor, not MAX_ROI cap.
+        MAX_ROI capping is handled per-scenario in calculate_roi(apply_cap=True)
+        for realistic scenario only. Optimistic/conservative show uncapped values."""
+        from services.business_case_engine_v2 import ScenarioKPIs
 
         scenario = ScenarioKPIs(
             name="optimistic",
-            roi_12m=5000.0,  # Way above max
+            roi_12m=5000.0,  # Above MAX_ROI — kept uncapped for non-realistic scenarios
             payback_months=1.0,
             monthly_savings=10000.0,
             annual_savings=120000.0,
             investment_total=5000.0,
         )
 
-        assert scenario.roi_12m == MAX_ROI
+        # Optimistic scenario preserves uncapped ROI for meaningful variance
+        assert scenario.roi_12m == 5000.0
 
     def test_roi_clamped_to_min(self) -> None:
         """Test ROI is clamped to minimum value."""
