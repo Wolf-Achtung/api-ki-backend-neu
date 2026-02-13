@@ -702,7 +702,7 @@ def inject_canonical_to_sections(
                 if old_hours != _canon_hours or old_rate != _canon_rate:
                     annual = _canon_hours * _canon_rate * 12
                     return f"{_canon_hours:.0f}h/Monat × {_canon_rate:.0f}€/h × 12 = {annual:,.0f}€"
-                return m.group(0)
+                return str(m.group(0))
             _new = _re.sub(
                 r'(\d+(?:\.\d+)?)h/Monat\s*×\s*(\d+(?:\.\d+)?)€/h\s*×\s*12\s*=\s*[\d.,]+€',
                 _fix_roi_line, _roi_html,
