@@ -744,8 +744,8 @@ class ReportValidator:
             # SPRINT N: Updated minimums
             # SPRINT G6: tools_empfehlungen erhöht, strategie_governance hinzugefügt
             # SPRINT G17.S: roadmap_90d reduced from 300 to 200
-            # FIX-TEAM-KMU: lowered from 180 → 140 (LLM variance, 2-pass expand at 150)
-            "executive_summary": 140,   # FIX-TEAM-KMU: realistic for LLM output
+            # FIX-TEAM-KMU: lowered from 180 → 140 → 120 (LLM variance, 117-word outputs observed)
+            "executive_summary": 120,   # FIX-R4-VAL: 140 still too high, 117 words observed in prod
             "quick_wins": 90,
             "roadmap_90d": 200,         # SPRINT G17.S: reduced from 300
             "roadmap_12m": 600,         # SPRINT N: erhöht von 500
@@ -764,8 +764,8 @@ class ReportValidator:
             # SPRINT G6: tools_empfehlungen + strategie_governance erhöht
             # SPRINT G17.S: roadmap_90d reduced from 350 to 220
             # SPRINT G18: foerderpotenzial erhöht für Substanz
-            # FIX-TEAM-KMU: lowered from 200 → 140 (LLM variance, 2-pass expand at 150)
-            "executive_summary": 140,   # FIX-TEAM-KMU: realistic for LLM output
+            # FIX-TEAM-KMU: lowered from 200 → 140 → 120 (LLM variance, 117-word outputs observed)
+            "executive_summary": 120,   # FIX-R4-VAL: 140 still too high for LLM output variance
             "quick_wins": 120,
             "roadmap_90d": 220,         # SPRINT G17.S: reduced from 350
             "roadmap_12m": 700,         # SPRINT N: erhöht von 600

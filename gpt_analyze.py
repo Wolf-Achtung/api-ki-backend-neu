@@ -14862,8 +14862,9 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             _word_count = len(_text_only.split()) if _text_only else 0
             _min_words = _get_min_words_sp(_heal_segment, _logical_name)
 
-            # Only heal if slightly below minimum (within 20 words gap)
-            if _word_count < _min_words and _word_count >= _min_words - 20:
+            # Only heal if slightly below minimum (within 30 words gap)
+            # FIX-R4-VAL: widened from 20→30 (117/140 gap=23 was missed)
+            if _word_count < _min_words and _word_count >= _min_words - 30:
                 log.warning(
                     "[%s] [POST-TRIM-HEAL] %s under minimum (%d/%d words), expanding...",
                     run_id, _html_key, _word_count, _min_words,
