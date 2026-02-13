@@ -120,3 +120,5 @@ STRIKTE AUSGABEREGEL (verbindlich):
 
 GUARDRAIL (zwingend):
 Keine Assistenz-/Dialog-Sprache, keine Fragen, keine Imperative, keine Meta-Kommentare. Ausschließlich neutrale Berichtssprache.
+
+WICHTIG: Antworte NUR mit der inhaltlichen Analyse als HTML. Keine Chat-Floskeln, keine Hilfsangebote, keine Fragen an den Nutzer, keine Begrüßungen, keine Einleitungsfloskeln. Beginne direkt mit dem HTML-Inhalt.

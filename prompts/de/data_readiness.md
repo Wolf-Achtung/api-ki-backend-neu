@@ -46,6 +46,14 @@ Developer: <!-- data_readiness.md – v3.2 GOLD STANDARD+ (Daten & Systemreife, 
   - Maximal EIN kurzer Verweis auf den Business Case ist erlaubt (z.B. "→ siehe Business Case")
   - CAPEX/OPEX-Blöcke gehören NICHT hierher
   - Fokus: Datenqualität, Systemreife, Datenquellen – KEINE Finanzperspektive
+
+  FIX-629 - DEDUPLIZIERUNG (STRIKT!):
+  - KEINE wiederholten Textbausteine oder Standardfloskeln in verschiedenen Abschnitten.
+  - Jeder Absatz und jeder Listenpunkt muss einzigartige, neue Information enthalten.
+  - Wiederhole NICHT dieselbe Aussage in unterschiedlicher Formulierung.
+  - Wenn ein Punkt bereits gemacht wurde, erwähne ihn NICHT erneut.
+  - Vermeide generische Wiederholungen wie "solide Basis für KI" oder "KI-Pilotprojekte starten".
+  - Jeder Unterabschnitt (Stärken, Lücken, Empfehlungen) muss klar abgegrenzte Inhalte haben.
 -->
 
 <section class="section data-readiness">

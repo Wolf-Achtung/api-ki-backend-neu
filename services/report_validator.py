@@ -1342,7 +1342,14 @@ class ReportValidator:
             # SIZE-AWARE Mindestlänge
             min_words = self._get_min_words_for_section(logical_name)
 
-            if actual_word_count < min_words:
+            # FIX-629: Apply 5% tolerance (minimum 5 words) as safety net.
+            # Post-processing (hauptleistung-enforcer, repetition-limiter, zero-leak
+            # cleanup) can trim sections slightly below the hard minimum.
+            # The tolerance prevents false-positive CRITICAL errors for marginal cases.
+            tolerance = max(5, int(min_words * 0.05))
+            effective_min = min_words - tolerance
+
+            if actual_word_count < effective_min:
                 # SPRINT N: Use CRITICAL severity for critical length sections
                 is_critical_section = logical_name in self.CRITICAL_LENGTH_SECTIONS
                 severity = "CRITICAL" if is_critical_section else "WARNING"
@@ -1354,13 +1361,20 @@ class ReportValidator:
                         section=section_key,
                         message=(
                             f"Section zu kurz: {actual_word_count} Wörter "
-                            f"(Minimum für {self.company_size}: {min_words} Wörter)"
+                            f"(Minimum für {self.company_size}: {min_words} Wörter, "
+                            f"Toleranz: {tolerance})"
                         ),
                         details=(
                             f"Content preview: {text_only[:150]}... "
                             f"{'[CRITICAL SECTION]' if is_critical_section else ''}"
                         ),
                     )
+                )
+            elif actual_word_count < min_words:
+                # Within tolerance band: log as INFO-level warning, not a validation error
+                log.info(
+                    "[FIX-629][TOLERANCE] %s: %d words (min=%d, tolerance=%d) - within tolerance band",
+                    section_key, actual_word_count, min_words, tolerance,
                 )
 
     # FIX-554: Technical context indicators for "Platzhalter"

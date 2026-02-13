@@ -314,14 +314,12 @@ DETERMINISTIC_PRESCRUB_PHRASES: List[str] = [
     "Beispiel-Ablauf",
     "Platzhalter",
     "Template-Text",
-    # FIX-620: Move help-offer phrases from EXECUTIVE_CRITICAL to prescrub
-    # to avoid expensive FAIL-CLOSED regeneration (same pattern as FIX-526)
-    "wobei kann ich helfen",
-    "wobei ich dir helfen",
-    "wobei ich Ihnen helfen",
-    "wie kann ich dir helfen",
-    "wie kann ich Ihnen helfen",
-    "wie kann ich ihnen helfen",
+    # FIX-629: Help-offer phrases REMOVED from prescrub → now HARD-BLOCK
+    # in EXECUTIVE_SECTIONS via EXECUTIVE_CRITICAL_PHRASES.
+    # Reverses FIX-620: prescrub silently removed these, masking broken
+    # chat-style responses (GPT-5.2 "wie kann ich dir helfen" in decision
+    # sections). Now triggers FAIL-CLOSED + regeneration for executive sections,
+    # while BENIGN_CHATBOT_PHRASES still handles them in non-executive sections.
     # Chat introduction artifacts
     "Hier ist",
     "Natürlich,",
