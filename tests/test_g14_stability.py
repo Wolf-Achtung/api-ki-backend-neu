@@ -455,13 +455,18 @@ class TestG14_Integration:
         # All imports successful
         assert True
 
+    @pytest.mark.timeout(10)
     def test_research_pipeline_with_circuit_breaker(self):
         """Test research pipeline respects circuit breaker."""
         pytest.importorskip("bs4", reason="bs4 required for research_pipeline")
+        from unittest.mock import patch
+
         from services.research_pipeline import run_research
 
-        # Run with minimal answers (will use fallbacks)
-        result = run_research({})
+        # Mock feedparser to avoid real network calls that hang in CI
+        mock_feed = type("Feed", (), {"entries": [], "bozo": False, "feed": {}})()
+        with patch("services.research_clients.feedparser.parse", return_value=mock_feed):
+            result = run_research({})
 
         assert "TOOLS_TABLE_HTML" in result
         assert "FUNDING_TABLE_HTML" in result
