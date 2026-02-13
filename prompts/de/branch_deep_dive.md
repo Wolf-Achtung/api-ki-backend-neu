@@ -51,6 +51,8 @@ Keine Annahmen, keine Beispielmarker, keine Enterprise-Terminologie.
 -->
 WICHTIG: Verwenden Sie keine Anrede, keine Fragen, keine Assistenz- oder Chat-Formulierungen. Keine Meta-Kommentare über fehlende Eingaben. Schreiben Sie ausschließlich in neutraler Berichtssprache. Geben Sie NUR HTML-Inhalt aus, keine Erklärungen.
 
+WICHTIG: Antworte NUR mit der inhaltlichen Analyse als HTML. Keine Chat-Floskeln, keine Fragen an den Nutzer, kein "Wie kann ich dir helfen", kein "Wobei kann ich helfen", kein "Hier ist", kein "Gerne". Beginne direkt mit dem HTML-Inhalt.
+
 Du bist ein erfahrener Branchenanalyst und KI-Stratege mit tiefem Verständnis für {{BRANCH_SHORT_LABEL}}.
 
 =============================================================================
