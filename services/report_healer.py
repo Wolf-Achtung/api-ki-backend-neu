@@ -2893,6 +2893,31 @@ def apply_segment_budget(
                 flags=re.DOTALL
             )
 
+        # PLATIN+++ FIX 3.2: Final safety net - if still over budget, trim at sentence boundary
+        if len(processed) > budget:
+            # Find last complete sentence before budget limit
+            text_budget = budget
+            for end_marker in ['. </p>', '.</p>', '.</li>', '. ', '! ', '? ']:
+                pos = processed.rfind(end_marker, 0, text_budget)
+                if pos > text_budget * 0.5:  # Keep at least 50% of budget
+                    processed = processed[:pos + len(end_marker)]
+                    # Close any open tags
+                    open_tags = re.findall(r'<(p|li|ul|ol|div|section)(?:\s[^>]*)?>', processed)
+                    close_tags = re.findall(r'</(p|li|ul|ol|div|section)>', processed)
+                    open_counts: dict = {}
+                    for t in open_tags:
+                        open_counts[t] = open_counts.get(t, 0) + 1
+                    for t in close_tags:
+                        open_counts[t] = open_counts.get(t, 0) - 1
+                    for tag, count in reversed(list(open_counts.items())):
+                        for _ in range(max(0, count)):
+                            processed += f"</{tag}>"
+                    break
+            log.info(
+                "[FIX-G] Section '%s' sentence-trimmed: %d -> %d chars (budget=%d)",
+                section_name, current_len, len(processed), budget
+            )
+
         # Clean up
         processed = re.sub(r"<p>\s*</p>", "", processed)
         processed = re.sub(r"\n{3,}", "\n\n", processed)

@@ -183,11 +183,12 @@ TOOL_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
             "funding_eligible": True,
         },
     ],
+    # PLATIN+++ FIX 4.2: KMU-appropriate tools (not Enterprise-grade)
     "kmu": [
         {
-            "name": "Enterprise KI-Plattform",
+            "name": "KI-Assistenz-Plattform (Team)",
             "category": "KI-API",
-            "purpose": "Unternehmensweite KI-Integration",
+            "purpose": "Team-weite KI-Integration für 11-100 Mitarbeiter",
             "priority": 1,
             "estimated_setup_days": 5,
             "funding_eligible": True,
@@ -197,15 +198,15 @@ TOOL_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
             "category": "Data Quality",
             "purpose": "Sicherung der Datenqualität für KI",
             "priority": 1,
-            "estimated_setup_days": 10,
+            "estimated_setup_days": 7,
             "funding_eligible": True,
         },
         {
-            "name": "ML-Lifecycle-Management",
-            "category": "ML Lifecycle / Governance",
-            "purpose": "Governance und Versionierung von KI-Modellen",
+            "name": "Workflow-Automatisierung",
+            "category": "Automation",
+            "purpose": "Automatisierung wiederkehrender Geschäftsprozesse",
             "priority": 1,
-            "estimated_setup_days": 14,
+            "estimated_setup_days": 7,
             "funding_eligible": True,
         },
         {
@@ -213,15 +214,15 @@ TOOL_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
             "category": "Monitoring / Observability",
             "purpose": "Monitoring und Analytics",
             "priority": 2,
-            "estimated_setup_days": 7,
+            "estimated_setup_days": 5,
             "funding_eligible": True,
         },
         {
-            "name": "Compliance-Framework",
-            "category": "ML Lifecycle / Governance",
-            "purpose": "AI Act Compliance und Governance",
+            "name": "KI-Governance-Checkliste",
+            "category": "Governance",
+            "purpose": "AI Act Compliance und interne Richtlinien",
             "priority": 2,
-            "estimated_setup_days": 14,
+            "estimated_setup_days": 3,
             "funding_eligible": True,
         },
     ],
@@ -232,15 +233,8 @@ TOOL_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
 # Only universal BMWK/federal programs are included here.
 # Regional programs should be handled by funding_engine_v2 with bundesland filter.
 FUNDING_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
+    # PLATIN+++ FIX 4.1: Removed go-digital (ended Dec 2024) and Digital Jetzt (ended Dec 2023)
     "solo": [
-        {
-            "program_id": "go_digital",
-            "name": "go-digital",
-            "provider": "BMWK",
-            "max_amount": "16.500 €",
-            "fit_reason": "Ideal für Einzelunternehmer, einfacher Antrag",
-            "application_complexity": "low",
-        },
         {
             "program_id": "unternehmensberater_foerderung",
             "name": "Förderung unternehmerischen Know-hows",
@@ -249,22 +243,30 @@ FUNDING_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
             "fit_reason": "Beratungsförderung für Gründer und Selbstständige (bundesweit)",
             "application_complexity": "low",
         },
+        {
+            "program_id": "eic_accelerator_small",
+            "name": "EIC Accelerator (Kleinformat)",
+            "provider": "EU",
+            "max_amount": "2.500 €",
+            "fit_reason": "EU-Innovationsförderung für Solo-Selbstständige",
+            "application_complexity": "medium",
+        },
     ],
     "team": [
         {
-            "program_id": "go_digital",
-            "name": "go-digital",
-            "provider": "BMWK",
-            "max_amount": "16.500 €",
-            "fit_reason": "Schneller Start für erste Digitalisierung",
+            "program_id": "unternehmensberater_foerderung",
+            "name": "Förderung unternehmerischen Know-hows",
+            "provider": "BAFA",
+            "max_amount": "4.000 €",
+            "fit_reason": "Beratungsförderung für kleine Teams (bundesweit)",
             "application_complexity": "low",
         },
         {
-            "program_id": "digital_jetzt",
-            "name": "Digital Jetzt",
-            "provider": "BMWK",
-            "max_amount": "50.000 €",
-            "fit_reason": "Investitionsförderung für Digitalisierung (bundesweit)",
+            "program_id": "kfw_digitalisierung",
+            "name": "KfW-Digitalisierungskredit",
+            "provider": "KfW",
+            "max_amount": "25.000 €",
+            "fit_reason": "Günstige Finanzierung für Digitalisierungsvorhaben",
             "application_complexity": "medium",
         },
     ],
@@ -436,10 +438,11 @@ KIT_DESCRIPTIONS: Dict[str, str] = {
         "gemeinsame KI-Nutzung, automatisierte Workflows und strukturierte "
         "Kommunikation – plus Zugang zu attraktiven Förderprogrammen."
     ),
+    # PLATIN+++ FIX 4.2: KMU-appropriate description (not Enterprise)
     "kmu": (
-        "Enterprise-Ready KI-Framework: Umfassendes Kit für KMU mit Fokus auf "
-        "Datenqualität, Governance und erweiterbare KI-Integration – inklusive "
-        "Unterstützung für größere Förderprojekte wie ZIM."
+        "Wachstums-Kit für KMU: Strukturiertes Paket für Unternehmen mit 11-100 "
+        "Mitarbeitern – mit Fokus auf Datenqualität, Prozessautomatisierung und "
+        "schrittweise KI-Integration inklusive passender Förderprogramme."
     ),
 }
 

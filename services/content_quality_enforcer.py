@@ -2638,6 +2638,50 @@ def apply_solo_terms_final(sections: dict, company_size: str) -> dict:
     return sections
 
 
+def _limit_hauptleistung_repetitions(sections: dict, hauptleistung: str, max_full: int = 3) -> dict:
+    """
+    PLATIN+++ FIX 3.1: Limit full-text hauptleistung repetitions across all sections.
+
+    After max_full occurrences, replace with a short version (first 60 chars + ...).
+    This prevents the report from repeating the full hauptleistung 16-25 times.
+    """
+    if not hauptleistung or len(hauptleistung) <= 50:
+        return sections
+
+    # Create short version
+    short = hauptleistung[:60].rsplit(" ", 1)[0] + "..." if len(hauptleistung) > 60 else hauptleistung
+    # Even shorter: extract core concept (first sentence or clause)
+    for sep in [",", ";", ".", " und ", " mit "]:
+        pos = hauptleistung.find(sep)
+        if 15 < pos < 80:
+            short = hauptleistung[:pos]
+            break
+
+    total_replaced = 0
+    for key, val in sections.items():
+        if not isinstance(val, str) or key.startswith("_"):
+            continue
+        count = val.count(hauptleistung)
+        if count <= 0:
+            continue
+        # Keep first max_full occurrences in the entire report, replace rest
+        # Process per-section: allow max 1 full occurrence per section (first one)
+        parts = val.split(hauptleistung)
+        if len(parts) <= 2:
+            continue  # 0 or 1 occurrence in this section
+        # Keep first occurrence, replace rest
+        rebuilt = parts[0] + hauptleistung
+        for part in parts[2:]:
+            rebuilt += short + part
+            total_replaced += 1
+        sections[key] = rebuilt
+
+    if total_replaced > 0:
+        log.info("[FIX-3.1] hauptleistung repetition limited: replaced %d occurrences with short form", total_replaced)
+
+    return sections
+
+
 def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesland: str = "", company_size: str = "") -> dict:
 
     """
@@ -2758,6 +2802,10 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
 
     # 19. FIX-52x: Deduplicate long identical paragraphs (PRIO 3)
     sections = _dedupe_long_paragraphs(sections)
+
+    # 19.5 PLATIN+++ FIX 3.1: Limit hauptleistung full-text repetitions (max 3)
+    if hauptleistung and len(hauptleistung) > 50:
+        sections = _limit_hauptleistung_repetitions(sections, hauptleistung, max_full=3)
 
     # 20. FIX-52x: Strip trailing sentence fragments (PRIO 4)
     sections = strip_trailing_sentence_fragments(sections)

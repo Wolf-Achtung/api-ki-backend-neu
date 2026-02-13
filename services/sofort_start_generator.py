@@ -33,6 +33,42 @@ from typing import Any, Dict, List, Optional, cast
 
 log = logging.getLogger(__name__)
 
+# PLATIN+++ FIX 1.1/1.2/1.4: Import canonical rates from single source of truth
+try:
+    from services.business_case_engine_v2 import (
+        HOURLY_RATES_BY_SIZE,
+        OPEX_DEFAULTS_BY_SIZE,
+        MAX_TIME_SAVINGS_BY_SIZE,
+    )
+except ImportError:
+    HOURLY_RATES_BY_SIZE = {"solo": 80, "team": 95, "kmu": 110, "enterprise": 130}
+    OPEX_DEFAULTS_BY_SIZE = {"solo": 50, "team": 150, "kmu": 400, "enterprise": 1500}
+    MAX_TIME_SAVINGS_BY_SIZE = {"solo": 20, "team": 60, "kmu": 150, "enterprise": 400}
+
+
+def _get_canonical_rate(company_size: str) -> int:
+    """Get canonical hourly rate for company size. PLATIN+++ single source of truth."""
+    size_key = "solo"
+    if company_size:
+        size_lower = company_size.lower()
+        if any(x in size_lower for x in ["team", "klein", "2-10", "2–10"]):
+            size_key = "team"
+        elif any(x in size_lower for x in ["kmu", "mittel", "11-100", "11–100", "100"]):
+            size_key = "kmu"
+    return int(HOURLY_RATES_BY_SIZE.get(size_key, 80))
+
+
+def _get_canonical_opex_yearly(company_size: str) -> int:
+    """Get canonical yearly OPEX for company size. PLATIN+++ single source of truth."""
+    size_key = "solo"
+    if company_size:
+        size_lower = company_size.lower()
+        if any(x in size_lower for x in ["team", "klein", "2-10", "2–10"]):
+            size_key = "team"
+        elif any(x in size_lower for x in ["kmu", "mittel", "11-100", "11–100", "100"]):
+            size_key = "kmu"
+    return int(OPEX_DEFAULTS_BY_SIZE.get(size_key, 50)) * 12
+
 # =============================================================================
 # BRANCHEN-SPEZIFISCHE PROMPTS (13 Branchen)
 # =============================================================================
@@ -975,17 +1011,25 @@ def get_branche_key(branche: str) -> str:
     return "default"
 
 
-def calculate_yearly_savings(hours_per_week: int, hourly_rate: int = 80) -> dict:
-    """Berechnet Jahresersparnis (Idee #3 + #6)."""
+def calculate_yearly_savings(hours_per_week: int, hourly_rate: int = 80, company_size: str = "solo") -> dict:
+    """Berechnet Jahresersparnis (Idee #3 + #6).
+
+    PLATIN+++ FIX 1.1/1.4: Uses canonical hourly rate and OPEX from single source of truth.
+    """
+    # PLATIN+++ FIX 1.1: Use canonical rate if default was passed
+    if hourly_rate == 80:
+        hourly_rate = _get_canonical_rate(company_size)
+
     hours_per_month = hours_per_week * 4
     hours_per_year = hours_per_week * 48  # 48 Arbeitswochen
-    
+
     savings_per_month = hours_per_month * hourly_rate
     savings_per_year = hours_per_year * hourly_rate
-    
-    tool_costs_per_year = 240  # ~20€/Monat
+
+    # PLATIN+++ FIX 1.4: Use canonical OPEX instead of hardcoded 240€
+    tool_costs_per_year = _get_canonical_opex_yearly(company_size)
     net_savings = savings_per_year - tool_costs_per_year
-    
+
     return {
         "hours_per_week": hours_per_week,
         "hours_per_month": hours_per_month,
@@ -1007,29 +1051,46 @@ def generate_sofort_start_html(
     branche: str,
     company_size: str = "solo",
     zeitersparnis_prioritaet: str = "",
-    stundensatz: int = 80
+    stundensatz: int = 0
 ) -> str:
     """
     Generiert die SOFORT_START_HTML Section.
+
+    PLATIN+++ FIX 1.1/1.2/1.4: Uses canonical rates and size-based time savings.
     """
-    
+
     branche_key = get_branche_key(branche)
     branche_data = BRANCHE_PROMPTS.get(branche_key, BRANCHE_PROMPTS["default"])
-    
+
     # Company size normalisieren
     size_key = "solo"
     if company_size:
         size_lower = company_size.lower()
-        if any(x in size_lower for x in ["team", "klein", "2-10"]):
+        if any(x in size_lower for x in ["team", "klein", "2-10", "2–10"]):
             size_key = "team"
-        elif any(x in size_lower for x in ["kmu", "mittel", "11-100", "100"]):
+        elif any(x in size_lower for x in ["kmu", "mittel", "11-100", "11–100", "100"]):
             size_key = "kmu"
-    
+
     tools = TOOL_EMPFEHLUNGEN.get(size_key, TOOL_EMPFEHLUNGEN["solo"])
-    
-    # Zeitersparnis berechnen
-    hours_per_week: int = cast(int, branche_data.get("zeitersparnis_pro_woche", 4))
-    savings = calculate_yearly_savings(hours_per_week, stundensatz)
+
+    # PLATIN+++ FIX 1.1: Use canonical rate from single source of truth
+    if stundensatz <= 0:
+        stundensatz = _get_canonical_rate(company_size)
+
+    # PLATIN+++ FIX 1.2: Calculate time savings based on BOTH branche AND company size
+    branche_hours_per_week: int = cast(int, branche_data.get("zeitersparnis_pro_woche", 4))
+    # Scale by company size: team gets ~1.5x, kmu gets ~2x the branche base
+    size_multipliers = {"solo": 1.0, "team": 1.5, "kmu": 2.0}
+    size_mult = size_multipliers.get(size_key, 1.0)
+    hours_per_week = max(2, min(40, int(branche_hours_per_week * size_mult)))
+
+    # Ensure monthly hours don't exceed canonical MAX_TIME_SAVINGS_BY_SIZE
+    max_monthly = MAX_TIME_SAVINGS_BY_SIZE.get(size_key, 20)
+    hours_per_month_raw = hours_per_week * 4
+    if hours_per_month_raw > max_monthly:
+        hours_per_week = max(1, max_monthly // 4)
+
+    savings = calculate_yearly_savings(hours_per_week, stundensatz, company_size)
     
     # Personalisiere den ersten Schritt
     erster_schritt = branche_data["erster_schritt"]
@@ -1226,13 +1287,18 @@ def generate_entscheidungsvorlage_html(
     branche: str,
     company_size: str,
     zeitersparnis_pro_woche: int = 4,
-    stundensatz: int = 80
+    stundensatz: int = 0
 ) -> str:
     """
     Generiert eine Entscheidungsvorlage für Vorgesetzte (Idee #10).
+
+    PLATIN+++ FIX 1.1: Uses canonical rate from single source of truth.
     """
-    
-    savings = calculate_yearly_savings(zeitersparnis_pro_woche, stundensatz)
+    # PLATIN+++ FIX 1.1: Use canonical rate
+    if stundensatz <= 0:
+        stundensatz = _get_canonical_rate(company_size)
+
+    savings = calculate_yearly_savings(zeitersparnis_pro_woche, stundensatz, company_size)
     
     html = f'''
     <div style="background: white; border: 2px solid #1e40af; border-radius: 8px; padding: 20px; margin-top: 24px;">
@@ -1261,7 +1327,7 @@ def generate_entscheidungsvorlage_html(
             
             <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Investition:</h4>
             <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
-                <li>Tool-Kosten: ca. 20€/Monat pro Nutzer</li>
+                <li>Tool-Kosten: ca. {savings['tool_costs'] // 12}€/Monat pro Nutzer</li>
                 <li>Einarbeitung: ca. 2-4 Stunden</li>
             </ul>
             
