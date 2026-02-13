@@ -731,7 +731,8 @@ def render(briefing_obj: Any,
             r'\{CAPEX_REALISTISCH_EUR\}': str(sections.get('CAPEX_REALISTISCH_EUR', '')),
             r'\{OPEX_REALISTISCH_EUR\}': str(sections.get('OPEX_REALISTISCH_EUR', '')),
             r'\{EINSPARUNG_MONAT_EUR\}': str(sections.get('EINSPARUNG_MONAT_EUR', '')),
-            r'\{PAYBACK_MONTHS\}': str(sections.get('PAYBACK_MONTHS', '')),
+            # FIX-R4-1: Format payback as German decimal, not raw float
+            r'\{PAYBACK_MONTHS\}': str(sections.get('PAYBACK_MONTHS_FMT_DE', '') or sections.get('PAYBACK_MONTHS', '')),
             r'\{ROI_12M\}': str(sections.get('ROI_12M', '')),
         }
         expr_replacements.update(single_brace_replacements)
@@ -748,7 +749,8 @@ def render(briefing_obj: Any,
             r'\{\{\s*CAPEX_REALISTISCH_EUR\s*\}\}': str(sections.get('CAPEX_REALISTISCH_EUR', '')),
             r'\{\{\s*OPEX_REALISTISCH_EUR\s*\}\}': str(sections.get('OPEX_REALISTISCH_EUR', '')),
             r'\{\{\s*EINSPARUNG_MONAT_EUR\s*\}\}': str(sections.get('EINSPARUNG_MONAT_EUR', '')),
-            r'\{\{\s*PAYBACK_MONTHS\s*\}\}': str(sections.get('PAYBACK_MONTHS', '')),
+            # FIX-R4-1: Format payback as German decimal, not raw float
+            r'\{\{\s*PAYBACK_MONTHS\s*\}\}': str(sections.get('PAYBACK_MONTHS_FMT_DE', '') or sections.get('PAYBACK_MONTHS', '')),
             r'\{\{\s*ROI_12M\s*\}\}': str(sections.get('ROI_12M', '')),
         }
         expr_replacements.update(simple_replacements)

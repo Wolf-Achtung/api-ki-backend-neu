@@ -84,7 +84,7 @@ SCENARIO_NAMES = ["optimistic", "realistic", "conservative"]
 # Default values
 DEFAULT_INVESTMENT = 5000.0
 DEFAULT_MONTHLY_SAVINGS = 500.0
-DEFAULT_EFFORT_HOURS = 40.0
+DEFAULT_EFFORT_HOURS = 36.0  # FIX-R4-3: was 40.0, aligned with canonical default
 
 # Constraints
 MIN_ROI = -100.0  # -100% = total loss
@@ -1749,7 +1749,7 @@ def generate_scenarios(
 
 def generate_kpi_targets(
     scenarios: List[ScenarioKPIs],
-    baseline_effort_hours: float = 40.0,
+    baseline_effort_hours: float = 36.0,  # FIX-R4-3: was 40.0
 ) -> Tuple[Dict[str, float], Dict[str, float]]:
     """
     Generate KPI targets for 6 and 12 months.
