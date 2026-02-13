@@ -14720,7 +14720,12 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                      sections['PAYBACK_MONTHS_PESSIMISTIC'], sections['PAYBACK_MONTHS_OPTIMISTIC'])
         except (ValueError, ZeroDivisionError) as e:
             log.warning("[%s] ⚠️ Sensitivity calculation failed: %s", run_id, e)
-
+        # [FIX-R4-1b] Re-set PAYBACK_MONTHS_FMT_DE after BC values copied from answers
+        try:
+            _pb_raw2 = sections.get('PAYBACK_MONTHS', 0)
+            sections['PAYBACK_MONTHS_FMT_DE'] = f"{float(str(_pb_raw2).replace(',', '.')):.1f}".replace('.', ',')
+        except (ValueError, TypeError):
+            sections['PAYBACK_MONTHS_FMT_DE'] = str(sections.get('PAYBACK_MONTHS', 'n/a'))
         # FIX: Apply calculated values to HTML sections
         # Include both UPPERCASE (template keys) and lowercase (logical keys)
         sections_to_fix = [
