@@ -14656,6 +14656,12 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             log.info('[%s] [FIX-R4-2] BC prose replaced with static template', run_id)
     except Exception as _e:
         log.warning('[%s] [FIX-R4-2] BC prose replacement failed: %s', run_id, _e)
+    # [FIX-R4-1] Set PAYBACK_MONTHS_FMT_DE (template expects it, was never set)
+    try:
+        _pb_raw = sections.get('PAYBACK_MONTHS', 0)
+        sections['PAYBACK_MONTHS_FMT_DE'] = f"{float(str(_pb_raw).replace(',', '.')):.1f}".replace('.', ',')
+    except (ValueError, TypeError):
+        sections['PAYBACK_MONTHS_FMT_DE'] = str(sections.get('PAYBACK_MONTHS', 'n/a'))
     log.info("[%s] 🎨 Rendering final HTML...", run_id)
     # --- Sanitize dynamic sections to prevent HTML leaks (z. B. eingebettetes <html> im Pilot-Plan) ---
     # 3.1.4.16: Pass lang for EN locale sanitization (lastline guardrail)
