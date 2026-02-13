@@ -14845,9 +14845,8 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
                 log.warning(f"[{run_id}] ⚠️ N4.3: DoD FAILED - conflicts={n43_report.governance_conflicts}, issues={len(n43_report.issues)}")
                 # PLATIN+++ FIX 5.2: Trigger additional healing pass on DoD failure
                 try:
-                    from services.n43_integration import N43Processor
-                    _n43_retry = N43Processor()
-                    _n43_retry_report = _n43_retry.process(
+                    from services.n43_integration import process_n43_governance
+                    sections, _n43_retry_report = process_n43_governance(
                         sections=sections,
                         briefing=answers,
                         branch=branch_raw,
@@ -15040,8 +15039,9 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             if unified_grade == "C" and consistency_grade in ("C", "D"):
                 log.info(f"[{run_id}] [FIX-5.3] Triggering healing pass for grade={unified_grade}, consistency={consistency_grade}")
                 try:
-                    from services.report_healer import heal_all
-                    _heal_result = heal_all(sections, persona)
+                    from services.report_healer import heal_report_html
+                    _heal_persona: Any = persona  # satisfy Literal type constraint
+                    _heal_result = heal_report_html(sections, _heal_persona)
                     sections = _heal_result.sections
                     log.info(f"[{run_id}] [FIX-5.3] Healing pass complete: "
                              f"phrases={_heal_result.template_phrases_removed}, "
