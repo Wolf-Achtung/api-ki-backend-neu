@@ -7628,14 +7628,14 @@ def _generate_funding_compact(
     """
     if programme is None:
         programme = [
-            {'name': 'go-digital', 'geber': 'BMWK', 'eignung': 'Hoch', 'betrag': '16.500 €', 'komplexitaet': 'Niedrig'},
             {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': '3.200 €', 'komplexitaet': 'Niedrig'},
+            {'name': 'KMU-innovativ', 'geber': 'BMBF', 'eignung': 'Mittel', 'betrag': 'variabel', 'komplexitaet': 'Mittel'},
         ]
 
     if next_steps is None:
         next_steps = [
             'Projektsteckbrief erstellen (1-2 Seiten)',
-            'Förderfähigkeit mit go-digital prüfen',
+            'Förderfähigkeit mit BAFA-Beratung prüfen',
             'Antrag VOR Projektstart einreichen'
         ]
 
@@ -7785,9 +7785,10 @@ def _generate_funding_compact_from_html(
     land_count = sum(1 for p in programme if p.get('geber') == 'Land')
     if land_count > 2:
         # Regex fand nichts Brauchbares, verwende kuratierte Defaults
+        # FIX-R3-5A: go-digital discontinued — use BAFA + KMU-innovativ
         programme = [
-            {'name': 'go-digital', 'geber': 'BMWK', 'eignung': 'Hoch', 'betrag': '16.500 €', 'komplexitaet': 'Niedrig'},
             {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': '3.200 €', 'komplexitaet': 'Niedrig'},
+            {'name': 'KMU-innovativ', 'geber': 'BMBF', 'eignung': 'Mittel', 'betrag': 'variabel', 'komplexitaet': 'Mittel'},
         ]
         if bundesland and bundesland != "":
             programme.append({
@@ -7800,9 +7801,10 @@ def _generate_funding_compact_from_html(
 
     # Fallback wenn keine Programme gefunden
     if not programme:
+        # FIX-R3-5A: go-digital discontinued — use BAFA + KMU-innovativ
         programme = [
-            {'name': 'go-digital', 'geber': 'BMWK', 'eignung': 'Hoch', 'betrag': '16.500 €', 'komplexitaet': 'Niedrig'},
             {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': '3.200 €', 'komplexitaet': 'Niedrig'},
+            {'name': 'KMU-innovativ', 'geber': 'BMBF', 'eignung': 'Mittel', 'betrag': 'variabel', 'komplexitaet': 'Mittel'},
         ]
         if bundesland:
             programme.append({
@@ -7827,7 +7829,7 @@ def _generate_funding_compact_from_html(
 
     next_steps = [
         'Projektsteckbrief erstellen (1-2 Seiten)',
-        'Förderfähigkeit mit go-digital prüfen',
+        'Förderfähigkeit mit BAFA-Beratung prüfen',
         'Beratungsunternehmen auswählen',
         'Antrag einreichen'
     ]
@@ -7873,10 +7875,16 @@ def _generate_hero_page_from_context(
     report_date = datetime.now().strftime("%d.%m.%Y")
 
     # KPI-Werte
+    # FIX-R3-1: Format payback with German decimal (comma, 1 digit) before display
+    _hero_payback_raw = briefing.get("PAYBACK_MONTHS", 4.4)
+    try:
+        _hero_payback_fmt = f"{float(_hero_payback_raw):.1f}".replace(".", ",")
+    except (ValueError, TypeError):
+        _hero_payback_fmt = str(_hero_payback_raw)
     kpi_values = {
         'zeitersparnis': briefing.get("ZEITERSPARNIS_H", 18),
         'roi': briefing.get("ROI_12M", 200),
-        'payback': briefing.get("PAYBACK_MONTHS", 4.4)
+        'payback': _hero_payback_fmt,
     }
 
     # Reifegrad und Potenzial
@@ -8831,7 +8839,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
             foerder_focus = "Beratungsförderung, Gründerprogramme und niedrigschwellige Digitalisierungszuschüsse"
             budget_hinweis = "Im Solo-Kontext sind Förderprogramme besonders attraktiv, da sie den Eigenanteil bei Investitionen deutlich reduzieren können"
         elif size_group == "team":
-            foerder_focus = "go-digital, KMU-innovativ und regionale Digitalisierungsprogramme"
+            foerder_focus = "BAFA-Beratungsförderung, KMU-innovativ und regionale Digitalisierungsprogramme"
             budget_hinweis = "Für kleine Teams bieten Förderprogramme die Möglichkeit, ambitioniertere Projekte umzusetzen ohne die Liquidität zu gefährden"
         else:
             foerder_focus = "ZIM, KfW-Digitalisierung und strukturelle KMU-Förderprogramme"
@@ -8915,7 +8923,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
       sind wichtig für die nachhaltige Nutzung. Viele Programme fördern explizit den Kompetenzaufbau als Teil von
       Digitalisierungsprojekten.</li>
     <li><strong>Beratungsförderung:</strong> Unterstützung für externe Expertise bei der KI-Strategieentwicklung und
-      Umsetzung kann den Projekterfolg erheblich steigern. Programme wie go-digital oder regionale Beratungsförderung
+      Umsetzung kann den Projekterfolg erheblich steigern. Programme wie BAFA-Unternehmensberatung oder regionale Beratungsförderung
       decken oft einen Großteil der Beratungskosten ab.</li>
     <li><strong>Nachhaltigkeits- und Klimaförderung:</strong> KI-Projekte, die zur Ressourceneffizienz, Energieeinsparung
       oder Reduzierung des ökologischen Fußabdrucks beitragen, können zusätzlich von spezialisierten Förderprogrammen
@@ -9291,7 +9299,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         bis niedrigen dreistelligen Bereich pro Monat.</p>
       <p><strong>Verantwortlich:</strong> {verantwortlich_1}</p>
       <p><strong>Förderchance:</strong> Je nach Bundesland {bundesland} bestehen Zuschussprogramme für
-        digitale Prozessoptimierung. Prüfen Sie go-digital oder regionale Digitalisierungsförderung.</p>
+        digitale Prozessoptimierung. Prüfen Sie BAFA-Beratungsförderung oder regionale Digitalisierungsförderung.</p>
     </li>
 
     <li>
@@ -12186,6 +12194,10 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     sections["QUICK_WINS_HTML_RIGHT"] = ""  # Legacy compatibility
     # logischer Inhalt (Validator)
     sections["quick_wins"] = qw_html
+    # FIX-R3-5B: Save pristine copy BEFORE enforcer passes can strip
+    # PROBLEM/WIRKUNG/UMSETZUNG blocks. Key starts with _ so enforcers skip it.
+    if qw_html and 'data-qw-json-rendered="true"' in qw_html:
+        sections["_QUICK_WINS_PRISTINE"] = qw_html
     
     # ========== v14.10: SOFORT-START-SEITE (Gamechanger Feature) ==========
     try:
@@ -13155,7 +13167,10 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     # These programs are no longer available; replace with discontinuation notice
     # =========================================================================
     _FOERDER_BLACKLIST = ["go-digital", "go_digital", "digital jetzt", "digital_jetzt"]
-    for _fp_key in ["FOERDERPOTENZIAL_HTML", "foerderpotenzial"]:
+    # FIX-R3-5A: Extend blacklist scope to ALL text sections that might reference go-digital
+    for _fp_key in ["FOERDERPOTENZIAL_HTML", "foerderpotenzial",
+                     "RECOMMENDATIONS_HTML", "recommendations",
+                     "ROADMAP_90D_HTML", "ROADMAP_12M_HTML"]:
         _fp_html = sections.get(_fp_key, "")
         if _fp_html and isinstance(_fp_html, str):
             for _discontinued in _FOERDER_BLACKLIST:
@@ -15380,23 +15395,40 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         log.warning(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Failed: {e}")
 
     # =========================================================================
-    # FIX-R2-3: QUICK-WINS RECONCILIATION
+    # FIX-R3-5B: QUICK-WINS RECONCILIATION (replaces R2-3)
     # QUICK_WINS_HTML may have been shortened by enforcer passes, losing the
-    # premium-rendered PROBLEM/WIRKUNG/UMSETZUNG blocks.  QUICK_WINS_HTML_LEFT
-    # preserves the original premium render.  If LEFT is significantly richer,
-    # prefer it for the final template.
+    # premium-rendered PROBLEM/WIRKUNG/UMSETZUNG blocks.  _QUICK_WINS_PRISTINE
+    # holds the original premium render saved BEFORE any enforcer pass.
+    # If pristine is significantly richer, restore it for the final template.
     # =========================================================================
-    _qw_left = sections.get("QUICK_WINS_HTML_LEFT", "") or ""
+    _qw_pristine = sections.get("_QUICK_WINS_PRISTINE", "") or ""
     _qw_main = sections.get("QUICK_WINS_HTML", "") or ""
-    if (isinstance(_qw_left, str) and isinstance(_qw_main, str)
-            and len(_qw_left) > len(_qw_main) + 500
-            and 'data-qw-json-rendered="true"' in _qw_left):
+    if (isinstance(_qw_pristine, str) and isinstance(_qw_main, str)
+            and len(_qw_pristine) > len(_qw_main) + 200
+            and 'data-qw-json-rendered="true"' in _qw_pristine):
         log.info(
-            "[FIX-R2-3] QUICK_WINS_HTML_LEFT is richer (%d chars) than QUICK_WINS_HTML (%d chars) — using LEFT version",
-            len(_qw_left), len(_qw_main),
+            "[FIX-R3-5B] Restoring pristine QW HTML (%d chars) over enforcer-modified version (%d chars)",
+            len(_qw_pristine), len(_qw_main),
         )
-        sections["QUICK_WINS_HTML"] = _qw_left
-        sections["quick_wins"] = _qw_left
+        sections["QUICK_WINS_HTML"] = _qw_pristine
+        sections["QUICK_WINS_HTML_LEFT"] = _qw_pristine
+        sections["quick_wins"] = _qw_pristine
+
+    # =========================================================================
+    # FIX-R3-4B: FINAL hauptleistung limiter + concat repair
+    # Static template blocks (Final-Check, Sofort-Start, BC-Prose, Hero) are
+    # assembled AFTER the quality enforcer passes, so they may re-introduce
+    # full-text hauptleistung that FIX-3.1 already shortened.
+    # =========================================================================
+    try:
+        from services.content_quality_enforcer import _limit_hauptleistung_repetitions, fix_hauptleistung_concat
+        _hl_final = answers.get("hauptleistung", "")
+        if _hl_final and len(_hl_final) > 50:
+            sections = _limit_hauptleistung_repetitions(sections, _hl_final, max_full=3)
+            sections = fix_hauptleistung_concat(sections, _hl_final)
+            log.info(f"[{run_id}] [FIX-R3-4B] Applied final hauptleistung limiter + concat repair")
+    except Exception as _hl_err:
+        log.warning(f"[{run_id}] [FIX-R3-4B] Failed: {_hl_err}")
 
     # =========================================================================
     # FIX-528: PIPELINE SANITIZATION (decode HTML entities + complete sentences)

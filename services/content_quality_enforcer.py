@@ -1145,6 +1145,40 @@ def inject_hauptleistung_recommendations(html: str, hauptleistung: str, current_
     return result
 
 
+def fix_hauptleistung_concat(sections: dict, hauptleistung: str) -> dict:
+    """
+    FIX-R3-4A: Repair missing space/period before hauptleistung injections.
+
+    After the enforcer aggressively inserts hauptleistung, it may be glued
+    directly to the previous word:  ")Beratung und..."  or  "UnternehmenBeratung"
+    This function inserts ". " where a word-character or ")" directly precedes
+    the hauptleistung text.
+    """
+    if not hauptleistung or len(hauptleistung) < 10:
+        return sections
+
+    # Use first 30 chars of hauptleistung for matching (avoids issues with long text)
+    hl_prefix = hauptleistung[:30]
+    hl_escaped = re.escape(hl_prefix)
+    # Pattern: word-char or ) directly followed by hauptleistung (no space)
+    concat_pattern = re.compile(r'(\w|\))(' + hl_escaped + r')', re.IGNORECASE)
+
+    total_fixes = 0
+    for key, val in sections.items():
+        if not isinstance(val, str) or key.startswith("_"):
+            continue
+        new_val = concat_pattern.sub(r'\1. \2', val)
+        if new_val != val:
+            fixes = len(concat_pattern.findall(val))
+            sections[key] = new_val
+            total_fixes += fixes
+
+    if total_fixes > 0:
+        log.info("[FIX-R3-4A] Fixed %d hauptleistung concat bugs (missing space/period)", total_fixes)
+
+    return sections
+
+
 def _count_hauptleistung_combined(html: str, hauptleistung: str) -> int:
     """
     FIX-R2-4: Count both full-text AND short-form hauptleistung occurrences.
@@ -2843,6 +2877,10 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 19.5 PLATIN+++ FIX 3.1: Limit hauptleistung full-text repetitions (max 3)
     if hauptleistung and len(hauptleistung) > 50:
         sections = _limit_hauptleistung_repetitions(sections, hauptleistung, max_full=3)
+
+    # 19.6 FIX-R3-4A: Repair concat bugs (")Beratung", "UnternehmenBeratung")
+    if hauptleistung and len(hauptleistung) > 10:
+        sections = fix_hauptleistung_concat(sections, hauptleistung)
 
     # 20. FIX-52x: Strip trailing sentence fragments (PRIO 4)
     sections = strip_trailing_sentence_fragments(sections)

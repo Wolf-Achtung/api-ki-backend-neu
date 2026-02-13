@@ -686,48 +686,103 @@ def inject_canonical_to_sections(
 
     log.info("[CANON] Injected %d values into sections (LOCKED)", updates)
 
+    # FIX-R3-3: Fix ROI derivation hours — the ROI explanation may have been built
+    # with DEFAULT_EFFORT_HOURS (40h) before canonical hours (e.g. 36h) were known.
+    # Replace the stale hours in the ROI HTML with canonical values.
+    _canon_hours = canonical.hours_saved_per_month
+    _canon_rate = canonical.hourly_rate_eur
+    for _roi_key in ("ROI_HTML", "business_roi", "BUSINESS_ROI_HTML"):
+        _roi_html = sections.get(_roi_key, "")
+        if _roi_html and isinstance(_roi_html, str) and "h/Monat" in _roi_html:
+            import re as _re
+            # Replace "40h/Monat × 95€/h × 12 = 45.600€" with canonical values
+            def _fix_roi_line(m: "re.Match") -> str:
+                old_hours = float(m.group(1))
+                old_rate = float(m.group(2))
+                if old_hours != _canon_hours or old_rate != _canon_rate:
+                    annual = _canon_hours * _canon_rate * 12
+                    return f"{_canon_hours:.0f}h/Monat × {_canon_rate:.0f}€/h × 12 = {annual:,.0f}€"
+                return str(m.group(0))
+            _new = _re.sub(
+                r'(\d+(?:\.\d+)?)h/Monat\s*×\s*(\d+(?:\.\d+)?)€/h\s*×\s*12\s*=\s*[\d.,]+€',
+                _fix_roi_line, _roi_html,
+            )
+            if _new != _roi_html:
+                sections[_roi_key] = _new
+                log.info("[FIX-R3-3] Fixed ROI derivation hours in %s: → %.0fh × %.0f€", _roi_key, _canon_hours, _canon_rate)
+
     # PLATIN+++ FIX 2.1: Repair empty <strong></strong> tags in BUSINESS_CASE_HTML
     # After canonical injection, the BC prose HTML may still have empty labels
     _repair_empty_strong_tags(sections, canonical)
 
-    # FIX-R2-1: Final safety net — if BC prose STILL has empty € placeholders,
-    # replace the entire Fließtext block with a canonical template.
+    # FIX-R3-2: UNCONDITIONALLY replace BC prose with static canonical template.
+    # The LLM generates different HTML structures each time, so pattern-matching
+    # can never reliably fix all variants.  The canonical template guarantees
+    # every value is correctly filled.
     _bc_html = sections.get("BUSINESS_CASE_HTML", "")
-    if _bc_html and isinstance(_bc_html, str):
+    if _bc_html and isinstance(_bc_html, str) and len(_bc_html) > 50:
         import re as _re
-        _has_empty = bool(_re.search(r'<strong>\s*€?\s*</strong>', _bc_html)) or \
-                     bool(_re.search(r'rund\s+€[\s.,;)]', _bc_html)) or \
-                     bool(_re.search(r'\(\s*€\s*\)', _bc_html))
-        if _has_empty:
-            _capex = f"{canonical.capex_eur:,.0f}".replace(",", ".")
-            _opex = f"{canonical.opex_month_eur:,.0f}".replace(",", ".")
-            _savings = f"{canonical.monthly_gross:,.0f}".replace(",", ".")
-            _payback = f"{canonical.payback_months:.1f}"
-            _roi = f"{canonical.roi_12m_net:.0f}"
-            _bc_prose = (
-                f'<h3>Investition und laufende Kosten</h3>'
-                f'<p>Die einmaligen Aufwände für Aufbau und Einführung liegen bei rund '
-                f'<strong>{_capex} €</strong>. Hinzu kommen monatliche Betriebskosten von rund '
-                f'<strong>{_opex} €</strong> – hauptsächlich für KI-Nutzung, Infrastruktur, '
-                f'Tools und Lizenzen.</p>'
-                f'<h3>Monatlicher Effekt</h3>'
-                f'<p>Im täglichen Einsatz ist eine realistische Entlastung von rund '
-                f'<strong>{_savings} €</strong> pro Monat erreichbar. Sie entsteht aus '
-                f'Zeitgewinn in Kernprozessen, weniger manuellen Schleifen und '
-                f'konsistenterer Ergebnisqualität.</p>'
-                f'<h3>Amortisation und ROI</h3>'
-                f'<p><strong>Einfache Rechnung:</strong> Investition ({_capex} €) '
-                f'geteilt durch monatliche Einsparung ({_savings} €) ergibt eine '
-                f'Amortisation nach <strong>{_payback} Monaten</strong>. '
-                f'Der ROI nach 12 Monaten liegt bei <strong>{_roi} %</strong>.</p>'
+        _capex = f"{canonical.capex_eur:,.0f}".replace(",", ".")
+        _opex = f"{canonical.opex_month_eur:,.0f}".replace(",", ".")
+        _savings = f"{canonical.monthly_gross:,.0f}".replace(",", ".")
+        _payback = f"{canonical.payback_months:.1f}".replace(".", ",")  # German comma
+        _roi = f"{canonical.roi_12m_net:.0f}"
+        _hours = f"{canonical.hours_saved_per_month:.0f}"
+        _rate = f"{canonical.hourly_rate_eur:.0f}"
+        # Resolve bundesland label from sections
+        _bl_label = str(
+            sections.get("BUNDESLAND_LABEL", "")
+            or sections.get("bundesland_label", "")
+            or sections.get("bundesland", "")
+            or ""
+        ).strip()
+        # Resolve hauptleistung short form
+        _hl_full = str(sections.get("hauptleistung", "") or "").strip()
+        _hl_short = _hl_full
+        if len(_hl_full) > 60:
+            for _sep in [",", ";", ".", " und ", " mit "]:
+                _pos = _hl_full.find(_sep)
+                if 15 < _pos < 80:
+                    _hl_short = _hl_full[:_pos]
+                    break
+            else:
+                _hl_short = _hl_full[:60].rsplit(" ", 1)[0]
+        _hl_context = f" bei {_hl_short}" if _hl_short else ""
+
+        _bc_prose = (
+            f'<h3>Investition und laufende Kosten</h3>'
+            f'<p><strong>Einmalige Investition (CAPEX):</strong> <strong>{_capex} €</strong>. '
+            f'<strong>Laufende Kosten (OPEX):</strong> <strong>{_opex} €/Monat</strong> – '
+            f'hauptsächlich für KI-Tools, Infrastruktur und Lizenzen.</p>'
+            f'<h3>Monatlicher Effekt</h3>'
+            f'<p>{_hl_context.lstrip(" bei ").capitalize() + ": i" if _hl_context else "I"}m täglichen Einsatz ist eine '
+            f'realistische Entlastung von rund <strong>{_savings} €/Monat</strong> erreichbar '
+            f'({_hours} h × {_rate} €/h). Sie entsteht aus Zeitgewinn in Kernprozessen, '
+            f'weniger manuellen Schleifen und konsistenterer Ergebnisqualität.</p>'
+            f'<h3>Amortisation und ROI</h3>'
+            f'<p><strong>Payback-Formel:</strong> {_capex} € ÷ {_savings} € '
+            f'= <strong>{_payback} Monate</strong>. '
+            f'Der ROI nach 12 Monaten liegt bei <strong>{_roi} %</strong> '
+            f'(→ siehe Business-Case-Tabelle).</p>'
+            f'<h3>Einordnung nach Unternehmensgröße</h3>'
+            f'<p>Als kleines Team wirkt sich Standardisierung besonders stark aus: '
+            f'Je mehr wiederkehrende Schritte in festen Workflows laufen, '
+            f'desto schneller amortisiert sich die Investition.</p>'
+        )
+        # Add Fördermöglichkeiten section if bundesland is known
+        if _bl_label and len(_bl_label) > 1:
+            _bc_prose += (
+                f'<h3>Fördermöglichkeiten</h3>'
+                f'<p>In <strong>{_bl_label}</strong> können Programme für Digitalisierungs- und '
+                f'KI-Vorhaben relevant sein. Eine Förderung kann die Amortisation verkürzen '
+                f'(→ siehe Förderpotenzial).</p>'
             )
-            # Replace the prose section but keep any BC table that might follow
-            # Look for the prose block (from first <h3> to the table or end)
-            _table_match = _re.search(r'(<table[\s\S]*)', _bc_html)
-            _table_part = _table_match.group(1) if _table_match else ""
-            sections["BUSINESS_CASE_HTML"] = _bc_prose + _table_part
-            sections["business_case"] = sections["BUSINESS_CASE_HTML"]
-            log.info("[FIX-R2-1] Replaced BC prose with canonical template (empty placeholders detected)")
+        # Preserve any BC table that follows the prose
+        _table_match = _re.search(r'(<table[\s\S]*)', _bc_html)
+        _table_part = _table_match.group(1) if _table_match else ""
+        sections["BUSINESS_CASE_HTML"] = _bc_prose + _table_part
+        sections["business_case"] = sections["BUSINESS_CASE_HTML"]
+        log.info("[FIX-R3-2] Replaced BC prose with canonical template (unconditional)")
 
     return updates
 
@@ -840,8 +895,11 @@ class ScenarioKPIs:
             log.warning("[G30] Unknown scenario name: %s, defaulting to 'realistic'", self.name)
             self.name = "realistic"
 
-        # Clamp ROI
-        self.roi_12m = max(MIN_ROI, min(MAX_ROI, self.roi_12m))
+        # FIX-R3-5C: Only apply MIN_ROI floor, not MAX_ROI cap.
+        # calculate_roi() already handles per-scenario capping (realistic=capped,
+        # optimistic/conservative=uncapped). Re-capping here made all 3 scenarios
+        # show identical 200% ROI (double-cap bug).
+        self.roi_12m = max(MIN_ROI, self.roi_12m)
 
         # Clamp payback
         if self.payback_months < MIN_PAYBACK_MONTHS:
