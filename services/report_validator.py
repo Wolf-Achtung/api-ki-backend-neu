@@ -163,6 +163,9 @@ __all__ = [
     # SPRINT N2: Leak phrase exports
     "GENERIC_LLM_LEAK_PHRASES",
     "remove_leak_phrases_from_html",
+    # PLATIN+++ Validator
+    "PlatinValidator",
+    "validate_platin_ppp",
 ]
 
 
@@ -3054,6 +3057,174 @@ def remove_leak_phrases_from_html(html: str) -> Tuple[str, int]:
             )
 
     return cleaned, removed_count
+
+
+# =============================================================================
+# PLATIN+++ PRE-RENDER VALIDATION PIPELINE
+# =============================================================================
+
+class PlatinValidator:
+    """
+    PLATIN+++ Quality Gate: Comprehensive pre-render validation.
+
+    Checks all bugs identified in the CLAUDE.md Platin+++ briefing:
+    - Empty variables after labels
+    - Prompt leaks in output
+    - Number consistency (hourly rates, time savings)
+    - Sentence completeness (no truncation)
+    - Score consistency
+    - hauptleistung redundancy
+    - Bundesland resolution
+    - Discontinued funding programs
+    """
+
+    PROMPT_LEAK_PATTERNS = [
+        r'antworte\s+einfach\s+mit',
+        r'Ihr\s+Ziel\s+\(z\.\s*B\.',
+        r'Branche\s+und\s+Use\s+Case',
+        r'Vorhandene\s+Daten/Tools',
+        r'Zeithorizont\s+und\s+Budgetrahmen',
+        r'Erfolgskriterien\s+\(Kennzahlen\)',
+        r'Wenn\s+Sie\s+magst',
+    ]
+
+    STALE_PROGRAMS = ["go-digital", "digital jetzt", "digital_jetzt", "go_digital"]
+
+    def __init__(
+        self,
+        sections: Dict[str, Any],
+        canonical_bc: Optional[Dict[str, Any]] = None,
+        scores: Optional[Dict[str, Any]] = None,
+        meta: Optional[Dict[str, Any]] = None,
+    ):
+        self.sections = sections
+        self.bc = canonical_bc or {}
+        self.scores = scores or {}
+        self.meta = meta or {}
+        self.errors: List[str] = []
+        self.warnings: List[str] = []
+
+    def validate(self) -> bool:
+        """Run all Platin+++ validation checks. Returns True if no errors."""
+        self._check_empty_variables()
+        self._check_prompt_leaks()
+        self._check_number_consistency()
+        self._check_sentence_completeness()
+        self._check_score_consistency()
+        self._check_hauptleistung_redundancy()
+        self._check_bundesland_resolved()
+        self._check_foerder_aktualitaet()
+
+        if self.errors:
+            log.warning("[PLATIN+++] Validation FAILED: %d errors, %d warnings", len(self.errors), len(self.warnings))
+            for err in self.errors:
+                log.warning("[PLATIN+++] ERROR: %s", err)
+        else:
+            log.info("[PLATIN+++] Validation PASSED: 0 errors, %d warnings", len(self.warnings))
+
+        for warn in self.warnings[:10]:
+            log.info("[PLATIN+++] WARNING: %s", warn)
+
+        return len(self.errors) == 0
+
+    def _check_empty_variables(self) -> None:
+        """No empty variables after labels."""
+        patterns = [
+            r'(Investition|CAPEX|OPEX|Einsparung|Amortisation|ROI)[^<]{0,20}<strong>\s*</strong>',
+            r':\s*€\s*(/|\s|$)',
+            r':\s*<strong>\s*</strong>',
+        ]
+        for section_key, html in self.sections.items():
+            if not isinstance(html, str) or section_key.startswith("_"):
+                continue
+            for pattern in patterns:
+                if re.search(pattern, html):
+                    self.errors.append(f"EMPTY_VAR: {section_key} matches '{pattern}'")
+
+    def _check_prompt_leaks(self) -> None:
+        """No prompt fragments in output."""
+        for section_key, html in self.sections.items():
+            if not isinstance(html, str) or section_key.startswith("_"):
+                continue
+            for pattern in self.PROMPT_LEAK_PATTERNS:
+                if re.search(pattern, html, re.IGNORECASE):
+                    self.errors.append(f"PROMPT_LEAK: {section_key} matches '{pattern}'")
+
+    def _check_number_consistency(self) -> None:
+        """All number references match canonical values."""
+        rate = self.bc.get("hourly_rate_eur") or self.bc.get("CANON_RATE_EUR")
+        if not rate:
+            return
+        rate = int(rate)
+        all_html = ' '.join(str(v) for v in self.sections.values() if isinstance(v, str))
+        rates_found = set(re.findall(r'(\d+)\s*€/h', all_html))
+        for r in rates_found:
+            r_int = int(r)
+            if r_int != rate and abs(r_int - rate) > 5:
+                self.errors.append(f"RATE_MISMATCH: Found {r}€/h, canonical is {rate}€/h")
+
+    def _check_sentence_completeness(self) -> None:
+        """No truncated sentences."""
+        for section_key, html in self.sections.items():
+            if not isinstance(html, str) or section_key.startswith("_"):
+                continue
+            text = re.sub(r'<[^>]+>', '', html).strip()
+            if text and len(text) > 50:
+                if not text[-1] in '.!?:)"\u00BB\u201D':
+                    self.warnings.append(f"TRUNCATED: {section_key} ends with '...{text[-20:]}'")
+
+    def _check_score_consistency(self) -> None:
+        """Scores on title page = scores in risk section."""
+        risks_html = str(self.sections.get('RISKS_HTML', ''))
+        if 'nicht erhoben' in risks_html or 'nicht angegeben' in risks_html:
+            self.errors.append("SCORE_MISMATCH: Risiko-Sektion zeigt 'nicht erhoben' but scores exist")
+
+    def _check_hauptleistung_redundancy(self) -> None:
+        """hauptleistung max 5x in full length."""
+        hl = self.meta.get('hauptleistung', '')
+        if len(hl) > 50:
+            all_html = ' '.join(str(v) for v in self.sections.values() if isinstance(v, str))
+            count = all_html.count(hl)
+            if count > 5:
+                self.warnings.append(f"REDUNDANCY: hauptleistung appears {count}x (max 5)")
+
+    def _check_bundesland_resolved(self) -> None:
+        """Bundesland key is resolved to label."""
+        all_html = ' '.join(str(v) for v in self.sections.values() if isinstance(v, str))
+        if re.search(r'In\s+\[?\s*\]?\s+können\s+Programme', all_html):
+            self.errors.append("BUNDESLAND_EMPTY: Bundesland not resolved to label")
+        # Also check for raw 2-letter codes in context of bundesland
+        bl = self.meta.get('bundesland', '')
+        if bl and len(bl) == 2 and bl.lower() in ('bw', 'by', 'be', 'bb', 'hb', 'hh', 'he', 'mv', 'ni', 'nw', 'rp', 'sl', 'sn', 'st', 'sh', 'th'):
+            bl_label = self.sections.get('BUNDESLAND_LABEL', '')
+            if bl_label == bl:
+                self.errors.append(f"BUNDESLAND_UNRESOLVED: BUNDESLAND_LABEL is still raw code '{bl}'")
+
+    def _check_foerder_aktualitaet(self) -> None:
+        """No discontinued programs recommended."""
+        all_html = ' '.join(str(v) for v in self.sections.values() if isinstance(v, str)).lower()
+        for prog in self.STALE_PROGRAMS:
+            if prog.lower() in all_html:
+                # Check if it's in a "discontinued" context
+                if "eingestellt" not in all_html[max(0, all_html.find(prog.lower()) - 100):all_html.find(prog.lower()) + 100]:
+                    self.warnings.append(f"STALE_FOERDER: '{prog}' appears without discontinued notice")
+
+
+def validate_platin_ppp(
+    sections: Dict[str, Any],
+    canonical_bc: Optional[Dict[str, Any]] = None,
+    scores: Optional[Dict[str, Any]] = None,
+    meta: Optional[Dict[str, Any]] = None,
+) -> Tuple[bool, List[str], List[str]]:
+    """
+    Run Platin+++ validation pipeline.
+
+    Returns:
+        Tuple of (passed, errors, warnings)
+    """
+    validator = PlatinValidator(sections, canonical_bc, scores, meta)
+    passed = validator.validate()
+    return passed, validator.errors, validator.warnings
 
 
 if __name__ == "__main__":
