@@ -9912,7 +9912,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
         try:
             payback = f"{float(str(payback_raw).replace(',', '.')):.1f}".replace('.', ',')
         except (ValueError, TypeError):
-            payback = payback_raw
+            payback = str(payback_raw)
         # v14.35.23: Get both raw and capped ROI values
         roi_capped_val = briefing.get("ROI_12M", "—")
         roi_raw_val = briefing.get("ROI_12M_RAW")
@@ -15309,8 +15309,8 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             ).strip()
             # Float-Payback formatieren falls nötig
             try:
-                _pb = float(str(_bc_payback).replace(',', '.'))
-                _bc_payback = f"{_pb:.1f}".replace('.', ',')
+                _pb_val = float(str(_bc_payback).replace(',', '.'))
+                _bc_payback = f"{_pb_val:.1f}".replace('.', ',')
             except (ValueError, TypeError):
                 pass
             # Format integers with dot-separator for German (5000 → 5.000)
