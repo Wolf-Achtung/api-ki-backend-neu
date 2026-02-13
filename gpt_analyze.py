@@ -11821,6 +11821,102 @@ def _regenerate_section_strict(
         return None
 
 
+# =========================================================================
+# FIX-629: POST-TRIM-HEAL - Expand sections that fell slightly below minimum
+# after quality enforcer / hauptleistung-limiter / zero-leak cleanup
+# =========================================================================
+def _expand_short_section(
+    section_key: str,
+    current_html: str,
+    target_words: int,
+    current_words: int,
+) -> Optional[str]:
+    """
+    FIX-629: Expand a section that is slightly below its minimum word count.
+
+    Called by the post-trim-heal guard when quality enforcers have trimmed
+    a section to just below the minimum threshold (within 20 words).
+
+    Uses LLM to add substantive detail without changing the existing content's
+    meaning or structure.
+
+    Args:
+        section_key: HTML section key (e.g., "EXECUTIVE_SUMMARY_HTML")
+        current_html: Current HTML content of the section
+        target_words: Target word count (min_words + 20 buffer)
+        current_words: Current word count
+
+    Returns:
+        Expanded HTML content or None if expansion fails
+    """
+    words_needed = target_words - current_words
+    log.info(
+        "[POST-TRIM-HEAL] Expanding %s: %d → %d words (need +%d)",
+        section_key, current_words, target_words, words_needed,
+    )
+
+    expand_prompt = f"""Du bist ein professioneller Report-Generator.
+
+Der folgende HTML-Abschnitt ist {current_words} Wörter lang, muss aber mindestens {target_words} Wörter umfassen.
+
+AUFGABE: Erweitere den bestehenden Text um ca. {words_needed} zusätzliche Wörter.
+- Füge substanzielle, kontextrelevante Details hinzu (keine Füllwörter).
+- Behalte die bestehende HTML-Struktur und den Stil bei.
+- Keine neuen Überschriften (h1, h2, h3) hinzufügen.
+- Keine Chat-Floskeln, keine Fragen, keine Meta-Kommentare.
+- Nur neutrale Berichtssprache.
+- Gib NUR das erweiterte HTML-Fragment aus.
+
+BESTEHENDER INHALT:
+{current_html}
+
+ERWEITERTER INHALT:"""
+
+    try:
+        response = _call_llm_for_section(
+            section_key=section_key,
+            prompt=expand_prompt,
+            system_prompt="Du bist ein professioneller Report-Generator. Erweitere den Text substanziell.",
+            temperature=0.4,
+            max_tokens=2000,
+        )
+
+        if not response or not response.strip():
+            log.warning("[POST-TRIM-HEAL] Empty response for %s", section_key)
+            return None
+
+        # Clean the response
+        expanded = response.replace("```html", "").replace("```", "").strip()
+
+        # Verify the expansion actually added words
+        expanded_text = re.sub(r"<[^>]+>", "", expanded).strip()
+        expanded_word_count = len(expanded_text.split()) if expanded_text else 0
+
+        if expanded_word_count >= target_words:
+            log.info(
+                "[POST-TRIM-HEAL] Successfully expanded %s: %d → %d words",
+                section_key, current_words, expanded_word_count,
+            )
+            return expanded
+        elif expanded_word_count > current_words:
+            # Partial improvement - still better than before
+            log.info(
+                "[POST-TRIM-HEAL] Partial expansion %s: %d → %d words (target was %d)",
+                section_key, current_words, expanded_word_count, target_words,
+            )
+            return expanded
+        else:
+            log.warning(
+                "[POST-TRIM-HEAL] Expansion failed for %s: result %d words <= original %d",
+                section_key, expanded_word_count, current_words,
+            )
+            return None
+
+    except Exception as e:
+        log.warning("[POST-TRIM-HEAL] LLM expansion failed for %s: %s", section_key, e)
+        return None
+
+
 # -------------------- 🎯 UPDATED: Main composer with prompt system ----------------
 def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict[str, Any]:
     """Generate all content sections - using PARALLEL execution.
@@ -14633,6 +14729,73 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
                 log.info(f"[{run_id}] [HAUPTLEISTUNG-FIX] Injected hauptleistung into EXEC_SUMMARY_HTML (before validation)")
     except Exception as e:
         log.warning(f"[{run_id}] [HAUPTLEISTUNG-FIX] Pre-validation fix failed: {e}")
+
+    # =========================================================================
+    # FIX-629: POST-TRIM-HEAL GUARD
+    # After all quality enforcers, hauptleistung-limiters, and zero-leak cleanup,
+    # check critical sections for near-minimum word counts and expand if needed.
+    # This prevents the Hauptleistung-Enforcer ↔ Repetition-Limiter conflict
+    # from pushing sections below their minimum.
+    # =========================================================================
+    try:
+        from config.size_profiles import get_min_words as _get_min_words_sp
+        from services.company_size_normalizer import get_segment as _get_segment_heal
+        _heal_size_raw = answers.get("unternehmensgroesse") or "solo"
+        _heal_segment = _get_segment_heal(_heal_size_raw)
+
+        # Critical sections that MUST meet minimum word count
+        _HEAL_CRITICAL_SECTIONS = [
+            "executive_summary",
+            "tools_empfehlungen",
+            "gamechanger",
+            "roadmap_12m",
+        ]
+        # Map logical names to HTML keys
+        _HEAL_KEY_MAP = {
+            "executive_summary": "EXECUTIVE_SUMMARY_HTML",
+            "tools_empfehlungen": "TOOLS_EMPFEHLUNGEN_HTML",
+            "gamechanger": "GAMECHANGER_HTML",
+            "roadmap_12m": "ROADMAP_12M_HTML",
+        }
+
+        _heal_count = 0
+        for _logical_name in _HEAL_CRITICAL_SECTIONS:
+            _html_key = _HEAL_KEY_MAP.get(_logical_name, f"{_logical_name.upper()}_HTML")
+            _html_content = sections.get(_html_key, "")
+            if not isinstance(_html_content, str) or not _html_content.strip():
+                continue
+
+            _text_only = re.sub(r"<[^>]+>", "", _html_content).strip()
+            _word_count = len(_text_only.split()) if _text_only else 0
+            _min_words = _get_min_words_sp(_heal_segment, _logical_name)
+
+            # Only heal if slightly below minimum (within 20 words gap)
+            if _word_count < _min_words and _word_count >= _min_words - 20:
+                log.warning(
+                    "[%s] [POST-TRIM-HEAL] %s under minimum (%d/%d words), expanding...",
+                    run_id, _html_key, _word_count, _min_words,
+                )
+                _expanded = _expand_short_section(
+                    section_key=_html_key,
+                    current_html=_html_content,
+                    target_words=_min_words + 20,
+                    current_words=_word_count,
+                )
+                if _expanded:
+                    sections[_html_key] = _expanded
+                    # Also update lowercase alias
+                    if _logical_name in sections:
+                        sections[_logical_name] = _expanded
+                    _heal_count += 1
+                    log.info("[%s] [POST-TRIM-HEAL] %s expanded successfully", run_id, _html_key)
+                else:
+                    log.warning("[%s] [POST-TRIM-HEAL] %s expansion failed, proceeding with original", run_id, _html_key)
+
+        if _heal_count > 0:
+            log.info("[%s] [POST-TRIM-HEAL] Expanded %d sections to meet minimum word counts", run_id, _heal_count)
+    except Exception as _heal_exc:
+        log.warning("[%s] [POST-TRIM-HEAL] Guard failed: %s", run_id, _heal_exc)
+    # === END FIX-629: POST-TRIM-HEAL ===
 
     # === SPRINT N2: VALIDATE AND HEAL - Wolf 2025-12 ===
     # FIX-517C TASK 4: Two-stage validation (raw = pre-final-enforcer, final = post-final-enforcer)

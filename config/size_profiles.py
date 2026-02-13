@@ -171,6 +171,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "org_change": 100,
             "tools_empfehlungen": 190,
             "strategie_governance": 200,
+            "foerderpotenzial": 40,     # FIX-629: compact Förder-Überblick layout (~45 words valid)
             "gamechanger": 750,
             "transparency_box": 150,
             "technologie_prozesse": 200,
