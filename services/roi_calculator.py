@@ -56,8 +56,8 @@ def calc_roi(
     """
     b = _briefing_to_dict(briefing)
 
-    # konservativ 40 h/Monat Einsparung ohne Quickwins-Angaben
-    hours = 40.0
+    # FIX-R4-3: Use canonical hours from briefing, fallback to 36 (not 40)
+    hours = float(b.get("CANON_HOURS_MONTH") or b.get("EINSPARUNG_STUNDEN_MONAT") or 36.0)
     if quickwins:
         s = 0.0
         for q in quickwins:
