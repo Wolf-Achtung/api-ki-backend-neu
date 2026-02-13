@@ -685,7 +685,62 @@ def inject_canonical_to_sections(
     sections["_bc_canonical_source"] = "G30"
 
     log.info("[CANON] Injected %d values into sections (LOCKED)", updates)
+
+    # PLATIN+++ FIX 2.1: Repair empty <strong></strong> tags in BUSINESS_CASE_HTML
+    # After canonical injection, the BC prose HTML may still have empty labels
+    _repair_empty_strong_tags(sections, canonical)
+
     return updates
+
+
+def _repair_empty_strong_tags(sections: Dict[str, Any], canonical: "BusinessCaseCanonical") -> None:
+    """
+    PLATIN+++ FIX 2.1: Find and fill empty <strong></strong> tags after field labels
+    in BUSINESS_CASE_HTML and related sections.
+
+    Pattern: "Investition (CAPEX): <strong></strong>" → "Investition (CAPEX): <strong>5.000 €</strong>"
+    """
+    import re
+
+    # Map label keywords to canonical values with formatting
+    field_mapping = {
+        "CAPEX": f"{canonical.capex_eur:,.0f} €".replace(",", "."),
+        "Investition": f"{canonical.capex_eur:,.0f} €".replace(",", "."),
+        "Einmalige": f"{canonical.capex_eur:,.0f} €".replace(",", "."),
+        "OPEX": f"{canonical.opex_month_eur:,.0f} €".replace(",", "."),
+        "Laufende": f"{canonical.opex_month_eur:,.0f} € / Monat".replace(",", "."),
+        "Einsparung": f"{canonical.monthly_gross:,.0f} €".replace(",", "."),
+        "Monatliche": f"{canonical.monthly_gross:,.0f} €".replace(",", "."),
+        "Amortisation": f"{canonical.payback_months:.1f} Monate",
+        "ROI": f"{canonical.roi_12m_net:.0f} %",
+    }
+
+    sections_to_check = [
+        "BUSINESS_CASE_HTML", "ROI_HTML", "COSTS_OVERVIEW_HTML",
+        "business_case", "BUSINESS_CASE_TABLE_HTML",
+    ]
+
+    for section_key in sections_to_check:
+        html = sections.get(section_key)
+        if not html or not isinstance(html, str):
+            continue
+
+        original = html
+        # Pattern: label text followed by empty <strong></strong>
+        for keyword, value in field_mapping.items():
+            pattern = re.compile(
+                rf'({re.escape(keyword)}[^<]{{0,30}})<strong>\s*</strong>',
+                re.IGNORECASE
+            )
+            html = pattern.sub(rf'\1<strong>{value}</strong>', html)
+
+        # Also fix standalone "€ " without value (e.g., "€ / Monat")
+        html = re.sub(r':\s*€\s*/\s*Monat', f': {canonical.opex_month_eur:,.0f} € / Monat'.replace(",", "."), html)
+        html = re.sub(r':\s*€\s*$', f': {canonical.capex_eur:,.0f} €'.replace(",", "."), html, flags=re.MULTILINE)
+
+        if html != original:
+            sections[section_key] = html
+            log.info("[CANON-FIX-2.1] Repaired empty <strong> tags in %s", section_key)
 
 
 # =============================================================================
@@ -890,15 +945,19 @@ class BusinessCaseReport:
 # CALCULATION FUNCTIONS
 # =============================================================================
 
-def calculate_roi(annual_savings: float, investment_total: float) -> float:
+def calculate_roi(annual_savings: float, investment_total: float, apply_cap: bool = True) -> float:
     """
     Calculate Return on Investment (ROI) in percentage.
 
     Formula: ROI = ((annual_savings - investment_total) / investment_total) * 100
 
+    PLATIN+++ FIX 1.3: Added apply_cap parameter. When False, ROI is not capped at MAX_ROI.
+    This allows Monte Carlo scenarios to show different values instead of all hitting 200%.
+
     Args:
         annual_savings: Total annual savings in EUR
         investment_total: Total investment in EUR
+        apply_cap: If True (default), cap ROI at MAX_ROI. If False, only apply MIN_ROI floor.
 
     Returns:
         ROI as percentage (e.g., 150.0 = 150%)
@@ -909,7 +968,9 @@ def calculate_roi(annual_savings: float, investment_total: float) -> float:
         return 0.0
 
     roi = ((annual_savings - investment_total) / investment_total) * 100
-    return max(MIN_ROI, min(MAX_ROI, roi))
+    if apply_cap:
+        return max(MIN_ROI, min(MAX_ROI, roi))
+    return max(MIN_ROI, roi)
 
 
 def calculate_payback(investment_total: float, monthly_savings: float) -> float:
@@ -1531,7 +1592,10 @@ def generate_scenarios(
         # ROI uses gross annual savings - CAPEX - annual OPEX (same formula as canonical)
         annual_savings_gross = calculate_annual_savings(monthly_savings_gross)
         annual_opex = scenario_opex * 12
-        roi = calculate_roi(annual_savings_gross - annual_opex, scenario_investment)
+        # PLATIN+++ FIX 1.3: Only cap realistic scenario at MAX_ROI.
+        # Optimistic and conservative scenarios show uncapped values for meaningful variance.
+        should_cap = (name == "realistic")
+        roi = calculate_roi(annual_savings_gross - annual_opex, scenario_investment, apply_cap=should_cap)
 
         note = ""
         if name == "optimistic":
