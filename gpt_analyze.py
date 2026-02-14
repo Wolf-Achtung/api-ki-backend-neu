@@ -15816,7 +15816,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     # Quality enforcers may have shortened sections after initial RESCUE-640
     # =========================================================================
     try:
-        _final_short_check = []
+        _final_short_check: list[str] = []
         from config.size_profiles import get_min_words as _gmw_final
         from services.company_size_normalizer import get_segment as _gs_final
         _seg_final = _gs_final(answers.get("unternehmensgroesse", "solo"))
