@@ -853,9 +853,9 @@ def _repair_empty_strong_tags(sections: Dict[str, Any], canonical: "BusinessCase
         ]
         for ctx_pattern, ctx_value in _context_patterns:
             if '<strong>' in ctx_value:
-                html = re.sub(ctx_pattern, rf'\1<strong>{ctx_value}</strong>', html, flags=re.IGNORECASE)
+                html = re.sub(ctx_pattern, rf'\g<1><strong>{ctx_value}</strong>', html, flags=re.IGNORECASE)
             else:
-                html = re.sub(ctx_pattern, rf'\1{ctx_value}', html, flags=re.IGNORECASE)
+                html = re.sub(ctx_pattern, rf'\g<1>{ctx_value}', html, flags=re.IGNORECASE)
 
         # Also fix standalone "€ " without value (e.g., "€ / Monat")
         html = re.sub(r':\s*€\s*/\s*Monat', f': {canonical.opex_month_eur:,.0f} € / Monat'.replace(",", "."), html)
@@ -1723,7 +1723,7 @@ def generate_scenarios(
         annual_opex = scenario_opex * 12
         # PLATIN+++ FIX 1.3: Only cap realistic scenario at MAX_ROI.
         # Optimistic and conservative scenarios show uncapped values for meaningful variance.
-        should_cap = (name == "realistic")
+        should_cap = False  # FIX-641-P3: No cap at generation; canonical handles display capping
         roi = calculate_roi(annual_savings_gross - annual_opex, scenario_investment, apply_cap=should_cap)
 
         note = ""
