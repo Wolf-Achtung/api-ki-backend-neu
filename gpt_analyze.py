@@ -12969,6 +12969,35 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
             # FIX 2: Wrap Risk Matrix with page-break class
             risks_html = _wrap_risk_matrix_with_pagebreak(risks_html)
             log.info(f"[INTEGRATION] Risks HTML after Risk Matrix page-break: {len(risks_html)} chars")
+
+            # FIX-RM1: Generate and append visual Risk Matrix heatmap
+            # _generate_risk_matrix exists but was never called — integrate it now.
+            try:
+                _rm_gov = int(scores.get("governance", 50) or 50)
+                _rm_sec = int(scores.get("security", 50) or 50)
+                _rm_val = int(scores.get("value", scores.get("wertschoepfung", 50)) or 50)
+                _rm_ena = int(scores.get("enablement", scores.get("befaehigung", 50)) or 50)
+
+                def _score_to_level(s: int) -> str:
+                    if s < 40:
+                        return "high"
+                    elif s < 65:
+                        return "medium"
+                    return "low"
+
+                _rm_risks = {
+                    "Governance": _score_to_level(_rm_gov),
+                    "Daten & Sicherheit": _score_to_level(_rm_sec),
+                    "Wertschöpfung": _score_to_level(_rm_val),
+                    "Befähigung": _score_to_level(_rm_ena),
+                }
+                _rm_html = _generate_risk_matrix(_rm_risks)
+                if _rm_html and len(_rm_html) > 50:
+                    risks_html += '\n<div class="risk-matrix-section" style="page-break-inside:avoid;margin-top:24px;">' + _rm_html + '</div>'
+                    log.info(f"[INTEGRATION] Risk Matrix heatmap appended ({len(_rm_html)} chars)")
+            except Exception as _rm_err:
+                log.warning(f"[INTEGRATION] Risk Matrix generation failed: {_rm_err}")
+
             sections["RISKS_HTML"] = risks_html
         except Exception as e:
             log.error(f"[INTEGRATION] Risks formatting failed at integration point: {e}")
@@ -15767,9 +15796,14 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             _global_count = 0
             _global_replaced = 0
             _MAX_GLOBAL_HL = 5
+            # FIX-R5-4B: Protect sections that NEED multiple hauptleistung occurrences
+            _PROTECTED_HL_SECTIONS = {"EXEC_SUMMARY_HTML", "RECOMMENDATIONS_HTML"}
             for _hk in list(sections.keys()):
                 _hv = sections.get(_hk, "")
                 if not isinstance(_hv, str) or _hk.startswith("_"):
+                    continue
+                if _hk in _PROTECTED_HL_SECTIONS:
+                    log.info(f"[{run_id}] [FIX-R5-4] Skipping protected section {_hk} (hauptleistung count: {_hv.count(_hl_r54)})")
                     continue
                 _occ = _hv.count(_hl_r54)
                 if _occ <= 0:
@@ -16910,6 +16944,31 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     # =========================================================================
     # END FIX-A-G: REPORT HEALER
     # =========================================================================
+
+    # =========================================================================
+    # FIX-QW1: POST-HEALER Quick Wins Restore
+    # The Healer's FIX-G budget-trimmer cuts quick_wins from ~18k to ~1.5k chars,
+    # losing 4 of 5 Quick Win cards.  _QUICK_WINS_PRISTINE holds the full
+    # premium-rendered HTML saved before any enforcer/healer pass.
+    # Restore it after the healer so all Quick Win cards survive into the PDF.
+    # =========================================================================
+    try:
+        _qw_pristine_post = sections.get("_QUICK_WINS_PRISTINE", "") or ""
+        _qw_current = sections.get("QUICK_WINS_HTML", "") or ""
+        _QW_MIN_REASONABLE = 3000  # Less than this means cards were lost
+        if (isinstance(_qw_pristine_post, str)
+                and len(_qw_pristine_post) > _QW_MIN_REASONABLE
+                and len(_qw_current) < _QW_MIN_REASONABLE
+                and 'data-qw-json-rendered="true"' in _qw_pristine_post):
+            log.info(
+                f"[{run_id}] [FIX-QW1] Post-healer QW restore: pristine={len(_qw_pristine_post)} chars, "
+                f"healer-trimmed={len(_qw_current)} chars — restoring pristine"
+            )
+            sections["QUICK_WINS_HTML"] = _qw_pristine_post
+            sections["QUICK_WINS_HTML_LEFT"] = _qw_pristine_post
+            sections["quick_wins"] = _qw_pristine_post
+    except Exception as _qw_err:
+        log.warning(f"[{run_id}] [FIX-QW1] Post-healer QW restore failed: {_qw_err}")
 
     result = render(
         br,
