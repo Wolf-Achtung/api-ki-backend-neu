@@ -15143,7 +15143,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     log.warning("[%s] [RESCUE-640] Trying fallback for %s", run_id, _sec_key)
                     _fallback_key = _sec_key.replace("_HTML", "").lower()
                     try:
-                        _fallback_html = _get_fallback_content(_fallback_key, briefing, scores)
+                        _fallback_html = _get_fallback_content(_fallback_key, answers, scores)
                         if _fallback_html:
                             _fallback_text = re.sub(r"<[^>]+>", "", _fallback_html).strip()
                             _fallback_words = len(_fallback_text.split()) if _fallback_text else 0
