@@ -15811,6 +15811,41 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     # FIX-517C TASK 4: Stage 2 (FINAL) validation — post-final-enforcer
     # This gives the truthful STRICT-readiness metrics (after all enforcers ran)
     # =========================================================================
+        # =========================================================================
+    # RESCUE-640-FINAL: Last-chance rescue after ALL enforcers
+    # Quality enforcers may have shortened sections after initial RESCUE-640
+    # =========================================================================
+    try:
+        _final_short_check = []
+        from config.size_profiles import get_min_words as _gmw_final
+        from services.company_size_normalizer import get_segment as _gs_final
+        _seg_final = _gs_final(answers.get("unternehmensgroesse", "solo"))
+        _critical_sections_final = {
+            "GAMECHANGER_HTML": "gamechanger",
+            "EXECUTIVE_SUMMARY_HTML": "executive_summary",
+            "EXEC_SUMMARY_HTML": "executive_summary",
+        }
+        for _html_key, _logical_key in _critical_sections_final.items():
+            _html_val = sections.get(_html_key, "")
+            if not isinstance(_html_val, str) or not _html_val.strip():
+                continue
+            _text_val = re.sub(r"<[^>]+>", "", _html_val).strip()
+            _word_count = len(_text_val.split()) if _text_val else 0
+            _min_req = _gmw_final(_seg_final, _logical_key)
+            if _word_count < _min_req:
+                log.warning("[%s] [RESCUE-640-FINAL] %s too short: %d/%d, trying fallback...",
+                            run_id, _html_key, _word_count, _min_req)
+                _fb_html = _get_fallback_content(_logical_key, answers, scores)
+                if _fb_html:
+                    _fb_text = re.sub(r"<[^>]+>", "", _fb_html).strip()
+                    _fb_words = len(_fb_text.split()) if _fb_text else 0
+                    if _fb_words >= _min_req:
+                        sections[_html_key] = _fb_html
+                        sections[_logical_key] = _fb_html
+                        log.info("[%s] [RESCUE-640-FINAL] %s rescued: %d -> %d words",
+                                 run_id, _html_key, _word_count, _fb_words)
+    except Exception as _rf_err:
+        log.warning("[%s] [RESCUE-640-FINAL] Failed: %s", run_id, _rf_err)
     try:
         log.info(f"[{run_id}] 🔍 Running FINAL validation (post-enforcer) for STRICT-readiness...")
         _final_valid, _final_errors, _final_healed = validate_and_heal(sections, answers)
