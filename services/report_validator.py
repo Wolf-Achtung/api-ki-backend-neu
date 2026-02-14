@@ -75,7 +75,7 @@ except ImportError:
         """Fallback stub when config_validation not available."""
         HARD_STOP_ON_SIZE_MISMATCH = False
         MAX_REDUNDANCY_WARNINGS = 5
-        REDUNDANCY_WORD_THRESHOLD = 20
+        REDUNDANCY_WORD_THRESHOLD = 30  # FIX-645: Reduce false-positive redundancy warnings
         AI_ACT_MIN_REASONING_WORDS = 60
 
     def get_min_words(size: str, section_key: str) -> int:
