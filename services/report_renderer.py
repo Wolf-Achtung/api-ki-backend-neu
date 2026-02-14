@@ -18,6 +18,7 @@ from markupsafe import Markup
 
 from utils.logo_embedder import embed_logos_in_html
 from services.html_minifier import optimize_html_for_pdf, strip_unused_sections
+from services.final_sanitizer import final_sanitize
 from services.report_validator import GENERIC_LLM_LEAK_PHRASES, remove_leak_phrases_from_html
 from services.html_sanitizer import sanitize_en_locale_tokens
 from services.lang_utils import normalize_lang
@@ -650,7 +651,9 @@ def render(briefing_obj: Any,
         else:
             safe_sections[key] = value
     sections = safe_sections
-
+    
+    # [FINAL-SANITIZER] Last-pass fixes after ALL injections
+    sections = final_sanitize(sections)
     # Safe defaults with FIXED UTF-8
     # TEIL 3.1.4.x: Force LANG to detected value (no fallback to sections)
     ctx: Dict[str, Any] = {
