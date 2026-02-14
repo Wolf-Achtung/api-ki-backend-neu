@@ -14832,9 +14832,9 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     # Jinja‑ähnliche Platzhalter (z. B. {{ ROI_12M * 1.2 }}) in Sections auswerten
     try:
         sections = ksj_fix_placeholders_in_sections(sections, answers, scores)
-    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after KSJ-FIX-PLACEHOLDERS: %d words", run_id, _gc_tw)
     except Exception as _exc:
         log.warning("[%s] ⚠️ ksj_fix_placeholders_in_sections failed: %s", run_id, _exc)
+    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after KSJ-FIX-PLACEHOLDERS: %d words", run_id, _gc_tw)
 
     # === Placeholder-Fix (jetzt mit Business Case Variablen verfügbar!) ===
     try:
