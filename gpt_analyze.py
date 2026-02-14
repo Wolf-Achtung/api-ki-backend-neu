@@ -15138,6 +15138,8 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 warning_errors = [e for e in validation_errors if e.severity == "WARNING"]
                 if not critical_errors:
                     is_valid = True
+                    sections["_VALIDATOR_CRITICAL_COUNT"] = 0
+                    sections["_VALIDATOR_WARNING_COUNT"] = len(warning_errors)
                     log.info("[%s] [RESCUE-640] 🎉 All critical errors resolved!", run_id)
                 else:
                     log.warning("[%s] [RESCUE-640] %d critical errors remain after rescue",
