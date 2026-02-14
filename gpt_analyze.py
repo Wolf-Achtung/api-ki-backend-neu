@@ -13303,7 +13303,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
         log.info(f"[QUALITY-ENFORCER] Applied all quality fixes for hauptleistung={hauptleistung_value[:30] if hauptleistung_value else 'N/A'}, company_size={company_size_qe}")
     except Exception as e:
         log.warning(f"[QUALITY-ENFORCER] Failed: {e}")
-    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after QUALITY-ENFORCER-1: %d words", run_id, _gc_tw)
+    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after QUALITY-ENFORCER-1: %d words", "GCS", _gc_tw)
 
 
     # Sprint N3.3: Apply Exec Summary Hard-Clean to remove H1/H2 and label text
@@ -13450,7 +13450,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
         log.info(f"[QUALITY-ENFORCER-FINAL] Applied FINAL quality fixes, company_size={company_size_final}")
     except Exception as e:
         log.warning(f"[QUALITY-ENFORCER-FINAL] Failed: {e}")
-    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after QUALITY-ENFORCER-2: %d words", run_id, _gc_tw)
+    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after QUALITY-ENFORCER-2: %d words", "GCS", _gc_tw)
     return sections
 
 
