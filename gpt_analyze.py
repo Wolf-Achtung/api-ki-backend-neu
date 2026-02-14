@@ -2137,7 +2137,8 @@ def _clean_html(s: str) -> str:
         r'(?i)<(?:p|li|div)[^>]*>\s*Zeithorizont\s+und\s+Budgetrahmen[^<]*</(?:p|li|div)>',
         r'(?i)<(?:p|li|div)[^>]*>\s*Erfolgskriterien\s*\(Kennzahlen\)[^<]*</(?:p|li|div)>',
         r'(?i)antworte\s+einfach\s+mit[^<.]*[.<]',
-        r'(?i)Wenn\s+Sie\s+magst[^<.]*[.<]',
+        r'(?i)Wenn\s+Sie\s+magst[^.]*\.?',
+        r'(?i)Wenn\s+Sie\s+magst,?\s*strong>[^.]*',
     ]
     for pattern in prompt_leak_patterns:
         result = re.sub(pattern, '', result)
@@ -7474,7 +7475,7 @@ def _generate_hero_page(
         potential: Potential score improvement points
     """
     # Truncate hauptleistung - use smart truncation at word boundary
-    hl_truncated = _smart_truncate(hauptleistung, 80, '...') if hauptleistung else ""
+    hl_truncated = _smart_truncate(hauptleistung, 120, '...') if hauptleistung else ""
 
     # Generate Score SVG
     score_svg = _generate_score_svg(score, rating_text)
@@ -10464,7 +10465,7 @@ Format: Schritt-für-Schritt-Anleitung mit Zeitschätzung.'''
                     "KI-Integration testen (2-3h)",
                     "Qualitätskriterien definieren (1h)"
                 ],
-                prompt=f'''Erstellen Sie ein wiederverwendbares Template für "{_smart_truncate(hauptleistung, 80, '')}":
+                prompt=f'''Erstellen Sie ein wiederverwendbares Template für "{_smart_truncate(hauptleistung, 120, '')}":
 
 Struktur:
 - Kernbausteine die immer gleich sind
@@ -14091,7 +14092,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     hauptleistung = answers.get("hauptleistung", "").strip()
     if hauptleistung:
         # Smart truncation at word boundary
-        max_len = 60
+        max_len = 100
         if len(hauptleistung) <= max_len:
             sections["REPORT_SUBTITLE"] = hauptleistung
         else:

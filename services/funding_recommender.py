@@ -63,21 +63,21 @@ class FundingRecommendation:
 
 # Embedded core funding programs for fallback
 CORE_FUNDING_PROGRAMS: List[Dict[str, Any]] = [
-    {
-        "id": "go_digital",
-        "name": "go-digital",
-        "provider": "BMWK",
-        "max_funding": "16.500 €",
-        "funding_rate": "50%",
-        "ki_relevance": "high",
-        "complexity": "low",
-        "size_match": ["solo", "team"],
-        "branches": ["all"],
-        "regions": ["DE"],
-        "url": "https://www.bmwk.de/go-digital",
-        "summary_de": "Förderprogramm für Digitalisierung und IT-Sicherheit in KMU",
-        "summary_en": "Funding program for digitalization and IT security in SMEs",
-    },
+    # {
+    #     "id": "go_digital",
+    #     "name": "go-digital",
+    #     "provider": "BMWK",
+    #     "max_funding": "16.500 €",
+    #     "funding_rate": "50%",
+    #     "ki_relevance": "high",
+    #     "complexity": "low",
+    #     "size_match": ["solo", "team"],
+    #     "branches": ["all"],
+    #     "regions": ["DE"],
+    #     "url": "https://www.bmwk.de/go-digital",
+    #     "summary_de": "Förderprogramm für Digitalisierung und IT-Sicherheit in KMU",
+    #     "summary_en": "Funding program for digitalization and IT security in SMEs",
+    # },
     {
         "id": "zim",
         "name": "ZIM - Zentrales Innovationsprogramm Mittelstand",
@@ -1641,7 +1641,7 @@ FUNDING_BRANCH_ALIGNMENT_ENABLED = os.getenv("FUNDING_BRANCH_ALIGNMENT_ENABLED",
 # Maps branch to list of (program_id, priority_boost, reason)
 BRANCH_FUNDING_PRIORITIES: Dict[str, List[Tuple[str, float, str]]] = {
     "beratung": [
-        ("go_digital", 1.3, "Ideal für Digitalisierung der Beratungsprozesse"),
+#        ("go_digital", 1.3, "Ideal für Digitalisierung der Beratungsprozesse"),
         ("kfw_digitalisierung", 1.2, "Flexibler Kredit für Tool-Investitionen"),
     ],
     "it": [
@@ -1650,7 +1650,7 @@ BRANCH_FUNDING_PRIORITIES: Dict[str, List[Tuple[str, float, str]]] = {
         ("horizon_europe", 1.3, "EU-Förderung für disruptive Tech"),
     ],
     "handel": [
-        ("go_digital", 1.35, "E-Commerce-Digitalisierung"),
+#        ("go_digital", 1.35, "E-Commerce-Digitalisierung"),
         ("nrw_digital", 1.25, "Regionale Förderung für Handelsunternehmen"),
         ("kfw_digitalisierung", 1.2, "Finanzierung von Shop-Systemen"),
     ],
@@ -1670,18 +1670,18 @@ BRANCH_FUNDING_PRIORITIES: Dict[str, List[Tuple[str, float, str]]] = {
         ("kfw_digitalisierung", 1.2, "IoT-Infrastruktur-Finanzierung"),
     ],
     "bildung": [
-        ("go_digital", 1.35, "Digitalisierung von Bildungseinrichtungen"),
+#        ("go_digital", 1.35, "Digitalisierung von Bildungseinrichtungen"),
         ("horizon_europe", 1.2, "EU-Bildungsprojekte"),
     ],
     "marketing": [
-        ("go_digital", 1.35, "Digitale Marketing-Tools"),
+#        ("go_digital", 1.35, "Digitale Marketing-Tools"),
         ("nrw_digital", 1.2, "Regionale Agenturförderung"),
     ],
     # G19.1: New branch funding priorities
     "bauwesen_architektur": [
         ("zim", 1.4, "F&E für Smart Building und Digital Twins"),
         ("kfw_energieeffizienz", 1.3, "Energieeffiziente Gebäudetechnik mit KI"),
-        ("go_digital", 1.25, "Digitalisierung von Bauprozessen"),
+#        ("go_digital", 1.25, "Digitalisierung von Bauprozessen"),
         ("bafa_energieberatung", 1.2, "Energieberatung und Sanierung"),
     ],
     "verwaltung": [
@@ -1694,13 +1694,13 @@ BRANCH_FUNDING_PRIORITIES: Dict[str, List[Tuple[str, float, str]]] = {
         ("cef_transport", 1.4, "EU CEF Transport - Infrastrukturdigitalisierung"),
         ("zim", 1.3, "F&E für Predictive Logistics und Routenoptimierung"),
         ("kfw_klimaschutz", 1.25, "E-Logistik und nachhaltige Mobilität"),
-        ("go_digital", 1.2, "Digitalisierung von Logistikprozessen"),
+#        ("go_digital", 1.2, "Digitalisierung von Logistikprozessen"),
     ],
 }
 
 # Default priorities for unknown branches
 DEFAULT_FUNDING_PRIORITIES: List[Tuple[str, float, str]] = [
-    ("go_digital", 1.2, "Universelles Digitalisierungsprogramm"),
+#    ("go_digital", 1.2, "Universelles Digitalisierungsprogramm"),
     ("kfw_digitalisierung", 1.1, "Flexibler Digitalisierungskredit"),
 ]
 
