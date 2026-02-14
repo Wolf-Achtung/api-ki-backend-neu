@@ -11890,7 +11890,7 @@ ERWEITERTER INHALT:"""
             prompt=expand_prompt,
             system_prompt="Du bist ein professioneller Report-Generator. Erweitere den Text substanziell.",
             temperature=0.4,
-            max_tokens=2000,
+            max_tokens=4000,
         )
 
         if not response or not response.strip():
@@ -13093,6 +13093,8 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     else:
         log.warning("[CI-DESIGN] Gamechanger HTML empty or too short, skipping")
     sections["gamechanger"] = gamechanger_html
+    # FIX-642: GAMECHANGER SNAPSHOT PROTECTION
+    _gc_snapshot = sections.get("GAMECHANGER_HTML", "")
 
     # ========== CI-DESIGN v2.0: COMPACT FUNDING ==========
     foerderpotenzial_html = sections.get("FOERDERPOTENZIAL_HTML", "")
@@ -14960,6 +14962,14 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.warning("[%s] [POST-TRIM-HEAL] Guard failed: %s", run_id, _heal_exc)
     # === END FIX-629: POST-TRIM-HEAL ===
 
+    # FIX-642: GAMECHANGER SNAPSHOT RESTORE — if destroyed by post-processing
+    _gc_current = sections.get("GAMECHANGER_HTML", "")
+    _gc_current_words = len(re.sub(r"<[^>]+>", "", _gc_current).split()) if _gc_current else 0
+    _gc_snapshot_words = len(re.sub(r"<[^>]+>", "", _gc_snapshot).split()) if _gc_snapshot else 0
+    if _gc_snapshot_words > 100 and _gc_current_words < _gc_snapshot_words * 0.3:
+        log.warning("[%s] [FIX-642] GAMECHANGER_HTML destroyed (%d→%d words), restoring snapshot (%d words)", run_id, _gc_snapshot_words, _gc_current_words, _gc_snapshot_words)
+        sections["GAMECHANGER_HTML"] = _gc_snapshot
+        sections["gamechanger"] = _gc_snapshot
     # === SPRINT N2: VALIDATE AND HEAL - Wolf 2025-12 ===
     # FIX-517C TASK 4: Two-stage validation (raw = pre-final-enforcer, final = post-final-enforcer)
     # Stage 1 (RAW): validate BEFORE final enforcer pass → truthful pre-cleanup metrics
