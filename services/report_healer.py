@@ -1690,6 +1690,10 @@ wie Sie durch KI-Unterstützung Ihre Kernkompetenz stärken können.</p>
 
     # Update sections
     sections[rec_key] = modified_html
+    # Sync all aliases
+    for alias in ["RECOMMENDATIONS_HTML", "recommendations"]:
+        if alias != rec_key:
+            sections[alias] = modified_html
     injection_count = 1
 
     # Verify count after injection
@@ -1792,6 +1796,10 @@ die Ihre Kompetenz im Bereich {hl_escaped} durch intelligente Automatisierung st
             break
 
     sections[exec_key] = modified_html
+    # Sync all aliases
+    for alias in ["EXEC_SUMMARY_HTML", "EXECUTIVE_SUMMARY_HTML", "executive_summary"]:
+        if alias != exec_key:
+            sections[alias] = modified_html
     injection_count = 1
 
     count_after = _count_hauptleistung_in_text(modified_html, hl_value)
