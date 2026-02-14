@@ -16805,10 +16805,13 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
 
         log.info(f"[{run_id}] [HEALER] Running report_healer: segment={healer_segment}, payback={canonical_payback}")
 
+        # Get hauptleistung for healer
+        hl_for_healer = answers.get("hauptleistung", "")
         healing_result = heal_report_html(
             sections=sections,
             segment=healer_segment,
             canonical_payback_months=canonical_payback,
+            hauptleistung=hl_for_healer,
         )
 
         # Replace sections with healed version
@@ -16869,6 +16872,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                 result,
                 segment=healer_segment,
                 canonical_payback_months=canonical_payback,
+            hauptleistung=hl_for_healer,
             )
             log.info(f"[{run_id}] [HEALER-POST] Applied post-render healing")
     except Exception as e:
