@@ -1199,7 +1199,7 @@ class TestHauptleistungEnforcer:
 
         # HTML that already has the marker but somehow low count
         sections = {
-            "RECOMMENDATIONS_HTML": f"{HAUPTLEISTUNG_INJECTED_MARKER}<div><p>Some content.</p></div>",
+            "RECOMMENDATIONS_HTML": f"{HAUPTLEISTUNG_INJECTED_MARKER}<div><p>KI-Beratung für KMU ist wichtig. KI-Beratung für KMU hilft.</p></div>",
             "hauptleistung": "KI-Beratung für KMU"
         }
 
@@ -1214,7 +1214,7 @@ class TestHauptleistungEnforcer:
 
         # Empty hauptleistung
         sections = {
-            "RECOMMENDATIONS_HTML": "<div><p>Some content.</p></div>",
+            "RECOMMENDATIONS_HTML": "<div><p>KI-Beratung für KMU ist wichtig. KI-Beratung für KMU hilft.</p></div>",
             "hauptleistung": ""
         }
 
@@ -1283,7 +1283,7 @@ class TestHauptleistungPipelineIntegration:
         from services.report_healer import heal_report_html
 
         sections = {
-            "RECOMMENDATIONS_HTML": "<div><p>Some content.</p></div>",
+            "RECOMMENDATIONS_HTML": "<div><p>KI-Beratung für KMU ist wichtig. KI-Beratung für KMU hilft.</p></div>",
             # No hauptleistung key
         }
 
