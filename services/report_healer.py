@@ -1644,7 +1644,7 @@ def ensure_hauptleistung_in_recommendations(
         return sections, 0
 
     # Step 3: Check idempotency marker
-    if HAUPTLEISTUNG_INJECTED_MARKER in rec_html:
+    if HAUPTLEISTUNG_INJECTED_MARKER in rec_html and _count_hauptleistung_in_text(rec_html, hl_value) >= min_mentions:
         log.debug("[HAUPTLEISTUNG-HEALER] Already injected (marker present), skipping")
         return sections, 0
 
@@ -1758,7 +1758,7 @@ def ensure_hauptleistung_in_exec_summary(
         return sections, 0
 
     # Check marker
-    if HAUPTLEISTUNG_INJECTED_MARKER in exec_html:
+    if HAUPTLEISTUNG_INJECTED_MARKER in exec_html and _count_hauptleistung_in_text(exec_html, hl_value) >= min_mentions:
         return sections, 0
 
     # Count current
