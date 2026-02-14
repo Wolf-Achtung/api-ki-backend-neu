@@ -1641,8 +1641,8 @@ FUNDING_BRANCH_ALIGNMENT_ENABLED = os.getenv("FUNDING_BRANCH_ALIGNMENT_ENABLED",
 # Maps branch to list of (program_id, priority_boost, reason)
 BRANCH_FUNDING_PRIORITIES: Dict[str, List[Tuple[str, float, str]]] = {
     "beratung": [
-#        ("go_digital", 1.3, "Ideal für Digitalisierung der Beratungsprozesse"),
-        ("kfw_digitalisierung", 1.2, "Flexibler Kredit für Tool-Investitionen"),
+        ("kfw_digitalisierung", 1.3, "Flexibler Kredit für Tool-Investitionen"),
+        ("bafa_unternehmensberatung", 1.25, "Geförderte Beratung für KMU"),
     ],
     "it": [
         ("zim", 1.4, "F&E-Projekte für innovative Softwarelösungen"),
