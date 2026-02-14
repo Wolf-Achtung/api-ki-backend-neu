@@ -2297,7 +2297,6 @@ def scrub_quickwins_template_phrases(sections: dict) -> dict:
 
         # Remove standalone "Platzhalter" word (replace with neutral text)
         html = re.sub(r'\bPlatzhalter\b', 'konkreter Vorschlag', html, flags=re.IGNORECASE)
-    r'\bBeispieltext:?\b',  # FIX-645: Template-Phrase aus LLM output
 
         # Remove bracketed placeholders
         html = re.sub(r'\[Platzhalter[^\]]*\]', '', html, flags=re.IGNORECASE)
@@ -4446,7 +4445,6 @@ _PLACEHOLDER_LINE_PATTERN = re.compile(
     re.IGNORECASE
 )
 _PLACEHOLDER_WORD_PATTERN = re.compile(r'\bPlatzhalter\b', re.IGNORECASE)
-    r'\bBeispieltext:?\b',  # FIX-645: Template-Phrase aus LLM output
 
 
 def apply_placeholder_scrub(sections: dict) -> dict:
@@ -4512,7 +4510,6 @@ _TEMPLATE_PHRASE_PATTERNS = [
     (re.compile(r'\bLorem ipsum[^.]*\.?', re.IGNORECASE), ''),
     # Explicit "Platzhalter" / "Beispieltext" / "Mustertext" as inline words (all sections)
     (re.compile(r'\bPlatzhalter\b', re.IGNORECASE), 'konkreter Vorschlag'),
-    r'\bBeispieltext:?\b',  # FIX-645: Template-Phrase aus LLM output
     (re.compile(r'\bBeispieltext\b', re.IGNORECASE), ''),
     (re.compile(r'\bMustertext\b', re.IGNORECASE), ''),
     (re.compile(r'\bDummy-?Text\b', re.IGNORECASE), ''),
