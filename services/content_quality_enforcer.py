@@ -2724,9 +2724,17 @@ def _limit_hauptleistung_repetitions(sections: dict, hauptleistung: str, max_ful
             short = hauptleistung[:pos]
             break
 
+    # FIX-B1: Sections that NEED multiple hauptleistung occurrences (per validator requirements)
+    # EXEC_SUMMARY_HTML needs 3-4x, RECOMMENDATIONS_HTML needs 2-3x
+    # Limiter must NOT replace these — the Healer injected them deliberately.
+    PROTECTED_SECTIONS = {"EXEC_SUMMARY_HTML", "RECOMMENDATIONS_HTML"}
+
     total_replaced = 0
     for key, val in sections.items():
         if not isinstance(val, str) or key.startswith("_"):
+            continue
+        if key in PROTECTED_SECTIONS:
+            log.info("[FIX-3.1] Skipping protected section %s (hauptleistung count: %d)", key, val.count(hauptleistung))
             continue
         count = val.count(hauptleistung)
         if count <= 0:
