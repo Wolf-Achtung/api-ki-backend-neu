@@ -15588,7 +15588,6 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             if unified_grade == "C" and consistency_grade in ("C", "D"):
                 log.info(f"[{run_id}] [FIX-5.3] Triggering healing pass for grade={unified_grade}, consistency={consistency_grade}")
                 try:
-                    from services.report_healer import heal_report_html
                     _heal_persona: Any = persona  # satisfy Literal type constraint
                     _heal_result = heal_report_html(sections, _heal_persona)
                     sections = _heal_result.sections
