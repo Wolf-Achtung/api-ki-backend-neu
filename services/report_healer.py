@@ -3076,7 +3076,8 @@ def heal_report_html(
     segment: Literal["solo", "team", "kmu", "SOLO", "TEAM", "KMU"],
     *,
     canonical_payback_months: Optional[Union[float, Decimal, str]] = None,
-    skip_fixes: Optional[Set[str]] = None
+    skip_fixes: Optional[Set[str]] = None,
+    hauptleistung: Optional[str] = None
 ) -> HealingResult:
     """
     Main healing pipeline for report HTML (PRE-RENDER).
@@ -3230,8 +3231,8 @@ def heal_report_html(
     # Runs AFTER all content processing but BEFORE validation
     if "HL" not in skip:
         try:
-            # Get hauptleistung from sections (set by earlier pipeline stages)
-            hl_value = healed_sections.get("hauptleistung") or healed_sections.get("HAUPTLEISTUNG")
+            # Get hauptleistung from parameter or sections
+            hl_value = hauptleistung or healed_sections.get("hauptleistung") or healed_sections.get("HAUPTLEISTUNG")
             if hl_value and isinstance(hl_value, str) and len(hl_value.strip()) >= 6:
                 # Fix Recommendations (minimum 2 for CRITICAL threshold)
                 healed_sections, rec_inj = ensure_hauptleistung_in_recommendations(
