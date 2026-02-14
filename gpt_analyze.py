@@ -13283,6 +13283,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                 log.info(f"[SIEZEN-GUARD] {key}: du→Sie conversion applied")
             except Exception as e:
                 log.warning(f"[SIEZEN-GUARD] {key} failed: {e}")
+    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after SIEZEN-GUARD: %d words", run_id, _gc_tw)
 
     # ========== v14.0: CONTENT QUALITY ENFORCER (Post-Processing Safety Net) ==========
     # Fixes: ROI-Leak, Fragments, hauptleistung MIN, Extended Siezen, Solo Language
@@ -13299,6 +13300,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
         else:
             company_size_qe = "kmu"
         sections = apply_all_quality_enforcers(sections, hauptleistung_value, bundesland_value, company_size_qe)
+    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after QUALITY-ENFORCER: %d words", run_id, _gc_tw)
         log.info(f"[QUALITY-ENFORCER] Applied all quality fixes for hauptleistung={hauptleistung_value[:30] if hauptleistung_value else 'N/A'}, company_size={company_size_qe}")
     except Exception as e:
         log.warning(f"[QUALITY-ENFORCER] Failed: {e}")
@@ -13445,6 +13447,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
         else:
             company_size_final = "kmu"
         sections = apply_all_quality_enforcers(sections, hauptleistung_final, bundesland_final, company_size_final)
+    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after QUALITY-ENFORCER: %d words", run_id, _gc_tw)
         log.info(f"[QUALITY-ENFORCER-FINAL] Applied FINAL quality fixes, company_size={company_size_final}")
     except Exception as e:
         log.warning(f"[QUALITY-ENFORCER-FINAL] Failed: {e}")
@@ -14824,10 +14827,12 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             log.debug("[%s] ℹ️ No Business Case placeholder replacements needed (table generated deterministically)", run_id)
 
         sections.update(build_extra_sections(answers, scores))
+    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after BUILD-EXTRA-SECTIONS: %d words", run_id, _gc_tw)
 
     # Jinja‑ähnliche Platzhalter (z. B. {{ ROI_12M * 1.2 }}) in Sections auswerten
     try:
         sections = ksj_fix_placeholders_in_sections(sections, answers, scores)
+    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after KSJ-FIX-PLACEHOLDERS: %d words", run_id, _gc_tw)
     except Exception as _exc:
         log.warning("[%s] ⚠️ ksj_fix_placeholders_in_sections failed: %s", run_id, _exc)
 
@@ -14962,12 +14967,13 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.warning("[%s] [POST-TRIM-HEAL] Guard failed: %s", run_id, _heal_exc)
     # === END FIX-629: POST-TRIM-HEAL ===
 
+    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after PRE-SNAPSHOT-CHECK: %d words", run_id, _gc_tw)
     # FIX-642: GAMECHANGER SNAPSHOT RESTORE — if destroyed by post-processing
     _gc_current = sections.get("GAMECHANGER_HTML", "")
     _gc_snap = sections.get("_GC_SNAPSHOT_642", "")
     _gc_cur_w = len(re.sub(r"<[^>]+>", "", _gc_current).split()) if _gc_current else 0
     _gc_snap_w = len(re.sub(r"<[^>]+>", "", _gc_snap).split()) if _gc_snap else 0
-    if _gc_snap_w > 100 and _gc_cur_w < _gc_snap_w * 0.3:
+    if _gc_snap_w > 100 and _gc_cur_w < _gc_snap_w * 0.6:
         log.warning("[%s] [FIX-642] GAMECHANGER_HTML destroyed (%d→%d words), restoring snapshot (%d words)", run_id, _gc_snap_w, _gc_cur_w, _gc_snap_w)
         sections["GAMECHANGER_HTML"] = _gc_snap
         sections["gamechanger"] = _gc_snap
@@ -15090,7 +15096,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         # would cause a SECTION_TOO_SHORT pipeline abort.
         # ============================================================
         _short_errors = [
-            e for e in critical_errors
+            e for e in critical_errors + warning_errors
             if e.category == "SECTION_TOO_SHORT"
         ]
         if _short_errors:
