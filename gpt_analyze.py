@@ -13283,7 +13283,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                 log.info(f"[SIEZEN-GUARD] {key}: du→Sie conversion applied")
             except Exception as e:
                 log.warning(f"[SIEZEN-GUARD] {key} failed: {e}")
-    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after SIEZEN-GUARD: %d words", run_id, _gc_tw)
+    _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after SIEZEN-GUARD: %d words", "GCS", _gc_tw)
 
     # ========== v14.0: CONTENT QUALITY ENFORCER (Post-Processing Safety Net) ==========
     # Fixes: ROI-Leak, Fragments, hauptleistung MIN, Extended Siezen, Solo Language
