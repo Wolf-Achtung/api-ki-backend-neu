@@ -15070,7 +15070,67 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     })
             except Exception as _debug_exc:
                 log.warning("[%s] [STATE-AUDIT-517A] debug artifact generation failed: %s", run_id, _debug_exc)
+# ============================================================
+        # FIX-640: RESCUE LOOP for SECTION_TOO_SHORT before Quality Gate
+        # The POST-TRIM-HEAL (line ~14936) only heals sections within
+        # 30 words of minimum. After Truncation (-29%) + Quality Enforcer
+        # (leak removal), sections can fall FAR below minimum (e.g. 634/750).
+        # This rescue loop has NO gap limit - it expands ANY section that
+        # would cause a SECTION_TOO_SHORT pipeline abort.
+        # ============================================================
+        _short_errors = [
+            e for e in critical_errors
+            if e.category == "SECTION_TOO_SHORT"
+        ]
+        if _short_errors:
+            log.warning("[%s] [RESCUE-640] %d sections too short, attempting rescue expansion...",
+                        run_id, len(_short_errors))
+            _rescued = 0
+            for err in _short_errors:
+                _sec_key = err.section
+                _sec_html = sections.get(_sec_key, "")
+                if not isinstance(_sec_html, str) or not _sec_html.strip():
+                    continue
 
+                _sec_text = re.sub(r"<[^>]+>", "", _sec_html).strip()
+                _sec_words = len(_sec_text.split()) if _sec_text else 0
+
+                # Extract min_words from error message
+                _min_match = re.search(r"Minimum.*?:\s*(\d+)", err.message)
+                _min_words = int(_min_match.group(1)) if _min_match else 750
+
+                log.info("[%s] [RESCUE-640] Expanding %s: %d → %d+ words",
+                         run_id, _sec_key, _sec_words, _min_words)
+
+                _rescued_html = _expand_short_section(
+                    section_key=_sec_key,
+                    current_html=_sec_html,
+                    target_words=_min_words + 50,  # +50 buffer for safety
+                    current_words=_sec_words,
+                )
+                if _rescued_html:
+                    sections[_sec_key] = _rescued_html
+                    # Also update lowercase alias if exists
+                    _lower_key = _sec_key.replace("_HTML", "").lower()
+                    if _lower_key in sections:
+                        sections[_lower_key] = _rescued_html
+                    _rescued += 1
+                    log.info("[%s] [RESCUE-640] ✅ %s rescued successfully", run_id, _sec_key)
+                else:
+                    log.error("[%s] [RESCUE-640] ❌ %s rescue failed", run_id, _sec_key)
+
+            if _rescued > 0:
+                # Re-validate after rescue
+                log.info("[%s] [RESCUE-640] Re-validating after %d rescues...", run_id, _rescued)
+                is_valid, validation_errors, _heal2 = validate_and_heal(sections, answers)
+                critical_errors = [e for e in validation_errors if e.severity == "CRITICAL"]
+                warning_errors = [e for e in validation_errors if e.severity == "WARNING"]
+                if not critical_errors:
+                    is_valid = True
+                    log.info("[%s] [RESCUE-640] 🎉 All critical errors resolved!", run_id)
+                else:
+                    log.warning("[%s] [RESCUE-640] %d critical errors remain after rescue",
+                                run_id, len(critical_errors))
         # Phase 2: Quality Gate NOW ENABLED - blocks reports with critical errors
         # Set to False only for debugging/testing
         HARD_QUALITY_GATE_ENABLED = True  # ENABLED: Strict mode active
