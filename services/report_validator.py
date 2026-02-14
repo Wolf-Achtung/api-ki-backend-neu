@@ -131,12 +131,29 @@ def _strip_html_for_text_count(html: str) -> str:
     return text.strip()
 
 
+def _derive_hauptleistung_short_form(hauptleistung: str) -> str:
+    """
+    Derive the same short form that FIX-3.1 uses for hauptleistung.
+    Must stay in sync with _limit_hauptleistung_repetitions() in content_quality_enforcer.py.
+    """
+    if not hauptleistung or len(hauptleistung) <= 50:
+        return hauptleistung
+    short = hauptleistung[:60].rsplit(" ", 1)[0] + "..." if len(hauptleistung) > 60 else hauptleistung
+    for sep in [",", ";", ".", " und ", " mit "]:
+        pos = hauptleistung.find(sep)
+        if 15 < pos < 80:
+            short = hauptleistung[:pos]
+            break
+    return short
+
+
 def _count_hauptleistung_robust(html: str, hauptleistung: str) -> int:
     """
     Count hauptleistung occurrences in HTML content, robustly handling:
     - HTML tag splits (e.g., 'Integration von <span>KI</span> in...')
     - HTML entities
     - Case variations
+    - FIX-A1: Also counts short-form occurrences created by FIX-3.1 limiter
 
     Returns the count of occurrences in the visible text content.
     """
@@ -145,8 +162,19 @@ def _count_hauptleistung_robust(html: str, hauptleistung: str) -> int:
     # Strip HTML tags and normalize both strings
     text = _strip_html_for_text_count(html)
     hl_normalized = _strip_html_for_text_count(hauptleistung)
-    # Case-insensitive count
-    return text.lower().count(hl_normalized.lower())
+    # Count full-form occurrences
+    count = text.lower().count(hl_normalized.lower())
+    # FIX-A1: Also count short-form occurrences (created by FIX-3.1 limiter)
+    short_form = _derive_hauptleistung_short_form(hauptleistung)
+    if short_form and short_form != hauptleistung and len(short_form) >= 15:
+        short_normalized = _strip_html_for_text_count(short_form)
+        # Only count short forms that are NOT already part of a full-form match
+        # (since the full form contains the short form as prefix)
+        short_count = text.lower().count(short_normalized.lower())
+        # Subtract full-form matches (they already contain the short form)
+        extra_short = max(0, short_count - count)
+        count += extra_short
+    return count
 
 
 __all__ = [
