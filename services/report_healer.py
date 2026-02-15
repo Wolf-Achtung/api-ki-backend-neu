@@ -27,10 +27,12 @@ from decimal import Decimal, InvalidOperation
 from typing import Any, Callable, Dict, List, Literal, Optional, Set, Tuple, TypeVar, Union
 
 log = logging.getLogger(__name__)
+from config.size_profiles import SIZE_PROFILES  # FIX-D1: Single Source of Truth for budgets
 
 # TASK 1 (P0 FINAL): Import Quick Wins debug pipeline
 try:
     from services.quickwins_debug import (
+
         dump_after_section_heal,
         dump_after_final_heal,
         is_debug_enabled,
@@ -2747,6 +2749,64 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "RISK_ENGINE_HTML": 5000,
         "RISK_ENGINE_V3_HTML": 4000,
         "RECOMMENDATIONS_ENGINE_HTML": 6000,
+        # FIX-D1: Fehlende Sections (vorher auf _default gefallen)
+
+        "BRANCH_DEEP_DIVE_HTML": 4000,
+
+        "ROI_TRACKING_HTML": 3000,
+
+        "KICKOFF_VORLAGE_HTML": 3000,
+
+        "AI_ACT_SUMMARY_HTML": 2000,
+
+        "TEMPLATES_START_HTML": 2500,
+
+        "AI_POLICY_MINI_HTML": 2500,
+
+        "PROMPT_FRAMEWORK_HTML": 2000,
+
+        "TRANSPARENCY_BOX_HTML": 2000,
+
+        "NEXT_ACTIONS_HTML": 2000,
+
+        "REIFEGRAD_SOWHAT_HTML": 2000,
+
+        "SOFORT_START_HTML": 1500,
+
+        "CHALLENGE_30_TAGE_HTML": 8000,
+
+        "KREATIV_TOOLS_HTML": 2000,
+
+        "WETTBEWERB_BENCHMARK_HTML": 3000,
+
+        "KI_AKTIVITAETEN_ZIELE_HTML": 2000,
+
+        "GAMECHANGER_DECISION_HTML": 1500,
+
+        "MARKET_INSIGHTS_HTML": 2000,
+
+        "GLOSSAR_HTML": 2500,
+
+        "DECISION_CONFIDENCE_HTML": 2000,
+
+        "BRANCH_PROFILE_HTML": 5000,
+
+        "BRANCH_OPPORTUNITIES_HTML": 2000,
+
+        "BRANCH_RISKS_HTML": 2000,
+
+        "FUNDING_HTML": 3000,
+
+        "FUNDING_BRANCH_ALIGNMENT_HTML": 3000,
+
+        "TOOLS_FUNDING_ALIGNMENT_HTML": 3000,
+
+        "TOOLS_BRANCH_ALIGNMENT_HTML": 3000,
+
+        "STARTER_KIT_HTML": 5000,
+
+        "SOURCES_BOX_HTML": 2000,
+
         "_default": 1000,
     },
     "team": {
@@ -2778,6 +2838,64 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "RISK_ENGINE_HTML": 7000,
         "RISK_ENGINE_V3_HTML": 5000,
         "RECOMMENDATIONS_ENGINE_HTML": 10000,
+        # FIX-D1: Fehlende Sections (vorher auf _default gefallen)
+
+        "BRANCH_DEEP_DIVE_HTML": 6000,
+
+        "ROI_TRACKING_HTML": 4000,
+
+        "KICKOFF_VORLAGE_HTML": 4000,
+
+        "AI_ACT_SUMMARY_HTML": 3000,
+
+        "TEMPLATES_START_HTML": 3500,
+
+        "AI_POLICY_MINI_HTML": 3500,
+
+        "PROMPT_FRAMEWORK_HTML": 3000,
+
+        "TRANSPARENCY_BOX_HTML": 3000,
+
+        "NEXT_ACTIONS_HTML": 3000,
+
+        "REIFEGRAD_SOWHAT_HTML": 2500,
+
+        "SOFORT_START_HTML": 2000,
+
+        "CHALLENGE_30_TAGE_HTML": 12000,
+
+        "KREATIV_TOOLS_HTML": 3000,
+
+        "WETTBEWERB_BENCHMARK_HTML": 4000,
+
+        "KI_AKTIVITAETEN_ZIELE_HTML": 3000,
+
+        "GAMECHANGER_DECISION_HTML": 2500,
+
+        "MARKET_INSIGHTS_HTML": 3000,
+
+        "GLOSSAR_HTML": 3500,
+
+        "DECISION_CONFIDENCE_HTML": 2500,
+
+        "BRANCH_PROFILE_HTML": 8000,
+
+        "BRANCH_OPPORTUNITIES_HTML": 3000,
+
+        "BRANCH_RISKS_HTML": 3000,
+
+        "FUNDING_HTML": 5000,
+
+        "FUNDING_BRANCH_ALIGNMENT_HTML": 5000,
+
+        "TOOLS_FUNDING_ALIGNMENT_HTML": 5000,
+
+        "TOOLS_BRANCH_ALIGNMENT_HTML": 5000,
+
+        "STARTER_KIT_HTML": 8000,
+
+        "SOURCES_BOX_HTML": 3000,
+
         "_default": 1500,
     },
     "kmu": {
@@ -2813,6 +2931,64 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "RISK_ENGINE_HTML": 8000,
         "RISK_ENGINE_V3_HTML": 5000,
         "RECOMMENDATIONS_ENGINE_HTML": 12000,
+        # FIX-D1: Fehlende Sections (vorher auf _default gefallen)
+
+        "BRANCH_DEEP_DIVE_HTML": 8000,
+
+        "ROI_TRACKING_HTML": 5000,
+
+        "KICKOFF_VORLAGE_HTML": 5000,
+
+        "AI_ACT_SUMMARY_HTML": 4000,
+
+        "TEMPLATES_START_HTML": 4000,
+
+        "AI_POLICY_MINI_HTML": 4000,
+
+        "PROMPT_FRAMEWORK_HTML": 3500,
+
+        "TRANSPARENCY_BOX_HTML": 3500,
+
+        "NEXT_ACTIONS_HTML": 3500,
+
+        "REIFEGRAD_SOWHAT_HTML": 3000,
+
+        "SOFORT_START_HTML": 2500,
+
+        "CHALLENGE_30_TAGE_HTML": 16000,
+
+        "KREATIV_TOOLS_HTML": 3500,
+
+        "WETTBEWERB_BENCHMARK_HTML": 5000,
+
+        "KI_AKTIVITAETEN_ZIELE_HTML": 3500,
+
+        "GAMECHANGER_DECISION_HTML": 3000,
+
+        "MARKET_INSIGHTS_HTML": 3500,
+
+        "GLOSSAR_HTML": 4000,
+
+        "DECISION_CONFIDENCE_HTML": 3000,
+
+        "BRANCH_PROFILE_HTML": 10000,
+
+        "BRANCH_OPPORTUNITIES_HTML": 4000,
+
+        "BRANCH_RISKS_HTML": 4000,
+
+        "FUNDING_HTML": 6000,
+
+        "FUNDING_BRANCH_ALIGNMENT_HTML": 6000,
+
+        "TOOLS_FUNDING_ALIGNMENT_HTML": 6000,
+
+        "TOOLS_BRANCH_ALIGNMENT_HTML": 6000,
+
+        "STARTER_KIT_HTML": 10000,
+
+        "SOURCES_BOX_HTML": 4000,
+
         "_default": 2000,
     },
 }
@@ -2848,7 +3024,12 @@ def apply_segment_budget(
             result[section_name] = html
             continue
 
-        budget = budgets.get(section_name, default_budget)
+        # FIX-D1: Hierarchie: SEGMENT_BUDGETS > SIZE_PROFILES > default
+        budget = budgets.get(section_name)
+        if budget is None:
+            # Fallback: SIZE_PROFILES als Single Source of Truth
+            sp = SIZE_PROFILES.get(segment, {})
+            budget = sp.get(section_name, sp.get(section_name.lower().replace("_html", ""), default_budget))
         current_len = len(html)
 
         if current_len <= budget:
