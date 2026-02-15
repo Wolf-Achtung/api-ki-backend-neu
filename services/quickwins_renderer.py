@@ -1187,21 +1187,32 @@ def normalize_quickwins_to_html(raw: str, strict: bool = False, company_size: st
     }
 
     # STRICT validation - FIX: Never raise, always fallback (Pipeline-Stabilität)
-    # FIX-E3: Bevor Fallback, alternative Item-Zählung via <h4> Tags
+    # FIX-E3+H1: Bevor Fallback, alternative Item-Zählung via mehrere Marker
     if strict and (item_count < 3 or len(result_html) < 250):
         h4_count = len(re.findall(r'<h4[^>]*>', result_html, re.IGNORECASE))
-        if h4_count >= 3 and len(result_html) > 1000:
+        # FIX-H1: Auch nummerierte <strong>-Patterns als Items zählen
+        # LLM strukturiert oft als "<strong>1. Titel</strong>" oder "<p><strong>Nutzen:"
+        strong_numbered = len(re.findall(r'<strong>\s*\d+[\.\):]', result_html))
+        # Oder <li> mit substantiellem Content als Items
+        li_items = len(re.findall(r'<li[^>]*>[^<]{20,}', result_html))
+        # Beste Schätzung: Maximum aller Marker
+        best_count = max(h4_count, strong_numbered, li_items // 2)
+        log.info(
+            "[FIX-H1] QW item detection: h4=%d, strong_num=%d, li=%d, best=%d, len=%d",
+            h4_count, strong_numbered, li_items, best_count, len(result_html)
+        )
+        if best_count >= 3 and len(result_html) > 1000:
             log.info(
-                "[FIX-E3] QW-NORMALIZE: h4-based count=%d overrides item_count=%d, len=%d - skipping fallback",
-                h4_count, item_count, len(result_html)
+                "[FIX-H1] QW-NORMALIZE: best_count=%d overrides item_count=%d, len=%d - skipping fallback",
+                best_count, item_count, len(result_html)
             )
-            item_count = h4_count
+            item_count = best_count
             has_class = True  # Trust the content
         else:
             log.warning(
                 "[QW-NORMALIZE] ⚠️ insufficient content in STRICT mode "
-                "(items=%d h4=%d len=%d) - generating fallback instead of raising",
-                item_count, h4_count, len(result_html)
+                "(items=%d best=%d h4=%d strong=%d li=%d len=%d) - generating fallback",
+                item_count, best_count, h4_count, strong_numbered, li_items, len(result_html)
             )
         # Generate minimal fallback HTML instead of raising
         fallback_html = _generate_minimal_quickwins_fallback(company_size)
