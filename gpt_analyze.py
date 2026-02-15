@@ -12817,11 +12817,29 @@ ERWEITERUNGSANFORDERUNGEN:
                 if _cleanup_available:
                     truncated = cleanup_truncation_artifacts(truncated)
 
-                # FIX-TEAM-KMU: Budget-based cap (replaces blind 50% cap)
+                # FIX-TEAM-KMU + FIX-B4: Budget-based cap with sentence boundary repair
                 # If truncation cut too aggressively, cap at budget instead of 50%
                 if len(truncated) < _budget and original_len > _budget:
-                    # Truncation went below budget - cap at budget
-                    truncated = html[:_budget]
+                    # Truncation went below budget - cap at budget with sentence repair
+                    raw_cut = html[:_budget]
+                    # FIX-B4: Find last complete sentence boundary before cut point
+                    # Look for '. </' or '! </' or '? </' or '.</p>' or '.</li>'
+                    _last_good = -1
+                    for _m in _re_trunc.finditer(r'[.!?]\s*(?:</|$)', raw_cut):
+                        _last_good = _m.end()
+                    if _last_good > len(raw_cut) * 0.7:
+                        # Found a sentence boundary in the last 30% — use it
+                        _close = raw_cut.find('>', _last_good)
+                        if _close > 0:
+                            truncated = raw_cut[:_close + 1]
+                        else:
+                            truncated = raw_cut[:_last_good]
+                        log.info(
+                            "[FIX-B4][TRUNC] sentence_repair section=%s budget=%d cut_at=%d (was %d)",
+                            key, _budget, len(truncated), len(raw_cut),
+                        )
+                    else:
+                        truncated = raw_cut
                     log.info(
                         "[FIX-TEAM-KMU][TRUNC] budget_cap section=%s budget=%d before=%d after=%d",
                         key, _budget, original_len, len(truncated),
@@ -16096,7 +16114,21 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                 continue
 
         log.error(f"[FIX-499-ROADMAP-REGEN] ❌ All {max_attempts} attempts failed")
-        return None
+        # FIX-B6: Hardcoded quality fallback instead of empty placeholder
+        branche = context.get("BRANCHE_LABEL", "Ihrem Unternehmen")
+        _fallback_html = f"""<div class="roadmap-90d">
+<h3>Ihre 90-Tage KI-Roadmap</h3>
+<ul>
+<li><strong>Woche 1–2:</strong> Bestandsaufnahme Ihrer wiederkehrenden Aufgaben und Prozesse – identifizieren Sie die drei zeitintensivsten Tätigkeiten in {branche}.</li>
+<li><strong>Woche 3–4:</strong> Recherche und Test von KI-Tools für Ihren wichtigsten Use Case. Starten Sie mit einer kostenlosen Testversion (z.B. ChatGPT, Microsoft Copilot).</li>
+<li><strong>Woche 5–6:</strong> Pilotprojekt starten: Setzen Sie das ausgewählte Tool für eine konkrete Aufgabe ein und dokumentieren Sie die Zeitersparnis.</li>
+<li><strong>Woche 7–8:</strong> Ergebnisse auswerten und Workflow-Integration planen. Definieren Sie klare Regeln für den KI-Einsatz in Ihrem Arbeitsalltag.</li>
+<li><strong>Woche 9–10:</strong> Zweiten Use Case identifizieren und mit den Erfahrungen aus dem Pilotprojekt umsetzen.</li>
+<li><strong>Woche 11–12:</strong> Wirkungsmessung durchführen: Vergleichen Sie Zeitaufwand vorher/nachher und planen Sie die nächsten Schritte für Quartal 2.</li>
+</ul>
+</div>"""
+        log.info("[FIX-B6] Using quality fallback template for ROADMAP_90D_DECISION_HTML")
+        return _fallback_html
 
     # FIX-511 CHANGE 2: Regeneration function for KI_STACK_SUMMARY_HTML
     def _regenerate_ki_stack_strict(context: Dict[str, Any], briefing: Dict[str, Any], max_attempts: int = 2) -> Optional[str]:
@@ -16730,7 +16762,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             if section_key == "ROADMAP_90D_DECISION_HTML":
                 log.warning(f"[{run_id}] [FIX-499] ROADMAP_90D_DECISION_HTML needs regeneration: reason={reason}, len={len(html_content or '')}")
 
-                regen_result = _regenerate_roadmap_90d_strict(guard_context, answers, max_attempts=2)
+                regen_result = _regenerate_roadmap_90d_strict(guard_context, answers, max_attempts=3)  # FIX-B6: was 2
 
                 if regen_result and len(regen_result.strip()) >= 300:
                     sections[section_key] = regen_result

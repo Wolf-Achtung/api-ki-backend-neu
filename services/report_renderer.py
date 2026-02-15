@@ -642,18 +642,20 @@ def render(briefing_obj: Any,
                     log.debug("[FIX-R5-6] Cleared near-empty section: %s (%d chars)", key, len(_stripped))
                 sections[key] = ''
 
-    # Mark HTML sections as safe (prevent escaping)
+    # [FINAL-SANITIZER] Last-pass fixes BEFORE Markup wrapping
+    # CRITICAL FIX-B1B2: final_sanitize() must run BEFORE Markup() wrapping,
+    # because string operations in sanitizer destroy Markup objects → HTML gets escaped
+    sections = final_sanitize(sections)
+
+    # Mark HTML sections as safe (prevent escaping) — AFTER all sanitization!
     safe_sections = {}
     for key, value in sections.items():
         if isinstance(value, str) and key.endswith('_HTML') and '<' in value:
             safe_sections[key] = Markup(value)
-            log.debug(f"[RENDER] Marked section '{key}' as safe HTML")
+            log.debug(f"[RENDER] Marked section '{key}' as safe HTML (post-sanitize)")
         else:
             safe_sections[key] = value
     sections = safe_sections
-    
-    # [FINAL-SANITIZER] Last-pass fixes after ALL injections
-    sections = final_sanitize(sections)
     # Safe defaults with FIXED UTF-8
     # TEIL 3.1.4.x: Force LANG to detected value (no fallback to sections)
     ctx: Dict[str, Any] = {

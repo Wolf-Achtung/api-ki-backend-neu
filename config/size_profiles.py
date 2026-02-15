@@ -146,16 +146,16 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "QUICK_WINS_HTML": 2000,
             "ROADMAP_90D_HTML": 1800,
             "ROADMAP_12M_HTML": 12000,
-            "RECOMMENDATIONS_HTML": 2500,
+            "RECOMMENDATIONS_HTML": 4000,  # FIX-B4: was 2500, preventing truncation
             "RISKS_HTML": 1800,
             "GAMECHANGER_HTML": 10000,
-            "FOERDERPOTENZIAL_HTML": 2000,
+            "FOERDERPOTENZIAL_HTML": 6000,  # FIX-B5: was 2000, too tight for 300+ words
             "ORG_CHANGE_HTML": 1800,
             "BUSINESS_CASE_HTML": 4000,
             "PILOT_PLAN_HTML": 1800,
             "DATA_READINESS_HTML": 1800,
             "STRATEGIE_GOVERNANCE_HTML": 3000,
-            "UNTERNEHMENSPROFIL_MARKT_HTML": 2500,
+            "UNTERNEHMENSPROFIL_MARKT_HTML": 4000,  # FIX-B5: was 2500
             "MONETARISIERUNG_HTML": 1800,
             "KI_SKILLPLAN_HTML": 1800,
             "TOOLS_EMPFEHLUNGEN_HTML": 3000,
