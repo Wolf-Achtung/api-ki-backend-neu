@@ -1187,12 +1187,22 @@ def normalize_quickwins_to_html(raw: str, strict: bool = False, company_size: st
     }
 
     # STRICT validation - FIX: Never raise, always fallback (Pipeline-Stabilität)
+    # FIX-E3: Bevor Fallback, alternative Item-Zählung via <h4> Tags
     if strict and (item_count < 3 or len(result_html) < 250):
-        log.warning(
-            "[QW-NORMALIZE] ⚠️ insufficient content in STRICT mode "
-            "(items=%d len=%d) - generating fallback instead of raising",
-            item_count, len(result_html)
-        )
+        h4_count = len(re.findall(r'<h4[^>]*>', result_html, re.IGNORECASE))
+        if h4_count >= 3 and len(result_html) > 1000:
+            log.info(
+                "[FIX-E3] QW-NORMALIZE: h4-based count=%d overrides item_count=%d, len=%d - skipping fallback",
+                h4_count, item_count, len(result_html)
+            )
+            item_count = h4_count
+            has_class = True  # Trust the content
+        else:
+            log.warning(
+                "[QW-NORMALIZE] ⚠️ insufficient content in STRICT mode "
+                "(items=%d h4=%d len=%d) - generating fallback instead of raising",
+                item_count, h4_count, len(result_html)
+            )
         # Generate minimal fallback HTML instead of raising
         fallback_html = _generate_minimal_quickwins_fallback(company_size)
         fallback_meta = {
