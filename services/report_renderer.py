@@ -876,22 +876,31 @@ def render(briefing_obj: Any,
         release_strict = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "True")
         qw_cards = html.count('class="quick-win')
         qw_marker = html.count('data-qw-json-rendered="true"')
-        qw_indicator = max(qw_cards, qw_marker)
-        # Extract Quick-Wins text length from rendered HTML
+        # FIX-H4: LLM-HTML hat keine quick-win Klassen - auch h4 Tags zaehlen
         import re as _re
+        _qw_section = _re.search(r'Quick\s*Wins.*?(?=<section|$)', html, _re.DOTALL | _re.IGNORECASE)
+        _qw_area = _qw_section.group(0) if _qw_section else html
+        qw_h4_count = len(_re.findall(r'<h4[^>]*>', _qw_area, _re.IGNORECASE))
+        qw_indicator = max(qw_cards, qw_marker, qw_h4_count)
+        # Extract Quick-Wins text length from rendered HTML
         qw_section_match = _re.search(
             r'class="quick-wins-container"[^>]*>(.*?)</div>\s*</div>',
             html, _re.DOTALL
         )
         qw_text_len = len(qw_section_match.group(1)) if qw_section_match else 0
+        # FIX-H4: Fallback - suche QW section via heading
+        if qw_text_len == 0:
+            _qw_body = _re.search(r'Quick\s*Wins</h2>.*?<div[^>]*class="section-body"[^>]*>(.*?)</section>', html, _re.DOTALL | _re.IGNORECASE)
+            if _qw_body:
+                qw_text_len = len(_qw_body.group(1))
         # Fallback: if no container match, use card count as proxy
         if qw_text_len == 0 and qw_indicator > 0:
             qw_text_len = qw_indicator * 100  # Estimate
 
         qw_non_empty = qw_indicator >= 3 and qw_text_len > 300
         log.info(
-            "[FIX-514][QW] non_empty=%s cards=%d len=%d",
-            str(qw_non_empty).lower(), qw_indicator, qw_text_len
+            "[FIX-H4] QW gate: cards=%d marker=%d h4=%d indicator=%d text_len=%d",
+            qw_cards, qw_marker, qw_h4_count, qw_indicator, qw_text_len
         )
 
         if not qw_non_empty and release_strict:
