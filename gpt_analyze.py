@@ -4039,6 +4039,13 @@ def _enforce_quickwins_no_raw_json(qw_html: str, branche: str, groesse: str) -> 
         log.info("[QW-VALIDATOR] ✅ class=\"quick-win*\" found - PASS (valid structure)")
         return qw_html
 
+    # FIX-G1: PRIORITY 3 - If LLM HTML has >=3 h4 tags and substantial length, it's valid content
+    # LLM often returns well-structured HTML without quick-win CSS classes
+    _h4_count = len(re.findall(r'<h4[^>]*>', qw_html, re.IGNORECASE))
+    if _h4_count >= 3 and html_len > 2000:
+        log.info("[FIX-G1] QW-VALIDATOR: h4-based PASS (h4=%d, len=%d) - accepting LLM HTML", _h4_count, html_len)
+        return qw_html
+
     stripped = qw_html.strip()
 
     # Fix-Batch C2: More robust JSON array detection

@@ -70,7 +70,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "ROADMAP_90D_HTML": 1200,
             "ROADMAP_12M_HTML": 8000,
             "RECOMMENDATIONS_HTML": 1500,
-            "RISKS_HTML": 2500,  # FIX-C4: was 1200
+            "RISKS_HTML": 7000,  # FIX-G2: was 2500, table-heavy content
             "GAMECHANGER_HTML": 1500,
             "FOERDERPOTENZIAL_HTML": 1000,
             "ORG_CHANGE_HTML": 1200,
@@ -158,7 +158,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "ROADMAP_90D_HTML": 1800,
             "ROADMAP_12M_HTML": 12000,
             "RECOMMENDATIONS_HTML": 4000,  # FIX-B4: was 2500, preventing truncation
-            "RISKS_HTML": 4000,  # FIX-C4
+            "RISKS_HTML": 8000,  # FIX-G2: was 4000, table-heavy content
             "GAMECHANGER_HTML": 10000,
             "FOERDERPOTENZIAL_HTML": 6000,  # FIX-B5: was 2000, too tight for 300+ words
             "ORG_CHANGE_HTML": 1800,
@@ -241,7 +241,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "ROADMAP_90D_HTML": 2500,
             "ROADMAP_12M_HTML": 14000,
             "RECOMMENDATIONS_HTML": 3500,
-            "RISKS_HTML": 5000,  # FIX-C4: kmu must be >= team
+            "RISKS_HTML": 10000,  # FIX-G2: was 5000, table-heavy content
             "GAMECHANGER_HTML": 12000,
             "FOERDERPOTENZIAL_HTML": 10000,
             "ORG_CHANGE_HTML": 2000,
