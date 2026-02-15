@@ -2723,6 +2723,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
     "solo": {
         "EXECUTIVE_SUMMARY_HTML": 2000,
         "QUICK_WINS_HTML": 8000,  # FIX-F1: LLM liefert 9K+ HTML
+        "QUICK_WINS_HTML_LEFT": 8000,  # FIX-H3
         "ROADMAP_90D_HTML": 1200,
         "ROADMAP_12M_HTML": 8000,
         "RECOMMENDATIONS_HTML": 1500,
@@ -2812,6 +2813,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
     "team": {
         "EXECUTIVE_SUMMARY_HTML": 3000,
         "QUICK_WINS_HTML": 10000,  # FIX-F1: LLM liefert 9K+ HTML
+        "QUICK_WINS_HTML_LEFT": 10000,  # FIX-H3
         "ROADMAP_90D_HTML": 1800,
         "ROADMAP_12M_HTML": 12000,
         "RECOMMENDATIONS_HTML": 2500,
@@ -2901,6 +2903,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
     "kmu": {
         "EXECUTIVE_SUMMARY_HTML": 4000,
         "QUICK_WINS_HTML": 12000,  # FIX-F1: LLM liefert 9K+ HTML
+        "QUICK_WINS_HTML_LEFT": 12000,  # FIX-H3
         "ROADMAP_90D_HTML": 2500,
         "ROADMAP_12M_HTML": 14000,
         "RECOMMENDATIONS_HTML": 3500,

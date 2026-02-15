@@ -4039,11 +4039,19 @@ def _enforce_quickwins_no_raw_json(qw_html: str, branche: str, groesse: str) -> 
         log.info("[QW-VALIDATOR] ✅ class=\"quick-win*\" found - PASS (valid structure)")
         return qw_html
 
-    # FIX-G1: PRIORITY 3 - If LLM HTML has >=3 h4 tags and substantial length, it's valid content
-    # LLM often returns well-structured HTML without quick-win CSS classes
+    # FIX-G1+H1b: PRIORITY 3 - If LLM HTML has structured items, it's valid content
+    # LLM uses various patterns: <h4>, <strong>1., numbered <li>
     _h4_count = len(re.findall(r'<h4[^>]*>', qw_html, re.IGNORECASE))
-    if _h4_count >= 3 and html_len > 2000:
-        log.info("[FIX-G1] QW-VALIDATOR: h4-based PASS (h4=%d, len=%d) - accepting LLM HTML", _h4_count, html_len)
+    _strong_num = len(re.findall(r'<strong>\s*\d+[\.\):]', qw_html))
+    _li_items = len(re.findall(r'<li[^>]*>[^<]{20,}', qw_html))
+    _best = max(_h4_count, _strong_num, _li_items // 2)
+    if _best >= 3 and html_len > 2000:
+        log.info("[FIX-H1b] QW-VALIDATOR: multi-marker PASS (h4=%d, strong=%d, li=%d, best=%d, len=%d)", 
+                 _h4_count, _strong_num, _li_items, _best, html_len)
+        return qw_html
+    # FIX-H1b: Even with low markers, if substantial HTML (>5000 chars), accept it
+    if html_len > 5000 and ('<p>' in qw_html or '<div' in qw_html):
+        log.info("[FIX-H1b] QW-VALIDATOR: length-based PASS (best=%d, len=%d) - accepting substantial HTML", _best, html_len)
         return qw_html
 
     stripped = qw_html.strip()
@@ -13639,6 +13647,9 @@ def analyze_briefing(
     # Multilingual v1: normalize language from br.lang
     report_lang = normalize_lang(getattr(br, "lang", "de"), default="de")
     strategic_context = build_strategic_context_block(answers, lang=report_lang)
+    # FIX-H2: UTF-8 Doppel-Encoding in strategic_context_block reparieren
+    from services.pipeline_sanitizers import fix_double_encoded_utf8
+    strategic_context = fix_double_encoded_utf8(strategic_context)
     answers["strategic_context_block"] = strategic_context
 
     # === 3.1.4.9: AUTHORITATIVE LANGUAGE from br.lang ===
