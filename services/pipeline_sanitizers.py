@@ -40,6 +40,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 log = logging.getLogger(__name__)
 
+ENTITY_PATTERN = re.compile(r'&(?:#[0-9]+|#x[0-9a-fA-F]+|[a-zA-Z]+);')  # Matches &amp; &#123; &#xAB; etc.
+
+
 def fix_double_encoded_utf8(text: str) -> str:
     """FIX-D3: Repariert doppelt-encodiertes UTF-8.
     Erkennt und repariert Muster wo UTF-8 Bytes als Latin-1 interpretiert wurden.
