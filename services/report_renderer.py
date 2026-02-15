@@ -25,6 +25,7 @@ from services.lang_utils import normalize_lang
 from services.i18n import ui as ui_factory, ui_for_segment
 from services.locale_rewriter import apply_locale_v2
 from services.debug_503d import build_debug_503d_attachments, build_debug_503d_summary, is_debug_render_enabled
+from services.pipeline_sanitizers import fix_double_encoded_utf8
 
 log = logging.getLogger(__name__)
 
@@ -700,6 +701,13 @@ def render(briefing_obj: Any,
         log.info(f"[FIX-503C] QUICK_WINS_HTML_LEFT: len={len(qw_html_left) if qw_html_left else 0}, "
                  f"QUICK_WINS_HTML_RIGHT: len={len(qw_html_right) if qw_html_right else 0}")
 
+    # FIX-F2: UTF-8 Doppel-Encoding in ALLEN ctx-Values reparieren
+    # Mojibake kommt aus Questionnaire-Daten die direkt ins Jinja2-Template gehen
+    for _k, _v in list(ctx.items()):
+        if isinstance(_v, str) and len(_v) > 2:
+            _fixed = fix_double_encoded_utf8(_v)
+            if _fixed != _v:
+                ctx[_k] = _fixed
     html = env.get_template(tpl_name).render(**ctx)
 
     # Save debug HTML for troubleshooting
