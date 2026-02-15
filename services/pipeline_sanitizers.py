@@ -40,40 +40,59 @@ from typing import Any, Dict, List, Optional, Tuple
 
 log = logging.getLogger(__name__)
 
-
-# =============================================================================
-# FIX-528: HTML ENTITY DECODING
-# =============================================================================
-
-# Common HTML entities that should be decoded
-ENTITY_MAP = {
-    '&uuml;': 'ü',
-    '&Uuml;': 'Ü',
-    '&auml;': 'ä',
-    '&Auml;': 'Ä',
-    '&ouml;': 'ö',
-    '&Ouml;': 'Ö',
-    '&szlig;': 'ß',
-    '&bdquo;': '„',
-    '&ldquo;': '"',
-    '&rdquo;': '"',
-    '&lsquo;': ''',
-    '&rsquo;': ''',
-    '&ndash;': '–',
-    '&mdash;': '—',
-    '&euro;': '€',
-    '&nbsp;': ' ',
-    '&hellip;': '…',
-    '&bull;': '•',
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&apos;': "'",
-}
-
-# Pattern to detect HTML entities
-ENTITY_PATTERN = re.compile(r'&([a-zA-Z]{2,8}|#\d{1,6}|#x[0-9a-fA-F]{1,6});')
+def fix_double_encoded_utf8(text: str) -> str:
+    """FIX-D3: Repariert doppelt-encodiertes UTF-8.
+    Erkennt und repariert Muster wo UTF-8 Bytes als Latin-1 interpretiert wurden.
+    Beispiel: \xc3\xa4 (UTF-8 fuer ae) wird als Latin-1 zu \u00c3\u00a4 = two chars.
+    """
+    if not text or not isinstance(text, str):
+        return text
+    # Schnellcheck: Enthaelt der Text das typische \xc3 Prefix?
+    # \xc3 = Latin-1 char 195 = first byte of 2-byte UTF-8 for chars U+00C0..U+00FF
+    CHECK_CHAR = chr(195)  # \xc3 als Latin-1
+    if CHECK_CHAR not in text:
+        # Kein \xc3 -> auch kein double-encoded UTF-8
+        return text
+    try:
+        repaired = text.encode("latin-1").decode("utf-8")
+        if len(repaired) < len(text):
+            log.info(
+                "[FIX-D3][UTF8-REPAIR] Repaired double-encoded UTF-8 (%d -> %d chars)",
+                len(text), len(repaired)
+            )
+            return repaired
+    except (UnicodeDecodeError, UnicodeEncodeError):
+        pass
+    # Fallback: Zeichenweise bekannte Paare ersetzen
+    # Latin-1 Interpretation von UTF-8 Bytes fuer deutsche Umlaute
+    PAIRS = [
+        (chr(195) + chr(164), chr(228)),   # ae
+        (chr(195) + chr(182), chr(246)),   # oe
+        (chr(195) + chr(188), chr(252)),   # ue
+        (chr(195) + chr(132), chr(196)),   # Ae
+        (chr(195) + chr(150), chr(214)),   # Oe
+        (chr(195) + chr(156), chr(220)),   # Ue
+        (chr(195) + chr(159), chr(223)),   # ss (eszett)
+        (chr(195) + chr(169), chr(233)),   # e-acute
+        (chr(195) + chr(168), chr(232)),   # e-grave
+        (chr(195) + chr(167), chr(231)),   # c-cedilla
+        (chr(226) + chr(128) + chr(147), chr(8211)),  # en-dash
+        (chr(226) + chr(128) + chr(148), chr(8212)),  # em-dash
+        (chr(226) + chr(128) + chr(162), chr(8226)),  # bullet
+        (chr(226) + chr(128) + chr(152), chr(8216)),  # left single quote
+        (chr(226) + chr(128) + chr(153), chr(8217)),  # right single quote
+        (chr(226) + chr(128) + chr(156), chr(8220)),  # left double quote
+        (chr(226) + chr(128) + chr(157), chr(8221)),  # right double quote
+    ]
+    result = text
+    count = 0
+    for bad, good in PAIRS:
+        if bad in result:
+            result = result.replace(bad, good)
+            count += 1
+    if count > 0:
+        log.info("[FIX-D3][UTF8-FALLBACK] Replaced %d double-encoded patterns", count)
+    return result
 
 
 def decode_html_entities(text: str, preserve_html_structure: bool = True) -> str:
@@ -495,9 +514,10 @@ def sanitize_all_sections(
         if not (key.endswith('_HTML') or key.endswith('_html')):
             continue
 
-        # Skip very short content
         if len(value) < 50:
             continue
+        # FIX-D3: UTF-8 Doppel-Encoding reparieren
+        value = fix_double_encoded_utf8(value)
 
         result = apply_post_llm_sanitization(
             value,

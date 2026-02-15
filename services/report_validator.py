@@ -1367,6 +1367,18 @@ class ReportValidator:
             words = text_only.split()
             actual_word_count = len(words)
 
+            # FIX-D1b: Table-heavy sections (Risk Matrix, Vendor Audit) haben
+            # wenig Text-Words aber viel sinnvollen Content in HTML-Tabellen.
+            # Für diese Sections: char_count/8 als Wort-Approximation nutzen.
+            if "<table" in content.lower() and actual_word_count < 200:
+                char_based_estimate = len(text_only) // 8
+                if char_based_estimate > actual_word_count:
+                    log.info(
+                        "[FIX-D1b] %s: table-heavy correction %d words -> %d (char-based)",
+                        section_key, actual_word_count, char_based_estimate
+                    )
+                    actual_word_count = char_based_estimate
+
             # SIZE-AWARE Mindestlänge
             min_words = self._get_min_words_for_section(logical_name)
 
