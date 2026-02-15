@@ -66,7 +66,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
 
         "section_budgets": {
             "EXECUTIVE_SUMMARY_HTML": 2000,
-            "QUICK_WINS_HTML": 1500,
+            "QUICK_WINS_HTML": 8000,  # FIX-G1b: LLM liefert 9K+ HTML
             "ROADMAP_90D_HTML": 1200,
             "ROADMAP_12M_HTML": 8000,
             "RECOMMENDATIONS_HTML": 1500,
@@ -154,7 +154,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
 
         "section_budgets": {
             "EXECUTIVE_SUMMARY_HTML": 3000,
-            "QUICK_WINS_HTML": 2000,
+            "QUICK_WINS_HTML": 10000,  # FIX-G1b: LLM liefert 9K+ HTML
             "ROADMAP_90D_HTML": 1800,
             "ROADMAP_12M_HTML": 12000,
             "RECOMMENDATIONS_HTML": 4000,  # FIX-B4: was 2500, preventing truncation
@@ -237,7 +237,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
 
         "section_budgets": {
             "EXECUTIVE_SUMMARY_HTML": 4000,
-            "QUICK_WINS_HTML": 2500,
+            "QUICK_WINS_HTML": 12000,  # FIX-G1b: LLM liefert 9K+ HTML
             "ROADMAP_90D_HTML": 2500,
             "ROADMAP_12M_HTML": 14000,
             "RECOMMENDATIONS_HTML": 3500,
