@@ -10889,6 +10889,8 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         "ai_policy_mini": "ai_policy_mini",
         "kickoff_vorlage": "kickoff_vorlage",
         "prompt_framework": "prompt_framework",
+        # FIX-C2: branch_deep_dive was missing
+        "branch_deep_dive": "branch_deep_dive",
     }
     
     prompt_key = prompt_map.get(section_name)

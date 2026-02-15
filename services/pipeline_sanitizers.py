@@ -507,7 +507,11 @@ def sanitize_all_sections(
             is_html=True,
         )
 
-        sanitized[key] = result.content
+        # FIX-C1: Strip context block leaks
+        cleaned, c1_rem = strip_context_block_leaks(result.content, key)
+        if c1_rem > 0:
+            stats['context_blocks_stripped'] = stats.get('context_blocks_stripped', 0) + c1_rem
+        sanitized[key] = cleaned
         stats['entities_decoded'] += result.entities_decoded
         stats['sentences_fixed'] += result.sentences_fixed
         stats['sections_processed'] += 1
@@ -521,6 +525,69 @@ def sanitize_all_sections(
         )
 
     return sanitized, stats
+
+
+
+
+# =============================================================================
+# FIX-C1: STRIP CONTEXT BLOCK LABELS FROM LLM OUTPUT
+# =============================================================================
+
+_CONTEXT_BLOCK_RE = re.compile(
+    r'<div[^>]*class="context-block[^"]*"[^>]*>.*?</div>',
+    re.DOTALL | re.IGNORECASE,
+)
+
+_CONTEXT_LABEL_PATTERNS = [
+    r'<p[^>]*>\s*<strong>\s*(?:Typische (?:Tools im Einsatz|Workflows)|'
+    r'H\xe4ufigste Pain Points|Charakteristika|Fokus-Priorit\xe4ten|'
+    r'In Ihrer aktuellen Gr\xf6\xdfe nicht sinnvoll|'
+    r'Branchen-Context|Gr\xf6\xdfen-Context|Mitarbeiter|'
+    r'Budget (?:CAPEX|OPEX) max|'
+    r'Kernleistung \(Hauptleistung\)|'
+    r'Typical (?:Tools in Use|Workflows)|Common Pain Points|'
+    r'Characteristics|Focus Priorities|'
+    r'Not recommended for your current size|'
+    r'Industry Context|Size Context|Core Service \(Main Offering\)'
+    r')\s*:?\s*</strong>\s*</p>',
+    r'<p[^>]*>\s*(?:Typische Tools im Einsatz|Charakteristika|'
+    r'Fokus-Priorit\xe4ten|In Ihrer aktuellen Gr\xf6\xdfe nicht sinnvoll)\s*:?\s*</p>',
+    r'<ul[^>]*>\s*<li>\s*\((?:Keine Angaben|No data available)\)\s*</li>\s*</ul>',
+]
+
+_CONTEXT_LABEL_RES = [re.compile(p, re.IGNORECASE | re.DOTALL) for p in _CONTEXT_LABEL_PATTERNS]
+
+_CONTEXT_SECTION_RE = re.compile(
+    r'<(?:div|section)[^>]*(?:context-block|branch-context|size-context)[^>]*>'
+    r'.*?</(?:div|section)>',
+    re.DOTALL | re.IGNORECASE,
+)
+
+_CONTEXT_HR_RE = re.compile(
+    r'<hr[^>]*style="[^"]*border[^"]*#cbd5e1[^"]*"[^>]*/?>',
+    re.IGNORECASE,
+)
+
+
+def strip_context_block_leaks(html: str, section_name: str = "") -> tuple:
+    """FIX-C1: Remove context block labels leaked from prompts into LLM output."""
+    if not html or len(html) < 100:
+        return html, 0
+    removals = 0
+    result = html
+    for _ in _CONTEXT_BLOCK_RE.finditer(result): removals += 1
+    result = _CONTEXT_BLOCK_RE.sub("", result)
+    for _ in _CONTEXT_SECTION_RE.finditer(result): removals += 1
+    result = _CONTEXT_SECTION_RE.sub("", result)
+    for pr in _CONTEXT_LABEL_RES:
+        for _ in pr.finditer(result): removals += 1
+        result = pr.sub("", result)
+    result = _CONTEXT_HR_RE.sub("", result)
+    result = re.sub(r'<(?:div|section)[^>]*>\s*</(?:div|section)>', "", result)
+    result = re.sub(r'\n\s*\n\s*\n', "\n\n", result)
+    if removals > 0:
+        log.info("[FIX-C1][CONTEXT-STRIP] section=%s removed=%d", section_name, removals)
+    return result, removals
 
 
 # =============================================================================

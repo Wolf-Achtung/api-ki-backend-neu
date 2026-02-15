@@ -890,6 +890,41 @@ def _determine_size_label(briefing: Optional[Dict[str, Any]]) -> str:
         return "team"
 
 
+
+
+# FIX-C5: Known vendor metadata for questionnaire-based extraction
+_KNOWN_VENDOR_META = {
+    "chatgpt": {"name": "ChatGPT (OpenAI)", "category": "LLM", "host": "US", "gdpr": "DPA available", "vendor_risk": 3, "eu_hosting": False},
+    "openai": {"name": "OpenAI", "category": "LLM API", "host": "US", "gdpr": "DPA available", "vendor_risk": 3, "eu_hosting": False},
+    "claude": {"name": "Claude (Anthropic)", "category": "LLM", "host": "US", "gdpr": "DPA available", "vendor_risk": 3, "eu_hosting": False},
+    "anthropic": {"name": "Anthropic", "category": "LLM API", "host": "US", "gdpr": "DPA available", "vendor_risk": 3, "eu_hosting": False},
+    "perplexity": {"name": "Perplexity AI", "category": "Search AI", "host": "US", "gdpr": "Limited", "vendor_risk": 4, "eu_hosting": False},
+    "tavily": {"name": "Tavily", "category": "Search API", "host": "US", "gdpr": "Limited", "vendor_risk": 4, "eu_hosting": False},
+    "gemini": {"name": "Gemini (Google)", "category": "LLM", "host": "US/EU", "gdpr": "DPA available", "vendor_risk": 3, "eu_hosting": False},
+    "copilot": {"name": "Microsoft Copilot", "category": "LLM", "host": "EU available", "gdpr": "DPA + EU Data Boundary", "vendor_risk": 2, "eu_hosting": True},
+    "midjourney": {"name": "Midjourney", "category": "Image Gen", "host": "US", "gdpr": "Limited", "vendor_risk": 4, "eu_hosting": False},
+    "deepl": {"name": "DeepL", "category": "Translation", "host": "DE", "gdpr": "Full DSGVO", "vendor_risk": 1, "eu_hosting": True},
+    "notion": {"name": "Notion AI", "category": "Productivity", "host": "US", "gdpr": "DPA available", "vendor_risk": 3, "eu_hosting": False},
+    "huggingface": {"name": "Hugging Face", "category": "ML Platform", "host": "US/EU", "gdpr": "Self-hosted option", "vendor_risk": 2, "eu_hosting": True},
+}
+
+
+def _extract_vendors_from_briefing(briefing: dict) -> list:
+    """FIX-C5: Extract vendor info from questionnaire answers as fallback."""
+    vendors = []
+    seen = set()
+    for source in [briefing.get("VORHANDENE_TOOLS_LABELS",""), briefing.get("vorhandene_tools",""), briefing.get("ki_projekte","")]:
+        if not source: continue
+        items = source if isinstance(source, list) else [s.strip() for s in str(source).replace(";",",").split(",")]
+        for item in items:
+            il = item.strip().lower()
+            if not il: continue
+            for key, meta in _KNOWN_VENDOR_META.items():
+                if key in il and meta["name"] not in seen:
+                    vendors.append(dict(meta)); seen.add(meta["name"])
+    return vendors
+
+
 def _extract_vendors_from_tools(
     tools_data: Any,
 ) -> List[Dict[str, Any]]:
@@ -1169,6 +1204,12 @@ def generate_vendor_audit_report(
 
     # Extract vendors from tools data
     vendors = _extract_vendors_from_tools(tools_data)
+
+    # FIX-C5: Fallback from questionnaire
+    if not vendors and briefing:
+        vendors = _extract_vendors_from_briefing(briefing)
+        if vendors:
+            log.info("[G35][FIX-C5] Extracted %d vendors from questionnaire", len(vendors))
 
     # Generate audit entries
     entries: List[VendorAuditEntry] = []

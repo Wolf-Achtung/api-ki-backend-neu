@@ -70,7 +70,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "ROADMAP_90D_HTML": 1200,
             "ROADMAP_12M_HTML": 8000,
             "RECOMMENDATIONS_HTML": 1500,
-            "RISKS_HTML": 1200,
+            "RISKS_HTML": 2500,  # FIX-C4
             "GAMECHANGER_HTML": 1500,
             "FOERDERPOTENZIAL_HTML": 1000,
             "ORG_CHANGE_HTML": 1200,
@@ -83,6 +83,17 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "KI_SKILLPLAN_HTML": 1200,
             "TOOLS_EMPFEHLUNGEN_HTML": 1200,
             "TECHNOLOGIE_PROZESSE_HTML": 2000,
+            # FIX-C3: Sprint 2025 Phase 2 sections
+            "ROI_TRACKING_HTML": 2000,
+            "AI_POLICY_MINI_HTML": 2500,
+            "KICKOFF_VORLAGE_HTML": 2500,
+            "PROMPT_FRAMEWORK_HTML": 1500,
+            "BRANCH_DEEP_DIVE_HTML": 3000,
+            "TRANSPARENCY_BOX_HTML": 1500,
+            "KI_AKTIVITAETEN_ZIELE_HTML": 2000,
+            "WETTBEWERB_BENCHMARK_HTML": 2000,
+            "REIFEGRAD_SOWHAT_HTML": 1500,
+            "AI_ACT_SUMMARY_HTML": 2000,
             "_default": 1000,
         },
 
@@ -147,7 +158,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "ROADMAP_90D_HTML": 1800,
             "ROADMAP_12M_HTML": 12000,
             "RECOMMENDATIONS_HTML": 4000,  # FIX-B4: was 2500, preventing truncation
-            "RISKS_HTML": 1800,
+            "RISKS_HTML": 4000,  # FIX-C4
             "GAMECHANGER_HTML": 10000,
             "FOERDERPOTENZIAL_HTML": 6000,  # FIX-B5: was 2000, too tight for 300+ words
             "ORG_CHANGE_HTML": 1800,
@@ -160,6 +171,17 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "KI_SKILLPLAN_HTML": 1800,
             "TOOLS_EMPFEHLUNGEN_HTML": 3000,
             "TECHNOLOGIE_PROZESSE_HTML": 3000,
+            # FIX-C3: Sprint 2025 Phase 2 sections
+            "ROI_TRACKING_HTML": 3000,
+            "AI_POLICY_MINI_HTML": 3500,
+            "KICKOFF_VORLAGE_HTML": 5000,
+            "PROMPT_FRAMEWORK_HTML": 2000,
+            "BRANCH_DEEP_DIVE_HTML": 6000,
+            "TRANSPARENCY_BOX_HTML": 2000,
+            "KI_AKTIVITAETEN_ZIELE_HTML": 3000,
+            "WETTBEWERB_BENCHMARK_HTML": 3000,
+            "REIFEGRAD_SOWHAT_HTML": 2000,
+            "AI_ACT_SUMMARY_HTML": 3000,
             "_default": 1500,
         },
 

@@ -339,12 +339,8 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
     Returns:
         sections: Bereinigtes Dict
     """
-    # Only apply for solo
-    if not company_size or company_size.lower() != "solo":
-        return sections
-
-    total_replacements = 0
-    sections_touched = 0
+    # FIX-C6: Apply persona replacements for solo AND team
+    size_lower = (company_size or "").lower()
 
     # Sections to process - Fix-Batch C3: Expanded list to cover all content sections
     # FIX-526: Added NEXT_ACTIONS_HTML, PILOT_PLAN_HTML
@@ -362,6 +358,35 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
         "TECHNOLOGIE_PROZESSE_HTML", "WETTBEWERB_BENCHMARK_HTML", "UNTERNEHMENSPROFIL_MARKT_HTML",
         "NEXT_ACTIONS_HTML", "PILOT_PLAN_HTML",
     ]
+
+    # Team-specific replacements
+    if size_lower == "team":
+        TEAM_REPLACEMENTS = [
+            (r"\bGovernance-Board\b", "KI-Verantwortlichen"),
+            (r"\bGovernance Board\b", "KI-Verantwortlichen"),
+            (r"\bEnterprise-Architektur\b", "IT-Struktur"),
+            (r"\bKonzernstruktur\b", "Unternehmensstruktur"),
+            (r"\bRollout-Plan\b", "Umsetzungsplan"),
+            (r"\bStakeholder-Analyse\b", "Beteiligte"),
+        ]
+        team_total = 0
+        for sk in check_sections:
+            val = sections.get(sk)
+            if not val or not isinstance(val, str): continue
+            mod = val
+            for pat, rep in TEAM_REPLACEMENTS:
+                ms = len(re.findall(pat, mod))
+                if ms > 0: mod = re.sub(pat, rep, mod); team_total += ms
+            if mod != val: sections[sk] = mod
+        if team_total > 0:
+            log.info("[FIX-C6] Team persona cleanup: %d replacements", team_total)
+        return sections
+
+    if size_lower != "solo":
+        return sections
+
+    total_replacements = 0
+    sections_touched = 0
 
     for section_key in check_sections:
         content = sections.get(section_key)
