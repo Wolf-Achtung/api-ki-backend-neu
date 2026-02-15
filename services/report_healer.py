@@ -2755,7 +2755,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "ROADMAP_90D_HTML": 1800,
         "ROADMAP_12M_HTML": 12000,
         "RECOMMENDATIONS_HTML": 2500,
-        "RISKS_HTML": 1800,
+        "RISKS_HTML": 4000,  # FIX-C4
         "GAMECHANGER_HTML": 10000,
         "FOERDERPOTENZIAL_HTML": 2000,
         "ORG_CHANGE_HTML": 1800,
