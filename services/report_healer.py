@@ -3024,12 +3024,18 @@ def apply_segment_budget(
             result[section_name] = html
             continue
 
-        # FIX-D1: Hierarchie: SEGMENT_BUDGETS > SIZE_PROFILES > default
+        # FIX-D1+E1: Hierarchie: exact match > uppercase_HTML > SIZE_PROFILES > default
         budget = budgets.get(section_name)
+        if budget is None:
+            # E1: lowercase keys -> UPPERCASE_HTML Budget nutzen
+            upper_key = section_name.upper()
+            if not upper_key.endswith("_HTML"):
+                upper_key = upper_key + "_HTML"
+            budget = budgets.get(upper_key)
         if budget is None:
             # Fallback: SIZE_PROFILES als Single Source of Truth
             sp = SIZE_PROFILES.get(segment, {})
-            budget = sp.get(section_name, sp.get(section_name.lower().replace("_html", ""), default_budget))
+            budget = sp.get(section_name, sp.get(section_name.upper() + "_HTML", default_budget))
         current_len = len(html)
 
         if current_len <= budget:

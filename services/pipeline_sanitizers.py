@@ -513,14 +513,19 @@ def sanitize_all_sections(
         if not isinstance(value, str):
             continue
 
-        # Only process HTML sections
+        # FIX-E2: UTF-8 Repair auf ALLE String-Values (Mojibake auch in LABEL Keys)
+        repaired = fix_double_encoded_utf8(value)
+        if repaired != value:
+            value = repaired
+            sanitized[key] = value
+            log.info("[FIX-E2] UTF-8 repaired non-HTML key: %s", key)
+
+        # Only process HTML sections for further sanitization
         if not (key.endswith('_HTML') or key.endswith('_html')):
             continue
 
         if len(value) < 50:
             continue
-        # FIX-D3: UTF-8 Doppel-Encoding reparieren
-        value = fix_double_encoded_utf8(value)
 
         result = apply_post_llm_sanitization(
             value,
