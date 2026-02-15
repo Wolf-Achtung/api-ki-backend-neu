@@ -160,6 +160,16 @@ def final_sanitize(sections: dict) -> dict:
         r'Erfolgskriterien:\s*KPIs,\s*Akzeptanz[^<]*',
         r'\[IHR NAME\]',
         r'\[DATUM\]',
+        # FIX-B7: Additional prompt-input-label patterns
+        r'<li>\s*Ihr Ziel[:\s]*</li>',
+        r'<li>\s*Ihre Datenlage[:\s]*</li>',
+        r'<li>\s*Ihre Branche[:\s]*</li>',
+        r'<li>\s*Ihr Unternehmen[:\s]*</li>',
+        r'<li>\s*Ihre größten Herausforderungen[:\s]*</li>',
+        r'<p>\s*Bitte beschreibe[^<]*</p>',
+        r'<p>\s*Bitte nennen Sie[^<]*</p>',
+        r'Beispiel-KPI[^<]{0,50}',
+        r'Beispieltext[^<]{0,50}',
     ]
     for key in list(sections.keys()):
         val = sections.get(key)

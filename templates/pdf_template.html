@@ -7000,6 +7000,27 @@
                 </div>
                 {% endif %}
 
+                <!-- ADDED FIX-B3: 12-Monats-Roadmap -->
+                {% if ROADMAP_12M_HTML and ROADMAP_12M_HTML|trim and '<' in ROADMAP_12M_HTML %}
+                <div class="page-break"></div>
+                <div class="section chapter roadmap-12m-section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-kicker">{{ ui("roadmap_12m_kicker", "Strategische Planung") }}</span>
+                            <br/>
+                            <h2>{{ ui("roadmap_12m_title", "12-Monats-Roadmap") }}</h2>
+                        </div>
+                        <span class="section-pill">
+                            <span class="pill-dot"></span>
+                            Langfristige KI-Strategie
+                        </span>
+                    </div>
+                    <div class="section-body">
+                        {{ ROADMAP_12M_HTML|safe }}
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- MOVED: Gamechanger Decision (Detail) -->
                 {% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim and '<' in GAMECHANGER_DECISION_HTML %}
                 <div class="section chapter gamechanger-decision-section">
@@ -7487,7 +7508,7 @@
                         </div>
 
                         <!-- Dynamischer Roadmap-Content -->
-                        {{ROADMAP_HTML}}
+                        {{ROADMAP_HTML|safe}}
                     </div>
                 </section>
                 <!-- BUSINESS CASE DETAIL -->
@@ -7516,12 +7537,12 @@
                 {% endif %}
                 {% if GAMECHANGER_HTML and GAMECHANGER_HTML|trim and '<' in GAMECHANGER_HTML %}
                 <section class="chapter">
-                    {{GAMECHANGER_HTML}}
+                    {{GAMECHANGER_HTML|safe}}
                 </section>
                 {% endif %}
                 {% if RECOMMENDATIONS_HTML and RECOMMENDATIONS_HTML|trim and '<' in RECOMMENDATIONS_HTML %}
                 <section class="chapter">
-                    {{RECOMMENDATIONS_HTML}}
+                    {{RECOMMENDATIONS_HTML|safe}}
                 </section>
                 {% endif %}
                 <!-- POINT 3: FUNDING TRUST BLOCK WITH EU BADGE -->
