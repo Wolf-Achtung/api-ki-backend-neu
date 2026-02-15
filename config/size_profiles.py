@@ -70,7 +70,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "ROADMAP_90D_HTML": 1200,
             "ROADMAP_12M_HTML": 8000,
             "RECOMMENDATIONS_HTML": 1500,
-            "RISKS_HTML": 2500,  # FIX-C4
+            "RISKS_HTML": 2500,  # FIX-C4: was 1200
             "GAMECHANGER_HTML": 1500,
             "FOERDERPOTENZIAL_HTML": 1000,
             "ORG_CHANGE_HTML": 1200,
@@ -241,7 +241,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "ROADMAP_90D_HTML": 2500,
             "ROADMAP_12M_HTML": 14000,
             "RECOMMENDATIONS_HTML": 3500,
-            "RISKS_HTML": 2500,
+            "RISKS_HTML": 5000,  # FIX-C4: kmu must be >= team
             "GAMECHANGER_HTML": 12000,
             "FOERDERPOTENZIAL_HTML": 10000,
             "ORG_CHANGE_HTML": 2000,
