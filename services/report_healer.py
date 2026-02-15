@@ -2722,11 +2722,11 @@ def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
 SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
     "solo": {
         "EXECUTIVE_SUMMARY_HTML": 2000,
-        "QUICK_WINS_HTML": 1500,
+        "QUICK_WINS_HTML": 8000,  # FIX-F1: LLM liefert 9K+ HTML
         "ROADMAP_90D_HTML": 1200,
         "ROADMAP_12M_HTML": 8000,
         "RECOMMENDATIONS_HTML": 1500,
-        "RISKS_HTML": 1200,
+        "RISKS_HTML": 7000,  # FIX-F3
         "GAMECHANGER_HTML": 1500,
         "FOERDERPOTENZIAL_HTML": 1000,
         "ORG_CHANGE_HTML": 1200,
@@ -2811,11 +2811,11 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
     },
     "team": {
         "EXECUTIVE_SUMMARY_HTML": 3000,
-        "QUICK_WINS_HTML": 2000,
+        "QUICK_WINS_HTML": 10000,  # FIX-F1: LLM liefert 9K+ HTML
         "ROADMAP_90D_HTML": 1800,
         "ROADMAP_12M_HTML": 12000,
         "RECOMMENDATIONS_HTML": 2500,
-        "RISKS_HTML": 4000,  # FIX-C4
+        "RISKS_HTML": 8000,  # FIX-F3
         "GAMECHANGER_HTML": 10000,
         "FOERDERPOTENZIAL_HTML": 2000,
         "ORG_CHANGE_HTML": 1800,
@@ -2900,11 +2900,11 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
     },
     "kmu": {
         "EXECUTIVE_SUMMARY_HTML": 4000,
-        "QUICK_WINS_HTML": 2500,
+        "QUICK_WINS_HTML": 12000,  # FIX-F1: LLM liefert 9K+ HTML
         "ROADMAP_90D_HTML": 2500,
         "ROADMAP_12M_HTML": 14000,
         "RECOMMENDATIONS_HTML": 3500,
-        "RISKS_HTML": 2500,
+        "RISKS_HTML": 10000,  # FIX-F3
         "GAMECHANGER_HTML": 12000,
         "FOERDERPOTENZIAL_HTML": 10000,
         "ORG_CHANGE_HTML": 2000,
