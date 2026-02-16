@@ -11836,7 +11836,7 @@ def _regenerate_section_strict(
         response = _call_openai(
             prompt=final_prompt,
             temperature=llm_params.get("temperature", 0.7),
-            max_tokens=llm_params.get("max_tokens", 2000),
+            max_tokens=llm_params.get("max_tokens", 4000),  # J9: raised from 2000
             section=section_name,
         )
 
@@ -12667,7 +12667,7 @@ ERWEITERUNGSANFORDERUNGEN:
                         prompt=_r12m_full_prompt,
                         system_prompt=_r12m_sys,
                         temperature=0.4,  # Lower for more consistent output
-                        max_tokens=min(_r12m_params.get("max_tokens", 2500), 3000),
+                        max_tokens=min(_r12m_params.get("max_tokens", 4000), 5000),  # J9: raised from 2500/3000
                         model=_r12m_params.get("model", "gpt-4o-mini"),
                     )
 
