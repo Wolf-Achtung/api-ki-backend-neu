@@ -886,7 +886,7 @@ def render(briefing_obj: Any,
         qw_marker = html.count('data-qw-json-rendered="true"')
         # FIX-H4: LLM-HTML hat keine quick-win Klassen - auch h4 Tags zaehlen
         import re as _re
-        _qw_section = _re.search(r'Quick\s*Wins.*?(?=<section|$)', html, _re.DOTALL | _re.IGNORECASE)
+        _qw_section = _re.search(r'Quick\s*Wins</h2>.*?(?=<section\s+class="section\s+chapter"|$)', html, _re.DOTALL | _re.IGNORECASE)
         _qw_area = _qw_section.group(0) if _qw_section else html
         qw_h4_count = len(_re.findall(r'<h4[^>]*>', _qw_area, _re.IGNORECASE))
         qw_indicator = max(qw_cards, qw_marker, qw_h4_count)
@@ -905,7 +905,8 @@ def render(briefing_obj: Any,
         if qw_text_len == 0 and qw_indicator > 0:
             qw_text_len = qw_indicator * 100  # Estimate
 
-        qw_non_empty = qw_indicator >= 3 and qw_text_len > 300
+        # FIX-J6: Also pass if substantial text exists (LLM HTML has no quick-win classes)
+        qw_non_empty = (qw_indicator >= 3 and qw_text_len > 300) or qw_text_len > 2000
         log.info(
             "[FIX-H4] QW gate: cards=%d marker=%d h4=%d indicator=%d text_len=%d",
             qw_cards, qw_marker, qw_h4_count, qw_indicator, qw_text_len
