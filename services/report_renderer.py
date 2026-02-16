@@ -646,6 +646,21 @@ def render(briefing_obj: Any,
     # [FINAL-SANITIZER] Last-pass fixes BEFORE Markup wrapping
     # CRITICAL FIX-B1B2: final_sanitize() must run BEFORE Markup() wrapping,
     # because string operations in sanitizer destroy Markup objects → HTML gets escaped
+    # -- M8: Content gate — hide sections with <30 words --
+    _M8_GATE_SECTIONS = [
+        'KICKOFF_VORLAGE_HTML',
+        'NINETY_DAY_PLAN_HTML',
+    ]
+    for _m8_key in _M8_GATE_SECTIONS:
+        _m8_val = sections.get(_m8_key, '')
+        if _m8_val and isinstance(_m8_val, str):
+            import re as _m8_re
+            _m8_text = _m8_re.sub(r'<[^>]+>', '', _m8_val)
+            _m8_wc = len(_m8_text.split())
+            if _m8_wc < 30:
+                log.warning("[FIX-M8] Section %s has only %d words — hidden", _m8_key, _m8_wc)
+                sections[_m8_key] = ''
+
     sections = final_sanitize(sections)
 
     # Mark HTML sections as safe (prevent escaping) — AFTER all sanitization!
