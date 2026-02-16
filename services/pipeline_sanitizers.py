@@ -566,6 +566,83 @@ def sanitize_all_sections(
     return sanitized, stats
 
 
+# =============================================================================
+# FIX-I1: STRIP VARIABLE NAME LEAKS FROM LLM OUTPUT
+# =============================================================================
+_VARIABLE_NAME_LEAK_PATTERNS = [
+    re.compile(r'<h4[^>]*>\s*quick_wins\s*</h4>', re.IGNORECASE),
+    re.compile(r'<h3[^>]*>\s*quick_wins\s*</h3>', re.IGNORECASE),
+    re.compile(r'<p[^>]*>\s*quick_wins\s*</p>', re.IGNORECASE),
+    re.compile(r'<strong>\s*quick_wins\s*</strong>', re.IGNORECASE),
+    re.compile(r'<h4[^>]*>\s*(?:risks_html|RISKS_HTML|executive_summary|roadmap_12m)\s*</h4>', re.IGNORECASE),
+    re.compile(r'<h3[^>]*>\s*(?:risks_html|RISKS_HTML|executive_summary|roadmap_12m)\s*</h3>', re.IGNORECASE),
+]
+
+_GRAMMAR_FIX_PATTERNS = [
+    (re.compile(r'Kleines\s+Kapazit[äa]t', re.IGNORECASE), 'Kleines Team'),
+    (re.compile(r'Kleine\s+Kapazit[äa]t', re.IGNORECASE), 'Kleine Kapazität'),
+]
+
+
+def strip_variable_name_leaks(html_content: str, section_name: str = "") -> tuple:
+    """FIX-I1: Remove variable name leaks from LLM output."""
+    if not html_content or len(html_content) < 50:
+        return html_content, 0
+    result = html_content
+    removals = 0
+    for pattern in _VARIABLE_NAME_LEAK_PATTERNS:
+        matches = pattern.findall(result)
+        if matches:
+            removals += len(matches)
+            result = pattern.sub('', result)
+    for pattern, replacement in _GRAMMAR_FIX_PATTERNS:
+        matches = pattern.findall(result)
+        if matches:
+            removals += len(matches)
+            result = pattern.sub(replacement, result)
+    if removals > 0:
+        result = re.sub(r'\n\s*\n\s*\n', '\n\n', result)
+        log.info("[FIX-I1] Stripped %d variable name leaks from section=%s", removals, section_name)
+    return result, removals
+
+
+# =============================================================================
+# FIX-I4: STRIP REDUNDANT CONTENT BLOCKS
+# =============================================================================
+def strip_redundant_blocks(html: str, section_name: str = "") -> tuple:
+    """FIX-I4: Detect and remove duplicate content blocks in HTML."""
+    if not html or len(html) < 500:
+        return html, 0
+    ul_pattern = re.compile(r'(<ul[^>]*>.*?</ul>)', re.DOTALL | re.IGNORECASE)
+    ul_blocks = ul_pattern.findall(html)
+    if not ul_blocks:
+        return html, 0
+    from collections import Counter
+    normalized_blocks = [re.sub(r'\s+', ' ', b.strip()) for b in ul_blocks]
+    block_counts = Counter(normalized_blocks)
+    result = html
+    removals = 0
+    for block_norm, count in block_counts.items():
+        if count <= 1 or len(block_norm) < 100:
+            continue
+        for original_block in ul_blocks:
+            if re.sub(r'\s+', ' ', original_block.strip()) == block_norm:
+                first_pos = result.find(original_block)
+                if first_pos >= 0:
+                    after_first = first_pos + len(original_block)
+                    rest = result[after_first:]
+                    removed_in_rest = rest.count(original_block)
+                    if removed_in_rest > 0:
+                        rest = rest.replace(original_block, '', removed_in_rest)
+                        result = result[:after_first] + rest
+                        removals += removed_in_rest
+                break
+    if removals > 0:
+        log.info("[FIX-I4] Stripped %d redundant blocks from section=%s", removals, section_name)
+    return result, removals
+
+
+
 
 
 # =============================================================================
