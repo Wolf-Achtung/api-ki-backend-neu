@@ -7490,8 +7490,8 @@ def _generate_hero_page(
         reifegrad: Maturity level description
         potential: Potential score improvement points
     """
-    # Truncate hauptleistung - use smart truncation at word boundary
-    hl_truncated = _smart_truncate(hauptleistung, 120, '...') if hauptleistung else ""
+    # FIX-I2: Increased limit from 120 to 250 to prevent visible truncation
+    hl_truncated = _smart_truncate(hauptleistung, 250, '...') if hauptleistung else ""
 
     # Generate Score SVG
     score_svg = _generate_score_svg(score, rating_text)

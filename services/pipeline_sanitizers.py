@@ -539,6 +539,17 @@ def sanitize_all_sections(
         cleaned, c1_rem = strip_context_block_leaks(result.content, key)
         if c1_rem > 0:
             stats['context_blocks_stripped'] = stats.get('context_blocks_stripped', 0) + c1_rem
+
+        # FIX-I1/I7: Strip variable name leaks and grammar fixes
+        cleaned, i1_rem = strip_variable_name_leaks(cleaned, key)
+        if i1_rem > 0:
+            stats['variable_leaks_stripped'] = stats.get('variable_leaks_stripped', 0) + i1_rem
+
+        # FIX-I4: Strip redundant content blocks
+        cleaned, i4_rem = strip_redundant_blocks(cleaned, key)
+        if i4_rem > 0:
+            stats['redundant_blocks_stripped'] = stats.get('redundant_blocks_stripped', 0) + i4_rem
+
         sanitized[key] = cleaned
         stats['entities_decoded'] += result.entities_decoded
         stats['sentences_fixed'] += result.sentences_fixed
