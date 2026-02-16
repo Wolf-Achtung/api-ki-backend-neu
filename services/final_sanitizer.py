@@ -210,7 +210,7 @@ def final_sanitize(sections: dict) -> dict:
             # Erst Verdopplungen fixen
             for key in list(sections.keys()):
                 val = sections.get(key)
-                if not isinstance(val, str) or key in ('hauptleistung', 'HAUPTLEISTUNG'):
+                if not isinstance(val, str) or key in ('hauptleistung', 'HAUPTLEISTUNG', 'REPORT_SUBTITLE', 'HAUPTLEISTUNG_SHORT'):
                     continue
                 doubled = hl + '. ' + hl
                 if doubled in val:
@@ -226,7 +226,7 @@ def final_sanitize(sections: dict) -> dict:
             total = 0
             for key in list(sections.keys()):
                 val = sections.get(key)
-                if not isinstance(val, str) or key.startswith('_') or key in ('hauptleistung', 'HAUPTLEISTUNG'):
+                if not isinstance(val, str) or key.startswith('_') or key in ('hauptleistung', 'HAUPTLEISTUNG', 'REPORT_SUBTITLE', 'HAUPTLEISTUNG_SHORT'):
                     continue
                 count = val.count(hl_needle)
                 if count > 0:
