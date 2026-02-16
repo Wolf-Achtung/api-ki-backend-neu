@@ -221,9 +221,7 @@ class ReportValidator:
         r"\[Feature/System \d+",
         r"\[Kompletter Meilenstein",
         r"\[Konkrete Zahlen\]",
-        r"\[X\]",
-        r"\[Y\]",
-        r"\[Z\]",
+        # [X], [Y], [Z] removed (J10) — too ambiguous, LLMs use for checkboxes
     ]
 
     # Phrasen, die klar auf Template- oder Platzhaltertexte hindeuten
