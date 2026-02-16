@@ -1415,13 +1415,13 @@ def vendor_audit_report_to_html(
             )
 
             html_parts.append(f'''
-                <div class="vendor-card" style="padding:16px;background:#fff;border-radius:8px;border:1px solid #e2e8f0;border-left:4px solid {cat_color};margin-bottom:12px;page-break-inside:avoid;">
+                <div class="vendor-card" style="padding:16px;background:#fff;border-radius:8px;border:1px solid #e2e8f0;border-left:4px solid {cat_color};margin-bottom:12px;page-break-inside:avoid;word-break:normal;overflow-wrap:break-word;word-wrap:break-word;">
                     <div style="margin-bottom:8px;">
                         <div style="display:inline-block;vertical-align:top;">
                             <h4 style="margin:0;font-size:11pt;color:#1e293b;font-weight:600;">{entry.name}</h4>
                             <span style="font-size:9px;color:#64748b;">{entry.category}</span>
                         </div>
-                        <div style="float:right;">
+                        <div style="display:block;margin-top:4px;">
                             <span style="font-size:9px;padding:2px 8px;background:{juris_color}22;color:{juris_color};border-radius:4px;border:1px solid {juris_color}44;">{entry.jurisdiction}</span>
                             <span style="font-size:9px;padding:2px 8px;background:{cat_bg};color:{cat_color};border-radius:4px;border:1px solid {cat_border};font-weight:600;">{entry.overall_category.upper()}</span>
                         </div>
