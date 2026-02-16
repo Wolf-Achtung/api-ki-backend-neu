@@ -136,9 +136,9 @@ def _derive_hauptleistung_short_form(hauptleistung: str) -> str:
     Derive the same short form that FIX-3.1 uses for hauptleistung.
     Must stay in sync with _limit_hauptleistung_repetitions() in content_quality_enforcer.py.
     """
-    if not hauptleistung or len(hauptleistung) <= 50:
+    if not hauptleistung or len(hauptleistung) <= 120:  # L1: was 50
         return hauptleistung
-    short = hauptleistung[:60].rsplit(" ", 1)[0] + "..." if len(hauptleistung) > 60 else hauptleistung
+    short = hauptleistung[:120].rsplit(" ", 1)[0] + "..." if len(hauptleistung) > 120 else hauptleistung  # L1: was 60
     for sep in [",", ";", ".", " und ", " mit "]:
         pos = hauptleistung.find(sep)
         if 15 < pos < 80:

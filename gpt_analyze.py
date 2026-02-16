@@ -13699,7 +13699,7 @@ def analyze_briefing(
     report_lang = normalize_lang(getattr(br, "lang", "de"), default="de")
     strategic_context = build_strategic_context_block(answers, lang=report_lang)
     # FIX-H2: UTF-8 Doppel-Encoding in strategic_context_block reparieren
-    from services.pipeline_sanitizers import fix_double_encoded_utf8
+    from services.pipeline_sanitizers import fix_double_encoded_utf8, strip_sprint_codes
     strategic_context = fix_double_encoded_utf8(strategic_context)
     answers["strategic_context_block"] = strategic_context
 
@@ -14218,7 +14218,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     hauptleistung = answers.get("hauptleistung", "").strip()
     if hauptleistung:
         # Smart truncation at word boundary
-        max_len = 100
+        max_len = 250  # L1: was 100
         if len(hauptleistung) <= max_len:
             sections["REPORT_SUBTITLE"] = hauptleistung
         else:
@@ -17390,6 +17390,13 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     except Exception as e:
         log.warning(f"[{run_id}] [SIZE-PASS] Final pass failed: {e} - continuing with original")
     # === END SIZE-AWARE FINAL PASS ===
+
+    # === L3: STRIP INTERNAL SPRINT CODES (G33, G35, G30 etc.) ===
+    try:
+        result["html"] = strip_sprint_codes(result["html"], section_name="FINAL_HTML")
+    except Exception as e:
+        log.warning(f"[{run_id}] [L3] Sprint code strip failed: {e}")
+    # === END L3 ===
 
     an = Analysis(
         user_id=br.user_id, 
