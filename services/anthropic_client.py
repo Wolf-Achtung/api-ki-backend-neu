@@ -386,6 +386,12 @@ def call_anthropic(
     # Versuch 1: Mit aufgelöstem Modell
     try:
         if stop_seqs:
+
+            # FIX-J3: Guard against empty content (causes 400 Bad Request)
+            if not prompt or (isinstance(prompt, str) and not prompt.strip()):
+                log.warning("[FIX-J3] Empty prompt for section=%s — skipping API call", section_name if "section_name" in dir() else "unknown")
+                return ""
+
             message = client.messages.create(
                 model=model_name,
                 max_tokens=max_tok,
