@@ -7544,6 +7544,7 @@ def _generate_hero_page(
     # FIX-I2: Increased limit from 120 to 250 to prevent visible truncation
     hl_truncated = _smart_truncate(hauptleistung, 250, '...') if hauptleistung else ""
 
+    log.warning("[DEBUG-M1] hero_page hl_truncated: len=%d value='%s'", len(hl_truncated), hl_truncated[:100])
     # Generate Score SVG
     score_svg = _generate_score_svg(score, rating_text)
 
@@ -7934,6 +7935,7 @@ def _generate_hero_page_from_context(
 
     # Unternehmensdaten
     hauptleistung = sections.get("HAUPTLEISTUNG", "") or briefing.get("HAUPTLEISTUNG", "Kerngeschäft")
+    log.warning("[DEBUG-M1] hero_from_context hauptleistung: len=%d value='%s'", len(hauptleistung), hauptleistung[:100])
     company = sections.get("KUNDENCODE", "") or briefing.get("KUNDENCODE", "Unternehmen")
     industry = sections.get("BRANCHE_LABEL", "") or briefing.get("BRANCHE", "Dienstleistung")
     size = sections.get("UNTERNEHMENSGROESSE_LABEL", "") or str(briefing.get("UNTERNEHMENSGROESSE", "1-10"))
