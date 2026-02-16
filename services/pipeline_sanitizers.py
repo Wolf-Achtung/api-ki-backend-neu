@@ -152,7 +152,7 @@ def fix_double_encoded_utf8(text: str) -> str:
     
     # FIX-J2: Apply explicit mojibake replacements
     result = _apply_mojibake_fixes(result)
-return result
+    return result
 
 
 def decode_html_entities(text: str, preserve_html_structure: bool = True) -> str:
