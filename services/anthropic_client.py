@@ -389,7 +389,7 @@ def call_anthropic(
 
             # FIX-J3: Guard against empty content (causes 400 Bad Request)
             if not prompt or (isinstance(prompt, str) and not prompt.strip()):
-                log.warning("[FIX-J3] Empty prompt for section=%s — skipping API call", section_name if "section_name" in dir() else "unknown")
+                log.warning("[FIX-J3] Empty prompt for section=%s — skipping API call", "unknown")
                 return ""
 
             message = client.messages.create(
