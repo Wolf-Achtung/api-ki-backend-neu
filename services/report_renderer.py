@@ -869,6 +869,14 @@ def render(briefing_obj: Any,
     meta["report_date"] = ctx.get("report_date", "")
 
     # =========================================================================
+    # FIX-I10: Final UTF-8 double-encoding repair on complete HTML
+    # =========================================================================
+    html_before_utf8 = html
+    html = fix_double_encoded_utf8(html)
+    if html != html_before_utf8:
+        log.info("[FIX-I10] Repaired UTF-8 double-encoding in final HTML for run=%s", run_id)
+
+    # =========================================================================
     # FIX-514: Quick-Wins Non-Empty Gate (pre-PDF, fail-closed in STRICT)
     # Ensures Quick-Wins section is never an empty page in the PDF.
     # =========================================================================

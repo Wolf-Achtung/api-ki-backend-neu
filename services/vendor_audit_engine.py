@@ -1357,31 +1357,37 @@ def vendor_audit_report_to_html(
         <div class="vendor-audit-summary" style="padding:16px;background:linear-gradient(135deg,#f8fafc 0%,#fff 100%);border-radius:12px;border:2px solid {status_color};margin-bottom:20px;">
             <p style="margin:0 0 12px 0;color:#64748b;font-size:10pt;">{report.summary}</p>
 
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-                <div style="padding:12px;background:{category_bg["green"]};border-radius:8px;border:1px solid {category_border["green"]};text-align:center;">
+            <div style="margin-bottom:12px;">
+                <table style="width:100%;border-collapse:separate;border-spacing:8px;table-layout:fixed;">
+                <tr>
+                <td style="padding:12px;background:{category_bg["green"]};border-radius:8px;border:1px solid {category_border["green"]};text-align:center;width:33%;">
                     <span style="font-size:9px;color:#166534;font-weight:600;">{labels["green_vendors"]}</span>
                     <div style="font-size:24px;font-weight:700;color:{category_colors["green"]};">{report.green_count}</div>
-                </div>
-                <div style="padding:12px;background:{category_bg["yellow"]};border-radius:8px;border:1px solid {category_border["yellow"]};text-align:center;">
+                </td>
+                <td style="padding:12px;background:{category_bg["yellow"]};border-radius:8px;border:1px solid {category_border["yellow"]};text-align:center;width:33%;">
                     <span style="font-size:9px;color:#92400e;font-weight:600;">{labels["yellow_vendors"]}</span>
                     <div style="font-size:24px;font-weight:700;color:{category_colors["yellow"]};">{report.yellow_count}</div>
-                </div>
-                <div style="padding:12px;background:{category_bg["red"]};border-radius:8px;border:1px solid {category_border["red"]};text-align:center;">
+                </td>
+                <td style="padding:12px;background:{category_bg["red"]};border-radius:8px;border:1px solid {category_border["red"]};text-align:center;width:33%;">
                     <span style="font-size:9px;color:#991b1b;font-weight:600;">{labels["red_vendors"]}</span>
                     <div style="font-size:24px;font-weight:700;color:{category_colors["red"]};">{report.red_count}</div>
-                </div>
+                </td>
+                </tr>
+                </table>
             </div>
 
-            <div style="display:flex;gap:12px;margin-top:12px;">
-                <div style="flex:1;padding:8px;background:#fff;border-radius:6px;border:1px solid #e2e8f0;">
+            <table style="width:100%;border-collapse:separate;border-spacing:8px;table-layout:fixed;margin-top:12px;">
+            <tr>
+                <td style="padding:8px;background:#fff;border-radius:6px;border:1px solid #e2e8f0;width:50%;">
                     <span style="font-size:9px;color:#64748b;">{labels["eu_compliant"]}</span>
                     <div style="font-size:14px;font-weight:600;color:#1e293b;">{report.eu_compliant_count} / {report.total_vendors}</div>
-                </div>
-                <div style="flex:1;padding:8px;background:#fff;border-radius:6px;border:1px solid #e2e8f0;">
+                </td>
+                <td style="padding:8px;background:#fff;border-radius:6px;border:1px solid #e2e8f0;width:50%;">
                     <span style="font-size:9px;color:#64748b;">{labels["compliance_score"]}</span>
                     <div style="font-size:14px;font-weight:600;color:#1e293b;">{report.compliance_score:.0f}%</div>
-                </div>
-            </div>
+                </td>
+            </tr>
+            </table>
         </div>
     ''')
 
@@ -1409,23 +1415,24 @@ def vendor_audit_report_to_html(
             )
 
             html_parts.append(f'''
-                <div class="vendor-card" style="padding:16px;background:#fff;border-radius:8px;border:1px solid #e2e8f0;border-left:4px solid {cat_color};margin-bottom:12px;">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                        <div>
+                <div class="vendor-card" style="padding:16px;background:#fff;border-radius:8px;border:1px solid #e2e8f0;border-left:4px solid {cat_color};margin-bottom:12px;page-break-inside:avoid;">
+                    <div style="margin-bottom:8px;">
+                        <div style="display:inline-block;vertical-align:top;">
                             <h4 style="margin:0;font-size:11pt;color:#1e293b;font-weight:600;">{entry.name}</h4>
                             <span style="font-size:9px;color:#64748b;">{entry.category}</span>
                         </div>
-                        <div style="display:flex;gap:6px;align-items:center;">
+                        <div style="float:right;">
                             <span style="font-size:9px;padding:2px 8px;background:{juris_color}22;color:{juris_color};border-radius:4px;border:1px solid {juris_color}44;">{entry.jurisdiction}</span>
                             <span style="font-size:9px;padding:2px 8px;background:{cat_bg};color:{cat_color};border-radius:4px;border:1px solid {cat_border};font-weight:600;">{entry.overall_category.upper()}</span>
                         </div>
+                        <div style="clear:both;"></div>
                     </div>
 
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-                        <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;">📍 {entry.data_location}</span>
-                        <span style="font-size:8px;padding:2px 6px;background:{"#dcfce7" if entry.has_dpa else "#fef2f2"};color:{"#166534" if entry.has_dpa else "#991b1b"};border-radius:3px;border:1px solid {"#86efac" if entry.has_dpa else "#fca5a5"};">📄 {labels["dpa_yes"] if entry.has_dpa else labels["dpa_no"]}</span>
-                        <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;">🔒 {entry.security_posture.title()}</span>
-                        <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;">⚖️ {labels["ai_act"]}: {entry.ai_act_relevance}</span>
+                    <div style="margin-bottom:8px;word-break:break-word;overflow-wrap:break-word;">
+                        <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">📍 {entry.data_location}</span>
+                        <span style="font-size:8px;padding:2px 6px;background:{"#dcfce7" if entry.has_dpa else "#fef2f2"};color:{"#166534" if entry.has_dpa else "#991b1b"};border-radius:3px;border:1px solid {"#86efac" if entry.has_dpa else "#fca5a5"};display:inline-block;margin:2px;">📄 {labels["dpa_yes"] if entry.has_dpa else labels["dpa_no"]}</span>
+                        <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">🔒 {entry.security_posture.title()}</span>
+                        <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">⚖️ {labels["ai_act"]}: {entry.ai_act_relevance}</span>
                     </div>
             ''')
 

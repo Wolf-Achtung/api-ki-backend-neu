@@ -2146,32 +2146,36 @@ def _generate_swot_html(report: BenchmarkReport, lang: str) -> str:
     return f"""
 <div class="benchmark-swot" style="margin-bottom: 24px;">
     <h3 style="font-size: 14pt; font-weight: 600; color: var(--color-text-strong, #0f172a); margin-bottom: 16px;">{title}</h3>
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-        <div style="padding: 16px; background: rgba(34, 197, 94, 0.08); border-radius: 8px; border-left: 4px solid #22c55e;">
-            <h4 style="margin: 0 0 12px 0; font-size: 12pt; font-weight: 600; color: #22c55e;">{labels["strengths"]}</h4>
-            <ul style="margin: 0; padding: 0 0 0 16px; font-size: 10pt; color: var(--color-text-normal, #1e293b);">
-                {render_items(report.strengths, "#22c55e", "rgba(34, 197, 94, 0.2)")}
-            </ul>
-        </div>
-        <div style="padding: 16px; background: rgba(239, 68, 68, 0.08); border-radius: 8px; border-left: 4px solid #ef4444;">
-            <h4 style="margin: 0 0 12px 0; font-size: 12pt; font-weight: 600; color: #ef4444;">{labels["weaknesses"]}</h4>
-            <ul style="margin: 0; padding: 0 0 0 16px; font-size: 10pt; color: var(--color-text-normal, #1e293b);">
-                {render_items(report.weaknesses, "#ef4444", "rgba(239, 68, 68, 0.2)")}
-            </ul>
-        </div>
-        <div style="padding: 16px; background: rgba(59, 130, 246, 0.08); border-radius: 8px; border-left: 4px solid #3b82f6;">
-            <h4 style="margin: 0 0 12px 0; font-size: 12pt; font-weight: 600; color: #3b82f6;">{labels["opportunities"]}</h4>
-            <ul style="margin: 0; padding: 0 0 0 16px; font-size: 10pt; color: var(--color-text-normal, #1e293b);">
-                {render_items(report.opportunities, "#3b82f6", "rgba(59, 130, 246, 0.2)")}
-            </ul>
-        </div>
-        <div style="padding: 16px; background: rgba(245, 158, 11, 0.08); border-radius: 8px; border-left: 4px solid #f59e0b;">
-            <h4 style="margin: 0 0 12px 0; font-size: 12pt; font-weight: 600; color: #f59e0b;">{labels["threats"]}</h4>
-            <ul style="margin: 0; padding: 0 0 0 16px; font-size: 10pt; color: var(--color-text-normal, #1e293b);">
-                {render_items(report.threats, "#f59e0b", "rgba(245, 158, 11, 0.2)")}
-            </ul>
-        </div>
-    </div>
+    <table style="width: 100%; border-collapse: separate; border-spacing: 12px; table-layout: fixed;">
+        <tr>
+            <td style="padding: 16px; background: rgba(34, 197, 94, 0.08); border-radius: 8px; border-left: 4px solid #22c55e; vertical-align: top; width: 50%;">
+                <h4 style="margin: 0 0 12px 0; font-size: 12pt; font-weight: 600; color: #22c55e;">{labels["strengths"]}</h4>
+                <ul style="margin: 0; padding: 0 0 0 16px; font-size: 10pt; color: var(--color-text-normal, #1e293b);">
+                    {render_items(report.strengths, "#22c55e", "rgba(34, 197, 94, 0.2)")}
+                </ul>
+            </td>
+            <td style="padding: 16px; background: rgba(239, 68, 68, 0.08); border-radius: 8px; border-left: 4px solid #ef4444; vertical-align: top; width: 50%;">
+                <h4 style="margin: 0 0 12px 0; font-size: 12pt; font-weight: 600; color: #ef4444;">{labels["weaknesses"]}</h4>
+                <ul style="margin: 0; padding: 0 0 0 16px; font-size: 10pt; color: var(--color-text-normal, #1e293b);">
+                    {render_items(report.weaknesses, "#ef4444", "rgba(239, 68, 68, 0.2)")}
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 16px; background: rgba(59, 130, 246, 0.08); border-radius: 8px; border-left: 4px solid #3b82f6; vertical-align: top; width: 50%;">
+                <h4 style="margin: 0 0 12px 0; font-size: 12pt; font-weight: 600; color: #3b82f6;">{labels["opportunities"]}</h4>
+                <ul style="margin: 0; padding: 0 0 0 16px; font-size: 10pt; color: var(--color-text-normal, #1e293b);">
+                    {render_items(report.opportunities, "#3b82f6", "rgba(59, 130, 246, 0.2)")}
+                </ul>
+            </td>
+            <td style="padding: 16px; background: rgba(245, 158, 11, 0.08); border-radius: 8px; border-left: 4px solid #f59e0b; vertical-align: top; width: 50%;">
+                <h4 style="margin: 0 0 12px 0; font-size: 12pt; font-weight: 600; color: #f59e0b;">{labels["threats"]}</h4>
+                <ul style="margin: 0; padding: 0 0 0 16px; font-size: 10pt; color: var(--color-text-normal, #1e293b);">
+                    {render_items(report.threats, "#f59e0b", "rgba(245, 158, 11, 0.2)")}
+                </ul>
+            </td>
+        </tr>
+    </table>
 </div>
 """
 

@@ -1691,6 +1691,24 @@
             border-right: none;
             word-wrap: break-word;
             overflow-wrap: break-word;
+            /* FIX-I2: Prevent text truncation in ALL table cells */
+            text-overflow: unset !important;
+            white-space: normal !important;
+            max-width: none;
+        }
+
+        /* FIX-I3: Prevent page breaks inside content sections */
+        .section-body {
+            page-break-inside: avoid;
+        }
+        .quick-win, .quick-win-card, .quick-win-card-new {
+            page-break-inside: avoid;
+        }
+        .vendor-card, .funding-card, .foerder-card {
+            page-break-inside: avoid;
+        }
+        .benchmark-swot > div > div {
+            page-break-inside: avoid;
         }
         /* Zebra Stripes - subtil aber sichtbar */
         tbody tr:nth-child(even) {
@@ -2029,6 +2047,11 @@
             font-style: italic;
             color: var(--color-primary);
             margin-bottom: 4px;
+            /* FIX-I2: Prevent hauptleistung text truncation */
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            white-space: normal;
+            text-overflow: unset;
         }
 
         .hero-title__meta {
@@ -3184,6 +3207,8 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 10pt;
+            /* FIX-I6: Fixed table layout for WeasyPrint */
+            table-layout: fixed;
         }
         .funding-matrix-v2 th {
             background: #f1f5f9;
@@ -3192,11 +3217,18 @@
             font-weight: 600;
             color: #475569;
             border-bottom: 1px solid #e2e8f0;
+            /* FIX-I6: Word-break for narrow columns */
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         .funding-matrix-v2 td {
             padding: 10pt 8pt;
             border-bottom: 1px solid #f1f5f9;
             vertical-align: top;
+            /* FIX-I6: Prevent text overflow in fixed-layout cells */
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
         }
         .funding-matrix-v2 tr:hover {
             background: #f8fafc;
