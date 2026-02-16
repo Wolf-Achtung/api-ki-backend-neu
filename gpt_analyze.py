@@ -1285,25 +1285,51 @@ EXEC_SUMMARY_MAX_TOKENS = _env_int("OPENAI_MAX_TOKENS_EXEC_SUMMARY", OPENAI_MAX_
 GAMECHANGER_MODEL = os.getenv("OPENAI_MODEL_GAMECHANGER", OPENAI_MODEL_DEFAULT)
 GAMECHANGER_TEMP = _env_float("OPENAI_TEMP_GAMECHANGER", _env_float("OPENAI_TEMPERATURE_GAMECHANGER", OPENAI_TEMP_DEFAULT))
 GAMECHANGER_MAX_TOKENS = _env_int("OPENAI_MAX_TOKENS_GAMECHANGER", OPENAI_MAX_TOKENS_DEFAULT)
-# FIX-J11: Section-specific max_tokens overrides (both OpenAI + Anthropic calls)
+# FIX-K2: PLATIN+++ Section-specific max_tokens
 _SECTION_MAX_TOKENS = {
-    "strategie_governance": 6000,
+    # ── PREMIUM (Opus 4.6 sections) ──
+    "executive_summary": 6000,
+    "gamechanger": 7000,
+    "gamechanger_expand": 7000,
+    "business_case": 6000,
+    "strategie_governance": 7000,
+    "strategie_governance_expand": 7000,
+    "recommendations": 6000,
+    "recommendations_expand": 6000,
+    "risks": 6000,
+    "risks_expand": 6000,
+    "foerderpotenzial": 6000,
+    "foerderpotenzial_expand": 6000,
+    # ── STANDARD (Sonnet 4.5 sections) ──
     "tools_empfehlungen": 7000,
-    "foerderpotenzial": 5000,
-    "foerderpotenzial_expand": 5000,
+    "tools_empfehlungen_expand": 7000,
     "wettbewerb_benchmark": 5000,
+    "wettbewerb_benchmark_expand": 5000,
     "technologie_prozesse": 5000,
+    "technologie_prozesse_expand": 5000,
     "org_change": 5000,
     "org_change_expand": 5000,
-    "risks": 5000,
-    "risks_expand": 5000,
-    "recommendations": 5000,
-    "recommendations_expand": 5000,
     "roadmap": 5000,
-    "gamechanger": 6000,
-    "gamechanger_expand": 6000,
+    "roadmap_expand": 5000,
+    "roadmap_12m": 5000,
+    "roadmap_12m_expand": 5000,
+    "unternehmensprofil_markt": 5000,
+    "unternehmensprofil_markt_expand": 5000,
     "ki_aktivitaeten_ziele": 5000,
-    "transparency_box": 5000,
+    "ki_aktivitaeten_ziele_expand": 5000,
+    "data_readiness": 5000,
+    "monetarisierung": 5000,
+    "ai_act_summary": 4000,
+    "reifegrad_sowhat": 4000,
+    "quick_wins": 5000,
+    "branch_deep_dive": 5000,
+    # ── EFFIZIENT ──
+    "transparency_box": 3000,
+    "kickoff_vorlage": 5000,
+    "ki_skillplan": 5000,
+    "templates_start": 5000,
+    "roi_tracking": 5000,
+    "ai_policy_mini": 5000,
 }
 
 
