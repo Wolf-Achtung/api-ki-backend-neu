@@ -713,6 +713,9 @@ _CONTEXT_BLOCK_RE = re.compile(
 )
 
 _CONTEXT_LABEL_PATTERNS = [
+    # L2: Catch raw strategic context bullets leaked into output
+    r'<(?:p|li|div)[^>]*>\s*(?:Kundenakquise\s+via\s+Netzwerk|Erstgespr\xe4che\s+und\s+Bedarfsanalyse)[^<]{0,200}</(?:p|li|div)>',
+    r'<(?:ul|ol)[^>]*>\s*(?:<li[^>]*>\s*(?:Kundenakquise|Erstgespr|Projektbasiert|Wissensmanagement)[^<]{0,200}</li>\s*){2,}</(?:ul|ol)>',
     r'<p[^>]*>\s*<strong>\s*(?:Typische (?:Tools im Einsatz|Workflows)|'
     r'H\xe4ufigste Pain Points|Charakteristika|Fokus-Priorit\xe4ten|'
     r'In Ihrer aktuellen Gr\xf6\xdfe nicht sinnvoll|'
@@ -762,6 +765,27 @@ def strip_context_block_leaks(html: str, section_name: str = "") -> tuple:
     if removals > 0:
         log.info("[FIX-C1][CONTEXT-STRIP] section=%s removed=%d", section_name, removals)
     return result, removals
+
+
+# L3: Strip internal sprint codes (G33, G35, G36, G30, G37, B2.2 etc.) from rendered HTML
+_SPRINT_CODE_RE = re.compile(
+    r'(?<![A-Za-z0-9])'          # Not preceded by alphanumeric
+    r'(?:G[0-9]{2}|B[0-9]\.[0-9])'  # G33, G35, G30, B2.2 etc.
+    r'(?:\s*[:–—-]\s*)?'         # Optional separator
+    r'(?![0-9])',                 # Not followed by digit (avoid matching G20 in "G2048" etc.)
+    re.IGNORECASE,
+)
+
+def strip_sprint_codes(html: str, section_name: str = "") -> str:
+    """L3: Remove internal sprint/engine codes like G33, G35, B2.2 from rendered HTML."""
+    if not html:
+        return html
+    result = _SPRINT_CODE_RE.sub("", html)
+    # Clean up leftover empty elements
+    result = re.sub(r'<(?:span|strong|b)[^>]*>\s*</(?:span|strong|b)>', "", result)
+    if result != html:
+        log.info("[L3][SPRINT-CODE-STRIP] section=%s codes removed", section_name)
+    return result
 
 
 # =============================================================================

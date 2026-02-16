@@ -193,7 +193,7 @@ def _derive_rate(branche: str, groesse: str, band: str | None) -> int:
     return max(30, int(round(base * mult)))
 
 
-def _shorten_hauptleistung(text: str, max_len: int = 80) -> str:
+def _shorten_hauptleistung(text: str, max_len: int = 200) -> str:  # L1: was 80
     if not text:
         return "—"
     txt = str(text).strip()

@@ -1216,7 +1216,7 @@ def _count_hauptleistung_combined(html: str, hauptleistung: str) -> int:
         return 0
     full_count = len(re.findall(re.escape(hauptleistung), html, re.IGNORECASE))
     # Derive the same short form that FIX-3.1 uses
-    short = hauptleistung[:60].rsplit(" ", 1)[0] + "..." if len(hauptleistung) > 60 else hauptleistung
+    short = hauptleistung[:120].rsplit(" ", 1)[0] + "..." if len(hauptleistung) > 120 else hauptleistung  # L1: was 60
     for sep in [",", ";", ".", " und ", " mit "]:
         pos = hauptleistung.find(sep)
         if 15 < pos < 80:
@@ -2737,11 +2737,11 @@ def _limit_hauptleistung_repetitions(sections: dict, hauptleistung: str, max_ful
     After max_full occurrences, replace with a short version (first 60 chars + ...).
     This prevents the report from repeating the full hauptleistung 16-25 times.
     """
-    if not hauptleistung or len(hauptleistung) <= 50:
+    if not hauptleistung or len(hauptleistung) <= 120:  # L1: was 50
         return sections
 
     # Create short version
-    short = hauptleistung[:60].rsplit(" ", 1)[0] + "..." if len(hauptleistung) > 60 else hauptleistung
+    short = hauptleistung[:120].rsplit(" ", 1)[0] + "..." if len(hauptleistung) > 120 else hauptleistung  # L1: was 60
     # Even shorter: extract core concept (first sentence or clause)
     for sep in [",", ";", ".", " und ", " mit "]:
         pos = hauptleistung.find(sep)
