@@ -93,9 +93,9 @@ DISTRIBUTION_NORMAL = "normal"
 
 # Size-specific variance multipliers
 SIZE_VARIANCE_MULTIPLIERS = {
-    "solo": 1.3,   # Higher variance for solo entrepreneurs
-    "small": 1.0,   # Base variance (was "team")
-    "medium": 0.85,   # Lower variance for established SMEs (was "kmu")
+    "solo": 1.8,   # Higher variance for solo entrepreneurs (J1: was 1.3)
+    "small": 1.4,   # Meaningful variance for small teams (J1: was 1.0)
+    "medium": 1.1,   # Moderate variance for SMEs (J1: was 0.85)
 }
 
 # Risk-adjusted variance factors
@@ -703,8 +703,10 @@ def generate_default_assumptions(
         savings_min = conservative.monthly_savings
         savings_max = optimistic.monthly_savings
     else:
-        savings_min = base_savings * DEFAULT_SAVINGS_RANGE["min_pct"] * combined_variance
-        savings_max = base_savings * DEFAULT_SAVINGS_RANGE["max_pct"] * combined_variance
+        # FIX-J1: Widen savings range — combined_variance now WIDENS the spread
+        savings_spread = (1 - DEFAULT_SAVINGS_RANGE["min_pct"])  # e.g. 0.2 if min_pct=0.8
+        savings_min = base_savings * (1 - savings_spread * max(combined_variance, 1.0))
+        savings_max = base_savings * (1 + savings_spread * max(combined_variance, 1.0))
 
     # Investment range
     if conservative and optimistic:
@@ -712,8 +714,10 @@ def generate_default_assumptions(
         invest_min = optimistic.investment_total
         invest_max = conservative.investment_total
     else:
-        invest_min = base_investment * DEFAULT_INVESTMENT_RANGE["min_pct"]
-        invest_max = base_investment * DEFAULT_INVESTMENT_RANGE["max_pct"] * combined_variance
+        # FIX-J1: Widen investment range
+        invest_spread = (DEFAULT_INVESTMENT_RANGE["max_pct"] - 1)  # e.g. 0.3 if max=1.3
+        invest_min = base_investment * (1 - invest_spread * max(combined_variance, 1.0))
+        invest_max = base_investment * (1 + invest_spread * max(combined_variance, 1.0))
 
     # Speed factor based on risk
     speed_min = DEFAULT_IMPLEMENTATION_SPEED_RANGE["min_pct"]
@@ -725,7 +729,7 @@ def generate_default_assumptions(
     # Risk adjustment factor - higher risk score = lower factor
     risk_score = _extract_residual_risk_score(risk_report_v3)
     risk_factor_mode = max(0.5, min(1.0, 1.5 - risk_score / 100))  # 50% score = 1.0, 100% = 0.5
-    risk_factor_min = max(0.5, risk_factor_mode - 0.2 * combined_variance)
+    risk_factor_min = max(0.3, risk_factor_mode - 0.3 * max(combined_variance, 1.0))  # J1: wider risk spread
     risk_factor_max = min(1.2, risk_factor_mode + 0.1)
 
     # Funding success probability
