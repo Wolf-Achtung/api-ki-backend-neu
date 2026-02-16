@@ -29,7 +29,7 @@ except ImportError:  # pragma: no cover
 
 # --- ENV Defaults ----------------------------------------------------------
 
-DEFAULT_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet")
+DEFAULT_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")  # K1: updated
 DEFAULT_MAX_TOKENS = int(os.getenv("ANTHROPIC_MAX_TOKENS", "5000"))  # J11: raised from 3000
 DEFAULT_TEMPERATURE = float(os.getenv("ANTHROPIC_TEMPERATURE", "0.2"))
 
@@ -425,7 +425,7 @@ def call_anthropic(
 
     except anthropic.NotFoundError as exc:
         # Modell nicht gefunden -> Fallback-Versuch
-        fallback_model = os.getenv("ANTHROPIC_MODEL_FALLBACK", "claude-3-5-sonnet-latest")
+        fallback_model = os.getenv("ANTHROPIC_MODEL_FALLBACK", "claude-sonnet-4-5-20250929")  # K1: updated
         log.warning(
             "⚠️ Anthropic NotFoundError für Modell '%s' (Abschnitt '%s'): %s. "
             "Versuche Fallback-Modell '%s'...",
