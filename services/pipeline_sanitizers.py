@@ -43,6 +43,60 @@ log = logging.getLogger(__name__)
 ENTITY_PATTERN = re.compile(r'&(?:#[0-9]+|#x[0-9a-fA-F]+|[a-zA-Z]+);')  # Matches &amp; &#123; &#xAB; etc.
 
 
+
+# =============================================================================
+# FIX-J2: Explicit mojibake replacement map for common patterns
+# =============================================================================
+_MOJIBAKE_REPLACEMENTS = {}
+
+def _build_mojibake_map():
+    """Build mojibake map safely using byte sequences."""
+    pairs = [
+        # bullet
+        (b"\xe2\x80\xa2", "\u2022"),
+        # German umlauts lowercase
+        (b"\xc3\xa4", "\u00e4"), (b"\xc3\xb6", "\u00f6"), (b"\xc3\xbc", "\u00fc"),
+        # German umlauts uppercase
+        (b"\xc3\x84", "\u00c4"), (b"\xc3\x96", "\u00d6"), (b"\xc3\x9c", "\u00dc"),
+        # Eszett
+        (b"\xc3\x9f", "\u00df"),
+        # dashes
+        (b"\xe2\x80\x93", "\u2013"), (b"\xe2\x80\x94", "\u2014"),
+        # quotes
+        (b"\xe2\x80\x98", "\u2018"), (b"\xe2\x80\x99", "\u2019"),
+        (b"\xe2\x80\x9c", "\u201c"), (b"\xe2\x80\x9d", "\u201d"),
+        # ellipsis
+        (b"\xe2\x80\xa6", "\u2026"),
+        # French accents
+        (b"\xc3\xa9", "\u00e9"), (b"\xc3\xa8", "\u00e8"), (b"\xc3\xaa", "\u00ea"),
+        (b"\xc3\xa0", "\u00e0"), (b"\xc3\xa2", "\u00e2"),
+        (b"\xc3\xae", "\u00ee"), (b"\xc3\xaf", "\u00ef"),
+        (b"\xc3\xb4", "\u00f4"),
+        (b"\xc3\xb9", "\u00f9"), (b"\xc3\xbb", "\u00fb"),
+        (b"\xc3\xa7", "\u00e7"),
+    ]
+    m = {}
+    for bseq, replacement in pairs:
+        try:
+            mojibake_str = bseq.decode("latin-1")
+            m[mojibake_str] = replacement
+        except Exception:
+            pass
+    return m
+
+_MOJIBAKE_REPLACEMENTS = _build_mojibake_map()
+_MOJIBAKE_PATTERN = re.compile("|".join(re.escape(k) for k in _MOJIBAKE_REPLACEMENTS.keys())) if _MOJIBAKE_REPLACEMENTS else None
+
+
+def _apply_mojibake_fixes(text: str) -> str:
+    """Apply explicit mojibake replacements."""
+    if not _MOJIBAKE_PATTERN or not text:
+        return text
+    return _MOJIBAKE_PATTERN.sub(lambda m: _MOJIBAKE_REPLACEMENTS[m.group()], text)
+
+
+
+
 def fix_double_encoded_utf8(text: str) -> str:
     """FIX-D3: Repariert doppelt-encodiertes UTF-8.
     Erkennt und repariert Muster wo UTF-8 Bytes als Latin-1 interpretiert wurden.
@@ -95,7 +149,10 @@ def fix_double_encoded_utf8(text: str) -> str:
             count += 1
     if count > 0:
         log.info("[FIX-D3][UTF8-FALLBACK] Replaced %d double-encoded patterns", count)
-    return result
+    
+    # FIX-J2: Apply explicit mojibake replacements
+    result = _apply_mojibake_fixes(result)
+return result
 
 
 def decode_html_entities(text: str, preserve_html_structure: bool = True) -> str:
@@ -613,8 +670,9 @@ def strip_redundant_blocks(html: str, section_name: str = "") -> tuple:
     """FIX-I4: Detect and remove duplicate content blocks in HTML."""
     if not html or len(html) < 500:
         return html, 0
-    ul_pattern = re.compile(r'(<ul[^>]*>.*?</ul>)', re.DOTALL | re.IGNORECASE)
-    ul_blocks = ul_pattern.findall(html)
+    # FIX-J5: Extended to detect <ul>, <ol>, and large <div> block repetitions
+    block_pattern = re.compile(r'(<(?:ul|ol)[^>]*>.*?</(?:ul|ol)>|<div[^>]*>(?:(?!<div).)*?</div>)', re.DOTALL | re.IGNORECASE)
+    ul_blocks = block_pattern.findall(html)
     if not ul_blocks:
         return html, 0
     from collections import Counter
