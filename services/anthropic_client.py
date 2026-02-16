@@ -30,7 +30,7 @@ except ImportError:  # pragma: no cover
 # --- ENV Defaults ----------------------------------------------------------
 
 DEFAULT_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet")
-DEFAULT_MAX_TOKENS = int(os.getenv("ANTHROPIC_MAX_TOKENS", "3000"))
+DEFAULT_MAX_TOKENS = int(os.getenv("ANTHROPIC_MAX_TOKENS", "5000"))  # J11: raised from 3000
 DEFAULT_TEMPERATURE = float(os.getenv("ANTHROPIC_TEMPERATURE", "0.2"))
 
 # z.B. USE_ANTHROPIC_FOR_EXEC_SUMMARY, USE_ANTHROPIC_FOR_RISKS, ...
