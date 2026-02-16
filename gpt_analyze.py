@@ -529,7 +529,7 @@ HARD_STOP_MAX_FALLBACKS = int(os.getenv("HARD_STOP_MAX_FALLBACKS", str(MAX_FALLB
 
 # Placeholder detection pattern - blocks report if found
 PLACEHOLDER_PATTERN = re.compile(
-    r"\[(Name|Placeholder|Beispiel.*?)\]|"
+    r"\[(Name|Placeholder|Beispiel)\]|"
     r"Freitextfeld|"
     r"Template-Marker|"
     r"\{\{PLACEHOLDER\}\}|"
