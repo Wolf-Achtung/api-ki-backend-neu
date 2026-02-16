@@ -370,6 +370,19 @@ def call_anthropic(
         stop_seqs = _PLATIN_STOP_SEQUENCES
         log.debug("🛑 Added stop sequences for Anthropic section=%s", section)
 
+    # =========================================================================
+    # FIX-J7: 3-Layer Empty Content Guard (prevents 400 Bad Request)
+    # Layer 1: Empty prompt → return fallback
+    # Layer 2: Whitespace-only prompt → return fallback
+    # Layer 3: BadRequestError catch → return fallback instead of crash
+    # =========================================================================
+    if not prompt or not prompt.strip():
+        log.warning(
+            "[FIX-J7] Empty/whitespace prompt for section=%s — skipping API call",
+            section or "unknown"
+        )
+        return ""
+
     # Build messages list
     messages: List[Any] = [
         {
@@ -386,12 +399,6 @@ def call_anthropic(
     # Versuch 1: Mit aufgelöstem Modell
     try:
         if stop_seqs:
-
-            # FIX-J3: Guard against empty content (causes 400 Bad Request)
-            if not prompt or (isinstance(prompt, str) and not prompt.strip()):
-                log.warning("[FIX-J3] Empty prompt for section=%s — skipping API call", "unknown")
-                return ""
-
             message = client.messages.create(
                 model=model_name,
                 max_tokens=max_tok,
@@ -408,6 +415,14 @@ def call_anthropic(
                 system=sys,
                 messages=messages,
             )
+    except anthropic.BadRequestError as exc:
+        # FIX-J7 Layer 3: Catch 400 errors (empty content, invalid params)
+        log.warning(
+            "⚠️ Anthropic BadRequestError für Abschnitt '%s': %s — returning empty",
+            section, str(exc)[:200]
+        )
+        return ""
+
     except anthropic.NotFoundError as exc:
         # Modell nicht gefunden -> Fallback-Versuch
         fallback_model = os.getenv("ANTHROPIC_MODEL_FALLBACK", "claude-3-5-sonnet-latest")
