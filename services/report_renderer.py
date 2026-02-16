@@ -708,7 +708,14 @@ def render(briefing_obj: Any,
             _fixed = fix_double_encoded_utf8(_v)
             if _fixed != _v:
                 ctx[_k] = _fixed
+    _rs_debug = ctx.get("REPORT_SUBTITLE", "NOT_FOUND")
+    log.warning("[DEBUG-M1] REPORT_SUBTITLE before render: len=%d value='%s'", len(str(_rs_debug)), str(_rs_debug)[:150])
     html = env.get_template(tpl_name).render(**ctx)
+    _sub_idx = html.find("Beratung und Unterstützung")
+    if _sub_idx > 0:
+        log.warning("[DEBUG-M1] After render found at %d: '%s'", _sub_idx, html[_sub_idx:_sub_idx+120])
+    else:
+        log.warning("[DEBUG-M1] 'Beratung und Unterstützung' NOT FOUND in rendered HTML")
 
     # Save debug HTML for troubleshooting
     report_id = sections.get('report_id', run_id)
