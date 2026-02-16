@@ -762,6 +762,43 @@ def strip_context_block_leaks(html: str, section_name: str = "") -> tuple:
     result = _CONTEXT_HR_RE.sub("", result)
     result = re.sub(r'<(?:div|section)[^>]*>\s*</(?:div|section)>', "", result)
     result = re.sub(r'\n\s*\n\s*\n', "\n\n", result)
+
+    # -- M2: Catch-all for Context-Block 1 (Beratung/Kundenakquise) --
+    _ctx1_re = re.compile(
+        r'Beratung und Unterstützung f.r Unternehm[^.]{0,500}?'
+        r'(?:einf.hren wollen|Tavily|etc\)|ihren Unternehmen)',
+        re.DOTALL | re.IGNORECASE
+    )
+    _ctx1_hits = _ctx1_re.findall(result)
+    if _ctx1_hits:
+        result = _ctx1_re.sub("", result)
+        removals += len(_ctx1_hits)
+        log.info("[FIX-M2] Stripped %d context-1 blocks from section=%s", len(_ctx1_hits), section_name)
+
+    # -- M3: Catch-all for Context-Block 2 (Pain-Points / Angebotserstellung) --
+    _ctx2_re = re.compile(
+        r'Angebotserstellung\s*\(individuell[^)]{0,500}?'
+        r'(?:Kleines Team|Gr.{1,2}en-Context)',
+        re.DOTALL | re.IGNORECASE
+    )
+    _ctx2_hits = _ctx2_re.findall(result)
+    if _ctx2_hits:
+        result = _ctx2_re.sub("", result)
+        removals += len(_ctx2_hits)
+        log.info("[FIX-M3] Stripped %d pain-points context blocks from section=%s", len(_ctx2_hits), section_name)
+
+    # M3b: Standalone size-context marker
+    _size_re = re.compile(r'Gr.{1,2}en-Context\s*:\s*[^<\n]{0,100}', re.IGNORECASE)
+    _size_hits = _size_re.findall(result)
+    if _size_hits:
+        result = _size_re.sub("", result)
+        removals += len(_size_hits)
+
+    # M2+M3: Cleanup empty elements after stripping
+    result = re.sub(r'<p[^>]*>\s*</p>', '', result)
+    result = re.sub(r'<div[^>]*>\s*</div>', '', result)
+    result = re.sub(r'<li[^>]*>\s*</li>', '', result)
+
     if removals > 0:
         log.info("[FIX-C1][CONTEXT-STRIP] section=%s removed=%d", section_name, removals)
     return result, removals
