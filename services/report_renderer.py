@@ -664,6 +664,12 @@ def render(briefing_obj: Any,
                     log.warning("[FIX-O2] Deduplicated %s: case-insensitive match", _n3_key)
             sections[_n3_key] = _n3_val
 
+    # V1: Save ORIGINAL hauptleistung BEFORE truncation (for U1b final-HTML replace)
+    _hl_original = sections.get('hauptleistung') or sections.get('HAUPTLEISTUNG') or ''
+    if not isinstance(_hl_original, str):
+        _hl_original = str(_hl_original)
+    log.info("[V1] Saved original hauptleistung (%d chars) for final-HTML replace", len(_hl_original))
+
     # U2: Truncate hauptleistung in sections for template rendering
     for _u2_key in ("hauptleistung", "HAUPTLEISTUNG"):
         _u2_val = sections.get(_u2_key, "")
@@ -769,25 +775,29 @@ def render(briefing_obj: Any,
             html = re.sub(_pat, _repl, html)
         log.info("[S2] Persona-leak fix applied for size=%s", _company_size)
 
-    # U6: Förder-Alignment-Tabelle — leere Tabellen durch Hinweis ersetzen
-    _empty_table_pattern = re.compile(
-        r'<table[^>]*>\s*<t(?:head|r)[^>]*>.*?</t(?:head|r)>\s*</table>',
-        re.DOTALL | re.IGNORECASE
-    )
-    def _fix_empty_tables(match):
-        table_html = match.group(0)
-        # Count data rows (tr inside tbody, or tr not in thead)
-        tbody_match = re.search(r'<tbody[^>]*>(.*?)</tbody>', table_html, re.DOTALL)
-        if tbody_match:
-            data_rows = len(re.findall(r'<tr', tbody_match.group(1)))
-        else:
-            all_rows = len(re.findall(r'<tr', table_html))
-            header_rows = len(re.findall(r'<th', table_html))
-            data_rows = all_rows - (1 if header_rows > 0 else 0)
-        if data_rows == 0:
-            return '<div style="padding:12px;color:#64748b;font-style:italic;">Keine Daten für diese Darstellung verfügbar.</div>'
-        return table_html
-    html = _empty_table_pattern.sub(_fix_empty_tables, html)
+    # V4 (was U6): Förder-Alignment-Tabelle — leere Tabellen durch Hinweis ersetzen
+    # Improved: Match ANY table, then check if it has only header rows
+    def _fix_empty_tables_v4(html_text):
+        def _check_table(match):
+            t = match.group(0)
+            all_rows = re.findall(r'<tr[^>]*>(.*?)</tr>', t, re.DOTALL | re.IGNORECASE)
+            if len(all_rows) <= 1:
+                # Only 0 or 1 row (header only) → empty
+                return '<div style="padding:12px;color:#64748b;font-style:italic;">Keine Daten für diese Darstellung verfügbar.</div>'
+            # Check if rows after first have any <td> with actual text content
+            data_rows = all_rows[1:]  # skip header
+            has_content = False
+            for row in data_rows:
+                # Strip tags, check for non-whitespace
+                text = re.sub(r'<[^>]+>', '', row).strip()
+                if len(text) > 5:
+                    has_content = True
+                    break
+            if not has_content:
+                return '<div style="padding:12px;color:#64748b;font-style:italic;">Keine Daten für diese Darstellung verfügbar.</div>'
+            return t
+        return re.sub(r'<table[^>]*>.*?</table>', _check_table, html_text, flags=re.DOTALL | re.IGNORECASE)
+    html = _fix_empty_tables_v4(html)
 
     # U5: Remove TBD placeholders from final HTML
     html = re.sub(r'\bTBD\b', '', html)
