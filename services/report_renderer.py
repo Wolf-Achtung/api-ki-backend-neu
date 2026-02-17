@@ -664,6 +664,13 @@ def render(briefing_obj: Any,
                     log.warning("[FIX-O2] Deduplicated %s: case-insensitive match", _n3_key)
             sections[_n3_key] = _n3_val
 
+    # U2: Truncate hauptleistung in sections for template rendering
+    for _u2_key in ("hauptleistung", "HAUPTLEISTUNG"):
+        _u2_val = sections.get(_u2_key, "")
+        if isinstance(_u2_val, str) and len(_u2_val) > 80:
+            sections[_u2_key] = _u2_val[:77].rsplit(' ', 1)[0] + '…'
+            log.info("[U2] Truncated sections['%s']: %d→%d chars", _u2_key, len(_u2_val), len(sections[_u2_key]))
+
     # -- M8: Content gate — hide sections with <30 words --
     _M8_GATE_SECTIONS = [
         'KICKOFF_VORLAGE_HTML',
@@ -761,6 +768,16 @@ def render(briefing_obj: Any,
         for _pat, _repl in _persona_fixes:
             html = re.sub(_pat, _repl, html)
         log.info("[S2] Persona-leak fix applied for size=%s", _company_size)
+
+    # U1: Global hauptleistung truncation on final HTML
+    # hauptleistung appears in GPT-generated sections (not just template vars).
+    # F7 only catches section-level injections. This catches EVERYTHING.
+    _hl_raw = ctx.get('hauptleistung') or ctx.get('HAUPTLEISTUNG') or ''
+    if isinstance(_hl_raw, str) and len(_hl_raw) > 80:
+        _hl_trunc = _hl_raw[:77].rsplit(' ', 1)[0] + '…'
+        # Replace full text with truncated version everywhere in HTML
+        html = html.replace(_hl_raw, _hl_trunc)
+        log.info("[U1] hauptleistung truncated in final HTML: %d→%d chars, replaced globally", len(_hl_raw), len(_hl_trunc))
 
     # R2-FIX: Remove go-digital / ZIM from final HTML
     # Blacklist in gpt_analyze runs BEFORE engine sections are generated
