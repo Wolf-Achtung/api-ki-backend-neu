@@ -797,6 +797,32 @@ def render(briefing_obj: Any,
             if _changed:
                 ctx[_sk] = _sv
     log.info("[Z+1c-PRE] PRE-RENDER: %d fixes (Gov=%d, Sec=%d)", _z1c_pre, _cg_pre, _cs_pre)
+    # A2: Strip template phrases from LLM-generated sections
+    _TEMPLATE_STRIP_PHRASES = [
+        'Template-Text', 'Platzhalter für', 'Beispieltext:', 'Beispieltext',
+        'Lorem ipsum', 'TODO:', 'Mustertext', 'Dummy-Text', 'Platzhaltertext',
+    ]
+    _TEMPLATE_CHECK_SECTIONS = [
+        'TECHNOLOGIE_PROZESSE_HTML', 'NEXT_ACTIONS_HTML', 'RECOMMENDATIONS_HTML',
+        'BUSINESS_CASE_HTML', 'EXEC_SUMMARY_HTML', 'ROADMAP_HTML',
+    ]
+    _a2_fixes = 0
+    for _a2_sk in _TEMPLATE_CHECK_SECTIONS:
+        _a2_sv = ctx.get(_a2_sk, '')
+        if not isinstance(_a2_sv, str):
+            continue
+        for _a2_phrase in _TEMPLATE_STRIP_PHRASES:
+            if _a2_phrase in _a2_sv:
+                # Remove the sentence containing the template phrase
+                _a2_sv = _a2_sv.replace(_a2_phrase, '')
+                _a2_fixes += 1
+                log.info("[A2] Stripped '%s' from %s", _a2_phrase, _a2_sk)
+        if _a2_fixes > 0:
+            ctx[_a2_sk] = _a2_sv
+    if _a2_fixes > 0:
+        log.info("[A2] Total template phrases stripped: %d", _a2_fixes)
+
+
 
     html = env.get_template(tpl_name).render(**ctx)
 
