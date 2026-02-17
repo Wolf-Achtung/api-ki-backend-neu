@@ -769,6 +769,31 @@ def render(briefing_obj: Any,
             html = re.sub(_pat, _repl, html)
         log.info("[S2] Persona-leak fix applied for size=%s", _company_size)
 
+    # U6: Förder-Alignment-Tabelle — leere Tabellen durch Hinweis ersetzen
+    _empty_table_pattern = re.compile(
+        r'<table[^>]*>\s*<t(?:head|r)[^>]*>.*?</t(?:head|r)>\s*</table>',
+        re.DOTALL | re.IGNORECASE
+    )
+    def _fix_empty_tables(match):
+        table_html = match.group(0)
+        # Count data rows (tr inside tbody, or tr not in thead)
+        tbody_match = re.search(r'<tbody[^>]*>(.*?)</tbody>', table_html, re.DOTALL)
+        if tbody_match:
+            data_rows = len(re.findall(r'<tr', tbody_match.group(1)))
+        else:
+            all_rows = len(re.findall(r'<tr', table_html))
+            header_rows = len(re.findall(r'<th', table_html))
+            data_rows = all_rows - (1 if header_rows > 0 else 0)
+        if data_rows == 0:
+            return '<div style="padding:12px;color:#64748b;font-style:italic;">Keine Daten für diese Darstellung verfügbar.</div>'
+        return table_html
+    html = _empty_table_pattern.sub(_fix_empty_tables, html)
+
+    # U5: Remove TBD placeholders from final HTML
+    html = re.sub(r'\bTBD\b', '', html)
+    html = re.sub(r'\b[Tt]o [Bb]e [Dd]etermined\b', '', html)
+    html = re.sub(r'\b[Pp]latzhalter\b', '', html)
+
     # U1: Global hauptleistung truncation on final HTML
     # hauptleistung appears in GPT-generated sections (not just template vars).
     # F7 only catches section-level injections. This catches EVERYTHING.
@@ -778,6 +803,13 @@ def render(briefing_obj: Any,
         # Replace full text with truncated version everywhere in HTML
         html = html.replace(_hl_raw, _hl_trunc)
         log.info("[U1] hauptleistung truncated in final HTML: %d→%d chars, replaced globally", len(_hl_raw), len(_hl_trunc))
+
+    # U1: Global hauptleistung truncation on final HTML
+    _hl_raw = ctx.get('hauptleistung') or ctx.get('HAUPTLEISTUNG') or ''
+    if isinstance(_hl_raw, str) and len(_hl_raw) > 80:
+        _hl_trunc = _hl_raw[:77].rsplit(' ', 1)[0] + '…'
+        html = html.replace(_hl_raw, _hl_trunc)
+        log.info("[U1] hauptleistung truncated in final HTML: %d→%d chars", len(_hl_raw), len(_hl_trunc))
 
     # R2-FIX: Remove go-digital / ZIM from final HTML
     # Blacklist in gpt_analyze runs BEFORE engine sections are generated

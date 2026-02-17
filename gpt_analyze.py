@@ -15540,6 +15540,18 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         canon_updates = inject_canonical_to_sections(canonical_bc, sections)
         log.info(f"[{run_id}] ✅ [CANONICAL-BC] Injected {canon_updates} canonical KPI values")
 
+        # U7: Score-Harmonisierung — CANONICAL scores als Single Source of Truth
+        if sections.get("CANONICAL_OVERALL"):
+            _canon_overall = float(sections["CANONICAL_OVERALL"])
+            if sections.get("score_gesamt") and abs(float(sections["score_gesamt"]) - _canon_overall) > 5:
+                log.info("[U7] Score harmonized: score_gesamt %.0f → CANONICAL_OVERALL %.0f",
+                         float(sections["score_gesamt"]), _canon_overall)
+                sections["score_gesamt"] = str(int(_canon_overall))
+        if sections.get("CANONICAL_GOVERNANCE"):
+            sections["score_governance"] = str(int(float(sections["CANONICAL_GOVERNANCE"])))
+        if sections.get("CANONICAL_SECURITY"):
+            sections["score_sicherheit"] = str(int(float(sections["CANONICAL_SECURITY"])))
+
         # =========================================================================
         # P0.1: CANONICAL-TO-TEMPLATE BINDING - Formatted strings for PDF template
         # These prevent raw floats (e.g., "3.5000001") and ensure German formatting

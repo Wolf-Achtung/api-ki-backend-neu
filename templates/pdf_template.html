@@ -6728,7 +6728,7 @@
                             </div>
                             <div style="text-align: center;">
                                 <div style="font-size: 36px; font-weight: 600; color: var(--color-text-normal); margin-bottom: var(--space-xs);">
-                                    {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% else %}→ BC{% endif %}
+                                    {% if ROI_P50 and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% elif ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% else %}→ BC{% endif %}
                                 </div>
                                 <div style="font-size: 13px; font-weight: 500; color: var(--color-text-normal); margin-bottom: 4px;">
                                     {{ ui("kpi_roi_details", "ROI-Details") }}
@@ -6805,7 +6805,7 @@
                                     ROI-Prognose
                                 </div>
                                 <div style="font-size: 24px; font-weight: 600; color: var(--color-text-normal);">
-                                    {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% else %}siehe Business Case{% endif %}
+                                    {% if ROI_P50 and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% elif ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% else %}siehe Business Case{% endif %}
                                 </div>
                             </div>
                         </div>
