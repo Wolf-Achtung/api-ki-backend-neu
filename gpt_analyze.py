@@ -15995,7 +15995,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             _global_replaced = 0
             _MAX_GLOBAL_HL = 3  # Z7: Reduced from 5 — less fragment risk
             # Z7: Don't protect any sections — ENFORCER is disabled (Z3)
-            _PROTECTED_HL_SECTIONS = set()  # Was {"EXEC_SUMMARY_HTML", "RECOMMENDATIONS_HTML"}
+            _PROTECTED_HL_SECTIONS: set[str] = set()  # Was {"EXEC_SUMMARY_HTML", "RECOMMENDATIONS_HTML"}
             for _hk in list(sections.keys()):
                 _hv = sections.get(_hk, "")
                 if not isinstance(_hv, str) or _hk.startswith("_"):
