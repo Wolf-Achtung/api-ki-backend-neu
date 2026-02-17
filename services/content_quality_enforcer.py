@@ -960,6 +960,10 @@ def count_hauptleistung(html: str, hauptleistung: str) -> int:
 
 
 def inject_hauptleistung_executive(html: str, hauptleistung: str, current_count: int, target: int = 4) -> str:
+    # Z3: DISABLED — Enforcer creates fragment-duplicates (16×→5× after limiter)
+    # With DB truncation at 72 chars, GPT already gets short version
+    log.info("[Z3] HAUPTLEISTUNG-ENFORCER disabled (was injecting %d→%d, causing fragments)", current_count, target)
+    return html  # Return unchanged
     """
     Injiziert hauptleistung in Executive Summary wenn unter Minimum.
     

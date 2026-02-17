@@ -861,6 +861,9 @@ def render(briefing_obj: Any,
         ('ninety-day-plan', 'NINETY_DAY_PLAN_HTML'),
         ('gamechanger-analysis', 'GAMECHANGER_HTML'),
         ('ki-systemlandschaft', 'KI_STACK_SUMMARY_HTML'),
+        ('gamechanger-decision', 'GAMECHANGER_DECISION_HTML'),
+        ('roadmap-90d-decision', 'ROADMAP_90D_DECISION_HTML'),
+        ('ki-stack-summary', 'ki_stack_summary'),
     ]
     for _w3_class, _w3_key in _W3_THIN_SECTIONS:
         _w3_val = ctx.get(_w3_key, '')
@@ -871,7 +874,17 @@ def render(briefing_obj: Any,
                 'konkrete empfehlungen richten sich',
                 'richten sich nach ihren individuellen',
                 'bietet potenziale in prozessautomatisierung',
+                'dokumentenverarbeitung und entscheidungsunterst',
+                'vorhandenen ressourcen',
             ])
+            # Z4: Also check if section is mostly placeholder (>50% generic text)
+            _z4_generic = sum(1 for p in [
+                'prozessautomatisierung', 'dokumentenverarbeitung',
+                'entscheidungsunterst', 'individuellen priorit',
+                'vorhandenen ressourcen', 'konkrete empfehlungen',
+            ] if p in _w3_text.lower())
+            if _z4_generic >= 3:
+                _is_placeholder = True
             if _w3_words < 50 or _is_placeholder:
                 ctx[_w3_key] = ''
                 log.info("[W3+X3] Hidden thin/placeholder section %s (%d words, placeholder=%s)", _w3_key, _w3_words, _is_placeholder)

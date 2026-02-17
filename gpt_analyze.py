@@ -8701,6 +8701,10 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     base_vars.update({
         # English variants (code)
         "score_governance": scores.get("governance", 0),
+        "score_governance_display": f"Governance-Score: {scores.get('governance', 0)}/100",
+        "score_sicherheit_display": f"Sicherheits-Score: {scores.get('security', 0)}/100",
+        # Z2: Explicit score instruction for GPT — prevents hallucinated scores
+        "_SCORE_INSTRUCTION": f"WICHTIG: Verwende EXAKT diese Scores: Governance-Score: {scores.get('governance', 0)}/100, Sicherheits-Score: {scores.get('security', 0)}/100. Erfinde KEINE eigenen Werte.",
         "score_security": scores.get("security", 0),
         "score_value": scores.get("value", 0),
         "score_enablement": scores.get("enablement", 0),
