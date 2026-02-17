@@ -796,13 +796,6 @@ class BenchmarkReport:
         if total_weight > 0:
             self.maturity_score = weighted_sum / total_weight
 
-        # N10: Blend with external score_gesamt if set (prevents cover vs benchmark contradictions)
-        _ext = getattr(self, '_external_score_gesamt', None)
-        if _ext is not None and isinstance(_ext, (int, float)) and _ext > 0:
-            # 40% benchmark positions, 60% questionnaire score → consistent story
-            self.maturity_score = 0.4 * self.maturity_score + 0.6 * float(_ext)
-            self.maturity_score = max(0.0, min(100.0, self.maturity_score))
-
         # Determine grade
         if self.maturity_score >= 80:
             self.competitiveness_grade = "A"
