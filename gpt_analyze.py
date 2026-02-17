@@ -14771,6 +14771,19 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         # Truncate to ≤600 chars
         sections["FINAL_CHECK_INTRO"] = intro_template[:600]
         sections["FINAL_CHECK_DECISIONS"] = decisions[:3]  # Max 3 decisions
+        # S3: Ensure at least 2 decisions (pad if GPT returns only 1)
+        _decisions = sections.get("FINAL_CHECK_DECISIONS", [])
+        _fallback_decisions = [
+            "KI-Governance Framework etablieren und Verantwortlichkeiten definieren",
+            "Pilotprojekt starten: Quick Win aus der Roadmap innerhalb von 30 Tagen umsetzen",
+            "Datenschutz-Folgenabschätzung für geplante KI-Anwendungen durchführen",
+        ]
+        if isinstance(_decisions, list) and len(_decisions) < 2:
+            for _fd in _fallback_decisions:
+                if _fd not in _decisions and len(_decisions) < 3:
+                    _decisions.append(_fd)
+            sections["FINAL_CHECK_DECISIONS"] = _decisions
+            log.info("[S3] Padded FINAL_CHECK_DECISIONS to %d items", len(_decisions))
 
         log.info("[%s] ✅ Final-Check Intro generated (%d chars, %d decisions)",
                  run_id, len(sections["FINAL_CHECK_INTRO"]), len(sections["FINAL_CHECK_DECISIONS"]))
