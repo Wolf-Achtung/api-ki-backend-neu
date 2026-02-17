@@ -804,22 +804,27 @@ def render(briefing_obj: Any,
     html = re.sub(r'\b[Tt]o [Bb]e [Dd]etermined\b', '', html)
     html = re.sub(r'\b[Pp]latzhalter\b', '', html)
 
-    # U1: Global hauptleistung truncation on final HTML
-    # hauptleistung appears in GPT-generated sections (not just template vars).
-    # F7 only catches section-level injections. This catches EVERYTHING.
-    _hl_raw = ctx.get('hauptleistung') or ctx.get('HAUPTLEISTUNG') or ''
-    if isinstance(_hl_raw, str) and len(_hl_raw) > 80:
-        _hl_trunc = _hl_raw[:77].rsplit(' ', 1)[0] + '…'
-        # Replace full text with truncated version everywhere in HTML
-        html = html.replace(_hl_raw, _hl_trunc)
-        log.info("[U1] hauptleistung truncated in final HTML: %d→%d chars, replaced globally", len(_hl_raw), len(_hl_trunc))
+    # V2: Score-Harmonisierung auf Final-HTML (GPT-generierte Scores ersetzen)
+    _canon_gov = ctx.get('CANONICAL_GOVERNANCE')
+    _canon_sec = ctx.get('CANONICAL_SECURITY')
+    if _canon_gov:
+        _cg = int(float(_canon_gov))
+        html = re.sub(r'Governance[- ]Score[:\s]*\d{1,3}\s*/\s*100', f'Governance-Score: {_cg}/100', html)
+        html = re.sub(r'Governance[- ]Score[:\s]*<strong>\d{1,3}</strong>\s*/\s*100', f'Governance-Score: <strong>{_cg}</strong>/100', html)
+    if _canon_sec:
+        _cs = int(float(_canon_sec))
+        html = re.sub(r'Sicherheits[- ]Score[:\s]*\d{1,3}\s*/\s*100', f'Sicherheits-Score: {_cs}/100', html)
+        html = re.sub(r'Sicherheits[- ]Score[:\s]*<strong>\d{1,3}</strong>\s*/\s*100', f'Sicherheits-Score: <strong>{_cs}</strong>/100', html)
+    if _canon_gov or _canon_sec:
+        log.info("[V2] Score-Harmonisierung: Governance=%s, Security=%s", _canon_gov, _canon_sec)
 
-    # U1: Global hauptleistung truncation on final HTML
-    _hl_raw = ctx.get('hauptleistung') or ctx.get('HAUPTLEISTUNG') or ''
-    if isinstance(_hl_raw, str) and len(_hl_raw) > 80:
-        _hl_trunc = _hl_raw[:77].rsplit(' ', 1)[0] + '…'
-        html = html.replace(_hl_raw, _hl_trunc)
-        log.info("[U1] hauptleistung truncated in final HTML: %d→%d chars", len(_hl_raw), len(_hl_trunc))
+    # U1b (V1): Global hauptleistung replace using ORIGINAL saved before U2
+    if _hl_original and len(_hl_original) > 80:
+        _hl_trunc = _hl_original[:77].rsplit(' ', 1)[0] + '…'
+        _before = html.count(_hl_original)
+        html = html.replace(_hl_original, _hl_trunc)
+        log.info("[U1b] hauptleistung replaced in final HTML: %d→%d chars, %d occurrences removed",
+                 len(_hl_original), len(_hl_trunc), _before)
 
     # R2-FIX: Remove go-digital / ZIM from final HTML
     # Blacklist in gpt_analyze runs BEFORE engine sections are generated
