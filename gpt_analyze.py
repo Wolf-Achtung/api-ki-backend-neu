@@ -7951,7 +7951,8 @@ def _generate_hero_page_from_context(
         _hero_payback_fmt = str(_hero_payback_raw)
     kpi_values = {
         'zeitersparnis': briefing.get("ZEITERSPARNIS_H", 18),
-        'roi': briefing.get("ROI_12M_RAW", briefing.get("ROI_12M", 200)),  # N8+O6: Use raw ROI
+        # P4: Ensure ROI_12M_RAW is available in briefing (copied from sections where BC Engine sets it)
+        'roi': float(sections.get("ROI_12M_RAW", 0) or briefing.get("ROI_12M_RAW", 0) or briefing.get("ROI_12M", 200)),
 
         'payback': _hero_payback_fmt,
     }
@@ -13894,6 +13895,11 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     sections["score_wertschoepfung"] = scores.get("value", 0)
     sections["score_befaehigung"] = scores.get("enablement", 0)
     sections["score_gesamt"] = scores.get("overall", 0)
+    # P6: Set canonical scores as single source of truth
+    # These MUST be used by ALL sections (compliance, DPIA, benchmark)
+    sections["CANONICAL_GOVERNANCE"] = scores.get("governance", 0)
+    sections["CANONICAL_SECURITY"] = scores.get("security", 0)
+    sections["CANONICAL_OVERALL"] = scores.get("overall", 0)
 
     # ==========================================================================
     # Badges: Derived from scores for QA-Gate compliance
@@ -14217,6 +14223,10 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
 
     # Problem #7 FIX: Personalized report subtitle from hauptleistung
     hauptleistung = answers.get("hauptleistung", "").strip()
+    # P5: Fix Kl→KI in raw hauptleistung (common OCR/input error)
+    if hauptleistung:
+        hauptleistung = re.sub(r"\bKl-", "KI-", hauptleistung)
+        hauptleistung = re.sub(r"\bKl\b", "KI", hauptleistung)
     if hauptleistung:
         # Smart truncation at word boundary
         max_len = 250  # L1: was 100
@@ -14655,6 +14665,13 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
                 ms = benchmark_report.maturity_score
                 benchmark_report.competitiveness_grade = "A" if ms >= 80 else "B" if ms >= 65 else "C" if ms >= 50 else "D" if ms >= 35 else "F"
                 log.info("[O5-N10] Blended: %.1f → %.1f, grade=%s", _old_ms, ms, benchmark_report.competitiveness_grade)
+                # P3: Regenerate summary text with blended values
+                from services.benchmark_engine import _generate_summary as _gen_sum
+                _branch = answers.get("branche", "beratung")
+                _size = answers.get("unternehmensgroesse", "small")
+                _size_map = {"1": "solo", "2-10": "small", "2–10": "small", "11-100": "medium", "11–100": "medium"}
+                benchmark_report.summary = _gen_sum(benchmark_report, _branch, _size_map.get(_size, "small"), report_lang)
+                log.info("[P3] Summary regenerated with blended maturity=%.0f%%, grade=%s", ms, benchmark_report.competitiveness_grade)
         except Exception as _n10_err:
             log.warning("[O5-N10] Blending failed: %s", _n10_err)
         sections["BENCHMARK_ENGINE_HTML"] = benchmark_report_to_html(benchmark_report, lang=report_lang)

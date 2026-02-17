@@ -1731,6 +1731,8 @@ def generate_benchmark_report(
     log.info("[O4-SWOT] After LLM merge: S=%d W=%d O=%d T=%d (llm_data=%s)",
              len(strengths), len(weaknesses), len(opportunities), len(threats),
              bool(llm_data))
+    # P2-DEBUG: Log actual items for diagnosis
+    log.info("[P2-SWOT-ITEMS] O=%s | T=%s", str(opportunities)[:200], str(threats)[:200])
 
     # Create report with N3-06 branch and research_sources
     report = BenchmarkReport(
@@ -2150,6 +2152,7 @@ def _generate_swot_html(report: BenchmarkReport, lang: str) -> str:
         ])
 
     return f"""
+<!-- P2-SWOT-DEBUG: S={len(report.strengths)} W={len(report.weaknesses)} O={len(report.opportunities)} T={len(report.threats)} -->
 <div class="benchmark-swot" style="margin-bottom: 24px;">
     <h3 style="font-size: 14pt; font-weight: 600; color: var(--color-text-strong, #0f172a); margin-bottom: 16px;">{title}</h3>
     <table style="width: 100%; border-collapse: separate; border-spacing: 12px; table-layout: fixed;">
