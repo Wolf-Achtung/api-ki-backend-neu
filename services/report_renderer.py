@@ -749,6 +749,19 @@ def render(briefing_obj: Any,
     html = re.sub(r'Automatisierte Kl-', 'Automatisierte KI-', html)
     log.info("[Q3] Kl→KI fix applied on final HTML")
 
+    # S2: Fix persona leaks for team/kmu size (Einzelperson → Team)
+    _company_size = ctx.get("COMPANY_SIZE", "") or ctx.get("size_label", "") or ""
+    if _company_size and "solo" not in str(_company_size).lower():
+        _persona_fixes = [
+            (r'als Einzelperson', 'als Team'),
+            (r'Ihre Agilität als Einzelperson', 'Ihre Agilität als kleines Team'),
+            (r'Solo-Selbstständige[rn]?', 'kleine Unternehmen'),
+            (r'Einzelunternehmer(?:in)?', 'Ihr Unternehmen'),
+        ]
+        for _pat, _repl in _persona_fixes:
+            html = re.sub(_pat, _repl, html)
+        log.info("[S2] Persona-leak fix applied for size=%s", _company_size)
+
     # R2-FIX: Remove go-digital / ZIM from final HTML
     # Blacklist in gpt_analyze runs BEFORE engine sections are generated
     _gd_before = html.count('go-digital') + html.count('go_digital')
