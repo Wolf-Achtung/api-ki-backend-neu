@@ -233,7 +233,7 @@ def final_sanitize(sections: dict) -> dict:
                     continue
                 count = val.count(hl_needle)
                 if count > 0:
-                    if total >= 5:
+                    if total >= 3:  # T4: Was 5, reduced to 3 for cleaner report
                         # O1: Replace after 8 occurrences
                         val = val.replace(hl, hl_short)
                         sections[key] = val
@@ -241,7 +241,7 @@ def final_sanitize(sections: dict) -> dict:
 
             if total > 5:
                 # N1b: F7 replacement DISABLED — FIX-3.1 handles limiting
-                fixes_applied.append(f"F7:HL-limited-{total}-to-max5")
+                fixes_applied.append(f"F7:HL-limited-{total}-to-max3")
     except Exception as e:
         log.warning("[FINAL-SANITIZER] F7 HL-limiter failed: %s", e)
 
