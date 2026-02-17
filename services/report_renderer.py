@@ -769,6 +769,35 @@ def render(briefing_obj: Any,
             _fixed = fix_double_encoded_utf8(_v)
             if _fixed != _v:
                 ctx[_k] = _fixed
+    # Z+1c-PRE: NUCLEAR score fix on ALL ctx sections BEFORE Jinja
+    _cg_pre = int(float(ctx.get('CANONICAL_GOVERNANCE', 0) or 0))
+    _cs_pre = int(float(ctx.get('CANONICAL_SECURITY', 0) or 0))
+    _z1c_pre = 0
+    if _cg_pre > 0 and _cs_pre > 0:
+        for _sk in list(ctx.keys()):
+            _sv = ctx.get(_sk, '')
+            if not isinstance(_sv, str) or len(_sv) < 50:
+                continue
+            _changed = False
+            for _w, _r in [(38, _cg_pre), (42, _cs_pre), (32, _cg_pre), (48, _cs_pre)]:
+                for _pat in [f'{_w}/100', f'{_w} / 100', f'{_w} von 100']:
+                    if _pat in _sv:
+                        _sv = _sv.replace(_pat, _pat.replace(str(_w), str(_r)))
+                        _changed = True
+                        _z1c_pre += 1
+                        log.info("[Z+1c-PRE] %s: %d->%d ('%s')", _sk, _w, _r, _pat[:30])
+                for _t in ['strong', 'b', 'span', 'em']:
+                    for _sep in ['', ' ']:
+                        _tp = f'<{_t}>{_w}</{_t}>{_sep}/100'
+                        if _tp in _sv:
+                            _sv = _sv.replace(_tp, f'<{_t}>{_r}</{_t}>{_sep}/100')
+                            _changed = True
+                            _z1c_pre += 1
+                            log.info("[Z+1c-PRE] %s <%s>: %d->%d", _sk, _t, _w, _r)
+            if _changed:
+                ctx[_sk] = _sv
+    log.info("[Z+1c-PRE] PRE-RENDER: %d fixes (Gov=%d, Sec=%d)", _z1c_pre, _cg_pre, _cs_pre)
+
     html = env.get_template(tpl_name).render(**ctx)
 
     # Q3: Fix Kl→KI globally in final HTML (common OCR/input error)
@@ -956,30 +985,51 @@ def render(briefing_obj: Any,
             ctx['MONETARISIERUNG_HTML'] = _y_monet
             log.info("[Y1b] Cleaned bare numbers from MONETARISIERUNG_HTML")
 
-    # Z+1: Score-Harmonisierung — BRUTE FORCE string replace
-    # Regex failed 3x due to double-escaping. Simple replace is guaranteed.
-    _canon_gov = ctx.get('CANONICAL_GOVERNANCE')
-    _canon_sec = ctx.get('CANONICAL_SECURITY')
-    _z_score_fixes = 0
-    if _canon_gov and _canon_sec:
-        _cg = int(float(_canon_gov))
-        _cs = int(float(_canon_sec))
-        _score_replacements = []
-        for _wrong_g in range(10, 100):
-            if _wrong_g != _cg:
-                _score_replacements.append((f'Governance-Score: {_wrong_g}/100', f'Governance-Score: {_cg}/100'))
-                _score_replacements.append((f'Governance Score: {_wrong_g}/100', f'Governance-Score: {_cg}/100'))
-        for _wrong_s in range(10, 100):
-            if _wrong_s != _cs:
-                _score_replacements.append((f'Sicherheits-Score: {_wrong_s}/100', f'Sicherheits-Score: {_cs}/100'))
-                _score_replacements.append((f'Sicherheits Score: {_wrong_s}/100', f'Sicherheits-Score: {_cs}/100'))
-        for _old_score, _new_score in _score_replacements:
-            _count = html.count(_old_score)
-            if _count > 0:
-                html = html.replace(_old_score, _new_score)
-                _z_score_fixes += _count
-                log.info("[Z+1] Score-Replace: '%s' -> '%s' (%dx)", _old_score, _new_score, _count)
-    log.info("[Z+1] Score-Harmonisierung: Gov=%s, Sec=%s, %d total replacements", _canon_gov, _canon_sec, _z_score_fixes)
+    # Z+1c-POST: NUCLEAR score fix on final HTML
+    import re as _re_z1c
+    _cg_post = int(float(ctx.get('CANONICAL_GOVERNANCE', 0) or 0))
+    _cs_post = int(float(ctx.get('CANONICAL_SECURITY', 0) or 0))
+    _z1c_post = 0
+    if _cg_post > 0 and _cs_post > 0:
+        for _wrong, _right, _label in [(38, _cg_post, 'Gov'), (42, _cs_post, 'Sec'), (32, _cg_post, 'Gov'), (48, _cs_post, 'Sec')]:
+            for _pat, _rep in [
+                (f'{_wrong}/100', f'{_right}/100'),
+                (f'{_wrong} / 100', f'{_right} / 100'),
+                (f'{_wrong} von 100', f'{_right} von 100'),
+            ]:
+                _c = html.count(_pat)
+                if _c > 0:
+                    html = html.replace(_pat, _rep)
+                    _z1c_post += _c
+                    log.info("[Z+1c-POST] %s: '%s' -> '%s' (%dx)", _label, _pat, _rep, _c)
+            for _t in ['strong', 'b', 'span', 'em']:
+                for _sep in ['', ' ']:
+                    _old_t = f'<{_t}>{_wrong}</{_t}>{_sep}/100'
+                    _new_t = f'<{_t}>{_right}</{_t}>{_sep}/100'
+                    _c = html.count(_old_t)
+                    if _c > 0:
+                        html = html.replace(_old_t, _new_t)
+                        _z1c_post += _c
+                        log.info("[Z+1c-POST] %s <%s>: %d->%d (%dx)", _label, _t, _wrong, _right, _c)
+        # NUCLEAR REGEX: >38</tag>/100 or >38< /100 etc
+        for _w, _r in [(38, _cg_post), (42, _cs_post)]:
+            _nuke = _re_z1c.compile(r'(?<=>)' + str(_w) + r'(?=(?:</[^>]+>)*\s*/\s*100)')
+            _nc = len(_nuke.findall(html))
+            if _nc > 0:
+                html = _nuke.sub(str(_r), html)
+                _z1c_post += _nc
+                log.info("[Z+1c-POST] NUCLEAR regex: >%d< (%dx)", _w, _nc)
+    if _z1c_post == 0 and _cg_post > 0:
+        for _dw in [38, 42]:
+            _dp = html.find(str(_dw))
+            _da = 0
+            while _dp != -1 and _da < 5:
+                _dc = html[max(0,_dp-80):_dp+40]
+                if any(x in _dc.lower() for x in ['score', 'governance', 'sicherheit', '/100', 'von 100']):
+                    log.warning("[Z+1c-DEBUG] '%d' at pos %d: ...%s...", _dw, _dp, repr(_dc[:120]))
+                _dp = html.find(str(_dw), _dp + 1)
+                _da += 1
+    log.info("[Z+1c-POST] Total post-render: %d", _z1c_post)
 
     # U1b (V1): Global hauptleistung replace using ORIGINAL saved before U2
     if _hl_original and len(_hl_original) > 80:
