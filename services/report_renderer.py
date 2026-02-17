@@ -664,11 +664,22 @@ def render(briefing_obj: Any,
                     log.warning("[FIX-O2] Deduplicated %s: case-insensitive match", _n3_key)
             sections[_n3_key] = _n3_val
 
-    # V1: Save ORIGINAL hauptleistung BEFORE truncation (for U1b final-HTML replace)
-    _hl_original = sections.get('hauptleistung') or sections.get('HAUPTLEISTUNG') or ''
+    # W1: Save ORIGINAL hauptleistung from BRIEFING (not sections — O2 dedup cuts to ~42 chars)
+    # GPT prompts use briefing.get('hauptleistung') → full text lands in GPT-generated HTML
+    _hl_original = ''
+    if briefing_obj:
+        if isinstance(briefing_obj, dict):
+            _hl_original = briefing_obj.get('hauptleistung') or briefing_obj.get('HAUPTLEISTUNG') or ''
+        elif hasattr(briefing_obj, 'answers'):
+            _answers = briefing_obj.answers if isinstance(briefing_obj.answers, dict) else {}
+            _hl_original = _answers.get('hauptleistung') or _answers.get('HAUPTLEISTUNG') or ''
+        elif hasattr(briefing_obj, 'hauptleistung'):
+            _hl_original = getattr(briefing_obj, 'hauptleistung', '') or ''
+    if not _hl_original:
+        _hl_original = sections.get('hauptleistung') or sections.get('HAUPTLEISTUNG') or ''
     if not isinstance(_hl_original, str):
         _hl_original = str(_hl_original)
-    log.info("[V1] Saved original hauptleistung (%d chars) for final-HTML replace", len(_hl_original))
+    log.info("[W1] Saved original hauptleistung from briefing (%d chars) for final-HTML replace", len(_hl_original))
 
     # U2: Truncate hauptleistung in sections for template rendering
     for _u2_key in ("hauptleistung", "HAUPTLEISTUNG"):
