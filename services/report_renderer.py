@@ -837,11 +837,22 @@ def render(briefing_obj: Any,
         ctx['KI_STACK_SUMMARY_HTML'] = ''
         log.info("[W5] Removed duplicate KI_STACK_SUMMARY_HTML (identical to GAMECHANGER)")
 
-    # W4: Label-Disambiguierung — S.15 "Sicherheits-Score" → "Compliance-Sicherheits-Score"
-    # Prevents confusion with KI-Readiness Sicherheits-Score on Cover
-    html = html.replace(
-        'Sicherheits-Score</span><p',
-        'Compliance-Sicherheits-Score</span><p'
+    # Y6 (was W4): Label-Disambiguierung — Compliance-Scores in Risiko-Matrix
+    # The risk matrix section has its own "Sicherheits-Score" that means something different
+    # from the Cover's "Sicherheits-Score". Rename to avoid confusion.
+    # Target: inside risk-block/matrix-block divs, rename the label
+    def _y6_disambiguate(match):
+        block = match.group(0)
+        block = block.replace('Sicherheits-Score', 'Compliance-Sicherheits-Score')
+        return block
+    html = re.sub(
+        r'<div[^>]*class="[^"]*risk-block[^"]*"[^>]*>.*?</div>\s*</div>',
+        _y6_disambiguate, html, flags=re.DOTALL | re.I
+    )
+    # Also catch the Gesamtbewertung label near "87 / Sicherheits-Score"
+    html = re.sub(
+        r'(\d{2,3}\s*/\s*)Sicherheits-Score(\s*/\s*Note)',
+        r'\1Compliance-Sicherheits-Score\2', html
     )
 
     # W3: Hide thin sections — replace sections with <50 words with empty string
@@ -873,6 +884,64 @@ def render(briefing_obj: Any,
             if _x3_words < 50:
                 ctx[_x3_key] = ''
                 log.info("[X3] Hidden thin section %s (%d words < 50)", _x3_key, _x3_words)
+
+    # Y7: Roadmap Redundanz — dedup ROADMAP_90D vs ROADMAP
+    _y7_road = re.sub(r'<[^>]+>', '', str(ctx.get('ROADMAP_HTML', ''))).strip()
+    _y7_90d = re.sub(r'<[^>]+>', '', str(ctx.get('ROADMAP_90D_HTML', ''))).strip()
+    if _y7_road and _y7_90d:
+        # If 90D is subset of ROADMAP or >60% similar, drop 90D
+        _y7_shorter = min(len(_y7_road), len(_y7_90d))
+        _y7_overlap = sum(1 for a, b in zip(_y7_road[:_y7_shorter], _y7_90d[:_y7_shorter]) if a == b)
+        if _y7_shorter > 50 and _y7_overlap / _y7_shorter > 0.6:
+            ctx['ROADMAP_90D_HTML'] = ''
+            log.info("[Y7] Removed redundant ROADMAP_90D_HTML (%.0f%% overlap)", 100 * _y7_overlap / _y7_shorter)
+
+    # Y5: Vendor-Tabelle CSS fix — force readable column widths
+    _y5_vendor = ctx.get('VENDOR_DETAIL_HTML', '') or ctx.get('VENDOR_AUDIT_HTML', '')
+    if isinstance(_y5_vendor, str) and _y5_vendor and '<table' in _y5_vendor.lower():
+        # Inject CSS override for vendor tables
+        _y5_css = '<style>.vendor-table table, .vendor-detail table {table-layout:fixed;width:100%} .vendor-table td, .vendor-detail td {word-wrap:break-word;overflow-wrap:break-word;padding:6px 8px;vertical-align:top;white-space:normal}</style>'
+        for _y5_key in ('VENDOR_DETAIL_HTML', 'VENDOR_AUDIT_HTML'):
+            _y5_v = ctx.get(_y5_key, '')
+            if _y5_v and '<table' in _y5_v.lower():
+                ctx[_y5_key] = _y5_css + _y5_v
+                log.info("[Y5] Injected table CSS into %s", _y5_key)
+
+    # Y1-Y4: Generic empty-content hider
+    # Sections where GPT produced only bare numbered lists ("1." "2.") or <30 chars text
+    _Y_EMPTY_CHECK_SECTIONS = [
+        'RECOMMENDATIONS_ENGINE_HTML',
+        'STARTER_KIT_HTML',
+        'STARTER_KIT_COMPACT_HTML',
+        'ROI_TRACKING_HTML',
+        'PROMPT_FRAMEWORK_HTML',
+    ]
+    for _y_key in _Y_EMPTY_CHECK_SECTIONS:
+        _y_val = ctx.get(_y_key, '')
+        if isinstance(_y_val, str) and _y_val:
+            _y_text = re.sub(r'<[^>]+>', '', _y_val).strip()
+            # Remove bare numbers and punctuation to check for real content
+            _y_content = re.sub(r'[\d\.\s,;:\-]+', '', _y_text).strip()
+            if len(_y_content) < 30:
+                ctx[_y_key] = ''
+                log.info("[Y1-4] Hidden empty-content section %s (content: %d chars after cleanup)", _y_key, len(_y_content))
+
+    # Y1b: Also fix bare numbered lists in MONETARISIERUNG (keep section but clean items)
+    _y_monet = ctx.get('MONETARISIERUNG_HTML', '')
+    if isinstance(_y_monet, str) and _y_monet:
+        # Remove any <li>, <p>, <div> that contains ONLY a number like "2." or "3."
+        _y_monet = re.sub(r'<(li|p|div)[^>]*>\s*\d+\.\s*</(li|p|div)>', '', _y_monet, flags=re.I)
+        # Remove bare "N." between tags
+        _y_monet = re.sub(r'(?<=>)\s*\d+\.\s*(?=<)', '', _y_monet)
+        # If after cleanup less than 30 chars of text remain, hide entirely
+        _y_monet_text = re.sub(r'<[^>]+>', '', _y_monet).strip()
+        _y_monet_content = re.sub(r'[\d\.\s,;:\-]+', '', _y_monet_text).strip()
+        if len(_y_monet_content) < 30:
+            ctx['MONETARISIERUNG_HTML'] = ''
+            log.info("[Y1b] Hidden empty MONETARISIERUNG_HTML")
+        else:
+            ctx['MONETARISIERUNG_HTML'] = _y_monet
+            log.info("[Y1b] Cleaned bare numbers from MONETARISIERUNG_HTML")
 
     # X2 (was V2): Score-Harmonisierung — extended patterns for GPT-generated HTML
     _canon_gov = ctx.get('CANONICAL_GOVERNANCE')
