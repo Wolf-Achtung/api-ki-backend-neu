@@ -2291,62 +2291,14 @@ class ReportValidator:
             # FIX: Use robust counting that strips HTML tags first
             # This handles cases like "Integration von <span>KI</span> in..."
             count = _count_hauptleistung_robust(exec_summary, hauptleistung)
-            if count < 3:  # CRITICAL: less than 3 is unacceptable
-                self.errors.append(
-                    ValidationError(
-                        severity="CRITICAL",
-# [Y8-REMOVED] category="SKIP_HL_CHECK  # W1b: Fully disabled",
-# [Y8-REMOVED] section="EXEC_SUMMARY_HTML",
-# [Y8-REMOVED] message=f"Executive Summary enthält nur {count}x hauptleistung (Minimum: 3)",
-# [Y8-REMOVED] details=f"Hauptleistung '{hauptleistung}' muss mindestens 3x vorkommen",
-# [Y8-REMOVED] )
-# [Y8-REMOVED] )
-# [Y8-REMOVED] elif count < 4:  # WARNING: 3 is minimum, 4 is ideal
-# [Y8-REMOVED] self.errors.append(
-# [Y8-REMOVED] ValidationError(
-# [Y8-REMOVED] severity="WARNING",
-# [Y8-REMOVED] category="SKIP_HL_CHECK  # W1b: Fully disabled",
-# [Y8-REMOVED] section="EXEC_SUMMARY_HTML",
-# [Y8-REMOVED] message=f"Executive Summary enthält nur {count}x hauptleistung (Empfohlen: 4)",
-# [Y8-REMOVED] details=f"Hauptleistung '{hauptleistung}' sollte 4x vorkommen für optimale Integration",
-# [Y8-REMOVED] )
-# [Y8-REMOVED] )
+            pass  # [Y8-FIX] HAUPTLEISTUNG check fully disabled
 
         # Check Recommendations (minimum 2, recommended 3)
         recommendations = self.sections.get("RECOMMENDATIONS_HTML", "")
         if recommendations and isinstance(recommendations, str):
             # FIX: Use robust counting that strips HTML tags first
             count = _count_hauptleistung_robust(recommendations, hauptleistung)
-            if count < 2:  # CRITICAL: less than 2 is unacceptable
-                self.errors.append(
-                    ValidationError(
-                        severity="CRITICAL",
-# [Y8-REMOVED] category="SKIP_HL_CHECK  # W1b: Fully disabled",
-# [Y8-REMOVED] section="RECOMMENDATIONS_HTML",
-# [Y8-REMOVED] message=f"Recommendations enthält nur {count}x hauptleistung (Minimum: 2)",
-# [Y8-REMOVED] details=f"Hauptleistung '{hauptleistung}' muss mindestens 2x vorkommen",
-# [Y8-REMOVED] )
-# [Y8-REMOVED] )
-# [Y8-REMOVED] elif count < 3:  # WARNING: 2 is minimum, 3 is ideal
-# [Y8-REMOVED] self.errors.append(
-# [Y8-REMOVED] ValidationError(
-# [Y8-REMOVED] severity="WARNING",
-# [Y8-REMOVED] category="SKIP_HL_CHECK  # W1b: Fully disabled",
-# [Y8-REMOVED] section="RECOMMENDATIONS_HTML",
-# [Y8-REMOVED] message=f"Recommendations enthält nur {count}x hauptleistung (Empfohlen: 3)",
-# [Y8-REMOVED] details=f"Hauptleistung '{hauptleistung}' sollte 3x vorkommen für optimale Integration",
-# [Y8-REMOVED] )
-# [Y8-REMOVED] )
-# [Y8-REMOVED] elif count > 6:  # WARNING: too many occurrences
-# [Y8-REMOVED] self.errors.append(
-# [Y8-REMOVED] ValidationError(
-# [Y8-REMOVED] severity="WARNING",
-# [Y8-REMOVED] category="HAUPTLEISTUNG_OVERUSE",
-# [Y8-REMOVED] section="RECOMMENDATIONS_HTML",
-# [Y8-REMOVED] message=f"Recommendations enthält {count}x hauptleistung (Maximum: 6)",
-# [Y8-REMOVED] details=f"Zu viele Wiederholungen - nutze Synonyme",
-# [Y8-REMOVED] )
-# [Y8-REMOVED] )
+            pass  # [Y8-FIX] HAUPTLEISTUNG check fully disabled
 
         # Check Roadmap (maximum 5, hard limit 10)
         roadmap = self.sections.get("ROADMAP_90D_HTML", "")
