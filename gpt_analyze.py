@@ -14640,8 +14640,15 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
 
         # N10b: Inject score_gesamt for benchmark/cover consistency
         try:
-            benchmark_report._external_score_gesamt = float(scores.get('gesamt', 0) or 0)
-            benchmark_report.recalculate()
+            _ext_score = float(scores.get('gesamt', 0) or 0)
+            if _ext_score > 0:
+                setattr(benchmark_report, '_external_score_gesamt', _ext_score)
+                # Blend: 40% benchmark, 60% questionnaire score
+                benchmark_report.maturity_score = 0.4 * benchmark_report.maturity_score + 0.6 * _ext_score
+                benchmark_report.maturity_score = max(0.0, min(100.0, benchmark_report.maturity_score))
+                # Recalculate grade
+                ms = benchmark_report.maturity_score
+                benchmark_report.competitiveness_grade = "A" if ms >= 80 else "B" if ms >= 65 else "C" if ms >= 50 else "D" if ms >= 35 else "F"
         except Exception:
             pass
         sections["BENCHMARK_ENGINE_HTML"] = benchmark_report_to_html(benchmark_report, lang=report_lang)
