@@ -858,10 +858,10 @@ def run_monte_carlo_simulation(
         annual_savings = effective_savings * 12
 
         # Calculate ROI
-        roi = calculate_roi(annual_savings, effective_investment)
-        # FIX-I8: Use higher cap (500%) for simulation to preserve percentile variance.
-        # The planning cap (200%) is only for displayed planning values, not for
-        # statistical analysis where variance must be visible.
+        # R1-FIX: apply_cap=False so calculate_roi returns raw ROI (e.g. 637%)
+        # Previously: default apply_cap=True → MAX_ROI=200% killed all variance
+        # SIMULATION_ROI_CAP (500%) then provides the statistical ceiling
+        roi = calculate_roi(annual_savings, effective_investment, apply_cap=False)
         SIMULATION_ROI_CAP = 500.0
         roi = max(MIN_ROI, min(SIMULATION_ROI_CAP, roi))
 
