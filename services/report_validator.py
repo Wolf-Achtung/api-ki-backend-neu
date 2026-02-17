@@ -2295,22 +2295,22 @@ class ReportValidator:
                 self.errors.append(
                     ValidationError(
                         severity="CRITICAL",
-                        category="SKIP_HL_CHECK  # W1b: Fully disabled",
-                        section="EXEC_SUMMARY_HTML",
-                        message=f"Executive Summary enthält nur {count}x hauptleistung (Minimum: 3)",
-                        details=f"Hauptleistung '{hauptleistung}' muss mindestens 3x vorkommen",
-                    )
-                )
-            elif count < 4:  # WARNING: 3 is minimum, 4 is ideal
-                self.errors.append(
-                    ValidationError(
-                        severity="WARNING",
-                        category="SKIP_HL_CHECK  # W1b: Fully disabled",
-                        section="EXEC_SUMMARY_HTML",
-                        message=f"Executive Summary enthält nur {count}x hauptleistung (Empfohlen: 4)",
-                        details=f"Hauptleistung '{hauptleistung}' sollte 4x vorkommen für optimale Integration",
-                    )
-                )
+# [Y8-REMOVED] category="SKIP_HL_CHECK  # W1b: Fully disabled",
+# [Y8-REMOVED] section="EXEC_SUMMARY_HTML",
+# [Y8-REMOVED] message=f"Executive Summary enthält nur {count}x hauptleistung (Minimum: 3)",
+# [Y8-REMOVED] details=f"Hauptleistung '{hauptleistung}' muss mindestens 3x vorkommen",
+# [Y8-REMOVED] )
+# [Y8-REMOVED] )
+# [Y8-REMOVED] elif count < 4:  # WARNING: 3 is minimum, 4 is ideal
+# [Y8-REMOVED] self.errors.append(
+# [Y8-REMOVED] ValidationError(
+# [Y8-REMOVED] severity="WARNING",
+# [Y8-REMOVED] category="SKIP_HL_CHECK  # W1b: Fully disabled",
+# [Y8-REMOVED] section="EXEC_SUMMARY_HTML",
+# [Y8-REMOVED] message=f"Executive Summary enthält nur {count}x hauptleistung (Empfohlen: 4)",
+# [Y8-REMOVED] details=f"Hauptleistung '{hauptleistung}' sollte 4x vorkommen für optimale Integration",
+# [Y8-REMOVED] )
+# [Y8-REMOVED] )
 
         # Check Recommendations (minimum 2, recommended 3)
         recommendations = self.sections.get("RECOMMENDATIONS_HTML", "")
@@ -2321,32 +2321,32 @@ class ReportValidator:
                 self.errors.append(
                     ValidationError(
                         severity="CRITICAL",
-                        category="SKIP_HL_CHECK  # W1b: Fully disabled",
-                        section="RECOMMENDATIONS_HTML",
-                        message=f"Recommendations enthält nur {count}x hauptleistung (Minimum: 2)",
-                        details=f"Hauptleistung '{hauptleistung}' muss mindestens 2x vorkommen",
-                    )
-                )
-            elif count < 3:  # WARNING: 2 is minimum, 3 is ideal
-                self.errors.append(
-                    ValidationError(
-                        severity="WARNING",
-                        category="SKIP_HL_CHECK  # W1b: Fully disabled",
-                        section="RECOMMENDATIONS_HTML",
-                        message=f"Recommendations enthält nur {count}x hauptleistung (Empfohlen: 3)",
-                        details=f"Hauptleistung '{hauptleistung}' sollte 3x vorkommen für optimale Integration",
-                    )
-                )
-            elif count > 6:  # WARNING: too many occurrences
-                self.errors.append(
-                    ValidationError(
-                        severity="WARNING",
-                        category="HAUPTLEISTUNG_OVERUSE",
-                        section="RECOMMENDATIONS_HTML",
-                        message=f"Recommendations enthält {count}x hauptleistung (Maximum: 6)",
-                        details=f"Zu viele Wiederholungen - nutze Synonyme",
-                    )
-                )
+# [Y8-REMOVED] category="SKIP_HL_CHECK  # W1b: Fully disabled",
+# [Y8-REMOVED] section="RECOMMENDATIONS_HTML",
+# [Y8-REMOVED] message=f"Recommendations enthält nur {count}x hauptleistung (Minimum: 2)",
+# [Y8-REMOVED] details=f"Hauptleistung '{hauptleistung}' muss mindestens 2x vorkommen",
+# [Y8-REMOVED] )
+# [Y8-REMOVED] )
+# [Y8-REMOVED] elif count < 3:  # WARNING: 2 is minimum, 3 is ideal
+# [Y8-REMOVED] self.errors.append(
+# [Y8-REMOVED] ValidationError(
+# [Y8-REMOVED] severity="WARNING",
+# [Y8-REMOVED] category="SKIP_HL_CHECK  # W1b: Fully disabled",
+# [Y8-REMOVED] section="RECOMMENDATIONS_HTML",
+# [Y8-REMOVED] message=f"Recommendations enthält nur {count}x hauptleistung (Empfohlen: 3)",
+# [Y8-REMOVED] details=f"Hauptleistung '{hauptleistung}' sollte 3x vorkommen für optimale Integration",
+# [Y8-REMOVED] )
+# [Y8-REMOVED] )
+# [Y8-REMOVED] elif count > 6:  # WARNING: too many occurrences
+# [Y8-REMOVED] self.errors.append(
+# [Y8-REMOVED] ValidationError(
+# [Y8-REMOVED] severity="WARNING",
+# [Y8-REMOVED] category="HAUPTLEISTUNG_OVERUSE",
+# [Y8-REMOVED] section="RECOMMENDATIONS_HTML",
+# [Y8-REMOVED] message=f"Recommendations enthält {count}x hauptleistung (Maximum: 6)",
+# [Y8-REMOVED] details=f"Zu viele Wiederholungen - nutze Synonyme",
+# [Y8-REMOVED] )
+# [Y8-REMOVED] )
 
         # Check Roadmap (maximum 5, hard limit 10)
         roadmap = self.sections.get("ROADMAP_90D_HTML", "")
