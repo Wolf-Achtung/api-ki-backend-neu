@@ -15973,15 +15973,8 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     # assembled AFTER the quality enforcer passes, so they may re-introduce
     # full-text hauptleistung that FIX-3.1 already shortened.
     # =========================================================================
-    try:
-        from services.content_quality_enforcer import _limit_hauptleistung_repetitions, fix_hauptleistung_concat
-        _hl_final = answers.get("hauptleistung", "")
-        if _hl_final and len(_hl_final) > 50:
-            sections = _limit_hauptleistung_repetitions(sections, _hl_final, max_full=3)
-            sections = fix_hauptleistung_concat(sections, _hl_final)
-            log.info(f"[{run_id}] [FIX-R3-4B] Applied final hauptleistung limiter + concat repair")
-    except Exception as _hl_err:
-        log.warning(f"[{run_id}] [FIX-R3-4B] Failed: {_hl_err}")
+    # Z6: FIX-R3-4B DISABLED — ENFORCER (Z3) is off, limiter creates fragments
+    log.info(f"[{run_id}] [Z6] FIX-R3-4B disabled (ENFORCER off, limiter unnecessary)")
 
     # =========================================================================
     # FIX-R5-4: GLOBAL hauptleistung limiter — max 5 total across ALL sections.
@@ -16000,9 +15993,9 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     break
             _global_count = 0
             _global_replaced = 0
-            _MAX_GLOBAL_HL = 5
-            # FIX-R5-4B: Protect sections that NEED multiple hauptleistung occurrences
-            _PROTECTED_HL_SECTIONS = {"EXEC_SUMMARY_HTML", "RECOMMENDATIONS_HTML"}
+            _MAX_GLOBAL_HL = 3  # Z7: Reduced from 5 — less fragment risk
+            # Z7: Don't protect any sections — ENFORCER is disabled (Z3)
+            _PROTECTED_HL_SECTIONS = set()  # Was {"EXEC_SUMMARY_HTML", "RECOMMENDATIONS_HTML"}
             for _hk in list(sections.keys()):
                 _hv = sections.get(_hk, "")
                 if not isinstance(_hv, str) or _hk.startswith("_"):
@@ -16020,7 +16013,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     if _global_count <= _MAX_GLOBAL_HL:
                         _rebuilt_parts.append(_hl_r54)
                     else:
-                        _rebuilt_parts.append(_short_hl)
+                        _rebuilt_parts.append("")  # Z7: Remove entirely, don't create fragments
                         _global_replaced += 1
                     _rebuilt_parts.append(_parts[_pi])
                 sections[_hk] = "".join(_rebuilt_parts)

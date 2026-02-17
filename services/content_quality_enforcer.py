@@ -2735,6 +2735,10 @@ def apply_solo_terms_final(sections: dict, company_size: str) -> dict:
 
 
 def _limit_hauptleistung_repetitions(sections: dict, hauptleistung: str, max_full: int = 3) -> dict:
+
+    # Z8: DISABLED — short-form replacement creates garbled fragments
+    log.info("[Z8] _limit_hauptleistung_repetitions disabled (fragment prevention)")
+    return sections
     """
     PLATIN+++ FIX 3.1: Limit full-text hauptleistung repetitions across all sections.
 
