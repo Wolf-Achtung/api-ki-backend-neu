@@ -664,6 +664,10 @@ def render(briefing_obj: Any,
                     log.warning("[FIX-O2] Deduplicated %s: case-insensitive match", _n3_key)
             sections[_n3_key] = _n3_val
 
+    # W2: Also save a case-insensitive regex pattern for hauptleistung
+    # GPT sometimes changes casing (Chatgpt→ChatGPT, etc) so html.replace() misses them
+    _hl_ci_replace = True  # Flag: use case-insensitive replace in U1b
+
     # W1: Save ORIGINAL hauptleistung from BRIEFING (not sections — O2 dedup cuts to ~42 chars)
     # GPT prompts use briefing.get('hauptleistung') → full text lands in GPT-generated HTML
     _hl_original = ''
@@ -815,6 +819,47 @@ def render(briefing_obj: Any,
     html = re.sub(r'\b[Tt]o [Bb]e [Dd]etermined\b', '', html)
     html = re.sub(r'\b[Pp]latzhalter\b', '', html)
 
+    # W6: Monetarisierung — fix numbered list with missing items
+    _monet = ctx.get('MONETARISIERUNG_HTML', '')
+    if isinstance(_monet, str) and _monet:
+        # Check for "2." or "3." without content (just number + whitespace)
+        _monet = re.sub(r'<(?:li|p|div)[^>]*>\s*2\.\s*</(?:li|p|div)>', '', _monet, flags=re.I)
+        _monet = re.sub(r'<(?:li|p|div)[^>]*>\s*3\.\s*</(?:li|p|div)>', '', _monet, flags=re.I)
+        # Also remove bare "2." or "3." not in tags
+        _monet = re.sub(r'(?<=>)\s*[23]\.\s*(?=<)', '', _monet)
+        ctx['MONETARISIERUNG_HTML'] = _monet
+        log.info("[W6] Cleaned empty pricing model numbers from MONETARISIERUNG")
+
+    # W5: Gamechanger-Dopplung — wenn identischer Text, lösche KI_STACK_SUMMARY
+    _gc_text = re.sub(r'<[^>]+>', '', str(ctx.get('GAMECHANGER_HTML', ''))).strip()
+    _ks_text = re.sub(r'<[^>]+>', '', str(ctx.get('KI_STACK_SUMMARY_HTML', ''))).strip()
+    if _gc_text and _ks_text and (_gc_text == _ks_text or len(_gc_text) < 100):
+        ctx['KI_STACK_SUMMARY_HTML'] = ''
+        log.info("[W5] Removed duplicate KI_STACK_SUMMARY_HTML (identical to GAMECHANGER)")
+
+    # W4: Label-Disambiguierung — S.15 "Sicherheits-Score" → "Compliance-Sicherheits-Score"
+    # Prevents confusion with KI-Readiness Sicherheits-Score on Cover
+    html = html.replace(
+        'Sicherheits-Score</span><p',
+        'Compliance-Sicherheits-Score</span><p'
+    )
+
+    # W3: Hide thin sections — replace sections with <50 words with empty string
+    # This removes near-empty placeholder pages from the PDF
+    _W3_THIN_SECTIONS = [
+        ('ninety-day-plan', 'NINETY_DAY_PLAN_HTML'),
+        ('gamechanger-analysis', 'GAMECHANGER_HTML'),
+        ('ki-systemlandschaft', 'KI_STACK_SUMMARY_HTML'),
+    ]
+    for _w3_class, _w3_key in _W3_THIN_SECTIONS:
+        _w3_val = ctx.get(_w3_key, '')
+        if isinstance(_w3_val, str) and _w3_val:
+            _w3_text = re.sub(r'<[^>]+>', '', _w3_val)
+            _w3_words = len(_w3_text.split())
+            if _w3_words < 50:
+                ctx[_w3_key] = ''
+                log.info("[W3] Hidden thin section %s (%d words < 50)", _w3_key, _w3_words)
+
     # V2: Score-Harmonisierung auf Final-HTML (GPT-generierte Scores ersetzen)
     _canon_gov = ctx.get('CANONICAL_GOVERNANCE')
     _canon_sec = ctx.get('CANONICAL_SECURITY')
@@ -832,10 +877,21 @@ def render(briefing_obj: Any,
     # U1b (V1): Global hauptleistung replace using ORIGINAL saved before U2
     if _hl_original and len(_hl_original) > 80:
         _hl_trunc = _hl_original[:77].rsplit(' ', 1)[0] + '…'
-        _before = html.count(_hl_original)
-        html = html.replace(_hl_original, _hl_trunc)
-        log.info("[U1b] hauptleistung replaced in final HTML: %d→%d chars, %d occurrences removed",
-                 len(_hl_original), len(_hl_trunc), _before)
+        _before = len(re.findall(re.escape(_hl_original), html, re.IGNORECASE))
+        # W2: Case-insensitive replace to catch GPT casing variants
+        html = re.sub(re.escape(_hl_original), _hl_trunc, html, flags=re.IGNORECASE)
+        _after = len(re.findall(re.escape(_hl_original), html, re.IGNORECASE))
+        log.info("[U1b+W2] hauptleistung replaced (case-insensitive): %d→%d chars, %d→%d occurrences",
+                 len(_hl_original), len(_hl_trunc), _before, _after)
+        # W2b: Also catch partial fragments (broken repeats starting mid-sentence)
+        # e.g. "einführen wollen, Automatisierte KI-Readiness..."
+        if len(_hl_original) > 40:
+            _frag = _hl_original[len(_hl_original)//3:]  # last 2/3 of text
+            if _frag and len(_frag) > 40:
+                _frag_count = len(re.findall(re.escape(_frag), html, re.IGNORECASE))
+                if _frag_count > 0:
+                    html = re.sub(re.escape(_frag), '', html, flags=re.IGNORECASE)
+                    log.info("[W2b] Removed %d fragment occurrences (%d chars)", _frag_count, len(_frag))
 
     # R2-FIX: Remove go-digital / ZIM from final HTML
     # Blacklist in gpt_analyze runs BEFORE engine sections are generated
