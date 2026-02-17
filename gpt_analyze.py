@@ -15095,32 +15095,8 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 _prompt_trace_data.clear()
 
     # =========================================================================
-    # HAUPTLEISTUNG_UNDERUSE FIX: Robust failsafe BEFORE validation
-    # Ensures minimum hauptleistung occurrences to prevent CRITICAL errors
-    # MUST run BEFORE validate_and_heal() at line ~14312
-    # =========================================================================
-    try:
-        from services.report_healer import (
-            ensure_hauptleistung_in_recommendations,
-            ensure_hauptleistung_in_exec_summary,
-        )
-        hl_value = answers.get("hauptleistung", "")
-        if hl_value and len(hl_value.strip()) >= 6:
-            # Fix Recommendations (minimum 2 for CRITICAL threshold)
-            sections, rec_inj = ensure_hauptleistung_in_recommendations(
-                sections, hauptleistung=hl_value, min_mentions=2
-            )
-            if rec_inj > 0:
-                log.info(f"[{run_id}] [HAUPTLEISTUNG-FIX] Injected hauptleistung into RECOMMENDATIONS_HTML (before validation)")
-
-            # Fix Executive Summary (minimum 3 for CRITICAL threshold)
-            sections, exec_inj = ensure_hauptleistung_in_exec_summary(
-                sections, hauptleistung=hl_value, min_mentions=3
-            )
-            if exec_inj > 0:
-                log.info(f"[{run_id}] [HAUPTLEISTUNG-FIX] Injected hauptleistung into EXEC_SUMMARY_HTML (before validation)")
-    except Exception as e:
-        log.warning(f"[{run_id}] [HAUPTLEISTUNG-FIX] Pre-validation fix failed: {e}")
+    # Z+5: HAUPTLEISTUNG_UNDERUSE FIX DISABLED — was 4th injection path creating 19x instances
+    log.info(f"[{run_id}] [Z+5] HAUPTLEISTUNG_UNDERUSE pre-validation fix DISABLED")
 
     # =========================================================================
     # FIX-629: POST-TRIM-HEAL GUARD

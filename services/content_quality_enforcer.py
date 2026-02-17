@@ -1234,6 +1234,9 @@ def _count_hauptleistung_combined(html: str, hauptleistung: str) -> int:
 
 
 def apply_hauptleistung_enforcer(sections: dict, hauptleistung: str) -> dict:
+    # Z+3: ENTIRE ENFORCER DISABLED — all injection paths created 19x hauptleistung in Run 616
+    log.info("[Z+3] apply_hauptleistung_enforcer DISABLED (all injection paths off)")
+    return sections
     """
     Enforced hauptleistung Minimum in Executive Summary und Recommendations.
     """

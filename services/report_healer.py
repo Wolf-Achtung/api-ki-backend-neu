@@ -3427,7 +3427,9 @@ def heal_report_html(
 
     # HAUPTLEISTUNG_UNDERUSE FIX: Ensure minimum hauptleistung occurrences
     # Runs AFTER all content processing but BEFORE validation
-    if "HL" not in skip:
+    if True:  # Z+4: HEALER hauptleistung DISABLED — was injecting 3x per pass
+        log.info("[Z+4] HAUPTLEISTUNG-HEALER disabled (all injection off)")
+    if False and "HL" not in skip:  # Original check disabled
         try:
             # Get hauptleistung from parameter or sections
             hl_value = hauptleistung or healed_sections.get("hauptleistung") or healed_sections.get("HAUPTLEISTUNG")
