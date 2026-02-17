@@ -671,8 +671,11 @@ class TestMonteCarloSimulation:
         result = run_monte_carlo_simulation(assumptions, runs=500)
 
         # All ROI values should be within bounds
+        # R1-FIX: MC now uses apply_cap=False, so ROI can exceed MAX_ROI (200%)
+        # up to SIMULATION_ROI_CAP (500%)
+        SIMULATION_ROI_CAP = 500.0
         for roi in result.roi_samples:
-            assert MIN_ROI <= roi <= MAX_ROI
+            assert MIN_ROI <= roi <= SIMULATION_ROI_CAP
 
     def test_run_simulation_payback_positive(self) -> None:
         """Test simulation payback values are positive."""
