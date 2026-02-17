@@ -266,7 +266,7 @@ class TestPhase2EndToEnd:
 
         # Step 2: Verify key variables
         assert vars_dict["zeitersparnis_prioritaet"] == "Umsetzung und Programmierung und überprüfen der Machbarkeit"
-        assert "Fragebogen" in vars_dict["hauptleistung"]
+        assert "Integration von KI" in vars_dict["hauptleistung"]  # X1 truncates at 77 chars
         assert vars_dict["score_security"] == 60
 
         # Step 3: Load prompt with variables
