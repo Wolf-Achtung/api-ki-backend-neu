@@ -2295,7 +2295,7 @@ class ReportValidator:
                 self.errors.append(
                     ValidationError(
                         severity="CRITICAL",
-                        category="HAUPTLEISTUNG_UNDERUSE",
+                        category="HAUPTLEISTUNG_UNDERUSE_V3_OFF",
                         section="EXEC_SUMMARY_HTML",
                         message=f"Executive Summary enthält nur {count}x hauptleistung (Minimum: 3)",
                         details=f"Hauptleistung '{hauptleistung}' muss mindestens 3x vorkommen",
@@ -2305,7 +2305,7 @@ class ReportValidator:
                 self.errors.append(
                     ValidationError(
                         severity="WARNING",
-                        category="HAUPTLEISTUNG_UNDERUSE",
+                        category="HAUPTLEISTUNG_UNDERUSE_V3_OFF",
                         section="EXEC_SUMMARY_HTML",
                         message=f"Executive Summary enthält nur {count}x hauptleistung (Empfohlen: 4)",
                         details=f"Hauptleistung '{hauptleistung}' sollte 4x vorkommen für optimale Integration",
@@ -2321,7 +2321,7 @@ class ReportValidator:
                 self.errors.append(
                     ValidationError(
                         severity="CRITICAL",
-                        category="HAUPTLEISTUNG_UNDERUSE",
+                        category="HAUPTLEISTUNG_UNDERUSE_V3_OFF",
                         section="RECOMMENDATIONS_HTML",
                         message=f"Recommendations enthält nur {count}x hauptleistung (Minimum: 2)",
                         details=f"Hauptleistung '{hauptleistung}' muss mindestens 2x vorkommen",
@@ -2331,7 +2331,7 @@ class ReportValidator:
                 self.errors.append(
                     ValidationError(
                         severity="WARNING",
-                        category="HAUPTLEISTUNG_UNDERUSE",
+                        category="HAUPTLEISTUNG_UNDERUSE_V3_OFF",
                         section="RECOMMENDATIONS_HTML",
                         message=f"Recommendations enthält nur {count}x hauptleistung (Empfohlen: 3)",
                         details=f"Hauptleistung '{hauptleistung}' sollte 3x vorkommen für optimale Integration",
