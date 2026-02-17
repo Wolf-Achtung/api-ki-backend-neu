@@ -197,7 +197,7 @@ def final_sanitize(sections: dict) -> dict:
             val = re.sub(r'<tr[^>]*>(?:(?!</tr>).)*go[-_]digital(?:(?!</tr>).)*</tr>\s*', '', val, flags=re.I|re.DOTALL)
             val = re.sub(r'<div[^>]*class=["\']*[^"]*tool-card[^"]*["\']*[^>]*>(?:(?!</div>).)*go[-_]digital(?:(?!</div>).)*</div>\s*', '', val, flags=re.I|re.DOTALL)
             val = re.sub(r'go[-_]digital\s*\(?eingestellt\)?\s*[,;.]?\s*', '', val, flags=re.I)
-            val = re.sub(r'go[-_]digital\s*[,;.]?\s*', '', val, flags=re.I)
+            val = re.sub(r'go[-_]digital\s*(?:/\s*ZIM)?\s*[,;.]?\s*', '', val, flags=re.I)
             val = re.sub(r'[•·\-]\s*[Uu]nterlagen\s+f.r\s+go-digital[^\n<]*[.\n]?\s*', '', val, flags=re.I)
             if val != sections[key]:
                 sections[key] = val
