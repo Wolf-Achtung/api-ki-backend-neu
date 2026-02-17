@@ -856,23 +856,44 @@ def render(briefing_obj: Any,
         if isinstance(_w3_val, str) and _w3_val:
             _w3_text = re.sub(r'<[^>]+>', '', _w3_val)
             _w3_words = len(_w3_text.split())
-            if _w3_words < 50:
+            _is_placeholder = any(p in _w3_text.lower() for p in [
+                'konkrete empfehlungen richten sich',
+                'richten sich nach ihren individuellen',
+                'bietet potenziale in prozessautomatisierung',
+            ])
+            if _w3_words < 50 or _is_placeholder:
                 ctx[_w3_key] = ''
-                log.info("[W3] Hidden thin section %s (%d words < 50)", _w3_key, _w3_words)
+                log.info("[W3+X3] Hidden thin/placeholder section %s (%d words, placeholder=%s)", _w3_key, _w3_words, _is_placeholder)
+    # X3: Also check NINETY_DAY_PLAN and redundant roadmap
+    for _x3_key in ('NINETY_DAY_PLAN_HTML', 'ROADMAP_90D_HTML'):
+        _x3_val = ctx.get(_x3_key, '')
+        if isinstance(_x3_val, str) and _x3_val:
+            _x3_text = re.sub(r'<[^>]+>', '', _x3_val)
+            _x3_words = len(_x3_text.split())
+            if _x3_words < 50:
+                ctx[_x3_key] = ''
+                log.info("[X3] Hidden thin section %s (%d words < 50)", _x3_key, _x3_words)
 
-    # V2: Score-Harmonisierung auf Final-HTML (GPT-generierte Scores ersetzen)
+    # X2 (was V2): Score-Harmonisierung — extended patterns for GPT-generated HTML
     _canon_gov = ctx.get('CANONICAL_GOVERNANCE')
     _canon_sec = ctx.get('CANONICAL_SECURITY')
+    _x2_fixes = 0
     if _canon_gov:
         _cg = int(float(_canon_gov))
-        html = re.sub(r'Governance[- ]Score[:\s]*\d{1,3}\s*/\s*100', f'Governance-Score: {_cg}/100', html)
-        html = re.sub(r'Governance[- ]Score[:\s]*<strong>\d{1,3}</strong>\s*/\s*100', f'Governance-Score: <strong>{_cg}</strong>/100', html)
+        # Pattern 1: "Governance-Score: 38/100" or "Governance Score: 38/100"
+        _x2_fixes += len(re.findall(r'Governance[- ]?Score[:\s]*\d{1,3}\s*/\s*100', html, re.I))
+        html = re.sub(r'Governance[- ]?Score[:\s]*\d{1,3}\s*/\s*100', f'Governance-Score: {_cg}/100', html, flags=re.I)
+        # Pattern 2: with <strong> tags
+        html = re.sub(r'Governance[- ]?Score[:\s]*<strong>\d{1,3}</strong>\s*/\s*100', f'Governance-Score: <strong>{_cg}</strong>/100', html, flags=re.I)
+        # Pattern 3: bare "38/100" after "Governance" within 50 chars
+        html = re.sub(r'(Governance[^<]{0,30}?)([1-4]\d)\s*/\s*100', lambda m: m.group(1) + f'{_cg}/100', html, flags=re.I)
     if _canon_sec:
         _cs = int(float(_canon_sec))
-        html = re.sub(r'Sicherheits[- ]Score[:\s]*\d{1,3}\s*/\s*100', f'Sicherheits-Score: {_cs}/100', html)
-        html = re.sub(r'Sicherheits[- ]Score[:\s]*<strong>\d{1,3}</strong>\s*/\s*100', f'Sicherheits-Score: <strong>{_cs}</strong>/100', html)
-    if _canon_gov or _canon_sec:
-        log.info("[V2] Score-Harmonisierung: Governance=%s, Security=%s", _canon_gov, _canon_sec)
+        _x2_fixes += len(re.findall(r'Sicherheits[- ]?Score[:\s]*\d{1,3}\s*/\s*100', html, re.I))
+        html = re.sub(r'Sicherheits[- ]?Score[:\s]*\d{1,3}\s*/\s*100', f'Sicherheits-Score: {_cs}/100', html, flags=re.I)
+        html = re.sub(r'Sicherheits[- ]?Score[:\s]*<strong>\d{1,3}</strong>\s*/\s*100', f'Sicherheits-Score: <strong>{_cs}</strong>/100', html, flags=re.I)
+        html = re.sub(r'(Sicherheits[^<]{0,30}?)([1-4]\d)\s*/\s*100', lambda m: m.group(1) + f'{_cs}/100', html, flags=re.I)
+    log.info("[X2] Score-Harmonisierung: Governance=%s, Security=%s, %d patterns replaced", _canon_gov, _canon_sec, _x2_fixes)
 
     # U1b (V1): Global hauptleistung replace using ORIGINAL saved before U2
     if _hl_original and len(_hl_original) > 80:
