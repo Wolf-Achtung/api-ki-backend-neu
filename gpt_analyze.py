@@ -14603,7 +14603,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             sections["ROI_P80"] = bc_simulation.distribution.roi_p80
             sections["ROI_P90"] = bc_simulation.distribution.roi_p90
             log.info("[O6-MC] ROI_12M_RAW=%s, ROI_12M=%s, P50=%.1f, P80=%.1f, P90=%.1f",
-                     briefing.get("ROI_12M_RAW", "MISSING"), briefing.get("ROI_12M", "MISSING"),
+                     answers.get("ROI_12M_RAW", "MISSING"), answers.get("ROI_12M", "MISSING"),
                      bc_simulation.distribution.roi_p50, bc_simulation.distribution.roi_p80, bc_simulation.distribution.roi_p90)
             sections["PAYBACK_P50"] = bc_simulation.distribution.payback_p50
 
@@ -14646,7 +14646,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         try:
             _ext_score = float(sections.get('score_gesamt', 0) or answers.get('score_gesamt', 0) or 0)
             if _ext_score <= 0:
-                _ext_score = float(briefing.get('score_gesamt', 0) or 0) if 'briefing' in dir() else 0
+                _ext_score = float(answers.get('score_gesamt', 0) or 0)
             log.info("[O5-N10] score_gesamt for blend: %.1f, benchmark raw: %.1f", _ext_score, benchmark_report.maturity_score)
             if _ext_score > 0:
                 _old_ms = benchmark_report.maturity_score
