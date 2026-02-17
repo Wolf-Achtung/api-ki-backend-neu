@@ -1428,7 +1428,7 @@ def vendor_audit_report_to_html(
                         <div style="clear:both;"></div>
                     </div>
 
-                    <div style="margin-bottom:8px;word-break:break-word;overflow-wrap:break-word;">
+                    <div style="margin-bottom:8px;word-break:normal;overflow-wrap:break-word;hyphens:none;-webkit-hyphens:none;">
                         <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">📍 {entry.data_location}</span>
                         <span style="font-size:8px;padding:2px 6px;background:{"#dcfce7" if entry.has_dpa else "#fef2f2"};color:{"#166534" if entry.has_dpa else "#991b1b"};border-radius:3px;border:1px solid {"#86efac" if entry.has_dpa else "#fca5a5"};display:inline-block;margin:2px;">📄 {labels["dpa_yes"] if entry.has_dpa else labels["dpa_no"]}</span>
                         <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">🔒 {entry.security_posture.title()}</span>

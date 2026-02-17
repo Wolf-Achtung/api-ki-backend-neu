@@ -7544,7 +7544,6 @@ def _generate_hero_page(
     # FIX-I2: Increased limit from 120 to 250 to prevent visible truncation
     hl_truncated = _smart_truncate(hauptleistung, 250, '...') if hauptleistung else ""
 
-    log.warning("[DEBUG-M1] hero_page hl_truncated: len=%d value='%s'", len(hl_truncated), hl_truncated[:100])
     # Generate Score SVG
     score_svg = _generate_score_svg(score, rating_text)
 
@@ -7935,7 +7934,6 @@ def _generate_hero_page_from_context(
 
     # Unternehmensdaten
     hauptleistung = sections.get("HAUPTLEISTUNG", "") or briefing.get("HAUPTLEISTUNG", "Kerngeschäft")
-    log.warning("[DEBUG-M1] hero_from_context hauptleistung: len=%d value='%s'", len(hauptleistung), hauptleistung[:100])
     company = sections.get("KUNDENCODE", "") or briefing.get("KUNDENCODE", "Unternehmen")
     industry = sections.get("BRANCHE_LABEL", "") or briefing.get("BRANCHE", "Dienstleistung")
     size = sections.get("UNTERNEHMENSGROESSE_LABEL", "") or str(briefing.get("UNTERNEHMENSGROESSE", "1-10"))
@@ -7953,7 +7951,7 @@ def _generate_hero_page_from_context(
         _hero_payback_fmt = str(_hero_payback_raw)
     kpi_values = {
         'zeitersparnis': briefing.get("ZEITERSPARNIS_H", 18),
-        'roi': briefing.get("ROI_12M", 200),
+        'roi': briefing.get("ROI_12M_RAW", briefing.get("ROI_12M", 200)),  # N8: Use raw ROI for MC simulation, not planning-capped
         'payback': _hero_payback_fmt,
     }
 
@@ -14640,6 +14638,12 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             lang=report_lang,
         )
 
+        # N10b: Inject score_gesamt for benchmark/cover consistency
+        try:
+            benchmark_report._external_score_gesamt = float(scores.get('gesamt', 0) or 0)
+            benchmark_report.recalculate()
+        except Exception:
+            pass
         sections["BENCHMARK_ENGINE_HTML"] = benchmark_report_to_html(benchmark_report, lang=report_lang)
         sections["_benchmark_report"] = benchmark_report
 

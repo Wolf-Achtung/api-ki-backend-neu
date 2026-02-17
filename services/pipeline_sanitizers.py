@@ -763,6 +763,39 @@ def strip_context_block_leaks(html: str, section_name: str = "") -> tuple:
     result = re.sub(r'<(?:div|section)[^>]*>\s*</(?:div|section)>', "", result)
     result = re.sub(r'\n\s*\n\s*\n', "\n\n", result)
 
+    # -- N9: KI-KI deduplication (LLM artifact) --
+    _kiki_re = re.compile(r'KI-KI-', re.IGNORECASE)
+    _kiki_hits = _kiki_re.findall(result)
+    if _kiki_hits:
+        result = _kiki_re.sub('KI-', result)
+        removals += len(_kiki_hits)
+
+    # -- N2: Pain-Point phrase blacklist (zeitersparnis_prioritaet leaks) --
+    _pain_phrases = [
+        re.compile(r'[•·\-]\s*Angebotserstellung\s*\(individuell[^)]*\)[.,;]?\s*', re.I),
+        re.compile(r'[•·\-]\s*Akquise frisst produktive Zeit[^\n<]*[.\n]?\s*', re.I),
+        re.compile(r'[•·\-]\s*Angebote schreiben dauert zu lang[^\n<]*[.\n]?\s*', re.I),
+        re.compile(r'[•·\-]\s*Standardisierung schwierig[^\n<]*[.\n]?\s*', re.I),
+        re.compile(r'[•·\-]\s*Projektdurchf.hrung:\s*Workshops[^\n<]*[.\n]?\s*', re.I),
+        re.compile(r'[•·\-]\s*Jede[rs]?\s+Kunde\s+will\s+individuelle[^\n<]*[.\n]?\s*', re.I),
+        re.compile(r'30.40%\s+f.r\s+Marketing\s+statt\s+Delivery[^\n<]*[.\n]?\s*', re.I),
+        # Also catch without bullet prefix (in <li> or <p> tags)
+        re.compile(r'<li[^>]*>[^<]*Angebotserstellung\s*\(individuell[^<]*</li>\s*', re.I),
+        re.compile(r'<li[^>]*>[^<]*Akquise frisst produktive Zeit[^<]*</li>\s*', re.I),
+        re.compile(r'<li[^>]*>[^<]*Angebote schreiben dauert zu lang[^<]*</li>\s*', re.I),
+        re.compile(r'<li[^>]*>[^<]*Standardisierung schwierig[^<]*</li>\s*', re.I),
+        re.compile(r'<li[^>]*>[^<]*Projektdurchf.hrung:\s*Workshops[^<]*</li>\s*', re.I),
+    ]
+    for _pp_re in _pain_phrases:
+        _pp_hits = _pp_re.findall(result)
+        if _pp_hits:
+            result = _pp_re.sub('', result)
+            removals += len(_pp_hits)
+    # Clean up empty containers after removal
+    result = re.sub(r'<ul[^>]*>\s*</ul>', '', result)
+    result = re.sub(r'<ol[^>]*>\s*</ol>', '', result)
+    result = re.sub(r'<p[^>]*>\s*</p>', '', result)
+
     # -- M2: Catch-all for Context-Block 1 (Beratung/Kundenakquise) --
     _ctx1_re = re.compile(
         r'Beratung und Unterstützung f.r Unternehm[^.]{0,500}?'

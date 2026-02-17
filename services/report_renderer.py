@@ -646,6 +646,20 @@ def render(briefing_obj: Any,
     # [FINAL-SANITIZER] Last-pass fixes BEFORE Markup wrapping
     # CRITICAL FIX-B1B2: final_sanitize() must run BEFORE Markup() wrapping,
     # because string operations in sanitizer destroy Markup objects → HTML gets escaped
+    # -- N3: Deduplicate hauptleistung in sections before rendering --
+    # Prevents doubled raw text on S.27 ({{ hauptleistung }} in template)
+    for _n3_key in ("hauptleistung", "HAUPTLEISTUNG"):
+        _n3_val = sections.get(_n3_key, "")
+        if _n3_val and isinstance(_n3_val, str) and len(_n3_val) > 80:
+            # Check if the value contains itself doubled
+            # Pattern: "...Text A, Text A..." or "...Text A Text A..."
+            _n3_half = len(_n3_val) // 2
+            _n3_first = _n3_val[:_n3_half].strip().rstrip(".,; ")
+            if len(_n3_first) > 30 and _n3_first in _n3_val[_n3_half - 10:]:
+                # Doubled! Keep only the first occurrence
+                sections[_n3_key] = _n3_first
+                log.warning("[FIX-N3] Deduplicated %s: %d → %d chars", _n3_key, len(_n3_val), len(_n3_first))
+
     # -- M8: Content gate — hide sections with <30 words --
     _M8_GATE_SECTIONS = [
         'KICKOFF_VORLAGE_HTML',
@@ -723,14 +737,7 @@ def render(briefing_obj: Any,
             _fixed = fix_double_encoded_utf8(_v)
             if _fixed != _v:
                 ctx[_k] = _fixed
-    _rs_debug = ctx.get("REPORT_SUBTITLE", "NOT_FOUND")
-    log.warning("[DEBUG-M1] REPORT_SUBTITLE before render: len=%d value='%s'", len(str(_rs_debug)), str(_rs_debug)[:150])
     html = env.get_template(tpl_name).render(**ctx)
-    _sub_idx = html.find("Beratung und Unterstützung")
-    if _sub_idx > 0:
-        log.warning("[DEBUG-M1] After render found at %d: '%s'", _sub_idx, html[_sub_idx:_sub_idx+120])
-    else:
-        log.warning("[DEBUG-M1] 'Beratung und Unterstützung' NOT FOUND in rendered HTML")
 
     # Save debug HTML for troubleshooting
     report_id = sections.get('report_id', run_id)
