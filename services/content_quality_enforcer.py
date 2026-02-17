@@ -2750,13 +2750,11 @@ def _limit_hauptleistung_repetitions(sections: dict, hauptleistung: str, max_ful
         short = hauptleistung[:dot_pos + 1]  # Full first sentence
     # else: keep the 120-char version from above
 
-    # N1: Expanded PROTECTED_SECTIONS — all customer-facing metadata
+    # O1b: Minimal PROTECTED — only sections that NEED full hauptleistung
     PROTECTED_SECTIONS = {
-        "EXEC_SUMMARY_HTML", "RECOMMENDATIONS_HTML",
-        "REPORT_SUBTITLE", "HAUPTLEISTUNG", "hauptleistung",
-        "HERO_HTML", "hero",
-        "FINAL_CHECK_INTRO", "FINAL_CHECK_DECISIONS",
-        "UNTERNEHMENSPROFIL_MARKT_HTML",
+        "EXEC_SUMMARY_HTML", "RECOMMENDATIONS_HTML",  # Validator requires these
+        "REPORT_SUBTITLE", "HAUPTLEISTUNG", "hauptleistung",  # Raw metadata
+        "HERO_HTML", "hero",  # Cover page
     }
 
     total_replaced = 0

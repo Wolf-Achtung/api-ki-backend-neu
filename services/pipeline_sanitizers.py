@@ -763,6 +763,32 @@ def strip_context_block_leaks(html: str, section_name: str = "") -> tuple:
     result = re.sub(r'<(?:div|section)[^>]*>\s*</(?:div|section)>', "", result)
     result = re.sub(r'\n\s*\n\s*\n', "\n\n", result)
 
+    # -- O7: Tool/Communication context-block sanitizer --
+    _tool_phrases = [
+        re.compile(r'[•·\-]\s*Microsoft Office\s*/\s*Google Workspace[^\n<]*[.\n]?\s*', re.I),
+        re.compile(r'[•·\-]\s*Excel\s*/\s*Google Sheets[^\n<]*[.\n]?\s*', re.I),
+        re.compile(r'[•·\-]\s*Email als Haupt-Kommunikationskanal[^\n<]*[.\n]?\s*', re.I),
+        re.compile(r'[•·\-]\s*Zoom\s*/\s*Microsoft Teams[^\n<]*[.\n]?\s*', re.I),
+        re.compile(r'Erweiterung nur mit mehr Zeit:\s*Kapazit.tsgrenze[^\n<]*[.\n]?\s*', re.I),
+        # Also in <li> tags
+        re.compile(r'<li[^>]*>[^<]*Microsoft Office\s*/\s*Google Workspace[^<]*</li>\s*', re.I),
+        re.compile(r'<li[^>]*>[^<]*Excel\s*/\s*Google Sheets[^<]*</li>\s*', re.I),
+        re.compile(r'<li[^>]*>[^<]*Email als Haupt-Kommunikationskanal[^<]*</li>\s*', re.I),
+        re.compile(r'<li[^>]*>[^<]*Zoom\s*/\s*Microsoft Teams[^<]*</li>\s*', re.I),
+    ]
+    for _tp_re in _tool_phrases:
+        _tp_hits = _tp_re.findall(result)
+        if _tp_hits:
+            result = _tp_re.sub('', result)
+            removals += len(_tp_hits)
+
+    # -- O2c: Kl→KI fix (common OCR/input error: lowercase L instead of uppercase I) --
+    _kl_re = re.compile(r'\bKl-(?=Readiness|Sicherheit|Manager|Strategie|Einsatz|Tool|System|Projekt|Kompetenz|Verantwort)')
+    _kl_hits = _kl_re.findall(result)
+    if _kl_hits:
+        result = _kl_re.sub('KI-', result)
+        removals += len(_kl_hits)
+
     # -- N9: KI-KI deduplication (LLM artifact) --
     _kiki_re = re.compile(r'KI-KI-', re.IGNORECASE)
     _kiki_hits = _kiki_re.findall(result)

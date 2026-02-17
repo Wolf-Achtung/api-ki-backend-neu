@@ -646,19 +646,23 @@ def render(briefing_obj: Any,
     # [FINAL-SANITIZER] Last-pass fixes BEFORE Markup wrapping
     # CRITICAL FIX-B1B2: final_sanitize() must run BEFORE Markup() wrapping,
     # because string operations in sanitizer destroy Markup objects → HTML gets escaped
-    # -- N3: Deduplicate hauptleistung in sections before rendering --
-    # Prevents doubled raw text on S.27 ({{ hauptleistung }} in template)
+    # -- O2+N3: Deduplicate hauptleistung + Kl→KI fix --
     for _n3_key in ("hauptleistung", "HAUPTLEISTUNG"):
         _n3_val = sections.get(_n3_key, "")
-        if _n3_val and isinstance(_n3_val, str) and len(_n3_val) > 80:
-            # Check if the value contains itself doubled
-            # Pattern: "...Text A, Text A..." or "...Text A Text A..."
-            _n3_half = len(_n3_val) // 2
-            _n3_first = _n3_val[:_n3_half].strip().rstrip(".,; ")
-            if len(_n3_first) > 30 and _n3_first in _n3_val[_n3_half - 10:]:
-                # Doubled! Keep only the first occurrence
-                sections[_n3_key] = _n3_first
-                log.warning("[FIX-N3] Deduplicated %s: %d → %d chars", _n3_key, len(_n3_val), len(_n3_first))
+        if _n3_val and isinstance(_n3_val, str):
+            # O2a: Fix "Kl" (lowercase L) → "KI" (common input error)
+            _n3_val = re.sub(r'\bKl-', 'KI-', _n3_val)
+            _n3_val = re.sub(r'\bKl\b', 'KI', _n3_val)
+            if len(_n3_val) > 80:
+                # O2b: Case-insensitive dedup check
+                _n3_half = len(_n3_val) // 2
+                _n3_first = _n3_val[:_n3_half].strip().rstrip(".,; ")
+                _n3_lower = _n3_val.lower()
+                _n3_first_lower = _n3_first.lower()
+                if len(_n3_first) > 30 and _n3_first_lower in _n3_lower[_n3_half - 15:]:
+                    _n3_val = _n3_first
+                    log.warning("[FIX-O2] Deduplicated %s: case-insensitive match", _n3_key)
+            sections[_n3_key] = _n3_val
 
     # -- M8: Content gate — hide sections with <30 words --
     _M8_GATE_SECTIONS = [
