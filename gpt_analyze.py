@@ -15400,6 +15400,15 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     except Exception as _a1_exc:
         log.warning(f"[{run_id}] [A1] Pre-G22 AI-Act consistency failed: {_a1_exc}")
 
+    # === A1: Pre-G22 AI-Act Consistency Cleanup ===
+    # Ensures "Hochrisiko" contradictions are resolved BEFORE G22 grades
+    try:
+        from services.content_quality_enforcer import apply_ai_act_consistency
+        sections = apply_ai_act_consistency(sections)
+        log.info(f"[{run_id}] [A1] Pre-G22 AI-Act consistency enforced")
+    except Exception as _a1_exc:
+        log.warning(f"[{run_id}] [A1] Pre-G22 AI-Act consistency failed: {_a1_exc}")
+
     # === G22: CROSS-SECTION CONSISTENCY CHECK ===
     try:
         from services.consistency_engine import check_consistency, ConsistencyReport
