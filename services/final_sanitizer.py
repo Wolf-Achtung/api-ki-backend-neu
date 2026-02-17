@@ -258,77 +258,13 @@ def final_sanitize(sections: dict) -> dict:
                 sections[key] = ''
                 fixes_applied.append(f"F8:empty-{key}")
 
-    # ─── FIX-F9: HAUPTLEISTUNG Mindest-Vorkommen sicherstellen (FIX-641-P2) ───
-    # Problem: LLM generiert manchmal Content ohne die spezifische Hauptleistung
-    # des Unternehmens zu nennen. Validator verlangt min 3x in Exec Summary, 2x in Reco.
-    # Lösung: Kontextrelevante Sätze mit der Hauptleistung injizieren.
-    try:
-        hl = sections.get('hauptleistung') or sections.get('HAUPTLEISTUNG') or ''
-        if len(hl) >= 5:
-            # Kurzform für Injection (max 60 Zeichen)
-            hl_short = hl
-            if len(hl) > 60:
-                for sep in [",", ";", ".", " und ", " mit "]:
-                    pos = hl.find(sep)
-                    if 15 < pos < 80:
-                        hl_short = hl[:pos]
-                        break
-                else:
-                    hl_short = hl[:60].rsplit(" ", 1)[0]
-
-            _f9_targets = {
-                'EXEC_SUMMARY_HTML': 3,
-                'RECOMMENDATIONS_HTML': 2,
-            }
-            for key, min_count in _f9_targets.items():
-                val = sections.get(key, '')
-                if not isinstance(val, str) or len(val) < 100:
-                    continue
-                # Count occurrences (case-insensitive, HTML-stripped)
-                text_only = re.sub(r'<[^>]*>', '', val).lower()
-                count = text_only.count(hl_short.lower())
-                if count < min_count:
-                    needed = min_count - count
-                    # Erster Injektions-Absatz
-                    inject = (
-                        f'<p>Im Bereich <strong>{hl_short}</strong> '
-                        f'ergeben sich durch KI-gestützte Prozessoptimierung '
-                        f'erhebliche Potenziale.</p>'
-                    )
-                    # Nach erstem </p> einfügen
-                    insert_pos = val.find('</p>')
-                    if insert_pos > 0:
-                        insert_pos += 4
-                        new_val = val[:insert_pos] + '\n' + inject + '\n' + val[insert_pos:]
-                    else:
-                        new_val = inject + '\n' + val
-                    # Zweiter Absatz wenn nötig
-                    if needed >= 2:
-                        inject2 = (
-                            f'<p>Gerade im Kerngeschäft ({hl_short}) '
-                            f'lassen sich wiederkehrende Aufgaben automatisieren.</p>'
-                        )
-                        second_pos = new_val.find('</p>', insert_pos + len(inject) + 10)
-                        if second_pos > 0:
-                            second_pos += 4
-                            new_val = new_val[:second_pos] + '\n' + inject2 + '\n' + new_val[second_pos:]
-                        else:
-                            new_val = new_val + '\n' + inject2
-                    # Dritter Absatz wenn nötig
-                    if needed >= 3:
-                        inject3 = (
-                            f'<p>Die Empfehlungen zielen darauf ab, '
-                            f'{hl_short} effizienter und skalierbarer zu gestalten.</p>'
-                        )
-                        new_val = new_val + '\n' + inject3
-                    sections[key] = new_val
-                    # Update lowercase alias
-                    lower_key = key.replace('_HTML', '').lower()
-                    if lower_key in sections:
-                        sections[lower_key] = new_val
-                    fixes_applied.append(f"F9:HL-inject-{key}({count}→{min_count})")
-    except Exception as e:
-        log.warning("[FINAL-SANITIZER] F9 HL-inject failed: %s", e)
+    # ─── FIX-F9: HAUPTLEISTUNG Mindest-Vorkommen — DISABLED by Q4 ───
+    # Q4: F9 was re-injecting full hauptleistung AFTER FIX-3.1 replaced it
+    # with short form, causing 25+ occurrences. FIX-3.1 + F7 handle limiting.
+    # Validator HAUPTLEISTUNG_UNDERUSE is a false positive (counts short form as 0).
+    # Q4: F9 DISABLED — was causing hauptleistung overflow (25+ occurrences)
+    # FIX-3.1 + F7 handle hauptleistung limiting. F9 injection removed.
+    fixes_applied.append("F9:DISABLED-Q4")
 
     # ─── Logging ───
     if fixes_applied:

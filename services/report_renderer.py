@@ -743,6 +743,12 @@ def render(briefing_obj: Any,
                 ctx[_k] = _fixed
     html = env.get_template(tpl_name).render(**ctx)
 
+    # Q3: Fix Kl→KI globally in final HTML (common OCR/input error)
+    html = re.sub(r'\bKl-Readiness', 'KI-Readiness', html)
+    html = re.sub(r'\bKl-Ready', 'KI-Ready', html)
+    html = re.sub(r'Automatisierte Kl-', 'Automatisierte KI-', html)
+    log.info("[Q3] Kl→KI fix applied on final HTML")
+
     # Save debug HTML for troubleshooting
     report_id = sections.get('report_id', run_id)
     debug_path = f'/tmp/report_debug_{report_id}.html'
