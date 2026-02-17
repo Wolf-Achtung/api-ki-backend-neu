@@ -2832,7 +2832,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "TECHNOLOGIE_PROZESSE_HTML": 3000,
         # Engine-generated sections (structured output, not LLM free-text)
         "AUTOMATION_ROADMAP_HTML": 18000,
-        "BENCHMARK_ENGINE_HTML": 12000,
+        "BENCHMARK_ENGINE_HTML": 18000,  # Q1: Was 12000, SWOT at end was trimmed
         "RESPONSIBLE_AI_HTML": 12000,
         "BUSINESS_CASE_ENGINE_HTML": 8000,
         "BUSINESS_CASE_SIM_HTML": 6000,

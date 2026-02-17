@@ -7951,8 +7951,8 @@ def _generate_hero_page_from_context(
         _hero_payback_fmt = str(_hero_payback_raw)
     kpi_values = {
         'zeitersparnis': briefing.get("ZEITERSPARNIS_H", 18),
-        # P4: Ensure ROI_12M_RAW is available in briefing (copied from sections where BC Engine sets it)
-        'roi': float(sections.get("ROI_12M_RAW", 0) or briefing.get("ROI_12M_RAW", 0) or briefing.get("ROI_12M", 200)),
+        # Q2: Use BC_ROI_REALISTIC (set by BC engine before MC) as primary ROI source
+        'roi': float(sections.get("BC_ROI_REALISTIC", 0) or sections.get("ROI_12M_RAW", 0) or briefing.get("ROI_12M_RAW", 0) or briefing.get("ROI_12M", 200)),
 
         'payback': _hero_payback_fmt,
     }
