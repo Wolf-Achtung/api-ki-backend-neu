@@ -7951,7 +7951,8 @@ def _generate_hero_page_from_context(
         _hero_payback_fmt = str(_hero_payback_raw)
     kpi_values = {
         'zeitersparnis': briefing.get("ZEITERSPARNIS_H", 18),
-        'roi': briefing.get("ROI_12M_RAW", briefing.get("ROI_12M", 200)),  # N8: Use raw ROI for MC simulation, not planning-capped
+        'roi': briefing.get("ROI_12M_RAW", briefing.get("ROI_12M", 200)),  # N8+O6: Use raw ROI
+
         'payback': _hero_payback_fmt,
     }
 
@@ -14601,6 +14602,9 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             sections["ROI_P50"] = bc_simulation.distribution.roi_p50
             sections["ROI_P80"] = bc_simulation.distribution.roi_p80
             sections["ROI_P90"] = bc_simulation.distribution.roi_p90
+            log.info("[O6-MC] ROI_12M_RAW=%s, ROI_12M=%s, P50=%.1f, P80=%.1f, P90=%.1f",
+                     briefing.get("ROI_12M_RAW", "MISSING"), briefing.get("ROI_12M", "MISSING"),
+                     bc_simulation.distribution.roi_p50, bc_simulation.distribution.roi_p80, bc_simulation.distribution.roi_p90)
             sections["PAYBACK_P50"] = bc_simulation.distribution.payback_p50
 
         log.info("[%s] ✅ G34 Business Case Simulation generated: P50 ROI=%.1f%%, P80 ROI=%.1f%%",
@@ -14638,19 +14642,21 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             lang=report_lang,
         )
 
-        # N10b: Inject score_gesamt for benchmark/cover consistency
+        # O5: Inject score_gesamt for benchmark/cover consistency (with logging)
         try:
-            _ext_score = float(scores.get('gesamt', 0) or 0)
+            _ext_score = float(sections.get('score_gesamt', 0) or answers.get('score_gesamt', 0) or 0)
+            if _ext_score <= 0:
+                _ext_score = float(briefing.get('score_gesamt', 0) or 0) if 'briefing' in dir() else 0
+            log.info("[O5-N10] score_gesamt for blend: %.1f, benchmark raw: %.1f", _ext_score, benchmark_report.maturity_score)
             if _ext_score > 0:
-                setattr(benchmark_report, '_external_score_gesamt', _ext_score)
-                # Blend: 40% benchmark, 60% questionnaire score
+                _old_ms = benchmark_report.maturity_score
                 benchmark_report.maturity_score = 0.4 * benchmark_report.maturity_score + 0.6 * _ext_score
                 benchmark_report.maturity_score = max(0.0, min(100.0, benchmark_report.maturity_score))
-                # Recalculate grade
                 ms = benchmark_report.maturity_score
                 benchmark_report.competitiveness_grade = "A" if ms >= 80 else "B" if ms >= 65 else "C" if ms >= 50 else "D" if ms >= 35 else "F"
-        except Exception:
-            pass
+                log.info("[O5-N10] Blended: %.1f → %.1f, grade=%s", _old_ms, ms, benchmark_report.competitiveness_grade)
+        except Exception as _n10_err:
+            log.warning("[O5-N10] Blending failed: %s", _n10_err)
         sections["BENCHMARK_ENGINE_HTML"] = benchmark_report_to_html(benchmark_report, lang=report_lang)
         sections["_benchmark_report"] = benchmark_report
 

@@ -191,12 +191,13 @@ def final_sanitize(sections: dict) -> dict:
         val = sections.get(key)
         if not isinstance(val, str):
             continue
-        if 'go-digital' in val.lower():
+        if 'go-digital' in val.lower() or 'go_digital' in val.lower():
             # N5: Remove go-digital entirely (program discontinued 2023)
-            val = re.sub(r'<li[^>]*>[^<]*go-digital[^<]*</li>\s*', '', val, flags=re.I)
-            val = re.sub(r'<tr[^>]*>(?:(?!</tr>).)*go-digital(?:(?!</tr>).)*</tr>\s*', '', val, flags=re.I|re.DOTALL)
-            val = re.sub(r'<div[^>]*class=["\']*[^"]*tool-card[^"]*["\']*[^>]*>(?:(?!</div>).)*go-digital(?:(?!</div>).)*</div>\s*', '', val, flags=re.I|re.DOTALL)
-            val = re.sub(r'go-digital\s*\(eingestellt\)\s*[,;.]?\s*', '', val, flags=re.I)
+            val = re.sub(r'<li[^>]*>[^<]*go[-_]digital[^<]*</li>\s*', '', val, flags=re.I)
+            val = re.sub(r'<tr[^>]*>(?:(?!</tr>).)*go[-_]digital(?:(?!</tr>).)*</tr>\s*', '', val, flags=re.I|re.DOTALL)
+            val = re.sub(r'<div[^>]*class=["\']*[^"]*tool-card[^"]*["\']*[^>]*>(?:(?!</div>).)*go[-_]digital(?:(?!</div>).)*</div>\s*', '', val, flags=re.I|re.DOTALL)
+            val = re.sub(r'go[-_]digital\s*\(?eingestellt\)?\s*[,;.]?\s*', '', val, flags=re.I)
+            val = re.sub(r'go[-_]digital\s*[,;.]?\s*', '', val, flags=re.I)
             val = re.sub(r'[•·\-]\s*[Uu]nterlagen\s+f.r\s+go-digital[^\n<]*[.\n]?\s*', '', val, flags=re.I)
             if val != sections[key]:
                 sections[key] = val
@@ -232,11 +233,15 @@ def final_sanitize(sections: dict) -> dict:
                     continue
                 count = val.count(hl_needle)
                 if count > 0:
+                    if total >= 8:
+                        # O1: Replace after 8 occurrences
+                        val = val.replace(hl, hl_short)
+                        sections[key] = val
                     total += count
 
-            if total > 5:
+            if total > 8:
                 # N1b: F7 replacement DISABLED — FIX-3.1 handles limiting
-                fixes_applied.append(f"F7:HL-counted-{total}(limiter-off)")
+                fixes_applied.append(f"F7:HL-limited-{total}-to-max8")
     except Exception as e:
         log.warning("[FINAL-SANITIZER] F7 HL-limiter failed: %s", e)
 

@@ -1718,15 +1718,19 @@ def generate_benchmark_report(
     strengths, weaknesses, opportunities, threats = _generate_swot_from_positions(positions, lang)
 
     # Use LLM data to enhance if available
+    # O4: Only override if LLM provides NON-EMPTY lists (empty [] was wiping generated SWOT)
     if llm_data:
-        if llm_data.get("strengths"):
+        if llm_data.get("strengths") and len(llm_data["strengths"]) > 0:
             strengths = llm_data["strengths"][:4]
-        if llm_data.get("weaknesses"):
+        if llm_data.get("weaknesses") and len(llm_data["weaknesses"]) > 0:
             weaknesses = llm_data["weaknesses"][:4]
-        if llm_data.get("opportunities"):
+        if llm_data.get("opportunities") and len(llm_data["opportunities"]) > 0:
             opportunities = llm_data["opportunities"][:4]
-        if llm_data.get("threats"):
+        if llm_data.get("threats") and len(llm_data["threats"]) > 0:
             threats = llm_data["threats"][:4]
+    log.info("[O4-SWOT] After LLM merge: S=%d W=%d O=%d T=%d (llm_data=%s)",
+             len(strengths), len(weaknesses), len(opportunities), len(threats),
+             bool(llm_data))
 
     # Create report with N3-06 branch and research_sources
     report = BenchmarkReport(
