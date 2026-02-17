@@ -956,26 +956,30 @@ def render(briefing_obj: Any,
             ctx['MONETARISIERUNG_HTML'] = _y_monet
             log.info("[Y1b] Cleaned bare numbers from MONETARISIERUNG_HTML")
 
-    # X2 (was V2): Score-Harmonisierung — extended patterns for GPT-generated HTML
+    # Z+1: Score-Harmonisierung — BRUTE FORCE string replace
+    # Regex failed 3x due to double-escaping. Simple replace is guaranteed.
     _canon_gov = ctx.get('CANONICAL_GOVERNANCE')
     _canon_sec = ctx.get('CANONICAL_SECURITY')
-    _x2_fixes = 0
-    if _canon_gov:
+    _z_score_fixes = 0
+    if _canon_gov and _canon_sec:
         _cg = int(float(_canon_gov))
-        # Pattern 1: "Governance-Score: 38/100" or "Governance Score: 38/100"
-        _x2_fixes += len(re.findall(r'Governance[- ]?Score[:\s]*\d{1,3}\s*/\s*100', html, re.I))
-        html = re.sub(r'Governance[- ]?Score[:\s]*\d{1,3}\s*/\s*100', f'Governance-Score: {_cg}/100', html, flags=re.I)
-        # Pattern 2: with <strong> tags
-        html = re.sub(r'Governance[- ]?Score[:\s]*<strong>\d{1,3}</strong>\s*/\s*100', f'Governance-Score: <strong>{_cg}</strong>/100', html, flags=re.I)
-        # Pattern 3: bare "38/100" after "Governance" within 50 chars
-        html = re.sub(r'(Governance[^<]{0,30}?)([1-4]\d)\s*/\s*100', lambda m: m.group(1) + f'{_cg}/100', html, flags=re.I)
-    if _canon_sec:
         _cs = int(float(_canon_sec))
-        _x2_fixes += len(re.findall(r'Sicherheits[- ]?Score[:\s]*\d{1,3}\s*/\s*100', html, re.I))
-        html = re.sub(r'Sicherheits[- ]?Score[:\s]*\d{1,3}\s*/\s*100', f'Sicherheits-Score: {_cs}/100', html, flags=re.I)
-        html = re.sub(r'Sicherheits[- ]?Score[:\s]*<strong>\d{1,3}</strong>\s*/\s*100', f'Sicherheits-Score: <strong>{_cs}</strong>/100', html, flags=re.I)
-        html = re.sub(r'(Sicherheits[^<]{0,30}?)([1-4]\d)\s*/\s*100', lambda m: m.group(1) + f'{_cs}/100', html, flags=re.I)
-    log.info("[X2] Score-Harmonisierung: Governance=%s, Security=%s, %d patterns replaced", _canon_gov, _canon_sec, _x2_fixes)
+        _score_replacements = []
+        for _wrong_g in range(10, 100):
+            if _wrong_g != _cg:
+                _score_replacements.append((f'Governance-Score: {_wrong_g}/100', f'Governance-Score: {_cg}/100'))
+                _score_replacements.append((f'Governance Score: {_wrong_g}/100', f'Governance-Score: {_cg}/100'))
+        for _wrong_s in range(10, 100):
+            if _wrong_s != _cs:
+                _score_replacements.append((f'Sicherheits-Score: {_wrong_s}/100', f'Sicherheits-Score: {_cs}/100'))
+                _score_replacements.append((f'Sicherheits Score: {_wrong_s}/100', f'Sicherheits-Score: {_cs}/100'))
+        for _old_score, _new_score in _score_replacements:
+            _count = html.count(_old_score)
+            if _count > 0:
+                html = html.replace(_old_score, _new_score)
+                _z_score_fixes += _count
+                log.info("[Z+1] Score-Replace: '%s' -> '%s' (%dx)", _old_score, _new_score, _count)
+    log.info("[Z+1] Score-Harmonisierung: Gov=%s, Sec=%s, %d total replacements", _canon_gov, _canon_sec, _z_score_fixes)
 
     # U1b (V1): Global hauptleistung replace using ORIGINAL saved before U2
     if _hl_original and len(_hl_original) > 80:
