@@ -968,13 +968,13 @@ def render(briefing_obj: Any,
         # Pattern 2: with <strong> tags
         html = re.sub(r'Governance[- ]?Score[:\s]*<strong>\d{1,3}</strong>\s*/\s*100', f'Governance-Score: <strong>{_cg}</strong>/100', html, flags=re.I)
         # Pattern 3: bare "38/100" after "Governance" within 50 chars
-        html = re.sub(r'(Governance[^<]{0,30}?)([1-4]\d)\s*/\s*100', lambda m: m.group(1) + f'{_cg}/100', html, flags=re.I)
+        html = re.sub(r'(Governance[^<]{0,30}?)([1-4]d)\s*/\s*100', lambda m: m.group(1) + f'{_cg}/100', html, flags=re.I)
     if _canon_sec:
         _cs = int(float(_canon_sec))
         _x2_fixes += len(re.findall(r'Sicherheits[- ]?Score[:\s]*\d{1,3}\s*/\s*100', html, re.I))
         html = re.sub(r'Sicherheits[- ]?Score[:\s]*\d{1,3}\s*/\s*100', f'Sicherheits-Score: {_cs}/100', html, flags=re.I)
         html = re.sub(r'Sicherheits[- ]?Score[:\s]*<strong>\d{1,3}</strong>\s*/\s*100', f'Sicherheits-Score: <strong>{_cs}</strong>/100', html, flags=re.I)
-        html = re.sub(r'(Sicherheits[^<]{0,30}?)([1-4]\d)\s*/\s*100', lambda m: m.group(1) + f'{_cs}/100', html, flags=re.I)
+        html = re.sub(r'(Sicherheits[^<]{0,30}?)([1-4]d)\s*/\s*100', lambda m: m.group(1) + f'{_cs}/100', html, flags=re.I)
     log.info("[X2] Score-Harmonisierung: Governance=%s, Security=%s, %d patterns replaced", _canon_gov, _canon_sec, _x2_fixes)
 
     # U1b (V1): Global hauptleistung replace using ORIGINAL saved before U2
