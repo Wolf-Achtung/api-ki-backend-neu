@@ -749,6 +749,17 @@ def render(briefing_obj: Any,
     html = re.sub(r'Automatisierte Kl-', 'Automatisierte KI-', html)
     log.info("[Q3] Kl→KI fix applied on final HTML")
 
+    # R2-FIX: Remove go-digital / ZIM from final HTML
+    # Blacklist in gpt_analyze runs BEFORE engine sections are generated
+    _gd_before = html.count('go-digital') + html.count('go_digital')
+    if _gd_before > 0:
+        html = re.sub(r'<tr[^>]*>(?:(?!</tr>).)*go[-_]digital(?:(?!</tr>).)*</tr>\s*', '', html, flags=re.I|re.DOTALL)
+        html = re.sub(r'<li[^>]*>[^<]*go[-_]digital[^<]*</li>\s*', '', html, flags=re.I)
+        html = re.sub(r'<div[^>]*>[^<]*go[-_]digital(?:\s*/\s*ZIM)?[^<]*</div>\s*', '', html, flags=re.I)
+        html = re.sub(r'go[-_]digital\s*(?:/\s*ZIM)?\s*(?:\((?:eingestellt|Programm eingestellt)\))?\s*[–—-]?\s*(?:Eignung:[^<]*)?', '', html, flags=re.I)
+        _gd_after = html.count('go-digital') + html.count('go_digital')
+        log.info("[R2-FIX] go-digital removed from final HTML: %d → %d occurrences", _gd_before, _gd_after)
+
     # Save debug HTML for troubleshooting
     report_id = sections.get('report_id', run_id)
     debug_path = f'/tmp/report_debug_{report_id}.html'
