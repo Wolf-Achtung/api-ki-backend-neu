@@ -2742,17 +2742,22 @@ def _limit_hauptleistung_repetitions(sections: dict, hauptleistung: str, max_ful
 
     # Create short version
     short = hauptleistung[:120].rsplit(" ", 1)[0] + "..." if len(hauptleistung) > 120 else hauptleistung  # L1: was 60
-    # Even shorter: extract core concept (first sentence or clause)
-    for sep in [",", ";", ".", " und ", " mit "]:
-        pos = hauptleistung.find(sep)
-        if 15 < pos < 80:
-            short = hauptleistung[:pos]
-            break
+    # N1: Smarter short form — keep first SENTENCE, not first comma clause
+    # Old logic cut at first comma (pos ~42) → "Beratung und Unterstützung für Unternehmen"
+    # New: prefer first sentence (ending with ".") or 120-char word boundary
+    dot_pos = hauptleistung.find(".")
+    if 40 < dot_pos < 150:
+        short = hauptleistung[:dot_pos + 1]  # Full first sentence
+    # else: keep the 120-char version from above
 
-    # FIX-B1: Sections that NEED multiple hauptleistung occurrences (per validator requirements)
-    # EXEC_SUMMARY_HTML needs 3-4x, RECOMMENDATIONS_HTML needs 2-3x
-    # Limiter must NOT replace these — the Healer injected them deliberately.
-    PROTECTED_SECTIONS = {"EXEC_SUMMARY_HTML", "RECOMMENDATIONS_HTML"}
+    # N1: Expanded PROTECTED_SECTIONS — all customer-facing metadata
+    PROTECTED_SECTIONS = {
+        "EXEC_SUMMARY_HTML", "RECOMMENDATIONS_HTML",
+        "REPORT_SUBTITLE", "HAUPTLEISTUNG", "hauptleistung",
+        "HERO_HTML", "hero",
+        "FINAL_CHECK_INTRO", "FINAL_CHECK_DECISIONS",
+        "UNTERNEHMENSPROFIL_MARKT_HTML",
+    }
 
     total_replaced = 0
     for key, val in sections.items():

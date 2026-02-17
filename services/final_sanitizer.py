@@ -191,14 +191,16 @@ def final_sanitize(sections: dict) -> dict:
         val = sections.get(key)
         if not isinstance(val, str):
             continue
-        if 'go-digital' in val.lower() and '(eingestellt)' not in val:
-            val = re.sub(
-                r'go-digital(?!\s*\(eingestellt\))',
-                'go-digital (eingestellt)',
-                val, flags=re.IGNORECASE
-            )
-            sections[key] = val
-            fixes_applied.append(f"F6:go-digital-in-{key[:30]}")
+        if 'go-digital' in val.lower():
+            # N5: Remove go-digital entirely (program discontinued 2023)
+            val = re.sub(r'<li[^>]*>[^<]*go-digital[^<]*</li>\s*', '', val, flags=re.I)
+            val = re.sub(r'<tr[^>]*>(?:(?!</tr>).)*go-digital(?:(?!</tr>).)*</tr>\s*', '', val, flags=re.I|re.DOTALL)
+            val = re.sub(r'<div[^>]*class=["\']*[^"]*tool-card[^"]*["\']*[^>]*>(?:(?!</div>).)*go-digital(?:(?!</div>).)*</div>\s*', '', val, flags=re.I|re.DOTALL)
+            val = re.sub(r'go-digital\s*\(eingestellt\)\s*[,;.]?\s*', '', val, flags=re.I)
+            val = re.sub(r'[•·\-]\s*[Uu]nterlagen\s+f.r\s+go-digital[^\n<]*[.\n]?\s*', '', val, flags=re.I)
+            if val != sections[key]:
+                sections[key] = val
+                fixes_applied.append(f"N5:go-digital-removed-{key[:30]}")
 
     # ─── FIX-F7: hauptleistung Global Limiter (max 5) + Deduplizierung ───
     try:
@@ -230,14 +232,11 @@ def final_sanitize(sections: dict) -> dict:
                     continue
                 count = val.count(hl_needle)
                 if count > 0:
-                    if total >= 5:
-                        # Alle durch Kurzform ersetzen
-                        val = val.replace(hl, hl_short)
-                        sections[key] = val
                     total += count
 
             if total > 5:
-                fixes_applied.append(f"F7:HL-limited-{total}→max5")
+                # N1b: F7 replacement DISABLED — FIX-3.1 handles limiting
+                fixes_applied.append(f"F7:HL-counted-{total}(limiter-off)")
     except Exception as e:
         log.warning("[FINAL-SANITIZER] F7 HL-limiter failed: %s", e)
 
