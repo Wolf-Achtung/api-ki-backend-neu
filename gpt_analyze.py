@@ -13303,9 +13303,13 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     # FIX-R5-5: Added FUNDING_HTML, TOOLS_FUNDING_ALIGNMENT_HTML, STARTER_KIT_HTML
     for _fp_key in ["FOERDERPOTENZIAL_HTML", "foerderpotenzial",
                      "RECOMMENDATIONS_HTML", "recommendations",
+                     "RECOMMENDATIONS_ENGINE_HTML",  # R2: Was missing
                      "ROADMAP_90D_HTML", "ROADMAP_12M_HTML",
                      "FUNDING_HTML", "TOOLS_FUNDING_ALIGNMENT_HTML",
-                     "STARTER_KIT_HTML"]:
+                     "TOOLS_FUNDING_ALIGNMENT_COMPACT_HTML",  # R2: Was missing
+                     "STARTER_KIT_HTML", "STARTER_KIT_COMPACT_HTML",  # R2
+                     "FUNDING_BRANCH_ALIGNMENT_HTML",  # R2
+                     "FOERDERPROGRAMME_HTML"]:  # R2: Was missing
         _fp_html = sections.get(_fp_key, "")
         if _fp_html and isinstance(_fp_html, str):
             for _discontinued in _FOERDER_BLACKLIST:
@@ -14595,12 +14599,24 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             business_case_simulation_to_html,
         )
 
+        # R1: Inject raw ROI into answers for MC simulation
+        # BC_ROI_REALISTIC (637%) is set by BC engine at line 14512, BEFORE MC.
+        # Without this, MC reads answers["ROI_12M"]=200 (capped) → all percentiles 200%.
+        _mc_roi_raw = float(sections.get("BC_ROI_REALISTIC", 0) or sections.get("BC_ROI_REALISTIC_RAW", 0) or 0)
+        _mc_briefing = dict(answers)  # Shallow copy to avoid polluting answers
+        if _mc_roi_raw > 0:
+            _mc_briefing["ROI_12M"] = _mc_roi_raw
+            _mc_briefing["ROI_12M_RAW"] = _mc_roi_raw
+            log.info("[R1-MC] Injected ROI_12M=%.0f%% into MC briefing (was %s)", _mc_roi_raw, answers.get("ROI_12M", "MISSING"))
+        else:
+            log.warning("[R1-MC] BC_ROI_REALISTIC not available, MC will use capped ROI")
+
         bc_simulation = generate_business_case_simulation(
             context=None,
             business_case=sections.get("_bc_report"),
             risk_report_v3=sections.get("_risk_report_v3"),
             auto_report=sections.get("_automation_roadmap_report"),
-            briefing=answers,
+            briefing=_mc_briefing,
             llm_response=None,
         )
 
@@ -14612,8 +14628,8 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             sections["ROI_P50"] = bc_simulation.distribution.roi_p50
             sections["ROI_P80"] = bc_simulation.distribution.roi_p80
             sections["ROI_P90"] = bc_simulation.distribution.roi_p90
-            log.info("[O6-MC] ROI_12M_RAW=%s, ROI_12M=%s, P50=%.1f, P80=%.1f, P90=%.1f",
-                     answers.get("ROI_12M_RAW", "MISSING"), answers.get("ROI_12M", "MISSING"),
+            log.info("[O6-MC] BC_ROI_REALISTIC=%s, ROI_12M_RAW=%s, ROI_12M=%s, P50=%.1f, P80=%.1f, P90=%.1f",
+                     sections.get("BC_ROI_REALISTIC", "MISSING"), answers.get("ROI_12M_RAW", "MISSING"), answers.get("ROI_12M", "MISSING"),
                      bc_simulation.distribution.roi_p50, bc_simulation.distribution.roi_p80, bc_simulation.distribution.roi_p90)
             sections["PAYBACK_P50"] = bc_simulation.distribution.payback_p50
 
