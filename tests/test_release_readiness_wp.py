@@ -325,7 +325,7 @@ class TestWP4CompactPayloadGuard:
         from services.solo_compact_engine import MAX_PAGES_BY_SIZE
 
         assert MAX_PAGES_BY_SIZE["solo"] == 16
-        assert MAX_PAGES_BY_SIZE["team"] == 35
+        assert MAX_PAGES_BY_SIZE["team"] == 55
         assert MAX_PAGES_BY_SIZE["kmu"] == 45
 
     def test_estimate_page_count(self):
