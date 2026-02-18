@@ -636,7 +636,7 @@ def process_for_solo_compact(
 # Max pages per size profile before auto-compact triggers
 MAX_PAGES_BY_SIZE: Dict[str, int] = {
     "solo": 16,
-    "team": 35,
+    "team": 55,
     "kmu": 45,
 }
 
