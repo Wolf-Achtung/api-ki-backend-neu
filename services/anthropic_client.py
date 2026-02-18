@@ -33,6 +33,22 @@ DEFAULT_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")  # K1
 DEFAULT_MAX_TOKENS = int(os.getenv("ANTHROPIC_MAX_TOKENS", "5000"))  # J11: raised from 3000
 DEFAULT_TEMPERATURE = float(os.getenv("ANTHROPIC_TEMPERATURE", "0.2"))
 
+# --- RUN-622 P2: Opus Routing ------------------------------------------------
+OPUS_MODEL = os.getenv("ANTHROPIC_MODEL_OPUS", "claude-opus-4-5-20250929")
+_OPUS_SECTIONS_RAW = os.getenv("OPUS_SECTIONS", "")
+OPUS_SECTIONS_SET: set = {
+    s.strip().lower()
+    for s in _OPUS_SECTIONS_RAW.split(",")
+    if s.strip()
+}
+if OPUS_SECTIONS_SET:
+    log.info(
+        "🎯 [RUN-622] Opus routing enabled for %d sections: %s",
+        len(OPUS_SECTIONS_SET), sorted(OPUS_SECTIONS_SET),
+    )
+else:
+    log.info("ℹ️ [RUN-622] Opus routing disabled (OPUS_SECTIONS not set)")
+
 # z.B. USE_ANTHROPIC_FOR_EXEC_SUMMARY, USE_ANTHROPIC_FOR_RISKS, ...
 SECTION_FLAG_PREFIX = "USE_ANTHROPIC_FOR_"
 
@@ -127,6 +143,15 @@ def _resolve_anthropic_model(section: Optional[str], requested_model: Optional[s
                 env_name
             )
             return section_model
+    
+    # 1b. RUN-622 P2: Opus Routing via OPUS_SECTIONS ENV
+    section_lower = (section or "").strip().lower()
+    if section_lower in OPUS_SECTIONS_SET:
+        log.info(
+            "🎯 anthropic_client: Opus routing → '%s' for section '%s' (source='OPUS_SECTIONS')",
+            OPUS_MODEL, section,
+        )
+        return OPUS_MODEL
     
     # 2. Globale ENV-Variablen
     global_model = os.getenv("ANTHROPIC_MODEL_DEFAULT") or os.getenv("ANTHROPIC_MODEL")
