@@ -774,7 +774,7 @@ class ReportValidator:
             "executive_summary": 120,   # FIX-R4-VAL: 140 still too high, 117 words observed in prod
             "quick_wins": 90,
             "roadmap_90d": 200,         # SPRINT G17.S: reduced from 300
-            "roadmap_12m": 600,         # SPRINT N: erhöht von 500
+            "roadmap_12m": 520,         # FIX-629c: war 600, CONTEXT-STRIP reduziert ~50 Wörter
             "org_change": 100,
             "tools_empfehlungen": 190,  # SPRINT G6: erhöht von 160
             "strategie_governance": 200,  # SPRINT G6: konsistent mit anderen
