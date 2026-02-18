@@ -11718,6 +11718,28 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
         if error_gate:
             error_gate.increment_fallback()
         return _get_fallback_content(section_name, briefing, scores)
+    # === RUN-622: Quality Gate auch fuer Legacy-Pfad ===
+    _legacy_min_words = {
+        "executive_summary": 150, "roadmap_12m": 800, "foerderpotenzial": 900,
+        "risks": 800, "recommendations": 800, "gamechanger": 850,
+        "technologie_prozesse": 200, "data_readiness": 200,
+        "org_change": 100, "strategie_governance": 120,
+        "tools_empfehlungen": 80, "unternehmensprofil_markt": 600,
+        "wettbewerb_benchmark": 200, "ki_aktivitaeten_ziele": 150,
+        "monetarisierung": 150, "ki_skillplan": 150, "templates_start": 100,
+    }
+    import re as _re_leg
+    _leg_text = _re_leg.sub(r"<[^>]+>", "", out or "").strip()
+    _leg_wc = len(_leg_text.split()) if _leg_text else 0
+    _leg_min = _legacy_min_words.get(section_name, 10)
+    if _leg_wc < _leg_min:
+        log.warning(
+            "[RUN-622] Legacy output too short for %s: %d words < %d min -> PLATIN fallback",
+            section_name, _leg_wc, _leg_min
+        )
+        if error_gate:
+            error_gate.increment_fallback()
+        return _get_fallback_content(section_name, briefing, scores)
     return out
 
 
