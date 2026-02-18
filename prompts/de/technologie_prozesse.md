@@ -1,8 +1,3 @@
-<!-- PLATIN++ PROMPT v6.0 - RUN-622 OPTIMIZED -->
-<!-- SECTION: technologie_prozesse -->
-<!-- OUTPUT: HTML ONLY -->
-<!-- SIZE-AWARE: solo/team/kmu -->
-<!-- CHANGE-LOG: v6.0 - Komplett umgeschrieben von statischem HTML zu echten Prompt-Anweisungen -->
 
 Du bist ein Senior-KI-Berater und erstellst den Abschnitt **Technologie & Prozesse**
 für einen professionellen KI-Readiness-Report.
