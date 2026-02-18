@@ -65,7 +65,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
         ],
 
         "section_budgets": {
-            "EXECUTIVE_SUMMARY_HTML": 4000,
+            "EXECUTIVE_SUMMARY_HTML": 12000,
             "QUICK_WINS_HTML": 8000,  # FIX-G1b: LLM liefert 9K+ HTML
             "QUICK_WINS_HTML_LEFT": 8000,  # FIX-H3
             "ROADMAP_90D_HTML": 3000,
@@ -75,15 +75,15 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "GAMECHANGER_HTML": 1500,
             "FOERDERPOTENZIAL_HTML": 3000,
             "ORG_CHANGE_HTML": 3000,
-            "BUSINESS_CASE_HTML": 5000,
+            "BUSINESS_CASE_HTML": 14000,
             "PILOT_PLAN_HTML": 3000,
             "DATA_READINESS_HTML": 3000,
             "STRATEGIE_GOVERNANCE_HTML": 3000,
-            "UNTERNEHMENSPROFIL_MARKT_HTML": 3000,
+            "UNTERNEHMENSPROFIL_MARKT_HTML": 14000,
             "MONETARISIERUNG_HTML": 3000,
             "KI_SKILLPLAN_HTML": 3000,
             "TOOLS_EMPFEHLUNGEN_HTML": 3000,
-            "TECHNOLOGIE_PROZESSE_HTML": 3000,
+            "TECHNOLOGIE_PROZESSE_HTML": 12000,
             # FIX-C3: Sprint 2025 Phase 2 sections
             "ROI_TRACKING_HTML": 2000,
             "AI_POLICY_MINI_HTML": 2500,
@@ -154,24 +154,24 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
         ],
 
         "section_budgets": {
-            "EXECUTIVE_SUMMARY_HTML": 8000,
+            "EXECUTIVE_SUMMARY_HTML": 12000,
             "QUICK_WINS_HTML": 10000,  # FIX-G1b: LLM liefert 9K+ HTML
             "QUICK_WINS_HTML_LEFT": 10000,  # FIX-H3
             "ROADMAP_90D_HTML": 6000,
             "ROADMAP_12M_HTML": 12000,
-            "RECOMMENDATIONS_HTML": 10000,  # FIX-B4: was 2500, preventing truncation
-            "RISKS_HTML": 8000,  # FIX-G2: was 4000, table-heavy content
-            "GAMECHANGER_HTML": 10000,
-            "FOERDERPOTENZIAL_HTML": 10000,  # FIX-B5: was 2000, too tight for 300+ words
-            "ORG_CHANGE_HTML": 8000,
-            "BUSINESS_CASE_HTML": 10000,
+            "RECOMMENDATIONS_HTML": 18000,  # FIX-B4: was 2500, preventing truncation
+            "RISKS_HTML": 16000,  # FIX-G2: was 4000, table-heavy content
+            "GAMECHANGER_HTML": 14000,
+            "FOERDERPOTENZIAL_HTML": 16000,  # FIX-B5: was 2000, too tight for 300+ words
+            "ORG_CHANGE_HTML": 14000,
+            "BUSINESS_CASE_HTML": 14000,
             "PILOT_PLAN_HTML": 6000,
             "DATA_READINESS_HTML": 8000,
-            "STRATEGIE_GOVERNANCE_HTML": 10000,
-            "UNTERNEHMENSPROFIL_MARKT_HTML": 8000,  # FIX-B5: was 2500
+            "STRATEGIE_GOVERNANCE_HTML": 16000,
+            "UNTERNEHMENSPROFIL_MARKT_HTML": 14000,  # FIX-B5: was 2500
             "MONETARISIERUNG_HTML": 6000,
             "KI_SKILLPLAN_HTML": 6000,
-            "TOOLS_EMPFEHLUNGEN_HTML": 10000,
+            "TOOLS_EMPFEHLUNGEN_HTML": 16000,
             "TECHNOLOGIE_PROZESSE_HTML": 8000,
             # FIX-C3: Sprint 2025 Phase 2 sections
             "ROI_TRACKING_HTML": 3000,

@@ -2107,6 +2107,11 @@ Nutze den Strategischen Kontext wie folgt:
             "costs_overview",           # Kostenübersicht nach Budget
             "ai_act_summary",           # AI Act nach Risikoklasse
             "recommendations",          # Empfehlungen nach Kontext
+            "technologie_prozesse",     # RUN-625: Fehlte! Technologie nach IT-Infrastruktur
+            "data_readiness",           # RUN-625: Datenreife nach Infrastruktur
+            "ki_aktivitaeten_ziele",    # RUN-625: KI-Aktivitäten nach Erfahrung
+            "transparency_box",         # RUN-625: Transparenz-Box
+            "branch_deep_dive",         # RUN-625: Branch Deep Dive
         }
 
         try:

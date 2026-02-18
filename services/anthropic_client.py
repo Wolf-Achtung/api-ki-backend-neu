@@ -134,11 +134,17 @@ def _resolve_anthropic_model(section: Optional[str], requested_model: Optional[s
         "[OPUS-DEBUG] _resolve called: section=%s requested=%s OPUS_SET=%s OPUS_MODEL=%s",
         section, requested_model, bool(OPUS_SECTIONS_SET), OPUS_MODEL,
     )
+    # RUN-625 DEBUG: Trace all inputs
+    log.warning(
+        "[OPUS-DEBUG] _resolve called: section=%s requested=%s OPUS_SET=%s OPUS_MODEL=%s",
+        section, requested_model, bool(OPUS_SECTIONS_SET), OPUS_MODEL,
+    )
     # 1. Sektion-spezifischer Override
     suffix = section_to_env_suffix(section) if section else None
     if suffix:
         env_name = f"ANTHROPIC_MODEL_{suffix}"
         section_model = os.getenv(env_name)
+        log.warning("[OPUS-DEBUG] Step1: suffix=%s env_name=%s value=%s", suffix, env_name, section_model)
         log.warning("[OPUS-DEBUG] Step1: suffix=%s env_name=%s value=%s", suffix, env_name, section_model)
         if section_model:
             log.info(
