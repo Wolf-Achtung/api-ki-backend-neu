@@ -34,7 +34,7 @@ DEFAULT_MAX_TOKENS = int(os.getenv("ANTHROPIC_MAX_TOKENS", "5000"))  # J11: rais
 DEFAULT_TEMPERATURE = float(os.getenv("ANTHROPIC_TEMPERATURE", "0.2"))
 
 # --- RUN-622 P2: Opus Routing ------------------------------------------------
-OPUS_MODEL = os.getenv("ANTHROPIC_MODEL_OPUS", "claude-opus-4-5-20250929")
+OPUS_MODEL = os.getenv("ANTHROPIC_MODEL_OPUS", "claude-opus-4-6")  # FIX-629: war claude-opus-4-5-20250929
 _OPUS_SECTIONS_RAW = os.getenv("OPUS_SECTIONS", "")
 OPUS_SECTIONS_SET: set = {
     s.strip().lower()
@@ -64,9 +64,22 @@ def _normalize_bool(value: Optional[str]) -> bool:
 
 
 _SECTION_ENV_ALIASES = {
-    # Abschnitts-Key -> ENV-Suffix
-    # executive_summary => EXEC_SUMMARY (analog zu OPENAI_MODEL_EXEC_SUMMARY)
-    "executive_summary": "EXEC_SUMMARY",
+    # FIX-629: KRITISCHER BUG BEHOBEN - executive_summary → EXEC_SUMMARY war FALSCH!
+    # Wolf setzt ANTHROPIC_MODEL_EXECUTIVE_SUMMARY in Railway.
+    # Alter Code suchte ANTHROPIC_MODEL_EXEC_SUMMARY → nie gefunden → Sonnet Fallback.
+    # Alle Einträge müssen dem Railway-Variablennamen entsprechen (UPPERCASE nach _).
+    "executive_summary":        "EXECUTIVE_SUMMARY",
+    "gamechanger":              "GAMECHANGER",
+    "recommendations":          "RECOMMENDATIONS",
+    "risks":                    "RISKS",
+    "business_case":            "BUSINESS_CASE",
+    "foerderpotenzial":         "FOERDERPOTENZIAL",
+    "strategie_governance":     "STRATEGIE_GOVERNANCE",
+    "technologie_prozesse":     "TECHNOLOGIE_PROZESSE",
+    "quick_wins":               "QUICK_WINS",
+    "roadmap_12m":              "ROADMAP_12M",
+    "org_change":               "ORG_CHANGE",
+    "unternehmensprofil_markt": "UNTERNEHMENSPROFIL_MARKT",
 }
 
 
@@ -129,23 +142,17 @@ def _resolve_anthropic_model(section: Optional[str], requested_model: Optional[s
     Returns:
         Ein valider Claude-Modellname
     """
-    # RUN-625 DEBUG: Trace all inputs
-    log.warning(
-        "[OPUS-DEBUG] _resolve called: section=%s requested=%s OPUS_SET=%s OPUS_MODEL=%s",
-        section, requested_model, bool(OPUS_SECTIONS_SET), OPUS_MODEL,
-    )
-    # RUN-625 DEBUG: Trace all inputs
-    log.warning(
-        "[OPUS-DEBUG] _resolve called: section=%s requested=%s OPUS_SET=%s OPUS_MODEL=%s",
-        section, requested_model, bool(OPUS_SECTIONS_SET), OPUS_MODEL,
+    # FIX-629: Debug-Log bereinigt (war doppelt, jetzt 1x auf INFO-Level)
+    log.info(
+        "[OPUS-ROUTING] _resolve: section=%s requested=%s opus_sections=%d model=%s",
+        section, requested_model, len(OPUS_SECTIONS_SET), OPUS_MODEL,
     )
     # 1. Sektion-spezifischer Override
     suffix = section_to_env_suffix(section) if section else None
     if suffix:
         env_name = f"ANTHROPIC_MODEL_{suffix}"
         section_model = os.getenv(env_name)
-        log.warning("[OPUS-DEBUG] Step1: suffix=%s env_name=%s value=%s", suffix, env_name, section_model)
-        log.warning("[OPUS-DEBUG] Step1: suffix=%s env_name=%s value=%s", suffix, env_name, section_model)
+        log.debug("[OPUS-ROUTING] Step1: suffix=%s env_name=%s value=%s", suffix, env_name, section_model)
         if section_model:
             log.info(
                 "🎯 anthropic_client: Using model '%s' for section '%s' (requested='%s', source='%s')",
