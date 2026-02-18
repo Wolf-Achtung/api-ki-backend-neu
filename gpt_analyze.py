@@ -11644,8 +11644,10 @@ Format: <table> mit 2 Spalten (Position, Betrag).""",
 {tone} {only_html} Format: <table> mit <thead>/<tbody>. """,
         "gamechanger": f"""Skizziere einen **Gamechanger-Use Case** für {context}. (Idee: 3–4 Sätze; 3 Vorteile; 3 Schritte)
 {tone} {only_html} Verwende <h4>, <p>, <ul>. """,
-        "data_readiness": f"""Erstelle eine kompakte **Dateninventar & -Qualität**-Übersicht für {context}.
-{tone} {only_html} Format: <div class="data-readiness"><h4>…</h4><ul>…</ul></div>. """,
+        "data_readiness": f"""Erstelle eine spezifische **Dateninventar & Datenqualitäts-Analyse** für {context}.
+Analysiere konkret: (1) Welche Datenquellen sind vorhanden und wie strukturiert? (2) Datenqualität: Vollständigkeit, Aktualität, Konsistenz. (3) KI-Readiness: Welche Daten sind für KI-Einsatz geeignet? (4) Datenlücken und Handlungsbedarf. (5) DSGVO-Relevanz der Datenbestände.
+WICHTIG: Keine allgemeinen KI-Empfehlungen — NUR datenspezifische Analyse für dieses Unternehmen.
+{tone} {only_html} Format: <div class="data-readiness"><h4>Datenbestand & Qualität</h4><ul><li>...</li></ul><h4>KI-Readiness der Daten</h4><ul>...</ul><h4>Handlungsbedarf</h4><ul>...</ul></div>. """,
         "org_change": f"""Beschreibe **Organisation & Change** (Governance-Rollen, Skill-Programm, Kommunikation) für {context}.
 {tone} {only_html} Format: <div class="org-change">…</div>. """,
         "business_case": f"""Erstelle einen kompakten **Business Case (detailliert)** für {context} – Annahmen, Nutzen (J1), Kosten (CapEx/OpEx), Payback, ROI, Sensitivität.
