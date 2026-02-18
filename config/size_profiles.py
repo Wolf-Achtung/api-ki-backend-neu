@@ -154,24 +154,24 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
         ],
 
         "section_budgets": {
-            "EXECUTIVE_SUMMARY_HTML": 12000,
-            "QUICK_WINS_HTML": 10000,  # FIX-G1b: LLM liefert 9K+ HTML
-            "QUICK_WINS_HTML_LEFT": 10000,  # FIX-H3
+            "EXECUTIVE_SUMMARY_HTML": 7000,   # FIX-626: was 12000
+            "QUICK_WINS_HTML": 7000,   # FIX-626: was 10000
+            "QUICK_WINS_HTML_LEFT": 7000,   # FIX-626: was 10000
             "ROADMAP_90D_HTML": 6000,
-            "ROADMAP_12M_HTML": 12000,
-            "RECOMMENDATIONS_HTML": 18000,  # FIX-B4: was 2500, preventing truncation
-            "RISKS_HTML": 16000,  # FIX-G2: was 4000, table-heavy content
-            "GAMECHANGER_HTML": 14000,
-            "FOERDERPOTENZIAL_HTML": 16000,  # FIX-B5: was 2000, too tight for 300+ words
-            "ORG_CHANGE_HTML": 14000,
-            "BUSINESS_CASE_HTML": 14000,
+            "ROADMAP_12M_HTML": 8000,   # FIX-626: was 12000
+            "RECOMMENDATIONS_HTML": 10000,  # FIX-626: was 18000
+            "RISKS_HTML": 9000,   # FIX-626: was 16000
+            "GAMECHANGER_HTML": 8000,   # FIX-626: was 14000
+            "FOERDERPOTENZIAL_HTML": 9000,   # FIX-626: was 16000
+            "ORG_CHANGE_HTML": 8000,   # FIX-626: was 14000
+            "BUSINESS_CASE_HTML": 8000,   # FIX-626: was 14000
             "PILOT_PLAN_HTML": 6000,
             "DATA_READINESS_HTML": 8000,
-            "STRATEGIE_GOVERNANCE_HTML": 16000,
-            "UNTERNEHMENSPROFIL_MARKT_HTML": 14000,  # FIX-B5: was 2500
+            "STRATEGIE_GOVERNANCE_HTML": 9000,   # FIX-626: was 16000
+            "UNTERNEHMENSPROFIL_MARKT_HTML": 8000,   # FIX-626: was 14000
             "MONETARISIERUNG_HTML": 6000,
             "KI_SKILLPLAN_HTML": 6000,
-            "TOOLS_EMPFEHLUNGEN_HTML": 16000,
+            "TOOLS_EMPFEHLUNGEN_HTML": 9000,   # FIX-626: was 16000
             "TECHNOLOGIE_PROZESSE_HTML": 8000,
             # FIX-C3: Sprint 2025 Phase 2 sections
             "ROI_TRACKING_HTML": 3000,
