@@ -158,7 +158,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "QUICK_WINS_HTML": 7000,   # FIX-626: was 10000
             "QUICK_WINS_HTML_LEFT": 7000,   # FIX-626: was 10000
             "ROADMAP_90D_HTML": 6000,
-            "ROADMAP_12M_HTML": 8000,   # FIX-626: was 12000
+            "ROADMAP_12M_HTML": 8500,   # FIX-626: was 12000
             "RECOMMENDATIONS_HTML": 10000,  # FIX-626: was 18000
             "RISKS_HTML": 9000,   # FIX-626: was 16000
             "GAMECHANGER_HTML": 8000,   # FIX-626: was 14000
