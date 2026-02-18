@@ -1405,6 +1405,17 @@ def _llm_params_for(section_key: str) -> Dict[str, Any]:
     else:
         max_tokens = OPENAI_MAX_TOKENS_DEFAULT
 
+    # === RUN-622 P1: Diagnostik-Logging für Token-Budget-Auflösung ===
+    _token_source = "ENV" if max_tokens_env is not None else (
+        "_SECTION_MAX_TOKENS" if key in _SECTION_MAX_TOKENS else (
+            "platin_config" if platin_config else "global_default"
+        )
+    )
+    log.info(
+        "[TokenBudget] section=%s → max_tokens=%d (source=%s, model=%s)",
+        section_key, max_tokens, _token_source, model
+    )
+
     return {
         "model": model,
         "temperature": temperature,
@@ -2180,6 +2191,9 @@ def _clean_html(s: str) -> str:
         r'(?i)Verwenden\s+Sie\s+nur\s+die\s+folgenden\s+Tags[^.]*\.',
         r'<p>\s*</p>',  # Empty paragraphs
         r'<p>\s*\.\s*</p>',  # Paragraphs with only a dot
+        # RUN-622 P5: Remove TBD/TODO placeholders from LLM output
+        r'(?i)<(?:p|li|td|div)[^>]*>\s*TBD\s*</(?:p|li|td|div)>',  # Full-element TBD
+        r'(?i)\bTBD\b',  # Standalone TBD anywhere
         # PLATIN+++ FIX 2.2/2.3: Strip prompt input-field labels from LLM output
         r'(?i)<(?:p|li|div)[^>]*>\s*Branche\s+und\s+Use\s+Case\s*</(?:p|li|div)>',
         r'(?i)Branche\s+und\s+Use\s+Case\s*:?\s*',  # FIX-PL1: Catch without tag wrapper
