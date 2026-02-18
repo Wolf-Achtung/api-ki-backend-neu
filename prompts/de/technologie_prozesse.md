@@ -67,7 +67,7 @@ ANTI-REDUNDANZ:
     <li>Automatische Konsistenzprüfung aller Sektionen vor PDF-Erstellung</li>
     <li>Size-Mismatch-Detection: Solo/Team/KMU-spezifische Inhalte werden validiert</li>
     <li>Plausibilitätsprüfung der Business-Case-Zahlen (ROI, Payback, CAPEX)</li>
-    <li>Template-Text-Erkennung: Keine Platzhalter im finalen Report</li>
+    <li>Platzhalter-Erkennung: Keine unvollständigen Inhalte im finalen Report</li>
   </ul>
 
   <h3>Betrieb & Erweiterung</h3>
