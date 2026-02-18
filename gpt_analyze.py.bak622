@@ -2205,11 +2205,6 @@ def _clean_html(s: str) -> str:
         r'(?i)antworte\s+einfach\s+mit[^<.]*[.<]',
         r'(?i)Wenn\s+Sie\s+magst[^.]*\.?',
         r'(?i)Wenn\s+Sie\s+magst,?\s*strong>[^.]*',
-        # RUN-622 P5: TBD/TODO/N/A Placeholder-Filter
-        r'(?i)\\bTBD\\b',
-        r'(?i)\\bTODO\\b',
-        r'(?i)\\b(?:N/A|n/a)\\b',
-        r'\\[(?:hier erg\u00e4nzen|to be defined|noch offen|\\.\\.\\.)\\]',
     ]
     for pattern in prompt_leak_patterns:
         result = re.sub(pattern, '', result)
