@@ -29,6 +29,13 @@ DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
 🎯 ZIEL: 3-5 NATÜRLICHE ERWÄHNUNGEN (NICHT MEHR!)
 ⚠️ MAXIMUM 6x - Mehr wirkt mechanisch!
 
+  ANTI-REDUNDANZ (RUN-622 - KRITISCH):
+  - KEINE Wiederholung von Textbausteinen aus anderen Sections
+  - KEINE ROI-Zahlen, Payback-Werte oder Tool-Listen recyceln
+  - Jeder Absatz muss EINZIGARTIG fuer diese Section sein
+  - Vermeide generische Branchenbeschreibungen die auch anderswo stehen koennten
+
+
 VERTEILUNG (STRIKT!):
 1. ✅ Im h2-Titel: 1x {{hauptleistung}} (PFLICHT)
 2. ✅ Im Bruchpunkt h3: 1x (PFLICHT)
