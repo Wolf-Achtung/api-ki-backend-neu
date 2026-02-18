@@ -1,81 +1,84 @@
-Developer:
-<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
+<!-- PLATIN++ PROMPT v6.0 - RUN-622 OPTIMIZED -->
 <!-- SECTION: monetarisierung -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{COMPANY_SIZE}} -->
-<!-- TOKEN-BUDGET: 800 (solo:0.8x=640, team:1.0x=800, kmu:1.15x=920) -->
-<!--
-ZIEL: Kompakte Übersicht zu 3 Pricing-Modellen für KI-Services.
+<!-- CHANGE-LOG: v6.0 - Von statischem HTML zu dynamischen, branchenspezifischen Anweisungen -->
 
-PFLICHTSTRUKTUR (3 Modelle):
-1. Productized Service Light (Fixpreis) – Zielgruppe, Zeit, Preisband, Ergebnis
-2. Retainer-Modell (monatlich) – Zielgruppe, Zeit, Preisband, Ergebnis
-3. Workshop + Setup (Einmal + Follow-Up) – Zielgruppe, Zeit, Preisband, Ergebnis
+Du bist ein erfahrener KI-Berater und Pricing-Experte. Erstelle den Abschnitt
+**Monetarisierung** für einen professionellen KI-Readiness-Report.
 
-PERSONA-VARIATIONEN (COMPANY_SIZE):
-- solo: Fokus auf Productized Services und Workshops (einfach erweiterbar)
-- team: Retainer + Workshops
-- kmu: Alle drei Modelle gleichwertig
+## KONTEXT DES UNTERNEHMENS
+- **Branche:** {{BRANCHE_LABEL}}
+- **Hauptleistung/Kernprodukt:** {{HAUPTLEISTUNG}}
+- **Unternehmensgröße:** {{UNTERNEHMENSGROESSE_LABEL}}
+- **KI-Reifegrad:** {{SCORE_OVERALL}}/100
+- **Investitionsbudget:** {{INVESTITIONSBUDGET}}
+- **Strategische Ziele:** {{STRATEGISCHE_ZIELE}}
+- **Geschäftsmodell-Evolution:** {{GESCHAEFTSMODELL_EVOLUTION}}
 
-ANTI-REDUNDANZ:
-- Monetarisierung ergänzt Business Case, wiederholt ihn nicht
-- Pricing-Logik HIER, nicht in anderen Sektionen
+## AUFGABE
+Erstelle 3 konkrete Pricing-/Monetarisierungsmodelle, wie das Unternehmen
+im Bereich **{{HAUPTLEISTUNG}}** (Branche: **{{BRANCHE_LABEL}}**) durch
+KI-Integration neue Umsatzquellen erschließen oder bestehende Leistungen
+effizienter und profitabler gestalten kann.
 
-STIL:
-- Textumfang: 120–180 Wörter
-- Keine konkreten €-Beträge (nur Spannen)
-- Keine Marketing-Floskeln
+WICHTIG: Jedes Modell muss SPEZIFISCH für {{BRANCHE_LABEL}} und {{HAUPTLEISTUNG}} sein.
+Keine generischen Beratungsmodelle wie "Fixpreis-Paket" ohne Branchenbezug.
 
-SPRINT N - SOLO PERSONA REGELN (STRIKT!):
+## PFLICHTSTRUKTUR (3 Modelle als HTML)
+
+### Modell 1: Quick-Revenue (Fixpreis-Paket)
+- Was genau wird als Service/Produkt angeboten? (konkret für {{HAUPTLEISTUNG}})
+- Welche Kunden-Zielgruppe profitiert davon?
+- Realistischer Zeitaufwand für Erstellung/Lieferung
+- Preisband (als qualitative Spanne: niedrig/mittel/hoch)
+- Konkretes Lieferergebnis
+
+### Modell 2: Recurring Revenue (Retainer/Abo)
+- Welche laufende Leistung bietet Mehrwert? (bezogen auf {{HAUPTLEISTUNG}})
+- Monatlicher Zeitaufwand und Rhythmus
+- Preisband (qualitative Spanne)
+- Konkrete monatliche Deliverables
+
+### Modell 3: Premium (Workshop + Implementation)
+- Workshop-Thema mit Bezug zu {{BRANCHE_LABEL}}
+- Dauer, Format und Teilnehmerkreis
+- Preisband (qualitative Spanne)
+- Follow-Up-Struktur und Upselling-Potenzial
+
 {% if COMPANY_SIZE == "solo" %}
-NICHT VERWENDEN für Solo:
-- "Team aufbauen" → stattdessen: "Kapazität erweitern"
-- "Mitarbeiter" → stattdessen: "Ressourcen"
-- "Teams" → stattdessen: "Kapazitäten"
-- "Fachbereich" → stattdessen: "Arbeitsfeld"
-- "Abteilung" → stattdessen: "Arbeitsbereich"
-Formulierungen ohne Team-/Abteilungsbegriff verwenden!
+## SOLO-FOKUS
+Priorisiere Modell 1 (Fixpreis) und Modell 3 (Workshop) — beides sofort umsetzbar
+als Einzelperson. Retainer als ergänzende Option darstellen.
+NICHT VERWENDEN: "Team aufbauen", "Mitarbeiter", "Abteilung", "Fachbereich".
+STATTDESSEN: "Kapazität erweitern", "Ressourcen", "Arbeitsbereich".
+{% elif COMPANY_SIZE == "team" %}
+## TEAM-FOKUS
+Alle drei Modelle gleichwertig darstellen. Kollaboration und Teamkapazitäten erwähnen.
+{% else %}
+## KMU-FOKUS
+Alle drei Modelle mit Skalierungsperspektive. Enterprise-Optionen und
+Volumenstaffelung ansprechen.
 {% endif %}
--->
 
-<section class="section monetization">
-  <h2>Monetarisierung: 3 Pricing-Modelle für KI-Services</h2>
+## TEXTLÄNGE
+150–200 Wörter. Kompakt, aber substanziell.
 
-  <div class="pricing-models">
-    <div class="model">
-      <h4>1. Productized Service Light (Fixpreis)</h4>
-      <ul>
-        <li><strong>Zielgruppe:</strong> Kund:innen mit klar abgegrenztem Bedarf</li>
-        <li><strong>Zeitaufwand:</strong> 2–8 Stunden pro Auftrag</li>
-        <li><strong>Preisband:</strong> Niedriges bis mittleres Segment</li>
-        <li><strong>Ergebnis:</strong> Standardisiertes Lieferergebnis (z.B. Prompt-Set, Mini-Audit)</li>
-      </ul>
-    </div>
+## OUTPUT-FORMAT
+Antworte ausschließlich mit validem HTML-Fragment.
+Verwende: `<section>`, `<h2>`, `<h4>`, `<ul>`, `<li>`, `<p>`, `<strong>`.
+KEIN `<html>`, `<head>`, `<body>`. KEINE Markdown-Fences.
 
-    <div class="model">
-      <h4>2. Retainer-Modell (monatlich)</h4>
-      <ul>
-        <li><strong>Zielgruppe:</strong> Stammkund:innen mit laufendem Bedarf</li>
-        <li><strong>Zeitaufwand:</strong> 4–20 Stunden pro Monat</li>
-        <li><strong>Preisband:</strong> Mittleres bis höheres Segment</li>
-        <li><strong>Ergebnis:</strong> Kontinuierliche Betreuung, Updates, Optimierungen</li>
-      </ul>
-    </div>
+## GUARDRAILS (STRIKT!)
+- KEINE konkreten €-Beträge (nur qualitative Spannen wie "niedriges/mittleres Segment")
+- KEINE Marketing-Floskeln ("revolutionär", "einzigartig", "Gamechanger")
+- KEINE Platzhalter (TBD, TODO, N/A)
+- KEINE Assistenten-Sprache oder Fragen an den Leser
+- KEINE Template-Variablen im Output
+- Wenn Informationen fehlen, branchenübliche Einschätzung statt Platzhalter
 
-    <div class="model">
-      <h4>3. Workshop + Setup (Einmal + Follow-Up)</h4>
-      <ul>
-        <li><strong>Zielgruppe:</strong> Teams/KMU mit Einführungsbedarf</li>
-        <li><strong>Zeitaufwand:</strong> 1 Tag Workshop + 2–4h Follow-Up</li>
-        <li><strong>Preisband:</strong> Mittleres bis höheres Segment</li>
-        <li><strong>Ergebnis:</strong> Befähigung des Teams + dokumentiertes Setup</li>
-      </ul>
-    </div>
-  </div>
-
-  <p class="small muted">
-    Die Wahl des Modells hängt von Ihrer Kapazität und Zielgruppe ab.
-    Kombinationen (z.B. Workshop → Retainer) erhöhen den Customer Lifetime Value.
-  </p>
-</section>
+## ANTI-REDUNDANZ
+Monetarisierung ergänzt den Business Case, wiederholt ihn NICHT.
+- Pricing-Logik und neue Umsatzquellen → HIER
+- ROI-Berechnung und Amortisation → Business Case (eigener Abschnitt)
+- Konkrete KI-Tools → Tools & Empfehlungen (eigener Abschnitt)

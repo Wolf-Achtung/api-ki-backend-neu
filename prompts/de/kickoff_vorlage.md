@@ -1,92 +1,92 @@
-Developer:
-<!-- PLATIN++ PROMPT v5.2 -->
+<!-- PLATIN++ PROMPT v6.0 - RUN-622 OPTIMIZED -->
 <!-- SECTION: kickoff_vorlage -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}} -->
-<!-- TOKEN-BUDGET: 700 (solo:0.8x=560, team:1.0x=700, kmu:1.15x=805) -->
-<!--
-ZIEL: Strukturierte Kickoff-Vorlage für den Start eines KI-Projekts.
+<!-- CHANGE-LOG: v6.0 - Size-aware Formate, branchenspezifische Fragen -->
 
-PFLICHTSTRUKTUR:
-1. Agenda (7 Punkte mit Zeiten)
-2. Vorbereitungs-Fragenkatalog (4 Bereiche)
-3. Ergebnis-Template
+Du bist ein erfahrener Projekt-Moderator und erstellst eine sofort nutzbare
+Kickoff-Vorlage für den Start eines KI-Projekts.
 
-PERSONA-VARIATIONEN (COMPANY_SIZE):
-- solo: Schneller Selbst-Check, 30 Min., fokussiert auf Quick Wins
-- team: Gemeinsamer Workshop, Rollen klären, 60-90 Min.
-- kmu: Strukturierter Kickoff, Stakeholder einbinden, 2-3 Stunden
+## KONTEXT DES UNTERNEHMENS
+- **Branche:** {{BRANCHE_LABEL}}
+- **Hauptleistung/Kernprodukt:** {{HAUPTLEISTUNG}}
+- **Unternehmensgröße:** {{UNTERNEHMENSGROESSE_LABEL}}
+- **Zeitfresser-Priorität:** {{ZEITERSPARNIS_PRIORITAET}}
+- **KI-Ziele:** {{PROJEKTZIEL}}
 
-SIZE-AWARE VERANTWORTLICHKEITEN:
-- solo: "Sie selbst", keine komplexen Rollen
-- team: "Projektverantwortlicher", "Team", Peer-Abstimmung
-- kmu: "Projektleitung", "Fachbereich", "IT", "Controlling"
+## AUFGABE
+Erstelle eine strukturierte Kickoff-Vorlage für den Start eines KI-Projekts
+in **{{BRANCHE_LABEL}}** ({{UNTERNEHMENSGROESSE_LABEL}}).
+Die Vorlage muss SOFORT nutzbar sein — zum Ausdrucken oder digital Ausfüllen.
 
-ANTI-REDUNDANZ:
-- Kickoff HIER, nicht in Roadmap 90d (dort erste Umsetzungsschritte)
-- Fokus auf VORBEREITUNG, nicht auf Umsetzung
-- Keine Überschneidung mit Quick Wins (dort konkrete erste Aktionen)
+{% if COMPANY_SIZE == "solo" %}
+## FORMAT: SOLO-SELBSTCHECK (30 Minuten)
+Kein Workshop, sondern eine strukturierte Selbstreflexion.
+- 5 Agenda-Punkte (kompakt, fokussiert)
+- Verantwortlich: immer "Sie selbst"
+- Fokus auf Quick Wins und erste konkrete Schritte
+- NICHT VERWENDEN: "Team", "Abteilung", "Fachbereich", "Stakeholder"
+{% elif COMPANY_SIZE == "team" %}
+## FORMAT: TEAM-WORKSHOP (60–90 Minuten)
+Gemeinsamer Workshop mit klarer Rollenverteilung.
+- 6–7 Agenda-Punkte
+- Rollen: "Projektverantwortlicher", "Team"
+- Peer-Abstimmung und gemeinsame Priorisierung einbauen
+{% else %}
+## FORMAT: KMU-KICKOFF (2–3 Stunden)
+Strukturierter Kickoff mit Stakeholder-Alignment.
+- 7 Agenda-Punkte inkl. Stakeholder-Alignment
+- Rollen: "Projektleitung", "Fachbereich", "IT", "Controlling"
+- Governance-Aspekte von Anfang an berücksichtigen
+{% endif %}
 
-STIL:
-- Textumfang: 120-180 Wörter
-- Praktisch, sofort nutzbar
-- Keine Theorie, nur Struktur
+## PFLICHTSTRUKTUR (3 Teile als HTML)
 
-Nicht verwenden:
-- Keine Platzhalter oder Template-Marker
-- Keine Wiederholung von Roadmap-Inhalten
-- Keine unrealistischen Zeitvorgaben für die Unternehmensgröße
--->
+### Teil 1: Agenda (als Tabelle)
+HTML-Tabelle mit Spalten: #, Thema, Dauer, Verantwortlich.
 
-<section class="section kickoff-vorlage">
-  <h2>Kickoff-Vorlage: KI-Projekt starten</h2>
+Die Themen müssen zum gewählten Format passen:
+{% if COMPANY_SIZE == "solo" %}
+Fokus: Ziele klären, Pain Points, Quick Win #1 definieren, Ressourcen-Check, nächste Schritte.
+{% elif COMPANY_SIZE == "team" %}
+Fokus: Begrüßung, Ausgangslage, KI-Potenziale, Datenlage, Quick Wins, Rollen, Timeline.
+{% else %}
+Fokus: Begrüßung & Ziele, Ausgangslage, KI-Potenziale, Datenlage, Quick Wins, Rollen & Governance, Timeline.
+{% endif %}
 
-  <p>
-    Strukturierter Projektstart für
-    <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in <strong>{{BRANCHE_LABEL}}</strong>.
-  </p>
+Passe die Themen an {{BRANCHE_LABEL}} an. Statt generisches "KI-Potenziale identifizieren"
+lieber branchenspezifisch formulieren (z.B. für Handwerk: "Welche Abläufe kosten am meisten Zeit?").
 
-  <div class="kickoff-content">
-    <h4>Agenda (anpassbar)</h4>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Thema</th>
-          <th>Dauer</th>
-          <th>Verantwortlich</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>1</td><td>Begrüßung & Ziele</td><td>5-10 Min.</td><td>Projektleitung</td></tr>
-        <tr><td>2</td><td>Ausgangslage & Pain Points</td><td>15-20 Min.</td><td>Alle</td></tr>
-        <tr><td>3</td><td>KI-Potenziale identifizieren</td><td>15-20 Min.</td><td>Fachbereich</td></tr>
-        <tr><td>4</td><td>Datenlage klären</td><td>10-15 Min.</td><td>IT / Datenverantwortliche</td></tr>
-        <tr><td>5</td><td>Quick Wins definieren</td><td>15-20 Min.</td><td>Alle</td></tr>
-        <tr><td>6</td><td>Rollen & Verantwortlichkeiten</td><td>10 Min.</td><td>Projektleitung</td></tr>
-        <tr><td>7</td><td>Nächste Schritte & Timeline</td><td>10 Min.</td><td>Projektleitung</td></tr>
-      </tbody>
-    </table>
+### Teil 2: Fragenkatalog zur Vorbereitung
+4 Bereiche mit jeweils 1–2 konkreten Fragen, SPEZIFISCH für {{BRANCHE_LABEL}}:
+- **Ziele:** Was soll durch KI im Bereich {{HAUPTLEISTUNG}} besser werden?
+- **Daten:** Welche Daten aus {{HAUPTLEISTUNG}} liegen digital vor?
+- **Ressourcen:** Verfügbares Budget und Zeitkapazität
+- **Priorität:** Was ist der größte Zeitfresser?
 
-    <h4>Fragenkatalog zur Vorbereitung</h4>
-    <ul>
-      <li><strong>Ziele:</strong> Was soll durch KI besser/schneller/günstiger werden?</li>
-      <li><strong>Daten:</strong> Welche Daten liegen digital vor? Gibt es Datenschutz-Einschränkungen?</li>
-      <li><strong>Ressourcen:</strong> Wer hat Zeit? Welches Budget steht zur Verfügung?</li>
-      <li><strong>Rollen:</strong> Wer entscheidet? Wer setzt um? Wer prüft?</li>
-    </ul>
+### Teil 3: Ergebnis-Dokumentation (nach dem Kickoff festhalten)
+4–5 Punkte, die als Ergebnis dokumentiert werden müssen:
+Projektziel, Top-3 Pain Points, erster Quick Win, nächster Meilenstein + Datum.
 
-    <h4>Nach dem Kickoff dokumentieren</h4>
-    <ul>
-      <li>Projektziel (klar formuliert)</li>
-      <li>Top 3 Pain Points</li>
-      <li>Erster Quick Win + Verantwortlicher</li>
-      <li>Nächster Meilenstein + Datum</li>
-    </ul>
-  </div>
+## TEXTLÄNGE
+140–200 Wörter. Praktisch, sofort nutzbar, keine Theorie.
 
-  <p class="small muted">
-    Tipp: Kickoff kurz halten, Ergebnisse sofort dokumentieren, Follow-up planen.
-  </p>
-</section>
+## OUTPUT-FORMAT
+Antworte ausschließlich mit validem HTML-Fragment.
+Verwende: `<section>`, `<h2>`, `<h4>`, `<table class="table">`, `<thead>`, `<tbody>`,
+`<ul>`, `<p>`, `<strong>`.
+KEIN `<html>`, `<head>`, `<body>`. KEINE Markdown-Fences.
+
+## GUARDRAILS (STRIKT!)
+- KEINE Platzhalter (TBD, TODO, N/A)
+- KEINE Assistenten-Sprache oder Fragen an den Leser
+- KEINE Template-Variablen im Output
+- Kickoff = VORBEREITUNG, nicht Umsetzung (→ Roadmap 90d ist für Umsetzungsschritte)
+- KEINE Überschneidung mit Quick Wins (dort konkrete erste Aktionen)
+- KEINE unrealistischen Zeitvorgaben für die Unternehmensgröße
+
+## ANTI-REDUNDANZ
+- Kickoff-Vorbereitung → HIER
+- Erste Umsetzungsschritte → Roadmap 90d
+- Konkrete Quick Wins → Quick Wins Section
+- Langfristige Planung → Roadmap 12 Monate
