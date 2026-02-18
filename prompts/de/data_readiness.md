@@ -12,6 +12,12 @@ Developer: <!-- data_readiness.md – v3.2 GOLD STANDARD+ (Daten & Systemreife, 
   - KEINE generischen Einleitungen wie "Dieser Abschnitt fasst zusammen..."
   - KEINE redundanten Verweise auf andere Abschnitte in der Einleitung
   - DIREKT mit branchenspezifischem Kontext beginnen
+  ANTI-REDUNDANZ (RUN-622 - KRITISCH):
+  - Verwende KEINE Textbausteine, die in anderen Sections vorkommen könnten
+  - Vermeide Wiederholung von: ROI-Zahlen, Payback-Werten, Branchenbeschreibungen, Tool-Listen
+  - Jeder Absatz muss EINZIGARTIG für Datenreife sein — nicht recycelbar für Risks/Governance/Tools
+  - Statt "Das Unternehmen aus der Branche X..." → direkt zur Datenlage: "Die vorhandenen Datenquellen..."
+  - KEINE Aufzählung von Tools die bereits im Tools-Abschnitt stehen — stattdessen BEWERTUNG der Datenqualität
 
   VERFÜGBARE VARIABLEN (Labels/Nutzereingaben aus dem Fragebogen):
   - {{BRANCHE_LABEL}}
@@ -59,7 +65,6 @@ Developer: <!-- data_readiness.md – v3.2 GOLD STANDARD+ (Daten & Systemreife, 
 <section class="section data-readiness">
   <h2>Datenlage & Systemreife für KI</h2>
 
-  <!-- SPRINT N1: Direkte, branchenspezifische Einleitung ohne Template-Phrasen -->
   <p>
     In <strong>{{BRANCH_CONTEXT_LABEL}}</strong> basiert erfolgreiche KI-Implementierung auf
     einer soliden Datenbasis. Die vorhandenen Datenquellen, Strukturen und Schnittstellen sind
@@ -111,7 +116,6 @@ Developer: <!-- data_readiness.md – v3.2 GOLD STANDARD+ (Daten & Systemreife, 
   </p>
 </section>
 
-<!-- Output-Umfang:
      - 1 Einleitung, 4 Unterabschnitte (Status, Stärken, Lücken, nächste Schritte).
      - Pro Listenpunkt maximal 2 kurze Sätze.
      - Schreibe direkt finalen, kundentauglichen Inhalt. -->
