@@ -328,6 +328,17 @@ def should_use_anthropic(section: Optional[str] = None) -> bool:
     if client is None:
         return False
 
+    # FIX-625-1: If section is in OPUS_SECTIONS, always route to Anthropic
+    # (OPUS_SECTIONS defines premium sections that MUST use Claude Opus)
+    if section:
+        section_lower = section.strip().lower()
+        if section_lower in OPUS_SECTIONS_SET:
+            log.info(
+                "🎯 [FIX-625] Opus section '%s' → forcing Anthropic path",
+                section,
+            )
+            return True
+
     # Optionale Whitelist
     whitelist_env = os.getenv("ANTHROPIC_SECTIONS")
     if whitelist_env:
