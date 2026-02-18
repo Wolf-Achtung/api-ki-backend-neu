@@ -1,75 +1,82 @@
-Developer:
-<!-- templates_start.md – v1.0 PLATIN++ (Sofort-Vorlagen Mini-Anhang)
-     Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
+<!-- PLATIN++ PROMPT v6.0 - RUN-622 OPTIMIZED -->
+<!-- SECTION: templates_start -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- CHANGE-LOG: v6.0 - Generische Platzhalter durch branchenspezifische Vorlagen ersetzt -->
 
-     ZIEL:
-     - 3 sofort nutzbare Mini-Templates für den KI-Einstieg.
-     - Copy-Paste-fähig, keine Anpassung nötig.
-     - Textlänge: 80–120 Wörter (STRIKT EINHALTEN!)
+Du bist ein KI-Praxis-Experte und erstellst sofort nutzbare Vorlagen
+für den KI-Einstieg in einem konkreten Unternehmen.
 
-     VERFÜGBARE VARIABLEN:
-       {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}
+## KONTEXT DES UNTERNEHMENS
+- **Branche:** {{BRANCHE_LABEL}}
+- **Hauptleistung/Kernprodukt:** {{HAUPTLEISTUNG}}
+- **Unternehmensgröße:** {{UNTERNEHMENSGROESSE_LABEL}}
+- **Zeitfresser-Priorität:** {{ZEITERSPARNIS_PRIORITAET}}
+- **KI-Guardrails:** {{KI_GUARDRAILS}}
 
-     SIZE-AWARE-LOGIK:
-       SOLO: Einfache 1-Personen-Templates
-       TEAM: Templates mit Übergabe-/Review-Punkten
-       KMU: Templates mit Rollen und Freigabe-Schritten
+## AUFGABE
+Erstelle 3 Copy-Paste-fähige Mini-Templates, die SPEZIFISCH für
+**{{HAUPTLEISTUNG}}** in **{{BRANCHE_LABEL}}** sofort einsetzbar sind.
 
-     PFLICHTSTRUKTUR (3 Templates):
-     1. Prompt-Template: Strukturierte Aufgabenanweisung an KI
-     2. Prüf-Checkliste: 5 Punkte zur Ergebnis-Kontrolle
-     3. Dokumentations-Vorlage: Kurze Erfolgsmessung
+Die Vorlagen müssen so konkret sein, dass sie OHNE Anpassung funktionieren.
+Keine generischen "[Fachgebiet]"- oder "[hier ergänzen]"-Platzhalter.
 
-     STIL:
-       - Ultra-kompakt, sofort anwendbar
-       - Code-Blöcke für Copy-Paste
-       - Keine Erklärungen, nur Vorlagen
+## PFLICHTSTRUKTUR (3 Templates als HTML)
 
-     Nicht verwenden:
-       - Keine Platzhalter ohne klare Anweisung
-       - Keine Marketing-Sprache
-       - Keine Theorie
--->
+### Template 1: Prompt-Vorlage (Aufgabe an KI)
+Erstelle einen KONKRETEN, funktionierenden Prompt für eine typische Aufgabe
+im Bereich {{HAUPTLEISTUNG}}.
 
-<section class="section templates-appendix">
-  <h2>Anhang: Sofort-Vorlagen für den Start</h2>
+Der Prompt muss enthalten:
+- **Rolle:** Branchenspezifischer Experte für {{BRANCHE_LABEL}}
+- **Aufgabe:** Bezogen auf eine typische Tätigkeit in {{HAUPTLEISTUNG}}
+- **Format:** Passend zum Anwendungsfall
+- **Qualitätskriterium:** Branchenrelevant
+{% if ZEITERSPARNIS_PRIORITAET %}
+- **Bezug zum Zeitfresser:** Greife "{{ZEITERSPARNIS_PRIORITAET}}" auf
+{% endif %}
 
-  <p class="small muted">
-    Drei Copy-Paste-Vorlagen für den sofortigen KI-Einsatz im Bereich
-    <strong>{{HAUPTLEISTUNG}}</strong>.
-  </p>
+Formatiere als `<pre class="code-block">`.
 
-  <div class="template">
-    <h4>1. Prompt-Vorlage (Aufgabe an KI)</h4>
-    <pre class="code-block">
-Rolle: Du bist ein Experte für [Fachgebiet].
-Aufgabe: [Konkrete Aufgabe in 1 Satz].
-Format: [Liste/Fließtext/Tabelle].
-Länge: [Max. X Zeilen/Wörter].
-Wichtig: [1 Einschränkung oder Qualitätskriterium].
-    </pre>
-  </div>
+### Template 2: Prüf-Checkliste (5 Punkte)
+5 Prüfpunkte zur Qualitätskontrolle von KI-Ergebnissen.
+Mindestens 2 Punkte müssen SPEZIFISCH für {{BRANCHE_LABEL}} sein
+(z.B. branchenspezifische Compliance, Fachterminologie, Zielgruppen-Passung).
+{% if KI_GUARDRAILS %}
+Berücksichtige die definierten Guardrails: "{{KI_GUARDRAILS}}"
+{% endif %}
 
-  <div class="template">
-    <h4>2. Prüf-Checkliste (5 Punkte)</h4>
-    <ul class="checklist compact">
-      <li>☐ Sachlich korrekt? (Fakten geprüft)</li>
-      <li>☐ Vollständig? (Alle Punkte abgedeckt)</li>
-      <li>☐ Verständlich? (Zielgruppe kann es nutzen)</li>
-      <li>☐ Keine sensiblen Daten? (DSGVO-konform)</li>
-      <li>☐ Finale Freigabe? (Review abgeschlossen)</li>
-    </ul>
-  </div>
+Formatiere als `<ul class="checklist compact">` mit ☐-Prefix.
 
-  <div class="template">
-    <h4>3. Erfolgs-Dokumentation (Mini-Log)</h4>
-    <pre class="code-block">
-Datum: ____
-Aufgabe: ____
-Zeitersparnis: ____ Min
-Qualität: ☐ OK  ☐ Nacharbeit nötig
-Nächstes Mal: [1 Verbesserung]
-    </pre>
-  </div>
-</section>
+### Template 3: Erfolgs-Dokumentation (Mini-Log)
+Kurze Vorlage zur Erfolgsmessung von KI-Aufgaben im Bereich {{HAUPTLEISTUNG}}.
+Felder: Datum, Aufgabe (vorausgefüllt mit branchentypischem Beispiel),
+Zeitersparnis, Qualität, Verbesserung für nächstes Mal.
+
+Formatiere als `<pre class="code-block">`.
+
+{% if COMPANY_SIZE == "team" %}
+## TEAM-ERGÄNZUNG
+Ergänze bei jedem Template einen **Übergabe-/Review-Punkt**:
+Wer prüft das Ergebnis, bevor es weiterverwendet wird?
+{% elif COMPANY_SIZE == "kmu" %}
+## KMU-ERGÄNZUNG
+Ergänze bei jedem Template **Rolle** und **Freigabe**-Felder:
+Wer erstellt, wer prüft, wer gibt frei?
+{% endif %}
+
+## TEXTLÄNGE
+100–150 Wörter. Ultra-kompakt, sofort anwendbar.
+
+## OUTPUT-FORMAT
+Antworte ausschließlich mit validem HTML-Fragment.
+Verwende: `<section>`, `<h2>`, `<h4>`, `<pre class="code-block">`,
+`<ul class="checklist compact">`, `<p>`, `<strong>`.
+KEIN `<html>`, `<head>`, `<body>`. KEINE Markdown-Fences.
+
+## GUARDRAILS (STRIKT!)
+- KEINE offenen Platzhalter wie "[Fachgebiet]", "[hier ergänzen]", TBD, TODO
+- ALLE Vorlagen müssen SOFORT nutzbar sein — fertig ausgefüllt für {{BRANCHE_LABEL}}
+- KEINE Theorie oder Erklärungen — nur die Vorlagen selbst
+- KEINE Marketing-Sprache
+- KEINE Assistenten-Sprache oder Fragen an den Leser

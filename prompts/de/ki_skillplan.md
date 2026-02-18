@@ -1,96 +1,87 @@
-Developer:
-<!-- ki_skillplan.md – v1.1 PLATIN++ SPRINT N (KI-Kompetenz-Fahrplan)
-     Antworte ausschließlich mit validem HTML.
-     KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
+<!-- PLATIN++ PROMPT v6.0 - RUN-622 OPTIMIZED -->
+<!-- SECTION: ki_skillplan -->
+<!-- OUTPUT: HTML ONLY -->
+<!-- SIZE-AWARE: solo/team/kmu -->
+<!-- CHANGE-LOG: v6.0 - Generische Stufen durch branchenspezifische Skills ersetzt -->
 
-     ZIEL:
-     - Klarer, verständlicher Kompetenzaufbau-Plan für KI-Nutzung.
-     - 3 Stufen: Basis → Pro → Experte (mit Zeitrahmen).
-     - Praxisnah, ohne Fachjargon, sofort umsetzbar.
-     - Textlänge: 100–150 Wörter (STRIKT EINHALTEN!)
+Du bist ein KI-Trainings-Experte und erstellst einen praxisnahen
+Kompetenz-Fahrplan für KI-Nutzung.
 
-     VERFÜGBARE VARIABLEN:
-       {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{COMPANY_SIZE}}
+## KONTEXT DES UNTERNEHMENS
+- **Branche:** {{BRANCHE_LABEL}}
+- **Hauptleistung/Kernprodukt:** {{HAUPTLEISTUNG}}
+- **Unternehmensgröße:** {{UNTERNEHMENSGROESSE_LABEL}}
+- **KI-Reifegrad:** {{SCORE_OVERALL}}/100
+- **Vorhandene KI-Kompetenz:** {{KI_KNOWHOW}}
+- **Trainingsinteressen:** {{TRAININGS_INTERESSEN}}
+- **Vorhandene Tools:** {{VORHANDENE_TOOLS_LABELS}}
 
-     SIZE-AWARE-LOGIK:
-       SOLO: Fokus auf Selbstlernen, Online-Ressourcen, learning-by-doing
-       TEAM: Gemeinsames Lernen, Peer-Reviews, interne Workshops
-       KMU: Strukturierte Schulungen, externe Trainer, Zertifizierungen
+## AUFGABE
+Erstelle einen 3-Stufen-Kompetenzaufbau-Plan für KI-Nutzung,
+SPEZIFISCH zugeschnitten auf **{{HAUPTLEISTUNG}}** in **{{BRANCHE_LABEL}}**.
 
-     PFLICHTSTRUKTUR (3 Stufen):
-     1. Basis (0–3 Monate)
-        - Prompting-Grundlagen
-        - Textautomatisierung (E-Mails, Vorlagen)
-        - Erste Workflows testen
-     2. Pro (3–9 Monate)
-        - Workflow-Automatisierung
-        - Datenqualität & Strukturierung
-        - Analyseketten aufbauen
-     3. Experte (9–18 Monate)
-        - RAG (Retrieval-Augmented Generation)
-        - KI-Agents & Automatisierung
-        - Governance & Qualitätssicherung
+Jede Stufe muss branchenspezifische Beispiele enthalten.
+Ein Handwerksbetrieb braucht andere Skills als ein Medienunternehmen —
+die Empfehlungen müssen zur Branche passen.
 
-     STIL:
-       - Sehr verständlich, keine Fachbegriffe ohne Erklärung
-       - Konkrete Beispiele statt Theorie
-       - Motivierend, aber realistisch
+## PFLICHTSTRUKTUR (3 Stufen als HTML)
 
-     Nicht verwenden:
-       - Keine Platzhalter oder Template-Marker
-       - Keine technischen Pipeline-Begriffe
-       - Keine übertriebenen Versprechen
+### Stufe 1: Basis (0–3 Monate)
+3 konkrete Lern-Skills, zugeschnitten auf {{HAUPTLEISTUNG}}:
+- Jeweils: **Was lernen** + **Wozu nützt es konkret in {{BRANCHE_LABEL}}**
+- Praxisbeispiel aus dem Alltag von {{HAUPTLEISTUNG}}
+- Empfohlene Lernmethode (passend zur Unternehmensgröße)
 
-     SPRINT N - SOLO PERSONA REGELN (STRIKT!):
-     {% if COMPANY_SIZE == "solo" %}
-     NICHT VERWENDEN für Solo:
-     - "Team aufbauen" → stattdessen: "Kapazität erweitern"
-     - "Mitarbeiter schulen" → stattdessen: "sich weiterbilden"
-     - "Teams" → stattdessen: "Kapazitäten"
-     - "Fachbereich" → stattdessen: "Arbeitsfeld"
-     - "Abteilung" → stattdessen: "Arbeitsbereich"
-     Formulierungen ohne Team-/Abteilungsbegriff verwenden!
-     {% endif %}
--->
+### Stufe 2: Pro (3–9 Monate)
+3 fortgeschrittene Skills für {{BRANCHE_LABEL}}:
+- Fokus auf Workflow-Automatisierung in {{HAUPTLEISTUNG}}
+- Konkrete Anwendungsbeispiele (Welche Prozesse? Welche Tools?)
+- Messbare Verbesserungen (Zeitersparnis, Qualität)
 
-<section class="section skill-plan">
-  <h2>KI-Kompetenz-Fahrplan</h2>
+### Stufe 3: Experte (9–18 Monate)
+3 Expert-Skills mit Branchen-Bezug:
+- RAG-Systeme: Wie kann {{BRANCHE_LABEL}} eigene Daten/Dokumente nutzen?
+- KI-Agents: Welche wiederkehrenden Aufgaben in {{HAUPTLEISTUNG}} automatisieren?
+- Governance: Branchenspezifische Qualitätssicherung und Richtlinien
 
-  <p>
-    Für <strong>{{UNTERNEHMENSGROESSE_LABEL}}</strong> in <strong>{{BRANCHE_LABEL}}</strong>
-    empfiehlt sich ein strukturierter Kompetenzaufbau in drei Stufen.
-  </p>
+{% if COMPANY_SIZE == "solo" %}
+## SOLO-FOKUS
+Fokus auf Selbstlernen, Online-Ressourcen, Learning-by-Doing.
+NICHT VERWENDEN: "Team aufbauen", "Mitarbeiter schulen", "Abteilung", "Fachbereich".
+STATTDESSEN: "sich weiterbilden", "Kapazität erweitern", "Arbeitsbereich".
+{% elif COMPANY_SIZE == "team" %}
+## TEAM-FOKUS
+Gemeinsames Lernen betonen: Peer-Reviews, interne Workshops, geteilte Prompt-Bibliotheken.
+{% else %}
+## KMU-FOKUS
+Strukturierte Schulungen, externe Trainer, Zertifizierungen berücksichtigen.
+Rollen definieren: Wer wird KI-Champion? Wer bildet andere aus?
+{% endif %}
 
-  <div class="skill-levels">
-    <div class="level basis">
-      <h4>Stufe 1: Basis (0–3 Monate)</h4>
-      <ul>
-        <li><strong>Prompting lernen:</strong> Klare Anweisungen formulieren, Ergebnisse prüfen</li>
-        <li><strong>Textautomatisierung:</strong> E-Mail-Vorlagen, Standardantworten, Dokumentenentwürfe</li>
-        <li><strong>Erste Tests:</strong> KI im Alltag ausprobieren, Grenzen kennenlernen</li>
-      </ul>
-    </div>
+{% if TRAININGS_INTERESSEN %}
+## BESONDERE BERÜCKSICHTIGUNG
+Der/die Nutzer:in hat folgende Trainingsinteressen angegeben: {{TRAININGS_INTERESSEN}}.
+Integriere diese Interessen in die passende Stufe des Fahrplans.
+{% endif %}
 
-    <div class="level pro">
-      <h4>Stufe 2: Pro (3–9 Monate)</h4>
-      <ul>
-        <li><strong>Automatisierung:</strong> Wiederkehrende Abläufe mit KI-Unterstützung beschleunigen</li>
-        <li><strong>Datenqualität:</strong> Strukturierte Eingaben, konsistente Formate, Prüfroutinen</li>
-        <li><strong>Analyseketten:</strong> Mehrstufige Aufgaben (z.B. Recherche → Zusammenfassung → Handlungsempfehlung)</li>
-      </ul>
-    </div>
+## TEXTLÄNGE
+130–180 Wörter. Verständlich, praxisnah, motivierend.
 
-    <div class="level expert">
-      <h4>Stufe 3: Experte (9–18 Monate)</h4>
-      <ul>
-        <li><strong>RAG-Systeme:</strong> KI mit eigenen Dokumenten/Datenbanken verbinden</li>
-        <li><strong>KI-Agents:</strong> Automatisierte Assistenten für komplexe Aufgaben</li>
-        <li><strong>Governance:</strong> Qualitätssicherung, Richtlinien, kontinuierliche Verbesserung</li>
-      </ul>
-    </div>
-  </div>
+## OUTPUT-FORMAT
+Antworte ausschließlich mit validem HTML-Fragment.
+Verwende: `<section>`, `<h2>`, `<h4>`, `<ul>`, `<li>`, `<p>`, `<strong>`.
+KEIN `<html>`, `<head>`, `<body>`. KEINE Markdown-Fences.
 
-  <p class="small muted">
-    Tipp: Jede Stufe aufbauen, bevor die nächste beginnt – solide Grundlagen ermöglichen schnelleren Fortschritt.
-  </p>
-</section>
+## GUARDRAILS (STRIKT!)
+- KEINE Platzhalter (TBD, TODO, N/A)
+- KEINE Fachbegriffe ohne kurze Erklärung (z.B. "RAG" → "(KI mit eigenen Dokumenten)")
+- KEINE übertriebenen Versprechen ("10x Produktivität in 3 Wochen")
+- KEINE Assistenten-Sprache oder Fragen an den Leser
+- KEINE Template-Variablen im Output
+- Verständlich auch für absolute KI-Einsteiger
+
+## ANTI-REDUNDANZ
+Der Skillplan ergänzt andere Abschnitte, wiederholt sie nicht:
+- Konkrete Tool-Empfehlungen → Tools & Empfehlungen
+- Organisatorisches Change Management → Org Change
+- KI-Strategie → Strategie & Governance

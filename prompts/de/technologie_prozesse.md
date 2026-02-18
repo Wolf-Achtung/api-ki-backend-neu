@@ -1,94 +1,101 @@
-<!-- PLATIN++ PROMPT v5.4 - SPRINT G6 -->
+<!-- PLATIN++ PROMPT v6.0 - RUN-622 OPTIMIZED -->
 <!-- SECTION: technologie_prozesse -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!--
-ZIEL: Präzise Technologie & Prozesse Übersicht.
+<!-- CHANGE-LOG: v6.0 - Komplett umgeschrieben von statischem HTML zu echten Prompt-Anweisungen -->
 
-MINDESTLÄNGE (STRIKT!):
-- Solo: ≥180 Wörter
-- Team: ≥210 Wörter
-- KMU: ≥240 Wörter
+Du bist ein Senior-KI-Berater und erstellst den Abschnitt **Technologie & Prozesse**
+für einen professionellen KI-Readiness-Report.
 
-STRUKTUR (4 Abschnitte):
-1. Kurze Einleitung (2 Sätze, kein generischer Meta-Text!)
-2. Systemarchitektur (Tabelle: 5 Layer mit Funktion)
-3. Datenflüsse & Integrationen (Hauptprozess + size-aware Details)
-4. Qualitätssicherung (3-4 Punkte)
+## KONTEXT DES UNTERNEHMENS
+- **Branche:** {{BRANCHE_LABEL}}
+- **Hauptleistung/Kernprodukt:** {{HAUPTLEISTUNG}}
+- **Unternehmensgröße:** {{UNTERNEHMENSGROESSE_LABEL}}
+- **IT-Infrastruktur:** {{IT_INFRASTRUKTUR_LABEL}}
+- **Digitalisierungsgrad (papierlos):** {{PROZESSE_PAPIERLOS_LABEL}}
+- **Automatisierungsgrad:** {{AUTOMATISIERUNGSGRAD_LABEL}}
+- **Vorhandene Tools:** {{VORHANDENE_TOOLS_LABELS}}
+- **Datenquellen:** {{DATENQUELLEN_LABELS}}
+
+## AUFGABE
+Erstelle eine branchenspezifische Analyse der technologischen Infrastruktur
+und Prozessketten, die für den KI-Einsatz bei einem Unternehmen im Bereich
+**{{HAUPTLEISTUNG}}** (Branche: **{{BRANCHE_LABEL}}**) relevant sind.
+
+Beschreibe die IST-Situation und bewerte die KI-Readiness der Technologielandschaft.
+
+## PFLICHTSTRUKTUR (5 Abschnitte als HTML)
+
+### 1. Einleitung (2–3 Sätze)
+Beschreibe die aktuelle technologische Ausgangslage SPEZIFISCH für {{HAUPTLEISTUNG}}
+in der Branche {{BRANCHE_LABEL}}.
+KEIN generischer Meta-Text wie "Eine IT-Infrastruktur ist wichtig für...".
+Direkt auf die Branche und das Kernprodukt eingehen.
+
+### 2. Systemarchitektur-Bewertung (Tabelle)
+Erstelle eine HTML-Tabelle mit 5 Layern. JEDER Layer muss einen konkreten Bezug
+zu {{BRANCHE_LABEL}} und {{HAUPTLEISTUNG}} haben:
+
+Spalten: Layer | Funktion | Bewertung für {{BRANCHE_LABEL}}
+
+Die 5 Layer:
+- **Datenerfassung:** Wie kommen Daten im Bereich {{HAUPTLEISTUNG}} ins System?
+- **Datenverarbeitung:** Welche Systeme verarbeiten die Daten?
+- **KI/Analyse:** Wo kann KI in den bestehenden Prozessen ansetzen?
+- **Output/Delivery:** Wie werden Ergebnisse an Kunden/intern geliefert?
+- **Monitoring:** Wie wird Qualität in {{BRANCHE_LABEL}} gesichert?
+
+### 3. Datenflüsse & Integrationen
+Beschreibe den Hauptdatenfluss in {{HAUPTLEISTUNG}} als nummerierte Liste (5–8 Schritte).
+Jeder Schritt muss konkret auf die Branche bezogen sein.
+Berücksichtige den aktuellen IT-Stand: {{IT_INFRASTRUKTUR_LABEL}}.
+
+### 4. Qualitätssicherung
+3–4 konkrete QS-Maßnahmen, die für {{BRANCHE_LABEL}} typisch und relevant sind.
+Beziehe den Digitalisierungsgrad ein: {{PROZESSE_PAPIERLOS_LABEL}}.
 
 {% if COMPANY_SIZE == "team" or COMPANY_SIZE == "kmu" %}
-Für Team/KMU zusätzlich:
-- Betriebsmodell/Support (1 Absatz)
-- Ausblick: Cloud, EU-Hosting, Observability (kurz)
+### 5. Betriebsmodell & Ausblick
+- Empfehlung Cloud/On-Premise/Hybrid mit Begründung für {{BRANCHE_LABEL}}
+- EU-Hosting und DSGVO-Relevanz für diese Branche
+- Skalierbarkeit: Was ändert sich bei Wachstum?
+{% else %}
+### 5. Datensicherheit
+DSGVO-konforme Tools mit EU-Hosting nutzen. Sensible Daten aus {{HAUPTLEISTUNG}}
+nur anonymisiert in KI-Tools eingeben. Konkrete Empfehlung für Solo-Setup.
 {% endif %}
 
-ANTI-REDUNDANZ:
-- Keine Tool-Liste (→ siehe KI-Stack)
-- Fokus auf Prozessketten, nicht konkrete Tools
-- Keine generischen Definitionen ("Eine Roadmap ist...")
--->
+## MINDESTLÄNGE (STRIKT!)
+{% if COMPANY_SIZE == "solo" %}
+Mindestens 180 Wörter.
+{% elif COMPANY_SIZE == "team" %}
+Mindestens 210 Wörter.
+{% else %}
+Mindestens 240 Wörter.
+{% endif %}
 
-<section class="section technologie-prozesse">
-  <h2>Technologie & Prozesse</h2>
+## OUTPUT-FORMAT
+Antworte ausschließlich mit validem HTML-Fragment.
+Verwende: `<section>`, `<h2>`, `<h3>`, `<table class="table">`, `<thead>`, `<tbody>`,
+`<ul>`, `<ol>`, `<p>`, `<strong>`.
+KEIN `<html>`, `<head>`, `<body>`. KEINE Markdown-Fences.
 
-  <p>
-    Der Datenfluss vom Fragebogen bis zum fertigen PDF-Report basiert auf einer
-    mehrschichtigen Architektur mit integrierter Qualitätssicherung.
-  </p>
+## GUARDRAILS (STRIKT!)
+- KEINE Platzhalter: Kein TBD, TODO, N/A, "[...]", "[hier ergänzen]"
+- KEINE Assistenten-Sprache: Kein "Gerne!", "Natürlich!", "Hier ist Ihre Analyse"
+- KEINE Fragen an den Leser: Kein "Möchten Sie...?", "Haben Sie...?"
+- KEINE internen Bezeichnungen: Kein LEAD_TECH, PERSONA_*, SECTION_KEY
+- KEINE Template-Variablen im Output: Kein {BRANCHE}, {SCORE_*} sichtbar
+- Sprache: Neutral, dritte Person, professionelle Berichtsform
+- Wenn eine Information fehlt, formuliere eine fundierte, branchenübliche Einschätzung
+  statt einen Platzhalter zu setzen
 
-  <h3>Systemarchitektur</h3>
-  <table class="table">
-    <thead>
-      <tr><th>Layer</th><th>Funktion</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>Frontend</td><td>Fragebogen-Erfassung, Validierung, Submit mit Autosave</td></tr>
-      <tr><td>Backend</td><td>Prompt-Orchestrierung, Report-Builder, Business-Case-Berechnung</td></tr>
-      <tr><td>KI/Analyse</td><td>Mehrschichtige Prompt-Analyse, Research-Integration, Branchen-Kontext</td></tr>
-      <tr><td>PDF-Service</td><td>HTML→PDF Rendering, Layout-Optimierung, Branding</td></tr>
-      <tr><td>Delivery</td><td>E-Mail-Versand, Archivierung, Nachverfolgung</td></tr>
-    </tbody>
-  </table>
-
-  <h3>Datenfluss & Integrationen</h3>
-  <ol>
-    <li>Nutzer:in füllt Fragebogen aus (Autosave aktiv, Zwischenspeicherung)</li>
-    <li>Submit → Validierung → Speicherung in sicherer Datenbank</li>
-    <li>Prompt-Engine injiziert Branchen- und Größen-Kontext (size-aware)</li>
-    <li>KI generiert Sektionen (Executive Summary, Roadmaps, Risiken, Business Case)</li>
-    <li>Business-Case-Logik berechnet CAPEX/OPEX/ROI basierend auf Eingaben</li>
-    <li>Validator prüft HTML-Qualität, Konsistenz und Persona-Compliance</li>
-    <li>PDF-Service rendert finalen Report mit Corporate-Layout</li>
-    <li>Versand per E-Mail mit Zustellbestätigung</li>
-  </ol>
-
-  <h3>Qualitätssicherung</h3>
-  <ul>
-    <li>Automatische Konsistenzprüfung aller Sektionen vor PDF-Erstellung</li>
-    <li>Size-Mismatch-Detection: Solo/Team/KMU-spezifische Inhalte werden validiert</li>
-    <li>Plausibilitätsprüfung der Business-Case-Zahlen (ROI, Payback, CAPEX)</li>
-    <li>Template-Text-Erkennung: Keine Platzhalter im finalen Report</li>
-  </ul>
-
-  <h3>Betrieb & Erweiterung</h3>
-  <p>
-    Die Architektur ist für parallele Reportgenerierung ausgelegt. EU-Hosting gewährleistet
-    DSGVO-Konformität. Monitoring überwacht Latenz und Fehlerquoten kontinuierlich.
-  </p>
-
-  <h3>Datensicherheit &amp; Compliance</h3>
-  <p>
-    {% if COMPANY_SIZE == "solo" %}
-    DSGVO-konforme Tools mit EU-Hosting nutzen. Sensible Daten nur anonymisiert eingeben.
-    {% elif COMPANY_SIZE == "team" %}
-    Klare Regeln für Datentypen in KI-Tools. Zentraler Leitfaden für Rechtssicherheit.
-    {% else %}
-    KI-Richtlinien in Datenschutzprozesse integrieren. Regelmäßige Audits + Art.-30-Dokumentation.
-    {% endif %}
-  </p>
-
-  <p class="small muted">
-    Diese Architektur gewährleistet nachvollziehbare, qualitätsgesicherte Reports
-    mit konsistenten Ergebnissen unabhängig von der Unternehmensgröße.
-  </p>
-</section>
+## ANTI-REDUNDANZ
+Dieser Abschnitt beschreibt TECHNISCHE Infrastruktur und Prozesse.
+Folgende Themen gehören NICHT hierher (eigene Abschnitte):
+- Konkrete Tool-Empfehlungen → siehe Tools & Empfehlungen
+- Change Management → siehe Organisatorischer Wandel
+- Risiken → siehe Risiko-Analyse
+- Governance-Richtlinien → siehe Strategie & Governance
+- KI-Stack-Überblick → siehe KI-Stack-Summary
+Fokus auf PROZESSKETTEN und DATENFLÜSSE, nicht auf einzelne Tool-Namen.

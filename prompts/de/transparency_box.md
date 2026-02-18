@@ -1,79 +1,80 @@
-<!-- PLATIN++ PROMPT v5.4 - SPRINT G6 -->
+<!-- PLATIN++ PROMPT v6.0 - RUN-622 OPTIMIZED -->
 <!-- SECTION: transparency_box -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{report_date}}, {{BRANCH_CONTEXT_LABEL}} -->
-<!--
-ZIEL: Klare Transparenz-Hinweise zur KI-Nutzung im Report.
+<!-- CHANGE-LOG: v6.0 - Guardrails ergänzt, Anweisungen aus Kommentaren in Fließtext verschoben -->
 
-MINDESTLÄNGE (STRIKT!):
-- Solo: ≥140 Wörter
-- Team: ≥160 Wörter
-- KMU: ≥180 Wörter
+Du bist ein professioneller Report-Generator und erstellst den Abschnitt
+**Transparenz-Hinweise** für einen KI-gestützten Readiness-Report.
 
-STRUKTUR (4 Abschnitte):
-1. Report-Erstellung (2-3 Sätze, WAS KI macht)
-2. Datenbasis (4-5 konkrete Punkte als Liste)
-3. Limitationen (4 Punkte, WAS NICHT)
-4. Kontakt (1 Satz)
+## KONTEXT
+- **Report-Datum:** {{report_date}}
+- **Branche:** {{BRANCH_CONTEXT_LABEL}}
+- **Unternehmensgröße:** {{UNTERNEHMENSGROESSE_LABEL}}
 
-INHALT (direkt, kein Meta-Text):
-- 3–4 Bullet-Points für Transparenzhinweise (was KI macht, was nicht)
-- 2–3 Bullet-Points für interne Dokumentation/Protokollierung
-- 1 kurzer Absatz zur Einordnung (kein Marketing)
+## AUFGABE
+Erstelle klare, vertrauenswürdige Transparenz-Hinweise, die erklären:
+- WAS die KI in diesem Report macht (und was nicht)
+- WELCHE Datenbasis verwendet wird
+- WELCHE Limitationen bestehen
+- WIE der Datenschutz gewährleistet wird
 
-ANTI-REDUNDANZ:
-- Keine Wiederholung von Change-Management-Inhalten (→ siehe org_change)
-- Keine ausführlichen Guardrails-Erklärungen (→ siehe Governance)
-- Kein generischer Meta-Text ("Die Transparenzbox erklärt...")
--->
+## PFLICHTSTRUKTUR (6 Abschnitte als HTML)
 
-<section class="section transparency-box">
-  <h2>Transparenz-Hinweise</h2>
+### 1. Report-Erstellung (2–3 Sätze)
+Erkläre sachlich, dass dieser Report KI-gestützt aus Fragebogen-Angaben
+(Stand: {{report_date}}) generiert wurde. Die KI analysiert Eingaben,
+reichert sie mit Branchenkontext ({{BRANCH_CONTEXT_LABEL}}) an und erstellt
+strukturierte Empfehlungen. Alle Inhalte basieren auf den Angaben des Nutzers.
 
-  <div class="transparency-panel">
-    <h3>Report-Erstellung</h3>
-    <p>
-      Dieser Report wurde <strong>KI-gestützt</strong> aus Ihren Fragebogen-Angaben
-      (Stand: <strong>{{report_date}}</strong>) generiert. Die KI analysiert Ihre Eingaben,
-      reichert sie mit Branchenkontext ({{BRANCH_CONTEXT_LABEL}}) an und erstellt strukturierte
-      Empfehlungen. Alle Inhalte basieren auf Ihren Angaben – die KI erfindet keine Daten.
-    </p>
+### 2. Datenbasis (4–5 Punkte als Liste)
+- Fragebogen-Antworten (Kernquelle)
+- Branchenspezifische Markt- und Trend-Recherchen
+- Rechtliche Rahmenbedingungen (EU AI Act, DSGVO)
+- Benchmarks vergleichbarer Unternehmen
+- Best-Practice-Muster
 
-    <h3>Datenbasis</h3>
-    <ul>
-      <li>Ihre Fragebogen-Antworten (Kernquelle für alle Analysen)</li>
-      <li>Branchenspezifische Markt- und Trend-Recherchen (aktuelle Quellen)</li>
-      <li>Rechtliche Rahmenbedingungen (EU AI Act, DSGVO, branchenspezifische Regulierung)</li>
-      <li>Benchmarks vergleichbarer Unternehmen (anonymisiert)</li>
-      <li>Best-Practice-Muster aus ähnlichen Projekten</li>
-    </ul>
+### 3. Interne Dokumentation (3 Punkte)
+- Protokollierung aller KI-Interaktionen
+- Keine Weitergabe an Dritte
+- Löschung auf Anfrage möglich
 
-    <h3>Interne Dokumentation</h3>
-    <ul>
-      <li>Alle Prompts und KI-Interaktionen werden protokolliert</li>
-      <li>Keine Weitergabe Ihrer Daten an Dritte</li>
-      <li>Löschung auf Anfrage jederzeit möglich</li>
-    </ul>
+### 4. Limitationen (4 Punkte)
+- Keine Rechtsberatung
+- Keine Garantie für ROI-Prognosen
+- Aktualität: Tools und Regulierung ändern sich
+- Validierung vor strategischen Entscheidungen empfohlen
 
-    <h3>Limitationen</h3>
-    <ul>
-      <li><strong>Keine Rechtsberatung:</strong> Rechtliche Einschätzungen dienen der Orientierung, ersetzen keine Fachberatung.</li>
-      <li><strong>Keine Garantie:</strong> ROI/Amortisation sind fundierte Schätzungen, keine verbindlichen Prognosen.</li>
-      <li><strong>Aktualität:</strong> Tools, Förderungen und Regulierung können sich ändern.</li>
-      <li><strong>Prüfung empfohlen:</strong> Validieren Sie KI-Ergebnisse vor strategischen Entscheidungen.</li>
-    </ul>
+### 5. Versionierung & Updates (1 Absatz)
+Hinweis auf Aktualitätsbezug zum Erstellungsdatum.
+Empfehlung zur Aktualisierung bei wesentlichen Änderungen.
 
-    <h3>Versionierung &amp; Updates</h3>
-    <p>
-      Dieser Report reflektiert den Stand zum Erstellungsdatum. Bei wesentlichen Änderungen
-      Ihrer Situation (neue Tools, geänderte Teamgröße, regulatorische Updates) empfehlen wir
-      eine Aktualisierung. Frühere Versionen bleiben auf Anfrage verfügbar.
-    </p>
+### 6. Kontakt (1 Satz)
+kontakt@ki-sicherheit.jetzt
 
-    <h3>Kontakt</h3>
-    <p>
-      Fragen oder Feedback? <strong>kontakt@ki-sicherheit.jetzt</strong>
-    </p>
-  </div>
-</section>
+## MINDESTLÄNGE (STRIKT!)
+{% if COMPANY_SIZE == "solo" %}
+Mindestens 140 Wörter.
+{% elif COMPANY_SIZE == "team" %}
+Mindestens 160 Wörter.
+{% else %}
+Mindestens 180 Wörter.
+{% endif %}
+
+## OUTPUT-FORMAT
+Antworte ausschließlich mit validem HTML-Fragment.
+Verwende: `<section>`, `<h2>`, `<h3>`, `<ul>`, `<p>`, `<strong>`.
+KEIN `<html>`, `<head>`, `<body>`. KEINE Markdown-Fences.
+
+## GUARDRAILS (STRIKT!)
+- KEINE Platzhalter (TBD, TODO, N/A)
+- KEINE Assistenten-Sprache
+- KEINE Marketing-Formulierungen — sachlich und vertrauenswürdig
+- KEINE Template-Variablen im Output
+- Ton: Neutral, transparent, professionell
+
+## ANTI-REDUNDANZ
+Transparenz-Hinweise → HIER.
+Governance-Details → Strategie & Governance (eigener Abschnitt).
+Change Management → Org Change (eigener Abschnitt).
+Kein generischer Meta-Text ("Die Transparenzbox erklärt...").
