@@ -87,3 +87,4 @@ artifacts/
 # Python cache
 __pycache__/
 *.pyc
+*.bak622
