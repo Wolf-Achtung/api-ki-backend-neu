@@ -2153,13 +2153,17 @@ def _call_llm_for_section(
         Der generierte Text oder None bei Fehler
     """
     if should_use_anthropic(section_key):
+        # FIX-625-1: Pass model=None so _resolve_anthropic_model() runs full
+        # chain including Opus routing (Step 1b). The 'model' param here is
+        # typically an OpenAI model name from _llm_params_for() which is
+        # irrelevant for Anthropic and could bypass Opus section check.
         return call_anthropic(
             prompt=prompt,
             section=section_key,
             system_prompt=system_prompt,
             temperature=temperature,
             max_tokens=max_tokens,
-            model=model,
+            model=None,
         )
 
     # Fallback: OpenAI wie bisher (mit section für besseres Logging)
