@@ -65,7 +65,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
         ],
 
         "section_budgets": {
-            "EXECUTIVE_SUMMARY_HTML": 12000,
+            "EXECUTIVE_SUMMARY_HTML": 4000,
             "QUICK_WINS_HTML": 8000,  # FIX-G1b: LLM liefert 9K+ HTML
             "QUICK_WINS_HTML_LEFT": 8000,  # FIX-H3
             "ROADMAP_90D_HTML": 3000,
@@ -75,15 +75,15 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "GAMECHANGER_HTML": 1500,
             "FOERDERPOTENZIAL_HTML": 3000,
             "ORG_CHANGE_HTML": 3000,
-            "BUSINESS_CASE_HTML": 14000,
+            "BUSINESS_CASE_HTML": 5000,
             "PILOT_PLAN_HTML": 3000,
             "DATA_READINESS_HTML": 3000,
             "STRATEGIE_GOVERNANCE_HTML": 3000,
-            "UNTERNEHMENSPROFIL_MARKT_HTML": 14000,
+            "UNTERNEHMENSPROFIL_MARKT_HTML": 3000,
             "MONETARISIERUNG_HTML": 3000,
             "KI_SKILLPLAN_HTML": 3000,
             "TOOLS_EMPFEHLUNGEN_HTML": 3000,
-            "TECHNOLOGIE_PROZESSE_HTML": 12000,
+            "TECHNOLOGIE_PROZESSE_HTML": 3000,
             # FIX-C3: Sprint 2025 Phase 2 sections
             "ROI_TRACKING_HTML": 2000,
             "AI_POLICY_MINI_HTML": 2500,
@@ -238,25 +238,25 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
         ],
 
         "section_budgets": {
-            "EXECUTIVE_SUMMARY_HTML": 12000,
+            "EXECUTIVE_SUMMARY_HTML": 14000,
             "QUICK_WINS_HTML": 12000,  # FIX-G1b: LLM liefert 9K+ HTML
             "QUICK_WINS_HTML_LEFT": 12000,  # FIX-H3
             "ROADMAP_90D_HTML": 8000,
             "ROADMAP_12M_HTML": 14000,
-            "RECOMMENDATIONS_HTML": 12000,
-            "RISKS_HTML": 10000,  # FIX-G2: was 5000, table-heavy content
-            "GAMECHANGER_HTML": 12000,
-            "FOERDERPOTENZIAL_HTML": 14000,
-            "ORG_CHANGE_HTML": 10000,
-            "BUSINESS_CASE_HTML": 14000,
+            "RECOMMENDATIONS_HTML": 20000,
+            "RISKS_HTML": 18000,  # FIX-G2: was 5000, table-heavy content
+            "GAMECHANGER_HTML": 16000,
+            "FOERDERPOTENZIAL_HTML": 18000,
+            "ORG_CHANGE_HTML": 16000,
+            "BUSINESS_CASE_HTML": 16000,
             "PILOT_PLAN_HTML": 8000,
             "DATA_READINESS_HTML": 10000,
-            "STRATEGIE_GOVERNANCE_HTML": 14000,
-            "UNTERNEHMENSPROFIL_MARKT_HTML": 10000,
+            "STRATEGIE_GOVERNANCE_HTML": 18000,
+            "UNTERNEHMENSPROFIL_MARKT_HTML": 16000,
             "MONETARISIERUNG_HTML": 8000,
             "KI_SKILLPLAN_HTML": 8000,
-            "TOOLS_EMPFEHLUNGEN_HTML": 14000,
-            "TECHNOLOGIE_PROZESSE_HTML": 10000,
+            "TOOLS_EMPFEHLUNGEN_HTML": 18000,
+            "TECHNOLOGIE_PROZESSE_HTML": 12000,
             "_default": 2000,
         },
 
