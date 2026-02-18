@@ -13004,6 +13004,24 @@ ERWEITERUNGSANFORDERUNGEN:
                         "[FIX-TEAM-KMU][TRUNC] budget_cap section=%s budget=%d before=%d after=%d",
                         key, _budget, original_len, len(truncated),
                     )
+                elif len(truncated) > _budget:
+                    # FIX-625: Aggressive truncation wasn't enough - hard cap at budget
+                    raw_cut = html[:_budget]
+                    _last_good = -1
+                    for _m in re.finditer(r'[.!?]\s*(?:</|$)', raw_cut):
+                        _last_good = _m.end()
+                    if _last_good > len(raw_cut) * 0.7:
+                        _close = raw_cut.find('>', _last_good)
+                        if _close > 0:
+                            truncated = raw_cut[:_close + 1]
+                        else:
+                            truncated = raw_cut[:_last_good]
+                    else:
+                        truncated = raw_cut
+                    log.info(
+                        "[FIX-625][TRUNC] hard_budget_cap section=%s budget=%d before=%d after=%d",
+                        key, _budget, original_len, len(truncated),
+                    )
 
                 # FIX-TEAM-KMU: Min-words guard (replaces ROADMAP_12M-only guard)
                 # Never let truncation drop word count below the section's min_words
