@@ -14553,7 +14553,9 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             llm_response=None,
         )
 
-        sections["VENDOR_AUDIT_HTML"] = vendor_audit_report_to_html(vendor_audit_report, lang=report_lang)
+        sections["VENDOR_AUDIT_HTML"] = vendor_audit_report_to_html(
+            vendor_audit_report, lang=report_lang, max_html_chars=4000
+        )
         sections["_vendor_audit_report"] = vendor_audit_report
 
         # Extract key values for template usage
