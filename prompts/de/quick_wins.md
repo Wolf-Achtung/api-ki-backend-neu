@@ -15,7 +15,7 @@ Jeder Quick Win ist ein JSON-Objekt mit **genau** diesen Keys:
 - `icon` (Emoji)
 - `problem` (zwei bis drei volle Sätze)
 - `wirkung` (zwei bis drei volle Sätze)
-- `umsetzung` (drei bis vier volle Sätze, konkrete Tool-Namen, klare Reihenfolge)
+- `umsetzung` (mindestens vier volle Sätze, konkrete Tool-Namen, klare Reihenfolge)
 - `hinweis` (mindestens ein voller Satz, **immer** Verweis auf Business Case)
 
 ### Zahlen & Zeiten (STRIKT)
