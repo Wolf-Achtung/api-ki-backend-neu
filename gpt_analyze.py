@@ -1322,7 +1322,7 @@ _SECTION_MAX_TOKENS = {
     "ai_act_summary": 4000,
     "reifegrad_sowhat": 4000,
     "quick_wins": 5000,
-    "branch_deep_dive": 5000,
+    "branch_deep_dive": 8000,  # FIX-B718: was 5000, LLM hits max_tokens → truncation
     # ── EFFIZIENT ──
     "transparency_box": 3000,
     "kickoff_vorlage": 5000,
@@ -15969,6 +15969,38 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             log.info("[%s] [FIX-PLACEHOLDER-GUARD] Cleaned %d sections before hard_stop", run_id, _ph_cleaned)
     except Exception as _ph_err:
         log.warning("[%s] [FIX-PLACEHOLDER-GUARD] Failed: %s", run_id, _ph_err)
+
+    # FIX-TYPO-GUARD: Clean known LLM typos before hard_stop.
+    # Claude Sonnet consistently generates "zunächen" (→ zunächst) and "feen" (→ fest).
+    # These are visible in customer PDFs and must be caught deterministically.
+    try:
+        _TYPO_MAP = {
+            "zunächen": "zunächst",
+            " feen,": " fest,",
+            " feen ": " fest ",
+            " feen.": " fest.",
+            "vorraussichtlich": "voraussichtlich",
+            "Vorraussichtlich": "Voraussichtlich",
+            "Implementierung implementieren": "Implementierung umsetzen",
+            "beinhaltet beinhalten": "beinhaltet umfassen",
+            "basierend basiert": "basierend auf",
+        }
+        _typo_fixed = 0
+        for _ty_key, _ty_val in sections.items():
+            if not isinstance(_ty_val, str) or len(_ty_val) < 50:
+                continue
+            if _ty_key.startswith("_") or _ty_key in ("LANG", "report_date", "report_year"):
+                continue
+            _ty_new = _ty_val
+            for _ty_old, _ty_repl in _TYPO_MAP.items():
+                _ty_new = _ty_new.replace(_ty_old, _ty_repl)
+            if _ty_new != _ty_val:
+                sections[_ty_key] = _ty_new
+                _typo_fixed += 1
+        if _typo_fixed:
+            log.info("[%s] [FIX-TYPO-GUARD] Fixed typos in %d sections", run_id, _typo_fixed)
+    except Exception as _ty_err:
+        log.warning("[%s] [FIX-TYPO-GUARD] Failed: %s", run_id, _ty_err)
 
     # Execute hard stop validation
     hard_stop_if_invalid(sections, error_gate, persona=persona, run_id=run_id)
