@@ -302,8 +302,50 @@ class N43IntegrationEngine:
             if report.healed:
                 self._report.total_healed += 1
 
-            log.info("[N4.3] Numerical Integrity Engine: issues=%d",
-                     report.issues_found)
+            log.info("[N4.3] Numerical Integrity Engine: issues=%d, healed=%d, remaining=%d",
+                     report.issues_found, report.issues_healed,
+                     self._report.numerical_inconsistencies)
+
+            # FIX-NUM-DIAG: Log individual unhealed issues for debugging
+            if self._report.numerical_inconsistencies > 0:
+                # Try to extract detailed issues from the engine report
+                detail_issues = getattr(report, 'issues', None) or getattr(report, 'issue_details', None) or []
+                if detail_issues:
+                    for idx, issue in enumerate(detail_issues[:10]):
+                        if isinstance(issue, dict):
+                            log.warning(
+                                "[N4.3][NUM-DIAG] Issue %d: metric=%s, expected=%s, actual=%s, section=%s, healed=%s",
+                                idx + 1,
+                                issue.get('metric', issue.get('field', '?')),
+                                issue.get('expected', '?'),
+                                issue.get('actual', issue.get('found', '?')),
+                                issue.get('section', issue.get('source', '?')),
+                                issue.get('healed', issue.get('resolved', '?')),
+                            )
+                        elif isinstance(issue, str):
+                            log.warning("[N4.3][NUM-DIAG] Issue %d: %s", idx + 1, issue[:200])
+                        else:
+                            # Object with attributes
+                            log.warning(
+                                "[N4.3][NUM-DIAG] Issue %d: type=%s, section=%s, healed=%s, msg=%s",
+                                idx + 1,
+                                getattr(issue, 'type', getattr(issue, 'metric', '?')),
+                                getattr(issue, 'section', getattr(issue, 'source', '?')),
+                                getattr(issue, 'healed', getattr(issue, 'resolved', '?')),
+                                str(getattr(issue, 'message', getattr(issue, 'description', issue)))[:200],
+                            )
+                else:
+                    # No detail list found — log what attributes the report has
+                    report_attrs = [a for a in dir(report) if not a.startswith('__')]
+                    log.warning(
+                        "[N4.3][NUM-DIAG] No issue details found. Report attrs: %s",
+                        ', '.join(report_attrs[:20])
+                    )
+                    # Store summary for upstream consumption
+                    self._report.issues.append(
+                        f"Numerical: {self._report.numerical_inconsistencies} unhealed "
+                        f"(found={report.issues_found}, healed={report.issues_healed})"
+                    )
 
         except Exception as e:
             log.error("[N4.3] Numerical Integrity Engine failed: %s", str(e))
@@ -393,10 +435,40 @@ class N43IntegrationEngine:
     def _validate_dod(self) -> None:
         """Validate Definition of Done criteria."""
         # Check if any fallbacks were used
+        # FIX-NUM-DIAG: Only check metadata keys, not content sections
+        # Old code matched "fallback" in ANY section value → false positives
+        # from content like "Ohne Fallback-Strategie entstehen Single..."
         fallbacks = 0
+        fallback_keys: list = []
+        _FALLBACK_MARKER_KEYS = {
+            "_fallback_used", "_qw_fallback", "_used_fallback",
+            "PIPELINE_FALLBACK_COUNT",
+        }
         for key in self._current_sections:
-            if key.startswith("_") and "fallback" in str(self._current_sections[key]).lower():
-                fallbacks += 1
+            # Method 1: Known fallback marker keys
+            if key in _FALLBACK_MARKER_KEYS:
+                val = self._current_sections[key]
+                if val and str(val) not in ("0", "False", "false", ""):
+                    fallbacks += 1
+                    fallback_keys.append(f"{key}={val}")
+                continue
+
+            # Method 2: Only check _-prefixed metadata keys (not content HTML)
+            if key.startswith("_") and key.endswith("_fallback"):
+                val = self._current_sections[key]
+                if val:
+                    fallbacks += 1
+                    fallback_keys.append(f"{key}={str(val)[:50]}")
+
+        # Also check the error gate if available
+        try:
+            from gpt_analyze import get_error_gate
+            gate = get_error_gate()
+            if gate and hasattr(gate, 'fallback_count') and gate.fallback_count > 0:
+                fallbacks = max(fallbacks, gate.fallback_count)
+                fallback_keys.append(f"error_gate.fallback_count={gate.fallback_count}")
+        except (ImportError, Exception):
+            pass  # Error gate not available in this context
 
         self._report.fallbacks_used = fallbacks
 
@@ -412,6 +484,12 @@ class N43IntegrationEngine:
                 self._report.compliance_leaks,
                 self._report.fallbacks_used
             )
+            # FIX-NUM-DIAG: Log which criteria failed
+            if self._report.numerical_inconsistencies > 1:
+                log.warning("[N4.3][DOD-DETAIL] numerical_inconsistencies=%d (threshold=1)",
+                            self._report.numerical_inconsistencies)
+            if fallback_keys:
+                log.warning("[N4.3][DOD-DETAIL] fallback sources: %s", fallback_keys)
 
     def get_report(self) -> N43Report:
         """Get the N4.3 report."""
