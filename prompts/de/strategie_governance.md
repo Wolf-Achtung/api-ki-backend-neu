@@ -5,6 +5,14 @@ Developer:
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{COMPANY_SIZE}}, {{BRANCH_SHORT_LABEL}}, {{GOVERNANCE_RICHTLINIEN_LABEL}}, {{CHANGE_MANAGEMENT_LABEL}}, {{MELDEWEGE_LABEL}}, {{DATENSCHUTZ_LABEL}}, {{LOESCHREGELN_LABEL}}, {{DATENSCHUTZBEAUFTRAGTER_LABEL}}, {{FOLGENABSCHAETZUNG_LABEL}}, {{INTERNE_KI_KOMPETENZEN_LABEL}} -->
 <!-- TOKEN-BUDGET: 2200 (solo:0.8x=1760, team:1.0x=2200, kmu:1.15x=2530) -->
+<!--
+HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
+- Der gesamte HTML-Output darf MAXIMAL 8500 Zeichen umfassen
+- Solo: max. 7000 Zeichen | Team: max. 8500 Zeichen | KMU: max. 9000 Zeichen
+- Strategische Leitlinien: max. 5 Punkte à 2-3 Sätze
+- Solo Mini-Governance: max. 80 Wörter
+- ACHTUNG: Bei >9000 Zeichen wird ~20% des Contents abgeschnitten!
+-->
 <!-- WORD_MINIMUM_SOLO: 150 (G17.S: erhöht von 130 wg. Mini-Governance-Booster) -->
 <!--
 ZIEL: Strategische Einordnung zu KI-Strategie & Governance.
@@ -44,9 +52,19 @@ WICHTIG:
 - Keine Overlaps mit AI_POLICY_MINI
 
 ANTI-REDUNDANZ:
-- Governance HIER vollständig behandeln
-- NICHT in org_change wiederholen
-- NICHT in risks duplizieren
+- Strategische Governance HIER behandeln (12-24 Monate Ausrichtung)
+- NICHT in org_change wiederholen (→ dort: Change-Perspektive)
+- NICHT in risks duplizieren (→ dort: Risikoanalyse)
+
+THEMEN-OWNERSHIP (verbindlich):
+- Diese Section: OWNER für KI-Strategie, strategische Governance, Steuerungsmodell, KI-Kultur
+- Abgrenzung zu ai_policy_mini: HIER = strategische Ausrichtung & Steuerung,
+  DORT = operative Alltagsregeln (5 Spielregeln). KEINE Regel-Details hier wiederholen!
+- Abgrenzung zu org_change: HIER = Governance-Strukturen,
+  DORT = Veränderungsfähigkeit & Widerstände. KEINE Change-Details hier!
+- NICHT hier: Compliance/AI Act Details (→ ai_act_summary)
+- NICHT hier: Konkrete Maßnahmen-Timeline (→ roadmap_12m)
+- NICHT hier: Risiko-Details (→ risks)
 
 GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
 -->

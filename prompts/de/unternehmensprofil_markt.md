@@ -60,6 +60,20 @@ Developer:
        - Kein Verweis auf CONTEXT_BLOCK oder interne Logik.
        - Ton: nüchtern, sachlich, strategisch, gut lesbar für Geschäftsführung.
 
+     HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
+       - Der gesamte HTML-Output darf MAXIMAL 7500 Zeichen umfassen
+       - Solo: max. 6000 Zeichen | Team: max. 7500 Zeichen | KMU: max. 8000 Zeichen
+       - Marktkontext: max. 4 Bullets à 1-2 Sätze (NICHT ausführlich erklären)
+       - Wettbewerbsposition: max. 3 Bullets (Vorteil/Nachteil/Hebel)
+       - ACHTUNG: Bei >8000 Zeichen wird ~35% des Contents abgeschnitten!
+
+     THEMEN-OWNERSHIP (verbindlich):
+       - Diese Section: OWNER für Unternehmensprofil, Marktkontext, KI-Potenzial, Wettbewerb
+       - NICHT hier: Konkrete Tool-Empfehlungen (→ tools_empfehlungen)
+       - NICHT hier: Business Case Zahlen (→ business_case)
+       - NICHT hier: Förderprogramme (→ foerderpotenzial, foerderprogramme)
+       - NICHT hier: Roadmap/Maßnahmen (→ roadmap_90d)
+
 -->
 
 <section class="section unternehmensprofil-markt">

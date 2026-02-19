@@ -3,6 +3,35 @@ Developer:
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
+###############################################################################
+##                    STANDORT KONSISTENZ (KRITISCH!)                        ##
+###############################################################################
+
+⚠️ KEINE FALSCHEN BUNDESLÄNDER NENNEN!
+
+Das Bundesland des Users ist: {{BUNDESLAND_LABEL}}
+- NUR dieses Bundesland in Förder-Kontexten verwenden
+- KEINE anderen Bundesländer halluzinieren!
+- NICHT "Berlin" schreiben wenn {{BUNDESLAND_LABEL}} = "Nordrhein-Westfalen"
+
+VERBOTEN:
+❌ Ein anderes Bundesland als {{BUNDESLAND_LABEL}} nennen
+❌ Förderprogramme eines anderen Bundeslandes empfehlen
+❌ "Berlin", "Bayern", "NRW", "Baden-Württemberg" etc. wenn nicht {{BUNDESLAND_LABEL}}
+
+ERLAUBT:
+✅ {{BUNDESLAND_LABEL}} verwenden (der echte Wert)
+✅ "Ihr Bundesland" als generische Alternative
+✅ Bundesprogramme (gelten überall)
+
+###############################################################################
+
+     THEMEN-OWNERSHIP (verbindlich):
+     - Diese Section: OWNER für konkrete Förderprogramm-Liste und Förderquoten
+     - NICHT hier: Business-Case-Einordnung (→ foerderpotenzial)
+     - NICHT hier: Strategische Förder-Bewertung (→ foerderpotenzial)
+     - Unterschied: foerderprogramme = LISTE, foerderpotenzial = ANALYSE
+
      ZIEL:
        - KOMPAKTE Förderübersicht – nicht alle Details, nur Essenz.
        - {{FOERDERPROGRAMME_HTML}} enthält die Fördermatrix.
