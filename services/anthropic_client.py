@@ -43,11 +43,11 @@ OPUS_SECTIONS_SET: set = {
 }
 if OPUS_SECTIONS_SET:
     log.info(
-        "🎯 [RUN-622] Opus routing enabled for %d sections: %s",
-        len(OPUS_SECTIONS_SET), sorted(OPUS_SECTIONS_SET),
+        "🏆 [FIX-OPUS-ROUTING] Opus routing ACTIVE for %d sections: %s | model=%s",
+        len(OPUS_SECTIONS_SET), sorted(OPUS_SECTIONS_SET), OPUS_MODEL,
     )
 else:
-    log.info("ℹ️ [RUN-622] Opus routing disabled (OPUS_SECTIONS not set)")
+    log.info("ℹ️ [FIX-OPUS-ROUTING] Opus routing disabled (OPUS_SECTIONS not set)")
 
 # z.B. USE_ANTHROPIC_FOR_EXEC_SUMMARY, USE_ANTHROPIC_FOR_RISKS, ...
 SECTION_FLAG_PREFIX = "USE_ANTHROPIC_FOR_"
@@ -126,95 +126,84 @@ def _is_claude_model(model_name: str) -> bool:
 def _resolve_anthropic_model(section: Optional[str], requested_model: Optional[str]) -> str:
     """
     Ermittelt das tatsächlich zu verwendende Anthropic-Modell für einen Abschnitt.
-    
+
     Mappt OpenAI-Modellnamen automatisch auf Claude-Modelle, um Fehler zu vermeiden.
-    
-    Reihenfolge:
-    1. Sektion-spezifischer ENV-Override: ANTHROPIC_MODEL_<SECTION_IN_UPPERCASE>
-    2. Globale ENV-Variable: ANTHROPIC_MODEL_DEFAULT -> ANTHROPIC_MODEL
+
+    FIX-OPUS-ROUTING: Neue Priorität (2026-02-19):
+    0. OPUS_SECTIONS → HÖCHSTE Priorität, überschreibt ALLES
+    1. Sektion-spezifischer ENV-Override: ANTHROPIC_MODEL_<SECTION>
+    2. Globale ENV: ANTHROPIC_MODEL_DEFAULT → ANTHROPIC_MODEL
     3. Falls requested_model ein Claude-Modell ist, verwende es
-    4. Fallback: "claude-3-5-sonnet-latest"
-    
+    4. Fallback: DEFAULT_MODEL
+
     Args:
         section: Der Abschnitts-Identifier (z.B. "executive_summary")
         requested_model: Das ursprünglich angeforderte Modell (kann OpenAI-Modell sein)
-    
+
     Returns:
         Ein valider Claude-Modellname
     """
-    # FIX-629: Debug-Log bereinigt (war doppelt, jetzt 1x auf INFO-Level)
-    log.info(
-        "[OPUS-ROUTING] _resolve: section=%s requested=%s opus_sections=%d model=%s",
-        section, requested_model, len(OPUS_SECTIONS_SET), OPUS_MODEL,
-    )
-    # 1. Sektion-spezifischer Override
+    section_lower = (section or "").strip().lower()
+
+    # =========================================================================
+    # FIX-OPUS-ROUTING: Step 0 — OPUS hat IMMER Vorrang
+    # Wenn eine Section in OPUS_SECTIONS steht, bekommt sie Opus.
+    # Kein ENV-Override kann das überschreiben.
+    # =========================================================================
+    if section_lower and section_lower in OPUS_SECTIONS_SET:
+        log.info(
+            "🏆 [FIX-OPUS-ROUTING] OPUS section '%s' → model='%s' "
+            "(OPUS_SECTIONS=%d, overrides ALL ENV)",
+            section, OPUS_MODEL, len(OPUS_SECTIONS_SET),
+        )
+        return OPUS_MODEL
+
+    # 1. Sektion-spezifischer Override (nur für Non-Opus-Sections)
     suffix = section_to_env_suffix(section) if section else None
     if suffix:
         env_name = f"ANTHROPIC_MODEL_{suffix}"
         section_model = os.getenv(env_name)
-        log.debug("[OPUS-ROUTING] Step1: suffix=%s env_name=%s value=%s", suffix, env_name, section_model)
         if section_model:
-            section_model = section_model.strip()  # FIX-STRIP: Remove trailing \n from Railway ENV
+            section_model = section_model.strip()  # FIX-STRIP
             log.info(
-                "🎯 anthropic_client: Using model '%s' for section '%s' (requested='%s', source='%s')",
-                section_model,
-                section,
-                requested_model or "None",
-                env_name
+                "🎯 [RESOLVE] section='%s' → model='%s' (source='%s')",
+                section, section_model, env_name,
             )
             return section_model
-    
-    # 1b. RUN-622 P2: Opus Routing via OPUS_SECTIONS ENV
-    section_lower = (section or "").strip().lower()
-    if section_lower in OPUS_SECTIONS_SET:
-        log.info(
-            "🎯 anthropic_client: Opus routing → '%s' for section '%s' (source='OPUS_SECTIONS')",
-            OPUS_MODEL, section,
-        )
-        return OPUS_MODEL
-    
+
     # 2. Globale ENV-Variablen
-    global_model = (os.getenv("ANTHROPIC_MODEL_DEFAULT") or os.getenv("ANTHROPIC_MODEL") or "").strip()  # FIX-STRIP
+    global_model = (
+        os.getenv("ANTHROPIC_MODEL_DEFAULT") or os.getenv("ANTHROPIC_MODEL") or ""
+    ).strip()
     if global_model:
         log.info(
-            "🎯 anthropic_client: Using model '%s' for section '%s' (requested='%s', source='ENV')",
-            global_model,
-            section,
-            requested_model or "None"
+            "🎯 [RESOLVE] section='%s' → model='%s' (source='ENV_GLOBAL')",
+            section, global_model,
         )
         return global_model
-    
+
     # 3. Requested model prüfen
     if requested_model:
         if _is_openai_model(requested_model):
-            # OpenAI-Modell erkannt -> Ignorieren und Fallback verwenden
-            fallback = "claude-3-5-sonnet-latest"
+            fallback = DEFAULT_MODEL
             log.info(
-                "🔄 anthropic_client: Mapping OpenAI model '%s' to Claude model '%s' for section '%s'",
-                requested_model,
-                fallback,
-                section
+                "🔄 [RESOLVE] section='%s' → OpenAI model '%s' mapped to '%s'",
+                section, requested_model, fallback,
             )
             return fallback
         elif _is_claude_model(requested_model):
-            # Valides Claude-Modell
             log.info(
-                "✅ anthropic_client: Using model '%s' for section '%s' (requested='%s')",
-                requested_model,
-                section,
-                requested_model
+                "✅ [RESOLVE] section='%s' → model='%s' (source='requested')",
+                section, requested_model,
             )
             return requested_model
-    
+
     # 4. Harter Fallback
-    fallback = "claude-3-5-sonnet-latest"
     log.info(
-        "🔄 anthropic_client: Using fallback model '%s' for section '%s' (requested='%s')",
-        fallback,
-        section,
-        requested_model or "None"
+        "🔄 [RESOLVE] section='%s' → model='%s' (source='FALLBACK')",
+        section, DEFAULT_MODEL,
     )
-    return fallback
+    return DEFAULT_MODEL
 
 
 @lru_cache(maxsize=1)
@@ -243,10 +232,16 @@ def get_anthropic_client() -> Optional["anthropic.Anthropic"]:
 def _get_model_for_section(section: Optional[str]) -> str:
     """
     Ermittelt das Anthropic-Modell für einen Abschnitt:
+    0. OPUS_SECTIONS → Opus (FIX-OPUS-ROUTING)
     1. ANTHROPIC_MODEL_<SECTION>
     2. ANTHROPIC_MODEL
     3. DEFAULT_MODEL
     """
+    # FIX-OPUS-ROUTING: Opus-Check auch hier
+    section_lower = (section or "").strip().lower()
+    if section_lower and section_lower in OPUS_SECTIONS_SET:
+        return OPUS_MODEL
+
     suffix = section_to_env_suffix(section) if section else None
     if suffix:
         env_name = f"ANTHROPIC_MODEL_{suffix}"
@@ -379,12 +374,17 @@ def should_use_anthropic(section: Optional[str] = None) -> bool:
     # globaler Default
     default_provider = os.getenv("LLM_PROVIDER_DEFAULT", "openai").strip().lower()
     if default_provider == "anthropic":
-        log.debug(
-            "✅ LLM_PROVIDER_DEFAULT=anthropic – verwende Anthropic für Abschnitt %s",
+        log.info(
+            "✅ [FIX-OPUS-ROUTING] LLM_PROVIDER_DEFAULT=anthropic → Anthropic für section='%s'",
             section,
         )
         return True
 
+    log.info(
+        "ℹ️ [FIX-OPUS-ROUTING] section='%s' → NOT using Anthropic "
+        "(LLM_PROVIDER_DEFAULT='%s')",
+        section, default_provider,
+    )
     return False
 
 
