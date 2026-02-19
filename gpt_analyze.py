@@ -14553,9 +14553,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             llm_response=None,
         )
 
-        sections["VENDOR_AUDIT_HTML"] = vendor_audit_report_to_html(
-            vendor_audit_report, lang=report_lang, max_html_chars=4000
-        )
+        sections["VENDOR_AUDIT_HTML"] = vendor_audit_report_to_html(vendor_audit_report, lang=report_lang)
         sections["_vendor_audit_report"] = vendor_audit_report
 
         # Extract key values for template usage
@@ -15309,6 +15307,17 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     # Phase 1.5 Quality Gate: Log all validation errors
     critical_errors = [e for e in validation_errors if e.severity == "CRITICAL"]
     warning_errors = [e for e in validation_errors if e.severity == "WARNING"]
+
+    # FIX-REDUNDANCY-ALIAS: Exclude roadmap-alias redundancy from RAW count too
+    _ALIAS_SECTIONS_RAW = {"PILOT_PLAN_HTML", "roadmap", "ROADMAP_HTML", "ROADMAP_90D_HTML", "roadmap_90d"}
+    _alias_raw = [
+        e for e in warning_errors
+        if getattr(e, "category", "") == "REDUNDANCY_DETECTED"
+        and any(alias in (getattr(e, "section", "") or "") for alias in _ALIAS_SECTIONS_RAW)
+    ]
+    if _alias_raw:
+        log.info(f"[{run_id}] [FIX-REDUNDANCY-ALIAS] Excluding {len(_alias_raw)} roadmap-alias warnings from RAW count")
+        warning_errors = [w for w in warning_errors if w not in _alias_raw]
 
     if critical_errors:
         log.error(f"[{run_id}] ❌ CRITICAL validation errors found: {len(critical_errors)}")
@@ -16218,6 +16227,21 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         _final_valid, _final_errors, _final_healed = validate_and_heal(sections, answers)
         _final_critical = [e for e in _final_errors if e.severity == "CRITICAL"]
         _final_warnings = [e for e in _final_errors if e.severity == "WARNING"]
+
+        # FIX-REDUNDANCY-ALIAS: Exclude REDUNDANCY_DETECTED warnings for known
+        # section aliases (PILOT_PLAN_HTML = roadmap = ROADMAP_HTML = ROADMAP_90D_HTML).
+        # These are identical by design (line ~12785) and get dropped by report_healer
+        # TASK5, but the validator runs before the healer → false positive warnings.
+        _ALIAS_SECTIONS = {"PILOT_PLAN_HTML", "roadmap", "ROADMAP_HTML", "ROADMAP_90D_HTML", "roadmap_90d"}
+        _alias_redundancy = [
+            e for e in _final_warnings
+            if getattr(e, "category", "") == "REDUNDANCY_DETECTED"
+            and any(alias in (getattr(e, "section", "") or "") for alias in _ALIAS_SECTIONS)
+        ]
+        if _alias_redundancy:
+            log.info(f"[{run_id}] [FIX-REDUNDANCY-ALIAS] Excluding {len(_alias_redundancy)} "
+                     f"roadmap-alias redundancy warnings from count")
+            _final_warnings = [w for w in _final_warnings if w not in _alias_redundancy]
 
         # Update legacy keys with FINAL counts (used by STRICT-readiness gate)
         sections["_VALIDATOR_WARNING_COUNT"] = len(_final_warnings)
