@@ -268,6 +268,85 @@ def _check_quickwins_markers(html: str) -> List[Violation]:
             ))
         return violations  # Pass - QuickWins is rendered
 
+    # -------------------------------------------------------------------------
+    # FIX-513B: Content-based heuristic for direct HTML renders (no markers).
+    # Sonnet sometimes returns valid QW HTML without class="quick-win" or
+    # data-qw-json-rendered markers.  When the qw_block is the FULL assembled
+    # HTML (debug anchors missing → block_len > 50 000), we first try to
+    # extract the QW region via secondary patterns, then validate the extract.
+    # -------------------------------------------------------------------------
+
+    _QW_CONTENT_HEADING = re.compile(
+        r'<h[3-5][^>]*>\s*(?:(?!</).){5,80}\s*</h[3-5]>',
+        re.IGNORECASE | re.DOTALL,
+    )
+    _QW_CONTENT_PROBLEM = re.compile(
+        r'<(?:p|li|span|div)[^>]*>\s*<strong>\s*(?:Problem|Herausforderung|Ausgangslage)\s*'
+        r'(?::|</strong>)',
+        re.IGNORECASE,
+    )
+    _QW_CONTENT_SOLUTION = re.compile(
+        r'<(?:p|li|span|div)[^>]*>\s*<strong>\s*(?:L[öo]sung|Ma[ßs]nahme|Quick\s*Win|Umsetzung)\s*'
+        r'(?::|</strong>)',
+        re.IGNORECASE,
+    )
+
+    # --- secondary extraction: try to find QW region by id/data-section ------
+    _QW_REGION_PATTERNS = [
+        re.compile(
+            r'(<(?:section|div|article)[^>]*(?:id|data-section)=["\']'
+            r'(?:quick[_-]?wins|schnellgewinne|sofort[_-]?massnahmen)["\'][^>]*>)'
+            r'(.*?)</(?:section|div|article)>',
+            re.IGNORECASE | re.DOTALL,
+        ),
+        # Template comment markers (some templates wrap QW with HTML comments)
+        re.compile(
+            r'(<!--\s*QW[_-]?START\s*-->)(.*?)(<!--\s*QW[_-]?END\s*-->)',
+            re.IGNORECASE | re.DOTALL,
+        ),
+    ]
+
+    extracted_qw = None
+    for rp in _QW_REGION_PATTERNS:
+        m = rp.search(html)
+        if m:
+            extracted_qw = m.group(0)
+            break
+
+    # Use extracted region (or fall through to full-page heuristic below)
+    check_block = extracted_qw or qw_block
+    is_full_page = (extracted_qw is None and block_len > 50_000)
+
+    # Count QW-indicative structures in the check block
+    n_headings = len(_QW_CONTENT_HEADING.findall(check_block))
+    n_problems = len(_QW_CONTENT_PROBLEM.findall(check_block))
+    n_solutions = len(_QW_CONTENT_SOLUTION.findall(check_block))
+
+    if is_full_page:
+        # Full-page mode: require the SPECIFIC Problem/Lösung pattern (not just headings)
+        # This prevents false positives from other sections' headings.
+        content_pass = (n_problems >= 2 and n_solutions >= 2)
+    else:
+        # Extracted block: headings + paragraphs sufficient
+        content_pass = (n_headings >= 2 and len(check_block) >= _QUICKWIN_MIN_BLOCK_LEN)
+
+    if content_pass:
+        log.info(
+            "[FIX-513B][HTML-CONTRACT] quick_wins CONTENT-HEURISTIC PASS: "
+            "headings=%d problems=%d solutions=%d block_len=%d extracted=%s "
+            "(no marker/class, but valid HTML content detected)",
+            n_headings, n_problems, n_solutions,
+            len(check_block), extracted_qw is not None,
+        )
+        return violations  # Pass - QuickWins has valid rendered HTML content
+
+    log.info(
+        "[FIX-513B][HTML-CONTRACT] quick_wins CONTENT-HEURISTIC FAIL: "
+        "headings=%d problems=%d solutions=%d block_len=%d extracted=%s",
+        n_headings, n_problems, n_solutions,
+        len(check_block), extracted_qw is not None,
+    )
+
     # Fallback: Check via section patterns (old behavior for non-premium renders)
     quickwins_patterns = [
         re.compile(r'(<section[^>]*(?:id|data-section)=["\']quick[_-]?wins["\'][^>]*>)(.*?)</section>', re.IGNORECASE | re.DOTALL),
