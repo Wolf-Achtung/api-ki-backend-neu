@@ -1491,28 +1491,50 @@ def vendor_audit_report_to_html(
     full_html = '\n'.join(html_parts)
 
     # FIX-WP4-VENDOR: Budget enforcement — if output exceeds max_html_chars,
-    # rebuild with fewer vendor cards (drop green first, then yellow).
+    # use compact table format instead of full card layout.
     if max_html_chars > 0 and len(full_html) > max_html_chars and report.entries:
+        log.info(
+            "[G35] Budget enforcement: full=%d chars > %d limit, switching to compact mode",
+            len(full_html), max_html_chars,
+        )
+        # Compact table format — fits any number of vendors in ~2000-3000 chars
+        t = labels
+        rows = ""
         sorted_entries = sorted(
             report.entries,
             key=lambda e: {"red": 0, "yellow": 1, "green": 2}.get(e.overall_category, 1)
         )
-        # Try progressively fewer vendors
-        for max_n in range(len(sorted_entries) - 1, 0, -1):
-            report_trimmed = VendorAuditReport(
-                entries=sorted_entries[:max_n],
-                recommendations=report.recommendations[:3],
+        for e in sorted_entries:
+            cat_c = category_colors.get(e.overall_category, "#f59e0b")
+            dpa_icon = "✓" if e.has_dpa else "✗"
+            dpa_c = "#166534" if e.has_dpa else "#991b1b"
+            flags_str = ", ".join(e.audit_flags[:2]) if e.audit_flags else "–"
+            rows += (
+                f'<tr><td style="padding:6px;border-bottom:1px solid #e2e8f0;">'
+                f'<strong>{e.name}</strong><br><span style="font-size:8px;color:#64748b;">{e.category}</span></td>'
+                f'<td style="padding:6px;border-bottom:1px solid #e2e8f0;text-align:center;">'
+                f'<span style="color:{cat_c};font-weight:700;">{e.overall_category.upper()}</span></td>'
+                f'<td style="padding:6px;border-bottom:1px solid #e2e8f0;">{e.jurisdiction} · {e.data_location}</td>'
+                f'<td style="padding:6px;border-bottom:1px solid #e2e8f0;color:{dpa_c};">{dpa_icon}</td>'
+                f'<td style="padding:6px;border-bottom:1px solid #e2e8f0;font-size:8px;">{flags_str}</td></tr>'
             )
-            trimmed_html = vendor_audit_report_to_html(report_trimmed, lang=lang, max_html_chars=0)
-            if len(trimmed_html) <= max_html_chars:
-                log.info(
-                    "[G35] Budget enforcement: %d→%d chars, showing %d/%d vendors",
-                    len(full_html), len(trimmed_html), max_n, len(report.entries),
-                )
-                return trimmed_html
-        # Return smallest possible (1 vendor)
-        log.warning("[G35] Budget enforcement: trimmed to 1 vendor, still %d chars", len(trimmed_html))
-        return trimmed_html
+        recs_html = ""
+        if report.recommendations:
+            recs_html = '<ul style="margin:8px 0 0 16px;font-size:9pt;">' + "".join(
+                f'<li>{r}</li>' for r in report.recommendations[:3]
+            ) + '</ul>'
+
+        compact_html = f'''<div class="vendor-audit-engine" style="font-size:10pt;">
+<p style="font-weight:700;margin:0 0 8px;">🔍 {t["title"]}</p>
+<p style="font-size:9px;color:#64748b;margin:0 0 8px;">{t["green_vendors"]}: {report.green_count} · {t["yellow_vendors"]}: {report.yellow_count} · {t["red_vendors"]}: {report.red_count} · {t["compliance_score"]}: {report.compliance_score:.0f}%</p>
+<table style="width:100%;border-collapse:collapse;font-size:9pt;">
+<tr style="background:#f8fafc;"><th style="padding:6px;text-align:left;">Vendor</th><th style="padding:6px;">Status</th><th style="padding:6px;text-align:left;">{t["jurisdiction"]}</th><th style="padding:6px;">AVV</th><th style="padding:6px;text-align:left;">Flags</th></tr>
+{rows}
+</table>
+{recs_html}
+</div>'''
+        log.info("[G35] Compact mode: %d chars (limit %d)", len(compact_html), max_html_chars)
+        return compact_html
 
     return full_html
 
