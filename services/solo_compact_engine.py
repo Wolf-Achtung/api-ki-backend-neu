@@ -634,26 +634,30 @@ def process_for_solo_compact(
 # payload exceeds thresholds. Prevents 9MB/92-page PDF monsters.
 
 # Max pages per size profile before auto-compact triggers
+# FIX-WP4: Raised team from 55→70 — with all sections, team reports
+# genuinely need 60-70 pages. Previous value caused 8+ sections to be dropped.
 MAX_PAGES_BY_SIZE: Dict[str, int] = {
     "solo": 16,
-    "team": 55,
-    "kmu": 45,
+    "team": 70,
+    "kmu": 55,
 }
 
 # HTML size thresholds (KB) for auto-compact
-HTML_COMPACT_THRESHOLD_KB: int = int(os.getenv("HTML_COMPACT_THRESHOLD_KB", "450"))
+# FIX-WP4: Raised from 450→500 to work with higher page limit
+HTML_COMPACT_THRESHOLD_KB: int = int(os.getenv("HTML_COMPACT_THRESHOLD_KB", "500"))
 
 # Low-priority sections to drop when auto-compacting Team/KMU
+# Ordered by priority: drop first = least important
+# FIX-WP4: Removed PROMPT_FRAMEWORK_HTML (PROMPT_LEAK fixed, section now clean)
 TEAM_KMU_LOW_PRIORITY_SECTIONS: List[str] = [
-    "VENDOR_AUDIT_HTML",
-    "AUTOMATION_ROADMAP_HTML",
     "FUNDING_BRANCH_ALIGNMENT_HTML",
     "TOOLS_FUNDING_ALIGNMENT_HTML",
     "TOOLS_BRANCH_ALIGNMENT_HTML",
+    "AUTOMATION_ROADMAP_HTML",
     "ROI_TRACKING_HTML",
-    "KICKOFF_HTML",
-    "PROMPT_FRAMEWORK_HTML",
     "BUSINESS_CASE_SIM_HTML",
+    "VENDOR_AUDIT_HTML",
+    "KICKOFF_HTML",
 ]
 
 
@@ -719,9 +723,28 @@ def check_and_apply_compact_guard(
     result.reason = "; ".join(reasons)
     log.warning("[WP4-GUARD] Auto-compact triggered: %s", result.reason)
 
-    # Step 1: Drop low-priority sections from sections dict
+    # Step 1: Iteratively drop low-priority sections until under budget
+    # FIX-WP4: Previously dropped ALL low-priority sections at once.
+    # Now drops one at a time, stopping when under threshold.
+    # This preserves more content for the user.
     updated_sections = dict(sections)
+    compacted_html = html
+
     for section_key in TEAM_KMU_LOW_PRIORITY_SECTIONS:
+        # Re-check if still over limit
+        current_kb = len(compacted_html.encode("utf-8")) / 1024
+        current_pages = estimate_page_count(compacted_html)
+        still_over = (
+            current_kb > HTML_COMPACT_THRESHOLD_KB
+            or current_pages > max_pages
+        )
+        if not still_over:
+            log.info(
+                "[WP4-GUARD] Under threshold after dropping %d sections (%.0fKB, %d pages)",
+                len(result.sections_dropped), current_kb, current_pages,
+            )
+            break
+
         if section_key in updated_sections:
             val = updated_sections[section_key]
             if isinstance(val, str) and len(val) > 100:
@@ -729,20 +752,16 @@ def check_and_apply_compact_guard(
                 updated_sections[section_key] = ""
                 log.info("[WP4-GUARD] Dropped low-priority section: %s", section_key)
 
-    # Step 2: Remove dropped sections from rendered HTML
-    # FIX-RC2: Use <section> block matching instead of non-existent <!-- markers -->
-    compacted_html = html
-    for dropped_key in result.sections_dropped:
-        # Try CSS class-based pattern: <section class="report-section vendor-audit-section ...">...</section>
-        css_slug = dropped_key.replace("_HTML", "").replace("_", "-").lower()
-        section_pattern = re.compile(
-            rf'<section[^>]*class="[^"]*{re.escape(css_slug)}[^"]*"[^>]*>.*?</section>',
-            re.DOTALL | re.IGNORECASE,
-        )
-        new_html = section_pattern.sub('', compacted_html)
-        if len(new_html) < len(compacted_html):
-            compacted_html = new_html
-            log.info("[WP4-GUARD] Removed section block via CSS class: %s", css_slug)
+                # Also remove from rendered HTML
+                css_slug = section_key.replace("_HTML", "").replace("_", "-").lower()
+                section_pattern = re.compile(
+                    rf'<section[^>]*class="[^"]*{re.escape(css_slug)}[^"]*"[^>]*>.*?</section>',
+                    re.DOTALL | re.IGNORECASE,
+                )
+                new_html = section_pattern.sub('', compacted_html)
+                if len(new_html) < len(compacted_html):
+                    compacted_html = new_html
+                    log.info("[WP4-GUARD] Removed section block via CSS class: %s", css_slug)
 
     # Step 3: If still too large, trim excessively long text blocks (hard budget)
     _target_kb = MAX_PAGES_BY_SIZE.get(size_lower, 45) * 3.5  # ~3.5KB per page estimate
