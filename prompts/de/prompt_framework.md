@@ -35,7 +35,7 @@ STIL:
 - Keine theoretischen Abhandlungen
 
 Nicht verwenden:
-- Keine Platzhalter oder Template-Marker
+- Keine Template-Variablen oder Marker im Ausgabetext
 - Keine Wiederholung von Skillplan-Inhalten
 - Keine Tool-spezifischen Anleitungen
 -->
