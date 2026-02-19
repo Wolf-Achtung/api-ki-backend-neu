@@ -113,7 +113,10 @@ class TestG22DataStructures:
         assert report.score >= 95
 
         # Add warnings to lower grade
-        for i in range(5):
+        # FIX-G22-TUNE: With reduced detail penalty (2.0) and higher bonuses
+        # (exec_clean=8, zero_error=5), need 10 detail warnings for Grade B:
+        # 100 - (10 * 2.0) + 8 + 5 = 93 → Grade B
+        for i in range(10):
             report.add_issue(ConsistencyIssue(
                 rule_id=f"WARN_{i}",
                 severity="WARNING",
@@ -123,7 +126,7 @@ class TestG22DataStructures:
                 message=f"Warning {i}",
             ))
 
-        # 5 warnings = -15 points = 85 = Grade B
+        # 10 detail warnings → score 93 → Grade B
         assert report.grade == "B"
         assert 85 <= report.score < 95
 
