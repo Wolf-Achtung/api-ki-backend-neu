@@ -60,6 +60,14 @@ Developer: <!-- data_readiness.md – v3.2 GOLD STANDARD+ (Daten & Systemreife, 
   - Wenn ein Punkt bereits gemacht wurde, erwähne ihn NICHT erneut.
   - Vermeide generische Wiederholungen wie "solide Basis für KI" oder "KI-Pilotprojekte starten".
   - Jeder Unterabschnitt (Stärken, Lücken, Empfehlungen) muss klar abgegrenzte Inhalte haben.
+
+  THEMEN-OWNERSHIP (verbindlich):
+  - Diese Section: NUR Datenlage, Systemreife, Datenqualität, Schnittstellen
+  - NICHT hier: KI-Pilotprojekte starten (→ roadmap_90d)
+  - NICHT hier: Governance/Rollen (→ ai_policy_mini, org_change)
+  - NICHT hier: Tool-Empfehlungen (→ tools_empfehlungen)
+  - NICHT hier: Compliance/AI Act (→ ai_act_summary)
+  - Querverweis-Format: "→ siehe [Section-Name]"
 -->
 
 <section class="section data-readiness">
@@ -106,13 +114,13 @@ Developer: <!-- data_readiness.md – v3.2 GOLD STANDARD+ (Daten & Systemreife, 
     <li><strong>Datenlandkarte erstellen:</strong> Übersicht über alle relevanten Datenquellen und Systeme, inkl. Verantwortlichen und Datenqualität.</li>
     <li><strong>Standard für Ablage & Benennung definieren:</strong> Einfache, aber verbindliche Regeln, die zu {{UNTERNEHMENSGROESSE_LABEL}} passen.</li>
     <li><strong>Datenschutz & Zugriffsrechte klären:</strong> Zuständigkeiten, Rollen und Freigaben für KI-Nutzung festlegen – besonders in regulierten Bereichen.</li>
-    <li><strong>KI-Pilotprojekt mit „sauberem“ Datenschnitt starten:</strong> Einen Prozess wählen, bei dem Daten relativ vollständig und strukturiert vorliegen.</li>
+    <li><strong>Pilotfähigen Datenschnitt identifizieren:</strong> Einen Prozess auswählen, bei dem Daten bereits vollständig und strukturiert vorliegen — als Grundlage für den 90-Tage-Fahrplan.</li>
   </ol>
 
   <p class="small muted">
-    Die Datenlage ist damit ausreichend, um gezielte KI-Piloten zu starten.
-    Für eine nachhaltige Erweiterung sollten Struktur, Verantwortlichkeiten und Datenqualität
-    jedoch Schritt für Schritt verbessert werden.
+    Für eine nachhaltige KI-Nutzung sollten Datenstruktur und -qualität
+    schrittweise verbessert werden. Konkrete Umsetzungsschritte
+    → siehe 90-Tage-Fahrplan.
   </p>
 </section>
 
