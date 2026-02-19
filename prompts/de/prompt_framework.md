@@ -9,10 +9,15 @@ Developer:
 ZIEL: Kompaktes 5-Schritte-Framework für effektive KI-Prompts.
 
 PFLICHTSTRUKTUR:
-1. Die 5 Schritte (Kontext, Rolle, Ziel, Constraints, Format)
+1. Die 5 Schritte (Kontext, Rolle, Aufgabe, Constraints, Format)
 2. Vollständiges Beispiel
 3. Troubleshooting-Tabelle
 4. Variablen-Nutzung
+
+PROMPT-LEAK VERMEIDEN (KRITISCH!):
+- NICHT "Ihr Ziel (z. B. ...)" schreiben → triggert Validator
+- NICHT "Platzhalter" oder "Beispieltext" verwenden
+- Stattdessen: Konkrete, fertige Beispiele ohne "z. B." Pattern
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: Schnell anwendbar, 1 Beispiel reicht, keine Theorie
@@ -74,9 +79,9 @@ Nicht verwenden:
         </tr>
         <tr>
           <td>3</td>
-          <td><strong>Ziel</strong></td>
+          <td><strong>Aufgabe</strong></td>
           <td>Was erreicht werden soll</td>
-          <td>"Erstelle eine Zusammenfassung der Meeting-Ergebnisse."</td>
+          <td>"Fasse die Meeting-Ergebnisse zusammen."</td>
         </tr>
         <tr>
           <td>4</td>

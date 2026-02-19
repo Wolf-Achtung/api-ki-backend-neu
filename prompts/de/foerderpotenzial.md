@@ -5,6 +5,15 @@ Developer:
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BUNDESLAND_LABEL}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}, {{COMPANY_SIZE}} -->
 <!-- TOKEN-BUDGET: 3200 (solo:0.8x, team:1.0x, kmu:1.15x) -->
+<!--
+HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
+- Budget: 9000 Zeichen HTML-Output — NICHT überschreiten!
+- Solo: max. 7000 Zeichen | Team: max. 9000 Zeichen | KMU: max. 10500 Zeichen
+- B714: 14.802 Zeichen generiert, auf 8.261 getruncated → 44% VERLUST!
+- 4 Abschnitte × max. 200 Wörter = max. 800 Wörter gesamt
+- Pro Bullet-Liste: max. 4-5 Punkte à 1 Satz
+- GESAMT-ZIEL: 720-880 Wörter (steht auch unten bei PDF-SLIMDOWN)
+-->
 <!-- FOERDERLOGIK: DE-Bundesprogramme + Landesprogramme (KEINE EU-Core-Hinweise) -->
 <!--
 ###############################################################################
@@ -47,6 +56,12 @@ PERSONA-VARIATIONEN (COMPANY_SIZE):
 ANTI-REDUNDANZ:
 - Business-Case-Zahlen EINMAL nennen, nicht wiederholen
 - KEINE Wiederholung der Zahlen aus business_case.md – nur Förder-Kontext
+
+THEMEN-OWNERSHIP (verbindlich):
+- Diese Section: OWNER für Förderpotenzial, Förderkategorien, Nächste Schritte Förderantrag
+- NICHT hier: Business Case Details (→ business_case)
+- NICHT hier: Compliance/AI Act (→ ai_act_summary)
+- NICHT hier: Tool-Kosten (→ tools_empfehlungen)
 
 SPRINT G18 - NARRATIVE VERBINDUNGEN:
 - Bezug zu Tools herstellen: "Besonders relevant für die empfohlenen Tools und Starter Kits..."

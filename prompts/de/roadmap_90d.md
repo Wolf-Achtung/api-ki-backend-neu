@@ -67,6 +67,14 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
 <!-- INPUT NEW: {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}, {{ki_projekte}}, {{KI_GUARDRAILS}}, {{VISION_3_JAHRE}} -->
 <!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, kmu:1.15x=3220) -->
+<!--
+HÖCHSTLÄNGE (STRIKT! — Section wird bei Überschreitung automatisch getruncated!):
+- Solo: max. 5000 Zeichen HTML-Output | Team: max. 5800 Zeichen | KMU: max. 6500 Zeichen
+- PILOT_PLAN Budget: 6000 Zeichen — NICHT überschreiten!
+- Jede Phase: max. 3-4 Bullets à 1-2 Sätze
+- Lieber konkret und kurz als ausführlich und generisch
+- Überschreitung >20% führt zu harter Kürzung durch die Pipeline!
+-->
 
 <!--
 =============================================================================
