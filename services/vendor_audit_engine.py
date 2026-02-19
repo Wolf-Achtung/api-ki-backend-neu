@@ -1247,6 +1247,7 @@ def generate_vendor_audit_report(
 def vendor_audit_report_to_html(
     report: VendorAuditReport,
     lang: str = "de",
+    max_html_chars: int = 0,
 ) -> str:
     """
     Generate HTML section for Vendor Audit Report.
@@ -1262,6 +1263,8 @@ def vendor_audit_report_to_html(
     Args:
         report: VendorAuditReport object
         lang: Language code ("de" or "en")
+        max_html_chars: If > 0, limit output to this many characters.
+                        Omits vendor cards from lowest-risk first until under budget.
 
     Returns:
         HTML string for PDF template
@@ -1485,7 +1488,33 @@ def vendor_audit_report_to_html(
 
     html_parts.append('</div>')
 
-    return '\n'.join(html_parts)
+    full_html = '\n'.join(html_parts)
+
+    # FIX-WP4-VENDOR: Budget enforcement — if output exceeds max_html_chars,
+    # rebuild with fewer vendor cards (drop green first, then yellow).
+    if max_html_chars > 0 and len(full_html) > max_html_chars and report.entries:
+        sorted_entries = sorted(
+            report.entries,
+            key=lambda e: {"red": 0, "yellow": 1, "green": 2}.get(e.overall_category, 1)
+        )
+        # Try progressively fewer vendors
+        for max_n in range(len(sorted_entries) - 1, 0, -1):
+            report_trimmed = VendorAuditReport(
+                entries=sorted_entries[:max_n],
+                recommendations=report.recommendations[:3],
+            )
+            trimmed_html = vendor_audit_report_to_html(report_trimmed, lang=lang, max_html_chars=0)
+            if len(trimmed_html) <= max_html_chars:
+                log.info(
+                    "[G35] Budget enforcement: %d→%d chars, showing %d/%d vendors",
+                    len(full_html), len(trimmed_html), max_n, len(report.entries),
+                )
+                return trimmed_html
+        # Return smallest possible (1 vendor)
+        log.warning("[G35] Budget enforcement: trimmed to 1 vendor, still %d chars", len(trimmed_html))
+        return trimmed_html
+
+    return full_html
 
 
 # =============================================================================
