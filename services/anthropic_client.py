@@ -29,12 +29,12 @@ except ImportError:  # pragma: no cover
 
 # --- ENV Defaults ----------------------------------------------------------
 
-DEFAULT_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")  # K1: updated
+DEFAULT_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929").strip()  # K1: updated, FIX-STRIP
 DEFAULT_MAX_TOKENS = int(os.getenv("ANTHROPIC_MAX_TOKENS", "5000"))  # J11: raised from 3000
 DEFAULT_TEMPERATURE = float(os.getenv("ANTHROPIC_TEMPERATURE", "0.2"))
 
 # --- RUN-622 P2: Opus Routing ------------------------------------------------
-OPUS_MODEL = os.getenv("ANTHROPIC_MODEL_OPUS", "claude-opus-4-6")  # FIX-629: war claude-opus-4-5-20250929
+OPUS_MODEL = os.getenv("ANTHROPIC_MODEL_OPUS", "claude-opus-4-6").strip()  # FIX-629 + FIX-STRIP
 _OPUS_SECTIONS_RAW = os.getenv("OPUS_SECTIONS", "")
 OPUS_SECTIONS_SET: set = {
     s.strip().lower()
@@ -154,6 +154,7 @@ def _resolve_anthropic_model(section: Optional[str], requested_model: Optional[s
         section_model = os.getenv(env_name)
         log.debug("[OPUS-ROUTING] Step1: suffix=%s env_name=%s value=%s", suffix, env_name, section_model)
         if section_model:
+            section_model = section_model.strip()  # FIX-STRIP: Remove trailing \n from Railway ENV
             log.info(
                 "🎯 anthropic_client: Using model '%s' for section '%s' (requested='%s', source='%s')",
                 section_model,
@@ -173,7 +174,7 @@ def _resolve_anthropic_model(section: Optional[str], requested_model: Optional[s
         return OPUS_MODEL
     
     # 2. Globale ENV-Variablen
-    global_model = os.getenv("ANTHROPIC_MODEL_DEFAULT") or os.getenv("ANTHROPIC_MODEL")
+    global_model = (os.getenv("ANTHROPIC_MODEL_DEFAULT") or os.getenv("ANTHROPIC_MODEL") or "").strip()  # FIX-STRIP
     if global_model:
         log.info(
             "🎯 anthropic_client: Using model '%s' for section '%s' (requested='%s', source='ENV')",
@@ -251,9 +252,9 @@ def _get_model_for_section(section: Optional[str]) -> str:
         env_name = f"ANTHROPIC_MODEL_{suffix}"
         section_model = os.getenv(env_name)
         if section_model:
-            return section_model
+            return section_model.strip()  # FIX-STRIP
 
-    return os.getenv("ANTHROPIC_MODEL", DEFAULT_MODEL)
+    return os.getenv("ANTHROPIC_MODEL", DEFAULT_MODEL).strip()  # FIX-STRIP
 
 
 def _get_temperature_for_section(section: Optional[str]) -> float:
@@ -480,7 +481,7 @@ def call_anthropic(
 
     except anthropic.NotFoundError as exc:
         # Modell nicht gefunden -> Fallback-Versuch
-        fallback_model = os.getenv("ANTHROPIC_MODEL_FALLBACK", "claude-sonnet-4-5-20250929")  # K1: updated
+        fallback_model = os.getenv("ANTHROPIC_MODEL_FALLBACK", "claude-sonnet-4-5-20250929").strip()  # K1 + FIX-STRIP
         log.warning(
             "⚠️ Anthropic NotFoundError für Modell '%s' (Abschnitt '%s'): %s. "
             "Versuche Fallback-Modell '%s'...",
