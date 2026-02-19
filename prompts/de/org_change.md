@@ -6,6 +6,13 @@ Developer:
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{KI_ZIELE_LABELS}}, {{KI_HEMMNISSE_LABELS}}, {{ki_kompetenz}}, {{score_governance}}, {{score_sicherheit}}, {{score_nutzen}}, {{score_befaehigung}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 2200 (solo:0.8x=1760, team:1.0x=2200, kmu:1.15x=2530) -->
 <!--
+HÖCHSTLÄNGE (STRIKT!):
+- Der gesamte HTML-Output dieser Section darf MAXIMAL 7500 Zeichen umfassen
+- Solo: max. 5500 Zeichen | Team: max. 7500 Zeichen | KMU: max. 8500 Zeichen
+- Lieber prägnant als ausschweifend — jeder Satz muss Mehrwert liefern
+- Bei Überschreitung: Kürzen durch Zusammenfassung, nicht durch Weglassen ganzer Abschnitte
+-->
+<!--
 ZIEL: Präziser Abschnitt „Veränderungsfähigkeit & Lernen".
 
 KURZLABELS (VERPFLICHTEND!):

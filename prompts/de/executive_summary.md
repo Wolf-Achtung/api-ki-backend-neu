@@ -107,6 +107,18 @@ BRANCH_SHORT_LABEL (verbindlich):
 <!-- INPUT NEW: {{hauptleistung}}, {{ZEITERSPARNIS_PRIORITAET}}, {{STRATEGISCHE_ZIELE}}, {{KI_GUARDRAILS}} -->
 <!-- TOKEN-BUDGET: 1500 -->
 <!-- WORD_MINIMUM: 250 -->
+<!--
+HÖCHSTLÄNGE UND MINDESTLÄNGE (STRIKT!):
+- MINIMUM: 200 Wörter HTML-Output (unter 200 = RESCUE-Fallback = schlecht!)
+- MAXIMUM: 400 Wörter HTML-Output
+- Zielkorridor: 250-350 Wörter
+- ACHTUNG: Bei B714 nur 127 Wörter generiert → UNGENÜGEND!
+- Jedes Element (Profil, 3 Entscheidungen, Nächster Schritt, Takeaway) MUSS substantiell sein
+- Profil-Satz: 20-25 Wörter (nicht weniger!)
+- Jede Entscheidung: 15-25 Wörter (nicht nur Stichworte!)
+- Nächster Schritt: 20-30 Wörter mit konkreter Handlung
+- Takeaway: 25-30 Wörter
+-->
 
 <!--
 =============================================================================

@@ -1,6 +1,15 @@
 Developer:
 <!-- PLATIN+++ PROMPT v7.2 - SPRINT INHALTLICHE FINALISIERUNG -->
 <!-- SECTION: gamechanger -->
+<!-- TOKEN-BUDGET: 2800 (solo:0.7x=2000, team:1.0x=2800, kmu:1.1x=3100) -->
+<!--
+HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
+- Budget: 8000 Zeichen HTML-Output — NICHT überschreiten!
+- Solo: max. 5500 Zeichen | Team: max. 8000 Zeichen | KMU: max. 9000 Zeichen
+- B714: 11.998 Zeichen generiert, auf 7.571 getruncated → 37% VERLUST!
+- UNTEN stehen Wort-Limits: Solo 200-280, Team 300-400, KMU 350-450 Wörter
+- Diese Limits GELTEN — bei Überschreitung wird brutal getruncated!
+-->
 <!-- FIX-506: Canonical KPI Contract -->
 <!--
 ###############################################################################
@@ -34,6 +43,14 @@ DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
   - KEINE ROI-Zahlen, Payback-Werte oder Tool-Listen recyceln
   - Jeder Absatz muss EINZIGARTIG fuer diese Section sein
   - Vermeide generische Branchenbeschreibungen die auch anderswo stehen koennten
+
+  THEMEN-OWNERSHIP (verbindlich):
+  - Diese Section: OWNER für strategischen Bruchpunkt und Transformationsidee
+  - NICHT hier: Konkrete Maßnahmen-Liste (→ recommendations)
+  - NICHT hier: Roadmap/Timeline (→ roadmap_90d, roadmap_12m)
+  - NICHT hier: Business Case/ROI (→ business_case)
+  - NICHT hier: Risiken (→ risks)
+  - Prinzip: EINE mutige Idee, nicht eine Empfehlungsliste
 
 
 VERTEILUNG (STRIKT!):
@@ -583,21 +600,25 @@ Der Text soll wie eine **interne strategische Analyse** wirken, nicht wie Beratu
 
 ---
 
-## Umfang (GRÖSSENBEZOGEN - Problem #6 Lösung)
+## Umfang (GRÖSSENBEZOGEN - HARD LIMIT!)
+
+⚠️ ÜBERSCHREITUNG WIRD AUTOMATISCH GETRUNCATED — INFORMATION GEHT VERLOREN!
 
 {% if COMPANY_SIZE == "solo" %}
-SOLO: Ca. **200–280 Wörter** insgesamt.
+SOLO: **200–280 Wörter** insgesamt. HARD MAXIMUM: 300 Wörter.
 - Fokus auf praktische Umsetzbarkeit
 - KEIN Strategiejargon
 - Max. 2 Bullets pro Sektion
 {% elif COMPANY_SIZE == "team" %}
-TEAM: Ca. **300–400 Wörter** insgesamt.
+TEAM: **300–400 Wörter** insgesamt. HARD MAXIMUM: 450 Wörter.
 - Moderate Tiefe
 - Koordinationsaspekte einbeziehen
+- Max. 3 Bullets pro Sektion
 {% else %}
-KMU: Ca. **350–450 Wörter** insgesamt.
+KMU: **350–450 Wörter** insgesamt. HARD MAXIMUM: 500 Wörter.
 - Volle strategische Tiefe
 - Alle 4 Blöcke ausführlich
+- Max. 3 Bullets pro Sektion
 {% endif %}
 
 Keine Einleitung, keine Zusammenfassung außerhalb der vier Blöcke.

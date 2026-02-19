@@ -6,6 +6,16 @@ Developer:
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 1200 (solo:0.8x=960, team:1.0x=1200, kmu:1.15x=1380) -->
 <!--
+HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
+- Budget: 10000 Zeichen HTML-Output — NICHT überschreiten!
+- Solo: max. 7500 Zeichen | Team: max. 10000 Zeichen | KMU: max. 11500 Zeichen
+- B714: 17.425 Zeichen generiert, auf 9.915 getruncated → 43% VERLUST!
+- 3 MUSS-Maßnahmen: je max. 80 Wörter (Titel + Detail + Warum)
+- 3 OPTIONEN: je max. 30 Wörter
+- Prioritäten-Tabelle: 6 Zeilen à max. 8 Wörter pro Zelle
+- GESAMT-ZIEL: 500-800 Wörter (nicht mehr!)
+-->
+<!--
 ###############################################################################
 ##   🚨🚨🚨 CRITICAL: MINIMUM 3x {{hauptleistung}} - NON-NEGOTIABLE 🚨🚨🚨  ##
 ###############################################################################
@@ -227,6 +237,14 @@ ANTI-REDUNDANZ (STRIKT!):
 - KEINE Wiederholung von Roadmap-Inhalten (→ siehe Roadmap)
 - Fokus auf ERGÄNZENDE strategische Empfehlungen
 - Bei Überschneidung: Querverweis nutzen
+
+THEMEN-OWNERSHIP (verbindlich):
+- Diese Section: OWNER für priorisierte MUSS-Maßnahmen und strategische Optionen
+- NICHT hier: Quick Wins (→ quick_wins)
+- NICHT hier: Detaillierte Umsetzungsplanung (→ roadmap_90d, roadmap_12m)
+- NICHT hier: Tool-Auswahl (→ tools_empfehlungen)
+- NICHT hier: Förderinformationen (→ foerderpotenzial)
+- Prinzip: WAS muss entschieden werden, nicht WIE es umgesetzt wird
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: Inhaber:in, persönliche Schritte, niedriges Budget

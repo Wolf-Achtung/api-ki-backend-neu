@@ -6,6 +6,16 @@ Developer:
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{score_governance}}, {{score_sicherheit}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 4500 (solo:0.85x=3800, team:1.0x=4500, kmu:1.1x=5000) -->
 <!--
+HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
+- Budget: 9000 Zeichen HTML-Output — NICHT überschreiten!
+- Solo: max. 7500 Zeichen | Team: max. 9000 Zeichen | KMU: max. 10000 Zeichen
+- B714: 16.590 Zeichen generiert, auf 8.602 getruncated → 48% VERLUST!
+- LIEBER KOMPAKT UND VOLLSTÄNDIG als ausführlich und dann abgeschnitten
+- 4 Risiken × 85 Wörter = 340 Wörter pro Section × 4 Sections = ~1360 Wörter
+- Risiko-Matrix: max. 5 Zeilen à 1 Satz pro Zelle
+- GESAMT-ZIEL: 1000-1500 Wörter (nicht mehr!)
+-->
+<!--
 ZIEL: 5 Abschnitte mit je 200-300 Wörtern (= 1000-1500 Wörter gesamt). WICHTIG: Alle Sätze MÜSSEN vollständig sein - keine Abbrüche!
 
 KURZLABELS (VERPFLICHTEND!):
@@ -29,6 +39,13 @@ ANTI-REDUNDANZ (STRIKT!):
 - Risiken NICHT in Guardrails-Sektion wiederholen (→ Querverweis)
 - Maßnahmen kurz, nicht in org_change wiederholen (→ Querverweis)
 - Bei Überschneidung: Querverweis nutzen
+
+THEMEN-OWNERSHIP (verbindlich):
+- Diese Section: OWNER für Risikoanalyse, Risiko-Matrix, Gegenmaßnahmen-Übersicht
+- NICHT hier: Governance-Regeln im Detail (→ ai_policy_mini)
+- NICHT hier: Change Management / Widerstände (→ org_change)
+- NICHT hier: Compliance-Details / AI Act (→ ai_act_summary)
+- Maßnahmen: NUR Kurzbeschreibung (1 Satz), keine Umsetzungsplanung
 
 SPRINT G5 - PERSONA HARD-GUARDS (STRIKT!):
 {% if COMPANY_SIZE == "solo" %}
