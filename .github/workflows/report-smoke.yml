@@ -18,6 +18,10 @@ on:
         required: false
         default: 'all'
 
+permissions:
+  actions: write
+  contents: read
+
 env:
   PYTHON_VERSION: '3.11'
   ARTIFACTS_DIR: 'artifacts'

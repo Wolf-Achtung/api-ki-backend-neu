@@ -22,6 +22,10 @@ on:
       - 'data/test_profiles_gold/**'
       - 'tests/test_platin_*.py'
 
+permissions:
+  actions: write
+  contents: read
+
 env:
   PYTHONUNBUFFERED: "1"
   DATABASE_URL: "sqlite:///:memory:"
