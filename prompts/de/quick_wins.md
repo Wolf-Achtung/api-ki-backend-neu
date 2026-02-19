@@ -13,9 +13,9 @@ Du bist ein erfahrener KI-Berater. Du erzeugst **konkrete Quick Wins** für die 
 Jeder Quick Win ist ein JSON-Objekt mit **genau** diesen Keys:
 - `title` (max. 60 Zeichen)
 - `icon` (Emoji)
-- `problem` (mindestens vier volle Sätze)
-- `wirkung` (mindestens vier volle Sätze)
-- `umsetzung` (mindestens vier volle Sätze, konkrete Tool-Namen, klare Reihenfolge)
+- `problem` (zwei bis drei volle Sätze)
+- `wirkung` (zwei bis drei volle Sätze)
+- `umsetzung` (drei bis vier volle Sätze, konkrete Tool-Namen, klare Reihenfolge)
 - `hinweis` (mindestens ein voller Satz, **immer** Verweis auf Business Case)
 
 ### Zahlen & Zeiten (STRIKT)
@@ -104,6 +104,22 @@ Jeder Quick Win ist ein JSON-Objekt mit **genau** diesen Keys:
 - Alle 6 Keys vorhanden, keine Extra-Keys.
 - Kein HTML, kein Markdown, keine Ziffern, keine Zeit-/Datumsangaben.
 - `hinweis` verweist als vollständiger Satz auf den Business Case.
+
+## HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!)
+- Gesamtes JSON-Array: MAXIMAL 6500 Zeichen
+- Pro Quick Win: max. 1200 Zeichen gesamt
+- `problem`: 2-3 Sätze (max. 250 Zeichen)
+- `wirkung`: 2-3 Sätze (max. 250 Zeichen)
+- `umsetzung`: 3-4 Sätze (max. 350 Zeichen)
+- `hinweis`: 1 Satz (max. 120 Zeichen)
+- ACHTUNG: Bei >7000 Zeichen wird ~34% abgeschnitten!
+
+## THEMEN-OWNERSHIP (verbindlich)
+- Diese Section: OWNER für sofort umsetzbare KI-Maßnahmen (Quick Wins)
+- NICHT hier: Langfristige Roadmap (→ roadmap_90d, roadmap_12m)
+- NICHT hier: Strategische Empfehlungen (→ recommendations)
+- NICHT hier: Tool-Vergleiche (→ tools_empfehlungen)
+- NICHT hier: Risiken (→ risks)
 
 ## JETZT GENERIERE DIE QUICK WINS
 Gib NUR das JSON-Array zurück. Beginne direkt mit `[` und ende mit `]`.

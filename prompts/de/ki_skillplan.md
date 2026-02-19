@@ -65,7 +65,14 @@ Integriere diese Interessen in die passende Stufe des Fahrplans.
 {% endif %}
 
 ## TEXTLÄNGE
-130–180 Wörter. Verständlich, praxisnah, motivierend.
+400–550 Wörter gesamt. Pro Stufe: 3 Skills à max. 2 Sätze.
+
+## HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!)
+- Der gesamte HTML-Output darf MAXIMAL 5500 Zeichen umfassen
+- ACHTUNG: Bei >6000 Zeichen wird ~55% des Contents abgeschnitten!
+- Pro Skill-Bullet: max. 2 Sätze (Was + Wozu)
+- Praxisbeispiele: 1 Satz pro Skill, nicht mehr
+- Lernmethoden: nur als Klammer-Hinweis, kein eigener Absatz
 
 ## OUTPUT-FORMAT
 Antworte ausschließlich mit validem HTML-Fragment.
@@ -85,3 +92,10 @@ Der Skillplan ergänzt andere Abschnitte, wiederholt sie nicht:
 - Konkrete Tool-Empfehlungen → Tools & Empfehlungen
 - Organisatorisches Change Management → Org Change
 - KI-Strategie → Strategie & Governance
+
+## THEMEN-OWNERSHIP (verbindlich)
+- Diese Section: OWNER für KI-Kompetenzaufbau, Lernpfad, Skill-Stufen
+- NICHT hier: Tool-Auswahl (→ tools_empfehlungen)
+- NICHT hier: Prompt-Technik im Detail (→ prompt_framework)
+- NICHT hier: Organisatorische Veränderung (→ org_change)
+- NICHT hier: Governance-Regeln (→ ai_policy_mini, strategie_governance)
