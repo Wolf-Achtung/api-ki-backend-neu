@@ -257,7 +257,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "KI_SKILLPLAN_HTML": 8000,
             "TOOLS_EMPFEHLUNGEN_HTML": 18000,
             "TECHNOLOGIE_PROZESSE_HTML": 12000,
-            "_default": 2000,
+            "_default": 3000,  # FIX-TRUNC: was 2000, must be >= team._default (2500)
         },
 
         "min_words": {
