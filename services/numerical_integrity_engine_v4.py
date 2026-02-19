@@ -457,6 +457,21 @@ class NumericalIntegrityEngineV4:
         self._report.issues_healed = sum(1 for i in self._issues if i.healed)
         self._report.healed = self._report.issues_healed > 0
 
+        # FIX-NUM-DIAG-V4: Transfer unhealed issue details to report
+        # Previously report.issues stayed empty [], losing all diagnostic info.
+        for issue in self._issues:
+            if not issue.healed:
+                self._report.issues.append(
+                    f"{issue.metric_type.value}: expected={issue.expected_value}, "
+                    f"actual={issue.actual_value}, section={issue.section}, "
+                    f"severity={issue.severity.value}, desc={issue.description[:120]}"
+                )
+            else:
+                self._report.warnings.append(
+                    f"HEALED {issue.metric_type.value}: {issue.expected_value}→{issue.healed_value} "
+                    f"in {issue.section}"
+                )
+
         # Calculate validation status
         self._report.numerical_validated = (
             self._report.critical_issues == 0 or
