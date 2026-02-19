@@ -12218,10 +12218,34 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     # FIX-499 FIX 2A: JSON recognition is FINAL TRUTH
     # If response starts with '[', it's JSON and must be processed as JSON
     qw_raw_stripped = qw_raw.strip() if qw_raw else ""
+
+    # FIX-STRIP-QW: Strip code fence remnants and "json" prefix
+    # LLM sometimes returns ```json\n[...]\n``` and partial stripping leaves "json [..."
+    if qw_raw_stripped:
+        # Remove complete code fences first
+        _fence_match = re.match(r'^```(?:json|JSON)?\s*([\s\S]*?)\s*```\s*$', qw_raw_stripped)
+        if _fence_match:
+            qw_raw_stripped = _fence_match.group(1).strip()
+            log.info("[FIX-STRIP-QW] Removed complete code fences, len=%d", len(qw_raw_stripped))
+        else:
+            # Remove partial/broken code fence artifacts
+            # Handles: "```json\n[..." or "json\n[..." or "json [..."
+            _prefix_match = re.match(r'^(?:```)?(?:json|JSON)\s*', qw_raw_stripped)
+            if _prefix_match:
+                qw_raw_stripped = qw_raw_stripped[_prefix_match.end():]
+                log.info("[FIX-STRIP-QW] Removed 'json' prefix (%d chars), remaining starts with: %.20s",
+                         _prefix_match.end(), qw_raw_stripped[:20])
+            # Remove trailing incomplete fence
+            if qw_raw_stripped.endswith("```"):
+                qw_raw_stripped = qw_raw_stripped[:-3].rstrip()
+
     is_json_response = qw_raw_stripped.startswith('[') or qw_raw_stripped.startswith('{')
 
     if is_json_response:
         log.info("[FIX-499-QW] JSON response detected (starts with '[' or '{')")
+
+        # FIX-STRIP-QW: Use cleaned version for all JSON renderers
+        qw_raw = qw_raw_stripped
 
         # FIX-510 CHANGE 2: Detect template mode for premium renderer
         qw_template_mode = detect_quickwins_template_mode(sections)
@@ -15589,6 +15613,16 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 log.info(f"[{run_id}] ✅ N4.3: DoD PASSED - score={n43_report.governance_score}, healed={n43_report.total_healed}")
             else:
                 log.warning(f"[{run_id}] ⚠️ N4.3: DoD FAILED - conflicts={n43_report.governance_conflicts}, issues={len(n43_report.issues)}")
+                # FIX-NUM-DIAG: Log unhealed issues in detail for debugging
+                for _idx, _issue in enumerate(getattr(n43_report, 'issues', [])[:10]):
+                    _i_type = getattr(_issue, 'type', getattr(_issue, 'category', 'unknown'))
+                    _i_msg = getattr(_issue, 'message', getattr(_issue, 'description', str(_issue)))
+                    _i_section = getattr(_issue, 'section', getattr(_issue, 'source', '?'))
+                    _i_healed = getattr(_issue, 'healed', getattr(_issue, 'resolved', '?'))
+                    log.warning(
+                        f"[{run_id}] [FIX-NUM-DIAG] Issue {_idx+1}: type={_i_type}, "
+                        f"section={_i_section}, healed={_i_healed}, msg={str(_i_msg)[:120]}"
+                    )
                 # PLATIN+++ FIX 5.2: Trigger additional healing pass on DoD failure
                 # FIX-629: Do NOT re-import process_n43_governance here – a local
                 # `from … import` makes Python treat the name as local for the
@@ -15607,6 +15641,16 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                         n43_report = _n43_retry_report
                     else:
                         log.warning(f"[{run_id}] ⚠️ N4.3 HEALING PASS: DoD still FAILED after retry")
+                        # FIX-NUM-DIAG: Log remaining issues after healing
+                        for _idx2, _issue2 in enumerate(getattr(_n43_retry_report, 'issues', [])[:10]):
+                            _i2_type = getattr(_issue2, 'type', getattr(_issue2, 'category', 'unknown'))
+                            _i2_msg = getattr(_issue2, 'message', getattr(_issue2, 'description', str(_issue2)))
+                            _i2_section = getattr(_issue2, 'section', getattr(_issue2, 'source', '?'))
+                            _i2_healed = getattr(_issue2, 'healed', getattr(_issue2, 'resolved', '?'))
+                            log.warning(
+                                f"[{run_id}] [FIX-NUM-DIAG-RETRY] Issue {_idx2+1}: type={_i2_type}, "
+                                f"section={_i2_section}, healed={_i2_healed}, msg={str(_i2_msg)[:120]}"
+                            )
                 except Exception as heal_err:
                     log.error(f"[{run_id}] N4.3 healing pass failed: {heal_err}")
 
