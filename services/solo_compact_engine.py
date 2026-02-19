@@ -427,12 +427,15 @@ def _create_light_section(content: str, max_words: int, title: str) -> str:
 
 def estimate_page_count(html: str) -> int:
     """
-    FIX-528: Estimate page count from HTML content.
+    FIX-528 + FIX-WP4-PAGES: Estimate page count from HTML content.
 
     Uses heuristics based on:
-    - Character count (~3000 chars per page for A4 with margins)
     - Explicit page breaks
-    - Section count
+    - Text content length (stripped of HTML tags/styles)
+
+    FIX-WP4-PAGES: Raw HTML with inline CSS inflates char count ~4x vs
+    actual rendered text. Previous: len(html)/3000 → 151 pages for 415KB
+    HTML (actual PDF: 35 pages). Now strips tags first.
 
     Returns:
         Estimated page count
@@ -443,13 +446,21 @@ def estimate_page_count(html: str) -> int:
     # Count explicit page breaks
     page_breaks = len(re.findall(r'class="[^"]*page-break[^"]*"|class="[^"]*chapter[^"]*"', html, re.IGNORECASE))
 
-    # Estimate from content length (roughly 3000 chars per A4 page with margins)
-    content_pages = len(html) / 3000
+    # FIX-WP4-PAGES: Strip HTML tags + inline styles to get text-only length.
+    text_only = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    text_only = re.sub(r'<[^>]+>', ' ', text_only)
+    text_only = re.sub(r'\s+', ' ', text_only).strip()
+
+    # ~3000 text chars per A4 page (with margins, 11pt font)
+    content_pages = len(text_only) / 3000
 
     # Take the maximum as estimate
     estimated = max(page_breaks + 1, int(content_pages))
 
-    log.debug(f"[FIX-528] Page estimate: breaks={page_breaks}, content_pages={content_pages:.1f}, estimated={estimated}")
+    log.debug(
+        "[FIX-528] Page estimate: breaks=%d, text_chars=%d, content_pages=%.1f, estimated=%d",
+        page_breaks, len(text_only), content_pages, estimated,
+    )
 
     return estimated
 

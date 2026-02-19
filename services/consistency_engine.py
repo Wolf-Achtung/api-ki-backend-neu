@@ -83,12 +83,17 @@ CANONICAL_EXECUTIVE_SECTIONS: List[str] = [
 ]
 
 # Bonus points for clean executive sections (no warnings)
-EXECUTIVE_CLEAN_BONUS = 5
+EXECUTIVE_CLEAN_BONUS = 8  # FIX-G22-TUNE: raised from 5 — clean executive content is high-value
 
 # Slightly reduced warning penalty for detail sections (not executive)
-# Default: -3 per warning, Detail sections: -2.5 per warning
+# FIX-G22-TUNE: Detail sections are inherently secondary and often
+# truncated by AGGRESSIVE-TRUNCATION, causing false positive mismatches.
+# Reduced from 2.5 to 2.0 to account for truncation-induced false positives.
 WARNING_PENALTY_DEFAULT = 3.0
-WARNING_PENALTY_DETAIL = 2.5
+WARNING_PENALTY_DETAIL = 2.0
+
+# FIX-G22-TUNE: Bonus for reports with zero ERRORS (fundamentally sound report)
+ZERO_ERROR_BONUS = 5
 
 # Report style enforcement
 REPORT_STYLE_DEFAULT = "advisory"  # advisory, neutral, non-conversational
@@ -191,17 +196,20 @@ class ConsistencyReport:
             executive_clean_bonus = EXECUTIVE_CLEAN_BONUS
             log.debug("[Consistency] Executive sections clean: +%d bonus", EXECUTIVE_CLEAN_BONUS)
 
+        # FIX-G22-TUNE: Zero-error bonus (fundamentally sound report)
+        zero_error_bonus = ZERO_ERROR_BONUS if errors == 0 else 0.0
+
         # N3-03: Apply healing bonus if sections were healed
         # Each healed section adds HEALING_BONUS_POINTS, up to max +20
         if self.healed_sections:
             bonus = min(len(self.healed_sections) * HEALING_BONUS_POINTS, 20)
-            self.healing_bonus_applied = bonus + executive_clean_bonus
+            self.healing_bonus_applied = bonus + executive_clean_bonus + zero_error_bonus
             log.info(
-                "[N3-03] Healing bonus: +%d points for %d healed sections (exec_clean: +%d)",
-                bonus, len(self.healed_sections), executive_clean_bonus
+                "[N3-03] Healing bonus: +%d points for %d healed sections (exec_clean: +%d, zero_err: +%d)",
+                bonus, len(self.healed_sections), executive_clean_bonus, zero_error_bonus
             )
         else:
-            self.healing_bonus_applied = executive_clean_bonus
+            self.healing_bonus_applied = executive_clean_bonus + zero_error_bonus
 
         # Final score with bonus, capped at 0-100
         self.score = max(0.0, min(100.0, base_score + self.healing_bonus_applied))
