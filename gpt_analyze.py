@@ -15911,6 +15911,34 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     except Exception as e:
         log.warning(f"[{run_id}] ⚠️ [CANONICAL-BC] Failed to inject canonical values: {e}")
 
+    # FIX-PLACEHOLDER-GUARD: Clean any remaining placeholders BEFORE hard_stop.
+    # LLM nondeterminism sometimes generates [Placeholder], {{VARIABLE}}, etc.
+    # heal_placeholder_sections (line ~15592) catches most, but late-stage
+    # processing (canonical BC injection, R5-7, etc.) can re-introduce them.
+    try:
+        _ph_cleaned = 0
+        _ph_pattern = re.compile(
+            r"\[(?:Placeholder|Name|Beispiel)\]|"
+            r"\{\{PLACEHOLDER\}\}|"
+            r"Freitextfeld|"
+            r"Template-Marker",
+            re.IGNORECASE,
+        )
+        for _ph_key, _ph_val in sections.items():
+            if not isinstance(_ph_val, str) or len(_ph_val) < 20:
+                continue
+            if _ph_key.startswith("_") or _ph_key in ("LANG", "report_date", "report_year"):
+                continue
+            _ph_new = _ph_pattern.sub("", _ph_val)
+            if _ph_new != _ph_val:
+                sections[_ph_key] = _ph_new
+                _ph_cleaned += 1
+                log.info("[%s] [FIX-PLACEHOLDER-GUARD] Cleaned placeholder in %s", run_id, _ph_key)
+        if _ph_cleaned:
+            log.info("[%s] [FIX-PLACEHOLDER-GUARD] Cleaned %d sections before hard_stop", run_id, _ph_cleaned)
+    except Exception as _ph_err:
+        log.warning("[%s] [FIX-PLACEHOLDER-GUARD] Failed: %s", run_id, _ph_err)
+
     # Execute hard stop validation
     hard_stop_if_invalid(sections, error_gate, persona=persona, run_id=run_id)
 
