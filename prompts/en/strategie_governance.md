@@ -1,3 +1,5 @@
+**IMPORTANT – Length limit: Your response must not exceed 1200 words. Cut rather than exceed.**
+
 Developer:
 <!-- PLATIN++ PROMPT v5.3 - SPRINT G17.S -->
 <!-- SECTION: strategie_governance -->

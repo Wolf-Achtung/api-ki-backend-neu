@@ -1,3 +1,5 @@
+**IMPORTANT – Length limit: Your response must not exceed 1100 words. Cut rather than exceed.**
+
 Developer:
 <!-- unternehmensprofil_markt.md – v5.0 GOLD STANDARD+ (branch-aware, size-aware, context-integrated)
      Respond exclusively with valid HTML.

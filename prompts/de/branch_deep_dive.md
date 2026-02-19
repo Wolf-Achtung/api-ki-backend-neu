@@ -2,6 +2,8 @@
 <!-- INPUT: {{BRANCH_SHORT_LABEL}}, {{hauptleistung}}, COMPANY_SIZE -->
 <!--
 ###############################################################################
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 1100 Wörter umfassen. Kürze lieber als zu überziehen.**
+
 ##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
 ###############################################################################
 

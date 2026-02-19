@@ -1,3 +1,5 @@
+**IMPORTANT – Length limit: Your response must not exceed 1100 words. Cut rather than exceed.**
+
 <!-- PLATIN+++ PROMPT v6.1 - SPRINT G5 -->
 <!-- SECTION: org_change -->
 <!-- OUTPUT: HTML ONLY -->

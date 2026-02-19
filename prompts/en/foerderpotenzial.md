@@ -1,3 +1,5 @@
+**IMPORTANT – Length limit: Your response must not exceed 1200 words. Cut rather than exceed.**
+
 <!-- PLATIN++ PROMPT v5.4 - Funding Potential (Germany) -->
 <!-- SECTION: funding_potential -->
 <!-- OUTPUT: HTML ONLY -->

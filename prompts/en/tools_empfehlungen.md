@@ -1,3 +1,5 @@
+**IMPORTANT – Length limit: Your response must not exceed 1200 words. Cut rather than exceed.**
+
 <!-- PLATIN++ PROMPT v5.4 - AI Stack Recommendations -->
 <!-- SECTION: tools_recommendations -->
 <!-- OUTPUT: HTML ONLY -->

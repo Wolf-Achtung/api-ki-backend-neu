@@ -17,6 +17,8 @@ HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
 <!-- FOERDERLOGIK: DE-Bundesprogramme + Landesprogramme (KEINE EU-Core-Hinweise) -->
 <!--
 ###############################################################################
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 1200 Wörter umfassen. Kürze lieber als zu überziehen.**
+
 ##                    STANDORT KONSISTENZ (KRITISCH!)                        ##
 ###############################################################################
 

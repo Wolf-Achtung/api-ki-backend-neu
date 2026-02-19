@@ -1,3 +1,5 @@
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 1100 Wörter umfassen. Kürze lieber als zu überziehen.**
+
 Developer:
 <!-- unternehmensprofil_markt.md – v5.0 GOLD STANDARD+ (branch-aware, size-aware, context-integrated)
      Antworte ausschließlich mit validem HTML.

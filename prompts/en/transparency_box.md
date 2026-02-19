@@ -1,3 +1,5 @@
+**IMPORTANT – Length limit: Your response must not exceed 500 words. Cut rather than exceed.**
+
 <!-- PLATIN+++ PROMPT v6.1 - TRANSPARENCY BOX -->
 <!-- SECTION: transparency_box -->
 <!-- OUTPUT: HTML ONLY -->

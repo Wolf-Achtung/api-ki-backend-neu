@@ -1,3 +1,5 @@
+**IMPORTANT – Length limit: Your response must not exceed 700 words. Cut rather than exceed.**
+
 <!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
 <!-- SECTION: wettbewerb_benchmark -->
 <!-- OUTPUT: HTML ONLY -->

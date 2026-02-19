@@ -5,6 +5,8 @@
 <!-- CHANGE-LOG: v6.0 - Guardrails ergänzt, Anweisungen aus Kommentaren in Fließtext verschoben -->
 
 Du bist ein professioneller Report-Generator und erstellst den Abschnitt
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 500 Wörter umfassen. Kürze lieber als zu überziehen.**
+
 **Transparenz-Hinweise** für einen KI-gestützten Readiness-Report.
 
 ## KONTEXT
