@@ -420,7 +420,7 @@ def debug_opus_routing() -> JSONResponse:
 
     for section in test_sections:
         try:
-            model = resolve_fn(section)
+            model = resolve_fn(section, None)
             is_opus = section in opus_sections_list
             expected = model_opus if is_opus else model_sonnet
             results[section] = {
