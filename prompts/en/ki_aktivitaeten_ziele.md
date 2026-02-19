@@ -1,3 +1,5 @@
+**IMPORTANT – Length limit: Your response must not exceed 400 words. Cut rather than exceed.**
+
 <!-- ki_aktivitaeten_ziele.md – v3.0 GOLD STANDARD+
      Respond exclusively with valid HTML.
      NO <html>, <head> or <body> tags. NO markdown fences.

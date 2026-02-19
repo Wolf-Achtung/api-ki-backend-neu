@@ -1,3 +1,5 @@
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 1200 Wörter umfassen. Kürze lieber als zu überziehen.**
+
 Developer:
 <!-- PLATIN++ PROMPT v5.5 - SPRINT G17.S -->
 <!-- SECTION: tools_empfehlungen -->

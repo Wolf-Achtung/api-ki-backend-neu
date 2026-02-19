@@ -1,3 +1,5 @@
+**IMPORTANT – Length limit: Your response must not exceed 1100 words. Cut rather than exceed.**
+
 <!-- PLATIN+++ PROMPT v7.1 - SPRINT INHALTLICHE FINALISIERUNG -->
 <!-- SECTION: Technology & Processes -->
 <!-- OUTPUT: HTML ONLY -->

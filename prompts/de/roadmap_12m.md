@@ -125,6 +125,8 @@ KMU-MODUS - VERBOTEN:
 -->
 
 ## 12-Monats-Fahrplan für {{OFFERING_LABEL}}
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 1200 Wörter umfassen. Kürze lieber als zu überziehen.**
+
 
 {% if COMPANY_SIZE == "solo" %}
 Aufbauend auf den ersten 90 Tagen – Fokus auf nachhaltige Integration und Erweiterung.

@@ -1,3 +1,5 @@
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 1100 Wörter umfassen. Kürze lieber als zu überziehen.**
+
 Developer:
 <!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
 <!-- SECTION: org_change -->

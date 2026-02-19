@@ -1,3 +1,5 @@
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 1200 Wörter umfassen. Kürze lieber als zu überziehen.**
+
 Developer:
 <!-- PLATIN++ PROMPT v5.3 - SPRINT G17.S -->
 <!-- SECTION: strategie_governance -->

@@ -8,6 +8,8 @@ Developer:
 <!-- FIX-506: Canonical KPI Contract -->
 <!--
 ###############################################################################
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 1100 Wörter umfassen. Kürze lieber als zu überziehen.**
+
 ##                    CANONICAL KPI CONTRACT (STRICT)                        ##
 ###############################################################################
 

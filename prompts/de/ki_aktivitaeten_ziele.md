@@ -1,3 +1,5 @@
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 400 Wörter umfassen. Kürze lieber als zu überziehen.**
+
 Developer:
 <!-- ki_aktivitaeten_ziele.md – v3.0 GOLD STANDARD+
      Antworte ausschließlich mit validem HTML.

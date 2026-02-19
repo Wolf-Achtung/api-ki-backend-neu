@@ -1,3 +1,5 @@
+**IMPORTANT – Length limit: Your response must not exceed 1100 words. Cut rather than exceed.**
+
 Developer:
 <!-- PLATIN++ PROMPT v5.4 - SPRINT G17.P -->
 <!-- SECTION: business_case -->

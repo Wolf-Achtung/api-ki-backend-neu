@@ -1,3 +1,5 @@
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 700 Wörter umfassen. Kürze lieber als zu überziehen.**
+
 Developer:
 <!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
 <!-- SECTION: wettbewerb_benchmark -->
