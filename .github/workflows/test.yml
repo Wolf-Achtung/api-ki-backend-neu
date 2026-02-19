@@ -7,6 +7,10 @@ on:
     branches: ["main"]
 
 # Repository/environment defaults
+permissions:
+  actions: write
+  contents: read
+
 env:
   # Optional base URL for smoke/e2e tests
   SMOKE_BASE_URL: ${{ vars.SMOKE_BASE_URL || 'http://localhost:8000' }}
