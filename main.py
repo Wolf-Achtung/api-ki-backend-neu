@@ -363,6 +363,99 @@ def info() -> JSONResponse:
 
 
 # ---------------------------------------------------------------------------
+# DEBUG: Opus-Routing Verifikation (TEMPORÄR — nach Test entfernen!)
+# ---------------------------------------------------------------------------
+@app.get("/debug/opus-routing", response_class=JSONResponse)
+def debug_opus_routing() -> JSONResponse:
+    """
+    Temporärer Debug-Endpoint: Zeigt für alle Sections das aufgelöste Modell.
+    Verifiziert FIX-OPUS-ROUTING Deploy.
+    >>> NACH VALIDIERUNG ENTFERNEN! <<<
+    """
+    import datetime
+
+    # ENV-Werte
+    env_info = {
+        "OPUS_SECTIONS": os.environ.get("OPUS_SECTIONS", "NOT SET"),
+        "ANTHROPIC_MODEL": os.environ.get("ANTHROPIC_MODEL", "NOT SET"),
+        "ANTHROPIC_MODEL_OPUS": os.environ.get("ANTHROPIC_MODEL_OPUS", "NOT SET"),
+        "LLM_PROVIDER_DEFAULT": os.environ.get("LLM_PROVIDER_DEFAULT", "NOT SET"),
+    }
+
+    opus_sections_raw = os.environ.get("OPUS_SECTIONS", "")
+    opus_sections_list = [s.strip() for s in opus_sections_raw.split(",") if s.strip()]
+
+    test_sections = [
+        "executive_summary", "gamechanger", "gamechanger_expand",
+        "business_case", "strategie_governance", "strategie_governance_expand",
+        "recommendations", "recommendations_expand",
+        "risks", "risks_expand",
+        "foerderpotenzial", "foerderpotenzial_expand",
+        "one_liner", "next_actions", "branch_deep_dive", "ki_skillplan",
+    ]
+
+    results = {}
+    resolve_fn = None
+    fn_name = "none"
+
+    # Import der Resolve-Funktion
+    for candidate in ("_resolve_anthropic_model", "_get_model_for_section"):
+        try:
+            mod = __import__("services.anthropic_client", fromlist=[candidate])
+            if hasattr(mod, candidate):
+                resolve_fn = getattr(mod, candidate)
+                fn_name = candidate
+                break
+        except Exception:
+            continue
+
+    if resolve_fn is None:
+        return JSONResponse(
+            content={"error": "Konnte keine Resolve-Funktion importieren", "env": env_info},
+            media_type="application/json; charset=utf-8",
+        )
+
+    model_opus = os.environ.get("ANTHROPIC_MODEL_OPUS", "claude-opus-4-6")
+    model_sonnet = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
+
+    for section in test_sections:
+        try:
+            model = resolve_fn(section)
+            is_opus = section in opus_sections_list
+            expected = model_opus if is_opus else model_sonnet
+            results[section] = {
+                "model": model,
+                "expected": expected,
+                "in_opus_list": is_opus,
+                "status": "PASS" if model == expected else "FAIL",
+            }
+        except Exception as e:
+            results[section] = {"error": str(e)}
+
+    opus_pass = sum(1 for v in results.values() if isinstance(v, dict) and v.get("status") == "PASS" and v.get("in_opus_list"))
+    opus_total = sum(1 for v in results.values() if isinstance(v, dict) and v.get("in_opus_list"))
+    non_opus_pass = sum(1 for v in results.values() if isinstance(v, dict) and v.get("status") == "PASS" and not v.get("in_opus_list"))
+    non_opus_total = sum(1 for v in results.values() if isinstance(v, dict) and not v.get("in_opus_list"))
+
+    return JSONResponse(
+        content={
+            "fix": "FIX-OPUS-ROUTING",
+            "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+            "resolve_function": fn_name,
+            "env": env_info,
+            "opus_sections_parsed": opus_sections_list,
+            "routing_results": results,
+            "summary": {
+                "opus_correct": f"{opus_pass}/{opus_total}",
+                "non_opus_correct": f"{non_opus_pass}/{non_opus_total}",
+                "verdict": "FIX VERIFIED" if opus_pass == opus_total and opus_total > 0 else "FIX NOT WORKING",
+            },
+        },
+        media_type="application/json; charset=utf-8",
+    )
+
+
+# ---------------------------------------------------------------------------
 # Legacy Endpoint (Abwärtskompatibilität)
 # ---------------------------------------------------------------------------
 @app.post("/api/briefing_async", status_code=202)
