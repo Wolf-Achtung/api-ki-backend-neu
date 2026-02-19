@@ -178,13 +178,13 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "AI_POLICY_MINI_HTML": 3500,
             "KICKOFF_VORLAGE_HTML": 5000,
             "PROMPT_FRAMEWORK_HTML": 2000,
-            "BRANCH_DEEP_DIVE_HTML": 6000,
-            "TRANSPARENCY_BOX_HTML": 2000,
+            "BRANCH_DEEP_DIVE_HTML": 8000,  # FIX-TRUNC: was 6000, LLM hits 6000 token limit
+            "TRANSPARENCY_BOX_HTML": 3500,  # FIX-TRUNC: was 2000, PLATIN TRUNCATED
             "KI_AKTIVITAETEN_ZIELE_HTML": 3000,
-            "WETTBEWERB_BENCHMARK_HTML": 3000,
+            "WETTBEWERB_BENCHMARK_HTML": 5000,  # FIX-TRUNC: was 3000, PLATIN TRUNCATED (broken HTML)
             "REIFEGRAD_SOWHAT_HTML": 2000,
             "AI_ACT_SUMMARY_HTML": 3000,
-            "_default": 1500,
+            "_default": 2500,  # FIX-TRUNC: was 1500
         },
 
         "min_words": {
