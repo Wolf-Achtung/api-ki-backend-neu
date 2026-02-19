@@ -50,6 +50,13 @@ KMU-MODUS - VERBOTEN:
 REGELN:
 - Scores AKTIV interpretieren
 - Keine generischen Aussagen ohne klaren Nutzen
+
+THEMEN-OWNERSHIP (verbindlich):
+- Diese Section: NUR Veränderungsfähigkeit, Lernkultur, Widerstandsmanagement
+- NICHT hier: Konkrete 90-Tage-Maßnahmen im Detail (→ roadmap_90d)
+- NICHT hier: Governance-Regeln/Rollen im Detail (→ ai_policy_mini)
+- NICHT hier: Datenthemen (→ data_readiness)
+- Prinzip: WIE der Wandel gelingt, nicht WAS umgesetzt wird
 -->
 
 <section class="section org-change">
@@ -114,44 +121,27 @@ REGELN:
     </li>
   </ul>
 
-  <h3>3. Fahrplan für die nächsten 90 Tage</h3>
+  <h3>3. Veränderungsschritte in den ersten 90 Tagen</h3>
   <p>
-    Der Wandel gelingt am besten durch klar priorisierte Schritte. Die folgende
-    90-Tage-Struktur ergänzt die Roadmap (→ siehe Roadmap-Abschnitt).
+    Die konkreten Umsetzungsschritte sind im 90-Tage-Fahrplan beschrieben.
+    Aus Change-Perspektive sind drei Schwerpunkte entscheidend:
   </p>
 
   <ul>
     <li>
-      <strong>0–30 Tage – Orientierung &amp; Standards:</strong>
-      2–3 zentrale KI-Einsatzstellen definieren, einfache Input-Regeln formulieren,
-      branchentypische Beispiele sammeln und eine erste, kurze Dokumentationsvorlage anlegen.
-      {% if COMPANY_SIZE == "solo" %}
-        Fokus auf persönliche Wiederholbarkeit und realistische Routinen.
-      {% elif COMPANY_SIZE == "team" %}
-        Abstimmung zwischen Teamlead und KI-Owner zur gemeinsamen Nutzung der neuen Standards.
-      {% else %}
-        Einbindung relevanter Fachbereiche zur Abstimmung von Qualitäts- und Freigaberegeln.
-      {% endif %}
+      <strong>Monat 1 — Orientierung schaffen:</strong>
+      Neue Arbeitsweisen an 2–3 konkreten Stellen einführen, nicht flächendeckend.
+      Erwartungen klar kommunizieren.
     </li>
 
     <li>
-      <strong>31–60 Tage – Qualität &amp; Kompetenz:</strong>
-      Review-Schleifen etablieren, einfache Guidelines zu Stil, Vollständigkeit und
-      Prüfschritten definieren und eine kleine interne Best-Practice-Sammlung starten.
-      {% if COMPANY_SIZE == "solo" %}
-        Fokus auf schnelle Lernzyklen und konsequente Vereinfachung.
-      {% elif COMPANY_SIZE == "team" %}
-        Team-Reviews zur Harmonisierung der Ergebnisse.
-      {% else %}
-        Fachbereichsübergreifende kurze Formate (Quality-Runden, Mini-Workshops).
-      {% endif %}
+      <strong>Monat 2 — Qualität sichern:</strong>
+      Erste Erfahrungen auswerten, Feedback einholen, Routinen anpassen.
     </li>
 
     <li>
-      <strong>61–90 Tage – Stabilisierung &amp; erste Erweiterung:</strong>
-      Regelmäßige Reflexion (Solo: kurzer Wochen-Check; Team: kurze Team-Reviews;
-      KMU: Bereichs- oder Prozessrunden), Kennzahlen für Zeitersparnis und Qualität
-      festlegen und entscheiden, welche Workflows in den Regelbetrieb überführt werden.
+      <strong>Monat 3 — Verbindlichkeit herstellen:</strong>
+      Erfolgreiche Workflows in den Regelbetrieb überführen, Kennzahlen festlegen.
     </li>
   </ul>
 

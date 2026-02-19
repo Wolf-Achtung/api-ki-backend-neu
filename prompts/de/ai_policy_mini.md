@@ -41,6 +41,12 @@ Nicht verwenden:
 - Keine Platzhalter oder Template-Marker
 - Keine juristischen Formulierungen
 - Keine Wiederholung von Guardrails aus der Risks-Sektion
+
+THEMEN-OWNERSHIP (verbindlich):
+- Diese Section: OWNER für Governance-Grundregeln, Review-Pflicht, Tool-Freigabe
+- NICHT hier: AI Act Fristen/Artikel (→ ai_act_summary)
+- NICHT hier: Risiko-Bewertung (→ risks)
+- NICHT hier: Umsetzungs-Timeline (→ roadmap_90d, roadmap_12m)
 -->
 
 <section class="section ai-policy-mini">
@@ -109,7 +115,7 @@ Nicht verwenden:
 
     <div class="rule">
       <h4>3. Transparenz</h4>
-      <p>Bei kundenrelevanten Inhalten kennzeichnen, wenn KI unterstützt hat.</p>
+      <p>KI-Unterstützung bei kundenrelevanten Inhalten kennzeichnen (→ Details im EU AI Act Abschnitt).</p>
     </div>
 
     <div class="rule">
@@ -165,7 +171,7 @@ Nicht verwenden:
 
     <div class="rule">
       <h4>3. Transparenz</h4>
-      <p>Bei kundenrelevanten Inhalten kennzeichnen, wenn KI unterstützt hat.</p>
+      <p>KI-Unterstützung bei kundenrelevanten Inhalten kennzeichnen (→ Details im EU AI Act Abschnitt).</p>
     </div>
 
     <div class="rule">

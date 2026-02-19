@@ -87,6 +87,15 @@ ANTI-REDUNDANZ (STRIKT!):
 - Fokus: WAS KOMMT NACH den ersten 90 Tagen?
 - Bei Wiederholung: Querverweis nutzen (→ siehe Abschnitt X)
 
+THEMEN-OWNERSHIP (verbindlich):
+- Diese Section: NUR zeitliche Umsetzungsplanung (Q1-Q4 / Dimensionen)
+- NICHT hier: Daten-IST-Analyse (→ data_readiness)
+- NICHT hier: Governance-Regeln (→ ai_policy_mini)
+- NICHT hier: AI Act Details (→ ai_act_summary)
+- NICHT hier: Change Management (→ org_change)
+- NICHT hier: Quick Wins / erste 90 Tage (→ roadmap_90d)
+- Prinzip: Hier steht WAS WANN passiert, nicht WAS die Regeln sind
+
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: eigene Workflows, Self-Review, persönliche Routine
 - team: KI-Koordinator, gemeinsame Standards, Review-Runden
@@ -152,8 +161,8 @@ Aufbauend auf den ersten 90 Tagen – Fokus auf Erweiterung im Team.
 **🎯 Meilenstein Q1:** Alle Teammitglieder nutzen KI regelmäßig.
 
 ### Q2 (Monate 4–6): Qualität & Daten
-- QS-Prozess formalisieren: Input → KI → Review → Freigabe
-- Team-Styleguide für KI-Outputs erstellen
+- QS-Prozess aus den KI-Nutzungsregeln in den Arbeitsalltag überführen
+- Team-Styleguide für konsistente KI-Outputs erstellen
 - Erste Datenintegration (gemeinsame Dokumente, CRM)
 
 **🎯 Meilenstein Q2:** Einheitliche Qualität, Fehlerquote < 10%.
@@ -176,11 +185,11 @@ Aufbauend auf den ersten 90 Tagen – professioneller Ausbau über 5 Dimensionen
 **🎯 Meilenstein:** Tool-Set stabil, Integrationen funktionsfähig.
 
 ### Dimension 2: Daten (Q1–Q2)
-- Relevante Datenquellen identifizieren und anbinden
-- Datenqualität für KI-Nutzung sicherstellen
-- Zugriffsrechte und Datenschutz klären
+- Datenanbindung aus identifizierten Quellen umsetzen (→ siehe Datenlage & Systemreife)
+- Automatisierte Datenqualitätsprüfung für KI-Workflows einführen
+- Daten-Governance-Regeln in Betrieb nehmen
 
-**🎯 Meilenstein:** Kerndaten für KI verfügbar und regelkonform nutzbar.
+**🎯 Meilenstein:** Kerndaten automatisiert verfügbar, Qualitätsprüfung aktiv.
 
 ### Dimension 3: Organisation (Q2–Q3)
 - KI-Verantwortliche in jedem Fachbereich benennen
@@ -197,9 +206,9 @@ Aufbauend auf den ersten 90 Tagen – professioneller Ausbau über 5 Dimensionen
 **🎯 Meilenstein:** 3+ Bereiche produktiv, messbare Effizienzgewinne.
 
 ### Dimension 5: Compliance (Q3–Q4)
-- AI-Act-Relevanz prüfen und dokumentieren
-- Risiko-Assessment für KI-Anwendungen durchführen
-- Transparenzpflichten umsetzen (wo KI im Einsatz)
+- AI-Act-Anforderungen aus dem Compliance-Abschnitt operativ umsetzen
+- Risiko-Assessment als wiederkehrenden Prozess etablieren
+- Kennzeichnungs- und Dokumentationsstandards in Produktion überführen
 
 **🎯 Meilenstein:** Compliance-Dokumentation vollständig.
 

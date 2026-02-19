@@ -22,6 +22,17 @@ VERBOTEN:
 
 ###############################################################################
 
+KONSISTENZ-EXPORT (NEU):
+Diese Section DEFINIERT die Risiko-Klassifizierung für den gesamten Report.
+Andere Sections dürfen KEINE EIGENE Klassifizierung vornehmen, sondern
+müssen die hier gewählte Einstufung übernehmen.
+
+THEMEN-OWNERSHIP (verbindlich):
+- Diese Section: OWNER für AI Act, Compliance-Pflichten, Risiko-Klassifizierung, Fristen
+- NICHT hier: Konkrete Governance-Regeln für den Alltag (→ ai_policy_mini)
+- NICHT hier: Umsetzungs-Timeline (→ roadmap_12m Dimension 5)
+- EXPORT: Risiko-Klassifizierung wird von dieser Section für den gesamten Report definiert
+
      ZIEL:
        - Präzise, seriöse, sachliche Zusammenfassung des EU AI Act.
        - Bewertung der Relevanz für {{HAUPTLEISTUNG}} unter Berücksichtigung von

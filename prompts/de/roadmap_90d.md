@@ -238,6 +238,13 @@ ANTI-REDUNDANZ (STRIKT!):
 - Change-Management in org_change.md → Querverweis nutzen
 - Hier: WIE und WANN, nicht WAS
 
+THEMEN-OWNERSHIP (verbindlich):
+- Diese Section: OWNER für konkrete 90-Tage-Maßnahmen und Phasenplanung
+- NICHT hier: Datenlage-Bewertung (→ data_readiness)
+- NICHT hier: Change-Perspektive/Widerstände (→ org_change)
+- NICHT hier: Governance-Regeln (→ ai_policy_mini)
+- NICHT hier: 12-Monats-Planung (→ roadmap_12m)
+
 SPRINT G6 - PERSONA HARD-GUARDS (STRIKT!):
 {% if COMPANY_SIZE == "solo" %}
 SOLO-MODUS - VERBOTEN:

@@ -118,6 +118,12 @@ STRIKTE AUSGABEREGEL (verbindlich):
 - Falls branchenspezifische Details fehlen, verwende realistische Standard-Maßnahmen
 - Jeder Bullet muss sofort umsetzbar formuliert sein, nicht als Template
 
+THEMEN-OWNERSHIP (verbindlich):
+- Diese Section: NUR Entscheidungsverdichtung der 90-Tage-Roadmap
+- Basiert auf roadmap_90d, keine eigenen Maßnahmen erfinden
+- NICHT hier: Change Management (→ org_change)
+- NICHT hier: Detaillierte Schritte (→ roadmap_90d)
+
 GUARDRAIL (zwingend):
 Keine Assistenz-/Dialog-Sprache, keine Fragen, keine Imperative, keine Meta-Kommentare. Ausschließlich neutrale Berichtssprache.
 
