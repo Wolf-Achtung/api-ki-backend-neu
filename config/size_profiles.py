@@ -95,6 +95,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "WETTBEWERB_BENCHMARK_HTML": 2000,
             "REIFEGRAD_SOWHAT_HTML": 1500,
             "AI_ACT_SUMMARY_HTML": 2000,
+            "VENDOR_AUDIT_HTML": 10000,  # FIX-B718: match team/kmu budget
             "_default": 1000,
         },
 
@@ -184,6 +185,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "WETTBEWERB_BENCHMARK_HTML": 5000,  # FIX-TRUNC: was 3000, PLATIN TRUNCATED (broken HTML)
             "REIFEGRAD_SOWHAT_HTML": 2000,
             "AI_ACT_SUMMARY_HTML": 3000,
+            "VENDOR_AUDIT_HTML": 10000,  # FIX-B718: Compact table is 2500-8500 chars, healer trim counterproductive
             "_default": 2500,  # FIX-TRUNC: was 1500
         },
 
@@ -257,6 +259,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "KI_SKILLPLAN_HTML": 8000,
             "TOOLS_EMPFEHLUNGEN_HTML": 18000,
             "TECHNOLOGIE_PROZESSE_HTML": 12000,
+            "VENDOR_AUDIT_HTML": 10000,  # FIX-B718: match team budget
             "_default": 3000,  # FIX-TRUNC: was 2000, must be >= team._default (2500)
         },
 
