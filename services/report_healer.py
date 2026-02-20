@@ -2746,13 +2746,13 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "RESPONSIBLE_AI_HTML": 6000,
         "BUSINESS_CASE_ENGINE_HTML": 5000,
         "BUSINESS_CASE_SIM_HTML": 4000,
-        "VENDOR_AUDIT_HTML": 3000,
+        "VENDOR_AUDIT_HTML": 10000,  # FIX-B720: was 3000
         "RISK_ENGINE_HTML": 5000,
         "RISK_ENGINE_V3_HTML": 4000,
         "RECOMMENDATIONS_ENGINE_HTML": 6000,
         # FIX-D1: Fehlende Sections (vorher auf _default gefallen)
 
-        "BRANCH_DEEP_DIVE_HTML": 4000,
+        "BRANCH_DEEP_DIVE_HTML": 12000,  # FIX-B720: was 4000, matches 8000 token budget
 
         "ROI_TRACKING_HTML": 3000,
 
@@ -2836,7 +2836,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "RESPONSIBLE_AI_HTML": 12000,
         "BUSINESS_CASE_ENGINE_HTML": 8000,
         "BUSINESS_CASE_SIM_HTML": 6000,
-        "VENDOR_AUDIT_HTML": 4000,
+        "VENDOR_AUDIT_HTML": 10000,  # FIX-B720: was 4000
         "RISK_ENGINE_HTML": 7000,
         "RISK_ENGINE_V3_HTML": 5000,
         "RECOMMENDATIONS_ENGINE_HTML": 10000,
@@ -2930,7 +2930,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "RESPONSIBLE_AI_HTML": 15000,
         "BUSINESS_CASE_ENGINE_HTML": 10000,
         "BUSINESS_CASE_SIM_HTML": 8000,
-        "VENDOR_AUDIT_HTML": 5000,
+        "VENDOR_AUDIT_HTML": 10000,  # FIX-B720: was 5000
         "RISK_ENGINE_HTML": 8000,
         "RISK_ENGINE_V3_HTML": 5000,
         "RECOMMENDATIONS_ENGINE_HTML": 12000,
