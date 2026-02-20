@@ -7328,7 +7328,7 @@
                 {% endif %}
                 <!-- G35: Vendor Audit Engine – KI-TUV for Tools & Models -->
                 <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
-                {% if VENDOR_AUDIT_HTML and not COMPACT_REPORT_MODE %}
+                {% if VENDOR_AUDIT_HTML %}  {# FIX-B720: removed COMPACT_REPORT_MODE gate — VENDOR always shown #}
                 <section class="section chapter" id="vendor-audit">
                     <div class="section-header">
                         <div class="section-title">

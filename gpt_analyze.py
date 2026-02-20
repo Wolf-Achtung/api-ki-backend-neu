@@ -16011,6 +16011,12 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             " feen,": " fest,",
             " feen ": " fest ",
             " feen.": " fest.",
+            # FIX-B720: Sync with TYPO_FIXES dict
+            "Modulering": "Modellierung",
+            "Ablaeufe": "Abläufe",
+            "Regelkonformitaet": "Regelkonformität",
+            "vorraussichtlich": "voraussichtlich",
+            "Vorraussichtlich": "Voraussichtlich",
             "vorraussichtlich": "voraussichtlich",
             "Vorraussichtlich": "Voraussichtlich",
             "Implementierung implementieren": "Implementierung umsetzen",
