@@ -53,7 +53,8 @@ class TestSoloCompactConfig:
         config = SoloCompactConfig()
 
         assert "BRANCH_DEEP_DIVE_HTML" in config.excluded_sections
-        assert "VENDOR_AUDIT_HTML" in config.excluded_sections
+        # FIX-B719: VENDOR_AUDIT_HTML now protected (not excluded)
+        assert "VENDOR_AUDIT_HTML" not in config.excluded_sections
         assert "AUTOMATION_ROADMAP_HTML" in config.excluded_sections
         assert "ROADMAP_12M_HTML" in config.excluded_sections
 
@@ -76,7 +77,8 @@ class TestSectionFiltering:
         assert "EXECUTIVE_SUMMARY_HTML" in filtered
         assert "QUICK_WINS_HTML" in filtered
         assert "BRANCH_DEEP_DIVE_HTML" not in filtered
-        assert "VENDOR_AUDIT_HTML" not in filtered
+        # FIX-B719: VENDOR_AUDIT_HTML now kept in filtered output
+        assert "VENDOR_AUDIT_HTML" in filtered
 
     def test_filter_preserves_allowed_sections(self):
         """Test that allowed sections pass through."""
