@@ -15333,7 +15333,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     # FIX-REDUNDANCY-ALIAS: Exclude REDUNDANCY_DETECTED for known aliases AND
     # shadow-key pairs. Shadow keys: every HTML section (XX_HTML) has a lowercase
     # copy (xx) with identical content. The validator sees them as duplicates.
-    _ALIAS_SECTIONS_RAW = {"PILOT_PLAN_HTML", "roadmap", "ROADMAP_HTML", "ROADMAP_90D_HTML", "roadmap_90d"}
+    _ALIAS_SECTIONS_RAW = {"PILOT_PLAN_HTML", "roadmap", "ROADMAP_HTML", "ROADMAP_90D_HTML", "roadmap_90d", "_GC_SNAPSHOT_642"}  # FIX-B721: GC backup is not a real section
 
     def _is_shadow_key_redundancy(err) -> bool:
         """Check if a REDUNDANCY warning is between an HTML key and its shadow."""
@@ -15765,6 +15765,38 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         canonical_bc = create_canonical_from_sections(sections, company_size=size_raw)
         canon_updates = inject_canonical_to_sections(canonical_bc, sections)
         log.info(f"[{run_id}] ✅ [CANONICAL-BC] Injected {canon_updates} canonical KPI values")
+
+        # FIX-B721: Post-canonical €/h sweep — force ALL hourly rates to match canonical
+        # LLM generates values like 95€/h or 150€/h that don't match the locked canonical rate.
+        # This causes RATE_MISMATCH errors and drops Consistency score.
+        try:
+            import re as _re_b721
+            _canon_rate = canonical_bc.get("rate") or canonical_bc.get("hourly_rate")
+            if _canon_rate:
+                _canon_rate_int = int(float(_canon_rate))
+                _rate_pattern = _re_b721.compile(r'(\d{2,3})\s*€\s*/\s*(?:h|Std\.?|Stunde)')
+                _rate_fixes = 0
+                _rate_sections_fixed = 0
+                for _rk, _rv in sections.items():
+                    if not isinstance(_rv, str) or _rk.startswith("_") or _rk.startswith("CANON"):
+                        continue
+                    _matches = _rate_pattern.findall(_rv)
+                    _non_canonical = [m for m in _matches if int(m) != _canon_rate_int]
+                    if _non_canonical:
+                        _new_val = _rate_pattern.sub(
+                            lambda m: f"{_canon_rate_int}€/h" if int(m.group(1)) != _canon_rate_int else m.group(0),
+                            _rv
+                        )
+                        if _new_val != _rv:
+                            sections[_rk] = _new_val
+                            _rate_fixes += len(_non_canonical)
+                            _rate_sections_fixed += 1
+                if _rate_fixes:
+                    log.info(f"[{run_id}] [FIX-B721-RATE-SWEEP] Fixed {_rate_fixes} non-canonical €/h values in {_rate_sections_fixed} sections (canonical={_canon_rate_int}€/h)")
+                else:
+                    log.debug(f"[{run_id}] [FIX-B721-RATE-SWEEP] All €/h values already canonical ({_canon_rate_int}€/h)")
+        except Exception as _rs_err:
+            log.warning(f"[{run_id}] [FIX-B721-RATE-SWEEP] Failed: {_rs_err}")
 
         # U7: Score-Harmonisierung — CANONICAL scores als Single Source of Truth
         if sections.get("CANONICAL_OVERALL"):
@@ -16353,13 +16385,42 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.warning("[%s] [RESCUE-640-FINAL] Failed: %s", run_id, _rf_err)
     try:
         log.info(f"[{run_id}] 🔍 Running FINAL validation (post-enforcer) for STRICT-readiness...")
+        # FIX-B721: Second Typo-Guard pass — catches OpenAI/engine-generated content
+        # First pass runs before some LLM calls; this catches everything.
+        try:
+            _typo2_map = {
+                "zunächen": "zunächst",
+                " feen,": " fest,",
+                " feen ": " fest ",
+                " feen.": " fest.",
+                "Modulering": "Modellierung",
+                "Ablaeufe": "Abläufe",
+                "Regelkonformitaet": "Regelkonformität",
+                "vorraussichtlich": "voraussichtlich",
+                "Vorraussichtlich": "Voraussichtlich",
+            }
+            _typo2_fixed = 0
+            for _tk, _tv in sections.items():
+                if not isinstance(_tv, str) or _tk.startswith("_"):
+                    continue
+                _orig = _tv
+                for _typo, _correct in _typo2_map.items():
+                    _tv = _tv.replace(_typo, _correct)
+                if _tv != _orig:
+                    sections[_tk] = _tv
+                    _typo2_fixed += 1
+            if _typo2_fixed:
+                log.info(f"[{run_id}] [FIX-B721-TYPO-PASS2] Fixed typos in {_typo2_fixed} sections (post-enforcer)")
+        except Exception as _tp2_err:
+            log.warning(f"[{run_id}] [FIX-B721-TYPO-PASS2] Failed: {_tp2_err}")
+
         _final_valid, _final_errors, _final_healed = validate_and_heal(sections, answers)
         _final_critical = [e for e in _final_errors if e.severity == "CRITICAL"]
         _final_warnings = [e for e in _final_errors if e.severity == "WARNING"]
 
         # FIX-REDUNDANCY-ALIAS: Exclude REDUNDANCY_DETECTED warnings for known
         # section aliases AND shadow-key pairs (HTML_KEY + logical_name with identical content).
-        _ALIAS_SECTIONS = {"PILOT_PLAN_HTML", "roadmap", "ROADMAP_HTML", "ROADMAP_90D_HTML", "roadmap_90d"}
+        _ALIAS_SECTIONS = {"PILOT_PLAN_HTML", "roadmap", "ROADMAP_HTML", "ROADMAP_90D_HTML", "roadmap_90d", "_GC_SNAPSHOT_642"}  # FIX-B721: GC backup is not a real section
 
         def _is_shadow_redundancy(err) -> bool:
             section_str = getattr(err, "section", "") or ""
