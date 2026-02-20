@@ -326,7 +326,7 @@ class TestWP4CompactPayloadGuard:
 
         assert MAX_PAGES_BY_SIZE["solo"] == 16
         assert MAX_PAGES_BY_SIZE["team"] == 70   # FIX-WP4: raised from 55
-        assert MAX_PAGES_BY_SIZE["kmu"] == 55    # FIX-WP4: raised from 45
+        assert MAX_PAGES_BY_SIZE["kmu"] == 70    # FIX-WP4: raised from 45
 
     def test_estimate_page_count(self):
         """Page count estimation should be reasonable."""
