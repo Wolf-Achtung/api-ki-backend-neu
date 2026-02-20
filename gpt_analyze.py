@@ -15766,37 +15766,41 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         canon_updates = inject_canonical_to_sections(canonical_bc, sections)
         log.info(f"[{run_id}] ✅ [CANONICAL-BC] Injected {canon_updates} canonical KPI values")
 
-        # FIX-B721: Post-canonical €/h sweep — force ALL hourly rates to match canonical
-        # LLM generates values like 95€/h or 150€/h that don't match the locked canonical rate.
-        # This causes RATE_MISMATCH errors and drops Consistency score.
+        # FIX-B722: Post-canonical rate sweep v2
+        # B721 was broken: getattr(canonical_bc, "rate") returned "110€/h" string
+        # → int(float("110€/h")) crashed silently. Now uses sections["CANON_RATE_EUR"].
         try:
-            import re as _re_b721
-            _canon_rate = getattr(canonical_bc, "rate", None) or getattr(canonical_bc, "hourly_rate", None)
-            if _canon_rate:
-                _canon_rate_int = int(float(_canon_rate))
-                _rate_pattern = _re_b721.compile(r'(\d{2,3})\s*€\s*/\s*(?:h|Std\.?|Stunde)')
+            import re as _re_b722
+            _canon_rate_str = str(sections.get("CANON_RATE_EUR", "") or "")
+            if _canon_rate_str and _canon_rate_str.strip().isdigit():
+                _canon_rate_int = int(_canon_rate_str.strip())
+                _rate_pat1 = _re_b722.compile(r'(\d{2,3})\s*€\s*/\s*(?:h|Std\.?|Stunde)')
+                _rate_pat2 = _re_b722.compile(r'(Stundensatz\s*)(\d{2,3})(\s*€)')
+                _rate_pat3 = _re_b722.compile(r'(Bei\s+)(\d{2,3})(\s*€\s*/\s*h)')
                 _rate_fixes = 0
                 _rate_sections_fixed = 0
                 for _rk, _rv in sections.items():
                     if not isinstance(_rv, str) or _rk.startswith("_") or _rk.startswith("CANON"):
                         continue
-                    _matches = _rate_pattern.findall(_rv)
-                    _non_canonical = [m for m in _matches if int(m) != _canon_rate_int]
-                    if _non_canonical:
-                        _new_val = _rate_pattern.sub(
-                            lambda m: f"{_canon_rate_int}€/h" if int(m.group(1)) != _canon_rate_int else m.group(0),
-                            _rv
-                        )
-                        if _new_val != _rv:
-                            sections[_rk] = _new_val
-                            _rate_fixes += len(_non_canonical)
-                            _rate_sections_fixed += 1
+                    _orig = _rv
+                    _rv = _rate_pat1.sub(
+                        lambda m: f"{_canon_rate_int}€/h" if int(m.group(1)) != _canon_rate_int else m.group(0), _rv)
+                    _rv = _rate_pat2.sub(
+                        lambda m: f"{m.group(1)}{_canon_rate_int}{m.group(3)}" if int(m.group(2)) != _canon_rate_int else m.group(0), _rv)
+                    _rv = _rate_pat3.sub(
+                        lambda m: f"{m.group(1)}{_canon_rate_int}{m.group(3)}" if int(m.group(2)) != _canon_rate_int else m.group(0), _rv)
+                    if _rv != _orig:
+                        sections[_rk] = _rv
+                        _rate_fixes += 1
+                        _rate_sections_fixed += 1
                 if _rate_fixes:
-                    log.info(f"[{run_id}] [FIX-B721-RATE-SWEEP] Fixed {_rate_fixes} non-canonical €/h values in {_rate_sections_fixed} sections (canonical={_canon_rate_int}€/h)")
+                    log.info(f"[{run_id}] [FIX-B722-RATE-SWEEP] Fixed {_rate_fixes} sections with non-canonical rates (canonical={_canon_rate_int}€/h)")
                 else:
-                    log.debug(f"[{run_id}] [FIX-B721-RATE-SWEEP] All €/h values already canonical ({_canon_rate_int}€/h)")
+                    log.info(f"[{run_id}] [FIX-B722-RATE-SWEEP] All rates already canonical ({_canon_rate_int}€/h)")
+            else:
+                log.warning(f"[{run_id}] [FIX-B722-RATE-SWEEP] CANON_RATE_EUR not found or invalid: '{_canon_rate_str}'")
         except Exception as _rs_err:
-            log.warning(f"[{run_id}] [FIX-B721-RATE-SWEEP] Failed: {_rs_err}")
+            log.warning(f"[{run_id}] [FIX-B722-RATE-SWEEP] Failed: {_rs_err}")
 
         # U7: Score-Harmonisierung — CANONICAL scores als Single Source of Truth
         if sections.get("CANONICAL_OVERALL"):
@@ -17583,6 +17587,58 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             sections["quick_wins"] = _qw_pristine_post
     except Exception as _qw_err:
         log.warning(f"[{run_id}] [FIX-QW1] Post-healer QW restore failed: {_qw_err}")
+
+    # FIX-B722: PRE-RENDER CLEANUP — absolute last stop before PDF generation
+    # Catches typos and rate mismatches re-introduced after Typo Pass 2 by
+    # RESCUE-640-FINAL, QW-Restore, Healer, or other post-validation changes.
+    try:
+        import re as _re_prerender
+        _prerender_typos = {
+            "Ablaeufe": "Abläufe", "ablaeufe": "abläufe",
+            "Regelkonformitaet": "Regelkonformität",
+            "regelkonformitaet": "regelkonformität",
+            "Modulering": "Modellierung", "modulering": "modellierung",
+            "zunächen": "zunächst",
+            " feen,": " fest,", " feen ": " fest ", " feen.": " fest.",
+            "vorraussichtlich": "voraussichtlich",
+            "Vorraussichtlich": "Voraussichtlich",
+        }
+        _pr_canon = str(sections.get("CANON_RATE_EUR", "") or "")
+        _pr_rate_int = int(_pr_canon.strip()) if _pr_canon.strip().isdigit() else 0
+        _pr_pat1 = _re_prerender.compile(r'(\d{2,3})\s*€\s*/\s*(?:h|Std\.?|Stunde)') if _pr_rate_int else None
+        _pr_pat2 = _re_prerender.compile(r'(Stundensatz\s*)(\d{2,3})(\s*€)') if _pr_rate_int else None
+        _pr_pat3 = _re_prerender.compile(r'(Bei\s+)(\d{2,3})(\s*€\s*/\s*h)') if _pr_rate_int else None
+        _pr_typo_fixes = 0
+        _pr_rate_fixes = 0
+        for _pk, _pv in sections.items():
+            if not isinstance(_pv, str) or _pk.startswith("_"):
+                continue
+            _orig = _pv
+            for _typo, _correct in _prerender_typos.items():
+                if _typo in _pv:
+                    _pv = _pv.replace(_typo, _correct)
+            if _pr_rate_int and not _pk.startswith("CANON"):
+                if _pr_pat1:
+                    _pv = _pr_pat1.sub(
+                        lambda m: f"{_pr_rate_int}€/h" if int(m.group(1)) != _pr_rate_int else m.group(0), _pv)
+                if _pr_pat2:
+                    _pv = _pr_pat2.sub(
+                        lambda m: f"{m.group(1)}{_pr_rate_int}{m.group(3)}" if int(m.group(2)) != _pr_rate_int else m.group(0), _pv)
+                if _pr_pat3:
+                    _pv = _pr_pat3.sub(
+                        lambda m: f"{m.group(1)}{_pr_rate_int}{m.group(3)}" if int(m.group(2)) != _pr_rate_int else m.group(0), _pv)
+            if _pv != _orig:
+                sections[_pk] = _pv
+                if any(t in _orig for t in list(_prerender_typos.keys())[:8]):
+                    _pr_typo_fixes += 1
+                else:
+                    _pr_rate_fixes += 1
+        if _pr_typo_fixes or _pr_rate_fixes:
+            log.info(f"[{run_id}] [FIX-B722-PRERENDER] Cleaned {_pr_typo_fixes} typo + {_pr_rate_fixes} rate sections before render")
+        else:
+            log.debug(f"[{run_id}] [FIX-B722-PRERENDER] No pre-render fixes needed")
+    except Exception as _pr_err:
+        log.warning(f"[{run_id}] [FIX-B722-PRERENDER] Failed: {_pr_err}")
 
     result = render(
         br,
