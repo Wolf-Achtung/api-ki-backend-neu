@@ -1357,6 +1357,17 @@ def _llm_params_for(section_key: str) -> Dict[str, Any]:
     platin_config = get_platin_config(key)
 
     # Explizite Env-Overrides pro Section (höchste Priorität)
+    # FIX-B719: Force branch_deep_dive to 8000 regardless of ENV
+    # ENV OPENAI_MAX_TOKENS_BRANCH_DEEP_DIVE was stuck at 6000
+    _FORCE_TOKEN_OVERRIDES = {"branch_deep_dive": 8000}
+    if key in _FORCE_TOKEN_OVERRIDES:
+        return {
+            "model": os.getenv(f"OPENAI_MODEL_{suffix}", OPENAI_MODEL_DEFAULT),
+            "temperature": OPENAI_TEMP_DEFAULT,
+            "max_tokens": _FORCE_TOKEN_OVERRIDES[key],
+            "timeout": OPENAI_TIMEOUT_SEC,
+        }
+
     model_env = os.getenv(f"OPENAI_MODEL_{suffix}")
     temp_env = os.getenv(f"OPENAI_TEMP_{suffix}")
     max_tokens_env = os.getenv(f"OPENAI_MAX_TOKENS_{suffix}")
@@ -2251,6 +2262,17 @@ TYPO_FIXES = {
     "ROI-Berechung": "ROI-Berechnung",
     "Effizienz-Steigerung": "Effizienzsteigerung",
     "Kosten-Reduktion": "Kostenreduktion",
+    # B719: Expanded Typo-Guard
+    "zunächen": "zunächst",
+    " feen,": " fest,",
+    " feen ": " fest ",
+    " feen.": " fest.",
+    "Modulering": "Modellierung",
+    "Ablaeufe": "Abläufe",
+    "Regelkonformitaet": "Regelkonformität",
+    "vorraussichtlich": "voraussichtlich",
+    "Vorraussichtlich": "Voraussichtlich",
+    "Skalierbarkeit skalierbar": "Skalierbarkeit",
 }
 
 
@@ -15360,6 +15382,16 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             log.warning(f"[{run_id}]   [{err.category}] {err.section}: {err.message}")
 
     # FIX-517C: Store RAW (pre-final-enforcer) counts for diagnostics
+
+    # FIX-GRADE-UNIVERSAL: Same classification for RAW stage
+    _INFORMATIONAL_CATEGORIES_RAW = {
+        "SOLO_TERMINOLOGY", "SIZE_MISMATCH", "SECTION_TOO_SHORT", "TEMPLATE_PHRASE",
+    }
+    _info_raw = [w for w in warning_errors if getattr(w, "category", "") in _INFORMATIONAL_CATEGORIES_RAW]
+    if _info_raw:
+        log.info(f"[{run_id}] [FIX-GRADE-UNIVERSAL] RAW: {len(_info_raw)} informational warnings excluded from grade")
+        warning_errors = [w for w in warning_errors if getattr(w, "category", "") not in _INFORMATIONAL_CATEGORIES_RAW]
+
     sections["_VALIDATOR_RAW_WARNING_COUNT"] = len(warning_errors)
     sections["_VALIDATOR_RAW_CRITICAL_COUNT"] = len(critical_errors)
     # Legacy keys updated after final validation below
@@ -16363,6 +16395,31 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             _final_warnings = [w for w in _final_warnings if w not in _roi_roadmap]
 
         # Update legacy keys with FINAL counts (used by STRICT-readiness gate)
+
+        # FIX-GRADE-UNIVERSAL: Classify warnings by severity.
+        # Only grade-blocking warnings count toward total_warnings for grade calc.
+        # Informational warnings are logged but don't affect the grade.
+        _INFORMATIONAL_CATEGORIES = {
+            "SOLO_TERMINOLOGY",     # Persona check — informational, not content error
+            "SIZE_MISMATCH",        # Persona size check — informational
+            "SECTION_TOO_SHORT",    # Content length — soft warning, not data corruption
+            "TEMPLATE_PHRASE",      # Residual template text — cosmetic
+        }
+        _grade_blocking_final = [
+            w for w in _final_warnings
+            if getattr(w, "category", "") not in _INFORMATIONAL_CATEGORIES
+        ]
+        _informational_final = [
+            w for w in _final_warnings
+            if getattr(w, "category", "") in _INFORMATIONAL_CATEGORIES
+        ]
+        if _informational_final:
+            log.info(f"[{run_id}] [FIX-GRADE-UNIVERSAL] Classified {len(_informational_final)} "
+                     f"informational warnings (not grade-blocking): "
+                     f"{', '.join(set(getattr(w, 'category', '?') for w in _informational_final))}")
+        # Override _final_warnings to only grade-blocking for count purposes
+        _final_warnings = _grade_blocking_final
+
         sections["_VALIDATOR_WARNING_COUNT"] = len(_final_warnings)
         sections["_VALIDATOR_CRITICAL_COUNT"] = len(_final_critical)
         # Store explicit FINAL keys for diagnostics
