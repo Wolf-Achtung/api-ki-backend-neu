@@ -148,7 +148,7 @@ SOLO_COMPACT_EXCLUDED = [
     "RISK_ENGINE_V3_HTML",
     "BUSINESS_CASE_SIM_HTML",
     "BENCHMARKS_HTML",
-    "VENDOR_AUDIT_HTML",
+    # "VENDOR_AUDIT_HTML",  # FIX-B719: Protected — always keep
     "AUTOMATION_ROADMAP_HTML",
     "FUNDING_BRANCH_ALIGNMENT_HTML",
     "TOOLS_FUNDING_ALIGNMENT_HTML",
@@ -650,12 +650,19 @@ def process_for_solo_compact(
 MAX_PAGES_BY_SIZE: Dict[str, int] = {
     "solo": 16,
     "team": 70,
-    "kmu": 55,
+    "kmu": 70,  # FIX-B719: was 55, KMU reports need 60-70 pages like team
 }
 
 # HTML size thresholds (KB) for auto-compact
 # FIX-WP4: Raised from 450→500 to work with higher page limit
+# FIX-B719: Segment-specific HTML thresholds
+# KMU at 507KB was triggering compact — raised to 650KB
 HTML_COMPACT_THRESHOLD_KB: int = int(os.getenv("HTML_COMPACT_THRESHOLD_KB", "500"))
+HTML_COMPACT_THRESHOLD_BY_SIZE: dict = {
+    "solo": 300,
+    "team": 500,
+    "kmu": 650,  # FIX-B719: was 500, KMU legitimately produces 500-600KB
+}
 
 # Low-priority sections to drop when auto-compacting Team/KMU
 # Ordered by priority: drop first = least important
@@ -667,7 +674,7 @@ TEAM_KMU_LOW_PRIORITY_SECTIONS: List[str] = [
     "AUTOMATION_ROADMAP_HTML",
     "ROI_TRACKING_HTML",
     "BUSINESS_CASE_SIM_HTML",
-    "VENDOR_AUDIT_HTML",
+    # "VENDOR_AUDIT_HTML",  # FIX-B719: Protected — always keep
     "KICKOFF_HTML",
 ]
 
@@ -714,9 +721,10 @@ def check_and_apply_compact_guard(
     needs_compact = False
     reasons: List[str] = []
 
-    if size_kb > HTML_COMPACT_THRESHOLD_KB:
+    _compact_threshold = HTML_COMPACT_THRESHOLD_BY_SIZE.get(size_lower, HTML_COMPACT_THRESHOLD_KB)
+    if size_kb > _compact_threshold:
         needs_compact = True
-        reasons.append(f"HTML size {size_kb:.0f}KB > {HTML_COMPACT_THRESHOLD_KB}KB threshold")
+        reasons.append(f"HTML size {size_kb:.0f}KB > {_compact_threshold}KB threshold for {size_lower}")
 
     if estimated_pages > max_pages:
         needs_compact = True

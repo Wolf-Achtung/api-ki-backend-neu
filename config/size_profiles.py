@@ -199,7 +199,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "strategie_governance": 200,
             "foerderpotenzial": 40,     # FIX-629: compact Förder-Überblick layout (~45 words valid)
             "gamechanger": 750,
-            "transparency_box": 150,
+            "transparency_box": 120,  # FIX-B719: was 150
             "technologie_prozesse": 200,
         },
 
@@ -273,7 +273,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "strategie_governance": 220,
             "foerderpotenzial": 800,
             "gamechanger": 750,
-            "transparency_box": 150,
+            "transparency_box": 120,  # FIX-B719: was 150
             "technologie_prozesse": 200,
         },
 
