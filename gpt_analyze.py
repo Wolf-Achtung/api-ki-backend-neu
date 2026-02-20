@@ -15771,7 +15771,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         # This causes RATE_MISMATCH errors and drops Consistency score.
         try:
             import re as _re_b721
-            _canon_rate = canonical_bc.get("rate") or canonical_bc.get("hourly_rate")
+            _canon_rate = getattr(canonical_bc, "rate", None) or getattr(canonical_bc, "hourly_rate", None)
             if _canon_rate:
                 _canon_rate_int = int(float(_canon_rate))
                 _rate_pattern = _re_b721.compile(r'(\d{2,3})\s*€\s*/\s*(?:h|Std\.?|Stunde)')
