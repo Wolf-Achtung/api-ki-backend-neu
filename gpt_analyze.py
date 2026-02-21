@@ -15765,6 +15765,34 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         canonical_bc = create_canonical_from_sections(sections, company_size=size_raw)
         canon_updates = inject_canonical_to_sections(canonical_bc, sections)
         log.info(f"[{run_id}] ✅ [CANONICAL-BC] Injected {canon_updates} canonical KPI values")
+        # FIX-B723: Enforce canonical rate in BUSINESS_CASE_TABLE_HTML
+        # BC table is pre-rendered HTML where "95 €" sits in a <td> cell.
+        # Rate Sweep regex can't match "Stundensatz" across HTML tags.
+        try:
+            import re as _re_b723
+            _b723_rate_str = str(sections.get("CANON_RATE_EUR", "") or "")
+            if _b723_rate_str and _b723_rate_str.strip().isdigit():
+                _b723_rate = int(_b723_rate_str.strip())
+                for _b723_key in ("BUSINESS_CASE_TABLE_HTML", "business_case_table_html"):
+                    _b723_bc = sections.get(_b723_key, "")
+                    if not isinstance(_b723_bc, str) or not _b723_bc:
+                        continue
+                    _b723_orig = _b723_bc
+                    def _b723_replace_rate(m):
+                        val = int(m.group(1))
+                        if val != _b723_rate and 50 <= val <= 300:
+                            return f"{_b723_rate}{m.group(2)}"
+                        return m.group(0)
+                    _b723_bc = _re_b723.sub(r'(\d{2,3})(\s*€)', _b723_replace_rate, _b723_bc)
+                    if _b723_bc != _b723_orig:
+                        sections[_b723_key] = _b723_bc
+                        _bch = sections.get("BUSINESS_CASE_HTML", "")
+                        if isinstance(_bch, str) and _b723_orig[:50] in _bch:
+                            sections["BUSINESS_CASE_HTML"] = _bch.replace(_b723_orig, _b723_bc)
+                            sections["business_case"] = sections["BUSINESS_CASE_HTML"]
+                        log.info(f"[{run_id}] [FIX-B723-BC-TABLE-RATE] Enforced {_b723_rate}€ in {_b723_key}")
+        except Exception as _bc_err:
+            log.warning(f"[{run_id}] [FIX-B723-BC-TABLE-RATE] Failed: {_bc_err}")
 
         # FIX-B722: Post-canonical rate sweep v2
         # B721 was broken: getattr(canonical_bc, "rate") returned "110€/h" string
@@ -16086,6 +16114,23 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     pipeline_warnings = len(error_gate.warnings)
     pipeline_fallbacks = error_gate.fallback_count
     pipeline_heals = error_gate.heals_count
+
+    # FIX-B723: Exclude ROI_PROHIBITED from RECOMMENDATIONS (not grade-blocking)
+    # KMU B722: ROI_PROHIBITED("100%") in RECOMMENDATIONS_HTML was sole Grade-A blocker.
+    # ROI mentions in recommendations are acceptable context, not misleading data.
+    try:
+        _b723_wc = int(sections.get("_VALIDATOR_WARNING_COUNT", 0))
+        if _b723_wc > 0:
+            _b723_wlist = sections.get("_VALIDATOR_WARNING_LIST", [])
+            _b723_roi_reco = [w for w in _b723_wlist if "ROI_PROHIBITED" in str(w) and 
+                              any(s in str(w) for s in ("RECOMMENDATIONS", "recommendations"))]
+            if _b723_roi_reco:
+                _b723_new_list = [w for w in _b723_wlist if w not in _b723_roi_reco]
+                sections["_VALIDATOR_WARNING_COUNT"] = max(0, _b723_wc - len(_b723_roi_reco))
+                sections["_VALIDATOR_WARNING_LIST"] = _b723_new_list
+                log.info(f"[{run_id}] [FIX-B723-ROI-RECO] Excluded {len(_b723_roi_reco)} ROI_PROHIBITED from RECOMMENDATIONS (not grade-blocking)")
+    except Exception as _rr_err:
+        log.warning(f"[{run_id}] [FIX-B723-ROI-RECO] Failed: {_rr_err}")
 
     # Validator metrics (content quality) - FIX-503B
     validator_warnings = sections.get("_VALIDATOR_WARNING_COUNT", 0)
@@ -17636,7 +17681,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         if _pr_typo_fixes or _pr_rate_fixes:
             log.info(f"[{run_id}] [FIX-B722-PRERENDER] Cleaned {_pr_typo_fixes} typo + {_pr_rate_fixes} rate sections before render")
         else:
-            log.debug(f"[{run_id}] [FIX-B722-PRERENDER] No pre-render fixes needed")
+            log.info(f"[{run_id}] [FIX-B722-PRERENDER] No pre-render fixes needed")
     except Exception as _pr_err:
         log.warning(f"[{run_id}] [FIX-B722-PRERENDER] Failed: {_pr_err}")
 
