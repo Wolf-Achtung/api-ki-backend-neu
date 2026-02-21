@@ -8477,7 +8477,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # -------------------------------------------------------------------------
     # FIX-B726-HAUPTLEISTUNG: Robust source cleanup
     try:
-        _hl726 = answers.get("hauptleistung", "") if isinstance(answers, dict) else ""
+        _hl726 = briefing.get("hauptleistung", "") if isinstance(briefing, dict) else ""
         if _hl726 and len(str(_hl726)) > 50:
             _hl726_s = str(_hl726).rstrip()
             _needs_clean = False
@@ -8496,11 +8496,11 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
                     if _pos726 > 20:
                         _hl726_c = _hl726_c[:_pos726]
                         break
-                if isinstance(answers, dict) and _hl726_c != _hl726_s:
-                    answers["hauptleistung"] = _hl726_c
-                    log.info("[%s] [FIX-B726-HAUPTLEISTUNG] Cleaned: len %d->%d", run_id, len(_hl726_s), len(_hl726_c))
+                if isinstance(briefing, dict) and _hl726_c != _hl726_s:
+                    briefing["hauptleistung"] = _hl726_c
+                    log.info("[FIX-B726-HAUPTLEISTUNG] Cleaned: len %d->%d", len(_hl726_s), len(_hl726_c))
     except Exception as _hl726_err:
-        log.warning("[%s] [FIX-B726-HAUPTLEISTUNG] Error: %s", run_id, _hl726_err)
+        log.warning("[FIX-B726-HAUPTLEISTUNG] Error: %s", _hl726_err)
 
     # FIX-BRANCH-13 TASK 3: Log core input fields before prompt rendering
     # -------------------------------------------------------------------------
