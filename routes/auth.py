@@ -410,7 +410,26 @@ EMAIL_WHITELIST = {email.lower() for email in [
     "test-v7-359@ki-sicherheit.jetzt",
     "test-v7-360@ki-sicherheit.jetzt",    
     "test-v7-9@ki-sicherheit.jetzt",
-]}
+    "test-v7-361@ki-sicherheit.jetzt",
+    "test-v7-362@ki-sicherheit.jetzt",
+    "test-v7-363@ki-sicherheit.jetzt",
+    "test-v7-364@ki-sicherheit.jetzt",
+    "test-v7-365@ki-sicherheit.jetzt",
+    "test-v7-366@ki-sicherheit.jetzt",
+    "test-v7-367@ki-sicherheit.jetzt",
+    "test-v7-368@ki-sicherheit.jetzt",
+    "test-v7-369@ki-sicherheit.jetzt",
+    "test-v7-370@ki-sicherheit.jetzt",
+    "test-v7-371@ki-sicherheit.jetzt",
+    "test-v7-372@ki-sicherheit.jetzt",
+    "test-v7-373@ki-sicherheit.jetzt",
+    "test-v7-374@ki-sicherheit.jetzt",
+    "test-v7-375@ki-sicherheit.jetzt",
+    "test-v7-376@ki-sicherheit.jetzt",
+    "test-v7-377@ki-sicherheit.jetzt",
+    "test-v7-378@ki-sicherheit.jetzt",
+    "test-v7-379@ki-sicherheit.jetzt",
+    "test-v7-380@ki-sicherheit.jetzt",   ]}
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 log = logging.getLogger(__name__)
