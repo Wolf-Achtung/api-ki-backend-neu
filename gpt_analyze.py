@@ -14083,12 +14083,12 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     sections["COMPACT_REPORT_MODE"] = compact_report_mode
     sections["COMPANY_SIZE"] = company_size
 
-        # ── FIX-B724-COMPACT-KMU ──────────────────────────────────────────
-        # KMU reports: force compact layout → ~27 pages (not 67).
-        _b724_sz = str(sections.get("COMPANY_SIZE", "") or "").lower().strip()
-        if _b724_sz in ("kmu", "small", "medium") and not sections.get("COMPACT_REPORT_MODE"):
-            sections["COMPACT_REPORT_MODE"] = True
-            log.info(f"[{run_id}] [FIX-B724-COMPACT-KMU] Forced COMPACT=True for {_b724_sz}")
+    # ── FIX-B724-COMPACT-KMU ──────────────────────────────────────────
+    # KMU reports: force compact layout → ~27 pages (not 67).
+    _b724_sz = str(sections.get("COMPANY_SIZE", "") or "").lower().strip()
+    if _b724_sz in ("kmu", "small", "medium") and not sections.get("COMPACT_REPORT_MODE"):
+        sections["COMPACT_REPORT_MODE"] = True
+        log.info(f"[{run_id}] [FIX-B724-COMPACT-KMU] Forced COMPACT=True for {_b724_sz}")
     log.info("[%s] 📄 [COMPACT] Mode=%s, company_size=%s, COMPACT_REPORT_MODE=%s",
              run_id, appendix_mode_env or "(default=all)", company_size, compact_report_mode)
 
