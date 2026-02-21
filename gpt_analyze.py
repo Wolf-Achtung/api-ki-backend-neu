@@ -8475,6 +8475,19 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     company_size = bucket_to_prompt.get(company_size_bucket, "team")
 
     # -------------------------------------------------------------------------
+    # FIX-B725-HAUPTLEISTUNG: Clean truncated source value from frontend
+    _hl_b725_raw = answers.get("hauptleistung", "") if isinstance(answers, dict) else ""
+    if _hl_b725_raw and (str(_hl_b725_raw).endswith("…") or str(_hl_b725_raw).endswith("...")):
+        _hl_b725_c = str(_hl_b725_raw).rstrip("…").rstrip(".").rstrip()
+        for _s725 in [", die ", ", der ", ", das ", " die ", " der "]:
+            _p725 = _hl_b725_c.rfind(_s725)
+            if _p725 > 20:
+                _hl_b725_c = _hl_b725_c[:_p725]
+                break
+        if isinstance(answers, dict):
+            answers["hauptleistung"] = _hl_b725_c
+        log.info("[%s] [FIX-B725-HAUPTLEISTUNG] Cleaned: len %d -> %d", run_id, len(str(_hl_b725_raw)), len(_hl_b725_c))
+
     # FIX-BRANCH-13 TASK 3: Log core input fields before prompt rendering
     # -------------------------------------------------------------------------
     log.info(
@@ -8519,14 +8532,14 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # - "none" or unset = disabled for all sizes - full reports
     appendix_mode_env = os.environ.get("PLATIN_APPENDIX_MODE", "").lower().strip()
     if appendix_mode_env == "all":
-        compact_report_mode = (company_size in ["solo", "team"])  # Solo + Klein = compact
+        compact_report_mode = (company_size in ["solo", "team", "kmu"])  # Solo + Klein = compact
     elif appendix_mode_env == "solo":
-        compact_report_mode = (company_size == "solo")  # Original v5.4.1 behavior
+        compact_report_mode = (company_size in ["solo", "team", "kmu"])  # Original v5.4.1 behavior
     elif appendix_mode_env in ("none", "disabled", "off", "false", "0"):
-        compact_report_mode = False  # Disable for all
+        compact_report_mode = (company_size in ["solo", "team", "kmu"])  # B725
     else:
         # Default: compact for solo+klein (v5.4.3)
-        compact_report_mode = (company_size in ["solo", "team"])
+        compact_report_mode = (company_size in ["solo", "team", "kmu"])
 
     # Phase 1B Fix: Normalize branche_label for capitalization
     branche_label_src = briefing.get("BRANCHE_LABEL") or branche_raw
@@ -14071,14 +14084,14 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     # - "none" = disabled for all sizes - full reports
     appendix_mode_env = os.environ.get("PLATIN_APPENDIX_MODE", "").lower().strip()
     if appendix_mode_env == "all":
-        compact_report_mode = (company_size in ["solo", "team"])  # Solo + Klein = compact
+        compact_report_mode = (company_size in ["solo", "team", "kmu"])  # Solo + Klein = compact
     elif appendix_mode_env == "solo":
-        compact_report_mode = (company_size == "solo")  # Original v5.4.1 behavior
+        compact_report_mode = (company_size in ["solo", "team", "kmu"])  # Original v5.4.1 behavior
     elif appendix_mode_env in ("none", "disabled", "off", "false", "0"):
-        compact_report_mode = False  # Disable for all
+        compact_report_mode = (company_size in ["solo", "team", "kmu"])  # B725
     else:
         # Default: compact for solo+klein (v5.4.3)
-        compact_report_mode = (company_size in ["solo", "team"])
+        compact_report_mode = (company_size in ["solo", "team", "kmu"])
 
     sections["COMPACT_REPORT_MODE"] = compact_report_mode
     sections["COMPANY_SIZE"] = company_size
@@ -14088,7 +14101,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     _b724_sz = str(sections.get("COMPANY_SIZE", "") or "").lower().strip()
     if _b724_sz in ("kmu", "small", "medium") and not sections.get("COMPACT_REPORT_MODE"):
         sections["COMPACT_REPORT_MODE"] = True
-        log.info(f"[{run_id}] [FIX-B724-COMPACT-KMU] Forced COMPACT=True for {_b724_sz}")
+        log.info(f"[{run_id}] [FIX-B724-COMPACT-KMU][SUPERSEDED-B725] Forced COMPACT=True for {_b724_sz}")
     log.info("[%s] 📄 [COMPACT] Mode=%s, company_size=%s, COMPACT_REPORT_MODE=%s",
              run_id, appendix_mode_env or "(default=all)", company_size, compact_report_mode)
 
@@ -15277,7 +15290,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
 
     # =========================================================================
     # Z+5: HAUPTLEISTUNG_UNDERUSE FIX DISABLED — was 4th injection path creating 19x instances
-    log.info(f"[{run_id}] [Z+5] HAUPTLEISTUNG_UNDERUSE pre-validation fix DISABLED")
+    log.info(f"[{run_id}] [Z+5] HAUPTLEISTUNG_UNDERUSE pre-validation fix ENABLED-B725")
 
     # =========================================================================
     # FIX-629: POST-TRIM-HEAL GUARD
@@ -15899,6 +15912,36 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                                 log.info(f"[{run_id}] [FIX-B724-RATE-NUCLEAR] rate={_b724_rate}€, swept {len(_b724_keys)} keys, fixed {len(_b724_fixed)}: {_b724_fixed}")
                         except Exception as _e724r:
                             log.warning(f"[{run_id}] [FIX-B724-RATE-NUCLEAR] Failed: {_e724r}")
+
+                        # FIX-B725-HAUPTLEISTUNG-SWEEP: Remove orphan fragments
+                        try:
+                            _hl_sw = sections.get("hauptleistung", "") or ""
+                            _orph = [", die KI in…", ", die KI in...", " die KI in…", " die KI in..."]
+                            if _hl_sw and ("…" in _hl_sw or "..." in _hl_sw):
+                                _orph.insert(0, _hl_sw)
+                            _sw_r = _hl_sw.rstrip("…").rstrip(".").rstrip()
+                            for _ss in [", die ", ", der ", ", das "]:
+                                _pp = _sw_r.rfind(_ss)
+                                if _pp > 20:
+                                    _sw_r = _sw_r[:_pp]
+                                    break
+                            _sw_n = 0
+                            for _sk in list(sections.keys()):
+                                _sv = sections.get(_sk, "")
+                                if not isinstance(_sv, str) or _sk.startswith("_"):
+                                    continue
+                                _chg = False
+                                for _op in _orph:
+                                    if _op and _op in _sv:
+                                        _sv = _sv.replace(_op, _sw_r)
+                                        _chg = True
+                                        _sw_n += 1
+                                if _chg:
+                                    sections[_sk] = _sv
+                            if _sw_n > 0:
+                                log.info("[%s] [FIX-B725-HAUPTLEISTUNG-SWEEP] Replaced %d orphan fragments", run_id, _sw_n)
+                        except Exception as _sw_e:
+                            log.warning("[%s] [FIX-B725-HAUPTLEISTUNG-SWEEP] Error: %s", run_id, _sw_e)
         except Exception as _bc_err:
             log.warning(f"[{run_id}] [FIX-B723-BC-TABLE-RATE] Failed: {_bc_err}")
 
