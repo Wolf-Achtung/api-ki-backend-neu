@@ -15858,47 +15858,47 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                             sections["business_case"] = sections["BUSINESS_CASE_HTML"]
                         log.info(f"[{run_id}] [FIX-B723-BC-TABLE-RATE] Enforced {_b723_rate}€ in {_b723_key}")
 
-        # ── FIX-B724-RATE-NUCLEAR ──────────────────────────────────────────
-        # Nuclear sweep: catches ALL BC rate mismatches B723 missed.
-        # Patterns: plain "95 €", HTML ">95</td>", "Stundensatz...95", "95 €/h"
-        try:
-            import re as _re724
-            _b724r = str(sections.get("CANON_RATE_EUR", "") or "")
-            if _b724r and _b724r.strip().replace(".", "").isdigit():
-                _b724_rate = int(float(_b724r.strip()))
-                _b724_keys = [k for k in sections if isinstance(sections.get(k), str)
-                              and any(t in k.upper() for t in ("BUSINESS_CASE", "BC_", "STUNDENSATZ",
-                                      "ROI_HTML", "COSTS_OVERVIEW", "SENSITIVITY"))]
-                _b724_fixed = []
-                for _k in _b724_keys:
-                    _v = sections[_k]
-                    _orig = _v
-                    def _r1(m):
-                        n = int(m.group(1))
-                        return f"{_b724_rate}{m.group(2)}" if n != _b724_rate and 50 <= n <= 300 else m.group(0)
-                    _v = _re724.sub(r'(\d{2,3})(\s*€)', _r1, _v)
-                    def _r2(m):
-                        n = int(m.group(2))
-                        return f"{m.group(1)}{_b724_rate}{m.group(3)}" if n != _b724_rate and 50 <= n <= 300 else m.group(0)
-                    _v = _re724.sub(r'(>)(\d{2,3})(</(?:td|span|strong|b|div)>)', _r2, _v)
-                    def _r3(m):
-                        n = int(m.group(2))
-                        return f"{m.group(1)}{_b724_rate}" if n != _b724_rate and 50 <= n <= 300 else m.group(0)
-                    _v = _re724.sub(r'([Ss]tundensatz[^0-9]{0,80})(\d{2,3})', _r3, _v)
-                    def _r4(m):
-                        n = int(m.group(1))
-                        return f"{_b724_rate}{m.group(2)}" if n != _b724_rate and 50 <= n <= 300 else m.group(0)
-                    _v = _re724.sub(r'(\d{2,3})(\s*€/h)', _r4, _v)
-                    if _v != _orig:
-                        sections[_k] = _v
-                        _b724_fixed.append(_k)
-                _stz = sections.get("stundensatz_eur")
-                if _stz and str(_stz).strip() != str(_b724_rate):
-                    sections["stundensatz_eur"] = str(_b724_rate)
-                    _b724_fixed.append("stundensatz_eur")
-                log.info(f"[{run_id}] [FIX-B724-RATE-NUCLEAR] rate={_b724_rate}€, swept {len(_b724_keys)} keys, fixed {len(_b724_fixed)}: {_b724_fixed}")
-        except Exception as _e724r:
-            log.warning(f"[{run_id}] [FIX-B724-RATE-NUCLEAR] Failed: {_e724r}")
+                        # ── FIX-B724-RATE-NUCLEAR ──────────────────────────────────────────
+                        # Nuclear sweep: catches ALL BC rate mismatches B723 missed.
+                        # Patterns: plain "95 €", HTML ">95</td>", "Stundensatz...95", "95 €/h"
+                        try:
+                            import re as _re724
+                            _b724r = str(sections.get("CANON_RATE_EUR", "") or "")
+                            if _b724r and _b724r.strip().replace(".", "").isdigit():
+                                _b724_rate = int(float(_b724r.strip()))
+                                _b724_keys = [k for k in sections if isinstance(sections.get(k), str)
+                                              and any(t in k.upper() for t in ("BUSINESS_CASE", "BC_", "STUNDENSATZ",
+                                                      "ROI_HTML", "COSTS_OVERVIEW", "SENSITIVITY"))]
+                                _b724_fixed = []
+                                for _k in _b724_keys:
+                                    _v = sections[_k]
+                                    _orig = _v
+                                    def _r1(m):
+                                        n = int(m.group(1))
+                                        return f"{_b724_rate}{m.group(2)}" if n != _b724_rate and 50 <= n <= 300 else m.group(0)
+                                    _v = _re724.sub(r'(\d{2,3})(\s*€)', _r1, _v)
+                                    def _r2(m):
+                                        n = int(m.group(2))
+                                        return f"{m.group(1)}{_b724_rate}{m.group(3)}" if n != _b724_rate and 50 <= n <= 300 else m.group(0)
+                                    _v = _re724.sub(r'(>)(\d{2,3})(</(?:td|span|strong|b|div)>)', _r2, _v)
+                                    def _r3(m):
+                                        n = int(m.group(2))
+                                        return f"{m.group(1)}{_b724_rate}" if n != _b724_rate and 50 <= n <= 300 else m.group(0)
+                                    _v = _re724.sub(r'([Ss]tundensatz[^0-9]{0,80})(\d{2,3})', _r3, _v)
+                                    def _r4(m):
+                                        n = int(m.group(1))
+                                        return f"{_b724_rate}{m.group(2)}" if n != _b724_rate and 50 <= n <= 300 else m.group(0)
+                                    _v = _re724.sub(r'(\d{2,3})(\s*€/h)', _r4, _v)
+                                    if _v != _orig:
+                                        sections[_k] = _v
+                                        _b724_fixed.append(_k)
+                                _stz = sections.get("stundensatz_eur")
+                                if _stz and str(_stz).strip() != str(_b724_rate):
+                                    sections["stundensatz_eur"] = str(_b724_rate)
+                                    _b724_fixed.append("stundensatz_eur")
+                                log.info(f"[{run_id}] [FIX-B724-RATE-NUCLEAR] rate={_b724_rate}€, swept {len(_b724_keys)} keys, fixed {len(_b724_fixed)}: {_b724_fixed}")
+                        except Exception as _e724r:
+                            log.warning(f"[{run_id}] [FIX-B724-RATE-NUCLEAR] Failed: {_e724r}")
         except Exception as _bc_err:
             log.warning(f"[{run_id}] [FIX-B723-BC-TABLE-RATE] Failed: {_bc_err}")
 
