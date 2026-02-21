@@ -15774,31 +15774,31 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             sections["N43_MATURITY_LEVEL"] = n43_report.maturity_level
             sections["N43_DOD_PASSED"] = n43_report.dod_passed
 
-        # ── FIX-B724-N43-FP ───────────────────────────────────────────────
-        # payback < benchmark = GOOD (fast ROI). time_savings in branch_deep_dive = LLM noise.
-        try:
-            _n43r = sections.get("_n43_report", {})
-            _n43_num = _n43r.get("numerical_issues", []) if isinstance(_n43r, dict) else []
-            _b724_real, _b724_supp = [], []
-            for _ni in _n43_num:
-                _d = _ni if isinstance(_ni, dict) else {}
-                _metric = str(_d.get("metric", "")).lower()
-                _desc = str(_d.get("desc", "")).lower()
-                _sec = str(_d.get("section", "")).lower()
-                if "payback" in _metric and ("below" in _desc or "under" in _desc):
-                    _b724_supp.append(f"payback-fp")
-                    continue
-                if "time_savings" in _metric and "branch_deep_dive" in _sec:
-                    _b724_supp.append(f"branch-noise")
-                    continue
-                _b724_real.append(_ni)
-            if _b724_supp:
-                if len(_b724_real) == 0:
-                    sections["_n43_dod_passed"] = True
-                    sections["N43_DOD_PASSED"] = True
-                log.info(f"[{run_id}] [FIX-B724-N43-FP] Suppressed {len(_b724_supp)}: {_b724_supp}, real={len(_b724_real)}, DoD={'PASS' if not _b724_real else 'FAIL'}")
-        except Exception as _e724n:
-            log.warning(f"[{run_id}] [FIX-B724-N43-FP] Failed: {_e724n}")
+            # ── FIX-B724-N43-FP ───────────────────────────────────────────────
+            # payback < benchmark = GOOD (fast ROI). time_savings in branch_deep_dive = LLM noise.
+            try:
+                _n43r = sections.get("_n43_report", {})
+                _n43_num = _n43r.get("numerical_issues", []) if isinstance(_n43r, dict) else []
+                _b724_real, _b724_supp = [], []
+                for _ni in _n43_num:
+                    _d = _ni if isinstance(_ni, dict) else {}
+                    _metric = str(_d.get("metric", "")).lower()
+                    _desc = str(_d.get("desc", "")).lower()
+                    _sec = str(_d.get("section", "")).lower()
+                    if "payback" in _metric and ("below" in _desc or "under" in _desc):
+                        _b724_supp.append(f"payback-fp")
+                        continue
+                    if "time_savings" in _metric and "branch_deep_dive" in _sec:
+                        _b724_supp.append(f"branch-noise")
+                        continue
+                    _b724_real.append(_ni)
+                if _b724_supp:
+                    if len(_b724_real) == 0:
+                        sections["_n43_dod_passed"] = True
+                        sections["N43_DOD_PASSED"] = True
+                    log.info(f"[{run_id}] [FIX-B724-N43-FP] Suppressed {len(_b724_supp)}: {_b724_supp}, real={len(_b724_real)}, DoD={'PASS' if not _b724_real else 'FAIL'}")
+            except Exception as _e724n:
+                log.warning(f"[{run_id}] [FIX-B724-N43-FP] Failed: {_e724n}")
 
         except Exception as e:
             log.error(f"[{run_id}] ❌ N4.3: Governance processing failed: {e}")
