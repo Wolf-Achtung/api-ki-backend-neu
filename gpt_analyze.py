@@ -13648,9 +13648,9 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                 if _v != _vo:
                     sections[_k] = _v
                     _hl_n += 1
-            log.info(f"[{run_id}] [FIX-B724-HAUPTLEISTUNG] src={'fixed' if _hl_src else 'ok'}, sections={_hl_n}")
+            log.info("[FIX-B724-HAUPTLEISTUNG] src=%s, sections=%d", "fixed" if _hl_src else "ok", _hl_n)
         except Exception as _e724h:
-            log.warning(f"[{run_id}] [FIX-B724-HAUPTLEISTUNG] Failed: {_e724h}")
+            log.warning("[FIX-B724-HAUPTLEISTUNG] Failed: %s", _e724h)
     except Exception as e:
         log.warning(f"[QUALITY-ENFORCER] Failed: {e}")
     _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after QUALITY-ENFORCER-1: %d words", "GCS", _gc_tw)
