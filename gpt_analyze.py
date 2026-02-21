@@ -15952,9 +15952,9 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                                             sections[_ck] = ""
                                             _compact_removed += 1
                                 sections["COMPACT_REPORT_MODE"] = True
-                                log.info("[%s] [FIX-B726-COMPACT] Removed %d appendix sections for %s", run_id, _compact_removed, _compact_size)
+                                log.info("[FIX-B726-COMPACT] Removed %d appendix sections for %s", _compact_removed, _compact_size)
                         except Exception as _c726_err:
-                            log.warning("[%s] [FIX-B726-COMPACT] Error: %s", run_id, _c726_err)
+                            log.warning("[FIX-B726-COMPACT] Error: %s", _c726_err)
 
                         # FIX-B726-HAUPTLEISTUNG-SWEEP: Remove orphan fragments
                         try:
@@ -15988,9 +15988,9 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                                 if _changed:
                                     sections[_sk] = _sv
                             if _sw_count > 0:
-                                log.info("[%s] [FIX-B726-HAUPTLEISTUNG-SWEEP] Replaced %d orphan fragments", run_id, _sw_count)
+                                log.info("[FIX-B726-HAUPTLEISTUNG-SWEEP] Replaced %d orphan fragments", _sw_count)
                         except Exception as _sw726_err:
-                            log.warning("[%s] [FIX-B726-HAUPTLEISTUNG-SWEEP] Error: %s", run_id, _sw726_err)
+                            log.warning("[FIX-B726-HAUPTLEISTUNG-SWEEP] Error: %s", _sw726_err)
         except Exception as _bc_err:
             log.warning(f"[{run_id}] [FIX-B723-BC-TABLE-RATE] Failed: {_bc_err}")
 
