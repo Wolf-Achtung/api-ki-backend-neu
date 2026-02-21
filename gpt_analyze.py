@@ -8475,18 +8475,32 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     company_size = bucket_to_prompt.get(company_size_bucket, "team")
 
     # -------------------------------------------------------------------------
-    # FIX-B725-HAUPTLEISTUNG: Clean truncated source value from frontend
-    _hl_b725_raw = answers.get("hauptleistung", "") if isinstance(answers, dict) else ""
-    if _hl_b725_raw and (str(_hl_b725_raw).endswith("…") or str(_hl_b725_raw).endswith("...")):
-        _hl_b725_c = str(_hl_b725_raw).rstrip("…").rstrip(".").rstrip()
-        for _s725 in [", die ", ", der ", ", das ", " die ", " der "]:
-            _p725 = _hl_b725_c.rfind(_s725)
-            if _p725 > 20:
-                _hl_b725_c = _hl_b725_c[:_p725]
-                break
-        if isinstance(answers, dict):
-            answers["hauptleistung"] = _hl_b725_c
-        log.info("[%s] [FIX-B725-HAUPTLEISTUNG] Cleaned: len %d -> %d", run_id, len(str(_hl_b725_raw)), len(_hl_b725_c))
+    # FIX-B726-HAUPTLEISTUNG: Robust source cleanup
+    try:
+        _hl726 = answers.get("hauptleistung", "") if isinstance(answers, dict) else ""
+        if _hl726 and len(str(_hl726)) > 50:
+            _hl726_s = str(_hl726).rstrip()
+            _needs_clean = False
+            # Check multiple truncation indicators
+            for _ind in ["\u2026", "...", "die KI in", "Unternehm"]:
+                if _hl726_s.endswith(_ind):
+                    _needs_clean = True
+                    break
+            # Also clean if last char is not a sentence-ender
+            if not _needs_clean and _hl726_s and _hl726_s[-1] not in ".!?)":
+                _needs_clean = True
+            if _needs_clean:
+                _hl726_c = _hl726_s.rstrip("\u2026").rstrip(".").rstrip()
+                for _sep726 in [", die ", ", der ", ", das ", " die ", " der ", " fuer ", " f\u00fcr "]:
+                    _pos726 = _hl726_c.rfind(_sep726)
+                    if _pos726 > 20:
+                        _hl726_c = _hl726_c[:_pos726]
+                        break
+                if isinstance(answers, dict) and _hl726_c != _hl726_s:
+                    answers["hauptleistung"] = _hl726_c
+                    log.info("[%s] [FIX-B726-HAUPTLEISTUNG] Cleaned: len %d->%d", run_id, len(_hl726_s), len(_hl726_c))
+    except Exception as _hl726_err:
+        log.warning("[%s] [FIX-B726-HAUPTLEISTUNG] Error: %s", run_id, _hl726_err)
 
     # FIX-BRANCH-13 TASK 3: Log core input fields before prompt rendering
     # -------------------------------------------------------------------------
@@ -8532,14 +8546,14 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # - "none" or unset = disabled for all sizes - full reports
     appendix_mode_env = os.environ.get("PLATIN_APPENDIX_MODE", "").lower().strip()
     if appendix_mode_env == "all":
-        compact_report_mode = (company_size in ["solo", "team", "kmu"])  # Solo + Klein = compact
+        compact_report_mode = (company_size in ["solo", "team"])  # Solo + Klein = compact
     elif appendix_mode_env == "solo":
-        compact_report_mode = (company_size in ["solo", "team", "kmu"])  # Original v5.4.1 behavior
+        compact_report_mode = (company_size == "solo")  # Original v5.4.1 behavior
     elif appendix_mode_env in ("none", "disabled", "off", "false", "0"):
-        compact_report_mode = (company_size in ["solo", "team", "kmu"])  # B725
+        compact_report_mode = False  # Disable for all
     else:
         # Default: compact for solo+klein (v5.4.3)
-        compact_report_mode = (company_size in ["solo", "team", "kmu"])
+        compact_report_mode = (company_size in ["solo", "team"])
 
     # Phase 1B Fix: Normalize branche_label for capitalization
     branche_label_src = briefing.get("BRANCHE_LABEL") or branche_raw
@@ -14084,14 +14098,14 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     # - "none" = disabled for all sizes - full reports
     appendix_mode_env = os.environ.get("PLATIN_APPENDIX_MODE", "").lower().strip()
     if appendix_mode_env == "all":
-        compact_report_mode = (company_size in ["solo", "team", "kmu"])  # Solo + Klein = compact
+        compact_report_mode = (company_size in ["solo", "team"])  # Solo + Klein = compact
     elif appendix_mode_env == "solo":
-        compact_report_mode = (company_size in ["solo", "team", "kmu"])  # Original v5.4.1 behavior
+        compact_report_mode = (company_size == "solo")  # Original v5.4.1 behavior
     elif appendix_mode_env in ("none", "disabled", "off", "false", "0"):
-        compact_report_mode = (company_size in ["solo", "team", "kmu"])  # B725
+        compact_report_mode = False  # Disable for all
     else:
         # Default: compact for solo+klein (v5.4.3)
-        compact_report_mode = (company_size in ["solo", "team", "kmu"])
+        compact_report_mode = (company_size in ["solo", "team"])
 
     sections["COMPACT_REPORT_MODE"] = compact_report_mode
     sections["COMPANY_SIZE"] = company_size
@@ -14101,7 +14115,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     _b724_sz = str(sections.get("COMPANY_SIZE", "") or "").lower().strip()
     if _b724_sz in ("kmu", "small", "medium") and not sections.get("COMPACT_REPORT_MODE"):
         sections["COMPACT_REPORT_MODE"] = True
-        log.info(f"[{run_id}] [FIX-B724-COMPACT-KMU][SUPERSEDED-B725] Forced COMPACT=True for {_b724_sz}")
+        log.info(f"[{run_id}] [FIX-B724-COMPACT-KMU] Forced COMPACT=True for {_b724_sz}")
     log.info("[%s] 📄 [COMPACT] Mode=%s, company_size=%s, COMPACT_REPORT_MODE=%s",
              run_id, appendix_mode_env or "(default=all)", company_size, compact_report_mode)
 
@@ -15290,7 +15304,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
 
     # =========================================================================
     # Z+5: HAUPTLEISTUNG_UNDERUSE FIX DISABLED — was 4th injection path creating 19x instances
-    log.info(f"[{run_id}] [Z+5] HAUPTLEISTUNG_UNDERUSE pre-validation fix ENABLED-B725")
+    log.info(f"[{run_id}] [Z+5] HAUPTLEISTUNG_UNDERUSE pre-validation fix ENABLED-B726")
 
     # =========================================================================
     # FIX-629: POST-TRIM-HEAL GUARD
@@ -15913,35 +15927,70 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                         except Exception as _e724r:
                             log.warning(f"[{run_id}] [FIX-B724-RATE-NUCLEAR] Failed: {_e724r}")
 
-                        # FIX-B725-HAUPTLEISTUNG-SWEEP: Remove orphan fragments
+                        # =================================================================
+                        # FIX-B726-COMPACT: Remove appendix sections for compact reports
+                        # Template-Conditionals sind unzuverlaessig (bool/string mismatch)
+                        # Deshalb hier die Sections direkt leeren
+                        # =================================================================
+                        try:
+                            _compact_size = sections.get("COMPANY_SIZE", "") or ""
+                            _compact_mode = sections.get("COMPACT_REPORT_MODE", False)
+                            # Force compact for solo, team, kmu
+                            if _compact_size in ("solo", "team", "kmu") or _compact_mode:
+                                _compact_remove = [
+                                    "KICKOFF_VORLAGE_HTML", "KREATIV_SPECIAL_HTML",
+                                    "PROMPT_FRAMEWORK_HTML", "ROI_TRACKING_HTML",
+                                    "BUSINESS_CASE_SIM_HTML", "BENCHMARK_ENGINE_HTML",
+                                    "RESPONSIBLE_AI_HTML", "STARTER_STACKS_HTML",
+                                    "BENCHMARKS_SECTION_HTML", "GLOSSAR_HTML",
+                                    "LEISTUNG_NACHWEIS_HTML", "WERKBANK_HTML",
+                                    "AI_ACT_TABLE_OFFER_HTML", "AI_ACT_ADDON_PACKAGES_HTML",
+                                ]
+                                _compact_removed = 0
+                                for _ck in _compact_remove:
+                                        if sections.get(_ck):
+                                            sections[_ck] = ""
+                                            _compact_removed += 1
+                                sections["COMPACT_REPORT_MODE"] = True
+                                log.info("[%s] [FIX-B726-COMPACT] Removed %d appendix sections for %s", run_id, _compact_removed, _compact_size)
+                        except Exception as _c726_err:
+                            log.warning("[%s] [FIX-B726-COMPACT] Error: %s", run_id, _c726_err)
+
+                        # FIX-B726-HAUPTLEISTUNG-SWEEP: Remove orphan fragments
                         try:
                             _hl_sw = sections.get("hauptleistung", "") or ""
-                            _orph = [", die KI in…", ", die KI in...", " die KI in…", " die KI in..."]
-                            if _hl_sw and ("…" in _hl_sw or "..." in _hl_sw):
-                                _orph.insert(0, _hl_sw)
-                            _sw_r = _hl_sw.rstrip("…").rstrip(".").rstrip()
+                            _orph_patterns = []
+                            # Build orphan list from actual hauptleistung
+                            for _suf in [", die KI in\u2026", ", die KI in...", " die KI in\u2026", " die KI in...",
+                                         "die KI in\u2026", "die KI in...", ", die KI in", "Unternehm\u2026"]:
+                                _orph_patterns.append(_suf)
+                            # If hauptleistung itself contains truncation, add it too
+                            if _hl_sw and ("\u2026" in _hl_sw or "..." in _hl_sw):
+                                _orph_patterns.insert(0, _hl_sw)
+                            # Build clean replacement
+                            _sw_clean = _hl_sw.rstrip("\u2026").rstrip(".").rstrip()
                             for _ss in [", die ", ", der ", ", das "]:
-                                _pp = _sw_r.rfind(_ss)
+                                _pp = _sw_clean.rfind(_ss)
                                 if _pp > 20:
-                                    _sw_r = _sw_r[:_pp]
+                                    _sw_clean = _sw_clean[:_pp]
                                     break
-                            _sw_n = 0
+                            _sw_count = 0
                             for _sk in list(sections.keys()):
                                 _sv = sections.get(_sk, "")
                                 if not isinstance(_sv, str) or _sk.startswith("_"):
                                     continue
-                                _chg = False
-                                for _op in _orph:
+                                _changed = False
+                                for _op in _orph_patterns:
                                     if _op and _op in _sv:
-                                        _sv = _sv.replace(_op, _sw_r)
-                                        _chg = True
-                                        _sw_n += 1
-                                if _chg:
+                                        _sv = _sv.replace(_op, _sw_clean)
+                                        _changed = True
+                                        _sw_count += 1
+                                if _changed:
                                     sections[_sk] = _sv
-                            if _sw_n > 0:
-                                log.info("[%s] [FIX-B725-HAUPTLEISTUNG-SWEEP] Replaced %d orphan fragments", run_id, _sw_n)
-                        except Exception as _sw_e:
-                            log.warning("[%s] [FIX-B725-HAUPTLEISTUNG-SWEEP] Error: %s", run_id, _sw_e)
+                            if _sw_count > 0:
+                                log.info("[%s] [FIX-B726-HAUPTLEISTUNG-SWEEP] Replaced %d orphan fragments", run_id, _sw_count)
+                        except Exception as _sw726_err:
+                            log.warning("[%s] [FIX-B726-HAUPTLEISTUNG-SWEEP] Error: %s", run_id, _sw726_err)
         except Exception as _bc_err:
             log.warning(f"[{run_id}] [FIX-B723-BC-TABLE-RATE] Failed: {_bc_err}")
 
