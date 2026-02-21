@@ -7996,8 +7996,8 @@ def _generate_hero_page_from_context(
         _hero_payback_fmt = str(_hero_payback_raw)
     kpi_values = {
         'zeitersparnis': briefing.get("ZEITERSPARNIS_H", 18),
-        # Q2: Use BC_ROI_REALISTIC (set by BC engine before MC) as primary ROI source
-        'roi': float(sections.get("BC_ROI_REALISTIC", 0) or sections.get("ROI_12M_RAW", 0) or briefing.get("ROI_12M_RAW", 0) or briefing.get("ROI_12M", 200)),
+        # FIX-B728: Use CAPPED ROI_12M for hero (not uncapped BC_ROI_REALISTIC)
+        'roi': int(float(briefing.get("ROI_12M", 0) or sections.get("ROI_12M", 0) or 200)),
 
         'payback': _hero_payback_fmt,
     }
@@ -13399,6 +13399,30 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                 gamechanger_html = _enhance_text_readability(gamechanger_html)
                 gamechanger_html = _convert_gamechanger_to_comparison_table(gamechanger_html)
                 gamechanger_html = _format_gamechanger_section(gamechanger_html)
+        # FIX-B728: Governance/Security Score Enforcer (post-gamechanger)
+        # LLM invents scores (45/100) despite _SCORE_INSTRUCTION. Regex fix.
+        try:
+            import re as _re_b728
+            _b728_gov = int(scores.get("governance", 0) or 0)
+            _b728_sec = int(scores.get("security", 0) or 0)
+            _b728_gov_pat = _re_b728.compile(r'(Governance-Score[:\s]+)(\d{1,3})(/100)')
+            _b728_sec_pat = _re_b728.compile(r'(Sicherheits-Score[:\s]+)(\d{1,3})(/100)')
+            _b728_fixed = 0
+            for _sk in ("GAMECHANGER_HTML", "gamechanger", "RISKS_HTML", "risks",
+                         "RECOMMENDATIONS_HTML", "recommendations", "REIFEGRAD_SOWHAT_HTML"):
+                _sv = sections.get(_sk, "")
+                if not isinstance(_sv, str) or len(_sv) < 50:
+                    continue
+                _orig = _sv
+                _sv = _b728_gov_pat.sub(lambda m: f"{m.group(1)}{_b728_gov}{m.group(3)}" if int(m.group(2)) != _b728_gov else m.group(0), _sv)
+                _sv = _b728_sec_pat.sub(lambda m: f"{m.group(1)}{_b728_sec}{m.group(3)}" if int(m.group(2)) != _b728_sec else m.group(0), _sv)
+                if _sv != _orig:
+                    sections[_sk] = _sv
+                    _b728_fixed += 1
+            if _b728_fixed > 0:
+                log.info(f"[{run_id}] [FIX-B728-SCORE-ENFORCER] Fixed scores in {_b728_fixed} sections (gov={_b728_gov}, sec={_b728_sec})")
+        except Exception as _se:
+            log.warning(f"[{run_id}] [FIX-B728-SCORE-ENFORCER] Failed: {_se}")
                 log.info(f"[CI-DESIGN] Gamechanger legacy: {len(gamechanger_html)} chars")
             sections["GAMECHANGER_HTML"] = gamechanger_html
         except Exception as e:

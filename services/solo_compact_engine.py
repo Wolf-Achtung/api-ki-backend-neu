@@ -452,7 +452,7 @@ def estimate_page_count(html: str) -> int:
     text_only = re.sub(r'\s+', ' ', text_only).strip()
 
     # ~3000 text chars per A4 page (with margins, 11pt font)
-    content_pages = len(text_only) / 3000
+    content_pages = len(text_only) / 2000  # FIX-B728: Was 3000, yields ~27 for 364KB HTML
 
     # Take the maximum as estimate
     estimated = max(page_breaks + 1, int(content_pages))
@@ -650,7 +650,7 @@ def process_for_solo_compact(
 MAX_PAGES_BY_SIZE: Dict[str, int] = {
     "solo": 16,
     "team": 70,
-    "kmu": 70,  # FIX-B719: was 55, KMU reports need 60-70 pages like team
+    "kmu": 30,  # FIX-B728: Was 70, actual target ~27 pages for compact KMU
 }
 
 # HTML size thresholds (KB) for auto-compact
@@ -661,7 +661,7 @@ HTML_COMPACT_THRESHOLD_KB: int = int(os.getenv("HTML_COMPACT_THRESHOLD_KB", "500
 HTML_COMPACT_THRESHOLD_BY_SIZE: dict = {
     "solo": 300,
     "team": 500,
-    "kmu": 650,  # FIX-B719: was 500, KMU legitimately produces 500-600KB
+    "kmu": 400,  # FIX-B728: Was 650, trigger compaction earlier for ~27 pages
 }
 
 # Low-priority sections to drop when auto-compacting Team/KMU
