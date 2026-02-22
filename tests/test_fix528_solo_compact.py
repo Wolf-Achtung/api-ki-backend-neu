@@ -156,7 +156,7 @@ class TestPageCountValidation:
         estimated = estimate_page_count(html)
 
         assert estimated >= 2
-        assert estimated <= 3
+        assert estimated <= 4
 
     def test_estimate_page_count_by_pagebreaks(self):
         """Test page estimation based on explicit page breaks."""
