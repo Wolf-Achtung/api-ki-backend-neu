@@ -156,7 +156,7 @@ class TestPageCountValidation:
         estimated = estimate_page_count(html)
 
         assert estimated >= 2
-        assert estimated <= 4
+        assert estimated <= 5  # FIX-B729: divisor 2000→1500, conservative page estimation
 
     def test_estimate_page_count_by_pagebreaks(self):
         """Test page estimation based on explicit page breaks."""
