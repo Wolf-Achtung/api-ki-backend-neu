@@ -326,16 +326,16 @@ class TestWP4CompactPayloadGuard:
 
         assert MAX_PAGES_BY_SIZE["solo"] == 16
         assert MAX_PAGES_BY_SIZE["team"] == 70   # FIX-WP4: raised from 55
-        assert MAX_PAGES_BY_SIZE["kmu"] == 70    # FIX-WP4: raised from 45
+        assert MAX_PAGES_BY_SIZE["kmu"] == 27    # FIX-B729: lowered to 27 (real PDF overshoots ~10%)
 
     def test_estimate_page_count(self):
         """Page count estimation should be reasonable."""
         from services.solo_compact_engine import estimate_page_count
 
-        # ~3000 chars per page
+        # ~1500 chars per page (FIX-B729: conservative estimation)
         html_10_pages = "x" * 30000
         estimated = estimate_page_count(html_10_pages)
-        assert 8 <= estimated <= 12, f"Expected ~10 pages, got {estimated}"
+        assert 16 <= estimated <= 24, f"Expected ~20 pages, got {estimated}"
 
 
 # =============================================================================
