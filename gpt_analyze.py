@@ -1701,6 +1701,9 @@ def _map_german_to_english_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
         "unter_2000": "under_10k",
         "2000_10000": "under_10k",
         "10000_50000": "10k-50k",
+        "ueber_50000": "over_100k",     # FIX-B729-S1: Form sends "ueber_50000" not "ueber_100000"
+        "unklar": "none",               # FIX-B729-S1: Explicit "unklar" mapping
+        # Legacy compatibility:
         "50000_100000": "50k-100k",
         "ueber_100000": "over_100k",
     }
@@ -1724,16 +1727,39 @@ def _map_german_to_english_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
     val_points = 8 if u and len(u) > 50 else (4 if u else 0)
     m["_value_points_from_uses"] = val_points
     roi = answers.get("vision_prioritaet", "")
-    m["roi_expected"] = "high" if roi in ["marktfuehrerschaft", "wachstum"] else ("medium" if roi else "low")
+    m["roi_expected"] = "high" if roi in ["marktfuehrerschaft", "gpt_services", "datenprodukte"] else ("medium" if roi and roi != "keine_angabe" else "low")  # FIX-B729-S4
     m["measurable_goals"] = "yes" if (answers.get("strategische_ziele") or answers.get("ki_ziele")) else "no"
     m["pilot_planned"] = "yes" if answers.get("pilot_bereich") else ("in_progress" if answers.get("ki_projekte") else "no")
     kompetenz_map = {"hoch": "advanced", "mittel": "intermediate", "niedrig": "basic", "keine": "none"}
     m["ai_skills"] = kompetenz_map.get(answers.get("ki_kompetenz", ""), "none")
     m["training_budget"] = "yes" if answers.get("zeitbudget") in ["ueber_10", "5_10"] else ("planned" if answers.get("zeitbudget") else "no")
     change = answers.get("change_management", "")
-    m["change_management"] = "yes" if change == "hoch" else ("planned" if change in ["mittel", "niedrig"] else "no")
+    m["change_management"] = "yes" if change in ["hoch", "sehr_hoch"] else ("planned" if change in ["mittel", "niedrig", "sehr_niedrig"] else "no")  # FIX-B729-S2
     innovationsprozess = answers.get("innovationsprozess", "")
-    m["innovation_culture"] = "strong" if innovationsprozess in ["mitarbeitende", "alle"] else ("moderate" if innovationsprozess else "weak")
+    m["innovation_culture"] = "strong" if innovationsprozess in ["innovationsteam", "mitarbeitende", "kunden"] else ("moderate" if innovationsprozess and innovationsprozess != "unbekannt" else "weak")  # FIX-B729-S3
+
+    # FIX-B729-P2: Map 7 previously-lost form fields into scoring pipeline
+    # --- ai_act_kenntnis → governance bonus ---
+    ai_act = answers.get("ai_act_kenntnis", "")
+    m["_gov_ai_act_bonus"] = 3 if ai_act in ["sehr_gut", "gut"] else (1 if ai_act == "gehoert" else 0)
+
+    # --- meldewege → security bonus ---
+    meldewege = answers.get("meldewege", "")
+    m["_sec_meldewege_bonus"] = 4 if meldewege == "ja" else (2 if meldewege == "teilweise" else 0)
+
+    # --- digitalisierungsgrad → enablement indicator ---
+    try:
+        _digi_raw = int(answers.get("digitalisierungsgrad", 5) or 5)
+    except (ValueError, TypeError):
+        _digi_raw = 5
+    m["_ena_digi_bonus"] = 3 if _digi_raw >= 7 else (1 if _digi_raw >= 4 else 0)
+
+    # --- Pass-through for prompt context (no scoring impact) ---
+    m["risikofreude"] = answers.get("risikofreude", "3")
+    m["bisherige_foerdermittel"] = answers.get("bisherige_foerdermittel", "nein")
+    m["erfahrung_beratung"] = answers.get("erfahrung_beratung", "nein")
+    m["massnahmen_komplexitaet"] = answers.get("massnahmen_komplexitaet", "unklar")
+
     return m
 
 def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
@@ -1754,10 +1780,12 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
     else:
         details["governance"].append("❌ Kein Budget")
     gov += 4 if (m.get("goals") or m.get("use_cases")) else 0
+    gov += m.get("_gov_ai_act_bonus", 0)  # FIX-B729-P2: AI Act awareness bonus
     sec += 8 if m.get("gdpr_aware") == "yes" else 0
     sec += 7 if m.get("data_protection") in ["comprehensive", "basic"] else 0
     sec += 6 if m.get("risk_assessment") == "yes" else 0
     sec += 4 if m.get("security_training") in ["regular", "occasional"] else 0
+    sec += m.get("_sec_meldewege_bonus", 0)  # FIX-B729-P2: Incident reporting bonus
     val += m.get("_value_points_from_uses", 0)
     roi = m.get("roi_expected", "")
     val += 7 if roi in ["high", "medium"] else (3 if roi == "low" else 0)
@@ -1769,6 +1797,7 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
     ena += 6 if m.get("change_management") == "yes" else 0
     culture = m.get("innovation_culture", "")
     ena += 4 if culture in ["strong", "moderate"] else 0
+    ena += m.get("_ena_digi_bonus", 0)  # FIX-B729-P2: Digitalization maturity bonus
     scores = {
         "governance": min(gov, 25) * 4,
         "security": min(sec, 25) * 4,
@@ -7996,8 +8025,8 @@ def _generate_hero_page_from_context(
         _hero_payback_fmt = str(_hero_payback_raw)
     kpi_values = {
         'zeitersparnis': briefing.get("ZEITERSPARNIS_H", 18),
-        # FIX-B728: Use CAPPED ROI_12M for hero (not uncapped BC_ROI_REALISTIC)
-        'roi': int(float(briefing.get("ROI_12M", 0) or sections.get("ROI_12M", 0) or 200)),
+        # FIX-B729: Hard-cap Hero ROI to 200% (BC_ROI_REALISTIC/P50 can be 350%+)
+        'roi': min(200, int(float(briefing.get("ROI_12M", 0) or sections.get("ROI_12M", 0) or 200))),
 
         'payback': _hero_payback_fmt,
     }
@@ -8690,6 +8719,17 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     base_vars.update({
         "TRAININGS_INTERESSEN": briefing.get("trainings_interessen", "Nicht spezifiziert"),
         "INNOVATIONSKULTUR": briefing.get("innovationskultur", "Nicht bewertet"),
+    })
+
+    # ===== BLOCK 6b: Previously-lost form fields (FIX-B729-P2) =====
+    base_vars.update({
+        "DIGITALISIERUNGSGRAD": briefing.get("digitalisierungsgrad", "5"),
+        "AI_ACT_KENNTNIS": briefing.get("ai_act_kenntnis", "unbekannt"),
+        "RISIKOFREUDE": briefing.get("risikofreude", "3"),
+        "MELDEWEGE": briefing.get("meldewege", "nein"),
+        "BISHERIGE_FOERDERMITTEL": briefing.get("bisherige_foerdermittel", "nein"),
+        "ERFAHRUNG_BERATUNG": briefing.get("erfahrung_beratung", "nein"),
+        "MASSNAHMEN_KOMPLEXITAET": briefing.get("massnahmen_komplexitaet", "unklar"),
     })
     
     # ===== BLOCK 7: Quick Wins & ROI (EXTENDED!) =====
@@ -13407,29 +13447,37 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
         log.warning("[CI-DESIGN] Gamechanger HTML empty or too short, skipping")
     sections["gamechanger"] = gamechanger_html
 
-    # FIX-B728: Governance/Security Score Enforcer (post-gamechanger)
+    # FIX-B729: Governance/Security Score Enforcer (HTML-aware regex, always-log)
     try:
-        import re as _re_b728
-        _b728_gov = int(scores.get("governance", 0) or 0)
-        _b728_sec = int(scores.get("security", 0) or 0)
-        _b728_gov_pat = _re_b728.compile(r'(Governance-Score[:\s]+)(\d{1,3})(/100)')
-        _b728_sec_pat = _re_b728.compile(r'(Sicherheits-Score[:\s]+)(\d{1,3})(/100)')
-        _b728_fixed = 0
+        import re as _re_b729
+        _b729_gov = int(scores.get("governance", 0) or 0)
+        _b729_sec = int(scores.get("security", 0) or 0)
+        # HTML-aware: allow optional <tags> between "Score:" and digits, and around "/100"
+        _b729_gov_pat = _re_b729.compile(r'(Governance-Score[:\s]*(?:<[^>]+>\s*)*\s*)(\d{1,3})(\s*(?:<[^>]+>\s*)*/\s*100)')
+        _b729_sec_pat = _re_b729.compile(r'(Sicherheits-Score[:\s]*(?:<[^>]+>\s*)*\s*)(\d{1,3})(\s*(?:<[^>]+>\s*)*/\s*100)')
+        _b729_fixed = 0
+        _b729_checked = 0
+        # B729: Expanded section list — score hallucinations can appear anywhere
         for _sk in ("GAMECHANGER_HTML", "gamechanger", "RISKS_HTML", "risks",
-                     "RECOMMENDATIONS_HTML", "recommendations", "REIFEGRAD_SOWHAT_HTML"):
+                     "RECOMMENDATIONS_HTML", "recommendations", "REIFEGRAD_SOWHAT_HTML",
+                     "EXECUTIVE_SUMMARY_HTML", "executive_summary", "SCORE_DRIVERS_HTML",
+                     "BRANCH_DEEP_DIVE_HTML", "QUICK_WINS_HTML", "ROADMAP_HTML",
+                     "KI_SKILLPLAN_HTML", "MARKET_INSIGHTS_HTML"):
             _sv = sections.get(_sk, "")
             if not isinstance(_sv, str) or len(_sv) < 50:
                 continue
+            _b729_checked += 1
             _orig = _sv
-            _sv = _b728_gov_pat.sub(lambda m: f"{m.group(1)}{_b728_gov}{m.group(3)}" if int(m.group(2)) != _b728_gov else m.group(0), _sv)
-            _sv = _b728_sec_pat.sub(lambda m: f"{m.group(1)}{_b728_sec}{m.group(3)}" if int(m.group(2)) != _b728_sec else m.group(0), _sv)
+            _sv = _b729_gov_pat.sub(lambda m: f"{m.group(1)}{_b729_gov}{m.group(3)}" if int(m.group(2)) != _b729_gov else m.group(0), _sv)
+            _sv = _b729_sec_pat.sub(lambda m: f"{m.group(1)}{_b729_sec}{m.group(3)}" if int(m.group(2)) != _b729_sec else m.group(0), _sv)
             if _sv != _orig:
                 sections[_sk] = _sv
-                _b728_fixed += 1
-        if _b728_fixed > 0:
-            log.info(f"[{run_id}] [FIX-B728-SCORE-ENFORCER] Fixed scores in {_b728_fixed} sections (gov={_b728_gov}, sec={_b728_sec})")
+                _b729_fixed += 1
+                log.info(f"[{run_id}] [FIX-B729-SCORE-ENFORCER] Replaced score in section: {_sk}")
+        # B729: ALWAYS log — even 0 fixes (confirms code path is reached)
+        log.info(f"[{run_id}] [FIX-B729-SCORE-ENFORCER] Checked {_b729_checked} sections, fixed {_b729_fixed} (gov={_b729_gov}, sec={_b729_sec})")
     except Exception as _se:
-        log.warning(f"[{run_id}] [FIX-B728-SCORE-ENFORCER] Failed: {_se}")
+        log.warning(f"[{run_id}] [FIX-B729-SCORE-ENFORCER] Failed: {_se}")
     # FIX-642: GAMECHANGER SNAPSHOT PROTECTION
     sections["_GC_SNAPSHOT_642"] = sections.get("GAMECHANGER_HTML", "")
 
