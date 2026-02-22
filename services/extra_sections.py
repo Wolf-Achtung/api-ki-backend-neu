@@ -238,6 +238,9 @@ def get_size_constraints(
         "unter_2000": 1000,
         "2000_10000": 5000,
         "10000_50000": 25000,
+        "ueber_50000": 75000,   # FIX-B729-E1: Form sends "ueber_50000"
+        "unklar": 10000,        # FIX-B729-E1: Explicit "unklar" mapping
+        # Legacy compatibility:
         "50000_250000": 125000,
         "ueber_250000": 500000,
     }
@@ -363,6 +366,8 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
         capex = 1500
     elif "2000_10000" in band or "2000-10000" in band:
         capex = 6000
+    elif "ueber_50000" in band or "ueber_250000" in band:
+        capex = 20000  # FIX-B729-E2: Higher budget → higher initial investment
     elif "10000" in band:
         capex = 12000
     else:

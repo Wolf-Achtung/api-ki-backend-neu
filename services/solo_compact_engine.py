@@ -452,7 +452,7 @@ def estimate_page_count(html: str) -> int:
     text_only = re.sub(r'\s+', ' ', text_only).strip()
 
     # ~3000 text chars per A4 page (with margins, 11pt font)
-    content_pages = len(text_only) / 2000  # FIX-B728: Was 3000, yields ~27 for 364KB HTML
+    content_pages = len(text_only) / 1500  # FIX-B729: Was 2000, compensate for CSS margins/tables/charts
 
     # Take the maximum as estimate
     estimated = max(page_breaks + 1, int(content_pages))
@@ -650,7 +650,7 @@ def process_for_solo_compact(
 MAX_PAGES_BY_SIZE: Dict[str, int] = {
     "solo": 16,
     "team": 70,
-    "kmu": 30,  # FIX-B728: Was 70, actual target ~27 pages for compact KMU
+    "kmu": 27,  # FIX-B729: Was 30, target ≤27 to land at ≤30 real pages
 }
 
 # HTML size thresholds (KB) for auto-compact
@@ -668,6 +668,7 @@ HTML_COMPACT_THRESHOLD_BY_SIZE: dict = {
 # Ordered by priority: drop first = least important
 # FIX-WP4: Removed PROMPT_FRAMEWORK_HTML (PROMPT_LEAK fixed, section now clean)
 TEAM_KMU_LOW_PRIORITY_SECTIONS: List[str] = [
+    # Tier 1: Alignment/cross-reference sections (least user value)
     "FUNDING_BRANCH_ALIGNMENT_HTML",
     "TOOLS_FUNDING_ALIGNMENT_HTML",
     "TOOLS_BRANCH_ALIGNMENT_HTML",
@@ -676,6 +677,11 @@ TEAM_KMU_LOW_PRIORITY_SECTIONS: List[str] = [
     "BUSINESS_CASE_SIM_HTML",
     # "VENDOR_AUDIT_HTML",  # FIX-B719: Protected — always keep
     "KICKOFF_HTML",
+    # FIX-B729 Tier 2: Additional droppable sections for KMU ≤27 pages
+    "MONETARISIERUNG_HTML",
+    "KI_SKILLPLAN_HTML",
+    "MARKET_INSIGHTS_HTML",
+    "NEWS_BOX_HTML",
 ]
 
 
@@ -754,7 +760,7 @@ def check_and_apply_compact_guard(
         current_kb = len(compacted_html.encode("utf-8")) / 1024
         current_pages = estimate_page_count(compacted_html)
         still_over = (
-            current_kb > HTML_COMPACT_THRESHOLD_KB
+            current_kb > _compact_threshold  # FIX-B729: Was HTML_COMPACT_THRESHOLD_KB (global 500), now uses size-specific threshold
             or current_pages > max_pages
         )
         if not still_over:
