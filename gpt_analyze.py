@@ -13473,11 +13473,11 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
             if _sv != _orig:
                 sections[_sk] = _sv
                 _b729_fixed += 1
-                log.info(f"[{run_id}] [FIX-B729-SCORE-ENFORCER] Replaced score in section: {_sk}")
+                log.info(f"[FIX-B729-SCORE-ENFORCER] Replaced score in section: {_sk}")
         # B729: ALWAYS log — even 0 fixes (confirms code path is reached)
-        log.info(f"[{run_id}] [FIX-B729-SCORE-ENFORCER] Checked {_b729_checked} sections, fixed {_b729_fixed} (gov={_b729_gov}, sec={_b729_sec})")
+        log.info(f"[FIX-B729-SCORE-ENFORCER] Checked {_b729_checked} sections, fixed {_b729_fixed} (gov={_b729_gov}, sec={_b729_sec})")
     except Exception as _se:
-        log.warning(f"[{run_id}] [FIX-B729-SCORE-ENFORCER] Failed: {_se}")
+        log.warning(f"[FIX-B729-SCORE-ENFORCER] Failed: {_se}")
     # FIX-642: GAMECHANGER SNAPSHOT PROTECTION
     sections["_GC_SNAPSHOT_642"] = sections.get("GAMECHANGER_HTML", "")
 
