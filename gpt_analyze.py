@@ -16187,6 +16187,68 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.info(f"[{run_id}] ✅ [P0.1] Template bindings: PAYBACK={sections['PAYBACK_MONTHS_FMT_DE']}, "
                  f"HOURS={sections['TIME_SAVINGS_MONTH_HOURS_FMT']}, ROI_DISPLAY={sections['ROI_12M_DISPLAY_DE']}")
 
+
+        # =================================================================
+        # FIX-B730: Hero ROI + Payback Enforcer — NACH CANON + P0.1
+        # Problem: Hero wird ~2 Min VOR CANON generiert → enthält MC-ROI (352%)
+        # Lösung: Exakt wie Score-Enforcer — kanonische Werte per Regex in Hero-HTML erzwingen
+        # =================================================================
+        try:
+            import re as _re_b730
+            _b730_hero = sections.get("HERO_HTML", "")
+            if _b730_hero and isinstance(_b730_hero, str) and len(_b730_hero) > 100:
+                _b730_orig = _b730_hero
+                _b730_fixes = []
+
+                # --- ROI Enforcer ---
+                _b730_roi_canon = _fmt_int_no_float(sections.get("ROI_12M", 200))
+                # Pattern: <span class="kpi-card__value">NNN%</span> ... ROI (12 Monate)
+                _b730_roi_pat = _re_b730.compile(
+                    r'(<span\s+class="kpi-card__value">)'
+                    r'(\d{1,4})(%</span>)'
+                    r'([\s\S]{0,200}?ROI\s*\(12\s*Monate\))'
+                )
+                _b730_roi_match = _b730_roi_pat.search(_b730_hero)
+                if _b730_roi_match:
+                    _b730_old_roi = _b730_roi_match.group(2)
+                    if _b730_old_roi != _b730_roi_canon:
+                        _b730_hero = _b730_hero[:_b730_roi_match.start(2)] + _b730_roi_canon + _b730_hero[_b730_roi_match.end(2):]
+                        _b730_fixes.append(f"ROI {_b730_old_roi}%→{_b730_roi_canon}%")
+                    else:
+                        _b730_fixes.append(f"ROI already {_b730_roi_canon}%")
+                else:
+                    log.warning(f"[{run_id}] [FIX-B730-ROI-ENFORCER] ROI pattern not found in Hero HTML")
+
+                # --- Payback Enforcer ---
+                _b730_payback_canon = sections.get("PAYBACK_MONTHS_FMT_DE", "1,4")
+                _b730_pb_pat = _re_b730.compile(
+                    r'(<span\s+class="kpi-card__value">)'
+                    r'([\d]+[,.]\d+)'
+                    r'(\s*Mo\.</span>)'
+                    r'([\s\S]{0,200}?Payback-Zeit)'
+                )
+                _b730_pb_match = _b730_pb_pat.search(_b730_hero)
+                if _b730_pb_match:
+                    _b730_old_pb = _b730_pb_match.group(2)
+                    if _b730_old_pb != _b730_payback_canon:
+                        _b730_hero = _b730_hero[:_b730_pb_match.start(2)] + _b730_payback_canon + _b730_hero[_b730_pb_match.end(2):]
+                        _b730_fixes.append(f"Payback {_b730_old_pb}→{_b730_payback_canon}")
+                    else:
+                        _b730_fixes.append(f"Payback already {_b730_payback_canon}")
+                else:
+                    log.warning(f"[{run_id}] [FIX-B730-PAYBACK-ENFORCER] Payback pattern not found in Hero HTML")
+
+                # Apply changes
+                if _b730_hero != _b730_orig:
+                    sections["HERO_HTML"] = _b730_hero
+                    sections["hero"] = _b730_hero
+                # ALWAYS log (even 0 fixes — confirms code path reached)
+                log.info(f"[{run_id}] [FIX-B730-HERO-ENFORCER] {', '.join(_b730_fixes) if _b730_fixes else 'No changes needed'}")
+            else:
+                log.info(f"[{run_id}] [FIX-B730-HERO-ENFORCER] Hero HTML empty or too short, skipping")
+        except Exception as _b730_err:
+            log.warning(f"[{run_id}] [FIX-B730-HERO-ENFORCER] Failed: {_b730_err}")
+
         # =================================================================
         # [FIX-R4-2] Statischen BC-Fließtext einsetzen — NACH Canonical-Injection.
         # Ersetzt den LLM-generierten Fließtext (der leere €/%/Monaten-Felder hat)
