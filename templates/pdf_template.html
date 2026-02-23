@@ -6728,7 +6728,7 @@
                             </div>
                             <div style="text-align: center;">
                                 <div style="font-size: 36px; font-weight: 600; color: var(--color-text-normal); margin-bottom: var(--space-xs);">
-                                    {% if ROI_P50 and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% elif ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% else %}→ BC{% endif %}
+                                    {# FIX-B731: Canonical ROI first, P50 fallback #}{% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_P50 and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% else %}→ BC{% endif %}
                                 </div>
                                 <div style="font-size: 13px; font-weight: 500; color: var(--color-text-normal); margin-bottom: 4px;">
                                     {{ ui("kpi_roi_details", "ROI-Details") }}
@@ -6805,7 +6805,7 @@
                                     ROI-Prognose
                                 </div>
                                 <div style="font-size: 24px; font-weight: 600; color: var(--color-text-normal);">
-                                    {% if ROI_P50 and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% elif ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% else %}siehe Business Case{% endif %}
+                                    {# FIX-B731: Canonical ROI first #}{% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_P50 and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% else %}siehe Business Case{% endif %}
                                 </div>
                             </div>
                         </div>
@@ -8029,7 +8029,7 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
                             KI-Sicherheit.jetzt – Wolf Hohl<br>
                             Greifswalder Str. 224a<br>
                             10405 Berlin</p>
-                            <p>E-Mail: <a href="mailto:wolf@ki-sicherheit.jetzt">wolf@ki-sicherheit.jetzt</a></p>
+                            <p>E-Mail: <a href="/cdn-cgi/l/email-protection#d0a7bfbcb690bbb9fda3b9b3b8b5a2b8b5b9a4febab5a4aaa4"><span class="__cf_email__" data-cfemail="691e06050f290200441a000a010c1b010c001d47030c1d131d">[email&#160;protected]</span></a></p>
                         </div>
                         <div class="impressum-block">
                             <h4>Haftungsausschluss</h4>
@@ -8058,7 +8058,7 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
                             <li>Beschwerde bei der Datenschutzbehörde</li>
                         </ul>
                         <p>Wenn Sie von Ihren Rechten Gebrauch machen wollen, wenden Sie sich bitte an
-                            <a href="mailto:wolf@ki-sicherheit.jetzt">wolf@ki-sicherheit.jetzt</a>.
+                            <a href="/cdn-cgi/l/email-protection#1c6b73707a5c7775316f757f74796e74797568327679686668"><span class="__cf_email__" data-cfemail="7c0b13101a3c1715510f151f14190e14191508521619080608">[email&#160;protected]</span></a>.
                         </p>
                     </div>
                 </div>
@@ -8140,14 +8140,4 @@ monolithischen Abo-Ökosystem. Im Alltag bewährt haben sich u.&nbsp;a.:</p>
                     <a href="https://ki-sicherheit.jetzt/datenschutz" target="_blank">{{ ui("gdpr_link_text", "Datenschutzerklärung") }}</a>
                 </div>
 
-                <p class="small" style="text-align: center;">
-                    © {{report_year}} KI-Sicherheit.jetzt —
-                    Report ID: {{report_id}} —
-                    Erstellt am: {{LAST_UPDATED}}
-                </p>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
-<!-- Template version: 20260101-1550 -->
+                <p class="small" style="text-align: cente
