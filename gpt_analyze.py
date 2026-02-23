@@ -16184,6 +16184,41 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         roi_capped_str = _fmt_int_no_float(roi_capped)
         sections["ROI_12M_DISPLAY_DE"] = f"{roi_capped_str} %"
 
+        # =================================================================
+        # FIX-B731: Cap ROI_P50 + PAYBACK_P50 to canonical values
+        # Root Cause: pdf_template.html Zeile 6731 zeigt ROI_P50 (MC P50)
+        # mit höchster Priorität VOR ROI_12M_DISPLAY_DE.
+        # ROI_P50 = 347% (ungecappt MC), ROI_12M = 200% (canonical).
+        # Fix: ROI_P50 auf canonical cap setzen, damit Template korrekt zeigt.
+        # =================================================================
+        try:
+            _b731_roi_cap = int(float(roi_capped or 200))
+            _b731_p50_raw = sections.get("ROI_P50")
+            if _b731_p50_raw is not None:
+                _b731_p50_val = float(_b731_p50_raw)
+                if _b731_p50_val > _b731_roi_cap:
+                    sections["ROI_P50"] = _b731_roi_cap
+                    log.info(f"[{run_id}] [FIX-B731-ROI-CAP] ROI_P50 capped: {_b731_p50_val:.0f}% → {_b731_roi_cap}%")
+                else:
+                    log.info(f"[{run_id}] [FIX-B731-ROI-CAP] ROI_P50 already ≤ cap ({_b731_p50_val:.0f}% ≤ {_b731_roi_cap}%)")
+            else:
+                log.info(f"[{run_id}] [FIX-B731-ROI-CAP] ROI_P50 not set, skipping")
+
+            # Payback: P50 ebenfalls auf canonical setzen
+            _b731_pb_canon = sections.get("PAYBACK_MONTHS_FMT_DE", "1,4")
+            _b731_pb_p50 = sections.get("PAYBACK_P50")
+            if _b731_pb_p50 is not None:
+                try:
+                    _b731_pb_canon_float = float(str(_b731_pb_canon).replace(",", "."))
+                    _b731_pb_p50_float = float(_b731_pb_p50)
+                    if abs(_b731_pb_p50_float - _b731_pb_canon_float) > 0.05:
+                        sections["PAYBACK_P50"] = _b731_pb_canon_float
+                        log.info(f"[{run_id}] [FIX-B731-PAYBACK-CAP] PAYBACK_P50: {_b731_pb_p50_float:.1f} → {_b731_pb_canon_float:.1f}")
+                except (ValueError, TypeError):
+                    pass
+        except Exception as _b731_err:
+            log.warning(f"[{run_id}] [FIX-B731-ROI-CAP] Failed: {_b731_err}")
+
         log.info(f"[{run_id}] ✅ [P0.1] Template bindings: PAYBACK={sections['PAYBACK_MONTHS_FMT_DE']}, "
                  f"HOURS={sections['TIME_SAVINGS_MONTH_HOURS_FMT']}, ROI_DISPLAY={sections['ROI_12M_DISPLAY_DE']}")
 
@@ -17954,78 +17989,6 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     except Exception as _qw_err:
         log.warning(f"[{run_id}] [FIX-QW1] Post-healer QW restore failed: {_qw_err}")
 
-    # =================================================================
-    # FIX-B731: Hero ROI + Payback Enforcer — NACH HEALER + QW1 Restore
-    # B730 hatte den Enforcer vor dem Healer → Healer überschrieb ROI.
-    # Jetzt läuft der Enforcer als letzter Schritt vor Pre-Render Cleanup.
-    # =================================================================
-    try:
-        import re as _re_b731
-        _b731_hero = sections.get("HERO_HTML", "")
-        if _b731_hero and isinstance(_b731_hero, str) and len(_b731_hero) > 100:
-            _b731_orig = _b731_hero
-            _b731_fixes = []
-
-            # Helper (eigener Scope — _fmt_int_no_float nicht mehr verfügbar nach Healer)
-            def _b731_fmt_int(val):
-                try:
-                    return str(int(float(val)))
-                except (ValueError, TypeError):
-                    return str(val) if val else "0"
-
-            # --- ROI Enforcer ---
-            _b731_roi_canon = _b731_fmt_int(sections.get("ROI_12M", 200))
-            _b731_roi_pat = _re_b731.compile(
-                r'(<span\s+class="kpi-card__value">)'    # group 1: opening tag
-                r'(\d{1,4})'                               # group 2: number
-                r'(%</span>)'                              # group 3: % + closing tag
-                r'([\s\S]{0,200}?ROI\s*\(12\s*Monate\))'  # group 4: ROI label
-            )
-            _b731_roi_match = _b731_roi_pat.search(_b731_hero)
-            if _b731_roi_match:
-                _b731_old_roi = _b731_roi_match.group(2)
-                if _b731_old_roi != _b731_roi_canon:
-                    _b731_hero = (_b731_hero[:_b731_roi_match.start(2)]
-                                 + _b731_roi_canon
-                                 + _b731_hero[_b731_roi_match.end(2):])
-                    _b731_fixes.append(f"ROI {_b731_old_roi}%→{_b731_roi_canon}%")
-                else:
-                    _b731_fixes.append(f"ROI already {_b731_roi_canon}%")
-            else:
-                log.warning(f"[{run_id}] [FIX-B731-ROI-ENFORCER] ROI pattern not found in Hero HTML")
-
-            # --- Payback Enforcer ---
-            _b731_payback_canon = sections.get("PAYBACK_MONTHS_FMT_DE", "1,4")
-            _b731_pb_pat = _re_b731.compile(
-                r'(<span\s+class="kpi-card__value">)'        # group 1: opening tag
-                r'([\d]+[,.]\d+)'                             # group 2: decimal number
-                r'(\s*Mo\.</span>)'                           # group 3: Mo. + closing tag
-                r'([\s\S]{0,200}?Payback-Zeit)'              # group 4: label
-            )
-            _b731_pb_match = _b731_pb_pat.search(_b731_hero)
-            if _b731_pb_match:
-                _b731_old_pb = _b731_pb_match.group(2)
-                if _b731_old_pb != _b731_payback_canon:
-                    _b731_hero = (_b731_hero[:_b731_pb_match.start(2)]
-                                 + _b731_payback_canon
-                                 + _b731_hero[_b731_pb_match.end(2):])
-                    _b731_fixes.append(f"Payback {_b731_old_pb}→{_b731_payback_canon}")
-                else:
-                    _b731_fixes.append(f"Payback already {_b731_payback_canon}")
-            else:
-                log.warning(f"[{run_id}] [FIX-B731-PAYBACK-ENFORCER] Payback pattern not found in Hero HTML")
-
-            # Apply
-            if _b731_hero != _b731_orig:
-                sections["HERO_HTML"] = _b731_hero
-                sections["hero"] = _b731_hero
-            # ALWAYS log
-            log.info(f"[{run_id}] [FIX-B731-HERO-ENFORCER] {', '.join(_b731_fixes) if _b731_fixes else 'No changes needed'}")
-        else:
-            log.info(f"[{run_id}] [FIX-B731-HERO-ENFORCER] Hero HTML empty/short, skipping")
-    except Exception as _b731_err:
-        log.warning(f"[{run_id}] [FIX-B731-HERO-ENFORCER] Failed: {_b731_err}")
-
     # FIX-B722: PRE-RENDER CLEANUP — absolute last stop before PDF generation
     # Catches typos and rate mismatches re-introduced after Typo Pass 2 by
     # RESCUE-640-FINAL, QW-Restore, Healer, or other post-validation changes.
@@ -18394,54 +18357,6 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     except Exception as e:
         log.warning(f"[{run_id}] [L3] Sprint code strip failed: {e}")
     # === END L3 ===
-
-    # =================================================================
-    # FIX-B731-POST: ABSOLUTE LAST Hero ROI + Payback Enforcer
-    # Belt-and-suspenders: Falls Render oder heal_final_html ROI korrumpiert.
-    # Läuft auf result["html"] — dem finalen HTML vor DB-Speicherung.
-    # =================================================================
-    try:
-        import re as _re_b731f
-        _b731f_html = result.get("html", "") if isinstance(result, dict) else (result if isinstance(result, str) else "")
-        if _b731f_html and len(_b731f_html) > 500:
-            _b731f_orig = _b731f_html
-            _b731f_fixes = []
-
-            # ROI: canonical value from sections
-            _b731f_roi = str(int(float(sections.get("ROI_12M", 200) or 200)))
-            _b731f_roi_pat = _re_b731f.compile(
-                r'(<span\s+class="kpi-card__value">)(\d{1,4})(%</span>)([\s\S]{0,200}?ROI\s*\(12\s*Monate\))'
-            )
-            _b731f_m = _b731f_roi_pat.search(_b731f_html)
-            if _b731f_m and _b731f_m.group(2) != _b731f_roi:
-                _b731f_html = _b731f_html[:_b731f_m.start(2)] + _b731f_roi + _b731f_html[_b731f_m.end(2):]
-                _b731f_fixes.append(f"ROI {_b731f_m.group(2)}%→{_b731f_roi}%")
-            elif _b731f_m:
-                _b731f_fixes.append(f"ROI already {_b731f_roi}%")
-
-            # Payback: canonical value from sections
-            _b731f_pb = sections.get("PAYBACK_MONTHS_FMT_DE", "1,4")
-            _b731f_pb_pat = _re_b731f.compile(
-                r'(<span\s+class="kpi-card__value">)([\d]+[,.]\d+)(\s*Mo\.</span>)([\s\S]{0,200}?Payback-Zeit)'
-            )
-            _b731f_pb_m = _b731f_pb_pat.search(_b731f_html)
-            if _b731f_pb_m and _b731f_pb_m.group(2) != _b731f_pb:
-                _b731f_html = _b731f_html[:_b731f_pb_m.start(2)] + _b731f_pb + _b731f_html[_b731f_pb_m.end(2):]
-                _b731f_fixes.append(f"Payback {_b731f_pb_m.group(2)}→{_b731f_pb}")
-            elif _b731f_pb_m:
-                _b731f_fixes.append(f"Payback already {_b731f_pb}")
-
-            if _b731f_html != _b731f_orig:
-                if isinstance(result, dict):
-                    result["html"] = _b731f_html
-                else:
-                    result = _b731f_html
-            log.info(f"[{run_id}] [FIX-B731-POST-RENDER] {', '.join(_b731f_fixes) if _b731f_fixes else 'No changes needed'}")
-        else:
-            log.info(f"[{run_id}] [FIX-B731-POST-RENDER] Final HTML too short, skipping")
-    except Exception as _b731f_err:
-        log.warning(f"[{run_id}] [FIX-B731-POST-RENDER] Failed: {_b731f_err}")
-    # === END FIX-B731-POST ===
 
     an = Analysis(
         user_id=br.user_id, 
