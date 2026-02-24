@@ -16237,7 +16237,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 log.info(f"[{run_id}] [FIX-B731-ROI-CAP] ROI_P50 not set, skipping")
 
             # Payback: P50 ebenfalls auf canonical setzen
-            _b731_pb_canon = sections.get("PAYBACK_MONTHS_FMT_DE", "1,4")
+            _b731_pb_canon = sections.get("PAYBACK_MONTHS_FMT_DE", "1,6")  # FIX-B732-PAYBACK-F1: correct default
             _b731_pb_p50 = sections.get("PAYBACK_P50")
             if _b731_pb_p50 is not None:
                 try:

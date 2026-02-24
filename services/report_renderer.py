@@ -1319,7 +1319,15 @@ def render(briefing_obj: Any,
         )
 
         if not qw_non_empty and release_strict:
-            raise RuntimeError(
+            # FIX-B732-QW-TABLE: Accept table-format Quick Wins as valid
+            import re as _re_qw
+            _qw_html = sections.get("QUICK_WINS_HTML", "") or ""
+            _qw_has_table = bool(_re_qw.search(r"<table[^>]*>.*?<t[dh]", _qw_html, _re_qw.DOTALL | _re_qw.IGNORECASE))
+            _qw_has_rows = len(_re_qw.findall(r"<tr[^>]*>", _qw_html, _re_qw.IGNORECASE)) >= 2  # header + 1 data row
+            if _qw_has_table and _qw_has_rows:
+                log.info("[FIX-B732-QW-TABLE] Quick Wins in table format accepted (rows=%d, len=%d)", len(_re_qw.findall(r"<tr[^>]*>", _qw_html, _re_qw.IGNORECASE)), len(_qw_html))
+            else:
+                raise RuntimeError(
                 f"[FIX-514] QuickWinsEmptyError: cards={qw_indicator} len={qw_text_len}"
             )
     except RuntimeError:
