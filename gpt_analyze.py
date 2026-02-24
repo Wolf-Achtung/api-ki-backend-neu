@@ -14853,6 +14853,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             # FIX-498 WP5: Centralize Payback KPI - use BC Engine 2.0 as single source of truth
             # This ensures cover page and BC section show the same Payback value
             sections["PAYBACK_MONTHS"] = realistic.payback_months
+            sections["_PAYBACK_BC_V2"] = realistic.payback_months  # FIX-B733b: immutable payback (survives CANON inject)
             sections["ROI_12M"] = realistic.roi_12m
             log.info("[%s] [FIX-498-WP5] Centralized KPIs: PAYBACK_MONTHS=%.1f, ROI_12M=%.1f%%",
                      run_id, realistic.payback_months, realistic.roi_12m)
@@ -16183,7 +16184,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 return str(val) if val else "0"
 
         # 1. PAYBACK_MONTHS_FMT_DE - German decimal, 1 digit (e.g., "3,5")
-        payback_raw = sections.get("BC_PAYBACK_REALISTIC") or sections.get("PAYBACK_MONTHS", 0)  # FIX-B733-PAYBACK: canonical source
+        payback_raw = sections.get("_PAYBACK_BC_V2") or sections.get("BC_PAYBACK_REALISTIC") or sections.get("PAYBACK_MONTHS", 0)  # FIX-B733b-PAYBACK: immutable BC Engine source
         sections["PAYBACK_MONTHS_FMT_DE"] = _fmt_de_decimal(payback_raw, 1)
         # FIX-R4-1: Also overwrite PAYBACK_MONTHS itself with formatted string.
         # The raw float (e.g. 1.6286644951140066) leaks through Jinja2 fallback
