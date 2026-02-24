@@ -17,6 +17,10 @@ Du bist ein erfahrener KI-Berater und Pricing-Experte. Erstelle den Abschnitt
 - **Geschäftsmodell-Evolution:** {{GESCHAEFTSMODELL_EVOLUTION}}
 
 ## AUFGABE
+⚠️ ALLE 3 MODELLE SIND PFLICHT — KEINES DARF FEHLEN!
+Wenn ein Modell fehlt, ist die Antwort UNGÜLTIG.
+Jedes Modell MUSS mit einer eigenen Überschrift beginnen.
+
 Erstelle 3 konkrete Pricing-/Monetarisierungsmodelle, wie das Unternehmen
 im Bereich **{{HAUPTLEISTUNG}}** (Branche: **{{BRANCHE_LABEL}}**) durch
 KI-Integration neue Umsatzquellen erschließen oder bestehende Leistungen

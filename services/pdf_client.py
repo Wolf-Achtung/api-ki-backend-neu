@@ -176,7 +176,7 @@ def slim_html_sections(sections: Dict[str, Any]) -> Dict[str, Any]:
     return sections
 
 
-def build_footer_template(report_id: str, report_date: str) -> str:
+def build_footer_template(report_id: str, report_date: str, build_id: str = "") -> str:
     """
     Build Puppeteer footerTemplate with page numbers and report metadata.
 
@@ -190,6 +190,7 @@ def build_footer_template(report_id: str, report_date: str) -> str:
     # Fallback for missing values
     report_id_display = report_id if report_id else "–"
     report_date_display = report_date if report_date else "–"
+    build_id_display = f" · Build: {build_id}" if build_id else ""
 
     return f'''<div style="width:100%; font-size:9px; padding:0 14mm; box-sizing:border-box; color:#666;
             display:flex; align-items:center; justify-content:space-between;">
@@ -197,7 +198,7 @@ def build_footer_template(report_id: str, report_date: str) -> str:
     Seite <span class="pageNumber"></span> / <span class="totalPages"></span>
   </div>
   <div>
-    Report-ID: {report_id_display} • {report_date_display}
+    Report-ID: {report_id_display} • {report_date_display}{build_id_display}
   </div>
 </div>'''
 

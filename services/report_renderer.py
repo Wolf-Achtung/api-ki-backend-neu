@@ -726,6 +726,7 @@ def render(briefing_obj: Any,
         "OWNER_NAME": sections.get("OWNER_NAME", os.getenv("OWNER_NAME", "KI-Sicherheit.jetzt")),  # ✅ FIXED
         "report_date": sections.get("report_date", ""),
         "report_id": sections.get("report_id", ""),
+        "BUILD_ID": sections.get("BUILD_ID", "B734d"),
         "report_year": sections.get("report_year", ""),
         "BRANCHE_LABEL": sections.get("BRANCHE_LABEL", ""),
         "UNTERNEHMENSGROESSE_LABEL": sections.get("UNTERNEHMENSGROESSE_LABEL", ""),

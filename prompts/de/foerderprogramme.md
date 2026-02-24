@@ -38,6 +38,19 @@ ERLAUBT:
        - Für Solo/Team: MAX 3 Programme mit je 1 Satz Beschreibung.
        - Für KMU: bis zu 5 Programme mit kurzen Beschreibungen.
 
+
+     LANDES-SPEZIFISCHE PROGRAMME (PFLICHT wenn BUNDESLAND passt!):
+     Wenn {{BUNDESLAND_LABEL}} = "Berlin":
+       - IBB Pro FIT: Innovationsförderung für technologieorientierte Projekte,
+         bis 400.000€ Zuschuss, Antrag über IBB (Investitionsbank Berlin).
+         Link: https://www.ibb.de/de/foerderprogramme/pro-fit.html
+       - Transfer BONUS: Technologietransfer-Förderung, bis 45.000€,
+         für KMU die mit Forschungseinrichtungen kooperieren.
+         Link: https://www.ibb.de/de/foerderprogramme/transfer-bonus.html
+       - Digitalprämie Berlin (wenn aktiv): Zuschuss für Digitalisierung,
+         prüfe aktuelle Verfügbarkeit.
+       → Mindestens 1 Berliner Landesprogramm MUSS genannt werden!
+
      SIZE-AWARE PROGRAMMANZAHL (STRIKT EINHALTEN!):
        SOLO: MAX 3 Programme, je 1 Satz. Hinweis: "Details im Anhang"
        TEAM: MAX 3 Programme, je 1-2 Sätze. Hinweis: "Details im Anhang"
