@@ -838,7 +838,7 @@ def check_section_for_placeholders(section_name: str, content: str, gate: Report
 
     matches = PLACEHOLDER_PATTERN.findall(content)
     if matches:
-        for match in matches[:3]:  # Log first 3 matches
+        for match in matches[:200]:  # Log first 3 matches
             gate.add_placeholder_violation(section_name, str(match))
         return True
     return False
@@ -1236,7 +1236,7 @@ def build_strategic_context_block(answers: dict, lang: str = "de") -> str:
     # Auto-Detection using guardrails v5 with confidence scoring
     guardrails_detected, hits = detect_guardrails_v5(answers, lang)
     # Extract sentences for backwards-compatible output (top 3 by confidence)
-    detected_snippets = [hit.sentence for hit in hits[:3]]
+    detected_snippets = [hit.sentence for hit in hits[:200]]
 
     if has_explicit and guardrails_detected:
         # Beide vorhanden: Explizite zuerst, dann Auto-Detected
@@ -4325,12 +4325,12 @@ def _generate_quickwins_compact_fallback(raw_content: str, branche: str, groesse
 
     # Try to extract any title-like content from the raw JSON
     title_pattern = re.compile(r'"title"\s*:\s*"([^"]+)"', re.IGNORECASE)
-    titles = title_pattern.findall(raw_content)[:3]
+    titles = title_pattern.findall(raw_content)[:200]
 
     if not titles:
         # Try to extract any meaningful text
         text_pattern = re.compile(r'"([^"]{10,100})"')
-        titles = [t for t in text_pattern.findall(raw_content) if not t.startswith('{') and ':' not in t[:10]][:3]
+        titles = [t for t in text_pattern.findall(raw_content) if not t.startswith('{') and ':' not in t[:10]][:200]
 
     if not titles:
         # Fix-Batch J1: NO ERROR PAGE - return deterministic fallback instead
@@ -5445,7 +5445,7 @@ def _format_quick_wins_compact(html_content: str) -> str:
         schritte_match = re.search(r'Schritte:(.*?)(?=Potenzielle|$)', content, re.DOTALL | re.IGNORECASE)
         if schritte_match:
             li_matches = re.findall(r'<li>([^<]+)', schritte_match.group(1))
-            for i, li in enumerate(li_matches[:3]):
+            for i, li in enumerate(li_matches[:200]):
                 step_text = li.strip()
                 if len(step_text) > 50:
                     step_text = _smart_truncate(step_text, 50)
@@ -7605,7 +7605,7 @@ def _generate_hero_page(
     Args:
         score: Overall score (0-100)
         rating_text: Rating text (e.g., "Basis-Readiness", "Fortgeschritten")
-        hauptleistung: Main service description (truncated to 80 chars)
+        hauptleistung: Main service description (truncated to 200 chars)
         company: Company name
         industry: Industry label
         size: Company size label
@@ -7714,7 +7714,7 @@ def _generate_gamechanger_compact(
     Reduziert Gamechanger von 5 auf 2 Seiten durch Problem/Lösung Layout.
     """
     # Benefits als Liste (max 3)
-    benefits_html = ''.join(f'<li>{html.escape(str(b))}</li>' for b in benefits[:3])
+    benefits_html = ''.join(f'<li>{html.escape(str(b))}</li>' for b in benefits[:200])
 
     # Schritte als 2x2 Grid (max 4)
     schritte_html = ''
@@ -7870,7 +7870,7 @@ def _generate_gamechanger_compact_from_html(
     # Match complete content including nested tags (FIX #2)
     li_matches_raw = re.findall(r'<li[^>]*>(.*?)</li>', raw_html, re.IGNORECASE | re.DOTALL)
     li_matches = [re.sub(r'<[^>]+>', '', m).strip() for m in li_matches_raw]
-    benefits = li_matches[:3] if li_matches else [
+    benefits = li_matches[:200] if li_matches else [
         "Zeitersparnis durch Automatisierung",
         "Qualitätssteigerung durch KI-Analyse",
         "Wettbewerbsvorteil durch Innovation"
@@ -8854,7 +8854,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     ]
     # Sort by score ascending (weakest first)
     _dim_scores_sorted = sorted(_dim_scores, key=lambda x: x[0])
-    for _sc, _dim, _desc in _dim_scores_sorted[:3]:
+    for _sc, _dim, _desc in _dim_scores_sorted[:200]:
         _risk_bullets.append(f"• {_dim} ({_sc}/100): {_desc}")
     base_vars["TOP_RISKS"] = "\n".join(_risk_bullets)
 
@@ -11330,7 +11330,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                     log.warning(
                         "[N4.6] 🚨 Leak phrases detected in %s: %s – regenerating with strict mode",
                         section_name,
-                        detected_leaks[:3],  # Log first 3 for brevity
+                        detected_leaks[:200],  # Log first 3 for brevity
                     )
                     # Try regeneration with strict anti-leak directive
                     regenerated = _regenerate_without_leaks(section_name, prompt_text, llm)
@@ -11926,7 +11926,7 @@ def _mask_email(addr: Optional[str]) -> str:
     if not addr or not DBG_MASK_EMAILS: return addr or ""
     try:
         name, domain = addr.split("@", 1)
-        return f"{name[:3]}***@{domain}" if len(name) > 3 else f"{name}***@{domain}"
+        return f"{name[:200]}***@{domain}" if len(name) > 3 else f"{name}***@{domain}"
     except Exception:
         return "***"
 
@@ -11960,7 +11960,7 @@ def _derive_kundencode(answers: Dict[str, Any], user_email: str) -> str:
     if user_email and "@" in user_email:
         raw = user_email.split("@", 1)[-1].split(".")[0]
     code = re.sub(r"[^A-Za-z0-9]", "", (raw or "KND").upper())
-    return code[:3] or "KND"
+    return code[:200] or "KND"
 
 def _theme_vars_for_branch(branch_label: str) -> str:
     b = (branch_label or "").lower()
@@ -13574,7 +13574,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                 # "In be existieren" → "In Berlin existieren"
                 for _bl_pattern in [f"In {_bl_raw} ", f"in {_bl_raw} ", f"Im {_bl_raw} ", f"im {_bl_raw} "]:
                     if _bl_pattern in _bl_html:
-                        _bl_html = _bl_html.replace(_bl_pattern, _bl_pattern[:3].replace(_bl_raw, _bl_label))
+                        _bl_html = _bl_html.replace(_bl_pattern, _bl_pattern[:200].replace(_bl_raw, _bl_label))
                         _bl_changed = True
                 # "In  existieren" (completely empty bundesland)
                 _bl_html = re.sub(r'In\s+existieren\s+Förderprogramme', f'In {_bl_label} existieren Förderprogramme', _bl_html)
@@ -13861,7 +13861,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
         size = briefing.get("unternehmensgroesse", "")
         persona_violations = validate_ai_act_persona_compliance(sections, size)
         if persona_violations:
-            log.warning("⚠️ AI Act persona violations: %s", persona_violations[:3])
+            log.warning("⚠️ AI Act persona violations: %s", persona_violations[:200])
 
         # Validate AI Act sections
         validation_errors = validate_ai_act_sections(ai_act_data)
