@@ -674,32 +674,6 @@
         .section-body > div[style*="column-count"] {
             column-count: 1 !important;
         }
-        /* FIX-B734e: Global grid override for ALL elements (not just .section-body children).
-           Catches inline-style grids in static template HTML (e.g. dimensions-grid, scores).
-           Targets 3+ column repeat() patterns that break in Puppeteer PDF rendering. */
-        div[style*="repeat(3,"],
-        div[style*="repeat(3 ,"],
-        div[style*="repeat(4,"],
-        div[style*="repeat(4 ,"],
-        div[style*="repeat(7,"],
-        div[style*="repeat(7 ,"] {
-            grid-template-columns: repeat(2, 1fr) !important;
-        }
-        @media print {
-            div[style*="repeat(3,"],
-            div[style*="repeat(3 ,"],
-            div[style*="repeat(4,"],
-            div[style*="repeat(4 ,"],
-            div[style*="repeat(7,"],
-            div[style*="repeat(7 ,"] {
-                grid-template-columns: 1fr !important;
-                display: block !important;
-            }
-            div[style*="1fr 1fr 1fr"] {
-                grid-template-columns: 1fr !important;
-                display: block !important;
-            }
-        }
         /* Prevent orphan sections creating empty pages */
         .section.chapter {
             page-break-inside: auto;
@@ -2784,7 +2758,7 @@
 
         /* === 4.6 GLOSSAR 2-SPALTIG === */
         .glossary {
-            column-count: 1; /* FIX-B734e: Was 2 — breaks in PDF rendering */
+            column-count: 2;
             column-gap: 24px;
         }
 

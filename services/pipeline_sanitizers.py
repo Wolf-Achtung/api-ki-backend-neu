@@ -906,19 +906,6 @@ _MULTI_COLUMN_SECTIONS = {
     'ki_skillplan', 'KI_SKILLPLAN_HTML',
     'kickoff_vorlage', 'KICKOFF_VORLAGE_HTML',
     'glossar', 'GLOSSAR_HTML',
-    # FIX-B734e: Added missing sections that produce 3+ column grids
-    'starter_kit', 'STARTER_KIT_HTML',
-    'STARTER_KIT_COMPACT_HTML',
-    'SOFORT_START_HTML', 'sofort_start',
-    'CHALLENGE_30_TAGE_HTML', 'challenge_30_tage',
-    'branch_deep_dive', 'BRANCH_DEEP_DIVE_HTML',
-    'BRANCH_PROFILE_HTML', 'branch_profile',
-    'TOOLS_HTML', 'tools_empfehlungen', 'TOOLS_EMPFEHLUNGEN_HTML',
-    'RISK_ENGINE_HTML', 'RISK_ENGINE_V3_HTML',
-    'VENDOR_AUDIT_HTML',
-    'roi_tracking', 'ROI_TRACKING_HTML',
-    'AUTOMATION_ROADMAP_HTML',
-    'BENCHMARKS_HTML', 'BENCHMARKS_SECTION_HTML',
 }
 
 
