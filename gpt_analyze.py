@@ -14554,7 +14554,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     sections["THEME_CSS_VARS"] = _theme_vars_for_branch(sections.get("BRANCHE_LABEL") or sections.get("branche", ""))
     
     # BUILD_ID - timestamp for report generation tracking
-    sections["BUILD_ID"] = f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M')}"
+    sections["BUILD_ID"] = f"B734e-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M')}"
 
     # Problem #7 FIX: Personalized report subtitle from hauptleistung
     hauptleistung = answers.get("hauptleistung", "").strip()

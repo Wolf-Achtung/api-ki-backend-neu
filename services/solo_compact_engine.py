@@ -678,7 +678,7 @@ TEAM_KMU_LOW_PRIORITY_SECTIONS: List[str] = [
     # "VENDOR_AUDIT_HTML",  # FIX-B719: Protected — always keep
     "KICKOFF_HTML",
     # FIX-B729 Tier 2: Additional droppable sections for KMU ≤27 pages
-    "MONETARISIERUNG_HTML",
+    # "MONETARISIERUNG_HTML",  # FIX-B734e: Protected — mandatory section (3/3 Monetarisierungsmodelle)
     "KI_SKILLPLAN_HTML",
     "MARKET_INSIGHTS_HTML",
     "NEWS_BOX_HTML",
