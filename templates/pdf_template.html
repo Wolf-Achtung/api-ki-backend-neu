@@ -20,7 +20,7 @@
 
         @page {
             size: A4;
-            margin: 15mm 15mm 18mm 15mm; /* Phase 2 Fix: Kompakter für weniger Seiten */
+            margin: 12mm 12mm 15mm 12mm; /* B734 Fix: Mehr Platz pro Seite für weniger Seiten */
             @bottom-right {
                 content: "Seite " counter(page) " von " counter(pages);
                 font-size: 8pt;
@@ -224,8 +224,8 @@
            PAGEBREAK RULES (PLATIN++ V5.2) - ROBUST FIX
            ================================================ */
         .chapter {
-            page-break-before: always !important;
-            break-before: page !important;
+            page-break-before: auto !important;
+            break-before: auto !important;
         }
         .chapter:first-of-type {
             page-break-before: auto !important;
@@ -237,8 +237,8 @@
         }
         /* Verstärkte Regeln für Haupt-Sections */
         .section.chapter {
-            page-break-before: always !important;
-            break-before: page !important;
+            page-break-before: auto !important;
+            break-before: auto !important;
         }
         .section.chapter:first-of-type {
             page-break-before: auto !important;
@@ -309,6 +309,13 @@
         .business-case-section,
         .handlungsempfehlungen-section {
             page-break-before: auto;
+        }
+        /* B734 Fix: Selektive Page-Breaks für wichtige Sections */
+        .roadmap-decision-section,
+        .risk-engine,
+        .recommendations-engine {
+            page-break-before: always !important;
+            break-before: page !important;
         }
         /* ================================================
            TAGS (PLATIN++ V5.2)
