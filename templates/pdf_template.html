@@ -665,6 +665,25 @@
             font-size: var(--font-body);
             color: var(--color-text-normal);
         }
+        /* FIX-B734b: Force single-column in section-body for WeasyPrint compatibility */
+        /* LLM-generated HTML sometimes uses multi-column grids that break at narrow margins */
+        .section-body > div[style*="grid-template-columns"] {
+            display: block !important;
+            grid-template-columns: none !important;
+        }
+        .section-body > div[style*="column-count"] {
+            column-count: 1 !important;
+        }
+        /* Prevent orphan sections creating empty pages */
+        .section.chapter {
+            page-break-inside: auto;
+            orphans: 3;
+            widows: 3;
+        }
+        /* Keep short sections together - avoid whitespace pages */
+        .section.chapter .section-body {
+            min-height: 0;
+        }
         .pill-dot {
             width: 6px;
             height: 6px;
@@ -6798,12 +6817,12 @@
 
                     <!-- Quick Summary Box -->
                     <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 4px solid var(--color-primary); padding: var(--space-lg); border-radius: 8px; margin-bottom: var(--space-xl);">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); overflow: hidden;">
                             <div>
                                 <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-xs);">
                                     Ihr KI-Reifegrad
                                 </div>
-                                <div style="font-size: 24px; font-weight: 600; color: var(--color-text-normal);">
+                                <div style="font-size: 24px; font-weight: 600; color: var(--color-text-normal); overflow-wrap: break-word; word-wrap: break-word;">
                                     {{ score_gesamt }}/100 - {{ score_rating }}
                                 </div>
                             </div>
@@ -7243,7 +7262,7 @@
                 <!-- G24: Branch Deep-Dive Addon (FINAL GO: fail-closed) -->
                 <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
                 {% if BRANCH_DEEP_DIVE_HTML and BRANCH_DEEP_DIVE_HTML|trim and '<' in BRANCH_DEEP_DIVE_HTML and not COMPACT_REPORT_MODE %}
-                <section class="section chapter" id="branch-deep-dive">
+                <section class="section" id="branch-deep-dive" style="page-break-before: auto;">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">
                             <span class="section-kicker">Branch Deep Dive</span>
@@ -7673,7 +7692,7 @@
                 {% endif %}
                 <!-- SPRINT B2.2: Starter Kit -->
                 {% if STARTER_KIT_HTML %}
-                <section class="section chapter" id="starter-kit">
+                <section class="section chapter" id="starter-kit" style="page-break-inside: auto;">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Ihr Einstieg</span>
@@ -7712,7 +7731,7 @@
                 {% endif %}
                 <!-- NEUE SEKTIONEN: Monetarisierung, Skill-Plan, Templates -->
                 {% if MONETARISIERUNG_HTML %}
-                <section class="section chapter">
+                <section class="section" style="page-break-before: auto;">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Wertschöpfung</span>
@@ -7730,7 +7749,7 @@
                 </section>
                 {% endif %}
                 {% if KI_SKILLPLAN_HTML %}
-                <section class="section chapter">
+                <section class="section" style="page-break-before: auto;">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Kompetenzaufbau</span>
@@ -7748,7 +7767,7 @@
                 </section>
                 {% endif %}
                 {% if TEMPLATES_START_HTML %}
-                <section class="section chapter">
+                <section class="section" style="page-break-before: auto;">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Sofort loslegen</span>
@@ -7786,7 +7805,7 @@
                 </section>
                 {% endif %}
                 {% if AI_POLICY_MINI_HTML %}
-                <section class="section chapter">
+                <section class="section" style="page-break-before: auto;">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">{{ ui("governance_section_kicker", "Governance") }}</span>

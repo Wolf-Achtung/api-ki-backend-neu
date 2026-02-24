@@ -19,6 +19,7 @@ from markupsafe import Markup
 from utils.logo_embedder import embed_logos_in_html
 from services.html_minifier import optimize_html_for_pdf, strip_unused_sections
 from services.final_sanitizer import final_sanitize
+from services.pipeline_sanitizers import sanitize_grid_layouts
 from services.report_validator import GENERIC_LLM_LEAK_PHRASES, remove_leak_phrases_from_html
 from services.html_sanitizer import sanitize_en_locale_tokens
 from services.lang_utils import normalize_lang
@@ -769,6 +770,19 @@ def render(briefing_obj: Any,
             _fixed = fix_double_encoded_utf8(_v)
             if _fixed != _v:
                 ctx[_k] = _fixed
+    # FIX-B734b: Sanitize grid layouts in LLM-generated HTML sections
+    _grid_sections = [
+        'AI_POLICY_MINI_HTML', 'TEMPLATES_START_HTML', 'MONETARISIERUNG_HTML',
+        'KI_SKILLPLAN_HTML', 'KICKOFF_VORLAGE_HTML', 'GLOSSAR_HTML',
+        'SOFORT_START_HTML', 'STARTER_KIT_HTML',
+    ]
+    for _gs in _grid_sections:
+        _gv = ctx.get(_gs, '')
+        if isinstance(_gv, str) and len(_gv) > 100:
+            _gv_new = sanitize_grid_layouts(_gv, _gs)
+            if _gv_new != _gv:
+                ctx[_gs] = _gv_new
+
     # Z+1c-PRE: NUCLEAR score fix on ALL ctx sections BEFORE Jinja
     _cg_pre = int(float(ctx.get('CANONICAL_GOVERNANCE', 0) or 0))
     _cs_pre = int(float(ctx.get('CANONICAL_SECURITY', 0) or 0))
@@ -1074,8 +1088,28 @@ def render(briefing_obj: Any,
                 html = _nuke.sub(str(_r), html)
                 _z1c_post += _nc
                 log.info("[Z+1c-POST] NUCLEAR regex: >%d< (%dx)", _w, _nc)
+    # FIX-B734a: Prose-Score-Halluzination fixen
+    # Fängt "Sicherheits-Score von 38" / "Governance-Score von 42" im Fließtext
+    if _cg_post > 0 and _cs_post > 0:
+        _prose_patterns = [
+            # (regex_pattern, replacement, label)
+            (r'(Sicherheits[- ]?Score\s+von\s+)\d{1,3}', rf'\g<1>{_cs_post}', 'Sec-Prose'),
+            (r'(Governance[- ]?Score\s+von\s+)\d{1,3}', rf'\g<1>{_cg_post}', 'Gov-Prose'),
+            (r'(Sicherheits[- ]?Score\s+unter\s+)\d{1,3}', rf'\g<1>{_cs_post}', 'Sec-unter'),
+            (r'(Governance[- ]?Score\s+unter\s+)\d{1,3}', rf'\g<1>{_cg_post}', 'Gov-unter'),
+            (r'(Sicherheits[- ]?Score:\s*)\d{1,3}', rf'\g<1>{_cs_post}', 'Sec-colon'),
+            (r'(Governance[- ]?Score:\s*)\d{1,3}', rf'\g<1>{_cg_post}', 'Gov-colon'),
+        ]
+        for _pp, _pr, _pl in _prose_patterns:
+            _pm = _re_z1c.findall(_pp, html)
+            if _pm:
+                html, _pc = _re_z1c.subn(_pp, _pr, html)
+                if _pc > 0:
+                    _z1c_post += _pc
+                    log.info("[Z+1c-POST][FIX-B734a] %s: %d fixes", _pl, _pc)
+
     if _z1c_post == 0 and _cg_post > 0:
-        for _dw in [38, 42]:
+        for _dw in [38, 42, 32, 48]:
             _dp = html.find(str(_dw))
             _da = 0
             while _dp != -1 and _da < 5:
