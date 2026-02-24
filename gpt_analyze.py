@@ -12505,7 +12505,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             company_size=sofort_size,
             zeitersparnis_prioritaet=sofort_zeit,
             stundensatz=_sofort_rate,
-            canon_hours_month=float(sections.get("CANON_HOURS_MONTH", 0))  # FIX-B732-HOURS-SYNC
+            canon_hours_month=float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 36)  # FIX-B733-HOURS: fallback chain
         )
         log.info("[SOFORT-START] ✅ Generated Sofort-Start page for %s", sofort_branche[:30] if sofort_branche else "default")
     except Exception as e:
@@ -16183,7 +16183,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 return str(val) if val else "0"
 
         # 1. PAYBACK_MONTHS_FMT_DE - German decimal, 1 digit (e.g., "3,5")
-        payback_raw = sections.get("PAYBACK_MONTHS", 0)
+        payback_raw = sections.get("BC_PAYBACK_REALISTIC") or sections.get("PAYBACK_MONTHS", 0)  # FIX-B733-PAYBACK: canonical source
         sections["PAYBACK_MONTHS_FMT_DE"] = _fmt_de_decimal(payback_raw, 1)
         # FIX-R4-1: Also overwrite PAYBACK_MONTHS itself with formatted string.
         # The raw float (e.g. 1.6286644951140066) leaks through Jinja2 fallback
