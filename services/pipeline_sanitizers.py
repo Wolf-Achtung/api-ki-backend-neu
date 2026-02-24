@@ -892,3 +892,68 @@ log.info(
     "[FIX-528] pipeline_sanitizers loaded: decode_html_entities, "
     "ensure_complete_sentences, apply_post_llm_sanitization, sanitize_all_sections"
 )
+
+
+# =============================================================================
+# FIX-B734b: Strip dangerous multi-column grid layouts from LLM output
+# WeasyPrint breaks grid-template-columns with 3+ columns at narrow margins
+# =============================================================================
+
+_MULTI_COLUMN_SECTIONS = {
+    'ai_policy_mini', 'AI_POLICY_MINI_HTML',
+    'templates_start', 'TEMPLATES_START_HTML',
+    'monetarisierung', 'MONETARISIERUNG_HTML',
+    'ki_skillplan', 'KI_SKILLPLAN_HTML',
+    'kickoff_vorlage', 'KICKOFF_VORLAGE_HTML',
+    'glossar', 'GLOSSAR_HTML',
+}
+
+
+def sanitize_grid_layouts(html_content: str, section_name: str = "") -> str:
+    """FIX-B734b: Replace multi-column grid with single-column block layout.
+
+    Only applies to sections known to break in WeasyPrint PDF rendering.
+    Converts grid-template-columns with 3+ columns to single column.
+    """
+    if not html_content or not isinstance(html_content, str):
+        return html_content
+
+    if section_name and section_name not in _MULTI_COLUMN_SECTIONS:
+        return html_content
+
+    original_len = len(html_content)
+    result = html_content
+    fixes = 0
+
+    # Fix 1: grid-template-columns mit 3+ Spalten -> 1fr
+    _pat_3col = re.compile(
+        r'grid-template-columns\s*:\s*(?:repeat\s*\(\s*[3-9]\s*,|(?:[\w.]+\s+){2,})',
+        re.IGNORECASE,
+    )
+    if _pat_3col.search(result):
+        result = re.sub(
+            r'(grid-template-columns\s*:\s*)(?:repeat\s*\([^)]+\)|[^;"]+)',
+            r'\g<1>1fr',
+            result,
+        )
+        fixes += 1
+
+    # Fix 2: column-count > 1 -> 1
+    _pat_colcount = re.compile(r'column-count\s*:\s*[2-9]', re.IGNORECASE)
+    if _pat_colcount.search(result):
+        result = _pat_colcount.sub('column-count: 1', result)
+        fixes += 1
+
+    # Fix 3: columns: N -> columns: 1
+    _pat_columns = re.compile(r'(?<![a-z-])columns\s*:\s*[2-9]', re.IGNORECASE)
+    if _pat_columns.search(result):
+        result = _pat_columns.sub('columns: 1', result)
+        fixes += 1
+
+    if fixes > 0:
+        log.info(
+            "[FIX-B734b] Sanitized %d grid/column layouts in %s (%d->%d chars)",
+            fixes, section_name or "unknown", original_len, len(result),
+        )
+
+    return result
