@@ -1361,7 +1361,7 @@ def vendor_audit_report_to_html(
             <p style="margin:0 0 12px 0;color:#64748b;font-size:10pt;">{report.summary}</p>
 
             <div style="margin-bottom:12px;">
-                <table style="width:100%;border-collapse:separate;border-spacing:8px;table-layout:fixed;">
+                <table data-preserve="true" style="width:100%;border-collapse:separate;border-spacing:8px;table-layout:fixed;">
                 <tr>
                 <td style="padding:12px;background:{category_bg["green"]};border-radius:8px;border:1px solid {category_border["green"]};text-align:center;width:33%;">
                     <span style="font-size:9px;color:#166534;font-weight:600;">{labels["green_vendors"]}</span>
@@ -1379,7 +1379,7 @@ def vendor_audit_report_to_html(
                 </table>
             </div>
 
-            <table style="width:100%;border-collapse:separate;border-spacing:8px;table-layout:fixed;margin-top:12px;">
+            <table data-preserve="true" style="width:100%;border-collapse:separate;border-spacing:8px;table-layout:fixed;margin-top:12px;">
             <tr>
                 <td style="padding:8px;background:#fff;border-radius:6px;border:1px solid #e2e8f0;width:50%;">
                     <span style="font-size:9px;color:#64748b;">{labels["eu_compliant"]}</span>
@@ -1527,7 +1527,7 @@ def vendor_audit_report_to_html(
         compact_html = f'''<div class="vendor-audit-engine" style="font-size:10pt;">
 <p style="font-weight:700;margin:0 0 8px;">🔍 {t["title"]}</p>
 <p style="font-size:9px;color:#64748b;margin:0 0 8px;">{t["green_vendors"]}: {report.green_count} · {t["yellow_vendors"]}: {report.yellow_count} · {t["red_vendors"]}: {report.red_count} · {t["compliance_score"]}: {report.compliance_score:.0f}%</p>
-<table style="width:100%;border-collapse:collapse;font-size:9pt;">
+<table data-preserve="true" style="width:100%;border-collapse:collapse;font-size:9pt;">
 <tr style="background:#f8fafc;"><th style="padding:6px;text-align:left;">Vendor</th><th style="padding:6px;">Status</th><th style="padding:6px;text-align:left;">{t["jurisdiction"]}</th><th style="padding:6px;">AVV</th><th style="padding:6px;text-align:left;">Flags</th></tr>
 {rows}
 </table>

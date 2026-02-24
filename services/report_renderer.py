@@ -876,6 +876,9 @@ def render(briefing_obj: Any,
     def _fix_empty_tables_v4(html_text):
         def _check_table(match):
             t = match.group(0)
+            # FIX-B732-VENDOR: Preserve vendor audit tables from empty-table killer
+            if "data-preserve" in t:
+                return t
             all_rows = re.findall(r'<tr[^>]*>(.*?)</tr>', t, re.DOTALL | re.IGNORECASE)
             if len(all_rows) <= 1:
                 # Only 0 or 1 row (header only) → empty

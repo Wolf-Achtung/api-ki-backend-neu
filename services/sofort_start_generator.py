@@ -1051,7 +1051,8 @@ def generate_sofort_start_html(
     branche: str,
     company_size: str = "solo",
     zeitersparnis_prioritaet: str = "",
-    stundensatz: int = 0
+    stundensatz: int = 0,
+    canon_hours_month: float = 0  # FIX-B732: CANON hours for consistency
 ) -> str:
     """
     Generiert die SOFORT_START_HTML Section.
@@ -1089,6 +1090,13 @@ def generate_sofort_start_html(
     hours_per_month_raw = hours_per_week * 4
     if hours_per_month_raw > max_monthly:
         hours_per_week = max(1, max_monthly // 4)
+
+
+    # FIX-B732-HOURS-SYNC: Override with CANON hours if provided
+    if canon_hours_month > 0:
+        _b732_hours_week = max(1, int(canon_hours_month / 4))
+        if _b732_hours_week != hours_per_week:
+            hours_per_week = _b732_hours_week
 
     savings = calculate_yearly_savings(hours_per_week, stundensatz, company_size)
     
