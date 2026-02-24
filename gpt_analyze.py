@@ -4325,12 +4325,12 @@ def _generate_quickwins_compact_fallback(raw_content: str, branche: str, groesse
 
     # Try to extract any title-like content from the raw JSON
     title_pattern = re.compile(r'"title"\s*:\s*"([^"]+)"', re.IGNORECASE)
-    titles = title_pattern.findall(raw_content)[:200]
+    titles = title_pattern.findall(raw_content)[:3]
 
     if not titles:
         # Try to extract any meaningful text
         text_pattern = re.compile(r'"([^"]{10,100})"')
-        titles = [t for t in text_pattern.findall(raw_content) if not t.startswith('{') and ':' not in t[:10]][:200]
+        titles = [t for t in text_pattern.findall(raw_content) if not t.startswith('{') and ':' not in t[:10]][:3]
 
     if not titles:
         # Fix-Batch J1: NO ERROR PAGE - return deterministic fallback instead
@@ -8854,7 +8854,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     ]
     # Sort by score ascending (weakest first)
     _dim_scores_sorted = sorted(_dim_scores, key=lambda x: x[0])
-    for _sc, _dim, _desc in _dim_scores_sorted[:200]:
+    for _sc, _dim, _desc in _dim_scores_sorted[:3]:
         _risk_bullets.append(f"• {_dim} ({_sc}/100): {_desc}")
     base_vars["TOP_RISKS"] = "\n".join(_risk_bullets)
 
