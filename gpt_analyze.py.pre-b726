@@ -1701,9 +1701,6 @@ def _map_german_to_english_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
         "unter_2000": "under_10k",
         "2000_10000": "under_10k",
         "10000_50000": "10k-50k",
-        "ueber_50000": "over_100k",     # FIX-B729-S1: Form sends "ueber_50000" not "ueber_100000"
-        "unklar": "none",               # FIX-B729-S1: Explicit "unklar" mapping
-        # Legacy compatibility:
         "50000_100000": "50k-100k",
         "ueber_100000": "over_100k",
     }
@@ -1727,39 +1724,16 @@ def _map_german_to_english_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
     val_points = 8 if u and len(u) > 50 else (4 if u else 0)
     m["_value_points_from_uses"] = val_points
     roi = answers.get("vision_prioritaet", "")
-    m["roi_expected"] = "high" if roi in ["marktfuehrerschaft", "gpt_services", "datenprodukte"] else ("medium" if roi and roi != "keine_angabe" else "low")  # FIX-B729-S4
+    m["roi_expected"] = "high" if roi in ["marktfuehrerschaft", "wachstum"] else ("medium" if roi else "low")
     m["measurable_goals"] = "yes" if (answers.get("strategische_ziele") or answers.get("ki_ziele")) else "no"
     m["pilot_planned"] = "yes" if answers.get("pilot_bereich") else ("in_progress" if answers.get("ki_projekte") else "no")
     kompetenz_map = {"hoch": "advanced", "mittel": "intermediate", "niedrig": "basic", "keine": "none"}
     m["ai_skills"] = kompetenz_map.get(answers.get("ki_kompetenz", ""), "none")
     m["training_budget"] = "yes" if answers.get("zeitbudget") in ["ueber_10", "5_10"] else ("planned" if answers.get("zeitbudget") else "no")
     change = answers.get("change_management", "")
-    m["change_management"] = "yes" if change in ["hoch", "sehr_hoch"] else ("planned" if change in ["mittel", "niedrig", "sehr_niedrig"] else "no")  # FIX-B729-S2
+    m["change_management"] = "yes" if change == "hoch" else ("planned" if change in ["mittel", "niedrig"] else "no")
     innovationsprozess = answers.get("innovationsprozess", "")
-    m["innovation_culture"] = "strong" if innovationsprozess in ["innovationsteam", "mitarbeitende", "kunden"] else ("moderate" if innovationsprozess and innovationsprozess != "unbekannt" else "weak")  # FIX-B729-S3
-
-    # FIX-B729-P2: Map 7 previously-lost form fields into scoring pipeline
-    # --- ai_act_kenntnis → governance bonus ---
-    ai_act = answers.get("ai_act_kenntnis", "")
-    m["_gov_ai_act_bonus"] = 3 if ai_act in ["sehr_gut", "gut"] else (1 if ai_act == "gehoert" else 0)
-
-    # --- meldewege → security bonus ---
-    meldewege = answers.get("meldewege", "")
-    m["_sec_meldewege_bonus"] = 4 if meldewege == "ja" else (2 if meldewege == "teilweise" else 0)
-
-    # --- digitalisierungsgrad → enablement indicator ---
-    try:
-        _digi_raw = int(answers.get("digitalisierungsgrad", 5) or 5)
-    except (ValueError, TypeError):
-        _digi_raw = 5
-    m["_ena_digi_bonus"] = 3 if _digi_raw >= 7 else (1 if _digi_raw >= 4 else 0)
-
-    # --- Pass-through for prompt context (no scoring impact) ---
-    m["risikofreude"] = answers.get("risikofreude", "3")
-    m["bisherige_foerdermittel"] = answers.get("bisherige_foerdermittel", "nein")
-    m["erfahrung_beratung"] = answers.get("erfahrung_beratung", "nein")
-    m["massnahmen_komplexitaet"] = answers.get("massnahmen_komplexitaet", "unklar")
-
+    m["innovation_culture"] = "strong" if innovationsprozess in ["mitarbeitende", "alle"] else ("moderate" if innovationsprozess else "weak")
     return m
 
 def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
@@ -1780,12 +1754,10 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
     else:
         details["governance"].append("❌ Kein Budget")
     gov += 4 if (m.get("goals") or m.get("use_cases")) else 0
-    gov += m.get("_gov_ai_act_bonus", 0)  # FIX-B729-P2: AI Act awareness bonus
     sec += 8 if m.get("gdpr_aware") == "yes" else 0
     sec += 7 if m.get("data_protection") in ["comprehensive", "basic"] else 0
     sec += 6 if m.get("risk_assessment") == "yes" else 0
     sec += 4 if m.get("security_training") in ["regular", "occasional"] else 0
-    sec += m.get("_sec_meldewege_bonus", 0)  # FIX-B729-P2: Incident reporting bonus
     val += m.get("_value_points_from_uses", 0)
     roi = m.get("roi_expected", "")
     val += 7 if roi in ["high", "medium"] else (3 if roi == "low" else 0)
@@ -1797,7 +1769,6 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
     ena += 6 if m.get("change_management") == "yes" else 0
     culture = m.get("innovation_culture", "")
     ena += 4 if culture in ["strong", "moderate"] else 0
-    ena += m.get("_ena_digi_bonus", 0)  # FIX-B729-P2: Digitalization maturity bonus
     scores = {
         "governance": min(gov, 25) * 4,
         "security": min(sec, 25) * 4,
@@ -8025,8 +7996,8 @@ def _generate_hero_page_from_context(
         _hero_payback_fmt = str(_hero_payback_raw)
     kpi_values = {
         'zeitersparnis': briefing.get("ZEITERSPARNIS_H", 18),
-        # FIX-B729: Hard-cap Hero ROI to 200% (BC_ROI_REALISTIC/P50 can be 350%+)
-        'roi': min(200, int(float(briefing.get("ROI_12M", 0) or sections.get("ROI_12M", 0) or 200))),
+        # Q2: Use BC_ROI_REALISTIC (set by BC engine before MC) as primary ROI source
+        'roi': float(sections.get("BC_ROI_REALISTIC", 0) or sections.get("ROI_12M_RAW", 0) or briefing.get("ROI_12M_RAW", 0) or briefing.get("ROI_12M", 200)),
 
         'payback': _hero_payback_fmt,
     }
@@ -8504,33 +8475,6 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     company_size = bucket_to_prompt.get(company_size_bucket, "team")
 
     # -------------------------------------------------------------------------
-    # FIX-B726-HAUPTLEISTUNG: Robust source cleanup
-    try:
-        _hl726 = briefing.get("hauptleistung", "") if isinstance(briefing, dict) else ""
-        if _hl726 and len(str(_hl726)) > 50:
-            _hl726_s = str(_hl726).rstrip()
-            _needs_clean = False
-            # Check multiple truncation indicators
-            for _ind in ["\u2026", "...", "die KI in", "Unternehm"]:
-                if _hl726_s.endswith(_ind):
-                    _needs_clean = True
-                    break
-            # Also clean if last char is not a sentence-ender
-            if not _needs_clean and _hl726_s and _hl726_s[-1] not in ".!?)":
-                _needs_clean = True
-            if _needs_clean:
-                _hl726_c = _hl726_s.rstrip("\u2026").rstrip(".").rstrip()
-                for _sep726 in [", die ", ", der ", ", das ", " die ", " der ", " fuer ", " f\u00fcr "]:
-                    _pos726 = _hl726_c.rfind(_sep726)
-                    if _pos726 > 20:
-                        _hl726_c = _hl726_c[:_pos726]
-                        break
-                if isinstance(briefing, dict) and _hl726_c != _hl726_s:
-                    briefing["hauptleistung"] = _hl726_c
-                    log.info("[FIX-B726-HAUPTLEISTUNG] Cleaned: len %d->%d", len(_hl726_s), len(_hl726_c))
-    except Exception as _hl726_err:
-        log.warning("[FIX-B726-HAUPTLEISTUNG] Error: %s", _hl726_err)
-
     # FIX-BRANCH-13 TASK 3: Log core input fields before prompt rendering
     # -------------------------------------------------------------------------
     log.info(
@@ -8719,17 +8663,6 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     base_vars.update({
         "TRAININGS_INTERESSEN": briefing.get("trainings_interessen", "Nicht spezifiziert"),
         "INNOVATIONSKULTUR": briefing.get("innovationskultur", "Nicht bewertet"),
-    })
-
-    # ===== BLOCK 6b: Previously-lost form fields (FIX-B729-P2) =====
-    base_vars.update({
-        "DIGITALISIERUNGSGRAD": briefing.get("digitalisierungsgrad", "5"),
-        "AI_ACT_KENNTNIS": briefing.get("ai_act_kenntnis", "unbekannt"),
-        "RISIKOFREUDE": briefing.get("risikofreude", "3"),
-        "MELDEWEGE": briefing.get("meldewege", "nein"),
-        "BISHERIGE_FOERDERMITTEL": briefing.get("bisherige_foerdermittel", "nein"),
-        "ERFAHRUNG_BERATUNG": briefing.get("erfahrung_beratung", "nein"),
-        "MASSNAHMEN_KOMPLEXITAET": briefing.get("massnahmen_komplexitaet", "unklar"),
     })
     
     # ===== BLOCK 7: Quick Wins & ROI (EXTENDED!) =====
@@ -12504,8 +12437,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             branche=sofort_branche,
             company_size=sofort_size,
             zeitersparnis_prioritaet=sofort_zeit,
-            stundensatz=_sofort_rate,
-            canon_hours_month=float(sections.get("CANON_HOURS_MONTH", 0))  # FIX-B732-HOURS-SYNC
+            stundensatz=_sofort_rate
         )
         log.info("[SOFORT-START] ✅ Generated Sofort-Start page for %s", sofort_branche[:30] if sofort_branche else "default")
     except Exception as e:
@@ -13447,69 +13379,6 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     else:
         log.warning("[CI-DESIGN] Gamechanger HTML empty or too short, skipping")
     sections["gamechanger"] = gamechanger_html
-
-    # FIX-B729: Governance/Security Score Enforcer (HTML-aware regex, always-log)
-    try:
-        import re as _re_b729
-        _b729_gov = int(scores.get("governance", 0) or 0)
-        _b729_sec = int(scores.get("security", 0) or 0)
-        # HTML-aware: allow optional <tags> between "Score:" and digits, and around "/100"
-        _b729_gov_pat = _re_b729.compile(r'(Governance-Score[:\s]*(?:<[^>]+>\s*)*\s*)(\d{1,3})(\s*(?:<[^>]+>\s*)*/\s*100)')
-        _b729_sec_pat = _re_b729.compile(r'(Sicherheits-Score[:\s]*(?:<[^>]+>\s*)*\s*)(\d{1,3})(\s*(?:<[^>]+>\s*)*/\s*100)')
-        _b729_fixed = 0
-        _b729_checked = 0
-        # B729: Expanded section list — score hallucinations can appear anywhere
-        for _sk in ("GAMECHANGER_HTML", "gamechanger", "RISKS_HTML", "risks",
-                     "RECOMMENDATIONS_HTML", "recommendations", "REIFEGRAD_SOWHAT_HTML",
-                     "EXECUTIVE_SUMMARY_HTML", "executive_summary", "SCORE_DRIVERS_HTML",
-                     "BRANCH_DEEP_DIVE_HTML", "QUICK_WINS_HTML", "ROADMAP_HTML",
-                     "KI_SKILLPLAN_HTML", "MARKET_INSIGHTS_HTML"):
-            _sv = sections.get(_sk, "")
-            if not isinstance(_sv, str) or len(_sv) < 50:
-                continue
-            _b729_checked += 1
-            _orig = _sv
-            _sv = _b729_gov_pat.sub(lambda m: f"{m.group(1)}{_b729_gov}{m.group(3)}" if int(m.group(2)) != _b729_gov else m.group(0), _sv)
-            _sv = _b729_sec_pat.sub(lambda m: f"{m.group(1)}{_b729_sec}{m.group(3)}" if int(m.group(2)) != _b729_sec else m.group(0), _sv)
-            if _sv != _orig:
-                sections[_sk] = _sv
-                _b729_fixed += 1
-                log.info(f"[FIX-B729-SCORE-ENFORCER] Replaced score in section: {_sk}")
-        # B729: ALWAYS log — even 0 fixes (confirms code path is reached)
-        log.info(f"[FIX-B729-SCORE-ENFORCER] Checked {_b729_checked} sections, fixed {_b729_fixed} (gov={_b729_gov}, sec={_b729_sec})")
-
-        # FIX-B732-GC-DEDUP: Gamechanger/KI-Stack Deduplizierung (S.11 3x gleicher Text)
-        try:
-            import re as _re732
-            from difflib import SequenceMatcher as _SM732
-            _gc_dec = sections.get("GAMECHANGER_DECISION_HTML", "") or ""
-            _ks_sum = sections.get("KI_STACK_SUMMARY_HTML", "") or ""
-            if _gc_dec and _ks_sum and len(_gc_dec) > 100 and len(_ks_sum) > 100:
-                _gc_txt = _re732.sub(r'<[^>]+>', '', _gc_dec).strip()[:500]
-                _ks_txt = _re732.sub(r'<[^>]+>', '', _ks_sum).strip()[:500]
-                _sim = _SM732(None, _gc_txt, _ks_txt).ratio()
-                if _sim > 0.65:
-                    _hl = sections.get("HAUPTLEISTUNG", "") or sections.get("hauptleistung", "") or "Ihr Unternehmen"
-                    _ks_new = (
-                        '<div style="padding:16px; background:#f8fafc; border-radius:8px; border-left:4px solid #2563eb;">'
-                        '<p style="margin:0; font-size:0.95em; color:#334155;">'
-                        '<strong>KI-Systemlandschaft:</strong> Die empfohlenen Tools, Integrationen und '
-                        f'Implementierungsschritte für {_hl[:60]} finden Sie im Detail in der '
-                        'Gamechanger-Analyse und im Starter-Kit weiter unten in diesem Report.'
-                        '</p></div>'
-                    )
-                    sections["KI_STACK_SUMMARY_HTML"] = _ks_new
-                    sections["ki_stack_summary"] = _ks_new
-                    log.info(f"[FIX-B732-GC-DEDUP] Replaced KI_STACK_SUMMARY (similarity={_sim:.0%}) with compact reference")
-                else:
-                    log.info(f"[FIX-B732-GC-DEDUP] Similarity={_sim:.0%} - no dedup needed")
-            else:
-                log.info("[FIX-B732-GC-DEDUP] Skipped - sections empty or too short")
-        except Exception as _b732e:
-            log.warning(f"[FIX-B732-GC-DEDUP] Failed: {_b732e}")
-
-    except Exception as _se:
-        log.warning(f"[FIX-B729-SCORE-ENFORCER] Failed: {_se}")
     # FIX-642: GAMECHANGER SNAPSHOT PROTECTION
     sections["_GC_SNAPSHOT_642"] = sections.get("GAMECHANGER_HTML", "")
 
@@ -13752,9 +13621,9 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                 if _v != _vo:
                     sections[_k] = _v
                     _hl_n += 1
-            log.info("[FIX-B724-HAUPTLEISTUNG] src=%s, sections=%d", "fixed" if _hl_src else "ok", _hl_n)
+            log.info(f"[{run_id}] [FIX-B724-HAUPTLEISTUNG] src={'fixed' if _hl_src else 'ok'}, sections={_hl_n}")
         except Exception as _e724h:
-            log.warning("[FIX-B724-HAUPTLEISTUNG] Failed: %s", _e724h)
+            log.warning(f"[{run_id}] [FIX-B724-HAUPTLEISTUNG] Failed: {_e724h}")
     except Exception as e:
         log.warning(f"[QUALITY-ENFORCER] Failed: {e}")
     _gc_t = sections.get("GAMECHANGER_HTML", ""); _gc_tw = len(re.sub(r"<[^>]+>", "", _gc_t).split()) if _gc_t else 0; log.info("[%s] [FIX-642-TRACE] GC after QUALITY-ENFORCER-1: %d words", "GCS", _gc_tw)
@@ -15408,7 +15277,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
 
     # =========================================================================
     # Z+5: HAUPTLEISTUNG_UNDERUSE FIX DISABLED — was 4th injection path creating 19x instances
-    log.info(f"[{run_id}] [Z+5] HAUPTLEISTUNG_UNDERUSE pre-validation fix ENABLED-B726")
+    log.info(f"[{run_id}] [Z+5] HAUPTLEISTUNG_UNDERUSE pre-validation fix DISABLED")
 
     # =========================================================================
     # FIX-629: POST-TRIM-HEAL GUARD
@@ -15568,23 +15437,6 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     # Legacy keys updated after final validation below
     sections["_VALIDATOR_WARNING_COUNT"] = len(warning_errors)
     sections["_VALIDATOR_CRITICAL_COUNT"] = len(critical_errors)
-    # FIX-B727: Subtract ALIAS + ROI exclusions from actual count
-    try:
-        _b727_alias = [e for e in warning_errors if hasattr(e, 'category') and
-                       e.category == "REDUNDANCY_DETECTED" and hasattr(e, 'section') and
-                       any(a in e.section for a in ("roadmap", "ROADMAP", "PILOT_PLAN",
-                           "DATA_READINESS", "data_readiness", "_GC_SNAPSHOT"))]
-        _b727_roi = [e for e in warning_errors if hasattr(e, 'category') and
-                     e.category == "ROI_PROHIBITED" and hasattr(e, 'section') and
-                     any(s in e.section for s in ("ROADMAP", "roadmap", "RECOMMENDATIONS", "recommendations"))]
-        _b727_excluded = len(_b727_alias) + len(_b727_roi)
-        if _b727_excluded > 0:
-            _b727_real = max(0, len(warning_errors) - _b727_excluded)
-            sections["_VALIDATOR_WARNING_COUNT"] = _b727_real
-            log.info(f"[{run_id}] [FIX-B727-ALIAS-COUNT] Updated warning count: {len(warning_errors)}->{_b727_real} (excluded: {len(_b727_alias)} ALIAS + {len(_b727_roi)} ROI)")
-    except Exception as _ac_err:
-        log.warning(f"[{run_id}] [FIX-B727-ALIAS-COUNT] Failed: {_ac_err}")
-
 
     if not is_valid:
         # STATE-AUDIT-517A: Generate debug_517 artifacts BEFORE quality gate raise
@@ -16047,71 +15899,6 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                                 log.info(f"[{run_id}] [FIX-B724-RATE-NUCLEAR] rate={_b724_rate}€, swept {len(_b724_keys)} keys, fixed {len(_b724_fixed)}: {_b724_fixed}")
                         except Exception as _e724r:
                             log.warning(f"[{run_id}] [FIX-B724-RATE-NUCLEAR] Failed: {_e724r}")
-
-                        # =================================================================
-                        # FIX-B726-COMPACT: Remove appendix sections for compact reports
-                        # Template-Conditionals sind unzuverlaessig (bool/string mismatch)
-                        # Deshalb hier die Sections direkt leeren
-                        # =================================================================
-                        try:
-                            _compact_size = sections.get("COMPANY_SIZE", "") or ""
-                            _compact_mode = sections.get("COMPACT_REPORT_MODE", False)
-                            # Force compact for solo, team, kmu
-                            if _compact_size in ("solo", "team", "kmu") or _compact_mode:
-                                _compact_remove = [
-                                    "KICKOFF_VORLAGE_HTML", "KREATIV_SPECIAL_HTML",
-                                    "PROMPT_FRAMEWORK_HTML", "ROI_TRACKING_HTML",
-                                    "BUSINESS_CASE_SIM_HTML", "BENCHMARK_ENGINE_HTML",
-                                    "RESPONSIBLE_AI_HTML", "STARTER_STACKS_HTML",
-                                    "BENCHMARKS_SECTION_HTML", "GLOSSAR_HTML",
-                                    "LEISTUNG_NACHWEIS_HTML", "WERKBANK_HTML",
-                                    "AI_ACT_TABLE_OFFER_HTML", "AI_ACT_ADDON_PACKAGES_HTML",
-                                ]
-                                _compact_removed = 0
-                                for _ck in _compact_remove:
-                                        if sections.get(_ck):
-                                            sections[_ck] = ""
-                                            _compact_removed += 1
-                                sections["COMPACT_REPORT_MODE"] = True
-                                log.info("[FIX-B726-COMPACT] Removed %d appendix sections for %s", _compact_removed, _compact_size)
-                        except Exception as _c726_err:
-                            log.warning("[FIX-B726-COMPACT] Error: %s", _c726_err)
-
-                        # FIX-B726-HAUPTLEISTUNG-SWEEP: Remove orphan fragments
-                        try:
-                            _hl_sw = sections.get("hauptleistung", "") or ""
-                            _orph_patterns = []
-                            # Build orphan list from actual hauptleistung
-                            for _suf in [", die KI in\u2026", ", die KI in...", " die KI in\u2026", " die KI in...",
-                                         "die KI in\u2026", "die KI in...", ", die KI in", "Unternehm\u2026"]:
-                                _orph_patterns.append(_suf)
-                            # If hauptleistung itself contains truncation, add it too
-                            if _hl_sw and ("\u2026" in _hl_sw or "..." in _hl_sw):
-                                _orph_patterns.insert(0, _hl_sw)
-                            # Build clean replacement
-                            _sw_clean = _hl_sw.rstrip("\u2026").rstrip(".").rstrip()
-                            for _ss in [", die ", ", der ", ", das "]:
-                                _pp = _sw_clean.rfind(_ss)
-                                if _pp > 20:
-                                    _sw_clean = _sw_clean[:_pp]
-                                    break
-                            _sw_count = 0
-                            for _sk in list(sections.keys()):
-                                _sv = sections.get(_sk, "")
-                                if not isinstance(_sv, str) or _sk.startswith("_"):
-                                    continue
-                                _changed = False
-                                for _op in _orph_patterns:
-                                    if _op and _op in _sv:
-                                        _sv = _sv.replace(_op, _sw_clean)
-                                        _changed = True
-                                        _sw_count += 1
-                                if _changed:
-                                    sections[_sk] = _sv
-                            if _sw_count > 0:
-                                log.info("[FIX-B726-HAUPTLEISTUNG-SWEEP] Replaced %d orphan fragments", _sw_count)
-                        except Exception as _sw726_err:
-                            log.warning("[FIX-B726-HAUPTLEISTUNG-SWEEP] Error: %s", _sw726_err)
         except Exception as _bc_err:
             log.warning(f"[{run_id}] [FIX-B723-BC-TABLE-RATE] Failed: {_bc_err}")
 
@@ -16215,41 +16002,6 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         roi_capped = sections.get("ROI_12M", 0)
         roi_capped_str = _fmt_int_no_float(roi_capped)
         sections["ROI_12M_DISPLAY_DE"] = f"{roi_capped_str} %"
-
-        # =================================================================
-        # FIX-B731: Cap ROI_P50 + PAYBACK_P50 to canonical values
-        # Root Cause: pdf_template.html Zeile 6731 zeigt ROI_P50 (MC P50)
-        # mit höchster Priorität VOR ROI_12M_DISPLAY_DE.
-        # ROI_P50 = 347% (ungecappt MC), ROI_12M = 200% (canonical).
-        # Fix: ROI_P50 auf canonical cap setzen, damit Template korrekt zeigt.
-        # =================================================================
-        try:
-            _b731_roi_cap = int(float(roi_capped or 200))
-            _b731_p50_raw = sections.get("ROI_P50")
-            if _b731_p50_raw is not None:
-                _b731_p50_val = float(_b731_p50_raw)
-                if _b731_p50_val > _b731_roi_cap:
-                    sections["ROI_P50"] = _b731_roi_cap
-                    log.info(f"[{run_id}] [FIX-B731-ROI-CAP] ROI_P50 capped: {_b731_p50_val:.0f}% → {_b731_roi_cap}%")
-                else:
-                    log.info(f"[{run_id}] [FIX-B731-ROI-CAP] ROI_P50 already ≤ cap ({_b731_p50_val:.0f}% ≤ {_b731_roi_cap}%)")
-            else:
-                log.info(f"[{run_id}] [FIX-B731-ROI-CAP] ROI_P50 not set, skipping")
-
-            # Payback: P50 ebenfalls auf canonical setzen
-            _b731_pb_canon = sections.get("PAYBACK_MONTHS_FMT_DE", "1,4")
-            _b731_pb_p50 = sections.get("PAYBACK_P50")
-            if _b731_pb_p50 is not None:
-                try:
-                    _b731_pb_canon_float = float(str(_b731_pb_canon).replace(",", "."))
-                    _b731_pb_p50_float = float(_b731_pb_p50)
-                    if abs(_b731_pb_p50_float - _b731_pb_canon_float) > 0.05:
-                        sections["PAYBACK_P50"] = _b731_pb_canon_float
-                        log.info(f"[{run_id}] [FIX-B731-PAYBACK-CAP] PAYBACK_P50: {_b731_pb_p50_float:.1f} → {_b731_pb_canon_float:.1f}")
-                except (ValueError, TypeError):
-                    pass
-        except Exception as _b731_err:
-            log.warning(f"[{run_id}] [FIX-B731-ROI-CAP] Failed: {_b731_err}")
 
         log.info(f"[{run_id}] ✅ [P0.1] Template bindings: PAYBACK={sections['PAYBACK_MONTHS_FMT_DE']}, "
                  f"HOURS={sections['TIME_SAVINGS_MONTH_HOURS_FMT']}, ROI_DISPLAY={sections['ROI_12M_DISPLAY_DE']}")
@@ -16515,14 +16267,11 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     # Grade A: No warnings, no fallbacks, consistency A/B
     # Grade B: Few warnings, minimal fallbacks, consistency A/B/C
     # Grade C: Has issues that need attention
-    # FIX-B727: Accept consistency C if score >= 70 (high variance between runs)
-    _b727_cons_score = float(sections.get("_CONSISTENCY_SCORE", 100))
-    _b727_cons_ok = consistency_grade in ("A", "B") or (consistency_grade == "C" and _b727_cons_score >= 70)
     if (
         total_warnings == 0 and
         pipeline_fallbacks == 0 and
         pipeline_heals == 0 and
-        _b727_cons_ok
+        consistency_grade in ("A", "B")
     ):
         unified_grade = "A"
     elif (
@@ -16924,35 +16673,6 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.warning(f"[{run_id}] [FIX-517C][TWO-STAGE] Final validation failed: {e}")
 
     log.info("=" * 80)
-
-    # FIX-B727: Grade RECALC using FINAL validation counts
-    # BUG: FIX-503B reads stale RAW _VALIDATOR_WARNING_COUNT (6) before FINAL (0)
-    try:
-        _b727_vw = int(sections.get("_VALIDATOR_WARNING_COUNT", 0))
-        _b727_vc = int(sections.get("_VALIDATOR_CRITICAL_COUNT", 0))
-        _b727_pw = int(sections.get("PIPELINE_WARNINGS_COUNT", 0))
-        _b727_fb = int(sections.get("PIPELINE_FALLBACK_COUNT", 0))
-        _b727_hl = int(sections.get("PIPELINE_HEALS_COUNT", 0))
-        _b727_cg = sections.get("_CONSISTENCY_GRADE", "A")
-        _b727_cs = float(sections.get("_CONSISTENCY_SCORE", 100))
-        _b727_tw = _b727_pw + _b727_vw
-        _b727_old_grade = sections.get("PIPELINE_GRADE", "?")
-        _b727_consistency_ok = _b727_cg in ("A", "B") or (_b727_cg == "C" and _b727_cs >= 70)
-        if _b727_tw == 0 and _b727_vc == 0 and _b727_fb == 0 and _b727_hl == 0 and _b727_consistency_ok:
-            _b727_grade = "A"
-        elif _b727_tw <= 10 and _b727_fb <= 2 and _b727_cg in ("A", "B", "C"):
-            _b727_grade = "B"
-        else:
-            _b727_grade = "C"
-        if _b727_grade != _b727_old_grade:
-            sections["PIPELINE_GRADE"] = _b727_grade
-            sections["VALIDATOR_WARNINGS_COUNT"] = _b727_vw
-            sections["TOTAL_WARNINGS_COUNT"] = _b727_tw
-            log.info(f"[{run_id}] [FIX-B727-GRADE-RECALC] Grade {_b727_old_grade}->{_b727_grade} (FINAL: vw={_b727_vw}, vc={_b727_vc}, tw={_b727_tw}, consistency={_b727_cg}/{_b727_cs})")
-        else:
-            log.info(f"[{run_id}] [FIX-B727-GRADE-RECALC] Grade unchanged: {_b727_grade} (vw={_b727_vw}, consistency={_b727_cg}/{_b727_cs})")
-    except Exception as _b727_err:
-        log.warning(f"[{run_id}] [FIX-B727-GRADE-RECALC] Failed: {_b727_err}")
 
     # =========================================================================
     # P0.2: CRITICAL SECTIONS NON-EMPTY GUARD

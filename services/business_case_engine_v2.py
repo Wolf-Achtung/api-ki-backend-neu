@@ -659,6 +659,7 @@ def inject_canonical_to_sections(
         "ROI_12M_RATE": canonical.roi_12m_net,
         "ROI_WAS_CAPPED": canonical.roi_12m_net_raw > MAX_ROI,
         "PAYBACK_MONTHS": canonical.payback_months,
+        "PAYBACK_MONTHS_FMT_DE": f"{canonical.payback_months:.1f}".replace(".", ","),  # FIX-B732: Canonical FMT_DE for Hero/BC-Table consistency
         "BC_ROI_REALISTIC": canonical.roi_12m_net,
         "BC_ROI_REALISTIC_RAW": canonical.roi_12m_net_raw,
         "BC_PAYBACK_REALISTIC": canonical.payback_months,
