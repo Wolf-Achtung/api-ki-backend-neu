@@ -23,6 +23,11 @@ Keine generischen "[Fachgebiet]"- oder "[hier ergänzen]"-Platzhalter.
 
 ## PFLICHTSTRUKTUR (3 Templates als HTML)
 
+⚠️ ALLE 3 TEMPLATES SIND PFLICHT — KEINES DARF FEHLEN!
+Wenn ein Template fehlt, ist die Antwort UNGÜLTIG.
+Jedes Template MUSS mit einer <h4>-Überschrift beginnen.
+Prüfe vor der Ausgabe: Sind Template 1, Template 2 UND Template 3 vorhanden?
+
 ### Template 1: Prompt-Vorlage (Aufgabe an KI)
 Erstelle einen KONKRETEN, funktionierenden Prompt für eine typische Aufgabe
 im Bereich {{HAUPTLEISTUNG}}.

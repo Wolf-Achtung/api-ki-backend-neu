@@ -1073,7 +1073,7 @@ def _generate_recommendations(
     if red_vendors:
         names = ", ".join([e.name for e in red_vendors[:2]])
         recommendations.append(
-            f"Hochrisiko-Anbieter prüfen und ggf. durch EU-Alternativen ersetzen: {names}"
+            f"Hochrisiko-Anbieter prüfen, Risikominimierung durch AVV/DPA sicherstellen: {names}. Hinweis: Für LLM-Anbieter (OpenAI, Anthropic) existieren aktuell keine gleichwertigen EU-Alternativen — Fokus auf vertragliche Absicherung und Datenminimierung."
         )
 
     # Check for unknown data locations
