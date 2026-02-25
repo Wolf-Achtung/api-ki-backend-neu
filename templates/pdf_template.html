@@ -7592,8 +7592,10 @@
                 <!-- RISKS, GAMECHANGER, RECOMMENDATIONS, FUNDING -->
                 <!-- FIX-497: Conditional render to prevent empty pages -->
                 {% if RISKS_HTML and RISKS_HTML|trim and '<' in RISKS_HTML %}
-                <section class="chapter">
+                <section class="chapter" style="border: 5px solid red; min-height: 100px; page-break-before: always;">
+                    <h2 style="color: red; font-size: 24px;">DEBUG: RISKS SECTION START</h2>
                     {{RISKS_HTML|safe}}
+                    <h2 style="color: red; font-size: 24px;">DEBUG: RISKS SECTION END</h2>
                 </section>
                 {% endif %}
                 {% if GAMECHANGER_HTML and GAMECHANGER_HTML|trim and '<' in GAMECHANGER_HTML %}
