@@ -326,7 +326,7 @@ class TestWP4CompactPayloadGuard:
 
         assert MAX_PAGES_BY_SIZE["solo"] == 16
         assert MAX_PAGES_BY_SIZE["team"] == 70   # FIX-WP4: raised from 55
-        assert MAX_PAGES_BY_SIZE["kmu"] == 27    # FIX-B729: lowered to 27 (real PDF overshoots ~10%)
+        assert MAX_PAGES_BY_SIZE["kmu"] == 35    # B7: raised to 35 to preserve Monetarisierung + Skillplan
 
     def test_estimate_page_count(self):
         """Page count estimation should be reasonable."""
