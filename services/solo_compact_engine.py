@@ -650,7 +650,7 @@ def process_for_solo_compact(
 MAX_PAGES_BY_SIZE: Dict[str, int] = {
     "solo": 16,
     "team": 70,
-    "kmu": 27,  # FIX-B729: Was 30, target ≤27 to land at ≤30 real pages
+    "kmu": 35,  # B7: Was 27, raised to preserve Monetarisierung + Skillplan
 }
 
 # HTML size thresholds (KB) for auto-compact
@@ -661,7 +661,7 @@ HTML_COMPACT_THRESHOLD_KB: int = int(os.getenv("HTML_COMPACT_THRESHOLD_KB", "500
 HTML_COMPACT_THRESHOLD_BY_SIZE: dict = {
     "solo": 300,
     "team": 500,
-    "kmu": 400,  # FIX-B728: Was 650, trigger compaction earlier for ~27 pages
+    "kmu": 550,  # B7: Was 400, raised to preserve more sections
 }
 
 # Low-priority sections to drop when auto-compacting Team/KMU
@@ -677,9 +677,8 @@ TEAM_KMU_LOW_PRIORITY_SECTIONS: List[str] = [
     "BUSINESS_CASE_SIM_HTML",
     # "VENDOR_AUDIT_HTML",  # FIX-B719: Protected — always keep
     "KICKOFF_HTML",
-    # FIX-B729 Tier 2: Additional droppable sections for KMU ≤27 pages
-    "MONETARISIERUNG_HTML",
-    "KI_SKILLPLAN_HTML",
+    # FIX-B729 Tier 2: Additional droppable sections for KMU
+    # B7: MONETARISIERUNG_HTML + KI_SKILLPLAN_HTML removed (high customer value)
     "MARKET_INSIGHTS_HTML",
     "NEWS_BOX_HTML",
 ]

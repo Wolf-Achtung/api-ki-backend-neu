@@ -406,7 +406,7 @@
         .subtitle {
             font-size: var(--font-small);
             color: var(--color-text-muted);
-            max-width: 340px;
+            max-width: 500px;
         }
         .meta-grid {
             display: grid;
@@ -6757,7 +6757,7 @@
                                     {# FIX-B731: Canonical ROI first, P50 fallback #}{% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_P50 and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% else %}→ BC{% endif %}
                                 </div>
                                 <div style="font-size: 13px; font-weight: 500; color: var(--color-text-normal); margin-bottom: 4px;">
-                                    {{ ui("kpi_roi_details", "ROI-Details") }}
+                                    {% if ROI_12M and ROI_12M|int >= 200 %}ROI-Details (gedeckelt){% else %}{{ ui("kpi_roi_details", "ROI-Details") }}{% endif %}
                                 </div>
                                 <div style="font-size: 11px; color: var(--color-text-muted);">
                                     {{ ui("kpi_payback_months", "Amortisation") }}: {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS|round(1)|string|replace('.', ',') }}{% else %}n/a{% endif %} {{ ui("months", "Monate") }}
@@ -6778,7 +6778,7 @@
 
                         <!-- AUTHOR CREDENTIALS: TÜV Badge -->
                         <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 20px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; white-space: nowrap;">
-                            <img src="{{ TUEV_LOGO_B64 }}" alt="TÜV Austria" style="height: 40px; width: auto;">
+                            <img src="{{ TUEV_LOGO_B64 }}" alt="TÜV Austria" style="height: 52px; width: auto;">
                             <span style="font-size: 11px; color: var(--color-text-muted); white-space: nowrap;">Erstellt von: <strong style="color: var(--color-text-normal);">TÜV-zertifizierter KI-Manager</strong></span>
                         </div>
 
@@ -7163,7 +7163,7 @@
                                 <span style="font-size: 28px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">💼</span>
                                 <h4 style="font-size: 16px; font-weight: 700; margin: 0; color: #0c4a6e;">Hauptleistung</h4>
                             </div>
-                            <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #334155;">{{ hauptleistung|truncate(120, True, "…") }}</p>
+                            <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #334155;">{{ hauptleistung }}</p>
                         </div>
                         {% endif %}
 
