@@ -4577,7 +4577,7 @@ def _create_svg_decorated_box(
         '''
         body_wrapper_class = 'class="svg-box-table"'
     else:
-        page_break_style = "page-break-inside: avoid;"
+        page_break_style = "page-break-inside: auto;"
         table_styles = ""
         body_wrapper_class = ""
 
