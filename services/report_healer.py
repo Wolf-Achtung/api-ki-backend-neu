@@ -2224,6 +2224,8 @@ ROI_PROHIBITED_SECTIONS: Set[str] = {
     "empfehlungen",
     "QUICK_WINS_HTML",
     "quick_wins",
+    "ROADMAP_90D_HTML",
+    "roadmap_90d",
 }
 
 # Pattern to match ROI percentages

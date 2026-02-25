@@ -15106,12 +15106,12 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         _hl_full: str = sections.get('hauptleistung') or sections.get('HAUPTLEISTUNG') or ''
         # T3: Truncate hauptleistung in FINAL_CHECK_INTRO
         _fci = sections.get("FINAL_CHECK_INTRO", "")
-        if _fci and isinstance(_fci, str) and _hl_full and len(_hl_full) > 60:
-            _fci_short = _hl_full[:57].rsplit(' ', 1)[0] + '…'
+        if _fci and isinstance(_fci, str) and _hl_full and len(_hl_full) > 125:
+            _fci_short = _hl_full[:120].rsplit(' ', 1)[0] + '…'
             sections["FINAL_CHECK_INTRO"] = _fci.replace(_hl_full, _fci_short)
         # T1: Truncate hauptleistung in decisions to avoid S.28 variable dump
-        if _hl_full and len(_hl_full) > 60:
-            _hl_short = _hl_full[:57].rsplit(' ', 1)[0] + '…'
+        if _hl_full and len(_hl_full) > 125:
+            _hl_short = _hl_full[:120].rsplit(' ', 1)[0] + '…'
             decisions = [d.replace(_hl_full, _hl_short) if isinstance(d, str) else d for d in decisions]
             log.info("[T1] Truncated hauptleistung in %d FINAL_CHECK_DECISIONS", len(decisions))
         sections["FINAL_CHECK_DECISIONS"] = decisions[:3]  # Max 3 decisions
