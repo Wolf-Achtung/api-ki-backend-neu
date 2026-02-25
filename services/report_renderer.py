@@ -709,9 +709,8 @@ def render(briefing_obj: Any,
                 sections[_m8_key] = ''
 
     sections = final_sanitize(sections)
-    # B10-DEBUG: Check RISKS_HTML before render
+
     _risks_dbg = sections.get("RISKS_HTML", "")
-    log.info("[B10-DEBUG] RISKS_HTML before render: %d chars, starts: %s", len(_risks_dbg) if _risks_dbg else 0, (_risks_dbg[:100] if _risks_dbg else "EMPTY"))
     # B9: Fix residual LLM-generated "Unternehm…" truncation
     import re as _b9re
     for _b9k, _b9v in list(sections.items()):
