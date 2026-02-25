@@ -734,7 +734,8 @@ def render(briefing_obj: Any,
         "UNTERNEHMENSGROESSE_LABEL": sections.get("UNTERNEHMENSGROESSE_LABEL", ""),
         "BUNDESLAND_LABEL": sections.get("BUNDESLAND_LABEL", ""),
         "HAUPTLEISTUNG": sections.get("HAUPTLEISTUNG", ""),
-        # dynamic sections
+        # dynamic sections - ensure score_gesamt is numeric
+        "score_gesamt": sections.get("score_gesamt") or sections.get("score_overall") or sections.get("overall") or 0,
         **sections,
     }
 
