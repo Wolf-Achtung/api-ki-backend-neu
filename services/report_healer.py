@@ -2102,7 +2102,7 @@ def reduce_redundancy(
     seen_fp_texts: Dict[str, str] = {}  # fp_hash -> normalized text
 
     # TASK 2 (P0 FINAL): Sections protected from deduplication (NEVER EMPTY guarantee)
-    PROTECTED_SECTION_KEYS = {"QUICK_WINS_HTML", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT"}
+    PROTECTED_SECTION_KEYS = {"QUICK_WINS_HTML", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT", "RISKS_HTML", "risks"}
 
     # Process sections in order (earlier sections have priority)
     for section_name, html in sections.items():
