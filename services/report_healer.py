@@ -2235,6 +2235,10 @@ ROI_PERCENT_PATTERN = re.compile(
 )
 
 # Alternative pattern for standalone percentages with ROI context
+ROI_STANDALONE_PATTERN = re.compile(
+    r"\b\d+(?:[.,]\d+)?\s*%\s*(?:ROI|Rendite|Return|Ertrag)",
+    re.IGNORECASE
+)
 ROI_CONTEXT_PATTERN = re.compile(
     r"(?:erreichen|erzielen|erwarten|versprechen)\s+(?:ca\.?\s*)?\d+(?:[.,]\d+)?\s*%\s*(?:ROI|Rendite)",
     re.IGNORECASE
@@ -2273,7 +2277,7 @@ def enforce_roi_rules(sections: Dict[str, str]) -> Tuple[Dict[str, str], int]:
         processed = html
 
         # Remove ROI percentages
-        for pattern in [ROI_PERCENT_PATTERN, ROI_CONTEXT_PATTERN]:
+        for pattern in [ROI_PERCENT_PATTERN, ROI_CONTEXT_PATTERN, ROI_STANDALONE_PATTERN]:
             matches = pattern.findall(processed)
             if matches:
                 violations_fixed += len(matches)
@@ -2729,7 +2733,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "ROADMAP_90D_HTML": 1200,
         "ROADMAP_12M_HTML": 8000,
         "RECOMMENDATIONS_HTML": 6000,  # FIX-629b
-        "RISKS_HTML": 20000,  # FIX-F3 + B5: Risk Matrix needs space
+        "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
         "GAMECHANGER_HTML": 1500,
         "FOERDERPOTENZIAL_HTML": 5000,  # FIX-629b
         "ORG_CHANGE_HTML": 4000,  # FIX-629b
@@ -2819,7 +2823,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "ROADMAP_90D_HTML": 1800,
         "ROADMAP_12M_HTML": 12000,
         "RECOMMENDATIONS_HTML": 12000,  # FIX-629
-        "RISKS_HTML": 22000,  # FIX-F3 + B5: Risk Matrix needs space
+        "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
         "GAMECHANGER_HTML": 10000,
         "FOERDERPOTENZIAL_HTML": 10000,  # FIX-629
         "ORG_CHANGE_HTML": 9000,  # FIX-629
@@ -2909,7 +2913,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "ROADMAP_90D_HTML": 2500,
         "ROADMAP_12M_HTML": 14000,
         "RECOMMENDATIONS_HTML": 15000,  # FIX-629b
-        "RISKS_HTML": 25000,  # FIX-F3 + B5: Risk Matrix needs space
+        "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
         "GAMECHANGER_HTML": 12000,
         "FOERDERPOTENZIAL_HTML": 10000,
         "ORG_CHANGE_HTML": 10000,  # FIX-629b
