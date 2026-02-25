@@ -709,6 +709,12 @@ def render(briefing_obj: Any,
                 sections[_m8_key] = ''
 
     sections = final_sanitize(sections)
+    # B9: Fix residual LLM-generated "Unternehm…" truncation
+    import re as _b9re
+    for _b9k, _b9v in list(sections.items()):
+        if isinstance(_b9v, str) and _b9re.search(r'Unternehm[…\.]{1,3}(?!en|ens)', _b9v):
+            sections[_b9k] = _b9re.sub(r'Unternehm[…\.]{1,3}', 'Unternehmen', _b9v)
+            log.info("[B9] Fixed Unternehm-ellipsis in %s", _b9k)
 
     # Mark HTML sections as safe (prevent escaping) — AFTER all sanitization!
     safe_sections = {}
