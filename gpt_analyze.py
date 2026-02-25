@@ -16736,6 +16736,35 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     except Exception as _hl54_err:
         log.warning(f"[{run_id}] [FIX-R5-4] Global hauptleistung limiter failed: {_hl54_err}")
 
+
+    # =========================================================================
+    # B5-F1: Fix natively truncated hauptleistung in LLM output
+    # Replaces patterns like "Unternehm…" with full hauptleistung
+    # =========================================================================
+    try:
+        _hl_full_b5 = sections.get("hauptleistung") or sections.get("HAUPTLEISTUNG") or ""
+        if _hl_full_b5 and len(_hl_full_b5) > 15:
+            _b5_fixes = 0
+            for _sk, _sv in sections.items():
+                if isinstance(_sv, str) and len(_sv) > 50:
+                    _new = _sv
+                    # Fix truncated variants: first 8-50 chars + ellipsis
+                    for _cut in range(min(50, len(_hl_full_b5)-1), 7, -1):
+                        _trunc_pattern = _hl_full_b5[:_cut].rstrip() + "\u2026"
+                        if _trunc_pattern in _new:
+                            _new = _new.replace(_trunc_pattern, _hl_full_b5)
+                            _b5_fixes += 1
+                        _trunc_pattern2 = _hl_full_b5[:_cut].rstrip() + "..."
+                        if _trunc_pattern2 in _new:
+                            _new = _new.replace(_trunc_pattern2, _hl_full_b5)
+                            _b5_fixes += 1
+                    if _new != _sv:
+                        sections[_sk] = _new
+            if _b5_fixes:
+                log.info("[B5-F1] Fixed %d truncated hauptleistung patterns", _b5_fixes)
+    except Exception as _b5e:
+        log.warning("[B5-F1] hauptleistung fix failed: %s", _b5e)
+
     # =========================================================================
     # FIX-528: PIPELINE SANITIZATION (decode HTML entities + complete sentences)
     # Applied after quality enforcer, before final validation
