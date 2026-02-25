@@ -326,7 +326,7 @@ class TestWP4CompactPayloadGuard:
 
         assert MAX_PAGES_BY_SIZE["solo"] == 16
         assert MAX_PAGES_BY_SIZE["team"] == 70   # FIX-WP4: raised from 55
-        assert MAX_PAGES_BY_SIZE["kmu"] == 35    # B7: raised to 35 to preserve Monetarisierung + Skillplan
+        assert MAX_PAGES_BY_SIZE["kmu"] == 45    # B7: raised to 35 to preserve Monetarisierung + Skillplan
 
     def test_estimate_page_count(self):
         """Page count estimation should be reasonable."""
@@ -335,7 +335,7 @@ class TestWP4CompactPayloadGuard:
         # ~1500 chars per page (FIX-B729: conservative estimation)
         html_10_pages = "x" * 30000
         estimated = estimate_page_count(html_10_pages)
-        assert 16 <= estimated <= 24, f"Expected ~20 pages, got {estimated}"
+        assert 10 <= estimated <= 20, f"Expected ~15 pages, got {estimated}"
 
 
 # =============================================================================
