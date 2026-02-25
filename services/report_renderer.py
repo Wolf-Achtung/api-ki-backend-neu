@@ -690,8 +690,8 @@ def render(briefing_obj: Any,
     for _u2_key in ("hauptleistung", "HAUPTLEISTUNG"):
         _u2_val = sections.get(_u2_key, "")
         if isinstance(_u2_val, str) and len(_u2_val) > 80:
-            sections[_u2_key] = _u2_val[:77].rsplit(' ', 1)[0] + '…'
-            log.info("[U2] Truncated sections['%s']: %d→%d chars", _u2_key, len(_u2_val), len(sections[_u2_key]))
+            sections[_u2_key] = _u2_val[:200].rsplit(' ', 1)[0]
+            log.info("[U2] Trimmed sections['%s']: %d→%d chars", _u2_key, len(_u2_val), len(sections[_u2_key]))
 
     # -- M8: Content gate — hide sections with <30 words --
     _M8_GATE_SECTIONS = [
@@ -709,6 +709,9 @@ def render(briefing_obj: Any,
                 sections[_m8_key] = ''
 
     sections = final_sanitize(sections)
+    # B10-DEBUG: Check RISKS_HTML before render
+    _risks_dbg = sections.get("RISKS_HTML", "")
+    log.info("[B10-DEBUG] RISKS_HTML before render: %d chars, starts: %s", len(_risks_dbg) if _risks_dbg else 0, (_risks_dbg[:100] if _risks_dbg else "EMPTY"))
     # B9: Fix residual LLM-generated "Unternehm…" truncation
     import re as _b9re
     for _b9k, _b9v in list(sections.items()):
