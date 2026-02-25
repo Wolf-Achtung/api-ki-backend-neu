@@ -2942,7 +2942,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "RECOMMENDATIONS_ENGINE_HTML": 12000,
         # FIX-D1: Fehlende Sections (vorher auf _default gefallen)
 
-        "BRANCH_DEEP_DIVE_HTML": 8000,
+        "BRANCH_DEEP_DIVE_HTML": 14000,
 
         "ROI_TRACKING_HTML": 5000,
 
@@ -2962,7 +2962,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "REIFEGRAD_SOWHAT_HTML": 3000,
 
-        "SOFORT_START_HTML": 2500,
+        "SOFORT_START_HTML": 5000,
 
         "CHALLENGE_30_TAGE_HTML": 16000,
 
