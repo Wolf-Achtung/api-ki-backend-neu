@@ -3103,7 +3103,7 @@ def apply_segment_budget(
             text_budget = budget
             for end_marker in ['. </p>', '.</p>', '.</li>', '. ', '! ', '? ']:
                 pos = processed.rfind(end_marker, 0, text_budget)
-                if pos > text_budget * 0.5:  # Keep at least 50% of budget
+                if pos > text_budget * 0.80:  # FIX-B13: Keep at least 80% of budget (was 50%, caused 8016 for 14000 budget)
                     processed = processed[:pos + len(end_marker)]
                     # Close any open tags
                     open_tags = re.findall(r'<(p|li|ul|ol|div|section)(?:\s[^>]*)?>', processed)

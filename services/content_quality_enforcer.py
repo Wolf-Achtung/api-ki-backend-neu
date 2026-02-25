@@ -3426,7 +3426,7 @@ def truncate_at_sentence(text: str, max_chars: int = 500) -> str:
     return truncated[:max_chars - 3] + '...'
 
 
-def truncate_risk_descriptions(html: str, max_chars: int = 1500) -> tuple[str, int]:
+def truncate_risk_descriptions(html: str, max_chars: int = 2500) -> tuple[str, int]:
     """
     Fix-Batch I: Truncate long risk descriptions at sentence boundaries.
 
@@ -3471,7 +3471,7 @@ def truncate_risk_descriptions(html: str, max_chars: int = 1500) -> tuple[str, i
     return result, truncations
 
 
-def apply_risk_truncation(sections: dict, max_chars: int = 1500) -> dict:
+def apply_risk_truncation(sections: dict, max_chars: int = 2500) -> dict:
     """
     Fix-Batch I: Apply risk description truncation to relevant sections.
 
