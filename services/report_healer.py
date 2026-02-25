@@ -3033,6 +3033,12 @@ def apply_segment_budget(
             result[section_name] = html
             continue
 
+        # FIX-B14-ARCH: Engine-generated sections bypass budget trimming
+        BUDGET_EXEMPT_SECTIONS = {"RISKS_HTML", "risks", "GAMECHANGER_HTML", "gamechanger", "RECOMMENDATIONS_HTML", "recommendations", "VENDOR_AUDIT_HTML", "AUTOMATION_ROADMAP_HTML", "BENCHMARK_ENGINE_HTML", "BUSINESS_CASE_SIM_HTML", "RISK_ENGINE_HTML", "RISK_ENGINE_V3_HTML", "RECOMMENDATIONS_ENGINE_HTML"}
+        if section_name in BUDGET_EXEMPT_SECTIONS:
+            result[section_name] = html
+            continue
+
         # FIX-D1+E1: Hierarchie: exact match > uppercase_HTML > SIZE_PROFILES > default
         budget = budgets.get(section_name)
         if budget is None:

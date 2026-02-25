@@ -3482,8 +3482,8 @@ def apply_risk_truncation(sections: dict, max_chars: int = 2500) -> dict:
     Returns:
         Processed sections dict
     """
+    # FIX-B14-ARCH: RISKS_HTML excluded — has own LLM budget, truncation destroys SVG cards
     risk_sections = [
-        "RISKS_HTML", "risks",
         "AI_ACT_SUMMARY_HTML", "ai_act_summary",
         "COMPLIANCE_HTML", "compliance",
     ]
