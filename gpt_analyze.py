@@ -8026,7 +8026,10 @@ def _generate_hero_page_from_context(
     kpi_values = {
         'zeitersparnis': briefing.get("ZEITERSPARNIS_H", 18),
         # FIX-B729: Hard-cap Hero ROI to 200% (BC_ROI_REALISTIC/P50 can be 350%+)
+        # B8: Show cap label on hero
+        'roi_raw': int(float(briefing.get("ROI_12M", 0) or sections.get("ROI_12M", 0) or 200)),
         'roi': min(200, int(float(briefing.get("ROI_12M", 0) or sections.get("ROI_12M", 0) or 200))),
+        'roi_capped': int(float(briefing.get("ROI_12M", 0) or sections.get("ROI_12M", 0) or 200)) > 200,
 
         'payback': _hero_payback_fmt,
     }
