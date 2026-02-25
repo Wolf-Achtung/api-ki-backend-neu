@@ -7597,12 +7597,12 @@
                 </section>
                 {% endif %}
                 {% if GAMECHANGER_HTML and GAMECHANGER_HTML|trim and '<' in GAMECHANGER_HTML %}
-                <section class="chapter">
+                <section class="chapter" style="page-break-before: always;">
                     {{GAMECHANGER_HTML|safe}}
                 </section>
                 {% endif %}
                 {% if RECOMMENDATIONS_HTML and RECOMMENDATIONS_HTML|trim and '<' in RECOMMENDATIONS_HTML %}
-                <section class="chapter">
+                <section class="chapter" style="page-break-before: always;">
                     {{RECOMMENDATIONS_HTML|safe}}
                 </section>
                 {% endif %}

@@ -452,7 +452,7 @@ def estimate_page_count(html: str) -> int:
     text_only = re.sub(r'\s+', ' ', text_only).strip()
 
     # ~3000 text chars per A4 page (with margins, 11pt font)
-    content_pages = len(text_only) / 1500  # FIX-B729: Was 2000, compensate for CSS margins/tables/charts
+    content_pages = len(text_only) / 2200  # FIX-B11: Was 1500, overestimated 53 pages for actual 33-page PDF
 
     # Take the maximum as estimate
     estimated = max(page_breaks + 1, int(content_pages))
@@ -650,7 +650,7 @@ def process_for_solo_compact(
 MAX_PAGES_BY_SIZE: Dict[str, int] = {
     "solo": 16,
     "team": 70,
-    "kmu": 35,  # B7: Was 27, raised to preserve Monetarisierung + Skillplan
+    "kmu": 45,  # B11: Was 35, raised — page estimation now more accurate
 }
 
 # HTML size thresholds (KB) for auto-compact
