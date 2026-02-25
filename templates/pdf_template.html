@@ -674,6 +674,11 @@
         .section-body > div[style*="column-count"] {
             column-count: 1 !important;
         }
+        /* B10: Kill ALL multi-column layouts from LLM inline styles */
+        div[style*="column-count"], div[style*="columns:"], [style*="column-count"] {
+            column-count: 1 !important;
+            columns: 1 !important;
+        }
         /* Prevent orphan sections creating empty pages */
         .section.chapter {
             page-break-inside: auto;
