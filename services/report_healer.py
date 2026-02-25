@@ -2729,7 +2729,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "ROADMAP_90D_HTML": 1200,
         "ROADMAP_12M_HTML": 8000,
         "RECOMMENDATIONS_HTML": 6000,  # FIX-629b
-        "RISKS_HTML": 7000,  # FIX-F3
+        "RISKS_HTML": 20000,  # FIX-F3 + B5: Risk Matrix needs space
         "GAMECHANGER_HTML": 1500,
         "FOERDERPOTENZIAL_HTML": 5000,  # FIX-629b
         "ORG_CHANGE_HTML": 4000,  # FIX-629b
@@ -2819,7 +2819,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "ROADMAP_90D_HTML": 1800,
         "ROADMAP_12M_HTML": 12000,
         "RECOMMENDATIONS_HTML": 12000,  # FIX-629
-        "RISKS_HTML": 8000,  # FIX-F3
+        "RISKS_HTML": 22000,  # FIX-F3 + B5: Risk Matrix needs space
         "GAMECHANGER_HTML": 10000,
         "FOERDERPOTENZIAL_HTML": 10000,  # FIX-629
         "ORG_CHANGE_HTML": 9000,  # FIX-629
@@ -2909,7 +2909,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "ROADMAP_90D_HTML": 2500,
         "ROADMAP_12M_HTML": 14000,
         "RECOMMENDATIONS_HTML": 15000,  # FIX-629b
-        "RISKS_HTML": 10000,  # FIX-F3
+        "RISKS_HTML": 25000,  # FIX-F3 + B5: Risk Matrix needs space
         "GAMECHANGER_HTML": 12000,
         "FOERDERPOTENZIAL_HTML": 10000,
         "ORG_CHANGE_HTML": 10000,  # FIX-629b
