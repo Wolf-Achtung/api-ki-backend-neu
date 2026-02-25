@@ -6673,7 +6673,7 @@
                                             stroke-dasharray="{{ ((score_gesamt|int) / 100) * 251.2 }} 251.2"/>
                                 </svg>
                                 <div class="score-content">
-                                    <div class="score-number">{{ score_gesamt }}</div>
+                                    <div class="score-number">{{ score_gesamt|default(0)|int }}</div>
                                     <div class="score-max">/100</div>
                                     <div class="score-label">{{ score_rating }}</div>
                                 </div>
@@ -6777,11 +6777,9 @@
                         </div>
 
                         <!-- AUTHOR CREDENTIALS: TÜV Badge -->
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; background: #f8fafc; border-radius: 8px; margin-bottom: var(--space-lg);">
-                            <img src="{{ TUEV_LOGO_B64 }}" alt="TÜV Austria" style="height: 24px; opacity: 0.7;">
-                            <span style="font-size: 12px; color: var(--color-text-muted);">
-                                Erstellt von: <strong style="color: var(--color-text-normal);">TÜV-zertifizierter KI-Manager</strong>
-                            </span>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 20px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; white-space: nowrap;">
+                            <img src="{{ TUEV_LOGO_B64 }}" alt="TÜV Austria" style="height: 40px; width: auto;">
+                            <span style="font-size: 11px; color: var(--color-text-muted); white-space: nowrap;">Erstellt von: <strong style="color: var(--color-text-normal);">TÜV-zertifizierter KI-Manager</strong></span>
                         </div>
 
                         <!-- TRUST BADGES: Small, at bottom -->
