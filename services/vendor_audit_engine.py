@@ -91,6 +91,9 @@ VENDOR_JURISDICTION_HEURISTICS: Dict[str, str] = {
     # US vendors
     "openai": "US",
     "anthropic": "US",
+    "claude": "US",          # FIX-B16: Claude without "(Anthropic)" suffix
+    "perplexity": "US",      # FIX-B16: Perplexity AI
+    "tavily": "US",          # FIX-B16: Tavily Search API
     "microsoft": "US",
     "google": "US",
     "amazon": "US",
