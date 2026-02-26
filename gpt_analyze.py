@@ -14434,24 +14434,32 @@ def analyze_briefing(
     # MUST run here (post-calibration, pre-content) so that Score-Enforcer
     # inside _generate_content_sections() uses the FINAL bonus-adjusted values.
     try:
-        _freitext_bonus = calc_freitext_bonus(answers)
-        if any(_freitext_bonus.values()):
-            for _dim, _fb in _freitext_bonus.items():
-                if _fb > 0:
-                    scores[_dim] = min(scores[_dim] + _fb, 100)
+        _b22_current = {
+            'score_governance': scores["governance"],
+            'score_sicherheit': scores["security"],
+            'score_wertschoepfung': scores["value"],
+            'score_befaehigung': scores["enablement"],
+        }
+        _b22_adjusted = calc_freitext_bonus(answers, _b22_current)
+        _b22_changed = any(_b22_adjusted[k] != _b22_current[k] for k in _b22_current)
+        if _b22_changed:
+            scores["governance"] = _b22_adjusted['score_governance']
+            scores["security"] = _b22_adjusted['score_sicherheit']
+            scores["value"] = _b22_adjusted['score_wertschoepfung']
+            scores["enablement"] = _b22_adjusted['score_befaehigung']
             # Recalculate overall
             scores["overall"] = round(
                 (scores["governance"] + scores["security"]
                  + scores["value"] + scores["enablement"]) / 4
             )
             score_wrap["scores"] = scores
-            log.info("[%s] [FIX-B21-FREITEXT-BONUS] Bonus applied: %s → Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
-                     run_id, _freitext_bonus, scores["governance"], scores["security"],
+            log.info("[%s] [FIX-B22-P0] Freitext-Bonus pre-content: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+                     run_id, scores["governance"], scores["security"],
                      scores["value"], scores["enablement"], scores["overall"])
         else:
-            log.info("[%s] [FIX-B21-FREITEXT-BONUS] No keyword hits in freitext fields", run_id)
+            log.info("[%s] [FIX-B22-P0] Freitext-Bonus: no changes to scores", run_id)
     except Exception as _ftb_err:
-        log.warning("[%s] [FIX-B21-FREITEXT-BONUS] Failed: %s", run_id, _ftb_err)
+        log.warning("[%s] [FIX-B22-P0] Freitext-Bonus pre-content failed: %s", run_id, _ftb_err)
 
     # === Business Case FRÜHZEITIG berechnen (vor Content-Generierung!) ===
     # Damit sind BC-Werte (CAPEX, OPEX, ROI, etc.) für alle Fallbacks verfügbar
