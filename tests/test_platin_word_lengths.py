@@ -39,7 +39,7 @@ class TestPlatinMinWordLengths:
         "risks": 500,                   # Reduziert für bessere Compliance
         "recommendations": 150,         # Temporarily lowered to unblock reports
         "roadmap_12m": 400,             # Base (size-aware: Solo=400, Team=500, KMU=600)
-        "unternehmensprofil_markt": 300,  # Reduziert für bessere Compliance
+        "unternehmensprofil_markt": 220,  # FIX-B23-P3: was 300, card-based layout (242 words observed)
     }
 
     def count_words(self, html_content: str) -> int:

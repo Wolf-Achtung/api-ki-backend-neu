@@ -13864,10 +13864,9 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                     continue
                 _bt_orig = _bt_sv
                 for _bt_pat, _bt_repl in _bt_patterns:
-                    _bt_sv = _bt_pat.sub(
-                        lambda m, r=_bt_repl: f"{m.group(1)}{r}{m.group(3)}" if str(m.group(2)) != r else m.group(0),
-                        _bt_sv
-                    )
+                    def _bt_replace(m: re.Match[str], r: str = _bt_repl) -> str:
+                        return f"{m.group(1)}{r}{m.group(3)}" if str(m.group(2)) != r else m.group(0)
+                    _bt_sv = _bt_pat.sub(_bt_replace, _bt_sv)
                 if _bt_sv != _bt_orig:
                     sections[_bt_sk] = _bt_sv
                     _bt_fixed_total += 1
