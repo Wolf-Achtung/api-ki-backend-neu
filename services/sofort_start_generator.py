@@ -1147,8 +1147,8 @@ def generate_sofort_start_html(
         </p>
     </div>
     
-    <!-- 3 PROMPTS -->
-    <div style="margin-bottom: 24px;">
+    <!-- 3 PROMPTS – FIX-B16: page-break-before keeps heading + boxes together -->
+    <div style="margin-bottom: 24px; page-break-before: always; break-before: page;">
         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 24px;">📋</span>
             3 Copy-Paste Prompts für {branche_data["name"]}
