@@ -187,17 +187,28 @@ class ConsistencyReport:
         )
 
         # Base score with tiered warning penalties
-        # Errors: -10 each, Exec warnings: -3 each, Detail warnings: -2.5 each
-        base_score = 100.0 - (errors * 10) - (exec_warnings * WARNING_PENALTY_DEFAULT) - (detail_warnings * WARNING_PENALTY_DETAIL)
+        # Errors: -10 each, Exec warnings: -3 each, Detail warnings: -2.0 each
+        _deduct_errors = errors * 10
+        _deduct_exec = exec_warnings * WARNING_PENALTY_DEFAULT
+        _deduct_detail = detail_warnings * WARNING_PENALTY_DETAIL
+        base_score = 100.0 - _deduct_errors - _deduct_exec - _deduct_detail
+
+        # FIX-B24-P2: Verbose logging for G22 consistency score breakdown
+        log.info("[G22-VERBOSE] Deductions: errors=%d (-%d), exec_warnings=%d (-%.1f), "
+                 "detail_warnings=%d (-%.1f) → base_score=%.1f",
+                 errors, _deduct_errors, exec_warnings, _deduct_exec,
+                 detail_warnings, _deduct_detail, base_score)
 
         # Bonus for clean executive sections (no warnings in executive frontlayer)
         executive_clean_bonus = 0.0
         if exec_warnings == 0 and errors == 0:
             executive_clean_bonus = EXECUTIVE_CLEAN_BONUS
-            log.debug("[Consistency] Executive sections clean: +%d bonus", EXECUTIVE_CLEAN_BONUS)
+            log.info("[G22-VERBOSE] Executive clean bonus: +%d", EXECUTIVE_CLEAN_BONUS)
 
         # FIX-G22-TUNE: Zero-error bonus (fundamentally sound report)
         zero_error_bonus = ZERO_ERROR_BONUS if errors == 0 else 0.0
+        if zero_error_bonus > 0:
+            log.info("[G22-VERBOSE] Zero-error bonus: +%d", ZERO_ERROR_BONUS)
 
         # N3-03: Apply healing bonus if sections were healed
         # Each healed section adds HEALING_BONUS_POINTS, up to max +20
@@ -213,6 +224,10 @@ class ConsistencyReport:
 
         # Final score with bonus, capped at 0-100
         self.score = max(0.0, min(100.0, base_score + self.healing_bonus_applied))
+        log.info("[G22-VERBOSE] Final: base=%.1f + bonus=%.1f = %.1f → Grade %s",
+                 base_score, self.healing_bonus_applied, self.score,
+                 "A" if self.score >= 95 else "B" if self.score >= 85 else
+                 "C" if self.score >= 70 else "D" if self.score >= 50 else "F")
 
         # Grade calculation
         if self.score >= 95:
@@ -662,6 +677,25 @@ class ConsistencyEngine:
             "[G22] Consistency check complete: status=%s, grade=%s, score=%.1f",
             self.report.status, self.report.grade, self.report.score
         )
+
+        # FIX-B24-P2: Verbose issue breakdown for diagnosis
+        _issue_by_domain: dict = {}
+        for _iss in self.report.issues:
+            _dom = _iss.domain
+            if _dom not in _issue_by_domain:
+                _issue_by_domain[_dom] = {"errors": 0, "warnings": 0}
+            if _iss.severity == "ERROR":
+                _issue_by_domain[_dom]["errors"] += 1
+            elif _iss.severity == "WARNING":
+                _issue_by_domain[_dom]["warnings"] += 1
+        if _issue_by_domain:
+            _dom_parts = [f"{d}: {c['errors']}E/{c['warnings']}W" for d, c in sorted(_issue_by_domain.items())]
+            log.info("[G22-VERBOSE] Issues by domain: %s", ", ".join(_dom_parts))
+        # Log top-5 warnings for debugging
+        _top_warnings = [i for i in self.report.issues if i.severity == "WARNING"][:5]
+        for _tw in _top_warnings:
+            log.info("[G22-VERBOSE] WARNING [%s] %s → %s: %s",
+                     _tw.rule_id, _tw.source_section, _tw.target_section, _tw.message[:120])
 
         return self.report
 

@@ -2079,49 +2079,96 @@ def calc_freitext_bonus(answers: dict, current_scores: dict) -> dict:
     return adjusted
 
 
-# === [FIX-B21-QUALITY-BONUS] Pipeline-Qualität als Score-Bonus ===
+# === [FIX-B24-QUALITY-BONUS] Pipeline-Qualität als Score-Bonus ===
 def calc_quality_bonus(sections: dict) -> int:
     """
-    [FIX-B21] +1 bis +3 Punkte basierend auf Report-Qualitätsindikatoren.
-    Wird auf score_gesamt addiert (nicht auf Dimensionen).
+    [FIX-B24] Quality-Bonus based on n43_dod (prerequisite) + consistency grade.
+    +0 = n43_dod not passed
+    +1 = n43_dod passed, consistency < B
+    +2 = n43_dod passed, consistency >= B (grade A or B, or score >= 80)
     """
-    bonus = 0
-    reasons = []
-
-    # +1 für Consistency ≥ B (Score ≥ 80)
-    consistency_score = sections.get('_CONSISTENCY_SCORE', 0)
-    consistency_grade = str(sections.get('_CONSISTENCY_GRADE', 'F'))
-    if consistency_grade in ('A', 'B') or (isinstance(consistency_score, (int, float)) and consistency_score >= 80):
-        bonus += 1
-        reasons.append(f"consistency={consistency_grade}/{consistency_score}")
-
-    # +1 für N4.3 DoD PASSED
+    # n43_dod is prerequisite — no bonus without it
     dod_passed = sections.get('_n43_dod_passed', False)
     n43_passed = sections.get('N43_DOD_PASSED', False)
-    if dod_passed or n43_passed:
-        bonus += 1
-        reasons.append("n43_dod=PASSED")
+    if not (dod_passed or n43_passed):
+        log.info("[FIX-B24-QUALITY] +0 (n43_dod=FAILED)")
+        return 0
 
-    # +1 für wenige PLATIN-Warnings (< 25)
-    try:
-        platin_warnings = int(sections.get('_PLATIN_WARNINGS', 999))
-    except (ValueError, TypeError):
-        platin_warnings = 999
-    if platin_warnings < 25:
-        bonus += 1
-        reasons.append(f"platin_warnings={platin_warnings}")
+    # Check consistency grade for +1 vs +2
+    consistency_grade = str(sections.get('_CONSISTENCY_GRADE', 'F'))
+    consistency_score = sections.get('_CONSISTENCY_SCORE', 0)
 
-    # Cap: max +3
-    bonus = min(bonus, 3)
-
-    if bonus > 0:
-        log.info(f"[FIX-B21-QUALITY-BONUS] +{bonus} ({', '.join(reasons)})")
+    if consistency_grade in ('A', 'B') or (isinstance(consistency_score, (int, float)) and consistency_score >= 80):
+        log.info(f"[FIX-B24-QUALITY] +2 (n43_dod=PASSED, consistency={consistency_grade}/{consistency_score})")
+        return 2
     else:
-        log.info(f"[FIX-B21-QUALITY-BONUS] +0 (no bonus criteria met: "
-                 f"consistency={consistency_grade}, dod={dod_passed or n43_passed}, "
-                 f"platin_warnings={platin_warnings})")
+        log.info(f"[FIX-B24-QUALITY] +1 (n43_dod=PASSED, consistency={consistency_grade}/{consistency_score} < B)")
+        return 1
 
-    return bonus
+
+# === [FIX-B24-P0] Final Score Sweep — patcht pre-quality Score überall ===
+def _final_score_sweep(sections: dict, final_score: int, pre_quality_score: int) -> dict:
+    """
+    [FIX-B24-P0] Replace pre-quality score_gesamt references in ALL sections.
+    Runs AFTER calc_quality_bonus() to ensure 100% score consistency in PDF.
+    """
+    if final_score == pre_quality_score:
+        log.info(f"[FIX-B24-SWEEP] No quality bonus applied, skip sweep (score={final_score})")
+        return sections
+
+    _sweep_fixed = 0
+    _pre = str(pre_quality_score)
+    _fin = str(final_score)
+    # Also handle float forms like "90.0"
+    _pre_f = f"{pre_quality_score}.0"
+    _fin_f = f"{final_score}.0"
+
+    for key in list(sections.keys()):
+        html = sections[key]
+        if not isinstance(html, str) or len(html) < 30:
+            continue
+
+        original = html
+
+        # Pattern 1: "(90/100" → "(91/100"
+        html = html.replace(f'({_pre}/100', f'({_fin}/100')
+
+        # Pattern 2: "90.0/100" → "91.0/100"
+        html = html.replace(f'{_pre_f}/100', f'{_fin_f}/100')
+
+        # Pattern 3: "90/100 =" → "91/100 ="
+        html = html.replace(f'{_pre}/100 =', f'{_fin}/100 =')
+        html = html.replace(f'{_pre}/100 -', f'{_fin}/100 -')
+
+        # Pattern 4: "Reifegrad von 90" → "Reifegrad von 91"
+        html = re.sub(
+            rf'(Reifegrad\s+von\s+){_pre}\b',
+            rf'\g<1>{_fin}',
+            html
+        )
+
+        # Pattern 5: "Score von 90" → "Score von 91"
+        html = re.sub(
+            rf'(Score\s+von\s+){_pre}\b',
+            rf'\g<1>{_fin}',
+            html
+        )
+
+        # Pattern 6: "Gesamt-Score: 90" → "Gesamt-Score: 91"
+        html = re.sub(
+            rf'(Gesamt-?[Ss]core[:\s]+){_pre}\b',
+            rf'\g<1>{_fin}',
+            html
+        )
+
+        if html != original:
+            sections[key] = html
+            _sweep_fixed += 1
+            log.info(f"[FIX-B24-SWEEP] Patched {key}: {_pre}→{_fin}")
+
+    log.info(f"[FIX-B24-SWEEP] pre_quality={pre_quality_score}, final={final_score}, "
+             f"delta={final_score - pre_quality_score}, sections_patched={_sweep_fixed}")
+    return sections
 
 
 # -------------------- OpenAI client ----------------
@@ -17175,15 +17222,63 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     # Quality-Bonus: +1 bis +3 auf score_gesamt basierend auf Pipeline-Qualitätsindikatoren
     # Muss NACH Consistency-Check, N4.3 DoD und PLATIN-Validierung laufen (alle Metriken verfügbar)
     try:
+        _b24_pre_quality = int(float(sections.get('score_gesamt', 0) or 0))
         _b21q_bonus = calc_quality_bonus(sections)
         if _b21q_bonus > 0:
             _b21q_old_gesamt = float(sections.get('score_gesamt', 0) or 0)
             sections['score_gesamt'] = min(_b21q_old_gesamt + _b21q_bonus, 98)
             sections["CANONICAL_OVERALL"] = sections['score_gesamt']
-            log.info(f"[FIX-B21-QUALITY-BONUS] score_gesamt: "
+            log.info(f"[FIX-B24-QUALITY-BONUS] score_gesamt: "
                      f"{_b21q_old_gesamt} + {_b21q_bonus} = {sections['score_gesamt']}")
+        _b24_final_score = int(float(sections.get('score_gesamt', 0) or 0))
+
+        # === FIX-B24-P0: Final Score Sweep — patch pre-quality→final in ALL sections ===
+        sections = _final_score_sweep(sections, _b24_final_score, _b24_pre_quality)
+
+        # === FIX-B24-P0: Rebuild FINAL_CHECK_INTRO with final score ===
+        # FINAL_CHECK_INTRO was built pre-quality-bonus with score_gesamt=pre_quality.
+        # Must be rebuilt with the FINAL score to prevent cover vs page-2 mismatch.
+        try:
+            _b24_report_lang = sections.get("LANG", "de")
+            _b24_hauptleistung = answers.get("hauptleistung", "").strip()
+            _b24_company_size = sections.get("size_label", "KMU")
+            # Recalculate score_rating with final score
+            _b24_score_rating = sections.get("score_rating", "")
+            try:
+                from services.extra_sections import get_score_context
+                _b24_size = answers.get("unternehmensgroesse", "klein")
+                _b24_ctx = get_score_context(_b24_final_score, _b24_size, lang=_b24_report_lang)
+                _b24_score_rating = _b24_ctx.get("score_rating", _b24_score_rating)
+                sections["score_rating"] = _b24_score_rating
+            except Exception:
+                pass  # Keep existing score_rating
+
+            if _b24_report_lang == "en":
+                _b24_intro = (
+                    f"This AI Readiness Report analyzes your current AI maturity "
+                    f"({_b24_final_score}/100 = {_b24_score_rating}) "
+                    f"and provides actionable recommendations for {_b24_company_size} "
+                    f"focusing on {_b24_hauptleistung}. "
+                    f"Focus areas: Security, Efficiency, and Funding opportunities. "
+                    f"ROI details and payback analysis are provided in the Business Case."
+                )
+            else:
+                _b24_intro = (
+                    f"Dieser KI-Readiness-Report für {_b24_hauptleistung} analysiert "
+                    f"Ihren aktuellen KI-Reifegrad ({_b24_final_score}/100 = {_b24_score_rating}) "
+                    f"und liefert konkrete Handlungsempfehlungen für {_b24_company_size} "
+                    f"mit Fokus auf {_b24_hauptleistung}. "
+                    f"Schwerpunkte: Sicherheit, Effizienz und Förderpotenziale. "
+                    f"ROI-Details und Payback-Analyse finden Sie im Business Case."
+                )
+            sections["FINAL_CHECK_INTRO"] = _b24_intro[:600]
+            log.info(f"[FIX-B24-P0] FINAL_CHECK_INTRO rebuilt with final score {_b24_final_score} "
+                     f"(was {_b24_pre_quality}, rating={_b24_score_rating})")
+        except Exception as _b24_intro_err:
+            log.warning(f"[FIX-B24-P0] FINAL_CHECK_INTRO rebuild failed: {_b24_intro_err}")
+
     except Exception as _b21q_err:
-        log.warning(f"[FIX-B21-QUALITY-BONUS] Failed: {_b21q_err}")
+        log.warning(f"[FIX-B24-QUALITY-BONUS] Failed: {_b21q_err}")
 
     # === DEBUG: FINAL CHECK - Variables before render() ===
     log.info("=" * 80)
