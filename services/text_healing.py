@@ -711,6 +711,60 @@ def _normalize_text(text: str) -> str:
 LLMFallback = Callable[[str, Literal["risk", "reco", "bc"]], str]
 
 
+def _clean_markdown_fragments(text: str) -> str:
+    """
+    FIX-B15: Clean up unclosed markdown bold/italic markers and trailing ellipsis.
+
+    Fixes patterns like:
+    - "...für alle **..." → "...für alle."
+    - "Go/No-**..." → "Go/No-Go."
+    - Unclosed ** or * markers
+    - Trailing "..." after incomplete words
+    """
+    if not text:
+        return text
+
+    t = text
+
+    # 1. Remove unclosed bold markers: text ending with "**...**" or "**..."
+    #    Pattern: ** followed by ... or nothing at end
+    t = re.sub(r'\*\*\.{3}\*\*\s*$', '.', t)  # **...** at end
+    t = re.sub(r'\*\*\.{2,}\s*$', '.', t)      # **... at end
+    t = re.sub(r'\*\*\s*$', '.', t)             # ** at end (unclosed)
+
+    # 2. Remove text fragment before unclosed bold: "word **..." → "word."
+    t = re.sub(r'\s+\*\*[^*]*$', '.', t)
+
+    # 3. Fix "Go/No-**...**" → "Go/No-Go"
+    t = re.sub(r'Go/No-\*\*[^*]*\*\*', 'Go/No-Go', t)
+    t = re.sub(r'Go/No-\*\*', 'Go/No-Go', t)
+
+    # 4. Count bold markers — if odd number, remove the trailing unclosed one
+    bold_count = t.count('**')
+    if bold_count % 2 != 0:
+        # Remove the last ** and everything after it (fragment)
+        last_bold = t.rfind('**')
+        if last_bold > 0:
+            before = t[:last_bold].rstrip()
+            if before and before[-1] not in '.!?':
+                before += '.'
+            t = before
+
+    # 5. Clean trailing ellipsis that indicates truncation: keep last complete sentence
+    if t.rstrip().endswith('...') and not t.rstrip().endswith('etc.'):
+        # Try to find the last complete sentence before the ellipsis
+        clean = t.rstrip().rstrip('.')
+        sentences = clean.split('. ')
+        if len(sentences) > 1:
+            # Keep all but the last (truncated) sentence
+            t = '. '.join(sentences[:-1]) + '.'
+        else:
+            # Single sentence with ellipsis — just replace ... with .
+            t = clean + '.'
+
+    return t.strip()
+
+
 def heal_text_block(
     text: str,
     *,
@@ -822,6 +876,10 @@ def heal_text_block(
         tail_budget -= 1
 
     healed = " ".join(s.strip() for s in out if s.strip()).strip()
+
+    # FIX-B15: Clean up unclosed markdown bold/italic markers and ellipsis fragments
+    healed = _clean_markdown_fragments(healed)
+
     if healed and healed[-1] not in ".!?":
         healed += "."
 
@@ -918,6 +976,14 @@ def _heal_html_blockwise(html: str, domain: Literal["risk", "reco", "bc"]) -> st
     html = re.sub(r"(<p[^>]*>)([^<]{1,2000})(</p>)", heal_inner, html, flags=re.IGNORECASE)
     # Heal Risk-Card description divs
     html = re.sub(r'(<div[^>]*style="[^"]*color[^"]*"[^>]*>)([^<]{1,500})(</div>)', heal_inner, html, flags=re.IGNORECASE)
+
+    # FIX-B15: Clean unclosed <strong>/<b> tags with truncated content
+    html = re.sub(r'<strong>\.{2,}</strong>', '', html)
+    html = re.sub(r'<strong>[^<]{0,5}\.{2,}</strong>', '', html)
+    html = re.sub(r'<b>\.{2,}</b>', '', html)
+    html = re.sub(r'<b>[^<]{0,5}\.{2,}</b>', '', html)
+    # Remove unclosed strong/b at end of text nodes
+    html = re.sub(r'<strong>[^<]*$', '', html)
 
     return html
 
@@ -1081,7 +1147,12 @@ def truncate_to_complete_sentence(text: str, max_words: int = 50, min_words: int
             return safe_text
 
     # Last resort: truncate with ellipsis
-    return " ".join(truncated_words) + "..."
+    result = " ".join(truncated_words)
+    # FIX-B15: Clean unclosed markdown before adding ellipsis
+    result = _clean_markdown_fragments(result)
+    if not result.endswith((".", "!", "?")):
+        result += "..."
+    return result
 
 
 def truncate_bullet_safe(text: str, max_words: int = 25) -> str:

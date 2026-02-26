@@ -268,14 +268,14 @@ class ROIExplanation:
             roi_raw_value = 0.0
 
         # Build step 5 with raw ROI
-        roi_step5 = f"5. ROI (berechnet): {(self.zeitersparnis_stunden * self.stundensatz * 12) - self.einmalkosten - (self.laufende_kosten_monat * 12):,.0f}€ / {self.einmalkosten:,.0f}€ × 100 = <strong>{roi_raw_value:.0f}%</strong>"
+        roi_step5 = f"5. ROI (berechnet): {(self.zeitersparnis_stunden * self.stundensatz * 12) - self.einmalkosten - (self.laufende_kosten_monat * 12):,.0f}€ / {self.einmalkosten:,.0f}€ × 100 = {roi_raw_value:.0f}%"
 
-        # P0.3: Option A - Add step 6 if ROI was capped
+        # FIX-B15: Emphasize capped value as primary, raw value as secondary
         if self.roi_was_capped:
             roi_step6 = f"<br>6. <strong>Planwert (gedeckelt):</strong> {self.roi_capped:.0f}% (konservative Obergrenze: 200%)"
             roi_conclusion = f"""
                     <div style="margin-top:8px;padding:8px;background:#fef3c7;border-radius:4px;border-left:3px solid #f59e0b;">
-                        <strong>Ergebnis:</strong> {roi_raw_value:.0f}% (berechnet) → <strong>{self.roi_capped:.0f}%</strong> (Planwert, gedeckelt auf max. 200%)
+                        <strong>Ergebnis: ROI = {self.roi_capped:.0f}%</strong> (konservativer Planwert, gedeckelt auf max. 200%)
                     </div>"""
         else:
             roi_step6 = ""
@@ -1993,15 +1993,16 @@ def _generate_narrative_summary(
     # Build narrative
     parts = []
 
-    # ROI assessment
-    if realistic.roi_12m >= 200:
-        parts.append(f"Der Business Case zeigt ein sehr attraktives ROI von {realistic.roi_12m:.0f}% über 12 Monate.")
-    elif realistic.roi_12m >= 100:
-        parts.append(f"Der Business Case ist solide mit einem ROI von {realistic.roi_12m:.0f}% im ersten Jahr.")
-    elif realistic.roi_12m >= 50:
-        parts.append(f"Der Business Case ist moderat positiv mit {realistic.roi_12m:.0f}% ROI.")
+    # ROI assessment — FIX-B15: Cap displayed ROI at MAX_ROI for narrative consistency
+    _narrative_roi = min(MAX_ROI, realistic.roi_12m)
+    if _narrative_roi >= 200:
+        parts.append(f"Der Business Case zeigt ein sehr attraktives ROI von {_narrative_roi:.0f}% über 12 Monate.")
+    elif _narrative_roi >= 100:
+        parts.append(f"Der Business Case ist solide mit einem ROI von {_narrative_roi:.0f}% im ersten Jahr.")
+    elif _narrative_roi >= 50:
+        parts.append(f"Der Business Case ist moderat positiv mit {_narrative_roi:.0f}% ROI.")
     else:
-        parts.append(f"Der Business Case erfordert sorgfältige Abwägung bei {realistic.roi_12m:.0f}% ROI.")
+        parts.append(f"Der Business Case erfordert sorgfältige Abwägung bei {_narrative_roi:.0f}% ROI.")
 
     # Payback - Fix-Batch J2: Use German decimal format (comma instead of period)
     if realistic.payback_months <= 3:
@@ -2108,8 +2109,13 @@ def business_case_report_to_html(
         color = scenario_colors.get(scenario.name, "#6b7280")
         label = labels.get(scenario.name, scenario.name.capitalize())
 
+        # FIX-B15: Cap displayed ROI at MAX_ROI (200%) to avoid confusing uncapped values
+        _display_roi = min(MAX_ROI, scenario.roi_12m)
+        _roi_was_capped = scenario.roi_12m > MAX_ROI
+        _roi_cap_label = f' <span style="font-size:8px;color:#64748b;">(gedeckelt)</span>' if _roi_was_capped else ""
+
         # ROI color based on value
-        roi_color = "#22c55e" if scenario.roi_12m >= 100 else "#f59e0b" if scenario.roi_12m >= 50 else "#dc2626"
+        roi_color = "#22c55e" if _display_roi >= 100 else "#f59e0b" if _display_roi >= 50 else "#dc2626"
 
         html_parts.append(f'''
             <div class="scenario-card" style="flex:1;min-width:180px;padding:16px;background:#fff;border-radius:10px;border:2px solid {color};box-shadow:0 2px 8px rgba(0,0,0,0.05);">
@@ -2120,7 +2126,7 @@ def business_case_report_to_html(
 
                 <div style="margin-bottom:8px;">
                     <span style="font-size:9pt;color:#64748b;">{labels["roi_label"]}</span>
-                    <p style="margin:4px 0 0 0;font-size:24pt;font-weight:700;color:{roi_color};">{scenario.roi_12m:.0f}%</p>
+                    <p style="margin:4px 0 0 0;font-size:24pt;font-weight:700;color:{roi_color};">{_display_roi:.0f}%{_roi_cap_label}</p>
                 </div>
 
                 <div style="margin-bottom:8px;">
