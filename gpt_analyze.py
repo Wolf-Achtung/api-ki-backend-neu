@@ -15117,9 +15117,15 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             # This ensures cover page and BC section show the same Payback value
             sections["PAYBACK_MONTHS"] = realistic.payback_months
             sections["_PAYBACK_BC_V2"] = realistic.payback_months  # FIX-B733b: immutable payback (survives CANON inject)
-            sections["ROI_12M"] = realistic.roi_12m
+            # FIX-B17: Store raw ROI for MC simulation, cap display value to 200%
+            _MAX_ROI_DISPLAY = 200.0
+            sections["ROI_12M_RAW"] = realistic.roi_12m
+            sections["ROI_12M"] = min(_MAX_ROI_DISPLAY, realistic.roi_12m)
+            if realistic.roi_12m > _MAX_ROI_DISPLAY:
+                log.info("[%s] [FIX-B17-ROI-CAP] ROI_12M capped for display: %.0f%% → %.0f%%",
+                         run_id, realistic.roi_12m, _MAX_ROI_DISPLAY)
             log.info("[%s] [FIX-498-WP5] Centralized KPIs: PAYBACK_MONTHS=%.1f, ROI_12M=%.1f%%",
-                     run_id, realistic.payback_months, realistic.roi_12m)
+                     run_id, realistic.payback_months, sections["ROI_12M"])
 
         log.info("[%s] ✅ G30 Business Case Engine 2.0 generated: investment=%.0f€, ROI=%.1f%%, payback=%.1f months",
                  run_id, bc_report.investment_total,
@@ -15214,6 +15220,20 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             briefing=_mc_briefing,
             llm_response=None,
         )
+
+        # FIX-B17: Cap simulation display values to MAX_ROI for consistency
+        _SIM_ROI_CAP = 200.0
+        if bc_simulation.distribution:
+            _dist = bc_simulation.distribution
+            if _dist.roi_p50 > _SIM_ROI_CAP:
+                log.info("[FIX-B17] Capping sim roi_p50: %.0f%% → %.0f%%", _dist.roi_p50, _SIM_ROI_CAP)
+                _dist.roi_p50 = _SIM_ROI_CAP
+            if _dist.roi_p80 > _SIM_ROI_CAP:
+                log.info("[FIX-B17] Capping sim roi_p80: %.0f%% → %.0f%%", _dist.roi_p80, _SIM_ROI_CAP)
+                _dist.roi_p80 = _SIM_ROI_CAP
+            if _dist.roi_p90 > _SIM_ROI_CAP:
+                log.info("[FIX-B17] Capping sim roi_p90: %.0f%% → %.0f%%", _dist.roi_p90, _SIM_ROI_CAP)
+                _dist.roi_p90 = _SIM_ROI_CAP
 
         sections["BUSINESS_CASE_SIM_HTML"] = business_case_simulation_to_html(bc_simulation, lang=report_lang)
         sections["_business_case_simulation_report"] = bc_simulation
@@ -16499,6 +16519,15 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     log.info(f"[{run_id}] [FIX-B731-ROI-CAP] ROI_P50 already ≤ cap ({_b731_p50_val:.0f}% ≤ {_b731_roi_cap}%)")
             else:
                 log.info(f"[{run_id}] [FIX-B731-ROI-CAP] ROI_P50 not set, skipping")
+
+            # FIX-B17: Cap P80/P90 too for display consistency
+            for _pkey in ["ROI_P80", "ROI_P90"]:
+                _pval_raw = sections.get(_pkey)
+                if _pval_raw is not None:
+                    _pval = float(_pval_raw)
+                    if _pval > _b731_roi_cap:
+                        sections[_pkey] = _b731_roi_cap
+                        log.info(f"[{run_id}] [FIX-B17-ROI-CAP] {_pkey} capped: {_pval:.0f}% → {_b731_roi_cap}%")
 
             # Payback: P50 ebenfalls auf canonical setzen
             _b731_pb_canon = sections.get("PAYBACK_MONTHS_FMT_DE", "1,6")  # FIX-B732-PAYBACK-F1: correct default
