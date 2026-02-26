@@ -1997,7 +1997,7 @@ def _calibrate_scores(scores: Dict[str, int], answers: Dict[str, Any]) -> Dict[s
 
 
 # === [FIX-B21-FREITEXT-BONUS] Freitext-Analyse für Score-Kalibrierung ===
-FREITEXT_SCORE_MAP = {
+FREITEXT_SCORE_MAP: Dict[str, Dict[str, Any]] = {
     'score_sicherheit': {
         'fields': ['ki_guardrails', 'strategische_ziele'],
         'keywords': {
