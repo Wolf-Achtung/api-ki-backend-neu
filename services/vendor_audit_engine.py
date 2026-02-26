@@ -583,7 +583,8 @@ def _determine_has_dpa(
 
     # Known vendors with DPA
     known_dpa_vendors = [
-        "openai", "anthropic", "microsoft", "google", "aws", "amazon",
+        "openai", "anthropic", "claude",  # FIX-B17: Claude short name
+        "microsoft", "google", "aws", "amazon",
         "salesforce", "hubspot", "notion", "slack", "zoom", "datadog",
         "mongodb", "snowflake", "databricks", "deepl", "mistral",
     ]
@@ -1467,7 +1468,16 @@ def vendor_audit_report_to_html(
 
             # Audit Flags
             # FIX-B15: Translate flags to German for DE reports, filter empty strings
-            _visible_flags = [f for f in entry.audit_flags if f and f.strip()]
+            # FIX-B17: Safety net — ensure US/red vendors always have minimum flags
+            _raw_flags = list(entry.audit_flags)
+            if not _raw_flags and entry.jurisdiction == "US":
+                if entry.vendor_risk_score >= 4:
+                    _raw_flags.append("High vendor risk score")
+                if entry.dsgvo_risk_level == "high":
+                    _raw_flags.append("High DSGVO risk")
+                if not entry.has_dpa:
+                    _raw_flags.append("US vendor without DPA")
+            _visible_flags = [f for f in _raw_flags if f and f.strip()]
             if lang == "de":
                 _visible_flags = [_flag_translations_de.get(f, f) for f in _visible_flags]
             if _visible_flags:
@@ -1526,7 +1536,16 @@ def vendor_audit_report_to_html(
             dpa_icon = "✓" if e.has_dpa else "✗"
             dpa_c = "#166534" if e.has_dpa else "#991b1b"
             # FIX-B15: Translate + filter flags in compact mode too
-            _cflags = [f for f in e.audit_flags if f and f.strip()]
+            # FIX-B17: Safety net for compact mode too
+            _craw = list(e.audit_flags)
+            if not _craw and e.jurisdiction == "US":
+                if e.vendor_risk_score >= 4:
+                    _craw.append("High vendor risk score")
+                if e.dsgvo_risk_level == "high":
+                    _craw.append("High DSGVO risk")
+                if not e.has_dpa:
+                    _craw.append("US vendor without DPA")
+            _cflags = [f for f in _craw if f and f.strip()]
             if lang == "de":
                 _cflags = [_flag_translations_de.get(f, f) for f in _cflags]
             flags_str = ", ".join(_cflags[:2]) if _cflags else "–"
