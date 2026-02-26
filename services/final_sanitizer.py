@@ -187,21 +187,36 @@ def final_sanitize(sections: dict) -> dict:
             fixes_applied.append(f"F5:leak-cleaned-{key[:30]}")
 
     # ─── FIX-F6: go-digital "(eingestellt)" ───
+    # FIX-B20: Extended to also remove "Digital Jetzt" (ended Dec 2023)
+    _DEPRECATED_PROGRAMS_RE = [
+        # go-digital variants
+        (r'go[-_]digital', 'go-digital'),
+        # Digital Jetzt variants (FIX-B20)
+        (r'digital[-_ ]?jetzt', 'digital-jetzt'),
+    ]
     for key in list(sections.keys()):
         val = sections.get(key)
         if not isinstance(val, str):
             continue
-        if 'go-digital' in val.lower() or 'go_digital' in val.lower():
-            # N5: Remove go-digital entirely (program discontinued 2023)
-            val = re.sub(r'<li[^>]*>[^<]*go[-_]digital[^<]*</li>\s*', '', val, flags=re.I)
-            val = re.sub(r'<tr[^>]*>(?:(?!</tr>).)*go[-_]digital(?:(?!</tr>).)*</tr>\s*', '', val, flags=re.I|re.DOTALL)
-            val = re.sub(r'<div[^>]*class=["\']*[^"]*tool-card[^"]*["\']*[^>]*>(?:(?!</div>).)*go[-_]digital(?:(?!</div>).)*</div>\s*', '', val, flags=re.I|re.DOTALL)
-            val = re.sub(r'go[-_]digital\s*\(?eingestellt\)?\s*[,;.]?\s*', '', val, flags=re.I)
-            val = re.sub(r'go[-_]digital\s*(?:/\s*ZIM)?\s*[,;.]?\s*', '', val, flags=re.I)
-            val = re.sub(r'[•·\-]\s*[Uu]nterlagen\s+f.r\s+go-digital[^\n<]*[.\n]?\s*', '', val, flags=re.I)
-            if val != sections[key]:
-                sections[key] = val
-                fixes_applied.append(f"N5:go-digital-removed-{key[:30]}")
+        _val_lower = val.lower()
+        for _prog_re, _prog_label in _DEPRECATED_PROGRAMS_RE:
+            if not re.search(_prog_re, _val_lower, flags=re.I):
+                continue
+            # Remove enclosing <li> block (allow nested tags with dotall match)
+            val = re.sub(rf'<li[^>]*>(?:(?!</li>).)*{_prog_re}(?:(?!</li>).)*</li>\s*', '', val, flags=re.I|re.DOTALL)
+            # Remove enclosing <p> block
+            val = re.sub(rf'<p[^>]*>(?:(?!</p>).)*{_prog_re}(?:(?!</p>).)*</p>\s*', '', val, flags=re.I|re.DOTALL)
+            # Remove enclosing <tr> block
+            val = re.sub(rf'<tr[^>]*>(?:(?!</tr>).)*{_prog_re}(?:(?!</tr>).)*</tr>\s*', '', val, flags=re.I|re.DOTALL)
+            # Remove enclosing <div> with tool-card class
+            val = re.sub(rf'<div[^>]*class=["\'][^"\']*tool-card[^"\']*["\'][^>]*>(?:(?!</div>).)*{_prog_re}(?:(?!</div>).)*</div>\s*', '', val, flags=re.I|re.DOTALL)
+            # Fallback: remove inline mention with optional parenthesized suffix
+            val = re.sub(rf'{_prog_re}\s*(?:\([^)]*\))?\s*[,;.\s]*', '', val, flags=re.I)
+            # Bullet-prefixed mentions
+            val = re.sub(rf'[•·\-]\s*(?:[Uu]nterlagen\s+f.r\s+)?{_prog_re}[^\n<]*[.\n]?\s*', '', val, flags=re.I)
+        if val != sections[key]:
+            sections[key] = val
+            fixes_applied.append(f"N5:deprecated-prog-removed-{key[:30]}")
 
     # ─── FIX-F7: hauptleistung Global Limiter (max 5) + Deduplizierung ───
     try:
