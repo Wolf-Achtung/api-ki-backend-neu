@@ -11128,6 +11128,102 @@ Für jede Kategorie: 2-3 Standard-Prompts'''
     Toolvorschlägen und einer strukturierten Umsetzungs-Roadmap.
   </p>
 </div>""",
+        # ════════════════════════════════════════════════════════════════════════
+        # FIX-B16: Decision-Sections — bisher ohne Fallback → generischer Boilerplate
+        # ════════════════════════════════════════════════════════════════════════
+        "executive_decision": f"""<div class="executive-decision-fallback">
+  <h3>Strategische Empfehlungen</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    Basierend auf dem KI-Reifegrad von <strong>{scores.get("overall", "–")}/100 Punkten</strong>
+    ergeben sich für <strong>{size_label or "Ihr Unternehmen"}</strong> im Bereich
+    <strong>{branche}</strong> folgende strategische Handlungsempfehlungen:
+  </p>
+  <ol>
+    <li><strong>Pilotprojekt starten:</strong> Wählen Sie einen klar abgegrenzten Prozess im Bereich
+    {hauptleistung or branche} und setzen Sie dort ein erstes KI-Tool produktiv ein. Der Fokus liegt
+    auf messbarer Zeitersparnis bei überschaubarem Risiko.</li>
+    <li><strong>Kompetenzen aufbauen:</strong> Investieren Sie in Grundlagenwissen zu KI-Anwendungen
+    für Ihr Team. Schulungen und Prompt-Training beschleunigen die Akzeptanz und Nutzungsqualität.</li>
+    <li><strong>Governance etablieren:</strong> Definieren Sie klare Regeln für den KI-Einsatz –
+    insbesondere zu Datenschutz, Qualitätskontrolle und Verantwortlichkeiten.</li>
+  </ol>
+  <p>
+    Die Umsetzung dieser Maßnahmen bildet das Fundament für eine nachhaltige KI-Strategie und
+    sollte innerhalb der nächsten 90 Tage begonnen werden.
+  </p>
+</div>""",
+        "roadmap_90d_decision": f"""<div class="roadmap-decision-fallback">
+  <h3>90-Tage-Plan: Entscheidungsversion</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    Ihr aktueller KI-Reifegrad-Score von <strong>{scores.get("overall", "–")}/100</strong>
+    zeigt {
+        "eine gute Ausgangsbasis für den systematischen Ausbau"
+        if int(scores.get("overall", 0) or 0) >= 60
+        else "klares Potenzial für schnelle Fortschritte durch gezielte Maßnahmen"
+    }. Der folgende 90-Tage-Plan priorisiert die wirksamsten Hebel für
+    <strong>{size_label or "Ihr Unternehmen"}</strong>.
+  </p>
+  <h4>Monat 1: Quick Wins realisieren</h4>
+  <ul>
+    <li>Erstes KI-Tool für {hauptleistung or "Ihren Kernprozess"} auswählen und einrichten.</li>
+    <li>Konkrete Anwendungsfälle definieren und Erfolgskriterien festlegen.</li>
+  </ul>
+  <h4>Monat 2: Pilotbetrieb und Lernen</h4>
+  <ul>
+    <li>Produktiven Einsatz im Pilotbereich starten und Ergebnisse dokumentieren.</li>
+    <li>Feedback sammeln und Prozesse anpassen.</li>
+  </ul>
+  <h4>Monat 3: Skalierung vorbereiten</h4>
+  <ul>
+    <li>Erfolgreiche Ansätze auf weitere Bereiche übertragen.</li>
+    <li>Governance-Rahmen und Schulungskonzept finalisieren.</li>
+  </ul>
+</div>""",
+        "gamechanger_decision": f"""<div class="gamechanger-decision-fallback">
+  <h3>Gamechanger-Analyse: Strategische Transformation</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    Für <strong>{size_label or "Ihr Unternehmen"}</strong> im Bereich <strong>{branche}</strong>
+    eröffnet KI die Möglichkeit, über reine Effizienzgewinne hinaus das Geschäftsmodell
+    strategisch weiterzuentwickeln. Die folgenden Transformationsansätze basieren auf den
+    Besonderheiten Ihres Leistungsportfolios im Bereich
+    <strong>{hauptleistung or branche}</strong>.
+  </p>
+  <h4>Transformationspotenziale</h4>
+  <ul>
+    <li><strong>Neue Servicemodelle:</strong> KI-gestützte Dienstleistungen als eigenständiges
+    Angebot positionieren – von automatisierten Analysen bis zu personalisierten Empfehlungen.</li>
+    <li><strong>Skalierbare Expertise:</strong> Fachwissen durch KI-Systeme multiplizieren und
+    auch bei wachsendem Kundenstamm konsistente Qualität sicherstellen.</li>
+    <li><strong>Datengetriebene Differenzierung:</strong> Durch systematische Datennutzung
+    Wettbewerbsvorteile aufbauen, die schwer kopierbar sind.</li>
+  </ul>
+  <p>
+    Der entscheidende Faktor ist die frühzeitige strategische Positionierung – Unternehmen,
+    die KI als Transformationstreiber nutzen, sichern sich nachhaltige Marktvorteile.
+  </p>
+</div>""",
+        "ki_stack_summary": f"""<div class="ki-stack-summary-fallback">
+  <h3>KI-Stack Übersicht</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    Der empfohlene KI-Stack für <strong>{size_label or "Ihr Unternehmen"}</strong> im Bereich
+    <strong>{branche}</strong> umfasst aufeinander abgestimmte Werkzeuge für die wichtigsten
+    Einsatzbereiche. Die Auswahl berücksichtigt Ihr Budget, Ihre Teamgröße und den
+    Anwendungsfokus auf <strong>{hauptleistung or "Ihre Kernprozesse"}</strong>.
+  </p>
+  <ul>
+    <li><strong>KI-Assistent:</strong> Zentrale Plattform für Textarbeit, Recherche und Entwürfe.</li>
+    <li><strong>Automatisierung:</strong> Verbindung wiederkehrender Abläufe zwischen Ihren bestehenden Tools.</li>
+    <li><strong>Spezialtool:</strong> Branchenspezifische Lösung für {hauptleistung or branche}.</li>
+  </ul>
+  <p>
+    Details zu jedem Tool mit Preisen, DSGVO-Bewertung und Einführungsempfehlungen finden Sie
+    im Abschnitt „Tool-Empfehlungen" dieses Reports.
+  </p>
+</div>""",
     }
 
     # SPRINT G2.3/G2.4: Default-Fallback – Meta-Text-frei, mit Kurzlabels
@@ -11204,6 +11300,11 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         "prompt_framework": "prompt_framework",
         # FIX-C2: branch_deep_dive was missing
         "branch_deep_dive": "branch_deep_dive",
+        # FIX-B16: Decision sections were missing → fell through to generic boilerplate
+        "executive_decision": "executive_decision",
+        "roadmap_90d_decision": "roadmap_90d_decision",
+        "gamechanger_decision": "gamechanger_decision",
+        "ki_stack_summary": "ki_stack_summary",
     }
     
     prompt_key = prompt_map.get(section_name)
