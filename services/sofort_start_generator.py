@@ -1163,7 +1163,7 @@ def generate_sofort_start_html(
     for i, prompt_data in enumerate(prompts_list, 1):
         prompt_text = prompt_data["prompt"][:400] + "..." if len(prompt_data["prompt"]) > 400 else prompt_data["prompt"]
         html += f'''
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                 <h4 style="font-size: 14px; font-weight: 600; margin: 0; color: #1e293b;">
                     {i}. {prompt_data["titel"]}
@@ -1172,7 +1172,7 @@ def generate_sofort_start_html(
                     ⏱️ {prompt_data["zeitersparnis"]}
                 </span>
             </div>
-            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 10px; line-height: 1.4; white-space: pre-wrap; color: #334155; max-height: 120px; overflow: hidden;">
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 10px; line-height: 1.4; white-space: pre-wrap; color: #334155;">
 {prompt_text}
             </div>
         </div>

@@ -1323,6 +1323,16 @@ def vendor_audit_report_to_html(
             "dsgvo_risk": "DSGVO-Risiko",
         }
 
+    # FIX-B15: German translations for audit flags
+    _flag_translations_de = {
+        "US vendor without DPA": "US-Anbieter ohne AVV",
+        "High vendor risk score": "Hohes Anbieter-Risiko",
+        "High DSGVO risk": "Hohes DSGVO-Risiko",
+        "High AI Act relevance - review required": "Hohe AI-Act-Relevanz – Prüfung erforderlich",
+        "Data location unknown": "Datenstandort unbekannt",
+        "Weak security posture": "Schwache Sicherheitslage",
+    }
+
     # Colors
     category_colors = {
         "green": "#22c55e",
@@ -1453,10 +1463,14 @@ def vendor_audit_report_to_html(
                 ''')
 
             # Audit Flags
-            if entry.audit_flags:
+            # FIX-B15: Translate flags to German for DE reports, filter empty strings
+            _visible_flags = [f for f in entry.audit_flags if f and f.strip()]
+            if lang == "de":
+                _visible_flags = [_flag_translations_de.get(f, f) for f in _visible_flags]
+            if _visible_flags:
                 flags_html = " ".join([
                     f'<span style="font-size:7px;padding:1px 4px;background:#dc262622;color:#dc2626;border-radius:2px;">⚠️ {flag}</span>'
-                    for flag in entry.audit_flags[:3]
+                    for flag in _visible_flags[:3]
                 ])
                 html_parts.append(f'''
                     <div>
@@ -1508,7 +1522,11 @@ def vendor_audit_report_to_html(
             cat_c = category_colors.get(e.overall_category, "#f59e0b")
             dpa_icon = "✓" if e.has_dpa else "✗"
             dpa_c = "#166534" if e.has_dpa else "#991b1b"
-            flags_str = ", ".join(e.audit_flags[:2]) if e.audit_flags else "–"
+            # FIX-B15: Translate + filter flags in compact mode too
+            _cflags = [f for f in e.audit_flags if f and f.strip()]
+            if lang == "de":
+                _cflags = [_flag_translations_de.get(f, f) for f in _cflags]
+            flags_str = ", ".join(_cflags[:2]) if _cflags else "–"
             rows += (
                 f'<tr><td style="padding:6px;border-bottom:1px solid #e2e8f0;">'
                 f'<strong>{e.name}</strong><br><span style="font-size:8px;color:#64748b;">{e.category}</span></td>'
