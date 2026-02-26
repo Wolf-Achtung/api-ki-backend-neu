@@ -998,8 +998,8 @@ def render(briefing_obj: Any,
             if _w3_words < 50 or _is_placeholder:
                 ctx[_w3_key] = ''
                 log.info("[W3+X3] Hidden thin/placeholder section %s (%d words, placeholder=%s)", _w3_key, _w3_words, _is_placeholder)
-    # X3: Also check NINETY_DAY_PLAN and redundant roadmap
-    for _x3_key in ('NINETY_DAY_PLAN_HTML', 'ROADMAP_90D_HTML'):
+    # X3: Also check NINETY_DAY_PLAN (ROADMAP_90D_HTML excluded per FIX-B22-P4)
+    for _x3_key in ('NINETY_DAY_PLAN_HTML',):
         _x3_val = ctx.get(_x3_key, '')
         if isinstance(_x3_val, str) and _x3_val:
             _x3_text = re.sub(r'<[^>]+>', '', _x3_val)

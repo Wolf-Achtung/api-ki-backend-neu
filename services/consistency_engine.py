@@ -5282,5 +5282,18 @@ def check_consistency(
         ...     for issue in report.issues:
         ...         print(f"[{issue.severity}] {issue.message}")
     """
-    engine = ConsistencyEngine(sections, briefing, language)
+    # FIX-B22-P5: Deduplicate HTML/plain shadow keys before consistency check.
+    # Plain-text keys (e.g. "data_readiness") that mirror HTML keys
+    # (e.g. "DATA_READINESS_HTML") can cause false-positive divergence.
+    _html_keys_upper = {k.upper() for k in sections if k.endswith("_HTML")}
+    _shadow_removed = 0
+    _filtered = {}
+    for k, v in sections.items():
+        if not k.endswith("_HTML") and f"{k.upper()}_HTML" in _html_keys_upper:
+            _shadow_removed += 1
+            continue  # Skip plain-text shadow of an existing HTML key
+        _filtered[k] = v
+    if _shadow_removed:
+        log.info("[FIX-B22-P5] Filtered %d plain-text shadow keys before G22 check", _shadow_removed)
+    engine = ConsistencyEngine(_filtered, briefing, language)
     return engine.check_all()

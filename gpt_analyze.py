@@ -1996,6 +1996,119 @@ def _calibrate_scores(scores: Dict[str, int], answers: Dict[str, Any]) -> Dict[s
     return calibrated
 
 
+# =============================================================================
+# B21: FREITEXT-BONUS-ENGINE
+# =============================================================================
+# Analyzes free-text questionnaire answers for dimension-relevant keywords
+# and adds bonus points to dimension scores (applied post-calibration).
+
+FREITEXT_SCORE_MAP: Dict[str, Dict[str, Any]] = {
+    "security": {
+        "keywords": [
+            "datenschutz", "dsgvo", "gdpr", "verschlüsselung", "encryption",
+            "firewall", "zugriffskontrolle", "access control", "backup",
+            "sicherheitskonzept", "incident", "penetrationstest", "phishing",
+            "malware", "zero trust", "authentifizierung", "2fa", "mfa",
+            "cybersecurity", "informationssicherheit", "it-sicherheit",
+            "notfallplan", "disaster recovery", "iso 27001", "bsi",
+            "schwachstelle", "sicherheitslücke", "passwort", "password",
+            "vpn", "ssl", "tls", "zertifikat",
+        ],
+        "fields": ["ki_guardrails", "strategische_ziele", "ki_projekte",
+                    "vision_3_jahre", "geschaeftsmodell_evolution"],
+        "max_bonus": 5,
+    },
+    "governance": {
+        "keywords": [
+            "richtlinie", "policy", "compliance", "verantwortlich",
+            "prozess", "regelwerk", "audit", "dokumentation",
+            "ethik", "transparenz", "nachvollziehbar", "regulierung",
+            "ai act", "verordnung", "kontrollmechanismus", "genehmigung",
+            "risikomanagement", "risikobewertung", "governance",
+            "leitfaden", "standard", "norm", "qualitätssicherung",
+            "freigabe", "vier-augen", "protokoll",
+        ],
+        "fields": ["ki_guardrails", "strategische_ziele", "ki_projekte",
+                    "vision_3_jahre"],
+        "max_bonus": 5,
+    },
+    "value": {
+        "keywords": [
+            "automatisierung", "effizienz", "produktivität", "zeitersparnis",
+            "kostenreduktion", "umsatzsteigerung", "wertschöpfung",
+            "innovation", "wettbewerbsvorteil", "skalierung",
+            "prozessoptimierung", "roi", "rendite", "einsparung",
+            "digitalisierung", "workflow", "pipeline",
+        ],
+        "fields": ["strategische_ziele", "ki_projekte", "zeitersparnis_prioritaet",
+                    "vision_3_jahre", "geschaeftsmodell_evolution"],
+        "max_bonus": 3,
+    },
+    "enablement": {
+        "keywords": [
+            "schulung", "training", "weiterbildung", "kompetenz",
+            "qualifizierung", "change management", "lernbereit",
+            "workshop", "zertifizierung", "coach", "mentor",
+            "teamkultur", "mindset", "skill", "fortbildung",
+            "onboarding", "wissenstransfer", "akademie",
+        ],
+        "fields": ["ki_projekte", "strategische_ziele", "vision_3_jahre"],
+        "max_bonus": 3,
+    },
+}
+
+
+def calc_freitext_bonus(answers: Dict[str, Any]) -> Dict[str, int]:
+    """
+    B21 Freitext-Bonus-Engine: Analyze free-text questionnaire answers
+    for dimension-relevant keywords and calculate bonus points.
+
+    Returns dict mapping dimension → bonus points (0 to max_bonus).
+    """
+    bonus: Dict[str, int] = {}
+    for dimension, config in FREITEXT_SCORE_MAP.items():
+        hits: set = set()
+        for field in config["fields"]:
+            text = str(answers.get(field, "") or "").lower()
+            if not text or len(text) < 3:
+                continue
+            for kw in config["keywords"]:
+                if kw in text:
+                    hits.add(kw)
+        # 1 point per unique keyword hit, capped at max_bonus
+        dim_bonus = min(len(hits), config["max_bonus"])
+        bonus[dimension] = dim_bonus
+    return bonus
+
+
+def calc_quality_bonus(sections: Dict[str, Any]) -> int:
+    """
+    B21 Quality-Bonus: Add +1-3 to score_gesamt based on pipeline quality.
+
+    +1 if Consistency grade >= B (score >= 85)
+    +1 if N4.3 DoD PASSED
+    +1 if PLATIN warnings < 50
+    """
+    bonus = 0
+
+    # +1 for Consistency grade B or better (score >= 85)
+    cons_score = float(sections.get("_CONSISTENCY_SCORE", 0) or 0)
+    if cons_score >= 85:
+        bonus += 1
+
+    # +1 for N4.3 DoD PASSED
+    dod_passed = sections.get("_n43_dod_passed") or sections.get("N43_DOD_PASSED")
+    if dod_passed:
+        bonus += 1
+
+    # +1 for PLATIN warnings < 50
+    platin_warnings = int(sections.get("_PLATIN_WARNINGS", 999) or 999)
+    if platin_warnings < 50:
+        bonus += 1
+
+    return bonus
+
+
 # -------------------- OpenAI client ----------------
 def _call_openai(
     prompt: str,
@@ -14201,6 +14314,29 @@ def analyze_briefing(
     score_wrap["scores"] = scores  # Update the wrapper with calibrated scores
     score_wrap["raw_scores"] = raw_scores  # Preserve raw scores for debugging
 
+    # === FIX-B21/B22-P0: Freitext-Bonus BEFORE content generation ===
+    # MUST run here (post-calibration, pre-content) so that Score-Enforcer
+    # inside _generate_content_sections() uses the FINAL bonus-adjusted values.
+    try:
+        _freitext_bonus = calc_freitext_bonus(answers)
+        if any(_freitext_bonus.values()):
+            for _dim, _fb in _freitext_bonus.items():
+                if _fb > 0:
+                    scores[_dim] = min(scores[_dim] + _fb, 100)
+            # Recalculate overall
+            scores["overall"] = round(
+                (scores["governance"] + scores["security"]
+                 + scores["value"] + scores["enablement"]) / 4
+            )
+            score_wrap["scores"] = scores
+            log.info("[%s] [FIX-B21-FREITEXT-BONUS] Bonus applied: %s → Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+                     run_id, _freitext_bonus, scores["governance"], scores["security"],
+                     scores["value"], scores["enablement"], scores["overall"])
+        else:
+            log.info("[%s] [FIX-B21-FREITEXT-BONUS] No keyword hits in freitext fields", run_id)
+    except Exception as _ftb_err:
+        log.warning("[%s] [FIX-B21-FREITEXT-BONUS] Failed: %s", run_id, _ftb_err)
+
     # === Business Case FRÜHZEITIG berechnen (vor Content-Generierung!) ===
     # Damit sind BC-Werte (CAPEX, OPEX, ROI, etc.) für alle Fallbacks verfügbar
     if calc_business_case:
@@ -14989,8 +15125,16 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             sections["PAYBACK_MONTHS"] = realistic.payback_months
             sections["_PAYBACK_BC_V2"] = realistic.payback_months  # FIX-B733b: immutable payback (survives CANON inject)
             sections["ROI_12M"] = realistic.roi_12m
+            # FIX-B22-P1: Save raw ROI, then cap all ROI keys to 200% for consistency
+            sections["ROI_12M_RAW"] = realistic.roi_12m
+            _b22_roi_raw = float(realistic.roi_12m or 0)
+            if _b22_roi_raw > 200.0:
+                sections["ROI_12M"] = 200.0
+                sections["BC_ROI_REALISTIC"] = 200.0
+                log.info("[%s] [FIX-B22-P1] ROI capped: ROI_12M %.1f→200.0, BC_ROI_REALISTIC %.1f→200.0",
+                         run_id, _b22_roi_raw, _b22_roi_raw)
             log.info("[%s] [FIX-498-WP5] Centralized KPIs: PAYBACK_MONTHS=%.1f, ROI_12M=%.1f%%",
-                     run_id, realistic.payback_months, realistic.roi_12m)
+                     run_id, realistic.payback_months, float(sections.get("ROI_12M", 0)))
 
         log.info("[%s] ✅ G30 Business Case Engine 2.0 generated: investment=%.0f€, ROI=%.1f%%, payback=%.1f months",
                  run_id, bc_report.investment_total,
@@ -15065,17 +15209,20 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             business_case_simulation_to_html,
         )
 
-        # R1: Inject raw ROI into answers for MC simulation
-        # BC_ROI_REALISTIC (637%) is set by BC engine at line 14512, BEFORE MC.
-        # Without this, MC reads answers["ROI_12M"]=200 (capped) → all percentiles 200%.
-        _mc_roi_raw = float(sections.get("BC_ROI_REALISTIC", 0) or sections.get("BC_ROI_REALISTIC_RAW", 0) or 0)
+        # R1: Inject ROI into answers for MC simulation
+        # FIX-B22-P1: Use CAPPED ROI (200%) not raw BC_ROI_REALISTIC (637%)
+        # to prevent ROI inconsistency across sections (KPI_001 trigger).
+        # MC simulation can use the raw value internally but display must be capped.
+        _mc_roi_capped = min(float(sections.get("ROI_12M", 0) or 0), 200.0)
+        _mc_roi_raw = float(sections.get("ROI_12M_RAW", 0) or _mc_roi_capped)
         _mc_briefing = dict(answers)  # Shallow copy to avoid polluting answers
-        if _mc_roi_raw > 0:
-            _mc_briefing["ROI_12M"] = _mc_roi_raw
+        if _mc_roi_capped > 0:
+            _mc_briefing["ROI_12M"] = _mc_roi_capped
             _mc_briefing["ROI_12M_RAW"] = _mc_roi_raw
-            log.info("[R1-MC] Injected ROI_12M=%.0f%% into MC briefing (was %s)", _mc_roi_raw, answers.get("ROI_12M", "MISSING"))
+            log.info("[R1-MC] [FIX-B22-P1] Injected capped ROI_12M=%.0f%% into MC briefing (raw=%.0f%%)",
+                     _mc_roi_capped, _mc_roi_raw)
         else:
-            log.warning("[R1-MC] BC_ROI_REALISTIC not available, MC will use capped ROI")
+            log.warning("[R1-MC] ROI_12M not available, MC will use defaults")
 
         bc_simulation = generate_business_case_simulation(
             context=None,
@@ -16769,6 +16916,31 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.info(f"[{run_id}] [PLATIN+++] Pre-render validation: passed={_p_passed}, errors={len(_p_errors)}, warnings={len(_p_warnings)}")
     except Exception as pv_err:
         log.warning(f"[{run_id}] [PLATIN+++] Validation failed to run: {pv_err}")
+
+    # === FIX-B21/B22-P3: Quality-Bonus (runs AFTER all quality metrics are set) ===
+    try:
+        _quality_bonus = calc_quality_bonus(sections)
+        _qb_reasons = []
+        _qb_cons = float(sections.get("_CONSISTENCY_SCORE", 0) or 0)
+        _qb_dod = sections.get("_n43_dod_passed") or sections.get("N43_DOD_PASSED")
+        _qb_pw = int(sections.get("_PLATIN_WARNINGS", 999) or 999)
+        if _qb_cons >= 85:
+            _qb_reasons.append(f"consistency={_qb_cons:.0f}>=85")
+        if _qb_dod:
+            _qb_reasons.append("n43_dod=PASSED")
+        if _qb_pw < 50:
+            _qb_reasons.append(f"platin_warn={_qb_pw}<50")
+        if _quality_bonus > 0:
+            _old_gesamt = int(float(sections.get("score_gesamt", 0) or 0))
+            _new_gesamt = min(_old_gesamt + _quality_bonus, 100)
+            sections["score_gesamt"] = _new_gesamt
+            sections["CANONICAL_OVERALL"] = _new_gesamt
+            scores["overall"] = _new_gesamt
+            log.info(f"[{run_id}] [FIX-B21-QUALITY-BONUS] +{_quality_bonus}: score_gesamt {_old_gesamt} → {_new_gesamt} ({', '.join(_qb_reasons)})")
+        else:
+            log.info(f"[{run_id}] [FIX-B21-QUALITY-BONUS] +0: no criteria met (cons={_qb_cons:.0f}, dod={_qb_dod}, platin_warn={_qb_pw})")
+    except Exception as _qb_err:
+        log.warning(f"[{run_id}] [FIX-B21-QUALITY-BONUS] Failed: {_qb_err}")
 
     # === DEBUG: FINAL CHECK - Variables before render() ===
     log.info("=" * 80)
