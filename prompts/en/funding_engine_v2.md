@@ -24,7 +24,7 @@ You are an expert funding advisor specialising in government and private subsidy
 
 1. **Identify suitable programmes:** Select **3–5 funding programmes** that best fit the company’s size and sector. For solo/freelancer companies, recommend up to **3** programmes; for teams (2–10), **3–4**; for SMEs (>10), **4–5**. Include programmes from federal, state and European levels, as well as industry‑specific grants if available.
 2. **Provide detailed metadata** for each programme:
-   - `programme_id` – a unique identifier or short code (e.g. `digital_jetzt`, `innovationsgutschein_bw`).
+   - `programme_id` – a unique identifier or short code (e.g. `bafa_beratung`, `innovationsgutschein_bw`).
    - `name` – the official programme name.
    - `provider` – the issuing body (e.g. BMWK, regional ministry, EU Commission, private foundation).
    - `description` – a concise one‑sentence summary of purpose and key eligibility criteria.
@@ -39,7 +39,7 @@ You are an expert funding advisor specialising in government and private subsidy
 3. **Summarise overall funding prospects** in a `summary` field. State typical funding rates, total potential funding, and whether the business case depends on grants to achieve the ROI/payback targets. Mention if certain programmes have high competition or strict quotas.
 4. **Incorporate KI guardrails and compliance** by excluding programmes that require ethically questionable applications or high data risks. If risks are flagged in the risk report, prioritise programmes that include strong governance components.
 5. **Align with roadmap & tools:** Prioritise programmes that fund the phases and technologies identified in the automation roadmap and tools summary. For each programme, specify which phase or tool category it aligns with (`phase_alignment` and `tool_alignment` fields).
-6. **Use realistic figures:** Avoid unrealistic or invented amounts and rates. German and EU grant programmes typically offer funding between €5,000 and €200,000; co‑financing rates vary between 25–50 %. Ensure the programmes you list actually exist or are plausible analogues (e.g. “Digital Jetzt”, “KMU‑Innovativ”, “Horizon Europe EIC”).
+6. **Use realistic figures:** Avoid unrealistic or invented amounts and rates. German and EU grant programmes typically offer funding between €5,000 and €200,000; co‑financing rates vary between 25–50 %. Ensure the programmes you list actually exist or are plausible analogues (e.g. “BAFA Unternehmensberatung”, “KMU‑Innovativ”, “Horizon Europe EIC”). IMPORTANT: Do NOT recommend discontinued programmes like “Digital Jetzt” (ended Dec 2023) or “go-digital” (ended Dec 2024).
 
 ## Size‑aware guidance
 
@@ -95,10 +95,10 @@ Return a **JSON object** with two keys:
   "summary": "You qualify for multiple federal and regional grants with funding rates around 40 %; the listed programmes can finance your planned AI prototyping and training activities.",
   "programmes": [
     {
-      "programme_id": "digital_jetzt",
-      "name": "Digital Jetzt – Investment in Digital Technologies",
+      "programme_id": "bafa_beratung",
+      "name": "BAFA Unternehmensberatung",
       "provider": "BMWK",
-      "description": "Supports SMEs investing in digital technologies and employee training.",
+      "description": "Supports SMEs with subsidised consulting on digitalisation and business optimisation.",
       "funding_rate": "40 % of investment costs",
       "max_amount_eur": 100000,
       "match_reasons": "Aligns with your sector focus and funds the planned AI tooling in Phase 1.",

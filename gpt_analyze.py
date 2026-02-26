@@ -2378,33 +2378,8 @@ def get_foerderprogramme_extended(bundesland: str, company_size: str, branche: s
     # Erweiterte Förderprogramm-Datenbank (30 Programme)
     foerder_db = {
         # ===== BUNDESWEIT (für alle Bundesländer) =====
-        # PLATIN+++ FIX 4.1: go-digital ended Dec 2024, Digital Jetzt ended Dec 2023
-        "go_digital": {
-            "name": "go-digital (BMWK)",
-            "beschreibung": "Programm eingestellt seit Dezember 2024. Nachfolgeprogramm prüfen.",
-            "max_foerderung": "16.500 €",
-            "eignung": "Nicht verfügbar",
-            "komplexitaet": "Niedrig",
-            "bundesland": "alle",
-            "sizes": ["solo", "small"],
-            "url": "https://www.bmwk.de/go-digital",
-            "zielgruppe": "KMU bis 100 MA",
-            "status": "eingestellt",
-            "ende": "2024-12"
-        },
-        "digital_jetzt": {
-            "name": "Digital Jetzt (BMWK)",
-            "beschreibung": "Programm eingestellt seit Dezember 2023. Nachfolgeprogramm prüfen.",
-            "max_foerderung": "50.000 €",
-            "eignung": "Nicht verfügbar",
-            "komplexitaet": "Mittel",
-            "bundesland": "alle",
-            "sizes": ["solo", "small", "medium"],
-            "url": "https://www.bmwk.de/digital-jetzt",
-            "zielgruppe": "KMU 3-499 MA",
-            "status": "eingestellt",
-            "ende": "2023-12"
-        },
+        # FIX-B15: Removed go_digital (ended Dec 2024) and digital_jetzt (ended Dec 2023)
+        # to prevent LLM from recommending discontinued programs.
         "bafa_beratung": {
             "name": "BAFA Unternehmensberatung",
             "beschreibung": "Beratungsförderung für KMU",
@@ -13608,15 +13583,34 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
         if _fp_html and isinstance(_fp_html, str):
             for _discontinued in _FOERDER_BLACKLIST:
                 if _discontinued.lower() in _fp_html.lower():
-                    # Add discontinuation notice instead of removing entirely
-                    _fp_html = re.sub(
-                        rf'({re.escape(_discontinued)}(?:\s*\([^)]*\))?)',
-                        r'\1 (Programm eingestellt)',
-                        _fp_html,
-                        flags=re.IGNORECASE,
-                        count=1,
+                    # FIX-B15: Remove entire <li>/<p>/<tr> block containing discontinued program
+                    # instead of marking it (which produced "Digital Jetzt (Programm eingestellt)")
+                    _disc_esc = re.escape(_discontinued)
+                    # Try removing enclosing <li>...</li> first
+                    _fp_html_new = re.sub(
+                        rf'<li[^>]*>[^<]*{_disc_esc}[^<]*(?:<[^>]*>[^<]*)*</li>\s*',
+                        '', _fp_html, flags=re.IGNORECASE
                     )
-                    log.info("[FIX-R2-6B] Marked '%s' as discontinued in %s", _discontinued, _fp_key)
+                    if _fp_html_new == _fp_html:
+                        # Try removing enclosing <p>...</p>
+                        _fp_html_new = re.sub(
+                            rf'<p[^>]*>[^<]*{_disc_esc}[^<]*(?:<[^>]*>[^<]*)*</p>\s*',
+                            '', _fp_html, flags=re.IGNORECASE
+                        )
+                    if _fp_html_new == _fp_html:
+                        # Try removing enclosing <tr>...</tr>
+                        _fp_html_new = re.sub(
+                            rf'<tr[^>]*>(?:(?!</tr>).)*{_disc_esc}(?:(?!</tr>).)*</tr>\s*',
+                            '', _fp_html, flags=re.IGNORECASE | re.DOTALL
+                        )
+                    if _fp_html_new == _fp_html:
+                        # Fallback: remove inline mention
+                        _fp_html_new = re.sub(
+                            rf'{_disc_esc}(?:\s*\([^)]*\))?[,;.\s]*',
+                            '', _fp_html, flags=re.IGNORECASE
+                        )
+                    _fp_html = _fp_html_new
+                    log.info("[FIX-R2-6B] Removed '%s' from %s", _discontinued, _fp_key)
             sections[_fp_key] = _fp_html
 
     # ========== SAFE RECOMMENDATIONS FORMATTING (v9.0 - Maßnahme 5) ==========

@@ -379,24 +379,25 @@ class LiveDataService:
             ]
 
         # Deutsche Basisprogramme
+        # FIX-B15: Removed go-digital (ended Dec 2024) and Digital Jetzt (ended Dec 2023)
         return [
             {
-                "name": "go-digital (BMWK)",
-                "beschreibung": "Förderung digitaler Geschäftsprozesse",
-                "max_foerderung": "16.500 €",
+                "name": "BAFA Unternehmensberatung",
+                "beschreibung": "Beratungsförderung für KMU bis 249 Mitarbeiter",
+                "max_foerderung": "3.200 €",
                 "eignung": "Hoch",
                 "komplexitaet": "Niedrig",
-                "url": "https://www.bmwk.de/go-digital",
+                "url": "https://www.bafa.de",
                 "source": "static",
                 "country": "DE"
             },
             {
-                "name": "Digital Jetzt (BMWK)",
-                "beschreibung": "Investitionsförderung für digitale Technologien",
-                "max_foerderung": "50.000 €",
+                "name": "KMU-innovativ (BMBF)",
+                "beschreibung": "Förderung innovativer KMU in Spitzentechnologien",
+                "max_foerderung": "Projektabhängig",
                 "eignung": "Mittel",
                 "komplexitaet": "Mittel",
-                "url": "https://www.bmwk.de/digital-jetzt",
+                "url": "https://www.bmbf.de/kmu-innovativ",
                 "source": "static",
                 "country": "DE"
             }
