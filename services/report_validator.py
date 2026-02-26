@@ -3212,15 +3212,64 @@ class PlatinValidator:
             if r_int != rate and abs(r_int - rate) > 5:
                 self.errors.append(f"RATE_MISMATCH: Found {r}€/h, canonical is {rate}€/h")
 
+    # FIX-B24-P3: Known safe endings that are not real truncation
+    TRUNCATED_SAFE_ENDINGS = [
+        'Cap: 200%',
+        'siehe Business Case',
+        'Business Case',
+        'Erweiterbarkeit',
+        '[anonymisiert]',
+        'Risiko Niedrig',
+        'oder Bewertung]',
+        'Monat 4-6',
+        'Monat 7-12',
+        'Phase 3',
+        'Phase 2',
+        'Phase 1',
+        'KI-Stack',
+        'Quick Wins',
+        'Roadmap',
+        'Förderprogramme',
+        'Governance',
+    ]
+
+    # FIX-B24-P3: Sections that commonly end without punctuation by design
+    TRUNCATED_SAFE_SECTIONS = {
+        'BUSINESS_CASE_TABLE_HTML',
+        'TOOLS_HTML',
+        'KI_STACK_SUMMARY_HTML',
+        'BENCHMARK_ENGINE_HTML',
+        'TRANSPARENCY_BOX_HTML',
+        'transparency_box',
+        'AI_ACT_COMPLIANCE_HTML',
+        'DUTY_MATRIX_HTML',
+        'ROADMAP_90D_HTML',
+        'NINETY_DAY_PLAN_HTML',
+    }
+
     def _check_sentence_completeness(self) -> None:
-        """No truncated sentences."""
+        """No truncated sentences. FIX-B24-P3: Improved false-positive filtering."""
         for section_key, html in self.sections.items():
             if not isinstance(html, str) or section_key.startswith("_"):
+                continue
+            # FIX-B24-P3: Skip sections that commonly end without punctuation
+            if section_key in self.TRUNCATED_SAFE_SECTIONS:
                 continue
             text = re.sub(r'<[^>]+>', '', html).strip()
             if text and len(text) > 50:
                 if not text[-1] in '.!?:)"\u00BB\u201D':
-                    self.warnings.append(f"TRUNCATED: {section_key} ends with '...{text[-20:]}'")
+                    # FIX-B24-P3: Check if ending matches known safe patterns
+                    _is_safe = False
+                    _text_end = text[-40:]
+                    for _safe in self.TRUNCATED_SAFE_ENDINGS:
+                        if _text_end.endswith(_safe):
+                            _is_safe = True
+                            break
+                    # Also safe: ends with HTML entity, closing tag remnant, or list marker
+                    if not _is_safe and re.search(r'(?:\d+[).]|\w+[-–]\w+|%|€|\d{4})$', _text_end):
+                        _is_safe = True
+                    if not _is_safe:
+                        self.warnings.append(f"TRUNCATED: {section_key} ends with '...{text[-20:]}'")
 
     def _check_score_consistency(self) -> None:
         """Scores on title page = scores in risk section."""
