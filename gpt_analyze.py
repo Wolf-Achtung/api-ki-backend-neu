@@ -14851,6 +14851,35 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         sections.setdefault("STARTER_KIT_COMPACT_HTML", "")
 
     # =========================================================================
+    # FIX-B17: Second-pass Digital Jetzt blacklist for late-generated sections
+    # The first pass (FIX-R2-6B) runs before FOERDERPROGRAMME_HTML is populated.
+    # This pass catches "digital jetzt" in sections generated after the first pass.
+    # =========================================================================
+    _FOERDER_BLACKLIST_2ND = ["go-digital", "go_digital", "digital jetzt", "digital_jetzt"]
+    for _fp_key2 in ["FOERDERPROGRAMME_HTML", "FUNDING_HTML",
+                      "TOOLS_FUNDING_ALIGNMENT_HTML", "TOOLS_FUNDING_ALIGNMENT_COMPACT_HTML",
+                      "STARTER_KIT_HTML", "STARTER_KIT_COMPACT_HTML",
+                      "FUNDING_BRANCH_ALIGNMENT_HTML"]:
+        _fp_html2 = sections.get(_fp_key2, "")
+        if _fp_html2 and isinstance(_fp_html2, str):
+            for _disc2 in _FOERDER_BLACKLIST_2ND:
+                if _disc2.lower() in _fp_html2.lower():
+                    _d2_esc = re.escape(_disc2)
+                    # Remove <li>, <p>, <tr> blocks or inline mention
+                    for _pat2 in [
+                        rf'<li[^>]*>[^<]*{_d2_esc}[^<]*(?:<[^>]*>[^<]*)*</li>\s*',
+                        rf'<p[^>]*>[^<]*{_d2_esc}[^<]*(?:<[^>]*>[^<]*)*</p>\s*',
+                        rf'<tr[^>]*>(?:(?!</tr>).)*{_d2_esc}(?:(?!</tr>).)*</tr>\s*',
+                        rf'{_d2_esc}(?:\s*\([^)]*\))?[,;.\s]*',
+                    ]:
+                        _fp_html2_new = re.sub(_pat2, '', _fp_html2, flags=re.IGNORECASE | re.DOTALL)
+                        if _fp_html2_new != _fp_html2:
+                            _fp_html2 = _fp_html2_new
+                            break
+                    log.info("[FIX-B17] 2nd-pass: Removed '%s' from %s", _disc2, _fp_key2)
+            sections[_fp_key2] = _fp_html2
+
+    # =========================================================================
     # SPRINT G19: Branchenintelligenz & Marktlogik 2.0
     # =========================================================================
     try:
