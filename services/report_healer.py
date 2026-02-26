@@ -2114,6 +2114,7 @@ def reduce_redundancy(
         "BUSINESS_CASE_SIM_HTML", "RISK_ENGINE_HTML",
         "RISK_ENGINE_V3_HTML", "RECOMMENDATIONS_ENGINE_HTML",
         "SOFORT_START_HTML", "CHALLENGE_30_TAGE_HTML",
+        "ROADMAP_90D_HTML",  # FIX-B22-P2: FIX-C strips too many blocks → 29 words
     }
 
     # Process sections in order (earlier sections have priority)
@@ -2742,7 +2743,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "EXECUTIVE_SUMMARY_HTML": 2000,
         "QUICK_WINS_HTML": 8000,  # FIX-F1: LLM liefert 9K+ HTML
         "QUICK_WINS_HTML_LEFT": 8000,  # FIX-H3
-        "ROADMAP_90D_HTML": 1200,
+        "ROADMAP_90D_HTML": 5000,  # FIX-B22-P2: was 1200, needs ≥220 words (~1540 chars + HTML)
         "ROADMAP_12M_HTML": 8000,
         "RECOMMENDATIONS_HTML": 6000,  # FIX-629b
         "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
@@ -2752,11 +2753,11 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "BUSINESS_CASE_HTML": 10000,  # FIX-629b
         "PILOT_PLAN_HTML": 1200,
         "DATA_READINESS_HTML": 1200,
-        "STRATEGIE_GOVERNANCE_HTML": 1200,
-        "UNTERNEHMENSPROFIL_MARKT_HTML": 1500,
+        "STRATEGIE_GOVERNANCE_HTML": 5000,  # FIX-B22-P2: was 1200
+        "UNTERNEHMENSPROFIL_MARKT_HTML": 5000,  # FIX-B22-P2: was 1500
         "MONETARISIERUNG_HTML": 1200,
         "KI_SKILLPLAN_HTML": 1200,
-        "TOOLS_EMPFEHLUNGEN_HTML": 1200,
+        "TOOLS_EMPFEHLUNGEN_HTML": 5000,  # FIX-B22-P2: was 1200
         "TECHNOLOGIE_PROZESSE_HTML": 2000,
         # Engine-generated sections (structured output, not LLM free-text)
         "AUTOMATION_ROADMAP_HTML": 8000,
@@ -2832,21 +2833,21 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "EXECUTIVE_SUMMARY_HTML": 3000,
         "QUICK_WINS_HTML": 10000,  # FIX-F1: LLM liefert 9K+ HTML
         "QUICK_WINS_HTML_LEFT": 10000,  # FIX-H3
-        "ROADMAP_90D_HTML": 1800,
+        "ROADMAP_90D_HTML": 5000,  # FIX-B22-P2: was 1800
         "ROADMAP_12M_HTML": 12000,
         "RECOMMENDATIONS_HTML": 12000,  # FIX-629
         "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
         "GAMECHANGER_HTML": 10000,
-        "FOERDERPOTENZIAL_HTML": 10000,  # FIX-629
+        "FOERDERPOTENZIAL_HTML": 12000,  # FIX-B22-P2: was 10000, needs ≥800 words (~5600 chars + HTML)
         "ORG_CHANGE_HTML": 9000,  # FIX-629
         "BUSINESS_CASE_HTML": 8000,  # FIX-629
         "PILOT_PLAN_HTML": 1800,
         "DATA_READINESS_HTML": 1800,
-        "STRATEGIE_GOVERNANCE_HTML": 3000,
-        "UNTERNEHMENSPROFIL_MARKT_HTML": 2500,
+        "STRATEGIE_GOVERNANCE_HTML": 5000,  # FIX-B22-P2: was 3000
+        "UNTERNEHMENSPROFIL_MARKT_HTML": 5000,  # FIX-B22-P2: was 2500
         "MONETARISIERUNG_HTML": 1800,
         "KI_SKILLPLAN_HTML": 1800,
-        "TOOLS_EMPFEHLUNGEN_HTML": 3000,
+        "TOOLS_EMPFEHLUNGEN_HTML": 5000,  # FIX-B22-P2: was 3000
         "TECHNOLOGIE_PROZESSE_HTML": 3000,
         # Engine-generated sections (structured output, not LLM free-text)
         "AUTOMATION_ROADMAP_HTML": 18000,
@@ -2922,21 +2923,21 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "EXECUTIVE_SUMMARY_HTML": 4000,
         "QUICK_WINS_HTML": 12000,  # FIX-F1: LLM liefert 9K+ HTML
         "QUICK_WINS_HTML_LEFT": 12000,  # FIX-H3
-        "ROADMAP_90D_HTML": 2500,
+        "ROADMAP_90D_HTML": 5000,  # FIX-B22-P2: was 2500
         "ROADMAP_12M_HTML": 14000,
         "RECOMMENDATIONS_HTML": 15000,  # FIX-629b
         "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
         "GAMECHANGER_HTML": 12000,
-        "FOERDERPOTENZIAL_HTML": 10000,
+        "FOERDERPOTENZIAL_HTML": 12000,  # FIX-B22-P2: was 10000, needs ≥800 words
         "ORG_CHANGE_HTML": 10000,  # FIX-629b
         "BUSINESS_CASE_HTML": 10000,  # FIX-629b
         "PILOT_PLAN_HTML": 2000,
         "DATA_READINESS_HTML": 2000,
-        "STRATEGIE_GOVERNANCE_HTML": 3500,
-        "UNTERNEHMENSPROFIL_MARKT_HTML": 3000,
+        "STRATEGIE_GOVERNANCE_HTML": 5000,  # FIX-B22-P2: was 3500
+        "UNTERNEHMENSPROFIL_MARKT_HTML": 5000,  # FIX-B22-P2: was 3000
         "MONETARISIERUNG_HTML": 2000,
         "KI_SKILLPLAN_HTML": 2000,
-        "TOOLS_EMPFEHLUNGEN_HTML": 3500,
+        "TOOLS_EMPFEHLUNGEN_HTML": 5000,  # FIX-B22-P2: was 3500
         "TECHNOLOGIE_PROZESSE_HTML": 3000,
         # FIX-620: Engine-generated sections need generous budgets
         # These are structurally generated (not LLM free-text) and produce

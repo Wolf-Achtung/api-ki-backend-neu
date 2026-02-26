@@ -14430,6 +14430,37 @@ def analyze_briefing(
     score_wrap["scores"] = scores  # Update the wrapper with calibrated scores
     score_wrap["raw_scores"] = raw_scores  # Preserve raw scores for debugging
 
+    # === FIX-B21/B22-P0: Freitext-Bonus BEFORE content generation ===
+    # MUST run here (post-calibration, pre-content) so that Score-Enforcer
+    # inside _generate_content_sections() uses the FINAL bonus-adjusted values.
+    try:
+        _b22_current = {
+            'score_governance': scores["governance"],
+            'score_sicherheit': scores["security"],
+            'score_wertschoepfung': scores["value"],
+            'score_befaehigung': scores["enablement"],
+        }
+        _b22_adjusted = calc_freitext_bonus(answers, _b22_current)
+        _b22_changed = any(_b22_adjusted[k] != _b22_current[k] for k in _b22_current)
+        if _b22_changed:
+            scores["governance"] = _b22_adjusted['score_governance']
+            scores["security"] = _b22_adjusted['score_sicherheit']
+            scores["value"] = _b22_adjusted['score_wertschoepfung']
+            scores["enablement"] = _b22_adjusted['score_befaehigung']
+            # Recalculate overall
+            scores["overall"] = round(
+                (scores["governance"] + scores["security"]
+                 + scores["value"] + scores["enablement"]) / 4
+            )
+            score_wrap["scores"] = scores
+            log.info("[%s] [FIX-B22-P0] Freitext-Bonus pre-content: Gov=%s Sec=%s Val=%s Ena=%s Overall=%s",
+                     run_id, scores["governance"], scores["security"],
+                     scores["value"], scores["enablement"], scores["overall"])
+        else:
+            log.info("[%s] [FIX-B22-P0] Freitext-Bonus: no changes to scores", run_id)
+    except Exception as _ftb_err:
+        log.warning("[%s] [FIX-B22-P0] Freitext-Bonus pre-content failed: %s", run_id, _ftb_err)
+
     # === Business Case FRÜHZEITIG berechnen (vor Content-Generierung!) ===
     # Damit sind BC-Werte (CAPEX, OPEX, ROI, etc.) für alle Fallbacks verfügbar
     if calc_business_case:
@@ -15361,17 +15392,20 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             business_case_simulation_to_html,
         )
 
-        # R1: Inject raw ROI into answers for MC simulation
-        # BC_ROI_REALISTIC (637%) is set by BC engine at line 14512, BEFORE MC.
-        # Without this, MC reads answers["ROI_12M"]=200 (capped) → all percentiles 200%.
-        _mc_roi_raw = float(sections.get("BC_ROI_REALISTIC", 0) or sections.get("BC_ROI_REALISTIC_RAW", 0) or 0)
+        # R1: Inject ROI into answers for MC simulation
+        # FIX-B22-P1: Use CAPPED ROI (200%) not raw BC_ROI_REALISTIC (637%)
+        # to prevent ROI inconsistency across sections (KPI_001 trigger).
+        # MC simulation can use the raw value internally but display must be capped.
+        _mc_roi_capped = min(float(sections.get("ROI_12M", 0) or 0), 200.0)
+        _mc_roi_raw = float(sections.get("ROI_12M_RAW", 0) or _mc_roi_capped)
         _mc_briefing = dict(answers)  # Shallow copy to avoid polluting answers
-        if _mc_roi_raw > 0:
-            _mc_briefing["ROI_12M"] = _mc_roi_raw
+        if _mc_roi_capped > 0:
+            _mc_briefing["ROI_12M"] = _mc_roi_capped
             _mc_briefing["ROI_12M_RAW"] = _mc_roi_raw
-            log.info("[R1-MC] Injected ROI_12M=%.0f%% into MC briefing (was %s)", _mc_roi_raw, answers.get("ROI_12M", "MISSING"))
+            log.info("[R1-MC] [FIX-B22-P1] Injected capped ROI_12M=%.0f%% into MC briefing (raw=%.0f%%)",
+                     _mc_roi_capped, _mc_roi_raw)
         else:
-            log.warning("[R1-MC] BC_ROI_REALISTIC not available, MC will use capped ROI")
+            log.warning("[R1-MC] ROI_12M not available, MC will use defaults")
 
         bc_simulation = generate_business_case_simulation(
             context=None,
