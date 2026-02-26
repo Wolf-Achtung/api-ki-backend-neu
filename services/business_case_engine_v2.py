@@ -2163,12 +2163,14 @@ def business_case_report_to_html(
                     <p style="margin:0 0 8px 0;font-weight:600;color:#0284c7;font-size:10pt;">{labels["kpi_6m"]}</p>
             ''')
             for key, value in list(report.kpi_targets_6m.items())[:4]:
+                # FIX-B17: Cap ROI KPI values at MAX_ROI for consistency
+                _kpi_val = min(MAX_ROI, value) if "roi" in key.lower() else value
                 display_key = key.replace("_", " ").title()
                 unit = "%" if "roi" in key or "rate" in key or "progress" in key else ("h" if "hours" in key else "€")
                 html_parts.append(f'''
                     <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:10pt;">
                         <span style="color:#64748b;">{display_key}</span>
-                        <span style="font-weight:600;color:#0284c7;">{value:.0f}{unit}</span>
+                        <span style="font-weight:600;color:#0284c7;">{_kpi_val:.0f}{unit}</span>
                     </div>
                 ''')
             html_parts.append('</div>')
@@ -2180,12 +2182,14 @@ def business_case_report_to_html(
                     <p style="margin:0 0 8px 0;font-weight:600;color:#16a34a;font-size:10pt;">{labels["kpi_12m"]}</p>
             ''')
             for key, value in list(report.kpi_targets_12m.items())[:4]:
+                # FIX-B17: Cap ROI KPI values at MAX_ROI for consistency
+                _kpi_val = min(MAX_ROI, value) if "roi" in key.lower() else value
                 display_key = key.replace("_", " ").title()
                 unit = "%" if "roi" in key or "rate" in key or "progress" in key else ("h" if "hours" in key else "€")
                 html_parts.append(f'''
                     <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:10pt;">
                         <span style="color:#64748b;">{display_key}</span>
-                        <span style="font-weight:600;color:#16a34a;">{value:.0f}{unit}</span>
+                        <span style="font-weight:600;color:#16a34a;">{_kpi_val:.0f}{unit}</span>
                     </div>
                 ''')
             html_parts.append('</div>')
