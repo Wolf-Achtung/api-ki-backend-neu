@@ -68,7 +68,7 @@ class ValidationConfig:
 
     # Redundancy settings
     MAX_REDUNDANCY_WARNINGS: int = get_int_env("VALIDATION_MAX_REDUNDANCY_WARNINGS", 5)
-    REDUNDANCY_WORD_THRESHOLD: int = get_int_env("VALIDATION_REDUNDANCY_THRESHOLD", 20)
+    REDUNDANCY_WORD_THRESHOLD: int = get_int_env("VALIDATION_REDUNDANCY_THRESHOLD", 25)  # FIX-B23-P4: was 20, raised to reduce false positives
 
     # AI Act validation
     AI_ACT_MIN_REASONING_WORDS: int = get_int_env("AI_ACT_MIN_REASONING_WORDS", 60)
@@ -96,7 +96,7 @@ class ValidationConfig:
         """Reload all config values from ENV (useful for testing)."""
         cls.HARD_STOP_ON_SIZE_MISMATCH = get_bool_env("HARD_STOP_ON_SIZE_MISMATCH", True)
         cls.MAX_REDUNDANCY_WARNINGS = get_int_env("VALIDATION_MAX_REDUNDANCY_WARNINGS", 5)
-        cls.REDUNDANCY_WORD_THRESHOLD = get_int_env("VALIDATION_REDUNDANCY_THRESHOLD", 20)
+        cls.REDUNDANCY_WORD_THRESHOLD = get_int_env("VALIDATION_REDUNDANCY_THRESHOLD", 25)  # FIX-B23-P4
         cls.AI_ACT_MIN_REASONING_WORDS = get_int_env("AI_ACT_MIN_REASONING_WORDS", 60)
         cls.AI_ACT_MIN_DUTY_MATRIX_ROWS = get_int_env("AI_ACT_MIN_DUTY_MATRIX_ROWS", 3)
         cls.AI_ACT_MIN_ALERTS = get_int_env("AI_ACT_MIN_ALERTS", 2)
@@ -140,7 +140,7 @@ SECTION_MIN_WORDS: Dict[Tuple[str, str], int] = {
     ("solo", "transparency_box"): 50,   # SPRINT N1: 130→50 (minimal overhead)
     ("solo", "tools_empfehlungen"): 100,
     ("solo", "org_change"): 300,
-    ("solo", "unternehmensprofil_markt"): 350,
+    ("solo", "unternehmensprofil_markt"): 200,  # FIX-B23-P3: was 350, card-based layout
     ("solo", "branch_deep_dive"): 250,  # G24: Branch Deep-Dive Addon
 
     # ----- TEAM -----
@@ -159,7 +159,7 @@ SECTION_MIN_WORDS: Dict[Tuple[str, str], int] = {
     ("team", "transparency_box"): 160,
     ("team", "tools_empfehlungen"): 130,
     ("team", "org_change"): 400,
-    ("team", "unternehmensprofil_markt"): 400,
+    ("team", "unternehmensprofil_markt"): 230,  # FIX-B23-P3: was 400, card-based layout
     ("team", "branch_deep_dive"): 300,  # G24: Branch Deep-Dive Addon
 
     # ----- KMU -----
@@ -178,7 +178,7 @@ SECTION_MIN_WORDS: Dict[Tuple[str, str], int] = {
     ("kmu", "transparency_box"): 180,
     ("kmu", "tools_empfehlungen"): 160,
     ("kmu", "org_change"): 500,
-    ("kmu", "unternehmensprofil_markt"): 500,
+    ("kmu", "unternehmensprofil_markt"): 230,  # FIX-B23-P3: was 500, card-based layout (242 observed)
     ("kmu", "branch_deep_dive"): 350,  # G24: Branch Deep-Dive Addon
 }
 

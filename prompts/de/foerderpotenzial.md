@@ -4,20 +4,21 @@ Developer:
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BUNDESLAND_LABEL}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}, {{COMPANY_SIZE}} -->
-<!-- TOKEN-BUDGET: 3200 (solo:0.8x, team:1.0x, kmu:1.15x) -->
+<!-- TOKEN-BUDGET: 4200 (solo:0.8x, team:1.0x, kmu:1.15x) -->
+<!-- FIX-B23-P1: Increased from 3200→4200, word targets raised to avoid SECTION_TOO_SHORT -->
 <!--
 HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
-- Budget: 9000 Zeichen HTML-Output — NICHT überschreiten!
-- Solo: max. 7000 Zeichen | Team: max. 9000 Zeichen | KMU: max. 10500 Zeichen
+- Budget: 11000 Zeichen HTML-Output — NICHT überschreiten!
+- Solo: max. 8000 Zeichen | Team: max. 10000 Zeichen | KMU: max. 12000 Zeichen
 - B714: 14.802 Zeichen generiert, auf 8.261 getruncated → 44% VERLUST!
-- 4 Abschnitte × max. 200 Wörter = max. 800 Wörter gesamt
-- Pro Bullet-Liste: max. 4-5 Punkte à 1 Satz
-- GESAMT-ZIEL: 720-880 Wörter (steht auch unten bei PDF-SLIMDOWN)
+- 4 Abschnitte × 200-275 Wörter = 800-1100 Wörter gesamt
+- Pro Bullet-Liste: max. 5-6 Punkte à 1-2 Sätze
+- GESAMT-ZIEL: 850-1100 Wörter (steht auch unten bei PDF-SLIMDOWN)
 -->
 <!-- FOERDERLOGIK: DE-Bundesprogramme + Landesprogramme (KEINE EU-Core-Hinweise) -->
 <!--
 ###############################################################################
-**WICHTIG – Längenlimit: Deine Antwort darf maximal 1200 Wörter umfassen. Kürze lieber als zu überziehen.**
+**WICHTIG – Längenlimit: Deine Antwort soll 850-1100 Wörter umfassen, maximal 1400 Wörter. Kürze lieber als zu überziehen.**
 
 ##                    STANDORT KONSISTENZ (KRITISCH!)                        ##
 ###############################################################################
@@ -42,7 +43,7 @@ ERLAUBT:
 ###############################################################################
 -->
 <!--
-ZIEL: 4 Abschnitte mit je 180-220 Wörtern (= 720-880 Wörter gesamt).
+ZIEL: 4 Abschnitte mit je 200-275 Wörtern (= 850-1100 Wörter gesamt).
 
 STRUKTUR (4 Pflicht-Abschnitte):
   H3 1. Einordnung des Business Case ohne Förderung
@@ -192,7 +193,7 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   </p>
 </section>
 
-<!-- DEV: PDF-SLIMDOWN v2.0 - Ziel: 720-880 Wörter, kompakt aber vollständig -->
+<!-- DEV: PDF-SLIMDOWN v2.1 - Ziel: 850-1100 Wörter, kompakt aber vollständig (FIX-B23-P1) -->
 
 <!-- ZERO-LEAK POLICY (N4.6) -->
 <!--
