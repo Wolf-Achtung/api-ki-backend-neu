@@ -1996,6 +1996,134 @@ def _calibrate_scores(scores: Dict[str, int], answers: Dict[str, Any]) -> Dict[s
     return calibrated
 
 
+# === [FIX-B21-FREITEXT-BONUS] Freitext-Analyse für Score-Kalibrierung ===
+FREITEXT_SCORE_MAP = {
+    'score_sicherheit': {
+        'fields': ['ki_guardrails', 'strategische_ziele'],
+        'keywords': {
+            # +2 Punkte wenn eines dieser Keywords im Freitext vorkommt
+            'high': ['dsgvo', 'datenschutz', 'compliance', 'löschkonzept', 'anonymisierung',
+                     'verschlüsselung', 'audit', 'iso 27001', 'bsi', 'pen-test',
+                     'zugangskontrollen', 'backup', 'incident', 'meldepflicht'],
+            # +1 Punkt für awareness-Keywords
+            'medium': ['sicherheit', 'schutz', 'risiko', 'vertraulich', 'sensibel',
+                       'no-go', 'keine halluzinationen', 'kein tracking']
+        },
+        'max_bonus': 5  # Absolutes Maximum aus Freitext
+    },
+    'score_governance': {
+        'fields': ['ki_guardrails', 'strategische_ziele', 'vision_3_jahre'],
+        'keywords': {
+            'high': ['governance', 'richtlinie', 'policy', 'verantwortlich', 'freigabe',
+                     'ethik', 'leitplanken', 'ai act', 'regulierung'],
+            'medium': ['transparenz', 'kontrolle', 'audit', 'dokumentation', 'nachvollziehbar']
+        },
+        'max_bonus': 4
+    },
+    'score_wertschoepfung': {
+        'fields': ['geschaeftsmodell_evolution', 'zeitersparnis_prioritaet', 'ki_projekte'],
+        'keywords': {
+            'high': ['roi', 'umsatz', 'einsparung', 'automatisierung', 'skalierung',
+                     'neue produkte', 'monetarisierung', 'geschäftsmodell'],
+            'medium': ['effizienz', 'zeit sparen', 'produktivität', 'schneller', 'kosten senken']
+        },
+        'max_bonus': 3  # Weniger, da schon 92
+    },
+    'score_befaehigung': {
+        'fields': ['ki_projekte', 'vision_3_jahre', 'strategische_ziele'],
+        'keywords': {
+            'high': ['team', 'training', 'schulung', 'kompetenz', 'pilotprojekt',
+                     'chatgpt', 'claude', 'midjourney', 'copilot'],
+            'medium': ['lernen', 'ausprobiert', 'erfahrung', 'experiment', 'test']
+        },
+        'max_bonus': 3
+    }
+}
+
+
+def calc_freitext_bonus(answers: dict, current_scores: dict) -> dict:
+    """[FIX-B21] Berechnet Freitext-Bonus pro Dimension. Gibt adjustierte Scores zurück."""
+    adjusted = dict(current_scores)
+
+    for dimension, config in FREITEXT_SCORE_MAP.items():
+        bonus = 0
+        seen_high: set = set()
+        seen_medium: set = set()
+
+        for field_key in config['fields']:
+            text = str(answers.get(field_key, '') or '').lower()
+            if not text or len(text) < 5:
+                continue
+
+            for kw in config['keywords']['high']:
+                if kw in text and kw not in seen_high:
+                    seen_high.add(kw)
+                    bonus += 2
+
+            for kw in config['keywords']['medium']:
+                if kw in text and kw not in seen_medium:
+                    seen_medium.add(kw)
+                    bonus += 1
+
+        # Cap at max_bonus AND ensure score doesn't exceed 98
+        bonus = min(bonus, config['max_bonus'])
+        new_score = min(adjusted[dimension] + bonus, 98)
+
+        if bonus > 0:
+            log.info(f"[FIX-B21-FREITEXT-BONUS] {dimension}: +{bonus} "
+                     f"(high={len(seen_high)}, medium={len(seen_medium)}) "
+                     f"→ {adjusted[dimension]}→{new_score}")
+
+        adjusted[dimension] = new_score
+
+    return adjusted
+
+
+# === [FIX-B21-QUALITY-BONUS] Pipeline-Qualität als Score-Bonus ===
+def calc_quality_bonus(sections: dict) -> int:
+    """
+    [FIX-B21] +1 bis +3 Punkte basierend auf Report-Qualitätsindikatoren.
+    Wird auf score_gesamt addiert (nicht auf Dimensionen).
+    """
+    bonus = 0
+    reasons = []
+
+    # +1 für Consistency ≥ B (Score ≥ 80)
+    consistency_score = sections.get('_CONSISTENCY_SCORE', 0)
+    consistency_grade = str(sections.get('_CONSISTENCY_GRADE', 'F'))
+    if consistency_grade in ('A', 'B') or (isinstance(consistency_score, (int, float)) and consistency_score >= 80):
+        bonus += 1
+        reasons.append(f"consistency={consistency_grade}/{consistency_score}")
+
+    # +1 für N4.3 DoD PASSED
+    dod_passed = sections.get('_n43_dod_passed', False)
+    n43_passed = sections.get('N43_DOD_PASSED', False)
+    if dod_passed or n43_passed:
+        bonus += 1
+        reasons.append("n43_dod=PASSED")
+
+    # +1 für wenige PLATIN-Warnings (< 25)
+    try:
+        platin_warnings = int(sections.get('_PLATIN_WARNINGS', 999))
+    except (ValueError, TypeError):
+        platin_warnings = 999
+    if platin_warnings < 25:
+        bonus += 1
+        reasons.append(f"platin_warnings={platin_warnings}")
+
+    # Cap: max +3
+    bonus = min(bonus, 3)
+
+    if bonus > 0:
+        log.info(f"[FIX-B21-QUALITY-BONUS] +{bonus} ({', '.join(reasons)})")
+    else:
+        log.info(f"[FIX-B21-QUALITY-BONUS] +0 (no bonus criteria met: "
+                 f"consistency={consistency_grade}, dod={dod_passed or n43_passed}, "
+                 f"platin_warnings={platin_warnings})")
+
+    return bonus
+
+
 # -------------------- OpenAI client ----------------
 def _call_openai(
     prompt: str,
@@ -14471,6 +14599,38 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     sections["CANONICAL_SECURITY"] = scores.get("security", 0)
     sections["CANONICAL_OVERALL"] = scores.get("overall", 0)
 
+    # --- [FIX-B21-FREITEXT-BONUS] ---
+    # Freitext-Analyse: Bonus-Punkte für Score-Dimensionen basierend auf Keywords in Freitextantworten
+    # Muss NACH Score-Zuweisung und VOR O5-N10 Benchmark-Blend laufen
+    try:
+        _b21_current_scores = {
+            'score_governance': int(sections.get('score_governance', 0) or 0),
+            'score_sicherheit': int(sections.get('score_sicherheit', 0) or 0),
+            'score_wertschoepfung': int(sections.get('score_wertschoepfung', 0) or 0),
+            'score_befaehigung': int(sections.get('score_befaehigung', 0) or 0),
+        }
+        _b21_adjusted = calc_freitext_bonus(answers, _b21_current_scores)
+
+        for _b21_dim, _b21_val in _b21_adjusted.items():
+            sections[_b21_dim] = _b21_val
+        # Keep score_nutzen alias in sync with score_wertschoepfung
+        sections["score_nutzen"] = _b21_adjusted['score_wertschoepfung']
+
+        # Update CANONICAL scores to reflect freitext bonus
+        sections["CANONICAL_GOVERNANCE"] = _b21_adjusted['score_governance']
+        sections["CANONICAL_SECURITY"] = _b21_adjusted['score_sicherheit']
+
+        # Gesamt-Score neu berechnen
+        sections['score_gesamt'] = round(
+            (_b21_adjusted['score_governance'] + _b21_adjusted['score_sicherheit'] +
+             _b21_adjusted['score_wertschoepfung'] + _b21_adjusted['score_befaehigung']) / 4, 1
+        )
+        sections["CANONICAL_OVERALL"] = sections['score_gesamt']
+        log.info(f"[FIX-B21-FREITEXT-BONUS] score_gesamt: "
+                 f"{_b21_current_scores} → {_b21_adjusted} = {sections['score_gesamt']}")
+    except Exception as _b21_err:
+        log.warning(f"[FIX-B21-FREITEXT-BONUS] Failed: {_b21_err}")
+
     # ==========================================================================
     # Badges: Derived from scores for QA-Gate compliance
     # badge_security: Based on security score (score_sicherheit)
@@ -16928,6 +17088,20 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.info(f"[{run_id}] [PLATIN+++] Pre-render validation: passed={_p_passed}, errors={len(_p_errors)}, warnings={len(_p_warnings)}")
     except Exception as pv_err:
         log.warning(f"[{run_id}] [PLATIN+++] Validation failed to run: {pv_err}")
+
+    # --- [FIX-B21-QUALITY-BONUS] ---
+    # Quality-Bonus: +1 bis +3 auf score_gesamt basierend auf Pipeline-Qualitätsindikatoren
+    # Muss NACH Consistency-Check, N4.3 DoD und PLATIN-Validierung laufen (alle Metriken verfügbar)
+    try:
+        _b21q_bonus = calc_quality_bonus(sections)
+        if _b21q_bonus > 0:
+            _b21q_old_gesamt = float(sections.get('score_gesamt', 0) or 0)
+            sections['score_gesamt'] = min(_b21q_old_gesamt + _b21q_bonus, 98)
+            sections["CANONICAL_OVERALL"] = sections['score_gesamt']
+            log.info(f"[FIX-B21-QUALITY-BONUS] score_gesamt: "
+                     f"{_b21q_old_gesamt} + {_b21q_bonus} = {sections['score_gesamt']}")
+    except Exception as _b21q_err:
+        log.warning(f"[FIX-B21-QUALITY-BONUS] Failed: {_b21q_err}")
 
     # === DEBUG: FINAL CHECK - Variables before render() ===
     log.info("=" * 80)
