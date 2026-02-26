@@ -219,7 +219,7 @@ def test_validator():
             "risks": 500,
             "recommendations": 500,
             "roadmap_12m": 400,
-            "unternehmensprofil_markt": 300,
+            "unternehmensprofil_markt": 220,  # FIX-B23-P3: card-based layout
         }
 
         for section, expected in expected_mins.items():
