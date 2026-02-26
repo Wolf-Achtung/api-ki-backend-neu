@@ -1298,8 +1298,8 @@ _SECTION_MAX_TOKENS = {
     "recommendations_expand": 6000,
     "risks": 6000,
     "risks_expand": 6000,
-    "foerderpotenzial": 6000,
-    "foerderpotenzial_expand": 6000,
+    "foerderpotenzial": 8000,       # FIX-B23-P1: was 6000, section too short (586/800 words)
+    "foerderpotenzial_expand": 8000,  # FIX-B23-P1: was 6000
     # ── STANDARD (Sonnet 4.5 sections) ──
     "tools_empfehlungen": 7000,
     "tools_empfehlungen_expand": 7000,
@@ -13821,6 +13821,61 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
         # B729: ALWAYS log — even 0 fixes (confirms code path is reached)
         log.info(f"[FIX-B729-SCORE-ENFORCER] Checked {_b729_checked} sections, fixed {_b729_fixed} (gov={_b729_gov}, sec={_b729_sec})")
 
+        # FIX-B23-P0: Body-Text Score Enforcer (Safety-Net for GPT body text)
+        # B729 only patches "Governance-Score: XX/100" header patterns.
+        # This catches body-text patterns like "Sicherheits-Score von XX", "(XX/100)" etc.
+        try:
+            _bt_overall = int(scores.get("overall", 0) or 0)
+            _bt_val = int(scores.get("value", 0) or 0)
+            _bt_ena = int(scores.get("enablement", 0) or 0)
+            _bt_patterns = [
+                # "Sicherheits-Score von XX"
+                (_re_b729.compile(r'(Sicherheits-?[Ss]core\s+von\s+)(\d{1,3})(\b)'), str(_b729_sec)),
+                # "Governance-Score von XX"
+                (_re_b729.compile(r'(Governance-?[Ss]core\s+von\s+)(\d{1,3})(\b)'), str(_b729_gov)),
+                # "Gesamt-Score von XX" / "Gesamtscore von XX"
+                (_re_b729.compile(r'(Gesamt-?[Ss]core\s+von\s+)(\d{1,3})(\b)'), str(_bt_overall)),
+                # "Wertschöpfungs-Score von XX"
+                (_re_b729.compile(r'(Wertsch(?:ö|oe)pfungs-?[Ss]core\s+von\s+)(\d{1,3})(\b)'), str(_bt_val)),
+                # "Befähigungs-Score von XX"
+                (_re_b729.compile(r'(Bef(?:ä|ae)higungs-?[Ss]core\s+von\s+)(\d{1,3})(\b)'), str(_bt_ena)),
+                # "(XX/100)" after Sicherheits-Score context (within 80 chars)
+                (_re_b729.compile(r'(Sicherheits-?[Ss]core[^<\n]{0,80}\()(\d{1,3})(\s*/\s*100\s*\))'), str(_b729_sec)),
+                # "(XX/100)" after Governance-Score context
+                (_re_b729.compile(r'(Governance-?[Ss]core[^<\n]{0,80}\()(\d{1,3})(\s*/\s*100\s*\))'), str(_b729_gov)),
+                # "(XX/100)" after Gesamt-Score context
+                (_re_b729.compile(r'(Gesamt-?[Ss]core[^<\n]{0,80}\()(\d{1,3})(\s*/\s*100\s*\))'), str(_bt_overall)),
+                # "Score von XX Punkten" (generic → overall)
+                (_re_b729.compile(r'(\bScore\s+von\s+)(\d{1,3})(\s+Punkt)'), str(_bt_overall)),
+                # "XX von 100 Punkten" (generic → overall)
+                (_re_b729.compile(r'(\b)(\d{1,3})(\s+von\s+100\s+Punkt)'), str(_bt_overall)),
+            ]
+            _bt_fixed_total = 0
+            for _bt_sk in list(sections.keys()):
+                _bt_sv = sections.get(_bt_sk, "")
+                if not isinstance(_bt_sv, str) or len(_bt_sv) < 50:
+                    continue
+                # Apply to HTML sections and known text sections that may contain scores
+                if not (_bt_sk.endswith("_HTML") or _bt_sk in (
+                    "gamechanger", "risks", "recommendations", "executive_summary",
+                    "reifegrad_sowhat", "foerderpotenzial", "strategie_governance",
+                    "tools_empfehlungen", "unternehmensprofil_markt",
+                )):
+                    continue
+                _bt_orig = _bt_sv
+                for _bt_pat, _bt_repl in _bt_patterns:
+                    def _bt_replace(m: re.Match[str], r: str = _bt_repl) -> str:
+                        return f"{m.group(1)}{r}{m.group(3)}" if str(m.group(2)) != r else m.group(0)
+                    _bt_sv = _bt_pat.sub(_bt_replace, _bt_sv)
+                if _bt_sv != _bt_orig:
+                    sections[_bt_sk] = _bt_sv
+                    _bt_fixed_total += 1
+                    log.info(f"[FIX-B23-P0-BODY-ENFORCER] Patched body text in: {_bt_sk}")
+            log.info(f"[FIX-B23-P0-BODY-ENFORCER] Total sections patched: {_bt_fixed_total} "
+                     f"(gov={_b729_gov}, sec={_b729_sec}, overall={_bt_overall}, val={_bt_val}, ena={_bt_ena})")
+        except Exception as _bt_err:
+            log.warning(f"[FIX-B23-P0-BODY-ENFORCER] Failed: {_bt_err}")
+
         # FIX-B732-GC-DEDUP: Gamechanger/KI-Stack Deduplizierung (S.11 3x gleicher Text)
         try:
             import re as _re732
@@ -14430,6 +14485,15 @@ def analyze_briefing(
     score_wrap["scores"] = scores  # Update the wrapper with calibrated scores
     score_wrap["raw_scores"] = raw_scores  # Preserve raw scores for debugging
 
+    # === FIX-B23-P0: Save pre-bonus scores for body-text enforcer tracking ===
+    _pre_bonus_scores = {
+        "governance": scores.get("governance", 0),
+        "security": scores.get("security", 0),
+        "value": scores.get("value", 0),
+        "enablement": scores.get("enablement", 0),
+        "overall": scores.get("overall", 0),
+    }
+
     # === FIX-B21/B22-P0: Freitext-Bonus BEFORE content generation ===
     # MUST run here (post-calibration, pre-content) so that Score-Enforcer
     # inside _generate_content_sections() uses the FINAL bonus-adjusted values.
@@ -14481,6 +14545,14 @@ def analyze_briefing(
 
     log.info("[%s] 🎨 Generating content sections with %s...", run_id, "PROMPT SYSTEM" if USE_PROMPT_SYSTEM else "legacy prompts")
     sections = _generate_content_sections(briefing=answers, scores=scores)
+
+    # === FIX-B23-P0: Store pre-bonus scores in sections for tracking ===
+    sections["_pre_bonus_governance"] = _pre_bonus_scores["governance"]
+    sections["_pre_bonus_security"] = _pre_bonus_scores["security"]
+    sections["_pre_bonus_value"] = _pre_bonus_scores["value"]
+    sections["_pre_bonus_enablement"] = _pre_bonus_scores["enablement"]
+    sections["_pre_bonus_overall"] = _pre_bonus_scores["overall"]
+    log.info("[%s] [FIX-B23-P0] Pre-bonus scores stored: %s", run_id, _pre_bonus_scores)
 
     # === FIX-509-B: GLOBAL ZERO-LEAK PHRASE PRE-CLEANUP ===
     # Must run BEFORE zero-leak detection to prevent regeneration/fallback
@@ -14630,37 +14702,13 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     sections["CANONICAL_SECURITY"] = scores.get("security", 0)
     sections["CANONICAL_OVERALL"] = scores.get("overall", 0)
 
-    # --- [FIX-B21-FREITEXT-BONUS] ---
-    # Freitext-Analyse: Bonus-Punkte für Score-Dimensionen basierend auf Keywords in Freitextantworten
-    # Muss NACH Score-Zuweisung und VOR O5-N10 Benchmark-Blend laufen
-    try:
-        _b21_current_scores = {
-            'score_governance': int(sections.get('score_governance', 0) or 0),
-            'score_sicherheit': int(sections.get('score_sicherheit', 0) or 0),
-            'score_wertschoepfung': int(sections.get('score_wertschoepfung', 0) or 0),
-            'score_befaehigung': int(sections.get('score_befaehigung', 0) or 0),
-        }
-        _b21_adjusted = calc_freitext_bonus(answers, _b21_current_scores)
-
-        for _b21_dim, _b21_val in _b21_adjusted.items():
-            sections[_b21_dim] = _b21_val
-        # Keep score_nutzen alias in sync with score_wertschoepfung
-        sections["score_nutzen"] = _b21_adjusted['score_wertschoepfung']
-
-        # Update CANONICAL scores to reflect freitext bonus
-        sections["CANONICAL_GOVERNANCE"] = _b21_adjusted['score_governance']
-        sections["CANONICAL_SECURITY"] = _b21_adjusted['score_sicherheit']
-
-        # Gesamt-Score neu berechnen
-        sections['score_gesamt'] = round(
-            (_b21_adjusted['score_governance'] + _b21_adjusted['score_sicherheit'] +
-             _b21_adjusted['score_wertschoepfung'] + _b21_adjusted['score_befaehigung']) / 4, 1
-        )
-        sections["CANONICAL_OVERALL"] = sections['score_gesamt']
-        log.info(f"[FIX-B21-FREITEXT-BONUS] score_gesamt: "
-                 f"{_b21_current_scores} → {_b21_adjusted} = {sections['score_gesamt']}")
-    except Exception as _b21_err:
-        log.warning(f"[FIX-B21-FREITEXT-BONUS] Failed: {_b21_err}")
+    # --- [FIX-B21-FREITEXT-BONUS] DISABLED by FIX-B23-P0 ---
+    # Freitext-Bonus is now applied ONCE pre-content by FIX-B22-P0 (line ~14452).
+    # Applying it again here caused DOUBLE BONUS (e.g. Sec: 85→88 pre-content, then 88→91 here).
+    # Score aliases (score_nutzen) and CANONICAL values are already set at lines 14630-14641
+    # from the bonused `scores` dict.
+    log.info("[FIX-B23-P0] Skipped B21 freitext-bonus inside _generate_content_sections "
+             "(already applied pre-content by B22-P0, double-bonus fix)")
 
     # ==========================================================================
     # Badges: Derived from scores for QA-Gate compliance
