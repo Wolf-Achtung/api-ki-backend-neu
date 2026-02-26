@@ -1052,6 +1052,8 @@ def is_text_section(section_name: str) -> bool:
         'tool_comparison', 'benchmark_table',
         # v7.0: Quick Wins needs h3/h4 for structured boxes
         'quick_wins', 'quick_wins_html', 'quick_wins_html_left', 'quick_wins_html_right',
+        # FIX-B18: Vendor Audit uses h4, inline styles, flex layout — programmatically generated
+        'vendor_audit',
     }
 
     if any(exc in name_lower for exc in complex_html_sections):
