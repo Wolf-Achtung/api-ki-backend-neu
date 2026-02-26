@@ -1996,115 +1996,130 @@ def _calibrate_scores(scores: Dict[str, int], answers: Dict[str, Any]) -> Dict[s
     return calibrated
 
 
-# =============================================================================
-# B21: FREITEXT-BONUS-ENGINE
-# =============================================================================
-# Analyzes free-text questionnaire answers for dimension-relevant keywords
-# and adds bonus points to dimension scores (applied post-calibration).
-
+# === [FIX-B21-FREITEXT-BONUS] Freitext-Analyse für Score-Kalibrierung ===
 FREITEXT_SCORE_MAP: Dict[str, Dict[str, Any]] = {
-    "security": {
-        "keywords": [
-            "datenschutz", "dsgvo", "gdpr", "verschlüsselung", "encryption",
-            "firewall", "zugriffskontrolle", "access control", "backup",
-            "sicherheitskonzept", "incident", "penetrationstest", "phishing",
-            "malware", "zero trust", "authentifizierung", "2fa", "mfa",
-            "cybersecurity", "informationssicherheit", "it-sicherheit",
-            "notfallplan", "disaster recovery", "iso 27001", "bsi",
-            "schwachstelle", "sicherheitslücke", "passwort", "password",
-            "vpn", "ssl", "tls", "zertifikat",
-        ],
-        "fields": ["ki_guardrails", "strategische_ziele", "ki_projekte",
-                    "vision_3_jahre", "geschaeftsmodell_evolution"],
-        "max_bonus": 5,
+    'score_sicherheit': {
+        'fields': ['ki_guardrails', 'strategische_ziele'],
+        'keywords': {
+            # +2 Punkte wenn eines dieser Keywords im Freitext vorkommt
+            'high': ['dsgvo', 'datenschutz', 'compliance', 'löschkonzept', 'anonymisierung',
+                     'verschlüsselung', 'audit', 'iso 27001', 'bsi', 'pen-test',
+                     'zugangskontrollen', 'backup', 'incident', 'meldepflicht'],
+            # +1 Punkt für awareness-Keywords
+            'medium': ['sicherheit', 'schutz', 'risiko', 'vertraulich', 'sensibel',
+                       'no-go', 'keine halluzinationen', 'kein tracking']
+        },
+        'max_bonus': 5  # Absolutes Maximum aus Freitext
     },
-    "governance": {
-        "keywords": [
-            "richtlinie", "policy", "compliance", "verantwortlich",
-            "prozess", "regelwerk", "audit", "dokumentation",
-            "ethik", "transparenz", "nachvollziehbar", "regulierung",
-            "ai act", "verordnung", "kontrollmechanismus", "genehmigung",
-            "risikomanagement", "risikobewertung", "governance",
-            "leitfaden", "standard", "norm", "qualitätssicherung",
-            "freigabe", "vier-augen", "protokoll",
-        ],
-        "fields": ["ki_guardrails", "strategische_ziele", "ki_projekte",
-                    "vision_3_jahre"],
-        "max_bonus": 5,
+    'score_governance': {
+        'fields': ['ki_guardrails', 'strategische_ziele', 'vision_3_jahre'],
+        'keywords': {
+            'high': ['governance', 'richtlinie', 'policy', 'verantwortlich', 'freigabe',
+                     'ethik', 'leitplanken', 'ai act', 'regulierung'],
+            'medium': ['transparenz', 'kontrolle', 'audit', 'dokumentation', 'nachvollziehbar']
+        },
+        'max_bonus': 4
     },
-    "value": {
-        "keywords": [
-            "automatisierung", "effizienz", "produktivität", "zeitersparnis",
-            "kostenreduktion", "umsatzsteigerung", "wertschöpfung",
-            "innovation", "wettbewerbsvorteil", "skalierung",
-            "prozessoptimierung", "roi", "rendite", "einsparung",
-            "digitalisierung", "workflow", "pipeline",
-        ],
-        "fields": ["strategische_ziele", "ki_projekte", "zeitersparnis_prioritaet",
-                    "vision_3_jahre", "geschaeftsmodell_evolution"],
-        "max_bonus": 3,
+    'score_wertschoepfung': {
+        'fields': ['geschaeftsmodell_evolution', 'zeitersparnis_prioritaet', 'ki_projekte'],
+        'keywords': {
+            'high': ['roi', 'umsatz', 'einsparung', 'automatisierung', 'skalierung',
+                     'neue produkte', 'monetarisierung', 'geschäftsmodell'],
+            'medium': ['effizienz', 'zeit sparen', 'produktivität', 'schneller', 'kosten senken']
+        },
+        'max_bonus': 3  # Weniger, da schon 92
     },
-    "enablement": {
-        "keywords": [
-            "schulung", "training", "weiterbildung", "kompetenz",
-            "qualifizierung", "change management", "lernbereit",
-            "workshop", "zertifizierung", "coach", "mentor",
-            "teamkultur", "mindset", "skill", "fortbildung",
-            "onboarding", "wissenstransfer", "akademie",
-        ],
-        "fields": ["ki_projekte", "strategische_ziele", "vision_3_jahre"],
-        "max_bonus": 3,
-    },
+    'score_befaehigung': {
+        'fields': ['ki_projekte', 'vision_3_jahre', 'strategische_ziele'],
+        'keywords': {
+            'high': ['team', 'training', 'schulung', 'kompetenz', 'pilotprojekt',
+                     'chatgpt', 'claude', 'midjourney', 'copilot'],
+            'medium': ['lernen', 'ausprobiert', 'erfahrung', 'experiment', 'test']
+        },
+        'max_bonus': 3
+    }
 }
 
 
-def calc_freitext_bonus(answers: Dict[str, Any]) -> Dict[str, int]:
-    """
-    B21 Freitext-Bonus-Engine: Analyze free-text questionnaire answers
-    for dimension-relevant keywords and calculate bonus points.
+def calc_freitext_bonus(answers: dict, current_scores: dict) -> dict:
+    """[FIX-B21] Berechnet Freitext-Bonus pro Dimension. Gibt adjustierte Scores zurück."""
+    adjusted = dict(current_scores)
 
-    Returns dict mapping dimension → bonus points (0 to max_bonus).
-    """
-    bonus: Dict[str, int] = {}
     for dimension, config in FREITEXT_SCORE_MAP.items():
-        hits: set = set()
-        for field in config["fields"]:
-            text = str(answers.get(field, "") or "").lower()
-            if not text or len(text) < 3:
+        bonus = 0
+        seen_high: set = set()
+        seen_medium: set = set()
+
+        for field_key in config['fields']:
+            text = str(answers.get(field_key, '') or '').lower()
+            if not text or len(text) < 5:
                 continue
-            for kw in config["keywords"]:
-                if kw in text:
-                    hits.add(kw)
-        # 1 point per unique keyword hit, capped at max_bonus
-        dim_bonus = min(len(hits), config["max_bonus"])
-        bonus[dimension] = dim_bonus
-    return bonus
+
+            for kw in config['keywords']['high']:
+                if kw in text and kw not in seen_high:
+                    seen_high.add(kw)
+                    bonus += 2
+
+            for kw in config['keywords']['medium']:
+                if kw in text and kw not in seen_medium:
+                    seen_medium.add(kw)
+                    bonus += 1
+
+        # Cap at max_bonus AND ensure score doesn't exceed 98
+        bonus = min(bonus, config['max_bonus'])
+        new_score = min(adjusted[dimension] + bonus, 98)
+
+        if bonus > 0:
+            log.info(f"[FIX-B21-FREITEXT-BONUS] {dimension}: +{bonus} "
+                     f"(high={len(seen_high)}, medium={len(seen_medium)}) "
+                     f"→ {adjusted[dimension]}→{new_score}")
+
+        adjusted[dimension] = new_score
+
+    return adjusted
 
 
-def calc_quality_bonus(sections: Dict[str, Any]) -> int:
+# === [FIX-B21-QUALITY-BONUS] Pipeline-Qualität als Score-Bonus ===
+def calc_quality_bonus(sections: dict) -> int:
     """
-    B21 Quality-Bonus: Add +1-3 to score_gesamt based on pipeline quality.
-
-    +1 if Consistency grade >= B (score >= 85)
-    +1 if N4.3 DoD PASSED
-    +1 if PLATIN warnings < 50
+    [FIX-B21] +1 bis +3 Punkte basierend auf Report-Qualitätsindikatoren.
+    Wird auf score_gesamt addiert (nicht auf Dimensionen).
     """
     bonus = 0
+    reasons = []
 
-    # +1 for Consistency grade B or better (score >= 85)
-    cons_score = float(sections.get("_CONSISTENCY_SCORE", 0) or 0)
-    if cons_score >= 85:
+    # +1 für Consistency ≥ B (Score ≥ 80)
+    consistency_score = sections.get('_CONSISTENCY_SCORE', 0)
+    consistency_grade = str(sections.get('_CONSISTENCY_GRADE', 'F'))
+    if consistency_grade in ('A', 'B') or (isinstance(consistency_score, (int, float)) and consistency_score >= 80):
         bonus += 1
+        reasons.append(f"consistency={consistency_grade}/{consistency_score}")
 
-    # +1 for N4.3 DoD PASSED
-    dod_passed = sections.get("_n43_dod_passed") or sections.get("N43_DOD_PASSED")
-    if dod_passed:
+    # +1 für N4.3 DoD PASSED
+    dod_passed = sections.get('_n43_dod_passed', False)
+    n43_passed = sections.get('N43_DOD_PASSED', False)
+    if dod_passed or n43_passed:
         bonus += 1
+        reasons.append("n43_dod=PASSED")
 
-    # +1 for PLATIN warnings < 50
-    platin_warnings = int(sections.get("_PLATIN_WARNINGS", 999) or 999)
-    if platin_warnings < 50:
+    # +1 für wenige PLATIN-Warnings (< 25)
+    try:
+        platin_warnings = int(sections.get('_PLATIN_WARNINGS', 999))
+    except (ValueError, TypeError):
+        platin_warnings = 999
+    if platin_warnings < 25:
         bonus += 1
+        reasons.append(f"platin_warnings={platin_warnings}")
+
+    # Cap: max +3
+    bonus = min(bonus, 3)
+
+    if bonus > 0:
+        log.info(f"[FIX-B21-QUALITY-BONUS] +{bonus} ({', '.join(reasons)})")
+    else:
+        log.info(f"[FIX-B21-QUALITY-BONUS] +0 (no bonus criteria met: "
+                 f"consistency={consistency_grade}, dod={dod_passed or n43_passed}, "
+                 f"platin_warnings={platin_warnings})")
 
     return bonus
 
@@ -11241,6 +11256,102 @@ Für jede Kategorie: 2-3 Standard-Prompts'''
     Toolvorschlägen und einer strukturierten Umsetzungs-Roadmap.
   </p>
 </div>""",
+        # ════════════════════════════════════════════════════════════════════════
+        # FIX-B16: Decision-Sections — bisher ohne Fallback → generischer Boilerplate
+        # ════════════════════════════════════════════════════════════════════════
+        "executive_decision": f"""<div class="executive-decision-fallback">
+  <h3>Strategische Empfehlungen</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    Basierend auf dem KI-Reifegrad von <strong>{scores.get("overall", "–")}/100 Punkten</strong>
+    ergeben sich für <strong>{size_label or "Ihr Unternehmen"}</strong> im Bereich
+    <strong>{branche}</strong> folgende strategische Handlungsempfehlungen:
+  </p>
+  <ol>
+    <li><strong>Pilotprojekt starten:</strong> Wählen Sie einen klar abgegrenzten Prozess im Bereich
+    {hauptleistung or branche} und setzen Sie dort ein erstes KI-Tool produktiv ein. Der Fokus liegt
+    auf messbarer Zeitersparnis bei überschaubarem Risiko.</li>
+    <li><strong>Kompetenzen aufbauen:</strong> Investieren Sie in Grundlagenwissen zu KI-Anwendungen
+    für Ihr Team. Schulungen und Prompt-Training beschleunigen die Akzeptanz und Nutzungsqualität.</li>
+    <li><strong>Governance etablieren:</strong> Definieren Sie klare Regeln für den KI-Einsatz –
+    insbesondere zu Datenschutz, Qualitätskontrolle und Verantwortlichkeiten.</li>
+  </ol>
+  <p>
+    Die Umsetzung dieser Maßnahmen bildet das Fundament für eine nachhaltige KI-Strategie und
+    sollte innerhalb der nächsten 90 Tage begonnen werden.
+  </p>
+</div>""",
+        "roadmap_90d_decision": f"""<div class="roadmap-decision-fallback">
+  <h3>90-Tage-Plan: Entscheidungsversion</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    Ihr aktueller KI-Reifegrad-Score von <strong>{scores.get("overall", "–")}/100</strong>
+    zeigt {
+        "eine gute Ausgangsbasis für den systematischen Ausbau"
+        if int(scores.get("overall", 0) or 0) >= 60
+        else "klares Potenzial für schnelle Fortschritte durch gezielte Maßnahmen"
+    }. Der folgende 90-Tage-Plan priorisiert die wirksamsten Hebel für
+    <strong>{size_label or "Ihr Unternehmen"}</strong>.
+  </p>
+  <h4>Monat 1: Quick Wins realisieren</h4>
+  <ul>
+    <li>Erstes KI-Tool für {hauptleistung or "Ihren Kernprozess"} auswählen und einrichten.</li>
+    <li>Konkrete Anwendungsfälle definieren und Erfolgskriterien festlegen.</li>
+  </ul>
+  <h4>Monat 2: Pilotbetrieb und Lernen</h4>
+  <ul>
+    <li>Produktiven Einsatz im Pilotbereich starten und Ergebnisse dokumentieren.</li>
+    <li>Feedback sammeln und Prozesse anpassen.</li>
+  </ul>
+  <h4>Monat 3: Skalierung vorbereiten</h4>
+  <ul>
+    <li>Erfolgreiche Ansätze auf weitere Bereiche übertragen.</li>
+    <li>Governance-Rahmen und Schulungskonzept finalisieren.</li>
+  </ul>
+</div>""",
+        "gamechanger_decision": f"""<div class="gamechanger-decision-fallback">
+  <h3>Gamechanger-Analyse: Strategische Transformation</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    Für <strong>{size_label or "Ihr Unternehmen"}</strong> im Bereich <strong>{branche}</strong>
+    eröffnet KI die Möglichkeit, über reine Effizienzgewinne hinaus das Geschäftsmodell
+    strategisch weiterzuentwickeln. Die folgenden Transformationsansätze basieren auf den
+    Besonderheiten Ihres Leistungsportfolios im Bereich
+    <strong>{hauptleistung or branche}</strong>.
+  </p>
+  <h4>Transformationspotenziale</h4>
+  <ul>
+    <li><strong>Neue Servicemodelle:</strong> KI-gestützte Dienstleistungen als eigenständiges
+    Angebot positionieren – von automatisierten Analysen bis zu personalisierten Empfehlungen.</li>
+    <li><strong>Skalierbare Expertise:</strong> Fachwissen durch KI-Systeme multiplizieren und
+    auch bei wachsendem Kundenstamm konsistente Qualität sicherstellen.</li>
+    <li><strong>Datengetriebene Differenzierung:</strong> Durch systematische Datennutzung
+    Wettbewerbsvorteile aufbauen, die schwer kopierbar sind.</li>
+  </ul>
+  <p>
+    Der entscheidende Faktor ist die frühzeitige strategische Positionierung – Unternehmen,
+    die KI als Transformationstreiber nutzen, sichern sich nachhaltige Marktvorteile.
+  </p>
+</div>""",
+        "ki_stack_summary": f"""<div class="ki-stack-summary-fallback">
+  <h3>KI-Stack Übersicht</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    Der empfohlene KI-Stack für <strong>{size_label or "Ihr Unternehmen"}</strong> im Bereich
+    <strong>{branche}</strong> umfasst aufeinander abgestimmte Werkzeuge für die wichtigsten
+    Einsatzbereiche. Die Auswahl berücksichtigt Ihr Budget, Ihre Teamgröße und den
+    Anwendungsfokus auf <strong>{hauptleistung or "Ihre Kernprozesse"}</strong>.
+  </p>
+  <ul>
+    <li><strong>KI-Assistent:</strong> Zentrale Plattform für Textarbeit, Recherche und Entwürfe.</li>
+    <li><strong>Automatisierung:</strong> Verbindung wiederkehrender Abläufe zwischen Ihren bestehenden Tools.</li>
+    <li><strong>Spezialtool:</strong> Branchenspezifische Lösung für {hauptleistung or branche}.</li>
+  </ul>
+  <p>
+    Details zu jedem Tool mit Preisen, DSGVO-Bewertung und Einführungsempfehlungen finden Sie
+    im Abschnitt „Tool-Empfehlungen" dieses Reports.
+  </p>
+</div>""",
     }
 
     # SPRINT G2.3/G2.4: Default-Fallback – Meta-Text-frei, mit Kurzlabels
@@ -11317,6 +11428,11 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         "prompt_framework": "prompt_framework",
         # FIX-C2: branch_deep_dive was missing
         "branch_deep_dive": "branch_deep_dive",
+        # FIX-B16: Decision sections were missing → fell through to generic boilerplate
+        "executive_decision": "executive_decision",
+        "roadmap_90d_decision": "roadmap_90d_decision",
+        "gamechanger_decision": "gamechanger_decision",
+        "ki_stack_summary": "ki_stack_summary",
     }
     
     prompt_key = prompt_map.get(section_name)
@@ -14506,6 +14622,38 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     sections["CANONICAL_SECURITY"] = scores.get("security", 0)
     sections["CANONICAL_OVERALL"] = scores.get("overall", 0)
 
+    # --- [FIX-B21-FREITEXT-BONUS] ---
+    # Freitext-Analyse: Bonus-Punkte für Score-Dimensionen basierend auf Keywords in Freitextantworten
+    # Muss NACH Score-Zuweisung und VOR O5-N10 Benchmark-Blend laufen
+    try:
+        _b21_current_scores = {
+            'score_governance': int(sections.get('score_governance', 0) or 0),
+            'score_sicherheit': int(sections.get('score_sicherheit', 0) or 0),
+            'score_wertschoepfung': int(sections.get('score_wertschoepfung', 0) or 0),
+            'score_befaehigung': int(sections.get('score_befaehigung', 0) or 0),
+        }
+        _b21_adjusted = calc_freitext_bonus(answers, _b21_current_scores)
+
+        for _b21_dim, _b21_val in _b21_adjusted.items():
+            sections[_b21_dim] = _b21_val
+        # Keep score_nutzen alias in sync with score_wertschoepfung
+        sections["score_nutzen"] = _b21_adjusted['score_wertschoepfung']
+
+        # Update CANONICAL scores to reflect freitext bonus
+        sections["CANONICAL_GOVERNANCE"] = _b21_adjusted['score_governance']
+        sections["CANONICAL_SECURITY"] = _b21_adjusted['score_sicherheit']
+
+        # Gesamt-Score neu berechnen
+        sections['score_gesamt'] = round(
+            (_b21_adjusted['score_governance'] + _b21_adjusted['score_sicherheit'] +
+             _b21_adjusted['score_wertschoepfung'] + _b21_adjusted['score_befaehigung']) / 4, 1
+        )
+        sections["CANONICAL_OVERALL"] = sections['score_gesamt']
+        log.info(f"[FIX-B21-FREITEXT-BONUS] score_gesamt: "
+                 f"{_b21_current_scores} → {_b21_adjusted} = {sections['score_gesamt']}")
+    except Exception as _b21_err:
+        log.warning(f"[FIX-B21-FREITEXT-BONUS] Failed: {_b21_err}")
+
     # ==========================================================================
     # Badges: Derived from scores for QA-Gate compliance
     # badge_security: Based on security score (score_sicherheit)
@@ -14887,6 +15035,35 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         sections.setdefault("STARTER_KIT_COMPACT_HTML", "")
 
     # =========================================================================
+    # FIX-B17: Second-pass Digital Jetzt blacklist for late-generated sections
+    # The first pass (FIX-R2-6B) runs before FOERDERPROGRAMME_HTML is populated.
+    # This pass catches "digital jetzt" in sections generated after the first pass.
+    # =========================================================================
+    _FOERDER_BLACKLIST_2ND = ["go-digital", "go_digital", "digital jetzt", "digital_jetzt"]
+    for _fp_key2 in ["FOERDERPROGRAMME_HTML", "FUNDING_HTML",
+                      "TOOLS_FUNDING_ALIGNMENT_HTML", "TOOLS_FUNDING_ALIGNMENT_COMPACT_HTML",
+                      "STARTER_KIT_HTML", "STARTER_KIT_COMPACT_HTML",
+                      "FUNDING_BRANCH_ALIGNMENT_HTML"]:
+        _fp_html2 = sections.get(_fp_key2, "")
+        if _fp_html2 and isinstance(_fp_html2, str):
+            for _disc2 in _FOERDER_BLACKLIST_2ND:
+                if _disc2.lower() in _fp_html2.lower():
+                    _d2_esc = re.escape(_disc2)
+                    # Remove <li>, <p>, <tr> blocks or inline mention
+                    for _pat2 in [
+                        rf'<li[^>]*>[^<]*{_d2_esc}[^<]*(?:<[^>]*>[^<]*)*</li>\s*',
+                        rf'<p[^>]*>[^<]*{_d2_esc}[^<]*(?:<[^>]*>[^<]*)*</p>\s*',
+                        rf'<tr[^>]*>(?:(?!</tr>).)*{_d2_esc}(?:(?!</tr>).)*</tr>\s*',
+                        rf'{_d2_esc}(?:\s*\([^)]*\))?[,;.\s]*',
+                    ]:
+                        _fp_html2_new = re.sub(_pat2, '', _fp_html2, flags=re.IGNORECASE | re.DOTALL)
+                        if _fp_html2_new != _fp_html2:
+                            _fp_html2 = _fp_html2_new
+                            break
+                    log.info("[FIX-B17] 2nd-pass: Removed '%s' from %s", _disc2, _fp_key2)
+            sections[_fp_key2] = _fp_html2
+
+    # =========================================================================
     # SPRINT G19: Branchenintelligenz & Marktlogik 2.0
     # =========================================================================
     try:
@@ -15124,17 +15301,15 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             # This ensures cover page and BC section show the same Payback value
             sections["PAYBACK_MONTHS"] = realistic.payback_months
             sections["_PAYBACK_BC_V2"] = realistic.payback_months  # FIX-B733b: immutable payback (survives CANON inject)
-            sections["ROI_12M"] = realistic.roi_12m
-            # FIX-B22-P1: Save raw ROI, then cap all ROI keys to 200% for consistency
+            # FIX-B17: Store raw ROI for MC simulation, cap display value to 200%
+            _MAX_ROI_DISPLAY = 200.0
             sections["ROI_12M_RAW"] = realistic.roi_12m
-            _b22_roi_raw = float(realistic.roi_12m or 0)
-            if _b22_roi_raw > 200.0:
-                sections["ROI_12M"] = 200.0
-                sections["BC_ROI_REALISTIC"] = 200.0
-                log.info("[%s] [FIX-B22-P1] ROI capped: ROI_12M %.1f→200.0, BC_ROI_REALISTIC %.1f→200.0",
-                         run_id, _b22_roi_raw, _b22_roi_raw)
+            sections["ROI_12M"] = min(_MAX_ROI_DISPLAY, realistic.roi_12m)
+            if realistic.roi_12m > _MAX_ROI_DISPLAY:
+                log.info("[%s] [FIX-B17-ROI-CAP] ROI_12M capped for display: %.0f%% → %.0f%%",
+                         run_id, realistic.roi_12m, _MAX_ROI_DISPLAY)
             log.info("[%s] [FIX-498-WP5] Centralized KPIs: PAYBACK_MONTHS=%.1f, ROI_12M=%.1f%%",
-                     run_id, realistic.payback_months, float(sections.get("ROI_12M", 0)))
+                     run_id, realistic.payback_months, sections["ROI_12M"])
 
         log.info("[%s] ✅ G30 Business Case Engine 2.0 generated: investment=%.0f€, ROI=%.1f%%, payback=%.1f months",
                  run_id, bc_report.investment_total,
@@ -15232,6 +15407,20 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             briefing=_mc_briefing,
             llm_response=None,
         )
+
+        # FIX-B17: Cap simulation display values to MAX_ROI for consistency
+        _SIM_ROI_CAP = 200.0
+        if bc_simulation.distribution:
+            _dist = bc_simulation.distribution
+            if _dist.roi_p50 > _SIM_ROI_CAP:
+                log.info("[FIX-B17] Capping sim roi_p50: %.0f%% → %.0f%%", _dist.roi_p50, _SIM_ROI_CAP)
+                _dist.roi_p50 = _SIM_ROI_CAP
+            if _dist.roi_p80 > _SIM_ROI_CAP:
+                log.info("[FIX-B17] Capping sim roi_p80: %.0f%% → %.0f%%", _dist.roi_p80, _SIM_ROI_CAP)
+                _dist.roi_p80 = _SIM_ROI_CAP
+            if _dist.roi_p90 > _SIM_ROI_CAP:
+                log.info("[FIX-B17] Capping sim roi_p90: %.0f%% → %.0f%%", _dist.roi_p90, _SIM_ROI_CAP)
+                _dist.roi_p90 = _SIM_ROI_CAP
 
         sections["BUSINESS_CASE_SIM_HTML"] = business_case_simulation_to_html(bc_simulation, lang=report_lang)
         sections["_business_case_simulation_report"] = bc_simulation
@@ -16518,6 +16707,15 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             else:
                 log.info(f"[{run_id}] [FIX-B731-ROI-CAP] ROI_P50 not set, skipping")
 
+            # FIX-B17: Cap P80/P90 too for display consistency
+            for _pkey in ["ROI_P80", "ROI_P90"]:
+                _pval_raw = sections.get(_pkey)
+                if _pval_raw is not None:
+                    _pval = float(_pval_raw)
+                    if _pval > _b731_roi_cap:
+                        sections[_pkey] = _b731_roi_cap
+                        log.info(f"[{run_id}] [FIX-B17-ROI-CAP] {_pkey} capped: {_pval:.0f}% → {_b731_roi_cap}%")
+
             # Payback: P50 ebenfalls auf canonical setzen
             _b731_pb_canon = sections.get("PAYBACK_MONTHS_FMT_DE", "1,6")  # FIX-B732-PAYBACK-F1: correct default
             _b731_pb_p50 = sections.get("PAYBACK_P50")
@@ -16917,30 +17115,19 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     except Exception as pv_err:
         log.warning(f"[{run_id}] [PLATIN+++] Validation failed to run: {pv_err}")
 
-    # === FIX-B21/B22-P3: Quality-Bonus (runs AFTER all quality metrics are set) ===
+    # --- [FIX-B21-QUALITY-BONUS] ---
+    # Quality-Bonus: +1 bis +3 auf score_gesamt basierend auf Pipeline-Qualitätsindikatoren
+    # Muss NACH Consistency-Check, N4.3 DoD und PLATIN-Validierung laufen (alle Metriken verfügbar)
     try:
-        _quality_bonus = calc_quality_bonus(sections)
-        _qb_reasons = []
-        _qb_cons = float(sections.get("_CONSISTENCY_SCORE", 0) or 0)
-        _qb_dod = sections.get("_n43_dod_passed") or sections.get("N43_DOD_PASSED")
-        _qb_pw = int(sections.get("_PLATIN_WARNINGS", 999) or 999)
-        if _qb_cons >= 85:
-            _qb_reasons.append(f"consistency={_qb_cons:.0f}>=85")
-        if _qb_dod:
-            _qb_reasons.append("n43_dod=PASSED")
-        if _qb_pw < 50:
-            _qb_reasons.append(f"platin_warn={_qb_pw}<50")
-        if _quality_bonus > 0:
-            _old_gesamt = int(float(sections.get("score_gesamt", 0) or 0))
-            _new_gesamt = min(_old_gesamt + _quality_bonus, 100)
-            sections["score_gesamt"] = _new_gesamt
-            sections["CANONICAL_OVERALL"] = _new_gesamt
-            scores["overall"] = _new_gesamt
-            log.info(f"[{run_id}] [FIX-B21-QUALITY-BONUS] +{_quality_bonus}: score_gesamt {_old_gesamt} → {_new_gesamt} ({', '.join(_qb_reasons)})")
-        else:
-            log.info(f"[{run_id}] [FIX-B21-QUALITY-BONUS] +0: no criteria met (cons={_qb_cons:.0f}, dod={_qb_dod}, platin_warn={_qb_pw})")
-    except Exception as _qb_err:
-        log.warning(f"[{run_id}] [FIX-B21-QUALITY-BONUS] Failed: {_qb_err}")
+        _b21q_bonus = calc_quality_bonus(sections)
+        if _b21q_bonus > 0:
+            _b21q_old_gesamt = float(sections.get('score_gesamt', 0) or 0)
+            sections['score_gesamt'] = min(_b21q_old_gesamt + _b21q_bonus, 98)
+            sections["CANONICAL_OVERALL"] = sections['score_gesamt']
+            log.info(f"[FIX-B21-QUALITY-BONUS] score_gesamt: "
+                     f"{_b21q_old_gesamt} + {_b21q_bonus} = {sections['score_gesamt']}")
+    except Exception as _b21q_err:
+        log.warning(f"[FIX-B21-QUALITY-BONUS] Failed: {_b21q_err}")
 
     # === DEBUG: FINAL CHECK - Variables before render() ===
     log.info("=" * 80)

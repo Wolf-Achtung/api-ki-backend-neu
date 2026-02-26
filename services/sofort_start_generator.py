@@ -1147,8 +1147,9 @@ def generate_sofort_start_html(
         </p>
     </div>
     
-    <!-- 3 PROMPTS -->
+    <!-- 3 PROMPTS – FIX-B17: heading + first box stay together, no forced page break -->
     <div style="margin-bottom: 24px;">
+        <div style="page-break-inside: avoid; break-inside: avoid;">
         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 24px;">📋</span>
             3 Copy-Paste Prompts für {branche_data["name"]}
@@ -1157,11 +1158,13 @@ def generate_sofort_start_html(
             Kopieren Sie diese Prompts direkt in ChatGPT oder Claude:
         </p>
 '''
-    
+
     # Prompts hinzufügen
     prompts_list: List[Dict[str, Any]] = cast(List[Dict[str, Any]], branche_data["prompts"])
     for i, prompt_data in enumerate(prompts_list, 1):
         prompt_text = prompt_data["prompt"][:400] + "..." if len(prompt_data["prompt"]) > 400 else prompt_data["prompt"]
+        # FIX-B17: Close the avoid-break wrapper after first prompt box
+        close_wrapper = "</div>" if i == 1 else ""
         html += f'''
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -1176,6 +1179,7 @@ def generate_sofort_start_html(
 {prompt_text}
             </div>
         </div>
+        {close_wrapper}
 '''
     
     html += '''
