@@ -10992,6 +10992,142 @@ Für jede Kategorie: 2-3 Standard-Prompts'''
     und dokumentieren Sie Erfolge und Learnings.
   </p>
 </div>""",
+        # ════════════════════════════════════════════════════════════════════════
+        # FINAL-QUALITY-PUSH: Section-spezifische Fallbacks gegen Boilerplate-Duplikate
+        # ════════════════════════════════════════════════════════════════════════
+        "business_roi": f"""<div class="business-roi-fallback">
+  <h3>Return on Investment – Übersicht</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    Die ROI-Berechnung für <strong>{size_label or "Ihr Unternehmen"}</strong> basiert auf den
+    im Briefing angegebenen Investitions- und Einsparungsparametern. Der Return on Investment
+    setzt die erzielten Einsparungen ins Verhältnis zu den eingesetzten Mitteln und macht den
+    wirtschaftlichen Nutzen Ihrer KI-Einführung transparent messbar.
+  </p>
+  <h4>Berechnungsgrundlage</h4>
+  <ul>
+    <li><strong>Einmalige Investition (CAPEX):</strong> {_safe_bc_val(briefing.get("CAPEX_REALISTISCH_EUR"), "€")} für Einrichtung, Lizenzen und initiale Anpassungen.</li>
+    <li><strong>Laufende Kosten (OPEX):</strong> {_safe_bc_val(briefing.get("OPEX_REALISTISCH_EUR"), "€/Monat")} für Abonnements, Wartung und Support.</li>
+    <li><strong>Erwartete monatliche Einsparung:</strong> {_safe_bc_val(briefing.get("EINSPARUNG_MONAT_EUR"), "€/Monat")} durch Zeitersparnis und Effizienzgewinne.</li>
+  </ul>
+  <h4>Interpretation</h4>
+  <p>
+    Die Amortisationszeit beträgt voraussichtlich <strong>{_payback_fmt}</strong>. Nach 12 Monaten
+    ergibt sich ein prognostizierter ROI von <strong>{_roi_fmt}</strong>. Diese Werte basieren auf
+    konservativen Annahmen und können bei konsequenter Nutzung höher ausfallen.
+  </p>
+  <p>
+    Für Unternehmen im Bereich <strong>{branche}</strong> zeigt die Erfahrung, dass sich KI-Investitionen
+    besonders in den Bereichen Zeitersparnis bei Routineaufgaben, Qualitätssteigerung und
+    beschleunigte Entscheidungsfindung auszahlen.
+  </p>
+</div>""",
+        "business_costs": f"""<div class="business-costs-fallback">
+  <h3>Investitionsstruktur und Kostenrahmen</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    Die Kostenstruktur für die KI-Einführung bei <strong>{size_label or "Ihr Unternehmen"}</strong>
+    gliedert sich in einmalige Einführungskosten und laufende Betriebsausgaben. Eine transparente
+    Darstellung beider Kostenarten ist entscheidend für eine fundierte Investitionsentscheidung.
+  </p>
+  <h4>Einmalige Kosten (CAPEX)</h4>
+  <p>
+    Die geschätzte Anfangsinvestition von <strong>{_safe_bc_val(briefing.get("CAPEX_REALISTISCH_EUR"), "€")}</strong>
+    umfasst typischerweise Software-Lizenzen, initiale Konfiguration, Schulungsaufwand und ggf.
+    externe Beratung. Für <strong>{branche}</strong> sind diese Werte branchenüblich und berücksichtigen
+    den Umfang des geplanten KI-Einsatzes im Bereich <strong>{hauptleistung or "Ihrer Kernprozesse"}</strong>.
+  </p>
+  <h4>Laufende Kosten (OPEX)</h4>
+  <p>
+    Die monatlichen Betriebskosten von <strong>{_safe_bc_val(briefing.get("OPEX_REALISTISCH_EUR"), "€/Monat")}</strong>
+    setzen sich aus Abonnementgebühren, API-Nutzung und internem Zeitaufwand für Administration zusammen.
+    Diese Kosten skalieren in der Regel moderat mit zunehmendem Nutzungsumfang.
+  </p>
+  <h4>Kosten-Nutzen-Verhältnis</h4>
+  <p>
+    Den laufenden Kosten steht eine erwartete monatliche Einsparung von
+    <strong>{_safe_bc_val(briefing.get("EINSPARUNG_MONAT_EUR"), "€/Monat")}</strong> gegenüber.
+    Die vollständige Amortisation wird nach etwa <strong>{_payback_fmt}</strong> erreicht.
+  </p>
+</div>""",
+        "branch_deep_dive": f"""<div class="branch-deep-dive-fallback">
+  <h3>Branchenspezifische KI-Analyse: {branche}</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    Unternehmen im Bereich <strong>{branche}</strong> stehen vor spezifischen Herausforderungen und
+    Chancen beim Einsatz von Künstlicher Intelligenz. Die folgenden Schwerpunkte ergeben sich aus
+    den typischen Geschäftsprozessen und Wettbewerbsanforderungen der Branche.
+  </p>
+  <h4>Branchentypische KI-Anwendungsfelder</h4>
+  <ul>
+    <li><strong>Kundeninteraktion:</strong> Automatisierte Kommunikation, personalisierte Angebote und intelligente Anfragenbearbeitung im Bereich {hauptleistung or branche}.</li>
+    <li><strong>Prozessoptimierung:</strong> Beschleunigung interner Abläufe durch KI-gestützte Workflows – von der Angebotserstellung bis zur Dokumentation.</li>
+    <li><strong>Wissensmanagement:</strong> Strukturierung und Bereitstellung von Fachwissen für schnellere, konsistentere Entscheidungen.</li>
+    <li><strong>Qualitätssicherung:</strong> KI-basierte Prüf- und Freigabeprozesse zur Fehlerreduktion und Standardeinhaltung.</li>
+  </ul>
+  <h4>Marktumfeld und Wettbewerb</h4>
+  <p>
+    Im Wettbewerbsumfeld der Branche <strong>{branche}</strong> setzen zunehmend mehr Unternehmen auf
+    KI-Unterstützung. Für <strong>{size_label or "Ihr Unternehmen"}</strong> bedeutet dies, dass ein
+    frühzeitiger, strategischer KI-Einsatz einen messbaren Wettbewerbsvorteil schaffen kann –
+    insbesondere bei der Differenzierung durch Servicequalität und Reaktionsgeschwindigkeit.
+  </p>
+</div>""",
+        "roadmap": f"""<div class="roadmap-fallback">
+  <h3>90-Tage-Umsetzungsplan</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    Für <strong>{size_label or "Ihr Unternehmen"}</strong> im Bereich <strong>{branche}</strong>
+    empfiehlt sich ein strukturierter Einstieg in drei Phasen. Dieser Plan priorisiert schnelle
+    Ergebnisse bei gleichzeitigem Aufbau nachhaltiger KI-Kompetenz.
+  </p>
+  <h4>Phase 1: Grundlagen (Tag 1–30)</h4>
+  <ul>
+    <li>Auswahl und Einrichtung eines KI-Assistenten für {hauptleistung or "Ihre Kernprozesse"}.</li>
+    <li>Definition von 2–3 konkreten Anwendungsfällen mit messbarem Nutzen.</li>
+    <li>Erste Schulung der beteiligten Personen im Umgang mit KI-Werkzeugen.</li>
+  </ul>
+  <h4>Phase 2: Pilotbetrieb (Tag 31–60)</h4>
+  <ul>
+    <li>Produktiver Einsatz im definierten Pilotbereich mit begleitender Erfolgsmessung.</li>
+    <li>Sammlung von Feedback und Identifikation von Optimierungspotenzialen.</li>
+    <li>Aufbau einfacher Governance-Regeln (Datenschutz, Qualitätskontrolle).</li>
+  </ul>
+  <h4>Phase 3: Ausbau (Tag 61–90)</h4>
+  <ul>
+    <li>Erweiterung auf zusätzliche Prozesse basierend auf den Piloterfahrungen.</li>
+    <li>Integration von Automatisierungen für wiederkehrende Aufgaben.</li>
+    <li>Dokumentation der Ergebnisse und Planung der nächsten Ausbaustufe.</li>
+  </ul>
+</div>""",
+        "executive_summary": f"""<div class="executive-summary-fallback">
+  <h3>Management-Zusammenfassung</h3>
+  <p class="context-label"><em>{branch_core_label}</em></p>
+  <p>
+    <strong>{size_label or "Ihr Unternehmen"}</strong> im Bereich <strong>{branche}</strong> erreicht
+    einen KI-Reifegrad-Gesamtscore von <strong>{scores.get("overall", "–")}/100 Punkten</strong>.
+    Diese Bewertung berücksichtigt die Dimensionen Befähigung
+    ({scores.get("enablement", "–")}/100), Governance ({scores.get("governance", "–")}/100),
+    Sicherheit ({scores.get("security", "–")}/100) und Wertschöpfung ({scores.get("value", "–")}/100).
+  </p>
+  <h4>Zentrale Erkenntnisse</h4>
+  <ul>
+    <li><strong>Ausgangslage:</strong> Ihr Unternehmen verfügt über {
+        "eine solide Grundlage für den KI-Einsatz" if int(scores.get("overall", 0) or 0) >= 60
+        else "ausbaufähige Voraussetzungen für den KI-Einstieg"
+    }. Die Analyse Ihrer Angaben zeigt konkrete Ansatzpunkte für den nächsten Schritt.</li>
+    <li><strong>Wirtschaftlichkeit:</strong> Mit einer geschätzten Anfangsinvestition von
+    {_safe_bc_val(briefing.get("CAPEX_REALISTISCH_EUR"), "€")} und einer erwarteten Amortisation
+    nach {_payback_fmt} ist der Business Case für den KI-Einsatz im Bereich
+    <strong>{hauptleistung or branche}</strong> nachvollziehbar darstellbar.</li>
+    <li><strong>Handlungsempfehlung:</strong> Starten Sie mit einem klar abgegrenzten Pilotprojekt,
+    das schnelle Ergebnisse liefert und als Grundlage für den weiteren Ausbau dient.</li>
+  </ul>
+  <p>
+    Die folgenden Abschnitte dieses Reports vertiefen jeden Aspekt mit konkreten Empfehlungen,
+    Toolvorschlägen und einer strukturierten Umsetzungs-Roadmap.
+  </p>
+</div>""",
     }
 
     # SPRINT G2.3/G2.4: Default-Fallback – Meta-Text-frei, mit Kurzlabels
