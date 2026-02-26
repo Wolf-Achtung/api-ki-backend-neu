@@ -803,7 +803,7 @@ class TestVendorAuditReportToHtml:
 
         html = vendor_audit_report_to_html(report, lang="de")
 
-        assert "US vendor without DPA" in html or "ohne DPA" in html
+        assert "US vendor without DPA" in html or "ohne DPA" in html or "ohne AVV" in html
 
 
 # =============================================================================

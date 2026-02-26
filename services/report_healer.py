@@ -2102,7 +2102,19 @@ def reduce_redundancy(
     seen_fp_texts: Dict[str, str] = {}  # fp_hash -> normalized text
 
     # TASK 2 (P0 FINAL): Sections protected from deduplication (NEVER EMPTY guarantee)
-    PROTECTED_SECTION_KEYS = {"QUICK_WINS_HTML", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT", "RISKS_HTML", "risks"}
+    # FIX-B15: Align with BUDGET_EXEMPT_SECTIONS — engine-generated sections
+    # must NOT be deduplicated (FIX-C was removing 28K+ chars from these)
+    PROTECTED_SECTION_KEYS = {
+        "QUICK_WINS_HTML", "QUICK_WINS_HTML_LEFT", "QUICK_WINS_HTML_RIGHT",
+        "RISKS_HTML", "risks",
+        "GAMECHANGER_HTML", "gamechanger",
+        "RECOMMENDATIONS_HTML", "recommendations",
+        "VENDOR_AUDIT_HTML",
+        "AUTOMATION_ROADMAP_HTML", "BENCHMARK_ENGINE_HTML",
+        "BUSINESS_CASE_SIM_HTML", "RISK_ENGINE_HTML",
+        "RISK_ENGINE_V3_HTML", "RECOMMENDATIONS_ENGINE_HTML",
+        "SOFORT_START_HTML", "CHALLENGE_30_TAGE_HTML",
+    }
 
     # Process sections in order (earlier sections have priority)
     for section_name, html in sections.items():
@@ -3034,7 +3046,8 @@ def apply_segment_budget(
             continue
 
         # FIX-B14-ARCH: Engine-generated sections bypass budget trimming
-        BUDGET_EXEMPT_SECTIONS = {"RISKS_HTML", "risks", "GAMECHANGER_HTML", "gamechanger", "RECOMMENDATIONS_HTML", "recommendations", "VENDOR_AUDIT_HTML", "AUTOMATION_ROADMAP_HTML", "BENCHMARK_ENGINE_HTML", "BUSINESS_CASE_SIM_HTML", "RISK_ENGINE_HTML", "RISK_ENGINE_V3_HTML", "RECOMMENDATIONS_ENGINE_HTML"}
+        # FIX-B15: Added SOFORT_START_HTML + CHALLENGE_30_TAGE_HTML (deterministic engine output)
+        BUDGET_EXEMPT_SECTIONS = {"RISKS_HTML", "risks", "GAMECHANGER_HTML", "gamechanger", "RECOMMENDATIONS_HTML", "recommendations", "VENDOR_AUDIT_HTML", "AUTOMATION_ROADMAP_HTML", "BENCHMARK_ENGINE_HTML", "BUSINESS_CASE_SIM_HTML", "RISK_ENGINE_HTML", "RISK_ENGINE_V3_HTML", "RECOMMENDATIONS_ENGINE_HTML", "SOFORT_START_HTML", "CHALLENGE_30_TAGE_HTML"}
         if section_name in BUDGET_EXEMPT_SECTIONS:
             result[section_name] = html
             continue
