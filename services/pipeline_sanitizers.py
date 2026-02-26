@@ -603,9 +603,11 @@ def sanitize_all_sections(
             stats['variable_leaks_stripped'] = stats.get('variable_leaks_stripped', 0) + i1_rem
 
         # FIX-I4: Strip redundant content blocks
-        cleaned, i4_rem = strip_redundant_blocks(cleaned, key)
-        if i4_rem > 0:
-            stats['redundant_blocks_stripped'] = stats.get('redundant_blocks_stripped', 0) + i4_rem
+        # FIX-B19: Skip vendor_audit — identical flag badges across vendor cards are intentional
+        if 'vendor_audit' not in key.lower():
+            cleaned, i4_rem = strip_redundant_blocks(cleaned, key)
+            if i4_rem > 0:
+                stats['redundant_blocks_stripped'] = stats.get('redundant_blocks_stripped', 0) + i4_rem
 
         sanitized[key] = cleaned
         stats['entities_decoded'] += result.entities_decoded
