@@ -13823,16 +13823,17 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                     # FIX-B15: Remove entire <li>/<p>/<tr> block containing discontinued program
                     # instead of marking it (which produced "Digital Jetzt (Programm eingestellt)")
                     _disc_esc = re.escape(_discontinued)
+                    # FIX-B20: Use dotall match to handle nested tags (e.g. <li><strong>Digital Jetzt</strong>...</li>)
                     # Try removing enclosing <li>...</li> first
                     _fp_html_new = re.sub(
-                        rf'<li[^>]*>[^<]*{_disc_esc}[^<]*(?:<[^>]*>[^<]*)*</li>\s*',
-                        '', _fp_html, flags=re.IGNORECASE
+                        rf'<li[^>]*>(?:(?!</li>).)*{_disc_esc}(?:(?!</li>).)*</li>\s*',
+                        '', _fp_html, flags=re.IGNORECASE | re.DOTALL
                     )
                     if _fp_html_new == _fp_html:
                         # Try removing enclosing <p>...</p>
                         _fp_html_new = re.sub(
-                            rf'<p[^>]*>[^<]*{_disc_esc}[^<]*(?:<[^>]*>[^<]*)*</p>\s*',
-                            '', _fp_html, flags=re.IGNORECASE
+                            rf'<p[^>]*>(?:(?!</p>).)*{_disc_esc}(?:(?!</p>).)*</p>\s*',
+                            '', _fp_html, flags=re.IGNORECASE | re.DOTALL
                         )
                     if _fp_html_new == _fp_html:
                         # Try removing enclosing <tr>...</tr>

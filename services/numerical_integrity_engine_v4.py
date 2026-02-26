@@ -550,12 +550,24 @@ class NumericalIntegrityEngineV4:
         # Only extract metrics from authoritative source sections.
         SKIP_PREFIXES = ("LEAD_", "ONE_LINER_", "_")
 
+        # FIX-B20: De-duplicate HTML/plain keys. Many sections exist as both
+        # "business_case" and "BUSINESS_CASE_HTML" with identical content.
+        # Extracting metrics from both double-counts issues.
+        # Strategy: prefer _HTML key, skip lowercase duplicate.
+        _seen_bases = set()
+
         for section_key, section_content in self.sections.items():
             if any(section_key.startswith(p) for p in SKIP_PREFIXES):
                 continue
 
             if not isinstance(section_content, str):
                 continue
+
+            # FIX-B20: De-duplicate by normalizing to base name
+            _base = section_key.lower().removesuffix("_html")
+            if _base in _seen_bases:
+                continue
+            _seen_bases.add(_base)
 
             metrics = self._extract_metrics_from_text(section_key, section_content)
             if metrics:
@@ -753,6 +765,9 @@ class NumericalIntegrityEngineV4:
         benchmarks = BRANCH_BENCHMARKS.get(self.branch, BRANCH_BENCHMARKS["consulting"])
         metrics_checked = 0
 
+        # FIX-B20: Metrics where LOWER values are BETTER (inverted semantics)
+        _LOWER_IS_BETTER = {"payback"}
+
         # Check all metric types against benchmarks
         for metric_name, (low, high) in benchmarks.items():
             metric_type_str = metric_name.replace("_percent", "")
@@ -760,7 +775,9 @@ class NumericalIntegrityEngineV4:
 
             for metric in metrics:
                 metrics_checked += 1
-                if metric.value < low:
+                # FIX-B20: For "lower is better" metrics (payback), being below
+                # the benchmark minimum is GOOD, not bad. Skip the low-check.
+                if metric.value < low and metric_type_str not in _LOWER_IS_BETTER:
                     issue = NumericIssue(
                         issue_id=self._get_issue_id(),
                         metric_type=metric.metric_type,
