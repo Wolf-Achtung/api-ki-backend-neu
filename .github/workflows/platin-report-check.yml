@@ -313,7 +313,7 @@ jobs:
               'recommendations': 150,  # Temporarily lowered to unblock reports
               'roadmap_12m': 400,
               'gamechanger': 400,
-              'unternehmensprofil_markt': 300,
+              'unternehmensprofil_markt': 220,
           }
 
           errors = []
