@@ -195,36 +195,20 @@ def enforce_b25_canonical_kpis(
             .replace(" ", "_")
         )
 
-        # Check by section name
+        # STRICT name-based matching only (no content fallback — B28 fix)
         needs_injection = any(
-            kpi_key in section_lower for kpi_key in KPI_SECTION_KEYS
+            section_lower == kpi_key or section_lower == f"{kpi_key}_html"
+            for kpi_key in KPI_SECTION_KEYS
         )
 
-        # Fallback: check by content (catches custom section names)
-        if not needs_injection and content:
-            stripped = _quick_strip(content) if is_html else content
-            if KPI_CONTENT_PATTERN.search(stripped):
-                needs_injection = True
-
         if needs_injection and content:
-            if is_html:
-                # Inject as hidden div with plain text inside.
-                # After _strip_html(), the plain text becomes visible
-                # and appears FIRST (prepended), so re.search() + break
-                # matches it before any divergent values in the section.
-                html_injection = (
-                    f'<!-- [FIX-B25-CANONICAL] -->'
-                    f'<div class="kpi-canonical" '
-                    f'style="display:none;font-size:0;height:0;overflow:hidden">'
-                    f'{canonical_block}'
-                    f'</div>'
-                )
-                modified_sections[section_name] = html_injection + content
-            else:
-                modified_sections[section_name] = canonical_block + content
+            # B28: Plain-text prepend for both HTML and plain-text modes.
+            # No hidden-div wrapper — avoids G22 parsing display:none
+            # content and generating cross-check conflicts.
+            modified_sections[section_name] = canonical_block + content
 
             _b25_enforced += 1
-            logger.debug(
+            logger.info(
                 f"[FIX-B25-CANONICAL] Injected into: {section_name}"
             )
         else:
@@ -292,12 +276,23 @@ def sanitize_roi_values_in_content(
 # ============================================================
 
 FUNDING_BLACKLIST = [
+    # go-digital (alle Varianten)
     "go-digital",
     "go-digital!",
     "Go-Digital",
     "go digital",
     "Go Digital",
     "godigital",
+    # KMU-innovativ (NEU in B28)
+    "KMU-innovativ",
+    "kmu-innovativ",
+    "KMU innovativ",
+    "kmu innovativ",
+    # Digitalbonus (NEU in B28)
+    "Digitalbonus",
+    "digitalbonus",
+    "Digital-Bonus",
+    "digital-bonus",
 ]
 
 
