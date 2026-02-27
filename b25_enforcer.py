@@ -330,7 +330,7 @@ def apply_funding_blacklist(
     Must be called BEFORE G22 consistency check to prevent AUTO_005 warnings.
     B29: Also cleans dict and list sections recursively.
     """
-    cleaned = {}
+    cleaned: dict[str, Any] = {}
     total_removed = 0
 
     for name, content in sections.items():
@@ -369,9 +369,9 @@ def apply_funding_blacklist(
     return cleaned
 
 
-def _clean_dict_recursive(d: dict) -> dict:
+def _clean_dict_recursive(d: dict[str, Any]) -> dict[str, Any]:
     """Recursively remove blacklisted funding terms from all string values in a dict."""
-    cleaned = {}
+    cleaned: dict[str, Any] = {}
     for key, value in d.items():
         if isinstance(value, str):
             cleaned_val = value
@@ -396,12 +396,12 @@ def _clean_dict_recursive(d: dict) -> dict:
     return cleaned
 
 
-def _clean_list_recursive(lst: list) -> list:
+def _clean_list_recursive(lst: list[Any]) -> list[Any]:
     """Recursively remove blacklisted funding terms from all string items in a list.
     String items containing a blacklisted term are removed entirely.
     Dict items are removed if ANY of their leaf string values contain a blacklisted term.
     """
-    cleaned = []
+    cleaned: list[Any] = []
     for item in lst:
         if isinstance(item, str):
             keep = True
@@ -430,7 +430,7 @@ def _clean_list_recursive(lst: list) -> list:
     return cleaned
 
 
-def _dict_contains_blacklisted(d: dict) -> bool:
+def _dict_contains_blacklisted(d: dict[str, Any]) -> bool:
     """Check if any leaf string value in a dict contains a blacklisted funding term."""
     for value in d.values():
         if isinstance(value, str):
