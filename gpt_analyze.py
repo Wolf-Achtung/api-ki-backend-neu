@@ -16416,6 +16416,36 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 sections[_key] = _val.dict()
                 log.info(f"[FIX-B33-PYDANTIC-V1] Converted {_key}")
 
+        # B34-PHASE1: Inspect VendorAudit + RiskReport structure
+        _va = sections.get('_vendor_audit_report')
+        _rr = sections.get('_risk_report_v3')
+        if isinstance(_va, dict):
+            log.info(f"[FIX-B34-INSPECT] _vendor_audit_report keys: {list(_va.keys())[:20]}")
+            _vendors = _va.get('vendors', _va.get('results', _va.get('audits', [])))
+            if isinstance(_vendors, list) and len(_vendors) > 0:
+                _first = _vendors[0]
+                log.info(f"[FIX-B34-INSPECT] First vendor entry keys: "
+                         f"{list(_first.keys()) if isinstance(_first, dict) else type(_first).__name__}")
+                log.info(f"[FIX-B34-INSPECT] First vendor entry: {_first}")
+            else:
+                log.info(f"[FIX-B34-INSPECT] No vendors/results/audits list. "
+                         f"All values types: {[(k, type(v).__name__) for k, v in _va.items()]}")
+        else:
+            log.info(f"[FIX-B34-INSPECT] _vendor_audit_report type: {type(_va).__name__}")
+        if isinstance(_rr, dict):
+            log.info(f"[FIX-B34-INSPECT] _risk_report_v3 keys: {list(_rr.keys())[:20]}")
+            _miti_keys = [k for k in _rr.keys() if 'mitig' in k.lower() or 'action' in k.lower()
+                          or 'plan' in k.lower() or 'measure' in k.lower() or 'maßnahm' in k.lower()]
+            log.info(f"[FIX-B34-INSPECT] Mitigation-related keys: {_miti_keys}")
+            for mk in _miti_keys[:3]:
+                _mv = _rr[mk]
+                if isinstance(_mv, list) and len(_mv) > 0:
+                    log.info(f"[FIX-B34-INSPECT] {mk}[0]: {_mv[0]}")
+                else:
+                    log.info(f"[FIX-B34-INSPECT] {mk}: {type(_mv).__name__} = {str(_mv)[:200]}")
+        else:
+            log.info(f"[FIX-B34-INSPECT] _risk_report_v3 type: {type(_rr).__name__}")
+
         # --- Apply funding blacklist BEFORE G22 ---
         sections = apply_funding_blacklist(sections)
 
