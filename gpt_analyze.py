@@ -16369,7 +16369,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     # Injects canonical plain-text KPI block BEFORE section content so
     # _extract_kpis() finds it first via re.search() + break pattern.
     try:
-        from b25_enforcer import enforce_b25_canonical_kpis, sanitize_roi_values_in_content, apply_funding_blacklist
+        from b25_enforcer import enforce_b25_canonical_kpis, sanitize_roi_values_in_content, apply_funding_blacklist, strip_canonical_blocks
 
         # --- B25 Canonical KPI Enforcement ---
         # Bridge uppercase section keys → lowercase enforcer keys
@@ -16426,6 +16426,12 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     except Exception as exc:
         log.warning(f"[{run_id}] ⚠️ G22 consistency check failed: {exc}")
     # === END G22 CONSISTENCY CHECK ===
+
+    # === FIX-B30: Strip canonical blocks AFTER G22 but BEFORE PDF render ===
+    try:
+        sections = strip_canonical_blocks(sections)
+    except Exception as _strip_exc:
+        log.warning(f"[{run_id}] [FIX-B30-CANONICAL-STRIP] Strip failed (non-fatal): {_strip_exc}")
 
     # Benchmarks / Starter-Stacks / Responsible AI
     if build_benchmarks_section:

@@ -453,6 +453,44 @@ def _dict_contains_blacklisted(d: dict[str, Any]) -> bool:
 
 
 # ============================================================
+# Canonical Block Stripper — remove AFTER G22, BEFORE PDF render
+# ============================================================
+
+_CANONICAL_STRIP_PATTERN = re.compile(
+    r'\[KPI-CANONICAL-START\].*?\[KPI-CANONICAL-END\]',
+    re.DOTALL,
+)
+
+
+def strip_canonical_blocks(sections: dict[str, Any]) -> dict[str, Any]:
+    """Remove KPI canonical blocks from all string sections before PDF render.
+
+    Must be called AFTER G22 consistency check but BEFORE PDF rendering.
+    The canonical blocks were injected by enforce_b25_canonical_kpis() so that
+    _extract_kpis() finds consistent values. After G22 has run, they must be
+    stripped so they don't appear as visible text in the PDF.
+    """
+    stripped: dict[str, Any] = {}
+    total_removed = 0
+
+    for name, content in sections.items():
+        if isinstance(content, str) and '[KPI-CANONICAL-START]' in content:
+            cleaned = _CANONICAL_STRIP_PATTERN.sub('', content).strip()
+            stripped[name] = cleaned
+            total_removed += 1
+            logger.info(f"[FIX-B30-CANONICAL-STRIP] Removed canonical block from {name}")
+        else:
+            stripped[name] = content
+
+    if total_removed > 0:
+        logger.info(
+            f"[FIX-B30-CANONICAL-STRIP] Total: {total_removed} blocks stripped "
+            f"before PDF render"
+        )
+    return stripped
+
+
+# ============================================================
 # Helper functions
 # ============================================================
 
