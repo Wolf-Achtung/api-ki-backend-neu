@@ -402,6 +402,23 @@ check("LEGAL unchanged (never injected)", final_17["LEGAL_NOTICE_HTML"] == "<p>I
 check("Int preserved", final_17["score_gesamt"] == 91)
 
 # ============================================================
+print("\n📋 TEST 18: Integration — apply_funding_blacklist cleans dict with go-digital")
+# ============================================================
+sections_integration = {
+    "AUTOMATION_ROADMAP_HTML": "Programme:\n- go-digital\n- KI-Invest\n",
+    "_automation_roadmap_report": {
+        "programs": ["go-digital", "KI-Invest"],
+        "text": "Empfehlung: go-digital nutzen",
+    },
+}
+result_18 = apply_funding_blacklist(sections_integration)
+rpt = result_18["_automation_roadmap_report"]
+check("Integration: go-digital removed from dict programs", "go-digital" not in rpt["programs"])
+check("Integration: KI-Invest preserved in dict programs", "KI-Invest" in rpt["programs"])
+check("Integration: go-digital removed from dict text", "go-digital" not in rpt["text"])
+check("Integration: HTML also cleaned", "go-digital" not in result_18["AUTOMATION_ROADMAP_HTML"])
+
+# ============================================================
 # Summary
 # ============================================================
 total = passed + failed
