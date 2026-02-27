@@ -189,6 +189,54 @@ check("Nested extraction works", count10 == 1)
 check("Block contains 180%", "180%" in result10["executive_summary"])
 
 # ============================================================
+print("\n📋 TEST 11: Non-string values in sections dict (B27.1 regression)")
+# ============================================================
+sections_mixed = {
+    "executive_summary": "<h2>Summary</h2><p>ROI: 200%</p>",
+    "score_gesamt": 92,
+    "score_governance": 88,
+    "monatsersparnis_stunden": 45.5,
+    "roi_analysis": "<div>ROI beträgt 200%</div>",
+    "tools_count": 4,
+    "legal_notice": "<p>Impressum</p>",
+    "is_platin": True,
+    "sections_generated": ["exec", "roi", "tools"],
+}
+report_data_mixed = {"roi_percent": 200.0, "payback_months": 1.6, "tools_count": 4}
+
+# enforce should NOT crash
+try:
+    result_mixed, count_mixed = enforce_b25_canonical_kpis(
+        sections_mixed, report_data_mixed, is_html=True
+    )
+    check("No crash on mixed dict", True)
+    check(
+        f"String sections injected (got {count_mixed})",
+        count_mixed >= 2,  # executive_summary + roi_analysis at minimum
+    )
+    check("Int value preserved", result_mixed["score_gesamt"] == 92)
+    check("Float value preserved", result_mixed["monatsersparnis_stunden"] == 45.5)
+    check("Bool value preserved", result_mixed["is_platin"] is True)
+    check("List value preserved", result_mixed["sections_generated"] == ["exec", "roi", "tools"])
+except Exception as e:
+    check(f"No crash on mixed dict (GOT: {e})", False)
+
+# sanitize should NOT crash on int
+try:
+    sanitized_int = sanitize_roi_values_in_content(92, roi_cap=200.0)
+    check("Sanitizer handles int input", sanitized_int == 92)
+except Exception as e:
+    check(f"Sanitizer handles int input (GOT: {e})", False)
+
+# blacklist should NOT crash on mixed dict
+try:
+    cleaned_mixed = apply_funding_blacklist(sections_mixed)
+    check("Blacklist handles mixed dict", True)
+    check("Blacklist preserves int", cleaned_mixed["score_gesamt"] == 92)
+except Exception as e:
+    check(f"Blacklist handles mixed dict (GOT: {e})", False)
+
+# ============================================================
 # Summary
 # ============================================================
 total = passed + failed
