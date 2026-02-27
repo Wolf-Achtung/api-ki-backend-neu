@@ -347,6 +347,20 @@ def apply_funding_blacklist(
                     f"keys={list(content.keys())[:10]}"
                 )
                 cleaned[name] = _clean_dict_recursive(content)
+            elif hasattr(content, 'model_dump'):
+                # Pydantic v2 model
+                content_dict = content.model_dump()
+                cleaned_dict = _clean_dict_recursive(content_dict)
+                cleaned[name] = cleaned_dict
+                logger.info(f"[FIX-B31-PYDANTIC] Cleaned Pydantic model: {name}")
+                continue
+            elif hasattr(content, 'dict'):
+                # Pydantic v1 model
+                content_dict = content.dict()
+                cleaned_dict = _clean_dict_recursive(content_dict)
+                cleaned[name] = cleaned_dict
+                logger.info(f"[FIX-B31-PYDANTIC] Cleaned Pydantic v1 model: {name}")
+                continue
             elif isinstance(content, list):
                 cleaned[name] = _clean_list_recursive(content)
             else:
