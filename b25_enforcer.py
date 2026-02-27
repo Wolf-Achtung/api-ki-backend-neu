@@ -333,10 +333,19 @@ def apply_funding_blacklist(
     cleaned: dict[str, Any] = {}
     total_removed = 0
 
+    logger.info(
+        f"[FIX-B30-DEBUG-BL] Non-string sections: "
+        f"{[(k, type(v).__name__) for k, v in sections.items() if not isinstance(v, str)]}"
+    )
+
     for name, content in sections.items():
         if not isinstance(content, str):
             # B29-FIX: Also clean blacklisted terms from dict/list values
             if isinstance(content, dict):
+                logger.info(
+                    f"[FIX-B30-DEBUG-BL] Processing dict section: {name}, "
+                    f"keys={list(content.keys())[:10]}"
+                )
                 cleaned[name] = _clean_dict_recursive(content)
             elif isinstance(content, list):
                 cleaned[name] = _clean_list_recursive(content)
