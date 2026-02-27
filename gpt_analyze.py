@@ -16364,169 +16364,35 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     except Exception as _a1_exc:
         log.warning(f"[{run_id}] [A1] Pre-G22 AI-Act consistency failed: {_a1_exc}")
 
-    # === FIX-B25: Pre-G22 Cross-Section Consistency Enforcer ===
-    # Harmonizes canonical KPI/ROI/Payback values across all HTML sections
-    # BEFORE the G22 check runs, preventing false-positive inconsistencies
-    # caused by GPT generating slightly different numbers in each section.
+    # === FIX-B25-CANONICAL: Pre-G22 Cross-Section Consistency Enforcer ===
+    # Replaces: FIX-B25-ROI, FIX-B25-PAYBACK, FIX-B25-TOOLS
+    # Injects canonical plain-text KPI block BEFORE section content so
+    # _extract_kpis() finds it first via re.search() + break pattern.
     try:
-        _b25_enforced = 0
+        from b25_enforcer import enforce_b25_canonical_kpis, sanitize_roi_values_in_content, apply_funding_blacklist
 
-        # --- FIX-B25-ROI: Harmonize ROI across all sections ---
-        # KPI_001 triggers ERROR when ROI values differ >15% between sections.
-        # Use ROI_12M (capped) as canonical single source of truth.
-        _b25_canonical_roi = sections.get('ROI_12M')
-        if _b25_canonical_roi is not None:
-            try:
-                _b25_roi_val = float(_b25_canonical_roi)
-                _b25_roi_str = f"{_b25_roi_val:.0f}" if _b25_roi_val == int(_b25_roi_val) else f"{_b25_roi_val:.1f}"
-                _b25_roi_targets = [
-                    'KI_STACK_SUMMARY_HTML', 'BUSINESS_CASE_HTML',
-                    'BUSINESS_CASE_ENGINE_HTML', 'EXECUTIVE_SUMMARY_HTML',
-                ]
-                for _b25_rk in _b25_roi_targets:
-                    _b25_rv = sections.get(_b25_rk)
-                    if not isinstance(_b25_rv, str) or len(_b25_rv) < 50:
-                        continue
-                    _b25_rv_orig = _b25_rv
-                    # Replace ROI patterns: "ROI: 347%", "ROI 150,5%", "150% ROI"
-                    _b25_rv = re.sub(
-                        r'(ROI[:\s]+)(\d+(?:[.,]\d+)?)\s*(%)',
-                        lambda m: f'{m.group(1)}{_b25_roi_str}{m.group(3)}',
-                        _b25_rv
-                    )
-                    _b25_rv = re.sub(
-                        r'(Return on Investment[:\s]+)(\d+(?:[.,]\d+)?)\s*(%)',
-                        lambda m: f'{m.group(1)}{_b25_roi_str}{m.group(3)}',
-                        _b25_rv,
-                        flags=re.IGNORECASE
-                    )
-                    if _b25_rv != _b25_rv_orig:
-                        sections[_b25_rk] = _b25_rv
-                        _b25_enforced += 1
-                if _b25_enforced > 0:
-                    log.info(f"[{run_id}] [FIX-B25-ROI] Canonical ROI {_b25_roi_str}%% harmonized in {_b25_enforced} sections")
-            except (ValueError, TypeError):
-                pass
+        # --- B25 Canonical KPI Enforcement ---
+        sections, _b25_count = enforce_b25_canonical_kpis(
+            sections=sections,
+            report_data=sections,
+            is_html=True,
+        )
+        log.info(f"[{run_id}] [FIX-B25-CANONICAL] {_b25_count} sections enforced")
 
-        # --- FIX-B25-PAYBACK: Harmonize Payback across all sections ---
-        # KPI_002 triggers WARNING/ERROR when Payback values differ >4 months.
-        _b25_canonical_pb = sections.get('PAYBACK_MONTHS') or sections.get('_PAYBACK_BC_V2')
-        if _b25_canonical_pb is not None:
-            try:
-                _b25_pb_val = float(str(_b25_canonical_pb).replace(',', '.'))
-                _b25_pb_str = f"{_b25_pb_val:.1f}"
-                _b25_pb_fixed = 0
-                _b25_pb_targets = [
-                    'KI_STACK_SUMMARY_HTML', 'BUSINESS_CASE_HTML',
-                    'BUSINESS_CASE_ENGINE_HTML', 'EXECUTIVE_SUMMARY_HTML',
-                ]
-                for _b25_pk in _b25_pb_targets:
-                    _b25_pv = sections.get(_b25_pk)
-                    if not isinstance(_b25_pv, str) or len(_b25_pv) < 50:
-                        continue
-                    _b25_pv_orig = _b25_pv
-                    # Replace: "Payback: 12 Monate", "Amortisation: 8,5 Monate"
-                    _b25_pv = re.sub(
-                        r'(Payback|Amortisation|Break[\s-]?even)[:\s]*(\d+(?:[.,]\d+)?)\s*(Monate?|months?)',
-                        lambda m: f'{m.group(1)}: {_b25_pb_str} {m.group(3)}',
-                        _b25_pv,
-                        flags=re.IGNORECASE
-                    )
-                    if _b25_pv != _b25_pv_orig:
-                        sections[_b25_pk] = _b25_pv
-                        _b25_pb_fixed += 1
-                if _b25_pb_fixed > 0:
-                    log.info(f"[{run_id}] [FIX-B25-PAYBACK] Canonical Payback {_b25_pb_str}mo harmonized in {_b25_pb_fixed} sections")
-                    _b25_enforced += _b25_pb_fixed
-            except (ValueError, TypeError):
-                pass
-
-        # --- FIX-B25-VA: Inject Red Vendors into Risk/Mitigation section ---
-        # VA_002 triggers WARNING when red vendors aren't mentioned in risk section.
-        _b25_va_html = sections.get('VENDOR_AUDIT_HTML', '')
-        _b25_risk_html = sections.get('RISK_ENGINE_V3_HTML', '')
-        if _b25_va_html and _b25_risk_html:
-            _b25_red_names = re.findall(
-                r'<h4[^>]*>([^<]+)</h4>',
-                _b25_va_html
-            )
-            _b25_red_cats = re.findall(
-                r'>(GREEN|YELLOW|RED)</span>',
-                _b25_va_html,
-                re.IGNORECASE
-            )
-            _b25_red_vendors = []
-            for _b25_vi, _b25_vn in enumerate(_b25_red_names):
-                if _b25_vi < len(_b25_red_cats) and _b25_red_cats[_b25_vi].upper() == 'RED':
-                    _b25_red_vendors.append(_b25_vn.strip())
-
-            _b25_missing_vendors = [
-                v for v in _b25_red_vendors
-                if v.lower() not in _b25_risk_html.lower()
-            ]
-            if _b25_missing_vendors:
-                _b25_mitigation_items = ''.join(
-                    f'<li><strong>{v}</strong>: Als Hochrisiko-Vendor im Vendor-Audit identifiziert. '
-                    f'Empfehlung: Datenschutz-Folgenabschätzung durchführen, EU-konforme Alternative prüfen, '
-                    f'vertragliche Absicherung (DPA/SCCs) sicherstellen.</li>'
-                    for v in _b25_missing_vendors
+        # --- ROI Sanitizer (fixes 295% in scenario tables) ---
+        for _b25_sname, _b25_scontent in sections.items():
+            if isinstance(_b25_scontent, str) and len(_b25_scontent) > 50:
+                sections[_b25_sname] = sanitize_roi_values_in_content(
+                    content=_b25_scontent,
+                    roi_cap=200.0,
+                    is_html=True,
                 )
-                _b25_vendor_block = (
-                    f'<div class="vendor-risk-mitigation" style="margin-top:1em;">'
-                    f'<h4>Vendor-Risiko-Mitigation</h4>'
-                    f'<ul>{_b25_mitigation_items}</ul></div>'
-                )
-                sections['RISK_ENGINE_V3_HTML'] = _b25_risk_html + _b25_vendor_block
-                _b25_enforced += len(_b25_missing_vendors)
-                log.info(f"[{run_id}] [FIX-B25-VA] Injected {len(_b25_missing_vendors)} red vendors "
-                         f"into RISK_ENGINE_V3_HTML: {_b25_missing_vendors}")
 
-        # --- FIX-B25-TOOLS: Cross-reference KI-Stack tools → Tools section ---
-        # TOOLS_001 triggers WARNING when KI-Stack has tools not in Tools section.
-        _b25_stack_html = sections.get('KI_STACK_SUMMARY_HTML', '')
-        _b25_tools_html = sections.get('TOOLS_EMPFEHLUNGEN_HTML', '') or sections.get('TOOLS_HTML', '')
-        if _b25_stack_html and _b25_tools_html:
-            # Extract tool names from stack using same patterns as consistency engine
-            _b25_stack_tool_pat = r'<td[^>]*>([A-Za-z0-9\s\-\.]+(?:AI|GPT|Bot|Tool|Cloud|Pro|Plus)?)</td>'
-            _b25_card_pat = r'<[^>]*class="[^"]*pair-card-name[^"]*"[^>]*>([^<]+)</[^>]+>'
-            _b25_stack_tools = set()
-            for _b25_m in re.finditer(_b25_stack_tool_pat, _b25_stack_html, re.IGNORECASE):
-                _b25_tn = _b25_m.group(1).strip()
-                if 2 < len(_b25_tn) < 50:
-                    _b25_stack_tools.add(_b25_tn)
-            for _b25_m in re.finditer(_b25_card_pat, _b25_stack_html, re.IGNORECASE):
-                _b25_tn = _b25_m.group(1).strip()
-                if len(_b25_tn) > 2:
-                    _b25_stack_tools.add(_b25_tn)
+        # --- Apply funding blacklist BEFORE G22 ---
+        sections = apply_funding_blacklist(sections)
 
-            _b25_tools_lower = _b25_tools_html.lower()
-            _b25_missing_tools = [
-                t for t in _b25_stack_tools
-                if t.lower() not in _b25_tools_lower
-                and not any(t.lower() in ft.lower() for ft in re.findall(r'<td[^>]*>([^<]+)</td>', _b25_tools_html))
-            ]
-            if _b25_missing_tools:
-                _b25_tool_rows = ''.join(
-                    f'<tr><td>{t}</td><td>Empfohlen im KI-Stack</td><td>Siehe KI-Stack-Analyse</td></tr>'
-                    for t in _b25_missing_tools[:5]
-                )
-                _b25_tool_block = (
-                    f'<div class="stack-tools-sync" style="margin-top:1em;">'
-                    f'<h4>Weitere Tools aus KI-Stack-Analyse</h4>'
-                    f'<table><tbody>{_b25_tool_rows}</tbody></table></div>'
-                )
-                _b25_tools_key = 'TOOLS_EMPFEHLUNGEN_HTML' if 'TOOLS_EMPFEHLUNGEN_HTML' in sections else 'TOOLS_HTML'
-                sections[_b25_tools_key] = sections.get(_b25_tools_key, '') + _b25_tool_block
-                _b25_enforced += len(_b25_missing_tools)
-                log.info(f"[{run_id}] [FIX-B25-TOOLS] Injected {len(_b25_missing_tools)} missing tools "
-                         f"into {_b25_tools_key}: {_b25_missing_tools[:5]}")
-
-        if _b25_enforced > 0:
-            log.info(f"[{run_id}] [FIX-B25-PRE-G22] Cross-section consistency enforced: {_b25_enforced} fixes applied")
-        else:
-            log.info(f"[{run_id}] [FIX-B25-PRE-G22] No cross-section inconsistencies found")
     except Exception as _b25_exc:
-        log.warning(f"[{run_id}] [FIX-B25-PRE-G22] Enforcer failed (non-fatal): {_b25_exc}")
+        log.warning(f"[{run_id}] [FIX-B25-CANONICAL] Enforcer failed (non-fatal): {_b25_exc}")
 
     # === G22: CROSS-SECTION CONSISTENCY CHECK ===
     try:
