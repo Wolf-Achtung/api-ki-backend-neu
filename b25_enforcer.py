@@ -195,16 +195,16 @@ def enforce_b25_canonical_kpis(
             .replace(" ", "_")
         )
 
-        # STRICT name-based matching only (no content fallback — B28 fix)
+        # STRICT name-based matching only (no content fallback — B28)
         needs_injection = any(
             section_lower == kpi_key or section_lower == f"{kpi_key}_html"
             for kpi_key in KPI_SECTION_KEYS
         )
 
         if needs_injection and content:
-            # B28: Plain-text prepend for both HTML and plain-text modes.
-            # No hidden-div wrapper — avoids G22 parsing display:none
-            # content and generating cross-check conflicts.
+            # B28: Plain-text prepend for both HTML and text modes.
+            # No hidden-div wrapper — plain text survives _strip_html()
+            # and is found first by re.search() + break in _extract_kpis().
             modified_sections[section_name] = canonical_block + content
 
             _b25_enforced += 1
