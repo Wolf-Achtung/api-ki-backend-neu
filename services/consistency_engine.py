@@ -691,11 +691,16 @@ class ConsistencyEngine:
         if _issue_by_domain:
             _dom_parts = [f"{d}: {c['errors']}E/{c['warnings']}W" for d, c in sorted(_issue_by_domain.items())]
             log.info("[G22-VERBOSE] Issues by domain: %s", ", ".join(_dom_parts))
-        # Log top-5 warnings for debugging
-        _top_warnings = [i for i in self.report.issues if i.severity == "WARNING"][:5]
-        for _tw in _top_warnings:
+        # FIX-B25: Log ALL warnings (not just top-5) for complete diagnosis
+        _all_warnings = [i for i in self.report.issues if i.severity == "WARNING"]
+        for _tw in _all_warnings:
             log.info("[G22-VERBOSE] WARNING [%s] %s → %s: %s",
                      _tw.rule_id, _tw.source_section, _tw.target_section, _tw.message[:120])
+        # Also log errors for completeness
+        _all_errors = [i for i in self.report.issues if i.severity == "ERROR"]
+        for _te in _all_errors:
+            log.info("[G22-VERBOSE] ERROR [%s] %s → %s: %s",
+                     _te.rule_id, _te.source_section, _te.target_section, _te.message[:120])
 
         return self.report
 
