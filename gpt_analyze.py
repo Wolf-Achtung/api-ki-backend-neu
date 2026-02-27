@@ -16395,6 +16395,12 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     is_html=True,
                 )
 
+        log.info(f"[FIX-B32-ALIVE] Code reached. Checking _automation_roadmap_report: "
+                 f"type={type(sections.get('_automation_roadmap_report')).__name__}, "
+                 f"has_model_dump={hasattr(sections.get('_automation_roadmap_report'), 'model_dump')}, "
+                 f"has_dict={hasattr(sections.get('_automation_roadmap_report'), 'dict')}, "
+                 f"dir={[x for x in dir(sections.get('_automation_roadmap_report', '')) if not x.startswith('_')][:15]}")
+
         # B32-FIX: Convert Pydantic models to dicts BEFORE blacklist cleaning
         for _key in list(sections.keys()):
             _val = sections[_key]
