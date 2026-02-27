@@ -13,6 +13,7 @@ from b25_enforcer import (
     enforce_b25_canonical_kpis,
     sanitize_roi_values_in_content,
     apply_funding_blacklist,
+    strip_canonical_blocks,
 )
 
 passed = 0
@@ -350,6 +351,55 @@ check("BUSINESS_CASE injected", "[KPI-CANONICAL-START]" in result_15["BUSINESS_C
 check("VENDOR_AUDIT NOT injected", "[KPI-CANONICAL-START]" not in result_15["VENDOR_AUDIT_HTML"])
 check("BENCHMARK NOT injected", "[KPI-CANONICAL-START]" not in result_15["BENCHMARK_HTML"])
 check("Int preserved", result_15["score_gesamt"] == 91)
+
+# ============================================================
+print("\n📋 TEST 16: strip_canonical_blocks removes injected blocks")
+# ============================================================
+# Simulate post-enforce sections (canonical block prepended to content)
+canonical = build_canonical_kpi_block(200.0, 1.6, 4)
+sections_injected = {
+    "EXECUTIVE_SUMMARY_HTML": canonical + "<h2>Summary</h2><p>ROI: 200%</p>",
+    "ROI_HTML": canonical + "<p>ROI details</p>",
+    "VENDOR_AUDIT_HTML": "<p>Vendor audit</p>",  # no canonical block
+    "score_gesamt": 91,
+    "_automation_roadmap_report": {"programs": ["KI-Invest"]},
+}
+stripped_16 = strip_canonical_blocks(sections_injected)
+
+check("EXEC canonical stripped", "[KPI-CANONICAL-START]" not in stripped_16["EXECUTIVE_SUMMARY_HTML"])
+check("EXEC original content preserved", "<h2>Summary</h2>" in stripped_16["EXECUTIVE_SUMMARY_HTML"])
+check("ROI canonical stripped", "[KPI-CANONICAL-START]" not in stripped_16["ROI_HTML"])
+check("ROI original content preserved", "<p>ROI details</p>" in stripped_16["ROI_HTML"])
+check("VENDOR_AUDIT unchanged", stripped_16["VENDOR_AUDIT_HTML"] == "<p>Vendor audit</p>")
+check("Int preserved", stripped_16["score_gesamt"] == 91)
+check("Dict preserved", stripped_16["_automation_roadmap_report"] == {"programs": ["KI-Invest"]})
+
+# ============================================================
+print("\n📋 TEST 17: Full pipeline — inject, then strip leaves clean content")
+# ============================================================
+sections_pipeline = {
+    "EXECUTIVE_SUMMARY_HTML": "<p>Executive overview</p>",
+    "ROI_HTML": "<p>ROI section</p>",
+    "BUSINESS_CASE_HTML": "<p>Business case</p>",
+    "LEGAL_NOTICE_HTML": "<p>Impressum</p>",
+    "score_gesamt": 91,
+}
+report_data_17 = {"roi_percent": 200.0, "payback_months": 1.6, "tools_count": 4}
+
+# Step 1: inject canonical blocks
+injected_17, count_17 = enforce_b25_canonical_kpis(sections_pipeline, report_data_17, is_html=True)
+check(f"Injection count >= 3 (got {count_17})", count_17 >= 3)
+check("Canonical present after inject", "[KPI-CANONICAL-START]" in injected_17["EXECUTIVE_SUMMARY_HTML"])
+
+# Step 2: strip canonical blocks (simulating post-G22 cleanup)
+final_17 = strip_canonical_blocks(injected_17)
+check("Canonical gone after strip", "[KPI-CANONICAL-START]" not in final_17["EXECUTIVE_SUMMARY_HTML"])
+check("Canonical gone from ROI", "[KPI-CANONICAL-START]" not in final_17["ROI_HTML"])
+check("Canonical gone from BUSINESS_CASE", "[KPI-CANONICAL-START]" not in final_17["BUSINESS_CASE_HTML"])
+check("Original EXEC content intact", "<p>Executive overview</p>" in final_17["EXECUTIVE_SUMMARY_HTML"])
+check("Original ROI content intact", "<p>ROI section</p>" in final_17["ROI_HTML"])
+check("LEGAL unchanged (never injected)", final_17["LEGAL_NOTICE_HTML"] == "<p>Impressum</p>")
+check("Int preserved", final_17["score_gesamt"] == 91)
 
 # ============================================================
 # Summary
