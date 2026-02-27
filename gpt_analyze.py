@@ -16365,7 +16365,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.warning(f"[{run_id}] [A1] Pre-G22 AI-Act consistency failed: {_a1_exc}")
 
     # === FIX-B25-CANONICAL: Pre-G22 Cross-Section Consistency Enforcer ===
-    # Replaces: FIX-B25-ROI, FIX-B25-PAYBACK, FIX-B25-TOOLS
+    # Replaces old per-field ROI/Payback/Tools inline patches (B25 legacy).
     # Injects canonical plain-text KPI block BEFORE section content so
     # _extract_kpis() finds it first via re.search() + break pattern.
     try:
