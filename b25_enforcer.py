@@ -86,6 +86,7 @@ def build_canonical_kpi_block(
 
 # Sections that typically contain KPI values
 KPI_SECTION_KEYS = [
+    # Originale Keys (lowercase)
     "executive_summary",
     "management_summary",
     "wertschoepfung",
@@ -103,6 +104,25 @@ KPI_SECTION_KEYS = [
     "foerderung",
     "financial_summary",
     "finanzen",
+    # B29-FIX: Tatsächliche Keys aus gpt_analyze.py
+    "roi",                        # ROI_HTML
+    "business_case",              # BUSINESS_CASE_HTML
+    "business_roi",               # lowercase mapping of ROI_HTML
+    "business_costs",             # COSTS_OVERVIEW_HTML mapping
+    "recommendations",            # RECOMMENDATIONS_HTML
+    "foerderpotezial",            # FOERDERPOTEZIAL_HTML (Typo-Variante)
+    "foerderpotenzial",           # FOERDERPOTENZIAL_HTML (korrekt)
+    "ki_stack_summary",           # KI_STACK_SUMMARY_HTML
+    "wirtschaftlichkeit",         # WIRTSCHAFTLICHKEIT_HTML
+    "strategie_governance",       # STRATEGIE_GOVERNANCE_HTML
+    "technologie_prozesse",       # TECHNOLOGIE_PROZESSE_HTML
+    "costs_overview",             # COSTS_OVERVIEW_HTML
+    "monetarisierung",            # MONETARISIERUNG_HTML
+    "business_case_table",        # BUSINESS_CASE_TABLE_HTML
+    "kpi",                        # KPI_HTML
+    "kpi_scores",                 # KPI_SCORES_HTML
+    "tools_empfehlungen",         # TOOLS_EMPFEHLUNGEN_HTML
+    "executive_decision",         # EXECUTIVE_DECISION_HTML
 ]
 
 # Regex for content-based KPI detection
@@ -132,6 +152,12 @@ def enforce_b25_canonical_kpis(
     the consistency engine's _check_consistency() / G22 validator runs.
     """
     _b25_enforced = 0
+
+    # B29-FIX: Debug logging — show all string section keys for key-list tuning
+    logger.info(
+        f"[FIX-B29-DEBUG] All string section keys: "
+        f"{[k for k, v in sections.items() if isinstance(v, str)]}"
+    )
 
     # --- Extract canonical values from report_data ---
     roi_pct = _safe_extract_float(
@@ -302,13 +328,20 @@ def apply_funding_blacklist(
     """
     Remove blacklisted funding programs from section content.
     Must be called BEFORE G22 consistency check to prevent AUTO_005 warnings.
+    B29: Also cleans dict and list sections recursively.
     """
-    cleaned = {}
+    cleaned: dict[str, Any] = {}
     total_removed = 0
 
     for name, content in sections.items():
         if not isinstance(content, str):
-            cleaned[name] = content
+            # B29-FIX: Also clean blacklisted terms from dict/list values
+            if isinstance(content, dict):
+                cleaned[name] = _clean_dict_recursive(content)
+            elif isinstance(content, list):
+                cleaned[name] = _clean_list_recursive(content)
+            else:
+                cleaned[name] = content
             continue
         modified = content
         for term in FUNDING_BLACKLIST:
@@ -334,6 +367,89 @@ def apply_funding_blacklist(
             f"across all sections (BEFORE G22)"
         )
     return cleaned
+
+
+def _clean_dict_recursive(d: dict[str, Any]) -> dict[str, Any]:
+    """Recursively remove blacklisted funding terms from all string values in a dict."""
+    cleaned: dict[str, Any] = {}
+    for key, value in d.items():
+        if isinstance(value, str):
+            cleaned_val = value
+            for term in FUNDING_BLACKLIST:
+                if term.lower() in cleaned_val.lower():
+                    lines = cleaned_val.split("\n")
+                    filtered = [l for l in lines if term.lower() not in l.lower()]
+                    removed = len(lines) - len(filtered)
+                    if removed > 0:
+                        logger.info(
+                            f"[FIX-B29-FUNDING-DICT] Removed {removed} lines "
+                            f"with '{term}' from dict field '{key}'"
+                        )
+                    cleaned_val = "\n".join(filtered)
+            cleaned[key] = cleaned_val
+        elif isinstance(value, dict):
+            cleaned[key] = _clean_dict_recursive(value)
+        elif isinstance(value, list):
+            cleaned[key] = _clean_list_recursive(value)
+        else:
+            cleaned[key] = value
+    return cleaned
+
+
+def _clean_list_recursive(lst: list[Any]) -> list[Any]:
+    """Recursively remove blacklisted funding terms from all string items in a list.
+    String items containing a blacklisted term are removed entirely.
+    Dict items are removed if ANY of their leaf string values contain a blacklisted term.
+    """
+    cleaned: list[Any] = []
+    for item in lst:
+        if isinstance(item, str):
+            keep = True
+            for term in FUNDING_BLACKLIST:
+                if term.lower() in item.lower():
+                    logger.info(
+                        f"[FIX-B29-FUNDING-LIST] Removed list item containing '{term}'"
+                    )
+                    keep = False
+                    break
+            if keep:
+                cleaned.append(item)
+        elif isinstance(item, dict):
+            # Check if any string value in this dict contains a blacklisted term
+            if _dict_contains_blacklisted(item):
+                logger.info(
+                    f"[FIX-B29-FUNDING-LIST] Removed dict item containing "
+                    f"blacklisted term: {list(item.keys())}"
+                )
+            else:
+                cleaned.append(item)
+        elif isinstance(item, list):
+            cleaned.append(_clean_list_recursive(item))
+        else:
+            cleaned.append(item)
+    return cleaned
+
+
+def _dict_contains_blacklisted(d: dict[str, Any]) -> bool:
+    """Check if any leaf string value in a dict contains a blacklisted funding term."""
+    for value in d.values():
+        if isinstance(value, str):
+            for term in FUNDING_BLACKLIST:
+                if term.lower() in value.lower():
+                    return True
+        elif isinstance(value, dict):
+            if _dict_contains_blacklisted(value):
+                return True
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, str):
+                    for term in FUNDING_BLACKLIST:
+                        if term.lower() in item.lower():
+                            return True
+                elif isinstance(item, dict):
+                    if _dict_contains_blacklisted(item):
+                        return True
+    return False
 
 
 # ============================================================

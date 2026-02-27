@@ -284,6 +284,74 @@ check("Digitalbonus removed", "digitalbonus" not in cleaned_13["automation_roadm
 check("KI-Invest preserved", "KI-Invest" in cleaned_13["automation_roadmap"])
 
 # ============================================================
+print("\n📋 TEST 14: Blacklist cleans dict and list sections (B29 fix)")
+# ============================================================
+sections_with_dict = {
+    "AUTOMATION_ROADMAP_HTML": "Förderprogramme:\n- go-digital: Digitalisierung\n- KI-Invest: KI\n",
+    "_automation_roadmap_report": {
+        "programs": ["go-digital", "KMU-innovativ", "KI-Invest"],
+        "recommendations": "Nutzen Sie go-digital für Digitalisierung.\nNutzen Sie KI-Invest für KI.",
+        "scores": {"go-digital": 0.8, "KI-Invest": 0.9},
+    },
+    "_tools_report": [
+        {"name": "ChatGPT", "program": "Digitalbonus"},
+        {"name": "Claude", "program": "KI-Invest"},
+    ],
+    "score_gesamt": 91,
+}
+cleaned_14 = apply_funding_blacklist(sections_with_dict)
+
+# HTML section cleaned (existing behavior)
+check("HTML go-digital removed", "go-digital" not in cleaned_14["AUTOMATION_ROADMAP_HTML"])
+check("HTML KI-Invest preserved", "KI-Invest" in cleaned_14["AUTOMATION_ROADMAP_HTML"])
+
+# Dict section cleaned (B29 new behavior)
+report_14 = cleaned_14["_automation_roadmap_report"]
+check("Dict programs list: go-digital removed", "go-digital" not in report_14["programs"])
+check("Dict programs list: KMU-innovativ removed", "KMU-innovativ" not in report_14["programs"])
+check("Dict programs list: KI-Invest preserved", "KI-Invest" in report_14["programs"])
+check("Dict recommendations: go-digital removed", "go-digital" not in report_14["recommendations"])
+check("Dict recommendations: KI-Invest preserved", "KI-Invest" in report_14["recommendations"])
+
+# List section cleaned (B29 new behavior)
+tools_14 = cleaned_14["_tools_report"]
+check("List: Digitalbonus tool removed", len(tools_14) == 1)
+check("List: KI-Invest tool preserved", tools_14[0]["name"] == "Claude")
+
+# Non-string preserved
+check("Int preserved", cleaned_14["score_gesamt"] == 91)
+
+# ============================================================
+print("\n📋 TEST 15: New section keys match actual gpt_analyze.py keys")
+# ============================================================
+sections_real_keys = {
+    "EXECUTIVE_SUMMARY_HTML": "<p>ROI: 200%</p>",
+    "ROI_HTML": "<p>ROI details</p>",
+    "BUSINESS_CASE_HTML": "<p>Kosten-Nutzen</p>",
+    "WIRTSCHAFTLICHKEIT_HTML": "<p>Financial summary</p>",
+    "KI_STACK_SUMMARY_HTML": "<p>Tools overview</p>",
+    "FOERDERPOTEZIAL_HTML": "<p>Funding potential</p>",
+    "AUTOMATION_ROADMAP_HTML": "<p>Roadmap</p>",
+    "RECOMMENDATIONS_HTML": "<p>Empfehlungen</p>",
+    "STRATEGIE_GOVERNANCE_HTML": "<p>Strategy</p>",
+    # Non-KPI sections (should NOT get injection)
+    "VENDOR_AUDIT_HTML": "<p>Vendor audit with ROI mention</p>",
+    "BENCHMARK_HTML": "<p>Benchmark data</p>",
+    "LEGAL_NOTICE_HTML": "<p>Impressum</p>",
+    "score_gesamt": 91,
+}
+report_data_15 = {"roi_percent": 200.0, "payback_months": 1.6, "tools_count": 4}
+result_15, count_15 = enforce_b25_canonical_kpis(sections_real_keys, report_data_15, is_html=True)
+
+check(f"Injection count 7-10 (got {count_15})", 7 <= count_15 <= 10)
+check("EXECUTIVE_SUMMARY injected", "[KPI-CANONICAL-START]" in result_15["EXECUTIVE_SUMMARY_HTML"])
+check("ROI_HTML injected", "[KPI-CANONICAL-START]" in result_15["ROI_HTML"])
+check("BUSINESS_CASE injected", "[KPI-CANONICAL-START]" in result_15["BUSINESS_CASE_HTML"])
+check("VENDOR_AUDIT NOT injected", "[KPI-CANONICAL-START]" not in result_15["VENDOR_AUDIT_HTML"])
+check("BENCHMARK NOT injected", "[KPI-CANONICAL-START]" not in result_15["BENCHMARK_HTML"])
+check("Int preserved", result_15["score_gesamt"] == 91)
+
+# ============================================================
 # Summary
 # ============================================================
 total = passed + failed
