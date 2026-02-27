@@ -16395,6 +16395,18 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     is_html=True,
                 )
 
+        # B32-FIX: Convert Pydantic models to dicts BEFORE blacklist cleaning
+        for _key in list(sections.keys()):
+            _val = sections[_key]
+            if hasattr(_val, 'model_dump'):
+                sections[_key] = _val.model_dump()
+                log.info(f"[FIX-B32-PYDANTIC] Converted {_key} from "
+                         f"{type(_val).__name__} to dict")
+            elif hasattr(_val, 'dict') and not isinstance(_val, (str, int, float, bool, list, dict)):
+                sections[_key] = _val.dict()
+                log.info(f"[FIX-B32-PYDANTIC-V1] Converted {_key} from "
+                         f"{type(_val).__name__} to dict")
+
         # --- Apply funding blacklist BEFORE G22 ---
         sections = apply_funding_blacklist(sections)
 
