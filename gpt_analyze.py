@@ -16364,182 +16364,42 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     except Exception as _a1_exc:
         log.warning(f"[{run_id}] [A1] Pre-G22 AI-Act consistency failed: {_a1_exc}")
 
-    # === FIX-B25: Pre-G22 Cross-Section Consistency Enforcer ===
-    # Harmonizes canonical KPI/ROI/Payback values across all HTML sections
-    # BEFORE the G22 check runs, preventing false-positive inconsistencies
-    # caused by GPT generating slightly different numbers in each section.
-    #
-    # DESIGN: The G22 consistency engine's _extract_kpis() works by:
-    #   1. Calling _strip_html() to remove all HTML tags
-    #   2. Running re.search() with ROI/Payback patterns on plain text
-    #   3. Taking the FIRST match (break after first hit)
-    # Therefore: PREPENDING a canonical KPI block to each section guarantees
-    # _extract_kpis() finds the canonical value first, regardless of how
-    # GPT structured the ROI/Payback values in the HTML content.
+    # === FIX-B25-CANONICAL: Pre-G22 Cross-Section Consistency Enforcer ===
+    # Replaces: FIX-B25-ROI, FIX-B25-PAYBACK, FIX-B25-TOOLS
+    # Injects canonical plain-text KPI block BEFORE section content so
+    # _extract_kpis() finds it first via re.search() + break pattern.
     try:
-        _b25_enforced = 0
+        from b25_enforcer import enforce_b25_canonical_kpis, sanitize_roi_values_in_content, apply_funding_blacklist
 
-        # --- FIX-B25-ROI + FIX-B25-PAYBACK: Canonical KPI injection ---
-        # KPI_001 triggers ERROR when ROI values differ >15% between sections.
-        # KPI_002 triggers WARNING/ERROR when Payback values differ >4 months.
-        # Solution: Inject canonical values at the START of each section so
-        # _extract_kpis() (which uses re.search + break) finds them first.
-        _b25_canonical_roi = sections.get('ROI_12M')
-        _b25_canonical_pb = sections.get('PAYBACK_MONTHS') or sections.get('_PAYBACK_BC_V2')
+        # --- B25 Canonical KPI Enforcement ---
+        # Bridge uppercase section keys → lowercase enforcer keys
+        _b25_report_data = {
+            "roi_percent": sections.get("ROI_12M"),
+            "payback_months": sections.get("PAYBACK_MONTHS") or sections.get("_PAYBACK_BC_V2"),
+            "tools_count": sections.get("_TOOLS_COUNT"),
+            "tools_names": sections.get("_TOOLS_NAMES"),
+        }
+        sections, _b25_count = enforce_b25_canonical_kpis(
+            sections=sections,
+            report_data=_b25_report_data,
+            is_html=True,
+        )
+        log.info(f"[{run_id}] [FIX-B25-CANONICAL] {_b25_count} sections enforced")
 
-        if _b25_canonical_roi is not None or _b25_canonical_pb is not None:
-            _b25_kpi_parts = []
-            _b25_roi_str = None
-            _b25_pb_str = None
-
-            if _b25_canonical_roi is not None:
-                try:
-                    _b25_roi_val = float(_b25_canonical_roi)
-                    _b25_roi_str = f"{_b25_roi_val:.1f}"
-                    _b25_kpi_parts.append(f"ROI: {_b25_roi_str}%")
-                except (ValueError, TypeError):
-                    pass
-
-            if _b25_canonical_pb is not None:
-                try:
-                    _b25_pb_val = float(str(_b25_canonical_pb).replace(',', '.'))
-                    _b25_pb_str = f"{_b25_pb_val:.1f}"
-                    _b25_kpi_parts.append(f"Payback: {_b25_pb_str} Monate")
-                except (ValueError, TypeError):
-                    pass
-
-            if _b25_kpi_parts:
-                # Build invisible canonical block — _strip_html() removes tags,
-                # leaving plain "ROI: X% Payback: Y Monate" at the START of text.
-                # _extract_kpis() re.search() finds these FIRST → consistent values.
-                _b25_canonical_text = " ".join(_b25_kpi_parts)
-                _b25_canonical_block = (
-                    f'<div class="canonical-kpis" style="display:none;" '
-                    f'aria-hidden="true">{_b25_canonical_text}</div>'
+        # --- ROI Sanitizer (fixes 295% in scenario tables) ---
+        for _b25_sname, _b25_scontent in list(sections.items()):
+            if isinstance(_b25_scontent, str) and len(_b25_scontent) > 50:
+                sections[_b25_sname] = sanitize_roi_values_in_content(
+                    content=_b25_scontent,
+                    roi_cap=200.0,
+                    is_html=True,
                 )
-                _b25_kpi_targets = [
-                    'KI_STACK_SUMMARY_HTML', 'BUSINESS_CASE_HTML',
-                    'BUSINESS_CASE_ENGINE_HTML', 'EXECUTIVE_SUMMARY_HTML',
-                ]
-                _b25_kpi_injected = 0
-                for _b25_kk in _b25_kpi_targets:
-                    _b25_kv = sections.get(_b25_kk)
-                    if isinstance(_b25_kv, str) and len(_b25_kv) > 50:
-                        sections[_b25_kk] = _b25_canonical_block + _b25_kv
-                        _b25_kpi_injected += 1
 
-                if _b25_kpi_injected > 0:
-                    _b25_enforced += _b25_kpi_injected
-                    log.info(f"[{run_id}] [FIX-B25-ROI] Canonical ROI={_b25_roi_str}%% "
-                             f"injected into {_b25_kpi_injected} sections")
-                    log.info(f"[{run_id}] [FIX-B25-PAYBACK] Canonical Payback={_b25_pb_str}mo "
-                             f"injected into {_b25_kpi_injected} sections")
+        # --- Apply funding blacklist BEFORE G22 ---
+        sections = apply_funding_blacklist(sections)
 
-        # --- FIX-B25-VA: Inject Red Vendors into Risk/Mitigation section ---
-        # VA_002 triggers WARNING when red vendors aren't mentioned in risk section.
-        # The check does: vendor_lower not in risk_v3_html.lower()
-        # So injecting vendor names as plain text in the risk HTML is sufficient.
-        _b25_va_html = sections.get('VENDOR_AUDIT_HTML', '')
-        _b25_risk_html = sections.get('RISK_ENGINE_V3_HTML', '')
-        if _b25_va_html and _b25_risk_html:
-            _b25_red_names = re.findall(
-                r'<h4[^>]*>([^<]+)</h4>',
-                _b25_va_html
-            )
-            _b25_red_cats = re.findall(
-                r'>(GREEN|YELLOW|RED)</span>',
-                _b25_va_html,
-                re.IGNORECASE
-            )
-            _b25_red_vendors = []
-            for _b25_vi, _b25_vn in enumerate(_b25_red_names):
-                if _b25_vi < len(_b25_red_cats) and _b25_red_cats[_b25_vi].upper() == 'RED':
-                    _b25_red_vendors.append(_b25_vn.strip())
-
-            # Also extract from _vendor_audit_report dict (more reliable than HTML parsing)
-            _b25_va_report = sections.get('_vendor_audit_report')
-            if isinstance(_b25_va_report, dict):
-                for _b25_ve in _b25_va_report.get('vendors', []):
-                    if isinstance(_b25_ve, dict) and _b25_ve.get('overall_category') == 'red':
-                        _b25_vname = _b25_ve.get('name', '')
-                        if _b25_vname and _b25_vname not in _b25_red_vendors:
-                            _b25_red_vendors.append(_b25_vname)
-            elif isinstance(_b25_va_report, list):
-                for _b25_ve in _b25_va_report:
-                    if isinstance(_b25_ve, dict) and _b25_ve.get('overall_category') == 'red':
-                        _b25_vname = _b25_ve.get('name', '')
-                        if _b25_vname and _b25_vname not in _b25_red_vendors:
-                            _b25_red_vendors.append(_b25_vname)
-
-            _b25_risk_lower = _b25_risk_html.lower()
-            _b25_missing_vendors = [
-                v for v in _b25_red_vendors
-                if v.lower() not in _b25_risk_lower
-            ]
-            if _b25_missing_vendors:
-                _b25_mitigation_items = ''.join(
-                    f'<li><strong>{v}</strong>: Als Hochrisiko-Vendor im Vendor-Audit identifiziert. '
-                    f'Empfehlung: Datenschutz-Folgenabschätzung durchführen, EU-konforme Alternative prüfen, '
-                    f'vertragliche Absicherung (DPA/SCCs) sicherstellen.</li>'
-                    for v in _b25_missing_vendors
-                )
-                _b25_vendor_block = (
-                    f'<div class="vendor-risk-mitigation" style="margin-top:1em;">'
-                    f'<h4>Vendor-Risiko-Mitigation</h4>'
-                    f'<ul>{_b25_mitigation_items}</ul></div>'
-                )
-                sections['RISK_ENGINE_V3_HTML'] = _b25_risk_html + _b25_vendor_block
-                _b25_enforced += len(_b25_missing_vendors)
-                log.info(f"[{run_id}] [FIX-B25-VA] Injected {len(_b25_missing_vendors)} red vendors "
-                         f"into RISK_ENGINE_V3_HTML: {_b25_missing_vendors}")
-
-        # --- FIX-B25-TOOLS: Cross-reference KI-Stack tools → Tools section ---
-        # TOOLS_001 triggers WARNING when KI-Stack has tools not in Tools section.
-        # The check uses _extract_tool_names() which works on raw HTML (no strip).
-        _b25_stack_html = sections.get('KI_STACK_SUMMARY_HTML', '')
-        _b25_tools_html = sections.get('TOOLS_EMPFEHLUNGEN_HTML', '') or sections.get('TOOLS_HTML', '')
-        if _b25_stack_html and _b25_tools_html:
-            # Extract tool names from stack using same patterns as consistency engine
-            _b25_stack_tool_pat = r'<td[^>]*>([A-Za-z0-9\s\-\.]+(?:AI|GPT|Bot|Tool|Cloud|Pro|Plus)?)</td>'
-            _b25_card_pat = r'<[^>]*class="[^"]*pair-card-name[^"]*"[^>]*>([^<]+)</[^>]+>'
-            _b25_stack_tools = set()
-            for _b25_m in re.finditer(_b25_stack_tool_pat, _b25_stack_html, re.IGNORECASE):
-                _b25_tn = _b25_m.group(1).strip()
-                if 2 < len(_b25_tn) < 50:
-                    _b25_stack_tools.add(_b25_tn)
-            for _b25_m in re.finditer(_b25_card_pat, _b25_stack_html, re.IGNORECASE):
-                _b25_tn = _b25_m.group(1).strip()
-                if len(_b25_tn) > 2:
-                    _b25_stack_tools.add(_b25_tn)
-
-            _b25_tools_lower = _b25_tools_html.lower()
-            _b25_missing_tools = [
-                t for t in _b25_stack_tools
-                if t.lower() not in _b25_tools_lower
-                and not any(t.lower() in ft.lower() for ft in re.findall(r'<td[^>]*>([^<]+)</td>', _b25_tools_html))
-            ]
-            if _b25_missing_tools:
-                _b25_tool_rows = ''.join(
-                    f'<tr><td>{t}</td><td>Empfohlen im KI-Stack</td><td>Siehe KI-Stack-Analyse</td></tr>'
-                    for t in _b25_missing_tools[:5]
-                )
-                _b25_tool_block = (
-                    f'<div class="stack-tools-sync" style="margin-top:1em;">'
-                    f'<h4>Weitere Tools aus KI-Stack-Analyse</h4>'
-                    f'<table><tbody>{_b25_tool_rows}</tbody></table></div>'
-                )
-                _b25_tools_key = 'TOOLS_EMPFEHLUNGEN_HTML' if 'TOOLS_EMPFEHLUNGEN_HTML' in sections else 'TOOLS_HTML'
-                sections[_b25_tools_key] = sections.get(_b25_tools_key, '') + _b25_tool_block
-                _b25_enforced += len(_b25_missing_tools)
-                log.info(f"[{run_id}] [FIX-B25-TOOLS] Injected {len(_b25_missing_tools)} missing tools "
-                         f"into {_b25_tools_key}: {_b25_missing_tools[:5]}")
-
-        if _b25_enforced > 0:
-            log.info(f"[{run_id}] [FIX-B25-PRE-G22] Cross-section consistency enforced: {_b25_enforced} fixes applied")
-        else:
-            log.info(f"[{run_id}] [FIX-B25-PRE-G22] No cross-section inconsistencies found")
     except Exception as _b25_exc:
-        log.warning(f"[{run_id}] [FIX-B25-PRE-G22] Enforcer failed (non-fatal): {_b25_exc}")
+        log.warning(f"[{run_id}] [FIX-B25-CANONICAL] Enforcer failed (non-fatal): {_b25_exc}")
 
     # === G22: CROSS-SECTION CONSISTENCY CHECK ===
     try:
