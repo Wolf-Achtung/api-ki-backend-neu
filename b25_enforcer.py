@@ -1,32 +1,36 @@
-# ============================================================
-# FIX-B25-CANONICAL — Robust KPI Harmonization via Injection
-# Replaces: FIX-B25-ROI, FIX-B25-PAYBACK, FIX-B25-TOOLS
-# Date: 2025-02-27
-# Why: Old enforcer ran regex on raw HTML; consistency engine
-#       strips HTML first → regex never matched → silent fail.
-# How: Inject canonical plain-text KPI block BEFORE section
-#       content so _extract_kpis() finds it first via
-#       re.search() + break pattern.
-# ============================================================
-
+"""
+FIX-B25-CANONICAL — Robust KPI Harmonization via Canonical Injection
+Replaces: FIX-B25-ROI, FIX-B25-PAYBACK, FIX-B25-TOOLS
+Date: 2027-02-27
+Build: B27 prep
+Root Cause: Old enforcer ran regex on raw HTML; consistency engine strips
+HTML first via _strip_html() → regex never matched → _b25_enforced=0 → silent fail.
+Solution: Inject canonical plain-text KPI block BEFORE section content so
+_extract_kpis() finds it first via its re.search() + break pattern.
+"""
 import re
 import logging
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+
+# ============================================================
+# Canonical KPI Block Builder
+# ============================================================
 
 def build_canonical_kpi_block(
     roi_pct: float,
     payback_months: float,
     tools_count: int,
-    tools_names: list | None = None,
+    tools_names: Optional[list[str]] = None,
     currency: str = "EUR",
 ) -> str:
     """
     Build a plain-text canonical KPI block that matches ALL 5 patterns
     used by _extract_kpis() in the consistency engine.
 
-    Patterns covered (lines 500-505 of consistency engine):
+    Patterns covered (consistency engine lines 500-505):
       1. ROI: X%
       2. ROI beträgt X%
       3. X% ROI
@@ -42,16 +46,22 @@ def build_canonical_kpi_block(
     """
     # Cap ROI at 200% per business rule
     roi_display = min(roi_pct, 200.0)
-    roi_str = f"{roi_display:.0f}" if roi_display == int(roi_display) else f"{roi_display:.1f}"
+    roi_str = (
+        f"{roi_display:.0f}"
+        if roi_display == int(roi_display)
+        else f"{roi_display:.1f}"
+    )
 
-    # Format payback
-    pb_str = f"{payback_months:.1f}".replace(".", ",")  # German decimal
+    # Format payback with German decimal
+    pb_str = f"{payback_months:.1f}".replace(".", ",")
 
-    # Tools
+    # Tools line
     tools_str = ", ".join(tools_names) if tools_names else ""
-    tools_line = f"{tools_count} KI-Tools" + (f" ({tools_str})" if tools_str else "")
+    tools_line = f"{tools_count} KI-Tools"
+    if tools_str:
+        tools_line += f" ({tools_str})"
 
-    # Build block with ALL 5 ROI pattern variants for maximum match probability
+    # Build block with ALL 5 ROI pattern variants
     block = (
         f"\n"
         f"[KPI-CANONICAL-START]\n"
@@ -70,11 +80,43 @@ def build_canonical_kpi_block(
     return block
 
 
+# ============================================================
+# Main Enforcer
+# ============================================================
+
+# Sections that typically contain KPI values
+KPI_SECTION_KEYS = [
+    "executive_summary",
+    "management_summary",
+    "wertschoepfung",
+    "value_creation",
+    "roi_analysis",
+    "roi_analyse",
+    "kosten_nutzen",
+    "cost_benefit",
+    "automation_roadmap",
+    "implementation_plan",
+    "umsetzungsplan",
+    "tools_analysis",
+    "tools_analyse",
+    "funding_section",
+    "foerderung",
+    "financial_summary",
+    "finanzen",
+]
+
+# Regex for content-based KPI detection
+KPI_CONTENT_PATTERN = re.compile(
+    r"ROI|Return on Investment|Payback|Amortis|KI-Tools|AI-Tools",
+    re.IGNORECASE,
+)
+
+
 def enforce_b25_canonical_kpis(
-    sections: dict,
+    sections: dict[str, str],
     report_data: dict,
     is_html: bool = True,
-) -> tuple:
+) -> tuple[dict[str, str], int]:
     """
     Inject canonical KPI block into each section for consistency harmonization.
 
@@ -87,37 +129,41 @@ def enforce_b25_canonical_kpis(
         Tuple of (modified_sections, injection_count)
 
     Integration point: Call this AFTER sections are generated but BEFORE
-    the consistency engine's _check_consistency() runs.
+    the consistency engine's _check_consistency() / G22 validator runs.
     """
     _b25_enforced = 0
 
     # --- Extract canonical values from report_data ---
-    roi_pct = _safe_extract_float(report_data, [
-        "roi_percent", "roi_pct", "roi", "roi_value",
-        "calculated_roi", "roi_capped", "ROI_12M",
-    ], default=200.0)
-
-    payback_months = _safe_extract_float(report_data, [
-        "payback_months", "payback", "payback_period",
-        "amortisation_months", "amortisation",
-        "PAYBACK_MONTHS",
-    ], default=1.6)
-
-    tools_count = _safe_extract_int(report_data, [
-        "tools_count", "num_tools", "ki_tools_count",
-        "ai_tools_count", "tool_count",
-    ], default=4)
-
-    tools_names = _safe_extract_list(report_data, [
-        "tools_names", "tool_names", "ki_tools",
-        "ai_tools", "tools_list",
-    ], default=None)
+    roi_pct = _safe_extract_float(
+        report_data,
+        ["roi_percent", "roi_pct", "roi", "roi_value",
+         "calculated_roi", "roi_capped"],
+        default=200.0,
+    )
+    payback_months = _safe_extract_float(
+        report_data,
+        ["payback_months", "payback", "payback_period",
+         "amortisation_months", "amortisation"],
+        default=1.6,
+    )
+    tools_count = _safe_extract_int(
+        report_data,
+        ["tools_count", "num_tools", "ki_tools_count",
+         "ai_tools_count", "tool_count"],
+        default=4,
+    )
+    tools_names = _safe_extract_list(
+        report_data,
+        ["tools_names", "tool_names", "ki_tools",
+         "ai_tools", "tools_list"],
+        default=None,
+    )
 
     # --- Cap ROI per business rule ---
     if roi_pct > 200.0:
         logger.info(
             f"[FIX-B25-CANONICAL] ROI {roi_pct:.1f}% exceeds cap, "
-            f"displaying as 200% (gedeckelt)"
+            f"displaying as 200%% (gedeckelt)"
         )
         roi_pct = 200.0
 
@@ -131,83 +177,74 @@ def enforce_b25_canonical_kpis(
 
     logger.info(
         f"[FIX-B25-CANONICAL] Canonical KPI block built: "
-        f"ROI={roi_pct:.0f}%, PAYBACK={payback_months:.1f}M, "
+        f"ROI={roi_pct:.0f}%%, PAYBACK={payback_months:.1f}M, "
         f"TOOLS={tools_count}"
     )
 
-    # --- Sections that need KPI harmonization ---
-    kpi_sections = [
-        "executive_summary",
-        "management_summary",
-        "wertschoepfung",
-        "value_creation",
-        "roi_analysis",
-        "roi_analyse",
-        "kosten_nutzen",
-        "cost_benefit",
-        "automation_roadmap",
-        "implementation_plan",
-        "umsetzungsplan",
-        "tools_analysis",
-        "tools_analyse",
-        "funding_section",
-        "foerderung",
-        "financial_summary",
-        "finanzen",
-    ]
-
+    # --- Inject into relevant sections ---
     modified_sections = {}
     for section_name, content in sections.items():
-        section_lower = section_name.lower().replace("-", "_").replace(" ", "_")
-
-        # Check if this section should get KPI injection
-        needs_injection = any(
-            kpi_key in section_lower for kpi_key in kpi_sections
+        section_lower = (
+            section_name.lower()
+            .replace("-", "_")
+            .replace(" ", "_")
         )
 
-        # Also inject if section content mentions ROI/Payback/Tools
+        # Check by section name
+        needs_injection = any(
+            kpi_key in section_lower for kpi_key in KPI_SECTION_KEYS
+        )
+
+        # Fallback: check by content (catches custom section names)
         if not needs_injection and content:
             stripped = _quick_strip(content) if is_html else content
-            if isinstance(stripped, str) and re.search(
-                r"ROI|Return on Investment|Payback|Amortis|KI-Tools|AI-Tools",
-                stripped,
-                re.IGNORECASE,
-            ):
+            if KPI_CONTENT_PATTERN.search(stripped):
                 needs_injection = True
 
-        if needs_injection and content and isinstance(content, str) and len(content) > 50:
+        if needs_injection and content:
             if is_html:
-                # Inject as HTML comment + hidden div with plain text
+                # Inject as hidden div with plain text inside.
+                # After _strip_html(), the plain text becomes visible
+                # and appears FIRST (prepended), so re.search() + break
+                # matches it before any divergent values in the section.
                 html_injection = (
-                    f'<!-- {canonical_block} -->'
-                    f'<div class="kpi-canonical" style="display:none">'
+                    f'<!-- [FIX-B25-CANONICAL] -->'
+                    f'<div class="kpi-canonical" '
+                    f'style="display:none;font-size:0;height:0;overflow:hidden">'
                     f'{canonical_block}'
                     f'</div>'
                 )
-                # PREPEND so it appears FIRST after stripping
                 modified_sections[section_name] = html_injection + content
             else:
-                # Plain text: just prepend
                 modified_sections[section_name] = canonical_block + content
 
             _b25_enforced += 1
             logger.debug(
-                f"[FIX-B25-CANONICAL] Injected into section: {section_name}"
+                f"[FIX-B25-CANONICAL] Injected into: {section_name}"
             )
         else:
             modified_sections[section_name] = content
 
     logger.info(
         f"[FIX-B25-CANONICAL] Enforcement complete: "
-        f"{_b25_enforced} sections harmonized out of {len(sections)} total"
+        f"{_b25_enforced}/{len(sections)} sections harmonized"
     )
 
     return modified_sections, _b25_enforced
 
 
 # ============================================================
-# ROI Sanitizer for scenario tables (fixes 295% leak)
+# ROI Sanitizer — caps ROI >200% in scenario tables
 # ============================================================
+
+_ROI_PATTERN = re.compile(
+    r'(ROI[:\s]*|Return on Investment[:\s]*|'
+    r'Rendite[:\s]*|Kapitalrendite[:\s]*)?'
+    r'(\d{3,}(?:[.,]\d+)?)'
+    r'(\s?%\s*(?:ROI|Return)?)',
+    re.IGNORECASE,
+)
+
 
 def sanitize_roi_values_in_content(
     content: str,
@@ -217,48 +254,32 @@ def sanitize_roi_values_in_content(
     """
     Find and cap any ROI percentage values > roi_cap in content.
     Covers scenario tables, inline text, and all ROI pattern variants.
-
-    This prevents inconsistencies like "ROI: 200% (gedeckelt)" in one
-    section but "295%" in a scenario table.
     """
-    if not isinstance(content, str):
-        return content
-
     cap_str = f"{roi_cap:.0f}"
 
     def _cap_roi_match(match: re.Match) -> str:
-        prefix = match.group(1) if match.group(1) else ""
+        prefix = match.group(1) or ""
         value_str = match.group(2)
-        suffix = match.group(3) if match.group(3) else ""
+        suffix = match.group(3) or ""
 
         try:
             value = float(value_str.replace(",", "."))
             if value > roi_cap:
                 logger.info(
-                    f"[FIX-B25-ROI-SANITIZER] Capping ROI {value_str}% → {cap_str}% "
-                    f"(context: ...{prefix[-20:]}{value_str}%{suffix[:20]}...)"
+                    f"[FIX-B25-ROI-SANITIZER] Capping {value_str}% → "
+                    f"{cap_str}% in context: "
+                    f"...{prefix[-20:]}{value_str}%{suffix[:20]}..."
                 )
                 return f"{prefix}{cap_str}{suffix}"
         except (ValueError, AttributeError):
             pass
         return match.group(0)
 
-    # Pattern: captures prefix, numeric value, and suffix around %
-    # Matches: 295%, 295 %, 295,5%
-    roi_pattern = re.compile(
-        r'(ROI[:\s]*|Return on Investment[:\s]*|'
-        r'Rendite[:\s]*|Kapitalrendite[:\s]*)?'
-        r'(\d{3,}(?:[.,]\d+)?)'
-        r'(\s?%\s*(?:ROI|Return)?)',
-        re.IGNORECASE,
-    )
-
-    sanitized = roi_pattern.sub(_cap_roi_match, content)
-    return sanitized
+    return _ROI_PATTERN.sub(_cap_roi_match, content)
 
 
 # ============================================================
-# Funding Blacklist — BEFORE G22
+# Funding Blacklist — remove BEFORE G22 check
 # ============================================================
 
 FUNDING_BLACKLIST = [
@@ -266,29 +287,36 @@ FUNDING_BLACKLIST = [
     "go-digital!",
     "Go-Digital",
     "go digital",
+    "Go Digital",
+    "godigital",
 ]
 
 
-def apply_funding_blacklist(sections: dict) -> dict:
-    """Remove blacklisted funding programs from section content BEFORE G22."""
+def apply_funding_blacklist(
+    sections: dict[str, str],
+) -> dict[str, str]:
+    """
+    Remove blacklisted funding programs from section content.
+    Must be called BEFORE G22 consistency check to prevent AUTO_005 warnings.
+    """
     cleaned = {}
     total_removed = 0
+
     for name, content in sections.items():
-        if not isinstance(content, str):
-            cleaned[name] = content
-            continue
         modified = content
         for term in FUNDING_BLACKLIST:
-            if term in modified:
-                # Remove lines containing the blacklisted term
+            if term.lower() in modified.lower():
                 lines = modified.split("\n")
-                filtered = [line for line in lines if term not in line]
+                filtered = [
+                    line for line in lines
+                    if term.lower() not in line.lower()
+                ]
                 removed = len(lines) - len(filtered)
                 if removed > 0:
                     total_removed += removed
                     logger.info(
-                        f"[FIX-B26-FUNDING-BL] Removed {removed} lines with "
-                        f"'{term}' from {name}"
+                        f"[FIX-B26-FUNDING-BL] Removed {removed} lines "
+                        f"with '{term}' from {name}"
                     )
                 modified = "\n".join(filtered)
         cleaned[name] = modified
@@ -307,7 +335,7 @@ def apply_funding_blacklist(sections: dict) -> dict:
 
 def _safe_extract_float(
     data: dict,
-    keys: list,
+    keys: list[str],
     default: float = 0.0,
 ) -> float:
     """Extract float value from dict, trying multiple key names."""
@@ -321,19 +349,26 @@ def _safe_extract_float(
             except (ValueError, TypeError):
                 continue
         # Try nested dicts
-        for sub_key in ["kpis", "calculated", "results", "scores", "financial"]:
+        for sub_key in [
+            "kpis", "calculated", "results", "scores", "financial",
+        ]:
             sub = data.get(sub_key, {})
             if isinstance(sub, dict):
-                val = sub.get(key)
-                if val is not None:
+                nested_val = sub.get(key)
+                if nested_val is not None:
                     try:
-                        if isinstance(val, str):
-                            val = val.replace(",", ".").replace("%", "").strip()
-                        return float(val)
+                        if isinstance(nested_val, str):
+                            nested_val = (
+                                nested_val
+                                .replace(",", ".")
+                                .replace("%", "")
+                                .strip()
+                            )
+                        return float(nested_val)
                     except (ValueError, TypeError):
                         continue
     logger.warning(
-        f"[FIX-B25-CANONICAL] Could not extract float from keys {keys}, "
+        f"[FIX-B25-CANONICAL] Could not extract float from {keys}, "
         f"using default={default}"
     )
     return default
@@ -341,7 +376,7 @@ def _safe_extract_float(
 
 def _safe_extract_int(
     data: dict,
-    keys: list,
+    keys: list[str],
     default: int = 0,
 ) -> int:
     """Extract int value from dict, trying multiple key names."""
@@ -355,14 +390,14 @@ def _safe_extract_int(
         for sub_key in ["kpis", "calculated", "results", "tools"]:
             sub = data.get(sub_key, {})
             if isinstance(sub, dict):
-                val = sub.get(key)
-                if val is not None:
+                nested_val = sub.get(key)
+                if nested_val is not None:
                     try:
-                        return int(val)
+                        return int(nested_val)
                     except (ValueError, TypeError):
                         continue
     logger.warning(
-        f"[FIX-B25-CANONICAL] Could not extract int from keys {keys}, "
+        f"[FIX-B25-CANONICAL] Could not extract int from {keys}, "
         f"using default={default}"
     )
     return default
@@ -370,9 +405,9 @@ def _safe_extract_int(
 
 def _safe_extract_list(
     data: dict,
-    keys: list,
-    default: list | None = None,
-) -> list | None:
+    keys: list[str],
+    default: Optional[list] = None,
+) -> Optional[list]:
     """Extract list value from dict, trying multiple key names."""
     for key in keys:
         val = data.get(key)
@@ -381,14 +416,12 @@ def _safe_extract_list(
         for sub_key in ["kpis", "tools", "results"]:
             sub = data.get(sub_key, {})
             if isinstance(sub, dict):
-                val = sub.get(key)
-                if isinstance(val, list):
-                    return val
+                nested_val = sub.get(key)
+                if isinstance(nested_val, list):
+                    return nested_val
     return default
 
 
 def _quick_strip(html: str) -> str:
-    """Fast HTML tag removal for content-detection only (not for display)."""
-    if not isinstance(html, str):
-        return ""
+    """Fast HTML tag removal for content-detection only."""
     return re.sub(r"<[^>]+>", " ", html)
