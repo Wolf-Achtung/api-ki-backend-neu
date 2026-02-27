@@ -10,7 +10,7 @@ _extract_kpis() finds it first via its re.search() + break pattern.
 """
 import re
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -113,10 +113,10 @@ KPI_CONTENT_PATTERN = re.compile(
 
 
 def enforce_b25_canonical_kpis(
-    sections: dict[str, str],
+    sections: dict[str, Any],
     report_data: dict,
     is_html: bool = True,
-) -> tuple[dict[str, str], int]:
+) -> tuple[dict[str, Any], int]:
     """
     Inject canonical KPI block into each section for consistency harmonization.
 
@@ -273,9 +273,9 @@ def sanitize_roi_values_in_content(
                 return f"{prefix}{cap_str}{suffix}"
         except (ValueError, AttributeError):
             pass
-        return match.group(0)
+        return str(match.group(0))
 
-    return _ROI_PATTERN.sub(_cap_roi_match, content)
+    return str(_ROI_PATTERN.sub(_cap_roi_match, content))
 
 
 # ============================================================
@@ -293,8 +293,8 @@ FUNDING_BLACKLIST = [
 
 
 def apply_funding_blacklist(
-    sections: dict[str, str],
-) -> dict[str, str]:
+    sections: dict[str, Any],
+) -> dict[str, Any]:
     """
     Remove blacklisted funding programs from section content.
     Must be called BEFORE G22 consistency check to prevent AUTO_005 warnings.
@@ -303,6 +303,9 @@ def apply_funding_blacklist(
     total_removed = 0
 
     for name, content in sections.items():
+        if not isinstance(content, str):
+            cleaned[name] = content
+            continue
         modified = content
         for term in FUNDING_BLACKLIST:
             if term.lower() in modified.lower():
