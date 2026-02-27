@@ -74,14 +74,14 @@ report_data = {
 }
 result, count = enforce_b25_canonical_kpis(sections, report_data, is_html=True)
 
-check("executive_summary injected", "kpi-canonical" in result["executive_summary"])
-check("roi_analysis injected", "kpi-canonical" in result["roi_analysis"])
+check("executive_summary injected", "KPI-CANONICAL-START" in result["executive_summary"])
+check("roi_analysis injected", "KPI-CANONICAL-START" in result["roi_analysis"])
 check("legal_notice NOT injected", result["legal_notice"] == sections["legal_notice"])
 check("appendix NOT injected", result["appendix"] == sections["appendix"])
 check(f"Injection count = 2 (got {count})", count == 2)
 
 # ============================================================
-print("\n📋 TEST 4: Section injection — content-based detection")
+print("\n📋 TEST 4: Content-based fallback REMOVED (B28 — strict name-only)")
 # ============================================================
 sections2 = {
     "custom_xyz": "<p>Der ROI beträgt 150% und ist damit positiv.</p>",
@@ -89,9 +89,9 @@ sections2 = {
 }
 result2, count2 = enforce_b25_canonical_kpis(sections2, report_data, is_html=True)
 
-check("custom_xyz injected (content detection)", "kpi-canonical" in result2["custom_xyz"])
+check("custom_xyz NOT injected (no content fallback)", result2["custom_xyz"] == sections2["custom_xyz"])
 check("random_section NOT injected", result2["random_section"] == sections2["random_section"])
-check(f"Count = 1 (got {count2})", count2 == 1)
+check(f"Count = 0 (got {count2})", count2 == 0)
 
 # ============================================================
 print("\n📋 TEST 5: Plain text mode (is_html=False)")
@@ -186,7 +186,7 @@ result10, count10 = enforce_b25_canonical_kpis(
     is_html=True,
 )
 check("Nested extraction works", count10 == 1)
-check("Block contains 180%", "180%" in result10["executive_summary"])
+check("Block contains 180%", "180%" in result10.get("executive_summary", ""))
 
 # ============================================================
 print("\n📋 TEST 11: Non-string values in sections dict (B27.1 regression)")
@@ -235,6 +235,53 @@ try:
     check("Blacklist preserves int", cleaned_mixed["score_gesamt"] == 92)
 except Exception as e:
     check(f"Blacklist handles mixed dict (GOT: {e})", False)
+
+# ============================================================
+print("\n📋 TEST 12: Realistic section dict — only named sections get injection")
+# ============================================================
+sections_realistic = {
+    # These SHOULD get injection (KPI sections)
+    "executive_summary": "<h2>Summary</h2><p>Overview text</p>",
+    "roi_analysis": "<div>ROI details</div>",
+    "automation_roadmap": "<div>Automation plan</div>",
+    "financial_summary": "<div>Costs and benefits</div>",
+    "tools_analysis": "<div>Tool recommendations</div>",
+    # These should NOT get injection (non-KPI sections)
+    "vendor_audit": "<div>Vendor risk assessment with ROI mention</div>",
+    "benchmark": "<div>Industry benchmark with ROI comparison</div>",
+    "legal_notice": "<p>Impressum</p>",
+    "strategy": "<div>Strategy recommendations</div>",
+    "appendix": "<div>Appendix</div>",
+    # Non-string values (should be skipped)
+    "score_gesamt": 92,
+    "score_governance": 88,
+    "is_platin": True,
+}
+report_data_12 = {"roi_percent": 200.0, "payback_months": 1.6, "tools_count": 4}
+result_12, count_12 = enforce_b25_canonical_kpis(sections_realistic, report_data_12, is_html=True)
+
+check(f"Injection count 4-6 (got {count_12})", 4 <= count_12 <= 6)
+check("vendor_audit NOT injected", "KPI-CANONICAL" not in result_12.get("vendor_audit", ""))
+check("benchmark NOT injected", "KPI-CANONICAL" not in result_12.get("benchmark", ""))
+check("Non-string preserved", result_12["score_gesamt"] == 92)
+
+# ============================================================
+print("\n📋 TEST 13: Extended blacklist covers KMU-innovativ and Digitalbonus")
+# ============================================================
+sections_funding = {
+    "automation_roadmap": (
+        "Empfohlene Förderprogramme:\n"
+        "- go-digital: Digitalisierung\n"
+        "- KMU-innovativ: Innovationsförderung\n"
+        "- Digitalbonus: Bayerische Förderung\n"
+        "- KI-Invest: KI-Förderung\n"
+    ),
+}
+cleaned_13 = apply_funding_blacklist(sections_funding)
+check("go-digital removed", "go-digital" not in cleaned_13["automation_roadmap"])
+check("KMU-innovativ removed", "kmu-innovativ" not in cleaned_13["automation_roadmap"].lower())
+check("Digitalbonus removed", "digitalbonus" not in cleaned_13["automation_roadmap"].lower())
+check("KI-Invest preserved", "KI-Invest" in cleaned_13["automation_roadmap"])
 
 # ============================================================
 # Summary
