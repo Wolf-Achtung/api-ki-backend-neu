@@ -16401,17 +16401,20 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                  f"has_dict={hasattr(sections.get('_automation_roadmap_report'), 'dict')}, "
                  f"dir={[x for x in dir(sections.get('_automation_roadmap_report', '')) if not x.startswith('_')][:15]}")
 
-        # B32-FIX: Convert Pydantic models to dicts BEFORE blacklist cleaning
+        # B33-FIX: Convert custom report objects to dicts BEFORE blacklist cleaning
         for _key in list(sections.keys()):
             _val = sections[_key]
-            if hasattr(_val, 'model_dump'):
+            if hasattr(_val, 'to_dict') and callable(getattr(_val, 'to_dict', None)):
+                if not isinstance(_val, (str, int, float, bool, list, dict)):
+                    sections[_key] = _val.to_dict()
+                    log.info(f"[FIX-B33-TO-DICT] Converted {_key} from "
+                             f"{type(_val).__name__} to dict")
+            elif hasattr(_val, 'model_dump'):
                 sections[_key] = _val.model_dump()
-                log.info(f"[FIX-B32-PYDANTIC] Converted {_key} from "
-                         f"{type(_val).__name__} to dict")
+                log.info(f"[FIX-B33-PYDANTIC-V2] Converted {_key}")
             elif hasattr(_val, 'dict') and not isinstance(_val, (str, int, float, bool, list, dict)):
                 sections[_key] = _val.dict()
-                log.info(f"[FIX-B32-PYDANTIC-V1] Converted {_key} from "
-                         f"{type(_val).__name__} to dict")
+                log.info(f"[FIX-B33-PYDANTIC-V1] Converted {_key}")
 
         # --- Apply funding blacklist BEFORE G22 ---
         sections = apply_funding_blacklist(sections)
