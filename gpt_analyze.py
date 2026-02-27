@@ -16372,15 +16372,22 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         from b25_enforcer import enforce_b25_canonical_kpis, sanitize_roi_values_in_content, apply_funding_blacklist
 
         # --- B25 Canonical KPI Enforcement ---
+        # Bridge uppercase section keys → lowercase enforcer keys
+        _b25_report_data = {
+            "roi_percent": sections.get("ROI_12M"),
+            "payback_months": sections.get("PAYBACK_MONTHS") or sections.get("_PAYBACK_BC_V2"),
+            "tools_count": sections.get("_TOOLS_COUNT"),
+            "tools_names": sections.get("_TOOLS_NAMES"),
+        }
         sections, _b25_count = enforce_b25_canonical_kpis(
             sections=sections,
-            report_data=sections,
+            report_data=_b25_report_data,
             is_html=True,
         )
         log.info(f"[{run_id}] [FIX-B25-CANONICAL] {_b25_count} sections enforced")
 
         # --- ROI Sanitizer (fixes 295% in scenario tables) ---
-        for _b25_sname, _b25_scontent in sections.items():
+        for _b25_sname, _b25_scontent in list(sections.items()):
             if isinstance(_b25_scontent, str) and len(_b25_scontent) > 50:
                 sections[_b25_sname] = sanitize_roi_values_in_content(
                     content=_b25_scontent,
