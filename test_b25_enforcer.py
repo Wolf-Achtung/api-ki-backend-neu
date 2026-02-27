@@ -419,6 +419,57 @@ check("Integration: go-digital removed from dict text", "go-digital" not in rpt[
 check("Integration: HTML also cleaned", "go-digital" not in result_18["AUTOMATION_ROADMAP_HTML"])
 
 # ============================================================
+print("\n📋 TEST 19: Pydantic model blacklist cleaning (B31)")
+# ============================================================
+# Mock Pydantic v2 model with model_dump()
+class MockPydanticV2:
+    """Simulates a Pydantic v2 BaseModel with model_dump()."""
+    def __init__(self, data: dict):
+        self._data = data
+    def model_dump(self) -> dict:
+        return dict(self._data)
+
+mock_report = MockPydanticV2({
+    "programs": ["go-digital", "KI-Invest"],
+    "text": "Empfehlung: go-digital nutzen und Digitalisierung vorantreiben",
+    "nested": {"funding": "go-digital Förderung", "other": "safe value"},
+})
+sections_pydantic = {
+    "summary": "This is a normal string section mentioning go-digital funding",
+    "_automation_roadmap_report": mock_report,
+}
+result_19 = apply_funding_blacklist(sections_pydantic)
+rpt_19 = result_19["_automation_roadmap_report"]
+check("B31: Pydantic model converted to dict", isinstance(rpt_19, dict))
+check("B31: go-digital removed from programs list", "go-digital" not in str(rpt_19.get("programs", [])))
+check("B31: KI-Invest preserved in programs list", "KI-Invest" in str(rpt_19.get("programs", [])))
+check("B31: go-digital removed from text", "go-digital" not in str(rpt_19.get("text", "")))
+check("B31: go-digital removed from nested dict", "go-digital" not in str(rpt_19.get("nested", {})))
+check("B31: safe nested value preserved", rpt_19.get("nested", {}).get("other") == "safe value")
+check("B31: string section also cleaned", "go-digital" not in result_19["summary"])
+
+# Mock Pydantic v1 model with dict()
+class MockPydanticV1:
+    """Simulates a Pydantic v1 BaseModel with dict() but no model_dump()."""
+    def __init__(self, data: dict):
+        self._data = data
+    def dict(self) -> dict:
+        return dict(self._data)
+
+mock_v1 = MockPydanticV1({
+    "info": "go-digital Programm details",
+    "amount": 16500,
+})
+sections_v1 = {
+    "_report_v1": mock_v1,
+}
+result_v1 = apply_funding_blacklist(sections_v1)
+rpt_v1 = result_v1["_report_v1"]
+check("B31-v1: Pydantic v1 model converted to dict", isinstance(rpt_v1, dict))
+check("B31-v1: go-digital removed from info", "go-digital" not in str(rpt_v1.get("info", "")))
+check("B31-v1: numeric value preserved", rpt_v1.get("amount") == 16500)
+
+# ============================================================
 # Summary
 # ============================================================
 total = passed + failed
