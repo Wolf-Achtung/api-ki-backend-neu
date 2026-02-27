@@ -184,6 +184,11 @@ def enforce_b25_canonical_kpis(
     # --- Inject into relevant sections ---
     modified_sections = {}
     for section_name, content in sections.items():
+        # B27.1-FIX: Skip non-string values (scores, counts, etc.)
+        if not isinstance(content, str):
+            modified_sections[section_name] = content
+            continue
+
         section_lower = (
             section_name.lower()
             .replace("-", "_")
@@ -255,6 +260,10 @@ def sanitize_roi_values_in_content(
     Find and cap any ROI percentage values > roi_cap in content.
     Covers scenario tables, inline text, and all ROI pattern variants.
     """
+    # B27.1-FIX: Guard against non-string input
+    if not isinstance(content, str):
+        return content
+
     cap_str = f"{roi_cap:.0f}"
 
     def _cap_roi_match(match: re.Match) -> str:
@@ -427,4 +436,6 @@ def _safe_extract_list(
 
 def _quick_strip(html: str) -> str:
     """Fast HTML tag removal for content-detection only."""
+    if not isinstance(html, str):
+        return str(html)
     return re.sub(r"<[^>]+>", " ", html)
