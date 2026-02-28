@@ -16458,6 +16458,31 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                          f"[0] type={type(entries[0]).__name__}: "
                          f"{list(entries[0].keys()) if isinstance(entries[0], dict) else entries[0]}")
 
+        # B34-FIX-VA002: Inject red vendors into risk mitigation plan
+        # Keys validiert durch Phase-1-Inspektion (28.02.2026)
+        _va_dict = sections.get('_vendor_audit_report')
+        _rr_dict = sections.get('_risk_report_v3')
+        if isinstance(_va_dict, dict) and isinstance(_rr_dict, dict):
+            _high_risk = _va_dict.get('high_risk_vendors', [])
+            _miti_plan = _rr_dict.get('mitigation_plan', [])
+
+            if _high_risk and isinstance(_miti_plan, list):
+                _injected = 0
+                for _vendor_name in _high_risk:
+                    if isinstance(_vendor_name, str):
+                        _entry = (f"Risikobewertung und Compliance-Prüfung für "
+                                 f"{_vendor_name} durchführen — Vendor-Risiko "
+                                 f"als hoch eingestuft (Vendor Audit).")
+                        if _entry not in _miti_plan:
+                            _miti_plan.append(_entry)
+                            _injected += 1
+                _rr_dict['mitigation_plan'] = _miti_plan
+                log.info(f"[FIX-B34-VA002] Injected {_injected} red vendors "
+                         f"into mitigation_plan: {_high_risk}")
+            else:
+                log.info(f"[FIX-B34-VA002] Skipped: high_risk={len(_high_risk)}, "
+                         f"miti_plan type={type(_miti_plan).__name__}")
+
         # --- Apply funding blacklist BEFORE G22 ---
         sections = apply_funding_blacklist(sections)
 
