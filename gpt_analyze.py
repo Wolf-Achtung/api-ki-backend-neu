@@ -16582,8 +16582,9 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         _sim = sections.get('_business_case_simulation_report')
         _bc = sections.get('_bc_report')
         if isinstance(_sim, dict) and isinstance(_bc, dict):
-            _dist = _sim.get('distribution', {})
-            _roi_p80 = (_dist.get('roi_p80') if isinstance(_dist, dict) else None) or _sim.get('roi_p80')
+            _dist_raw = _sim.get('distribution', {})
+            _dist = _dist_raw if isinstance(_dist_raw, dict) else {}  # type: ignore[assignment]
+            _roi_p80 = _dist.get('roi_p80') or _sim.get('roi_p80')  # type: ignore[attr-defined]
             _cons_roi = _bc.get('conservative_roi', _bc.get('roi_conservative', _bc.get('roi_low')))
             if _roi_p80 is not None and _cons_roi is not None:
                 try:
