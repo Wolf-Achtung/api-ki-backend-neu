@@ -3130,9 +3130,11 @@ def apply_segment_budget(
                 upper_key = upper_key + "_HTML"
             budget = budgets.get(upper_key)
         if budget is None:
-            # Fallback: SIZE_PROFILES als Single Source of Truth
+            # FIX-B37d: SIZE_PROFILES hat nested structure: SIZE_PROFILES[segment]["section_budgets"][key]
+            # Vorher wurde SIZE_PROFILES[segment][key] gesucht — fand nie etwas (Dict-Nesting-Bug)
             sp = SIZE_PROFILES.get(segment, {})
-            budget = sp.get(section_name, sp.get(section_name.upper() + "_HTML", default_budget))
+            sp_budgets = sp.get("section_budgets", sp)  # Fallback auf sp selbst falls kein Nesting
+            budget = sp_budgets.get(section_name, sp_budgets.get(section_name.upper() + "_HTML", default_budget))
         current_len = len(html)
 
         if current_len <= budget:
