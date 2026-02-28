@@ -2920,10 +2920,14 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "_default": 1500,
     },
     "kmu": {
-        "EXECUTIVE_SUMMARY_HTML": 4000,
+        # FIX-B36a: Budget increases based on B35g Railway log analysis
+        # Root cause: report_healer [FIX-G] sentence-trimming deleted 50-66%
+        # of GPT-generated content. GPT used only 9% of token limit (371/4000).
+        # HTML payload has 1.19 MB headroom (344KB used / 1536KB limit).
+        "EXECUTIVE_SUMMARY_HTML": 6000,  # FIX-B36a: was 4000, observed 371 tokens from GPT + expansion
         "QUICK_WINS_HTML": 12000,  # FIX-F1: LLM liefert 9K+ HTML
         "QUICK_WINS_HTML_LEFT": 12000,  # FIX-H3
-        "ROADMAP_90D_HTML": 5000,  # FIX-B22-P2: was 2500
+        "ROADMAP_90D_HTML": 8000,  # FIX-B36a: was 5000
         "ROADMAP_12M_HTML": 14000,
         "RECOMMENDATIONS_HTML": 15000,  # FIX-629b
         "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
@@ -2931,14 +2935,14 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "FOERDERPOTENZIAL_HTML": 12000,  # FIX-B22-P2: was 10000, needs ≥800 words
         "ORG_CHANGE_HTML": 10000,  # FIX-629b
         "BUSINESS_CASE_HTML": 10000,  # FIX-629b
-        "PILOT_PLAN_HTML": 2000,
-        "DATA_READINESS_HTML": 2000,
-        "STRATEGIE_GOVERNANCE_HTML": 5000,  # FIX-B22-P2: was 3500
-        "UNTERNEHMENSPROFIL_MARKT_HTML": 5000,  # FIX-B22-P2: was 3000
-        "MONETARISIERUNG_HTML": 2000,
-        "KI_SKILLPLAN_HTML": 2000,
-        "TOOLS_EMPFEHLUNGEN_HTML": 5000,  # FIX-B22-P2: was 3500
-        "TECHNOLOGIE_PROZESSE_HTML": 3000,
+        "PILOT_PLAN_HTML": 5000,  # FIX-B36a: was 2000, observed 4835 chars → trimmed to 1845 (62% lost!)
+        "DATA_READINESS_HTML": 6000,  # FIX-B36a: was 2000, observed 5698 → trimmed to 3079
+        "STRATEGIE_GOVERNANCE_HTML": 10000,  # FIX-B36a: was 5000, observed 9848 → trimmed to 4786 (51% lost!)
+        "UNTERNEHMENSPROFIL_MARKT_HTML": 14000,  # FIX-B36a: was 5000, observed 13843 → trimmed to 4768 (66% lost!)
+        "MONETARISIERUNG_HTML": 4000,  # FIX-B36a: was 2000
+        "KI_SKILLPLAN_HTML": 4000,  # FIX-B36a: was 2000
+        "TOOLS_EMPFEHLUNGEN_HTML": 8000,  # FIX-B36a: was 5000, observed truncation
+        "TECHNOLOGIE_PROZESSE_HTML": 8000,  # FIX-B36a: was 3000, observed 7380 → trimmed to 2911 (61% lost!)
         # FIX-620: Engine-generated sections need generous budgets
         # These are structurally generated (not LLM free-text) and produce
         # well-structured content that shouldn't be aggressively trimmed.
@@ -2961,9 +2965,9 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "KICKOFF_VORLAGE_HTML": 5000,
 
-        "AI_ACT_SUMMARY_HTML": 4000,
+        "AI_ACT_SUMMARY_HTML": 6000,  # FIX-B36a: was 4000
 
-        "TEMPLATES_START_HTML": 4000,
+        "TEMPLATES_START_HTML": 8000,  # FIX-B36a: was 4000, observed truncation
 
         "AI_POLICY_MINI_HTML": 4000,
 
@@ -2973,21 +2977,21 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "NEXT_ACTIONS_HTML": 3500,
 
-        "REIFEGRAD_SOWHAT_HTML": 3000,
+        "REIFEGRAD_SOWHAT_HTML": 4000,  # FIX-B36a: was 3000
 
-        "SOFORT_START_HTML": 5000,
+        "SOFORT_START_HTML": 8000,  # FIX-B36a: was 5000, observed truncation
 
         "CHALLENGE_30_TAGE_HTML": 16000,
 
         "KREATIV_TOOLS_HTML": 3500,
 
-        "WETTBEWERB_BENCHMARK_HTML": 5000,
+        "WETTBEWERB_BENCHMARK_HTML": 8000,  # FIX-B36a: was 5000
 
-        "KI_AKTIVITAETEN_ZIELE_HTML": 3500,
+        "KI_AKTIVITAETEN_ZIELE_HTML": 5000,  # FIX-B36a: was 3500
 
         "GAMECHANGER_DECISION_HTML": 3000,
 
-        "MARKET_INSIGHTS_HTML": 3500,
+        "MARKET_INSIGHTS_HTML": 5000,  # FIX-B36a: was 3500
 
         "GLOSSAR_HTML": 4000,
 
@@ -3011,7 +3015,29 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "SOURCES_BOX_HTML": 4000,
 
-        "_default": 2000,
+        # FIX-B36a: Explicit plaintext section budgets
+        # Lowercase sections were falling to _default=2000 because E1 fallback
+        # maps e.g. 'roadmap' → 'ROADMAP_HTML' which doesn't exist in budgets.
+        # These sections contain the plaintext variant and need adequate space.
+        "executive_summary": 4000,
+        "strategie_governance": 8000,
+        "technologie_prozesse": 6000,
+        "tools_empfehlungen": 6000,
+        "templates_start": 6000,
+        "branch_deep_dive": 12000,
+        "unternehmensprofil_markt": 10000,
+        "roadmap": 10000,
+        "roadmap_90d": 6000,
+        "data_readiness": 5000,
+        "ki_stack_summary": 5000,
+        "pilot_plan": 4000,
+        "monetarisierung": 3000,
+        "ki_skillplan": 3000,
+        "org_change": 8000,
+        "business_case": 8000,
+        "foerderpotenzial": 10000,
+
+        "_default": 3000,  # FIX-B36a: was 2000, safer default for unmapped sections
     },
 }
 
@@ -3141,6 +3167,40 @@ def apply_segment_budget(
                 "[FIX-G] Section '%s' sentence-trimmed: %d -> %d chars (budget=%d)",
                 section_name, current_len, len(processed), budget
             )
+
+        # FIX-B36b: Clean Ending Check — prevent PLATIN TRUNCATED warnings
+        # After sentence-trimming, the last sentence might end with "..." (ellipsis
+        # from GPT output or from truncation). The PLATIN+++ validator flags any
+        # section ending with "..." as TRUNCATED. Fix: detect and remove the
+        # trailing incomplete fragment so the section ends on a clean sentence.
+        _stripped = processed.rstrip()
+        if _stripped.endswith('...') or _stripped.endswith('…'):
+            # Remove trailing ellipsis and find the last complete sentence
+            _clean = re.sub(r'[.…]{2,}\s*$', '', _stripped)  # strip trailing dots/ellipsis
+            # Also strip any trailing HTML close tags that might follow
+            _clean = re.sub(r'(</(?:p|li|div|span|td|tr|section)>\s*)*$', '', _clean).rstrip()
+            # Find last clean sentence boundary
+            _last_period = max(_clean.rfind('. '), _clean.rfind('.</'), _clean.rfind('.'))
+            _last_excl = max(_clean.rfind('! '), _clean.rfind('!</'), _clean.rfind('!'))
+            _last_quest = max(_clean.rfind('? '), _clean.rfind('?</'), _clean.rfind('?'))
+            _best_end = max(_last_period, _last_excl, _last_quest)
+            if _best_end > len(_clean) * 0.7:  # Keep at least 70% of content
+                processed = _clean[:_best_end + 1]
+                # Re-close any open HTML tags
+                _open_tags = re.findall(r'<(p|li|ul|ol|div|section|span|td|tr|table)(?:\s[^>]*)?>', processed)
+                _close_tags = re.findall(r'</(p|li|ul|ol|div|section|span|td|tr|table)>', processed)
+                _tag_counts: dict = {}
+                for _t in _open_tags:
+                    _tag_counts[_t] = _tag_counts.get(_t, 0) + 1
+                for _t in _close_tags:
+                    _tag_counts[_t] = _tag_counts.get(_t, 0) - 1
+                for _tag, _cnt in reversed(list(_tag_counts.items())):
+                    for _ in range(max(0, _cnt)):
+                        processed += f"</{_tag}>"
+                log.info(
+                    "[FIX-B36b] Section '%s' clean-ending applied: removed trailing '...' fragment",
+                    section_name
+                )
 
         # Clean up
         processed = re.sub(r"<p>\s*</p>", "", processed)
