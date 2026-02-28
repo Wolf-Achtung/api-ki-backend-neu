@@ -16458,30 +16458,40 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                          f"[0] type={type(entries[0]).__name__}: "
                          f"{list(entries[0].keys()) if isinstance(entries[0], dict) else entries[0]}")
 
-        # B34-FIX-VA002: Inject red vendors into risk mitigation plan
-        # Keys validiert durch Phase-1-Inspektion (28.02.2026)
+        # B34-FIX-VA002v2: Inject red vendors into RISK_ENGINE_V3_HTML
+        # G22 liest HTML-Sections, nicht dict-Objekte (consistency_engine.py Zeile 3043+3072)
         _va_dict = sections.get('_vendor_audit_report')
-        _rr_dict = sections.get('_risk_report_v3')
-        if isinstance(_va_dict, dict) and isinstance(_rr_dict, dict):
+        _risk_html = sections.get('RISK_ENGINE_V3_HTML', '')
+        if isinstance(_va_dict, dict) and isinstance(_risk_html, str):
             _high_risk = _va_dict.get('high_risk_vendors', [])
-            _miti_plan = _rr_dict.get('mitigation_plan', [])
+            _missing = [v for v in _high_risk if isinstance(v, str) and v.lower() not in _risk_html.lower()]
 
-            if _high_risk and isinstance(_miti_plan, list):
-                _injected = 0
-                for _vendor_name in _high_risk:
-                    if isinstance(_vendor_name, str):
-                        _entry = (f"Risikobewertung und Compliance-Prüfung für "
-                                 f"{_vendor_name} durchführen — Vendor-Risiko "
-                                 f"als hoch eingestuft (Vendor Audit).")
-                        if _entry not in _miti_plan:
-                            _miti_plan.append(_entry)
-                            _injected += 1
-                _rr_dict['mitigation_plan'] = _miti_plan
-                log.info(f"[FIX-B34-VA002] Injected {_injected} red vendors "
-                         f"into mitigation_plan: {_high_risk}")
+            if _missing:
+                # Inject als Mitigation-Plan-Block am Ende der HTML
+                _mitigation_items = ''.join(
+                    f'<li>Risikobewertung und Compliance-Prüfung für {v} '
+                    f'durchführen — Vendor-Risiko als hoch eingestuft (Vendor Audit).</li>'
+                    for v in _missing
+                )
+                _injection = (
+                    f'\n<!-- B34-VA002-INJECTION -->'
+                    f'\n<div class="mitigation-plan-supplement">'
+                    f'\n<h4>Ergänzende Maßnahmen für Hochrisiko-Vendors</h4>'
+                    f'\n<ul>{_mitigation_items}</ul>'
+                    f'\n</div>'
+                )
+                # Vor </section> oder </div> am Ende einfügen, oder anhängen
+                if '</section>' in _risk_html:
+                    sections['RISK_ENGINE_V3_HTML'] = _risk_html.replace(
+                        '</section>', f'{_injection}</section>', 1)
+                else:
+                    sections['RISK_ENGINE_V3_HTML'] = _risk_html + _injection
+
+                log.info(f"[FIX-B34-VA002] Injected {len(_missing)} red vendors "
+                         f"into RISK_ENGINE_V3_HTML: {_missing}")
             else:
-                log.info(f"[FIX-B34-VA002] Skipped: high_risk={len(_high_risk)}, "
-                         f"miti_plan type={type(_miti_plan).__name__}")
+                log.info(f"[FIX-B34-VA002] All {len(_high_risk)} red vendors "
+                         f"already in RISK_ENGINE_V3_HTML")
 
         # --- Apply funding blacklist BEFORE G22 ---
         sections = apply_funding_blacklist(sections)
