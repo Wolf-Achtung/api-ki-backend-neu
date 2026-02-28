@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Benchmarks for 12 industries (DE, KMU). Provides lookup + HTML snippet.
+Benchmarks for 13 industries (DE, KMU). Provides lookup + HTML snippet.
 Numbers are based on public reports (2024/25) and approximations for top quartile.
 """
 from __future__ import annotations
@@ -23,6 +23,7 @@ CANON = [
     "Medien & Kreativwirtschaft",
     "Industrie & Produktion",
     "Transport & Logistik",
+    "Gastronomie & Tourismus",
 ]
 
 # Lowercased keyword mapping → canonical label
@@ -52,6 +53,12 @@ SYNONYMS = {
     "produktion": "Industrie & Produktion",
     "transport": "Transport & Logistik",
     "logistik": "Transport & Logistik",
+    "gastronomie": "Gastronomie & Tourismus",
+    "tourismus": "Gastronomie & Tourismus",
+    "hotel": "Gastronomie & Tourismus",
+    "hotellerie": "Gastronomie & Tourismus",
+    "restaurant": "Gastronomie & Tourismus",
+    "gastgewerbe": "Gastronomie & Tourismus",
 }
 
 DEFAULT_BENCHMARKS = {
@@ -126,6 +133,12 @@ DEFAULT_BENCHMARKS = {
         "source_title": "IW Köln Zukunftspanel (2025)",
         "source_url": "https://www.iwd.de/artikel/noch-grosses-ki-potenzial-in-unternehmen-654534/",
         "year": 2025, "notes": "Anteil KI-Nutzer; Top25 geschätzt."
+    },
+    "Gastronomie & Tourismus": {
+        "avg": 18, "top25": 40,
+        "source_title": "DEHOGA/Deutsche Telekom Digitalisierungsindex (2024), BZT Bayern KI-Stimmungsbild (2024)",
+        "source_url": "https://bzt.bayern/stimmungsbild-ki-touristische-unternehmen/",
+        "year": 2024, "notes": "Anteil KI-Nutzer Gastgewerbe/Tourismus; Top25 geschätzt auf Basis progressiver Betriebe."
     },
 }
 
