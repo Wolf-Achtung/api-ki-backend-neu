@@ -3983,6 +3983,40 @@ class ConsistencyEngine:
 
         # Try from report object first
         if report:
+            # B35g-FIX: Handle dict-converted reports (from to_dict())
+            # Structure: distribution = {roi: {p50: X, p80: Y}, payback: {p50: Z}}
+            if isinstance(report, dict):
+                dist = report.get("distribution", {})
+                if isinstance(dist, dict):
+                    # Check for nested structure: distribution.roi.pXX
+                    roi_sub = dist.get("roi", {})
+                    if isinstance(roi_sub, dict):
+                        if "p50" in roi_sub:
+                            metrics["roi_p50"] = float(roi_sub["p50"])
+                        if "p80" in roi_sub:
+                            metrics["roi_p80"] = float(roi_sub["p80"])
+                        if "p90" in roi_sub:
+                            metrics["roi_p90"] = float(roi_sub["p90"])
+                        if "p20" in roi_sub:
+                            metrics["roi_p20"] = float(roi_sub["p20"])
+                        if "mean" in roi_sub:
+                            metrics["roi_mean"] = float(roi_sub["mean"])
+                        if "std" in roi_sub:
+                            metrics["roi_std"] = float(roi_sub["std"])
+                    # Also check for flat keys: distribution.roi_p50 (from B35f flatten)
+                    for flat_key in ["roi_p50", "roi_p80", "roi_p90", "roi_p20", "roi_mean", "roi_std"]:
+                        if flat_key not in metrics and flat_key in dist:
+                            metrics[flat_key] = float(dist[flat_key])
+                    # Payback
+                    payback_sub = dist.get("payback", {})
+                    if isinstance(payback_sub, dict) and "p50" in payback_sub:
+                        metrics["payback_p50"] = float(payback_sub["p50"])
+                    elif "payback_p50" in dist:
+                        metrics["payback_p50"] = float(dist["payback_p50"])
+                if metrics:
+                    return metrics
+
+            # Original: handle dataclass/object reports
             if hasattr(report, "distribution"):
                 dist = report.distribution
                 if hasattr(dist, "roi_p50"):
@@ -4077,6 +4111,18 @@ class ConsistencyEngine:
         if not report:
             return rois
 
+        # B35g-FIX: Handle dict-converted reports (from to_dict())
+        if isinstance(report, dict):
+            scenarios = report.get("scenarios", [])
+            for scenario in scenarios:
+                if isinstance(scenario, dict):
+                    name = scenario.get("name", "")
+                    roi = scenario.get("roi_12m", 0)
+                    if name in ["optimistic", "realistic", "conservative"]:
+                        rois[name] = float(roi) if roi else 0
+            return rois
+
+        # Original: handle dataclass/object reports
         scenarios = getattr(report, "scenarios", [])
         for scenario in scenarios:
             name = getattr(scenario, "name", "")
@@ -4120,6 +4166,18 @@ class ConsistencyEngine:
         if not report:
             return paybacks
 
+        # B35g-FIX: Handle dict-converted reports (from to_dict())
+        if isinstance(report, dict):
+            scenarios = report.get("scenarios", [])
+            for scenario in scenarios:
+                if isinstance(scenario, dict):
+                    name = scenario.get("name", "")
+                    payback = scenario.get("payback_months", 0)
+                    if name in ["optimistic", "realistic", "conservative"]:
+                        paybacks[name] = float(payback) if payback else 0
+            return paybacks
+
+        # Original: handle dataclass/object reports
         scenarios = getattr(report, "scenarios", [])
         for scenario in scenarios:
             name = getattr(scenario, "name", "")
@@ -4398,6 +4456,15 @@ class ConsistencyEngine:
         }
 
         if report:
+            # B35g-FIX: Handle dict-converted reports FIRST (from to_dict())
+            if isinstance(report, dict):
+                swot["strengths"] = report.get("strengths", [])
+                swot["weaknesses"] = report.get("weaknesses", [])
+                swot["opportunities"] = report.get("opportunities", [])
+                swot["threats"] = report.get("threats", [])
+                return swot
+
+            # Original: handle dataclass/object reports
             if hasattr(report, "strengths"):
                 swot["strengths"] = list(report.strengths)
             if hasattr(report, "weaknesses"):
@@ -4407,12 +4474,6 @@ class ConsistencyEngine:
             if hasattr(report, "threats"):
                 swot["threats"] = list(report.threats)
             return swot
-
-        if isinstance(report, dict):
-            swot["strengths"] = report.get("strengths", [])
-            swot["weaknesses"] = report.get("weaknesses", [])
-            swot["opportunities"] = report.get("opportunities", [])
-            swot["threats"] = report.get("threats", [])
 
         return swot
 
