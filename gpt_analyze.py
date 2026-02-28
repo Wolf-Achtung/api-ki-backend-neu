@@ -16416,6 +16416,45 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 sections[_key] = _val.dict()
                 log.info(f"[FIX-B33-PYDANTIC-V1] Converted {_key}")
 
+        # ========== B35e ROOT CAUSE FIX ==========
+        # B35e-FIX-ATTRDICT: Wrap to_dict()-converted dicts so G22's hasattr/getattr works
+        # ROOT CAUSE: B33 converts custom report objects to plain dicts via to_dict().
+        # But G22 (consistency_engine.py) uses hasattr(report, "field") and getattr()
+        # to access data. For plain dicts, hasattr("weaknesses") returns False because
+        # dict keys are not attributes. This causes G22 to skip the dict-handling code
+        # and return empty data, triggering false warnings.
+        class _AttrDict(dict):
+            """Dict subclass supporting attribute access for G22 compatibility.
+            Handles nested dicts and lists of dicts recursively."""
+            def __getattr__(self, key):
+                try:
+                    val = self[key]
+                    # Recursively wrap nested dicts
+                    if isinstance(val, dict) and not isinstance(val, _AttrDict):
+                        return _AttrDict(val)
+                    # Recursively wrap dicts inside lists
+                    if isinstance(val, list):
+                        return [
+                            _AttrDict(v) if isinstance(v, dict) and not isinstance(v, _AttrDict)
+                            else v
+                            for v in val
+                        ]
+                    return val
+                except KeyError:
+                    raise AttributeError(key)
+
+        _attrdict_count = 0
+        for _key in list(sections.keys()):
+            _val = sections[_key]
+            if isinstance(_val, dict) and _key.startswith('_') and not isinstance(_val, _AttrDict):
+                sections[_key] = _AttrDict(_val)
+                _attrdict_count += 1
+
+        if _attrdict_count > 0:
+            log.info(f"[FIX-B35e-ATTRDICT] Wrapped {_attrdict_count} dict sections as AttrDict "
+                     f"for G22 hasattr/getattr compatibility")
+        # ========== END B35e ROOT CAUSE FIX ==========
+
         # B34-PHASE1: Inspect VendorAudit + RiskReport structure
         _va = sections.get('_vendor_audit_report')
         _rr = sections.get('_risk_report_v3')
@@ -16529,51 +16568,6 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 log.info(f"[FIX-B35d-BENCH004] Skip: positions={len(positions)}, "
                          f"radar={len(radar_scores)}")
 
-        # ===== FIX-B35d-BENCH006: Weaknesses in Dict sicherstellen =====
-        # G22 reads _benchmark_report["weaknesses"] from dict, not HTML
-        bench_report = sections.get("_benchmark_report")
-        if isinstance(bench_report, dict):
-            weaknesses = bench_report.get("weaknesses", [])
-
-            # Prüfe ob G22 diese als "leer" werten würde
-            is_empty = (not weaknesses or
-                        all(str(w).strip().lower() in ["none", "keine", "-", ""] for w in weaknesses))
-
-            if is_empty:
-                # Generiere realistische Schwächen basierend auf Scores
-                positions = bench_report.get("positions", [])
-                generated_weaknesses = []
-
-                for pos in positions:
-                    if isinstance(pos, dict):
-                        percentile = pos.get("score_percentile", 50)
-                        domain = pos.get("domain", "unknown")
-                        if isinstance(percentile, (int, float)) and percentile < 50:
-                            domain_labels = {
-                                "kpi": "KPI-Tracking und Erfolgsmessung",
-                                "tools": "Tool-Landschaft und Automatisierungsgrad",
-                                "risk": "Risikomanagement und Compliance",
-                                "automation": "Prozessautomatisierung",
-                                "funding": "Nutzung verfügbarer Förderprogramme",
-                                "strategy": "Strategische KI-Planung",
-                            }
-                            label = domain_labels.get(str(domain).lower(), str(domain))
-                            generated_weaknesses.append(
-                                f"Verbesserungspotenzial im Bereich {label} (P{percentile:.0f})"
-                            )
-
-                if not generated_weaknesses:
-                    # Fallback: Mindestens eine generische Schwäche
-                    generated_weaknesses = [
-                        "Ausbaufähige Prozessdokumentation für KI-Governance"
-                    ]
-
-                bench_report["weaknesses"] = generated_weaknesses
-                sections["_benchmark_report"] = bench_report
-                log.info(f"[FIX-B35d-BENCH006] Injected {len(generated_weaknesses)} weaknesses into dict")
-            else:
-                log.info(f"[FIX-B35d-BENCH006] {len(weaknesses)} weaknesses already present in dict")
-
         # B35-FIX-C4001: Strip long-term references from 90-day roadmap
         _roadmap_90d = sections.get('ROADMAP_90D_HTML', '')
         if isinstance(_roadmap_90d, str):
@@ -16595,56 +16589,6 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 log.info(f"[FIX-B35-C4001] Stripped long-term references from ROADMAP_90D_HTML")
             else:
                 log.info(f"[FIX-B35-C4001] No long-term references found in ROADMAP_90D_HTML")
-
-        # ===== FIX-B35d-BCSIM002: P80 ROI über Conservative×0.8 =====
-        # G22 parses HTML (not dict) because hasattr(dict, "distribution") is False
-        sim_html = sections.get("BUSINESS_CASE_SIM_HTML", "")
-        bc_html = sections.get("BUSINESS_CASE_ENGINE_HTML", "")
-
-        if sim_html and bc_html:
-            # 1. Conservative ROI aus BC-HTML extrahieren (gleiche Logik wie G22)
-            cons_roi = 0.0
-            for de_name in ["konservativ", "conservative"]:
-                _bc_pattern = rf'{de_name}.*?(\d+(?:[.,]\d+)?)\s*%'
-                _bc_match = _re_b35.search(_bc_pattern, bc_html.lower(), _re_b35.DOTALL)
-                if _bc_match:
-                    cons_roi = float(_bc_match.group(1).replace(",", "."))
-                    break
-
-            if cons_roi > 0:
-                threshold = cons_roi * 0.85  # 85% statt 80% → sicherer Puffer
-
-                # 2. P80 aus Sim-HTML extrahieren
-                p80_match = _re_b35.search(r'P80.*?ROI.*?(\d+(?:\.\d+)?)\s*%', sim_html, _re_b35.IGNORECASE)
-                if p80_match:
-                    current_p80 = float(p80_match.group(1))
-
-                    if current_p80 < threshold:
-                        new_p80 = round(threshold + 5, 1)  # 5% über Schwelle
-                        # Ersetze im HTML
-                        old_text = p80_match.group(0)
-                        new_text = old_text.replace(p80_match.group(1), str(new_p80))
-                        sim_html = sim_html.replace(old_text, new_text, 1)
-                        sections["BUSINESS_CASE_SIM_HTML"] = sim_html
-                        # 3. Auch Flat-Key aktualisieren
-                        sections["ROI_P80"] = new_p80
-                        # 4. Dict-Report auch patchen
-                        sim_report = sections.get("_business_case_simulation_report")
-                        if isinstance(sim_report, dict) and "distribution" in sim_report:
-                            dist = sim_report["distribution"]
-                            if isinstance(dist, dict):
-                                dist["roi_p80"] = new_p80
-                                sim_report["distribution"] = dist
-                                sections["_business_case_simulation_report"] = sim_report
-                        log.info(f"[FIX-B35d-BCSIM002] Calibrated P80 ROI in HTML: "
-                                 f"{current_p80}% -> {new_p80}% (cons={cons_roi}%, threshold={threshold:.1f}%)")
-                    else:
-                        log.info(f"[FIX-B35d-BCSIM002] P80 ROI OK: {current_p80}% >= "
-                                 f"threshold {threshold:.1f}%")
-                else:
-                    log.info("[FIX-B35d-BCSIM002] No P80 ROI pattern found in BUSINESS_CASE_SIM_HTML")
-            else:
-                log.info("[FIX-B35d-BCSIM002] No conservative ROI found in BUSINESS_CASE_ENGINE_HTML")
 
         # --- Apply funding blacklist BEFORE G22 (B26 removes go-digital from KI-Stack) ---
         sections = apply_funding_blacklist(sections)
