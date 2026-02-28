@@ -2740,25 +2740,28 @@ def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
 # Section budgets by segment (max chars or max blocks)
 SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
     "solo": {
-        "EXECUTIVE_SUMMARY_HTML": 2000,
+        # FIX-B36a: Proportional budget update (55% of KMU, floor 2000)
+        # Solo reports are intentionally compact, but previous budgets
+        # caused 50-66% content loss on critical sections.
+        "EXECUTIVE_SUMMARY_HTML": 3500,  # FIX-B36a: was 2000
         "QUICK_WINS_HTML": 8000,  # FIX-F1: LLM liefert 9K+ HTML
         "QUICK_WINS_HTML_LEFT": 8000,  # FIX-H3
-        "ROADMAP_90D_HTML": 5000,  # FIX-B22-P2: was 1200, needs ≥220 words (~1540 chars + HTML)
+        "ROADMAP_90D_HTML": 5000,  # FIX-B22-P2: was 1200, kept at 5000
         "ROADMAP_12M_HTML": 8000,
         "RECOMMENDATIONS_HTML": 6000,  # FIX-629b
         "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
-        "GAMECHANGER_HTML": 1500,
-        "FOERDERPOTENZIAL_HTML": 5000,  # FIX-629b
-        "ORG_CHANGE_HTML": 4000,  # FIX-629b
+        "GAMECHANGER_HTML": 6500,  # FIX-B36a: was 1500 (!)
+        "FOERDERPOTENZIAL_HTML": 6500,  # FIX-B36a: was 5000
+        "ORG_CHANGE_HTML": 5500,  # FIX-B36a: was 4000
         "BUSINESS_CASE_HTML": 10000,  # FIX-629b
-        "PILOT_PLAN_HTML": 1200,
-        "DATA_READINESS_HTML": 1200,
-        "STRATEGIE_GOVERNANCE_HTML": 5000,  # FIX-B22-P2: was 1200
-        "UNTERNEHMENSPROFIL_MARKT_HTML": 5000,  # FIX-B22-P2: was 1500
-        "MONETARISIERUNG_HTML": 1200,
-        "KI_SKILLPLAN_HTML": 1200,
-        "TOOLS_EMPFEHLUNGEN_HTML": 5000,  # FIX-B22-P2: was 1200
-        "TECHNOLOGIE_PROZESSE_HTML": 2000,
+        "PILOT_PLAN_HTML": 3000,  # FIX-B36a: was 1200
+        "DATA_READINESS_HTML": 3500,  # FIX-B36a: was 1200
+        "STRATEGIE_GOVERNANCE_HTML": 5500,  # FIX-B36a: was 5000, slight increase
+        "UNTERNEHMENSPROFIL_MARKT_HTML": 7500,  # FIX-B36a: was 5000
+        "MONETARISIERUNG_HTML": 2000,  # FIX-B36a: was 1200
+        "KI_SKILLPLAN_HTML": 2000,  # FIX-B36a: was 1200
+        "TOOLS_EMPFEHLUNGEN_HTML": 5000,  # FIX-B22-P2: was 1200, kept
+        "TECHNOLOGIE_PROZESSE_HTML": 4500,  # FIX-B36a: was 2000
         # Engine-generated sections (structured output, not LLM free-text)
         "AUTOMATION_ROADMAP_HTML": 8000,
         "BENCHMARK_ENGINE_HTML": 18000,  # Q7: Was 6000, SWOT was trimmed
@@ -2777,9 +2780,9 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "KICKOFF_VORLAGE_HTML": 3000,
 
-        "AI_ACT_SUMMARY_HTML": 2000,
+        "AI_ACT_SUMMARY_HTML": 3500,  # FIX-B36a: was 2000
 
-        "TEMPLATES_START_HTML": 2500,
+        "TEMPLATES_START_HTML": 4500,  # FIX-B36a: was 2500
 
         "AI_POLICY_MINI_HTML": 2500,
 
@@ -2791,7 +2794,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "REIFEGRAD_SOWHAT_HTML": 2000,
 
-        "SOFORT_START_HTML": 1500,
+        "SOFORT_START_HTML": 4500,  # FIX-B36a: was 1500
 
         "CHALLENGE_30_TAGE_HTML": 8000,
 
@@ -2799,11 +2802,11 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "WETTBEWERB_BENCHMARK_HTML": 5000,  # FIX-629b
 
-        "KI_AKTIVITAETEN_ZIELE_HTML": 2000,
+        "KI_AKTIVITAETEN_ZIELE_HTML": 3000,  # FIX-B36a: was 2000
 
-        "GAMECHANGER_DECISION_HTML": 1500,
+        "GAMECHANGER_DECISION_HTML": 2000,  # FIX-B36a: was 1500
 
-        "MARKET_INSIGHTS_HTML": 2000,
+        "MARKET_INSIGHTS_HTML": 3000,  # FIX-B36a: was 2000
 
         "GLOSSAR_HTML": 2500,
 
@@ -2827,28 +2830,48 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "SOURCES_BOX_HTML": 2000,
 
-        "_default": 1000,
+        # FIX-B36a: Explicit plaintext section budgets (50% of KMU)
+        "executive_summary": 2000,
+        "strategie_governance": 4000,
+        "technologie_prozesse": 3000,
+        "tools_empfehlungen": 3000,
+        "templates_start": 3000,
+        "branch_deep_dive": 6000,
+        "unternehmensprofil_markt": 5000,
+        "roadmap": 5000,
+        "roadmap_90d": 3000,
+        "data_readiness": 2500,
+        "ki_stack_summary": 2500,
+        "pilot_plan": 2000,
+        "monetarisierung": 1500,
+        "ki_skillplan": 1500,
+        "org_change": 4000,
+        "business_case": 4000,
+        "foerderpotenzial": 5000,
+
+        "_default": 1500,  # FIX-B36a: was 1000
     },
     "team": {
-        "EXECUTIVE_SUMMARY_HTML": 3000,
+        # FIX-B36a: Proportional budget update (75% of KMU, floor 2500)
+        "EXECUTIVE_SUMMARY_HTML": 4500,  # FIX-B36a: was 3000
         "QUICK_WINS_HTML": 10000,  # FIX-F1: LLM liefert 9K+ HTML
         "QUICK_WINS_HTML_LEFT": 10000,  # FIX-H3
-        "ROADMAP_90D_HTML": 5000,  # FIX-B22-P2: was 1800
+        "ROADMAP_90D_HTML": 6000,  # FIX-B36a: was 5000
         "ROADMAP_12M_HTML": 12000,
         "RECOMMENDATIONS_HTML": 12000,  # FIX-629
         "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
         "GAMECHANGER_HTML": 10000,
-        "FOERDERPOTENZIAL_HTML": 12000,  # FIX-B22-P2: was 10000, needs ≥800 words (~5600 chars + HTML)
+        "FOERDERPOTENZIAL_HTML": 12000,  # FIX-B22-P2: was 10000
         "ORG_CHANGE_HTML": 9000,  # FIX-629
         "BUSINESS_CASE_HTML": 8000,  # FIX-629
-        "PILOT_PLAN_HTML": 1800,
-        "DATA_READINESS_HTML": 1800,
-        "STRATEGIE_GOVERNANCE_HTML": 5000,  # FIX-B22-P2: was 3000
-        "UNTERNEHMENSPROFIL_MARKT_HTML": 5000,  # FIX-B22-P2: was 2500
-        "MONETARISIERUNG_HTML": 1800,
-        "KI_SKILLPLAN_HTML": 1800,
-        "TOOLS_EMPFEHLUNGEN_HTML": 5000,  # FIX-B22-P2: was 3000
-        "TECHNOLOGIE_PROZESSE_HTML": 3000,
+        "PILOT_PLAN_HTML": 4000,  # FIX-B36a: was 1800
+        "DATA_READINESS_HTML": 4500,  # FIX-B36a: was 1800
+        "STRATEGIE_GOVERNANCE_HTML": 7500,  # FIX-B36a: was 5000
+        "UNTERNEHMENSPROFIL_MARKT_HTML": 10500,  # FIX-B36a: was 5000
+        "MONETARISIERUNG_HTML": 3000,  # FIX-B36a: was 1800
+        "KI_SKILLPLAN_HTML": 3000,  # FIX-B36a: was 1800
+        "TOOLS_EMPFEHLUNGEN_HTML": 6000,  # FIX-B36a: was 5000
+        "TECHNOLOGIE_PROZESSE_HTML": 6000,  # FIX-B36a: was 3000
         # Engine-generated sections (structured output, not LLM free-text)
         "AUTOMATION_ROADMAP_HTML": 18000,
         "BENCHMARK_ENGINE_HTML": 18000,  # Q1: Was 12000, SWOT at end was trimmed
@@ -2861,15 +2884,15 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "RECOMMENDATIONS_ENGINE_HTML": 10000,
         # FIX-D1: Fehlende Sections (vorher auf _default gefallen)
 
-        "BRANCH_DEEP_DIVE_HTML": 6000,
+        "BRANCH_DEEP_DIVE_HTML": 10000,  # FIX-B36a: was 6000
 
         "ROI_TRACKING_HTML": 4000,
 
         "KICKOFF_VORLAGE_HTML": 4000,
 
-        "AI_ACT_SUMMARY_HTML": 3000,
+        "AI_ACT_SUMMARY_HTML": 4500,  # FIX-B36a: was 3000
 
-        "TEMPLATES_START_HTML": 3500,
+        "TEMPLATES_START_HTML": 6000,  # FIX-B36a: was 3500
 
         "AI_POLICY_MINI_HTML": 3500,
 
@@ -2879,9 +2902,9 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "NEXT_ACTIONS_HTML": 3000,
 
-        "REIFEGRAD_SOWHAT_HTML": 2500,
+        "REIFEGRAD_SOWHAT_HTML": 3000,  # FIX-B36a: was 2500
 
-        "SOFORT_START_HTML": 2000,
+        "SOFORT_START_HTML": 6000,  # FIX-B36a: was 2000
 
         "CHALLENGE_30_TAGE_HTML": 12000,
 
@@ -2889,11 +2912,11 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "WETTBEWERB_BENCHMARK_HTML": 8000,  # FIX-629
 
-        "KI_AKTIVITAETEN_ZIELE_HTML": 3000,
+        "KI_AKTIVITAETEN_ZIELE_HTML": 4000,  # FIX-B36a: was 3000
 
         "GAMECHANGER_DECISION_HTML": 2500,
 
-        "MARKET_INSIGHTS_HTML": 3000,
+        "MARKET_INSIGHTS_HTML": 4000,  # FIX-B36a: was 3000
 
         "GLOSSAR_HTML": 3500,
 
@@ -2917,7 +2940,26 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "SOURCES_BOX_HTML": 3000,
 
-        "_default": 1500,
+        # FIX-B36a: Explicit plaintext section budgets (70% of KMU)
+        "executive_summary": 3000,
+        "strategie_governance": 5500,
+        "technologie_prozesse": 4000,
+        "tools_empfehlungen": 4000,
+        "templates_start": 4000,
+        "branch_deep_dive": 8500,
+        "unternehmensprofil_markt": 7000,
+        "roadmap": 7000,
+        "roadmap_90d": 4000,
+        "data_readiness": 3500,
+        "ki_stack_summary": 3500,
+        "pilot_plan": 3000,
+        "monetarisierung": 2000,
+        "ki_skillplan": 2000,
+        "org_change": 5500,
+        "business_case": 5500,
+        "foerderpotenzial": 7000,
+
+        "_default": 2000,  # FIX-B36a: was 1500
     },
     "kmu": {
         # FIX-B36a: Budget increases based on B35g Railway log analysis
