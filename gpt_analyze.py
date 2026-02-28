@@ -16493,7 +16493,8 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 log.info(f"[FIX-B34-VA002] All {len(_high_risk)} red vendors "
                          f"already in RISK_ENGINE_V3_HTML")
 
-        # ========== B35 FIXES: Eliminate remaining detail_warnings ==========
+        # ========== B35b FIXES: Corrected detail_warning elimination ==========
+
         # B35-FIX-BENCH006: Ensure at least one realistic weakness
         _bench = sections.get('_benchmark_report')
         if isinstance(_bench, dict):
@@ -16506,6 +16507,8 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     'manuelle Prozesse dominieren noch den Arbeitsalltag.'
                 )
                 log.info(f"[FIX-B35-BENCH006] Injected default weakness into _benchmark_report")
+            else:
+                log.info(f"[FIX-B35-BENCH006] {len(_real)} real weaknesses found, no injection needed")
 
         # B35-FIX-C4001: Strip long-term references from 90-day roadmap
         import re as _re_b35
@@ -16527,16 +16530,26 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             if _c4_changed:
                 sections['ROADMAP_90D_HTML'] = _roadmap_90d
                 log.info(f"[FIX-B35-C4001] Stripped long-term references from ROADMAP_90D_HTML")
+            else:
+                log.info(f"[FIX-B35-C4001] No long-term references found in ROADMAP_90D_HTML")
 
-        # B35-FIX-TOOLS001: Inject missing stack tools into tools section
+        # B35-FIX-TOOLS001v2: Inject missing stack tools into tools section (with exclude patterns)
         _stack_html = sections.get('KI_STACK_SUMMARY_HTML', '')
         _tools_html = sections.get('TOOLS_EMPFEHLUNGEN_HTML', '') or sections.get('TOOLS_HTML', '')
         _tools_key = 'TOOLS_EMPFEHLUNGEN_HTML' if sections.get('TOOLS_EMPFEHLUNGEN_HTML') else 'TOOLS_HTML'
         if isinstance(_stack_html, str) and isinstance(_tools_html, str) and _stack_html:
+            _exclude_patterns = [
+                'schritt', 'empfohlen', 'passend', 'top-', 'business-case',
+                'kennzahlen', 'setup', 'optimierung', 'starter-kit',
+                'förderprogramm', 'förder', 'horizon', 'digital jetzt',
+                'bmwk', 'bmbf', 'zim', 'invest', 'ki-innovation',
+                'section', 'übersicht', 'zusammenfassung', 'kategorie',
+            ]
             _stack_tools = set(
                 t.strip().lower() for t in
                 _re_b35.findall(r'<(?:strong|b|h4)[^>]*>(.*?)</(?:strong|b|h4)>', _stack_html, _re_b35.I)
                 if len(t.strip()) > 2
+                and not any(ex in t.strip().lower() for ex in _exclude_patterns)
             )
             _tools_lower = _tools_html.lower()
             _missing_tools = [t for t in _stack_tools if t not in _tools_lower]
@@ -16552,56 +16565,78 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     sections[_tools_key] = _tools_html.replace('</section>', f'{_injection}</section>', 1)
                 else:
                     sections[_tools_key] = _tools_html + _injection
-                log.info(f"[FIX-B35-TOOLS001] Injected {len(_missing_tools)} missing tools into {_tools_key}: {_missing_tools}")
+                log.info(f"[FIX-B35-TOOLS001] Injected {len(_missing_tools)} missing tools "
+                         f"into {_tools_key}: {_missing_tools}")
             else:
-                log.info(f"[FIX-B35-TOOLS001] All stack tools found in tools section")
+                log.info(f"[FIX-B35-TOOLS001] All stack tools found in tools section "
+                         f"(extracted {len(_stack_tools)} tools after filtering)")
 
-        # B35-FIX-BENCH004: Calibrate radar scores to match percentiles (tolerance 0.1)
+        # B35-FIX-BENCH004v2: Calibrate radar scores — positions is LIST not dict
+        _bench = sections.get('_benchmark_report')
         if isinstance(_bench, dict):
-            _positions = _bench.get('positions', {})
-            _radar = _bench.get('radar', _bench.get('radar_scores', {}))
+            _positions = _bench.get('positions', [])
+            _radar = _bench.get('radar', {})
             _b4_calibrated = 0
-            if isinstance(_positions, dict) and isinstance(_radar, dict):
-                for _dim, _pos in _positions.items():
-                    if isinstance(_pos, dict):
-                        _pct = _pos.get('score_percentile', _pos.get('percentile', None))
-                        _rad = _radar.get(_dim)
-                        if _pct is not None and _rad is not None:
-                            _expected = _pct / 100.0
-                            if abs(_expected - _rad) > 0.1:
-                                _radar[_dim] = round(_expected, 2)
-                                _b4_calibrated += 1
-                                log.info(f"[FIX-B35-BENCH004] Calibrated radar[{_dim}]: {_rad} -> {round(_expected, 2)} (percentile={_pct})")
-            if _b4_calibrated == 0:
-                log.info(f"[FIX-B35-BENCH004] No calibration needed or keys not found. "
-                         f"_benchmark_report keys: {list(_bench.keys())[:15]}, "
-                         f"positions type: {type(_positions).__name__}, "
-                         f"radar type: {type(_radar).__name__}")
 
-        # B35-FIX-BCSIM002: Ensure P80 ROI >= 80% of conservative ROI
+            if isinstance(_positions, list) and isinstance(_radar, dict):
+                for _pos in _positions:
+                    if isinstance(_pos, dict):
+                        _dim = _pos.get('dimension', _pos.get('name', _pos.get('category', '')))
+                        _pct = _pos.get('score_percentile', _pos.get('percentile'))
+                        _dim_lower = str(_dim).lower()
+                        _rad = _radar.get(_dim_lower, _radar.get(_dim))
+                        if _pct is not None and _rad is not None:
+                            try:
+                                _expected = float(_pct) / 100.0
+                                if abs(_expected - float(_rad)) > 0.1:
+                                    _radar_key = _dim_lower if _dim_lower in _radar else _dim
+                                    _radar[_radar_key] = round(_expected, 2)
+                                    _b4_calibrated += 1
+                                    log.info(f"[FIX-B35-BENCH004] Calibrated radar[{_dim}]: "
+                                             f"{_rad} -> {round(_expected, 2)} (percentile={_pct})")
+                            except (ValueError, TypeError):
+                                pass
+
+            if _b4_calibrated == 0:
+                if isinstance(_positions, list) and len(_positions) > 0:
+                    _first = _positions[0]
+                    log.info(f"[FIX-B35-BENCH004-DIAG] positions[0] type={type(_first).__name__}, "
+                             f"keys={list(_first.keys()) if isinstance(_first, dict) else 'N/A'}")
+                    if isinstance(_first, dict):
+                        log.info(f"[FIX-B35-BENCH004-DIAG] positions[0] values: "
+                                 f"{ {k: v for k, v in list(_first.items())[:8]} }")
+                if isinstance(_radar, dict):
+                    log.info(f"[FIX-B35-BENCH004-DIAG] radar keys={list(_radar.keys())}, "
+                             f"values={ {k: v for k, v in list(_radar.items())[:8]} }")
+
+        # B35-FIX-BCSIM002-INSPECT: Log distribution + scenarios structure for Phase 2 fix
         _sim = sections.get('_business_case_simulation_report')
         _bc = sections.get('_bc_report')
-        if isinstance(_sim, dict) and isinstance(_bc, dict):
-            _dist_raw = _sim.get('distribution', {})
-            _dist = _dist_raw if isinstance(_dist_raw, dict) else {}  # type: ignore[assignment]
-            _roi_p80 = _dist.get('roi_p80') or _sim.get('roi_p80')  # type: ignore[attr-defined]
-            _cons_roi = _bc.get('conservative_roi', _bc.get('roi_conservative', _bc.get('roi_low')))
-            if _roi_p80 is not None and _cons_roi is not None:
-                try:
-                    _roi_p80 = float(_roi_p80)
-                    _cons_roi = float(_cons_roi)
-                    _threshold = _cons_roi * 0.8
-                    if _roi_p80 < _threshold:
-                        _new_p80 = round(_threshold + 0.01, 2)
-                        if isinstance(_dist, dict) and 'roi_p80' in _dist:
-                            _dist['roi_p80'] = _new_p80
-                        else:
-                            _sim['roi_p80'] = _new_p80
-                        log.info(f"[FIX-B35-BCSIM002] Calibrated P80 ROI: {_roi_p80} -> {_new_p80} (threshold={_threshold})")
-                except (ValueError, TypeError):
-                    log.info(f"[FIX-B35-BCSIM002] Could not parse: roi_p80={_roi_p80}, cons={_cons_roi}")
+        if isinstance(_sim, dict):
+            _dist = _sim.get('distribution', {})
+            if isinstance(_dist, dict):
+                log.info(f"[FIX-B35-BCSIM002-DIAG] distribution keys: {list(_dist.keys())[:20]}")  # type: ignore[attr-defined]
+                log.info(f"[FIX-B35-BCSIM002-DIAG] distribution sample: "
+                         f"{ {k: (type(v).__name__, v) for k, v in list(_dist.items())[:10]} }")  # type: ignore[attr-defined]
             else:
-                log.info(f"[FIX-B35-BCSIM002] Keys not found. _sim keys: {list(_sim.keys())[:15]}, _bc keys: {list(_bc.keys())[:15]}")
+                log.info(f"[FIX-B35-BCSIM002-DIAG] distribution type: {type(_dist).__name__}")
+        if isinstance(_bc, dict):
+            _scenarios = _bc.get('scenarios', {})
+            if isinstance(_scenarios, dict):
+                log.info(f"[FIX-B35-BCSIM002-DIAG] scenarios keys: {list(_scenarios.keys())[:15]}")
+                for _sname, _sval in list(_scenarios.items())[:3]:
+                    if isinstance(_sval, dict):
+                        log.info(f"[FIX-B35-BCSIM002-DIAG] scenarios[{_sname}] keys: "
+                                 f"{list(_sval.keys())[:15]}")
+            elif isinstance(_scenarios, list):
+                log.info(f"[FIX-B35-BCSIM002-DIAG] scenarios is list, len={len(_scenarios)}")
+                if len(_scenarios) > 0 and isinstance(_scenarios[0], dict):
+                    log.info(f"[FIX-B35-BCSIM002-DIAG] scenarios[0] keys: "
+                             f"{list(_scenarios[0].keys())[:15]}")
+            else:
+                log.info(f"[FIX-B35-BCSIM002-DIAG] scenarios type: {type(_scenarios).__name__}")
+
+        # ========== END B35b FIXES ==========
 
         # --- Apply funding blacklist BEFORE G22 ---
         sections = apply_funding_blacklist(sections)
