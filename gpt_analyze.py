@@ -16446,6 +16446,18 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         else:
             log.info(f"[FIX-B34-INSPECT] _risk_report_v3 type: {type(_rr).__name__}")
 
+        # B34-Phase1b: Inspect high_risk_vendors + entries structure
+        if isinstance(_va, dict):
+            hrv = _va.get('high_risk_vendors', [])
+            if hrv:
+                log.info(f"[FIX-B34-INSPECT-P1B] high_risk_vendors count={len(hrv)}, "
+                         f"[0] type={type(hrv[0]).__name__}: {hrv[0]}")
+            entries = _va.get('entries', [])
+            if entries:
+                log.info(f"[FIX-B34-INSPECT-P1B] entries count={len(entries)}, "
+                         f"[0] type={type(entries[0]).__name__}: "
+                         f"{list(entries[0].keys()) if isinstance(entries[0], dict) else entries[0]}")
+
         # --- Apply funding blacklist BEFORE G22 ---
         sections = apply_funding_blacklist(sections)
 
