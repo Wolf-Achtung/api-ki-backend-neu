@@ -19150,6 +19150,17 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                         for _ in range(max(0, _cnt)):
                             _b40_val += f"</{_tag}>"
 
+                    # FIX-B42: Verify trim actually fixed the ending
+                    _b40_post_text = _re_b40.sub(r'</?\w+[^>]*>', '', _b40_val).rstrip()
+                    if _b40_post_text and _b40_post_text[-1] not in _b40_terminal_chars:
+                        # Trim didn't help (e.g. dot was in HTML attribute) → dot-append
+                        _b40_val = _b40_val.rstrip()
+                        _b40_val += '.'
+                        log.info(
+                            "[FIX-B42] Section '%s' dot-appended after trim: still non-terminal, ends with '%s'",
+                            _b40_key, _re_b40.sub(r'</?\w+[^>]*>', '', _b40_val).rstrip()[-30:]
+                        )
+
                     sections[_b40_key] = _b40_val
                     _b40_applied += 1
                     log.info(
@@ -19209,6 +19220,41 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         log.info(f"[{run_id}] [PLATIN+++] Post-healer validation: passed={_p_passed}, errors={len(_p_errors)}, warnings={len(_p_warnings)}")
     except Exception as pv_err:
         log.warning(f"[{run_id}] [PLATIN+++] Validation failed to run: {pv_err}")
+
+    # =========================================================================
+    # FIX-B42: Post-B40 Grade Recalculation
+    # B727 grade calc runs BEFORE B40 clean-ending and PLATIN+++ post-healer
+    # validation. If B40 fixed TRUNCATED issues, the grade may be too low.
+    # Recalculate using the same logic as B727 but with current state.
+    # =========================================================================
+    try:
+        _b42_vw = int(sections.get("_VALIDATOR_WARNING_COUNT", 0))
+        _b42_vc = int(sections.get("_VALIDATOR_CRITICAL_COUNT", 0))
+        _b42_pw = int(sections.get("PIPELINE_WARNINGS_COUNT", 0))
+        _b42_fb = int(sections.get("PIPELINE_FALLBACK_COUNT", 0))
+        _b42_hl = int(sections.get("PIPELINE_HEALS_COUNT", 0))
+        _b42_cg = sections.get("_CONSISTENCY_GRADE", "A")
+        _b42_cs = float(sections.get("_CONSISTENCY_SCORE", 100))
+        _b42_tw = _b42_pw + _b42_vw
+        _b42_old_grade = sections.get("PIPELINE_GRADE", "?")
+        _b42_consistency_ok = _b42_cg in ("A", "B") or (_b42_cg == "C" and _b42_cs >= 70)
+        if _b42_tw == 0 and _b42_vc == 0 and _b42_fb == 0 and _b42_hl == 0 and _b42_consistency_ok:
+            _b42_grade = "A"
+        elif _b42_tw <= 10 and _b42_fb <= 2 and _b42_cg in ("A", "B", "C"):
+            _b42_grade = "B"
+        else:
+            _b42_grade = "C"
+        if _b42_grade != _b42_old_grade:
+            sections["PIPELINE_GRADE"] = _b42_grade
+            sections["TOTAL_WARNINGS_COUNT"] = _b42_tw
+            log.info(f"[{run_id}] [FIX-B42-GRADE-RECALC] Grade {_b42_old_grade}->{_b42_grade} "
+                     f"(post-B40: vw={_b42_vw}, vc={_b42_vc}, fb={_b42_fb}, hl={_b42_hl}, "
+                     f"tw={_b42_tw}, consistency={_b42_cg}/{_b42_cs})")
+        else:
+            log.info(f"[{run_id}] [FIX-B42-GRADE-RECALC] Grade unchanged: {_b42_grade} "
+                     f"(vw={_b42_vw}, fb={_b42_fb}, hl={_b42_hl}, consistency={_b42_cg}/{_b42_cs})")
+    except Exception as _b42_grade_err:
+        log.warning(f"[{run_id}] [FIX-B42-GRADE-RECALC] Failed: {_b42_grade_err}")
 
     # =========================================================================
     # FIX-QW1: POST-HEALER Quick Wins Restore
