@@ -19107,7 +19107,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     # Platzierung: NACH Healer, VOR Validator.
     # =========================================================================
     import re as _re_b40
-    _b40_terminal_chars = {'.', '!', '?', ':', ')', '"', '\u00BB', '\u201d'}
+    _b40_terminal_chars = {'.', '!', '?', ':', ')', '"', '\u00BB', '\u201d', '*'}  # FIX-B41: '*' für LEAD_* (.**)
     _b40_applied = 0
     _b40_skipped = 0
 
@@ -19159,11 +19159,34 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                         _re_b40.sub(r'</?\w+[^>]*>', '', _b40_val).rstrip()[-30:]
                     )
                 else:
-                    _b40_skipped += 1
+                    # FIX-B41: Dot-append Fallback wenn Trim-Schwelle zu niedrig
+                    # Statt TRUNCATED zu akzeptieren — Punkt anhängen (kein Content-Verlust)
+                    _b40_val = _b40_val.rstrip()
+                    _b40_open_parens = _b40_val.count('(') - _b40_val.count(')')
+                    for _ in range(max(0, _b40_open_parens)):
+                        _b40_val += ')'
+                    _b40_val += '.'
+                    sections[_b40_key] = _b40_val
+                    _b40_applied += 1
                     log.info(
-                        "[FIX-B40] Section '%s' skipped: last sentence at %.0f%% (< 65%%)",
-                        _b40_key, _b40_keep * 100
+                        "[FIX-B41] Section '%s' dot-appended: ratio %.0f%% too low for trim, ends with '%s'",
+                        _b40_key, _b40_keep * 100,
+                        _re_b40.sub(r'</?\w+[^>]*>', '', _b40_val).rstrip()[-30:]
                     )
+            else:
+                # FIX-B41: Kein Satzende gefunden → Dot-append als letzter Fallback
+                _b40_val = _b40_val.rstrip()
+                _b40_open_parens = _b40_val.count('(') - _b40_val.count(')')
+                for _ in range(max(0, _b40_open_parens)):
+                    _b40_val += ')'
+                _b40_val += '.'
+                sections[_b40_key] = _b40_val
+                _b40_applied += 1
+                log.info(
+                    "[FIX-B41] Section '%s' dot-appended: no sentence boundary found, ends with '%s'",
+                    _b40_key,
+                    _re_b40.sub(r'</?\w+[^>]*>', '', _b40_val).rstrip()[-30:]
+                )
 
     log.info(
         "[FIX-B40] Clean-ending pass: %d applied, %d skipped (65%% threshold)",
