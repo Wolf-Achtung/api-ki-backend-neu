@@ -182,6 +182,13 @@ def _is_allowed_term_context(term: str, context_snippet: str) -> bool:
         # Allow "Team-Kapazität" which gets replaced separately
         if "Kapazität" in context_snippet or "Kapazitaet" in context_snippet:
             return True
+        # FIX-B42: Allow product names containing "Teams" (e.g., "Microsoft Teams")
+        _snippet_lower = context_snippet.lower()
+        if "microsoft" in _snippet_lower or "google" in _snippet_lower:
+            return True
+        # "MS Teams" — word-boundary check to avoid matching "Umsetzung" etc.
+        if re.search(r'\bMS\b', context_snippet):
+            return True
     return False
 
 
