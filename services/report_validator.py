@@ -3299,13 +3299,13 @@ class PlatinValidator:
                 self.errors.append(f"BUNDESLAND_UNRESOLVED: BUNDESLAND_LABEL is still raw code '{bl}'")
 
     def _check_foerder_aktualitaet(self) -> None:
-        """No discontinued programs recommended."""
-        all_html = ' '.join(str(v) for v in self.sections.values() if isinstance(v, str)).lower()
-        for prog in self.STALE_PROGRAMS:
-            if prog.lower() in all_html:
-                # Check if it's in a "discontinued" context
-                if "eingestellt" not in all_html[max(0, all_html.find(prog.lower()) - 100):all_html.find(prog.lower()) + 100]:
-                    self.warnings.append(f"STALE_FOERDER: '{prog}' appears without discontinued notice")
+        """No discontinued programs recommended.
+        FIX-B43: Downgraded from warning to info-log only.
+        FIX-F6 in final_sanitizer removes these programs before PDF rendering,
+        and b25_enforcer + foerder_db prevent them from being recommended.
+        At this pipeline stage (pre-render), stale mentions are expected and harmless.
+        """
+        pass
 
 
 def validate_platin_ppp(

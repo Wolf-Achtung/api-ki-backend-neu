@@ -13838,6 +13838,34 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
         log.warning("[CI-DESIGN] Gamechanger HTML empty or too short, skipping")
     sections["gamechanger"] = gamechanger_html
 
+    # FIX-B43: Remove Gamechanger-specific payback/Amortisation values
+    # The LLM sometimes generates payback values for the Gamechanger scenario
+    # (e.g., "7 Monate Payback") that differ from the main BC (e.g., "1,6 Monate").
+    # The prompt forbids this, but LLM compliance is imperfect.
+    # Replace payback mentions with reference to the main Business Case.
+    try:
+        import re as _re_gc_bc
+        _gc_html = sections.get("GAMECHANGER_HTML", "")
+        if isinstance(_gc_html, str) and _gc_html:
+            _gc_orig = _gc_html
+            # Pattern: "X Monate Payback" or "Payback: X Monate" or "Amortisation: X Monate"
+            _gc_html = _re_gc_bc.sub(
+                r'(?:\d[\d,\.]*\s*Monate?\s*(?:Payback|Amortisation))',
+                'Details siehe Business Case',
+                _gc_html, flags=_re_gc_bc.IGNORECASE
+            )
+            _gc_html = _re_gc_bc.sub(
+                r'(?:(?:Payback|Amortisation)\s*(?::|von|nach|in)?\s*(?:ca\.?\s*)?\d[\d,\.]*\s*Monate?)',
+                'Details siehe Business Case',
+                _gc_html, flags=_re_gc_bc.IGNORECASE
+            )
+            if _gc_html != _gc_orig:
+                sections["GAMECHANGER_HTML"] = _gc_html
+                sections["gamechanger"] = _gc_html
+                log.info("[FIX-B43] Gamechanger payback reference replaced with BC disclaimer")
+    except Exception as _gc_bc_err:
+        log.warning("[FIX-B43] Gamechanger payback cleanup failed: %s", _gc_bc_err)
+
     # FIX-B729: Governance/Security Score Enforcer (HTML-aware regex, always-log)
     try:
         import re as _re_b729
@@ -16131,6 +16159,11 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     # FIX-GRADE-UNIVERSAL: Same classification for RAW stage
     _INFORMATIONAL_CATEGORIES_RAW = {
         "SOLO_TERMINOLOGY", "SIZE_MISMATCH", "SECTION_TOO_SHORT", "TEMPLATE_PHRASE",
+        # FIX-B43: Sync with FINAL informational categories
+        "INCOMPLETE_SENTENCE", "TONE_INCONSISTENCY",
+        "TOOLS_LOW_CONFIDENCE", "TOOLS_MISSING_CONFIDENCE",
+        "TOOLS_SEGMENT_WEAKNESS", "TOOLS_OVERPOPULATION",
+        "HAUPTLEISTUNG_OVERUSE",
     }
     _info_raw = [w for w in warning_errors if getattr(w, "category", "") in _INFORMATIONAL_CATEGORIES_RAW]
     if _info_raw:
@@ -17981,6 +18014,14 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             "SIZE_MISMATCH",        # Persona size check — informational
             "SECTION_TOO_SHORT",    # Content length — soft warning, not data corruption
             "TEMPLATE_PHRASE",      # Residual template text — cosmetic
+            # FIX-B43: Additional informational categories (not content-critical)
+            "INCOMPLETE_SENTENCE",  # Same as TRUNCATED — B40/B41 clean-ending handles this
+            "TONE_INCONSISTENCY",   # Sie vs du — cosmetic, not data corruption
+            "TOOLS_LOW_CONFIDENCE",      # Tool confidence scoring — informational
+            "TOOLS_MISSING_CONFIDENCE",  # Missing confidence data — informational
+            "TOOLS_SEGMENT_WEAKNESS",    # Weak tool segment — informational
+            "TOOLS_OVERPOPULATION",      # Too many tools listed — cosmetic
+            "HAUPTLEISTUNG_OVERUSE",     # Keyword redundancy — cosmetic
         }
         _grade_blocking_final = [
             w for w in _final_warnings

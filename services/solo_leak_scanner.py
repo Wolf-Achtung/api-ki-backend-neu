@@ -121,7 +121,8 @@ CRITICAL_LEAK_TERMS: Dict[str, str] = {
 # Warning-level terms (review but don't fail gate)
 WARNING_LEAK_TERMS: Dict[str, str] = {
     r"\bOrganisation(s(struktur|einheit)?)?\b": "Organisation → prüfen ob nötig",
-    r"\bManagement\b(?![\-\s]?(Summary|Zusammenfassung))": "Management → prüfen",
+    # FIX-B43: Compound-Begriffe mit Management erlauben (Prompt-Management, Datenmanagement etc.)
+    r"(?<![a-zäöü\-])Management\b(?![\-\s]?(Summary|Zusammenfassung))": "Management → prüfen",
     r"\bProzess(e|en)?\b(?!or)": "Prozess → 'Ablauf' bevorzugt",
 }
 
