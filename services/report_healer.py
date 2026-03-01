@@ -3237,7 +3237,7 @@ def apply_segment_budget(
             if _last_sentence_end > 0:
                 _before_len = len(processed)
                 _keep_ratio = (_last_sentence_end + 1) / _before_len
-                if _keep_ratio >= 0.70:
+                if _keep_ratio >= 0.65:  # FIX-B40: Schwelle von 70% auf 65% gesenkt
                     processed = processed[:_last_sentence_end + 1]
 
                     # Offene HTML-Tags schließen
@@ -3262,7 +3262,7 @@ def apply_segment_budget(
                     )
                 else:
                     log.info(
-                        "[FIX-B38a] Section '%s' skipped: last sentence at %.0f%% (< 70%% threshold)",
+                        "[FIX-B38a] Section '%s' skipped: last sentence at %.0f%% (< 65%% threshold)",
                         section_name, _keep_ratio * 100
                     )
 
@@ -3314,7 +3314,7 @@ def apply_segment_budget(
 
             if _b39_last_end > 0:
                 _b39_keep_ratio = (_b39_last_end + 1) / len(_b39_content)
-                if _b39_keep_ratio >= 0.70:
+                if _b39_keep_ratio >= 0.65:  # FIX-B40: Schwelle von 70% auf 65% gesenkt
                     _b39_before = _b39_content
                     _b39_content = _b39_content[:_b39_last_end + 1]
 
@@ -3342,13 +3342,13 @@ def apply_segment_budget(
                 else:
                     _b39_skipped += 1
                     log.info(
-                        "[FIX-B39] Section '%s' skipped: last sentence at %.0f%% (< 70%%)",
+                        "[FIX-B39] Section '%s' skipped: last sentence at %.0f%% (< 65%%)",
                         _b39_key, _b39_keep_ratio * 100
                     )
 
     if _b39_applied > 0 or _b39_skipped > 0:
         log.info(
-            "[FIX-B39] Clean-ending pass complete: %d applied, %d skipped (70%% threshold)",
+            "[FIX-B39] Clean-ending pass complete: %d applied, %d skipped (65%% threshold)",
             _b39_applied, _b39_skipped
         )
 
