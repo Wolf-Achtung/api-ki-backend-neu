@@ -1038,11 +1038,17 @@ def render(briefing_obj: Any,
         'STARTER_KIT_COMPACT_HTML',
         'ROI_TRACKING_HTML',
         'PROMPT_FRAMEWORK_HTML',
+        'TOOLS_FUNDING_ALIGNMENT_HTML',  # FIX-B43: Hide if only "Keine Daten" placeholder
     ]
     for _y_key in _Y_EMPTY_CHECK_SECTIONS:
         _y_val = ctx.get(_y_key, '')
         if isinstance(_y_val, str) and _y_val:
             _y_text = re.sub(r'<[^>]+>', '', _y_val).strip()
+            # FIX-B43: Hide sections with "Keine Daten" placeholder
+            if 'Keine Daten' in _y_text:
+                ctx[_y_key] = ''
+                log.info("[Y1-4] Hidden placeholder section %s ('Keine Daten')", _y_key)
+                continue
             # Remove bare numbers and punctuation to check for real content
             _y_content = re.sub(r'[\d\.\s,;:\-]+', '', _y_text).strip()
             if len(_y_content) < 30:
