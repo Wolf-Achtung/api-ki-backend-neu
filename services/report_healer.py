@@ -2856,7 +2856,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "EXECUTIVE_SUMMARY_HTML": 4500,  # FIX-B36a: was 3000
         "QUICK_WINS_HTML": 10000,  # FIX-F1: LLM liefert 9K+ HTML
         "QUICK_WINS_HTML_LEFT": 10000,  # FIX-H3
-        "ROADMAP_90D_HTML": 6000,  # FIX-B36a: was 5000
+        "ROADMAP_90D_HTML": 7500,  # FIX-B43: was 6000 — Phase 3 wurde abgeschnitten
         "ROADMAP_12M_HTML": 12000,
         "RECOMMENDATIONS_HTML": 12000,  # FIX-629
         "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
@@ -2949,7 +2949,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "branch_deep_dive": 8500,
         "unternehmensprofil_markt": 7000,
         "roadmap": 7000,
-        "roadmap_90d": 4000,
+        "roadmap_90d": 5000,  # FIX-B43: was 4000 — Phase 3 wurde abgeschnitten
         "data_readiness": 3500,
         "ki_stack_summary": 3500,
         "pilot_plan": 3000,
