@@ -3257,7 +3257,7 @@ class PlatinValidator:
                 continue
             text = re.sub(r'<[^>]+>', '', html).strip()
             if text and len(text) > 50:
-                if not text[-1] in '.!?:)"\u00BB\u201D':
+                if not text[-1] in '.!?:)"\u00BB\u201D*':  # FIX-B41: '*' für LEAD_*-Sections (enden auf .**)
                     # FIX-B24-P3: Check if ending matches known safe patterns
                     _is_safe = False
                     _text_end = text[-40:]
