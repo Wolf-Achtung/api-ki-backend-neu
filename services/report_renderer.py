@@ -1047,7 +1047,7 @@ def render(briefing_obj: Any,
             # FIX-B43: Hide sections with "Keine Daten" placeholder
             if 'Keine Daten' in _y_text:
                 ctx[_y_key] = ''
-                log.info("[Y1-4] Hidden placeholder section %s ('Keine Daten')", _y_key)
+                log.info("[FIX-B43][Y1-4] Hidden placeholder section %s ('Keine Daten')", _y_key)
                 continue
             # Remove bare numbers and punctuation to check for real content
             _y_content = re.sub(r'[\d\.\s,;:\-]+', '', _y_text).strip()
