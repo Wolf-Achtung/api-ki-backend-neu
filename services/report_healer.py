@@ -3279,6 +3279,79 @@ def apply_segment_budget(
 
         result[section_name] = processed
 
+    # === FIX-B39: Clean-Ending-Check für ALLE Sections ===
+    # B38a fixte nur Sections nach FIX-G Trimming (over-budget).
+    # Viele TRUNCATED-Sections kommen direkt aus der GPT-Generierung
+    # und waren nie over-budget → B38a hat sie nie gesehen.
+    # BUDGET_EXEMPT Sections (SOFORT_START_HTML, CHALLENGE_30_TAGE_HTML, etc.)
+    # werden ebenfalls geprüft — ein sauberes Ende schadet keiner Section.
+    # B39 prüft ALLE String-Sections auf saubere Enden.
+    _terminal_chars = {'.', '!', '?', ':', ')', '"', '\u00BB', '\u201d'}
+    _b39_applied = 0
+    _b39_skipped = 0
+
+    for _b39_key in list(result.keys()):
+        _b39_content = result[_b39_key]
+        if not isinstance(_b39_content, str) or len(_b39_content) < 50:
+            continue
+        # Skip internal/meta keys
+        if _b39_key.startswith("_"):
+            continue
+
+        _b39_text = re.sub(r'</?\w+[^>]*>', '', _b39_content).rstrip()
+        if not _b39_text:
+            continue
+
+        if _b39_text[-1] not in _terminal_chars:
+            # Section endet nicht auf Satzzeichen → finde letzten vollständigen Satz
+            _b39_last_end = -1
+            for _b39_i in range(len(_b39_content) - 1, -1, -1):
+                if _b39_content[_b39_i] in {'.', '!', '?'}:
+                    _b39_after = _b39_content[_b39_i + 1:_b39_i + 3] if _b39_i + 1 < len(_b39_content) else ''
+                    if _b39_after == '' or _b39_after[0] in ' \n\t<' or _b39_after.startswith('</'):
+                        _b39_last_end = _b39_i
+                        break
+
+            if _b39_last_end > 0:
+                _b39_keep_ratio = (_b39_last_end + 1) / len(_b39_content)
+                if _b39_keep_ratio >= 0.70:
+                    _b39_before = _b39_content
+                    _b39_content = _b39_content[:_b39_last_end + 1]
+
+                    # Offene HTML-Tags schließen
+                    _b39_open = re.findall(r'<(p|li|ul|ol|div|section|span|td|tr|table)\b[^>]*>', _b39_content)
+                    _b39_close = re.findall(r'</(p|li|ul|ol|div|section|span|td|tr|table)>', _b39_content)
+                    _b39_tag_counts: dict = {}
+                    for _t in _b39_open:
+                        _b39_tag_counts[_t] = _b39_tag_counts.get(_t, 0) + 1
+                    for _t in _b39_close:
+                        _b39_tag_counts[_t] = _b39_tag_counts.get(_t, 0) - 1
+                    for _tag, _cnt in reversed(list(_b39_tag_counts.items())):
+                        for _ in range(max(0, _cnt)):
+                            _b39_content += f"</{_tag}>"
+
+                    result[_b39_key] = _b39_content
+                    _b39_applied += 1
+                    log.info(
+                        "[FIX-B39] Section '%s' clean-ending applied: "
+                        "removed %d trailing chars, ends now with '%s'",
+                        _b39_key,
+                        len(_b39_before) - len(_b39_content),
+                        re.sub(r'</?\w+[^>]*>', '', _b39_content).rstrip()[-30:]
+                    )
+                else:
+                    _b39_skipped += 1
+                    log.info(
+                        "[FIX-B39] Section '%s' skipped: last sentence at %.0f%% (< 70%%)",
+                        _b39_key, _b39_keep_ratio * 100
+                    )
+
+    if _b39_applied > 0 or _b39_skipped > 0:
+        log.info(
+            "[FIX-B39] Clean-ending pass complete: %d applied, %d skipped (70%% threshold)",
+            _b39_applied, _b39_skipped
+        )
+
     return result, sections_trimmed
 
 
