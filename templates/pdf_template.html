@@ -3865,6 +3865,54 @@
         }
 
         /* ================================================
+           FIX-VISUAL-P0: Globale SVG-Size-Guards für LLM-Output
+           Problem: LLM generiert SVGs ohne class-Attribute,
+           bestehende Guards greifen nicht
+           ================================================ */
+
+        /* Alle SVGs in section-body begrenzen, unabhängig von class */
+        .section-body svg {
+            max-width: 48px !important;
+            max-height: 48px !important;
+            display: inline-block !important;
+            vertical-align: middle !important;
+        }
+
+        /* AUSNAHMEN: Charts, Donut, Score — diese NICHT begrenzen! */
+        .donut-chart svg,
+        .chart-container svg,
+        svg.donut-svg,
+        .hero-page svg,
+        .score-badge svg,
+        [class*="chart"] svg,
+        [class*="donut"] svg,
+        .kpi-card svg,
+        .metric-card svg {
+            max-width: none !important;
+            max-height: none !important;
+        }
+
+        /* Standalone-SVGs (direkt als Kind von Containern) noch kleiner */
+        .section-body > svg,
+        .section-body > div > svg,
+        .section-body > p > svg {
+            max-width: 40px !important;
+            max-height: 40px !important;
+        }
+
+        /* LLM-generierte Inline-Font-Size auf Emojis begrenzen */
+        .section-body span[style*="font-size"] {
+            font-size: 24px !important;
+            line-height: 1.2 !important;
+        }
+
+        /* Bilder in LLM-Output begrenzen (außer Charts/Logos) */
+        .section-body img:not([class*="chart"]):not([class*="logo"]):not([class*="donut"]):not([class*="tuev"]):not([class*="tüv"]) {
+            max-width: 80px !important;
+            max-height: 80px !important;
+        }
+
+        /* ================================================
            TAKEAWAY - Content Quality Pack v1.2
            "Wenn Sie nur eines tun:" individueller Startpunkt
            ================================================ */

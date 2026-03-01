@@ -3657,6 +3657,20 @@ def _apply_pdf_inline_styles(html: str) -> str:
 
     result = pre_pattern.sub(add_pre_style, result)
 
+    # FIX-VISUAL-P0: SVGs ohne width/height bekommen feste Größe
+    # LLM generiert <svg viewBox="0 0 24 24"> ohne Dimensionen → Puppeteer rendert sie riesig
+    result = re.sub(
+        r'<svg(?![^>]*(?:width|height)\s*=)([^>]*)>',
+        r'<svg width="24" height="24"\1>',
+        result
+    )
+    # Zusätzlich: SVGs mit style="width:100%" o.ä. begrenzen
+    result = re.sub(
+        r'(<svg[^>]*)\s+style="[^"]*(?:width|height)\s*:\s*(?:100%|[2-9]\d{2,}px)[^"]*"',
+        r'\1 style="width:24px;height:24px"',
+        result
+    )
+
     # Fix 4: Replace emojis with custom SVG icons for reliable PDF rendering
     # Uses the icon_system module with branded SVG icons
     result = replace_emojis_with_icons(result, size=18)
