@@ -17641,19 +17641,10 @@ Digitalisierungs- und KI-Vorhaben relevant sein
 
     log.info(f"[{run_id}] 📦 Storing {len(serializable_sections)} sections in meta for Golden Gate")
 
-    # === PLATIN+++ PRE-RENDER VALIDATION ===
-    try:
-        from services.report_validator import validate_platin_ppp
-        _canon_bc = sections.get("_canonical_bc", {})
-        _p_scores = {"governance": sections.get("gov_score", 50), "security": sections.get("sec_score", 50)}
-        _p_meta = {"hauptleistung": answers.get("hauptleistung", ""), "bundesland": answers.get("bundesland", "")}
-        _p_passed, _p_errors, _p_warnings = validate_platin_ppp(sections, _canon_bc, _p_scores, _p_meta)
-        sections["_PLATIN_VALIDATION_PASSED"] = _p_passed
-        sections["_PLATIN_ERRORS"] = len(_p_errors)
-        sections["_PLATIN_WARNINGS"] = len(_p_warnings)
-        log.info(f"[{run_id}] [PLATIN+++] Pre-render validation: passed={_p_passed}, errors={len(_p_errors)}, warnings={len(_p_warnings)}")
-    except Exception as pv_err:
-        log.warning(f"[{run_id}] [PLATIN+++] Validation failed to run: {pv_err}")
+    # FIX-B38b: PLATIN+++ Validator-Block nach Healer verschoben (war hier)
+    # Grund: Validator zählte TRUNCATED bevor der Healer (FIX-B38a) die Enden
+    # bereinigen konnte. Neuer Standort: nach report_healer Aufruf.
+    # calc_quality_bonus() benötigt KEINE PLATIN-Variablen (nur _CONSISTENCY_*).
 
     # --- [FIX-B21-QUALITY-BONUS] ---
     # Quality-Bonus: +1 bis +3 auf score_gesamt basierend auf Pipeline-Qualitätsindikatoren
@@ -19106,6 +19097,23 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     # =========================================================================
     # END FIX-A-G: REPORT HEALER
     # =========================================================================
+
+    # === PLATIN+++ POST-HEALER VALIDATION ===
+    # FIX-B38b: Hierher verschoben (war vor dem Healer bei ~Zeile 17644).
+    # Muss NACH dem Healer laufen, damit FIX-B38a Clean Endings bereits
+    # angewendet sind und TRUNCATED-Count den tatsächlichen Zustand zeigt.
+    try:
+        from services.report_validator import validate_platin_ppp
+        _canon_bc = sections.get("_canonical_bc", {})
+        _p_scores = {"governance": sections.get("gov_score", 50), "security": sections.get("sec_score", 50)}
+        _p_meta = {"hauptleistung": answers.get("hauptleistung", ""), "bundesland": answers.get("bundesland", "")}
+        _p_passed, _p_errors, _p_warnings = validate_platin_ppp(sections, _canon_bc, _p_scores, _p_meta)
+        sections["_PLATIN_VALIDATION_PASSED"] = _p_passed
+        sections["_PLATIN_ERRORS"] = len(_p_errors)
+        sections["_PLATIN_WARNINGS"] = len(_p_warnings)
+        log.info(f"[{run_id}] [PLATIN+++] Post-healer validation: passed={_p_passed}, errors={len(_p_errors)}, warnings={len(_p_warnings)}")
+    except Exception as pv_err:
+        log.warning(f"[{run_id}] [PLATIN+++] Validation failed to run: {pv_err}")
 
     # =========================================================================
     # FIX-QW1: POST-HEALER Quick Wins Restore
