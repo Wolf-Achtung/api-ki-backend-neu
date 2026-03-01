@@ -3912,6 +3912,186 @@
             max-height: 80px !important;
         }
 
+        /* ================================================================
+           FIX-VISUAL-P1a: Tabellen-Styling für LLM-generierte Sections
+           Betrifft: S.31, S.34-35, S.42-43 (Tabellen ohne Header-Farbe/Zebra)
+           NICHT betroffen: Engine-generierte Tabellen (Vendor Audit, Branchenprofil)
+           ================================================================ */
+
+        .section-body table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 14px 0;
+            font-size: 9.5pt;
+            overflow: hidden;
+        }
+
+        .section-body table th {
+            background: var(--color-primary, #1E3A5F) !important;
+            color: #ffffff !important;
+            padding: 9px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 8.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            border-bottom: 2px solid #0f2740;
+        }
+
+        .section-body table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+            font-size: 9.5pt;
+            line-height: 1.45;
+        }
+
+        .section-body table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        /* Erste Spalte leicht hervorheben fuer bessere Lesbarkeit */
+        .section-body table td:first-child {
+            font-weight: 500;
+            color: var(--color-primary, #1E3A5F);
+        }
+
+        .section-body table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ================================================================
+           FIX-VISUAL-P1b: Textfluss-Styling fuer LLM-generierte Sections
+           Betrifft: S.9-13, S.21-22, S.36-45, S.51-54 (Textwuesten)
+           Verbessert: Ueberschriften, Absaetze, Listen, Code-Bloecke
+           NICHT betroffen: Engine-generierte Sections (eigene Klassen)
+           ================================================================ */
+
+        /* --- Ueberschriften in LLM-Content --- */
+        .section-body h3 {
+            color: var(--color-primary, #1E3A5F);
+            font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+            font-size: 13pt;
+            font-weight: 700;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 5px;
+            margin-top: 22px;
+            margin-bottom: 10px;
+        }
+
+        .section-body h4 {
+            color: #374151;
+            font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+            font-size: 11pt;
+            font-weight: 600;
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+
+        /* --- Absaetze mit besserem Zeilenabstand --- */
+        .section-body > p,
+        .section-body > div > p {
+            line-height: 1.6;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        /* --- Aufzaehlungen mit farbigen Bullets --- */
+        .section-body ul {
+            list-style: none;
+            padding-left: 18px;
+            margin: 10px 0;
+        }
+
+        .section-body ul > li {
+            position: relative;
+            padding-left: 16px;
+            margin-bottom: 6px;
+            line-height: 1.5;
+        }
+
+        .section-body ul > li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-accent, #10B981);
+        }
+
+        /* Verschachtelte Listen: zweite Ebene andere Farbe */
+        .section-body ul ul > li::before {
+            background: var(--color-primary, #1E3A5F);
+            width: 5px;
+            height: 5px;
+        }
+
+        /* --- Nummerierte Listen --- */
+        .section-body ol {
+            padding-left: 22px;
+            margin: 10px 0;
+        }
+
+        .section-body ol > li {
+            margin-bottom: 8px;
+            padding-left: 6px;
+            line-height: 1.5;
+        }
+
+        /* --- Bold-Text am Absatzanfang als visuellen Marker --- */
+        /* Viele LLM-Sections nutzen <p><strong>Label:</strong> Text</p> */
+        .section-body > p > strong:first-child,
+        .section-body > div > p > strong:first-child {
+            color: var(--color-primary, #1E3A5F);
+        }
+
+        /* --- Horizontale Linien als Abschnittstrenner --- */
+        .section-body hr {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 18px 0;
+        }
+
+        /* --- Code/Template-Bloecke (fuer S.52 Starter-Templates) --- */
+        .section-body pre {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-family: 'Courier New', monospace;
+            font-size: 8pt;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 10px 0;
+        }
+
+        .section-body code {
+            background: #f1f5f9;
+            padding: 1px 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 9pt;
+            border-radius: 3px;
+        }
+
+        /* pre > code: Kein doppelter Hintergrund */
+        .section-body pre > code {
+            background: none;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        /* --- Blockquotes (falls LLM welche generiert) --- */
+        .section-body blockquote {
+            border-left: 3px solid var(--color-accent, #10B981);
+            padding-left: 14px;
+            margin: 12px 0;
+            color: #4b5563;
+            font-style: italic;
+        }
+
         /* ================================================
            TAKEAWAY - Content Quality Pack v1.2
            "Wenn Sie nur eines tun:" individueller Startpunkt
