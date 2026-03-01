@@ -3305,7 +3305,7 @@ class PlatinValidator:
         and b25_enforcer + foerder_db prevent them from being recommended.
         At this pipeline stage (pre-render), stale mentions are expected and harmless.
         """
-        pass
+        log.info("[FIX-B43] STALE_FOERDER check skipped — programs handled by FIX-F6 final_sanitizer")
 
 
 def validate_platin_ppp(
