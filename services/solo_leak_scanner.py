@@ -184,10 +184,11 @@ def _is_allowed_term_context(term: str, context_snippet: str) -> bool:
             return True
         # FIX-B42: Allow product names containing "Teams" (e.g., "Microsoft Teams")
         _snippet_lower = context_snippet.lower()
-        _product_prefixes = ["microsoft", "ms", "google"]
-        for _prefix in _product_prefixes:
-            if _prefix in _snippet_lower:
-                return True
+        if "microsoft" in _snippet_lower or "google" in _snippet_lower:
+            return True
+        # "MS Teams" — word-boundary check to avoid matching "Umsetzung" etc.
+        if re.search(r'\bMS\b', context_snippet):
+            return True
     return False
 
 
