@@ -19098,6 +19098,78 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     # END FIX-A-G: REPORT HEALER
     # =========================================================================
 
+    # =========================================================================
+    # FIX-B40: Clean-Ending-Pass über ALLE Sections (direkt auf sections{})
+    # B38a/B39 in report_healer.py operieren auf string_sections (Subset).
+    # Der Validator prüft aber sections{} (Superset). 8 von 10 TRUNCATED-
+    # Sections wurden von B38a/B39 nie berührt (LEAD_*, text-only, etc.).
+    # B40 läuft direkt auf sections{} — dem exakten Dict das der Validator prüft.
+    # Platzierung: NACH Healer, VOR Validator.
+    # =========================================================================
+    import re as _re_b40
+    _b40_terminal_chars = {'.', '!', '?', ':', ')', '"', '\u00BB', '\u201d'}
+    _b40_applied = 0
+    _b40_skipped = 0
+
+    for _b40_key in list(sections.keys()):
+        _b40_val = sections[_b40_key]
+        if not isinstance(_b40_val, str) or len(_b40_val) < 50:
+            continue
+        if _b40_key.startswith("_"):
+            continue
+
+        _b40_text = _re_b40.sub(r'</?\w+[^>]*>', '', _b40_val).rstrip()
+        if not _b40_text:
+            continue
+
+        if _b40_text[-1] not in _b40_terminal_chars:
+            # Section endet nicht auf Satzzeichen → finde letzten vollständigen Satz
+            _b40_last_end = -1
+            for _b40_i in range(len(_b40_val) - 1, -1, -1):
+                if _b40_val[_b40_i] in {'.', '!', '?'}:
+                    _b40_after = _b40_val[_b40_i + 1:_b40_i + 3] if _b40_i + 1 < len(_b40_val) else ''
+                    if _b40_after == '' or _b40_after[0] in ' \n\t<' or _b40_after.startswith('</'):
+                        _b40_last_end = _b40_i
+                        break
+
+            if _b40_last_end > 0:
+                _b40_keep = (_b40_last_end + 1) / len(_b40_val)
+                if _b40_keep >= 0.65:  # P3: Schwelle 65% (gesenkt von 70%)
+                    _b40_before_len = len(_b40_val)
+                    _b40_val = _b40_val[:_b40_last_end + 1]
+
+                    # Offene HTML-Tags schließen
+                    _b40_open = _re_b40.findall(r'<(p|li|ul|ol|div|section|span|td|tr|table)\b[^>]*>', _b40_val)
+                    _b40_close = _re_b40.findall(r'</(p|li|ul|ol|div|section|span|td|tr|table)>', _b40_val)
+                    _b40_tc: dict = {}
+                    for _t in _b40_open:
+                        _b40_tc[_t] = _b40_tc.get(_t, 0) + 1
+                    for _t in _b40_close:
+                        _b40_tc[_t] = _b40_tc.get(_t, 0) - 1
+                    for _tag, _cnt in reversed(list(_b40_tc.items())):
+                        for _ in range(max(0, _cnt)):
+                            _b40_val += f"</{_tag}>"
+
+                    sections[_b40_key] = _b40_val
+                    _b40_applied += 1
+                    log.info(
+                        "[FIX-B40] Section '%s' clean-ending: removed %d chars, ends with '%s'",
+                        _b40_key,
+                        _b40_before_len - len(_b40_val),
+                        _re_b40.sub(r'</?\w+[^>]*>', '', _b40_val).rstrip()[-30:]
+                    )
+                else:
+                    _b40_skipped += 1
+                    log.info(
+                        "[FIX-B40] Section '%s' skipped: last sentence at %.0f%% (< 65%%)",
+                        _b40_key, _b40_keep * 100
+                    )
+
+    log.info(
+        "[FIX-B40] Clean-ending pass: %d applied, %d skipped (65%% threshold)",
+        _b40_applied, _b40_skipped
+    )
+
     # === PLATIN+++ POST-HEALER VALIDATION ===
     # FIX-B38b: Hierher verschoben (war vor dem Healer bei ~Zeile 17644).
     # Muss NACH dem Healer laufen, damit FIX-B38a Clean Endings bereits
