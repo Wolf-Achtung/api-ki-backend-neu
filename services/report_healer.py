@@ -3212,39 +3212,59 @@ def apply_segment_budget(
                 section_name, current_len, len(processed), budget
             )
 
-        # FIX-B36b: Clean Ending Check — prevent PLATIN TRUNCATED warnings
-        # After sentence-trimming, the last sentence might end with "..." (ellipsis
-        # from GPT output or from truncation). The PLATIN+++ validator flags any
-        # section ending with "..." as TRUNCATED. Fix: detect and remove the
-        # trailing incomplete fragment so the section ends on a clean sentence.
-        _stripped = processed.rstrip()
-        if _stripped.endswith('...') or _stripped.endswith('…'):
-            # Remove trailing ellipsis and find the last complete sentence
-            _clean = re.sub(r'[.…]{2,}\s*$', '', _stripped)  # strip trailing dots/ellipsis
-            # Also strip any trailing HTML close tags that might follow
-            _clean = re.sub(r'(</(?:p|li|div|span|td|tr|section)>\s*)*$', '', _clean).rstrip()
-            # Find last clean sentence boundary
-            _last_period = max(_clean.rfind('. '), _clean.rfind('.</'), _clean.rfind('.'))
-            _last_excl = max(_clean.rfind('! '), _clean.rfind('!</'), _clean.rfind('!'))
-            _last_quest = max(_clean.rfind('? '), _clean.rfind('?</'), _clean.rfind('?'))
-            _best_end = max(_last_period, _last_excl, _last_quest)
-            if _best_end > len(_clean) * 0.7:  # Keep at least 70% of content
-                processed = _clean[:_best_end + 1]
-                # Re-close any open HTML tags
-                _open_tags = re.findall(r'<(p|li|ul|ol|div|section|span|td|tr|table)(?:\s[^>]*)?>', processed)
-                _close_tags = re.findall(r'</(p|li|ul|ol|div|section|span|td|tr|table)>', processed)
-                _tag_counts: dict = {}
-                for _t in _open_tags:
-                    _tag_counts[_t] = _tag_counts.get(_t, 0) + 1
-                for _t in _close_tags:
-                    _tag_counts[_t] = _tag_counts.get(_t, 0) - 1
-                for _tag, _cnt in reversed(list(_tag_counts.items())):
-                    for _ in range(max(0, _cnt)):
-                        processed += f"</{_tag}>"
-                log.info(
-                    "[FIX-B36b] Section '%s' clean-ending applied: removed trailing '...' fragment",
-                    section_name
-                )
+        # FIX-B38a: Clean Ending Check — korrigierte Trigger-Bedingung
+        # B36b prüfte endswith('...') — triggerte NIE, weil:
+        #   1) ELLIPSIS-FIX (content_quality_enforcer.py:896) entfernt "..." vor dem Healer
+        #   2) FIX-G Sentence-Trimming schneidet an Satzgrenzen (endet auf ".", "!", "?")
+        #   3) Sections enden auf Wörtern ohne Satzzeichen, NICHT auf "..."
+        # Der PLATIN+++ Validator (report_validator.py:3260) prüft:
+        #   text[-1] NOT IN {. ! ? : ) " » \u201d}
+        # B38a nutzt dasselbe Kriterium. Root Cause: ANALYSE_B36b_TRIGGER_BUG.md
+        _text_only = re.sub(r'</?\w+[^>]*>', '', processed).rstrip()
+        _terminal_chars = {'.', '!', '?', ':', ')', '"', '\u00BB', '\u201d'}  # matches validator
+
+        if _text_only and len(_text_only) > 50 and _text_only[-1] not in _terminal_chars:
+            # Section endet nicht auf Satzzeichen → finde letzten vollständigen Satz
+            _last_sentence_end = -1
+            for _i in range(len(processed) - 1, -1, -1):
+                if processed[_i] in {'.', '!', '?'}:
+                    # Prüfe ob nach dem Zeichen Leerzeichen oder Tag kommt (nicht Abkürzung)
+                    _after = processed[_i + 1:_i + 3] if _i + 1 < len(processed) else ''
+                    if _after == '' or _after[0] in ' \n\t<' or _after.startswith('</'):
+                        _last_sentence_end = _i
+                        break
+
+            if _last_sentence_end > 0:
+                _before_len = len(processed)
+                _keep_ratio = (_last_sentence_end + 1) / _before_len
+                if _keep_ratio >= 0.70:
+                    processed = processed[:_last_sentence_end + 1]
+
+                    # Offene HTML-Tags schließen
+                    _open_tags = re.findall(r'<(p|li|ul|ol|div|section|span|td|tr|table)\b[^>]*>', processed)
+                    _close_tags = re.findall(r'</(p|li|ul|ol|div|section|span|td|tr|table)>', processed)
+                    _tag_counts: dict = {}
+                    for _t in _open_tags:
+                        _tag_counts[_t] = _tag_counts.get(_t, 0) + 1
+                    for _t in _close_tags:
+                        _tag_counts[_t] = _tag_counts.get(_t, 0) - 1
+                    for _tag, _cnt in reversed(list(_tag_counts.items())):
+                        for _ in range(max(0, _cnt)):
+                            processed += f"</{_tag}>"
+
+                    log.info(
+                        "[FIX-B38a] Section '%s' clean-ending applied: "
+                        "removed %d trailing chars (ended with '%s', now ends with '%s')",
+                        section_name,
+                        _before_len - len(processed),
+                        _text_only[-20:],
+                        re.sub(r'</?\w+[^>]*>', '', processed).rstrip()[-20:]
+                    )
+                else:
+                    log.info(
+                        "[FIX-B38a] Section '%s' skipped: last sentence at %.0f%% (< 70%% threshold)",
+                        section_name, _keep_ratio * 100
+                    )
 
         # Clean up
         processed = re.sub(r"<p>\s*</p>", "", processed)
