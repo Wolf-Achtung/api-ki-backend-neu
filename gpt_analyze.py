@@ -13866,6 +13866,33 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     except Exception as _gc_bc_err:
         log.warning("[FIX-B43] Gamechanger payback cleanup failed: %s", _gc_bc_err)
 
+    # FIX-B43b: Gamechanger-BC Disclaimer — explicit note that this is a separate scenario
+    try:
+        _gc_disc_html = sections.get("GAMECHANGER_HTML", "")
+        _gc_disc_tag = '<p class="gc-scenario-note">'
+        if (isinstance(_gc_disc_html, str) and len(_gc_disc_html) > 200
+                and _gc_disc_tag not in _gc_disc_html):
+            _gc_disclaimer = (
+                '<p class="gc-scenario-note" style="margin-top:12px;font-size:0.9em;color:#64748b;">'
+                '<em>Gamechanger-Szenario \u2014 der konservative Business Case '
+                'findet sich in der ROI-Simulation.</em></p>'
+            )
+            # Insert before final closing tags
+            import re as _re_gc_disc
+            _gc_disc_html = _re_gc_disc.sub(
+                r'((?:</div>\s*</div>\s*</div>|</section>|</article>)\s*)$',
+                _gc_disclaimer + r'\1',
+                _gc_disc_html
+            )
+            if _gc_disclaimer not in _gc_disc_html:
+                # Fallback: append at end
+                _gc_disc_html += _gc_disclaimer
+            sections["GAMECHANGER_HTML"] = _gc_disc_html
+            sections["gamechanger"] = _gc_disc_html
+            log.info("[FIX-B43b] Gamechanger BC disclaimer appended")
+    except Exception as _gc_disc_err:
+        log.warning("[FIX-B43b] Gamechanger disclaimer failed: %s", _gc_disc_err)
+
     # FIX-B729: Governance/Security Score Enforcer (HTML-aware regex, always-log)
     try:
         import re as _re_b729
@@ -18035,6 +18062,14 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             log.info(f"[{run_id}] [FIX-GRADE-UNIVERSAL] Classified {len(_informational_final)} "
                      f"informational warnings (not grade-blocking): "
                      f"{', '.join(set(getattr(w, 'category', '?') for w in _informational_final))}")
+            # FIX-B43: Extended informational categories for Grade A eligibility
+            _b43_cats = {getattr(w, 'category', '?') for w in _informational_final} & {
+                "INCOMPLETE_SENTENCE", "TONE_INCONSISTENCY", "TOOLS_LOW_CONFIDENCE",
+                "TOOLS_MISSING_CONFIDENCE", "TOOLS_SEGMENT_WEAKNESS", "TOOLS_OVERPOPULATION",
+                "HAUPTLEISTUNG_OVERUSE",
+            }
+            if _b43_cats:
+                log.info(f"[{run_id}] [FIX-B43] {len(_b43_cats)} warning types reclassified as informational: {', '.join(sorted(_b43_cats))}")
         # Override _final_warnings to only grade-blocking for count purposes
         _final_warnings = _grade_blocking_final
 
@@ -18999,6 +19034,36 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             )
         except Exception as e:
             log.warning(f"[{run_id}] [FIX-529][SOLO-COMPACT] Processing failed: {e} - using standard report")
+
+        # FIX-B43b: Post-compact minimum content threshold
+        # Sections with <150 chars text after compact look unprofessional (almost-empty boxes).
+        # Better to hide them entirely than show 1 line in a full-page box.
+        try:
+            import re as _re_b43b
+            _B43B_MIN_CONTENT = 150  # ~2 sentences minimum
+            # Sections that are intentionally short (score boxes, KPI one-liners, metadata)
+            _B43B_ALLOW_SHORT = {
+                "COVER_HTML", "UMSETZUNGSZEITRAUM_HTML", "TOC_HTML",
+                "REPORT_TYPE", "REPORT_TYPE_LABEL", "OPEN_INPUTS_HTML",
+                "SCORE_DRIVERS_HTML",
+            }
+            _b43b_hidden = 0
+            for _b43b_key in list(sections.keys()):
+                if _b43b_key in _B43B_ALLOW_SHORT or _b43b_key.startswith("_"):
+                    continue
+                _b43b_val = sections[_b43b_key]
+                if not isinstance(_b43b_val, str):
+                    continue
+                _b43b_text = _re_b43b.sub(r'<[^>]+>', '', _b43b_val).strip()
+                if 0 < len(_b43b_text) < _B43B_MIN_CONTENT:
+                    sections[_b43b_key] = ''
+                    _b43b_hidden += 1
+                    log.info("[FIX-B43b] Section '%s' hidden after compact: %d chars < %d min",
+                             _b43b_key, len(_b43b_text), _B43B_MIN_CONTENT)
+            if _b43b_hidden:
+                log.info("[FIX-B43b] Post-compact cleanup: %d thin sections hidden", _b43b_hidden)
+        except Exception as _b43b_err:
+            log.warning("[FIX-B43b] Post-compact min-content check failed: %s", _b43b_err)
 
         # =====================================================================
         # P0 LEAK-KILL: Apply lexicon and validate for Team/KMU leaks
