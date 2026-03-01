@@ -3221,7 +3221,7 @@ def apply_segment_budget(
         #   text[-1] NOT IN {. ! ? : ) " » \u201d}
         # B38a nutzt dasselbe Kriterium. Root Cause: ANALYSE_B36b_TRIGGER_BUG.md
         _text_only = re.sub(r'</?\w+[^>]*>', '', processed).rstrip()
-        _terminal_chars = {'.', '!', '?', ':', ')', '"', '\u00BB', '\u201d'}  # matches validator
+        _terminal_chars = {'.', '!', '?', ':', ')', '"', '\u00BB', '\u201d', '*'}  # FIX-B41: '*' für LEAD_* (.**)
 
         if _text_only and len(_text_only) > 50 and _text_only[-1] not in _terminal_chars:
             # Section endet nicht auf Satzzeichen → finde letzten vollständigen Satz
@@ -3286,7 +3286,7 @@ def apply_segment_budget(
     # BUDGET_EXEMPT Sections (SOFORT_START_HTML, CHALLENGE_30_TAGE_HTML, etc.)
     # werden ebenfalls geprüft — ein sauberes Ende schadet keiner Section.
     # B39 prüft ALLE String-Sections auf saubere Enden.
-    _terminal_chars = {'.', '!', '?', ':', ')', '"', '\u00BB', '\u201d'}
+    _terminal_chars = {'.', '!', '?', ':', ')', '"', '\u00BB', '\u201d', '*'}  # FIX-B41: '*' für LEAD_* (.**)
     _b39_applied = 0
     _b39_skipped = 0
 
