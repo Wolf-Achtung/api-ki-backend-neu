@@ -4092,6 +4092,164 @@
             font-style: italic;
         }
 
+        /* ================================================================
+           FIX-VISUAL-P3b: Erweiterte Selektoren basierend auf HTML-Diagnose
+
+           Problem 1: LLM nutzt <p><strong>Titel</strong></p> statt <h3>
+           Problem 2: Templates-Sections nutzen <h4> statt <h3>
+           Problem 3: Post-Processing setzt Inline-Styles die CSS ueberschreiben
+           ================================================================ */
+
+        /* --- Fake-Headings: <p><strong>Titel</strong></p> als Ueberschrift stylen --- */
+        /* Greift wenn ein <p> NUR ein <strong> als Inhalt hat = Fake-Heading */
+        .section-body > p > strong:only-child,
+        .section-body > div > p > strong:only-child {
+            display: block;
+            color: var(--color-primary, #1E3A5F) !important;
+            font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+            font-size: 12pt !important;
+            font-weight: 700;
+            margin-top: 18px;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        /* Eltern-<p> von Fake-Headings: Margin-Korrektur */
+        .section-body > p:has(> strong:only-child) {
+            margin-bottom: 2px;
+        }
+
+        /* --- <h4> Styling (templates_start, ai_policy_mini nutzen h4) --- */
+        .section-body h4 {
+            color: var(--color-primary, #1E3A5F) !important;
+            font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+            font-size: 11pt !important;
+            font-weight: 600;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            padding-bottom: 3px;
+            border-bottom: 1.5px solid #e2e8f0;
+        }
+
+        /* --- Fallback: Auch .chapter direkt targeten --- */
+        /* Falls Template-Aenderung nicht alle Sections erwischt */
+        section.chapter > p > strong:only-child,
+        section.chapter > div > p > strong:only-child {
+            display: block;
+            color: var(--color-primary, #1E3A5F) !important;
+            font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+            font-size: 12pt !important;
+            font-weight: 700;
+            margin-top: 18px;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        /* Text-Styling Fallback fuer .chapter-Container */
+        section.chapter > p,
+        section.chapter > div > p {
+            line-height: 1.6;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        section.chapter > ul,
+        section.chapter > div > ul {
+            list-style: none;
+            padding-left: 18px;
+            margin: 10px 0;
+        }
+
+        section.chapter > ul > li,
+        section.chapter > div > ul > li {
+            position: relative;
+            padding-left: 16px;
+            margin-bottom: 6px;
+            line-height: 1.5;
+        }
+
+        section.chapter > ul > li::before,
+        section.chapter > div > ul > li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-accent, #10B981);
+        }
+
+        section.chapter > ol,
+        section.chapter > div > ol {
+            padding-left: 22px;
+            margin: 10px 0;
+        }
+
+        section.chapter > ol > li,
+        section.chapter > div > ol > li {
+            margin-bottom: 8px;
+            padding-left: 6px;
+            line-height: 1.5;
+        }
+
+        /* Tabellen-Fallback fuer .chapter */
+        section.chapter table th {
+            background: var(--color-primary, #1E3A5F) !important;
+            color: #ffffff !important;
+            padding: 9px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 8.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        section.chapter table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+            font-size: 9.5pt;
+            line-height: 1.45;
+        }
+
+        section.chapter table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        /* --- Bold-Labels am Zeilenanfang (z.B. "Ziel:", "Schwerpunkt:") --- */
+        /* Fuer BEIDE Container-Typen */
+        .section-body > p > strong:first-child:not(:only-child),
+        .section-body > div > p > strong:first-child:not(:only-child),
+        section.chapter > p > strong:first-child:not(:only-child),
+        section.chapter > div > p > strong:first-child:not(:only-child) {
+            color: var(--color-primary, #1E3A5F) !important;
+        }
+
+        /* --- Post-Processing CSS-Klassen gezielt ansprechen --- */
+        /* Diese Klassen kommen aus den Python-Post-Processing-Funktionen */
+
+        /* Roadmap Phase Cards */
+        .roadmap-phase-card {
+            margin-bottom: 16px;
+            page-break-inside: avoid;
+        }
+
+        /* Gamechanger Decision Box */
+        .gamechanger-decision {
+            margin-bottom: 12px;
+        }
+
+        /* Empfehlungs-Cards */
+        .empfehlung-card,
+        .rec-card,
+        .recommendation-card-compact {
+            page-break-inside: avoid;
+            margin-bottom: 12px;
+        }
+
         /* ================================================
            TAKEAWAY - Content Quality Pack v1.2
            "Wenn Sie nur eines tun:" individueller Startpunkt
@@ -7821,17 +7979,23 @@
                 <!-- FIX-497: Conditional render to prevent empty pages -->
                 {% if RISKS_HTML and RISKS_HTML|trim and '<' in RISKS_HTML %}
                 <section class="chapter" style="page-break-before: always;">
-                    {{RISKS_HTML|safe}}
+                    <div class="section-body">
+                        {{RISKS_HTML|safe}}
+                    </div>
                 </section>
                 {% endif %}
                 {% if GAMECHANGER_HTML and GAMECHANGER_HTML|trim and '<' in GAMECHANGER_HTML %}
                 <section class="chapter" style="page-break-before: always;">
-                    {{GAMECHANGER_HTML|safe}}
+                    <div class="section-body">
+                        {{GAMECHANGER_HTML|safe}}
+                    </div>
                 </section>
                 {% endif %}
                 {% if RECOMMENDATIONS_HTML and RECOMMENDATIONS_HTML|trim and '<' in RECOMMENDATIONS_HTML %}
                 <section class="chapter" style="page-break-before: always;">
-                    {{RECOMMENDATIONS_HTML|safe}}
+                    <div class="section-body">
+                        {{RECOMMENDATIONS_HTML|safe}}
+                    </div>
                 </section>
                 {% endif %}
                 <!-- POINT 3: FUNDING TRUST BLOCK WITH EU BADGE -->
@@ -7878,7 +8042,9 @@
                 <!-- FIX-497: Conditional render to prevent empty pages -->
                 {% if FOERDERPOTENZIAL_HTML and FOERDERPOTENZIAL_HTML|trim and '<' in FOERDERPOTENZIAL_HTML %}
                 <section class="chapter">
-                    {{FOERDERPOTENZIAL_HTML|safe}}
+                    <div class="section-body">
+                        {{FOERDERPOTENZIAL_HTML|safe}}
+                    </div>
                 </section>
                 {% endif %}
                 <!-- SPRINT G19: Funding × Branch Alignment -->
