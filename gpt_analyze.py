@@ -3746,6 +3746,29 @@ def _apply_pdf_inline_styles(html: str) -> str:
             )
             result = re.sub(pattern, replacement, result, flags=re.DOTALL | re.IGNORECASE)
 
+    # FIX-VISUAL-P4a-LI: Auch <li><strong>Label:</strong> text</li> matchen
+    # Der Gamechanger-Prompt erzeugt Labels in <li>-Tags (nicht <p>),
+    # z.B. <li><strong>Bisher:</strong> Problem...</li>
+    for group in _BOX_PATTERNS:
+        for label in group["labels"]:
+            pattern_li = (
+                r'<li([^>]*)>\s*<strong([^>]*)>'
+                + re.escape(label)
+                + r'(?::?\s*)</strong>:?\s*(.*?)</li>'
+            )
+            replacement_li = (
+                r'<li\1 style="background:{bg};border-left:4px solid {border};'
+                r'border-radius:6px;padding:8px 12px;margin:6px 0;list-style:none;">'
+                r'<strong\2 style="color:{label_color} !important;">'
+                + label
+                + r':</strong> \3</li>'
+            ).format(
+                bg=group["bg"],
+                border=group["border"],
+                label_color=group["label_color"],
+            )
+            result = re.sub(pattern_li, replacement_li, result, flags=re.DOTALL | re.IGNORECASE)
+
     return result
 
 

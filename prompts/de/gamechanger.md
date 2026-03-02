@@ -54,8 +54,8 @@ DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
 
 
 VERTEILUNG (STRIKT!):
-1. ✅ Im h2-Titel: 1x {{hauptleistung}} (PFLICHT)
-2. ✅ Im Bruchpunkt h3: 1x (PFLICHT)
+1. ✅ Im Bruchpunkt-Titel: 1x {{hauptleistung}} (PFLICHT)
+2. ✅ In der obsoleten Logik: 1x (PFLICHT)
 3. ❌ Transformation: Nutze "diese Leistung" als Synonym
 4. ❌ Impact: Nutze "Ihr Kerngeschäft" als Synonym
 5. ✅ Erster Schritt: 1x (falls passend)
@@ -381,105 +381,111 @@ Die Transformation ermöglicht strategische Neupositionierung – nicht nur Opti
 
 -->
 
-<section class="section gamechanger">
-  <h2>Der strategische Gamechanger für {{hauptleistung}}</h2>
+<!--
+=============================================================================
+OUTPUT-STRUKTUR (NUR erlaubte HTML-Tags! Kein <section>, <div>, <h1>-<h4>!)
+=============================================================================
+WICHTIG: Die Struktur unten nutzt AUSSCHLIESSLICH erlaubte Tags:
+<p>, <ul>, <ol>, <li>, <strong>, <em>
+Jede Sektion beginnt mit einem Fake-Heading: <p><strong>Titel</strong></p>
+(allein in eigenem <p>-Tag, KEIN Fließtext danach im selben <p>!)
+=============================================================================
+-->
 
-  <div class="gamechanger-insight">
-    <h3>Strategischer Bruchpunkt bei {{hauptleistung}}</h3>
-    <!--
-    PHASE 3: INDIVIDUALISIERUNG PFLICHT!
-    Nutze {{hauptleistung}} statt {{OFFERING_LABEL}} wenn vorhanden.
-    Der Bruchpunkt muss {{ZEITERSPARNIS_PRIORITAET}} direkt adressieren.
-    -->
-    <p><strong>Die obsolete Logik:</strong></p>
-    <ul>
-      <!--
-      HIER: 3 kurze Bullets (je 1 Satz):
-      - Was wird bei {{hauptleistung}} falsch gedacht?
-      - PRIMÄR: Bezug zu {{ZEITERSPARNIS_PRIORITAET}} herstellen
-      - Format: "Bisher: [konkretes Problem bei {{hauptleistung}}]"
+<!-- SEKTION 1: Strategischer Bruchpunkt -->
+<p><strong>Strategischer Bruchpunkt bei {{hauptleistung}}</strong></p>
+<!--
+PHASE 3: INDIVIDUALISIERUNG PFLICHT!
+Nutze {{hauptleistung}} statt {{OFFERING_LABEL}} wenn vorhanden.
+Der Bruchpunkt muss {{ZEITERSPARNIS_PRIORITAET}} direkt adressieren.
+-->
+<p><strong>Die obsolete Logik:</strong></p>
+<ul>
+  <!--
+  HIER: 3 kurze Bullets (je 1 Satz):
+  - Was wird bei {{hauptleistung}} falsch gedacht?
+  - PRIMÄR: Bezug zu {{ZEITERSPARNIS_PRIORITAET}} herstellen
+  - Format: "<li><strong>Bisher:</strong> [konkretes Problem]</li>"
 
-      BEISPIEL Briefing 369:
-      - "Bisher: Jede KI-Readiness-Analyse als Custom-Entwicklung programmiert"
-      - "Obwohl 70% der Fragebogen-Logik wiederkehrend ist, startet jedes Projekt bei Null"
-      - "Der Hauptzeitfresser {{ZEITERSPARNIS_PRIORITAET}} wird nicht adressiert"
+  BEISPIEL Briefing 369:
+  - "<li><strong>Bisher:</strong> Jede KI-Readiness-Analyse als Custom-Entwicklung programmiert.</li>"
+  - "<li><strong>Denkfehler:</strong> Obwohl 70% der Logik wiederkehrend ist, startet jedes Projekt bei Null.</li>"
+  - "<li><strong>Konsequenz:</strong> Der Hauptzeitfresser wird nicht adressiert.</li>"
 
-      VERBOTEN: Generische Phrasen wie "Prozesse sind ineffizient"
-      -->
-    </ul>
-  </div>
+  VERBOTEN: Generische Phrasen wie "Prozesse sind ineffizient"
+  PFLICHT: Jedes <li> beginnt mit <strong>Label:</strong>
+  -->
+</ul>
 
-  <div class="gamechanger-transformation">
-    <h3>Die Transformation</h3>
-    <!--
-    PHASE 3: Die Transformation muss zu {{VISION_3_JAHRE}} führen.
-    -->
-    <p><strong>Die neue Wertschöpfungslogik:</strong></p>
-    <ul>
-      <!--
-      HIER: 3 kurze Bullets (je 1-2 Sätze):
-      - WIE verändert sich {{hauptleistung}}?
-      - WAS löst {{ZEITERSPARNIS_PRIORITAET}} als Hebel?
-      - Format: "Stattdessen: [konkreter Ansatz] → Weg zu {{VISION_3_JAHRE}}"
+<!-- SEKTION 2: Die Transformation -->
+<p><strong>Die Transformation</strong></p>
+<!--
+PHASE 3: Die Transformation muss zu {{VISION_3_JAHRE}} führen.
+-->
+<p><strong>Die neue Wertschöpfungslogik:</strong></p>
+<ul>
+  <!--
+  HIER: 3 kurze Bullets (je 1-2 Sätze):
+  - WIE verändert sich {{hauptleistung}}?
+  - WAS löst {{ZEITERSPARNIS_PRIORITAET}} als Hebel?
+  - Format: "<li><strong>Neue Logik:</strong> [Ansatz] → Weg zu {{VISION_3_JAHRE}}</li>"
 
-      BEISPIEL Briefing 369:
-      - "Stattdessen: Template-basierte Analyse statt Custom-Programmierung"
-      - "Ein Baukasten für {{hauptleistung}}, der 60% Programmieraufwand eliminiert"
-      - "Fundament für {{VISION_3_JAHRE}}: Skalierbare Analyse-Pipelines"
+  BEISPIEL Briefing 369:
+  - "<li><strong>Neue Logik:</strong> Template-basierte Analyse statt Custom-Programmierung.</li>"
+  - "<li><strong>Architektur:</strong> Ein Baukasten, der 60% Programmieraufwand eliminiert.</li>"
+  - "<li><strong>Erweiterungseffekt:</strong> Fundament für skalierbare Analyse-Pipelines.</li>"
 
-      VERBOTEN: "Von manuell zu automatisiert" (zu generisch!)
-      -->
-    </ul>
-  </div>
+  VERBOTEN: "Von manuell zu automatisiert" (zu generisch!)
+  PFLICHT: Jedes <li> beginnt mit <strong>Label:</strong>
+  -->
+</ul>
 
-  <div class="gamechanger-impact">
-    <h3>Warum das ein Gamechanger ist</h3>
-    <!--
-    PHASE 3: Strukturelle Vorteile für {{hauptleistung}} benennen.
-    -->
-    <ul>
-      <!--
-      HIER: 3 kurze Bullets (je 1 Satz):
-      - Struktureller Vorteil für {{hauptleistung}}
-      - Wie adressiert das {{ZEITERSPARNIS_PRIORITAET}}?
-      - Wie führt das zu {{VISION_3_JAHRE}}?
+<!-- SEKTION 3: Warum Gamechanger -->
+<p><strong>Warum das ein Gamechanger ist</strong></p>
+<!--
+PHASE 3: Strukturelle Vorteile für {{hauptleistung}} benennen.
+-->
+<ul>
+  <!--
+  HIER: 3 kurze Bullets (je 1 Satz):
+  - Struktureller Vorteil für {{hauptleistung}}
+  - Wie adressiert das {{ZEITERSPARNIS_PRIORITAET}}?
+  - Wie führt das zu {{VISION_3_JAHRE}}?
 
-      BEISPIEL Briefing 369:
-      - "Jede neue KI-Readiness-Analyse nutzt bewährte Komponenten statt Neuprogrammierung"
-      - "Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} von 40-60%"
-      - "Grundlage für {{VISION_3_JAHRE}}: Automatisierte Pipelines sind erweiterbar"
+  BEISPIEL Briefing 369:
+  - "<li><strong>Wirkung:</strong> Jede neue Analyse nutzt bewährte Komponenten.</li>"
+  - "<li><strong>Ergebnis:</strong> Zeitersparnis von 40-60% bei der Durchführung.</li>"
+  - "<li><strong>Meilenstein:</strong> Automatisierte Pipelines als Grundlage für Skalierung.</li>"
 
-      VERBOTEN: "spart Zeit" (zu vage!), "reduziert Kosten" (zu generisch!)
-      -->
-    </ul>
-  </div>
+  VERBOTEN: "spart Zeit" (zu vage!), "reduziert Kosten" (zu generisch!)
+  PFLICHT: Jedes <li> beginnt mit <strong>Label:</strong>
+  -->
+</ul>
 
-  <div class="gamechanger-action">
-    <h3>Erster realistischer Schritt</h3>
-    <!--
-    PHASE 3: Der erste Schritt muss {{ZEITERSPARNIS_PRIORITAET}} direkt angreifen.
-    Falls {{KI_GUARDRAILS}} vorhanden: Als Qualitätskriterium einbauen.
-    -->
-    <p><strong>In 2-4 Wochen umsetzbar:</strong></p>
-    <ol>
-      <!--
-      HIER: 3-5 kurze Bullets (je 1 Satz):
-      - Schritt 1: Direkt {{ZEITERSPARNIS_PRIORITAET}} adressieren
-      - Schritt 2: Bezug zu {{hauptleistung}}
-      - Schritt 3: {{KI_GUARDRAILS}} als Qualitätskriterium verankern
+<!-- SEKTION 4: Erster realistischer Schritt -->
+<p><strong>Erster realistischer Schritt</strong></p>
+<!--
+PHASE 3: Der erste Schritt muss {{ZEITERSPARNIS_PRIORITAET}} direkt angreifen.
+Falls {{KI_GUARDRAILS}} vorhanden: Als Qualitätskriterium einbauen.
+-->
+<p><strong>In 2-4 Wochen umsetzbar:</strong></p>
+<ol>
+  <!--
+  HIER: 3-5 kurze Bullets (je 1 Satz):
+  - Schritt 1: Direkt {{ZEITERSPARNIS_PRIORITAET}} adressieren
+  - Schritt 2: Bezug zu {{hauptleistung}}
+  - Schritt 3: {{KI_GUARDRAILS}} als Qualitätskriterium verankern
 
-      BEISPIEL Briefing 369:
-      - "Die 3 häufigsten Fragebogen-Strukturen für {{hauptleistung}} als Templates definieren"
-      - "Wiederverwendbare Auswertungs-Prompts dokumentieren"
-      - "Review-Checkliste mit {{KI_GUARDRAILS}} erstellen"
+  BEISPIEL Briefing 369:
+  - "<li><strong>Meilenstein:</strong> Die 3 häufigsten Fragebogen-Strukturen als Templates definieren.</li>"
+  - "<li><strong>Meilenstein:</strong> Wiederverwendbare Auswertungs-Prompts dokumentieren.</li>"
+  - "<li><strong>Meilenstein:</strong> Review-Checkliste mit Qualitätskriterien erstellen.</li>"
 
-      Passend für {{COMPANY_SIZE}}.
-      VERBOTEN: "Einen Prozess dokumentieren" (zu generisch!)
-      -->
-    </ol>
-  </div>
-
-</section>
+  Passend für {{COMPANY_SIZE}}.
+  VERBOTEN: "Einen Prozess dokumentieren" (zu generisch!)
+  PFLICHT: Jedes <li> beginnt mit <strong>Label:</strong>
+  -->
+</ol>
 
 <!--
 QUALITÄTS-SELBSTCHECK VOR OUTPUT (v7.1):
@@ -597,6 +603,28 @@ Beschreibe **einen umsetzbaren Startschritt**, der:
 - Ton: analytisch, souverän, entscheidungsorientiert
 
 Der Text soll wie eine **interne strategische Analyse** wirken, nicht wie Beratung.
+
+---
+
+### FORMATIERUNGS-PFLICHTEN (v7.2 — PDF-Rendering)
+
+Diese Regeln stellen sicher, dass der Output im PDF korrekt gerendert wird:
+
+1. **Fake-Headings**: Jeder Abschnittstitel steht ALLEIN in einem eigenen `<p>`-Tag:
+   - RICHTIG: `<p><strong>Strategischer Bruchpunkt</strong></p>`
+   - FALSCH: `<p><strong>Bruchpunkt:</strong> Dann folgt hier Text...</p>`
+   - Der Titel-`<p>` enthält NUR den `<strong>`-Text, KEINEN Fließtext
+
+2. **Label-Bullets**: Jedes `<li>` beginnt mit `<strong>Label:</strong>`:
+   - RICHTIG: `<li><strong>Bisher:</strong> Jede Analyse startet bei Null.</li>`
+   - FALSCH: `<li>Jede Analyse startet bei Null.</li>` (kein Label!)
+   - Erlaubte Labels: Bisher, Denkfehler, Konsequenz, Neue Logik, Architektur,
+     Erweiterungseffekt, Wirkung, Ergebnis, Meilenstein, Hinweis
+
+3. **Absatzlänge**: Maximal 2–4 Sätze pro `<p>`. Kein `<p>` über 60 Wörter.
+
+4. **Keine verbotenen Tags**: Kein `<h1>`–`<h4>`, kein `<section>`, kein `<div>`, kein `<article>`.
+   Überschriften werden AUSSCHLIESSLICH als `<p><strong>Titel</strong></p>` realisiert.
 
 ---
 
