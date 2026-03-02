@@ -170,6 +170,27 @@ BEISPIEL - SO NICHT:
 BEISPIEL - SO JA:
 ✅ <li><strong>Bisher:</strong> Jede Analyse startet bei Null, obwohl 70%
    der Logik wiederkehrend ist.</li> [= 15 Wörter = PERFEKT!]
+
+=============================================================================
+LABEL-FORMAT (KRITISCH FÜR RENDERING — PFLICHT!)
+=============================================================================
+Labels (Bisher, Neue Logik, Architektur, Konsequenz etc.) MÜSSEN exakt so
+formatiert werden, damit das Rendering-System farbige Boxen erzeugen kann:
+
+✅ RICHTIG — Text im SELBEN Tag wie das Label:
+<p><strong>Bisher:</strong> Der alte Ansatz war zeitintensiv.</p>
+<li><strong>Neue Logik:</strong> Automatisierte Vorlagen statt Neuentwicklung.</li>
+
+❌ FALSCH — Label und Text in GETRENNTEN Tags:
+<p><strong>Bisher:</strong></p>
+<p>Der alte Ansatz war zeitintensiv.</p>
+
+REGEL: Der Text MUSS im SELBEN <p> oder <li>-Tag wie das <strong>Label:</strong> stehen!
+
+LISTEN VERWENDEN (PFLICHT):
+- Nutze <ul><li> für Aufzählungen statt langer Fließtext-Absätze
+- Mindestens 2-3 Listen pro Gamechanger-Section
+- Listen lockern den Text visuell auf
 =============================================================================
 -->
 

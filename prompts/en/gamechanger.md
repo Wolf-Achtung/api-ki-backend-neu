@@ -73,6 +73,27 @@ EXAMPLE - WRONG:
 EXAMPLE - CORRECT:
 ✅ <li><strong>Previously:</strong> Each analysis starts from zero, even though 70%
    of the logic is recurring.</li> [= 15 words = PERFECT!]
+
+=============================================================================
+LABEL FORMAT (CRITICAL FOR RENDERING — MANDATORY!)
+=============================================================================
+Labels (Previously, New Logic, Architecture, Consequence etc.) MUST be formatted
+exactly like this so the rendering system can create colored boxes:
+
+✅ CORRECT — Text in the SAME tag as the label:
+<p><strong>Previously:</strong> The old approach was time-consuming.</p>
+<li><strong>New Logic:</strong> Automated templates instead of custom development.</li>
+
+❌ WRONG — Label and text in SEPARATE tags:
+<p><strong>Previously:</strong></p>
+<p>The old approach was time-consuming.</p>
+
+RULE: The text MUST be in the SAME <p> or <li> tag as the <strong>Label:</strong>!
+
+USE LISTS (MANDATORY):
+- Use <ul><li> for enumerations instead of long prose paragraphs
+- At least 2-3 lists per Gamechanger section
+- Lists visually break up the text
 =============================================================================
 -->
 
