@@ -3675,6 +3675,77 @@ def _apply_pdf_inline_styles(html: str) -> str:
     # Uses the icon_system module with branded SVG icons
     result = replace_emojis_with_icons(result, size=18)
 
+    # FIX-VISUAL-P4a: Gamechanger-Textmuster in farbige Boxen wrappen
+    # Erkennt <p><strong>Label:</strong> Fließtext</p> und wrapped in Highlight-Box
+    # Greift NUR auf spezifische Labels die im Gamechanger/Roadmap vorkommen
+
+    _BOX_PATTERNS = [
+        # Gamechanger-Patterns (lila Akzent)
+        {
+            "labels": [
+                "Bisher", "Denkfehler", "Konsequenz",
+                "Neue Logik", "Architektur", "Erweiterungseffekt",
+                "Marktposition", "Kapazitätssprung", "Produktkern",
+                "Skalierungsfähigkeit", "Wissenskapitalisierung",
+                "Strukturwandel", "Modellrolle",
+            ],
+            "bg": "#faf5ff",
+            "border": "#7c3aed",
+            "label_color": "#6d28d9",
+        },
+        # Risiko/Stop-Patterns (rot)
+        {
+            "labels": ["Stop-Regel", "Risiko", "Warnung", "Achtung"],
+            "bg": "#fef2f2",
+            "border": "#dc2626",
+            "label_color": "#b91c1c",
+        },
+        # Erfolg/Meilenstein-Patterns (grün)
+        {
+            "labels": ["Meilenstein", "Erfolgskriterium", "Ergebnis", "Wirkung"],
+            "bg": "#f0fdf4",
+            "border": "#16a34a",
+            "label_color": "#15803d",
+        },
+        # Hinweis/Info-Patterns (gelb)
+        {
+            "labels": ["Hinweis", "Beachten", "Wichtig", "Tipp"],
+            "bg": "#fffbeb",
+            "border": "#f59e0b",
+            "label_color": "#d97706",
+        },
+        # Förder-Patterns (grün-blau)
+        {
+            "labels": ["Förderchance", "Förderquote", "Zuschuss"],
+            "bg": "#ecfdf5",
+            "border": "#10b981",
+            "label_color": "#059669",
+        },
+    ]
+
+    for group in _BOX_PATTERNS:
+        for label in group["labels"]:
+            # Pattern: <p><strong>Label:</strong> Beliebiger Fließtext</p>
+            # Auch: <p><strong>Label</strong>: Fließtext</p>
+            # Auch: <p> <strong>Label:</strong> Fließtext</p> (mit Leerzeichen)
+            pattern = (
+                r'<p([^>]*)>\s*<strong([^>]*)>'
+                + re.escape(label)
+                + r'(?::?\s*)</strong>:?\s*(.*?)</p>'
+            )
+            replacement = (
+                r'<div style="background:{bg};border-left:4px solid {border};'
+                r'border-radius:6px;padding:12px 16px;margin:10px 0;">'
+                r'<p\1><strong\2 style="color:{label_color} !important;">'
+                + label
+                + r':</strong> \3</p></div>'
+            ).format(
+                bg=group["bg"],
+                border=group["border"],
+                label_color=group["label_color"],
+            )
+            result = re.sub(pattern, replacement, result, flags=re.DOTALL | re.IGNORECASE)
+
     return result
 
 
