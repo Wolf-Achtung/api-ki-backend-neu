@@ -1732,6 +1732,16 @@
         .section-body {
             page-break-inside: avoid;
         }
+        /* P5-Fix: Risiken-Section darf umbrechen (hat oft viel Content) */
+        .section[data-chapter="risiken"] .section-body {
+            page-break-inside: auto;
+        }
+        /* Auch für Qualitäts/Transparenz/Akzeptanz-Risiken falls separates Kapitel */
+        .section[data-chapter="qualitaet"] .section-body,
+        .section[data-chapter="transparenz"] .section-body,
+        .section[data-chapter="akzeptanz"] .section-body {
+            page-break-inside: auto;
+        }
         .quick-win, .quick-win-card, .quick-win-card-new {
             page-break-inside: avoid;
         }

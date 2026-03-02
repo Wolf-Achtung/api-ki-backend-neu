@@ -3583,6 +3583,114 @@ def get_foerderprogramme_for_report(
 # ==================== ENDE PHASE 4 INTEGRATION ====================
 
 
+def _apply_gamechanger_label_boxes(html: str) -> str:
+    """
+    Wendet farbige Box-Styles auf Gamechanger-Labels an (P5-Fix).
+
+    Unterstützt drei Formate:
+    - <p><strong>Label:</strong> Text</p>            (inline)
+    - <p><strong>Label:</strong></p>                  (standalone, Text folgt separat)
+    - <li><strong>Label:</strong> Text</li>           (list items)
+
+    Wird im Compact-Skipped-Pfad aufgerufen, damit Labels auch ohne
+    den vollen Legacy-Pipeline gestylt werden.
+    """
+    if not html:
+        return html
+
+    # Guard: Wenn bereits Box-Styles vorhanden, nicht nochmal anwenden
+    if 'border-left: 4px solid #7c3aed' in html or 'border-left:4px solid #7c3aed' in html:
+        return html
+
+    result = html
+
+    _BOX_GROUPS = [
+        # Gamechanger-Patterns (lila Akzent)
+        {
+            "labels": [
+                "Bisher", "Denkfehler", "Konsequenz",
+                "Neue Logik", "Architektur", "Erweiterungseffekt",
+                "Marktposition", "Kapazitätssprung", "Produktkern",
+                "Skalierungsfähigkeit", "Wissenskapitalisierung",
+                "Strukturwandel", "Modellrolle", "Strukturfehler",
+            ],
+            "bg": "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)",
+            "border": "#7c3aed",
+            "label_color": "#6d28d9",
+        },
+        # Risiko/Stop-Patterns (rot)
+        {
+            "labels": ["Stop-Regel", "Risiko", "Warnung", "Achtung"],
+            "bg": "#fef2f2",
+            "border": "#dc2626",
+            "label_color": "#b91c1c",
+        },
+        # Erfolg/Meilenstein-Patterns (grün)
+        {
+            "labels": ["Meilenstein", "Erfolgskriterium", "Ergebnis", "Wirkung"],
+            "bg": "#f0fdf4",
+            "border": "#16a34a",
+            "label_color": "#15803d",
+        },
+        # Hinweis/Info-Patterns (gelb)
+        {
+            "labels": ["Hinweis", "Beachten", "Wichtig", "Tipp"],
+            "bg": "#fffbeb",
+            "border": "#f59e0b",
+            "label_color": "#d97706",
+        },
+    ]
+
+    for group in _BOX_GROUPS:
+        bg = group["bg"]
+        border = group["border"]
+        label_color = group["label_color"]
+
+        box_style = (
+            f'style="background: {bg}; '
+            f'border-left: 4px solid {border}; '
+            f'padding: 12px 16px; margin: 12px 0; '
+            f'border-radius: 0 8px 8px 0;"'
+        )
+        label_style = f'style="color: {label_color} !important;"'
+
+        for label in group["labels"]:
+            escaped = re.escape(label)
+
+            # Pattern 1: <p><strong>Label:</strong> Text im selben Tag</p>
+            p_inline = (
+                rf'<p([^>]*)>\s*<strong([^>]*)>\s*{escaped}\s*:?\s*</strong>\s*:?\s*(.+?)</p>'
+            )
+            r_inline = (
+                rf'<div {box_style}><p\1><strong\2 {label_style}>'
+                rf'{label}:</strong> \3</p></div>'
+            )
+            result = re.sub(p_inline, r_inline, result, flags=re.DOTALL | re.IGNORECASE)
+
+            # Pattern 2: <p><strong>Label:</strong></p> (standalone — Text folgt separat)
+            p_standalone = (
+                rf'<p([^>]*)>\s*<strong([^>]*)>\s*{escaped}\s*:?\s*</strong>\s*:?\s*</p>'
+            )
+            r_standalone = (
+                rf'<div {box_style}><p\1><strong\2 {label_style}>'
+                rf'{label}:</strong></p></div>'
+            )
+            result = re.sub(p_standalone, r_standalone, result, flags=re.IGNORECASE)
+
+            # Pattern 3: <li><strong>Label:</strong> Text</li>
+            p_li = (
+                rf'<li([^>]*)>\s*<strong([^>]*)>\s*{escaped}\s*:?\s*</strong>\s*:?\s*(.+?)</li>'
+            )
+            r_li = (
+                rf'<li\1 {box_style}><strong\2 {label_style}>'
+                rf'{label}:</strong> \3</li>'
+            )
+            result = re.sub(p_li, r_li, result, flags=re.DOTALL | re.IGNORECASE)
+
+    log.info("[P5-FIX1] Applied gamechanger label boxes (changed: %s)", result != html)
+    return result
+
+
 def _apply_pdf_inline_styles(html: str) -> str:
     """
     Apply inline styles for Puppeteer PDF rendering compatibility.
@@ -13925,13 +14033,18 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                             _gc_words_after, _gc_min_words, _gc_words_before,
                         )
                         gamechanger_html = _gc_pre_compact
+                        # P5-Fix: Apply label boxes to reverted content too
+                        gamechanger_html = _apply_gamechanger_label_boxes(gamechanger_html)
                     else:
                         log.info(f"[CI-DESIGN] Gamechanger compact: {len(gamechanger_html)} chars ({_gc_words_after} words)")
                 else:
+                    # P5-Fix: Labels trotzdem mit Box-Styles versehen
+                    gamechanger_html = _apply_gamechanger_label_boxes(gamechanger_html)
                     log.info(
                         f"[CI-DESIGN][FIX-620] Gamechanger compact SKIPPED: "
                         f"{_gc_words_before} words < {_gc_compact_threshold} threshold "
-                        f"(min_words={_gc_min_words}, preserving full content for validator)"
+                        f"(min_words={_gc_min_words}, preserving full content for validator, "
+                        f"P5 label-boxes applied)"
                     )
             else:
                 # Fallback: Alter Flow
