@@ -7376,10 +7376,10 @@
 {% set variant_label = 'Leader' if variant == 'leader' else 'Accelerator' if variant == 'accelerator' else 'Builder' if variant == 'builder' else 'Starter' %}
 {% set score_level = 'excellent' if score_int >= 80 else 'good' if score_int >= 65 else 'medium' if score_int >= 50 else 'low' if score_int >= 30 else 'critical' %}
 {% set score_color = '#22c55e' if score_level == 'excellent' else '#84cc16' if score_level == 'good' else '#eab308' if score_level == 'medium' else '#f97316' if score_level == 'low' else '#ef4444' %}
-{% set gov_score = (dim_governance|default(0))|int %}
-{% set sec_score = (dim_sicherheit|default(0))|int %}
-{% set wert_score = (dim_wertschoepfung|default(0))|int %}
-{% set bef_score = (dim_befaehigung|default(0))|int %}
+{% set gov_score = (score_governance|default(dim_governance|default(0)))|int %}
+{% set sec_score = (score_sicherheit|default(dim_sicherheit|default(0)))|int %}
+{% set wert_score = (score_wertschoepfung|default(dim_wertschoepfung|default(0)))|int %}
+{% set bef_score = (score_befaehigung|default(dim_befaehigung|default(0)))|int %}
     <div class="page">
         <div class="content">
             <div class="content-inner">
@@ -7659,7 +7659,7 @@
             {% for decision in FINAL_CHECK_DECISIONS[:3] %}
             <div style="display: flex; gap: 6px; margin-bottom: 5px; font-size: 10pt; color: #1e3a8a;">
                 <span style="background: #3b82f6; color: white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 9pt; font-weight: 700; flex-shrink: 0;">{{ loop.index }}</span>
-                <span>{{ decision.title|default(decision) }}</span>
+                <span>{{ decision }}</span>
             </div>
             {% endfor %}
             {% else %}
@@ -7735,14 +7735,14 @@
     {{ EXECUTIVE_DECISION_HTML|safe }}
     {% elif FINAL_CHECK_DECISIONS %}
     {% for decision in FINAL_CHECK_DECISIONS %}
-    <div style="background: {% if decision.type == 'do' %}#f0fdf4; border: 1px solid #bbf7d0{% elif decision.type == 'dont' %}#fef2f2; border: 1px solid #fecaca{% else %}#fff7ed; border: 1px solid #fed7aa{% endif %}; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
+    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-            <span style="font-size: 16px;">{% if decision.type == 'do' %}✅{% elif decision.type == 'dont' %}🚫{% else %}⛔{% endif %}</span>
-            <span style="font-weight: 800; font-size: 12pt; text-transform: uppercase; letter-spacing: 1px; color: {% if decision.type == 'do' %}#047857{% elif decision.type == 'dont' %}#b91c1c{% else %}#c2410c{% endif %};">
-                {% if decision.type == 'do' %}TUN{% elif decision.type == 'dont' %}LASSEN{% else %}STOP-SIGNAL{% endif %}
+            <span style="background: {{ variant_color }}; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 12pt; font-weight: 700; flex-shrink: 0;">{{ loop.index }}</span>
+            <span style="font-weight: 800; font-size: 12pt; text-transform: uppercase; letter-spacing: 1px; color: #047857;">
+                AKTION {{ loop.index }}
             </span>
         </div>
-        <p style="font-size: 10pt; color: #374151; line-height: 1.6; margin: 0;">{{ decision.text|default(decision.title|default(decision)) }}</p>
+        <p style="font-size: 10pt; color: #374151; line-height: 1.6; margin: 0;">{{ decision }}</p>
     </div>
     {% endfor %}
     {% elif FINAL_CHECK_INTRO %}
@@ -8154,8 +8154,7 @@
         <div style="display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #f3f4f6;">
             <span style="background: {{ variant_color }}; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12pt; flex-shrink: 0;">{{ loop.index }}</span>
             <div>
-                <div style="font-size: 12pt; font-weight: 600; color: #111827;">{{ decision.title|default(decision) }}</div>
-                {% if decision.text %}<div style="font-size: 10pt; color: #6b7280;">{{ decision.text }}</div>{% endif %}
+                <div style="font-size: 12pt; font-weight: 600; color: #111827;">{{ decision }}</div>
             </div>
         </div>
         {% endfor %}
@@ -8177,7 +8176,12 @@
 
 {# ═══════════════════════════════════════════════════════════════ #}
 {#  EBENE 3: DEEP DIVE ANHANG                                    #}
+{#  DEAKTIVIERT in v6.0.1: Appendix verdoppelt Content aus       #}
+{#  Action Guide und löst Auto-Compactor aus (78 Seiten).        #}
+{#  Re-aktivieren wenn Backend Content-Splitting implementiert.  #}
+{#  Steuerung via: ENABLE_APPENDIX=true                          #}
 {# ═══════════════════════════════════════════════════════════════ #}
+{% if ENABLE_APPENDIX|default(false) %}
 
 <!-- APPENDIX COVER PAGE -->
 <div class="appendix-cover">
@@ -8402,7 +8406,8 @@
     </dl>
 </section>
 
-<!-- IMPRESSUM / DATENSCHUTZ (A14) -->
+<!-- IMPRESSUM / DATENSCHUTZ (A14) - always shown -->
+{% endif %}{# /ENABLE_APPENDIX #}
 <div class="impressum chapter" id="appendix-a14" style="page-break-before: always;">
     <div class="appendix-header">📖 ANHANG A14 · Impressum & Datenschutz</div>
     <div class="impressum-grid">
@@ -8412,7 +8417,7 @@
             KI-Sicherheit.jetzt – Wolf Hohl<br>
             Greifswalder Str. 224a<br>
             10405 Berlin</p>
-            <p>E-Mail: kontakt@ki-sicherheit.jetzt</p>
+            <p>E-Mail: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="365d595842575d42765d5f1b455f555e53445e535f42185c53424c42">[email&#160;protected]</a></p>
         </div>
         <div class="impressum-block">
             <h4>Haftungsausschluss</h4>
@@ -8440,7 +8445,7 @@
             <li>Widerruf erteilter Einwilligungen</li>
             <li>Beschwerde bei der Datenschutzbehörde</li>
         </ul>
-        <p>Wenn Sie von Ihren Rechten Gebrauch machen wollen, wenden Sie sich bitte an kontakt@ki-sicherheit.jetzt.</p>
+        <p>Wenn Sie von Ihren Rechten Gebrauch machen wollen, wenden Sie sich bitte an <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1d767273697c76695d7674306e747e75786f75787469337778696769">[email&#160;protected]</a>.</p>
     </div>
 </div>
 
@@ -8451,7 +8456,7 @@
 </div>
 
 <p class="small" style="text-align: center; color: var(--color-text-muted); margin-top: var(--space-lg);">
-    Report v6.0 · Template v6.0.0 · Generiert am {{ report_date }} · {{ report_id }}
+    Report v6.0 · Template v6.0.1 · Generiert am {{ report_date }} · {{ report_id }}
     {% if BUILD_ID %} · Build: {{ BUILD_ID }}{% endif %}
 </p>
 
