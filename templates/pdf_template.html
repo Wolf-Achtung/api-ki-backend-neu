@@ -4250,6 +4250,90 @@
             margin-bottom: 12px;
         }
 
+        /* ================================================================
+           FIX-VISUAL-P4b: Farbige Kapitel-Seitenbalken
+           Gibt jeder Section eine farbige linke Borduere zur Kapitel-Zuordnung
+           ================================================================ */
+
+        [data-chapter="roadmap"] > .section-body,
+        [data-chapter="roadmap"] > div > .section-body {
+            border-left: 4px solid #2563eb;
+            padding-left: 16px;
+        }
+
+        [data-chapter="gamechanger"] > .section-body,
+        [data-chapter="gamechanger"] > div > .section-body {
+            border-left: 4px solid #7c3aed;
+            padding-left: 16px;
+        }
+
+        [data-chapter="quickwins"] > .section-body,
+        [data-chapter="quickwins"] > div > .section-body {
+            border-left: 4px solid #059669;
+            padding-left: 16px;
+        }
+
+        [data-chapter="wirtschaftlichkeit"] > .section-body,
+        [data-chapter="wirtschaftlichkeit"] > div > .section-body {
+            border-left: 4px solid #0891b2;
+            padding-left: 16px;
+        }
+
+        [data-chapter="risiken"] > .section-body,
+        [data-chapter="risiken"] > div > .section-body {
+            border-left: 4px solid #dc2626;
+            padding-left: 16px;
+        }
+
+        [data-chapter="governance"] > .section-body,
+        [data-chapter="governance"] > div > .section-body {
+            border-left: 4px solid #1e40af;
+            padding-left: 16px;
+        }
+
+        [data-chapter="foerderung"] > .section-body,
+        [data-chapter="foerderung"] > div > .section-body {
+            border-left: 4px solid #16a34a;
+            padding-left: 16px;
+        }
+
+        [data-chapter="compliance"] > .section-body,
+        [data-chapter="compliance"] > div > .section-body {
+            border-left: 4px solid #b91c1c;
+            padding-left: 16px;
+        }
+
+        [data-chapter="empfehlungen"] > .section-body,
+        [data-chapter="empfehlungen"] > div > .section-body {
+            border-left: 4px solid #ea580c;
+            padding-left: 16px;
+        }
+
+        [data-chapter="tools"] > .section-body,
+        [data-chapter="tools"] > div > .section-body {
+            border-left: 4px solid #0d9488;
+            padding-left: 16px;
+        }
+
+        [data-chapter="templates"] > .section-body,
+        [data-chapter="templates"] > div > .section-body {
+            border-left: 4px solid #6366f1;
+            padding-left: 16px;
+        }
+
+        /* Engine-Sections optional */
+        [data-chapter="branche"] > .section-body { border-left: 4px solid #2563eb; padding-left: 16px; }
+        [data-chapter="vendor"] > .section-body { border-left: 4px solid #7c3aed; padding-left: 16px; }
+        [data-chapter="benchmark"] > .section-body { border-left: 4px solid #0891b2; padding-left: 16px; }
+
+        /* Seitenbalken NICHT auf spezielle Seiten anwenden */
+        .hero-page .section-body,
+        .exec-decision-page .section-body,
+        .exec-toc-page .section-body {
+            border-left: none !important;
+            padding-left: 0 !important;
+        }
+
         /* ================================================
            TAKEAWAY - Content Quality Pack v1.2
            "Wenn Sie nur eines tun:" individueller Startpunkt
@@ -7433,7 +7517,7 @@
 
                 <!-- MOVED: 90-Day Roadmap Decision (Detail) -->
                 {% if ROADMAP_90D_DECISION_HTML and ROADMAP_90D_DECISION_HTML|trim and '<' in ROADMAP_90D_DECISION_HTML %}
-                <div class="section chapter roadmap-decision-section">
+                <div class="section chapter roadmap-decision-section" data-chapter="roadmap">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">{{ ui("roadmap_kicker", "90-Tage-Plan") }}</span>
@@ -7450,7 +7534,7 @@
                 <!-- ADDED FIX-B3: 12-Monats-Roadmap -->
                 {% if ROADMAP_12M_HTML and ROADMAP_12M_HTML|trim and '<' in ROADMAP_12M_HTML %}
                 <div class="page-break"></div>
-                <div class="section chapter roadmap-12m-section">
+                <div class="section chapter roadmap-12m-section" data-chapter="roadmap">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">{{ ui("roadmap_12m_kicker", "Strategische Planung") }}</span>
@@ -7470,7 +7554,7 @@
 
                 <!-- MOVED: Gamechanger Decision (Detail) -->
                 {% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim and '<' in GAMECHANGER_DECISION_HTML %}
-                <div class="section chapter gamechanger-decision-section">
+                <div class="section chapter gamechanger-decision-section" data-chapter="gamechanger">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">{{ ui("gamechanger_kicker", "Strategische Optionen") }}</span>
@@ -7486,7 +7570,7 @@
 
                 <!-- MOVED: KI-Stack Summary (Detail) -->
                 {% if KI_STACK_SUMMARY_HTML and KI_STACK_SUMMARY_HTML|trim and '<' in KI_STACK_SUMMARY_HTML %}
-                <section class="section chapter" style="page-break-before: auto;">
+                <section class="section chapter" style="page-break-before: auto;" data-chapter="tools">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">{{ ui("ki_stack_kicker", "Executive KI-Stack") }}</span>
@@ -7606,7 +7690,7 @@
                 <!-- QUICK WINS - FIX-498 WP2: Conditional render -->
                 {% if QUICK_WINS_HTML and QUICK_WINS_HTML|trim and '<' in QUICK_WINS_HTML %}
                 <!-- DEBUG-ANCHOR: QUICK_WINS_DETAIL_START -->
-                <section class="section chapter" style="page-break-before: auto;">
+                <section class="section chapter" style="page-break-before: auto;" data-chapter="quickwins">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Schnelle Effekte</span>
@@ -7651,7 +7735,7 @@
                 <!-- G24: Branch Deep-Dive Addon (FINAL GO: fail-closed) -->
                 <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
                 {% if BRANCH_DEEP_DIVE_HTML and BRANCH_DEEP_DIVE_HTML|trim and '<' in BRANCH_DEEP_DIVE_HTML and not COMPACT_REPORT_MODE %}
-                <section class="section" id="branch-deep-dive" style="page-break-before: auto;">
+                <section class="section" id="branch-deep-dive" style="page-break-before: auto;" data-chapter="branche">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">
                             <span class="section-kicker">Branch Deep Dive</span>
@@ -7671,7 +7755,7 @@
                 <!-- G29: Risk Engine 2.0 – Konsolidierte Risikoanalyse -->
                 <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
                 {% if RISK_ENGINE_HTML and not COMPACT_REPORT_MODE %}
-                <section class="section chapter" id="risk-engine">
+                <section class="section chapter" id="risk-engine" data-chapter="risiken">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Risikoanalyse &amp; Compliance</span>
@@ -7744,7 +7828,7 @@
                 <!-- G35: Vendor Audit Engine – KI-TUV for Tools & Models -->
                 <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
                 {% if VENDOR_AUDIT_HTML %}  {# FIX-B720: removed COMPACT_REPORT_MODE gate — VENDOR always shown #}
-                <section class="section chapter" id="vendor-audit">
+                <section class="section chapter" id="vendor-audit" data-chapter="vendor">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Vendor Audit</span>
@@ -7764,7 +7848,7 @@
                 <!-- G36: Automation Roadmap Engine – Prozessanalyse & Transformationspfade -->
                 <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
                 {% if AUTOMATION_ROADMAP_HTML and not COMPACT_REPORT_MODE %}
-                <section class="section chapter" id="automation-roadmap">
+                <section class="section chapter" id="automation-roadmap" data-chapter="roadmap">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Automations-Roadmap</span>
@@ -7783,7 +7867,7 @@
                 {% endif %}
                 <!-- G30: Business Case Engine 2.0 – ROI-Simulation & Szenarien -->
                 {% if BUSINESS_CASE_ENGINE_HTML %}
-                <section class="section chapter" id="business-case-engine">
+                <section class="section chapter" id="business-case-engine" data-chapter="wirtschaftlichkeit">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">ROI-Simulation</span>
@@ -7847,7 +7931,7 @@
                 <!-- G37: Benchmark Engine – Branchenvergleich & Wettbewerbsposition -->
                 <!-- PLATIN+++ v5.4.1: Move to appendix for solo users -->
                 {% if BENCHMARK_ENGINE_HTML and not COMPACT_REPORT_MODE %}
-                <section class="section chapter" id="benchmark-engine">
+                <section class="section chapter" id="benchmark-engine" data-chapter="benchmark">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">
                             <span class="section-kicker">Benchmarking</span>
@@ -7866,7 +7950,7 @@
                 {% endif %}
                 <!-- G32: Recommendations Engine – Priorisierte Handlungsempfehlungen -->
                 {% if RECOMMENDATIONS_ENGINE_HTML %}
-                <section class="section chapter" id="recommendations-engine">
+                <section class="section chapter" id="recommendations-engine" data-chapter="empfehlungen">
                     <div class="section-header" data-ui="1">
                         <div class="section-title">
                             <span class="section-kicker">{{ ui("recommendations") }}</span>
@@ -7884,7 +7968,7 @@
                 </section>
                 {% endif %}
                 <!-- ROADMAP -->
-                <section class="section chapter">
+                <section class="section chapter" data-chapter="roadmap">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Orientierung</span>
@@ -7959,7 +8043,7 @@
                     </div>
                 </section>
                 <!-- BUSINESS CASE DETAIL -->
-                <section class="section chapter">
+                <section class="section chapter" data-chapter="wirtschaftlichkeit">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Wirtschaftlichkeit</span>
@@ -7978,21 +8062,21 @@
                 <!-- RISKS, GAMECHANGER, RECOMMENDATIONS, FUNDING -->
                 <!-- FIX-497: Conditional render to prevent empty pages -->
                 {% if RISKS_HTML and RISKS_HTML|trim and '<' in RISKS_HTML %}
-                <section class="chapter" style="page-break-before: always;">
+                <section class="chapter" style="page-break-before: always;" data-chapter="risiken">
                     <div class="section-body">
                         {{RISKS_HTML|safe}}
                     </div>
                 </section>
                 {% endif %}
                 {% if GAMECHANGER_HTML and GAMECHANGER_HTML|trim and '<' in GAMECHANGER_HTML %}
-                <section class="chapter" style="page-break-before: always;">
+                <section class="chapter" style="page-break-before: always;" data-chapter="gamechanger">
                     <div class="section-body">
                         {{GAMECHANGER_HTML|safe}}
                     </div>
                 </section>
                 {% endif %}
                 {% if RECOMMENDATIONS_HTML and RECOMMENDATIONS_HTML|trim and '<' in RECOMMENDATIONS_HTML %}
-                <section class="chapter" style="page-break-before: always;">
+                <section class="chapter" style="page-break-before: always;" data-chapter="empfehlungen">
                     <div class="section-body">
                         {{RECOMMENDATIONS_HTML|safe}}
                     </div>
@@ -8041,7 +8125,7 @@
                 {% endif %}
                 <!-- FIX-497: Conditional render to prevent empty pages -->
                 {% if FOERDERPOTENZIAL_HTML and FOERDERPOTENZIAL_HTML|trim and '<' in FOERDERPOTENZIAL_HTML %}
-                <section class="chapter">
+                <section class="chapter" data-chapter="foerderung">
                     <div class="section-body">
                         {{FOERDERPOTENZIAL_HTML|safe}}
                     </div>
@@ -8089,7 +8173,7 @@
                 {% endif %}
                 <!-- SPRINT B2.2: Starter Kit -->
                 {% if STARTER_KIT_HTML %}
-                <section class="section chapter" id="starter-kit" style="page-break-inside: auto;">
+                <section class="section chapter" id="starter-kit" style="page-break-inside: auto;" data-chapter="tools">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Ihr Einstieg</span>
@@ -8128,7 +8212,7 @@
                 {% endif %}
                 <!-- NEUE SEKTIONEN: Monetarisierung, Skill-Plan, Templates -->
                 {% if MONETARISIERUNG_HTML %}
-                <section class="section" style="page-break-before: auto;">
+                <section class="section" style="page-break-before: auto;" data-chapter="wirtschaftlichkeit">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Wertschöpfung</span>
@@ -8146,7 +8230,7 @@
                 </section>
                 {% endif %}
                 {% if KI_SKILLPLAN_HTML %}
-                <section class="section" style="page-break-before: auto;">
+                <section class="section" style="page-break-before: auto;" data-chapter="tools">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Kompetenzaufbau</span>
@@ -8164,7 +8248,7 @@
                 </section>
                 {% endif %}
                 {% if TEMPLATES_START_HTML %}
-                <section class="section" style="page-break-before: auto;">
+                <section class="section" style="page-break-before: auto;" data-chapter="templates">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Sofort loslegen</span>
@@ -8184,7 +8268,7 @@
                 <!-- NEUE SEKTIONEN: ROI Tracking, AI Policy, Kickoff, Prompt Framework -->
                 <!-- PLATIN+++ v5.4.2: Move to appendix for solo users -->
                 {% if ROI_TRACKING_HTML and not COMPACT_REPORT_MODE %}
-                <section class="section chapter">
+                <section class="section chapter" data-chapter="wirtschaftlichkeit">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Erfolgsmessung</span>
@@ -8202,7 +8286,7 @@
                 </section>
                 {% endif %}
                 {% if AI_POLICY_MINI_HTML %}
-                <section class="section" style="page-break-before: auto;">
+                <section class="section" style="page-break-before: auto;" data-chapter="governance">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">{{ ui("governance_section_kicker", "Governance") }}</span>
@@ -8221,7 +8305,7 @@
                 {% endif %}
                 <!-- SPRINT G7/G8: AI Act Compliance Section -->
                 {% if AI_ACT_RISK_LEVEL %}
-                <section class="section chapter ai-act-compliance" style="page-break-inside: auto;">
+                <section class="section chapter ai-act-compliance" data-chapter="compliance" style="page-break-inside: auto;">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">EU AI Act</span>
@@ -8359,7 +8443,7 @@
                 </section>
                 {% endif %}
                 {% if KICKOFF_VORLAGE_HTML and not COMPACT_REPORT_MODE %}
-                <section class="section chapter">
+                <section class="section chapter" data-chapter="templates">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Projektstart</span>
@@ -8377,7 +8461,7 @@
                 </section>
                 {% endif %}
                 {% if PROMPT_FRAMEWORK_HTML and not COMPACT_REPORT_MODE %}
-                <section class="section chapter">
+                <section class="section chapter" data-chapter="templates">
                     <div class="section-header">
                         <div class="section-title">
                             <span class="section-kicker">Anleitung</span>
