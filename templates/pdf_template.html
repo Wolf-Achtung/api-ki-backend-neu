@@ -4253,78 +4253,69 @@
         /* ================================================================
            FIX-VISUAL-P4b: Farbige Kapitel-Seitenbalken
            Gibt jeder Section eine farbige linke Borduere zur Kapitel-Zuordnung
+           FIX: Descendant-Selektor statt Child (>) weil section-header
+                zwischen data-chapter und section-body liegt
            ================================================================ */
 
-        [data-chapter="roadmap"] > .section-body,
-        [data-chapter="roadmap"] > div > .section-body {
+        [data-chapter="roadmap"] .section-body {
             border-left: 4px solid #2563eb;
             padding-left: 16px;
         }
 
-        [data-chapter="gamechanger"] > .section-body,
-        [data-chapter="gamechanger"] > div > .section-body {
+        [data-chapter="gamechanger"] .section-body {
             border-left: 4px solid #7c3aed;
             padding-left: 16px;
         }
 
-        [data-chapter="quickwins"] > .section-body,
-        [data-chapter="quickwins"] > div > .section-body {
+        [data-chapter="quickwins"] .section-body {
             border-left: 4px solid #059669;
             padding-left: 16px;
         }
 
-        [data-chapter="wirtschaftlichkeit"] > .section-body,
-        [data-chapter="wirtschaftlichkeit"] > div > .section-body {
+        [data-chapter="wirtschaftlichkeit"] .section-body {
             border-left: 4px solid #0891b2;
             padding-left: 16px;
         }
 
-        [data-chapter="risiken"] > .section-body,
-        [data-chapter="risiken"] > div > .section-body {
+        [data-chapter="risiken"] .section-body {
             border-left: 4px solid #dc2626;
             padding-left: 16px;
         }
 
-        [data-chapter="governance"] > .section-body,
-        [data-chapter="governance"] > div > .section-body {
+        [data-chapter="governance"] .section-body {
             border-left: 4px solid #1e40af;
             padding-left: 16px;
         }
 
-        [data-chapter="foerderung"] > .section-body,
-        [data-chapter="foerderung"] > div > .section-body {
+        [data-chapter="foerderung"] .section-body {
             border-left: 4px solid #16a34a;
             padding-left: 16px;
         }
 
-        [data-chapter="compliance"] > .section-body,
-        [data-chapter="compliance"] > div > .section-body {
+        [data-chapter="compliance"] .section-body {
             border-left: 4px solid #b91c1c;
             padding-left: 16px;
         }
 
-        [data-chapter="empfehlungen"] > .section-body,
-        [data-chapter="empfehlungen"] > div > .section-body {
+        [data-chapter="empfehlungen"] .section-body {
             border-left: 4px solid #ea580c;
             padding-left: 16px;
         }
 
-        [data-chapter="tools"] > .section-body,
-        [data-chapter="tools"] > div > .section-body {
+        [data-chapter="tools"] .section-body {
             border-left: 4px solid #0d9488;
             padding-left: 16px;
         }
 
-        [data-chapter="templates"] > .section-body,
-        [data-chapter="templates"] > div > .section-body {
+        [data-chapter="templates"] .section-body {
             border-left: 4px solid #6366f1;
             padding-left: 16px;
         }
 
         /* Engine-Sections optional */
-        [data-chapter="branche"] > .section-body { border-left: 4px solid #2563eb; padding-left: 16px; }
-        [data-chapter="vendor"] > .section-body { border-left: 4px solid #7c3aed; padding-left: 16px; }
-        [data-chapter="benchmark"] > .section-body { border-left: 4px solid #0891b2; padding-left: 16px; }
+        [data-chapter="branche"] .section-body { border-left: 4px solid #2563eb; padding-left: 16px; }
+        [data-chapter="vendor"] .section-body { border-left: 4px solid #7c3aed; padding-left: 16px; }
+        [data-chapter="benchmark"] .section-body { border-left: 4px solid #0891b2; padding-left: 16px; }
 
         /* Seitenbalken NICHT auf spezielle Seiten anwenden */
         .hero-page .section-body,
