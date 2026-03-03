@@ -14,6 +14,10 @@ Kickoff-Vorlage für den Start eines KI-Projekts.
 - **Zeitfresser-Priorität:** {{ZEITERSPARNIS_PRIORITAET}}
 - **KI-Ziele:** {{PROJEKTZIEL}}
 
+BRANCHENBEZEICHNUNG-REGEL:
+Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vorkommen.
+Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
+
 ## AUFGABE
 Erstelle eine strukturierte Kickoff-Vorlage für den Start eines KI-Projekts
 in **{{BRANCHE_LABEL}}** ({{UNTERNEHMENSGROESSE_LABEL}}).

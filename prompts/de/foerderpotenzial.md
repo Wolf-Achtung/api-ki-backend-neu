@@ -7,6 +7,10 @@ Developer:
 <!-- TOKEN-BUDGET: 4200 (solo:0.8x, team:1.0x, kmu:1.15x) -->
 <!-- FIX-B23-P1: Increased from 3200→4200, word targets raised to avoid SECTION_TOO_SHORT -->
 <!--
+BRANCHENBEZEICHNUNG-REGEL:
+Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vorkommen.
+Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
+
 HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
 - Budget: 11000 Zeichen HTML-Output — NICHT überschreiten!
 - Solo: max. 8000 Zeichen | Team: max. 10000 Zeichen | KMU: max. 12000 Zeichen
