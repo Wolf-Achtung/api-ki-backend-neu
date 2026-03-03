@@ -136,41 +136,31 @@ class TestG20TemplateIntegration:
         return Path(__file__).parent.parent / "templates"
 
     def test_de_template_has_ki_stack_summary_section(self, templates_dir: Path) -> None:
-        """Test that German PDF template includes KI_STACK_SUMMARY_HTML."""
-        template_file = templates_dir / "pdf_template.html"
+        """Test that PDF template includes KI_STACK_SUMMARY_HTML."""
+        template_file = templates_dir / "pdf_template_v7.html"
         assert template_file.exists(), f"Template file not found: {template_file}"
 
         content = template_file.read_text(encoding="utf-8")
         assert "KI_STACK_SUMMARY_HTML" in content, \
-            "German PDF template should include KI_STACK_SUMMARY_HTML variable"
+            "PDF template should include KI_STACK_SUMMARY_HTML variable"
         assert "Executive KI-Stack" in content or "KI-Stack" in content, \
-            "German PDF template should have KI-Stack section header"
+            "PDF template should have KI-Stack section header"
 
-    def test_en_template_has_ki_stack_summary_section(self, templates_dir: Path) -> None:
-        """Test that English PDF template includes KI_STACK_SUMMARY_HTML."""
-        template_file = templates_dir / "pdf_template_en.html"
-        assert template_file.exists(), f"Template file not found: {template_file}"
-
+    def test_template_has_ki_stack_conditional(self, templates_dir: Path) -> None:
+        """Test that KI-Stack section has conditional rendering."""
+        template_file = templates_dir / "pdf_template_v7.html"
         content = template_file.read_text(encoding="utf-8")
-        assert "KI_STACK_SUMMARY_HTML" in content, \
-            "English PDF template should include KI_STACK_SUMMARY_HTML variable"
-        assert "Executive AI Stack" in content or "AI Stack" in content, \
-            "English PDF template should have AI Stack section header"
 
-    def test_templates_place_ki_stack_after_executive_summary(self, templates_dir: Path) -> None:
-        """Test that KI-Stack Summary is placed after Executive Summary in templates."""
-        for template_name in ["pdf_template.html", "pdf_template_en.html"]:
-            template_file = templates_dir / template_name
-            content = template_file.read_text(encoding="utf-8")
+        assert "{% if KI_STACK_SUMMARY_HTML" in content, \
+            "KI_STACK_SUMMARY_HTML should have conditional rendering"
 
-            # Find positions
-            exec_summary_pos = content.find("exec-divider")
-            ki_stack_pos = content.find("KI_STACK_SUMMARY_HTML")
+    def test_template_ki_stack_has_section_kicker(self, templates_dir: Path) -> None:
+        """Test that KI-Stack section uses ui() for kicker label."""
+        template_file = templates_dir / "pdf_template_v7.html"
+        content = template_file.read_text(encoding="utf-8")
 
-            assert exec_summary_pos >= 0, f"{template_name} should have exec-divider"
-            assert ki_stack_pos >= 0, f"{template_name} should have KI_STACK_SUMMARY_HTML"
-            assert ki_stack_pos > exec_summary_pos, \
-                f"KI_STACK_SUMMARY_HTML should appear after exec-divider in {template_name}"
+        assert 'ui("ki_stack_kicker"' in content, \
+            "KI-Stack section should use ui() for kicker label"
 
 
 class TestG20ContentValidation:

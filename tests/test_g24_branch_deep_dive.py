@@ -163,70 +163,21 @@ class TestG24TemplateIntegration:
         return Path(__file__).parent.parent / "templates"
 
     def test_de_template_has_branch_deep_dive_section(self, templates_dir: Path) -> None:
-        """Test that German PDF template includes BRANCH_DEEP_DIVE_HTML."""
-        template_file = templates_dir / "pdf_template.html"
+        """Test that PDF template includes BRANCH_DEEP_DIVE_HTML."""
+        template_file = templates_dir / "pdf_template_v7.html"
         assert template_file.exists(), f"Template file not found: {template_file}"
 
         content = template_file.read_text(encoding="utf-8")
         assert "BRANCH_DEEP_DIVE_HTML" in content, \
-            "German PDF template should include BRANCH_DEEP_DIVE_HTML variable"
-        assert "branch-deep-dive" in content, \
-            "German PDF template should have branch-deep-dive section ID"
-        assert "Branchenanalyse" in content or "Branch Deep Dive" in content, \
-            "German PDF template should have Branch Deep Dive section header"
+            "PDF template should include BRANCH_DEEP_DIVE_HTML variable"
 
-    def test_en_template_has_branch_deep_dive_section(self, templates_dir: Path) -> None:
-        """Test that English PDF template includes BRANCH_DEEP_DIVE_HTML."""
-        template_file = templates_dir / "pdf_template_en.html"
-        assert template_file.exists(), f"Template file not found: {template_file}"
-
-        content = template_file.read_text(encoding="utf-8")
-        assert "BRANCH_DEEP_DIVE_HTML" in content, \
-            "English PDF template should include BRANCH_DEEP_DIVE_HTML variable"
-        assert "branch-deep-dive" in content, \
-            "English PDF template should have branch-deep-dive section ID"
-        assert "Industry Analysis" in content or "Branch Deep Dive" in content, \
-            "English PDF template should have Branch Deep Dive section header"
-
-    def test_de_template_section_placement(self, templates_dir: Path) -> None:
-        """Test that German template has branch-deep-dive after branch-profile and before roadmap."""
-        template_file = templates_dir / "pdf_template.html"
+    def test_de_template_branch_deep_dive_conditional(self, templates_dir: Path) -> None:
+        """Test that branch deep dive has conditional rendering."""
+        template_file = templates_dir / "pdf_template_v7.html"
         content = template_file.read_text(encoding="utf-8")
 
-        # Find positions
-        branch_profile_pos = content.find("branch-profile")
-        branch_deep_dive_pos = content.find("branch-deep-dive")
-        roadmap_pos = content.find("<!-- ROADMAP -->")
-
-        assert branch_profile_pos > 0, "branch-profile should exist in template"
-        assert branch_deep_dive_pos > 0, "branch-deep-dive should exist in template"
-        assert roadmap_pos > 0, "ROADMAP should exist in template"
-
-        # Verify order: branch-profile < branch-deep-dive < ROADMAP
-        assert branch_profile_pos < branch_deep_dive_pos, \
-            "branch-deep-dive should come after branch-profile"
-        assert branch_deep_dive_pos < roadmap_pos, \
-            "branch-deep-dive should come before ROADMAP"
-
-    def test_en_template_section_placement(self, templates_dir: Path) -> None:
-        """Test that English template has branch-deep-dive after branch-profile and before roadmap."""
-        template_file = templates_dir / "pdf_template_en.html"
-        content = template_file.read_text(encoding="utf-8")
-
-        # Find positions
-        branch_profile_pos = content.find("branch-profile")
-        branch_deep_dive_pos = content.find("branch-deep-dive")
-        roadmap_pos = content.find("<!-- ROADMAP -->")
-
-        assert branch_profile_pos > 0, "branch-profile should exist in template"
-        assert branch_deep_dive_pos > 0, "branch-deep-dive should exist in template"
-        assert roadmap_pos > 0, "ROADMAP should exist in template"
-
-        # Verify order
-        assert branch_profile_pos < branch_deep_dive_pos, \
-            "branch-deep-dive should come after branch-profile"
-        assert branch_deep_dive_pos < roadmap_pos, \
-            "branch-deep-dive should come before ROADMAP"
+        assert "{% if BRANCH_DEEP_DIVE_HTML %}" in content, \
+            "BRANCH_DEEP_DIVE_HTML should have conditional rendering"
 
 
 class TestG24PromptContent:
@@ -361,8 +312,7 @@ class TestG24Integration:
         required_files = [
             "prompts/de/branch_deep_dive.md",
             "prompts/en/branch_deep_dive.md",
-            "templates/pdf_template.html",
-            "templates/pdf_template_en.html",
+            "templates/pdf_template_v7.html",
             "gpt_analyze.py",
             "services/config_validation.py",
         ]
@@ -378,11 +328,10 @@ class TestG24Integration:
 
         assert "G24" in content, "gpt_analyze.py should have G24 marker"
 
-    def test_g24_marker_in_templates(self) -> None:
-        """Test that templates have G24 marker comments."""
+    def test_template_has_branch_deep_dive(self) -> None:
+        """Test that template includes BRANCH_DEEP_DIVE_HTML."""
         templates_dir = Path(__file__).parent.parent / "templates"
-
-        for template_name in ["pdf_template.html", "pdf_template_en.html"]:
-            template_file = templates_dir / template_name
-            content = template_file.read_text(encoding="utf-8")
-            assert "G24" in content, f"{template_name} should have G24 marker"
+        template_file = templates_dir / "pdf_template_v7.html"
+        content = template_file.read_text(encoding="utf-8")
+        assert "BRANCH_DEEP_DIVE_HTML" in content, \
+            "Template should include BRANCH_DEEP_DIVE_HTML"

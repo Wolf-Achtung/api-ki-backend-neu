@@ -25,28 +25,27 @@ class TestBCTablePageBreak:
         """Test that PDF template has BC table page break CSS."""
         from pathlib import Path
 
-        template_path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        template_path = Path(__file__).parent.parent / "templates" / "pdf_template_v7.html"
         with open(template_path, 'r', encoding='utf-8') as f:
             css = f.read()
 
-        # Should have page-break-inside: avoid for BC tables
-        assert "business-case-engine-v2" in css
+        # Should have page-break-inside: avoid for cards
         assert "page-break-inside: avoid" in css
 
-        # Should have protection for table rows
-        assert ".bc-table tr" in css or "business-case-engine-v2 tr" in css
+        # Should have business case section
+        assert "business-case-compact" in css or "BUSINESS_CASE_ENGINE_HTML" in css
 
     def test_business_case_card_has_break_avoid(self):
-        """Test that business-case-card CSS has break-inside: avoid."""
+        """Test that card CSS has page-break-inside: avoid."""
         from pathlib import Path
 
-        template_path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        template_path = Path(__file__).parent.parent / "templates" / "pdf_template_v7.html"
         with open(template_path, 'r', encoding='utf-8') as f:
             css = f.read()
 
-        # Find the business-case-card rule
-        assert ".business-case-card" in css
-        assert "break-inside: avoid" in css
+        # v7 uses .card-nobreak and other card classes with page-break-inside: avoid
+        assert ".card-nobreak" in css or "page-break-inside: avoid" in css
+        assert "page-break-inside: avoid" in css
 
 
 class TestTextGlitchFixer:

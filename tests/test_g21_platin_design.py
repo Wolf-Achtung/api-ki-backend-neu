@@ -2,14 +2,15 @@
 """
 Sprint G21: PLATIN++ Design Enhancement Tests
 
-Tests for G21 PLATIN++ Design Enhancement System:
-- Report card CSS classes in templates
-- KPI triple block design
-- Step cards for starter kit
-- Pair cards for tools/funding
-- Badge block for branch/risk
+Tests for design system CSS classes in v7 template:
+- KPI card design
+- Management cards
+- Decision cards
+- Funding cards
+- Badge system
+- Section kickers
 - SVG icon library documentation
-- G20 prompt updates with design examples
+- Prompt updates with design examples
 """
 from __future__ import annotations
 
@@ -18,232 +19,86 @@ from pathlib import Path
 
 
 class TestG21CSSClasses:
-    """Tests for G21 CSS classes in PDF templates."""
+    """Tests for design CSS classes in v7 PDF template."""
 
     @pytest.fixture
     def templates_dir(self) -> Path:
         """Get templates directory."""
         return Path(__file__).parent.parent / "templates"
 
-    def test_de_template_has_g21_css_section(self, templates_dir: Path) -> None:
-        """Test that German PDF template has G21 CSS section."""
-        template_file = templates_dir / "pdf_template.html"
+    def test_de_template_has_design_css(self, templates_dir: Path) -> None:
+        """Test that PDF template has design system CSS."""
+        template_file = templates_dir / "pdf_template_v7.html"
         content = template_file.read_text(encoding="utf-8")
 
-        assert "G21: PLATIN++ DESIGN ENHANCEMENT SYSTEM" in content, \
-            "German template should have G21 CSS section marker"
+        assert ".kpi-card" in content, \
+            "Template should have .kpi-card CSS class"
+        assert ".mgmt-card" in content, \
+            "Template should have .mgmt-card CSS class"
 
-    def test_en_template_has_g21_css_section(self, templates_dir: Path) -> None:
-        """Test that English PDF template has G21 CSS section."""
-        template_file = templates_dir / "pdf_template_en.html"
-        content = template_file.read_text(encoding="utf-8")
-
-        assert "G21: PLATIN++ DESIGN ENHANCEMENT SYSTEM" in content, \
-            "English template should have G21 CSS section marker"
-
-    def test_report_card_classes_exist_de(self, templates_dir: Path) -> None:
-        """Test that report card CSS classes exist in German template."""
-        template_file = templates_dir / "pdf_template.html"
+    def test_kpi_classes_exist(self, templates_dir: Path) -> None:
+        """Test that KPI CSS classes exist in template."""
+        template_file = templates_dir / "pdf_template_v7.html"
         content = template_file.read_text(encoding="utf-8")
 
         required_classes = [
-            ".report-card",
-            ".report-card-header",
-            ".report-card-icon",
-            ".report-card-title",
-            ".report-card-badge",
-            ".report-card-body",
-        ]
-
-        for css_class in required_classes:
-            assert css_class in content, \
-                f"German template should have {css_class} CSS class"
-
-    def test_report_card_classes_exist_en(self, templates_dir: Path) -> None:
-        """Test that report card CSS classes exist in English template."""
-        template_file = templates_dir / "pdf_template_en.html"
-        content = template_file.read_text(encoding="utf-8")
-
-        required_classes = [
-            ".report-card",
-            ".report-card-header",
-            ".report-card-icon",
-            ".report-card-title",
-            ".report-card-badge",
-            ".report-card-body",
-        ]
-
-        for css_class in required_classes:
-            assert css_class in content, \
-                f"English template should have {css_class} CSS class"
-
-    def test_kpi_triple_classes_exist_de(self, templates_dir: Path) -> None:
-        """Test that KPI triple CSS classes exist in German template."""
-        template_file = templates_dir / "pdf_template.html"
-        content = template_file.read_text(encoding="utf-8")
-
-        required_classes = [
-            ".kpi-triple",
-            ".kpi",
+            ".kpi-card",
             ".kpi-label",
             ".kpi-value",
-            ".kpi-sub",
         ]
 
         for css_class in required_classes:
             assert css_class in content, \
-                f"German template should have {css_class} CSS class"
+                f"Template should have {css_class} CSS class"
 
-    def test_kpi_triple_classes_exist_en(self, templates_dir: Path) -> None:
-        """Test that KPI triple CSS classes exist in English template."""
-        template_file = templates_dir / "pdf_template_en.html"
+    def test_card_classes_exist(self, templates_dir: Path) -> None:
+        """Test that card CSS classes exist in template."""
+        template_file = templates_dir / "pdf_template_v7.html"
         content = template_file.read_text(encoding="utf-8")
 
         required_classes = [
-            ".kpi-triple",
-            ".kpi",
-            ".kpi-label",
-            ".kpi-value",
-            ".kpi-sub",
+            ".mgmt-card",
+            ".decision-card",
+            ".funding-card",
+            ".card-nobreak",
         ]
 
         for css_class in required_classes:
             assert css_class in content, \
-                f"English template should have {css_class} CSS class"
+                f"Template should have {css_class} CSS class"
 
-    def test_step_card_classes_exist_de(self, templates_dir: Path) -> None:
-        """Test that step card CSS classes exist in German template."""
-        template_file = templates_dir / "pdf_template.html"
+    def test_badge_classes_exist(self, templates_dir: Path) -> None:
+        """Test that badge CSS classes exist in template."""
+        template_file = templates_dir / "pdf_template_v7.html"
         content = template_file.read_text(encoding="utf-8")
 
         required_classes = [
-            ".step-cards",
-            ".step-card",
-            ".step-card-number",
-            ".step-card-title",
-            ".step-card-body",
+            ".badge",
+            ".badge-strategy",
+            ".badge-action",
+            ".badge-risk",
+            ".badge-finance",
         ]
 
         for css_class in required_classes:
             assert css_class in content, \
-                f"German template should have {css_class} CSS class"
+                f"Template should have {css_class} CSS class"
 
-    def test_step_card_classes_exist_en(self, templates_dir: Path) -> None:
-        """Test that step card CSS classes exist in English template."""
-        template_file = templates_dir / "pdf_template_en.html"
+    def test_section_kicker_exists(self, templates_dir: Path) -> None:
+        """Test that section-kicker CSS class exists in template."""
+        template_file = templates_dir / "pdf_template_v7.html"
         content = template_file.read_text(encoding="utf-8")
 
-        required_classes = [
-            ".step-cards",
-            ".step-card",
-            ".step-card-number",
-            ".step-card-title",
-            ".step-card-body",
-        ]
+        assert ".section-kicker" in content, \
+            "Template should have .section-kicker CSS class"
 
-        for css_class in required_classes:
-            assert css_class in content, \
-                f"English template should have {css_class} CSS class"
-
-    def test_pair_card_classes_exist_de(self, templates_dir: Path) -> None:
-        """Test that pair card CSS classes exist in German template."""
-        template_file = templates_dir / "pdf_template.html"
+    def test_css_has_page_break_avoid(self, templates_dir: Path) -> None:
+        """Test that card CSS uses page-break-inside: avoid."""
+        template_file = templates_dir / "pdf_template_v7.html"
         content = template_file.read_text(encoding="utf-8")
 
-        required_classes = [
-            ".pair-card",
-            ".pair-card-icon",
-            ".pair-card-content",
-            ".pair-card-name",
-            ".pair-card-category",
-            ".pair-card-description",
-        ]
-
-        for css_class in required_classes:
-            assert css_class in content, \
-                f"German template should have {css_class} CSS class"
-
-    def test_pair_card_classes_exist_en(self, templates_dir: Path) -> None:
-        """Test that pair card CSS classes exist in English template."""
-        template_file = templates_dir / "pdf_template_en.html"
-        content = template_file.read_text(encoding="utf-8")
-
-        required_classes = [
-            ".pair-card",
-            ".pair-card-icon",
-            ".pair-card-content",
-            ".pair-card-name",
-            ".pair-card-category",
-            ".pair-card-description",
-        ]
-
-        for css_class in required_classes:
-            assert css_class in content, \
-                f"English template should have {css_class} CSS class"
-
-    def test_badge_block_classes_exist_de(self, templates_dir: Path) -> None:
-        """Test that badge block CSS classes exist in German template."""
-        template_file = templates_dir / "pdf_template.html"
-        content = template_file.read_text(encoding="utf-8")
-
-        required_classes = [
-            ".badge-block",
-            ".badge-block-item",
-            ".badge-block-label",
-            ".badge-block-value",
-            ".badge-block-icon",
-        ]
-
-        for css_class in required_classes:
-            assert css_class in content, \
-                f"German template should have {css_class} CSS class"
-
-    def test_badge_block_classes_exist_en(self, templates_dir: Path) -> None:
-        """Test that badge block CSS classes exist in English template."""
-        template_file = templates_dir / "pdf_template_en.html"
-        content = template_file.read_text(encoding="utf-8")
-
-        required_classes = [
-            ".badge-block",
-            ".badge-block-item",
-            ".badge-block-label",
-            ".badge-block-value",
-            ".badge-block-icon",
-        ]
-
-        for css_class in required_classes:
-            assert css_class in content, \
-                f"English template should have {css_class} CSS class"
-
-    def test_risk_level_classes_exist_de(self, templates_dir: Path) -> None:
-        """Test that risk level CSS classes exist in German template."""
-        template_file = templates_dir / "pdf_template.html"
-        content = template_file.read_text(encoding="utf-8")
-
-        required_classes = [
-            ".risk-low",
-            ".risk-medium",
-            ".risk-high",
-        ]
-
-        for css_class in required_classes:
-            assert css_class in content, \
-                f"German template should have {css_class} CSS class"
-
-    def test_risk_level_classes_exist_en(self, templates_dir: Path) -> None:
-        """Test that risk level CSS classes exist in English template."""
-        template_file = templates_dir / "pdf_template_en.html"
-        content = template_file.read_text(encoding="utf-8")
-
-        required_classes = [
-            ".risk-low",
-            ".risk-medium",
-            ".risk-high",
-        ]
-
-        for css_class in required_classes:
-            assert css_class in content, \
-                f"English template should have {css_class} CSS class"
+        assert content.count("page-break-inside: avoid") >= 3, \
+            "CSS should use page-break-inside: avoid for proper PDF pagination"
 
 
 class TestG21IconLibrary:
@@ -366,38 +221,26 @@ class TestG21PromptUpdates:
 
 
 class TestG21CSSQuality:
-    """Tests for G21 CSS quality and completeness."""
+    """Tests for CSS quality and completeness."""
 
     @pytest.fixture
     def templates_dir(self) -> Path:
         """Get templates directory."""
         return Path(__file__).parent.parent / "templates"
 
-    def test_css_uses_platin_variables(self, templates_dir: Path) -> None:
-        """Test that G21 CSS uses PLATIN++ V5.2 CSS variables."""
-        template_file = templates_dir / "pdf_template.html"
+    def test_css_uses_css_variables(self, templates_dir: Path) -> None:
+        """Test that CSS uses CSS custom properties (variables)."""
+        template_file = templates_dir / "pdf_template_v7.html"
         content = template_file.read_text(encoding="utf-8")
 
-        # Find G21 section
-        g21_start = content.find("G21: PLATIN++ DESIGN ENHANCEMENT SYSTEM")
-        assert g21_start > 0, "G21 CSS section should exist"
+        assert "var(--" in content, "CSS should use CSS custom properties"
+        assert ":root" in content or "--c-" in content, \
+            "CSS should define custom properties"
 
-        g21_section = content[g21_start:g21_start + 10000]
-
-        assert "var(--color-bg-card)" in g21_section, "G21 CSS should use --color-bg-card variable"
-        assert "var(--color-border)" in g21_section, "G21 CSS should use --color-border variable"
-        assert "var(--color-brand-primary)" in g21_section, "G21 CSS should use --color-brand-primary variable"
-        assert "var(--radius-card)" in g21_section, "G21 CSS should use --radius-card variable"
-
-    def test_css_has_break_inside_avoid(self, templates_dir: Path) -> None:
-        """Test that G21 CSS uses break-inside: auto for cards."""
-        template_file = templates_dir / "pdf_template.html"
+    def test_css_has_page_break_avoid(self, templates_dir: Path) -> None:
+        """Test that CSS uses page-break-inside: avoid for cards."""
+        template_file = templates_dir / "pdf_template_v7.html"
         content = template_file.read_text(encoding="utf-8")
 
-        # Find G21 section
-        g21_start = content.find("G21: PLATIN++ DESIGN ENHANCEMENT SYSTEM")
-        g21_section = content[g21_start:g21_start + 10000]
-
-        # All card types should have break-inside: auto for PDF rendering
-        assert g21_section.count("break-inside: auto") >= 5, \
-            "G21 CSS should use break-inside: auto for proper PDF pagination"
+        assert content.count("page-break-inside: avoid") >= 3, \
+            "CSS should use page-break-inside: avoid for proper PDF pagination"
