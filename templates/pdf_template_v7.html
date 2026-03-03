@@ -525,6 +525,53 @@ tr:last-child td { border-bottom: none; }
 }
 
 /* ══════════════════════════════════════════════════════
+   CONFIDENCE CARD (Decision Confidence Layer)
+   ══════════════════════════════════════════════════════ */
+.confidence-card {
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    padding: var(--sp-md);
+    page-break-inside: avoid;
+}
+.confidence-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: var(--sp-sm);
+}
+.confidence-header .confidence-icon { font-size: 14pt; }
+.confidence-header .confidence-title {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--c-primary);
+    margin: 0;
+}
+.confidence-header .confidence-date {
+    margin-left: auto;
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+}
+.confidence-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--sp-sm);
+}
+.confidence-block h4 {
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: var(--c-text);
+    margin: 0 0 6px 0;
+}
+.confidence-list {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 8.5pt;
+    color: var(--c-text-2);
+    line-height: 1.5;
+}
+
+/* ══════════════════════════════════════════════════════
    FUNDING PATH CARDS
    ══════════════════════════════════════════════════════ */
 .funding-card {
