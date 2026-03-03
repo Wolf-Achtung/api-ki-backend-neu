@@ -292,7 +292,7 @@ class TestDCLTemplate:
     @pytest.fixture
     def template_path(self) -> Path:
         """Get path to PDF template."""
-        return Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        return Path(__file__).parent.parent / "templates" / "pdf_template_v7.html"
 
     def test_template_has_dcl_placeholder(self, template_path: Path) -> None:
         """Test that template has DCL placeholder."""
@@ -311,15 +311,15 @@ class TestDCLTemplate:
         assert dcl_pos > exec_pos, "DCL should come after Executive Decision"
 
     def test_template_dcl_before_continue_note(self, template_path: Path) -> None:
-        """Test that DCL is placed before Weiterführende Details."""
+        """Test that DCL is placed before the Action Guide (Sofort-Start) section."""
         content = template_path.read_text(encoding="utf-8")
 
         dcl_pos = content.find("DECISION_CONFIDENCE_HTML")
-        continue_pos = content.find("Weiterführende Details")
+        continue_pos = content.find('id="sofort-start"')
 
         assert dcl_pos > 0, "Should have DECISION_CONFIDENCE_HTML"
-        assert continue_pos > 0, "Should have Weiterführende Details"
-        assert dcl_pos < continue_pos, "DCL should come before Weiterführende Details"
+        assert continue_pos > 0, "Should have sofort-start section"
+        assert dcl_pos < continue_pos, "DCL should come before Action Guide"
 
     def test_template_dcl_has_conditional_render(self, template_path: Path) -> None:
         """Test that DCL has conditional rendering."""
