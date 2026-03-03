@@ -19438,11 +19438,23 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     _b40_applied = 0
     _b40_skipped = 0
 
+    # FIX-B41-SKIP: Non-text keys that must NOT be modified by clean-ending pass
+    _b40_skip_keys = {
+        "LOGO_PRIMARY_SRC", "FOOTER_LEFT_LOGO_SRC", "FOOTER_MID_LOGO_SRC",
+        "FOOTER_RIGHT_LOGO_SRC", "FOOTER_BRANDS_HTML", "FEEDBACK_URL",
+        "THEME_CSS_VARS", "BUILD_ID", "CONTACT_EMAIL", "OWNER_NAME",
+        "TRANSITION_EXEC_TO_ACTION", "TRANSITION_QUICKWINS_TO_ROADMAP",
+        "TRANSITION_RISK_TO_FUNDING",
+    }
+
     for _b40_key in list(sections.keys()):
         _b40_val = sections[_b40_key]
         if not isinstance(_b40_val, str) or len(_b40_val) < 50:
             continue
         if _b40_key.startswith("_"):
+            continue
+        if _b40_key in _b40_skip_keys:
+            _b40_skipped += 1
             continue
 
         _b40_text = _re_b40.sub(r'</?\w+[^>]*>', '', _b40_val).rstrip()
