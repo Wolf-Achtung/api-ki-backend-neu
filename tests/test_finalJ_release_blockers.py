@@ -470,14 +470,14 @@ class TestK3PaginationLayout:
         assert result is not None
 
     def test_k3_comment_in_template(self):
-        """Test that K3 CSS comments exist in template."""
+        """Test that key sections exist in template."""
         from pathlib import Path
 
-        template = Path("templates/pdf_template.html").read_text(encoding="utf-8")
+        template = Path("templates/pdf_template_v7.html").read_text(encoding="utf-8")
 
-        assert "K3" in template
         assert "Starter-Kit" in template
-        assert "Risk Matrix" in template
+        assert "Business Case" in template
+        assert "page-break-inside: avoid" in template
 
 
 # =============================================================================

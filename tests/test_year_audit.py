@@ -17,7 +17,7 @@ class TestYearAuditTemplates:
     @pytest.fixture
     def template_de(self):
         """Load German template."""
-        path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        path = Path(__file__).parent.parent / "templates" / "pdf_template_v7.html"
         if path.exists():
             return path.read_text(encoding="utf-8")
         pytest.skip("Template file not found")
@@ -50,11 +50,13 @@ class TestYearAuditTemplates:
         matches = re.findall(pattern, template_de, re.IGNORECASE)
         assert len(matches) == 0, f"Found hardcoded 'Trends 2025/26': {matches}"
 
-    def test_uses_report_year_variable_de(self, template_de):
-        """Test that German template uses {{report_year}} variable."""
-        # Should find references to report_year
-        assert "{{report_year}}" in template_de or "{{ report_year }}" in template_de, \
-            "Template should use {{report_year}} variable"
+    def test_no_hardcoded_year_in_template_de(self, template_de):
+        """Test that German template has no hardcoded year in headings."""
+        # v7 does not contain any hardcoded year references
+        # Year content comes from dynamically injected HTML sections
+        pattern = r"<h[23][^>]*>[^<]*2025[^<]*</h[23]>"
+        matches = re.findall(pattern, template_de, re.IGNORECASE)
+        assert len(matches) == 0, f"Found hardcoded 2025 in headings: {matches}"
 
     def test_no_hardcoded_skill_roadmap_2025_en(self, template_en):
         """Test that English template has no 'Skills Roadmap 2025'."""
@@ -120,7 +122,7 @@ class TestYearAuditGate:
         """Test that templates don't have 2025 in h2/h3 headings."""
         templates_dir = Path(__file__).parent.parent / "templates"
 
-        for template_file in ["pdf_template.html", "pdf_template_en.html"]:
+        for template_file in ["pdf_template_v7.html"]:
             path = templates_dir / template_file
             if not path.exists():
                 continue

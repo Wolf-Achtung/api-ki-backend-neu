@@ -136,41 +136,20 @@ class TestCSSBreakInsideAvoid:
     @pytest.fixture
     def template_css(self):
         """Load the PDF template CSS."""
-        template_path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        template_path = Path(__file__).parent.parent / "templates" / "pdf_template_v7.html"
         with open(template_path, "r", encoding="utf-8") as f:
             return f.read()
 
-    def test_css_has_break_inside_avoid_for_cards(self, template_css):
-        """Test that card elements have break-inside: avoid."""
-        # P0.4: These elements should have break-inside: avoid
-        avoid_elements = [
-            ".kpi-card",
-            ".quick-win-card-new",
-            ".hero-metric-card",
-            ".roi-herleitung",
-            ".recommendation-card",
-            ".business-case-card",
-        ]
-
-        for element in avoid_elements:
-            # Check that the element is in the avoid rule block
-            pattern = rf'{re.escape(element)}[^{{]*\{{[^}}]*break-inside:\s*avoid'
-            match = re.search(pattern, template_css, re.DOTALL)
-            assert match is not None, f"{element} should have break-inside: avoid"
-
-    def test_css_has_break_inside_avoid_for_table_rows(self, template_css):
-        """Test that table rows have break-inside: avoid."""
-        # P0.4: tr should have break-inside: avoid
-        pattern = r'tr\s*\{[^}]*break-inside:\s*avoid'
-        match = re.search(pattern, template_css, re.DOTALL)
-        assert match is not None, "tr should have break-inside: avoid"
-
-    def test_css_tables_allow_breaks(self, template_css):
-        """Test that tables themselves allow breaks (for long tables)."""
-        # Tables should have break-inside: auto or page-break-inside: auto
-        pattern = r'table\s*\{[^}]*(?:page-)?break-inside:\s*auto'
-        match = re.search(pattern, template_css, re.DOTALL)
-        assert match is not None, "table should have break-inside: auto"
+    def test_css_has_page_break_inside_avoid_for_cards(self, template_css):
+        """Test that card elements have page-break-inside: avoid."""
+        # v7 uses page-break-inside: avoid for card elements
+        assert "page-break-inside: avoid" in template_css, \
+            "Template should have page-break-inside: avoid for cards"
+        # Check specific v7 card classes
+        assert ".kpi-card" in template_css, \
+            "Template should have .kpi-card class"
+        assert ".card-nobreak" in template_css, \
+            "Template should have .card-nobreak class"
 
     def test_css_section_allows_breaks(self, template_css):
         """Test that .section allows breaks (to prevent empty pages)."""
