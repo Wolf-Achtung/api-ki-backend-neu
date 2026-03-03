@@ -85,6 +85,13 @@ Wenn in ANDEREN Sektionen ROI erwähnt wird:
 
 ###############################################################################
 
+ROI-GUARDRAIL (STRIKT):
+- ROI-Werte IMMER zwischen 50% und 200% halten
+- Werte über 200%: auf "200% (gedeckelt)" setzen, NICHT den höheren Wert nennen
+- Payback NIEMALS unter 1 Monat angeben
+- Alle Zahlen KONSERVATIV schätzen — lieber unter- als überschätzen
+- KEINE Emojis in den Warnhinweisen
+
 ###############################################################################
 ##                    STANDORT KONSISTENZ (KRITISCH!)                        ##
 ###############################################################################
