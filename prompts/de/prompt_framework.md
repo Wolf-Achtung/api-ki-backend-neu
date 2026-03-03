@@ -8,6 +8,10 @@ Developer:
 <!--
 ZIEL: Kompaktes 5-Schritte-Framework für effektive KI-Prompts.
 
+BRANCHENBEZEICHNUNG-REGEL:
+Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vorkommen.
+Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
+
 PFLICHTSTRUKTUR:
 1. Die 5 Schritte (Kontext, Rolle, Aufgabe, Constraints, Format)
 2. Vollständiges Beispiel

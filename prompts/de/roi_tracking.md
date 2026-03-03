@@ -8,6 +8,10 @@ Developer:
 <!--
 ZIEL: Kompaktes ROI-Tracking-Framework für monatliche Erfolgsmessung von KI-Projekten.
 
+BRANCHENBEZEICHNUNG-REGEL:
+Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vorkommen.
+Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
+
 PFLICHTSTRUKTUR (3 Bereiche):
 1. KPIs definieren (3-5 messbare Kennzahlen)
 2. Tracking-Methode (wie messen, wer misst, wie oft)

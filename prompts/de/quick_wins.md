@@ -18,6 +18,10 @@ Jeder Quick Win ist ein JSON-Objekt mit **genau** diesen Keys:
 - `umsetzung` (mindestens vier volle Sätze, konkrete Tool-Namen, klare Reihenfolge)
 - `hinweis` (mindestens ein voller Satz, **immer** Verweis auf Business Case)
 
+BRANCHENBEZEICHNUNG-REGEL:
+Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vorkommen.
+Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
+
 ### Zahlen & Zeiten (STRIKT)
 - **Keine Ziffern** (0–9), **keine** Euro-Beträge, **keine** Prozentzeichen, **keine** Monats-/Stunden-/Tage-Angaben, **keine** Datumsangaben, **keine** Spannweiten.
 - Wenn wirtschaftliche Details naheliegen: schreibe **nur** sinngemäß „siehe Business Case" (ohne Zahlen).

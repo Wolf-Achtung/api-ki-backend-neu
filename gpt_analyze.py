@@ -11696,6 +11696,9 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         "roadmap_90d_decision": "roadmap_90d_decision",
         "gamechanger_decision": "gamechanger_decision",
         "ki_stack_summary": "ki_stack_summary",
+        # v7.1.1: Score Interpretation + Advisor Note
+        "score_interpretation": "score_interpretation",
+        "advisor_note": "advisor_note",
     }
     
     prompt_key = prompt_map.get(section_name)
@@ -12841,6 +12844,9 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         ("prompt_framework", "PROMPT_FRAMEWORK_HTML"),
         # G24: Branch Deep-Dive Addon
         ("branch_deep_dive", "BRANCH_DEEP_DIVE_HTML"),
+        # v7.1.1: Score Interpretation + Advisor Note
+        ("score_interpretation", "SCORE_INTERPRETATION_HTML"),
+        ("advisor_note", "ADVISOR_NOTE_HTML"),
     ]
 
     max_workers = int(os.getenv("GPT_PARALLEL_WORKERS", "10"))
@@ -15352,6 +15358,23 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     
     # BUILD_ID - timestamp for report generation tracking
     sections["BUILD_ID"] = f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M')}"
+
+    # v7.1.1: Static section transition texts (plain text, no HTML)
+    sections["TRANSITION_EXEC_TO_ACTION"] = (
+        "Die vorherigen Seiten haben Ihre Ausgangslage definiert \u2013 "
+        "Score, Reifegrad und strategische Leitplanken. "
+        "Ab hier wird es konkret: Ma\u00dfnahmen, Zeitpl\u00e4ne, Budget."
+    )
+    sections["TRANSITION_QUICKWINS_TO_ROADMAP"] = (
+        "Die Quick Wins liefern schnelle Erfolge innerhalb von Tagen. "
+        "F\u00fcr nachhaltige Wirkung braucht es einen strukturierten Plan \u2013 "
+        "Ihr 90-Tage-Fahrplan folgt auf der n\u00e4chsten Seite."
+    )
+    sections["TRANSITION_RISK_TO_FUNDING"] = (
+        "Die Risiko-Analyse zeigt, wo Handlungsbedarf besteht. "
+        "Die gute Nachricht: F\u00fcr viele dieser Ma\u00dfnahmen gibt es "
+        "F\u00f6rderprogramme, die Ihre Investition deutlich reduzieren."
+    )
 
     # Problem #7 FIX: Personalized report subtitle from hauptleistung
     hauptleistung = answers.get("hauptleistung", "").strip()
@@ -19438,11 +19461,23 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     _b40_applied = 0
     _b40_skipped = 0
 
+    # FIX-B41-SKIP: Non-text keys that must NOT be modified by clean-ending pass
+    _b40_skip_keys = {
+        "LOGO_PRIMARY_SRC", "FOOTER_LEFT_LOGO_SRC", "FOOTER_MID_LOGO_SRC",
+        "FOOTER_RIGHT_LOGO_SRC", "FOOTER_BRANDS_HTML", "FEEDBACK_URL",
+        "THEME_CSS_VARS", "BUILD_ID", "CONTACT_EMAIL", "OWNER_NAME",
+        "TRANSITION_EXEC_TO_ACTION", "TRANSITION_QUICKWINS_TO_ROADMAP",
+        "TRANSITION_RISK_TO_FUNDING",
+    }
+
     for _b40_key in list(sections.keys()):
         _b40_val = sections[_b40_key]
         if not isinstance(_b40_val, str) or len(_b40_val) < 50:
             continue
         if _b40_key.startswith("_"):
+            continue
+        if _b40_key in _b40_skip_keys:
+            _b40_skipped += 1
             continue
 
         _b40_text = _re_b40.sub(r'</?\w+[^>]*>', '', _b40_val).rstrip()
