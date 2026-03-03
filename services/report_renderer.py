@@ -30,6 +30,54 @@ from services.pipeline_sanitizers import fix_double_encoded_utf8
 
 log = logging.getLogger(__name__)
 
+# Emoji regex for stripping emojis from backend-generated HTML blocks
+_EMOJI_RE = re.compile(
+    "["
+    "\U0001F600-\U0001F64F"  # Emoticons
+    "\U0001F300-\U0001F5FF"  # Misc Symbols and Pictographs
+    "\U0001F680-\U0001F6FF"  # Transport and Map Symbols
+    "\U0001F1E0-\U0001F1FF"  # Flags
+    "\U0001F900-\U0001F9FF"  # Supplemental Symbols
+    "\U0001FA00-\U0001FA6F"  # Chess Symbols
+    "\U0001FA70-\U0001FAFF"  # Symbols Extended-A
+    "\U00002702-\U000027B0"  # Dingbats
+    "\U000024C2-\U0001F251"  # Enclosed characters
+    "\U0000FE0F"             # Variation Selector-16
+    "\U0000200D"             # Zero Width Joiner
+    "\U00002600-\U000026FF"  # Misc Symbols
+    "\U00002700-\U000027BF"  # Dingbats
+    "\U0000FE00-\U0000FE0F"  # Variation Selectors
+    "\U0000231A-\U0000231B"  # Watch, Hourglass
+    "\U000023E9-\U000023F3"  # Various symbols
+    "\U000023F8-\U000023FA"  # Various symbols
+    "\U000025AA-\U000025AB"  # Squares
+    "\U000025B6\U000025C0"   # Play/Reverse buttons
+    "\U000025FB-\U000025FE"  # Squares
+    "\U00002B05-\U00002B07"  # Arrows
+    "\U00002B1B-\U00002B1C"  # Squares
+    "\U00002B50\U00002B55"   # Star, Circle
+    "\U00003030\U0000303D"   # Wavy Dash, Part Alternation Mark
+    "\U00003297\U00003299"   # Circled Ideographs
+    "]+",
+    flags=re.UNICODE
+)
+
+
+def _strip_emojis(text: str) -> str:
+    """Remove all emojis from a string. Safe for HTML content."""
+    if not text or not isinstance(text, str):
+        return text
+    return _EMOJI_RE.sub("", text)
+
+
+def _strip_emojis_from_context(context: dict) -> dict:
+    """Strip emojis from all *_HTML template variables in the render context."""
+    for key in list(context.keys()):
+        if isinstance(context[key], str) and (key.endswith("_HTML") or key.endswith("_html")):
+            context[key] = _strip_emojis(context[key])
+    return context
+
+
 # N3: Pre-compute a single regex pattern for O(n) leak detection instead of O(n*phrases)
 # This matches ANY leak phrase in a single pass through the HTML
 _LEAK_PATTERN = re.compile(
@@ -874,7 +922,8 @@ def render(briefing_obj: Any,
     if _a2_fixes > 0:
         log.info("[A2] Total template phrases stripped: %d", _a2_fixes)
 
-
+    # V7: Strip emojis from all backend-generated HTML blocks
+    _strip_emojis_from_context(ctx)
 
     html = env.get_template(tpl_name).render(**ctx)
 

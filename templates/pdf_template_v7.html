@@ -111,7 +111,7 @@ tr:last-child td { border-bottom: none; }
 .page { max-width: 210mm; margin: 0 auto; }
 
 /* ══ HARD PAGE BREAKS (max 3) ═══════════════════════ */
-.break-cover-to-toc { page-break-before: always; }
+/* .break-cover-to-toc removed — cover uses page-break-after: always */
 .break-exec-to-action { page-break-before: always; }
 .break-action-to-imprint { page-break-before: always; }
 
@@ -219,7 +219,15 @@ tr:last-child td { border-bottom: none; }
     font-size: 10pt;
     line-height: 1.65;
 }
+.section-body p + p { margin-top: 6px; }
+.section-body h4 + p { margin-top: 4px; }
+.section-body p, .section-body li { orphans: 3; widows: 3; }
 .section-body h3 { margin-top: var(--sp-lg); }
+
+/* ── Funding section spacing ──────────────────────────── */
+#funding-section .section-body p { margin-bottom: 8px; }
+#funding-section .section-body ul,
+#funding-section .section-body ol { margin: 8px 0 12px; }
 
 /* ── Cross-Reference Link ───────────────────────────── */
 .xref {
@@ -242,8 +250,10 @@ tr:last-child td { border-bottom: none; }
     justify-content: center;
     align-items: center;
     text-align: center;
-    min-height: 100vh;
+    height: 100vh;
     padding: var(--sp-2xl) var(--sp-xl);
+    overflow: hidden;
+    page-break-after: always;
 }
 .cover-accent {
     width: 60px;
@@ -413,7 +423,7 @@ tr:last-child td { border-bottom: none; }
 .toc-entry {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     padding: 6px 0;
     border-bottom: 1px solid #F3F4F6;
     text-decoration: none;
@@ -421,7 +431,8 @@ tr:last-child td { border-bottom: none; }
     font-size: 9.5pt;
 }
 .toc-entry:hover { background: var(--c-bg); }
-.toc-entry-cat { width: 50px; flex-shrink: 0; }
+.toc-entry-cat { flex-shrink: 0; min-width: 65px; }
+.toc-entry .badge { margin-right: 4px; }
 .toc-entry-title { flex: 1; font-weight: 500; }
 .toc-audience {
     font-size: 7.5pt;
@@ -860,7 +871,7 @@ tr:last-child td { border-bottom: none; }
 </div>
 
 <!-- ═══════ TABLE OF CONTENTS ═══════ -->
-<div class="section break-cover-to-toc" id="toc" data-category="strategy">
+<div class="section" id="toc" data-category="strategy">
     <div style="margin-bottom: var(--sp-lg);">
         <span class="badge badge-strategy">Strategie</span>
         <h2>Inhaltsverzeichnis</h2>
@@ -875,10 +886,10 @@ tr:last-child td { border-bottom: none; }
         <span class="toc-level-title">Executive View</span>
         <span class="toc-level-sub">5 Min · Für Entscheider</span>
     </div>
-    <a href="#cover" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategie</span><span class="toc-entry-title">Cover &amp; Score-Übersicht</span></a>
-    <a href="#toc" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategie</span><span class="toc-entry-title">Inhaltsverzeichnis</span></a>
-    <a href="#mgmt-summary" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategie</span><span class="toc-entry-title">Management Summary</span></a>
-    <a href="#decision" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategie</span><span class="toc-entry-title">Entscheidungsvorlage</span></a>
+    <a href="#cover" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategie</span> <span class="toc-entry-title">Cover &amp; Score-Übersicht</span></a>
+    <a href="#toc" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategie</span> <span class="toc-entry-title">Inhaltsverzeichnis</span></a>
+    <a href="#mgmt-summary" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategie</span> <span class="toc-entry-title">Management Summary</span></a>
+    <a href="#decision" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategie</span> <span class="toc-entry-title">Entscheidungsvorlage</span></a>
 
     <!-- ACTION GUIDE (Dynamic TOC) -->
     <div class="toc-level-header toc-level-header-action" style="margin-top: var(--sp-md);">
