@@ -1,8 +1,6 @@
-Pdf template v7 · HTML
-Kopieren
-
-<!-- KI-Readiness Report Template v7.0.0 "Clean Corporate" — 2026-03-03 -->
+<!-- KI-Readiness Report Template v7.1.0 "Clean Corporate Plus" — 2026-03-03 -->
 <!-- Engine: Puppeteer/Chromium · Backend: FastAPI/Jinja2 · Design: McKinsey/BCG -->
+<!-- Changelog v7.1: Fix leere Seite 2, Score-Interpretation, Advisor Note, Section Transitions, Tip/Warning Boxes -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -11,10 +9,12 @@ Kopieren
     <title>KI-Status-Report {{ report_id }} – {{ company_name or kundencode or ('Your Company' if ((lang or briefing_lang or report_lang or 'de')|lower)[:2] == 'en' else 'Ihr Unternehmen') }}</title>
     <style>
 /* ═══════════════════════════════════════════════════════
-   v7.0 CLEAN CORPORATE — Design System
+   v7.1 CLEAN CORPORATE PLUS — Design System
    Typography: Inter (unified family)
    Colors: 3 primary + grays
    Layout: CSS Grid + Flexbox
+   v7.1 additions: score-interpretation, advisor-note,
+   section-transition, tip-box, warning-box
    ═══════════════════════════════════════════════════════ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -111,7 +111,7 @@ tr:last-child td { border-bottom: none; }
 .page { max-width: 210mm; margin: 0 auto; }
 
 /* ══ HARD PAGE BREAKS (max 3) ═══════════════════════ */
-/* .break-cover-to-toc removed — cover uses page-break-after: always */
+/* .break-cover-to-toc removed — cover uses height:100vh (v7.1: page-break-after also removed) */
 .break-exec-to-action { page-break-before: always; }
 .break-action-to-imprint { page-break-before: always; }
 
@@ -253,7 +253,8 @@ tr:last-child td { border-bottom: none; }
     height: 100vh;
     padding: var(--sp-2xl) var(--sp-xl);
     overflow: hidden;
-    page-break-after: always;
+    /* v7.1: page-break-after entfernt — 100vh füllt Seite 1 komplett,
+       TOC startet natürlich auf Seite 2 ohne Geist-Seite */
 }
 .cover-accent {
     width: 60px;
@@ -740,6 +741,135 @@ tr:last-child td { border-bottom: none; }
 /* ── Utility: no-break cards ────────────────────────── */
 .card-nobreak { page-break-inside: avoid; }
 
+/* ══════════════════════════════════════════════════════
+   v7.1 NEUE ELEMENTE — Clean Corporate Plus
+   ══════════════════════════════════════════════════════ */
+
+/* ── Score-Interpretation ──────────────────────────── */
+.score-interpretation {
+    background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+    border-radius: var(--r-md);
+    padding: var(--sp-md) var(--sp-lg);
+    margin: var(--sp-lg) 0;
+    font-size: 10pt;
+    line-height: 1.65;
+    color: var(--c-text);
+    border-left: 4px solid var(--c-primary);
+    page-break-inside: avoid;
+}
+.score-interpretation strong {
+    color: var(--c-primary);
+    font-weight: 600;
+}
+
+/* ── Berater-Fazit (Advisor Note) ──────────────────── */
+.advisor-note {
+    background: var(--c-white);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+    padding: var(--sp-lg);
+    margin: var(--sp-xl) 0;
+    page-break-inside: avoid;
+    position: relative;
+}
+.advisor-note::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--c-primary), var(--c-accent));
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+.advisor-note-title {
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--c-text-3);
+    margin-bottom: var(--sp-sm);
+}
+.advisor-note-text {
+    font-size: 10.5pt;
+    line-height: 1.7;
+    color: var(--c-text);
+    font-style: italic;
+}
+.advisor-note-sig {
+    margin-top: var(--sp-md);
+    padding-top: var(--sp-sm);
+    border-top: 1px solid var(--c-border);
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--c-primary);
+    font-style: normal;
+}
+
+/* ── Section-Übergang (Transition) ─────────────────── */
+.section-transition {
+    text-align: center;
+    padding: var(--sp-lg) var(--sp-xl);
+    margin: 0;
+    color: var(--c-text-2);
+    font-size: 10pt;
+    line-height: 1.6;
+    font-style: italic;
+    page-break-after: avoid;
+}
+.section-transition::before {
+    content: '—';
+    display: block;
+    font-size: 16pt;
+    color: var(--c-border);
+    margin-bottom: var(--sp-sm);
+    font-style: normal;
+}
+
+/* ── Praxis-Tipp Box ───────────────────────────────── */
+.tip-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    margin: var(--sp-md) 0;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    page-break-inside: avoid;
+}
+.tip-box::before {
+    content: 'Praxis-Tipp';
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #047857;
+    margin-bottom: 4px;
+}
+
+/* ── Warnung Box ───────────────────────────────────── */
+.warning-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    margin: var(--sp-md) 0;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    page-break-inside: avoid;
+}
+.warning-box::before {
+    content: 'Häufiger Fehler';
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #b45309;
+    margin-bottom: 4px;
+}
+
 /* ── Print enhancements ─────────────────────────────── */
 @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -854,17 +984,17 @@ tr:last-child td { border-bottom: none; }
             <div class="rg-card">
                 <div class="rg-card-title">Executive View</div>
                 <div class="rg-card-time">5 Min</div>
-                <div class="rg-card-pages">Für Entscheider</div>
+                <div class="rg-card-pages">Go/No-Go-Entscheidung</div>
             </div>
             <div class="rg-card">
                 <div class="rg-card-title">Action Guide</div>
                 <div class="rg-card-time">30 Min</div>
-                <div class="rg-card-pages">Für Projektleiter</div>
+                <div class="rg-card-pages">Konkreter Fahrplan</div>
             </div>
             <div class="rg-card">
                 <div class="rg-card-title">Deep Dive</div>
                 <div class="rg-card-time">Nach Bedarf</div>
-                {% if ENABLE_APPENDIX|default(false) %}<div class="rg-card-pages">Anhang A1–A13</div>{% endif %}
+                <div class="rg-card-pages">{% if ENABLE_APPENDIX|default(false) %}Anhang A1–A13{% else %}Nachschlagewerk{% endif %}</div>
             </div>
         </div>
     </div>
@@ -935,6 +1065,9 @@ tr:last-child td { border-bottom: none; }
     {% endif %}
     {% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim %}
         {% set _ = toc_action_entries.append(("gamechanger-section", "strategy", "Gamechanger-Analyse", "gamechanger")) %}
+    {% endif %}
+    {% if ADVISOR_NOTE_HTML and ADVISOR_NOTE_HTML|trim %}
+    {% set _ = toc_action_entries.append(("advisor-note", "strategy", "Persönliche Einschätzung", "advisor")) %}
     {% endif %}
     {% set _ = toc_action_entries.append(("next-steps", "strategy", "Nächste Schritte & Kontakt", "next")) %}
 
@@ -1067,6 +1200,13 @@ tr:last-child td { border-bottom: none; }
         </div>
     </div>
 
+    {# v7.1: Score-Interpretation — Was bedeutet dieser Score? #}
+    {% if SCORE_INTERPRETATION_HTML and SCORE_INTERPRETATION_HTML|trim %}
+    <div class="score-interpretation">
+        {{ SCORE_INTERPRETATION_HTML|safe }}
+    </div>
+    {% endif %}
+
     {% if SKIP_HINT %}
     <div class="skip-hint"><strong>Bei Ihrem Score ({{ score_int }}/100):</strong> {{ SKIP_HINT }}</div>
     {% elif score_int >= 80 %}
@@ -1111,7 +1251,11 @@ tr:last-child td { border-bottom: none; }
    ═══════════════════════════════════════════════════════ #}
 
 <!-- ═══ Break: Executive View → Action Guide ═══ -->
-<div class="break-exec-to-action"></div>
+<div class="break-exec-to-action">
+    {% if TRANSITION_EXEC_TO_ACTION and TRANSITION_EXEC_TO_ACTION|trim %}
+    <div class="section-transition">{{ TRANSITION_EXEC_TO_ACTION }}</div>
+    {% endif %}
+</div>
 
 <!-- ═══════ SOFORT-START ═══════ -->
 {% if SOFORT_START_HTML and SOFORT_START_HTML|trim %}
@@ -1144,6 +1288,11 @@ tr:last-child td { border-bottom: none; }
     <div class="section-body">{{ QUICK_WINS_HTML|safe }}</div>
     {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detaillierte Maßnahmenbeschreibungen → Anhang A4</div>{% endif %}
 </section>
+{% endif %}
+
+{# v7.1: Übergang Quick Wins → 90-Tage-Roadmap #}
+{% if TRANSITION_QUICKWINS_TO_ROADMAP and TRANSITION_QUICKWINS_TO_ROADMAP|trim %}
+<div class="section-transition">{{ TRANSITION_QUICKWINS_TO_ROADMAP }}</div>
 {% endif %}
 
 <!-- ═══════ 90-TAGE-ROADMAP ═══════ -->
@@ -1322,6 +1471,11 @@ tr:last-child td { border-bottom: none; }
 </section>
 {% endif %}
 
+{# v7.1: Übergang Risiko → Förderprogramme #}
+{% if TRANSITION_RISK_TO_FUNDING and TRANSITION_RISK_TO_FUNDING|trim %}
+<div class="section-transition">{{ TRANSITION_RISK_TO_FUNDING }}</div>
+{% endif %}
+
 <!-- ═══════ FÖRDERPROGRAMME ═══════ -->
 {% if FUNDING_PATH_1 or FOERDERPOTENZIAL_HTML %}
 <section class="section" id="funding-section" data-category="finance">
@@ -1400,6 +1554,20 @@ tr:last-child td { border-bottom: none; }
     <div class="section-body">{{ GAMECHANGER_DECISION_HTML|safe }}</div>
     {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Vollständige Gamechanger-Analyse (Architektur, Skaleneffekte) → Anhang A2</div>{% endif %}
 </section>
+{% endif %}
+
+<!-- ═══════ PERSÖNLICHE EINSCHÄTZUNG (v7.1) ═══════ -->
+{% if ADVISOR_NOTE_HTML and ADVISOR_NOTE_HTML|trim %}
+<div class="section" id="advisor-note" data-category="strategy">
+    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
+    <span class="badge badge-strategy">Strategie</span>
+    <h2>Persönliche Einschätzung</h2>
+    <div class="advisor-note">
+        <div class="advisor-note-title">Meine Einschätzung für Ihr Unternehmen</div>
+        <div class="advisor-note-text">{{ ADVISOR_NOTE_HTML|safe }}</div>
+        <div class="advisor-note-sig">Wolf Hohl · TÜV-zertifizierter KI-Manager</div>
+    </div>
+</div>
 {% endif %}
 
 <!-- ═══════ NÄCHSTE SCHRITTE & KONTAKT ═══════ -->
@@ -1655,7 +1823,7 @@ tr:last-child td { border-bottom: none; }
 </div>
 
 <p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">
-    Report v7.0 · Template v7.0.0 "Clean Corporate" · Generiert am {{ report_date }} · {{ report_id }}
+    Report v7.1 · Template v7.1.0 "Clean Corporate Plus" · Generiert am {{ report_date }} · {{ report_id }}
     {% if BUILD_ID %} · Build: {{ BUILD_ID }}{% endif %}
 </p>
 
