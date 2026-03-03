@@ -3,6 +3,10 @@ Developer:
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
+     BRANCHENBEZEICHNUNG-REGEL:
+     Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vorkommen.
+     Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
+
      ZWECK:
        - Ergänzung zum Business Case, aber OHNE Wiederholung seiner Inhalte.
        - Branchen- und größenabhängige Kostendynamiken klar benennen.

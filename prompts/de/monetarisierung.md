@@ -16,6 +16,10 @@ Du bist ein erfahrener KI-Berater und Pricing-Experte. Erstelle den Abschnitt
 - **Strategische Ziele:** {{STRATEGISCHE_ZIELE}}
 - **Geschäftsmodell-Evolution:** {{GESCHAEFTSMODELL_EVOLUTION}}
 
+BRANCHENBEZEICHNUNG-REGEL:
+Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vorkommen.
+Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
+
 ## AUFGABE
 ⚠️ ALLE 3 MODELLE SIND PFLICHT — KEINES DARF FEHLEN!
 Wenn ein Modell fehlt, ist die Antwort UNGÜLTIG.

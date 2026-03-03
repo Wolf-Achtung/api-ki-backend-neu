@@ -64,6 +64,10 @@ NATÜRLICHE SPRACHE - SYNONYME NUTZEN:
 <!--
 ZIEL: Klarer, realistischer Business Case mit ROI, CAPEX/OPEX.
 
+BRANCHENBEZEICHNUNG-REGEL:
+Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vorkommen.
+Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
+
 ###############################################################################
 ##                    ROI KONSISTENZ (SINGLE SOURCE OF TRUTH)                ##
 ###############################################################################
@@ -80,6 +84,13 @@ Wenn in ANDEREN Sektionen ROI erwähnt wird:
 - → NIEMALS: andere Prozentsätze nennen
 
 ###############################################################################
+
+ROI-GUARDRAIL (STRIKT):
+- ROI-Werte IMMER zwischen 50% und 200% halten
+- Werte über 200%: auf "200% (gedeckelt)" setzen, NICHT den höheren Wert nennen
+- Payback NIEMALS unter 1 Monat angeben
+- Alle Zahlen KONSERVATIV schätzen — lieber unter- als überschätzen
+- KEINE Emojis in den Warnhinweisen
 
 ###############################################################################
 ##                    STANDORT KONSISTENZ (KRITISCH!)                        ##
