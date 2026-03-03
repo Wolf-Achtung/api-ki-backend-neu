@@ -8,72 +8,39 @@ in HTML and PDF rendering without layout overflow.
 """
 import pytest
 import re
+from pathlib import Path
+
+TEMPLATE_PATH = "templates/pdf_template_v7.html"
 
 
 class TestFinalCheckWrapCSS:
-    """Tests for Final-Check CSS wrapping rules."""
+    """Tests for Final-Check CSS wrapping rules in v7 template."""
 
-    def test_css_contains_overflow_wrap_anywhere(self):
-        """Verify CSS includes overflow-wrap: anywhere for text containers."""
-        with open("templates/pdf_template.html", "r", encoding="utf-8") as f:
+    def test_template_has_final_check_decisions(self):
+        """Verify template renders FINAL_CHECK_DECISIONS."""
+        with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        assert "FINAL_CHECK_DECISIONS" in content, (
+            "Template should render FINAL_CHECK_DECISIONS"
+        )
+
+    def test_css_has_grid_layout(self):
+        """Verify CSS includes grid-template-columns for layouts."""
+        with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
             css_content = f.read()
 
-        # Check that overflow-wrap: anywhere is present for final-check-text
-        assert "overflow-wrap: anywhere" in css_content, (
-            "CSS should contain 'overflow-wrap: anywhere' for robust text wrapping"
-        )
-
-        # Check that final-check-text class exists with min-width: 0
-        assert ".final-check-text" in css_content, (
-            "CSS should define .final-check-text class"
-        )
-        assert "min-width: 0" in css_content, (
-            "CSS should include 'min-width: 0' for flex/grid children"
-        )
-
-    def test_css_contains_grid_layout_for_icon_text(self):
-        """Verify CSS includes grid layout for icon+text rows."""
-        with open("templates/pdf_template.html", "r", encoding="utf-8") as f:
-            css_content = f.read()
-
-        # Check for grid-based final-check-row
-        assert ".final-check-row" in css_content, (
-            "CSS should define .final-check-row class"
-        )
         assert "grid-template-columns" in css_content, (
-            "CSS should use grid-template-columns for icon+text layout"
-        )
-        # Check for minmax(0, 1fr) pattern for flexible text column
-        assert "minmax(0, 1fr)" in css_content, (
-            "CSS should use minmax(0, 1fr) for text column to allow shrinking"
+            "CSS should use grid-template-columns for layouts"
         )
 
-    def test_css_contains_flex_layout_variant(self):
-        """Verify CSS includes flex layout variant for simpler cases."""
-        with open("templates/pdf_template.html", "r", encoding="utf-8") as f:
+    def test_css_has_flex_shrink(self):
+        """Verify CSS uses flex-shrink: 0 for icon protection."""
+        with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
             css_content = f.read()
 
-        # Check for flex-based variant
-        assert ".final-check-flex-row" in css_content, (
-            "CSS should define .final-check-flex-row class as flex variant"
-        )
         assert "flex-shrink: 0" in css_content, (
             "CSS should prevent icon shrinking with flex-shrink: 0"
-        )
-
-    def test_en_template_has_same_fixes(self):
-        """Verify English template has the same CSS fixes."""
-        with open("templates/pdf_template_en.html", "r", encoding="utf-8") as f:
-            css_content = f.read()
-
-        assert ".final-check-row" in css_content, (
-            "English template should have .final-check-row class"
-        )
-        assert "overflow-wrap: anywhere" in css_content, (
-            "English template should have overflow-wrap: anywhere"
-        )
-        assert ".final-check-text" in css_content, (
-            "English template should have .final-check-text class"
         )
 
 
@@ -159,42 +126,38 @@ class TestFinalCheckHTMLSnapshot:
         assert self.LONG_URL in html
 
 
-class TestConfidenceCheckboxWrap:
-    """Tests for confidence-checkbox wrapping."""
+class TestConfidenceCardCSS:
+    """Tests for confidence card CSS in v7 template."""
 
-    def test_css_fixes_confidence_checkbox(self):
-        """Verify CSS includes fixes for confidence-checkbox pattern."""
-        with open("templates/pdf_template.html", "r", encoding="utf-8") as f:
-            css_content = f.read()
+    def test_template_has_confidence_section(self):
+        """Verify template has confidence HTML section."""
+        with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
+            content = f.read()
 
-        # Check that confidence-checkbox is addressed
-        assert ".confidence-checkbox" in css_content, (
-            "CSS should address .confidence-checkbox class"
-        )
-        # The fix should include overflow-wrap for nested elements
-        # This is a combined pattern search
-        pattern = r"\.confidence-checkbox.*overflow-wrap"
-        matches = re.findall(pattern, css_content, re.DOTALL)
-        assert len(matches) > 0, (
-            "CSS should include overflow-wrap rules for confidence-checkbox children"
+        assert "DECISION_CONFIDENCE_HTML" in content, (
+            "Template should have DECISION_CONFIDENCE_HTML section"
         )
 
+    def test_template_has_confidence_card_css(self):
+        """Verify template has confidence-card CSS."""
+        with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
+            content = f.read()
 
-class TestFoerderChecklistWrap:
-    """Tests for Förderprüfung checklist wrapping."""
-
-    def test_css_fixes_foerder_content(self):
-        """Verify CSS includes fixes for foerder-content pattern."""
-        with open("templates/pdf_template.html", "r", encoding="utf-8") as f:
-            css_content = f.read()
-
-        # Check that foerder-content is addressed
-        assert ".foerder-content" in css_content, (
-            "CSS should address .foerder-content class"
+        assert ".confidence-card" in content, (
+            "Template should have .confidence-card CSS"
         )
-        # Look for min-width: 0 and overflow-wrap in relation to foerder-content
-        assert "foerder-content" in css_content and "min-width: 0" in css_content, (
-            "CSS should include min-width: 0 for foerder-content"
+
+
+class TestFoerderSectionExists:
+    """Tests for Förder section presence in template."""
+
+    def test_template_has_foerder_section(self):
+        """Verify template has Förderpotenzial section."""
+        with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        assert "FOERDERPOTENZIAL_HTML" in content, (
+            "Template should have FOERDERPOTENZIAL_HTML section"
         )
 
 

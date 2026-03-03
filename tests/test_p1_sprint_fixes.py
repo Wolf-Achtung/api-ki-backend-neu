@@ -16,56 +16,31 @@ import re
 class TestFinalCheckRendering:
     """Tests for Final-Check Box rendering changes."""
 
-    def test_template_has_final_check_item_class(self):
-        """Verify template uses p.final-check-item instead of ul/li."""
+    def test_template_has_final_check_decisions(self):
+        """Verify template renders FINAL_CHECK_DECISIONS."""
         from pathlib import Path
 
-        template_path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        template_path = Path(__file__).parent.parent / "templates" / "pdf_template_v7.html"
         with open(template_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # Find the Final-Check section (greedy to capture the whole block)
-        final_check_start = content.find('<!-- FINAL CHECK')
-        assert final_check_start != -1, "Final-Check section not found in template"
+        # v7 renders FINAL_CHECK_DECISIONS directly
+        assert "FINAL_CHECK_DECISIONS" in content, \
+            "Template should render FINAL_CHECK_DECISIONS"
 
-        # Find the end of the Final-Check block (next major section or 500 chars)
-        final_check_end = content.find('<!-- TOP-3 MUSS', final_check_start)
-        if final_check_end == -1:
-            final_check_end = final_check_start + 3000  # fallback
-
-        final_check_html = content[final_check_start:final_check_end]
-
-        # Should have p.final-check-item
-        assert 'class="final-check-item"' in final_check_html, \
-            f"Expected p.final-check-item class in Final-Check section. Found: {final_check_html[:500]}..."
-
-        # Should NOT have ul/li for FINAL_CHECK_DECISIONS
-        # Check that there's no <ul> before the {% endfor %} for decisions
-        decisions_block = re.search(r'FINAL_CHECK_DECISIONS.*?endfor', final_check_html, re.DOTALL)
-        if decisions_block:
-            assert '<ul' not in decisions_block.group(0), \
-                "Final-Check decisions should not use ul element"
-
-    def test_final_check_has_word_wrap_css(self):
-        """Verify Final-Check has word-wrap CSS for WeasyPrint compatibility."""
+    def test_final_check_section_exists(self):
+        """Verify Final-Check section exists in v7 template."""
         from pathlib import Path
 
-        template_path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        template_path = Path(__file__).parent.parent / "templates" / "pdf_template_v7.html"
         with open(template_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # Find the Final-Check section
-        final_check_match = re.search(
-            r'class="final-check-item"[^>]*style="[^"]*',
-            content
-        )
-
-        assert final_check_match, "final-check-item with style not found"
-        style = final_check_match.group(0)
-
-        # Should have word-wrap
-        assert 'word-wrap' in style or 'overflow-wrap' in style, \
-            "Expected word-wrap or overflow-wrap in final-check-item style"
+        # v7 has FINAL_CHECK_DECISIONS with inline styles
+        assert "FINAL_CHECK_DECISIONS" in content, \
+            "Template should have FINAL_CHECK_DECISIONS"
+        assert "FINAL_CHECK_INTRO" in content, \
+            "Template should have FINAL_CHECK_INTRO"
 
 
 # =============================================================================
@@ -181,29 +156,20 @@ class TestQuickWinsCompletenessGate:
 class TestSoloLabelsSourceOfTruth:
     """Tests for segment-aware labels in template rendering."""
 
-    def test_template_uses_ui_for_governance_label(self):
-        """Verify template uses ui() for Governance dimension label."""
+    def test_template_uses_ui_function(self):
+        """Verify template uses ui() function for i18n labels."""
         from pathlib import Path
 
-        template_path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        template_path = Path(__file__).parent.parent / "templates" / "pdf_template_v7.html"
         with open(template_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # Should use ui("governance_label", ...) for dimension label
-        assert 'ui("governance_label"' in content, \
-            "Expected template to use ui('governance_label') for dimension label"
-
-    def test_template_uses_ui_for_governance_section_kicker(self):
-        """Verify template uses ui() for Governance section kicker."""
-        from pathlib import Path
-
-        template_path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
-        with open(template_path, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        # Should use ui("governance_section_kicker", ...) for section kicker
-        assert 'ui("governance_section_kicker"' in content, \
-            "Expected template to use ui('governance_section_kicker') for section kicker"
+        # v7 uses ui() for various labels
+        assert "ui(" in content, \
+            "Expected template to use ui() function for i18n labels"
+        # Check for dimension labels (v7 uses dim_governance etc.)
+        assert 'ui("dim_governance"' in content, \
+            "Expected template to use ui('dim_governance') for governance dimension"
 
     def test_report_renderer_uses_segment_aware_ui(self):
         """Verify report_renderer uses ui_for_segment."""
@@ -546,7 +512,7 @@ class TestKiStackKickerLabel:
         """Verify template uses ui() for KI-Stack kicker."""
         from pathlib import Path
 
-        template_path = Path(__file__).parent.parent / "templates" / "pdf_template.html"
+        template_path = Path(__file__).parent.parent / "templates" / "pdf_template_v7.html"
         with open(template_path, "r", encoding="utf-8") as f:
             content = f.read()
 

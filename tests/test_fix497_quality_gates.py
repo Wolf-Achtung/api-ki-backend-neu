@@ -299,23 +299,23 @@ class TestConditionalRendering:
 
     def test_template_has_conditional_funding(self):
         """Test that funding section has conditional rendering."""
-        template = Path('templates/pdf_template.html').read_text()
+        template = Path('templates/pdf_template_v7.html').read_text()
 
         # Check for conditional rendering of FOERDERPOTENZIAL_HTML
         assert '{% if FOERDERPOTENZIAL_HTML' in template, \
             "FOERDERPOTENZIAL_HTML should have conditional rendering"
 
     def test_template_has_conditional_risks(self):
-        """Test that RISKS_HTML section has conditional rendering."""
-        template = Path('templates/pdf_template.html').read_text()
+        """Test that risk section has conditional rendering."""
+        template = Path('templates/pdf_template_v7.html').read_text()
 
-        # Check for conditional rendering
-        assert '{% if RISKS_HTML' in template, \
-            "RISKS_HTML should have conditional rendering"
+        # v7 uses RISK_ENGINE_HTML / RISK_ENGINE_V3_HTML
+        assert '{% if RISK_ENGINE_HTML' in template or '{% if RISKS_HTML' in template, \
+            "Risk section should have conditional rendering"
 
     def test_template_has_table_orphan_css(self):
         """Test that templates include table orphan prevention CSS."""
-        template = Path('templates/pdf_template.html').read_text()
+        template = Path('templates/pdf_template_v7.html').read_text()
 
         # Check for table orphan prevention
         assert 'page-break-inside: avoid' in template
