@@ -11696,6 +11696,9 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         "roadmap_90d_decision": "roadmap_90d_decision",
         "gamechanger_decision": "gamechanger_decision",
         "ki_stack_summary": "ki_stack_summary",
+        # v7.1.1: Score Interpretation + Advisor Note
+        "score_interpretation": "score_interpretation",
+        "advisor_note": "advisor_note",
     }
     
     prompt_key = prompt_map.get(section_name)
@@ -12841,6 +12844,9 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         ("prompt_framework", "PROMPT_FRAMEWORK_HTML"),
         # G24: Branch Deep-Dive Addon
         ("branch_deep_dive", "BRANCH_DEEP_DIVE_HTML"),
+        # v7.1.1: Score Interpretation + Advisor Note
+        ("score_interpretation", "SCORE_INTERPRETATION_HTML"),
+        ("advisor_note", "ADVISOR_NOTE_HTML"),
     ]
 
     max_workers = int(os.getenv("GPT_PARALLEL_WORKERS", "10"))
