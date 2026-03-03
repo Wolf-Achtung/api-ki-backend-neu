@@ -8,6 +8,10 @@ Developer:
 <!--
 ZIEL: Kompakte, sofort anwendbare KI-Nutzungsregeln ohne bürokratischen Overhead.
 
+BRANCHENBEZEICHNUNG-REGEL:
+Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vorkommen.
+Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
+
 PFLICHTSTRUKTUR (7 Grundregeln):
 1. Datennutzung (was darf KI, was nicht)
 2. Review-Pflicht (menschliche Prüfung)

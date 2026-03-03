@@ -14,6 +14,10 @@ für den KI-Einstieg in einem konkreten Unternehmen.
 - **Zeitfresser-Priorität:** {{ZEITERSPARNIS_PRIORITAET}}
 - **KI-Guardrails:** {{KI_GUARDRAILS}}
 
+BRANCHENBEZEICHNUNG-REGEL:
+Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vorkommen.
+Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
+
 ## AUFGABE
 Erstelle 3 Copy-Paste-fähige Mini-Templates, die SPEZIFISCH für
 **{{HAUPTLEISTUNG}}** in **{{BRANCHE_LABEL}}** sofort einsetzbar sind.
