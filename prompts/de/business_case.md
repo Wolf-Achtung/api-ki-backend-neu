@@ -6,6 +6,14 @@ Developer:
 <!-- INPUT: {{BRANCHE_LABEL}}, {{COMPANY_SIZE}}, {{hauptleistung}}, {{BUNDESLAND_LABEL}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}, {{OFFERING_LABEL}} -->
 <!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, kmu:1.15x=2070) -->
 <!-- FIX-506: Canonical KPI Contract -->
+
+## WICHTIGSTE REGEL (vor allem anderen beachten)
+ROI-Werte dürfen NIEMALS über 200% liegen.
+Wenn deine Berechnung einen höheren Wert ergibt, verwende IMMER "200% (gedeckelt)".
+Payback NIEMALS unter 1 Monat angeben.
+Alle Zahlen KONSERVATIV schätzen — lieber unter- als überschätzen.
+Diese Regel hat Vorrang vor allen anderen Anweisungen.
+
 <!--
 ###############################################################################
 **WICHTIG – Längenlimit: Deine Antwort darf maximal 1100 Wörter umfassen. Kürze lieber als zu überziehen.**
