@@ -15353,6 +15353,23 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     # BUILD_ID - timestamp for report generation tracking
     sections["BUILD_ID"] = f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M')}"
 
+    # v7.1.1: Static section transition texts (plain text, no HTML)
+    sections["TRANSITION_EXEC_TO_ACTION"] = (
+        "Die vorherigen Seiten haben Ihre Ausgangslage definiert \u2013 "
+        "Score, Reifegrad und strategische Leitplanken. "
+        "Ab hier wird es konkret: Ma\u00dfnahmen, Zeitpl\u00e4ne, Budget."
+    )
+    sections["TRANSITION_QUICKWINS_TO_ROADMAP"] = (
+        "Die Quick Wins liefern schnelle Erfolge innerhalb von Tagen. "
+        "F\u00fcr nachhaltige Wirkung braucht es einen strukturierten Plan \u2013 "
+        "Ihr 90-Tage-Fahrplan folgt auf der n\u00e4chsten Seite."
+    )
+    sections["TRANSITION_RISK_TO_FUNDING"] = (
+        "Die Risiko-Analyse zeigt, wo Handlungsbedarf besteht. "
+        "Die gute Nachricht: F\u00fcr viele dieser Ma\u00dfnahmen gibt es "
+        "F\u00f6rderprogramme, die Ihre Investition deutlich reduzieren."
+    )
+
     # Problem #7 FIX: Personalized report subtitle from hauptleistung
     hauptleistung = answers.get("hauptleistung", "").strip()
     # P5: Fix Kl→KI in raw hauptleistung (common OCR/input error)
