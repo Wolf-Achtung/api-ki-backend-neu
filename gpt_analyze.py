@@ -9196,6 +9196,9 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "score_nutzen": scores.get("value", 0),
         "score_befaehigung": scores.get("enablement", 0),
         "score_gesamt": scores.get("overall", 0),
+        # score_gesamt_display: includes quality bonus (+2) for prompt display
+        # Must match calc_quality_bonus() typical output to avoid cover vs section mismatch
+        "score_gesamt_display": min(int(scores.get("overall", 0) or 0) + 2, 98),
 
         # Special alias for PDF template
         "score_wertschoepfung": scores.get("value", 0),  # Alias for score_value in template
