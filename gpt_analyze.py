@@ -19729,6 +19729,20 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     except Exception as _pr_err:
         log.warning(f"[{run_id}] [FIX-B722-PRERENDER] Failed: {_pr_err}")
 
+    # =========================================================================
+    # FIX-GRAMMAR-3: FINAL safety net — period before "Schwerpunkte:" in Kernbotschaft
+    # Previous fixes at build-time (line ~16007) and B24-SWEEP (line ~18039) add the
+    # period correctly, but downstream post-processors (quality enforcer, hauptleistung
+    # limiter, pipeline sanitizers) can strip it.  This runs AFTER all post-processing,
+    # immediately before render(), so nothing can undo it.
+    # =========================================================================
+    _fci_final = sections.get("FINAL_CHECK_INTRO", "")
+    if isinstance(_fci_final, str) and "Schwerpunkte:" in _fci_final:
+        _fci_patched = re.sub(r'(\w)\s+(Schwerpunkte:)', r'\1. \2', _fci_final)
+        if _fci_patched != _fci_final:
+            sections["FINAL_CHECK_INTRO"] = _fci_patched
+            log.info(f"[{run_id}] [FIX-GRAMMAR-3] Inserted period before 'Schwerpunkte:' in FINAL_CHECK_INTRO")
+
     result = render(
         br,
         run_id=run_id,
