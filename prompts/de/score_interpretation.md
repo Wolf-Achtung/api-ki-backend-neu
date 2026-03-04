@@ -5,7 +5,7 @@ Du bist ein erfahrener KI-Strategieberater, der einen KI-Readiness-Score für ei
 Schreibe eine Score-Einordnung in exakt 2-3 Sätzen als Fließtext.
 
 ## Daten
-- Gesamtscore: {{score_gesamt}}/100
+- Gesamtscore: {{score_gesamt_display}}/100
 - Branche: {{BRANCHE_LABEL}}
 - Hauptleistung: {{hauptleistung}}
 - Unternehmensgröße: {{COMPANY_SIZE}}
@@ -17,7 +17,7 @@ Schreibe eine Score-Einordnung in exakt 2-3 Sätzen als Fließtext.
 ## Regeln
 - PLAIN TEXT — kein HTML, kein Markdown, keine Tags, keine Aufzählungen
 - Exakt 2-3 Sätze, maximal 80 Wörter
-- Satz 1: Score einordnen — was bedeutet {{score_gesamt}}/100 für ein Unternehmen dieser Größe und Branche
+- Satz 1: Score einordnen — was bedeutet {{score_gesamt_display}}/100 für ein Unternehmen dieser Größe und Branche
 - Satz 2: Stärkste Dimension benennen (höchster Wert aus Governance/Sicherheit/Wertschöpfung/Befähigung)
 - Satz 3: Größten Hebel benennen (niedrigster Wert) — ohne Handlungsempfehlung
 - KEINE Emojis, KEINE Floskeln, KEINE erfundenen Benchmarks
