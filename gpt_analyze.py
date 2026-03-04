@@ -9196,6 +9196,9 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "score_nutzen": scores.get("value", 0),
         "score_befaehigung": scores.get("enablement", 0),
         "score_gesamt": scores.get("overall", 0),
+        # score_gesamt_display: includes quality bonus (+2) for prompt display
+        # Must match calc_quality_bonus() typical output to avoid cover vs section mismatch
+        "score_gesamt_display": min(int(scores.get("overall", 0) or 0) + 2, 98),
 
         # Special alias for PDF template
         "score_wertschoepfung": scores.get("value", 0),  # Alias for score_value in template
@@ -12887,6 +12890,23 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         elapsed,
         len(parallel_sections) * 15,
     )
+
+    # v7.1.2: Strip literal section key names from LLM output
+    # Prevents "advisor_note" or "score_interpretation" appearing as visible text in PDF
+    for _clean_key in ("advisor_note", "score_interpretation"):
+        for _slot in (_clean_key, _clean_key.upper() + "_HTML",
+                      "ADVISOR_NOTE_HTML" if _clean_key == "advisor_note" else "SCORE_INTERPRETATION_HTML"):
+            _cv = sections.get(_slot, "")
+            if isinstance(_cv, str) and _clean_key in _cv:
+                _cv_new = _cv.replace(_clean_key, "").strip()
+                # If only the key name remained (content was stripped by healer), set empty
+                _cv_text = re.sub(r'<[^>]+>', '', _cv_new).strip()
+                if len(_cv_text) < 20:
+                    sections[_slot] = ""
+                    log.info("[v7.1.2] Cleared stub content for %s (only key name remained)", _slot)
+                else:
+                    sections[_slot] = _cv_new
+                    log.info("[v7.1.2] Stripped literal key name from %s", _slot)
 
     # Executive Summary Placeholder-Fix
     sections["EXECUTIVE_SUMMARY_HTML"] = _fix_exec_placeholders(
