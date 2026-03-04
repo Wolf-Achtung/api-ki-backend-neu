@@ -110,19 +110,26 @@ tr:last-child td { border-bottom: none; }
 /* ── Page Structure ─────────────────────────────────── */
 .page { max-width: 210mm; margin: 0 auto; }
 
-/* ══ PAGE BREAK RULES v7.1.2 (Puppeteer/Chromium) ═══ */
-/* .break-cover-to-toc removed — cover uses height:100vh */
+/* ══ PAGE BREAK RULES v7.1.3 (Puppeteer/Chromium) ═══ */
+/* Selective breaks: only at major theme changes to avoid whitespace pages */
 .break-exec-to-action { break-before: page; }
 .break-action-to-imprint { break-before: page; }
 
-/* Every main chapter starts on a new page */
-.section {
+/* Major chapter starts — new page */
+#mgmt-summary,
+#sofort-start,
+#business-case-compact,
+#challenge-section,
+#risks-compact,
+#funding-section,
+#outlook-section,
+#gamechanger-section,
+#advisor-note {
     break-before: page;
 }
-/* Exceptions: Cover has its own page-break-after, TOC follows naturally */
-#cover, #cover + .section, .section:first-of-type {
-    break-before: auto;
-}
+/* Sub-sections flow naturally (no forced break):
+   #decision, #quick-wins-section, #roadmap-90d, #tools-section,
+   #prompts-section, #vendor-section, #aiact-compact, #next-steps */
 
 /* ── Section Base ───────────────────────────────────── */
 .section {
