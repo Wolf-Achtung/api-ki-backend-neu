@@ -15970,7 +15970,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
                 score_rating = "im Durchschnitt" if report_lang == "de" else "average"
 
         company_size = sections.get("size_label", "KMU")
-        hauptleistung_fc = answers.get("hauptleistung", "").strip()
+        hauptleistung_fc = answers.get("hauptleistung", "").strip().rstrip('.')
         branch_label = sections.get("BRANCHE_LABEL", "")
         # PLATIN+++ v5.4.2: Read from answers first (timing bug fix - sections populated later)
         payback_months = answers.get("PAYBACK_MONTHS") or sections.get("PAYBACK_MONTHS", 0)
@@ -16002,8 +16002,10 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
                 "Sichten Sie die Förderprogramme für passende EU-/Bundesmittel"
             ]
 
-        # Truncate to ≤600 chars
-        sections["FINAL_CHECK_INTRO"] = intro_template[:600]
+        # Truncate to ≤600 chars, ensure clean sentence boundary before "Schwerpunkte:"
+        _fc_intro = intro_template[:600]
+        _fc_intro = re.sub(r'(\w)\s*(Schwerpunkte:)', r'\1. \2', _fc_intro)
+        sections["FINAL_CHECK_INTRO"] = _fc_intro
         # T1+T3: Define _hl_full ONCE, then use for both INTRO and DECISIONS
         _hl_full: str = sections.get('hauptleistung') or sections.get('HAUPTLEISTUNG') or ''
         # T3: Truncate hauptleistung in FINAL_CHECK_INTRO
@@ -18002,7 +18004,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         # Must be rebuilt with the FINAL score to prevent cover vs page-2 mismatch.
         try:
             _b24_report_lang = sections.get("LANG", "de")
-            _b24_hauptleistung = answers.get("hauptleistung", "").strip()
+            _b24_hauptleistung = answers.get("hauptleistung", "").strip().rstrip('.')
             _b24_company_size = sections.get("size_label", "KMU")
             # Recalculate score_rating with final score
             _b24_score_rating = sections.get("score_rating", "")
@@ -18033,7 +18035,9 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     f"Schwerpunkte: Sicherheit, Effizienz und Förderpotenziale. "
                     f"ROI-Details und Payback-Analyse finden Sie im Business Case."
                 )
-            sections["FINAL_CHECK_INTRO"] = _b24_intro[:600]
+            _b24_intro_clean = _b24_intro[:600]
+            _b24_intro_clean = re.sub(r'(\w)\s*(Schwerpunkte:)', r'\1. \2', _b24_intro_clean)
+            sections["FINAL_CHECK_INTRO"] = _b24_intro_clean
             log.info(f"[FIX-B24-P0] FINAL_CHECK_INTRO rebuilt with final score {_b24_final_score} "
                      f"(was {_b24_pre_quality}, rating={_b24_score_rating})")
         except Exception as _b24_intro_err:
