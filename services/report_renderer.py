@@ -1389,11 +1389,16 @@ def render(briefing_obj: Any,
     # the text in the PDF does not come (solely) from FINAL_CHECK_INTRO.
     # This regex runs on the FINAL rendered HTML — nothing can undo it.
     # =========================================================================
-    if 'Schwerpunkte' in html:
+    _sw_found = 'Schwerpunkte' in html
+    log.info("[FIX-v715-GRAMMAR] Reached. HTML length=%d. 'Schwerpunkte' found=%s run=%s",
+             len(html), _sw_found, run_id)
+    if _sw_found:
         _html_before_sw = html
         html = re.sub(r'(?<![.!?;:,])\s+(Schwerpunkte\s*:)', r'. \1', html)
         if html != _html_before_sw:
-            log.info("[FIX-v715-GRAMMAR] Schwerpunkte-Separator applied on final HTML for run=%s", run_id)
+            log.info("[FIX-v715-GRAMMAR] Regex applied — period inserted before 'Schwerpunkte:' run=%s", run_id)
+        else:
+            log.info("[FIX-v715-GRAMMAR] No change needed — punctuation already present before 'Schwerpunkte:' run=%s", run_id)
 
     # =========================================================================
     # FIX-514: Quick-Wins Non-Empty Gate (pre-PDF, fail-closed in STRICT)

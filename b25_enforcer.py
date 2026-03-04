@@ -276,6 +276,13 @@ def sanitize_roi_values_in_content(
 
     cap_str = f"{roi_cap:.0f}"
 
+    # v7.1.6: Pre-compute ROI keyword positions for context-aware capping
+    _roi_kw_pattern = re.compile(
+        r'ROI|Return on Investment|Rendite|Kapitalrendite|Amortis|Payback',
+        re.IGNORECASE,
+    )
+    _roi_kw_positions = [m.start() for m in _roi_kw_pattern.finditer(content)]
+
     def _cap_roi_match(match: re.Match) -> str:
         prefix = match.group(1) or ""
         value_str = match.group(2)
@@ -284,6 +291,17 @@ def sanitize_roi_values_in_content(
         try:
             value = float(value_str.replace(",", "."))
             if value > roi_cap:
+                # v7.1.6: Only cap if ROI keyword is in prefix/suffix OR within 80 chars
+                has_roi_context = bool(prefix.strip()) or bool(
+                    re.search(r'ROI|Return', suffix, re.IGNORECASE)
+                )
+                if not has_roi_context:
+                    pos = match.start()
+                    has_roi_context = any(
+                        abs(kw_pos - pos) < 80 for kw_pos in _roi_kw_positions
+                    )
+                if not has_roi_context:
+                    return str(match.group(0))  # Not ROI-related, skip
                 logger.info(
                     f"[FIX-B25-ROI-SANITIZER] Capping {value_str}% → "
                     f"{cap_str}% in context: "
