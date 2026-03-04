@@ -110,15 +110,24 @@ tr:last-child td { border-bottom: none; }
 /* ── Page Structure ─────────────────────────────────── */
 .page { max-width: 210mm; margin: 0 auto; }
 
-/* ══ HARD PAGE BREAKS (max 3) ═══════════════════════ */
-/* .break-cover-to-toc removed — cover uses height:100vh (v7.1: page-break-after also removed) */
-.break-exec-to-action { page-break-before: always; }
-.break-action-to-imprint { page-break-before: always; }
+/* ══ PAGE BREAK RULES v7.1.2 (Puppeteer/Chromium) ═══ */
+/* .break-cover-to-toc removed — cover uses height:100vh */
+.break-exec-to-action { break-before: page; }
+.break-action-to-imprint { break-before: page; }
+
+/* Every main chapter starts on a new page */
+.section {
+    break-before: page;
+}
+/* Exceptions: Cover has its own page-break-after, TOC follows naturally */
+#cover, #cover + .section, .section:first-of-type {
+    break-before: auto;
+}
 
 /* ── Section Base ───────────────────────────────────── */
 .section {
     padding: var(--sp-xl) 0 var(--sp-lg);
-    page-break-inside: auto;
+    break-inside: auto;
 }
 
 /* ── Level Indicator ────────────────────────────────── */
@@ -738,8 +747,35 @@ tr:last-child td { border-bottom: none; }
     margin-bottom: var(--sp-xs);
 }
 
-/* ── Utility: no-break cards ────────────────────────── */
-.card-nobreak { page-break-inside: avoid; }
+/* ══ BLOCK PROTECTION v7.1.2 — keep cards/boxes together ═══ */
+/* Cards and info boxes */
+.mgmt-card, .decision-card, .funding-card, .kpi-card,
+.glance-box, .contact-box, .impressum-block,
+.reading-guide, .card-nobreak {
+    break-inside: avoid;
+}
+
+/* Headings must stay with following content */
+h1, h2, h3, h4 {
+    break-after: avoid;
+}
+
+/* Score displays and KPI rows */
+.mgmt-grid, .kpi-row, .dim-grid {
+    break-inside: avoid;
+}
+
+/* Appendix sections */
+.appendix-section {
+    break-before: page;
+    break-inside: auto;
+}
+
+/* Transitions stay with their section */
+.section-transition {
+    break-before: avoid;
+    break-inside: avoid;
+}
 
 /* ══════════════════════════════════════════════════════
    v7.1 NEUE ELEMENTE — Clean Corporate Plus
@@ -873,8 +909,9 @@ tr:last-child td { border-bottom: none; }
 /* ── Print enhancements ─────────────────────────────── */
 @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .section { page-break-inside: auto; }
-    .card-nobreak, .mgmt-card, .decision-card, .funding-card, .kpi-card { page-break-inside: avoid; }
+    .section { break-inside: auto; }
+    .mgmt-card, .decision-card, .funding-card, .kpi-card,
+    .glance-box, .contact-box, .card-nobreak { break-inside: avoid; }
 }
     </style>
 </head>
