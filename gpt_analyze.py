@@ -15992,7 +15992,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         else:
             intro_template = (
                 f"Dieser KI-Readiness-Report für {hauptleistung_fc} analysiert Ihren aktuellen KI-Reifegrad ({overall_score}/100 = {score_rating}) "
-                f"und liefert konkrete Handlungsempfehlungen für {company_size} mit Fokus auf {hauptleistung_fc}. "
+                f"und liefert konkrete Handlungsempfehlungen für {company_size} mit Fokus auf Ihren Geschäftsbereich. "
                 f"Schwerpunkte: Sicherheit, Effizienz und Förderpotenziale. "
                 f"ROI-Details und Payback-Analyse finden Sie im Business Case."
             )
@@ -18031,7 +18031,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     f"Dieser KI-Readiness-Report für {_b24_hauptleistung} analysiert "
                     f"Ihren aktuellen KI-Reifegrad ({_b24_final_score}/100 = {_b24_score_rating}) "
                     f"und liefert konkrete Handlungsempfehlungen für {_b24_company_size} "
-                    f"mit Fokus auf {_b24_hauptleistung}. "
+                    f"mit Fokus auf Ihren Geschäftsbereich. "
                     f"Schwerpunkte: Sicherheit, Effizienz und Förderpotenziale. "
                     f"ROI-Details und Payback-Analyse finden Sie im Business Case."
                 )
