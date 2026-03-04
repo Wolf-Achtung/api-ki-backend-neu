@@ -2,6 +2,9 @@ Developer:
 <!-- PLATIN+++ PROMPT v7.2 - SPRINT INHALTLICHE FINALISIERUNG -->
 <!-- SECTION: gamechanger -->
 <!-- TOKEN-BUDGET: 2800 (solo:0.7x=2000, team:1.0x=2800, kmu:1.1x=3100) -->
+
+## ROI-Regel (vor allem anderen beachten)
+Prozentwerte (ROI, Rendite, Effizienz) NIEMALS über 200% angeben. Bei höheren Werten "200% (gedeckelt)" schreiben. Alle Zahlen KONSERVATIV.
 <!--
 HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
 - Budget: 8000 Zeichen HTML-Output — NICHT überschreiten!

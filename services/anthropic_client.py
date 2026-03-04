@@ -206,6 +206,22 @@ def _resolve_anthropic_model(section: Optional[str], requested_model: Optional[s
     return DEFAULT_MODEL
 
 
+# v7.1.6: Premium sections that should be verified in logs
+_PREMIUM_SECTIONS = {"advisor_note", "business_case", "executive_summary", "one_liner"}
+
+
+def log_premium_routing(section: str, resolved_model: str) -> None:
+    """Log routing for premium sections to verify Opus assignment."""
+    if (section or "").strip().lower() in _PREMIUM_SECTIONS:
+        is_opus = "opus" in resolved_model.lower()
+        log.info(
+            "[FIX-OPUS-ROUTING] Premium section '%s' → model='%s' (is_opus=%s, "
+            "in_OPUS_SECTIONS=%s)",
+            section, resolved_model, is_opus,
+            (section or "").strip().lower() in OPUS_SECTIONS_SET,
+        )
+
+
 @lru_cache(maxsize=1)
 def get_anthropic_client() -> Optional["anthropic.Anthropic"]:
     """
@@ -415,6 +431,7 @@ def call_anthropic(
 
     # Modell-Mapping durchführen
     model_name = _resolve_anthropic_model(section, model)
+    log_premium_routing(section or "", model_name)
     temp = temperature if temperature is not None else _get_temperature_for_section(section)
     max_tok = max_tokens if max_tokens is not None else _get_max_tokens_for_section(section)
     sys = system_prompt or "Du bist ein hilfreicher, präziser KI-Berater."
