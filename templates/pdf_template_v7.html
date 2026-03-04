@@ -1067,6 +1067,12 @@ tr:last-child td { border-bottom: none; }
         </div>
     </div>
 
+    {% if SCORE_INTERPRETATION_HTML and SCORE_INTERPRETATION_HTML|trim|length > 50 %}
+    <div style="margin-top: var(--sp-md); padding: var(--sp-sm) var(--sp-md); background: #EFF6FF; border-radius: 8px; font-size: 10pt; line-height: 1.65; color: #1E40AF;">
+        {{ SCORE_INTERPRETATION_HTML|safe }}
+    </div>
+    {% endif %}
+
     {% if SKIP_HINT %}
     <div class="skip-hint"><strong>Bei Ihrem Score ({{ score_int }}/100):</strong> {{ SKIP_HINT }}</div>
     {% elif score_int >= 80 %}
@@ -1399,6 +1405,16 @@ tr:last-child td { border-bottom: none; }
     </div>
     <div class="section-body">{{ GAMECHANGER_DECISION_HTML|safe }}</div>
     {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Vollständige Gamechanger-Analyse (Architektur, Skaleneffekte) → Anhang A2</div>{% endif %}
+</section>
+{% endif %}
+
+<!-- ═══════ PERSÖNLICHE EINSCHÄTZUNG ═══════ -->
+{% if ADVISOR_NOTE_HTML and ADVISOR_NOTE_HTML|trim|length > 50 %}
+<section class="section" id="advisor-note" data-category="strategy">
+    <div class="level-indicator"><span class="level-dot level-dot-exec"></span> EXECUTIVE VIEW</div>
+    <span class="badge badge-strategy">Strategie</span>
+    <h2>Persönliche Einschätzung</h2>
+    <div class="section-body">{{ ADVISOR_NOTE_HTML|safe }}</div>
 </section>
 {% endif %}
 
