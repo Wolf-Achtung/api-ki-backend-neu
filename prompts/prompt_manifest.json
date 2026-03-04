@@ -909,6 +909,22 @@
       "size_aware": false,
       "required": false,
       "output": "html"
+    },
+    "score_interpretation": {
+      "title": "Score-Interpretation",
+      "path": "score_interpretation.md",
+      "purpose": "Einordnung der Dimensions-Scores (Governance, Sicherheit, Wertschöpfung, Befähigung)",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "advisor_note": {
+      "title": "Persönliche Einschätzung",
+      "path": "advisor_note.md",
+      "purpose": "Wolf-Hohl-Persona: persönliche Advisor-Einschätzung",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
     }
   },
   "en": {
