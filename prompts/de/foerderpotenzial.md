@@ -2,6 +2,9 @@ Developer:
 <!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
 <!-- SECTION: foerderpotenzial -->
 <!-- OUTPUT: HTML ONLY -->
+
+## ROI-Regel (vor allem anderen beachten)
+Prozentwerte (ROI, Rendite, Effizienz) NIEMALS über 200% angeben. Bei höheren Werten "200% (gedeckelt)" schreiben. Alle Zahlen KONSERVATIV.
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BUNDESLAND_LABEL}}, {{BRANCHE_LABEL}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{HAUPTLEISTUNG}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}, {{COMPANY_SIZE}} -->
 <!-- TOKEN-BUDGET: 4200 (solo:0.8x, team:1.0x, kmu:1.15x) -->
