@@ -2161,6 +2161,16 @@ def _final_score_sweep(sections: dict, final_score: int, pre_quality_score: int)
             html
         )
 
+        # Pattern 7: "Gesamtscore von 90" → "Gesamtscore von 92" (advisor_note phrasing)
+        html = re.sub(
+            rf'(Gesamt-?[Ss]core\s+von\s+){_pre}\b',
+            rf'\g<1>{_fin}',
+            html
+        )
+
+        # Pattern 8: bare "90/100" anywhere (catch-all for score display)
+        html = html.replace(f'{_pre}/100', f'{_fin}/100')
+
         if html != original:
             sections[key] = html
             _sweep_fixed += 1
