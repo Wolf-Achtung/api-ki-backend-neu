@@ -20355,6 +20355,7 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
         pdf_options = {
             "format": "A4",
             "printBackground": True,
+            "preferCSSPageSize": True,
             "displayHeaderFooter": True,
             "headerTemplate": "<div></div>",
             "footerTemplate": footer_template,
@@ -20493,6 +20494,7 @@ def run_async(
         pdf_options = {
             "format": "A4",
             "printBackground": True,
+            "preferCSSPageSize": True,
             "displayHeaderFooter": True,
             "headerTemplate": "<div></div>",
             "footerTemplate": footer_template,
