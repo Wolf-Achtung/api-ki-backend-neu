@@ -110,9 +110,9 @@ tr:last-child td { border-bottom: none; }
 /* ── Page Structure ─────────────────────────────────── */
 .page { max-width: 210mm; margin: 0 auto; }
 
-/* ══ PAGE BREAK RULES v7.1.3 (Puppeteer/Chromium) ═══ */
+/* ══ PAGE BREAK RULES v7.1.4 (Puppeteer/Chromium) ═══ */
 /* Selective breaks: only at major theme changes to avoid whitespace pages */
-.break-exec-to-action { break-before: page; }
+/* v7.1.4: .break-exec-to-action removed — T1 transition now inside #sofort-start */
 .break-action-to-imprint { break-before: page; }
 
 /* Major chapter starts — new page */
@@ -1295,15 +1295,16 @@ h1, h2, h3, h4 {
    ═══════════════════════════════════════════════════════ #}
 
 <!-- ═══ Break: Executive View → Action Guide ═══ -->
-<div class="break-exec-to-action">
-    {% if TRANSITION_EXEC_TO_ACTION and TRANSITION_EXEC_TO_ACTION|trim %}
-    <div class="section-transition">{{ TRANSITION_EXEC_TO_ACTION }}</div>
-    {% endif %}
-</div>
+{# v7.1.4: T1-transition moved INSIDE sofort-start to prevent orphan page.
+   Previously the transition sat between break-exec-to-action (break-before:page)
+   and #sofort-start (also break-before:page), creating an empty page. #}
 
 <!-- ═══════ SOFORT-START ═══════ -->
 {% if SOFORT_START_HTML and SOFORT_START_HTML|trim %}
 <section class="section {% if 'start' in skip_pages %}section-optional{% endif %}" id="sofort-start" data-category="action">
+    {% if TRANSITION_EXEC_TO_ACTION and TRANSITION_EXEC_TO_ACTION|trim %}
+    <div class="section-transition">{{ TRANSITION_EXEC_TO_ACTION }}</div>
+    {% endif %}
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <span class="badge badge-action">Umsetzung</span>
     <h2>{{ ui("sofort_start_title", "Ihr Sofort-Start") }}</h2>
@@ -1515,14 +1516,15 @@ h1, h2, h3, h4 {
 </section>
 {% endif %}
 
-{# v7.1: Übergang Risiko → Förderprogramme #}
-{% if TRANSITION_RISK_TO_FUNDING and TRANSITION_RISK_TO_FUNDING|trim %}
-<div class="section-transition">{{ TRANSITION_RISK_TO_FUNDING }}</div>
-{% endif %}
+{# v7.1.4: T3-transition moved INSIDE funding-section to prevent orphan page
+   (same fix as T1 — #funding-section has break-before:page) #}
 
 <!-- ═══════ FÖRDERPROGRAMME ═══════ -->
 {% if FUNDING_PATH_1 or FOERDERPOTENZIAL_HTML %}
 <section class="section" id="funding-section" data-category="finance">
+    {% if TRANSITION_RISK_TO_FUNDING and TRANSITION_RISK_TO_FUNDING|trim %}
+    <div class="section-transition">{{ TRANSITION_RISK_TO_FUNDING }}</div>
+    {% endif %}
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <div class="section-header">
         <div>
