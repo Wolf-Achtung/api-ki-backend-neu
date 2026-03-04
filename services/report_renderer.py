@@ -1384,6 +1384,18 @@ def render(briefing_obj: Any,
         log.info("[FIX-I10] Repaired UTF-8 double-encoding in final HTML for run=%s", run_id)
 
     # =========================================================================
+    # FIX-v715: Brute-force grammar separator before "Schwerpunkte:" in final HTML
+    # Three attempts on FINAL_CHECK_INTRO (v7.1.2, v7.1.3, v7.1.4) failed because
+    # the text in the PDF does not come (solely) from FINAL_CHECK_INTRO.
+    # This regex runs on the FINAL rendered HTML — nothing can undo it.
+    # =========================================================================
+    if 'Schwerpunkte' in html:
+        _html_before_sw = html
+        html = re.sub(r'(?<![.!?;:,])\s+(Schwerpunkte\s*:)', r'. \1', html)
+        if html != _html_before_sw:
+            log.info("[FIX-v715-GRAMMAR] Schwerpunkte-Separator applied on final HTML for run=%s", run_id)
+
+    # =========================================================================
     # FIX-514: Quick-Wins Non-Empty Gate (pre-PDF, fail-closed in STRICT)
     # Ensures Quick-Wins section is never an empty page in the PDF.
     # =========================================================================
