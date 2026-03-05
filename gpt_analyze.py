@@ -9365,9 +9365,10 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     roi_capped_str: str = f"{float(roi_capped_val):.0f}"
     roi_raw_str: str = f"{float(roi_raw_val):.0f}"
 
-    # FIX-620: Show only capped ROI to avoid N4.3 numerical=2 (dual display confusion)
-    # The raw (berechnet) value is shown in the Business Case engine detail section.
+    # FIX-GRAMMAR-T1: Show capped ROI for display, but keep roi_raw available
+    # for ROI-Herleitung sections that need transparent derivation.
     roi_12m = roi_capped_str
+    roi_12m_raw = roi_raw_str
 
     # ════════════════════════════════════════════════════════════════════════════
     # 🎯 PLATIN+ FALLBACK: FOERDERPOTENZIAL (900+ Wörter)
@@ -9389,9 +9390,9 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     leading to an amortization period of about <strong>{payback} months</strong>.
   </p>
   <p>
-    <strong>ROI Calculation Example:</strong> At €{einsparung}/month time savings × 12 months = <strong>€{einsparung*12:,} annual savings</strong>. 
-    With an investment of €{capex:,}, this equals a Return on Investment of <strong>{roi_12m}%</strong> in the first year 
-    (Calculation: Annual savings / Investment × 100). This transparent calculation provides a solid basis for evaluating funding eligibility.
+    <strong>ROI Calculation Example:</strong> At €{einsparung}/month time savings × 12 months = <strong>€{einsparung*12:,} annual savings</strong>.
+    With an investment of €{capex:,}, the calculation (Annual savings / Investment × 100) yields an ROI of <strong>{roi_12m_raw}%</strong>.{f' <strong>Planning value (capped): {roi_12m}%</strong> (conservative ceiling).' if roi_was_capped else ''}
+    This transparent calculation provides a solid basis for evaluating funding eligibility.
   </p>
   <h3>2. How Funding Can Improve the Business Case</h3>
   <p>
@@ -9448,9 +9449,9 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     einem Payback von <strong>{payback} Monaten</strong>.
   </p>
   <p>
-    <strong>ROI-Herleitung (Beispielrechnung):</strong> Bei €{einsparung}/Monat Zeitersparnis × 12 Monate = <strong>€{einsparung*12:,} jährliche Ersparnis</strong>. 
-    Bei einer Investition von €{capex:,} entspricht das einem Return on Investment von <strong>{roi_12m}%</strong> im ersten Jahr 
-    (Berechnung: Jahresersparnis / Investition × 100). Diese transparente Kalkulation bildet eine
+    <strong>ROI-Herleitung (Beispielrechnung):</strong> Bei €{einsparung}/Monat Zeitersparnis × 12 Monate = <strong>€{einsparung*12:,} jährliche Ersparnis</strong>.
+    Bei einer Investition von €{capex:,} ergibt die Berechnung (Jahresersparnis / Investition × 100) einen ROI von <strong>{roi_12m_raw}%</strong>.{f' <strong>Planwert (gedeckelt): {roi_12m}%</strong> (konservative Obergrenze).' if roi_was_capped else ''}
+    Diese transparente Kalkulation bildet eine
     solide Grundlage für die Bewertung der Förderwürdigkeit durch öffentliche Stellen.
   </p>
   <p>
@@ -16724,7 +16725,12 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.info(f"[{run_id}] [FIX-B25-CANONICAL] {_b25_count} sections enforced")
 
         # --- ROI Sanitizer (fixes 295% in scenario tables) ---
+        # FIX-GRAMMAR-T1: Skip BUSINESS_CASE_ENGINE_HTML — its ROI-Herleitung
+        # intentionally shows the raw (uncapped) ROI in step 5 for transparency.
+        _B25_ROI_SKIP = {"BUSINESS_CASE_ENGINE_HTML"}
         for _b25_sname, _b25_scontent in list(sections.items()):
+            if _b25_sname in _B25_ROI_SKIP:
+                continue
             if isinstance(_b25_scontent, str) and len(_b25_scontent) > 50:
                 sections[_b25_sname] = sanitize_roi_values_in_content(
                     content=_b25_scontent,
