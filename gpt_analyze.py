@@ -15733,13 +15733,14 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             # This ensures cover page and BC section show the same Payback value
             sections["PAYBACK_MONTHS"] = realistic.payback_months
             sections["_PAYBACK_BC_V2"] = realistic.payback_months  # FIX-B733b: immutable payback (survives CANON inject)
-            # FIX-B17: Store raw ROI for MC simulation, cap display value to 200%
+            # FIX-B17 + v7.1.7: All scenario ROI values are now pre-capped at 200%
+            # in ScenarioKPIs.__post_init__ and Monte Carlo simulation.
+            # This display cap is now belt-and-suspenders.
             _MAX_ROI_DISPLAY = 200.0
             sections["ROI_12M_RAW"] = realistic.roi_12m
             sections["ROI_12M"] = min(_MAX_ROI_DISPLAY, realistic.roi_12m)
-            if realistic.roi_12m > _MAX_ROI_DISPLAY:
-                log.info("[%s] [FIX-B17-ROI-CAP] ROI_12M capped for display: %.0f%% → %.0f%%",
-                         run_id, realistic.roi_12m, _MAX_ROI_DISPLAY)
+            log.info("[%s] [FIX-v717-ROI-PRECAP] ROI_12M=%.0f%% (pre-capped in engine, display-cap=%.0f%%)",
+                     run_id, realistic.roi_12m, _MAX_ROI_DISPLAY)
             log.info("[%s] [FIX-498-WP5] Centralized KPIs: PAYBACK_MONTHS=%.1f, ROI_12M=%.1f%%",
                      run_id, realistic.payback_months, sections["ROI_12M"])
 

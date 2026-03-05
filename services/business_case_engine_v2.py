@@ -896,11 +896,13 @@ class ScenarioKPIs:
             log.warning("[G30] Unknown scenario name: %s, defaulting to 'realistic'", self.name)
             self.name = "realistic"
 
-        # FIX-R3-5C: Only apply MIN_ROI floor, not MAX_ROI cap.
-        # calculate_roi() already handles per-scenario capping (realistic=capped,
-        # optimistic/conservative=uncapped). Re-capping here made all 3 scenarios
-        # show identical 200% ROI (double-cap bug).
-        self.roi_12m = max(MIN_ROI, self.roi_12m)
+        # FIX-R3-5C (REVISED v7.1.7): Cap ALL scenarios at MAX_ROI.
+        # Original FIX-R3-5C disabled capping to avoid all 3 scenarios showing
+        # identical 200%, but this let values like 637% into HTML output, causing
+        # 52+ B25 sanitizer cappings. Now we cap deterministically here.
+        # Differentiation between scenarios is preserved by their input variance
+        # (different savings/investment assumptions), not by uncapped outliers.
+        self.roi_12m = max(MIN_ROI, min(MAX_ROI, self.roi_12m))
 
         # Clamp payback
         if self.payback_months < MIN_PAYBACK_MONTHS:
