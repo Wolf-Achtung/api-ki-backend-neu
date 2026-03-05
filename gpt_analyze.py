@@ -9209,6 +9209,10 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "ROI_NETTONUTZEN_EUR": _fmt_de(_roi_nettonutzen),
         "ROI_RAW_PCT": str(_roi_raw_pct),
         "ROI_CAPPED_PCT": str(_roi_capped_pct),
+        # Sofort-Start / Netto-Ersparnis (consistent with BC)
+        "BRUTTO_ERSPARNIS_JAHR_EUR": _fmt_de(_roi_jahresersparnis),
+        "NETTO_ERSPARNIS_JAHR_EUR": _fmt_de(_roi_jahresersparnis - _roi_opex_jahr),
+        "TOOL_KOSTEN_JAHR_EUR": _fmt_de(_roi_opex_jahr),
     })
 
     # ===== BLOCK 9: Scores (CRITICAL FIX!) =====
@@ -13168,13 +13172,16 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             _sofort_rate, _ = get_hourly_rate(_sofort_size_norm)
         except Exception:
             pass
+        # FIX-GRAMMAR-T1: Pass canonical OPEX for consistent net savings
+        _sofort_opex_monthly = float(sections.get("OPEX_REALISTISCH_EUR") or briefing.get("OPEX_REALISTISCH_EUR") or 0)
         sections["SOFORT_START_HTML"] = generate_sofort_start_html(
             hauptleistung=sofort_hauptleistung,
             branche=sofort_branche,
             company_size=sofort_size,
             zeitersparnis_prioritaet=sofort_zeit,
             stundensatz=_sofort_rate,
-            canon_hours_month=float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 36)  # FIX-B733-HOURS: fallback chain
+            canon_hours_month=float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 36),  # FIX-B733-HOURS: fallback chain
+            canon_opex_monthly=_sofort_opex_monthly,
         )
         log.info("[SOFORT-START] ✅ Generated Sofort-Start page for %s", sofort_branche[:30] if sofort_branche else "default")
     except Exception as e:
