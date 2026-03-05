@@ -13173,7 +13173,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         except Exception:
             pass
         # FIX-GRAMMAR-T1: Pass canonical OPEX for consistent net savings
-        _sofort_opex_monthly = float(sections.get("OPEX_REALISTISCH_EUR") or answers.get("OPEX_REALISTISCH_EUR") or 0)
+        _sofort_opex_monthly = float(sections.get("OPEX_REALISTISCH_EUR") or briefing.get("OPEX_REALISTISCH_EUR") or 0)
         sections["SOFORT_START_HTML"] = generate_sofort_start_html(
             hauptleistung=sofort_hauptleistung,
             branche=sofort_branche,
