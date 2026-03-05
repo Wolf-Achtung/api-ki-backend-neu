@@ -1955,6 +1955,14 @@ GRAMMAR_FIX_PATTERNS = [
     (r' mit n\.', ' mit einem passenden Tool.'),  # "mit n." → sinnvoll
     (r' und\.</p>', '.</p>'),  # "und.</p>" → ".</p>"
     (r' und\.<', '.<'),  # "und." vor Tag → "."
+
+    # FIX-GRAMMAR-T1: ROI ist maskulin — "ein attraktives ROI" → "einen attraktiven ROI"
+    (r'ein\s+sehr\s+attraktives\s+ROI', 'einen sehr attraktiven ROI'),
+    (r'ein\s+attraktives\s+ROI', 'einen attraktiven ROI'),
+    (r'ein\s+hohes\s+ROI', 'einen hohen ROI'),
+    (r'ein\s+positives\s+ROI', 'einen positiven ROI'),
+    (r'ein\s+gutes\s+ROI', 'einen guten ROI'),
+    (r'das\s+ROI', 'der ROI'),
 ]
 
 def apply_grammar_fixes(html: str) -> tuple[str, int]:
