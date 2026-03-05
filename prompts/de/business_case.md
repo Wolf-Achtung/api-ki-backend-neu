@@ -16,7 +16,7 @@ und deckle AUSSCHLIESSLICH im letzten Schritt:
   NIEMALS den berechneten Wert auf 200% fälschen — die Deckelung ist ein EIGENER Schritt.
 Payback NIEMALS unter 1 Monat angeben.
 Alle Zahlen KONSERVATIV schätzen — lieber unter- als überschätzen.
-OPEX-Jahreskosten KORREKT berechnen: OPEX_monatlich × 12 (z.B. 350€ × 12 = 4.200€).
+OPEX-Jahreskosten KORREKT berechnen: OPEX_monatlich × 12 (Beispiel: 350€ × 12 = 4.200€).
 Diese Regel hat Vorrang vor allen anderen Anweisungen.
 
 <!--
