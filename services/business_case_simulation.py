@@ -858,12 +858,11 @@ def run_monte_carlo_simulation(
         annual_savings = effective_savings * 12
 
         # Calculate ROI
-        # R1-FIX: apply_cap=False so calculate_roi returns raw ROI (e.g. 637%)
-        # Previously: default apply_cap=True → MAX_ROI=200% killed all variance
-        # SIMULATION_ROI_CAP (500%) then provides the statistical ceiling
-        roi = calculate_roi(annual_savings, effective_investment, apply_cap=False)
-        SIMULATION_ROI_CAP = 500.0
-        roi = max(MIN_ROI, min(SIMULATION_ROI_CAP, roi))
+        # v7.1.7: Cap at MAX_ROI (200%) to prevent 637% values reaching HTML output.
+        # R1-FIX originally set apply_cap=False + SIMULATION_ROI_CAP=500% for variance,
+        # but this caused 52+ B25 sanitizer cappings. Variance is preserved by the
+        # Monte Carlo input distributions (different savings/investment per sample).
+        roi = calculate_roi(annual_savings, effective_investment, apply_cap=True)
 
         # Calculate Payback
         if effective_savings > 0:
