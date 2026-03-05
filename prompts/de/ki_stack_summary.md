@@ -76,12 +76,12 @@ INHALTLICHE STRUKTUR (5 feste Bausteine)
      3. Optimierung (Feintuning, Standards, Governance)
    - Jeder Schritt: 1–2 Sätze, klar verständlich und umsetzungsorientiert.
 
-4) 3 wichtigste Business-Case KPIs
-   - Realistische Werte aus dem Business Case:
-     - ROI-Rate (in %)
-     - Payback (Monate)
-     - Zeitersparnis/Monat (in Stunden oder Euro)
+4) 3 wichtigste Business-Case KPIs (NUR diese kanonischen Werte verwenden!)
+   - ROI-Rate: {{ROI_CAPPED_PCT}}% (EXAKT diesen Wert verwenden)
+   - Payback: {{PAYBACK_MONTHS}} Monate (EXAKT diesen Wert verwenden)
+   - Zeitersparnis: {{ROI_STUNDEN_MONAT}} Stunden/Monat (EXAKT diesen Wert verwenden)
    - Kurz kommentieren, was diese KPIs für die Entscheidungsebene bedeuten.
+   - KEINE eigenen KPI-Werte erfinden oder berechnen!
 
 5) Branch Badge + Risikoindikator
    - Branch-Label: {{BRANCH_SHORT_LABEL}}.
