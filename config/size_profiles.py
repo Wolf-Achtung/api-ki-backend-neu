@@ -190,7 +190,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
         },
 
         "min_words": {
-            "executive_summary": 140,   # FIX-TEAM-KMU: realistic for LLM output
+            "executive_summary": 80,    # v7.1.7: lowered from 140 (74 words is adequate, prevents false RESCUE-640)
             "quick_wins": 90,
             "roadmap_90d": 200,
             "roadmap_12m": 600,
@@ -264,7 +264,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
         },
 
         "min_words": {
-            "executive_summary": 140,   # FIX-TEAM-KMU: realistic for LLM output
+            "executive_summary": 80,    # v7.1.7: lowered from 140 (74 words is adequate, prevents false RESCUE-640)
             "quick_wins": 120,
             "roadmap_90d": 220,
             "roadmap_12m": 700,
