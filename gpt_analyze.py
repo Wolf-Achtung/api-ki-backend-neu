@@ -1305,8 +1305,8 @@ _SECTION_MAX_TOKENS = {
     "tools_empfehlungen_expand": 7000,
     "wettbewerb_benchmark": 5000,
     "wettbewerb_benchmark_expand": 5000,
-    "technologie_prozesse": 5000,
-    "technologie_prozesse_expand": 5000,
+    "technologie_prozesse": 6000,       # v7.1.7: increased from 5000 to prevent TRUNCATED
+    "technologie_prozesse_expand": 6000,  # v7.1.7: increased from 5000
     "org_change": 5000,
     "org_change_expand": 5000,
     "roadmap": 5000,
