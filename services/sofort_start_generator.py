@@ -1011,10 +1011,11 @@ def get_branche_key(branche: str) -> str:
     return "default"
 
 
-def calculate_yearly_savings(hours_per_week: int, hourly_rate: int = 80, company_size: str = "solo") -> dict:
+def calculate_yearly_savings(hours_per_week: int, hourly_rate: int = 80, company_size: str = "solo", canon_opex_monthly: float = 0) -> dict:
     """Berechnet Jahresersparnis (Idee #3 + #6).
 
     PLATIN+++ FIX 1.1/1.4: Uses canonical hourly rate and OPEX from single source of truth.
+    FIX-GRAMMAR-T1: canon_opex_monthly overrides size-based OPEX when provided.
     """
     # PLATIN+++ FIX 1.1: Use canonical rate if default was passed
     if hourly_rate == 80:
@@ -1027,7 +1028,11 @@ def calculate_yearly_savings(hours_per_week: int, hourly_rate: int = 80, company
     savings_per_year = hours_per_year * hourly_rate
 
     # PLATIN+++ FIX 1.4: Use canonical OPEX instead of hardcoded 240€
-    tool_costs_per_year = _get_canonical_opex_yearly(company_size)
+    # FIX-GRAMMAR-T1: Prefer explicit canonical OPEX over size-based default
+    if canon_opex_monthly > 0:
+        tool_costs_per_year = int(canon_opex_monthly * 12)
+    else:
+        tool_costs_per_year = _get_canonical_opex_yearly(company_size)
     net_savings = savings_per_year - tool_costs_per_year
 
     return {
@@ -1052,7 +1057,8 @@ def generate_sofort_start_html(
     company_size: str = "solo",
     zeitersparnis_prioritaet: str = "",
     stundensatz: int = 0,
-    canon_hours_month: float = 0  # FIX-B732: CANON hours for consistency
+    canon_hours_month: float = 0,  # FIX-B732: CANON hours for consistency
+    canon_opex_monthly: float = 0,  # FIX-GRAMMAR-T1: CANON OPEX for consistency
 ) -> str:
     """
     Generiert die SOFORT_START_HTML Section.
@@ -1098,7 +1104,7 @@ def generate_sofort_start_html(
         if _b732_hours_week != hours_per_week:
             hours_per_week = _b732_hours_week
 
-    savings = calculate_yearly_savings(hours_per_week, stundensatz, company_size)
+    savings = calculate_yearly_savings(hours_per_week, stundensatz, company_size, canon_opex_monthly=canon_opex_monthly)
     
     # Personalisiere den ersten Schritt
     erster_schritt = branche_data["erster_schritt"]
