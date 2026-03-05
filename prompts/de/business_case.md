@@ -3,21 +3,34 @@ Developer:
 <!-- SECTION: business_case -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- INPUT: {{BRANCHE_LABEL}}, {{COMPANY_SIZE}}, {{hauptleistung}}, {{BUNDESLAND_LABEL}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}, {{OFFERING_LABEL}} -->
+<!-- INPUT: {{BRANCHE_LABEL}}, {{COMPANY_SIZE}}, {{hauptleistung}}, {{BUNDESLAND_LABEL}}, {{CAPEX_REALISTISCH_EUR}}, {{OPEX_REALISTISCH_EUR}}, {{EINSPARUNG_MONAT_EUR}}, {{PAYBACK_MONTHS}}, {{ROI_12M}}, {{OFFERING_LABEL}}, {{ROI_STUNDEN_MONAT}}, {{ROI_STUNDENSATZ_EUR}}, {{ROI_JAHRESERSPARNIS_EUR}}, {{ROI_CAPEX_EUR}}, {{ROI_OPEX_MONAT_EUR}}, {{ROI_OPEX_JAHR_EUR}}, {{ROI_NETTONUTZEN_EUR}}, {{ROI_RAW_PCT}}, {{ROI_CAPPED_PCT}} -->
 <!-- TOKEN-BUDGET: 1800 (solo:0.8x=1440, team:1.0x=1800, kmu:1.15x=2070) -->
 <!-- FIX-506: Canonical KPI Contract -->
 
 ## WICHTIGSTE REGEL (vor allem anderen beachten)
 ROI-Planwerte dürfen NIEMALS über 200% liegen.
 Wenn deine Berechnung einen höheren Wert ergibt, verwende IMMER "{{ROI_12M}}% (gedeckelt)".
-WICHTIG: Zeige in Schritt-für-Schritt-Herleitungen den ECHTEN berechneten Wert,
-und deckle AUSSCHLIESSLICH im letzten Schritt:
-  Beispiel: "ROI (berechnet): 766%" → dann: "Planwert (gedeckelt): 200%"
-  NIEMALS den berechneten Wert auf 200% fälschen — die Deckelung ist ein EIGENER Schritt.
 Payback NIEMALS unter 1 Monat angeben.
 Alle Zahlen KONSERVATIV schätzen — lieber unter- als überschätzen.
-OPEX-Jahreskosten KORREKT berechnen: OPEX_monatlich × 12 (Beispiel: 350€ × 12 = 4.200€).
+Rechne NIEMALS selbst — verwende AUSSCHLIESSLICH die vorberechneten Variablen.
 Diese Regel hat Vorrang vor allen anderen Anweisungen.
+
+## ROI-Herleitung (EXAKT diese Werte verwenden, NICHT selbst rechnen)
+
+Schreibe die ROI-Herleitung EXAKT so:
+
+1. Jahresersparnis: {{ROI_STUNDEN_MONAT}}h/Monat × {{ROI_STUNDENSATZ_EUR}}€/h × 12 = {{ROI_JAHRESERSPARNIS_EUR}}€
+2. Abzüglich Einmalinvestition: {{ROI_CAPEX_EUR}}€
+3. Abzüglich laufende Jahreskosten: {{ROI_OPEX_MONAT_EUR}}€/Monat × 12 = {{ROI_OPEX_JAHR_EUR}}€
+4. Nettonutzen: {{ROI_JAHRESERSPARNIS_EUR}}€ - {{ROI_CAPEX_EUR}}€ - {{ROI_OPEX_JAHR_EUR}}€ = {{ROI_NETTONUTZEN_EUR}}€
+5. ROI (berechnet): {{ROI_NETTONUTZEN_EUR}}€ / {{ROI_CAPEX_EUR}}€ × 100 = {{ROI_RAW_PCT}}%
+6. Planwert (gedeckelt): {{ROI_CAPPED_PCT}}% (konservative Obergrenze: 200%)
+
+REGELN:
+- Verwende AUSSCHLIESSLICH die oben angegebenen Werte
+- Rechne NIEMALS selbst — alle Zahlen sind vorberechnet
+- Ändere KEINE Werte
+- Die Reihenfolge der Schritte muss exakt eingehalten werden
 
 <!--
 ###############################################################################
@@ -100,11 +113,10 @@ Wenn in ANDEREN Sektionen ROI erwähnt wird:
 
 ROI-GUARDRAIL (STRIKT):
 - ROI-PLANWERTE IMMER zwischen 50% und 200% halten
-- Werte über 200%: als "Planwert (gedeckelt): 200%" kennzeichnen
-- In Herleitungen: den ECHTEN berechneten Wert zeigen, Deckelung als EIGENEN Schritt
+- Werte über 200%: als "Planwert (gedeckelt): {{ROI_CAPPED_PCT}}%" kennzeichnen
+- In Herleitungen: NUR die vorberechneten Variablen verwenden, NIEMALS selbst rechnen
 - Payback NIEMALS unter 1 Monat angeben
 - Alle Zahlen KONSERVATIV schätzen — lieber unter- als überschätzen
-- OPEX-Jahreskosten: OPEX_monatlich × 12 exakt berechnen
 - KEINE Emojis in den Warnhinweisen
 
 ###############################################################################

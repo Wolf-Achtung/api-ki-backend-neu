@@ -9184,7 +9184,33 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "opex_realistisch_eur": opex_realistisch,  # Now consistent monthly value
         "opex_konservativ_eur": int(opex_realistisch * 1.2),
     })
-    
+
+    # ===== BLOCK 8b: ROI-Herleitung Variablen (FIX-GRAMMAR-T1) =====
+    # All derivation steps pre-computed in backend so the LLM never does math.
+    # Uses stundensatz_eur, monatsersparnis_stunden from BLOCK 7,
+    # capex_realistisch, opex_realistisch from BLOCK 8.
+    _roi_jahresersparnis = monatsersparnis_stunden * stundensatz_eur * 12
+    _roi_opex_jahr = opex_realistisch * 12
+    _roi_nettonutzen = _roi_jahresersparnis - capex_realistisch - _roi_opex_jahr
+    _roi_raw_pct = round((_roi_nettonutzen / capex_realistisch) * 100) if capex_realistisch > 0 else 0
+    _roi_capped_pct = min(_roi_raw_pct, 200)
+
+    def _fmt_de(v: float) -> str:
+        """Format number with German thousands separator (dot)."""
+        return f"{int(v):,}".replace(",", ".")
+
+    base_vars.update({
+        "ROI_STUNDEN_MONAT": str(int(monatsersparnis_stunden)),
+        "ROI_STUNDENSATZ_EUR": str(int(stundensatz_eur)),
+        "ROI_JAHRESERSPARNIS_EUR": _fmt_de(_roi_jahresersparnis),
+        "ROI_CAPEX_EUR": _fmt_de(capex_realistisch),
+        "ROI_OPEX_MONAT_EUR": _fmt_de(opex_realistisch),
+        "ROI_OPEX_JAHR_EUR": _fmt_de(_roi_opex_jahr),
+        "ROI_NETTONUTZEN_EUR": _fmt_de(_roi_nettonutzen),
+        "ROI_RAW_PCT": str(_roi_raw_pct),
+        "ROI_CAPPED_PCT": str(_roi_capped_pct),
+    })
+
     # ===== BLOCK 9: Scores (CRITICAL FIX!) =====
     # Both English AND German variants needed!
     # English: Used in code (score_security, score_value)
