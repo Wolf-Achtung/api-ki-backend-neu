@@ -8,10 +8,15 @@ Developer:
 <!-- FIX-506: Canonical KPI Contract -->
 
 ## WICHTIGSTE REGEL (vor allem anderen beachten)
-ROI-Werte dürfen NIEMALS über 200% liegen.
-Wenn deine Berechnung einen höheren Wert ergibt, verwende IMMER "200% (gedeckelt)".
+ROI-Planwerte dürfen NIEMALS über 200% liegen.
+Wenn deine Berechnung einen höheren Wert ergibt, verwende IMMER "{{ROI_12M}}% (gedeckelt)".
+WICHTIG: Zeige in Schritt-für-Schritt-Herleitungen den ECHTEN berechneten Wert,
+und deckle AUSSCHLIESSLICH im letzten Schritt:
+  Beispiel: "ROI (berechnet): 766%" → dann: "Planwert (gedeckelt): 200%"
+  NIEMALS den berechneten Wert auf 200% fälschen — die Deckelung ist ein EIGENER Schritt.
 Payback NIEMALS unter 1 Monat angeben.
 Alle Zahlen KONSERVATIV schätzen — lieber unter- als überschätzen.
+OPEX-Jahreskosten KORREKT berechnen: OPEX_monatlich × 12 (z.B. 350€ × 12 = 4.200€).
 Diese Regel hat Vorrang vor allen anderen Anweisungen.
 
 <!--
@@ -94,10 +99,12 @@ Wenn in ANDEREN Sektionen ROI erwähnt wird:
 ###############################################################################
 
 ROI-GUARDRAIL (STRIKT):
-- ROI-Werte IMMER zwischen 50% und 200% halten
-- Werte über 200%: auf "200% (gedeckelt)" setzen, NICHT den höheren Wert nennen
+- ROI-PLANWERTE IMMER zwischen 50% und 200% halten
+- Werte über 200%: als "Planwert (gedeckelt): 200%" kennzeichnen
+- In Herleitungen: den ECHTEN berechneten Wert zeigen, Deckelung als EIGENEN Schritt
 - Payback NIEMALS unter 1 Monat angeben
 - Alle Zahlen KONSERVATIV schätzen — lieber unter- als überschätzen
+- OPEX-Jahreskosten: OPEX_monatlich × 12 exakt berechnen
 - KEINE Emojis in den Warnhinweisen
 
 ###############################################################################
