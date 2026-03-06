@@ -799,6 +799,28 @@ def render(briefing_obj: Any,
             except (ValueError, TypeError):
                 pass
 
+    # FIX-v720-N1: Ensure PAYBACK_MONTHS_FMT_DE is set for Management Summary
+    # Solo reports show "n/a Mo" when F1 in final_sanitizer doesn't fire.
+    # Safety net: derive from PAYBACK_MONTHS, _PAYBACK_BC_V2, or BC_PAYBACK_REALISTIC.
+    if not sections.get("PAYBACK_MONTHS_FMT_DE"):
+        _pb_raw = (
+            sections.get("PAYBACK_MONTHS")
+            or sections.get("_PAYBACK_BC_V2")
+            or sections.get("BC_PAYBACK_REALISTIC")
+        )
+        if _pb_raw is not None:
+            try:
+                _pb_float = float(str(_pb_raw).replace(",", "."))
+                if 0 < _pb_float < 120:  # sanity: 0-120 months
+                    _pb_fmt = f"{_pb_float:.1f}".replace(".", ",")
+                    sections["PAYBACK_MONTHS_FMT_DE"] = Markup(_pb_fmt)
+                    # Also ensure PAYBACK_MONTHS is set for template fallback
+                    if not sections.get("PAYBACK_MONTHS"):
+                        sections["PAYBACK_MONTHS"] = Markup(_pb_fmt)
+                    log.info("[FIX-v720-N1] Set PAYBACK_MONTHS_FMT_DE=%s", _pb_fmt)
+            except (ValueError, TypeError):
+                pass
+
     # Safe defaults with FIXED UTF-8
     # TEIL 3.1.4.x: Force LANG to detected value (no fallback to sections)
     ctx: Dict[str, Any] = {
