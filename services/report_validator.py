@@ -564,7 +564,7 @@ class ReportValidator:
             # =====================================================
             # Technical enterprise buzzwords
             "Engine",
-            "Plattform",
+            # FIX-P2-C1: "Plattform" removed — allgemeinsprachlich, kein Enterprise-Jargon
             "Framework",
             "Pipeline",
             "Architektur",
@@ -576,7 +576,7 @@ class ReportValidator:
             # Organization jargon
             "Rollout",
             "Change Management",
-            "Skalierung",
+            # FIX-P2-C1: "Skalierung" removed — kommt aus User-Input (vision_3_jahre)
             "Stakeholder",
             "Governance-Struktur",
             "Compliance-Framework",
@@ -584,7 +584,7 @@ class ReportValidator:
             # Abstract concepts
             "Strategische Roadmap",
             "Meilenstein-Planung",
-            "KPI-Dashboard",
+            # FIX-P2-C1: "KPI-Dashboard" removed — Standard-Begriff, Enforcer ersetzt bereits
             "Prozesslandschaft",
             "Wertschöpfungskette",
             "Matrixorganisation",
