@@ -656,6 +656,66 @@ class ReportValidator:
         ],
     }
 
+    # FIX-RC1: Section whitelist for SIZE_FORBIDDEN false positives.
+    # These term+section combos are intentional (section names, score dimensions,
+    # template labels) and should NOT trigger SIZE_MISMATCH or SOLO_TERMINOLOGY.
+    SIZE_FORBIDDEN_SECTION_WHITELIST: Dict[str, List[str]] = {
+        "Audit": [
+            "VENDOR_AUDIT_HTML", "vendor_audit",
+            "RISK_ENGINE_V3_HTML", "RISK_ENGINE_HTML",
+            "risk_engine_v3", "risk_engine",
+            "prompt_framework", "PROMPT_FRAMEWORK_HTML",
+        ],
+        "Audit-Trail": [
+            "VENDOR_AUDIT_HTML", "vendor_audit",
+            "RISK_ENGINE_V3_HTML", "RISK_ENGINE_HTML",
+        ],
+        "Governance": [
+            "AI_ACT_GOVERNANCE_INJECTION",
+            "KPI_SCORES_HTML", "KPI_VISUALS_HTML", "KPI_CONTEXT_HTML",
+            "AI_POLICY_MINI_HTML", "ai_policy_mini",
+            "ai_act_summary",
+            "BENCHMARKS_HTML", "benchmarks_html",
+            "LEAD_AI_ACT", "LEAD_RISKS", "LEAD_STRATEGIE", "LEAD_WETTBEWERB",
+            "MARKET_INSIGHTS_HTML",
+            "gamechanger_decision",
+            "_nist_rmf_narrative", "_GC_SNAPSHOT_642",
+        ],
+        "Governance-Struktur": [
+            "AI_ACT_GOVERNANCE_INJECTION",
+            "KPI_SCORES_HTML", "AI_POLICY_MINI_HTML",
+        ],
+        "Executive": [
+            "LEAD_EXEC",
+            "SOFORT_START_HTML", "sofort_start",
+            "ROADMAP_HTML", "ROADMAP_90D_HTML", "roadmap", "roadmap_90d",
+            "PILOT_PLAN_HTML", "pilot_plan",
+            "RECOMMENDATIONS_HTML", "recommendations",
+            "TECHNOLOGIE_PROZESSE_HTML", "technologie_prozesse",
+            "KI_SKILLPLAN_HTML", "ki_skillplan",
+            "TEMPLATES_START_HTML", "templates_start",
+            "PROMPT_FRAMEWORK_HTML", "prompt_framework",
+        ],
+        "Engine": [
+            "RISK_ENGINE_HTML", "RISK_ENGINE_V3_HTML",
+            "risk_engine", "risk_engine_v3",
+            "VENDOR_AUDIT_HTML", "vendor_audit",
+            "BUSINESS_CASE_ENGINE_HTML", "business_case_engine",
+            "RECOMMENDATIONS_ENGINE_HTML", "recommendations_engine",
+        ],
+        "Framework": [
+            "PROMPT_FRAMEWORK_HTML", "prompt_framework",
+            "AI_POLICY_MINI_HTML", "ai_policy_mini",
+        ],
+        "Pipeline": [
+            "_healer_stats", "_pipeline_meta",
+        ],
+        "Architektur": [
+            "AI_POLICY_MINI_HTML", "ai_policy_mini",
+            "TECHNOLOGIE_PROZESSE_HTML", "technologie_prozesse",
+        ],
+    }
+
     # SPRINT G3.1: Replacement mappings for size-inappropriate terms
     SIZE_REPLACEMENTS = {
         "team": {
@@ -1683,6 +1743,10 @@ class ReportValidator:
             if not isinstance(content, str):
                 continue
             for term in forbidden_terms:
+                # FIX-RC1: Skip whitelisted section+term combos (false positives)
+                wl = self.SIZE_FORBIDDEN_SECTION_WHITELIST.get(term, [])
+                if section_name in wl:
+                    continue
                 if self._term_hit(term, content):
                     # SPRINT N: Use CRITICAL severity if HARD_STOP is enabled
                     severity = "CRITICAL" if self.HARD_STOP_ON_SIZE_MISMATCH else "WARNING"
@@ -1733,6 +1797,12 @@ class ReportValidator:
             is_valid, violations = validate_solo_content(content, section_name)
 
             for violation in violations:
+                # FIX-RC1: Skip whitelisted section+term combos
+                vterm = violation.get("term", "")
+                wl = self.SIZE_FORBIDDEN_SECTION_WHITELIST.get(vterm, [])
+                if section_name in wl:
+                    continue
+
                 severity = violation.get("severity", "WARNING").upper()
                 # Headlines are CRITICAL, body is WARNING
                 if severity == "ERROR":
@@ -1744,7 +1814,7 @@ class ReportValidator:
                         category="SOLO_TERMINOLOGY",
                         section=section_name,
                         message=(
-                            f"Solo-Blacklist: '{violation.get('term', 'unknown')}' "
+                            f"Solo-Blacklist: '{vterm}' "
                             f"gefunden in {section_name}"
                         ),
                         details=(
