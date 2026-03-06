@@ -1401,6 +1401,73 @@ def render(briefing_obj: Any,
             log.info("[FIX-v715-GRAMMAR] No change needed — punctuation already present before 'Schwerpunkte:' run=%s", run_id)
 
     # =========================================================================
+    # FIX-v7110: LLM-Mathe-Korrektur auf finalem HTML
+    # LLMs können nicht rechnen. Wir korrigieren bekannte Fehler deterministisch
+    # mit den kanonischen Werten aus dem Business Case (sections dict).
+    # Gleicher Mechanismus wie der Schwerpunkte-Fix: Post-Processing auf
+    # finalem HTML, direkt vor Puppeteer — nichts kann es rückgängig machen.
+    # =========================================================================
+    try:
+        _canon_opex_m = float(sections.get("CANON_OPEX_MONTH_EUR") or sections.get("OPEX_REALISTISCH_EUR") or 0)
+        _canon_capex = float(sections.get("CANON_CAPEX_EUR") or sections.get("CAPEX_REALISTISCH_EUR") or 0)
+        _canon_hours = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
+        _canon_rate = float(sections.get("CANON_RATE_EUR") or sections.get("stundensatz_eur") or 0)
+
+        if _canon_opex_m > 0 and _canon_hours > 0 and _canon_rate > 0:
+            _opex_annual = _canon_opex_m * 12
+            _jahresersparnis = _canon_hours * _canon_rate * 12
+            _nettonutzen = _jahresersparnis - _canon_capex - _opex_annual
+            _netto_ersparnis = _jahresersparnis - _opex_annual  # Brutto minus laufende Kosten
+
+            def _fmt_de_eur(val: float) -> str:
+                """Format number with German thousands separator (dot)."""
+                return f"{int(val):,}".replace(",", ".")
+
+            _opex_annual_str = _fmt_de_eur(_opex_annual)
+            _nettonutzen_str = _fmt_de_eur(_nettonutzen)
+            _netto_ersparnis_str = _fmt_de_eur(_netto_ersparnis)
+            _opex_m_int = str(int(_canon_opex_m))
+
+            _html_before_math = html
+
+            # --- FIX 1: OPEX-Jahreskosten in ROI-Herleitung ---
+            # LLM schreibt z.B. "350€/Monat × 12 = 4.110€" → korrigiere auf "4.200€"
+            html = re.sub(
+                rf'({re.escape(_opex_m_int)}\s*€?/?Monat\s*[×x]\s*12\s*=\s*)[\d.]+(\s*€)',
+                rf'\g<1>{_opex_annual_str}\2',
+                html
+            )
+
+            # --- FIX 2: Netto-Ersparnis (Brutto minus OPEX) ---
+            # LLM berechnet falsch → korrigiere auf kanonischen Wert
+            html = re.sub(
+                r'(Netto-Ersparnis\*?\s*(?:</?\w[^>]*>\s*)*?)[\d.]{4,6}(\s*€)',
+                rf'\g<1>{_netto_ersparnis_str}\2',
+                html
+            )
+
+            # --- FIX 3: Entscheidungsvorlage "Jährliche Ersparnis" ---
+            # Korrigiere auf kanonischen Nettonutzen
+            html = re.sub(
+                r'(Jährliche Ersparnis:?\s*(?:ca\.?\s*)?)[\d.]{4,6}(\s*€)',
+                rf'\g<1>{_nettonutzen_str}\2',
+                html
+            )
+
+            if html != _html_before_math:
+                log.info(
+                    "[FIX-v7110-MATH] Applied: OPEX/Jahr=%s€, Netto-Ersparnis=%s€, Nettonutzen=%s€ run=%s",
+                    _opex_annual_str, _netto_ersparnis_str, _nettonutzen_str, run_id
+                )
+            else:
+                log.info("[FIX-v7110-MATH] No LLM math errors detected in HTML run=%s", run_id)
+        else:
+            log.info("[FIX-v7110-MATH] Skipped — canonical values incomplete (opex=%.0f, hours=%.0f, rate=%.0f) run=%s",
+                     _canon_opex_m, _canon_hours, _canon_rate, run_id)
+    except Exception as e:
+        log.warning("[FIX-v7110-MATH] Error during math correction (continuing): %s run=%s", str(e)[:200], run_id)
+
+    # =========================================================================
     # FIX-514: Quick-Wins Non-Empty Gate (pre-PDF, fail-closed in STRICT)
     # Ensures Quick-Wins section is never an empty page in the PDF.
     # =========================================================================
