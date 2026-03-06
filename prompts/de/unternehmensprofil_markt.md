@@ -1,7 +1,14 @@
-**WICHTIG – Längenlimit: Deine Antwort darf maximal 1100 Wörter umfassen. Kürze lieber als zu überziehen.**
+{% if COMPANY_SIZE == "solo" %}
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 350 Wörter / 2.500 Zeichen HTML umfassen. Solo-Budget ist NUR 3.000 Zeichen — bei 13K Output wird 78% abgeschnitten!**
+{% elif COMPANY_SIZE == "team" %}
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 700 Wörter / 6.500 Zeichen HTML umfassen. Team-Budget ist 8.000 Zeichen.**
+{% else %}
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 1000 Wörter umfassen.**
+{% endif %}
+Kürze lieber als zu überziehen — abgeschnittener Content ist wertlos!
 
 Developer:
-<!-- unternehmensprofil_markt.md – v5.0 GOLD STANDARD+ (branch-aware, size-aware, context-integrated)
+<!-- unternehmensprofil_markt.md – v5.1 TRUNCATION-FIX (branch-aware, size-aware, context-integrated)
      Antworte ausschließlich mit validem HTML.
      KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 
@@ -67,11 +74,10 @@ Developer:
        - Ton: nüchtern, sachlich, strategisch, gut lesbar für Geschäftsführung.
 
      HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
-       - Der gesamte HTML-Output darf MAXIMAL 7500 Zeichen umfassen
-       - Solo: max. 6000 Zeichen | Team: max. 7500 Zeichen | KMU: max. 8000 Zeichen
-       - Marktkontext: max. 4 Bullets à 1-2 Sätze (NICHT ausführlich erklären)
-       - Wettbewerbsposition: max. 3 Bullets (Vorteil/Nachteil/Hebel)
-       - ACHTUNG: Bei >8000 Zeichen wird ~35% des Contents abgeschnitten!
+       - Solo: max. 2.500 Zeichen (350 Wörter) | Team: max. 6.500 Zeichen (700 Wörter) | KMU: max. 8.000 Zeichen (1000 Wörter)
+       - WARNUNG: Solo-Budget ist NUR 3.000 Zeichen! Bei 13K+ Output = 78% Verlust!
+       - Solo: Marktkontext max. 3 Bullets à 1 Satz, Wettbewerb max. 3 kurze Bullets
+       - Team/KMU: Marktkontext max. 4 Bullets à 1-2 Sätze, Wettbewerb max. 3 Bullets
 
      THEMEN-OWNERSHIP (verbindlich):
        - Diese Section: OWNER für Unternehmensprofil, Marktkontext, KI-Potenzial, Wettbewerb
