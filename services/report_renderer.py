@@ -1504,6 +1504,56 @@ def render(briefing_obj: Any,
         log.warning("[FIX-v7110-MATH] Error during math correction (continuing): %s run=%s", str(e)[:200], run_id)
 
     # =========================================================================
+    # FIX-v720-F1: Complete truncated ROI derivation sentence
+    # LLM sometimes truncates "gedeckelt auf max. 200%)" to "gedeckelt auf max."
+    # =========================================================================
+    try:
+        _html_before_trunc = html
+        html = re.sub(
+            r'gedeckelt auf max\.(\s*(?:<|"|\'|\)|$))',
+            r'gedeckelt auf max. 200%).\1',
+            html
+        )
+        if html != _html_before_trunc:
+            log.info("[FIX-v720-F1] Completed truncated ROI sentence run=%s", run_id)
+    except Exception as e:
+        log.warning("[FIX-v720-F1] Error (continuing): %s run=%s", str(e)[:100], run_id)
+
+    # =========================================================================
+    # FIX-v720-F2: Replace hallucinated dates in Förderprogramme section
+    # LLM invents dates like "Juni 2025" for "Stand der Einschätzung" — replace
+    # with actual report date.
+    # =========================================================================
+    try:
+        _report_date_raw = sections.get("report_date", "")
+        if _report_date_raw:
+            # Convert DD.MM.YYYY to "März 2026" style
+            _GERMAN_MONTHS = {
+                1: "Januar", 2: "Februar", 3: "März", 4: "April",
+                5: "Mai", 6: "Juni", 7: "Juli", 8: "August",
+                9: "September", 10: "Oktober", 11: "November", 12: "Dezember"
+            }
+            try:
+                _rd_parts = _report_date_raw.split(".")
+                _rd_month = int(_rd_parts[1])
+                _rd_year = _rd_parts[2]
+                _rd_german = f"{_GERMAN_MONTHS[_rd_month]} {_rd_year}"
+            except (IndexError, ValueError, KeyError):
+                _rd_german = _report_date_raw  # fallback: use raw date
+
+            _html_before_date = html
+            # "Stand der Einschätzung: <any month> <any year>" → actual report date
+            html = re.sub(
+                r'(Stand der Einschätzung:\s*)\w+\s+\d{4}',
+                rf'\g<1>{_rd_german}',
+                html
+            )
+            if html != _html_before_date:
+                log.info("[FIX-v720-F2] Replaced hallucinated date with '%s' run=%s", _rd_german, run_id)
+    except Exception as e:
+        log.warning("[FIX-v720-F2] Error (continuing): %s run=%s", str(e)[:100], run_id)
+
+    # =========================================================================
     # FIX-514: Quick-Wins Non-Empty Gate (pre-PDF, fail-closed in STRICT)
     # Ensures Quick-Wins section is never an empty page in the PDF.
     # =========================================================================
