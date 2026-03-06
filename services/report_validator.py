@@ -567,10 +567,10 @@ class ReportValidator:
             # FIX-P2-C1: "Plattform" removed — allgemeinsprachlich, kein Enterprise-Jargon
             "Framework",
             "Pipeline",
-            "Architektur",
+            # FIX-P3-C1: "Architektur" removed — IT-Fachbegriff, kein Enterprise-Jargon
             "Baukasten",
             "Modul",
-            "Stack",
+            # FIX-P3-C1: "Stack" removed — "Mein KI-Stack" ist normales Solo-Vokabular
             "Layer",
             "Deployment",
             # Organization jargon
