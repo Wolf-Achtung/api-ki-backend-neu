@@ -1428,29 +1428,65 @@ def render(briefing_obj: Any,
             _netto_ersparnis_str = _fmt_de_eur(_netto_ersparnis)
             _opex_m_int = str(int(_canon_opex_m))
 
+            # --- Debug: show HTML context around known wrong values ---
+            for _dbg_pat, _dbg_label in [
+                (r'.{0,80}4[\.,\s]?110.{0,80}', 'OPEX-4110'),
+                (r'.{0,80}36[\.,\s]?840.{0,80}', 'NettoErsparnis-36840'),
+                (r'.{0,80}Netto-Ersparnis.{0,120}', 'NettoErsparnis-context'),
+            ]:
+                for _dbg_i, _dbg_m in enumerate(re.findall(_dbg_pat, html)):
+                    log.info("[FIX-v7110-DEBUG] %s[%d]: ...%s...", _dbg_label, _dbg_i, _dbg_m.strip()[:200])
+
             _html_before_math = html
 
-            # --- FIX 1: OPEX-Jahreskosten in ROI-Herleitung ---
+            # --- FIX 1a: OPEX-Jahreskosten in ROI-Herleitung ---
             # LLM schreibt z.B. "350€/Monat × 12 = 4.110€" → korrigiere auf "4.200€"
             html = re.sub(
-                rf'({re.escape(_opex_m_int)}\s*€?/?Monat\s*[×x]\s*12\s*=\s*)[\d.]+(\s*€)',
+                rf'({re.escape(_opex_m_int)}\s*€?\s*/?\s*Monat\s*[×x]\s*12\s*=\s*)[\d.,]+(\s*€)',
                 rf'\g<1>{_opex_annual_str}\2',
                 html
             )
 
-            # --- FIX 2: Netto-Ersparnis (Brutto minus OPEX) ---
-            # LLM berechnet falsch → korrigiere auf kanonischen Wert
+            # --- FIX 1b: OPEX-Jahreswert als eigenständiger Betrag (Subtraktionskontext) ---
+            # "4.110€" oder "4,110€" oder "4110€" → "4.200€"
+            # The wrong OPEX annual value appears in multiple places (e.g. step 4 subtraction)
+            _wrong_opex_annual = int(_opex_annual) - 90  # LLM typical error: 350*12=4110 instead of 4200
+            if _wrong_opex_annual > 0:
+                _wrong_opex_fmts = [
+                    _fmt_de_eur(_wrong_opex_annual),                    # "4.110"
+                    f"{_wrong_opex_annual:,}".replace(",", "."),        # "4.110"
+                    f"{_wrong_opex_annual:,}",                          # "4,110"
+                    str(_wrong_opex_annual),                            # "4110"
+                ]
+                for _wf in dict.fromkeys(_wrong_opex_fmts):  # deduplicate, preserve order
+                    if _wf in html:
+                        html = html.replace(f"{_wf}€", f"{_opex_annual_str}€")
+                        html = html.replace(f"{_wf} €", f"{_opex_annual_str} €")
+
+            # --- FIX 2: Netto-Ersparnis in Sofort-Start Zeitersparnis-Box ---
+            # HTML structure: <div style="...">VALUE€</div><div ...>Netto-Ersparnis*</div>
+            # The value PRECEDES the label (not after), and uses Python :, format (commas)
+            # Match: any €-amount in a div immediately before "Netto-Ersparnis"
+            _netto_ersparnis_comma = f"{int(_netto_ersparnis):,}"  # Python :, format (commas)
             html = re.sub(
-                r'(Netto-Ersparnis\*?\s*(?:</?\w[^>]*>\s*)*?)[\d.]{4,6}(\s*€)',
-                rf'\g<1>{_netto_ersparnis_str}\2',
+                r'(<div[^>]*>)\s*([\d.,]+)\s*€\s*(</div>\s*<div[^>]*>\s*Netto-Ersparnis)',
+                rf'\g<1>{_netto_ersparnis_comma}€\3',
                 html
             )
 
             # --- FIX 3: Entscheidungsvorlage "Jährliche Ersparnis" ---
             # Korrigiere auf kanonischen Nettonutzen
             html = re.sub(
-                r'(Jährliche Ersparnis:?\s*(?:ca\.?\s*)?)[\d.]{4,6}(\s*€)',
+                r'(Jährliche Ersparnis:?\s*(?:ca\.?\s*)?)[\d.,]{4,6}(\s*€)',
                 rf'\g<1>{_nettonutzen_str}\2',
+                html
+            )
+
+            # --- FIX 4: Tool-Kosten "400€/Monat" → kanonische OPEX/Monat ---
+            # LLM rundet OPEX auf 400€ statt 350€
+            html = re.sub(
+                r'(?<!\d)400(\s*€\s*/\s*Monat)',
+                rf'{_opex_m_int}\1',
                 html
             )
 
