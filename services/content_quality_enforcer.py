@@ -363,6 +363,11 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
         "TEMPLATES_START_HTML", "KICKOFF_VORLAGE_HTML", "PROMPT_FRAMEWORK_HTML",
         "TECHNOLOGIE_PROZESSE_HTML", "WETTBEWERB_BENCHMARK_HTML", "UNTERNEHMENSPROFIL_MARKT_HTML",
         "NEXT_ACTIONS_HTML", "PILOT_PLAN_HTML",
+        # FIX-P2-C2: Added missing sections that still had blacklist terms
+        "KI_AKTIVITAETEN_ZIELE_HTML", "ki_aktivitaeten_ziele",
+        "AI_POLICY_MINI_HTML", "ai_policy_mini",
+        "VENDOR_AUDIT_HTML", "RISK_ENGINE_V3_HTML",
+        "SOFORT_START_HTML",
     ]
 
     # Team-specific replacements
