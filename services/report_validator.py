@@ -825,6 +825,7 @@ class ReportValidator:
             "gamechanger": 100,  # v14.16: 150→100 (kurze aber valide OK)         # SPRINT N1: 750→500 (Solo-realistic)
             "transparency_box": 50,     # SPRINT N1: 100→50 (minimal overhead)
             "technologie_prozesse": 150,
+            "unternehmensprofil_markt": 180,  # FIX-RC3b: Solo-compact produces ~197 words (global 220 too high)
         },
         "team": {
             # SPRINT N: Updated minimums
