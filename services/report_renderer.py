@@ -775,6 +775,30 @@ def render(briefing_obj: Any,
         else:
             safe_sections[key] = value
     sections = safe_sections
+    # FIX-v720-COVER-ROI: Ensure ROI_12M_DISPLAY_DE is always set
+    # P0.1 in gpt_analyze.py sets this, but if it fails the template falls back to
+    # ROI_P50 (Monte Carlo) which can be much lower than ROI_12M (deterministic).
+    if not sections.get("ROI_12M_DISPLAY_DE"):
+        _roi_12m = sections.get("ROI_12M")
+        if _roi_12m is not None:
+            try:
+                sections["ROI_12M_DISPLAY_DE"] = Markup(f"{int(float(_roi_12m))} %")
+                log.info("[FIX-v720-COVER-ROI] Set ROI_12M_DISPLAY_DE=%s from ROI_12M", sections["ROI_12M_DISPLAY_DE"])
+            except (ValueError, TypeError):
+                pass
+
+    # FIX-v720-F5: Ensure CAPEX_DISPLAY_DE is set for Management Summary
+    # Template shows "—" when CAPEX_DISPLAY_DE and TOTAL_CAPEX are both missing.
+    if not sections.get("CAPEX_DISPLAY_DE"):
+        _capex_raw = sections.get("CANON_CAPEX_EUR") or sections.get("CAPEX_REALISTISCH_EUR")
+        if _capex_raw is not None:
+            try:
+                _capex_val = int(float(_capex_raw))
+                sections["CAPEX_DISPLAY_DE"] = Markup(f"{_capex_val:,}€".replace(",", "."))
+                log.info("[FIX-v720-F5] Set CAPEX_DISPLAY_DE=%s", sections["CAPEX_DISPLAY_DE"])
+            except (ValueError, TypeError):
+                pass
+
     # Safe defaults with FIXED UTF-8
     # TEIL 3.1.4.x: Force LANG to detected value (no fallback to sections)
     ctx: Dict[str, Any] = {
