@@ -1521,8 +1521,8 @@ def render(briefing_obj: Any,
 
     # =========================================================================
     # FIX-v720-F2: Replace hallucinated dates in Förderprogramme section
-    # LLM invents dates like "Juni 2025" for "Stand der Einschätzung" — replace
-    # with actual report date.
+    # LLM invents dates like "Juni 2025", "Anfang 2025", etc. for
+    # "Stand der Einschätzung/Informationen" — replace with actual report date.
     # =========================================================================
     try:
         _report_date_raw = sections.get("report_date", "")
@@ -1542,9 +1542,10 @@ def render(briefing_obj: Any,
                 _rd_german = _report_date_raw  # fallback: use raw date
 
             _html_before_date = html
-            # "Stand der Einschätzung: <any month> <any year>" → actual report date
+            # Match both "Stand der Einschätzung:" and "Stand der Informationen:"
+            # with date formats: "Juni 2025", "Anfang 2025", "Ende 2025", "Q2 2025", "März 2026", etc.
             html = re.sub(
-                r'(Stand der Einschätzung:\s*)\w+\s+\d{4}',
+                r'(Stand der (?:Einschätzung|Informationen|Daten|Analyse):\s*)(?:Anfang|Mitte|Ende|Q[1-4])?\s*\w*\s*\d{4}',
                 rf'\g<1>{_rd_german}',
                 html
             )
