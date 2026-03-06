@@ -1011,7 +1011,7 @@ h1, h2, h3, h4 {
         </div>
         <div class="kpi-card">
             <div class="kpi-value" style="color: #c2410c;">
-                {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_P50 and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% else %}—{% endif %}
+                {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% elif ROI_P50 and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% else %}—{% endif %}
             </div>
             <div class="kpi-label">{% if ROI_12M and ROI_12M|int >= 200 %}ROI (gedeckelt){% else %}{{ ui("kpi_roi", "ROI-Projektion") }}{% endif %}</div>
         </div>
