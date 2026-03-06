@@ -669,6 +669,8 @@ class ReportValidator:
             "TOOLS_EMPFEHLUNGEN_HTML", "tools_empfehlungen",
             "AI_POLICY_MINI_HTML", "ai_policy_mini",
             "KI_AKTIVITAETEN_ZIELE_HTML", "ki_aktivitaeten_ziele",
+            # FIX-P3-C2: Audit in competitive analysis context
+            "WETTBEWERB_BENCHMARK_HTML", "wettbewerb_benchmark",
         ],
         "Audit-Trail": [
             "VENDOR_AUDIT_HTML", "vendor_audit",
@@ -687,6 +689,9 @@ class ReportValidator:
             # FIX-P2-C3: Governance in roadmap is intentional (e.g. "Governance-Grundlagen")
             "roadmap", "ROADMAP_HTML", "ROADMAP_90D_HTML", "roadmap_90d",
             "STRATEGIE_GOVERNANCE_HTML", "strategie_governance",
+            # FIX-P3-C2: Advisor Note discusses governance gaps intentionally
+            "advisor_note", "ADVISOR_NOTE_HTML",
+            "KI_SKILLPLAN_HTML", "ki_skillplan",
         ],
         "Governance-Struktur": [
             "AI_ACT_GOVERNANCE_INJECTION",
@@ -720,6 +725,15 @@ class ReportValidator:
         "Architektur": [
             "AI_POLICY_MINI_HTML", "ai_policy_mini",
             "TECHNOLOGIE_PROZESSE_HTML", "technologie_prozesse",
+            # FIX-P3-C2: LEAD text, not PDF-relevant
+            "LEAD_WETTBEWERB",
+        ],
+        # FIX-P3-C2: "Enterprise" in LEAD text is not PDF-relevant
+        "Enterprise": [
+            "LEAD_TOOLS",
+        ],
+        "Enterprise-Software": [
+            "TEMPLATES_START_HTML", "templates_start",
         ],
     }
 
