@@ -1,7 +1,14 @@
-**WICHTIG – Längenlimit: Deine Antwort darf maximal 1200 Wörter umfassen. Kürze lieber als zu überziehen.**
+{% if COMPANY_SIZE == "solo" %}
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 400 Wörter / 2.500 Zeichen HTML umfassen. Solo-Budget ist NUR 3.000 Zeichen — bei 5.5K Output wird 48% abgeschnitten!**
+{% elif COMPANY_SIZE == "team" %}
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 800 Wörter / 7.500 Zeichen HTML umfassen.**
+{% else %}
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 1100 Wörter umfassen.**
+{% endif %}
+Kürze lieber als zu überziehen — abgeschnittener Content ist wertlos!
 
 Developer:
-<!-- PLATIN++ PROMPT v5.3 - SPRINT G17.S -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT TRUNCATION-FIX -->
 <!-- SECTION: strategie_governance -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
@@ -13,11 +20,10 @@ Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vor
 Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
 
 HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
-- Der gesamte HTML-Output darf MAXIMAL 8500 Zeichen umfassen
-- Solo: max. 7000 Zeichen | Team: max. 8500 Zeichen | KMU: max. 9000 Zeichen
-- Strategische Leitlinien: max. 5 Punkte à 2-3 Sätze
-- Solo Mini-Governance: max. 80 Wörter
-- ACHTUNG: Bei >9000 Zeichen wird ~20% des Contents abgeschnitten!
+- Solo: max. 2.500 Zeichen (400 Wörter) | Team: max. 7.500 Zeichen (800 Wörter) | KMU: max. 9.000 Zeichen (1100 Wörter)
+- WARNUNG: Solo-Budget ist NUR 3.000 Zeichen! Bei 5.5K+ Output = 48% Verlust!
+- Solo: Strategische Leitlinien max. 4 Punkte à 1-2 Sätze + Mini-Governance max. 60 Wörter
+- Steuerung & KI-Kultur: Solo max. je 40 Wörter
 -->
 <!-- WORD_MINIMUM_SOLO: 150 (G17.S: erhöht von 130 wg. Mini-Governance-Booster) -->
 <!--
