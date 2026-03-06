@@ -564,7 +564,7 @@ class ReportValidator:
             # =====================================================
             # Technical enterprise buzzwords
             "Engine",
-            "Plattform",
+            # FIX-P2-C1: "Plattform" removed — allgemeinsprachlich, kein Enterprise-Jargon
             "Framework",
             "Pipeline",
             "Architektur",
@@ -576,7 +576,7 @@ class ReportValidator:
             # Organization jargon
             "Rollout",
             "Change Management",
-            "Skalierung",
+            # FIX-P2-C1: "Skalierung" removed — kommt aus User-Input (vision_3_jahre)
             "Stakeholder",
             "Governance-Struktur",
             "Compliance-Framework",
@@ -584,7 +584,7 @@ class ReportValidator:
             # Abstract concepts
             "Strategische Roadmap",
             "Meilenstein-Planung",
-            "KPI-Dashboard",
+            # FIX-P2-C1: "KPI-Dashboard" removed — Standard-Begriff, Enforcer ersetzt bereits
             "Prozesslandschaft",
             "Wertschöpfungskette",
             "Matrixorganisation",
@@ -665,6 +665,10 @@ class ReportValidator:
             "RISK_ENGINE_V3_HTML", "RISK_ENGINE_HTML",
             "risk_engine_v3", "risk_engine",
             "prompt_framework", "PROMPT_FRAMEWORK_HTML",
+            # FIX-P2-C3: Additional whitelisted sections
+            "TOOLS_EMPFEHLUNGEN_HTML", "tools_empfehlungen",
+            "AI_POLICY_MINI_HTML", "ai_policy_mini",
+            "KI_AKTIVITAETEN_ZIELE_HTML", "ki_aktivitaeten_ziele",
         ],
         "Audit-Trail": [
             "VENDOR_AUDIT_HTML", "vendor_audit",
@@ -680,6 +684,9 @@ class ReportValidator:
             "MARKET_INSIGHTS_HTML",
             "gamechanger_decision",
             "_nist_rmf_narrative", "_GC_SNAPSHOT_642",
+            # FIX-P2-C3: Governance in roadmap is intentional (e.g. "Governance-Grundlagen")
+            "roadmap", "ROADMAP_HTML", "ROADMAP_90D_HTML", "roadmap_90d",
+            "STRATEGIE_GOVERNANCE_HTML", "strategie_governance",
         ],
         "Governance-Struktur": [
             "AI_ACT_GOVERNANCE_INJECTION",
