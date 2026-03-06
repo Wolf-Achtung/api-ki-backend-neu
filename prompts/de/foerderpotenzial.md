@@ -1,7 +1,18 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.3 - SPRINT N -->
+<!-- PLATIN++ PROMPT v5.4 - SPRINT TRUNCATION-FIX -->
 <!-- SECTION: foerderpotenzial -->
 <!-- OUTPUT: HTML ONLY -->
+
+## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
+{% if COMPANY_SIZE == "solo" %}
+**SOLO-HARD-LIMIT: Maximal 350 Wörter / 2.500 Zeichen HTML gesamt. Bei Überschreitung wird 82% abgeschnitten!**
+Schreibe extrem kompakt: nur die 2 relevantesten Förderkategorien, keine langen Erklärungen.
+{% elif COMPANY_SIZE == "team" %}
+**TEAM-HARD-LIMIT: Maximal 700 Wörter / 7.500 Zeichen HTML gesamt. Bei Überschreitung wird 38% abgeschnitten!**
+{% else %}
+**KMU-HARD-LIMIT: Maximal 900 Wörter / 10.000 Zeichen HTML gesamt.**
+{% endif %}
+JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN — der Report endet dann mitten im Satz!
 
 ## ROI-Regel (vor allem anderen beachten)
 Prozentwerte (ROI, Rendite, Effizienz) NIEMALS über 200% angeben. Bei höheren Werten "200% (gedeckelt)" schreiben. Alle Zahlen KONSERVATIV.
@@ -15,17 +26,24 @@ Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vor
 Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
 
 HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
-- Budget: 11000 Zeichen HTML-Output — NICHT überschreiten!
-- Solo: max. 8000 Zeichen | Team: max. 10000 Zeichen | KMU: max. 12000 Zeichen
-- B714: 14.802 Zeichen generiert, auf 8.261 getruncated → 44% VERLUST!
-- 4 Abschnitte × 200-275 Wörter = 800-1100 Wörter gesamt
-- Pro Bullet-Liste: max. 5-6 Punkte à 1-2 Sätze
-- GESAMT-ZIEL: 850-1100 Wörter (steht auch unten bei PDF-SLIMDOWN)
+- Solo: max. 2.500 Zeichen (350 Wörter) | Team: max. 7.500 Zeichen (700 Wörter) | KMU: max. 10.000 Zeichen (900 Wörter)
+- WARNUNG: Solo-Budget ist NUR 3.000 Zeichen! Bei 14K Output = 82% Verlust!
+- Solo: 4 kurze Abschnitte × 70-90 Wörter = 300-350 Wörter gesamt
+- Team: 4 Abschnitte × 150-175 Wörter = 600-700 Wörter gesamt
+- Pro Bullet-Liste: Solo max. 3-4 Punkte, Team/KMU max. 5 Punkte
+- GESAMT-ZIEL: Solo 300-350, Team 600-700, KMU 800-1000 Wörter
 -->
 <!-- FOERDERLOGIK: DE-Bundesprogramme + Landesprogramme (KEINE EU-Core-Hinweise) -->
 <!--
 ###############################################################################
-**WICHTIG – Längenlimit: Deine Antwort soll 850-1100 Wörter umfassen, maximal 1400 Wörter. Kürze lieber als zu überziehen.**
+{% if COMPANY_SIZE == "solo" %}
+**WICHTIG – Längenlimit: Deine Antwort soll 300-350 Wörter umfassen, maximal 400 Wörter. Solo-Budget ist NUR 3.000 Zeichen!**
+{% elif COMPANY_SIZE == "team" %}
+**WICHTIG – Längenlimit: Deine Antwort soll 600-700 Wörter umfassen, maximal 800 Wörter.**
+{% else %}
+**WICHTIG – Längenlimit: Deine Antwort soll 800-1000 Wörter umfassen, maximal 1100 Wörter.**
+{% endif %}
+Kürze lieber als zu überziehen — abgeschnittener Content ist wertlos!
 
 ##                    STANDORT KONSISTENZ (KRITISCH!)                        ##
 ###############################################################################
@@ -50,7 +68,13 @@ ERLAUBT:
 ###############################################################################
 -->
 <!--
-ZIEL: 4 Abschnitte mit je 200-275 Wörtern (= 850-1100 Wörter gesamt).
+{% if COMPANY_SIZE == "solo" %}
+ZIEL: 4 Abschnitte mit je 70-90 Wörtern (= 300-350 Wörter gesamt). KÜRZER IST BESSER!
+{% elif COMPANY_SIZE == "team" %}
+ZIEL: 4 Abschnitte mit je 150-175 Wörtern (= 600-700 Wörter gesamt).
+{% else %}
+ZIEL: 4 Abschnitte mit je 200-250 Wörtern (= 800-1000 Wörter gesamt).
+{% endif %}
 
 STRUKTUR (4 Pflicht-Abschnitte):
   H3 1. Einordnung des Business Case ohne Förderung
@@ -200,7 +224,8 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   </p>
 </section>
 
-<!-- DEV: PDF-SLIMDOWN v2.1 - Ziel: 850-1100 Wörter, kompakt aber vollständig (FIX-B23-P1) -->
+<!-- DEV: PDF-SLIMDOWN v2.2 - TRUNCATION-FIX: Solo 300-350, Team 600-700, KMU 800-1000 Wörter -->
+<!-- FINAL CHECK VOR OUTPUT: Zähle deine Wörter. Solo >400? KÜRZEN! Team >800? KÜRZEN! KMU >1100? KÜRZEN! -->
 
 <!-- ZERO-LEAK POLICY (N4.6) -->
 <!--
