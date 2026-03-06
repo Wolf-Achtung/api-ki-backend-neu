@@ -966,6 +966,35 @@ class ReportValidator:
         "technologie_prozesse": "TECHNOLOGIE_PROZESSE_HTML",
     }
 
+    # FIX-RC2: Sections excluded from Solo-Compact rendering.
+    # Warnings for these are noise when COMPACT_REPORT_MODE is active.
+    COMPACT_EXCLUDED_SECTIONS = {
+        "BRANCH_DEEP_DIVE_HTML", "branch_deep_dive",
+        "RISK_ENGINE_HTML", "risk_engine",
+        "RISK_ENGINE_V3_HTML", "risk_engine_v3",
+        "BUSINESS_CASE_SIM_HTML", "business_case_sim",
+        "BENCHMARKS_HTML", "benchmarks_html", "benchmarks",
+        "AUTOMATION_ROADMAP_HTML", "automation_roadmap",
+        "FUNDING_BRANCH_ALIGNMENT_HTML", "funding_branch_alignment",
+        "TOOLS_FUNDING_ALIGNMENT_HTML", "tools_funding_alignment",
+        "TOOLS_BRANCH_ALIGNMENT_HTML", "tools_branch_alignment",
+        "ROI_TRACKING_HTML", "roi_tracking",
+        "KICKOFF_HTML", "kickoff", "kickoff_vorlage",
+        "PROMPT_FRAMEWORK_HTML", "prompt_framework",
+        "ROADMAP_12M_HTML", "roadmap_12m",
+        "BUSINESS_CASE_HTML", "business_case",
+        "FOERDERPOTENZIAL_HTML", "foerderpotenzial",
+        # Internal/snapshot sections never rendered
+        "_GC_SNAPSHOT_642", "_nist_rmf_narrative", "_healer_stats",
+        "_pipeline_meta",
+        # Additional non-rendered sections in compact mode
+        "MARKET_INSIGHTS_HTML", "market_insights",
+        "NEWS_BOX_HTML", "news_box",
+        "responsible_ai_html", "RESPONSIBLE_AI_HTML",
+        "wettbewerb_benchmark",
+        "monetarisierung", "MONETARISIERUNG_HTML",
+    }
+
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:
         self.sections = sections or {}
         self.meta = meta or {}
@@ -976,6 +1005,12 @@ class ReportValidator:
         self._excluded_shadow_keys: Optional[set] = None
         # FIX-TEAM-KMU: Cache normalized size key
         self._size_key: Optional[str] = None
+        # FIX-RC2: Detect compact mode
+        self._is_compact = bool(self.sections.get("COMPACT_REPORT_MODE"))
+
+    def _is_compact_excluded(self, section_name: str) -> bool:
+        """FIX-RC2: Skip validation for sections not rendered in compact mode."""
+        return self._is_compact and section_name in self.COMPACT_EXCLUDED_SECTIONS
 
     def _normalize_size_key(self) -> str:
         """
@@ -1385,6 +1420,10 @@ class ReportValidator:
                 if logical_name in self.sections:
                     section_key = logical_name
 
+            # FIX-RC2: Skip non-rendered compact sections
+            if self._is_compact_excluded(section_key) or self._is_compact_excluded(logical_name):
+                continue
+
             # FIX-503B: Quick Wins fallback logic
             # If QUICK_WINS_HTML not found, try quick_wins text key
             if logical_name == "quick_wins" and section_key not in self.sections:
@@ -1742,6 +1781,9 @@ class ReportValidator:
         for section_name, content in self.canonical_sections.items():
             if not isinstance(content, str):
                 continue
+            # FIX-RC2: Skip non-rendered compact sections
+            if self._is_compact_excluded(section_name):
+                continue
             for term in forbidden_terms:
                 # FIX-RC1: Skip whitelisted section+term combos (false positives)
                 wl = self.SIZE_FORBIDDEN_SECTION_WHITELIST.get(term, [])
@@ -1791,6 +1833,9 @@ class ReportValidator:
         # Check each section
         for section_name, content in self.canonical_sections.items():
             if not isinstance(content, str):
+                continue
+            # FIX-RC2: Skip non-rendered compact sections
+            if self._is_compact_excluded(section_name):
                 continue
 
             # Use solo_simplifier validation
@@ -2326,6 +2371,9 @@ class ReportValidator:
             # SPRINT G13-B: Skip excluded sections (they're meant to summarize)
             if section_name in self.REDUNDANCY_EXCLUDED_SECTIONS:
                 continue
+            # FIX-RC2: Skip non-rendered compact sections
+            if self._is_compact_excluded(section_name):
+                continue
 
             # Split into sentences (rough approximation)
             sentences = re.split(r'[.!?]\s+', content)
@@ -2568,6 +2616,9 @@ class ReportValidator:
 
         for section_name, content in self.sections.items():
             if not isinstance(content, str):
+                continue
+            # FIX-RC2: Skip non-rendered compact sections
+            if self._is_compact_excluded(section_name):
                 continue
 
             # Check CRITICAL patterns
