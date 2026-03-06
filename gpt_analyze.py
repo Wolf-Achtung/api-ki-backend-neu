@@ -13166,10 +13166,14 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         
         # PLATIN+++ FIX 1.1: Pass canonical rate to sofort_start_generator
         _sofort_rate = 0  # 0 = use canonical rate from single source of truth
+        _sofort_hours_month = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 36)
         try:
-            from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
+            from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size, cap_time_savings
             _sofort_size_norm = normalize_company_size(sofort_size)
             _sofort_rate, _ = get_hourly_rate(_sofort_size_norm)
+            # FIX-v720-F2-HOURS: Apply size cap BEFORE sofort-start generation
+            # Without this, solo gets 36h/month (9h/week) instead of capped 20h/month (5h/week)
+            _sofort_hours_month, _ = cap_time_savings(_sofort_hours_month, _sofort_size_norm)
         except Exception:
             pass
         # FIX-GRAMMAR-T1: Pass canonical OPEX for consistent net savings
@@ -13180,7 +13184,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             company_size=sofort_size,
             zeitersparnis_prioritaet=sofort_zeit,
             stundensatz=_sofort_rate,
-            canon_hours_month=float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 36),  # FIX-B733-HOURS: fallback chain
+            canon_hours_month=_sofort_hours_month,
             canon_opex_monthly=_sofort_opex_monthly,
         )
         log.info("[SOFORT-START] ✅ Generated Sofort-Start page for %s", sofort_branche[:30] if sofort_branche else "default")
