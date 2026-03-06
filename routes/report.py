@@ -821,3 +821,112 @@ def get_report_pdf(
     """
     # Delegate to the new robust endpoint (reuses on-demand generation logic)
     return get_report_pdf_v2(briefing_id=briefing_id, db=db, auth=auth)
+
+
+# ---------------------------------------------------------------------------
+# Gamechanger Deep Dive — Standalone Report Product
+# ---------------------------------------------------------------------------
+
+class GamechangerDeepDiveRequest(BaseModel):
+    """Request model for Gamechanger Deep Dive report generation."""
+    briefing_id: int = Field(ge=0, description="ID of the briefing (must have completed Report 1)")
+
+
+@router.post("/gamechanger-deep-dive")
+async def generate_gamechanger_deep_dive(
+    payload: GamechangerDeepDiveRequest,
+) -> Dict[str, Any]:
+    """
+    Generate a Gamechanger Deep Dive report (standalone 6-8 page product).
+
+    Requires a completed Report 1 for the given briefing_id.
+    No new questionnaire — all data comes from Report 1.
+
+    Sections:
+    1. Strategischer Bruchpunkt (expanded from Report 1)
+    2. 90-Tage Implementierungsplan (LLM-generated)
+    3. Business Case Deep Dive (DETERMINISTIC — no LLM)
+    4. Risikobewertung & Absicherung (LLM-generated)
+    5. Nächste Schritte (LLM-generated)
+
+    Returns:
+        {"ok": True, "html": "<full HTML>", "briefing_id": int}
+    """
+    try:
+        from services.gamechanger_deep_dive import generate_gamechanger_report
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Gamechanger Deep Dive module unavailable: {exc}",
+        ) from exc
+
+    log.info(
+        "[GC-DEEP-DIVE] Generating Deep Dive for briefing_id=%d",
+        payload.briefing_id,
+    )
+
+    try:
+        result = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: generate_gamechanger_report(payload.briefing_id),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        log.error(
+            "[GC-DEEP-DIVE] Generation failed for briefing %d: %s",
+            payload.briefing_id, exc,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Deep Dive generation failed: {exc.__class__.__name__}: {exc}",
+        ) from exc
+
+    html = result.get("html", "")
+    sections = result.get("sections", {})
+
+    log.info(
+        "[GC-DEEP-DIVE] Generated: briefing_id=%d html_size=%d sections=%s",
+        payload.briefing_id, len(html), list(sections.keys()),
+    )
+
+    return {
+        "ok": True,
+        "briefing_id": payload.briefing_id,
+        "html": html,
+        "html_size": len(html),
+        "sections_generated": list(sections.keys()),
+    }
+
+
+@router.get("/gamechanger-deep-dive/html/{briefing_id}")
+async def get_gamechanger_deep_dive_html(
+    briefing_id: int,
+) -> HTMLResponse:
+    """
+    Generate and return the Gamechanger Deep Dive as HTML.
+
+    This is a convenience GET endpoint that generates and returns HTML directly.
+    For production use, prefer the POST endpoint to separate generation from retrieval.
+    """
+    try:
+        from services.gamechanger_deep_dive import generate_gamechanger_report
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Gamechanger Deep Dive module unavailable: {exc}",
+        ) from exc
+
+    try:
+        result = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: generate_gamechanger_report(briefing_id),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        log.error("[GC-DEEP-DIVE] HTML generation failed: %s", exc)
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    html = result.get("html", "")
+    return HTMLResponse(content=html, media_type="text/html; charset=utf-8")
