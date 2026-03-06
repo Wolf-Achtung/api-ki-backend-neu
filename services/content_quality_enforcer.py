@@ -70,10 +70,11 @@ SOLO_TERM_REPLACEMENTS = [
 
     # Deployment/Rollout terms
     (r'\bDeployment\b', 'Einrichtung', 'Deployment→Einrichtung'),
-    # FIX-526: Rollout → REMOVE entirely (not replace) per user feedback
-    (r'\bRollout\b', '', 'FIX-526: Rollout→ENTFERNEN'),
-    (r'\bRoll-out\b', '', 'FIX-526: Roll-out→ENTFERNEN'),
-    (r'\bRollouts\b', '', 'FIX-526: Rollouts→ENTFERNEN'),
+    # FIX-P2-C4: Rollout → Einführung (was: empty string, caused double-spaces)
+    (r'\bRollout-Plan\b', 'Einführungsplan', 'Rollout-Plan→Einführungsplan'),
+    (r'\bRollout\b', 'Einführung', 'Rollout→Einführung'),
+    (r'\bRoll-out\b', 'Einführung', 'Roll-out→Einführung'),
+    (r'\bRollouts\b', 'Einführungen', 'Rollouts→Einführungen'),
     (r'\bImplementierung\b', 'Umsetzung', 'Implementierung→Umsetzung'),
     (r'\bIntegration\b', 'Einbindung', 'Integration→Einbindung'),
 
@@ -363,6 +364,11 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
         "TEMPLATES_START_HTML", "KICKOFF_VORLAGE_HTML", "PROMPT_FRAMEWORK_HTML",
         "TECHNOLOGIE_PROZESSE_HTML", "WETTBEWERB_BENCHMARK_HTML", "UNTERNEHMENSPROFIL_MARKT_HTML",
         "NEXT_ACTIONS_HTML", "PILOT_PLAN_HTML",
+        # FIX-P2-C2: Added missing sections that still had blacklist terms
+        "KI_AKTIVITAETEN_ZIELE_HTML", "ki_aktivitaeten_ziele",
+        "AI_POLICY_MINI_HTML", "ai_policy_mini",
+        "VENDOR_AUDIT_HTML", "RISK_ENGINE_V3_HTML",
+        "SOFORT_START_HTML",
     ]
 
     # Team-specific replacements
