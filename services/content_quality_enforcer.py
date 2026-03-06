@@ -126,6 +126,12 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bProzesse\b', 'Abläufe', 'Prozesse→Abläufe'),
     (r'\bProzess\b', 'Ablauf', 'Prozess→Ablauf'),
 
+    # FIX-RC3a: Enterprise terms found in Solo validator warnings
+    (r'\bEnterprise-Software\b', 'Business-Software', 'Enterprise-Software→Business-Software'),
+    (r'\bWertschöpfungskette\b', 'Leistungskette', 'Wertschöpfungskette→Leistungskette'),
+    (r'\bStrategische Roadmap\b', 'Strategischer Fahrplan', 'Strategische Roadmap→Strategischer Fahrplan'),
+    (r'\bStrategischen Roadmap\b', 'Strategischen Fahrplan', 'Strategischen Roadmap→Strategischen Fahrplan'),
+
     # Planning terms
     (r'\bMeilenstein-Planung\b', 'Etappenplanung', 'Meilenstein-Planung→Etappenplanung'),
     (r'\bMeilensteine\b', 'Etappen', 'Meilensteine→Etappen'),
@@ -419,7 +425,8 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
 
     # --- FIX-52x: STRICT safety net for remaining solo persona leaks ---
     if os.getenv("RELEASE_STRICT_MODE") == "1":
-        forbidden = ["Skalierung", "Stakeholder", "Audit-Trail", "Audit Trail", "Stack", "Tech-Stack", "Full-Stack"]
+        forbidden = ["Skalierung", "Stakeholder", "Audit-Trail", "Audit Trail", "Stack", "Tech-Stack", "Full-Stack",
+                     "Enterprise-Software", "Wertschöpfungskette", "Strategische Roadmap"]
         all_text = " ".join(str(v) for v in sections.values() if isinstance(v, str))
         still = [t for t in forbidden if t.lower() in all_text.lower()]
         if still:
