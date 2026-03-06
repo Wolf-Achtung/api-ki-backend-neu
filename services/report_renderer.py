@@ -782,7 +782,7 @@ def render(briefing_obj: Any,
         _roi_12m = sections.get("ROI_12M")
         if _roi_12m is not None:
             try:
-                sections["ROI_12M_DISPLAY_DE"] = f"{int(float(_roi_12m))} %"
+                sections["ROI_12M_DISPLAY_DE"] = Markup(f"{int(float(_roi_12m))} %")
                 log.info("[FIX-v720-COVER-ROI] Set ROI_12M_DISPLAY_DE=%s from ROI_12M", sections["ROI_12M_DISPLAY_DE"])
             except (ValueError, TypeError):
                 pass
@@ -794,7 +794,7 @@ def render(briefing_obj: Any,
         if _capex_raw is not None:
             try:
                 _capex_val = int(float(_capex_raw))
-                sections["CAPEX_DISPLAY_DE"] = f"{_capex_val:,}€".replace(",", ".")
+                sections["CAPEX_DISPLAY_DE"] = Markup(f"{_capex_val:,}€".replace(",", "."))
                 log.info("[FIX-v720-F5] Set CAPEX_DISPLAY_DE=%s", sections["CAPEX_DISPLAY_DE"])
             except (ValueError, TypeError):
                 pass
