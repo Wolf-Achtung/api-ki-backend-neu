@@ -1,22 +1,41 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
+<!-- PLATIN++ PROMPT v5.5 - SPRINT TRUNCATION-FIX -->
 <!-- SECTION: risks -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, {{score_governance}}, {{score_sicherheit}}, COMPANY_SIZE -->
 <!-- TOKEN-BUDGET: 4500 (solo:0.85x=3800, team:1.0x=4500, kmu:1.1x=5000) -->
+
+## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
+{% if COMPANY_SIZE == "solo" %}
+**SOLO-HARD-LIMIT: Maximal 700 Wörter / 5.500 Zeichen HTML gesamt. Bei Überschreitung wird 62% abgeschnitten!**
+Pro Risikokategorie: NUR 3 Risiken (nicht 4!) mit je max. 50 Wörtern. Risiko-Matrix: max. 4 Zeilen.
+{% elif COMPANY_SIZE == "team" %}
+**TEAM-HARD-LIMIT: Maximal 1000 Wörter / 7.500 Zeichen HTML gesamt. Bei Überschreitung wird 49% abgeschnitten!**
+Pro Risikokategorie: 4 Risiken mit je max. 60 Wörtern.
+{% else %}
+**KMU-HARD-LIMIT: Maximal 1300 Wörter / 9.000 Zeichen HTML gesamt.**
+{% endif %}
+JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN — der Report endet dann mitten im Satz!
 <!--
 HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
-- Budget: 9000 Zeichen HTML-Output — NICHT überschreiten!
-- Solo: max. 7500 Zeichen | Team: max. 9000 Zeichen | KMU: max. 10000 Zeichen
-- B714: 16.590 Zeichen generiert, auf 8.602 getruncated → 48% VERLUST!
+- Solo: max. 5.500 Zeichen (700 Wörter) | Team: max. 7.500 Zeichen (1000 Wörter) | KMU: max. 9.000 Zeichen (1300 Wörter)
+- WARNUNG: Solo-Budget ist 7.000 Zeichen! Bei 17K+ Output = 62% Verlust!
 - LIEBER KOMPAKT UND VOLLSTÄNDIG als ausführlich und dann abgeschnitten
-- 4 Risiken × 85 Wörter = 340 Wörter pro Section × 4 Sections = ~1360 Wörter
-- Risiko-Matrix: max. 5 Zeilen à 1 Satz pro Zelle
-- GESAMT-ZIEL: 1000-1500 Wörter (nicht mehr!)
+- Solo: 3 Risiken × 50 Wörter × 4 Kategorien = 600 Wörter + Matrix 100 Wörter = 700 max
+- Team: 4 Risiken × 60 Wörter × 4 Kategorien = 960 Wörter + Matrix = 1000 max
+- Risiko-Matrix: Solo max. 4 Zeilen, Team/KMU max. 5 Zeilen
+- GESAMT-ZIEL: Solo 600-700, Team 800-1000, KMU 1000-1300 Wörter
 -->
 <!--
-ZIEL: 5 Abschnitte mit je 200-300 Wörtern (= 1000-1500 Wörter gesamt). WICHTIG: Alle Sätze MÜSSEN vollständig sein - keine Abbrüche!
+{% if COMPANY_SIZE == "solo" %}
+ZIEL: 5 Abschnitte, je max. 140 Wörter (= 600-700 Wörter gesamt). Solo: NUR 3 Risiken pro Kategorie!
+{% elif COMPANY_SIZE == "team" %}
+ZIEL: 5 Abschnitte, je max. 200 Wörter (= 800-1000 Wörter gesamt).
+{% else %}
+ZIEL: 5 Abschnitte mit je 200-260 Wörtern (= 1000-1300 Wörter gesamt).
+{% endif %}
+WICHTIG: Alle Sätze MÜSSEN vollständig sein - keine Abbrüche!
 
 KURZLABELS (VERPFLICHTEND!):
 - {{BRANCH_CORE_LABEL}} = Branche in 8-12 Wörtern
@@ -260,7 +279,8 @@ SEKTION-LIMITS:
   </p>
 </section>
 
-<!-- DEV: PDF-SLIMDOWN v2.0 - Ziel: 600-800 Wörter, kompakt aber vollständig -->
+<!-- DEV: PDF-SLIMDOWN v2.1 - TRUNCATION-FIX: Solo 600-700, Team 800-1000, KMU 1000-1300 Wörter -->
+<!-- FINAL CHECK VOR OUTPUT: Zähle deine Wörter. Solo >750? KÜRZEN! Team >1100? KÜRZEN! -->
 
 <!-- ZERO-LEAK POLICY (N4.6) -->
 <!--
