@@ -508,7 +508,7 @@ EMAIL_WHITELIST = {email.lower() for email in [
     "test-v7-457@ki-sicherheit.jetzt",
     "test-v7-458@ki-sicherheit.jetzt",
     "test-v7-459@ki-sicherheit.jetzt",
-    "test-v7-4600@ki-sicherheit.jetzt",
+    "test-v7-460@ki-sicherheit.jetzt",
     "test-v7-461@ki-sicherheit.jetzt",
     "test-v7-462@ki-sicherheit.jetzt",
     "test-v7-463@ki-sicherheit.jetzt",
@@ -518,7 +518,28 @@ EMAIL_WHITELIST = {email.lower() for email in [
     "test-v7-467@ki-sicherheit.jetzt",
     "test-v7-468@ki-sicherheit.jetzt",
     "test-v7-469@ki-sicherheit.jetzt",
-    "test-v7-470@ki-sicherheit.jetzt",    "test-v7-400@ki-sicherheit.jetzt",]}
+    "test-v7-470@ki-sicherheit.jetzt",
+    "test-v7-471@ki-sicherheit.jetzt",
+    "test-v7-472@ki-sicherheit.jetzt",
+    "test-v7-473@ki-sicherheit.jetzt",
+    "test-v7-474@ki-sicherheit.jetzt",
+    "test-v7-475@ki-sicherheit.jetzt",
+    "test-v7-476@ki-sicherheit.jetzt",
+    "test-v7-477@ki-sicherheit.jetzt",
+    "test-v7-478@ki-sicherheit.jetzt",
+    "test-v7-479@ki-sicherheit.jetzt",
+    "test-v7-480@ki-sicherheit.jetzt",
+    "test-v7-481@ki-sicherheit.jetzt",
+    "test-v7-482@ki-sicherheit.jetzt",
+    "test-v7-483@ki-sicherheit.jetzt",
+    "test-v7-484@ki-sicherheit.jetzt",
+    "test-v7-485@ki-sicherheit.jetzt",
+    "test-v7-486@ki-sicherheit.jetzt",
+    "test-v7-487@ki-sicherheit.jetzt",
+    "test-v7-488@ki-sicherheit.jetzt",
+    "test-v7-489@ki-sicherheit.jetzt",
+    "test-v7-490@ki-sicherheit.jetzt",     
+    "test-v7-400@ki-sicherheit.jetzt",]}
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 log = logging.getLogger(__name__)
