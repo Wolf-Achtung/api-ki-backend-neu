@@ -369,6 +369,8 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
         "AI_POLICY_MINI_HTML", "ai_policy_mini",
         "VENDOR_AUDIT_HTML", "RISK_ENGINE_V3_HTML",
         "SOFORT_START_HTML",
+        # FIX-P3-C3: Shadow keys for sections that also exist as lowercase
+        "templates_start", "wettbewerb_benchmark",
     ]
 
     # Team-specific replacements
