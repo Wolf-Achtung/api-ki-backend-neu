@@ -9199,6 +9199,18 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         """Format number with German thousands separator (dot)."""
         return f"{int(v):,}".replace(",", ".")
 
+    # FIX-T1: Compute PAYBACK_MONTHS for prompt templates (e.g. ki_stack_summary.md)
+    _net_monthly = monatsersparnis_eur - opex_realistisch
+    _payback_months_val = round(capex_realistisch / _net_monthly, 1) if _net_monthly > 0 else 0
+    # Use existing section value if available (set by BC engine), else computed
+    _payback_from_sections = briefing.get("PAYBACK_MONTHS") or briefing.get("_PAYBACK_BC_V2")
+    if _payback_from_sections:
+        try:
+            _payback_months_val = round(float(str(_payback_from_sections).replace(",", ".")), 1)
+        except (ValueError, TypeError):
+            pass
+    _payback_months_fmt = f"{_payback_months_val:.1f}".replace(".", ",")
+
     base_vars.update({
         "ROI_STUNDEN_MONAT": str(int(monatsersparnis_stunden)),
         "ROI_STUNDENSATZ_EUR": str(int(stundensatz_eur)),
@@ -9213,6 +9225,8 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "BRUTTO_ERSPARNIS_JAHR_EUR": _fmt_de(_roi_jahresersparnis),
         "NETTO_ERSPARNIS_JAHR_EUR": _fmt_de(_roi_jahresersparnis - _roi_opex_jahr),
         "TOOL_KOSTEN_JAHR_EUR": _fmt_de(_roi_opex_jahr),
+        # FIX-T1: PAYBACK_MONTHS for ki_stack_summary and other prompts
+        "PAYBACK_MONTHS": _payback_months_fmt,
     })
 
     # ===== BLOCK 9: Scores (CRITICAL FIX!) =====
