@@ -656,6 +656,66 @@ class ReportValidator:
         ],
     }
 
+    # FIX-RC1: Section whitelist for SIZE_FORBIDDEN false positives.
+    # These term+section combos are intentional (section names, score dimensions,
+    # template labels) and should NOT trigger SIZE_MISMATCH or SOLO_TERMINOLOGY.
+    SIZE_FORBIDDEN_SECTION_WHITELIST: Dict[str, List[str]] = {
+        "Audit": [
+            "VENDOR_AUDIT_HTML", "vendor_audit",
+            "RISK_ENGINE_V3_HTML", "RISK_ENGINE_HTML",
+            "risk_engine_v3", "risk_engine",
+            "prompt_framework", "PROMPT_FRAMEWORK_HTML",
+        ],
+        "Audit-Trail": [
+            "VENDOR_AUDIT_HTML", "vendor_audit",
+            "RISK_ENGINE_V3_HTML", "RISK_ENGINE_HTML",
+        ],
+        "Governance": [
+            "AI_ACT_GOVERNANCE_INJECTION",
+            "KPI_SCORES_HTML", "KPI_VISUALS_HTML", "KPI_CONTEXT_HTML",
+            "AI_POLICY_MINI_HTML", "ai_policy_mini",
+            "ai_act_summary",
+            "BENCHMARKS_HTML", "benchmarks_html",
+            "LEAD_AI_ACT", "LEAD_RISKS", "LEAD_STRATEGIE", "LEAD_WETTBEWERB",
+            "MARKET_INSIGHTS_HTML",
+            "gamechanger_decision",
+            "_nist_rmf_narrative", "_GC_SNAPSHOT_642",
+        ],
+        "Governance-Struktur": [
+            "AI_ACT_GOVERNANCE_INJECTION",
+            "KPI_SCORES_HTML", "AI_POLICY_MINI_HTML",
+        ],
+        "Executive": [
+            "LEAD_EXEC",
+            "SOFORT_START_HTML", "sofort_start",
+            "ROADMAP_HTML", "ROADMAP_90D_HTML", "roadmap", "roadmap_90d",
+            "PILOT_PLAN_HTML", "pilot_plan",
+            "RECOMMENDATIONS_HTML", "recommendations",
+            "TECHNOLOGIE_PROZESSE_HTML", "technologie_prozesse",
+            "KI_SKILLPLAN_HTML", "ki_skillplan",
+            "TEMPLATES_START_HTML", "templates_start",
+            "PROMPT_FRAMEWORK_HTML", "prompt_framework",
+        ],
+        "Engine": [
+            "RISK_ENGINE_HTML", "RISK_ENGINE_V3_HTML",
+            "risk_engine", "risk_engine_v3",
+            "VENDOR_AUDIT_HTML", "vendor_audit",
+            "BUSINESS_CASE_ENGINE_HTML", "business_case_engine",
+            "RECOMMENDATIONS_ENGINE_HTML", "recommendations_engine",
+        ],
+        "Framework": [
+            "PROMPT_FRAMEWORK_HTML", "prompt_framework",
+            "AI_POLICY_MINI_HTML", "ai_policy_mini",
+        ],
+        "Pipeline": [
+            "_healer_stats", "_pipeline_meta",
+        ],
+        "Architektur": [
+            "AI_POLICY_MINI_HTML", "ai_policy_mini",
+            "TECHNOLOGIE_PROZESSE_HTML", "technologie_prozesse",
+        ],
+    }
+
     # SPRINT G3.1: Replacement mappings for size-inappropriate terms
     SIZE_REPLACEMENTS = {
         "team": {
@@ -765,6 +825,7 @@ class ReportValidator:
             "gamechanger": 100,  # v14.16: 150→100 (kurze aber valide OK)         # SPRINT N1: 750→500 (Solo-realistic)
             "transparency_box": 50,     # SPRINT N1: 100→50 (minimal overhead)
             "technologie_prozesse": 150,
+            "unternehmensprofil_markt": 180,  # FIX-RC3b: Solo-compact produces ~197 words (global 220 too high)
         },
         "team": {
             # SPRINT N: Updated minimums
@@ -906,6 +967,35 @@ class ReportValidator:
         "technologie_prozesse": "TECHNOLOGIE_PROZESSE_HTML",
     }
 
+    # FIX-RC2: Sections excluded from Solo-Compact rendering.
+    # Warnings for these are noise when COMPACT_REPORT_MODE is active.
+    COMPACT_EXCLUDED_SECTIONS = {
+        "BRANCH_DEEP_DIVE_HTML", "branch_deep_dive",
+        "RISK_ENGINE_HTML", "risk_engine",
+        "RISK_ENGINE_V3_HTML", "risk_engine_v3",
+        "BUSINESS_CASE_SIM_HTML", "business_case_sim",
+        "BENCHMARKS_HTML", "benchmarks_html", "benchmarks",
+        "AUTOMATION_ROADMAP_HTML", "automation_roadmap",
+        "FUNDING_BRANCH_ALIGNMENT_HTML", "funding_branch_alignment",
+        "TOOLS_FUNDING_ALIGNMENT_HTML", "tools_funding_alignment",
+        "TOOLS_BRANCH_ALIGNMENT_HTML", "tools_branch_alignment",
+        "ROI_TRACKING_HTML", "roi_tracking",
+        "KICKOFF_HTML", "kickoff", "kickoff_vorlage",
+        "PROMPT_FRAMEWORK_HTML", "prompt_framework",
+        "ROADMAP_12M_HTML", "roadmap_12m",
+        "BUSINESS_CASE_HTML", "business_case",
+        "FOERDERPOTENZIAL_HTML", "foerderpotenzial",
+        # Internal/snapshot sections never rendered
+        "_GC_SNAPSHOT_642", "_nist_rmf_narrative", "_healer_stats",
+        "_pipeline_meta",
+        # Additional non-rendered sections in compact mode
+        "MARKET_INSIGHTS_HTML", "market_insights",
+        "NEWS_BOX_HTML", "news_box",
+        "responsible_ai_html", "RESPONSIBLE_AI_HTML",
+        "wettbewerb_benchmark",
+        "monetarisierung", "MONETARISIERUNG_HTML",
+    }
+
     def __init__(self, sections: Dict[str, Any], meta: Dict[str, Any]) -> None:
         self.sections = sections or {}
         self.meta = meta or {}
@@ -916,6 +1006,12 @@ class ReportValidator:
         self._excluded_shadow_keys: Optional[set] = None
         # FIX-TEAM-KMU: Cache normalized size key
         self._size_key: Optional[str] = None
+        # FIX-RC2: Detect compact mode
+        self._is_compact = bool(self.sections.get("COMPACT_REPORT_MODE"))
+
+    def _is_compact_excluded(self, section_name: str) -> bool:
+        """FIX-RC2: Skip validation for sections not rendered in compact mode."""
+        return self._is_compact and section_name in self.COMPACT_EXCLUDED_SECTIONS
 
     def _normalize_size_key(self) -> str:
         """
@@ -1325,6 +1421,10 @@ class ReportValidator:
                 if logical_name in self.sections:
                     section_key = logical_name
 
+            # FIX-RC2: Skip non-rendered compact sections
+            if self._is_compact_excluded(section_key) or self._is_compact_excluded(logical_name):
+                continue
+
             # FIX-503B: Quick Wins fallback logic
             # If QUICK_WINS_HTML not found, try quick_wins text key
             if logical_name == "quick_wins" and section_key not in self.sections:
@@ -1682,7 +1782,14 @@ class ReportValidator:
         for section_name, content in self.canonical_sections.items():
             if not isinstance(content, str):
                 continue
+            # FIX-RC2: Skip non-rendered compact sections
+            if self._is_compact_excluded(section_name):
+                continue
             for term in forbidden_terms:
+                # FIX-RC1: Skip whitelisted section+term combos (false positives)
+                wl = self.SIZE_FORBIDDEN_SECTION_WHITELIST.get(term, [])
+                if section_name in wl:
+                    continue
                 if self._term_hit(term, content):
                     # SPRINT N: Use CRITICAL severity if HARD_STOP is enabled
                     severity = "CRITICAL" if self.HARD_STOP_ON_SIZE_MISMATCH else "WARNING"
@@ -1728,11 +1835,20 @@ class ReportValidator:
         for section_name, content in self.canonical_sections.items():
             if not isinstance(content, str):
                 continue
+            # FIX-RC2: Skip non-rendered compact sections
+            if self._is_compact_excluded(section_name):
+                continue
 
             # Use solo_simplifier validation
             is_valid, violations = validate_solo_content(content, section_name)
 
             for violation in violations:
+                # FIX-RC1: Skip whitelisted section+term combos
+                vterm = violation.get("term", "")
+                wl = self.SIZE_FORBIDDEN_SECTION_WHITELIST.get(vterm, [])
+                if section_name in wl:
+                    continue
+
                 severity = violation.get("severity", "WARNING").upper()
                 # Headlines are CRITICAL, body is WARNING
                 if severity == "ERROR":
@@ -1744,7 +1860,7 @@ class ReportValidator:
                         category="SOLO_TERMINOLOGY",
                         section=section_name,
                         message=(
-                            f"Solo-Blacklist: '{violation.get('term', 'unknown')}' "
+                            f"Solo-Blacklist: '{vterm}' "
                             f"gefunden in {section_name}"
                         ),
                         details=(
@@ -2256,6 +2372,9 @@ class ReportValidator:
             # SPRINT G13-B: Skip excluded sections (they're meant to summarize)
             if section_name in self.REDUNDANCY_EXCLUDED_SECTIONS:
                 continue
+            # FIX-RC2: Skip non-rendered compact sections
+            if self._is_compact_excluded(section_name):
+                continue
 
             # Split into sentences (rough approximation)
             sentences = re.split(r'[.!?]\s+', content)
@@ -2498,6 +2617,9 @@ class ReportValidator:
 
         for section_name, content in self.sections.items():
             if not isinstance(content, str):
+                continue
+            # FIX-RC2: Skip non-rendered compact sections
+            if self._is_compact_excluded(section_name):
                 continue
 
             # Check CRITICAL patterns
