@@ -2747,7 +2747,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "QUICK_WINS_HTML": 8000,  # FIX-F1: LLM liefert 9K+ HTML
         "QUICK_WINS_HTML_LEFT": 8000,  # FIX-H3
         "ROADMAP_90D_HTML": 5000,  # FIX-B22-P2: was 1200, kept at 5000
-        "ROADMAP_12M_HTML": 8000,
+        "ROADMAP_12M_HTML": 10000,  # FIX-RS2-5: was 8000 — 8031 chars triggered aggressive 60% trim
         "RECOMMENDATIONS_HTML": 6000,  # FIX-629b
         "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
         "GAMECHANGER_HTML": 6500,  # FIX-B36a: was 1500 (!)
@@ -2778,13 +2778,13 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "ROI_TRACKING_HTML": 3000,
 
-        "KICKOFF_VORLAGE_HTML": 3000,
+        "KICKOFF_VORLAGE_HTML": 4500,  # FIX-RS2: was 3000
 
         "AI_ACT_SUMMARY_HTML": 3500,  # FIX-B36a: was 2000
 
         "TEMPLATES_START_HTML": 4500,  # FIX-B36a: was 2500
 
-        "AI_POLICY_MINI_HTML": 2500,
+        "AI_POLICY_MINI_HTML": 3500,  # FIX-RS2: was 2500
 
         "PROMPT_FRAMEWORK_HTML": 2000,
 
@@ -2825,6 +2825,8 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "TOOLS_FUNDING_ALIGNMENT_HTML": 3000,
 
         "TOOLS_BRANCH_ALIGNMENT_HTML": 3000,
+
+        "FOERDERPROGRAMME_HTML": 4000,  # FIX-RS2-4: was _default 1500 — table destroyed by trim
 
         "STARTER_KIT_HTML": 5000,
 
@@ -2935,6 +2937,8 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "TOOLS_FUNDING_ALIGNMENT_HTML": 5000,
 
         "TOOLS_BRANCH_ALIGNMENT_HTML": 5000,
+
+        "FOERDERPROGRAMME_HTML": 6000,  # FIX-RS2-4: was _default 2000 — table destroyed by trim
 
         "STARTER_KIT_HTML": 8000,
 
@@ -3052,6 +3056,8 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "TOOLS_FUNDING_ALIGNMENT_HTML": 6000,
 
         "TOOLS_BRANCH_ALIGNMENT_HTML": 6000,
+
+        "FOERDERPROGRAMME_HTML": 8000,  # FIX-RS2-4: was _default 3000 — table destroyed by trim
 
         "STARTER_KIT_HTML": 10000,
 

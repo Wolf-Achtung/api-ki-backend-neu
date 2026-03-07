@@ -38,7 +38,13 @@ from dataclasses import dataclass, field, asdict
 from typing import Any, Dict, List, Optional, Literal, Tuple
 
 # Fix-Batch J2: Import German number formatting
-from services.i18n import format_decimal_de
+from services.i18n import format_decimal_de, format_eur_de
+
+
+def _eur(v: float) -> str:
+    """Format EUR value with German thousands separator (dot), no currency symbol.
+    Example: 1800 → '1.800', 50 → '50'"""
+    return f"{v:,.0f}".replace(",", ".")
 
 log = logging.getLogger(__name__)
 
@@ -268,7 +274,7 @@ class ROIExplanation:
             roi_raw_value = 0.0
 
         # Build step 5 with raw ROI
-        roi_step5 = f"5. ROI (berechnet): {(self.zeitersparnis_stunden * self.stundensatz * 12) - self.einmalkosten - (self.laufende_kosten_monat * 12):,.0f}€ / {self.einmalkosten:,.0f}€ × 100 = {roi_raw_value:.0f}%"
+        roi_step5 = f"5. ROI (berechnet): {_eur((self.zeitersparnis_stunden * self.stundensatz * 12) - self.einmalkosten - (self.laufende_kosten_monat * 12))}€ / {_eur(self.einmalkosten)}€ × 100 = {roi_raw_value:.0f}%"
 
         # FIX-B15: Emphasize capped value as primary, raw value as secondary
         if self.roi_was_capped:
@@ -290,19 +296,19 @@ class ROIExplanation:
             <table style="width:100%;border-collapse:collapse;">
                 <tr><td style="padding:4px 8px;">Stundensatz</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.stundensatz} €/h</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{self.stundensatz_quelle}</td></tr>
                 <tr><td style="padding:4px 8px;">Zeitersparnis</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.zeitersparnis_stunden:.0f} h/Monat{cap_note}</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{self.zeitersparnis_quelle}</td></tr>
-                <tr><td style="padding:4px 8px;">Einmalkosten (CAPEX)</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.einmalkosten:,.0f} €</td><td></td></tr>
-                <tr><td style="padding:4px 8px;">Laufende Kosten (OPEX)</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.laufende_kosten_monat:,.0f} €/Monat</td><td></td></tr>
-                {"<tr><td style='padding:4px 8px;'>Fördereffekt</td><td style='padding:4px 8px;text-align:right;font-weight:500;color:#16a34a;'>-" + f"{self.foerdereffekt:,.0f} €</td><td></td></tr>" if self.foerdereffekt > 0 else ""}
+                <tr><td style="padding:4px 8px;">Einmalkosten (CAPEX)</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{_eur(self.einmalkosten)} €</td><td></td></tr>
+                <tr><td style="padding:4px 8px;">Laufende Kosten (OPEX)</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{_eur(self.laufende_kosten_monat)} €/Monat</td><td></td></tr>
+                {"<tr><td style='padding:4px 8px;'>Fördereffekt</td><td style='padding:4px 8px;text-align:right;font-weight:500;color:#16a34a;'>-" + f"{_eur(self.foerdereffekt)} €</td><td></td></tr>" if self.foerdereffekt > 0 else ""}
             </table>
             <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b;">
                 <strong>Formel:</strong> {self.formel}
                 <div style="margin-top:8px;padding:8px;background:#fff;border-radius:4px;">
                     <div style="font-weight:600;margin-bottom:4px;color:#334155;">ROI-Herleitung Schritt für Schritt:</div>
                     <div style="line-height:1.6;">
-                        1. Jahresersparnis: {self.zeitersparnis_stunden:.0f}h/Monat × {self.stundensatz}€/h × 12 = {self.zeitersparnis_stunden * self.stundensatz * 12:,.0f}€<br>
-                        2. Abzüglich Einmalinvestition: {self.einmalkosten:,.0f}€<br>
-                        3. Abzüglich laufende Jahreskosten: {self.laufende_kosten_monat:,.0f}€/Monat × 12 = {self.laufende_kosten_monat * 12:,.0f}€<br>
-                        4. Nettonutzen: {self.zeitersparnis_stunden * self.stundensatz * 12:,.0f}€ - {self.einmalkosten:,.0f}€ - {self.laufende_kosten_monat * 12:,.0f}€ = {(self.zeitersparnis_stunden * self.stundensatz * 12) - self.einmalkosten - (self.laufende_kosten_monat * 12):,.0f}€<br>
+                        1. Jahresersparnis: {self.zeitersparnis_stunden:.0f}h/Monat × {self.stundensatz}€/h × 12 = {_eur(self.zeitersparnis_stunden * self.stundensatz * 12)}€<br>
+                        2. Abzüglich Einmalinvestition: {_eur(self.einmalkosten)}€<br>
+                        3. Abzüglich laufende Jahreskosten: {_eur(self.laufende_kosten_monat)}€/Monat × 12 = {_eur(self.laufende_kosten_monat * 12)}€<br>
+                        4. Nettonutzen: {_eur(self.zeitersparnis_stunden * self.stundensatz * 12)}€ - {_eur(self.einmalkosten)}€ - {_eur(self.laufende_kosten_monat * 12)}€ = {_eur((self.zeitersparnis_stunden * self.stundensatz * 12) - self.einmalkosten - (self.laufende_kosten_monat * 12))}€<br>
                         {roi_step5}{roi_step6}
                     </div>{roi_conclusion}
                 </div>
@@ -702,7 +708,7 @@ def inject_canonical_to_sections(
                 old_rate = float(m.group(2))
                 if old_hours != _canon_hours or old_rate != _canon_rate:
                     annual = _canon_hours * _canon_rate * 12
-                    return f"{_canon_hours:.0f}h/Monat × {_canon_rate:.0f}€/h × 12 = {annual:,.0f}€"
+                    return f"{_canon_hours:.0f}h/Monat × {_canon_rate:.0f}€/h × 12 = {_eur(annual)}€"
                 return str(m.group(0))
             _new = _re.sub(
                 r'(\d+(?:\.\d+)?)h/Monat\s*×\s*(\d+(?:\.\d+)?)€/h\s*×\s*12\s*=\s*[\d.,]+€',
@@ -2138,12 +2144,12 @@ def business_case_report_to_html(
 
                 <div style="margin-bottom:8px;">
                     <span style="font-size:9pt;color:#64748b;">{labels["savings_label"]}</span>
-                    <p style="margin:4px 0 0 0;font-size:14pt;font-weight:600;color:#1e293b;">{scenario.monthly_savings:,.0f} €</p>
+                    <p style="margin:4px 0 0 0;font-size:14pt;font-weight:600;color:#1e293b;">{_eur(scenario.monthly_savings)} €</p>
                 </div>
 
                 <div style="padding-top:8px;border-top:1px solid #e2e8f0;">
                     <span style="font-size:9pt;color:#64748b;">{labels["investment_label"]}</span>
-                    <p style="margin:4px 0 0 0;font-size:12pt;color:#475569;">{scenario.investment_total:,.0f} €</p>
+                    <p style="margin:4px 0 0 0;font-size:12pt;color:#475569;">{_eur(scenario.investment_total)} €</p>
                 </div>
             </div>
         ''')
@@ -2204,7 +2210,7 @@ def business_case_report_to_html(
         <div class="funding-note" style="padding:12px;background:#fef3c7;border-radius:8px;margin-bottom:16px;">
             <p style="margin:0;font-size:10pt;color:#92400e;">
                 <strong>💡 {labels["funding_note"]}:</strong>
-                Durch Förderprogramme kann die Investition um bis zu <strong>{report.funding_effect:,.0f} €</strong> reduziert werden.
+                Durch Förderprogramme kann die Investition um bis zu <strong>{_eur(report.funding_effect)} €</strong> reduziert werden.
                 {f"Programme: {', '.join(report.funding_programmes_used[:2])}" if report.funding_programmes_used else ""}
             </p>
         </div>
