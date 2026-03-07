@@ -8941,8 +8941,13 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "hauptleistung_len": len(hauptleistung_raw) if hauptleistung_raw else 0,
     }
     
-    # Derive size_label (human-readable label for size)
-    size_label = briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
+    # [FIX-SEGMENT-LABEL] Label aus normalisiertem company_size ableiten (Ground Truth)
+    _size_label_map_cover = {
+        'solo': 'Solo / Einzelunternehmer',
+        'team': '2\u201310 (Kleines Team)',
+        'kmu': '11\u2013100 (KMU)',
+    }
+    size_label = _size_label_map_cover.get(company_size) or briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse", "")
     # Phase 1B Fix: Normalize size_label for grammar
     if size_label == "Einzelunternehmer":
         size_label = "Einzelunternehmen"
