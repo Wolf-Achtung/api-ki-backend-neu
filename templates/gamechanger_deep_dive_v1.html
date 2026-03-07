@@ -464,9 +464,8 @@ h1, h2, h3, h4 {
         <h1 style="color: var(--c-deep);">KI-Potenzial-<br>Analyse</h1>
         <p class="cover-subtitle">Ihre individuelle Analyse des strategischen KI-Potenzials</p>
         <p class="cover-meta">
-            Unternehmen: <strong>{{ company }}</strong>
-            {% if branche %}<span class="muted"> · </span>{{ branche }}{% endif %}
-            {% if size_label %}<span class="muted"> · </span>{{ size_label }}{% endif %}
+            {% if branche %}{{ branche }}{% endif %}
+            {% if size_label %}{% if branche %}<span class="muted"> · </span>{% endif %}{{ size_label }}{% endif %}
         </p>
     </div>
 
