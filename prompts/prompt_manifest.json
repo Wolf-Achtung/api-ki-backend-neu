@@ -925,6 +925,30 @@
       "size_aware": false,
       "required": false,
       "output": "html"
+    },
+    "gc_implementation_plan": {
+      "title": "Gamechanger Implementierungsplan",
+      "path": "gc_implementation_plan.md",
+      "purpose": "90-Tage Deep Dive Implementierungsplan für Gamechanger",
+      "size_aware": true,
+      "required": false,
+      "output": "html"
+    },
+    "gc_risk_assessment": {
+      "title": "Gamechanger Risikobewertung",
+      "path": "gc_risk_assessment.md",
+      "purpose": "Detaillierte Risikobewertung & Absicherung für Gamechanger Deep Dive",
+      "size_aware": true,
+      "required": false,
+      "output": "html"
+    },
+    "gc_next_steps": {
+      "title": "Gamechanger Nächste Schritte",
+      "path": "gc_next_steps.md",
+      "purpose": "Konkrete nächste Schritte nach Gamechanger Deep Dive",
+      "size_aware": true,
+      "required": false,
+      "output": "html"
     }
   },
   "en": {
