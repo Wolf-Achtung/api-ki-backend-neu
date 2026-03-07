@@ -616,7 +616,7 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
                         "[GC-DEEP-DIVE] LLM success for %s: attempt=%d, %.0fms, len=%d",
                         prompt_name, attempt, elapsed_ms, len(content),
                     )
-                    return content
+                    return str(content)
 
             log.warning("[GC-DEEP-DIVE] LLM returned no content for %s (attempt %d)", prompt_name, attempt)
 
