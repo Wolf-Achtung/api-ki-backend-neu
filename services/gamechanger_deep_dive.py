@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import logging
 import math
+import traceback
 from typing import Any, Dict, List, Optional
 
 log = logging.getLogger(__name__)
@@ -57,12 +58,23 @@ def build_gamechanger_context(report1_sections: Dict[str, Any],
         or 'solo'
     )
 
+    # Map COMPANY_SIZE to a human-readable label for the cover page
+    _size_label_map = {
+        'solo': 'Solo / Einzelunternehmer',
+        'team': 'Team (2–10 Mitarbeitende)',
+        'kmu': 'KMU (11–100 Mitarbeitende)',
+    }
+    # Use the label from Report 1 if available, otherwise derive from COMPANY_SIZE
+    raw_label = (
+        report1_sections.get('UNTERNEHMENSGROESSE_LABEL')
+        or briefing.get('unternehmensgroesse', '')
+    )
+    # If the label doesn't match the computed segment, override with correct label
+    size_label = _size_label_map.get(company_size, raw_label) if company_size else raw_label
+
     segment_info = {
         'COMPANY_SIZE': company_size,
-        'UNTERNEHMENSGROESSE_LABEL': (
-            report1_sections.get('UNTERNEHMENSGROESSE_LABEL')
-            or briefing.get('unternehmensgroesse', '')
-        ),
+        'UNTERNEHMENSGROESSE_LABEL': size_label,
         'BRANCHE_LABEL': (
             report1_sections.get('BRANCHE_LABEL')
             or briefing.get('branche', '')
@@ -70,6 +82,12 @@ def build_gamechanger_context(report1_sections: Dict[str, Any],
         'HAUPTLEISTUNG': (
             report1_sections.get('HAUPTLEISTUNG')
             or briefing.get('hauptleistung', '')
+        ),
+        # Company name / identifier for display (NOT hauptleistung!)
+        'kundencode': (
+            report1_sections.get('kundencode')
+            or briefing.get('kundencode', '')
+            or briefing.get('unternehmen_name', '')
         ),
     }
 
@@ -80,8 +98,8 @@ def build_gamechanger_context(report1_sections: Dict[str, Any],
         '_GC_SNAPSHOT_642': report1_sections.get('_GC_SNAPSHOT_642', ''),
     }
 
-    # Business Case canonical values
-    canonical_bc = _extract_canonical_bc(report1_sections, briefing)
+    # Business Case canonical values (pass company_size for segment caps)
+    canonical_bc = _extract_canonical_bc(report1_sections, briefing, company_size)
 
     # Supporting content from Report 1
     supporting = {
@@ -96,15 +114,38 @@ def build_gamechanger_context(report1_sections: Dict[str, Any],
 
 
 def _extract_canonical_bc(sections: Dict[str, Any],
-                           briefing: Dict[str, Any]) -> Dict[str, Any]:
-    """Extract canonical business case values from Report 1 data."""
+                           briefing: Dict[str, Any],
+                           company_size: str = 'solo') -> Dict[str, Any]:
+    """Extract canonical business case values from Report 1 data.
+
+    Applies segment-specific caps (Solo: hours ≤20/month, ROI ≤200%)."""
     def _safe_float(val: Any, default: float = 0.0) -> float:
         if val is None:
             return default
+        # If already numeric, return directly (avoids str(36.0) → "360" bug)
+        if isinstance(val, (int, float)):
+            return float(val)
         try:
             # Handle German format "1.234,56" and strings like "95€/h"
-            s = str(val).replace('€', '').replace('/h', '').replace('.', '').replace(',', '.').strip()
-            return float(s) if s else default
+            s = str(val).replace('€', '').replace('/h', '').strip()
+            if not s:
+                return default
+            # Detect German vs English decimal format:
+            # German: "1.234,56" → comma is decimal, dots are thousands
+            # German thousands only: "5.000" → dot separating exactly 3 digits
+            # English/raw: "36.0" → dot is decimal separator
+            if ',' in s:
+                # German format with comma: remove thousands dots, swap comma→dot
+                s = s.replace('.', '').replace(',', '.')
+            elif '.' in s:
+                # Check if dot is a thousands separator (German "5.000", "15.000")
+                # Pattern: dot followed by exactly 3 digits at end → thousands sep
+                import re
+                if re.match(r'^[\d]+(?:\.[\d]{3})+$', s):
+                    # Pure German thousands format like "5.000" or "15.000"
+                    s = s.replace('.', '')
+                # else: keep dot as decimal (English "36.0", "200.0")
+            return float(s)
         except (ValueError, TypeError):
             return default
 
@@ -134,6 +175,28 @@ def _extract_canonical_bc(sections: Dict[str, Any],
         sections.get('PAYBACK_MONTHS'),
         6.0
     )
+
+    # Apply segment-specific caps (must match Report 1 pipeline caps)
+    max_hours_by_size = {'solo': 20, 'team': 80, 'kmu': 200}
+    size_key = (company_size or 'solo').lower().strip()
+    max_hours = max_hours_by_size.get(size_key, 80)
+    if hours > max_hours:
+        log.info("[GC-DEEP-DIVE] Capping hours from %.1f to %d for size '%s'",
+                 hours, max_hours, size_key)
+        hours = float(max_hours)
+
+    # ROI hard cap at 200% (matches Report 1 _MAX_ROI_DISPLAY)
+    if roi > 200:
+        log.info("[GC-DEEP-DIVE] Capping ROI from %.1f to 200 for size '%s'",
+                 roi, size_key)
+        roi = 200.0
+
+    # Recalculate payback from capped values if needed
+    net_monthly = (hours * rate) - opex
+    if net_monthly > 0 and capex > 0:
+        payback = round(capex / net_monthly, 1)
+    elif net_monthly <= 0:
+        payback = 99.0
 
     return {
         'hours': hours,
@@ -389,7 +452,10 @@ def generate_deep_dive_sections(context: Dict[str, Any]) -> Dict[str, str]:
             html = _generate_gc_section(prompt_name, context)
             sections[html_key] = html
         except Exception as exc:
-            log.error("[GC-DEEP-DIVE] Failed to generate %s: %s", prompt_name, exc)
+            log.error(
+                "[GC-DEEP-DIVE] Failed to generate %s: %s\n%s",
+                prompt_name, exc, traceback.format_exc()
+            )
             sections[html_key] = f'<p><em>[Section {prompt_name} konnte nicht generiert werden.]</em></p>'
 
     return sections
@@ -420,7 +486,10 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
     try:
         prompt_text = load_prompt(prompt_name, lang="de", vars_dict=vars_dict)
     except Exception as exc:
-        log.error("[GC-DEEP-DIVE] Failed to load prompt %s: %s", prompt_name, exc)
+        log.error(
+            "[GC-DEEP-DIVE] Failed to load prompt %s: %s\n%s",
+            prompt_name, exc, traceback.format_exc(),
+        )
         return f'<p><em>[Prompt {prompt_name} nicht gefunden]</em></p>'
 
     if not isinstance(prompt_text, str) or not prompt_text.strip():
@@ -439,14 +508,34 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
                 log.error("[GC-DEEP-DIVE] No OPENAI_API_KEY")
                 return None
 
-            oai_client = openai.OpenAI(api_key=api_key)
+            # Use system-wide timeout settings (Stability Patch v1)
+            timeout_read = float(os.environ.get("OPENAI_TIMEOUT_READ", "120"))
+            oai_client = openai.OpenAI(
+                api_key=api_key,
+                timeout=timeout_read,
+                max_retries=0,  # Retries handled by call_with_retry
+            )
+            log.info(
+                "[GC-DEEP-DIVE] LLM call for %s: prompt_len=%d, max_tokens=%d",
+                section, len(prompt_text), max_tokens,
+            )
             response = oai_client.chat.completions.create(
                 model=os.environ.get("OPENAI_MODEL", "gpt-4o"),
                 messages=[{"role": "user", "content": prompt_text}],
                 max_tokens=max_tokens,
                 temperature=0.4,
             )
-            return response.choices[0].message.content if response.choices else None
+            if response.choices:
+                content = response.choices[0].message.content
+                finish_reason = response.choices[0].finish_reason
+                if finish_reason != "stop":
+                    log.warning(
+                        "[GC-DEEP-DIVE] LLM finish_reason=%s for %s",
+                        finish_reason, section,
+                    )
+                return content
+            log.warning("[GC-DEEP-DIVE] LLM returned no choices for %s", section)
+            return None
 
         result = client.call_with_retry(
             call_fn=_call_openai,
@@ -457,11 +546,19 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
         if result.success and result.content:
             return result.content
         else:
-            log.warning("[GC-DEEP-DIVE] LLM call failed for %s", prompt_name)
+            log.warning(
+                "[GC-DEEP-DIVE] LLM call failed for %s: success=%s, has_content=%s, "
+                "retries=%s, strategy=%s, time=%.0fms",
+                prompt_name, result.success, bool(result.content),
+                result.retries_used, result.final_strategy, result.total_time_ms or 0,
+            )
             return f'<p><em>[{prompt_name} konnte nicht generiert werden]</em></p>'
 
     except Exception as exc:
-        log.error("[GC-DEEP-DIVE] LLM error for %s: %s", prompt_name, exc)
+        log.error(
+            "[GC-DEEP-DIVE] LLM error for %s: %s\n%s",
+            prompt_name, exc, traceback.format_exc(),
+        )
         return f'<p><em>[Fehler bei {prompt_name}: {exc}]</em></p>'
 
 
@@ -506,9 +603,14 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
 
     # 3. Build context
     context = build_gamechanger_context(report1_sections, answers)
+    bc = context.get('canonical_bc', {})
     log.info(
-        "[GC-DEEP-DIVE] Context built for briefing %d: size=%s, branche=%s",
-        briefing_id, context.get('COMPANY_SIZE'), context.get('BRANCHE_LABEL')
+        "[GC-DEEP-DIVE] Context built for briefing %d: size=%s, branche=%s, "
+        "bc_hours=%.1f, bc_roi=%.1f, bc_payback=%.1f, bc_capex=%.0f, "
+        "company=%s, segment_label=%s",
+        briefing_id, context.get('COMPANY_SIZE'), context.get('BRANCHE_LABEL'),
+        bc.get('hours', 0), bc.get('roi', 0), bc.get('payback', 0), bc.get('capex', 0),
+        context.get('kundencode', ''), context.get('UNTERNEHMENSGROESSE_LABEL', ''),
     )
 
     # 4. Generate sections
@@ -540,7 +642,12 @@ def render_deep_dive_html(sections: Dict[str, str],
         # Merge sections and context for template
         template_vars = {**sections, **context}
         template_vars['report_type'] = 'gamechanger_deep_dive'
-        template_vars['company_name'] = context.get('HAUPTLEISTUNG', 'Ihr Unternehmen')
+        # Use kundencode (company identifier) as company_name, NOT hauptleistung
+        template_vars['company_name'] = (
+            context.get('kundencode')
+            or context.get('HAUPTLEISTUNG')
+            or 'Ihr Unternehmen'
+        )
 
         return template.render(**template_vars)
 
@@ -552,7 +659,7 @@ def render_deep_dive_html(sections: Dict[str, str],
 
 def _fallback_html(sections: Dict[str, str], context: Dict[str, Any]) -> str:
     """Fallback HTML if template rendering fails."""
-    company = context.get('HAUPTLEISTUNG', 'Ihr Unternehmen')
+    company = context.get('kundencode') or context.get('HAUPTLEISTUNG', 'Ihr Unternehmen')
     branche = context.get('BRANCHE_LABEL', '')
 
     parts = [
