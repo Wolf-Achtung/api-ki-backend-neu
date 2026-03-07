@@ -53,15 +53,32 @@ def build_gamechanger_context(report1_sections: Dict[str, Any],
         'score_rating': report1_sections.get('score_rating', ''),
     }
 
-    # Segment info — computed sections take priority over raw briefing
+    # Segment info — use briefing.unternehmensgroesse as ground truth
+    # Report 1 may have stale COMPANY_SIZE if briefing was edited after generation.
     _r1_size = report1_sections.get('COMPANY_SIZE')
-    _br_size = briefing.get('COMPANY_SIZE')
-    company_size = _r1_size or _br_size or 'solo'
+    _br_raw = briefing.get('unternehmensgroesse', '')
+    _br_size_key = briefing.get('COMPANY_SIZE')
+
+    # Re-derive from raw questionnaire answer (ground truth)
+    _bucket_to_size = {"solo": "solo", "small_team": "team", "kmu": "kmu"}
+    company_size = None
+    if _br_raw:
+        try:
+            from services.company_size_normalizer import normalize_company_size as _norm_cs
+            _norm_result = _norm_cs(str(_br_raw))
+            company_size = _bucket_to_size.get(_norm_result.get('bucket', ''), '')
+        except Exception as _e:
+            log.warning("[GC-DEEP-DIVE][SEGMENT] normalize_company_size failed: %s", _e)
+
+    # Fallback chain: normalized briefing → report1 → briefing key → default
+    if not company_size:
+        company_size = _r1_size or _br_size_key or 'solo'
 
     log.info(
-        "[GC-DEEP-DIVE][SEGMENT] Resolution: report1.COMPANY_SIZE=%r, "
-        "briefing.COMPANY_SIZE=%r, briefing.unternehmensgroesse=%r → resolved=%r",
-        _r1_size, _br_size, briefing.get('unternehmensgroesse'), company_size,
+        "[GC-DEEP-DIVE][SEGMENT] Resolution: briefing.unternehmensgroesse=%r "
+        "→ normalized=%r, report1.COMPANY_SIZE=%r, briefing.COMPANY_SIZE=%r "
+        "→ final=%r",
+        _br_raw, company_size, _r1_size, _br_size_key, company_size,
     )
 
     # Map COMPANY_SIZE to a human-readable label for the cover page
@@ -544,26 +561,46 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
     timeout_read = float(os.environ.get("OPENAI_TIMEOUT_READ", "120"))
     model = os.environ.get("OPENAI_MODEL", "gpt-4o")
 
+    # gpt-5.* and reasoning models (o1/o3) require max_completion_tokens
+    # and don't support temperature. Mirrors logic from gpt_analyze.py:2233.
+    _model_lower = model.lower()
+    _is_new_model = (
+        _model_lower.startswith("gpt-5")
+        or _model_lower.startswith("o1")
+        or _model_lower.startswith("o3")
+    )
+
     oai_client = openai.OpenAI(
         api_key=api_key,
         timeout=timeout_read,
         max_retries=0,  # We handle retries ourselves
     )
 
+    # Build create() params based on model capabilities
+    create_params: Dict[str, Any] = {
+        'model': model,
+        'messages': [{"role": "user", "content": prompt_text}],
+    }
+    if _is_new_model:
+        create_params['max_completion_tokens'] = 4000
+        # Reasoning models don't support temperature
+    else:
+        create_params['max_tokens'] = 4000
+        create_params['temperature'] = 0.4
+
+    _used_max_completion = _is_new_model  # Track for 400-error fallback
+
     last_error: Optional[Exception] = None
     for attempt in range(1, _GC_LLM_MAX_RETRIES + 1):
         try:
             log.info(
-                "[GC-DEEP-DIVE] LLM call for %s: attempt=%d/%d prompt_len=%d model=%s",
+                "[GC-DEEP-DIVE] LLM call for %s: attempt=%d/%d prompt_len=%d model=%s "
+                "token_param=%s",
                 prompt_name, attempt, _GC_LLM_MAX_RETRIES, len(prompt_text), model,
+                "max_completion_tokens" if _used_max_completion else "max_tokens",
             )
             t0 = time.monotonic()
-            response = oai_client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt_text}],
-                max_tokens=4000,
-                temperature=0.4,
-            )
+            response = oai_client.chat.completions.create(**create_params)
             elapsed_ms = (time.monotonic() - t0) * 1000
 
             if response.choices:
@@ -579,13 +616,33 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
                         "[GC-DEEP-DIVE] LLM success for %s: attempt=%d, %.0fms, len=%d",
                         prompt_name, attempt, elapsed_ms, len(content),
                     )
-                    return content
+                    return str(content)
 
             log.warning("[GC-DEEP-DIVE] LLM returned no content for %s (attempt %d)", prompt_name, attempt)
 
         except Exception as exc:
             last_error = exc
             elapsed_ms = (time.monotonic() - t0) * 1000 if 't0' in dir() else 0
+
+            # 400 "max_tokens unsupported" → swap to max_completion_tokens and retry
+            err_msg = str(exc).lower()
+            if (
+                isinstance(exc, openai.BadRequestError)
+                and "max_tokens" in err_msg
+                and "not supported" in err_msg
+                and not _used_max_completion
+            ):
+                log.warning(
+                    "[GC-DEEP-DIVE] max_tokens rejected by %s → switching to "
+                    "max_completion_tokens (attempt %d, %.0fms)",
+                    model, attempt, elapsed_ms,
+                )
+                create_params.pop('max_tokens', None)
+                create_params.pop('temperature', None)
+                create_params['max_completion_tokens'] = 4000
+                _used_max_completion = True
+                continue  # Retry immediately with corrected params
+
             retryable = _is_openai_retryable(exc)
             log.warning(
                 "[GC-DEEP-DIVE] LLM error for %s: attempt=%d/%d retryable=%s "
