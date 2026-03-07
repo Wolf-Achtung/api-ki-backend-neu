@@ -37,7 +37,7 @@ ANTI-REDUNDANZ:
 - Ergänzt Risks-Sektion (dort Risiken, hier Regeln)
 
 STIL:
-- Textumfang: 120-180 Wörter
+- Textumfang: 200-350 Wörter (inkl. HTML-Struktur der Regeln)
 - Praxisnah, sofort umsetzbar
 - Keine Rechtsberatung, sondern pragmatische Leitplanken
 
