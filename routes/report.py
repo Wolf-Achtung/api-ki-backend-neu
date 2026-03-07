@@ -985,11 +985,11 @@ def _send_deep_dive_email(
         user_email = _determine_user_email(db, briefing, None)
 
         attachment = {
-            "filename": f"Gamechanger-Deep-Dive-{briefing_id}.pdf",
+            "filename": f"KI-Potenzial-Analyse-{briefing_id}.pdf",
             "content": pdf_bytes,
             "mimetype": "application/pdf",
         }
-        subject = f"Ihr Gamechanger Deep Dive — {company_name}"
+        subject = "Ihre KI-Potenzial-Analyse"
 
         # --- User email ---
         if user_email:
@@ -1011,7 +1011,7 @@ def _send_deep_dive_email(
             for addr in _admin_recipients():
                 ok, err = _send_email_via_resend(
                     addr,
-                    f"Kopie: Gamechanger Deep Dive — Briefing #{briefing_id}",
+                    f"Kopie: KI-Potenzial-Analyse — Briefing #{briefing_id}",
                     render_deep_dive_email(company_name=company_name, recipient="admin"),
                     attachments=[attachment],
                 )
@@ -1143,7 +1143,7 @@ async def generate_deep_dive_pdf(
             media_type="application/pdf",
             headers={
                 "Content-Disposition": (
-                    f'attachment; filename="Gamechanger-Deep-Dive-{briefing_id}.pdf"'
+                    f'attachment; filename="KI-Potenzial-Analyse-{briefing_id}.pdf"'
                 )
             },
         )
