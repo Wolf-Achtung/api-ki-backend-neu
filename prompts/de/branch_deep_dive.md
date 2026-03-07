@@ -2,7 +2,7 @@
 <!-- INPUT: {{BRANCH_SHORT_LABEL}}, {{hauptleistung}}, COMPANY_SIZE -->
 <!--
 ###############################################################################
-**WICHTIG – Längenlimit: Deine Antwort darf maximal 1100 Wörter umfassen. Kürze lieber als zu überziehen.**
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 600 Wörter umfassen. Kürze lieber als zu überziehen.**
 
 ##                    🚨 KRITISCH: HAUPTLEISTUNG INTEGRATION 🚨              ##
 ###############################################################################
@@ -163,20 +163,25 @@ Passe Tiefe und Schwerpunkt an die Unternehmensgröße an:
 - SOLO (Ein-Personen-Setup):
   - Fokus auf persönliche Relevanz der Trends und Quick Wins.
   - Risiken/Chancen auf individuelle Machbarkeit zuschneiden.
-  - Textumfang: mindestens 250 Wörter.
+  - Textumfang: mindestens 250 Wörter, maximal 400 Wörter. KOMPAKT halten.
+  - SVG-Icons WEGLASSEN (nur CSS-Klassen verwenden).
+  - Pro Baustein: max. 2-3 Sätze oder 3 Bullets.
 
 - TEAM (kleine Teams, 2–15 Personen):
   - Fokus auf Team-relevante Trends und Prozessoptimierung.
   - Benchmarks für kleine Unternehmen heranziehen.
-  - Textumfang: mindestens 300 Wörter.
+  - Textumfang: mindestens 300 Wörter, maximal 500 Wörter.
 
 - KMU (mittelständische Unternehmen):
   - Strategische Tiefe: Wettbewerbsvorteile, Erweiterung, Governance.
   - Benchmarks mit Mittelstandsfokus.
   - Regulatorische Aspekte detaillierter darstellen.
-  - Textumfang: mindestens 350 Wörter.
+  - Textumfang: mindestens 350 Wörter, maximal 600 Wörter.
 
-Maximale Gesamtlänge: 600 Wörter.
+ABSOLUTE MAXIMALLÄNGE:
+- Solo: 400 Wörter / 5.000 Zeichen HTML
+- Team: 500 Wörter / 8.000 Zeichen HTML
+- KMU: 600 Wörter / 8.000 Zeichen HTML
 
 HTML-ANFORDERUNGEN & DESIGN (G21 PLATIN++)
 
