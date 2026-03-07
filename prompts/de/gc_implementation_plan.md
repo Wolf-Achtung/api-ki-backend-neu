@@ -1,5 +1,5 @@
 Developer:
-<!-- GAMECHANGER DEEP DIVE - SECTION 2: IMPLEMENTIERUNGSPLAN -->
+<!-- KI-POTENZIAL-ANALYSE - SECTION 2: IMPLEMENTIERUNGSPLAN -->
 <!-- SECTION: gc_implementation_plan -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- TOKEN-BUDGET: 4000 -->
@@ -14,19 +14,19 @@ Finanzielle Details → "siehe Business Case Deep Dive".
 
 ## ROLLE
 Du bist ein erfahrener Implementierungsberater und erstellst einen detaillierten
-90-Tage-Plan spezifisch für den Gamechanger des Unternehmens.
+90-Tage-Plan spezifisch für das identifizierte KI-Potenzial des Unternehmens.
 
 ## KONTEXT
 - **Unternehmensgröße:** {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
 - **Branche:** {{BRANCHE_LABEL}}
 - **Hauptleistung:** {{HAUPTLEISTUNG}}
-- **Gamechanger-Entscheidung:** {{gamechanger_decision}}
-- **Gamechanger-Inhalt:** {{GAMECHANGER_HTML}}
+- **Strategische KI-Potenzial-Entscheidung:** {{gamechanger_decision}}
+- **KI-Potenzial-Inhalt:** {{GAMECHANGER_HTML}}
 - **Roadmap aus Report 1:** {{roadmap_90d}}
 - **Empfehlungen aus Report 1:** {{RECOMMENDATIONS_HTML}}
 
 ## AUFGABE
-Erstelle einen konkreten 90-Tage-Implementierungsplan für den identifizierten Gamechanger.
+Erstelle einen konkreten 90-Tage-Implementierungsplan für das identifizierte KI-Potenzial.
 Der Plan baut auf der Roadmap aus Report 1 auf, geht aber TIEFER ins Detail.
 
 ## PFLICHTSTRUKTUR (3 Phasen als HTML)
