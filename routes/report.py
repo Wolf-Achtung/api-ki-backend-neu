@@ -933,7 +933,11 @@ async def get_gamechanger_deep_dive_html(
             lambda: generate_gamechanger_report(briefing_id),
         )
     except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=404, detail=f"Briefing nicht gefunden: {exc}",
+        ) from exc
+    except LookupError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         log.error("[GC-DEEP-DIVE] HTML generation failed: %s", exc)
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -1056,7 +1060,15 @@ async def generate_deep_dive_pdf(
             lambda: generate_gamechanger_report(briefing_id),
         )
     except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        # Briefing not found
+        raise HTTPException(
+            status_code=404, detail=f"Briefing nicht gefunden: {exc}",
+        ) from exc
+    except LookupError as exc:
+        # Report 1 not yet generated
+        raise HTTPException(
+            status_code=400, detail=str(exc),
+        ) from exc
     except Exception as exc:
         log.error(
             "[GC-DEEP-DIVE-PDF] HTML generation failed for briefing %d: %s",
@@ -1064,7 +1076,7 @@ async def generate_deep_dive_pdf(
         )
         raise HTTPException(
             status_code=500,
-            detail=f"Deep Dive generation failed: {exc.__class__.__name__}: {exc}",
+            detail=f"Generierung fehlgeschlagen: {exc.__class__.__name__}: {exc}",
         ) from exc
 
     html = result.get("html", "")
@@ -1096,21 +1108,29 @@ async def generate_deep_dive_pdf(
         "margin": {"top": "12mm", "right": "12mm", "bottom": "12mm", "left": "12mm"},
     }
 
-    pdf_result = render_pdf_from_html(
-        html=html,
-        meta={"briefing_id": briefing_id, "report_type": "gamechanger_deep_dive"},
-        pdf_options=pdf_options,
-    )
+    _pdf_meta = {"briefing_id": briefing_id, "report_type": "gamechanger_deep_dive"}
+
+    pdf_result = render_pdf_from_html(html=html, meta=_pdf_meta, pdf_options=pdf_options)
+
+    # 1x Retry if first render fails
+    if pdf_result.get("error"):
+        log.warning(
+            "[GC-DEEP-DIVE-PDF] PDF render failed for briefing %d, retrying: %s",
+            briefing_id, pdf_result.get("error"),
+        )
+        await asyncio.sleep(2)
+        pdf_result = render_pdf_from_html(html=html, meta=_pdf_meta, pdf_options=pdf_options)
 
     if pdf_result.get("error"):
         log.error(
-            "[GC-DEEP-DIVE-PDF] PDF render failed for briefing %d: %s",
+            "[GC-DEEP-DIVE-PDF] PDF render failed after retry for briefing %d: %s",
             briefing_id, pdf_result.get("error"),
         )
         return JSONResponse(
             status_code=502,
             content={
                 "error": "pdf_generation_failed",
+                "detail": "PDF-Erstellung fehlgeschlagen",
                 "reason": pdf_result.get("error"),
                 "briefing_id": briefing_id,
             },

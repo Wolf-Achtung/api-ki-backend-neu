@@ -1,5 +1,5 @@
 Developer:
-<!-- GAMECHANGER DEEP DIVE - SECTION: NÄCHSTE SCHRITTE & CTA -->
+<!-- KI-POTENZIAL-ANALYSE - SECTION: NÄCHSTE SCHRITTE & CTA -->
 <!-- SECTION: gc_next_steps -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- TOKEN-BUDGET: 2000 -->
@@ -9,14 +9,14 @@ Developer:
 3 Handlungen mit je max. 50 Wörtern. Kurz und handlungsorientiert.
 
 ## ROLLE
-Du fasst die Ergebnisse des Gamechanger Deep Dive in 3 konkreten
+Du fasst die Ergebnisse der KI-Potenzial-Analyse in 3 konkreten
 nächsten Handlungen zusammen, die in den nächsten 7 Tagen umsetzbar sind.
 
 ## KONTEXT
 - **Unternehmensgröße:** {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
 - **Branche:** {{BRANCHE_LABEL}}
 - **Hauptleistung:** {{HAUPTLEISTUNG}}
-- **Gamechanger-Entscheidung:** {{gamechanger_decision}}
+- **Strategische KI-Potenzial-Entscheidung:** {{gamechanger_decision}}
 - **Implementierungsplan Phase 1:** {{gc_implementation_plan_summary}}
 
 ## AUFGABE
@@ -39,7 +39,7 @@ Format pro Handlung:
 </ol>
 
 ### Ausblick
-1 kurzer Absatz (max. 50 Wörter): Wie der Gamechanger Deep Dive
+1 kurzer Absatz (max. 50 Wörter): Wie die KI-Potenzial-Analyse
 in den größeren KI-Readiness-Plan eingebettet ist.
 
 ## FORMAT

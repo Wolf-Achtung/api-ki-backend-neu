@@ -463,7 +463,25 @@ def generate_deep_dive_sections(context: Dict[str, Any]) -> Dict[str, str]:
     gc_decision = context.get('gamechanger_decision', '')
     gc_html = context.get('GAMECHANGER_HTML', '')
     gc_snapshot = context.get('_GC_SNAPSHOT_642', '')
-    sections['GC_BRUCHPUNKT_HTML'] = gc_decision or gc_snapshot or gc_html
+    section1_raw = gc_decision or gc_snapshot or gc_html
+
+    # Post-process: Replace customer-visible "Gamechanger" wording
+    # (internal keys like GAMECHANGER_DECISION_HTML are untouched)
+    _SECTION1_RENAMES = [
+        ("Warum das ein Gamechanger ist", "Warum das ein strategischer Hebel ist"),
+        ("Der strategische Gamechanger", "Der strategische Wendepunkt"),
+        ("Gamechanger-Analyse", "Strategische Analyse"),
+        ("Gamechanger-Szenario", "KI-Potenzial-Szenario"),
+        ("Ihr Gamechanger", "Ihr KI-Potenzial"),
+        ("den Gamechanger", "das KI-Potenzial"),
+        ("der Gamechanger", "das KI-Potenzial"),
+        ("ein Gamechanger", "ein strategischer Hebel"),
+        ("Gamechanger", "strategischer Hebel"),
+    ]
+    for old, new in _SECTION1_RENAMES:
+        section1_raw = section1_raw.replace(old, new)
+
+    sections['GC_BRUCHPUNKT_HTML'] = section1_raw
 
     # Section 3: Deterministic BC Deep Dive
     bc_data = calculate_bc_deep_dive(context.get('canonical_bc', {}))
@@ -701,7 +719,10 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
             .first()
         )
         if not analysis:
-            raise ValueError(f"No analysis found for briefing {briefing_id}")
+            raise LookupError(
+                f"KI-Readiness Report muss zuerst erstellt werden "
+                f"(kein Report 1 für Briefing {briefing_id})"
+            )
 
         report1_sections = analysis.sections
         answers = briefing.answers or {}
