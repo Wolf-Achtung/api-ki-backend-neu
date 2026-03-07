@@ -2778,13 +2778,13 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "ROI_TRACKING_HTML": 3000,
 
-        "KICKOFF_VORLAGE_HTML": 3000,
+        "KICKOFF_VORLAGE_HTML": 4500,  # FIX-RS2: was 3000
 
         "AI_ACT_SUMMARY_HTML": 3500,  # FIX-B36a: was 2000
 
         "TEMPLATES_START_HTML": 4500,  # FIX-B36a: was 2500
 
-        "AI_POLICY_MINI_HTML": 2500,
+        "AI_POLICY_MINI_HTML": 3500,  # FIX-RS2: was 2500
 
         "PROMPT_FRAMEWORK_HTML": 2000,
 
