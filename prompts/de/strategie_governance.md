@@ -1,14 +1,5 @@
-{% if COMPANY_SIZE == "solo" %}
-**WICHTIG – Längenlimit: Deine Antwort darf maximal 400 Wörter / 2.500 Zeichen HTML umfassen. Solo-Budget ist NUR 3.000 Zeichen — bei 5.5K Output wird 48% abgeschnitten!**
-{% elif COMPANY_SIZE == "team" %}
-**WICHTIG – Längenlimit: Deine Antwort darf maximal 800 Wörter / 7.500 Zeichen HTML umfassen.**
-{% else %}
-**WICHTIG – Längenlimit: Deine Antwort darf maximal 1100 Wörter umfassen.**
-{% endif %}
-Kürze lieber als zu überziehen — abgeschnittener Content ist wertlos!
-
 Developer:
-<!-- PLATIN++ PROMPT v5.4 - SPRINT TRUNCATION-FIX -->
+<!-- PLATIN++ PROMPT v5.3 G17.S - SPRINT TRUNCATION-FIX -->
 <!-- SECTION: strategie_governance -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
@@ -25,6 +16,8 @@ HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
 - Solo: Strategische Leitlinien max. 4 Punkte à 1-2 Sätze + Mini-Governance max. 60 Wörter
 - Steuerung & KI-Kultur: Solo max. je 40 Wörter
 -->
+**HARD-LIMITS (Solo: 400 Wörter / 2.500 Zeichen | Team: 800 / 7.500 | KMU: 1100 / 9.000)**
+Kürze lieber als zu überziehen — abgeschnittener Content ist wertlos!
 <!-- WORD_MINIMUM_SOLO: 150 (G17.S: erhöht von 130 wg. Mini-Governance-Booster) -->
 <!--
 ZIEL: Strategische Einordnung zu KI-Strategie & Governance.
