@@ -2826,6 +2826,8 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 
         "TOOLS_BRANCH_ALIGNMENT_HTML": 3000,
 
+        "FOERDERPROGRAMME_HTML": 4000,  # FIX-RS2-4: was _default 1500 — table destroyed by trim
+
         "STARTER_KIT_HTML": 5000,
 
         "SOURCES_BOX_HTML": 2000,
@@ -2935,6 +2937,8 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "TOOLS_FUNDING_ALIGNMENT_HTML": 5000,
 
         "TOOLS_BRANCH_ALIGNMENT_HTML": 5000,
+
+        "FOERDERPROGRAMME_HTML": 6000,  # FIX-RS2-4: was _default 2000 — table destroyed by trim
 
         "STARTER_KIT_HTML": 8000,
 
@@ -3052,6 +3056,8 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "TOOLS_FUNDING_ALIGNMENT_HTML": 6000,
 
         "TOOLS_BRANCH_ALIGNMENT_HTML": 6000,
+
+        "FOERDERPROGRAMME_HTML": 8000,  # FIX-RS2-4: was _default 3000 — table destroyed by trim
 
         "STARTER_KIT_HTML": 10000,
 
