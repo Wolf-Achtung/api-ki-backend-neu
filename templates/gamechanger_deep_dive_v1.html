@@ -487,7 +487,7 @@ h1, h2, h3, h4 {
         </div>
         <div class="kpi-card">
             <div class="kpi-value" style="color: var(--c-deep);">
-                {{ canonical_bc.payback|default(0)|round(1) }} M.
+                {{ canonical_bc.payback|default(0)|round(1)|string|replace('.', ',') }} Mon.
             </div>
             <div class="kpi-label">Amortisation</div>
         </div>

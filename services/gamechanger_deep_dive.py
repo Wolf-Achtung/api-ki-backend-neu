@@ -749,6 +749,9 @@ def render_deep_dive_html(sections: Dict[str, str],
         # Merge sections and context for template
         template_vars = {**sections, **context}
         template_vars['report_type'] = 'gamechanger_deep_dive'
+        # Set report_date for "Generiert am" display (same pattern as Report 1)
+        from datetime import datetime
+        template_vars['report_date'] = datetime.now().strftime("%d.%m.%Y")
         # Use kundencode (company identifier) as company_name, NOT hauptleistung
         template_vars['company_name'] = (
             context.get('kundencode')
