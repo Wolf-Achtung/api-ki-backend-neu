@@ -719,7 +719,10 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
             .first()
         )
         if not analysis:
-            raise ValueError(f"No analysis found for briefing {briefing_id}")
+            raise LookupError(
+                f"KI-Readiness Report muss zuerst erstellt werden "
+                f"(kein Report 1 für Briefing {briefing_id})"
+            )
 
         report1_sections = analysis.sections
         answers = briefing.answers or {}
