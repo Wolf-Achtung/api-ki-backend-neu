@@ -1,7 +1,7 @@
 ## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
 {% if COMPANY_SIZE == "solo" %}
-**SOLO-HARD-LIMIT: Maximal 350 Wörter / 2.500 Zeichen HTML gesamt. Bei Überschreitung wird 65% abgeschnitten!**
-Alle 4 Unterabschnitte behalten, aber extrem kompakt: je max. 3 Bullets à 1 Satz.
+**SOLO-HARD-LIMIT: Maximal 400 Wörter / 3.000 Zeichen HTML gesamt.**
+Alle 4 Unterabschnitte behalten, aber kompakt: je max. 3 Bullets à 1 Satz.
 {% elif COMPANY_SIZE == "team" %}
 **TEAM-HARD-LIMIT: Maximal 700 Wörter / 6.500 Zeichen HTML gesamt.**
 {% else %}
