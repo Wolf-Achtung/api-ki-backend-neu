@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import logging
 import math
+import os
+import time
 import traceback
 from typing import Any, Dict, List, Optional
 
@@ -52,10 +54,14 @@ def build_gamechanger_context(report1_sections: Dict[str, Any],
     }
 
     # Segment info — computed sections take priority over raw briefing
-    company_size = (
-        report1_sections.get('COMPANY_SIZE')
-        or briefing.get('COMPANY_SIZE')
-        or 'solo'
+    _r1_size = report1_sections.get('COMPANY_SIZE')
+    _br_size = briefing.get('COMPANY_SIZE')
+    company_size = _r1_size or _br_size or 'solo'
+
+    log.info(
+        "[GC-DEEP-DIVE][SEGMENT] Resolution: report1.COMPANY_SIZE=%r, "
+        "briefing.COMPANY_SIZE=%r, briefing.unternehmensgroesse=%r → resolved=%r",
+        _r1_size, _br_size, briefing.get('unternehmensgroesse'), company_size,
     )
 
     # Map COMPANY_SIZE to a human-readable label for the cover page
@@ -71,6 +77,12 @@ def build_gamechanger_context(report1_sections: Dict[str, Any],
     )
     # If the label doesn't match the computed segment, override with correct label
     size_label = _size_label_map.get(company_size, raw_label) if company_size else raw_label
+
+    log.info(
+        "[GC-DEEP-DIVE][SEGMENT] Label: raw_label=%r, mapped_label=%r, "
+        "report1.UNTERNEHMENSGROESSE_LABEL=%r",
+        raw_label, size_label, report1_sections.get('UNTERNEHMENSGROESSE_LABEL'),
+    )
 
     segment_info = {
         'COMPANY_SIZE': company_size,
@@ -461,10 +473,36 @@ def generate_deep_dive_sections(context: Dict[str, Any]) -> Dict[str, str]:
     return sections
 
 
-def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
-    """Generate a single Deep Dive section via LLM."""
+def _is_openai_retryable(exc: Exception) -> bool:
+    """Check if an openai SDK exception is retryable."""
     try:
-        from services.prompt_loader import load_prompt, _interpolate
+        import openai
+    except ImportError:
+        return False
+    # Timeout / connection errors → always retry
+    if isinstance(exc, (openai.APITimeoutError, openai.APIConnectionError)):
+        return True
+    # Rate limit (429) → retry with backoff
+    if isinstance(exc, openai.RateLimitError):
+        return True
+    # Server errors (5xx) → retry
+    if isinstance(exc, openai.APIStatusError) and exc.status_code >= 500:
+        return True
+    return False
+
+
+_GC_LLM_MAX_RETRIES = int(os.environ.get("GC_LLM_MAX_RETRIES", "3"))
+_GC_LLM_BACKOFF_SECS = [5.0, 10.0, 20.0]
+
+
+def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
+    """Generate a single Deep Dive section via LLM.
+
+    Uses its own retry loop that handles openai SDK exceptions directly
+    (the central LLMClient retry only handles requests.exceptions.*).
+    """
+    try:
+        from services.prompt_loader import load_prompt
     except ImportError:
         log.error("[GC-DEEP-DIVE] Cannot import prompt_loader")
         return '<p><em>[Prompt-System nicht verfügbar]</em></p>'
@@ -495,71 +533,83 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
     if not isinstance(prompt_text, str) or not prompt_text.strip():
         return f'<p><em>[Prompt {prompt_name} leer]</em></p>'
 
-    # Call LLM
-    try:
-        from services.llm_client import LLMClient, LLMCallResult
-        client = LLMClient()
+    # --- LLM call with openai-aware retry ---
+    import openai
 
-        def _call_openai(max_tokens: int = 4000, section: str = "", **kwargs) -> Optional[str]:
-            import openai
-            import os
-            api_key = os.environ.get("OPENAI_API_KEY", "")
-            if not api_key:
-                log.error("[GC-DEEP-DIVE] No OPENAI_API_KEY")
-                return None
+    api_key = os.environ.get("OPENAI_API_KEY", "")
+    if not api_key:
+        log.error("[GC-DEEP-DIVE] No OPENAI_API_KEY set")
+        return '<p><em>[OpenAI API-Key nicht konfiguriert]</em></p>'
 
-            # Use system-wide timeout settings (Stability Patch v1)
-            timeout_read = float(os.environ.get("OPENAI_TIMEOUT_READ", "120"))
-            oai_client = openai.OpenAI(
-                api_key=api_key,
-                timeout=timeout_read,
-                max_retries=0,  # Retries handled by call_with_retry
-            )
+    timeout_read = float(os.environ.get("OPENAI_TIMEOUT_READ", "120"))
+    model = os.environ.get("OPENAI_MODEL", "gpt-4o")
+
+    oai_client = openai.OpenAI(
+        api_key=api_key,
+        timeout=timeout_read,
+        max_retries=0,  # We handle retries ourselves
+    )
+
+    last_error: Optional[Exception] = None
+    for attempt in range(1, _GC_LLM_MAX_RETRIES + 1):
+        try:
             log.info(
-                "[GC-DEEP-DIVE] LLM call for %s: prompt_len=%d, max_tokens=%d",
-                section, len(prompt_text), max_tokens,
+                "[GC-DEEP-DIVE] LLM call for %s: attempt=%d/%d prompt_len=%d model=%s",
+                prompt_name, attempt, _GC_LLM_MAX_RETRIES, len(prompt_text), model,
             )
+            t0 = time.monotonic()
             response = oai_client.chat.completions.create(
-                model=os.environ.get("OPENAI_MODEL", "gpt-4o"),
+                model=model,
                 messages=[{"role": "user", "content": prompt_text}],
-                max_tokens=max_tokens,
+                max_tokens=4000,
                 temperature=0.4,
             )
+            elapsed_ms = (time.monotonic() - t0) * 1000
+
             if response.choices:
                 content = response.choices[0].message.content
                 finish_reason = response.choices[0].finish_reason
                 if finish_reason != "stop":
                     log.warning(
-                        "[GC-DEEP-DIVE] LLM finish_reason=%s for %s",
-                        finish_reason, section,
+                        "[GC-DEEP-DIVE] finish_reason=%s for %s (attempt %d, %.0fms)",
+                        finish_reason, prompt_name, attempt, elapsed_ms,
                     )
-                return content
-            log.warning("[GC-DEEP-DIVE] LLM returned no choices for %s", section)
-            return None
+                if content:
+                    log.info(
+                        "[GC-DEEP-DIVE] LLM success for %s: attempt=%d, %.0fms, len=%d",
+                        prompt_name, attempt, elapsed_ms, len(content),
+                    )
+                    return content
 
-        result = client.call_with_retry(
-            call_fn=_call_openai,
-            section=f"gc_deepdive_{prompt_name}",
-            max_tokens=4000,
-        )
+            log.warning("[GC-DEEP-DIVE] LLM returned no content for %s (attempt %d)", prompt_name, attempt)
 
-        if result.success and result.content:
-            return result.content
-        else:
+        except Exception as exc:
+            last_error = exc
+            elapsed_ms = (time.monotonic() - t0) * 1000 if 't0' in dir() else 0
+            retryable = _is_openai_retryable(exc)
             log.warning(
-                "[GC-DEEP-DIVE] LLM call failed for %s: success=%s, has_content=%s, "
-                "retries=%s, strategy=%s, time=%.0fms",
-                prompt_name, result.success, bool(result.content),
-                result.retries_used, result.final_strategy, result.total_time_ms or 0,
+                "[GC-DEEP-DIVE] LLM error for %s: attempt=%d/%d retryable=%s "
+                "type=%s msg=%s (%.0fms)",
+                prompt_name, attempt, _GC_LLM_MAX_RETRIES, retryable,
+                type(exc).__name__, str(exc)[:200], elapsed_ms,
             )
-            return f'<p><em>[{prompt_name} konnte nicht generiert werden]</em></p>'
+            if not retryable:
+                break  # Non-retryable error → stop immediately
 
-    except Exception as exc:
-        log.error(
-            "[GC-DEEP-DIVE] LLM error for %s: %s\n%s",
-            prompt_name, exc, traceback.format_exc(),
-        )
-        return f'<p><em>[Fehler bei {prompt_name}: {exc}]</em></p>'
+        # Backoff before next attempt
+        if attempt < _GC_LLM_MAX_RETRIES:
+            backoff = _GC_LLM_BACKOFF_SECS[min(attempt - 1, len(_GC_LLM_BACKOFF_SECS) - 1)]
+            log.info("[GC-DEEP-DIVE] Backing off %.0fs before retry %d for %s",
+                     backoff, attempt + 1, prompt_name)
+            time.sleep(backoff)
+
+    # All retries exhausted
+    err_detail = f"{type(last_error).__name__}: {last_error}" if last_error else "no content"
+    log.error(
+        "[GC-DEEP-DIVE] All %d attempts failed for %s: %s",
+        _GC_LLM_MAX_RETRIES, prompt_name, err_detail,
+    )
+    return f'<p><em>[{prompt_name} konnte nicht generiert werden]</em></p>'
 
 
 # =============================================================================
