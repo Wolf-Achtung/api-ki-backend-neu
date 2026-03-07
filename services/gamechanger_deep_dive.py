@@ -477,7 +477,8 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
     from models import Briefing, Analysis
     from core.db import get_session
 
-    with get_session() as db:
+    db = next(get_session())
+    try:
         # 1. Load briefing
         briefing = db.get(Briefing, briefing_id)
         if not briefing:
@@ -495,6 +496,8 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
 
         report1_sections = analysis.sections
         answers = briefing.answers or {}
+    finally:
+        db.close()
 
     # 3. Build context
     context = build_gamechanger_context(report1_sections, answers)
