@@ -8,10 +8,10 @@ Developer:
 
 ## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
 {% if COMPANY_SIZE == "solo" %}
-**SOLO-HARD-LIMIT: Maximal 700 Wörter / 5.500 Zeichen HTML gesamt. Bei Überschreitung wird 62% abgeschnitten!**
+**SOLO-HARD-LIMIT: Maximal 700 Wörter / 5.500 Zeichen HTML gesamt.**
 Pro Risikokategorie: NUR 3 Risiken (nicht 4!) mit je max. 50 Wörtern. Risiko-Matrix: max. 4 Zeilen.
 {% elif COMPANY_SIZE == "team" %}
-**TEAM-HARD-LIMIT: Maximal 1000 Wörter / 7.500 Zeichen HTML gesamt. Bei Überschreitung wird 49% abgeschnitten!**
+**TEAM-HARD-LIMIT: Maximal 1000 Wörter / 7.500 Zeichen HTML gesamt.**
 Pro Risikokategorie: 4 Risiken mit je max. 60 Wörtern.
 {% else %}
 **KMU-HARD-LIMIT: Maximal 1300 Wörter / 9.000 Zeichen HTML gesamt.**
@@ -20,7 +20,7 @@ JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN — der Report endet dann m
 <!--
 HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
 - Solo: max. 5.500 Zeichen (700 Wörter) | Team: max. 7.500 Zeichen (1000 Wörter) | KMU: max. 9.000 Zeichen (1300 Wörter)
-- WARNUNG: Solo-Budget ist 7.000 Zeichen! Bei 17K+ Output = 62% Verlust!
+- Solo-Budget ist 35.000 Zeichen (exempt) — aber kompakter Output ist besser!
 - LIEBER KOMPAKT UND VOLLSTÄNDIG als ausführlich und dann abgeschnitten
 - Solo: 3 Risiken × 50 Wörter × 4 Kategorien = 600 Wörter + Matrix 100 Wörter = 700 max
 - Team: 4 Risiken × 60 Wörter × 4 Kategorien = 960 Wörter + Matrix = 1000 max
