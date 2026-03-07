@@ -89,7 +89,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "AI_POLICY_MINI_HTML": 2500,
             "KICKOFF_VORLAGE_HTML": 4500,  # FIX-RS2: was 2500, Agenda+Fragen+Doku = 3500-4000 chars
             "PROMPT_FRAMEWORK_HTML": 1500,
-            "BRANCH_DEEP_DIVE_HTML": 3000,
+            "BRANCH_DEEP_DIVE_HTML": 5000,  # FIX-RS2: was 3000, 6 Bausteine + CSS = 4000-5000 chars
             "TRANSPARENCY_BOX_HTML": 1500,
             "KI_AKTIVITAETEN_ZIELE_HTML": 2000,
             "WETTBEWERB_BENCHMARK_HTML": 2000,
