@@ -945,9 +945,8 @@ async def get_gamechanger_deep_dive_html(
 def _send_deep_dive_email(
     briefing_id: int,
     pdf_bytes: bytes,
-    company_name: str,
 ) -> None:
-    """Send Gamechanger Deep Dive PDF via email (fire-and-forget helper).
+    """Send KI-Potenzial-Analyse PDF via email (fire-and-forget helper).
 
     Uses the same Resend infrastructure as Report 1.  Resolves the user
     email from the Briefing (same priority chain as Report 1).
@@ -985,18 +984,18 @@ def _send_deep_dive_email(
         user_email = _determine_user_email(db, briefing, None)
 
         attachment = {
-            "filename": f"Gamechanger-Deep-Dive-{briefing_id}.pdf",
+            "filename": f"KI-Potenzial-Analyse-{briefing_id}.pdf",
             "content": pdf_bytes,
             "mimetype": "application/pdf",
         }
-        subject = f"Ihr Gamechanger Deep Dive — {company_name}"
+        subject = "Ihre KI-Potenzial-Analyse"
 
         # --- User email ---
         if user_email:
             ok, err = _send_email_via_resend(
                 user_email,
                 subject,
-                render_deep_dive_email(company_name=company_name, recipient="user"),
+                render_deep_dive_email(recipient="user"),
                 attachments=[attachment],
             )
             if ok:
@@ -1011,8 +1010,8 @@ def _send_deep_dive_email(
             for addr in _admin_recipients():
                 ok, err = _send_email_via_resend(
                     addr,
-                    f"Kopie: Gamechanger Deep Dive — Briefing #{briefing_id}",
-                    render_deep_dive_email(company_name=company_name, recipient="admin"),
+                    f"Kopie: KI-Potenzial-Analyse — Briefing #{briefing_id}",
+                    render_deep_dive_email(recipient="admin"),
                     attachments=[attachment],
                 )
                 if ok:
@@ -1075,13 +1074,6 @@ async def generate_deep_dive_pdf(
             detail="Deep Dive generation returned empty HTML",
         )
 
-    # Extract company name for email subject (available from context)
-    company_name = (
-        result.get("context", {}).get("kundencode")
-        or result.get("context", {}).get("HAUPTLEISTUNG")
-        or "Ihr Unternehmen"
-    )
-
     # Step 2: Render HTML → PDF via Puppeteer service (same as Report 1)
     try:
         from services.pdf_client import render_pdf_from_html
@@ -1135,7 +1127,7 @@ async def generate_deep_dive_pdf(
         # Fire-and-forget email (runs in background, does not block PDF response)
         asyncio.get_event_loop().run_in_executor(
             None,
-            lambda: _send_deep_dive_email(briefing_id, pdf_bytes, company_name),
+            lambda: _send_deep_dive_email(briefing_id, pdf_bytes),
         )
 
         return Response(
@@ -1143,7 +1135,7 @@ async def generate_deep_dive_pdf(
             media_type="application/pdf",
             headers={
                 "Content-Disposition": (
-                    f'attachment; filename="Gamechanger-Deep-Dive-{briefing_id}.pdf"'
+                    f'attachment; filename="KI-Potenzial-Analyse-{briefing_id}.pdf"'
                 )
             },
         )

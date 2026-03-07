@@ -1,4 +1,4 @@
-<!-- Gamechanger Deep Dive Template v1.0.0 "Clean Corporate Plus" — 2026-03-06 -->
+<!-- KI-Potenzial-Analyse Template v1.0.0 "Clean Corporate Plus" — 2026-03-06 -->
 <!-- Engine: Puppeteer/Chromium · Backend: FastAPI/Jinja2 · Design: McKinsey/BCG -->
 <!-- Based on: pdf_template_v7.html — same CSS Design System -->
 <!DOCTYPE html>
@@ -6,10 +6,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gamechanger Deep Dive – {{ company_name or HAUPTLEISTUNG or 'Ihr Unternehmen' }}</title>
+    <title>KI-Potenzial-Analyse – {{ company_name or HAUPTLEISTUNG or 'Ihr Unternehmen' }}</title>
     <style>
 /* ═══════════════════════════════════════════════════════
-   v1.0 GAMECHANGER DEEP DIVE — Clean Corporate Plus
+   v1.0 KI-POTENZIAL-ANALYSE — Clean Corporate Plus
    Cloned from pdf_template_v7.html Design System
    Typography: Inter (unified family)
    Colors: 3 primary + grays + deep-dive purple accent
@@ -452,7 +452,7 @@ h1, h2, h3, h4 {
 <div class="cover" id="dd-cover">
     <div class="cover-accent"></div>
     <div class="cover-eyebrow">
-        Gamechanger Deep Dive · {{ report_date_display }}
+        KI-Potenzial-Analyse · {{ report_date_display }}
     </div>
 
     <!-- Deep Dive Icon -->
@@ -461,12 +461,11 @@ h1, h2, h3, h4 {
     </div>
 
     <div style="margin-bottom: var(--sp-lg); max-width: 600px;">
-        <h1 style="color: var(--c-deep);">Gamechanger<br>Deep Dive</h1>
-        <p class="cover-subtitle">Vertiefende Analyse Ihres strategischen KI-Bruchpunkts</p>
+        <h1 style="color: var(--c-deep);">KI-Potenzial-<br>Analyse</h1>
+        <p class="cover-subtitle">Ihre individuelle Analyse des strategischen KI-Potenzials</p>
         <p class="cover-meta">
-            Unternehmen: <strong>{{ company }}</strong>
-            {% if branche %}<span class="muted"> · </span>{{ branche }}{% endif %}
-            {% if size_label %}<span class="muted"> · </span>{{ size_label }}{% endif %}
+            {% if branche %}{{ branche }}{% endif %}
+            {% if size_label %}{% if branche %}<span class="muted"> · </span>{% endif %}{{ size_label }}{% endif %}
         </p>
     </div>
 
@@ -532,7 +531,7 @@ h1, h2, h3, h4 {
         </div>
         <span class="section-pill">
             <span style="width:6px;height:6px;border-radius:50%;background:var(--c-deep);"></span>
-            Gamechanger-Analyse
+            Strategische Analyse
         </span>
     </div>
 
@@ -563,7 +562,7 @@ h1, h2, h3, h4 {
     </div>
 
     <div class="glance-box glance-action">
-        <strong>Auf einen Blick:</strong> Ihr konkreter 3-Phasen-Plan zur Umsetzung des Gamechanger-Szenarios
+        <strong>Auf einen Blick:</strong> Ihr konkreter 3-Phasen-Plan zur Umsetzung des KI-Potenzial-Szenarios
         in 90 Tagen.
     </div>
 
@@ -590,7 +589,7 @@ h1, h2, h3, h4 {
 
     <div class="glance-box glance-finance">
         <strong>Auf einen Blick:</strong> Sensitivit&auml;tsanalyse, 3-Jahres-Projektion und Break-Even-Berechnung
-        f&uuml;r Ihren Gamechanger — rein datenbasiert, keine KI-generierte Sch&auml;tzung.
+        f&uuml;r Ihr KI-Potenzial — rein datenbasiert, keine KI-generierte Sch&auml;tzung.
     </div>
 
     <div class="section-body">
@@ -615,7 +614,7 @@ h1, h2, h3, h4 {
     </div>
 
     <div class="glance-box glance-risk">
-        <strong>Auf einen Blick:</strong> Die f&uuml;nf gr&ouml;&szlig;ten Risiken f&uuml;r Ihr Gamechanger-Szenario
+        <strong>Auf einen Blick:</strong> Die f&uuml;nf gr&ouml;&szlig;ten Risiken f&uuml;r Ihr KI-Potenzial-Szenario
         mit Eintrittswahrscheinlichkeit, Auswirkung und konkreten Gegenma&szlig;nahmen.
     </div>
 
@@ -697,7 +696,7 @@ h1, h2, h3, h4 {
 </div>
 
 <p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">
-    Gamechanger Deep Dive v1.0 · Design: Clean Corporate Plus · Generiert am {{ report_date_display }}
+    KI-Potenzial-Analyse v1.0 · Design: Clean Corporate Plus · Generiert am {{ report_date_display }}
 </p>
 
 </body>
