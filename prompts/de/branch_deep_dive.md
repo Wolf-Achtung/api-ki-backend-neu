@@ -163,20 +163,20 @@ Passe Tiefe und Schwerpunkt an die Unternehmensgröße an:
 - SOLO (Ein-Personen-Setup):
   - Fokus auf persönliche Relevanz der Trends und Quick Wins.
   - Risiken/Chancen auf individuelle Machbarkeit zuschneiden.
-  - Textumfang: 250–400 Wörter. KOMPAKT halten.
+  - Textumfang: mindestens 250 Wörter, maximal 400 Wörter. KOMPAKT halten.
   - SVG-Icons WEGLASSEN (nur CSS-Klassen verwenden).
   - Pro Baustein: max. 2-3 Sätze oder 3 Bullets.
 
 - TEAM (kleine Teams, 2–15 Personen):
   - Fokus auf Team-relevante Trends und Prozessoptimierung.
   - Benchmarks für kleine Unternehmen heranziehen.
-  - Textumfang: 300–500 Wörter.
+  - Textumfang: mindestens 300 Wörter, maximal 500 Wörter.
 
 - KMU (mittelständische Unternehmen):
   - Strategische Tiefe: Wettbewerbsvorteile, Erweiterung, Governance.
   - Benchmarks mit Mittelstandsfokus.
   - Regulatorische Aspekte detaillierter darstellen.
-  - Textumfang: 350–600 Wörter.
+  - Textumfang: mindestens 350 Wörter, maximal 600 Wörter.
 
 ABSOLUTE MAXIMALLÄNGE:
 - Solo: 400 Wörter / 5.000 Zeichen HTML
