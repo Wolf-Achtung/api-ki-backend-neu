@@ -50,23 +50,26 @@ def build_gamechanger_context(report1_sections: Dict[str, Any],
         'score_rating': report1_sections.get('score_rating', ''),
     }
 
-    # Segment info
+    # Segment info — computed sections take priority over raw briefing
     company_size = (
-        briefing.get('COMPANY_SIZE')
-        or report1_sections.get('COMPANY_SIZE')
+        report1_sections.get('COMPANY_SIZE')
+        or briefing.get('COMPANY_SIZE')
         or 'solo'
     )
 
     segment_info = {
         'COMPANY_SIZE': company_size,
-        'UNTERNEHMENSGROESSE_LABEL': briefing.get('unternehmensgroesse', ''),
+        'UNTERNEHMENSGROESSE_LABEL': (
+            report1_sections.get('UNTERNEHMENSGROESSE_LABEL')
+            or briefing.get('unternehmensgroesse', '')
+        ),
         'BRANCHE_LABEL': (
-            briefing.get('branche')
-            or report1_sections.get('BRANCHE_LABEL', '')
+            report1_sections.get('BRANCHE_LABEL')
+            or briefing.get('branche', '')
         ),
         'HAUPTLEISTUNG': (
-            briefing.get('hauptleistung')
-            or report1_sections.get('HAUPTLEISTUNG', '')
+            report1_sections.get('HAUPTLEISTUNG')
+            or briefing.get('hauptleistung', '')
         ),
     }
 
@@ -114,19 +117,21 @@ def _extract_canonical_bc(sections: Dict[str, Any],
         95.0
     )
     capex = _safe_float(
-        briefing.get('CAPEX_REALISTISCH_EUR') or sections.get('CAPEX_REALISTISCH_EUR'),
+        sections.get('CANON_CAPEX_EUR') or sections.get('CAPEX_REALISTISCH_EUR')
+        or briefing.get('CAPEX_REALISTISCH_EUR'),
         5000.0
     )
     opex = _safe_float(
-        briefing.get('OPEX_REALISTISCH_EUR') or sections.get('OPEX_REALISTISCH_EUR'),
+        sections.get('CANON_OPEX_MONTH_EUR') or sections.get('OPEX_REALISTISCH_EUR')
+        or briefing.get('OPEX_REALISTISCH_EUR'),
         150.0
     )
     roi = _safe_float(
-        sections.get('ROI_12M') or briefing.get('ROI_12M'),
+        sections.get('ROI_12M'),
         60.0
     )
     payback = _safe_float(
-        sections.get('PAYBACK_MONTHS') or briefing.get('PAYBACK_MONTHS'),
+        sections.get('PAYBACK_MONTHS'),
         6.0
     )
 
