@@ -1,17 +1,27 @@
 Developer:
-<!-- PLATIN+++ PROMPT v7.2 - SPRINT INHALTLICHE FINALISIERUNG -->
+<!-- PLATIN+++ PROMPT v7.3 - SPRINT TRUNCATION-FIX -->
 <!-- SECTION: gamechanger -->
 <!-- TOKEN-BUDGET: 2800 (solo:0.7x=2000, team:1.0x=2800, kmu:1.1x=3100) -->
+
+## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
+{% if COMPANY_SIZE == "solo" %}
+**SOLO-HARD-LIMIT: Maximal 150 Wörter / 1.200 Zeichen HTML gesamt. Bei Überschreitung wird 86% abgeschnitten!**
+Schreibe extrem kompakt: 2 Sätze pro Block, keine Einleitungen, keine Wiederholungen.
+{% elif COMPANY_SIZE == "team" %}
+**TEAM-HARD-LIMIT: Maximal 350 Wörter / 6.000 Zeichen HTML gesamt. Bei Überschreitung wird 33% abgeschnitten!**
+{% else %}
+**KMU-HARD-LIMIT: Maximal 450 Wörter / 8.000 Zeichen HTML gesamt.**
+{% endif %}
+JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN — der Report endet dann mitten im Satz!
 
 ## ROI-Regel (vor allem anderen beachten)
 Prozentwerte (ROI, Rendite, Effizienz) NIEMALS über 200% angeben. Bei höheren Werten "200% (gedeckelt)" schreiben. Alle Zahlen KONSERVATIV.
 <!--
 HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
-- Budget: 8000 Zeichen HTML-Output — NICHT überschreiten!
-- Solo: max. 5500 Zeichen | Team: max. 8000 Zeichen | KMU: max. 9000 Zeichen
-- B714: 11.998 Zeichen generiert, auf 7.571 getruncated → 37% VERLUST!
-- UNTEN stehen Wort-Limits: Solo 200-280, Team 300-400, KMU 350-450 Wörter
-- Diese Limits GELTEN — bei Überschreitung wird brutal getruncated!
+- Solo: max. 1.200 Zeichen (150 Wörter) | Team: max. 6.500 Zeichen (350 Wörter) | KMU: max. 8.000 Zeichen (450 Wörter)
+- WARNUNG: Solo-Budget ist NUR 1.500 Zeichen! Alles darüber = 86% Verlust!
+- Team-Budget ist 8.000 Zeichen. Bei 11K+ Output = 33% Verlust!
+- Diese Limits sind PHYSISCHE GRENZEN — der Text wird einfach abgeschnitten!
 -->
 <!-- FIX-506: Canonical KPI Contract -->
 <!--
@@ -657,20 +667,23 @@ Diese Regeln stellen sicher, dass der Output im PDF korrekt gerendert wird:
 ⚠️ ÜBERSCHREITUNG WIRD AUTOMATISCH GETRUNCATED — INFORMATION GEHT VERLOREN!
 
 {% if COMPANY_SIZE == "solo" %}
-SOLO: **200–280 Wörter** insgesamt. HARD MAXIMUM: 300 Wörter.
-- Fokus auf praktische Umsetzbarkeit
-- KEIN Strategiejargon
-- Max. 2 Bullets pro Sektion
+SOLO: **120–150 Wörter** insgesamt. HARD MAXIMUM: 170 Wörter / 1.200 Zeichen HTML.
+- NUR 4 kurze Blöcke: Bruchpunkt (2 Sätze), Transformation (2 Sätze), Warum Gamechanger (2 Bullets), Erster Schritt (2 Bullets)
+- KEIN Strategiejargon, KEINE Einleitungssätze
+- Max. 2 Bullets pro Sektion, je max. 15 Wörter
+- WARNUNG: Budget ist nur 1.500 Zeichen — bei 300 Wörtern wird 50%+ abgeschnitten!
 {% elif COMPANY_SIZE == "team" %}
-TEAM: **300–400 Wörter** insgesamt. HARD MAXIMUM: 450 Wörter.
-- Moderate Tiefe
-- Koordinationsaspekte einbeziehen
-- Max. 3 Bullets pro Sektion
+TEAM: **280–350 Wörter** insgesamt. HARD MAXIMUM: 400 Wörter / 6.500 Zeichen HTML.
+- Moderate Tiefe, keine ausschweifenden Erklärungen
+- Max. 3 Bullets pro Sektion, je max. 20 Wörter
+- WARNUNG: Budget ist 8.000 Zeichen — bei 500+ Wörtern wird 30%+ abgeschnitten!
 {% else %}
-KMU: **350–450 Wörter** insgesamt. HARD MAXIMUM: 500 Wörter.
+KMU: **350–450 Wörter** insgesamt. HARD MAXIMUM: 500 Wörter / 8.000 Zeichen HTML.
 - Volle strategische Tiefe
 - Alle 4 Blöcke ausführlich
 - Max. 3 Bullets pro Sektion
 {% endif %}
 
 Keine Einleitung, keine Zusammenfassung außerhalb der vier Blöcke.
+
+**FINAL CHECK VOR OUTPUT:** Zähle deine Wörter. {% if COMPANY_SIZE == "solo" %}Über 170? KÜRZEN!{% elif COMPANY_SIZE == "team" %}Über 400? KÜRZEN!{% else %}Über 500? KÜRZEN!{% endif %}

@@ -1,7 +1,13 @@
 Developer:
-<!-- PLATIN+++ PROMPT v7.1 - PHASE 3 HYPER-PERSONALIZATION -->
+<!-- PLATIN+++ PROMPT v7.2 - SPRINT TRUNCATION-FIX -->
 <!-- SECTION: roadmap_90d -->
 <!-- PHASE 3: Maximum personalization using ALL 5 Goldnuggets -->
+
+## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
+**HARD-LIMITS (Solo: 400 Wörter / 2.500 Zeichen | Team: 800 / 5.000 | KMU: 1000 / 7.000)**
+JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN — der Report endet dann mitten im Satz!
+Solo: NUR 4 Phasen × 3 Bullets + Effekte. KEINE Booster-Sektionen — passen nicht ins Budget!
+Team: 4 Phasen + Effekte + max. 1 kurze Booster-Sektion. Booster-Sektionen stark kürzen!
 <!--
 ###############################################################################
 ##   🚨🚨🚨 CRITICAL HAUPTLEISTUNG LIMIT - NON-NEGOTIABLE 🚨🚨🚨           ##
@@ -69,11 +75,12 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>
 <!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, kmu:1.15x=3220) -->
 <!--
 HÖCHSTLÄNGE (STRIKT! — Section wird bei Überschreitung automatisch getruncated!):
-- Solo: max. 5000 Zeichen HTML-Output | Team: max. 5800 Zeichen | KMU: max. 6500 Zeichen
-- PILOT_PLAN Budget: 6000 Zeichen — NICHT überschreiten!
-- Jede Phase: max. 3-4 Bullets à 1-2 Sätze
+- Solo: max. 2.500 Zeichen (400 Wörter) | Team: max. 5.000 Zeichen (800 Wörter) | KMU: max. 7.000 Zeichen (1000 Wörter)
+- WARNUNG: Solo-Budget ist NUR 3.000 Zeichen! Bei 9K+ Output = 71% Verlust!
+- Solo: NUR 4 Phasen × 3 Bullets + Effekte. KEINE Booster-Sektionen!
+- Team: 4 Phasen × 3-4 Bullets + Effekte + max. 1 kurze Booster-Sektion
+- Jede Phase: max. 3 Bullets à 1 Satz (nicht mehr!)
 - Lieber konkret und kurz als ausführlich und generisch
-- Überschreitung >20% führt zu harter Kürzung durch die Pipeline!
 -->
 
 <!--
