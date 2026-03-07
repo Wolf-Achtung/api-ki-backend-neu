@@ -5,12 +5,12 @@ Developer:
 
 ## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
 {% if COMPANY_SIZE == "solo" %}
-**SOLO-HARD-LIMIT: Maximal 150 Wörter / 1.200 Zeichen HTML gesamt. Bei Überschreitung wird 86% abgeschnitten!**
-Schreibe extrem kompakt: 2 Sätze pro Block, keine Einleitungen, keine Wiederholungen.
+**SOLO-HARD-LIMIT: Maximal 400 Wörter / 3.500 Zeichen HTML gesamt.**
+Schreibe kompakt: 2 Sätze pro Block, keine Einleitungen, keine Wiederholungen. NUR 2 Bullets pro Sektion.
 {% elif COMPANY_SIZE == "team" %}
-**TEAM-HARD-LIMIT: Maximal 350 Wörter / 6.000 Zeichen HTML gesamt. Bei Überschreitung wird 33% abgeschnitten!**
+**TEAM-HARD-LIMIT: Maximal 450 Wörter / 6.000 Zeichen HTML gesamt.**
 {% else %}
-**KMU-HARD-LIMIT: Maximal 450 Wörter / 8.000 Zeichen HTML gesamt.**
+**KMU-HARD-LIMIT: Maximal 550 Wörter / 8.000 Zeichen HTML gesamt.**
 {% endif %}
 JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN — der Report endet dann mitten im Satz!
 
@@ -18,9 +18,8 @@ JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN — der Report endet dann m
 Prozentwerte (ROI, Rendite, Effizienz) NIEMALS über 200% angeben. Bei höheren Werten "200% (gedeckelt)" schreiben. Alle Zahlen KONSERVATIV.
 <!--
 HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
-- Solo: max. 1.200 Zeichen (150 Wörter) | Team: max. 6.500 Zeichen (350 Wörter) | KMU: max. 8.000 Zeichen (450 Wörter)
-- WARNUNG: Solo-Budget ist NUR 1.500 Zeichen! Alles darüber = 86% Verlust!
-- Team-Budget ist 8.000 Zeichen. Bei 11K+ Output = 33% Verlust!
+- Solo: max. 3.500 Zeichen (400 Wörter) | Team: max. 6.000 Zeichen (450 Wörter) | KMU: max. 8.000 Zeichen (550 Wörter)
+- Solo-Budget ist 6.500 Zeichen — aber kompakter Output ist besser!
 - Diese Limits sind PHYSISCHE GRENZEN — der Text wird einfach abgeschnitten!
 -->
 <!-- FIX-506: Canonical KPI Contract -->
@@ -436,15 +435,10 @@ Der Bruchpunkt muss {{ZEITERSPARNIS_PRIORITAET}} direkt adressieren.
 <p><strong>Die obsolete Logik:</strong></p>
 <ul>
   <!--
-  HIER: 3 kurze Bullets (je 1 Satz):
+  HIER: 2 kurze Bullets (Solo) / 3 kurze Bullets (Team/KMU), je 1 Satz:
   - Was wird bei {{hauptleistung}} falsch gedacht?
   - PRIMÄR: Bezug zu {{ZEITERSPARNIS_PRIORITAET}} herstellen
   - Format: "<li><strong>Bisher:</strong> [konkretes Problem]</li>"
-
-  BEISPIEL Briefing 369:
-  - "<li><strong>Bisher:</strong> Jede KI-Readiness-Analyse als Custom-Entwicklung programmiert.</li>"
-  - "<li><strong>Denkfehler:</strong> Obwohl 70% der Logik wiederkehrend ist, startet jedes Projekt bei Null.</li>"
-  - "<li><strong>Konsequenz:</strong> Der Hauptzeitfresser wird nicht adressiert.</li>"
 
   VERBOTEN: Generische Phrasen wie "Prozesse sind ineffizient"
   PFLICHT: Jedes <li> beginnt mit <strong>Label:</strong>
@@ -459,15 +453,10 @@ PHASE 3: Die Transformation muss zu {{VISION_3_JAHRE}} führen.
 <p><strong>Die neue Wertschöpfungslogik:</strong></p>
 <ul>
   <!--
-  HIER: 3 kurze Bullets (je 1-2 Sätze):
+  HIER: 2 kurze Bullets (Solo) / 3 kurze Bullets (Team/KMU), je 1-2 Sätze:
   - WIE verändert sich {{hauptleistung}}?
   - WAS löst {{ZEITERSPARNIS_PRIORITAET}} als Hebel?
   - Format: "<li><strong>Neue Logik:</strong> [Ansatz] → Weg zu {{VISION_3_JAHRE}}</li>"
-
-  BEISPIEL Briefing 369:
-  - "<li><strong>Neue Logik:</strong> Template-basierte Analyse statt Custom-Programmierung.</li>"
-  - "<li><strong>Architektur:</strong> Ein Baukasten, der 60% Programmieraufwand eliminiert.</li>"
-  - "<li><strong>Erweiterungseffekt:</strong> Fundament für skalierbare Analyse-Pipelines.</li>"
 
   VERBOTEN: "Von manuell zu automatisiert" (zu generisch!)
   PFLICHT: Jedes <li> beginnt mit <strong>Label:</strong>
@@ -481,15 +470,9 @@ PHASE 3: Strukturelle Vorteile für {{hauptleistung}} benennen.
 -->
 <ul>
   <!--
-  HIER: 3 kurze Bullets (je 1 Satz):
+  HIER: 2 kurze Bullets (Solo) / 3 kurze Bullets (Team/KMU), je 1 Satz:
   - Struktureller Vorteil für {{hauptleistung}}
   - Wie adressiert das {{ZEITERSPARNIS_PRIORITAET}}?
-  - Wie führt das zu {{VISION_3_JAHRE}}?
-
-  BEISPIEL Briefing 369:
-  - "<li><strong>Wirkung:</strong> Jede neue Analyse nutzt bewährte Komponenten.</li>"
-  - "<li><strong>Ergebnis:</strong> Zeitersparnis von 40-60% bei der Durchführung.</li>"
-  - "<li><strong>Meilenstein:</strong> Automatisierte Pipelines als Grundlage für Skalierung.</li>"
 
   VERBOTEN: "spart Zeit" (zu vage!), "reduziert Kosten" (zu generisch!)
   PFLICHT: Jedes <li> beginnt mit <strong>Label:</strong>
@@ -505,15 +488,9 @@ Falls {{KI_GUARDRAILS}} vorhanden: Als Qualitätskriterium einbauen.
 <p><strong>In 2-4 Wochen umsetzbar:</strong></p>
 <ol>
   <!--
-  HIER: 3-5 kurze Bullets (je 1 Satz):
+  HIER: 2-3 kurze Bullets (Solo: 2, Team/KMU: 3), je 1 Satz:
   - Schritt 1: Direkt {{ZEITERSPARNIS_PRIORITAET}} adressieren
   - Schritt 2: Bezug zu {{hauptleistung}}
-  - Schritt 3: {{KI_GUARDRAILS}} als Qualitätskriterium verankern
-
-  BEISPIEL Briefing 369:
-  - "<li><strong>Meilenstein:</strong> Die 3 häufigsten Fragebogen-Strukturen als Templates definieren.</li>"
-  - "<li><strong>Meilenstein:</strong> Wiederverwendbare Auswertungs-Prompts dokumentieren.</li>"
-  - "<li><strong>Meilenstein:</strong> Review-Checkliste mit Qualitätskriterien erstellen.</li>"
 
   Passend für {{COMPANY_SIZE}}.
   VERBOTEN: "Einen Prozess dokumentieren" (zu generisch!)
@@ -667,18 +644,16 @@ Diese Regeln stellen sicher, dass der Output im PDF korrekt gerendert wird:
 ⚠️ ÜBERSCHREITUNG WIRD AUTOMATISCH GETRUNCATED — INFORMATION GEHT VERLOREN!
 
 {% if COMPANY_SIZE == "solo" %}
-SOLO: **120–150 Wörter** insgesamt. HARD MAXIMUM: 170 Wörter / 1.200 Zeichen HTML.
-- NUR 4 kurze Blöcke: Bruchpunkt (2 Sätze), Transformation (2 Sätze), Warum Gamechanger (2 Bullets), Erster Schritt (2 Bullets)
+SOLO: **300–400 Wörter** insgesamt. HARD MAXIMUM: 450 Wörter / 3.500 Zeichen HTML.
+- 4 kompakte Blöcke: Bruchpunkt (2–3 Sätze), Transformation (2–3 Sätze), Warum Gamechanger (2 Bullets), Erster Schritt (2 Bullets)
 - KEIN Strategiejargon, KEINE Einleitungssätze
-- Max. 2 Bullets pro Sektion, je max. 15 Wörter
-- WARNUNG: Budget ist nur 1.500 Zeichen — bei 300 Wörtern wird 50%+ abgeschnitten!
+- Max. 2 Bullets pro Sektion, je max. 20 Wörter
 {% elif COMPANY_SIZE == "team" %}
-TEAM: **280–350 Wörter** insgesamt. HARD MAXIMUM: 400 Wörter / 6.500 Zeichen HTML.
+TEAM: **350–450 Wörter** insgesamt. HARD MAXIMUM: 500 Wörter / 6.000 Zeichen HTML.
 - Moderate Tiefe, keine ausschweifenden Erklärungen
 - Max. 3 Bullets pro Sektion, je max. 20 Wörter
-- WARNUNG: Budget ist 8.000 Zeichen — bei 500+ Wörtern wird 30%+ abgeschnitten!
 {% else %}
-KMU: **350–450 Wörter** insgesamt. HARD MAXIMUM: 500 Wörter / 8.000 Zeichen HTML.
+KMU: **450–550 Wörter** insgesamt. HARD MAXIMUM: 600 Wörter / 8.000 Zeichen HTML.
 - Volle strategische Tiefe
 - Alle 4 Blöcke ausführlich
 - Max. 3 Bullets pro Sektion
@@ -686,4 +661,4 @@ KMU: **350–450 Wörter** insgesamt. HARD MAXIMUM: 500 Wörter / 8.000 Zeichen 
 
 Keine Einleitung, keine Zusammenfassung außerhalb der vier Blöcke.
 
-**FINAL CHECK VOR OUTPUT:** Zähle deine Wörter. {% if COMPANY_SIZE == "solo" %}Über 170? KÜRZEN!{% elif COMPANY_SIZE == "team" %}Über 400? KÜRZEN!{% else %}Über 500? KÜRZEN!{% endif %}
+**FINAL CHECK VOR OUTPUT:** Zähle deine Wörter. {% if COMPANY_SIZE == "solo" %}Über 450? KÜRZEN!{% elif COMPANY_SIZE == "team" %}Über 500? KÜRZEN!{% else %}Über 600? KÜRZEN!{% endif %}
