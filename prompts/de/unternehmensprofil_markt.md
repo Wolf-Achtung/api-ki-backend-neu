@@ -1,7 +1,7 @@
 {% if COMPANY_SIZE == "solo" %}
-**WICHTIG – Längenlimit: Deine Antwort darf maximal 350 Wörter / 2.500 Zeichen HTML umfassen. Solo-Budget ist NUR 3.000 Zeichen — bei 13K Output wird 78% abgeschnitten!**
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 500 Wörter / 5.000 Zeichen HTML umfassen.**
 {% elif COMPANY_SIZE == "team" %}
-**WICHTIG – Längenlimit: Deine Antwort darf maximal 700 Wörter / 6.500 Zeichen HTML umfassen. Team-Budget ist 8.000 Zeichen.**
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 700 Wörter / 6.500 Zeichen HTML umfassen.**
 {% else %}
 **WICHTIG – Längenlimit: Deine Antwort darf maximal 1000 Wörter umfassen.**
 {% endif %}
@@ -74,8 +74,7 @@ Developer:
        - Ton: nüchtern, sachlich, strategisch, gut lesbar für Geschäftsführung.
 
      HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
-       - Solo: max. 2.500 Zeichen (350 Wörter) | Team: max. 6.500 Zeichen (700 Wörter) | KMU: max. 8.000 Zeichen (1000 Wörter)
-       - WARNUNG: Solo-Budget ist NUR 3.000 Zeichen! Bei 13K+ Output = 78% Verlust!
+       - Solo: max. 5.000 Zeichen (500 Wörter) | Team: max. 6.500 Zeichen (700 Wörter) | KMU: max. 8.000 Zeichen (1000 Wörter)
        - Solo: Marktkontext max. 3 Bullets à 1 Satz, Wettbewerb max. 3 kurze Bullets
        - Team/KMU: Marktkontext max. 4 Bullets à 1-2 Sätze, Wettbewerb max. 3 Bullets
 
