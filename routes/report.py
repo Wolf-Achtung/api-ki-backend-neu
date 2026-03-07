@@ -942,6 +942,89 @@ async def get_gamechanger_deep_dive_html(
     return HTMLResponse(content=html, media_type="text/html; charset=utf-8")
 
 
+def _send_deep_dive_email(
+    briefing_id: int,
+    pdf_bytes: bytes,
+    company_name: str,
+) -> None:
+    """Send Gamechanger Deep Dive PDF via email (fire-and-forget helper).
+
+    Uses the same Resend infrastructure as Report 1.  Resolves the user
+    email from the Briefing (same priority chain as Report 1).
+    """
+    import os
+
+    run_tag = f"GC-DD-MAIL-{briefing_id}"
+
+    # Global kill-switch (same as Report 1)
+    if os.getenv("DISABLE_EMAILS", "").lower() in ("1", "true", "yes", "on"):
+        log.info("[%s] Emails disabled via DISABLE_EMAILS. Skipping.", run_tag)
+        return
+
+    try:
+        from gpt_analyze import (
+            _send_email_via_resend,
+            _determine_user_email,
+            _admin_recipients,
+            _mask_email,
+        )
+        from services.email_templates import render_deep_dive_email
+        from core.db import get_session
+        from models import User  # noqa: F811 — local re-import for helper scope
+    except ImportError as exc:
+        log.warning("[%s] Import failed, skipping email: %s", run_tag, exc)
+        return
+
+    db = next(get_session())
+    try:
+        briefing = db.get(Briefing, briefing_id)
+        if not briefing:
+            log.warning("[%s] Briefing not found, skipping email.", run_tag)
+            return
+
+        user_email = _determine_user_email(db, briefing, None)
+
+        attachment = {
+            "filename": f"Gamechanger-Deep-Dive-{briefing_id}.pdf",
+            "content": pdf_bytes,
+            "mimetype": "application/pdf",
+        }
+        subject = f"Ihr Gamechanger Deep Dive — {company_name}"
+
+        # --- User email ---
+        if user_email:
+            ok, err = _send_email_via_resend(
+                user_email,
+                subject,
+                render_deep_dive_email(company_name=company_name, recipient="user"),
+                attachments=[attachment],
+            )
+            if ok:
+                log.info("[%s] Email sent to user %s", run_tag, _mask_email(user_email))
+            else:
+                log.warning("[%s] User email failed: %s", run_tag, err)
+        else:
+            log.warning("[%s] No user email found, skipping user email.", run_tag)
+
+        # --- Admin email ---
+        if os.getenv("ENABLE_ADMIN_NOTIFY", "1") in ("1", "true", "TRUE", "yes", "YES"):
+            for addr in _admin_recipients():
+                ok, err = _send_email_via_resend(
+                    addr,
+                    f"Kopie: Gamechanger Deep Dive — Briefing #{briefing_id}",
+                    render_deep_dive_email(company_name=company_name, recipient="admin"),
+                    attachments=[attachment],
+                )
+                if ok:
+                    log.info("[%s] Admin email sent to %s", run_tag, _mask_email(addr))
+                else:
+                    log.warning("[%s] Admin email failed for %s: %s", run_tag, _mask_email(addr), err)
+    except Exception as exc:
+        log.error("[%s] Email sending failed: %s", run_tag, exc)
+    finally:
+        db.close()
+
+
 @router.post("/gamechanger-deep-dive/pdf/{briefing_id}")
 async def generate_deep_dive_pdf(
     briefing_id: int,
@@ -951,7 +1034,8 @@ async def generate_deep_dive_pdf(
 
     1. Generates Deep Dive HTML via generate_gamechanger_report()
     2. Renders HTML → PDF via the same Puppeteer service used by Report 1
-    3. Returns PDF as download
+    3. Sends PDF via email (fire-and-forget, non-blocking)
+    4. Returns PDF as download
 
     Returns:
         PDF file (application/pdf) as attachment download
@@ -990,6 +1074,13 @@ async def generate_deep_dive_pdf(
             status_code=500,
             detail="Deep Dive generation returned empty HTML",
         )
+
+    # Extract company name for email subject (available from context)
+    company_name = (
+        result.get("context", {}).get("kundencode")
+        or result.get("context", {}).get("HAUPTLEISTUNG")
+        or "Ihr Unternehmen"
+    )
 
     # Step 2: Render HTML → PDF via Puppeteer service (same as Report 1)
     try:
@@ -1033,13 +1124,20 @@ async def generate_deep_dive_pdf(
             },
         )
 
-    # Step 3: Return PDF as download
+    # Step 3: Send email + return PDF
     pdf_bytes = pdf_result.get("pdf_bytes")
     if pdf_bytes:
         log.info(
             "[GC-DEEP-DIVE-PDF] PDF generated: %d bytes (%.2f MB) for briefing %d",
             len(pdf_bytes), len(pdf_bytes) / (1024 * 1024), briefing_id,
         )
+
+        # Fire-and-forget email (runs in background, does not block PDF response)
+        asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: _send_deep_dive_email(briefing_id, pdf_bytes, company_name),
+        )
+
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
