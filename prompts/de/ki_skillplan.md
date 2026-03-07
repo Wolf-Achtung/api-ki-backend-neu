@@ -1,8 +1,19 @@
-<!-- PLATIN++ PROMPT v6.0 - RUN-622 OPTIMIZED -->
+<!-- PLATIN++ PROMPT v6.1 - SPRINT TRUNCATION-FIX -->
 <!-- SECTION: ki_skillplan -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- CHANGE-LOG: v6.0 - Generische Stufen durch branchenspezifische Skills ersetzt -->
+<!-- CHANGE-LOG: v6.1 - Aggressive word limits to prevent 45% truncation -->
+
+## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
+{% if COMPANY_SIZE == "solo" %}
+**SOLO-HARD-LIMIT: Maximal 350 Wörter / 2.500 Zeichen HTML gesamt. Bei Überschreitung wird 45% abgeschnitten!**
+Pro Stufe: NUR 3 Skills à 1 Satz (Was + Wozu). KEINE langen Erklärungen!
+{% elif COMPANY_SIZE == "team" %}
+**TEAM-HARD-LIMIT: Maximal 500 Wörter / 5.000 Zeichen HTML gesamt.**
+{% else %}
+**KMU-HARD-LIMIT: Maximal 600 Wörter / 7.000 Zeichen HTML gesamt.**
+{% endif %}
+JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN!
 
 Du bist ein KI-Trainings-Experte und erstellst einen praxisnahen
 Kompetenz-Fahrplan für KI-Nutzung.
@@ -69,11 +80,17 @@ Integriere diese Interessen in die passende Stufe des Fahrplans.
 {% endif %}
 
 ## TEXTLÄNGE
-400–550 Wörter gesamt. Pro Stufe: 3 Skills à max. 2 Sätze.
+{% if COMPANY_SIZE == "solo" %}
+Solo: 280–350 Wörter gesamt. Pro Stufe: 3 Skills à max. 1-2 Sätze. KEIN Fließtext zwischen Skills.
+{% elif COMPANY_SIZE == "team" %}
+Team: 400–500 Wörter gesamt. Pro Stufe: 3 Skills à max. 2 Sätze.
+{% else %}
+KMU: 450–600 Wörter gesamt. Pro Stufe: 3 Skills à max. 2 Sätze.
+{% endif %}
 
 ## HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!)
-- Der gesamte HTML-Output darf MAXIMAL 5500 Zeichen umfassen
-- ACHTUNG: Bei >6000 Zeichen wird ~55% des Contents abgeschnitten!
+- Solo: max. 2.500 Zeichen (350 Wörter) | Team: max. 5.000 Zeichen (500 Wörter) | KMU: max. 7.000 Zeichen (600 Wörter)
+- WARNUNG: Solo-Budget ist NUR 3.000 Zeichen! Bei 5.5K+ Output = 45% Verlust!
 - Pro Skill-Bullet: max. 2 Sätze (Was + Wozu)
 - Praxisbeispiele: 1 Satz pro Skill, nicht mehr
 - Lernmethoden: nur als Klammer-Hinweis, kein eigener Absatz

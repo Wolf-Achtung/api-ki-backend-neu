@@ -1,7 +1,18 @@
 Developer:
-<!-- PLATIN++ PROMPT v5.5 - SPRINT G5 -->
+<!-- PLATIN++ PROMPT v5.6 - SPRINT TRUNCATION-FIX -->
 <!-- SECTION: recommendations -->
 <!-- OUTPUT: HTML ONLY -->
+
+## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
+{% if COMPANY_SIZE == "solo" %}
+**SOLO-HARD-LIMIT: Maximal 350 Wörter / 2.500 Zeichen HTML gesamt. Bei Überschreitung wird 79% abgeschnitten!**
+NUR 3 MUSS-Maßnahmen (je max. 40 Wörter) + 3 kurze Optionen (je max. 20 Wörter) + kompakte Tabelle.
+{% elif COMPANY_SIZE == "team" %}
+**TEAM-HARD-LIMIT: Maximal 700 Wörter / 8.000 Zeichen HTML gesamt. Bei Überschreitung wird 34% abgeschnitten!**
+{% else %}
+**KMU-HARD-LIMIT: Maximal 900 Wörter / 10.000 Zeichen HTML gesamt.**
+{% endif %}
+JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN — der Report endet dann mitten im Satz!
 
 ## ROI-Regel (vor allem anderen beachten)
 Prozentwerte (ROI, Rendite, Effizienz) NIEMALS über 200% angeben. Bei höheren Werten "200% (gedeckelt)" schreiben. Alle Zahlen KONSERVATIV.
@@ -10,13 +21,11 @@ Prozentwerte (ROI, Rendite, Effizienz) NIEMALS über 200% angeben. Bei höheren 
 <!-- TOKEN-BUDGET: 1200 (solo:0.8x=960, team:1.0x=1200, kmu:1.15x=1380) -->
 <!--
 HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
-- Budget: 10000 Zeichen HTML-Output — NICHT überschreiten!
-- Solo: max. 7500 Zeichen | Team: max. 10000 Zeichen | KMU: max. 11500 Zeichen
-- B714: 17.425 Zeichen generiert, auf 9.915 getruncated → 43% VERLUST!
-- 3 MUSS-Maßnahmen: je max. 80 Wörter (Titel + Detail + Warum)
-- 3 OPTIONEN: je max. 30 Wörter
-- Prioritäten-Tabelle: 6 Zeilen à max. 8 Wörter pro Zelle
-- GESAMT-ZIEL: 500-800 Wörter (nicht mehr!)
+- Solo: max. 2.500 Zeichen (350 Wörter) | Team: max. 8.000 Zeichen (700 Wörter) | KMU: max. 10.000 Zeichen (900 Wörter)
+- WARNUNG: Solo-Budget ist NUR 3.000 Zeichen! Bei 13K+ Output = 79% Verlust!
+- Solo: 3 MUSS-Maßnahmen je max. 40 Wörter + 3 OPTIONEN je max. 20 Wörter + Tabelle
+- Team/KMU: 3 MUSS-Maßnahmen je max. 60 Wörter + 3 OPTIONEN je max. 30 Wörter + Tabelle
+- GESAMT-ZIEL: Solo 300-350, Team 600-700, KMU 800-900 Wörter
 -->
 <!--
 ###############################################################################
@@ -406,3 +415,5 @@ BEISPIEL-TRANSFORMATIONEN:
 ✅ "Fakten-Check vor Veröffentlichung" (bei Content-Risiken)
 =============================================================================
 -->
+
+<!-- FINAL CHECK VOR OUTPUT: Zähle deine Wörter. Solo >400? KÜRZEN! Team >800? KÜRZEN! KMU >1000? KÜRZEN! -->

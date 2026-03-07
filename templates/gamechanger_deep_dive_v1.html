@@ -1,0 +1,704 @@
+<!-- Gamechanger Deep Dive Template v1.0.0 "Clean Corporate Plus" — 2026-03-06 -->
+<!-- Engine: Puppeteer/Chromium · Backend: FastAPI/Jinja2 · Design: McKinsey/BCG -->
+<!-- Based on: pdf_template_v7.html — same CSS Design System -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gamechanger Deep Dive – {{ company_name or HAUPTLEISTUNG or 'Ihr Unternehmen' }}</title>
+    <style>
+/* ═══════════════════════════════════════════════════════
+   v1.0 GAMECHANGER DEEP DIVE — Clean Corporate Plus
+   Cloned from pdf_template_v7.html Design System
+   Typography: Inter (unified family)
+   Colors: 3 primary + grays + deep-dive purple accent
+   ═══════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Page Setup ─────────────────────────────────────── */
+@page {
+    size: A4;
+    margin: 12mm 12mm 15mm 12mm;
+    @bottom-right {
+        content: "Seite " counter(page) " von " counter(pages);
+        font-size: 7.5pt;
+        color: #9CA3AF;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+}
+
+/* ── Design Tokens ──────────────────────────────────── */
+:root {
+    /* Primary */
+    --c-primary: #1E3A5F;
+    --c-accent: #10B981;
+    --c-warning: #F59E0B;
+    /* Deep Dive accent */
+    --c-deep: #8b5cf6;
+    --c-deep-light: #f5f3ff;
+    --c-deep-border: #c4b5fd;
+    /* Grays */
+    --c-text: #374151;
+    --c-text-2: #6B7280;
+    --c-text-3: #9CA3AF;
+    --c-border: #E5E7EB;
+    --c-bg: #F9FAFB;
+    --c-white: #ffffff;
+    /* Semantic */
+    --c-success: #10B981;
+    --c-danger: #EF4444;
+    --c-info: #3B82F6;
+    /* Category Colors */
+    --c-cat-strategy: #3b82f6;
+    --c-cat-action: #10b981;
+    --c-cat-risk: #ef4444;
+    --c-cat-finance: #f59e0b;
+    --c-cat-deep: #8b5cf6;
+    /* Typography */
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+    /* Spacing */
+    --sp-xs: 4px;
+    --sp-sm: 8px;
+    --sp-md: 16px;
+    --sp-lg: 24px;
+    --sp-xl: 32px;
+    --sp-2xl: 48px;
+    /* Radius */
+    --r-sm: 4px;
+    --r-md: 8px;
+    --r-lg: 12px;
+}
+
+/* ── Base Reset ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: var(--font);
+    font-size: 10pt;
+    line-height: 1.6;
+    color: var(--c-text);
+    background: var(--c-white);
+    -webkit-font-smoothing: antialiased;
+    orphans: 4;
+    widows: 4;
+}
+
+/* ── Typography Scale ───────────────────────────────── */
+h1 { font-size: 28pt; font-weight: 700; color: var(--c-primary); line-height: 1.15; letter-spacing: -0.02em; }
+h2 { font-size: 18pt; font-weight: 700; color: var(--c-primary); line-height: 1.25; letter-spacing: -0.01em; margin: 0; }
+h3 { font-size: 13pt; font-weight: 600; color: var(--c-primary); line-height: 1.3; margin: var(--sp-md) 0 var(--sp-sm); }
+h4 { font-size: 11pt; font-weight: 600; color: var(--c-text); line-height: 1.4; margin: var(--sp-sm) 0 var(--sp-xs); }
+
+p { margin: var(--sp-sm) 0; }
+a { color: var(--c-primary); text-decoration: none; }
+strong { font-weight: 600; }
+.small { font-size: 8.5pt; }
+.muted { color: var(--c-text-3); }
+.text-2 { color: var(--c-text-2); }
+
+/* ── Lists & Tables ─────────────────────────────────── */
+ul, ol { padding-left: 1.5em; margin: var(--sp-sm) 0; }
+li { margin-bottom: var(--sp-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: var(--sp-md) 0; }
+th { background: var(--c-bg); font-weight: 600; text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--c-border); font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c-text-2); }
+td { padding: 8px 10px; border-bottom: 1px solid var(--c-border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr.highlight td { background: #f0fdf4; font-weight: 600; }
+td.positive { color: var(--c-success); font-weight: 600; }
+td.negative { color: var(--c-danger); font-weight: 600; }
+
+/* ── Page Structure ─────────────────────────────────── */
+.page { max-width: 210mm; margin: 0 auto; }
+
+/* ══ PAGE BREAK RULES ═══════════════════════════════ */
+#dd-implementation,
+#dd-business-case,
+#dd-risk-assessment,
+#dd-next-steps {
+    break-before: page;
+}
+
+/* ── Section Base ───────────────────────────────────── */
+.section {
+    padding: var(--sp-xl) 0 var(--sp-lg);
+    break-inside: auto;
+}
+
+/* ── Section Header ─────────────────────────────────── */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--sp-md);
+    margin-bottom: var(--sp-md);
+}
+.section-kicker {
+    display: block;
+    font-size: 9pt;
+    font-weight: 500;
+    color: var(--c-text-2);
+    margin-bottom: 2px;
+}
+.section-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 8pt;
+    color: var(--c-text-2);
+    background: var(--c-bg);
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+
+/* ── Category Badges ────────────────────────────────── */
+.badge {
+    display: inline-block;
+    font-size: 7.5pt;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-bottom: var(--sp-xs);
+}
+.badge-strategy { background: #eff6ff; color: var(--c-cat-strategy); }
+.badge-action   { background: #ecfdf5; color: #047857; }
+.badge-risk     { background: #fef2f2; color: #b91c1c; }
+.badge-finance  { background: #fffbeb; color: #b45309; }
+.badge-deep     { background: #f5f3ff; color: var(--c-cat-deep); }
+
+/* ── Glance Box ─────────────────────────────────────── */
+.glance-box {
+    font-size: 10pt;
+    line-height: 1.5;
+    padding: 10px 14px;
+    border-radius: var(--r-sm);
+    margin-bottom: var(--sp-lg);
+    background: var(--c-bg);
+    border-left: 3px solid var(--c-border);
+}
+.glance-box strong { font-weight: 600; color: var(--c-text); }
+.glance-strategy { border-left-color: var(--c-cat-strategy); }
+.glance-action   { border-left-color: var(--c-cat-action); }
+.glance-risk     { border-left-color: var(--c-cat-risk); }
+.glance-finance  { border-left-color: var(--c-cat-finance); }
+.glance-deep     { border-left-color: var(--c-cat-deep); }
+
+/* ── Section Body ───────────────────────────────────── */
+.section-body {
+    font-size: 10pt;
+    line-height: 1.65;
+}
+.section-body p + p { margin-top: 6px; }
+.section-body h4 + p { margin-top: 4px; }
+.section-body p, .section-body li { orphans: 3; widows: 3; }
+.section-body h3 { margin-top: var(--sp-lg); }
+
+/* ══════════════════════════════════════════════════════
+   DEEP DIVE COVER PAGE
+   ══════════════════════════════════════════════════════ */
+.cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100vh;
+    padding: var(--sp-2xl) var(--sp-xl);
+    overflow: hidden;
+}
+.cover-accent {
+    width: 80px;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--c-deep), var(--c-primary));
+    margin: 0 auto var(--sp-xl);
+}
+.cover-eyebrow {
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--c-text-3);
+    margin-bottom: var(--sp-lg);
+}
+.cover-subtitle {
+    font-size: 12pt;
+    color: var(--c-deep);
+    font-style: italic;
+    margin-bottom: var(--sp-xs);
+}
+.cover-meta {
+    font-size: 10.5pt;
+    color: var(--c-text-2);
+}
+.cover-meta strong { color: var(--c-text); }
+
+/* Deep Dive Icon */
+.dd-icon {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--c-deep-light), #ede9fe);
+    border: 3px solid var(--c-deep-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: var(--sp-xl) auto;
+}
+.dd-icon-inner {
+    font-size: 42pt;
+    line-height: 1;
+}
+
+/* KPI Cards */
+.kpi-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin: var(--sp-xl) 0;
+    max-width: 500px;
+}
+.kpi-card {
+    text-align: center;
+    padding: 14px 10px;
+    background: var(--c-bg);
+    border-radius: var(--r-md);
+}
+.kpi-value {
+    font-size: 22pt;
+    font-weight: 700;
+    line-height: 1.2;
+}
+.kpi-label {
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+    margin-top: 2px;
+}
+
+/* Table of Contents (inline) */
+.dd-toc {
+    text-align: left;
+    max-width: 400px;
+    margin: var(--sp-xl) auto 0;
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    padding: var(--sp-md);
+}
+.dd-toc-title {
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--c-text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: var(--sp-sm);
+}
+.dd-toc-entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid #F3F4F6;
+    font-size: 9.5pt;
+    color: var(--c-text);
+}
+.dd-toc-entry:last-child { border-bottom: none; }
+.dd-toc-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--c-deep-light);
+    color: var(--c-deep);
+    font-size: 8pt;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   SECTION-SPECIFIC STYLES
+   ══════════════════════════════════════════════════════ */
+
+/* Section number circle */
+.section-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--c-deep);
+    color: white;
+    font-size: 14pt;
+    font-weight: 700;
+    margin-right: var(--sp-sm);
+    vertical-align: middle;
+}
+
+/* Sensitivity table highlight */
+.table tr.highlight td {
+    background: #f0fdf4;
+    font-weight: 600;
+}
+.table td.positive,
+td.positive {
+    color: var(--c-success);
+    font-weight: 600;
+}
+.table td.negative,
+td.negative {
+    color: var(--c-danger);
+    font-weight: 600;
+}
+
+/* Risk matrix styling */
+.risk-high { color: var(--c-danger); font-weight: 600; }
+.risk-medium { color: var(--c-warning); font-weight: 600; }
+.risk-low { color: var(--c-success); font-weight: 600; }
+
+/* Next steps action cards */
+.action-card {
+    background: var(--c-bg);
+    border-left: 3px solid var(--c-deep);
+    border-radius: var(--r-sm);
+    padding: 12px 16px;
+    margin-bottom: var(--sp-md);
+    page-break-inside: avoid;
+}
+
+/* ══════════════════════════════════════════════════════
+   BLOCK PROTECTION — keep cards/boxes together
+   ══════════════════════════════════════════════════════ */
+.glance-box, .kpi-card, .action-card, .card-nobreak {
+    break-inside: avoid;
+}
+h1, h2, h3, h4 {
+    break-after: avoid;
+}
+.kpi-row {
+    break-inside: avoid;
+}
+
+/* ── Contact Box ─────────────────────────────────────── */
+.contact-box {
+    text-align: center;
+    padding: 20px;
+    background: var(--c-bg);
+    border-radius: var(--r-lg);
+    margin-top: var(--sp-lg);
+}
+.contact-name { font-size: 12pt; font-weight: 700; color: #111827; }
+.contact-org  { font-size: 9.5pt; color: var(--c-text-2); margin-top: 2px; }
+.contact-btns { margin-top: 12px; }
+.btn {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 9.5pt;
+    margin: 0 4px;
+    color: white;
+}
+.btn-primary { background: var(--c-primary); }
+.btn-accent  { background: var(--c-accent); }
+.btn-deep    { background: var(--c-deep); }
+
+/* ── Impressum ─────────────────────────────────────── */
+.impressum-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--sp-lg);
+    margin-bottom: var(--sp-lg);
+}
+.impressum-block h4 { font-size: 10pt; margin-bottom: var(--sp-sm); }
+.impressum-block p { font-size: 9pt; color: var(--c-text-2); line-height: 1.6; }
+.impressum-divider { height: 1px; background: var(--c-border); margin: var(--sp-lg) 0; }
+.gdpr-mini {
+    font-size: 7.5pt;
+    color: var(--c-text-3);
+    text-align: center;
+    padding: var(--sp-md) 0;
+    margin-top: var(--sp-lg);
+    border-top: 1px solid var(--c-border);
+}
+
+/* ── Print enhancements ─────────────────────────────── */
+@media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .section { break-inside: auto; }
+    .glance-box, .kpi-card, .action-card, .card-nobreak { break-inside: avoid; }
+}
+    </style>
+</head>
+<body>
+
+{# ═══════════════════════════════════════════════════════
+   COMPUTED VARIABLES
+   ═══════════════════════════════════════════════════════ #}
+{% set company = company_name or HAUPTLEISTUNG or 'Ihr Unternehmen' %}
+{% set branche = BRANCHE_LABEL|default('') %}
+{% set size_label = UNTERNEHMENSGROESSE_LABEL|default('') %}
+{% set report_date_display = report_date|default('') %}
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 1: COVER — Deep Dive Branding
+   ═══════════════════════════════════════════════════════ #}
+<div class="cover" id="dd-cover">
+    <div class="cover-accent"></div>
+    <div class="cover-eyebrow">
+        Gamechanger Deep Dive · {{ report_date_display }}
+    </div>
+
+    <!-- Deep Dive Icon -->
+    <div class="dd-icon">
+        <span class="dd-icon-inner">&#x1F50D;</span>
+    </div>
+
+    <div style="margin-bottom: var(--sp-lg); max-width: 600px;">
+        <h1 style="color: var(--c-deep);">Gamechanger<br>Deep Dive</h1>
+        <p class="cover-subtitle">Vertiefende Analyse Ihres strategischen KI-Bruchpunkts</p>
+        <p class="cover-meta">
+            Unternehmen: <strong>{{ company }}</strong>
+            {% if branche %}<span class="muted"> · </span>{{ branche }}{% endif %}
+            {% if size_label %}<span class="muted"> · </span>{{ size_label }}{% endif %}
+        </p>
+    </div>
+
+    <!-- KPI Summary -->
+    {% if canonical_bc %}
+    <div class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-value" style="color: var(--c-accent);">
+                {{ canonical_bc.hours|default(0)|round(0)|int }}h
+            </div>
+            <div class="kpi-label">Einsparung/Monat</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" style="color: #c2410c;">
+                {{ canonical_bc.roi|default(0)|round(0)|int }}%
+            </div>
+            <div class="kpi-label">ROI (12 Monate)</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" style="color: var(--c-deep);">
+                {{ canonical_bc.payback|default(0)|round(1) }} M.
+            </div>
+            <div class="kpi-label">Amortisation</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Mini Table of Contents -->
+    <div class="dd-toc">
+        <div class="dd-toc-title">Inhalt</div>
+        <div class="dd-toc-entry">
+            <span class="dd-toc-num">1</span>
+            <span>Strategischer Bruchpunkt</span>
+        </div>
+        <div class="dd-toc-entry">
+            <span class="dd-toc-num">2</span>
+            <span>90-Tage Implementierungsplan</span>
+        </div>
+        <div class="dd-toc-entry">
+            <span class="dd-toc-num">3</span>
+            <span>Business Case Deep Dive</span>
+        </div>
+        <div class="dd-toc-entry">
+            <span class="dd-toc-num">4</span>
+            <span>Risikobewertung &amp; Absicherung</span>
+        </div>
+        <div class="dd-toc-entry">
+            <span class="dd-toc-num">5</span>
+            <span>Konkrete n&auml;chste Schritte</span>
+        </div>
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 2-3: SECTION 1 — Strategischer Bruchpunkt
+   ═══════════════════════════════════════════════════════ #}
+<div class="section" id="dd-bruchpunkt">
+    <div class="section-header">
+        <div>
+            <span class="badge badge-deep">Deep Dive</span>
+            <span class="section-kicker">Abschnitt 1</span>
+            <h2><span class="section-num">1</span> Strategischer Bruchpunkt</h2>
+        </div>
+        <span class="section-pill">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--c-deep);"></span>
+            Gamechanger-Analyse
+        </span>
+    </div>
+
+    <div class="glance-box glance-deep">
+        <strong>Auf einen Blick:</strong> Die erweiterte Analyse Ihres strategischen KI-Wendepunkts
+        mit konkreten Handlungsempfehlungen.
+    </div>
+
+    <div class="section-body">
+        {{ GC_BRUCHPUNKT_HTML|safe }}
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 3-4: SECTION 2 — Implementierungsplan
+   ═══════════════════════════════════════════════════════ #}
+<div class="section" id="dd-implementation">
+    <div class="section-header">
+        <div>
+            <span class="badge badge-action">Umsetzung</span>
+            <span class="section-kicker">Abschnitt 2</span>
+            <h2><span class="section-num">2</span> 90-Tage Implementierungsplan</h2>
+        </div>
+        <span class="section-pill">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--c-cat-action);"></span>
+            Fahrplan
+        </span>
+    </div>
+
+    <div class="glance-box glance-action">
+        <strong>Auf einen Blick:</strong> Ihr konkreter 3-Phasen-Plan zur Umsetzung des Gamechanger-Szenarios
+        in 90 Tagen.
+    </div>
+
+    <div class="section-body">
+        {{ GC_IMPL_PLAN_HTML|safe }}
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 4-5: SECTION 3 — Business Case Deep Dive
+   ═══════════════════════════════════════════════════════ #}
+<div class="section" id="dd-business-case">
+    <div class="section-header">
+        <div>
+            <span class="badge badge-finance">Finanzen</span>
+            <span class="section-kicker">Abschnitt 3</span>
+            <h2><span class="section-num">3</span> Business Case Deep Dive</h2>
+        </div>
+        <span class="section-pill">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--c-cat-finance);"></span>
+            Deterministisch berechnet
+        </span>
+    </div>
+
+    <div class="glance-box glance-finance">
+        <strong>Auf einen Blick:</strong> Sensitivit&auml;tsanalyse, 3-Jahres-Projektion und Break-Even-Berechnung
+        f&uuml;r Ihren Gamechanger — rein datenbasiert, keine KI-generierte Sch&auml;tzung.
+    </div>
+
+    <div class="section-body">
+        {{ BC_DEEP_DIVE_HTML|safe }}
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 5-6: SECTION 4 — Risikobewertung
+   ═══════════════════════════════════════════════════════ #}
+<div class="section" id="dd-risk-assessment">
+    <div class="section-header">
+        <div>
+            <span class="badge badge-risk">Risiko</span>
+            <span class="section-kicker">Abschnitt 4</span>
+            <h2><span class="section-num">4</span> Risikobewertung &amp; Absicherung</h2>
+        </div>
+        <span class="section-pill">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--c-cat-risk);"></span>
+            Top-5-Risiken
+        </span>
+    </div>
+
+    <div class="glance-box glance-risk">
+        <strong>Auf einen Blick:</strong> Die f&uuml;nf gr&ouml;&szlig;ten Risiken f&uuml;r Ihr Gamechanger-Szenario
+        mit Eintrittswahrscheinlichkeit, Auswirkung und konkreten Gegenma&szlig;nahmen.
+    </div>
+
+    <div class="section-body">
+        {{ GC_RISK_HTML|safe }}
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 6-7: SECTION 5 — Nächste Schritte & CTA
+   ═══════════════════════════════════════════════════════ #}
+<div class="section" id="dd-next-steps">
+    <div class="section-header">
+        <div>
+            <span class="badge badge-action">Aktion</span>
+            <span class="section-kicker">Abschnitt 5</span>
+            <h2><span class="section-num">5</span> N&auml;chste Schritte</h2>
+        </div>
+        <span class="section-pill">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--c-cat-action);"></span>
+            7-Tage-Aktionen
+        </span>
+    </div>
+
+    <div class="glance-box glance-action">
+        <strong>Auf einen Blick:</strong> 3 konkrete Handlungen f&uuml;r die n&auml;chsten 7 Tage,
+        die Sie sofort umsetzen k&ouml;nnen — ohne Budget, ohne Setup.
+    </div>
+
+    <div class="section-body">
+        {{ GC_NEXT_STEPS_HTML|safe }}
+    </div>
+
+    <!-- Contact Box -->
+    <div class="contact-box" style="margin-top: var(--sp-xl);">
+        <p class="contact-name">Wolf Hohl</p>
+        <p class="contact-org">KI-Sicherheit.jetzt — Ihr Partner f&uuml;r KI-Readiness</p>
+        <div class="contact-btns">
+            <a href="https://ki-sicherheit.jetzt" class="btn btn-deep">Website besuchen</a>
+            <a href="mailto:kontakt@ki-sicherheit.jetzt" class="btn btn-primary">Kontakt aufnehmen</a>
+        </div>
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 7-8: IMPRESSUM
+   ═══════════════════════════════════════════════════════ #}
+<div class="section" id="dd-impressum" style="break-before: page;">
+    <div class="impressum-grid">
+        <div class="impressum-block">
+            <h4>Impressum</h4>
+            <p><strong>Verantwortlich f&uuml;r den Inhalt:</strong><br>
+            KI-Sicherheit.jetzt – Wolf Hohl<br>
+            Greifswalder Str. 224a<br>
+            10405 Berlin</p>
+            <p>E-Mail: kontakt@ki-sicherheit.jetzt</p>
+        </div>
+        <div class="impressum-block">
+            <h4>Haftungsausschluss</h4>
+            <p>Dieses Dokument dient ausschlie&szlig;lich der Information. Trotz sorgf&auml;ltiger Pr&uuml;fung &uuml;bernehmen wir keine Haftung f&uuml;r Vollst&auml;ndigkeit oder Richtigkeit.</p>
+            <h4>Urheberrecht</h4>
+            <p>Alle Inhalte unterliegen dem deutschen Urheberrecht.</p>
+        </div>
+        <div class="impressum-block">
+            <h4>Hinweis zum EU AI Act</h4>
+            <p>Dieses Dokument informiert &uuml;ber Pflichten, Risiken und F&ouml;rderm&ouml;glichkeiten beim Einsatz von KI. Es ersetzt keine Rechtsberatung.</p>
+        </div>
+    </div>
+    <div class="impressum-divider"></div>
+    <p class="small muted" style="text-align: center;">
+        Basierend auf Daten aus dem KI-Readiness Report 1. Keine erneute Befragung erforderlich.
+    </p>
+</div>
+
+<!-- GDPR Mini Disclaimer -->
+<div class="gdpr-mini">
+    Dieser Deep Dive nutzt Unternehmensdaten aus dem KI-Readiness Report. Verarbeitung auf Basis von Art. 6 (1) b DSGVO.
+    <a href="https://ki-sicherheit.jetzt/datenschutz" target="_blank">Datenschutzerkl&auml;rung</a>
+</div>
+
+<p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">
+    Gamechanger Deep Dive v1.0 · Design: Clean Corporate Plus · Generiert am {{ report_date_display }}
+</p>
+
+</body>
+</html>

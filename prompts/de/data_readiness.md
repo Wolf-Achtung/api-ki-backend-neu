@@ -1,4 +1,15 @@
-Developer: <!-- data_readiness.md – v3.2 GOLD STANDARD+ (Daten & Systemreife, multi-size) – SPRINT N1
+## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
+{% if COMPANY_SIZE == "solo" %}
+**SOLO-HARD-LIMIT: Maximal 350 Wörter / 2.500 Zeichen HTML gesamt. Bei Überschreitung wird 65% abgeschnitten!**
+Alle 4 Unterabschnitte behalten, aber extrem kompakt: je max. 3 Bullets à 1 Satz.
+{% elif COMPANY_SIZE == "team" %}
+**TEAM-HARD-LIMIT: Maximal 700 Wörter / 6.500 Zeichen HTML gesamt.**
+{% else %}
+**KMU-HARD-LIMIT: Maximal 900 Wörter / 8.500 Zeichen HTML gesamt.**
+{% endif %}
+JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN — der Report endet dann mitten im Satz!
+
+Developer: <!-- data_readiness.md – v3.3 TRUNCATION-FIX (Daten & Systemreife, multi-size) – SPRINT N1
   Antworte ausschließlich mit validem HTML.
   KEIN <html>, <head> oder <body>. KEINE Markdown-Fences.
 

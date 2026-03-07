@@ -1,7 +1,14 @@
-**WICHTIG – Längenlimit: Deine Antwort darf maximal 1100 Wörter umfassen. Kürze lieber als zu überziehen.**
+{% if COMPANY_SIZE == "solo" %}
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 350 Wörter / 2.500 Zeichen HTML umfassen. Solo-Budget ist NUR 3.000 Zeichen — bei 10K+ Output wird 71% abgeschnitten!**
+{% elif COMPANY_SIZE == "team" %}
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 700 Wörter / 6.500 Zeichen HTML umfassen. Team-Budget ist 8.000 Zeichen.**
+{% else %}
+**WICHTIG – Längenlimit: Deine Antwort darf maximal 1000 Wörter umfassen.**
+{% endif %}
+Kürze lieber als zu überziehen — abgeschnittener Content ist wertlos!
 
 Developer:
-<!-- PLATIN++ PROMPT v5.4 - SPRINT G5 -->
+<!-- PLATIN++ PROMPT v5.5 - SPRINT TRUNCATION-FIX -->
 <!-- SECTION: org_change -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
@@ -9,10 +16,10 @@ Developer:
 <!-- TOKEN-BUDGET: 2200 (solo:0.8x=1760, team:1.0x=2200, kmu:1.15x=2530) -->
 <!--
 HÖCHSTLÄNGE (STRIKT!):
-- Der gesamte HTML-Output dieser Section darf MAXIMAL 7500 Zeichen umfassen
-- Solo: max. 5500 Zeichen | Team: max. 7500 Zeichen | KMU: max. 8500 Zeichen
+- Solo: max. 2.500 Zeichen (350 Wörter) | Team: max. 6.500 Zeichen (700 Wörter) | KMU: max. 8.000 Zeichen (1000 Wörter)
+- WARNUNG: Solo-Budget ist NUR 3.000 Zeichen! Bei 10K+ Output = 71% Verlust!
+- Solo: Alle 4 Abschnitte, aber je max. 70-90 Wörter. 3 Bullets pro Abschnitt max.
 - Lieber prägnant als ausschweifend — jeder Satz muss Mehrwert liefern
-- Bei Überschreitung: Kürzen durch Zusammenfassung, nicht durch Weglassen ganzer Abschnitte
 -->
 <!--
 ZIEL: Präziser Abschnitt „Veränderungsfähigkeit & Lernen".
