@@ -885,9 +885,18 @@ async def generate_gamechanger_deep_dive(
     html = result.get("html", "")
     sections = result.get("sections", {})
 
+    # Only report sections that have real content (not fallback error text)
+    _FALLBACK_MARKER = "konnte nicht generiert werden"
+    sections_ok = [
+        k for k, v in sections.items()
+        if _FALLBACK_MARKER not in str(v)
+    ]
+    sections_failed = [k for k in sections if k not in sections_ok]
+
     log.info(
-        "[GC-DEEP-DIVE] Generated: briefing_id=%d html_size=%d sections=%s",
-        payload.briefing_id, len(html), list(sections.keys()),
+        "[GC-DEEP-DIVE] Generated: briefing_id=%d html_size=%d "
+        "sections_ok=%s sections_failed=%s",
+        payload.briefing_id, len(html), sections_ok, sections_failed,
     )
 
     return {
@@ -895,7 +904,8 @@ async def generate_gamechanger_deep_dive(
         "briefing_id": payload.briefing_id,
         "html": html,
         "html_size": len(html),
-        "sections_generated": list(sections.keys()),
+        "sections_generated": sections_ok,
+        "sections_failed": sections_failed,
     }
 
 
