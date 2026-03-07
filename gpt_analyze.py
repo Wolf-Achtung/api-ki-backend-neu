@@ -17477,6 +17477,18 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                                     "LEISTUNG_NACHWEIS_HTML", "WERKBANK_HTML",
                                     "AI_ACT_TABLE_OFFER_HTML", "AI_ACT_ADDON_PACKAGES_HTML",
                                 ]
+                                # FIX-RS2-6: Solo-specific extra removals (23→19 pages)
+                                if _compact_size == "solo":
+                                    _compact_remove += [
+                                        "BRANCH_DEEP_DIVE_HTML", "ROADMAP_12M_HTML",
+                                        "FOERDERPOTENZIAL_HTML", "FOERDERPROGRAMME_HTML",
+                                        "FUNDING_BRANCH_ALIGNMENT_HTML",
+                                        "TOOLS_FUNDING_ALIGNMENT_HTML",
+                                        "TOOLS_BRANCH_ALIGNMENT_HTML",
+                                        "BRANCH_PROFILE_HTML", "BRANCH_OPPORTUNITIES_HTML",
+                                        "BRANCH_RISKS_HTML", "MARKET_INSIGHTS_HTML",
+                                        "DECISION_CONFIDENCE_HTML",
+                                    ]
                                 _compact_removed = 0
                                 for _ck in _compact_remove:
                                         if sections.get(_ck):

@@ -80,6 +80,18 @@ ENTERPRISE_TERM_REPLACEMENTS: List[Tuple[str, str, str]] = [
     # --- Prozesslandschaft ---
     (r"\bProzesslandschaft(?:en)?\b", "Arbeitsabläufe", "Prozesslandschaft → Arbeitsabläufe"),
 
+    # --- Enterprise (FIX-RS2-7) ---
+    (r"\bEnterprise[-\s]?Software\b", "Unternehmenssoftware", "Enterprise-Software → Unternehmenssoftware"),
+    (r"\bEnterprise[-\s]?Lösung(?:en)?\b", "Unternehmenslösung", "Enterprise-Lösung → Unternehmenslösung"),
+    (r"\bEnterprise[-\s]?Plattform\b", "Unternehmensplattform", "Enterprise-Plattform → Unternehmensplattform"),
+    (r"(?<![-\w])Enterprise(?:s)?(?![-\w])", "Unternehmen", "Enterprise → Unternehmen"),
+
+    # --- Audit standalone (FIX-RS2-7: not just Audit-Trail) ---
+    (r"\bAudit[-\s]?Prozess(?:e|en)?\b", "Prüfprozess", "Audit-Prozess → Prüfprozess"),
+    (r"\bAudit[-\s]?Bericht(?:e|en)?\b", "Prüfbericht", "Audit-Bericht → Prüfbericht"),
+    (r"(?<![-\w])Audits(?![-\w])", "Prüfungen", "Audits → Prüfungen"),
+    (r"(?<![-\w])Audit(?![-\w\u2011\u2010]Trail)", "Prüfung", "Audit → Prüfung"),
+
     # --- Baukasten (in the sense of enterprise toolkit jargon) ---
     # Note: "Baukasten" in the replacement whitelist context (Solo-friendly) is fine.
     # This targets enterprise "Baukasten-Prinzip/System" language.

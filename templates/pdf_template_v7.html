@@ -1108,7 +1108,7 @@ h1, h2, h3, h4 {
         {% set _ = toc_action_entries.append(("outlook-section", "strategy", "12-Monats-Ausblick", "outlook")) %}
     {% endif %}
     {% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim %}
-        {% set _ = toc_action_entries.append(("gamechanger-section", "strategy", "Gamechanger-Analyse", "gamechanger")) %}
+        {% set _ = toc_action_entries.append(("gamechanger-section", "strategy", "KI-Potenzial-Analyse", "gamechanger")) %}
     {% endif %}
     {% if ADVISOR_NOTE_HTML and ADVISOR_NOTE_HTML|trim %}
     {% set _ = toc_action_entries.append(("advisor-note", "strategy", "Persönliche Einschätzung", "advisor")) %}
@@ -1131,7 +1131,7 @@ h1, h2, h3, h4 {
         <span class="toc-level-sub">Zum Nachschlagen</span>
     </div>
     {% for ref, title in [
-        ("A1", "Detaillierte Risikoanalyse"), ("A2", "Gamechanger-Analyse (vollständig)"),
+        ("A1", "Detaillierte Risikoanalyse"), ("A2", "KI-Potenzial-Analyse (vollständig)"),
         ("A3", "12-Monats-Roadmap & Automatisierung"), ("A4", "Handlungsempfehlungen (Detail)"),
         ("A5", "ROI-Simulation (3 Szenarien)"), ("A6", "Branchenprofil & Marktintelligenz"),
         ("A7", "KI-Skill-Fahrplan 2026"), ("A8", "Monetarisierung & Angebotslogik"),
@@ -1254,7 +1254,7 @@ h1, h2, h3, h4 {
     {% if SKIP_HINT %}
     <div class="skip-hint"><strong>Bei Ihrem Score ({{ score_int }}/100):</strong> {{ SKIP_HINT }}</div>
     {% elif score_int >= 80 %}
-    <div class="skip-hint"><strong>Bei Ihrem Score ({{ score_int }}/100):</strong> Grundlagen-Prompts und 30-Tage-Challenge können Sie überspringen. Fokussieren Sie auf: Quick Wins, Vendor-Audit und Gamechanger.</div>
+    <div class="skip-hint"><strong>Bei Ihrem Score ({{ score_int }}/100):</strong> Grundlagen-Prompts und 30-Tage-Challenge können Sie überspringen. Fokussieren Sie auf: Quick Wins, Vendor-Audit und KI-Potenzial-Analyse.</div>
     {% elif score_int >= 50 %}
     <div class="skip-hint"><strong>Bei Ihrem Score ({{ score_int }}/100):</strong> Die 30-Tage-Challenge Woche 1 können Sie überspringen. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
     {% endif %}
@@ -1590,7 +1590,7 @@ h1, h2, h3, h4 {
         <div>
             <span class="badge badge-strategy">Strategie</span>
             <span class="section-kicker">{{ ui("gamechanger_kicker", "Strategische Optionen") }}</span>
-            <h2>{{ ui("gamechanger_title", "Gamechanger-Analyse") }}</h2>
+            <h2>{{ ui("gamechanger_title", "KI-Potenzial-Analyse") }}</h2>
         </div>
         <span class="section-pill"><span class="pill-dot"></span>Transformatives Potenzial</span>
     </div>
@@ -1598,7 +1598,7 @@ h1, h2, h3, h4 {
         <strong>Auf einen Blick:</strong> Der strategische Bruchpunkt, der Ihr Geschäftsmodell transformieren kann.
     </div>
     <div class="section-body">{{ GAMECHANGER_DECISION_HTML|safe }}</div>
-    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Vollständige Gamechanger-Analyse (Architektur, Skaleneffekte) → Anhang A2</div>{% endif %}
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Vollständige KI-Potenzial-Analyse (Architektur, Skaleneffekte) → Anhang A2</div>{% endif %}
 </section>
 {% endif %}
 
@@ -1676,12 +1676,12 @@ h1, h2, h3, h4 {
 </section>
 {% endif %}
 
-<!-- A2: Gamechanger (vollständig) -->
+<!-- A2: KI-Potenzial-Analyse (vollständig) -->
 {% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim %}
 <section class="appendix-section" id="appendix-a2" data-category="deep">
-    <div class="appendix-header">Anhang A2 · Gamechanger-Analyse (vollständig)</div>
+    <div class="appendix-header">Anhang A2 · KI-Potenzial-Analyse (vollständig)</div>
     <div class="section-body">
-        <p class="muted">Die Gamechanger-Kernanalyse finden Sie im Action Guide. Hier folgen ergänzende Vertiefungen.</p>
+        <p class="muted">Die KI-Potenzial-Kernanalyse finden Sie im Action Guide. Hier folgen ergänzende Vertiefungen.</p>
         {% if GAMECHANGER_EXTENDED_HTML %}{{ GAMECHANGER_EXTENDED_HTML|safe }}{% endif %}
     </div>
 </section>

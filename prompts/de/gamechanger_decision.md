@@ -71,17 +71,17 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>
 <!-- WORD_MINIMUM: 350 -->
 <!-- WORD_MAXIMUM: 450 -->
 
-Erzeuge eine strategische Entscheidungsfassung des Gamechangers für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
+Erzeuge eine strategische Entscheidungsfassung des KI-Potenzials für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
 
 INHALTLICHE GRUNDLAGE:
-Verdichte den bestehenden Gamechanger-Content. Erfinde nichts Neues.
+Verdichte den bestehenden KI-Potenzial-Content. Erfinde nichts Neues.
 Fokus: Eine zitierfähige These, die in 2 Minuten erfassbar ist.
 
 STRUKTUR (exakt einhalten):
 
 ```html
 <div class="gamechanger-decision">
-  <p><strong>Der strategische Gamechanger – Entscheidungsfassung</strong></p>
+  <p><strong>Strategisches KI-Potenzial – Entscheidungsfassung</strong></p>
 
   <p><strong>Strategischer Bruchpunkt</strong></p>
   <p>[Warum das bisherige Vorgehen nicht mehr funktioniert – 2-3 Sätze]</p>
@@ -89,7 +89,7 @@ STRUKTUR (exakt einhalten):
   <p><strong>Die neue Logik</strong></p>
   <p>[Was sich fundamental ändert – 1 prägnanter Satz]</p>
 
-  <p><strong>Warum das ein Gamechanger ist</strong></p>
+  <p><strong>Warum das ein strategischer Hebel ist</strong></p>
   <ul>
     <li><strong>Erweiterung:</strong> [1 Satz]</li>
     <li><strong>Qualität & Governance:</strong> [1 Satz]</li>
