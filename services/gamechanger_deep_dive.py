@@ -773,7 +773,7 @@ def _fallback_html(sections: Dict[str, str], context: Dict[str, Any]) -> str:
     branche = context.get('BRANCHE_LABEL', '')
 
     parts = [
-        f'<h1>Gamechanger Deep Dive: {company}</h1>',
+        f'<h1>KI-Potenzial-Analyse: {company}</h1>',
         f'<p>Branche: {branche}</p>',
         '<hr>',
         '<h2>1. Strategischer Bruchpunkt</h2>',

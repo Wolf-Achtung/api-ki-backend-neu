@@ -77,19 +77,18 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
 </html>"""
 
 
-def render_deep_dive_email(company_name: str, recipient: str = "user") -> str:
-    """Render email HTML for Gamechanger Deep Dive delivery.
+def render_deep_dive_email(recipient: str = "user") -> str:
+    """Render email HTML for KI-Potenzial-Analyse delivery.
 
     Args:
-        company_name: Company name / kundencode for personalisation.
         recipient: "user" or "admin".
     """
     if recipient == "admin":
-        title = "Kopie: Gamechanger Deep Dive"
-        intro = "dies ist die Admin‑Kopie des Gamechanger Deep Dive."
+        title = "Kopie: KI-Potenzial-Analyse"
+        intro = "dies ist die Admin‑Kopie der KI-Potenzial-Analyse."
     else:
-        title = "Ihr Gamechanger Deep Dive"
-        intro = "Ihr Gamechanger Deep Dive ist fertig."
+        title = "Ihre KI-Potenzial-Analyse"
+        intro = "Ihre KI-Potenzial-Analyse ist fertig."
 
     body_text = (
         "Im Anhang finden Sie die vertiefende Analyse Ihres strategischen KI‑Bruchpunkts "
