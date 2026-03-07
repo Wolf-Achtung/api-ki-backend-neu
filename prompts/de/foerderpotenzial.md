@@ -5,10 +5,10 @@ Developer:
 
 ## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
 {% if COMPANY_SIZE == "solo" %}
-**SOLO-HARD-LIMIT: Maximal 350 Wörter / 2.500 Zeichen HTML gesamt. Bei Überschreitung wird 82% abgeschnitten!**
-Schreibe extrem kompakt: nur die 2 relevantesten Förderkategorien, keine langen Erklärungen.
+**SOLO-HARD-LIMIT: Maximal 450 Wörter / 4.500 Zeichen HTML gesamt.**
+Schreibe kompakt: nur die 2 relevantesten Förderkategorien, keine langen Erklärungen. Max 3 Bullets pro Sektion.
 {% elif COMPANY_SIZE == "team" %}
-**TEAM-HARD-LIMIT: Maximal 700 Wörter / 7.500 Zeichen HTML gesamt. Bei Überschreitung wird 38% abgeschnitten!**
+**TEAM-HARD-LIMIT: Maximal 700 Wörter / 7.500 Zeichen HTML gesamt.**
 {% else %}
 **KMU-HARD-LIMIT: Maximal 900 Wörter / 10.000 Zeichen HTML gesamt.**
 {% endif %}
@@ -26,18 +26,17 @@ Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vor
 Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
 
 HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
-- Solo: max. 2.500 Zeichen (350 Wörter) | Team: max. 7.500 Zeichen (700 Wörter) | KMU: max. 10.000 Zeichen (900 Wörter)
-- WARNUNG: Solo-Budget ist NUR 3.000 Zeichen! Bei 14K Output = 82% Verlust!
-- Solo: 4 kurze Abschnitte × 70-90 Wörter = 300-350 Wörter gesamt
+- Solo: max. 4.500 Zeichen (450 Wörter) | Team: max. 7.500 Zeichen (700 Wörter) | KMU: max. 10.000 Zeichen (900 Wörter)
+- Solo: 4 kurze Abschnitte × 90-110 Wörter = 380-450 Wörter gesamt
 - Team: 4 Abschnitte × 150-175 Wörter = 600-700 Wörter gesamt
-- Pro Bullet-Liste: Solo max. 3-4 Punkte, Team/KMU max. 5 Punkte
-- GESAMT-ZIEL: Solo 300-350, Team 600-700, KMU 800-1000 Wörter
+- Pro Bullet-Liste: Solo max. 3 Punkte, Team/KMU max. 5 Punkte
+- GESAMT-ZIEL: Solo 380-450, Team 600-700, KMU 800-1000 Wörter
 -->
 <!-- FOERDERLOGIK: DE-Bundesprogramme + Landesprogramme (KEINE EU-Core-Hinweise) -->
 <!--
 ###############################################################################
 {% if COMPANY_SIZE == "solo" %}
-**WICHTIG – Längenlimit: Deine Antwort soll 300-350 Wörter umfassen, maximal 400 Wörter. Solo-Budget ist NUR 3.000 Zeichen!**
+**WICHTIG – Längenlimit: Deine Antwort soll 380-450 Wörter umfassen, maximal 500 Wörter.**
 {% elif COMPANY_SIZE == "team" %}
 **WICHTIG – Längenlimit: Deine Antwort soll 600-700 Wörter umfassen, maximal 800 Wörter.**
 {% else %}
@@ -69,7 +68,7 @@ ERLAUBT:
 -->
 <!--
 {% if COMPANY_SIZE == "solo" %}
-ZIEL: 4 Abschnitte mit je 70-90 Wörtern (= 300-350 Wörter gesamt). KÜRZER IST BESSER!
+ZIEL: 4 Abschnitte mit je 90-110 Wörtern (= 380-450 Wörter gesamt). KÜRZER IST BESSER!
 {% elif COMPANY_SIZE == "team" %}
 ZIEL: 4 Abschnitte mit je 150-175 Wörtern (= 600-700 Wörter gesamt).
 {% else %}
@@ -224,8 +223,8 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   </p>
 </section>
 
-<!-- DEV: PDF-SLIMDOWN v2.2 - TRUNCATION-FIX: Solo 300-350, Team 600-700, KMU 800-1000 Wörter -->
-<!-- FINAL CHECK VOR OUTPUT: Zähle deine Wörter. Solo >400? KÜRZEN! Team >800? KÜRZEN! KMU >1100? KÜRZEN! -->
+<!-- DEV: PDF-SLIMDOWN v2.2 - TRUNCATION-FIX: Solo 380-450, Team 600-700, KMU 800-1000 Wörter -->
+<!-- FINAL CHECK VOR OUTPUT: Zähle deine Wörter. Solo >500? KÜRZEN! Team >800? KÜRZEN! KMU >1100? KÜRZEN! -->
 
 <!-- ZERO-LEAK POLICY (N4.6) -->
 <!--
