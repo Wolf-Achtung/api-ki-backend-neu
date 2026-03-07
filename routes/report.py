@@ -940,3 +940,126 @@ async def get_gamechanger_deep_dive_html(
 
     html = result.get("html", "")
     return HTMLResponse(content=html, media_type="text/html; charset=utf-8")
+
+
+@router.post("/gamechanger-deep-dive/pdf/{briefing_id}")
+async def generate_deep_dive_pdf(
+    briefing_id: int,
+) -> Response:
+    """
+    Generate the Gamechanger Deep Dive as PDF.
+
+    1. Generates Deep Dive HTML via generate_gamechanger_report()
+    2. Renders HTML → PDF via the same Puppeteer service used by Report 1
+    3. Returns PDF as download
+
+    Returns:
+        PDF file (application/pdf) as attachment download
+    """
+    try:
+        from services.gamechanger_deep_dive import generate_gamechanger_report
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Gamechanger Deep Dive module unavailable: {exc}",
+        ) from exc
+
+    # Step 1: Generate Deep Dive HTML
+    log.info("[GC-DEEP-DIVE-PDF] Generating Deep Dive for briefing_id=%d", briefing_id)
+
+    try:
+        result = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: generate_gamechanger_report(briefing_id),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        log.error(
+            "[GC-DEEP-DIVE-PDF] HTML generation failed for briefing %d: %s",
+            briefing_id, exc,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Deep Dive generation failed: {exc.__class__.__name__}: {exc}",
+        ) from exc
+
+    html = result.get("html", "")
+    if not html:
+        raise HTTPException(
+            status_code=500,
+            detail="Deep Dive generation returned empty HTML",
+        )
+
+    # Step 2: Render HTML → PDF via Puppeteer service (same as Report 1)
+    try:
+        from services.pdf_client import render_pdf_from_html
+    except ImportError as exc:
+        log.error("[GC-DEEP-DIVE-PDF] pdf_client import failed: %s", exc)
+        return JSONResponse(
+            status_code=503,
+            content={"error": "pdf_service_unavailable", "reason": "module_not_found"},
+        )
+
+    log.info(
+        "[GC-DEEP-DIVE-PDF] Rendering PDF for briefing %d (html_size=%d)",
+        briefing_id, len(html),
+    )
+
+    pdf_options = {
+        "format": "A4",
+        "printBackground": True,
+        "displayHeaderFooter": False,
+        "margin": {"top": "12mm", "right": "12mm", "bottom": "12mm", "left": "12mm"},
+    }
+
+    pdf_result = render_pdf_from_html(
+        html=html,
+        meta={"briefing_id": briefing_id, "report_type": "gamechanger_deep_dive"},
+        pdf_options=pdf_options,
+    )
+
+    if pdf_result.get("error"):
+        log.error(
+            "[GC-DEEP-DIVE-PDF] PDF render failed for briefing %d: %s",
+            briefing_id, pdf_result.get("error"),
+        )
+        return JSONResponse(
+            status_code=502,
+            content={
+                "error": "pdf_generation_failed",
+                "reason": pdf_result.get("error"),
+                "briefing_id": briefing_id,
+            },
+        )
+
+    # Step 3: Return PDF as download
+    pdf_bytes = pdf_result.get("pdf_bytes")
+    if pdf_bytes:
+        log.info(
+            "[GC-DEEP-DIVE-PDF] PDF generated: %d bytes (%.2f MB) for briefing %d",
+            len(pdf_bytes), len(pdf_bytes) / (1024 * 1024), briefing_id,
+        )
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": (
+                    f'attachment; filename="Gamechanger-Deep-Dive-{briefing_id}.pdf"'
+                )
+            },
+        )
+
+    pdf_url = pdf_result.get("pdf_url")
+    if pdf_url:
+        return RedirectResponse(url=pdf_url, status_code=302)
+
+    log.error("[GC-DEEP-DIVE-PDF] PDF service returned no content for briefing %d", briefing_id)
+    return JSONResponse(
+        status_code=502,
+        content={
+            "error": "pdf_generation_failed",
+            "reason": "no_content_returned",
+            "briefing_id": briefing_id,
+        },
+    )
