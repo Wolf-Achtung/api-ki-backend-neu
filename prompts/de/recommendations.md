@@ -5,10 +5,10 @@ Developer:
 
 ## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
 {% if COMPANY_SIZE == "solo" %}
-**SOLO-HARD-LIMIT: Maximal 350 Wörter / 2.500 Zeichen HTML gesamt. Bei Überschreitung wird 79% abgeschnitten!**
+**SOLO-HARD-LIMIT: Maximal 450 Wörter / 4.500 Zeichen HTML gesamt.**
 NUR 3 MUSS-Maßnahmen (je max. 40 Wörter) + 3 kurze Optionen (je max. 20 Wörter) + kompakte Tabelle.
 {% elif COMPANY_SIZE == "team" %}
-**TEAM-HARD-LIMIT: Maximal 700 Wörter / 8.000 Zeichen HTML gesamt. Bei Überschreitung wird 34% abgeschnitten!**
+**TEAM-HARD-LIMIT: Maximal 700 Wörter / 8.000 Zeichen HTML gesamt.**
 {% else %}
 **KMU-HARD-LIMIT: Maximal 900 Wörter / 10.000 Zeichen HTML gesamt.**
 {% endif %}
@@ -21,11 +21,10 @@ Prozentwerte (ROI, Rendite, Effizienz) NIEMALS über 200% angeben. Bei höheren 
 <!-- TOKEN-BUDGET: 1200 (solo:0.8x=960, team:1.0x=1200, kmu:1.15x=1380) -->
 <!--
 HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
-- Solo: max. 2.500 Zeichen (350 Wörter) | Team: max. 8.000 Zeichen (700 Wörter) | KMU: max. 10.000 Zeichen (900 Wörter)
-- WARNUNG: Solo-Budget ist NUR 3.000 Zeichen! Bei 13K+ Output = 79% Verlust!
+- Solo: max. 4.500 Zeichen (450 Wörter) | Team: max. 8.000 Zeichen (700 Wörter) | KMU: max. 10.000 Zeichen (900 Wörter)
 - Solo: 3 MUSS-Maßnahmen je max. 40 Wörter + 3 OPTIONEN je max. 20 Wörter + Tabelle
 - Team/KMU: 3 MUSS-Maßnahmen je max. 60 Wörter + 3 OPTIONEN je max. 30 Wörter + Tabelle
-- GESAMT-ZIEL: Solo 300-350, Team 600-700, KMU 800-900 Wörter
+- GESAMT-ZIEL: Solo 380-450, Team 600-700, KMU 800-900 Wörter
 -->
 <!--
 ###############################################################################
@@ -416,4 +415,4 @@ BEISPIEL-TRANSFORMATIONEN:
 =============================================================================
 -->
 
-<!-- FINAL CHECK VOR OUTPUT: Zähle deine Wörter. Solo >400? KÜRZEN! Team >800? KÜRZEN! KMU >1000? KÜRZEN! -->
+<!-- FINAL CHECK VOR OUTPUT: Zähle deine Wörter. Solo >500? KÜRZEN! Team >800? KÜRZEN! KMU >1000? KÜRZEN! -->
