@@ -87,7 +87,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             # FIX-C3: Sprint 2025 Phase 2 sections
             "ROI_TRACKING_HTML": 2000,
             "AI_POLICY_MINI_HTML": 2500,
-            "KICKOFF_VORLAGE_HTML": 2500,
+            "KICKOFF_VORLAGE_HTML": 4500,  # FIX-RS2: was 2500, Agenda+Fragen+Doku = 3500-4000 chars
             "PROMPT_FRAMEWORK_HTML": 1500,
             "BRANCH_DEEP_DIVE_HTML": 3000,
             "TRANSPARENCY_BOX_HTML": 1500,
@@ -260,6 +260,11 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "TOOLS_EMPFEHLUNGEN_HTML": 18000,
             "TECHNOLOGIE_PROZESSE_HTML": 12000,
             "VENDOR_AUDIT_HTML": 10000,  # FIX-B718: match team budget
+            # FIX-RS2: Phase 2 sections (explicit budgets to avoid _default fallback)
+            "KICKOFF_VORLAGE_HTML": 7000,
+            "BRANCH_DEEP_DIVE_HTML": 8000,
+            "AI_POLICY_MINI_HTML": 5000,
+            "RESPONSIBLE_AI_HTML": 4000,
             "_default": 3000,  # FIX-TRUNC: was 2000, must be >= team._default (2500)
         },
 

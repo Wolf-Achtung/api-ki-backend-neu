@@ -73,7 +73,14 @@ lieber branchenspezifisch formulieren (z.B. für Handwerk: "Welche Abläufe kost
 Projektziel, Top-3 Pain Points, erster Quick Win, nächster Meilenstein + Datum.
 
 ## TEXTLÄNGE
-140–200 Wörter. Praktisch, sofort nutzbar, keine Theorie.
+{% if COMPANY_SIZE == "solo" %}
+300–400 Wörter. Kompakt, praktisch, sofort nutzbar.
+{% elif COMPANY_SIZE == "team" %}
+400–550 Wörter. Klare Struktur, Workshop-tauglich.
+{% else %}
+500–650 Wörter. Strukturiert, Stakeholder-gerecht.
+{% endif %}
+Keine Theorie, nur umsetzbare Inhalte.
 
 ## OUTPUT-FORMAT
 Antworte ausschließlich mit validem HTML-Fragment.
