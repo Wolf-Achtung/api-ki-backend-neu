@@ -4,16 +4,10 @@ Developer:
 <!-- PHASE 3: Maximum personalization using ALL 5 Goldnuggets -->
 
 ## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
-{% if COMPANY_SIZE == "solo" %}
-**SOLO-HARD-LIMIT: Maximal 400 Wörter / 2.500 Zeichen HTML gesamt. Bei Überschreitung wird 71% abgeschnitten!**
-NUR die 4 Phasen mit je 3 kurzen Bullets + Erwartete Effekte. KEINE Booster-Sektionen (KPI-Tracking, Micro-Change etc.) — diese passen nicht ins Budget!
-{% elif COMPANY_SIZE == "team" %}
-**TEAM-HARD-LIMIT: Maximal 800 Wörter / 5.000 Zeichen HTML gesamt. Bei Überschreitung wird 41% abgeschnitten!**
-4 Phasen + Erwartete Effekte + max. 1 kurze Booster-Sektion. Booster-Sektionen stark kürzen!
-{% else %}
-**KMU-HARD-LIMIT: Maximal 1000 Wörter / 7.000 Zeichen HTML gesamt.**
-{% endif %}
+**HARD-LIMITS (Solo: 400 Wörter / 2.500 Zeichen | Team: 800 / 5.000 | KMU: 1000 / 7.000)**
 JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN — der Report endet dann mitten im Satz!
+Solo: NUR 4 Phasen × 3 Bullets + Effekte. KEINE Booster-Sektionen — passen nicht ins Budget!
+Team: 4 Phasen + Effekte + max. 1 kurze Booster-Sektion. Booster-Sektionen stark kürzen!
 <!--
 ###############################################################################
 ##   🚨🚨🚨 CRITICAL HAUPTLEISTUNG LIMIT - NON-NEGOTIABLE 🚨🚨🚨           ##
