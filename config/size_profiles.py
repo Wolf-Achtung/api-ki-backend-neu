@@ -86,7 +86,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "TECHNOLOGIE_PROZESSE_HTML": 3000,
             # FIX-C3: Sprint 2025 Phase 2 sections
             "ROI_TRACKING_HTML": 2000,
-            "AI_POLICY_MINI_HTML": 2500,
+            "AI_POLICY_MINI_HTML": 3500,  # FIX-RS2: was 2500, Template-Hybrid mit 5 Regeln + Quick-Check
             "KICKOFF_VORLAGE_HTML": 4500,  # FIX-RS2: was 2500, Agenda+Fragen+Doku = 3500-4000 chars
             "PROMPT_FRAMEWORK_HTML": 1500,
             "BRANCH_DEEP_DIVE_HTML": 5000,  # FIX-RS2: was 3000, 6 Bausteine + CSS = 4000-5000 chars
