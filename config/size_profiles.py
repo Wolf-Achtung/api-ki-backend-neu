@@ -96,6 +96,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "REIFEGRAD_SOWHAT_HTML": 1500,
             "AI_ACT_SUMMARY_HTML": 2000,
             "VENDOR_AUDIT_HTML": 10000,  # FIX-B718: match team/kmu budget
+            "RESPONSIBLE_AI_HTML": 2000,  # FIX-RS2: was _default 1000, static partials ~1500-1800 chars
             "_default": 1000,
         },
 
@@ -186,6 +187,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "REIFEGRAD_SOWHAT_HTML": 2000,
             "AI_ACT_SUMMARY_HTML": 3000,
             "VENDOR_AUDIT_HTML": 10000,  # FIX-B718: Compact table is 2500-8500 chars, healer trim counterproductive
+            "RESPONSIBLE_AI_HTML": 3500,  # FIX-RS2: was _default 2500, static partials ~2500-3000 chars
             "_default": 2500,  # FIX-TRUNC: was 1500
         },
 
