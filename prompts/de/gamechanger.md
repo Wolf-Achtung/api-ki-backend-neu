@@ -463,8 +463,8 @@ PHASE 3: Die Transformation muss zu {{VISION_3_JAHRE}} führen.
   -->
 </ul>
 
-<!-- SEKTION 3: Warum Gamechanger -->
-<p><strong>Warum das ein Gamechanger ist</strong></p>
+<!-- SEKTION 3: Warum strategischer Hebel -->
+<p><strong>Warum das ein strategischer Hebel ist</strong></p>
 <!--
 PHASE 3: Strukturelle Vorteile für {{hauptleistung}} benennen.
 -->
@@ -573,7 +573,7 @@ Keine Produkt- oder Tool-Namen.
 
 ---
 
-### 3. Warum das ein Gamechanger ist
+### 3. Warum das ein strategischer Hebel ist
 Nenne **2–3 präzise Wirkungen**, die zeigen, warum diese Idee
 einen strukturellen Vorteil erzeugt.
 
@@ -645,7 +645,7 @@ Diese Regeln stellen sicher, dass der Output im PDF korrekt gerendert wird:
 
 {% if COMPANY_SIZE == "solo" %}
 SOLO: **300–400 Wörter** insgesamt. HARD MAXIMUM: 450 Wörter / 3.500 Zeichen HTML.
-- 4 kompakte Blöcke: Bruchpunkt (2–3 Sätze), Transformation (2–3 Sätze), Warum Gamechanger (2 Bullets), Erster Schritt (2 Bullets)
+- 4 kompakte Blöcke: Bruchpunkt (2–3 Sätze), Transformation (2–3 Sätze), Warum strategischer Hebel (2 Bullets), Erster Schritt (2 Bullets)
 - KEIN Strategiejargon, KEINE Einleitungssätze
 - Max. 2 Bullets pro Sektion, je max. 20 Wörter
 {% elif COMPANY_SIZE == "team" %}
