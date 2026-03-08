@@ -1550,6 +1550,87 @@ def render(briefing_obj: Any,
         log.warning("[FIX-v7110-MATH] Error during math correction (continuing): %s run=%s", str(e)[:200], run_id)
 
     # =========================================================================
+    # FIX-v7110-BC-EUR: Correct EUR values in ROI-Herleitung and Scenario Cards
+    # Post-processing on final HTML ensures correct German EUR formatting.
+    # The BC engine generates correct values with _eur(), but post-processing
+    # steps (sanitizer, healer, budget trimmer) can corrupt German-formatted
+    # EUR values (e.g., "19.200€" → "19.80€"). This fix recalculates and
+    # re-inserts the correct values using canonical data.
+    # Solo-specific: Solo reports are most affected because their lower values
+    # (3-4 digit EUR) have fewer thousands separators as checkpoints.
+    # =========================================================================
+    try:
+        _bc_hours = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
+        _bc_rate = float(sections.get("CANON_RATE_EUR") or sections.get("stundensatz_eur") or 0)
+        _bc_opex_m = float(sections.get("CANON_OPEX_MONTH_EUR") or sections.get("OPEX_REALISTISCH_EUR") or 0)
+        _bc_capex = float(sections.get("CANON_CAPEX_EUR") or sections.get("CAPEX_REALISTISCH_EUR") or 0)
+
+        if _bc_hours > 0 and _bc_rate > 0:
+            _bc_jahresersparnis = _bc_hours * _bc_rate * 12
+            _bc_opex_annual = _bc_opex_m * 12
+            _bc_nettonutzen = _bc_jahresersparnis - _bc_capex - _bc_opex_annual
+
+            def _bc_fmt(val: float) -> str:
+                return f"{int(val):,}".replace(",", ".")
+
+            _html_before_bc_eur = html
+
+            # FIX 1: Jahresersparnis line — "{hours}h/Monat × {rate}€/h × 12 = {VALUE}€"
+            html = re.sub(
+                rf'({int(_bc_hours)})h/Monat\s*[×x]\s*({int(_bc_rate)})€/h\s*[×x]\s*12\s*=\s*[\d.,]+€',
+                rf'\1h/Monat × \2€/h × 12 = {_bc_fmt(_bc_jahresersparnis)}€',
+                html
+            )
+
+            # FIX 2: OPEX annual line — "{opex}€/Monat × 12 = {VALUE}€"
+            if _bc_opex_m > 0:
+                html = re.sub(
+                    rf'({int(_bc_opex_m)})€/Monat\s*[×x]\s*12\s*=\s*[\d.,]+€',
+                    rf'\1€/Monat × 12 = {_bc_fmt(_bc_opex_annual)}€',
+                    html
+                )
+
+            # FIX 3: Nettonutzen line — recalculate the subtraction result
+            # Pattern: "{jahresersparnis}€ - {capex}€ - {opex_annual}€ = {VALUE}€"
+            _j_fmt = _bc_fmt(_bc_jahresersparnis)
+            _c_fmt = _bc_fmt(_bc_capex)
+            _o_fmt = _bc_fmt(_bc_opex_annual)
+            html = re.sub(
+                rf'{re.escape(_j_fmt)}€\s*-\s*{re.escape(_c_fmt)}€\s*-\s*{re.escape(_o_fmt)}€\s*=\s*[\d.,]+€',
+                f'{_j_fmt}€ - {_c_fmt}€ - {_o_fmt}€ = {_bc_fmt(_bc_nettonutzen)}€',
+                html
+            )
+
+            # FIX 4: Scenario card monthly savings — recalculate from canonical values
+            # Cards appear in order: optimistic, realistic, conservative
+            _bc_base_savings = _bc_hours * _bc_rate  # Monthly gross savings
+            _sc_correct_values = [
+                _bc_fmt(_bc_base_savings * 1.3),  # optimistic
+                _bc_fmt(_bc_base_savings * 1.0),  # realistic
+                _bc_fmt(_bc_base_savings * 0.7),  # conservative
+            ]
+            _sc_idx = [0]  # mutable counter for closure
+
+            def _fix_sc_savings(m: re.Match) -> str:
+                idx = _sc_idx[0]
+                _sc_idx[0] += 1
+                if idx < len(_sc_correct_values):
+                    return f"{m.group(1)}{_sc_correct_values[idx]} {m.group(2)}"
+                return m.group(0)  # no change if extra matches
+
+            html = re.sub(
+                r'(Monatl\.\s*Ersparnis</span>\s*<p[^>]*>)\s*[\d.,]+\s*(€</p>)',
+                _fix_sc_savings,
+                html
+            )
+
+            if html != _html_before_bc_eur:
+                log.info("[FIX-v7110-BC-EUR] Corrected EUR values in ROI-Herleitung/Scenario Cards run=%s", run_id)
+
+    except Exception as e:
+        log.warning("[FIX-v7110-BC-EUR] Error (continuing): %s run=%s", str(e)[:200], run_id)
+
+    # =========================================================================
     # FIX-v720-F1: Complete truncated ROI derivation sentence
     # LLM sometimes truncates "gedeckelt auf max. 200%)" to "gedeckelt auf max."
     # =========================================================================
