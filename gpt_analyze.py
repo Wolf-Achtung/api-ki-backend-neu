@@ -16116,13 +16116,20 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     try:
         import re as _re
         _bc_html = sections.get('BUSINESS_CASE_HTML', '')
-        _capex = sections.get('CAPEX_REALISTISCH_EUR', '5.000')
-        _opex = sections.get('OPEX_REALISTISCH_EUR', '350')
-        _einsparung = sections.get('EINSPARUNG_MONAT_EUR', '3.420')
+        # FIX-B: Helper for German EUR formatting (numeric → "1.600")
+        def _fmt_eur_safe(v) -> str:
+            try:
+                n = float(str(v).replace(',', '.')) if not isinstance(v, (int, float)) else float(v)
+                return f"{int(n):,}".replace(",", ".")
+            except (ValueError, TypeError):
+                return str(v)
+        _capex = _fmt_eur_safe(sections.get('CAPEX_REALISTISCH_EUR', 5000))
+        _opex = _fmt_eur_safe(sections.get('OPEX_REALISTISCH_EUR', 350))
+        _einsparung = _fmt_eur_safe(sections.get('EINSPARUNG_MONAT_EUR', 3420))
         _roi = sections.get('ROI_12M_RATE', '200')
         _pb_raw = sections.get('PAYBACK_MONTHS', '1,6')
-        _hours = sections.get('CANON_HOURS_MONTH', '36')
-        _rate = sections.get('CANON_RATE_EUR', '95')
+        _hours = str(int(float(str(sections.get('CANON_HOURS_MONTH', 36)).replace(',', '.'))))
+        _rate = str(int(float(str(sections.get('CANON_RATE_EUR', 95)).replace(',', '.'))))
         _bundesland = sections.get('BUNDESLAND_LABEL', 'Ihrem Bundesland')
         try:
             _pb = f"{float(str(_pb_raw).replace(',', '.')):.1f}".replace('.', ',')
@@ -17730,9 +17737,16 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         if bc_html and isinstance(bc_html, str) and len(bc_html) > 50:
             # FIX-R5-1: Read from answers first (has canonical values earlier),
             # fall back to sections (which canonical injection already updated above).
-            _bc_capex = str(sections.get('CAPEX_REALISTISCH_EUR', '5.000'))
-            _bc_opex = str(sections.get('OPEX_REALISTISCH_EUR', '350'))
-            _bc_einsparung = str(sections.get('EINSPARUNG_MONAT_EUR', '3.420'))
+            # FIX-B: Use safe EUR formatter — handles int, float, and pre-formatted strings
+            def _fmt_eur_safe2(v) -> str:
+                try:
+                    n = float(str(v).replace(',', '.')) if not isinstance(v, (int, float)) else float(v)
+                    return f"{int(n):,}".replace(",", ".")
+                except (ValueError, TypeError):
+                    return str(v)
+            _bc_capex = _fmt_eur_safe2(sections.get('CAPEX_REALISTISCH_EUR', 5000))
+            _bc_opex = _fmt_eur_safe2(sections.get('OPEX_REALISTISCH_EUR', 350))
+            _bc_einsparung = _fmt_eur_safe2(sections.get('EINSPARUNG_MONAT_EUR', 3420))
             _bc_roi = str(sections.get('ROI_12M', '200'))
             _bc_payback = str(answers.get('PAYBACK_MONTHS') or sections.get('PAYBACK_MONTHS_FMT_DE', '1,6'))
             _bc_hours = str(answers.get('CANON_HOURS_MONTH') or sections.get('CANON_HOURS_MONTH', '36'))
@@ -17749,13 +17763,12 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 _bc_payback = f"{_pb_val:.1f}".replace('.', ',')
             except (ValueError, TypeError):
                 pass
-            # Format integers with dot-separator for German (5000 → 5.000)
             try:
-                _bc_capex = f"{int(float(str(_bc_capex).replace('.', '').replace(',', '.'))):,}".replace(",", ".")
+                _bc_hours = str(int(float(str(_bc_hours).replace(',', '.'))))
             except (ValueError, TypeError):
                 pass
             try:
-                _bc_einsparung = f"{int(float(str(_bc_einsparung).replace('.', '').replace(',', '.'))):,}".replace(",", ".")
+                _bc_rate = str(int(float(str(_bc_rate).replace(',', '.'))))
             except (ValueError, TypeError):
                 pass
             try:
