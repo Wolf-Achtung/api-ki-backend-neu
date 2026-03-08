@@ -1617,7 +1617,7 @@ def render(briefing_obj: Any,
                 _sc_idx[0] += 1
                 if idx < len(_sc_correct_values):
                     return f"{m.group(1)}{_sc_correct_values[idx]} {m.group(2)}"
-                return m.group(0)  # no change if extra matches
+                return str(m.group(0))  # no change if extra matches
 
             html = re.sub(
                 r'(Monatl\.\s*Ersparnis</span>\s*<p[^>]*>)\s*[\d.,]+\s*(€</p>)',
