@@ -223,11 +223,22 @@ async def get_briefing_status(
         "done_at": briefing.done_at.isoformat() if briefing.done_at else None,
     }
 
-    # Include report URLs when done
+    # Include report URLs and PDF availability when done
     if briefing.status == "done":
         base_url = str(request.base_url).rstrip("/")
         response["report_url"] = f"{base_url}/api/report/html/{briefing_id}"
         response["pdf_url"] = f"{base_url}/api/report/pdf/{briefing_id}"
+
+        # Check PDF availability
+        from models import Report
+        report = (
+            db.query(Report)
+            .filter(Report.briefing_id == briefing_id, Report.status == "done")
+            .order_by(Report.id.desc())
+            .first()
+        )
+        response["pdf_available"] = bool(report and (report.pdf_url or report.pdf_bytes_len))
+        response["email_sent"] = bool(report and report.email_sent_user)
 
     # Include error only if failed
     if briefing.status == "failed" and briefing.error:

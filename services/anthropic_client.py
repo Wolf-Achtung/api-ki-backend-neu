@@ -240,8 +240,12 @@ def get_anthropic_client() -> Optional["anthropic.Anthropic"]:
         )
         return None
 
-    client = anthropic.Anthropic(api_key=api_key)
-    log.info("✅ Anthropic-Client initialisiert.")
+    _timeout = float(os.getenv("ANTHROPIC_TIMEOUT", "180"))  # seconds
+    client = anthropic.Anthropic(
+        api_key=api_key,
+        timeout=_timeout,
+    )
+    log.info("✅ Anthropic-Client initialisiert (timeout=%ss).", _timeout)
     return client
 
 
