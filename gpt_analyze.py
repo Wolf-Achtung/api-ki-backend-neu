@@ -9400,6 +9400,15 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     capex: int = int(briefing.get("CAPEX_REALISTISCH_EUR") or 5000)
     opex: int = int(briefing.get("OPEX_REALISTISCH_EUR") or 150)
     einsparung: int = int(briefing.get("EINSPARUNG_MONAT_EUR") or 500)
+    # FIX-B-EUR: Pre-format EUR values for templates (German dot separator)
+    def _fmt_eur_foerder(v: int) -> str:
+        return f"{v:,}".replace(",", ".")
+    capex_fmt: str = _fmt_eur_foerder(capex)
+    opex_fmt: str = _fmt_eur_foerder(opex)
+    einsparung_fmt: str = _fmt_eur_foerder(einsparung)
+    einsparung_jahr_fmt: str = _fmt_eur_foerder(einsparung * 12)
+    opex_jahr_fmt: str = _fmt_eur_foerder(opex * 12)
+    capex_45_fmt: str = _fmt_eur_foerder(int(capex * 0.45))
     # SPRINT G2.5 + v14.35.23: Format payback/ROI with 1 decimal, German decimals for DE
     payback_raw: float = float(briefing.get("PAYBACK_MONTHS") or 10)
     payback_en: str = f"{float(payback_raw):.1f}" if isinstance(payback_raw, (int, float)) else str(payback_raw)
@@ -9434,12 +9443,12 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   </p>
   <h3>1. Business Case Assessment Without Funding</h3>
   <p>
-    The current business case shows one-time investments of approximately <strong>€{capex}</strong> and ongoing costs of
-    around <strong>€{opex} per month</strong>. The expected monthly relief is approximately <strong>€{einsparung}</strong>,
+    The current business case shows one-time investments of approximately <strong>€{capex:,}</strong> and ongoing costs of
+    around <strong>€{opex:,} per month</strong>. The expected monthly relief is approximately <strong>€{einsparung:,}</strong>,
     leading to an amortization period of about <strong>{payback} months</strong>.
   </p>
   <p>
-    <strong>ROI Calculation Example:</strong> At €{einsparung}/month time savings × 12 months = <strong>€{einsparung*12:,} annual savings</strong>.
+    <strong>ROI Calculation Example:</strong> At €{einsparung:,}/month time savings × 12 months = <strong>€{einsparung*12:,} annual savings</strong>.
     With an investment of €{capex:,}, the calculation (Annual savings / Investment × 100) yields an ROI of <strong>{roi_12m_raw}%</strong>.{f' <strong>Planning value (capped): {roi_12m}%</strong> (conservative ceiling).' if roi_was_capped else ''}
     This transparent calculation provides a solid basis for evaluating funding eligibility.
   </p>
@@ -9447,7 +9456,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   <p>
     Public funding programs typically cover 30-70% of eligible investment costs, depending on company size and project scope.
     This can significantly reduce the capital commitment and accelerate the payback period. For your project, a funding rate of
-    40-50% could reduce the effective initial investment by €{int(capex * 0.45)}, improving ROI to well over 100% in the first year.
+    40-50% could reduce the effective initial investment by €{int(capex * 0.45):,}, improving ROI to well over 100% in the first year.
   </p>
   <h3>3. EU Funding Opportunities</h3>
   <ul>
@@ -9492,14 +9501,14 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 
   <h3>1. Einordnung des Business Case ohne Förderung</h3>
   <p>
-    Der aktuelle Business Case zeigt einmalige Investitionen von etwa <strong>{capex}&nbsp;€</strong> sowie laufende Kosten von
-    rund <strong>{opex}&nbsp;€ pro Monat</strong>. Die erwartete monatliche Entlastung liegt bei ungefähr
-    <strong>{einsparung}&nbsp;€</strong>, was zu einer Amortisationsdauer von etwa <strong>{payback} Monaten</strong> und
+    Der aktuelle Business Case zeigt einmalige Investitionen von etwa <strong>{capex_fmt}&nbsp;€</strong> sowie laufende Kosten von
+    rund <strong>{opex_fmt}&nbsp;€ pro Monat</strong>. Die erwartete monatliche Entlastung liegt bei ungefähr
+    <strong>{einsparung_fmt}&nbsp;€</strong>, was zu einer Amortisationsdauer von etwa <strong>{payback} Monaten</strong> und
     einem Payback von <strong>{payback} Monaten</strong>.
   </p>
   <p>
-    <strong>ROI-Herleitung (Beispielrechnung):</strong> Bei €{einsparung}/Monat Zeitersparnis × 12 Monate = <strong>€{einsparung*12:,} jährliche Ersparnis</strong>.
-    Bei einer Investition von €{capex:,} ergibt die Berechnung (Jahresersparnis / Investition × 100) einen ROI von <strong>{roi_12m_raw}%</strong>.{f' <strong>Planwert (gedeckelt): {roi_12m}%</strong> (konservative Obergrenze).' if roi_was_capped else ''}
+    <strong>ROI-Herleitung (Beispielrechnung):</strong> Bei {einsparung_fmt}&nbsp;€/Monat Zeitersparnis × 12 Monate = <strong>{einsparung_jahr_fmt}&nbsp;€ jährliche Ersparnis</strong>.
+    Bei einer Investition von {capex_fmt}&nbsp;€ ergibt die Berechnung (Jahresersparnis / Investition × 100) einen ROI von <strong>{roi_12m_raw}%</strong>.{f' <strong>Planwert (gedeckelt): {roi_12m}%</strong> (konservative Obergrenze).' if roi_was_capped else ''}
     Diese transparente Kalkulation bildet eine
     solide Grundlage für die Bewertung der Förderwürdigkeit durch öffentliche Stellen.
   </p>
@@ -9508,7 +9517,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     klar erkennbar und der Eigenbeitrag grundsätzlich tragfähig. Fördermittel können diese Situation zusätzlich verbessern,
     indem sie einen Teil der Investitionsbelastung abfedern. {budget_hinweis}. Die Kombination aus nachvollziehbarem
     Business Case und klarem Digitalisierungsfokus macht Ihr Vorhaben zu einem starken Kandidaten für öffentliche Förderung.
-    Die Investition von {capex}&nbsp;€ amortisiert sich bei einer monatlichen Einsparung von {einsparung}&nbsp;€ nach etwa
+    Die Investition von {capex_fmt}&nbsp;€ amortisiert sich bei einer monatlichen Einsparung von {einsparung_fmt}&nbsp;€ nach etwa
     {payback} Monaten. Der ROI von {roi_12m}&nbsp;% zeigt, dass sich das Projekt auch ohne externe Unterstützung wirtschaftlich
     rechnet – mit Förderung wird die Rentabilität noch deutlich attraktiver. Fördergeber bewerten positiv, wenn Unternehmen
     einen substanziellen Eigenanteil einbringen und das Projekt auch ohne Förderung wirtschaftlich tragfähig erscheint.
@@ -9519,7 +9528,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Viele Programme in {bundesland} und auf Bundesebene unterstützen KI- und Digitalisierungsinitiativen, indem sie einen
     Teil der förderfähigen Investitionskosten bezuschussen. Je nach Programm, Unternehmensgröße und Projektschwerpunkt
     bewegen sich die Zuschussquoten typischerweise im Bereich von etwa <strong>30–50&nbsp;%</strong> der anerkannten Kosten.
-    Für ein Investitionsvolumen von {capex}&nbsp;€ könnte das eine Entlastung von mehreren tausend Euro bedeuten.
+    Für ein Investitionsvolumen von {capex_fmt}&nbsp;€ könnte das eine Entlastung von mehreren tausend Euro bedeuten.
   </p>
   <ul>
     <li><strong>Kürzere Amortisationsdauer:</strong> Durch eine Beteiligung an den Investitionskosten sinkt der Eigenanteil;
@@ -9530,7 +9539,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
       das Doppelte erhöhen. Dies macht das Projekt noch attraktiver für interne Budgetentscheidungen.</li>
     <li><strong>Reduziertes finanzielles Risiko:</strong> Für <strong>{size_label}</strong> kann ein Zuschuss den Schritt
       in ein ambitionierteres Projekt erleichtern, ohne die Liquidität unnötig zu belasten. Die laufenden Kosten von
-      {opex}&nbsp;€/Monat bleiben dabei tragbar und werden durch die monatliche Einsparung überkompensiert.</li>
+      {opex_fmt}&nbsp;€/Monat bleiben dabei tragbar und werden durch die monatliche Einsparung überkompensiert.</li>
     <li><strong>Mehr Spielraum für Qualität und Schulung:</strong> Einsparungen durch Förderung können genutzt werden,
       um zusätzliche Maßnahmen für Qualität, Sicherheit oder Qualifizierung vorzusehen. Dies erhöht die Nachhaltigkeit
       des Projekts und verbessert die langfristige Wirkung.</li>
@@ -9576,7 +9585,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
       <strong>{size_label}</strong> und <strong>{hauptleistung or "Ihrem Vorhaben"}</strong> passen. Prüfen Sie dabei
       sowohl Landes- als auch Bundesprogramme sowie mögliche EU-Förderungen.</li>
     <li><strong>Projektbeschreibung:</strong> Erstellen Sie eine kompakte Projektbeschreibung mit Zielen, Maßnahmen,
-      Zeitplan, erwarteter Nutzen und groben Kosten mit Bezug auf die berechneten {capex}&nbsp;€. Eine klare
+      Zeitplan, erwarteter Nutzen und groben Kosten mit Bezug auf die berechneten {capex_fmt}&nbsp;€. Eine klare
       Beschreibung der Innovationskomponente stärkt den Antrag.</li>
     <li><strong>Kumulierungsprüfung:</strong> Prüfen Sie, ob Programme aus {bundesland} mit Bundes- oder EU-Programmen
       kombiniert werden dürfen. Bei geschickter Kombination lassen sich höhere Gesamtförderquoten erreichen.</li>
