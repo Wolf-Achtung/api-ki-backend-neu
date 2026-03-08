@@ -9400,6 +9400,15 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     capex: int = int(briefing.get("CAPEX_REALISTISCH_EUR") or 5000)
     opex: int = int(briefing.get("OPEX_REALISTISCH_EUR") or 150)
     einsparung: int = int(briefing.get("EINSPARUNG_MONAT_EUR") or 500)
+    # FIX-B-EUR: Pre-format EUR values for templates (German dot separator)
+    def _fmt_eur_foerder(v: int) -> str:
+        return f"{v:,}".replace(",", ".")
+    capex_fmt: str = _fmt_eur_foerder(capex)
+    opex_fmt: str = _fmt_eur_foerder(opex)
+    einsparung_fmt: str = _fmt_eur_foerder(einsparung)
+    einsparung_jahr_fmt: str = _fmt_eur_foerder(einsparung * 12)
+    opex_jahr_fmt: str = _fmt_eur_foerder(opex * 12)
+    capex_45_fmt: str = _fmt_eur_foerder(int(capex * 0.45))
     # SPRINT G2.5 + v14.35.23: Format payback/ROI with 1 decimal, German decimals for DE
     payback_raw: float = float(briefing.get("PAYBACK_MONTHS") or 10)
     payback_en: str = f"{float(payback_raw):.1f}" if isinstance(payback_raw, (int, float)) else str(payback_raw)
@@ -9434,12 +9443,12 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   </p>
   <h3>1. Business Case Assessment Without Funding</h3>
   <p>
-    The current business case shows one-time investments of approximately <strong>€{capex}</strong> and ongoing costs of
-    around <strong>€{opex} per month</strong>. The expected monthly relief is approximately <strong>€{einsparung}</strong>,
+    The current business case shows one-time investments of approximately <strong>€{capex:,}</strong> and ongoing costs of
+    around <strong>€{opex:,} per month</strong>. The expected monthly relief is approximately <strong>€{einsparung:,}</strong>,
     leading to an amortization period of about <strong>{payback} months</strong>.
   </p>
   <p>
-    <strong>ROI Calculation Example:</strong> At €{einsparung}/month time savings × 12 months = <strong>€{einsparung*12:,} annual savings</strong>.
+    <strong>ROI Calculation Example:</strong> At €{einsparung:,}/month time savings × 12 months = <strong>€{einsparung*12:,} annual savings</strong>.
     With an investment of €{capex:,}, the calculation (Annual savings / Investment × 100) yields an ROI of <strong>{roi_12m_raw}%</strong>.{f' <strong>Planning value (capped): {roi_12m}%</strong> (conservative ceiling).' if roi_was_capped else ''}
     This transparent calculation provides a solid basis for evaluating funding eligibility.
   </p>
@@ -9447,7 +9456,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   <p>
     Public funding programs typically cover 30-70% of eligible investment costs, depending on company size and project scope.
     This can significantly reduce the capital commitment and accelerate the payback period. For your project, a funding rate of
-    40-50% could reduce the effective initial investment by €{int(capex * 0.45)}, improving ROI to well over 100% in the first year.
+    40-50% could reduce the effective initial investment by €{int(capex * 0.45):,}, improving ROI to well over 100% in the first year.
   </p>
   <h3>3. EU Funding Opportunities</h3>
   <ul>
@@ -9492,14 +9501,14 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
 
   <h3>1. Einordnung des Business Case ohne Förderung</h3>
   <p>
-    Der aktuelle Business Case zeigt einmalige Investitionen von etwa <strong>{capex}&nbsp;€</strong> sowie laufende Kosten von
-    rund <strong>{opex}&nbsp;€ pro Monat</strong>. Die erwartete monatliche Entlastung liegt bei ungefähr
-    <strong>{einsparung}&nbsp;€</strong>, was zu einer Amortisationsdauer von etwa <strong>{payback} Monaten</strong> und
+    Der aktuelle Business Case zeigt einmalige Investitionen von etwa <strong>{capex_fmt}&nbsp;€</strong> sowie laufende Kosten von
+    rund <strong>{opex_fmt}&nbsp;€ pro Monat</strong>. Die erwartete monatliche Entlastung liegt bei ungefähr
+    <strong>{einsparung_fmt}&nbsp;€</strong>, was zu einer Amortisationsdauer von etwa <strong>{payback} Monaten</strong> und
     einem Payback von <strong>{payback} Monaten</strong>.
   </p>
   <p>
-    <strong>ROI-Herleitung (Beispielrechnung):</strong> Bei €{einsparung}/Monat Zeitersparnis × 12 Monate = <strong>€{einsparung*12:,} jährliche Ersparnis</strong>.
-    Bei einer Investition von €{capex:,} ergibt die Berechnung (Jahresersparnis / Investition × 100) einen ROI von <strong>{roi_12m_raw}%</strong>.{f' <strong>Planwert (gedeckelt): {roi_12m}%</strong> (konservative Obergrenze).' if roi_was_capped else ''}
+    <strong>ROI-Herleitung (Beispielrechnung):</strong> Bei {einsparung_fmt}&nbsp;€/Monat Zeitersparnis × 12 Monate = <strong>{einsparung_jahr_fmt}&nbsp;€ jährliche Ersparnis</strong>.
+    Bei einer Investition von {capex_fmt}&nbsp;€ ergibt die Berechnung (Jahresersparnis / Investition × 100) einen ROI von <strong>{roi_12m_raw}%</strong>.{f' <strong>Planwert (gedeckelt): {roi_12m}%</strong> (konservative Obergrenze).' if roi_was_capped else ''}
     Diese transparente Kalkulation bildet eine
     solide Grundlage für die Bewertung der Förderwürdigkeit durch öffentliche Stellen.
   </p>
@@ -9508,7 +9517,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     klar erkennbar und der Eigenbeitrag grundsätzlich tragfähig. Fördermittel können diese Situation zusätzlich verbessern,
     indem sie einen Teil der Investitionsbelastung abfedern. {budget_hinweis}. Die Kombination aus nachvollziehbarem
     Business Case und klarem Digitalisierungsfokus macht Ihr Vorhaben zu einem starken Kandidaten für öffentliche Förderung.
-    Die Investition von {capex}&nbsp;€ amortisiert sich bei einer monatlichen Einsparung von {einsparung}&nbsp;€ nach etwa
+    Die Investition von {capex_fmt}&nbsp;€ amortisiert sich bei einer monatlichen Einsparung von {einsparung_fmt}&nbsp;€ nach etwa
     {payback} Monaten. Der ROI von {roi_12m}&nbsp;% zeigt, dass sich das Projekt auch ohne externe Unterstützung wirtschaftlich
     rechnet – mit Förderung wird die Rentabilität noch deutlich attraktiver. Fördergeber bewerten positiv, wenn Unternehmen
     einen substanziellen Eigenanteil einbringen und das Projekt auch ohne Förderung wirtschaftlich tragfähig erscheint.
@@ -9519,7 +9528,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Viele Programme in {bundesland} und auf Bundesebene unterstützen KI- und Digitalisierungsinitiativen, indem sie einen
     Teil der förderfähigen Investitionskosten bezuschussen. Je nach Programm, Unternehmensgröße und Projektschwerpunkt
     bewegen sich die Zuschussquoten typischerweise im Bereich von etwa <strong>30–50&nbsp;%</strong> der anerkannten Kosten.
-    Für ein Investitionsvolumen von {capex}&nbsp;€ könnte das eine Entlastung von mehreren tausend Euro bedeuten.
+    Für ein Investitionsvolumen von {capex_fmt}&nbsp;€ könnte das eine Entlastung von mehreren tausend Euro bedeuten.
   </p>
   <ul>
     <li><strong>Kürzere Amortisationsdauer:</strong> Durch eine Beteiligung an den Investitionskosten sinkt der Eigenanteil;
@@ -9530,7 +9539,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
       das Doppelte erhöhen. Dies macht das Projekt noch attraktiver für interne Budgetentscheidungen.</li>
     <li><strong>Reduziertes finanzielles Risiko:</strong> Für <strong>{size_label}</strong> kann ein Zuschuss den Schritt
       in ein ambitionierteres Projekt erleichtern, ohne die Liquidität unnötig zu belasten. Die laufenden Kosten von
-      {opex}&nbsp;€/Monat bleiben dabei tragbar und werden durch die monatliche Einsparung überkompensiert.</li>
+      {opex_fmt}&nbsp;€/Monat bleiben dabei tragbar und werden durch die monatliche Einsparung überkompensiert.</li>
     <li><strong>Mehr Spielraum für Qualität und Schulung:</strong> Einsparungen durch Förderung können genutzt werden,
       um zusätzliche Maßnahmen für Qualität, Sicherheit oder Qualifizierung vorzusehen. Dies erhöht die Nachhaltigkeit
       des Projekts und verbessert die langfristige Wirkung.</li>
@@ -9576,7 +9585,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
       <strong>{size_label}</strong> und <strong>{hauptleistung or "Ihrem Vorhaben"}</strong> passen. Prüfen Sie dabei
       sowohl Landes- als auch Bundesprogramme sowie mögliche EU-Förderungen.</li>
     <li><strong>Projektbeschreibung:</strong> Erstellen Sie eine kompakte Projektbeschreibung mit Zielen, Maßnahmen,
-      Zeitplan, erwarteter Nutzen und groben Kosten mit Bezug auf die berechneten {capex}&nbsp;€. Eine klare
+      Zeitplan, erwarteter Nutzen und groben Kosten mit Bezug auf die berechneten {capex_fmt}&nbsp;€. Eine klare
       Beschreibung der Innovationskomponente stärkt den Antrag.</li>
     <li><strong>Kumulierungsprüfung:</strong> Prüfen Sie, ob Programme aus {bundesland} mit Bundes- oder EU-Programmen
       kombiniert werden dürfen. Bei geschickter Kombination lassen sich höhere Gesamtförderquoten erreichen.</li>
@@ -17870,6 +17879,69 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         if _r57_count > 0:
             log.info(f'[FIX-R5-7] Replaced Stunden/Woche→Monat in {_r57_count} sections (canonical={_canon_h_display}h/Mo)')
 
+        # =================================================================
+        # [FIX-C1] Enforce canonical KPI values in KI_STACK_SUMMARY_HTML.
+        # The LLM sometimes ignores the injected {{ROI_CAPPED_PCT}} and
+        # {{ROI_STUNDEN_MONAT}} template variables and generates its own
+        # values (e.g. 134% raw ROI instead of 200% capped, or 18h from
+        # a legacy fallback instead of the canonical 36h).
+        # This post-processor overwrites the kpi-value spans with the
+        # single-source-of-truth canonical values.
+        # =================================================================
+        _ki_stack_html = sections.get('KI_STACK_SUMMARY_HTML', '')
+        if _ki_stack_html and isinstance(_ki_stack_html, str) and 'kpi-value' in _ki_stack_html:
+            import re as _re_c1
+            _c1_changed = False
+            _c1_roi = sections.get('ROI_12M_DISPLAY_DE') or sections.get('ROI_12M') or sections.get('ROI_CAPPED_PCT', '')
+            _c1_hours = _canon_h_display  # already computed above for FIX-R5-7
+            _c1_payback = sections.get('PAYBACK_MONTHS_FMT_DE', '')
+
+            # Clean ROI value to integer string
+            try:
+                _c1_roi_int = str(int(float(str(_c1_roi).replace(',', '.').replace('%', '').strip())))
+            except (ValueError, TypeError):
+                _c1_roi_int = ''
+
+            # Clean payback to German format (e.g. "1,6")
+            try:
+                _c1_pb_val = float(str(_c1_payback).replace(',', '.'))
+                _c1_pb_fmt = f"{_c1_pb_val:.1f}".replace('.', ',')
+            except (ValueError, TypeError):
+                _c1_pb_fmt = str(_c1_payback)
+
+            # Match kpi-label followed (possibly with intervening HTML) by kpi-value
+            _c1_pattern = _re_c1.compile(
+                r'(<span[^>]*class="kpi-label"[^>]*>([^<]+)</span>'   # label
+                r'[\s\S]{0,200}?'                                     # gap
+                r'<span[^>]*class="kpi-value"[^>]*>)([^<]+)(</span>)',  # value
+                _re_c1.IGNORECASE,
+            )
+
+            def _c1_replace_full(m):
+                label_text = m.group(2).strip().lower()
+                old_value = m.group(3)
+                prefix = m.group(1)
+                suffix = m.group(4)
+                if 'roi' in label_text and _c1_roi_int:
+                    new_val = f'{_c1_roi_int}%'
+                elif 'payback' in label_text and _c1_pb_fmt:
+                    new_val = f'{_c1_pb_fmt} Monate'
+                elif ('zeit' in label_text or 'stunden' in label_text or 'hours' in label_text or 'ersparnis' in label_text) and _c1_hours:
+                    new_val = f'{_c1_hours} Stunden/Monat'
+                else:
+                    return m.group(0)
+                return prefix + new_val + suffix
+
+            _ki_stack_new = _c1_pattern.sub(_c1_replace_full, _ki_stack_html)
+            if _ki_stack_new != _ki_stack_html:
+                sections['KI_STACK_SUMMARY_HTML'] = _ki_stack_new
+                sections['ki_stack_summary'] = _ki_stack_new
+                _c1_changed = True
+                log.info(f'[FIX-C1] Enforced canonical KPIs in KI_STACK_SUMMARY_HTML '
+                         f'(ROI={_c1_roi_int}%, hours={_c1_hours}h/Mo, payback={_c1_pb_fmt})')
+            else:
+                log.info('[FIX-C1] KI_STACK_SUMMARY_HTML kpi-value spans already match canonical values (or pattern not found)')
+
     except Exception as e:
         log.warning(f"[{run_id}] ⚠️ [CANONICAL-BC] Failed to inject canonical values: {e}")
 
@@ -19450,6 +19522,11 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             }
             _b43b_hidden = 0
             for _b43b_key in list(sections.keys()):
+                # FIX-B43b-GUARD: Only process _HTML content sections, never scalar
+                # metadata (report_id, score_governance, BRANCHE_LABEL, etc.)
+                # which are short strings that must NOT be emptied.
+                if not _b43b_key.endswith("_HTML"):
+                    continue
                 if _b43b_key in _B43B_ALLOW_SHORT or _b43b_key.startswith("_"):
                     continue
                 _b43b_val = sections[_b43b_key]
