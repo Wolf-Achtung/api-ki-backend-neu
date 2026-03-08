@@ -1030,8 +1030,8 @@ def render(briefing_obj: Any,
         # Check for "2." or "3." without content (just number + whitespace)
         _monet = re.sub(r'<(?:li|p|div)[^>]*>\s*2\.\s*</(?:li|p|div)>', '', _monet, flags=re.I)
         _monet = re.sub(r'<(?:li|p|div)[^>]*>\s*3\.\s*</(?:li|p|div)>', '', _monet, flags=re.I)
-        # Also remove bare "2." or "3." not in tags
-        _monet = re.sub(r'(?<=>)\s*[23]\.\s*(?=<)', '', _monet)
+        # Also remove bare "2." or "3." not in tags (not followed by digits = not EUR thousands)
+        _monet = re.sub(r'(?<=>)\s*[23]\.(?!\d)\s*(?=<)', '', _monet)
         ctx['MONETARISIERUNG_HTML'] = _monet
         log.info("[W6] Cleaned empty pricing model numbers from MONETARISIERUNG")
 
@@ -1154,9 +1154,10 @@ def render(briefing_obj: Any,
     _y_monet = ctx.get('MONETARISIERUNG_HTML', '')
     if isinstance(_y_monet, str) and _y_monet:
         # Remove any <li>, <p>, <div> that contains ONLY a number like "2." or "3."
-        _y_monet = re.sub(r'<(li|p|div)[^>]*>\s*\d+\.\s*</(li|p|div)>', '', _y_monet, flags=re.I)
-        # Remove bare "N." between tags
-        _y_monet = re.sub(r'(?<=>)\s*\d+\.\s*(?=<)', '', _y_monet)
+        # Negative lookahead (?!\d) prevents matching EUR thousands separators like "19.200"
+        _y_monet = re.sub(r'<(li|p|div)[^>]*>\s*\d+\.(?!\d)\s*</(li|p|div)>', '', _y_monet, flags=re.I)
+        # Remove bare "N." between tags (not followed by digits = not a thousands separator)
+        _y_monet = re.sub(r'(?<=>)\s*\d+\.(?!\d)\s*(?=<)', '', _y_monet)
         # If after cleanup less than 30 chars of text remain, hide entirely
         _y_monet_text = re.sub(r'<[^>]+>', '', _y_monet).strip()
         _y_monet_content = re.sub(r'[\d\.\s,;:\-]+', '', _y_monet_text).strip()
