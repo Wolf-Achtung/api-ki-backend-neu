@@ -19450,6 +19450,11 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             }
             _b43b_hidden = 0
             for _b43b_key in list(sections.keys()):
+                # FIX-B43b-GUARD: Only process _HTML content sections, never scalar
+                # metadata (report_id, score_governance, BRANCHE_LABEL, etc.)
+                # which are short strings that must NOT be emptied.
+                if not _b43b_key.endswith("_HTML"):
+                    continue
                 if _b43b_key in _B43B_ALLOW_SHORT or _b43b_key.startswith("_"):
                     continue
                 _b43b_val = sections[_b43b_key]
