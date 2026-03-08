@@ -2072,6 +2072,13 @@ def business_case_report_to_html(
             "summary_title": "Assessment",
             "funding_note": "Funding effect",
         }
+        kpi_key_labels = {
+            "roi": "ROI",
+            "payback_progress": "Payback Progress",
+            "time_savings_hours": "Time Savings",
+            "monthly_savings": "Monthly Savings",
+            "automation_rate": "Automation Rate",
+        }
     else:
         # Fix-Batch J2: 100% German labels
         labels = {
@@ -2089,6 +2096,13 @@ def business_case_report_to_html(
             "kpi_12m": "12-Monats-Ziele",
             "summary_title": "Bewertung",
             "funding_note": "Fördereffekt",
+        }
+        kpi_key_labels = {
+            "roi": "ROI",
+            "payback_progress": "Amortisierung",
+            "time_savings_hours": "Zeitersparnis",
+            "monthly_savings": "Monatl. Ersparnis",
+            "automation_rate": "Automatisierungsgrad",
         }
 
     # Scenario colors
@@ -2173,7 +2187,7 @@ def business_case_report_to_html(
             for key, value in list(report.kpi_targets_6m.items())[:4]:
                 # FIX-B17: Cap ROI KPI values at MAX_ROI for consistency
                 _kpi_val = min(MAX_ROI, value) if "roi" in key.lower() else value
-                display_key = key.replace("_", " ").title()
+                display_key = kpi_key_labels.get(key, key.replace("_", " ").title())
                 unit = "%" if "roi" in key or "rate" in key or "progress" in key else ("h" if "hours" in key else "€")
                 html_parts.append(f'''
                     <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:10pt;">
@@ -2192,7 +2206,7 @@ def business_case_report_to_html(
             for key, value in list(report.kpi_targets_12m.items())[:4]:
                 # FIX-B17: Cap ROI KPI values at MAX_ROI for consistency
                 _kpi_val = min(MAX_ROI, value) if "roi" in key.lower() else value
-                display_key = key.replace("_", " ").title()
+                display_key = kpi_key_labels.get(key, key.replace("_", " ").title())
                 unit = "%" if "roi" in key or "rate" in key or "progress" in key else ("h" if "hours" in key else "€")
                 html_parts.append(f'''
                     <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:10pt;">
