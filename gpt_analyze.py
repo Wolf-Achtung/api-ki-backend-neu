@@ -11636,7 +11636,7 @@ Für jede Kategorie: 2-3 Standard-Prompts'''
   </ul>
 </div>""",
         "gamechanger_decision": f"""<div class="gamechanger-decision-fallback">
-  <h3>Gamechanger-Analyse: Strategische Transformation</h3>
+  <h3>KI-Potenzial-Analyse: Strategische Transformation</h3>
   <p class="context-label"><em>{branch_core_label}</em></p>
   <p>
     Für <strong>{size_label or "Ihr Unternehmen"}</strong> im Bereich <strong>{branche}</strong>
@@ -14309,7 +14309,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                         '<p style="margin:0; font-size:0.95em; color:#334155;">'
                         '<strong>KI-Systemlandschaft:</strong> Die empfohlenen Tools, Integrationen und '
                         f'Implementierungsschritte für {_hl[:60]} finden Sie im Detail in der '
-                        'Gamechanger-Analyse und im Starter-Kit weiter unten in diesem Report.'
+                        'KI-Potenzial-Analyse und im Starter-Kit weiter unten in diesem Report.'
                         '</p></div>'
                     )
                     sections["KI_STACK_SUMMARY_HTML"] = _ks_new
@@ -16116,13 +16116,20 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     try:
         import re as _re
         _bc_html = sections.get('BUSINESS_CASE_HTML', '')
-        _capex = sections.get('CAPEX_REALISTISCH_EUR', '5.000')
-        _opex = sections.get('OPEX_REALISTISCH_EUR', '350')
-        _einsparung = sections.get('EINSPARUNG_MONAT_EUR', '3.420')
+        # FIX-B: Helper for German EUR formatting (numeric → "1.600")
+        def _fmt_eur_safe(v) -> str:
+            try:
+                n = float(str(v).replace(',', '.')) if not isinstance(v, (int, float)) else float(v)
+                return f"{int(n):,}".replace(",", ".")
+            except (ValueError, TypeError):
+                return str(v)
+        _capex = _fmt_eur_safe(sections.get('CAPEX_REALISTISCH_EUR', 5000))
+        _opex = _fmt_eur_safe(sections.get('OPEX_REALISTISCH_EUR', 350))
+        _einsparung = _fmt_eur_safe(sections.get('EINSPARUNG_MONAT_EUR', 3420))
         _roi = sections.get('ROI_12M_RATE', '200')
         _pb_raw = sections.get('PAYBACK_MONTHS', '1,6')
-        _hours = sections.get('CANON_HOURS_MONTH', '36')
-        _rate = sections.get('CANON_RATE_EUR', '95')
+        _hours = str(int(float(str(sections.get('CANON_HOURS_MONTH', 36)).replace(',', '.'))))
+        _rate = str(int(float(str(sections.get('CANON_RATE_EUR', 95)).replace(',', '.'))))
         _bundesland = sections.get('BUNDESLAND_LABEL', 'Ihrem Bundesland')
         try:
             _pb = f"{float(str(_pb_raw).replace(',', '.')):.1f}".replace('.', ',')
@@ -17462,8 +17469,22 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                         # FIX-B726-COMPACT: Remove appendix sections for compact reports
                         # Template-Conditionals sind unzuverlaessig (bool/string mismatch)
                         # Deshalb hier die Sections auf HTML-Kommentar setzen (nicht leeren, sonst HARD STOP)
+                        # GUARD: Only _HTML keys, only string values — never touch scalar template vars
                         # =================================================================
                         try:
+                            # FIX-A: Preserve critical template metadata BEFORE compact processing
+                            _meta_preserve_keys = [
+                                "report_id", "report_date", "report_year",
+                                "score_governance", "score_sicherheit", "score_nutzen",
+                                "score_wertschoepfung", "score_befaehigung", "score_gesamt",
+                                "score_rating", "BRANCHE_LABEL", "BUNDESLAND_LABEL",
+                                "UNTERNEHMENSGROESSE_LABEL", "AI_ACT_RISK_LEVEL",
+                                "REPORT_SUBTITLE", "kundencode", "BUILD_STAMP",
+                                "CANONICAL_GOVERNANCE", "CANONICAL_SECURITY", "CANONICAL_OVERALL",
+                                "hauptleistung", "HAUPTLEISTUNG", "COMPANY_SIZE",
+                            ]
+                            _meta_snapshot = {k: sections[k] for k in _meta_preserve_keys if k in sections}
+
                             _compact_size = sections.get("COMPANY_SIZE", "") or ""
                             _compact_mode = sections.get("COMPACT_REPORT_MODE", False)
                             # Force compact for solo, team, kmu
@@ -17490,12 +17511,33 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                                         "DECISION_CONFIDENCE_HTML",
                                     ]
                                 _compact_removed = 0
+                                _compact_skipped = []
                                 for _ck in _compact_remove:
-                                        if sections.get(_ck):
+                                        # GUARD: Only process _HTML string sections
+                                        if not _ck.endswith("_HTML"):
+                                            _compact_skipped.append(_ck)
+                                            continue
+                                        _cv = sections.get(_ck)
+                                        if _cv and isinstance(_cv, str):
                                             sections[_ck] = "<!-- removed-by-compact -->"
                                             _compact_removed += 1
+                                if _compact_skipped:
+                                    log.warning("[FIX-B726-COMPACT] GUARD: Skipped %d non-HTML keys: %s", len(_compact_skipped), _compact_skipped)
                                 sections["COMPACT_REPORT_MODE"] = True
                                 log.info("[FIX-B726-COMPACT] Removed %d appendix sections for %s", _compact_removed, _compact_size)
+
+                            # FIX-A: Restore critical template metadata after compact processing
+                            _meta_restored = 0
+                            for _mk, _mv in _meta_snapshot.items():
+                                if _mk not in sections or sections[_mk] is None or sections[_mk] == "":
+                                    sections[_mk] = _mv
+                                    _meta_restored += 1
+                                elif isinstance(_mv, (int, float)) and isinstance(sections.get(_mk), str) and sections[_mk] == "<!-- removed-by-compact -->":
+                                    # Scalar was accidentally overwritten with HTML placeholder
+                                    sections[_mk] = _mv
+                                    _meta_restored += 1
+                            if _meta_restored > 0:
+                                log.warning("[FIX-B726-COMPACT] RESTORED %d template metadata keys after compact", _meta_restored)
                         except Exception as _c726_err:
                             log.warning("[FIX-B726-COMPACT] Error: %s", _c726_err)
 
@@ -17695,9 +17737,16 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         if bc_html and isinstance(bc_html, str) and len(bc_html) > 50:
             # FIX-R5-1: Read from answers first (has canonical values earlier),
             # fall back to sections (which canonical injection already updated above).
-            _bc_capex = str(sections.get('CAPEX_REALISTISCH_EUR', '5.000'))
-            _bc_opex = str(sections.get('OPEX_REALISTISCH_EUR', '350'))
-            _bc_einsparung = str(sections.get('EINSPARUNG_MONAT_EUR', '3.420'))
+            # FIX-B: Use safe EUR formatter — handles int, float, and pre-formatted strings
+            def _fmt_eur_safe2(v) -> str:
+                try:
+                    n = float(str(v).replace(',', '.')) if not isinstance(v, (int, float)) else float(v)
+                    return f"{int(n):,}".replace(",", ".")
+                except (ValueError, TypeError):
+                    return str(v)
+            _bc_capex = _fmt_eur_safe2(sections.get('CAPEX_REALISTISCH_EUR', 5000))
+            _bc_opex = _fmt_eur_safe2(sections.get('OPEX_REALISTISCH_EUR', 350))
+            _bc_einsparung = _fmt_eur_safe2(sections.get('EINSPARUNG_MONAT_EUR', 3420))
             _bc_roi = str(sections.get('ROI_12M', '200'))
             _bc_payback = str(answers.get('PAYBACK_MONTHS') or sections.get('PAYBACK_MONTHS_FMT_DE', '1,6'))
             _bc_hours = str(answers.get('CANON_HOURS_MONTH') or sections.get('CANON_HOURS_MONTH', '36'))
@@ -17714,13 +17763,12 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 _bc_payback = f"{_pb_val:.1f}".replace('.', ',')
             except (ValueError, TypeError):
                 pass
-            # Format integers with dot-separator for German (5000 → 5.000)
             try:
-                _bc_capex = f"{int(float(str(_bc_capex).replace('.', '').replace(',', '.'))):,}".replace(",", ".")
+                _bc_hours = str(int(float(str(_bc_hours).replace(',', '.'))))
             except (ValueError, TypeError):
                 pass
             try:
-                _bc_einsparung = f"{int(float(str(_bc_einsparung).replace('.', '').replace(',', '.'))):,}".replace(",", ".")
+                _bc_rate = str(int(float(str(_bc_rate).replace(',', '.'))))
             except (ValueError, TypeError):
                 pass
             try:
