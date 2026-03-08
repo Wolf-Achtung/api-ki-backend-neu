@@ -20481,12 +20481,16 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
                 render_report_ready_email(recipient="user", pdf_url=pdf_url, user_email=user_email),
                 attachments=user_attachments
             )
-            if ok: 
+            if ok:
                 log.info("[%s] 📧 Mail sent to user %s via Resend", run_id, _mask_email(user_email))
-            else: 
+                rep.email_sent_user = True
+                rep.email_error_user = None
+            else:
                 log.warning("[%s] ⚠️ MAIL_USER failed: %s", run_id, err)
+                rep.email_error_user = str(err)[:2000] if err else "unknown error"
     except Exception as exc:
         log.warning("[%s] ⚠️ MAIL_USER failed: %s", run_id, exc)
+        rep.email_error_user = str(exc)[:2000]
     
     # Send to admins
     try:
@@ -20512,10 +20516,23 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
                 )
                 if ok:
                     log.info("[%s] 📧 Admin notify sent to %s via Resend", run_id, _mask_email(addr))
+                    rep.email_sent_admin = True
                 else:
                     log.warning("[%s] ⚠️ MAIL_ADMIN failed for %s: %s", run_id, _mask_email(addr), err)
+                    if not rep.email_error_admin:
+                        rep.email_error_admin = str(err)[:2000] if err else "unknown error"
     except Exception as exc:
         log.warning("[%s] ⚠️ MAIL_ADMIN block failed: %s", run_id, exc)
+        if not rep.email_error_admin:
+            rep.email_error_admin = str(exc)[:2000]
+
+    # Persist email_sent / email_error flags
+    try:
+        db.add(rep)
+        db.commit()
+    except Exception as commit_exc:
+        log.warning("[%s] ⚠️ Could not persist email status flags: %s", run_id, commit_exc)
+        db.rollback()
 
 def run_analysis_for_briefing(briefing_id: int, email: Optional[str] = None) -> None:
     """Public API: Start analysis for a briefing (called from routes/briefings.py)"""
