@@ -17461,7 +17461,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                         # =================================================================
                         # FIX-B726-COMPACT: Remove appendix sections for compact reports
                         # Template-Conditionals sind unzuverlaessig (bool/string mismatch)
-                        # Deshalb hier die Sections direkt leeren
+                        # Deshalb hier die Sections auf HTML-Kommentar setzen (nicht leeren, sonst HARD STOP)
                         # =================================================================
                         try:
                             _compact_size = sections.get("COMPANY_SIZE", "") or ""
@@ -17492,7 +17492,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                                 _compact_removed = 0
                                 for _ck in _compact_remove:
                                         if sections.get(_ck):
-                                            sections[_ck] = ""
+                                            sections[_ck] = "<!-- removed-by-compact -->"
                                             _compact_removed += 1
                                 sections["COMPACT_REPORT_MODE"] = True
                                 log.info("[FIX-B726-COMPACT] Removed %d appendix sections for %s", _compact_removed, _compact_size)
