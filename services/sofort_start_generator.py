@@ -1144,7 +1144,7 @@ def generate_sofort_start_html(
                 <div style="font-size: 11px; color: #64748b;">pro Jahr</div>
             </div>
             <div style="background: white; border-radius: 6px; padding: 12px;">
-                <div style="font-size: 24px; font-weight: 700; color: #166534;">{savings['net_savings']:,}€</div>
+                <div style="font-size: 24px; font-weight: 700; color: #166534;">{f"{savings['net_savings']:,}".replace(",", ".")}€</div>
                 <div style="font-size: 11px; color: #64748b;">Netto-Ersparnis*</div>
             </div>
         </div>
@@ -1339,7 +1339,7 @@ def generate_entscheidungsvorlage_html(
             <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Erwarteter Nutzen:</h4>
             <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
                 <li>Zeitersparnis: ca. {savings['hours_per_week']} Stunden/Woche</li>
-                <li>Jährliche Ersparnis: ca. {savings['net_savings']:,}€ (netto)</li>
+                <li>Jährliche Ersparnis: ca. {f"{savings['net_savings']:,}".replace(",", ".")}€ (netto)</li>
                 <li>Qualitätssteigerung bei Routineaufgaben</li>
             </ul>
             
