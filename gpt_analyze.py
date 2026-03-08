@@ -20522,6 +20522,61 @@ def run_analysis_for_briefing(briefing_id: int, email: Optional[str] = None) -> 
     run_async(briefing_id, email)
 
 
+def _auto_trigger_potenzialanalyse(briefing_id: int, run_id: str) -> None:
+    """
+    Auto-trigger KI-Potenzial-Analyse after Report 1 completion (fire-and-forget).
+
+    Generates the Deep Dive HTML, renders PDF, and sends via email.
+    Runs in a background thread so Report 1 pipeline is never blocked.
+    """
+    import threading
+
+    def _run(bid: int, rid: str) -> None:
+        _tag = f"AUTO-POTENZIALANALYSE-{bid}"
+        try:
+            log.info("[%s] Triggering for briefing_id=%d run=%s", _tag, bid, rid)
+
+            from services.gamechanger_deep_dive import generate_gamechanger_report
+            result = generate_gamechanger_report(bid)
+            html = result.get("html", "")
+            if not html:
+                log.warning("[%s] Empty HTML, skipping PDF+email", _tag)
+                return
+
+            from services.pdf_client import render_pdf_from_html
+            pdf_options = {
+                "format": "A4",
+                "printBackground": True,
+                "displayHeaderFooter": False,
+                "margin": {"top": "12mm", "right": "12mm", "bottom": "12mm", "left": "12mm"},
+            }
+            pdf_result = render_pdf_from_html(
+                html=html,
+                meta={"briefing_id": bid, "report_type": "gamechanger_deep_dive"},
+                pdf_options=pdf_options,
+            )
+
+            pdf_bytes = pdf_result.get("pdf_bytes")
+            if not pdf_bytes:
+                log.warning("[%s] PDF render failed: %s", _tag, pdf_result.get("error"))
+                return
+
+            log.info("[%s] PDF generated: %d bytes", _tag, len(pdf_bytes))
+
+            # Send email using existing helper from routes/report.py
+            from routes.report import _send_deep_dive_email
+            _send_deep_dive_email(bid, pdf_bytes)
+
+            log.info("[%s] ✅ Complete for briefing_id=%d", _tag, bid)
+        except Exception as exc:
+            log.error("[%s] ❌ Failed: %s", _tag, exc, exc_info=True)
+            # Never propagate — Report 1 must not be affected
+
+    thread = threading.Thread(target=_run, args=(briefing_id, run_id), daemon=True)
+    thread.start()
+    log.info("[AUTO-POTENZIALANALYSE] Background thread started for briefing_id=%d run=%s", briefing_id, run_id)
+
+
 def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = None, run_id: Optional[str] = None) -> None:
     """
     Execute the full briefing analysis pipeline (LLM + PDF + Email).
@@ -20652,6 +20707,12 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
         # Pass debug_attachments (bytes) directly - NOT stored in DB/meta
         _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id, meta=meta, debug_attachments=debug_attachments)
 
+        # === AUTO-TRIGGER: KI-Potenzial-Analyse (fire-and-forget) ===
+        try:
+            _auto_trigger_potenzialanalyse(briefing_id, run_id)
+        except Exception as e:
+            log.error("[%s] Auto-Potenzialanalyse trigger failed to start: %s", run_id, e)
+
         log.info("[%s] ✅ Pipeline complete for briefing_id=%s", run_id, briefing_id)
 
     except Exception as exc:
@@ -20770,6 +20831,12 @@ def run_async(
 
         # Pass debug_attachments (bytes) directly - NOT stored in DB/meta
         _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id, meta=meta, debug_attachments=debug_attachments)
+
+        # === AUTO-TRIGGER: KI-Potenzial-Analyse (fire-and-forget) ===
+        try:
+            _auto_trigger_potenzialanalyse(briefing_id, run_id)
+        except Exception as e:
+            log.error("[%s] Auto-Potenzialanalyse trigger failed to start: %s", run_id, e)
 
     except Exception as exc:
         log.error("[%s] ❌ Analysis failed: %s", run_id, exc, exc_info=True)
