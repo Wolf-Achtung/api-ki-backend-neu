@@ -211,6 +211,49 @@ def claim_next_briefing(db: Session) -> Optional[Briefing]:
         return None
 
 
+def _send_admin_error_alert(briefing: Briefing, error_msg: str, run_id: str) -> None:
+    """Send admin email alert when a briefing pipeline fails."""
+    try:
+        from gpt_analyze import _send_email_via_resend, _admin_recipients, _mask_email
+    except ImportError:
+        log.warning("[%s] Cannot import email helpers for admin alert", run_id)
+        return
+
+    if os.getenv("DISABLE_EMAILS", "").lower() in ("1", "true", "yes", "on"):
+        return
+
+    answers = getattr(briefing, "answers", {}) or {}
+    company_size = answers.get("unternehmensgroesse", "unknown")
+    user_email = ""
+    if briefing.user_id and briefing.user:
+        user_email = getattr(briefing.user, "email", "") or ""
+
+    subject = f"Report-Fehler: Briefing #{briefing.id}"
+    body = f"""
+    <div style="font-family:sans-serif;max-width:600px;">
+        <h2 style="color:#dc2626;">Report-Pipeline Fehler</h2>
+        <table style="border-collapse:collapse;width:100%;">
+            <tr><td style="padding:6px;font-weight:bold;">Briefing-ID:</td><td style="padding:6px;">{briefing.id}</td></tr>
+            <tr><td style="padding:6px;font-weight:bold;">Segment:</td><td style="padding:6px;">{company_size}</td></tr>
+            <tr><td style="padding:6px;font-weight:bold;">User-Email:</td><td style="padding:6px;">{user_email or 'N/A'}</td></tr>
+            <tr><td style="padding:6px;font-weight:bold;">Run-ID:</td><td style="padding:6px;">{run_id}</td></tr>
+            <tr><td style="padding:6px;font-weight:bold;">Zeitpunkt:</td><td style="padding:6px;">{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}</td></tr>
+        </table>
+        <div style="margin-top:16px;padding:12px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;">
+            <strong>Fehler:</strong><br>
+            <pre style="white-space:pre-wrap;font-size:12px;">{error_msg[:2000]}</pre>
+        </div>
+    </div>
+    """
+
+    for addr in _admin_recipients():
+        ok, err = _send_email_via_resend(addr, subject, body)
+        if ok:
+            log.info("[%s] Admin error alert sent to %s", run_id, _mask_email(addr))
+        else:
+            log.warning("[%s] Admin error alert failed for %s: %s", run_id, _mask_email(addr), err)
+
+
 def process_briefing(db: Session, briefing: Briefing) -> bool:
     """
     Process a single briefing through the full analysis pipeline.
@@ -258,6 +301,12 @@ def process_briefing(db: Session, briefing: Briefing) -> bool:
         except Exception as db_err:
             log.error("[%s] Failed to update briefing status: %s", run_id, db_err)
             db.rollback()
+
+        # Send admin error notification (fire-and-forget)
+        try:
+            _send_admin_error_alert(briefing, str(e), run_id)
+        except Exception as alert_err:
+            log.warning("[%s] Admin error alert failed: %s", run_id, alert_err)
 
         return False
 
