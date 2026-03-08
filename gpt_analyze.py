@@ -11636,7 +11636,7 @@ Für jede Kategorie: 2-3 Standard-Prompts'''
   </ul>
 </div>""",
         "gamechanger_decision": f"""<div class="gamechanger-decision-fallback">
-  <h3>Gamechanger-Analyse: Strategische Transformation</h3>
+  <h3>KI-Potenzial-Analyse: Strategische Transformation</h3>
   <p class="context-label"><em>{branch_core_label}</em></p>
   <p>
     Für <strong>{size_label or "Ihr Unternehmen"}</strong> im Bereich <strong>{branche}</strong>
@@ -14309,7 +14309,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                         '<p style="margin:0; font-size:0.95em; color:#334155;">'
                         '<strong>KI-Systemlandschaft:</strong> Die empfohlenen Tools, Integrationen und '
                         f'Implementierungsschritte für {_hl[:60]} finden Sie im Detail in der '
-                        'Gamechanger-Analyse und im Starter-Kit weiter unten in diesem Report.'
+                        'KI-Potenzial-Analyse und im Starter-Kit weiter unten in diesem Report.'
                         '</p></div>'
                     )
                     sections["KI_STACK_SUMMARY_HTML"] = _ks_new
