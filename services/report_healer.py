@@ -2111,6 +2111,7 @@ def reduce_redundancy(
         "RECOMMENDATIONS_HTML", "recommendations",
         "VENDOR_AUDIT_HTML",
         "AUTOMATION_ROADMAP_HTML", "BENCHMARK_ENGINE_HTML",
+        "BUSINESS_CASE_ENGINE_HTML",  # FIX-BC-EUR: protect deterministic EUR values
         "BUSINESS_CASE_SIM_HTML", "RISK_ENGINE_HTML",
         "RISK_ENGINE_V3_HTML", "RECOMMENDATIONS_ENGINE_HTML",
         "SOFORT_START_HTML", "CHALLENGE_30_TAGE_HTML",
@@ -3122,7 +3123,8 @@ def apply_segment_budget(
 
         # FIX-B14-ARCH: Engine-generated sections bypass budget trimming
         # FIX-B15: Added SOFORT_START_HTML + CHALLENGE_30_TAGE_HTML (deterministic engine output)
-        BUDGET_EXEMPT_SECTIONS = {"RISKS_HTML", "risks", "GAMECHANGER_HTML", "gamechanger", "RECOMMENDATIONS_HTML", "recommendations", "VENDOR_AUDIT_HTML", "AUTOMATION_ROADMAP_HTML", "BENCHMARK_ENGINE_HTML", "BUSINESS_CASE_SIM_HTML", "RISK_ENGINE_HTML", "RISK_ENGINE_V3_HTML", "RECOMMENDATIONS_ENGINE_HTML", "SOFORT_START_HTML", "CHALLENGE_30_TAGE_HTML"}
+        # FIX-BC-EUR: Added BUSINESS_CASE_ENGINE_HTML — deterministic engine output with precise EUR values
+        BUDGET_EXEMPT_SECTIONS = {"RISKS_HTML", "risks", "GAMECHANGER_HTML", "gamechanger", "RECOMMENDATIONS_HTML", "recommendations", "VENDOR_AUDIT_HTML", "AUTOMATION_ROADMAP_HTML", "BENCHMARK_ENGINE_HTML", "BUSINESS_CASE_ENGINE_HTML", "BUSINESS_CASE_SIM_HTML", "RISK_ENGINE_HTML", "RISK_ENGINE_V3_HTML", "RECOMMENDATIONS_ENGINE_HTML", "SOFORT_START_HTML", "CHALLENGE_30_TAGE_HTML"}
         if section_name in BUDGET_EXEMPT_SECTIONS:
             result[section_name] = html
             continue
