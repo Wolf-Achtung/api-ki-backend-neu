@@ -17879,6 +17879,69 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         if _r57_count > 0:
             log.info(f'[FIX-R5-7] Replaced Stunden/Woche→Monat in {_r57_count} sections (canonical={_canon_h_display}h/Mo)')
 
+        # =================================================================
+        # [FIX-C1] Enforce canonical KPI values in KI_STACK_SUMMARY_HTML.
+        # The LLM sometimes ignores the injected {{ROI_CAPPED_PCT}} and
+        # {{ROI_STUNDEN_MONAT}} template variables and generates its own
+        # values (e.g. 134% raw ROI instead of 200% capped, or 18h from
+        # a legacy fallback instead of the canonical 36h).
+        # This post-processor overwrites the kpi-value spans with the
+        # single-source-of-truth canonical values.
+        # =================================================================
+        _ki_stack_html = sections.get('KI_STACK_SUMMARY_HTML', '')
+        if _ki_stack_html and isinstance(_ki_stack_html, str) and 'kpi-value' in _ki_stack_html:
+            import re as _re_c1
+            _c1_changed = False
+            _c1_roi = sections.get('ROI_12M_DISPLAY_DE') or sections.get('ROI_12M') or sections.get('ROI_CAPPED_PCT', '')
+            _c1_hours = _canon_h_display  # already computed above for FIX-R5-7
+            _c1_payback = sections.get('PAYBACK_MONTHS_FMT_DE', '')
+
+            # Clean ROI value to integer string
+            try:
+                _c1_roi_int = str(int(float(str(_c1_roi).replace(',', '.').replace('%', '').strip())))
+            except (ValueError, TypeError):
+                _c1_roi_int = ''
+
+            # Clean payback to German format (e.g. "1,6")
+            try:
+                _c1_pb_val = float(str(_c1_payback).replace(',', '.'))
+                _c1_pb_fmt = f"{_c1_pb_val:.1f}".replace('.', ',')
+            except (ValueError, TypeError):
+                _c1_pb_fmt = str(_c1_payback)
+
+            # Match kpi-label followed (possibly with intervening HTML) by kpi-value
+            _c1_pattern = _re_c1.compile(
+                r'(<span[^>]*class="kpi-label"[^>]*>([^<]+)</span>'   # label
+                r'[\s\S]{0,200}?'                                     # gap
+                r'<span[^>]*class="kpi-value"[^>]*>)([^<]+)(</span>)',  # value
+                _re_c1.IGNORECASE,
+            )
+
+            def _c1_replace_full(m):
+                label_text = m.group(2).strip().lower()
+                old_value = m.group(3)
+                prefix = m.group(1)
+                suffix = m.group(4)
+                if 'roi' in label_text and _c1_roi_int:
+                    new_val = f'{_c1_roi_int}%'
+                elif 'payback' in label_text and _c1_pb_fmt:
+                    new_val = f'{_c1_pb_fmt} Monate'
+                elif ('zeit' in label_text or 'stunden' in label_text or 'hours' in label_text or 'ersparnis' in label_text) and _c1_hours:
+                    new_val = f'{_c1_hours} Stunden/Monat'
+                else:
+                    return m.group(0)
+                return prefix + new_val + suffix
+
+            _ki_stack_new = _c1_pattern.sub(_c1_replace_full, _ki_stack_html)
+            if _ki_stack_new != _ki_stack_html:
+                sections['KI_STACK_SUMMARY_HTML'] = _ki_stack_new
+                sections['ki_stack_summary'] = _ki_stack_new
+                _c1_changed = True
+                log.info(f'[FIX-C1] Enforced canonical KPIs in KI_STACK_SUMMARY_HTML '
+                         f'(ROI={_c1_roi_int}%, hours={_c1_hours}h/Mo, payback={_c1_pb_fmt})')
+            else:
+                log.info('[FIX-C1] KI_STACK_SUMMARY_HTML kpi-value spans already match canonical values (or pattern not found)')
+
     except Exception as e:
         log.warning(f"[{run_id}] ⚠️ [CANONICAL-BC] Failed to inject canonical values: {e}")
 
