@@ -1583,24 +1583,48 @@ def render(briefing_obj: Any,
                 html
             )
 
-            # FIX 2: OPEX annual line — "{opex}€/Monat × 12 = {VALUE}€"
-            if _bc_opex_m > 0:
-                html = re.sub(
-                    rf'({int(_bc_opex_m)})€/Monat\s*[×x]\s*12\s*=\s*[\d.,]+€',
-                    rf'\1€/Monat × 12 = {_bc_fmt(_bc_opex_annual)}€',
-                    html
-                )
-
-            # FIX 3: Nettonutzen line — recalculate the subtraction result
-            # Pattern: "{jahresersparnis}€ - {capex}€ - {opex_annual}€ = {VALUE}€"
+            # FIX 2: OPEX annual line — structural match for line 3 of ROI-Herleitung
+            # "Abzüglich laufende Jahreskosten: {X}€/Monat × 12 = {Y}€"
+            # Uses structural pattern (not value-specific) because both X and Y
+            # may already be corrupted (e.g., 180→80, 2.160→2.80).
             _j_fmt = _bc_fmt(_bc_jahresersparnis)
             _c_fmt = _bc_fmt(_bc_capex)
             _o_fmt = _bc_fmt(_bc_opex_annual)
+            _opex_m_display = _bc_fmt(_bc_opex_m) if _bc_opex_m >= 1000 else str(int(_bc_opex_m))
+            if _bc_opex_m > 0:
+                html = re.sub(
+                    r'(laufende Jahreskosten:\s*)\d[\d.,]*€/Monat\s*[×x]\s*12\s*=\s*[\d.,]+€',
+                    rf'\g<1>{_opex_m_display}€/Monat × 12 = {_o_fmt}€',
+                    html
+                )
+
+            # FIX 2b: OPEX in "So berechne ich" table — correct monthly display
+            # "Laufende Kosten (OPEX)</td><td ...>{X} €/Monat"
+            if _bc_opex_m > 0:
+                html = re.sub(
+                    r'(Laufende Kosten \(OPEX\)</td>\s*<td[^>]*>)\s*\d[\d.,]*\s*(€/Monat)',
+                    rf'\g<1>{_opex_m_display} \2',
+                    html
+                )
+
+            # FIX 3: Nettonutzen line — structural match for line 4 of ROI-Herleitung
+            # "Nettonutzen: {A}€ - {B}€ - {C}€ = {D}€"
+            # All four values may be corrupted, so match any numbers in this structure.
             html = re.sub(
-                rf'{re.escape(_j_fmt)}€\s*-\s*{re.escape(_c_fmt)}€\s*-\s*{re.escape(_o_fmt)}€\s*=\s*[\d.,]+€',
-                f'{_j_fmt}€ - {_c_fmt}€ - {_o_fmt}€ = {_bc_fmt(_bc_nettonutzen)}€',
+                r'(Nettonutzen:\s*)\d[\d.,]*€\s*-\s*\d[\d.,]*€\s*-\s*\d[\d.,]*€\s*=\s*\d[\d.,]*€',
+                rf'\g<1>{_j_fmt}€ - {_c_fmt}€ - {_o_fmt}€ = {_bc_fmt(_bc_nettonutzen)}€',
                 html
             )
+
+            # FIX 3b: ROI step 5 — "ROI (berechnet): {nettonutzen}€ / {capex}€ × 100 = {X}%"
+            # Ensure numerator matches corrected Nettonutzen
+            if _bc_capex > 0:
+                _roi_raw = (_bc_nettonutzen / _bc_capex) * 100
+                html = re.sub(
+                    r'(ROI \(berechnet\):\s*)\d[\d.,]*€\s*/\s*\d[\d.,]*€\s*[×x]\s*100\s*=\s*\d+%',
+                    rf'\g<1>{_bc_fmt(_bc_nettonutzen)}€ / {_c_fmt}€ × 100 = {_roi_raw:.0f}%',
+                    html
+                )
 
             # FIX 4: Scenario card monthly savings — recalculate from canonical values
             # Cards appear in order: optimistic, realistic, conservative
