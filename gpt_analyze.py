@@ -17462,8 +17462,22 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                         # FIX-B726-COMPACT: Remove appendix sections for compact reports
                         # Template-Conditionals sind unzuverlaessig (bool/string mismatch)
                         # Deshalb hier die Sections auf HTML-Kommentar setzen (nicht leeren, sonst HARD STOP)
+                        # GUARD: Only _HTML keys, only string values — never touch scalar template vars
                         # =================================================================
                         try:
+                            # FIX-A: Preserve critical template metadata BEFORE compact processing
+                            _meta_preserve_keys = [
+                                "report_id", "report_date", "report_year",
+                                "score_governance", "score_sicherheit", "score_nutzen",
+                                "score_wertschoepfung", "score_befaehigung", "score_gesamt",
+                                "score_rating", "BRANCHE_LABEL", "BUNDESLAND_LABEL",
+                                "UNTERNEHMENSGROESSE_LABEL", "AI_ACT_RISK_LEVEL",
+                                "REPORT_SUBTITLE", "kundencode", "BUILD_STAMP",
+                                "CANONICAL_GOVERNANCE", "CANONICAL_SECURITY", "CANONICAL_OVERALL",
+                                "hauptleistung", "HAUPTLEISTUNG", "COMPANY_SIZE",
+                            ]
+                            _meta_snapshot = {k: sections[k] for k in _meta_preserve_keys if k in sections}
+
                             _compact_size = sections.get("COMPANY_SIZE", "") or ""
                             _compact_mode = sections.get("COMPACT_REPORT_MODE", False)
                             # Force compact for solo, team, kmu
@@ -17490,12 +17504,33 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                                         "DECISION_CONFIDENCE_HTML",
                                     ]
                                 _compact_removed = 0
+                                _compact_skipped = []
                                 for _ck in _compact_remove:
-                                        if sections.get(_ck):
+                                        # GUARD: Only process _HTML string sections
+                                        if not _ck.endswith("_HTML"):
+                                            _compact_skipped.append(_ck)
+                                            continue
+                                        _cv = sections.get(_ck)
+                                        if _cv and isinstance(_cv, str):
                                             sections[_ck] = "<!-- removed-by-compact -->"
                                             _compact_removed += 1
+                                if _compact_skipped:
+                                    log.warning("[FIX-B726-COMPACT] GUARD: Skipped %d non-HTML keys: %s", len(_compact_skipped), _compact_skipped)
                                 sections["COMPACT_REPORT_MODE"] = True
                                 log.info("[FIX-B726-COMPACT] Removed %d appendix sections for %s", _compact_removed, _compact_size)
+
+                            # FIX-A: Restore critical template metadata after compact processing
+                            _meta_restored = 0
+                            for _mk, _mv in _meta_snapshot.items():
+                                if _mk not in sections or sections[_mk] is None or sections[_mk] == "":
+                                    sections[_mk] = _mv
+                                    _meta_restored += 1
+                                elif isinstance(_mv, (int, float)) and isinstance(sections.get(_mk), str) and sections[_mk] == "<!-- removed-by-compact -->":
+                                    # Scalar was accidentally overwritten with HTML placeholder
+                                    sections[_mk] = _mv
+                                    _meta_restored += 1
+                            if _meta_restored > 0:
+                                log.warning("[FIX-B726-COMPACT] RESTORED %d template metadata keys after compact", _meta_restored)
                         except Exception as _c726_err:
                             log.warning("[FIX-B726-COMPACT] Error: %s", _c726_err)
 
