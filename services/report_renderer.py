@@ -1514,7 +1514,7 @@ def render(briefing_obj: Any,
             # HTML structure: <div style="...">VALUE€</div><div ...>Netto-Ersparnis*</div>
             # The value PRECEDES the label (not after), and uses Python :, format (commas)
             # Match: any €-amount in a div immediately before "Netto-Ersparnis"
-            _netto_ersparnis_comma = f"{int(_netto_ersparnis):,}"  # Python :, format (commas)
+            _netto_ersparnis_comma = f"{int(_netto_ersparnis):,}".replace(",", ".")  # German thousands separator
             html = re.sub(
                 r'(<div[^>]*>)\s*([\d.,]+)\s*€\s*(</div>\s*<div[^>]*>\s*Netto-Ersparnis)',
                 rf'\g<1>{_netto_ersparnis_comma}€\3',
