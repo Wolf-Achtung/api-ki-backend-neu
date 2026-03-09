@@ -7,7 +7,7 @@ Warum: Dev/CI ohne Postgres soll nicht brechen.
 """
 
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional
 
 from sqlalchemy import (
     Boolean, DateTime, ForeignKey, Integer, String, Text,
@@ -322,7 +322,7 @@ class StrategyQuestion(Base):
     # Pflichtfragen S1-S7
     s1_budget: Mapped[str] = mapped_column(String(50), nullable=False)
     s2_zeitrahmen: Mapped[str] = mapped_column(String(50), nullable=False)
-    s3_prioritaeten: Mapped[dict] = mapped_column(JSONType, nullable=False)
+    s3_prioritaeten: Mapped[Any] = mapped_column(JSONType, nullable=False)  # JSONB: stores list[str]
     s4_engpass: Mapped[str] = mapped_column(String(100), nullable=False)
     s5_software: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     s6_foerderinteresse: Mapped[str] = mapped_column(String(50), nullable=False)
