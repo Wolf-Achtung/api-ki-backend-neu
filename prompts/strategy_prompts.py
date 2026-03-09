@@ -1,0 +1,384 @@
+# -*- coding: utf-8 -*-
+"""
+Prompt-Definitionen für den KI-Strategiebericht (Report 3).
+
+Quelle: PROMPT-SPECS-Report3-v1.md
+Alle Prompts verwenden {variable} Platzhalter, die vom Pipeline-Orchestrator
+mit konkreten Werten befüllt werden.
+
+WICHTIG: Budget- und ROI-Zahlen werden NICHT vom LLM berechnet.
+Sie kommen fertig berechnet aus strategy_budget.py via {budget_*} Variablen.
+"""
+
+SYSTEM_PROMPT_STRATEGY_REPORT = """Du bist ein erfahrener KI-Strategieberater für den deutschen Mittelstand.
+Du erstellst professionelle, umsetzbare Strategieberichte.
+
+REGELN:
+1. Schreibe auf Deutsch in professionellem, aber verständlichem Stil.
+2. Verwende "Sie" (Höflichkeitsform), niemals "du".
+3. Alle Ausgaben sind HTML-Fragmente (kein vollständiges HTML-Dokument).
+4. Verwende semantische HTML-Tags: <h3>, <p>, <ul>, <li>, <table>, <strong>, <em>.
+5. KEINE Markdown-Syntax (kein ```, kein #, kein *). Nur HTML.
+6. Budget- und ROI-Zahlen EXAKT aus den Vorgaben übernehmen — NICHT selbst rechnen.
+7. Nenne konkrete Tool-Namen, Anbieter und Preise wo möglich.
+8. Vermeide generische Floskeln. Sei spezifisch für die Branche {branche}.
+9. Jede Section hat 400-800 Wörter (Exec Summary: 200-300 Wörter).
+10. Quellenangaben am Ende jeder Section als <div class="sources">."""
+
+
+# =============================================================================
+# SECTION PROMPTS
+# =============================================================================
+
+STRATEGY_PROMPTS = {
+
+    # =========================================================================
+    # S1: Ausgangslage — Ihr KI-Readiness-Profil
+    # =========================================================================
+    "S1": """Erstelle die Section "Ausgangslage — Ihr KI-Readiness-Profil" für den KI-Strategiebericht.
+
+UNTERNEHMENSDATEN:
+- Firmenname: {firmenname}
+- Branche: {branche}
+- Segment/Größe: {segment}
+- Mitarbeiter: {mitarbeiter}
+- Bundesland: {bundesland}
+
+REPORT-1-ERGEBNISSE:
+- KI-Readiness-Score: {readiness_score}
+- Reifegrad: {reifegrad_label}
+- Stärken (Top 3): {staerken_top3}
+- Handlungsfelder (Top 3): {handlungsfelder_top3}
+- KI-Potenziale: {potenziale_summary}
+
+STRATEGIE-FRAGEN:
+- KI-Erfahrung: {s8_erfahrung}
+- Budget: {s1_budget}
+- Zeitrahmen: {s2_zeitrahmen}
+- Prioritäten: {s3_prioritaeten}
+- Engpass: {s4_engpass}
+
+AUFGABE:
+1. Fasse die KI-Readiness-Analyse zusammen (Score, Reifegrad, was das bedeutet).
+2. Stelle die Top-3 Stärken heraus und erkläre, wie sie für die KI-Strategie genutzt werden können.
+3. Benenne die Top-3 Handlungsfelder und warum sie prioritär sind.
+4. Ordne den aktuellen Reifegrad in den Branchenkontext ({branche}) ein.
+5. Leite über zur Strategie: "Basierend auf diesem Profil empfehlen wir folgende Strategie..."
+
+FORMAT: HTML-Fragment mit <h3>, <p>, <ul>, <table>. Kein Markdown.""",
+
+    # =========================================================================
+    # S2: Markt & Wettbewerb
+    # =========================================================================
+    "S2": """Erstelle die Section "Markt & Wettbewerb" für den KI-Strategiebericht.
+
+UNTERNEHMENSDATEN:
+- Branche: {branche}
+- Segment: {segment}
+- Bundesland: {bundesland}
+
+LIVE-RECHERCHE-ERGEBNISSE:
+--- Markttrends ---
+{research_markt_trends}
+
+--- Wettbewerb & Benchmark ---
+{research_wettbewerb}
+
+--- Branchenstatistiken (international) ---
+{research_branche_stats}
+
+AUFGABE:
+1. Analysiere den aktuellen Stand der KI-Adoption in der Branche {branche}.
+2. Zeige Benchmark-Daten: Wie weit sind Wettbewerber mit KI?
+3. Identifiziere 3-5 Branchentrends, die für {firmenname} relevant sind.
+4. Bewerte die Wettbewerbsposition: Wo steht {firmenname} im Vergleich?
+5. Formuliere die strategische Dringlichkeit.
+
+Verwende die Recherche-Ergebnisse als Datenbasis. Wenn keine Daten verfügbar sind,
+verwende allgemeine Mittelstands-Benchmarks für Deutschland 2025/2026.
+
+FORMAT: HTML-Fragment. Verwende eine Tabelle für den Branchen-Benchmark.
+Quellenangaben am Ende als <div class="sources">.""",
+
+    # =========================================================================
+    # S3: Strategische Handlungsfelder
+    # =========================================================================
+    "S3": """Erstelle die Section "Strategische Handlungsfelder" für den KI-Strategiebericht.
+
+UNTERNEHMENSDATEN:
+- Firmenname: {firmenname}
+- Branche: {branche}
+- Segment: {segment}
+- Prioritäten: {s3_prioritaeten}
+- Engpass: {s4_engpass}
+
+AUS REPORT 1:
+- Stärken: {staerken_top3}
+- Handlungsfelder: {handlungsfelder_top3}
+- KI-Potenziale: {potenziale_summary}
+
+AUS S2 (Markt & Wettbewerb):
+{s2_trends_summary}
+
+AUFGABE:
+1. Definiere 3-5 strategische Handlungsfelder, priorisiert nach Impact und Machbarkeit.
+2. Für jedes Handlungsfeld:
+   a) Kurzbeschreibung (was genau?)
+   b) Erwarteter Impact (hoch/mittel/niedrig)
+   c) Umsetzungskomplexität (hoch/mittel/niedrig)
+   d) Zeitrahmen (Quick Win / kurzfristig / mittelfristig)
+   e) Ampel-Bewertung: 🟢 Quick Win, 🟡 Standard, 🔴 Komplex
+3. Erstelle eine Prioritätsmatrix (Impact × Komplexität).
+4. Markiere den Quick Win (🟢) besonders hervor.
+
+FORMAT: HTML-Fragment. Verwende eine Tabelle für die Priorisierungsmatrix.
+Ampel-Farben als CSS-Klassen oder inline-styles.""",
+
+    # =========================================================================
+    # S4: Tool-Landschaft & Empfehlungen
+    # =========================================================================
+    "S4": """Erstelle die Section "Tool-Landschaft & Empfehlungen" für den KI-Strategiebericht.
+
+UNTERNEHMENSDATEN:
+- Branche: {branche}
+- Segment: {segment}
+- Bestehende Software: {s5_software}
+- KI-Erfahrung: {s8_erfahrung}
+- Präferenz: {s9_ansatz}
+- Datenschutz-Anforderung: {s10_datenschutz}
+
+HANDLUNGSFELDER AUS S3:
+{s3_handlungsfelder}
+
+LIVE-RECHERCHE — TOOLS:
+--- Tool-Vergleich 1 ---
+{research_tool_1}
+
+--- Tool-Vergleich 2 ---
+{research_tool_2}
+
+--- Integration bestehende Software ---
+{research_integration}
+
+AUFGABE:
+1. Empfehle für jedes Handlungsfeld 2-3 konkrete KI-Tools/Plattformen.
+2. Für jedes Tool:
+   a) Name und Anbieter
+   b) Kernfunktion
+   c) Preismodell (monatlich, pro User, etc.)
+   d) DSGVO-Konformität (ja/nein/teilweise)
+   e) Integrationsmöglichkeit mit {s5_software}
+   f) Empfehlung (★★★ / ★★ / ★)
+3. Erstelle eine Vergleichstabelle.
+4. Berücksichtige den Ansatz-Wunsch: {s9_ansatz}.
+5. Berücksichtige Datenschutz-Anforderung: {s10_datenschutz}.
+
+FORMAT: HTML-Fragment. Verwende Tabellen für Tool-Vergleiche.
+Quellenangaben am Ende als <div class="sources">.""",
+
+    # =========================================================================
+    # S5: Investitionsplan & ROI
+    # =========================================================================
+    "S5": """Erstelle die Section "Investitionsplan & ROI" für den KI-Strategiebericht.
+
+UNTERNEHMENSDATEN:
+- Firmenname: {firmenname}
+- Branche: {branche}
+- Segment: {segment}
+- Budget-Angabe: {s1_budget}
+
+BERECHNETE BUDGET-WERTE (EXAKT übernehmen, NICHT selbst rechnen!):
+- Software monatlich: {budget_software_monatlich} €
+- Software jährlich: {budget_software_jaehrlich} €
+- Implementierung (einmalig): {budget_implementierung} €
+- Schulung (einmalig): {budget_schulung_einmalig} €
+- Schulung (laufend/Jahr): {budget_schulung_laufend} €
+- Personal/Koordination: {budget_personal} €
+- GESAMT Jahr 1: {budget_gesamt_jahr1} €
+
+ROI-SZENARIEN (EXAKT übernehmen!):
+- Konservativ: {roi_konservativ}% ROI, Break-Even Monat {breakeven_konservativ}
+- Realistisch: {roi_realistisch}% ROI, Break-Even Monat {breakeven_realistisch}
+- Optimistisch: {roi_optimistisch}% ROI, Break-Even Monat {breakeven_optimistisch}
+
+EINSPARUNGEN:
+- Zeitersparnis: {zeitersparnis_stunden} Stunden/Monat
+- Monetär: {zeitersparnis_euro} €/Monat
+
+AUFGABE:
+1. Stelle den Investitionsplan als übersichtliche Tabelle dar.
+2. Erkläre die drei ROI-Szenarien und deren Annahmen.
+3. Visualisiere den Break-Even-Zeitpunkt (textuelle Beschreibung).
+4. Bewerte, ob das angegebene Budget ({s1_budget}) ausreicht.
+5. Gib eine klare Investitionsempfehlung.
+
+WICHTIG: Alle Zahlen EXAKT aus den Vorgaben übernehmen. NICHT selbst rechnen!
+
+FORMAT: HTML-Fragment. Verwende Tabellen für Budget und ROI.""",
+
+    # =========================================================================
+    # S6: Umsetzungs-Roadmap
+    # =========================================================================
+    "S6": """Erstelle die Section "Umsetzungs-Roadmap" für den KI-Strategiebericht.
+
+UNTERNEHMENSDATEN:
+- Firmenname: {firmenname}
+- Branche: {branche}
+- Segment: {segment}
+- Zeitrahmen: {s2_zeitrahmen}
+- Engpass: {s4_engpass}
+- Entscheidungshorizont: {s7_entscheidung}
+
+HANDLUNGSFELDER:
+{s3_handlungsfelder}
+
+TOOL-EMPFEHLUNGEN (Zusammenfassung):
+{s4_tools_summary}
+
+BUDGET (Zusammenfassung):
+{s5_budget_summary}
+
+PHASEN-BUDGETS (EXAKT übernehmen!):
+- Phase 1 (Quick Wins, Monat 1-3): {budget_phase_1} €
+- Phase 2 (Kernimplementierung, Monat 4-8): {budget_phase_2} €
+- Phase 3 (Skalierung, Monat 9-12): {budget_phase_3} €
+
+AUFGABE:
+1. Erstelle eine 12-Monats-Roadmap in 3 Phasen.
+2. Phase 1 (Monat 1-3): Quick Wins, Pilotprojekte, Grundlagen
+   - Welche Handlungsfelder? Welche Tools? Welche Meilensteine?
+3. Phase 2 (Monat 4-8): Kernimplementierung, Rollout
+   - Welche Handlungsfelder? Welche Tools? Welche Meilensteine?
+4. Phase 3 (Monat 9-12): Skalierung, Optimierung
+   - Welche Handlungsfelder? Welche Tools? Welche Meilensteine?
+5. Für jede Phase: Konkrete Meilensteine, Verantwortlichkeiten, Budget.
+6. Berücksichtige den Engpass: {s4_engpass}.
+7. Berücksichtige den Entscheidungshorizont: {s7_entscheidung}.
+
+FORMAT: HTML-Fragment. Verwende eine Timeline-artige Darstellung mit Tabelle.""",
+
+    # =========================================================================
+    # S7: Fördermittel & Finanzierung
+    # =========================================================================
+    "S7": """Erstelle die Section "Fördermittel & Finanzierung" für den KI-Strategiebericht.
+
+UNTERNEHMENSDATEN:
+- Firmenname: {firmenname}
+- Branche: {branche}
+- Segment: {segment}
+- Bundesland: {bundesland}
+- Förderinteresse: {s6_foerderinteresse}
+- Budget: {s1_budget}
+
+AUS REPORT 1:
+{foerder_matches}
+
+LIVE-RECHERCHE:
+--- Deutsche Förderprogramme ---
+{research_foerdermittel}
+
+--- EU-Förderprogramme ---
+{research_foerdermittel_eu}
+
+AUFGABE:
+1. Identifiziere die 3-5 relevantesten Förderprogramme für {firmenname}.
+2. Für jedes Programm:
+   a) Name und Träger
+   b) Förderhöhe (min/max)
+   c) Förderquote (%)
+   d) Antragsfrist (falls bekannt)
+   e) Passung für {firmenname} (hoch/mittel/niedrig)
+   f) Link/Kontakt
+3. Berechne die potenzielle Gesamtförderung.
+4. Gib eine Handlungsempfehlung: Welches Programm zuerst beantragen?
+5. Berücksichtige das Bundesland: {bundesland} (landesspezifische Programme).
+
+FORMAT: HTML-Fragment. Verwende eine Tabelle für die Programmübersicht.
+Quellenangaben am Ende als <div class="sources">.""",
+
+    # =========================================================================
+    # S8: Risiken & Compliance
+    # =========================================================================
+    "S8": """Erstelle die Section "Risiken & Compliance" für den KI-Strategiebericht.
+
+UNTERNEHMENSDATEN:
+- Firmenname: {firmenname}
+- Branche: {branche}
+- Segment: {segment}
+- Datenschutz-Anforderung: {s10_datenschutz}
+
+AUS REPORT 1:
+- Risiko-Score: {risiko_score}
+- Identifizierte Risiken: {risiken_report1}
+
+HANDLUNGSFELDER:
+{s3_handlungsfelder}
+
+TOOL-EMPFEHLUNGEN (Zusammenfassung):
+{s4_tools_summary}
+
+AUFGABE:
+1. Erstelle eine Risikomatrix (Eintrittswahrscheinlichkeit × Auswirkung).
+2. Identifiziere die Top-5 Risiken der KI-Strategie:
+   a) Technische Risiken (z.B. Vendor Lock-in, Datenqualität)
+   b) Organisatorische Risiken (z.B. Change Management, Know-how)
+   c) Regulatorische Risiken (z.B. EU AI Act, DSGVO)
+   d) Finanzielle Risiken (z.B. ROI-Verfehlung, versteckte Kosten)
+3. Für jedes Risiko: Mitigationsstrategie mit konkreten Maßnahmen.
+4. EU AI Act Compliance:
+   - Welche der empfohlenen Tools fallen unter den AI Act?
+   - Welche Risikoklasse? Welche Pflichten?
+5. DSGVO-Checkliste für die KI-Implementierung.
+
+FORMAT: HTML-Fragment. Verwende eine Tabelle für die Risikomatrix.""",
+
+    # =========================================================================
+    # EXEC: Executive Summary
+    # =========================================================================
+    "EXEC": """Erstelle die "Executive Summary" für den KI-Strategiebericht von {firmenname}.
+
+ECKDATEN:
+- Branche: {branche}
+- Segment: {segment}
+- KI-Readiness: {readiness_score} ({reifegrad_label})
+- Handlungsfelder: {anzahl_felder}
+- Top-Handlungsfeld: {top_handlungsfeld}
+- Quick Win: {quick_win}
+- Investition Jahr 1: {budget_gesamt_jahr1} €
+- ROI (realistisch): {roi_realistisch}%
+- Break-Even: Monat {breakeven_realistisch}
+- Förderpotenzial: {summe_foerder}
+- Zeitrahmen: {s2_zeitrahmen}
+
+AUFGABE:
+Schreibe eine prägnante Executive Summary (200-300 Wörter), die:
+1. Den aktuellen KI-Reifegrad einordnet.
+2. Die wichtigste strategische Empfehlung hervorhebt.
+3. Den Quick Win nennt (sofort umsetzbar).
+4. Die Investition und den erwarteten ROI zusammenfasst.
+5. Das Förderpotenzial erwähnt.
+6. Mit einem klaren Call-to-Action endet.
+
+Zielgruppe: Geschäftsführer/Entscheider, die schnell den Kern erfassen wollen.
+
+FORMAT: HTML-Fragment (<p> Tags). Keine Überschrift (wird vom Template gesetzt).
+Maximal 300 Wörter. Kein Markdown.""",
+}
+
+
+# =============================================================================
+# NÄCHSTE SCHRITTE TEMPLATE (static, not LLM-generated)
+# =============================================================================
+
+SECTION_TEMPLATE_NAECHSTE_SCHRITTE = """
+<div class="naechste-schritte">
+    <ol>
+        <li><strong>Strategiebericht durcharbeiten</strong> — Besprechen Sie die Ergebnisse mit Ihrem Team und identifizieren Sie die Quick Wins.</li>
+        <li><strong>Quick Win starten</strong> — Beginnen Sie innerhalb der nächsten 2 Wochen mit dem identifizierten Quick Win. Niedrige Einstiegshürde, schnelles Ergebnis.</li>
+        <li><strong>Fördermittel beantragen</strong> — Prüfen Sie die empfohlenen Förderprogramme und stellen Sie Anträge, bevor die Fristen ablaufen.</li>
+        <li><strong>Tool-Evaluation</strong> — Testen Sie die empfohlenen Tools mit kostenlosen Testversionen oder Demos. Planen Sie 2-4 Wochen für die Evaluation ein.</li>
+        <li><strong>Roadmap-Review</strong> — Planen Sie nach 3 Monaten (Ende Phase 1) ein Review ein, um Fortschritte zu bewerten und Phase 2 zu justieren.</li>
+    </ol>
+    <p><strong>Nächster Kontaktpunkt:</strong> Vereinbaren Sie ein kostenloses 30-Minuten-Strategiegespräch unter <a href="https://ki-sicherheit.jetzt/termin">ki-sicherheit.jetzt/termin</a>, um Fragen zum Bericht zu klären.</p>
+</div>
+"""
