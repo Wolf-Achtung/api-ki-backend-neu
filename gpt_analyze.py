@@ -16470,8 +16470,11 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     # === SOLO TERMINOLOGY FINAL CLEANUP (pre-validator) ===
     # Runs after all post-healer restores (Quick Wins pristine, GC snapshot, etc.)
     # to catch blacklisted terms that were re-introduced after healing.
+    # NOTE: Uses raw unternehmensgroesse — final_solo_terminology_cleanup handles
+    # solo detection internally (solo, 1, einzelunternehmer, etc.).
     try:
-        _solo_cleanup_fixes = final_solo_terminology_cleanup(sections, persona)
+        _solo_raw_seg = (answers.get("unternehmensgroesse", "") or "").strip()
+        _solo_cleanup_fixes = final_solo_terminology_cleanup(sections, _solo_raw_seg)
         if _solo_cleanup_fixes > 0:
             log.info(f"[{run_id}] [SOLO-FINAL-CLEANUP] Pre-validator: fixed {_solo_cleanup_fixes} sections")
     except Exception as _solo_cleanup_err:
