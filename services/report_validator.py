@@ -986,6 +986,8 @@ class ReportValidator:
         "strategie_governance": "STRATEGIE_GOVERNANCE_HTML",
         "unternehmensprofil_markt": "UNTERNEHMENSPROFIL_MARKT_HTML",
         "technologie_prozesse": "TECHNOLOGIE_PROZESSE_HTML",
+        # FIX-REDUNDANCY: QUICK_WINS_HTML_LEFT is a copy of QUICK_WINS_HTML
+        "QUICK_WINS_HTML_LEFT": "QUICK_WINS_HTML",
     }
 
     # FIX-RC2: Sections excluded from Solo-Compact rendering.
@@ -2361,6 +2363,12 @@ class ReportValidator:
         "pilot_plan",
         "SCORE_DRIVERS_HTML",
         "score_drivers",
+        # FIX-REDUNDANCY: These sections naturally summarize/reference content from
+        # other sections (skills plan, policy mini). Redundancy warnings are false positives.
+        "KI_SKILLPLAN_HTML",
+        "ki_skillplan",
+        "AI_POLICY_MINI_HTML",
+        "ai_policy_mini",
     ]
 
     def _check_redundancy(self) -> None:
@@ -2587,6 +2595,13 @@ class ReportValidator:
                 # Only report first occurrence per section
                 continue
 
+    # Sections known to use bullet-point/list-item style content where
+    # short fragments are intentional (e.g., "Nutzen: Zeitersparnis.")
+    INCOMPLETE_SENTENCE_EXCLUDED_SECTIONS = {
+        "ADVISOR_NOTE_HTML", "advisor_note",
+        "REIFEGRAD_SOWHAT_HTML", "reifegrad_sowhat",
+    }
+
     def _check_incomplete_sentences(self) -> None:
         """
         Sprint P1.5-4: Check for incomplete sentence fragments.
@@ -2623,24 +2638,29 @@ class ReportValidator:
         ]
 
         # WARNING patterns - less severe fragments
+        # FIX-FRAG: Only match before </p> tags, not </li> (list items allow fragments)
         warning_patterns = [
             r"\bEntwicklung eines\.\s",
             r"\bErstellung einer\.\s",
             r"\bAusbau eines\.\s",
             r"\bVerbesserung der\.\s",
-            r"\beines\.\s*</",  # Ends with "eines." before HTML tag
-            r"\beiner\.\s*</",  # Ends with "einer." before HTML tag
-            r"\beinem\.\s*</",  # Ends with "einem." before HTML tag
-            # Sentences ending with "und" (incomplete enumeration)
-            r"\bund\.\s*</",
-            r"\bsowie\.\s*</",
+            r"\beines\.\s*</p>",   # Ends with "eines." before closing paragraph
+            r"\beiner\.\s*</p>",   # Ends with "einer." before closing paragraph
+            r"\beinem\.\s*</p>",   # Ends with "einem." before closing paragraph
+            # Sentences ending with "und" (incomplete enumeration) - only in paragraphs
+            r"\bund\.\s*</p>",
+            r"\bsowie\.\s*</p>",
         ]
 
-        for section_name, content in self.sections.items():
+        # FIX-FRAG: Use canonical_sections to avoid duplicate warnings for shadow keys
+        for section_name, content in self.canonical_sections.items():
             if not isinstance(content, str):
                 continue
             # FIX-RC2: Skip non-rendered compact sections
             if self._is_compact_excluded(section_name):
+                continue
+            # FIX-FRAG: Skip sections known to use bullet-point/list-item style
+            if section_name in self.INCOMPLETE_SENTENCE_EXCLUDED_SECTIONS:
                 continue
 
             # Check CRITICAL patterns
