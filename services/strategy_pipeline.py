@@ -259,18 +259,20 @@ async def _call_openai(prompt: str, system_prompt: str, section: str) -> Optiona
             timeout=180.0,
         )
 
-        response = await asyncio.to_thread(
-            client.chat.completions.create,
-            model=settings.openai.model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.3,
-            max_tokens=4000,
-        )
+        def _openai_call() -> Any:
+            return client.chat.completions.create(
+                model=settings.openai.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.3,
+                max_tokens=4000,
+            )
 
-        content = response.choices[0].message.content if response.choices else None
+        response = await asyncio.to_thread(_openai_call)
+
+        content: Optional[str] = response.choices[0].message.content if response.choices else None
         return content
     except Exception as exc:
         logger.error("[Strategy] OpenAI call failed for %s: %s", section, exc)
@@ -379,7 +381,7 @@ def _extract_foerder_summe(s7_html: str) -> str:
     # Look for Euro amounts
     matches = re.findall(r"[\d.,]+\s*(?:€|Euro|EUR)", s7_html)
     if matches:
-        return matches[0]
+        return str(matches[0])
     return "k.A."
 
 
