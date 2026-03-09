@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI-Strategiebericht — {{ firmenname }}</title>
+    <style>
+        /* Minimales Styling — wird in Phase B durch finales Design ersetzt */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20mm;
+            color: #1a1a2e;
+            font-size: 11pt;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: #0a1628;
+            font-size: 28pt;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            color: #0a1628;
+            font-size: 16pt;
+            font-weight: 600;
+            border-bottom: 2px solid #a68921;
+            padding-bottom: 8px;
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+        }
+
+        h3 {
+            color: #1a1a2e;
+            font-size: 13pt;
+            font-weight: 600;
+            margin-top: 1.2em;
+            margin-bottom: 0.5em;
+        }
+
+        p { margin-bottom: 0.8em; }
+
+        ul, ol {
+            margin-bottom: 0.8em;
+            padding-left: 1.5em;
+        }
+
+        li { margin-bottom: 0.3em; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+            font-size: 10pt;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 10px;
+            text-align: left;
+        }
+
+        th {
+            background: #f0f5fa;
+            font-weight: 600;
+            color: #0a1628;
+        }
+
+        tr:nth-child(even) { background: #fafbfc; }
+
+        strong { font-weight: 600; }
+
+        .cover {
+            text-align: center;
+            padding: 60px 20px;
+            min-height: 200mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cover h1 { font-size: 32pt; margin-bottom: 16px; }
+        .cover .subtitle { font-size: 14pt; color: #555; margin-bottom: 8px; }
+        .cover .meta { font-size: 11pt; color: #888; margin-top: 24px; }
+        .cover .badge {
+            display: inline-block;
+            background: #f0f5fa;
+            border: 1px solid #a68921;
+            border-radius: 4px;
+            padding: 6px 16px;
+            font-size: 10pt;
+            color: #a68921;
+            margin-top: 16px;
+        }
+
+        .sources {
+            font-size: 0.85em;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 1em;
+            margin-top: 1.5em;
+        }
+
+        .sources a { color: #2563eb; text-decoration: none; }
+        .sources a:hover { text-decoration: underline; }
+
+        .page-break { page-break-before: always; }
+
+        .naechste-schritte ol { counter-reset: step; list-style: none; padding-left: 0; }
+        .naechste-schritte li {
+            counter-increment: step;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-left: 3px solid #a68921;
+            border-radius: 0 4px 4px 0;
+        }
+        .naechste-schritte li::before {
+            content: counter(step) ".";
+            font-weight: 700;
+            color: #a68921;
+            margin-right: 8px;
+        }
+
+        @media print {
+            body { padding: 15mm; }
+            .page-break { page-break-before: always; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Deckblatt -->
+    <div class="cover">
+        <h1>KI-Strategiebericht</h1>
+        <p class="subtitle">{{ firmenname }} &middot; {{ branche }}</p>
+        <p class="meta">Erstellt am {{ datum }}</p>
+        <span class="badge">TÜV Austria zertifizierte Methodik</span>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="page-break">
+        <h2>Executive Summary</h2>
+        {{ exec_summary | safe }}
+    </div>
+
+    <!-- S1: Ausgangslage -->
+    <div class="page-break">
+        <h2>1. Ausgangslage — Ihr KI-Readiness-Profil</h2>
+        {{ section_s1 | safe }}
+    </div>
+
+    <!-- S2: Markt & Wettbewerb -->
+    <div class="page-break">
+        <h2>2. Markt &amp; Wettbewerb</h2>
+        {{ section_s2 | safe }}
+    </div>
+
+    <!-- S3: Strategische Handlungsfelder -->
+    <div class="page-break">
+        <h2>3. Strategische Handlungsfelder</h2>
+        {{ section_s3 | safe }}
+    </div>
+
+    <!-- S4: Tool-Landschaft & Empfehlungen -->
+    <div class="page-break">
+        <h2>4. Tool-Landschaft &amp; Empfehlungen</h2>
+        {{ section_s4 | safe }}
+    </div>
+
+    <!-- S5: Investitionsplan & ROI -->
+    <div class="page-break">
+        <h2>5. Investitionsplan &amp; ROI</h2>
+        {{ section_s5 | safe }}
+    </div>
+
+    <!-- S6: Umsetzungs-Roadmap -->
+    <div class="page-break">
+        <h2>6. Umsetzungs-Roadmap</h2>
+        {{ section_s6 | safe }}
+    </div>
+
+    <!-- S7: Fördermittel & Finanzierung -->
+    <div class="page-break">
+        <h2>7. Fördermittel &amp; Finanzierung</h2>
+        {{ section_s7 | safe }}
+    </div>
+
+    <!-- S8: Risiken & Compliance -->
+    <div class="page-break">
+        <h2>8. Risiken &amp; Compliance</h2>
+        {{ section_s8 | safe }}
+    </div>
+
+    <!-- Nächste Schritte -->
+    <div class="page-break">
+        <h2>Ihre nächsten Schritte</h2>
+        {{ naechste_schritte | safe }}
+    </div>
+
+</body>
+</html>
