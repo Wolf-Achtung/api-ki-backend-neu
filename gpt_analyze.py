@@ -117,7 +117,7 @@ from field_registry import fields  # added by Patch03
 from models import Analysis, Briefing, Report, User
 from services.report_renderer import render
 from services.text_healing import heal_all_text_blocks, heal_text_block
-from services.report_healer import heal_report_html, heal_final_html, format_payback_de  # FIX-A-G: Report healing pipeline
+from services.report_healer import heal_report_html, heal_final_html, format_payback_de, final_solo_terminology_cleanup  # FIX-A-G: Report healing pipeline
 from services.pdf_client import render_pdf_from_html, build_footer_template
 from services.icon_system import (
     replace_emojis_with_icons,
@@ -16467,6 +16467,19 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.warning("[%s] [FIX-642] GAMECHANGER_HTML destroyed (%d→%d words), restoring snapshot (%d words)", run_id, _gc_snap_w, _gc_cur_w, _gc_snap_w)
         sections["GAMECHANGER_HTML"] = _gc_snap
         sections["gamechanger"] = _gc_snap
+    # === SOLO TERMINOLOGY FINAL CLEANUP (pre-validator) ===
+    # Runs after all post-healer restores (Quick Wins pristine, GC snapshot, etc.)
+    # to catch blacklisted terms that were re-introduced after healing.
+    # NOTE: Uses raw unternehmensgroesse — final_solo_terminology_cleanup handles
+    # solo detection internally (solo, 1, einzelunternehmer, etc.).
+    try:
+        _solo_raw_seg = (answers.get("unternehmensgroesse", "") or "").strip()
+        _solo_cleanup_fixes = final_solo_terminology_cleanup(sections, _solo_raw_seg)
+        if _solo_cleanup_fixes > 0:
+            log.info(f"[{run_id}] [SOLO-FINAL-CLEANUP] Pre-validator: fixed {_solo_cleanup_fixes} sections")
+    except Exception as _solo_cleanup_err:
+        log.warning(f"[{run_id}] [SOLO-FINAL-CLEANUP] Failed: {_solo_cleanup_err}")
+
     # === SPRINT N2: VALIDATE AND HEAL - Wolf 2025-12 ===
     # FIX-517C TASK 4: Two-stage validation (raw = pre-final-enforcer, final = post-final-enforcer)
     # Stage 1 (RAW): validate BEFORE final enforcer pass → truthful pre-cleanup metrics
@@ -16485,11 +16498,17 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     # copy (xx) with identical content. The validator sees them as duplicates.
     _ALIAS_SECTIONS_RAW = {"PILOT_PLAN_HTML", "roadmap", "ROADMAP_HTML", "ROADMAP_90D_HTML", "roadmap_90d", "_GC_SNAPSHOT_642"}  # FIX-B721: GC backup is not a real section
 
+    # FIX-REDUNDANCY: Known copy-keys that are identical to their source
+    _KNOWN_COPY_KEYS = {"QUICK_WINS_HTML_LEFT"}
+
     def _is_shadow_key_redundancy(err) -> bool:
-        """Check if a REDUNDANCY warning is between an HTML key and its shadow."""
+        """Check if a REDUNDANCY warning is between an HTML key and its shadow/copy."""
         section_str = getattr(err, "section", "") or ""
         # Section field format: "DATA_READINESS_HTML, data_readiness" or similar
         parts = [p.strip() for p in section_str.split(",")]
+        # Check if any part is a known copy-key
+        if any(p in _KNOWN_COPY_KEYS for p in parts):
+            return True
         # Check if any pair is HTML_KEY + logical_name (shadow)
         for p in parts:
             if p.endswith("_HTML"):
@@ -18457,6 +18476,15 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         except Exception as _tp2_err:
             log.warning(f"[{run_id}] [FIX-B721-TYPO-PASS2] Failed: {_tp2_err}")
 
+        # === SOLO TERMINOLOGY FINAL CLEANUP (pre-final-validator) ===
+        # Second pass catches terms re-introduced by final enforcers.
+        try:
+            _solo_final_fixes = final_solo_terminology_cleanup(sections, persona)
+            if _solo_final_fixes > 0:
+                log.info(f"[{run_id}] [SOLO-FINAL-CLEANUP] Pre-final-validator: fixed {_solo_final_fixes} sections")
+        except Exception as _solo_final_err:
+            log.warning(f"[{run_id}] [SOLO-FINAL-CLEANUP] Pre-final-validator failed: {_solo_final_err}")
+
         _final_valid, _final_errors, _final_healed = validate_and_heal(sections, answers)
         _final_critical = [e for e in _final_errors if e.severity == "CRITICAL"]
         _final_warnings = [e for e in _final_errors if e.severity == "WARNING"]
@@ -18465,9 +18493,15 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         # section aliases AND shadow-key pairs (HTML_KEY + logical_name with identical content).
         _ALIAS_SECTIONS = {"PILOT_PLAN_HTML", "roadmap", "ROADMAP_HTML", "ROADMAP_90D_HTML", "roadmap_90d", "_GC_SNAPSHOT_642"}  # FIX-B721: GC backup is not a real section
 
+        # FIX-REDUNDANCY: Known copy-keys that are identical to their source
+        _KNOWN_COPY_KEYS_FINAL = {"QUICK_WINS_HTML_LEFT"}
+
         def _is_shadow_redundancy(err) -> bool:
             section_str = getattr(err, "section", "") or ""
             parts = [p.strip() for p in section_str.split(",")]
+            # Check if any part is a known copy-key
+            if any(p in _KNOWN_COPY_KEYS_FINAL for p in parts):
+                return True
             for p in parts:
                 if p.endswith("_HTML"):
                     logical = p.replace("_HTML", "").lower()

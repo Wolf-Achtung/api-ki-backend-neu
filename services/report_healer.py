@@ -73,6 +73,7 @@ __all__ = [
     "BOILERPLATE_PATTERNS",
     "PAYBACK_PATTERNS_DE",
     "SOLO_BLACKLIST_TERMS",
+    "final_solo_terminology_cleanup",
     "BUSINESS_CASE_LABEL_LOCALIZATION_DE",
     "BoilerplatePattern",
     "PaybackPattern",
@@ -891,8 +892,9 @@ SOLO_TERM_REPLACEMENTS: Dict[str, str] = {
     "Rollout": "Einführung",
     "Deployment": "Bereitstellung",
     # TASK 2: Additional terms from validator warnings
-    "Executive": "Kurzfassung",
+    # NOTE: Phrase-level "Executive Summary" MUST come before bare "Executive"
     "Executive Summary": "Kurzfassung",
+    "Executive": "Kurzfassung",
     "executive": "kurzfassung",
     "Layer": "Ebene",
     "Layers": "Ebenen",
@@ -1069,6 +1071,82 @@ SOLO_REMOVE_PATTERNS: List[str] = [
     r"(?:Enterprise|Multi-Team)\s+(?:Architektur|Rollout|Deployment)",
     r"(?:Skalierung|Scaling)\s+(?:auf|für)\s+(?:mehrere|viele)\s+(?:Teams|Abteilungen)",
 ]
+
+
+# =============================================================================
+# FINAL SOLO TERMINOLOGY CLEANUP (pre-validator safety net)
+# =============================================================================
+
+def final_solo_terminology_cleanup(
+    sections: Dict[str, Any],
+    segment: str,
+) -> int:
+    """
+    Final safety-net pass to replace Solo-blacklisted terms in ALL sections.
+
+    Runs AFTER the healer and all post-healer restores (Quick Wins pristine,
+    Gamechanger snapshot, etc.) but BEFORE the validator. This catches terms
+    that were re-introduced by post-healer section restores.
+
+    Only modifies sections for segment='solo'. Returns number of fixes applied.
+
+    Mutates sections dict in-place for efficiency.
+    """
+    if not sections or not segment:
+        return 0
+
+    seg_lower = str(segment).strip().lower()
+    if seg_lower not in ("solo", "1", "einzelunternehmer", "selbstständig", "freiberufler"):
+        return 0
+
+    total_fixes = 0
+
+    # Iterate all sections and apply replacements
+    for key in list(sections.keys()):
+        val = sections[key]
+        if not isinstance(val, str) or not val or key.startswith("_"):
+            continue
+        if len(val) < 10:
+            continue
+
+        original = val
+
+        # Step 1: Apply phrase-level replacements first (longer matches first)
+        for phrase, replacement in SOLO_TERM_REPLACEMENTS_EXTENDED.items():
+            if phrase in val:
+                val = val.replace(phrase, replacement)
+
+        # Step 2: Apply blacklist enforcement with word boundaries
+        for term in SOLO_BLACKLIST_TERMS:
+            pattern = re.compile(r'\b' + re.escape(term) + r'\b', re.IGNORECASE)
+            fallback = SOLO_BLACKLIST_FALLBACKS.get(term, "")
+
+            def _replace_match(m: re.Match[str]) -> str:
+                matched = m.group(0)
+                if not fallback:
+                    return ""
+                if matched.isupper():
+                    return fallback.upper()
+                elif matched.islower():
+                    return fallback.lower()
+                elif matched[0].isupper():
+                    return fallback[0].upper() + fallback[1:] if len(fallback) > 1 else fallback.upper()
+                return fallback
+
+            val = pattern.sub(_replace_match, val)
+
+        if val != original:
+            sections[key] = val
+            total_fixes += 1
+
+    if total_fixes > 0:
+        log.info(
+            "[SOLO-FINAL-CLEANUP] Applied terminology fixes to %d sections",
+            total_fixes,
+        )
+
+    return total_fixes
+
 
 # =============================================================================
 # TASK 3: Business-Case Label Localization (English → German)
