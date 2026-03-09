@@ -197,6 +197,9 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
     if _bool_env("DASHBOARD_TOOLS_ENABLED", "1"):
         cfg.append(("routes.tools_dashboard", "", "tools-dashboard"))
 
+    # Report 3: KI-Strategiebericht
+    cfg.append(("routes.strategy", "/api", "strategy"))
+
     return cfg
 
 

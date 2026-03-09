@@ -780,7 +780,7 @@ def render_deep_dive_html(sections: Dict[str, str],
             or 'Ihr Unternehmen'
         )
 
-        return template.render(**template_vars)
+        return str(template.render(**template_vars))
 
     except Exception as exc:
         log.error("[GC-DEEP-DIVE] Template rendering failed: %s", exc)
