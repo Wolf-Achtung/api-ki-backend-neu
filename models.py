@@ -302,3 +302,131 @@ class ReportHistory(Base):
             "size_category": self.size_category,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
+
+
+# =============================================================================
+# REPORT 3: KI-STRATEGIEBERICHT
+# =============================================================================
+
+class StrategyQuestion(Base):
+    """
+    Report 3: Additional strategy questions (S1-S10) per briefing.
+    """
+    __tablename__ = "strategy_questions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    briefing_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("briefings.id", ondelete="CASCADE"), nullable=False, index=True, unique=True
+    )
+
+    # Pflichtfragen S1-S7
+    s1_budget: Mapped[str] = mapped_column(String(50), nullable=False)
+    s2_zeitrahmen: Mapped[str] = mapped_column(String(50), nullable=False)
+    s3_prioritaeten: Mapped[dict] = mapped_column(JSONType, nullable=False)
+    s4_engpass: Mapped[str] = mapped_column(String(100), nullable=False)
+    s5_software: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    s6_foerderinteresse: Mapped[str] = mapped_column(String(50), nullable=False)
+    s7_entscheidung: Mapped[str] = mapped_column(String(100), nullable=False)
+
+    # Optionale Fragen S8-S10
+    s8_erfahrung: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    s9_ansatz: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    s10_datenschutz: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+
+    # Metadaten
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
+
+    briefing = relationship("Briefing", lazy="joined")
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"<StrategyQuestion id={self.id} briefing_id={self.briefing_id}>"
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "briefing_id": self.briefing_id,
+            "s1_budget": self.s1_budget,
+            "s2_zeitrahmen": self.s2_zeitrahmen,
+            "s3_prioritaeten": self.s3_prioritaeten,
+            "s4_engpass": self.s4_engpass,
+            "s5_software": self.s5_software,
+            "s6_foerderinteresse": self.s6_foerderinteresse,
+            "s7_entscheidung": self.s7_entscheidung,
+            "s8_erfahrung": self.s8_erfahrung,
+            "s9_ansatz": self.s9_ansatz,
+            "s10_datenschutz": self.s10_datenschutz,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+class StrategyReport(Base):
+    """
+    Report 3: Strategy report status, cached data, generated sections, and PDF/email tracking.
+    """
+    __tablename__ = "strategy_reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    briefing_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("briefings.id", ondelete="CASCADE"), nullable=False, index=True, unique=True
+    )
+
+    # Status
+    status: Mapped[str] = mapped_column(String(30), default="pending", nullable=False, index=True)
+
+    # Recherche-Ergebnisse (JSON, gecached)
+    research_context: Mapped[Optional[dict]] = mapped_column(JSONType, nullable=True)
+
+    # Berechnete Werte (vom Backend-Calculator)
+    calculated_values: Mapped[Optional[dict]] = mapped_column(JSONType, nullable=True)
+
+    # Generierte Sections (JSON, jede Section separat)
+    sections: Mapped[Optional[dict]] = mapped_column(JSONType, nullable=True)
+
+    # PDF
+    pdf_available: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    pdf_generated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Email
+    email_sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    email_sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Timing
+    research_duration_seconds: Mapped[Optional[float]] = mapped_column(nullable=True)
+    generation_duration_seconds: Mapped[Optional[float]] = mapped_column(nullable=True)
+    total_duration_seconds: Mapped[Optional[float]] = mapped_column(nullable=True)
+
+    # Payment (Platzhalter für Mollie)
+    payment_status: Mapped[str] = mapped_column(String(30), default="beta", nullable=False)
+    payment_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
+    # Metadaten
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    briefing = relationship("Briefing", lazy="joined")
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"<StrategyReport id={self.id} briefing_id={self.briefing_id} status={self.status!r}>"
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "briefing_id": self.briefing_id,
+            "status": self.status,
+            "pdf_available": self.pdf_available,
+            "email_sent": self.email_sent,
+            "research_duration_seconds": self.research_duration_seconds,
+            "generation_duration_seconds": self.generation_duration_seconds,
+            "total_duration_seconds": self.total_duration_seconds,
+            "payment_status": self.payment_status,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
