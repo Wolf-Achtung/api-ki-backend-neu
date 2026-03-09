@@ -199,7 +199,7 @@ async def save_strategy_questions(
         # Update
         existing.s1_budget = questions.s1_budget
         existing.s2_zeitrahmen = questions.s2_zeitrahmen
-        existing.s3_prioritaeten = list(questions.s3_prioritaeten)
+        existing.s3_prioritaeten = questions.s3_prioritaeten
         existing.s4_engpass = questions.s4_engpass
         existing.s5_software = questions.s5_software
         existing.s6_foerderinteresse = questions.s6_foerderinteresse
