@@ -1,209 +1,1214 @@
+<!-- KI-Strategiebericht Template v1.0 "Strategy Blue" — 2026-03-10 -->
+<!-- Engine: Puppeteer/Chromium · Backend: FastAPI/Jinja2 · Design: Premium Strategy -->
+<!-- Fork of pdf_template_v7.html "Clean Corporate Plus", visually upgraded -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>KI-Strategiebericht — {{ firmenname }}</title>
     <style>
-        /* Minimales Styling — wird in Phase B durch finales Design ersetzt */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* ═══════════════════════════════════════════════════════
+   v1.0 STRATEGY BLUE — Premium Design System
+   Typography: Inter + Playfair Display
+   Colors: Navy + Gold + Strategy Blue
+   Layout: CSS Grid + Flexbox
+   Target: Puppeteer/Chromium A4 PDF
+   ═══════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Share+Tech+Mono&display=swap');
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Page Setup ─────────────────────────────────────── */
+@page {
+    size: A4;
+    margin: 20mm 20mm 25mm 23mm; /* links 3mm extra für Akzentlinie */
+    @bottom-center {
+        content: "Seite " counter(page) " von " counter(pages) "  ·  {{ report_id }}  ·  {{ datum }}";
+        font-size: 7pt;
+        color: #9CA3AF;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+    @bottom-right {
+        content: "Basierend auf Live-Marktdaten vom {{ research_date }}";
+        font-size: 6.5pt;
+        color: #9CA3AF;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+}
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            max-width: 210mm;
-            margin: 0 auto;
-            padding: 20mm;
-            color: #1a1a2e;
-            font-size: 11pt;
-            line-height: 1.6;
-        }
+/* ── Design Tokens ──────────────────────────────────── */
+:root {
+    /* Navy Palette (from Report 1) */
+    --navy-900: #0a1628;
+    --navy-800: #0e1f3d;
+    --navy-700: #132952;
+    --navy-100: #e8f2fa;
+    --navy-50: #f0f5fa;
+    /* Gold Accent */
+    --gold-600: #a68921;
+    --gold-100: #faf4dc;
+    /* Strategy Blue (NEW) */
+    --strategy-accent: #1a5276;
+    --strategy-highlight: #2e86c1;
+    --strategy-light: #ebf5fb;
+    /* Ampel / Traffic Light */
+    --ampel-green: #27ae60;
+    --ampel-yellow: #f39c12;
+    --ampel-red: #e74c3c;
+    /* Grays */
+    --c-text: #374151;
+    --c-text-2: #6B7280;
+    --c-text-3: #9CA3AF;
+    --c-border: #E5E7EB;
+    --c-bg: #F9FAFB;
+    --c-white: #ffffff;
+    /* Semantic */
+    --c-success: #10B981;
+    --c-danger: #EF4444;
+    --c-info: #3B82F6;
+    /* Typography */
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-heading: 'Playfair Display', Georgia, serif;
+    --font-mono: 'Share Tech Mono', monospace;
+    /* Spacing */
+    --sp-xs: 4px;
+    --sp-sm: 8px;
+    --sp-md: 16px;
+    --sp-lg: 24px;
+    --sp-xl: 32px;
+    --sp-2xl: 48px;
+    /* Radius */
+    --r-sm: 4px;
+    --r-md: 8px;
+    --r-lg: 12px;
+}
 
-        h1 {
-            color: #0a1628;
-            font-size: 28pt;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
+/* ── Base Reset ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        h2 {
-            color: #0a1628;
-            font-size: 16pt;
-            font-weight: 600;
-            border-bottom: 2px solid #a68921;
-            padding-bottom: 8px;
-            margin-top: 1.5em;
-            margin-bottom: 0.8em;
-        }
+body {
+    font-family: var(--font-body);
+    font-size: 10pt;
+    line-height: 1.65;
+    color: var(--c-text);
+    background: var(--c-white);
+    -webkit-font-smoothing: antialiased;
+    orphans: 4;
+    widows: 4;
+}
 
-        h3 {
-            color: #1a1a2e;
-            font-size: 13pt;
-            font-weight: 600;
-            margin-top: 1.2em;
-            margin-bottom: 0.5em;
-        }
+/* ── Seitenleiste / Accent Line (3mm Navy-Linie links) ── */
+body::before {
+    content: '';
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3mm;
+    background: linear-gradient(180deg, var(--navy-900) 0%, var(--strategy-accent) 50%, var(--navy-800) 100%);
+    z-index: 1000;
+}
 
-        p { margin-bottom: 0.8em; }
+/* ── Typography Scale ───────────────────────────────── */
+h1 {
+    font-family: var(--font-heading);
+    font-size: 30pt;
+    font-weight: 700;
+    color: var(--navy-900);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+h2 {
+    font-family: var(--font-heading);
+    font-size: 19pt;
+    font-weight: 600;
+    color: var(--navy-900);
+    line-height: 1.25;
+    margin: 0;
+}
+h3 {
+    font-family: var(--font-body);
+    font-size: 13pt;
+    font-weight: 600;
+    color: var(--navy-800);
+    line-height: 1.3;
+    margin: var(--sp-md) 0 var(--sp-sm);
+}
+h4 {
+    font-family: var(--font-body);
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--c-text);
+    line-height: 1.4;
+    margin: var(--sp-sm) 0 var(--sp-xs);
+}
 
-        ul, ol {
-            margin-bottom: 0.8em;
-            padding-left: 1.5em;
-        }
+p { margin: var(--sp-sm) 0; }
+a { color: var(--strategy-highlight); text-decoration: none; }
+a:hover { text-decoration: underline; }
+strong { font-weight: 600; }
+.small { font-size: 8.5pt; }
+.muted { color: var(--c-text-3); }
+.text-2 { color: var(--c-text-2); }
 
-        li { margin-bottom: 0.3em; }
+/* ── Lists & Tables ─────────────────────────────────── */
+ul, ol { padding-left: 1.5em; margin: var(--sp-sm) 0; }
+li { margin-bottom: var(--sp-xs); }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1em 0;
-            font-size: 10pt;
-        }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+    margin: var(--sp-md) 0;
+}
+th {
+    background: var(--navy-50);
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--navy-100);
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--navy-700);
+}
+td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--c-border);
+    vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) { background: var(--c-bg); }
 
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px 10px;
-            text-align: left;
-        }
+/* ── Tool-Comparison / Ampel Table ──────────────────── */
+table.tool-comparison {
+    border-radius: var(--r-md);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+table.tool-comparison th {
+    background: var(--navy-800);
+    color: white;
+    font-size: 8pt;
+    letter-spacing: 0.08em;
+}
+table.tool-comparison td {
+    font-size: 9pt;
+}
+.ampel-green { color: var(--ampel-green); font-weight: 600; }
+.ampel-yellow { color: var(--ampel-yellow); font-weight: 600; }
+.ampel-red { color: var(--ampel-red); font-weight: 600; }
 
-        th {
-            background: #f0f5fa;
-            font-weight: 600;
-            color: #0a1628;
-        }
+/* ── Page Structure ─────────────────────────────────── */
+.page { max-width: 210mm; margin: 0 auto; }
+.page-break { page-break-before: always; }
 
-        tr:nth-child(even) { background: #fafbfc; }
+/* ── Block Protection — keep cards/boxes together ───── */
+h1, h2, h3, h4 { break-after: avoid; }
 
-        strong { font-weight: 600; }
+/* ══════════════════════════════════════════════════════
+   COVER PAGE
+   ══════════════════════════════════════════════════════ */
+.cover-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100vh;
+    padding: var(--sp-2xl) var(--sp-xl);
+    overflow: hidden;
+    position: relative;
+}
 
-        .cover {
-            text-align: center;
-            padding: 60px 20px;
-            min-height: 200mm;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
+/* Decorative top bar */
+.cover-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--navy-900), var(--strategy-accent), var(--gold-600));
+}
 
-        .cover h1 { font-size: 32pt; margin-bottom: 16px; }
-        .cover .subtitle { font-size: 14pt; color: #555; margin-bottom: 8px; }
-        .cover .meta { font-size: 11pt; color: #888; margin-top: 24px; }
-        .cover .badge {
-            display: inline-block;
-            background: #f0f5fa;
-            border: 1px solid #a68921;
-            border-radius: 4px;
-            padding: 6px 16px;
-            font-size: 10pt;
-            color: #a68921;
-            margin-top: 16px;
-        }
+.cover-eyebrow {
+    font-family: var(--font-body);
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--strategy-accent);
+    margin-bottom: var(--sp-lg);
+}
 
-        .sources {
-            font-size: 0.85em;
-            color: #666;
-            border-top: 1px solid #ddd;
-            padding-top: 1em;
-            margin-top: 1.5em;
-        }
+.cover-accent-line {
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold-600), var(--strategy-highlight));
+    border-radius: 2px;
+    margin: 0 auto var(--sp-xl);
+}
 
-        .sources a { color: #2563eb; text-decoration: none; }
-        .sources a:hover { text-decoration: underline; }
+.cover-page h1 {
+    font-size: 36pt;
+    margin-bottom: var(--sp-md);
+    color: var(--navy-900);
+}
 
-        .page-break { page-break-before: always; }
+.cover-subtitle {
+    font-family: var(--font-heading);
+    font-size: 14pt;
+    color: var(--navy-700);
+    font-style: italic;
+    margin-bottom: var(--sp-xs);
+}
 
-        .naechste-schritte ol { counter-reset: step; list-style: none; padding-left: 0; }
-        .naechste-schritte li {
-            counter-increment: step;
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            background: #f8f9fa;
-            border-left: 3px solid #a68921;
-            border-radius: 0 4px 4px 0;
-        }
-        .naechste-schritte li::before {
-            content: counter(step) ".";
-            font-weight: 700;
-            color: #a68921;
-            margin-right: 8px;
-        }
+.cover-meta {
+    font-size: 10.5pt;
+    color: var(--c-text-2);
+    margin-bottom: var(--sp-xl);
+}
+.cover-meta strong { color: var(--c-text); }
 
-        @media print {
-            body { padding: 15mm; }
-            .page-break { page-break-before: always; }
-        }
+/* Cover Score Ring */
+.cover-score-ring {
+    margin: var(--sp-lg) auto;
+    position: relative;
+    display: inline-block;
+}
+.cover-score-ring svg {
+    transform: rotate(-90deg);
+}
+.cover-score-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+.cover-score-number {
+    font-family: var(--font-heading);
+    font-size: 38pt;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--navy-900);
+}
+.cover-score-max {
+    font-size: 11pt;
+    color: var(--c-text-3);
+}
+.cover-score-label {
+    font-size: 10pt;
+    font-weight: 600;
+    color: var(--strategy-accent);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* TÜV Badge */
+.tuev-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--navy-50) 0%, var(--strategy-light) 100%);
+    border: 1px solid var(--navy-100);
+    border-radius: var(--r-md);
+    padding: 12px 24px;
+    margin-top: var(--sp-lg);
+}
+.tuev-badge-icon {
+    width: 36px;
+    height: 36px;
+}
+.tuev-badge-text {
+    text-align: left;
+}
+.tuev-badge-title {
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--navy-800);
+    letter-spacing: 0.04em;
+}
+.tuev-badge-sub {
+    font-size: 7.5pt;
+    color: var(--c-text-2);
+}
+
+.cover-research-date {
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+    margin-top: var(--sp-lg);
+    font-style: italic;
+}
+
+/* ══════════════════════════════════════════════════════
+   TABLE OF CONTENTS
+   ══════════════════════════════════════════════════════ */
+.toc-page {
+    padding: var(--sp-2xl) 0;
+}
+
+.toc-page h2 {
+    font-size: 22pt;
+    margin-bottom: var(--sp-lg);
+    padding-bottom: var(--sp-sm);
+    border-bottom: 3px solid var(--navy-900);
+}
+
+.toc-entry {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #F3F4F6;
+    text-decoration: none;
+    color: var(--c-text);
+    font-size: 10pt;
+}
+.toc-entry:last-child { border-bottom: none; }
+
+.toc-number {
+    font-family: var(--font-heading);
+    font-size: 14pt;
+    font-weight: 700;
+    color: var(--strategy-accent);
+    min-width: 32px;
+    text-align: right;
+}
+.toc-title {
+    flex: 1;
+    font-weight: 500;
+    color: var(--navy-800);
+}
+.toc-subtitle {
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+    font-weight: 400;
+}
+.toc-dots {
+    flex: 1;
+    border-bottom: 1px dotted var(--c-border);
+    margin: 0 8px;
+    min-width: 40px;
+}
+
+/* ══════════════════════════════════════════════════════
+   SECTION HEADER (used for Exec Summary and sections)
+   ══════════════════════════════════════════════════════ */
+.section-header {
+    margin-bottom: var(--sp-lg);
+    padding-bottom: var(--sp-sm);
+    border-bottom: 2px solid var(--gold-600);
+}
+.section-label {
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--strategy-accent);
+    margin-bottom: var(--sp-xs);
+}
+
+/* ══════════════════════════════════════════════════════
+   CHAPTER SEPARATOR (full-page, premium)
+   ══════════════════════════════════════════════════════ */
+.chapter-separator {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(135deg, var(--navy-900) 0%, var(--strategy-accent) 60%, var(--navy-800) 100%);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle geometric decoration */
+.chapter-separator::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 50%;
+}
+.chapter-separator::after {
+    content: '';
+    position: absolute;
+    bottom: -15%;
+    left: -8%;
+    width: 300px;
+    height: 300px;
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 50%;
+}
+
+.chapter-number {
+    font-family: var(--font-heading);
+    font-size: 120pt;
+    font-weight: 700;
+    line-height: 1;
+    color: rgba(255,255,255,0.12);
+    margin-bottom: -20px;
+    position: relative;
+    z-index: 1;
+}
+
+.chapter-title {
+    font-family: var(--font-heading);
+    font-size: 28pt;
+    font-weight: 600;
+    color: white;
+    margin-bottom: var(--sp-sm);
+    position: relative;
+    z-index: 1;
+}
+
+.chapter-subtitle {
+    font-family: var(--font-body);
+    font-size: 12pt;
+    font-weight: 400;
+    color: var(--gold-100);
+    letter-spacing: 0.02em;
+    position: relative;
+    z-index: 1;
+}
+
+.chapter-accent-line {
+    width: 60px;
+    height: 2px;
+    background: var(--gold-600);
+    margin: var(--sp-md) auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* ══════════════════════════════════════════════════════
+   SECTION CONTENT
+   ══════════════════════════════════════════════════════ */
+.section-content {
+    padding: var(--sp-xl) 0 var(--sp-lg);
+    font-size: 10pt;
+    line-height: 1.65;
+}
+.section-content p + p { margin-top: 6px; }
+.section-content h4 + p { margin-top: 4px; }
+.section-content p, .section-content li { orphans: 3; widows: 3; }
+.section-content h3 { margin-top: var(--sp-lg); }
+
+/* Management / Detail Level Separator */
+.section-content hr {
+    border: none;
+    border-top: 2px solid var(--gold-100);
+    margin: var(--sp-lg) 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   EXECUTIVE SUMMARY BOX
+   ══════════════════════════════════════════════════════ */
+.exec-summary {
+    padding: var(--sp-xl) 0;
+}
+.exec-summary .section-body {
+    font-size: 10.5pt;
+    line-height: 1.7;
+}
+
+/* ══════════════════════════════════════════════════════
+   INFOGRAPHIC COMPONENTS
+   ══════════════════════════════════════════════════════ */
+
+/* Score Widget */
+.score-widget {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-md);
+    background: var(--navy-50);
+    border-radius: var(--r-md);
+    padding: var(--sp-md) var(--sp-lg);
+    margin: var(--sp-md) 0;
+    break-inside: avoid;
+}
+.score-widget-value {
+    font-family: var(--font-heading);
+    font-size: 32pt;
+    font-weight: 700;
+    color: var(--navy-900);
+    line-height: 1;
+}
+.score-widget-label {
+    font-size: 9pt;
+    color: var(--c-text-2);
+    font-weight: 500;
+}
+.score-widget-bar {
+    width: 120px;
+    height: 6px;
+    background: var(--c-border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+.score-widget-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--strategy-accent), var(--strategy-highlight));
+}
+
+/* KPI Cards Row */
+.kpi-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin: var(--sp-lg) 0;
+}
+.kpi-card {
+    text-align: center;
+    padding: 16px 12px;
+    background: var(--c-bg);
+    border-radius: var(--r-md);
+    border-top: 3px solid var(--strategy-accent);
+    break-inside: avoid;
+}
+.kpi-value {
+    font-family: var(--font-heading);
+    font-size: 22pt;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--navy-900);
+}
+.kpi-label {
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+    margin-top: 2px;
+}
+
+/* Timeline / Roadmap */
+.timeline {
+    position: relative;
+    padding-left: 32px;
+    margin: var(--sp-lg) 0;
+}
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--strategy-accent);
+}
+.timeline-item {
+    position: relative;
+    padding: var(--sp-sm) 0 var(--sp-lg);
+    break-inside: avoid;
+}
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 12px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--strategy-accent);
+    border: 2px solid var(--c-white);
+    box-shadow: 0 0 0 2px var(--strategy-accent);
+}
+.timeline-phase {
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--strategy-highlight);
+    margin-bottom: 2px;
+}
+.timeline-title {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--navy-800);
+}
+.timeline-desc {
+    font-size: 9.5pt;
+    color: var(--c-text-2);
+    margin-top: 2px;
+}
+
+/* Comparison Table with Traffic Light */
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-md);
+    margin: var(--sp-lg) 0;
+}
+.comparison-card {
+    background: var(--c-bg);
+    border-radius: var(--r-md);
+    padding: var(--sp-md);
+    break-inside: avoid;
+}
+.comparison-card h4 {
+    font-size: 10pt;
+    color: var(--navy-800);
+    margin-bottom: var(--sp-sm);
+}
+
+/* Highlight Box (for key findings / callouts) */
+.highlight-box {
+    background: var(--strategy-light);
+    border-left: 4px solid var(--strategy-highlight);
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+    padding: var(--sp-md) var(--sp-lg);
+    margin: var(--sp-lg) 0;
+    font-size: 10pt;
+    line-height: 1.6;
+    break-inside: avoid;
+}
+.highlight-box strong { color: var(--navy-800); }
+
+/* Tip Box */
+.tip-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    margin: var(--sp-md) 0;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    break-inside: avoid;
+}
+.tip-box::before {
+    content: 'Praxis-Tipp';
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #047857;
+    margin-bottom: 4px;
+}
+
+/* Warning Box */
+.warning-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    margin: var(--sp-md) 0;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    break-inside: avoid;
+}
+.warning-box::before {
+    content: 'Hinweis';
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #b45309;
+    margin-bottom: 4px;
+}
+
+/* Investment Scenario Cards */
+.scenario-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--sp-md);
+    margin: var(--sp-lg) 0;
+}
+.scenario-card {
+    background: var(--c-white);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    padding: var(--sp-md);
+    text-align: center;
+    break-inside: avoid;
+}
+.scenario-card.recommended {
+    border-color: var(--strategy-accent);
+    box-shadow: 0 2px 8px rgba(26,82,118,0.12);
+}
+.scenario-card.recommended::before {
+    content: 'EMPFOHLEN';
+    display: block;
+    font-size: 7pt;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--c-white);
+    background: var(--strategy-accent);
+    padding: 3px 8px;
+    border-radius: var(--r-sm);
+    margin: -8px auto var(--sp-sm);
+    width: fit-content;
+}
+.scenario-label {
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--c-text-2);
+    margin-bottom: var(--sp-xs);
+}
+.scenario-value {
+    font-family: var(--font-heading);
+    font-size: 20pt;
+    font-weight: 700;
+    color: var(--navy-900);
+}
+.scenario-desc {
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+    margin-top: var(--sp-xs);
+}
+
+/* ══════════════════════════════════════════════════════
+   QUELLENANGABEN / SOURCES FOOTER
+   ══════════════════════════════════════════════════════ */
+.sources-footer {
+    border-top: 1px solid #ddd;
+    padding-top: 12px;
+    margin-top: var(--sp-xl);
+    font-size: 8pt;
+    color: #666;
+    line-height: 1.5;
+}
+.sources-footer sup {
+    color: var(--strategy-highlight);
+    font-weight: 600;
+}
+.sources-footer a {
+    color: var(--c-text-2);
+    text-decoration: none;
+}
+.sources-footer a:hover { text-decoration: underline; }
+
+/* Inline Source Reference */
+sup.src-ref {
+    font-size: 7pt;
+    font-weight: 600;
+    color: var(--strategy-highlight);
+    cursor: default;
+}
+
+/* ══════════════════════════════════════════════════════
+   NÄCHSTE SCHRITTE / CTA
+   ══════════════════════════════════════════════════════ */
+.naechste-schritte {
+    padding: var(--sp-xl) 0;
+}
+.naechste-schritte h2 {
+    margin-bottom: var(--sp-lg);
+}
+.naechste-schritte ol {
+    counter-reset: step;
+    list-style: none;
+    padding-left: 0;
+}
+.naechste-schritte li {
+    counter-increment: step;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    background: var(--navy-50);
+    border-left: 4px solid var(--strategy-accent);
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+    break-inside: avoid;
+}
+.naechste-schritte li::before {
+    content: counter(step) ".";
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14pt;
+    color: var(--strategy-accent);
+    margin-right: 10px;
+}
+
+/* CTA Button */
+.cta-box {
+    background: linear-gradient(135deg, var(--navy-900) 0%, var(--strategy-accent) 100%);
+    border-radius: var(--r-lg);
+    padding: var(--sp-xl) var(--sp-2xl);
+    text-align: center;
+    margin-top: var(--sp-xl);
+    color: white;
+    break-inside: avoid;
+}
+.cta-box h3 {
+    color: white;
+    font-family: var(--font-heading);
+    font-size: 16pt;
+    margin-bottom: var(--sp-sm);
+}
+.cta-box p {
+    color: rgba(255,255,255,0.85);
+    font-size: 10pt;
+    margin-bottom: var(--sp-md);
+}
+.cta-btn {
+    display: inline-block;
+    padding: 10px 28px;
+    background: var(--gold-600);
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 10pt;
+    letter-spacing: 0.02em;
+}
+
+/* ══════════════════════════════════════════════════════
+   IMPRESSUM
+   ══════════════════════════════════════════════════════ */
+.impressum {
+    padding: var(--sp-xl) 0;
+}
+.impressum-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--sp-lg);
+    margin-bottom: var(--sp-lg);
+}
+.impressum-block h4 {
+    font-size: 10pt;
+    margin-bottom: var(--sp-sm);
+}
+.impressum-block p {
+    font-size: 9pt;
+    color: var(--c-text-2);
+    line-height: 1.6;
+}
+.impressum-divider {
+    height: 1px;
+    background: var(--c-border);
+    margin: var(--sp-lg) 0;
+}
+.impressum-privacy {
+    background: var(--c-bg);
+    border-radius: var(--r-md);
+    padding: var(--sp-lg);
+}
+.impressum-privacy h3 { margin-bottom: var(--sp-md); }
+.impressum-privacy h4 { font-size: 10pt; margin-top: var(--sp-md); }
+.impressum-privacy p, .impressum-privacy li { font-size: 9pt; color: var(--c-text-2); }
+
+.gdpr-mini {
+    font-size: 7.5pt;
+    color: var(--c-text-3);
+    text-align: center;
+    padding: var(--sp-md) 0;
+    margin-top: var(--sp-lg);
+    border-top: 1px solid var(--c-border);
+}
+
+/* ══════════════════════════════════════════════════════
+   PRINT / PUPPETEER OPTIMIZATION
+   ══════════════════════════════════════════════════════ */
+@media print {
+    body::before {
+        position: fixed;
+    }
+    .page-break {
+        page-break-before: always;
+    }
+    .chapter-separator {
+        page-break-before: always;
+        page-break-after: always;
+        page-break-inside: avoid;
+    }
+    .kpi-card, .scenario-card, .comparison-card,
+    .highlight-box, .tip-box, .warning-box,
+    .score-widget, .tuev-badge, .cta-box,
+    .impressum-block, .naechste-schritte li {
+        break-inside: avoid;
+    }
+    .section-content {
+        break-inside: auto;
+    }
+}
     </style>
 </head>
 <body>
 
-    <!-- Deckblatt -->
-    <div class="cover">
+    <!-- ====== DECKBLATT ====== -->
+    <div class="cover-page">
+        <div class="cover-eyebrow">KI-Strategiebericht</div>
+        <div class="cover-accent-line"></div>
         <h1>KI-Strategiebericht</h1>
-        <p class="subtitle">{{ firmenname }} &middot; {{ branche }}</p>
-        <p class="meta">Erstellt am {{ datum }}</p>
-        <span class="badge">TÜV Austria zertifizierte Methodik</span>
+        <p class="cover-subtitle">{{ firmenname }} · {{ branche }}</p>
+        <p class="cover-meta">Erstellt am <strong>{{ datum }}</strong> · Segment: {{ segment }} · {{ mitarbeiter }} Mitarbeiter</p>
+
+        <!-- Score Ring -->
+        <div class="cover-score-ring">
+            <svg width="160" height="160" viewBox="0 0 160 160">
+                <circle cx="80" cy="80" r="70" fill="none" stroke="#E5E7EB" stroke-width="8"/>
+                <circle cx="80" cy="80" r="70" fill="none" stroke="url(#scoreGrad)" stroke-width="8"
+                        stroke-dasharray="{{ (readiness_score|default(50)|float / 100 * 439.8)|round(1) }} 439.8"
+                        stroke-linecap="round"/>
+                <defs>
+                    <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#1a5276"/>
+                        <stop offset="100%" stop-color="#2e86c1"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div class="cover-score-content">
+                <div class="cover-score-number">{{ readiness_score }}</div>
+                <div class="cover-score-max">/ 100</div>
+                <div class="cover-score-label">{{ reifegrad_label }}</div>
+            </div>
+        </div>
+
+        <!-- TÜV Badge -->
+        <div class="tuev-badge">
+            <svg class="tuev-badge-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="18" cy="18" r="17" stroke="#1a5276" stroke-width="2"/>
+                <path d="M12 18l4 4 8-8" stroke="#27ae60" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="tuev-badge-text">
+                <div class="tuev-badge-title">TÜV Austria zertifizierte Methodik</div>
+                <div class="tuev-badge-sub">Qualitätsgesicherte KI-Readiness-Analyse</div>
+            </div>
+        </div>
+
+        <p class="cover-research-date">Basierend auf Live-Marktdaten vom {{ research_date }}</p>
     </div>
 
-    <!-- Executive Summary -->
-    <div class="page-break">
-        <h2>Executive Summary</h2>
-        {{ exec_summary | safe }}
+    <!-- ====== INHALTSVERZEICHNIS ====== -->
+    <div class="toc-page page-break">
+        <h2>Inhaltsverzeichnis</h2>
+
+        <div class="toc-entry" style="border-bottom: 2px solid var(--c-border); padding-bottom: 12px;">
+            <span class="toc-number" style="color: var(--gold-600);">—</span>
+            <span class="toc-title">Executive Summary</span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">1</span>
+            <span class="toc-title">Ausgangslage <span class="toc-subtitle">— Ihr KI-Readiness-Profil</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">2</span>
+            <span class="toc-title">Markt &amp; Wettbewerb <span class="toc-subtitle">— Aktuelle Branchendaten &amp; Benchmarks</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">3</span>
+            <span class="toc-title">Strategische Handlungsfelder <span class="toc-subtitle">— Priorisiert nach Impact &amp; Machbarkeit</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">4</span>
+            <span class="toc-title">Tool-Landschaft &amp; Empfehlungen <span class="toc-subtitle">— DSGVO-bewertete Lösungen</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">5</span>
+            <span class="toc-title">Investitionsplan &amp; ROI <span class="toc-subtitle">— Szenarien, Break-Even &amp; Budget-Fit</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">6</span>
+            <span class="toc-title">Umsetzungs-Roadmap <span class="toc-subtitle">— Ihr Phasenplan zur produktiven KI-Nutzung</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">7</span>
+            <span class="toc-title">Fördermittel &amp; Finanzierung <span class="toc-subtitle">— Aktuelle Programme</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">8</span>
+            <span class="toc-title">Risiken &amp; Compliance <span class="toc-subtitle">— EU AI Act &amp; DSGVO</span></span>
+        </div>
+
+        <div class="toc-entry" style="border-top: 2px solid var(--c-border); padding-top: 12px; margin-top: 4px;">
+            <span class="toc-number" style="color: var(--gold-600);">→</span>
+            <span class="toc-title">Ihre nächsten Schritte</span>
+        </div>
     </div>
 
-    <!-- S1: Ausgangslage -->
-    <div class="page-break">
-        <h2>1. Ausgangslage — Ihr KI-Readiness-Profil</h2>
+    <!-- ====== EXECUTIVE SUMMARY ====== -->
+    <div class="exec-summary page-break">
+        <div class="section-header">
+            <span class="section-label">ZUSAMMENFASSUNG</span>
+            <h2>Executive Summary</h2>
+        </div>
+        <div class="section-body">
+            {{ exec_summary | safe }}
+        </div>
+    </div>
+
+    <!-- ====== KAPITEL-TRENNER: 1 ====== -->
+    <div class="chapter-separator page-break">
+        <div class="chapter-number">1</div>
+        <div class="chapter-accent-line"></div>
+        <div class="chapter-title">Ausgangslage</div>
+        <div class="chapter-subtitle">Ihr KI-Readiness-Profil</div>
+    </div>
+
+    <!-- ====== S1: AUSGANGSLAGE ====== -->
+    <div class="section-content">
         {{ section_s1 | safe }}
     </div>
 
-    <!-- S2: Markt & Wettbewerb -->
-    <div class="page-break">
-        <h2>2. Markt &amp; Wettbewerb</h2>
+    <!-- ====== KAPITEL-TRENNER: 2 ====== -->
+    <div class="chapter-separator page-break">
+        <div class="chapter-number">2</div>
+        <div class="chapter-accent-line"></div>
+        <div class="chapter-title">Markt &amp; Wettbewerb</div>
+        <div class="chapter-subtitle">Aktuelle Branchendaten &amp; Benchmarks</div>
+    </div>
+
+    <!-- ====== S2: MARKT & WETTBEWERB ====== -->
+    <div class="section-content">
         {{ section_s2 | safe }}
     </div>
 
-    <!-- S3: Strategische Handlungsfelder -->
-    <div class="page-break">
-        <h2>3. Strategische Handlungsfelder</h2>
+    <!-- ====== KAPITEL-TRENNER: 3 ====== -->
+    <div class="chapter-separator page-break">
+        <div class="chapter-number">3</div>
+        <div class="chapter-accent-line"></div>
+        <div class="chapter-title">Strategische Handlungsfelder</div>
+        <div class="chapter-subtitle">Priorisiert nach Impact &amp; Machbarkeit</div>
+    </div>
+
+    <!-- ====== S3: HANDLUNGSFELDER ====== -->
+    <div class="section-content">
         {{ section_s3 | safe }}
     </div>
 
-    <!-- S4: Tool-Landschaft & Empfehlungen -->
-    <div class="page-break">
-        <h2>4. Tool-Landschaft &amp; Empfehlungen</h2>
+    <!-- ====== KAPITEL-TRENNER: 4 ====== -->
+    <div class="chapter-separator page-break">
+        <div class="chapter-number">4</div>
+        <div class="chapter-accent-line"></div>
+        <div class="chapter-title">Tool-Landschaft &amp; Empfehlungen</div>
+        <div class="chapter-subtitle">DSGVO-bewertete Lösungen für Ihr Unternehmen</div>
+    </div>
+
+    <!-- ====== S4: TOOLS ====== -->
+    <div class="section-content">
         {{ section_s4 | safe }}
     </div>
 
-    <!-- S5: Investitionsplan & ROI -->
-    <div class="page-break">
-        <h2>5. Investitionsplan &amp; ROI</h2>
+    <!-- ====== KAPITEL-TRENNER: 5 ====== -->
+    <div class="chapter-separator page-break">
+        <div class="chapter-number">5</div>
+        <div class="chapter-accent-line"></div>
+        <div class="chapter-title">Investitionsplan &amp; ROI</div>
+        <div class="chapter-subtitle">Szenarien, Break-Even &amp; Budget-Fit</div>
+    </div>
+
+    <!-- ====== S5: INVESTITIONSPLAN ====== -->
+    <div class="section-content">
         {{ section_s5 | safe }}
     </div>
 
-    <!-- S6: Umsetzungs-Roadmap -->
-    <div class="page-break">
-        <h2>6. Umsetzungs-Roadmap</h2>
+    <!-- ====== KAPITEL-TRENNER: 6 ====== -->
+    <div class="chapter-separator page-break">
+        <div class="chapter-number">6</div>
+        <div class="chapter-accent-line"></div>
+        <div class="chapter-title">Umsetzungs-Roadmap</div>
+        <div class="chapter-subtitle">Ihr Phasenplan zur produktiven KI-Nutzung</div>
+    </div>
+
+    <!-- ====== S6: ROADMAP ====== -->
+    <div class="section-content">
         {{ section_s6 | safe }}
     </div>
 
-    <!-- S7: Fördermittel & Finanzierung -->
-    <div class="page-break">
-        <h2>7. Fördermittel &amp; Finanzierung</h2>
+    <!-- ====== KAPITEL-TRENNER: 7 ====== -->
+    <div class="chapter-separator page-break">
+        <div class="chapter-number">7</div>
+        <div class="chapter-accent-line"></div>
+        <div class="chapter-title">Fördermittel &amp; Finanzierung</div>
+        <div class="chapter-subtitle">Aktuelle Programme für Ihr Unternehmen</div>
+    </div>
+
+    <!-- ====== S7: FÖRDERMITTEL ====== -->
+    <div class="section-content">
         {{ section_s7 | safe }}
     </div>
 
-    <!-- S8: Risiken & Compliance -->
-    <div class="page-break">
-        <h2>8. Risiken &amp; Compliance</h2>
+    <!-- ====== KAPITEL-TRENNER: 8 ====== -->
+    <div class="chapter-separator page-break">
+        <div class="chapter-number">8</div>
+        <div class="chapter-accent-line"></div>
+        <div class="chapter-title">Risiken &amp; Compliance</div>
+        <div class="chapter-subtitle">EU AI Act &amp; DSGVO</div>
+    </div>
+
+    <!-- ====== S8: RISIKEN ====== -->
+    <div class="section-content">
         {{ section_s8 | safe }}
     </div>
 
-    <!-- Nächste Schritte -->
-    <div class="page-break">
-        <h2>Ihre nächsten Schritte</h2>
+    <!-- ====== NÄCHSTE SCHRITTE ====== -->
+    <div class="naechste-schritte page-break">
+        <div class="section-header">
+            <span class="section-label">HANDLUNGSEMPFEHLUNG</span>
+            <h2>Ihre nächsten Schritte</h2>
+        </div>
         {{ naechste_schritte | safe }}
+    </div>
+
+    <!-- ====== IMPRESSUM / FOOTER ====== -->
+    <div class="impressum page-break">
+        <div class="section-header">
+            <span class="section-label">RECHTLICHES</span>
+            <h2>Impressum &amp; Datenschutz</h2>
+        </div>
+        <div class="impressum-grid">
+            <div class="impressum-block">
+                <h4>Impressum</h4>
+                <p><strong>Verantwortlich für den Inhalt:</strong><br>
+                KI-Sicherheit.jetzt – Wolf Hohl<br>
+                Greifswalder Str. 224a<br>
+                10405 Berlin</p>
+                <p>E-Mail: kontakt@ki-sicherheit.jetzt</p>
+            </div>
+            <div class="impressum-block">
+                <h4>Haftungsausschluss</h4>
+                <p>Dieser KI-Strategiebericht dient ausschließlich der Information und strategischen Orientierung. Trotz sorgfältiger Prüfung wird keine Haftung für Richtigkeit oder Vollständigkeit übernommen.</p>
+                <h4>Urheberrecht</h4>
+                <p>Alle Inhalte dieses Berichts unterliegen dem deutschen Urheberrecht.</p>
+            </div>
+            <div class="impressum-block">
+                <h4>Hinweis zum EU AI Act</h4>
+                <p>Dieser Bericht informiert über Pflichten, Risiken und Fördermöglichkeiten beim Einsatz von KI nach EU AI Act und DSGVO. Er ersetzt keine Rechtsberatung.</p>
+            </div>
+        </div>
+        <div class="impressum-divider"></div>
+        <div class="impressum-privacy">
+            <h3>Datenschutzerklärung</h3>
+            <p>Der Schutz Ihrer persönlichen Daten ist uns ein besonderes Anliegen.</p>
+            <h4>Datenverarbeitung</h4>
+            <p>Die für diesen Bericht erhobenen Unternehmensdaten werden ausschließlich zur Erstellung des KI-Strategieberichts verarbeitet (Art. 6 Abs. 1 b DSGVO).</p>
+            <h4>Ihre Rechte laut DSGVO</h4>
+            <ul>
+                <li>Auskunft, Berichtigung oder Löschung Ihrer Daten</li>
+                <li>Datenübertragbarkeit</li>
+                <li>Widerruf erteilter Einwilligungen</li>
+                <li>Beschwerde bei der Datenschutzbehörde</li>
+            </ul>
+            <p>Kontakt: kontakt@ki-sicherheit.jetzt</p>
+        </div>
+
+        <div class="gdpr-mini">
+            Dieser Report nutzt Unternehmensdaten zur KI-Strategie-Analyse. Verarbeitung auf Basis von Art. 6 (1) b DSGVO. AVV auf Anfrage.
+            Basierend auf Live-Marktdaten vom {{ research_date }}.
+        </div>
+
+        <p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">
+            KI-Strategiebericht v1.0 · Template: Strategy Blue · Generiert am {{ datum }} · {{ report_id }}
+            {% if build_id %} · Build: {{ build_id }}{% endif %}
+        </p>
     </div>
 
 </body>
