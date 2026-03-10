@@ -886,6 +886,66 @@ def apply_cross_section_dedup(sections: dict) -> dict:
 
 
 # =============================================================================
+# 1.6 BRANCHE NAME LIMITER (FIX-BRANCHENNAME)
+# Limits the industry name to max 2 occurrences per section.
+# After the 2nd occurrence, replaces with short forms like
+# "Ihrer Branche", "Ihrem Bereich", "diesem Sektor".
+# =============================================================================
+
+_BRANCHE_SHORT_FORMS = [
+    "Ihrer Branche",
+    "Ihrem Bereich",
+    "diesem Sektor",
+    "Ihrem Geschäftsfeld",
+    "Ihrem Unternehmen",
+]
+
+_BRANCHE_MAX_PER_SECTION = 2
+
+
+def apply_branche_name_limiter(sections: dict) -> dict:
+    """Limit industry name repetition to max 2 per section."""
+    branche_label = sections.get("BRANCHE_LABEL", "")
+    if not branche_label or len(branche_label) < 5:
+        return sections
+
+    total_replaced = 0
+    short_form_idx = 0
+
+    html_sections = [k for k in sections if k.endswith("_HTML") and isinstance(sections.get(k), str)]
+
+    for key in html_sections:
+        content = sections[key]
+        if not content or branche_label not in content:
+            continue
+
+        count = content.count(branche_label)
+        if count <= _BRANCHE_MAX_PER_SECTION:
+            continue
+
+        # Replace occurrences after the 2nd one
+        parts = content.split(branche_label)
+        # Keep first (MAX+1) parts as-is, replace the rest
+        result_parts = []
+        for i, part in enumerate(parts):
+            result_parts.append(part)
+            if i < len(parts) - 1:  # Not the last part
+                if i < _BRANCHE_MAX_PER_SECTION:
+                    result_parts.append(branche_label)  # Keep original
+                else:
+                    replacement = _BRANCHE_SHORT_FORMS[short_form_idx % len(_BRANCHE_SHORT_FORMS)]
+                    result_parts.append(replacement)
+                    short_form_idx += 1
+                    total_replaced += 1
+
+        sections[key] = "".join(result_parts)
+
+    if total_replaced:
+        log.info("[BRANCHE-LIMITER] Replaced %d excess industry name occurrences across sections", total_replaced)
+    return sections
+
+
+# =============================================================================
 # 2. FRAGMENT-REPAIR: Repariert unvollständige Sätze
 # =============================================================================
 
@@ -2943,6 +3003,9 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
 
     # 1.5 FIX-REDUNDANCY: Cross-section deduplication
     sections = apply_cross_section_dedup(sections)
+
+    # 1.6 FIX-BRANCHENNAME: Limit industry name repetition per section
+    sections = apply_branche_name_limiter(sections)
 
     # 2. Fragment-Repair
     sections = apply_fragment_repair(sections)
