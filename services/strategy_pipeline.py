@@ -187,6 +187,9 @@ async def generate_strategy_report(
         _save_sections(db_session, briefing_id, sections, research_duration, generation_duration, total_duration)
         _update_status(db_session, briefing_id, "completed")
 
+        # === PHASE 4: PDF Generation ===
+        await _generate_pdf(db_session, briefing_id)
+
         return sections
 
     except Exception as e:
@@ -415,6 +418,51 @@ def _extract_foerder_summe(s7_html: str) -> str:
     if matches:
         return str(matches[0])
     return "k.A."
+
+
+# =============================================================================
+# PDF GENERATION
+# =============================================================================
+
+async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
+    """Generate PDF after all sections are saved (analog to Report 1)."""
+    try:
+        from models import StrategyReport, Briefing, Analysis
+        from routes.strategy import _render_strategy_html
+        from services.pdf_client import render_pdf_from_html
+
+        sr = db_session.query(StrategyReport).filter(
+            StrategyReport.briefing_id == briefing_id
+        ).first()
+        if not sr or not sr.sections:
+            logger.warning("[Strategy %d] Cannot generate PDF — no sections", briefing_id)
+            return
+
+        html_content = _render_strategy_html(sr, db_session)
+        logger.info("[Strategy %d] Rendering PDF (%d chars HTML)", briefing_id, len(html_content))
+
+        result = await asyncio.to_thread(
+            render_pdf_from_html,
+            html_content,
+            {"report_type": "strategy", "briefing_id": briefing_id},
+        )
+
+        if "error" in result:
+            logger.error("[Strategy %d] PDF generation failed: %s", briefing_id, result["error"])
+            return
+
+        pdf_bytes = result.get("pdf_bytes")
+        if pdf_bytes:
+            sr.pdf_available = True
+            sr.pdf_generated_at = datetime.now(timezone.utc)
+            sr.updated_at = datetime.now(timezone.utc)
+            db_session.commit()
+            logger.info("[Strategy %d] PDF generated (%d bytes)", briefing_id, len(pdf_bytes))
+        else:
+            logger.warning("[Strategy %d] PDF service returned no bytes", briefing_id)
+
+    except Exception as exc:
+        logger.error("[Strategy %d] PDF generation error: %s", briefing_id, exc, exc_info=True)
 
 
 # =============================================================================
