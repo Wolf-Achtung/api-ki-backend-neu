@@ -2578,22 +2578,10 @@ class ReportValidator:
                 )
                 continue
 
-            # Fallback: Check plain percentage pattern on visible text only
-            matches = re.findall(roi_pattern, text_only)
-            roi_values = [int(m) for m in matches if 100 <= int(m) <= 500]
-
-            if roi_values:
-                self.errors.append(
-                    ValidationError(
-                        severity="WARNING",
-                        category="ROI_PROHIBITED",
-                        section=section_name,
-                        message=f"ROI-Prozentsatz {roi_values[0]}% in verbotenem Abschnitt gefunden",
-                        details="ROI-Werte sind nur im Business Case erlaubt. Entfernen oder durch '→ siehe Business Case' ersetzen.",
-                    )
-                )
-                # Only report first occurrence per section
-                continue
+            # FIX-ROI-VALIDATOR: Removed fallback plain-percentage pattern.
+            # The fallback matched ANY 100-500% value (e.g. "100% der Mitarbeiter",
+            # "100% Automatisierung") causing false positives. Only context-aware
+            # pattern (ROI/Rendite/Return/Amortis keyword nearby) is used now.
 
     # Sections known to use bullet-point/list-item style content where
     # short fragments are intentional (e.g., "Nutzen: Zeitersparnis.")

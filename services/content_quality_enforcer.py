@@ -727,8 +727,11 @@ ROI_PATTERNS = [
     r'ERWARTETER\s+ROI\s*:?\s*(\d{2,3})\s*%',  # "ERWARTETER ROI: 284%"
     # Rendite-Varianten
     r'\bRendite\s*(?:von)?\s*(\d{2,3})\s*%',
+    # FIX-ROI-PROHIBITED: Also catch Amortisation/Payback percentages in prohibited sections
+    r'\bAmortis\w*\s*(?:von|:)?\s*(\d{2,3})\s*%',  # "Amortisation: 100%"
+    r'\bPayback\s*(?:von|:)?\s*(\d{2,3})\s*%',      # "Payback: 100%"
     # Standalone hohe Prozentsätze im ROI-Kontext (vorsichtig)
-    r'(?:ROI|Rendite|Return)[^.]{0,30}(\d{2,3})\s*%',
+    r'(?:ROI|Rendite|Return|Amortis)[^.]{0,30}(\d{2,3})\s*%',
 ]
 
 # Sections wo ROI ERLAUBT ist
