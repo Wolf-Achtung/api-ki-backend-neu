@@ -86,12 +86,21 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         "medium": "11–100",
     }
     segment_raw = briefing_data.get("unternehmensgroesse", "")
-    segment_label = segment_map.get(str(segment_raw).strip(), str(segment_raw)) if segment_raw else ""
+    segment_key = str(segment_raw).strip().lower() if segment_raw else ""
+    # Try exact match, then lowercase match, then readable fallback
+    segment_label = segment_map.get(str(segment_raw).strip(), "")
+    if not segment_label:
+        segment_label = segment_map.get(segment_key, "")
+    if not segment_label and segment_raw:
+        # Readable fallback for unknown values
+        segment_label = f"Unternehmen ({segment_raw} Mitarbeiter)"
 
     # Mitarbeiter: explicit field or derived from unternehmensgroesse
     mitarbeiter = briefing_data.get("mitarbeiter", "")
     if not mitarbeiter and segment_raw:
-        mitarbeiter = mitarbeiter_map.get(str(segment_raw).strip(), str(segment_raw))
+        mitarbeiter = mitarbeiter_map.get(str(segment_raw).strip(), "")
+        if not mitarbeiter:
+            mitarbeiter = mitarbeiter_map.get(segment_key, str(segment_raw))
 
     logger.info(
         "[Strategy-Cover] briefing_id=%s segment_raw=%r → label=%r, mitarbeiter=%r, branche=%r",
