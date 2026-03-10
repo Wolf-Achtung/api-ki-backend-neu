@@ -185,31 +185,43 @@ UNTERNEHMENSDATEN:
 - Firmenname: {firmenname}
 - Branche: {branche}
 - Segment: {segment}
-- Budget-Angabe: {s1_budget}
+- Budget-Angabe des Kunden: {s1_budget_label}
 
-BERECHNETE BUDGET-WERTE (EXAKT übernehmen, NICHT selbst rechnen!):
+VERBINDLICHE INVESTITIONSWERTE (berechnet, NICHT ändern!):
+Budget des Kunden: {s1_budget_label}
+Gesamtinvestition Jahr 1: {budget_gesamt_jahr1} €
+  - Phase 1 (Quick Wins, Monat 1-3): {budget_phase_1} €
+  - Phase 2 (Kernimplementierung, Monat 4-8): {budget_phase_2} €
+  - Phase 3 (Skalierung, Monat 9-12): {budget_phase_3} €
+
+Kostenaufschlüsselung:
 - Software monatlich: {budget_software_monatlich} €
 - Software jährlich: {budget_software_jaehrlich} €
 - Implementierung (einmalig): {budget_implementierung} €
 - Schulung (einmalig): {budget_schulung_einmalig} €
 - Schulung (laufend/Jahr): {budget_schulung_laufend} €
 - Personal/Koordination: {budget_personal} €
-- GESAMT Jahr 1: {budget_gesamt_jahr1} €
 
-ROI-SZENARIEN (EXAKT übernehmen!):
+Zeitersparnis: {zeitersparnis_stunden} Stunden/Monat
+Stundensatz: {stundensatz} €/h
+Monatliche Einsparung: {zeitersparnis_euro} €
+Jährliche Einsparung: {jaehrliche_ersparnis} €
+
+ROI-SZENARIEN:
 - Konservativ: {roi_konservativ}% ROI, Break-Even Monat {breakeven_konservativ}
 - Realistisch: {roi_realistisch}% ROI, Break-Even Monat {breakeven_realistisch}
 - Optimistisch: {roi_optimistisch}% ROI, Break-Even Monat {breakeven_optimistisch}
 
-EINSPARUNGEN:
-- Zeitersparnis: {zeitersparnis_stunden} Stunden/Monat
-- Monetär: {zeitersparnis_euro} €/Monat
+Förderpotenzial: {foerder_potenzial} €
+
+REGEL: Verwende AUSSCHLIESSLICH diese Werte. Erfinde KEINE anderen Zahlen.
+Deine Aufgabe: Kontextualisiere und erkläre diese Werte für die Branche.
 
 AUFGABE:
-1. Stelle den Investitionsplan als übersichtliche Tabelle dar.
+1. Stelle den 3-Phasen-Investitionsplan als übersichtliche Tabelle dar.
 2. Erkläre die drei ROI-Szenarien und deren Annahmen.
-3. Visualisiere den Break-Even-Zeitpunkt (textuelle Beschreibung).
-4. Bewerte, ob das angegebene Budget ({s1_budget}) ausreicht.
+3. Beschreibe den Break-Even-Zeitpunkt (realistisch: Monat {breakeven_realistisch}).
+4. Bewerte, ob das angegebene Budget ({s1_budget_label}) ausreicht.
 5. Gib eine klare Investitionsempfehlung.
 
 WICHTIG: Alle Zahlen EXAKT aus den Vorgaben übernehmen. NICHT selbst rechnen!
