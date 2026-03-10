@@ -420,6 +420,21 @@ async def legacy_briefing_async_endpoint(
 # ---------------------------------------------------------------------------
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc) -> JSONResponse:
+    # Distinguish between "no route matched" (Starlette default detail="Not Found")
+    # and business-logic 404s raised explicitly by endpoint handlers.
+    detail = getattr(exc, "detail", None)
+    if detail and detail != "Not Found":
+        # Business-logic 404 from an endpoint — pass through the original detail
+        return JSONResponse(
+            status_code=404,
+            content={
+                "error": "not_found",
+                "detail": detail,
+                "path": str(request.url.path),
+            },
+            media_type="application/json; charset=utf-8",
+        )
+    # No matching route
     return JSONResponse(
         status_code=404,
         content={
