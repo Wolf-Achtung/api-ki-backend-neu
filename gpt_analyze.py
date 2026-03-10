@@ -15689,6 +15689,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             risk_report_v3=sections.get("_risk_report_v3"),
             briefing=answers,
             llm_response=None,
+            sections=sections,
         )
 
         sections["VENDOR_AUDIT_HTML"] = vendor_audit_report_to_html(vendor_audit_report, lang=report_lang)

@@ -565,6 +565,7 @@ def create_canonical_from_sections(
     # 3. Determine CAPEX
     capex_candidates = [
         sections.get("CANON_CAPEX_EUR"),
+        sections.get("CAPEX_REALISTISCH_EUR"),  # FIX-CAPEX: from extra_sections calc
         sections.get("investment_total"),
         sections.get("BC_CAPEX"),
     ]
