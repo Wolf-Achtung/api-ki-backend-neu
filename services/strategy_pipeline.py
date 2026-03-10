@@ -289,6 +289,17 @@ async def _call_openai(prompt: str, system_prompt: str, section: str) -> Optiona
         response = await asyncio.to_thread(_openai_call)
 
         content: Optional[str] = response.choices[0].message.content if response.choices else None
+
+        # Log raw response details for debugging
+        finish_reason = response.choices[0].finish_reason if response.choices else "no_choices"
+        content_len = len(content) if content else 0
+        logger.info(
+            "[Strategy] OpenAI raw response for %s: %d chars, finish_reason=%s",
+            section, content_len, finish_reason,
+        )
+        if finish_reason == "length":
+            logger.warning("[Strategy] OpenAI response TRUNCATED for %s (hit token limit)", section)
+
         return content
     except Exception as exc:
         logger.error("[Strategy] OpenAI call failed for %s: %s", section, exc, exc_info=True)
@@ -307,9 +318,14 @@ async def _call_anthropic(prompt: str, system_prompt: str, section: str) -> Opti
             system_prompt=system_prompt,
             max_tokens=5000,
         )
+        result_len = len(result) if result else 0
+        logger.info("[Strategy] Anthropic response for %s: %d chars", section, result_len)
+        if result_len == 0:
+            logger.warning("[Strategy] Anthropic returned EMPTY for %s — falling back to OpenAI", section)
+            return await _call_openai(prompt, system_prompt, section)
         return result
     except Exception as exc:
-        logger.error("[Strategy] Anthropic call failed for %s: %s", section, exc)
+        logger.error("[Strategy] Anthropic call failed for %s: %s", section, exc, exc_info=True)
         # Fallback to OpenAI
         logger.info("[Strategy] Falling back to OpenAI for %s", section)
         return await _call_openai(prompt, system_prompt, section)
