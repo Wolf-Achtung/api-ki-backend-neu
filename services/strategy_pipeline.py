@@ -89,8 +89,8 @@ async def generate_strategy_report(
         # Shared context for all sections
         report1_sections = report1_data.get("sections", {})
         base_context = {
-            "branche": briefing_data.get("branche", ""),
-            "segment": briefing_data.get("unternehmensgroesse", ""),
+            "branche": (briefing_data.get("branche", "") or "").title(),
+            "segment": _segment_label(briefing_data.get("unternehmensgroesse", "")),
             "mitarbeiter": briefing_data.get("mitarbeiter", ""),
             "bundesland": briefing_data.get("bundesland", ""),
             "firmenname": briefing_data.get("unternehmen_name", "Ihr Unternehmen"),
@@ -354,6 +354,25 @@ async def _call_anthropic(prompt: str, system_prompt: str, section: str, max_tok
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
+
+def _segment_label(raw: str) -> str:
+    """Map raw unternehmensgroesse value to a readable segment label for prompts."""
+    _map = {
+        "1": "Einzelunternehmer",
+        "solo": "Einzelunternehmer",
+        "freelancer": "Einzelunternehmer",
+        "2-10": "Kleinunternehmen (2\u201310 Mitarbeiter)",
+        "2\u201310": "Kleinunternehmen (2\u201310 Mitarbeiter)",
+        "team": "Kleinunternehmen (2\u201310 Mitarbeiter)",
+        "klein": "Kleinunternehmen (2\u201310 Mitarbeiter)",
+        "11-100": "KMU (11\u2013100 Mitarbeiter)",
+        "11\u2013100": "KMU (11\u2013100 Mitarbeiter)",
+        "kmu": "KMU (11\u2013100 Mitarbeiter)",
+        "medium": "KMU (11\u2013100 Mitarbeiter)",
+    }
+    key = str(raw or "").strip().lower()
+    return _map.get(key, str(raw or ""))
+
 
 def _derive_handlungsfelder(report1_data: Dict[str, Any], report2_data: Dict[str, Any]) -> List[str]:
     """Derive action fields from Report 1+2 data."""
