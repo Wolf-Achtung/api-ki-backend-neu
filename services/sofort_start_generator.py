@@ -1283,7 +1283,14 @@ def generate_sofort_start_html(
     
     
     # Branchen-Fallstudie (Idee #5)
-    html += generate_fallstudie_html(branche)
+    # FIX-FALLSTUDIE-MIRROR: Pass customer values so case study can avoid mirroring
+    _customer_hours_month = float(canon_hours_month) if canon_hours_month > 0 else hours_per_week * 4
+    _customer_savings_month = savings.get("monatlich", 0) if isinstance(savings, dict) else 0
+    html += generate_fallstudie_html(
+        branche,
+        customer_hours_month=_customer_hours_month,
+        customer_savings_month=_customer_savings_month,
+    )
 
     # Entscheidungsvorlage für Vorgesetzte (Idee #10) - nur für Team/KMU
     if size_key in ["team", "kmu"]:
@@ -2033,12 +2040,60 @@ FALLSTUDIEN = {
 }
 
 
-def generate_fallstudie_html(branche: str) -> str:
+def generate_fallstudie_html(
+    branche: str,
+    customer_hours_month: float = 0,
+    customer_savings_month: float = 0,
+) -> str:
     """
     Generiert eine branchenspezifische Fallstudie.
+
+    FIX-FALLSTUDIE-MIRROR: If the case study values are too close (±30%)
+    to the customer's calculated values, we pick a DIFFERENT case study
+    from a related industry to ensure the Fallstudie feels like an
+    independent external reference, not a mirror of the customer's own data.
     """
     branche_key = get_branche_key(branche)
     fallstudie: Dict[str, Any] = cast(Dict[str, Any], FALLSTUDIEN.get(branche_key, FALLSTUDIEN["default"]))
+
+    # FIX-FALLSTUDIE-MIRROR: Check if case study values mirror customer values
+    if customer_hours_month > 0:
+        cs_zeit = fallstudie.get("ergebnis", {}).get("zeitersparnis", "")
+        # Extract numeric value from case study (e.g., "12 Stunden/Woche" → 48 h/month)
+        import re as _re
+        _cs_match = _re.search(r'(\d+)', cs_zeit)
+        if _cs_match:
+            cs_hours = int(_cs_match.group(1))
+            # Convert weekly to monthly if needed
+            if "Woche" in cs_zeit or "woche" in cs_zeit:
+                cs_hours_month = cs_hours * 4
+            else:
+                cs_hours_month = cs_hours
+            # If within ±30% of customer value → pick alternative case study
+            ratio = cs_hours_month / customer_hours_month if customer_hours_month > 0 else 999
+            if 0.7 <= ratio <= 1.3:
+                log.info(
+                    "[FALLSTUDIE-MIRROR] Case study %.0fh/mo too close to customer %.0fh/mo (ratio=%.2f), picking alternative",
+                    cs_hours_month, customer_hours_month, ratio
+                )
+                # Pick from alternative industries that differ enough
+                _alternatives = ["it", "marketing", "handel", "finanzen", "bildung", "gesundheit", "industrie"]
+                for alt_key in _alternatives:
+                    if alt_key == branche_key:
+                        continue
+                    alt = FALLSTUDIEN.get(alt_key)
+                    if not alt:
+                        continue
+                    alt_zeit = alt.get("ergebnis", {}).get("zeitersparnis", "")
+                    alt_match = _re.search(r'(\d+)', alt_zeit)
+                    if alt_match:
+                        alt_hours = int(alt_match.group(1))
+                        alt_monthly = alt_hours * 4 if ("Woche" in alt_zeit or "woche" in alt_zeit) else alt_hours
+                        alt_ratio = alt_monthly / customer_hours_month if customer_hours_month > 0 else 999
+                        if alt_ratio < 0.7 or alt_ratio > 1.3:
+                            fallstudie = cast(Dict[str, Any], alt)
+                            log.info("[FALLSTUDIE-MIRROR] Using alternative: %s (%.0fh/mo)", alt_key, alt_monthly)
+                            break
     
     html = f'''
     <!-- FALLSTUDIE -->
