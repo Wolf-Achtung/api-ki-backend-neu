@@ -1852,11 +1852,23 @@ def generate_business_case_report(
     )
     recurring_costs_12m = tools_investment.get("opex_annual", 0.0)
 
-    # Use briefing values if available
-    if briefing.get("CAPEX_REALISTISCH_EUR"):
-        investment_total = float(briefing.get("CAPEX_REALISTISCH_EUR", investment_total))
-    if briefing.get("OPEX_REALISTISCH_EUR"):
-        recurring_costs_12m = float(briefing.get("OPEX_REALISTISCH_EUR", 0.0)) * 12
+    # FIX-AMORT-CANONICAL: Use canonical CAPEX/OPEX from sections or briefing.
+    # The canonical values (from calc_business_case in extra_sections.py) must be
+    # the single source of truth. Previously, this code only checked briefing but
+    # CAPEX_REALISTISCH_EUR lives in sections, causing bc_engine to use
+    # tools_capex + 0.5*opex_annual as investment_total — inflating payback.
+    canonical_capex = (
+        sections.get("CAPEX_REALISTISCH_EUR")
+        or briefing.get("CAPEX_REALISTISCH_EUR")
+    )
+    if canonical_capex:
+        investment_total = float(canonical_capex)
+    canonical_opex = (
+        sections.get("OPEX_REALISTISCH_EUR")
+        or briefing.get("OPEX_REALISTISCH_EUR")
+    )
+    if canonical_opex:
+        recurring_costs_12m = float(canonical_opex) * 12
 
     # Extract funding effect with size-appropriate caps
     company_size = briefing.get("unternehmensgroesse") if briefing else None

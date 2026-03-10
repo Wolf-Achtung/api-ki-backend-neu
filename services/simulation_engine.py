@@ -848,9 +848,12 @@ class ScenarioImpactEngine:
         opex_delta_percent = opex_delta / (current_opex + 1e-10) * 100
 
         # CAPEX amortization (months)
-        monthly_savings = annual_benefit / 12
-        if monthly_savings > 0:
-            capex_amortization = math.ceil(investment_capex / monthly_savings)
+        # FIX-AMORT-CANONICAL: Use NET monthly benefit (subtract remaining OPEX)
+        # to match canonical formula: CAPEX / (monthly_benefit - OPEX)
+        monthly_benefit_gross = annual_benefit / 12
+        monthly_net_benefit = monthly_benefit_gross - new_opex
+        if monthly_net_benefit > 0:
+            capex_amortization = math.ceil(investment_capex / monthly_net_benefit)
         else:
             capex_amortization = 999  # Never amortized
 
