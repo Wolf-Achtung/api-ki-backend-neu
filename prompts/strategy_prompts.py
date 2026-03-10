@@ -21,9 +21,11 @@ REGELN:
 5. KEINE Markdown-Syntax (kein ```, kein #, kein *). Nur HTML.
 6. Budget- und ROI-Zahlen EXAKT aus den Vorgaben übernehmen — NICHT selbst rechnen.
 7. Nenne konkrete Tool-Namen, Anbieter und Preise wo möglich.
-8. Vermeide generische Floskeln. Sei spezifisch für die Branche {branche}.
+8. Vermeide generische Floskeln. Sei spezifisch für die Branche.
 9. Jede Section hat 400-800 Wörter (Exec Summary: 200-300 Wörter).
-10. Quellenangaben am Ende jeder Section als <div class="sources">."""
+10. Quellenangaben am Ende jeder Section als <div class="sources">.
+11. STILREGEL: Verwende den Branchennamen maximal 2× pro Abschnitt. Nutze danach Variationen: "Ihr Bereich", "Ihre Branche", "diesem Sektor".
+12. Verwende "Ihr Unternehmen" / den Firmennamen maximal 3× pro Abschnitt. Variiere mit "Sie", "Ihr Team", "Ihr Betrieb"."""
 
 
 # =============================================================================
@@ -173,6 +175,12 @@ AUFGABE:
 4. Berücksichtige den Ansatz-Wunsch: {s9_ansatz}.
 5. Berücksichtige Datenschutz-Anforderung: {s10_datenschutz}.
 
+DIVERSITÄTS-REGELN:
+- Der Kunde nutzt bereits: {s5_software}. Bevorzuge Tools die sich in diesen Stack integrieren.
+- Empfehle MAXIMAL 3 Tools vom gleichen Anbieter (z.B. max. 3× Microsoft).
+- Zeige für jedes Handlungsfeld mindestens 1 Alternative zum Hauptanbieter.
+- Berücksichtige auch Open-Source-Alternativen und EU-Anbieter.
+
 FORMAT: HTML-Fragment. Verwende Tabellen für Tool-Vergleiche.
 Quellenangaben am Ende als <div class="sources">.""",
 
@@ -185,31 +193,43 @@ UNTERNEHMENSDATEN:
 - Firmenname: {firmenname}
 - Branche: {branche}
 - Segment: {segment}
-- Budget-Angabe: {s1_budget}
+- Budget-Angabe des Kunden: {s1_budget_label}
 
-BERECHNETE BUDGET-WERTE (EXAKT übernehmen, NICHT selbst rechnen!):
+VERBINDLICHE INVESTITIONSWERTE (berechnet, NICHT ändern!):
+Budget des Kunden: {s1_budget_label}
+Gesamtinvestition Jahr 1: {budget_gesamt_jahr1} €
+  - Phase 1 (Quick Wins, Monat 1-3): {budget_phase_1} €
+  - Phase 2 (Kernimplementierung, Monat 4-8): {budget_phase_2} €
+  - Phase 3 (Skalierung, Monat 9-12): {budget_phase_3} €
+
+Kostenaufschlüsselung:
 - Software monatlich: {budget_software_monatlich} €
 - Software jährlich: {budget_software_jaehrlich} €
 - Implementierung (einmalig): {budget_implementierung} €
 - Schulung (einmalig): {budget_schulung_einmalig} €
 - Schulung (laufend/Jahr): {budget_schulung_laufend} €
 - Personal/Koordination: {budget_personal} €
-- GESAMT Jahr 1: {budget_gesamt_jahr1} €
 
-ROI-SZENARIEN (EXAKT übernehmen!):
+Zeitersparnis: {zeitersparnis_stunden} Stunden/Monat
+Stundensatz: {stundensatz} €/h
+Monatliche Einsparung: {zeitersparnis_euro} €
+Jährliche Einsparung: {jaehrliche_ersparnis} €
+
+ROI-SZENARIEN:
 - Konservativ: {roi_konservativ}% ROI, Break-Even Monat {breakeven_konservativ}
 - Realistisch: {roi_realistisch}% ROI, Break-Even Monat {breakeven_realistisch}
 - Optimistisch: {roi_optimistisch}% ROI, Break-Even Monat {breakeven_optimistisch}
 
-EINSPARUNGEN:
-- Zeitersparnis: {zeitersparnis_stunden} Stunden/Monat
-- Monetär: {zeitersparnis_euro} €/Monat
+Förderpotenzial: {foerder_potenzial} €
+
+REGEL: Verwende AUSSCHLIESSLICH diese Werte. Erfinde KEINE anderen Zahlen.
+Deine Aufgabe: Kontextualisiere und erkläre diese Werte für die Branche.
 
 AUFGABE:
-1. Stelle den Investitionsplan als übersichtliche Tabelle dar.
+1. Stelle den 3-Phasen-Investitionsplan als übersichtliche Tabelle dar.
 2. Erkläre die drei ROI-Szenarien und deren Annahmen.
-3. Visualisiere den Break-Even-Zeitpunkt (textuelle Beschreibung).
-4. Bewerte, ob das angegebene Budget ({s1_budget}) ausreicht.
+3. Beschreibe den Break-Even-Zeitpunkt (realistisch: Monat {breakeven_realistisch}).
+4. Bewerte, ob das angegebene Budget ({s1_budget_label}) ausreicht.
 5. Gib eine klare Investitionsempfehlung.
 
 WICHTIG: Alle Zahlen EXAKT aus den Vorgaben übernehmen. NICHT selbst rechnen!
@@ -337,17 +357,19 @@ FORMAT: HTML-Fragment. Verwende eine Tabelle für die Risikomatrix.""",
     # =========================================================================
     "EXEC": """Erstelle die "Executive Summary" für den KI-Strategiebericht von {firmenname}.
 
-ECKDATEN (EXAKT diese Werte verwenden — KEINE eigenen Zahlen erfinden!):
+VERBINDLICHE KENNZAHLEN (EXAKT diese Werte verwenden — KEINE eigenen Zahlen erfinden!):
 - Branche: {branche}
 - Segment: {segment}
 - KI-Readiness-Score: {readiness_score} von 100 Punkten ({reifegrad_label})
 - Handlungsfelder: {anzahl_felder}
 - Top-Handlungsfeld: {top_handlungsfeld}
 - Quick Win: {quick_win}
-- Investition Jahr 1: {budget_gesamt_jahr1} €
+- Kundenbudget: {s1_budget_label}
+- Empfohlene Investition Jahr 1: {budget_gesamt_jahr1} €
+- Monatliche Einsparung: {zeitersparnis_euro} €
 - ROI (realistisch): {roi_realistisch}%
 - Break-Even: Monat {breakeven_realistisch}
-- Förderpotenzial: {summe_foerder}
+- Förderpotenzial: {foerder_potenzial} €
 - Zeitrahmen: {s2_zeitrahmen}
 
 INVESTITIONSPLAN-ZUSAMMENFASSUNG (aus Section S5):
@@ -366,7 +388,7 @@ Schreibe eine prägnante Executive Summary (200-300 Wörter), die:
 2. Die wichtigste strategische Empfehlung hervorhebt.
 3. Den Quick Win nennt (sofort umsetzbar).
 4. Die Investition ({budget_gesamt_jahr1} €) und den erwarteten ROI ({roi_realistisch}%) zusammenfasst.
-5. Das Förderpotenzial ({summe_foerder}) erwähnt.
+5. Das Förderpotenzial ({foerder_potenzial} €) erwähnt.
 6. Mit einem klaren Call-to-Action endet.
 
 Zielgruppe: Geschäftsführer/Entscheider, die schnell den Kern erfassen wollen.
