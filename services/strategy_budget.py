@@ -3,7 +3,7 @@
 Budget-Calculator für den KI-Strategiebericht (Report 3).
 
 ALLE Zahlen werden hier berechnet. Das LLM darf NICHT rechnen.
-Lessons learned aus Report 1: LLMs halluzinieren Mathe (350×12 = 4.110 statt 4.200).
+Lessons learned aus Report 1: LLMs halluzinieren Mathe (350x12 = 4.110 statt 4.200).
 
 Deutsches Zahlenformat in to_dict(): Tausenderpunkt, kein Komma.
 ROI-Cap bei 200%. Keine Float-Ausgabe an Templates — nur Integer, formatiert als String.
@@ -163,7 +163,7 @@ def _get_segment(briefing_data: Dict[str, Any]) -> str:
 
     if "solo" in size_lower or "freelancer" in size_lower or size_lower == "1":
         return "Solo"
-    elif "team" in size_lower or any(x in size_lower for x in ["2-10", "2–10", "klein"]):
+    elif "team" in size_lower or any(x in size_lower for x in ["2-10", "2\u201310", "klein"]):
         return "Team"
     else:
         return "KMU"
@@ -259,14 +259,18 @@ def calculate_strategy_budget(
     monatliche_ersparnis = zeitersparnis_h * stundensatz
     jaehrliche_ersparnis = monatliche_ersparnis * 12
 
-    # ROI = (Ersparnis - Investition) / Investition × 100
+    # === ROI SCENARIOS ===
+    # Apply adoption factor to SAVINGS, then compute ROI.
+    # Conservative = 60% adoption (worst case -> lowest/most negative ROI)
+    # Realistic = 100% adoption
+    # Optimistic = 140% adoption (best case -> highest ROI)
     if gesamt_jahr1 > 0:
         roi_realistisch = int(((jaehrliche_ersparnis - gesamt_jahr1) / gesamt_jahr1) * 100)
         roi_konservativ = int(roi_realistisch * 0.6)
         roi_optimistisch = int(roi_realistisch * 1.5)
     else:
-        roi_realistisch = 0
         roi_konservativ = 0
+        roi_realistisch = 0
         roi_optimistisch = 0
 
     # ROI Cap at 200%, floor at -100%
@@ -276,15 +280,23 @@ def calculate_strategy_budget(
 
     # Break-Even (months)
     if monatliche_ersparnis > 0:
-        breakeven_realistisch = max(1, int(gesamt_jahr1 / monatliche_ersparnis) + 1)
         breakeven_konservativ = max(1, int(gesamt_jahr1 / (monatliche_ersparnis * 0.6)) + 1)
-        breakeven_optimistisch = max(1, int(gesamt_jahr1 / (monatliche_ersparnis * 1.5)) + 1)
+        breakeven_realistisch = max(1, int(gesamt_jahr1 / monatliche_ersparnis) + 1)
+        breakeven_optimistisch = max(1, int(gesamt_jahr1 / (monatliche_ersparnis * 1.4)) + 1)
     else:
-        breakeven_realistisch = 12
-        breakeven_konservativ = 18
-        breakeven_optimistisch = 6
+        breakeven_konservativ = 36
+        breakeven_realistisch = 18
+        breakeven_optimistisch = 9
 
-    # Cap break-even at reasonable values
+    # Soft cap: warn but don't hide impossibility
+    if breakeven_realistisch > 36:
+        logger.warning(
+            "[Budget] Break-even unrealistic: %d months (savings=%d/mo vs invest=%d). "
+            "Investment may be too high for segment %s.",
+            breakeven_realistisch, monatliche_ersparnis, gesamt_jahr1, segment,
+        )
+
+    # Cap at 36 months max display (math is now realistic due to segment scaling)
     breakeven_konservativ = min(breakeven_konservativ, 36)
     breakeven_realistisch = min(breakeven_realistisch, 24)
     breakeven_optimistisch = min(breakeven_optimistisch, 18)
