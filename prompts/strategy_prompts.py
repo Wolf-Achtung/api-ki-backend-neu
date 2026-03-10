@@ -349,17 +349,19 @@ FORMAT: HTML-Fragment. Verwende eine Tabelle für die Risikomatrix.""",
     # =========================================================================
     "EXEC": """Erstelle die "Executive Summary" für den KI-Strategiebericht von {firmenname}.
 
-ECKDATEN (EXAKT diese Werte verwenden — KEINE eigenen Zahlen erfinden!):
+VERBINDLICHE KENNZAHLEN (EXAKT diese Werte verwenden — KEINE eigenen Zahlen erfinden!):
 - Branche: {branche}
 - Segment: {segment}
 - KI-Readiness-Score: {readiness_score} von 100 Punkten ({reifegrad_label})
 - Handlungsfelder: {anzahl_felder}
 - Top-Handlungsfeld: {top_handlungsfeld}
 - Quick Win: {quick_win}
-- Investition Jahr 1: {budget_gesamt_jahr1} €
+- Kundenbudget: {s1_budget_label}
+- Empfohlene Investition Jahr 1: {budget_gesamt_jahr1} €
+- Monatliche Einsparung: {zeitersparnis_euro} €
 - ROI (realistisch): {roi_realistisch}%
 - Break-Even: Monat {breakeven_realistisch}
-- Förderpotenzial: {summe_foerder}
+- Förderpotenzial: {foerder_potenzial} €
 - Zeitrahmen: {s2_zeitrahmen}
 
 INVESTITIONSPLAN-ZUSAMMENFASSUNG (aus Section S5):
@@ -378,7 +380,7 @@ Schreibe eine prägnante Executive Summary (200-300 Wörter), die:
 2. Die wichtigste strategische Empfehlung hervorhebt.
 3. Den Quick Win nennt (sofort umsetzbar).
 4. Die Investition ({budget_gesamt_jahr1} €) und den erwarteten ROI ({roi_realistisch}%) zusammenfasst.
-5. Das Förderpotenzial ({summe_foerder}) erwähnt.
+5. Das Förderpotenzial ({foerder_potenzial} €) erwähnt.
 6. Mit einem klaren Call-to-Action endet.
 
 Zielgruppe: Geschäftsführer/Entscheider, die schnell den Kern erfassen wollen.
