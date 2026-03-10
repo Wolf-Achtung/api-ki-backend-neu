@@ -427,8 +427,8 @@ def _extract_foerder_summe(s7_html: str) -> str:
 async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
     """Generate PDF after all sections are saved (analog to Report 1)."""
     try:
-        from models import StrategyReport, Briefing, Analysis
-        from routes.strategy import _render_strategy_html
+        from models import StrategyReport
+        from services.strategy_renderer import render_strategy_html
         from services.pdf_client import render_pdf_from_html
 
         sr = db_session.query(StrategyReport).filter(
@@ -438,7 +438,7 @@ async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
             logger.warning("[Strategy %d] Cannot generate PDF — no sections", briefing_id)
             return
 
-        html_content = _render_strategy_html(sr, db_session)
+        html_content = render_strategy_html(sr, db_session)
         logger.info("[Strategy %d] Rendering PDF (%d chars HTML)", briefing_id, len(html_content))
 
         result = await asyncio.to_thread(

@@ -377,14 +377,12 @@ Maximal 300 Wörter. Kein Markdown. KEINE Quellenangaben.""",
 # =============================================================================
 
 SECTION_TEMPLATE_NAECHSTE_SCHRITTE = """
-<div class="naechste-schritte">
-    <ol>
-        <li><strong>Strategiebericht durcharbeiten</strong> — Besprechen Sie die Ergebnisse mit Ihrem Team und identifizieren Sie die Quick Wins.</li>
-        <li><strong>Quick Win starten</strong> — Beginnen Sie innerhalb der nächsten 2 Wochen mit dem identifizierten Quick Win. Niedrige Einstiegshürde, schnelles Ergebnis.</li>
-        <li><strong>Fördermittel beantragen</strong> — Prüfen Sie die empfohlenen Förderprogramme und stellen Sie Anträge, bevor die Fristen ablaufen.</li>
-        <li><strong>Tool-Evaluation</strong> — Testen Sie die empfohlenen Tools mit kostenlosen Testversionen oder Demos. Planen Sie 2-4 Wochen für die Evaluation ein.</li>
-        <li><strong>Roadmap-Review</strong> — Planen Sie nach 3 Monaten (Ende Phase 1) ein Review ein, um Fortschritte zu bewerten und Phase 2 zu justieren.</li>
-    </ol>
-    <p><strong>Nächster Kontaktpunkt:</strong> Vereinbaren Sie ein kostenloses 30-Minuten-Strategiegespräch unter <a href="https://ki-sicherheit.jetzt/termin">ki-sicherheit.jetzt/termin</a>, um Fragen zum Bericht zu klären.</p>
-</div>
+<ol>
+    <li><strong>Strategiebericht durcharbeiten</strong> — Besprechen Sie die Ergebnisse mit Ihrem Team und identifizieren Sie die Quick Wins.</li>
+    <li><strong>Quick Win starten</strong> — Beginnen Sie innerhalb der nächsten 2 Wochen mit dem identifizierten Quick Win. Niedrige Einstiegshürde, schnelles Ergebnis.</li>
+    <li><strong>Fördermittel beantragen</strong> — Prüfen Sie die empfohlenen Förderprogramme und stellen Sie Anträge, bevor die Fristen ablaufen.</li>
+    <li><strong>Tool-Evaluation</strong> — Testen Sie die empfohlenen Tools mit kostenlosen Testversionen oder Demos. Planen Sie 2-4 Wochen für die Evaluation ein.</li>
+    <li><strong>Roadmap-Review</strong> — Planen Sie nach 3 Monaten (Ende Phase 1) ein Review ein, um Fortschritte zu bewerten und Phase 2 zu justieren.</li>
+</ol>
+<p><strong>Nächster Kontaktpunkt:</strong> Vereinbaren Sie ein kostenloses 30-Minuten-Strategiegespräch unter <a href="https://ki-sicherheit.jetzt/termin">ki-sicherheit.jetzt/termin</a>, um Fragen zum Bericht zu klären.</p>
 """
