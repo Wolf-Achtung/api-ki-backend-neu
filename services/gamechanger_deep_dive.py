@@ -459,29 +459,39 @@ def generate_deep_dive_sections(context: Dict[str, Any]) -> Dict[str, str]:
     """
     sections: Dict[str, str] = {}
 
-    # Section 1: Use expanded gamechanger from Report 1
+    # Section 1: LLM-generated deep dive (FIX-KPA-S1: no longer a copy of Report 1)
+    # Previously this copied GAMECHANGER_HTML verbatim with word replacements,
+    # causing the KPA Section 1 to be identical to the main report.
+    # Now we pass the Report 1 text as CONTEXT and ask the LLM to DEEPEN the analysis.
     gc_decision = context.get('gamechanger_decision', '')
     gc_html = context.get('GAMECHANGER_HTML', '')
     gc_snapshot = context.get('_GC_SNAPSHOT_642', '')
-    section1_raw = gc_decision or gc_snapshot or gc_html
+    report1_gamechanger = gc_decision or gc_snapshot or gc_html
 
-    # Post-process: Replace customer-visible "Gamechanger" wording
-    # (internal keys like GAMECHANGER_DECISION_HTML are untouched)
-    _SECTION1_RENAMES = [
-        ("Warum das ein Gamechanger ist", "Warum das ein strategischer Hebel ist"),
-        ("Der strategische Gamechanger", "Der strategische Wendepunkt"),
-        ("Gamechanger-Analyse", "Strategische Analyse"),
-        ("Gamechanger-Szenario", "KI-Potenzial-Szenario"),
-        ("Ihr Gamechanger", "Ihr KI-Potenzial"),
-        ("den Gamechanger", "das KI-Potenzial"),
-        ("der Gamechanger", "das KI-Potenzial"),
-        ("ein Gamechanger", "ein strategischer Hebel"),
-        ("Gamechanger", "strategischer Hebel"),
-    ]
-    for old, new in _SECTION1_RENAMES:
-        section1_raw = section1_raw.replace(old, new)
-
-    sections['GC_BRUCHPUNKT_HTML'] = section1_raw
+    try:
+        section1_html = _generate_gc_section('gc_bruchpunkt', context)
+        if section1_html and len(section1_html) > 200:
+            sections['GC_BRUCHPUNKT_HTML'] = section1_html
+        else:
+            raise ValueError("LLM response too short, falling back")
+    except Exception as exc:
+        log.warning("[GC-DEEP-DIVE] Section 1 LLM generation failed (%s), using enhanced fallback", exc)
+        # Fallback: use Report 1 text with word replacements (legacy behavior)
+        section1_raw = report1_gamechanger
+        _SECTION1_RENAMES = [
+            ("Warum das ein Gamechanger ist", "Warum das ein strategischer Hebel ist"),
+            ("Der strategische Gamechanger", "Der strategische Wendepunkt"),
+            ("Gamechanger-Analyse", "Strategische Analyse"),
+            ("Gamechanger-Szenario", "KI-Potenzial-Szenario"),
+            ("Ihr Gamechanger", "Ihr KI-Potenzial"),
+            ("den Gamechanger", "das KI-Potenzial"),
+            ("der Gamechanger", "das KI-Potenzial"),
+            ("ein Gamechanger", "ein strategischer Hebel"),
+            ("Gamechanger", "strategischer Hebel"),
+        ]
+        for old, new in _SECTION1_RENAMES:
+            section1_raw = section1_raw.replace(old, new)
+        sections['GC_BRUCHPUNKT_HTML'] = section1_raw
 
     # Section 3: Deterministic BC Deep Dive
     bc_data = calculate_bc_deep_dive(context.get('canonical_bc', {}))
