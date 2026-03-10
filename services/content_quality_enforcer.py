@@ -804,6 +804,88 @@ def apply_roi_filter(sections: dict) -> dict:
 
 
 # =============================================================================
+# 1.5 CROSS-SECTION DEDUPLICATION (FIX-REDUNDANCY)
+# Detects sentences ≥20 words appearing in 2+ sections and replaces
+# duplicates with cross-references. Prevents REDUNDANCY_DETECTED warnings.
+# =============================================================================
+
+_DEDUP_MIN_WORDS = 20
+_DEDUP_MIN_CHARS = 60
+
+# Sections to check for cross-redundancy (order = priority, first keeps original)
+_DEDUP_SECTION_PRIORITY = [
+    "EXECUTIVE_SUMMARY_HTML", "GAMECHANGER_HTML",
+    "RECOMMENDATIONS_HTML", "ROADMAP_90D_HTML", "ROADMAP_12M_HTML",
+    "BUSINESS_CASE_HTML", "BUSINESS_CASE_ENGINE_HTML",
+    "RISKS_HTML", "FOERDERPOTENZIAL_HTML",
+    "DATA_READINESS_HTML", "ORG_CHANGE_HTML",
+    "STRATEGIE_GOVERNANCE_HTML", "KI_SKILLPLAN_HTML",
+]
+
+
+def _extract_sentences(html: str) -> list[str]:
+    """Extract sentences from HTML (strip tags, split on sentence boundaries)."""
+    text = re.sub(r'<[^>]+>', ' ', html)
+    text = text.replace('&nbsp;', ' ').replace('&thinsp;', ' ')
+    text = re.sub(r'\s+', ' ', text).strip()
+    # Split on sentence-ending punctuation
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    return [s.strip() for s in sentences if len(s.strip()) >= _DEDUP_MIN_CHARS]
+
+
+def _normalize_sentence(s: str) -> str:
+    """Normalize for comparison: lowercase, collapse whitespace."""
+    return re.sub(r'\s+', ' ', s.lower().strip())
+
+
+def apply_cross_section_dedup(sections: dict) -> dict:
+    """
+    Remove duplicate sentences across sections.
+    The first section (by priority) keeps the sentence; later sections
+    get the duplicate replaced with an empty string (sentence removed).
+    """
+    # Build index: normalized_sentence → [(section_key, original_sentence)]
+    sentence_index: dict[str, list[tuple[str, str]]] = {}
+
+    for key in _DEDUP_SECTION_PRIORITY:
+        content = sections.get(key)
+        if not content or not isinstance(content, str) or len(content) < 100:
+            continue
+        for sentence in _extract_sentences(content):
+            words = sentence.split()
+            if len(words) < _DEDUP_MIN_WORDS:
+                continue
+            norm = _normalize_sentence(sentence)
+            if norm not in sentence_index:
+                sentence_index[norm] = []
+            sentence_index[norm].append((key, sentence))
+
+    # Find duplicates (appearing in 2+ different sections)
+    total_removed = 0
+    for norm, occurrences in sentence_index.items():
+        unique_sections = list(dict.fromkeys(occ[0] for occ in occurrences))
+        if len(unique_sections) < 2:
+            continue
+
+        # Keep first occurrence, remove from later sections
+        for section_key, original in occurrences:
+            if section_key == unique_sections[0]:
+                continue  # Keep in first (priority) section
+            content = sections.get(section_key, "")
+            if original in content:
+                sections[section_key] = content.replace(original, "", 1)
+                total_removed += 1
+                log.info(
+                    "[DEDUP] Removed duplicate from %s (kept in %s): %.60s...",
+                    section_key, unique_sections[0], original
+                )
+
+    if total_removed:
+        log.info("[DEDUP] Complete: %d duplicate sentences removed across sections", total_removed)
+    return sections
+
+
+# =============================================================================
 # 2. FRAGMENT-REPAIR: Repariert unvollständige Sätze
 # =============================================================================
 
@@ -2858,6 +2940,9 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
 
     # 1. ROI-Filter
     sections = apply_roi_filter(sections)
+
+    # 1.5 FIX-REDUNDANCY: Cross-section deduplication
+    sections = apply_cross_section_dedup(sections)
 
     # 2. Fragment-Repair
     sections = apply_fragment_repair(sections)
