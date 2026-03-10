@@ -2533,7 +2533,8 @@ class ReportValidator:
         roi_pattern = r"(\d{2,3})\s*%"
 
         # WP2: Context-aware ROI pattern - only flag percentages near ROI keywords
-        roi_context_pattern = r"(?:ROI|Rendite|Return|Amortis)[^.]{0,30}(\d{2,3})\s*%"
+        # Non-greedy [^.]{0,30}? prevents consuming digits that belong to the percentage
+        roi_context_pattern = r"(?:ROI|Rendite|Return|Amortis)[^.]{0,30}?(\d{2,3})\s*%"
 
         # Sections where ROI is PROHIBITED (per prompt requirement)
         prohibited_roi_sections = [
