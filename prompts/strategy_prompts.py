@@ -337,10 +337,10 @@ FORMAT: HTML-Fragment. Verwende eine Tabelle für die Risikomatrix.""",
     # =========================================================================
     "EXEC": """Erstelle die "Executive Summary" für den KI-Strategiebericht von {firmenname}.
 
-ECKDATEN:
+ECKDATEN (EXAKT diese Werte verwenden — KEINE eigenen Zahlen erfinden!):
 - Branche: {branche}
 - Segment: {segment}
-- KI-Readiness: {readiness_score} ({reifegrad_label})
+- KI-Readiness-Score: {readiness_score} von 100 Punkten ({reifegrad_label})
 - Handlungsfelder: {anzahl_felder}
 - Top-Handlungsfeld: {top_handlungsfeld}
 - Quick Win: {quick_win}
@@ -350,19 +350,25 @@ ECKDATEN:
 - Förderpotenzial: {summe_foerder}
 - Zeitrahmen: {s2_zeitrahmen}
 
+KRITISCHE REGELN:
+- Verwende AUSSCHLIESSLICH die oben genannten Zahlen für Score, Investition, ROI, Break-Even und Förderung.
+- Erfinde KEINE Zahlen, Prozentsätze oder Euro-Beträge.
+- Wenn ein Wert leer ist, lasse ihn weg statt einen Wert zu erfinden.
+- KEINE erfundenen Quellen oder Studien zitieren.
+
 AUFGABE:
 Schreibe eine prägnante Executive Summary (200-300 Wörter), die:
-1. Den aktuellen KI-Reifegrad einordnet.
+1. Den aktuellen KI-Reifegrad einordnet (Score: {readiness_score}/100).
 2. Die wichtigste strategische Empfehlung hervorhebt.
 3. Den Quick Win nennt (sofort umsetzbar).
-4. Die Investition und den erwarteten ROI zusammenfasst.
-5. Das Förderpotenzial erwähnt.
+4. Die Investition ({budget_gesamt_jahr1} €) und den erwarteten ROI ({roi_realistisch}%) zusammenfasst.
+5. Das Förderpotenzial ({summe_foerder}) erwähnt.
 6. Mit einem klaren Call-to-Action endet.
 
 Zielgruppe: Geschäftsführer/Entscheider, die schnell den Kern erfassen wollen.
 
 FORMAT: HTML-Fragment (<p> Tags). Keine Überschrift (wird vom Template gesetzt).
-Maximal 300 Wörter. Kein Markdown.""",
+Maximal 300 Wörter. Kein Markdown. KEINE Quellenangaben.""",
 }
 
 
