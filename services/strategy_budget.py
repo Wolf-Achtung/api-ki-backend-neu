@@ -8,7 +8,7 @@ Lessons learned aus Report 1: LLMs halluzinieren Mathe (350x12 = 4.110 statt 4.2
 Deutsches Zahlenformat in to_dict(): Tausenderpunkt, kein Komma.
 ROI-Cap bei 200%. Keine Float-Ausgabe an Templates — nur Integer, formatiert als String.
 
-v3.0 — Fixed: phase sums = total, ROI scenarios correct, segment-scaled investment.
+v2.0 — Budget-Profile nach s1_budget (Kunden-Budget-Angabe).
 """
 from __future__ import annotations
 
@@ -89,64 +89,62 @@ class StrategyBudget:
 
 
 # =============================================================================
-# BUDGET PROFILES — base investment by customer's stated budget
-# Phase splits are percentages -> phases ALWAYS sum to total.
+# BUDGET PROFILES — scaled by s1_budget (customer's stated budget)
 # =============================================================================
 
 _BUDGET_PROFILES = {
-    "Unter 5.000\u20ac": {
-        "base_total": 4500,
-        "phase1_pct": 30,    # Quick Wins
-        "phase2_pct": 45,    # Kernimplementierung
-        "phase3_pct": 25,    # Skalierung
+    "Unter 5.000€": {
+        "phase1_capex": 800,
+        "phase1_opex": 50,
+        "phase2_capex": 1500,
+        "phase2_opex": 100,
+        "phase3_capex": 0,
+        "phase3_opex": 150,
+        "total_year1": 4500,
     },
-    "5.000\u201315.000\u20ac": {
-        "base_total": 12000,
-        "phase1_pct": 25,
-        "phase2_pct": 45,
-        "phase3_pct": 30,
+    "5.000–15.000€": {
+        "phase1_capex": 2000,
+        "phase1_opex": 150,
+        "phase2_capex": 4000,
+        "phase2_opex": 300,
+        "phase3_capex": 2000,
+        "phase3_opex": 400,
+        "total_year1": 13400,
     },
-    "15.000\u201350.000\u20ac": {
-        "base_total": 35000,
-        "phase1_pct": 20,
-        "phase2_pct": 45,
-        "phase3_pct": 35,
+    "15.000–50.000€": {
+        "phase1_capex": 5000,
+        "phase1_opex": 350,
+        "phase2_capex": 12000,
+        "phase2_opex": 800,
+        "phase3_capex": 8000,
+        "phase3_opex": 1200,
+        "total_year1": 39200,
     },
-    "\u00dcber 50.000\u20ac": {
-        "base_total": 60000,
-        "phase1_pct": 20,
-        "phase2_pct": 45,
-        "phase3_pct": 35,
+    "Über 50.000€": {
+        "phase1_capex": 8000,
+        "phase1_opex": 500,
+        "phase2_capex": 20000,
+        "phase2_opex": 1500,
+        "phase3_capex": 15000,
+        "phase3_opex": 2500,
+        "total_year1": 67000,
     },
     "Noch unklar": {
-        "base_total": 10000,
-        "phase1_pct": 25,
-        "phase2_pct": 45,
-        "phase3_pct": 30,
+        "phase1_capex": 2000,
+        "phase1_opex": 100,
+        "phase2_capex": 3000,
+        "phase2_opex": 200,
+        "phase3_capex": 2000,
+        "phase3_opex": 300,
+        "total_year1": 10200,
     },
-}
-
-# Segment multiplier: Solo needs less investment than KMU
-_SEGMENT_MULTIPLIER = {
-    "Solo": 0.4,
-    "Team": 1.0,
-    "KMU": 1.8,
 }
 
 # Segment-specific hourly rates and time savings
 _SEGMENT_PARAMS = {
-    "Solo": {"time_savings_h": 15, "hourly_rate": 85},
-    "Team": {"time_savings_h": 30, "hourly_rate": 95},
-    "KMU": {"time_savings_h": 50, "hourly_rate": 110},
-}
-
-# Cost breakdown percentages (of total)
-_COST_SPLIT = {
-    "software_pct": 30,         # Software/SaaS (laufend)
-    "implementierung_pct": 25,  # Implementierung (einmalig)
-    "schulung_einmalig_pct": 15,  # Schulung (einmalig)
-    "schulung_laufend_pct": 10,   # Schulung (laufend/Jahr)
-    "personal_pct": 20,         # Personal/Koordination
+    "Solo": {"time_savings_h": 10, "hourly_rate": 80},
+    "Team": {"time_savings_h": 25, "hourly_rate": 95},
+    "KMU":  {"time_savings_h": 40, "hourly_rate": 110},
 }
 
 # Funding potential by interest level
@@ -154,7 +152,7 @@ _FOERDER_POTENTIAL = {
     "Ja, dringend": 50000,
     "Ja, wenn passend": 30000,
     "Nein, eigenes Budget": 0,
-    "Wei\u00df nicht": 15000,
+    "Weiß nicht": 15000,
 }
 
 
@@ -180,14 +178,14 @@ def _match_budget_key(s1_budget: str) -> str:
         if key.lower() in budget_lower or budget_lower in key.lower():
             return key
     # Fuzzy fallback
-    if "50.000" in s1_budget or "\u00fcber" in budget_lower:
-        return "\u00dcber 50.000\u20ac"
+    if "50.000" in s1_budget or "über" in budget_lower:
+        return "Über 50.000€"
     if "15.000" in s1_budget:
-        return "15.000\u201350.000\u20ac"
+        return "15.000–50.000€"
     if "5.000" in s1_budget:
-        return "5.000\u201315.000\u20ac"
+        return "5.000–15.000€"
     if "unter" in budget_lower:
-        return "Unter 5.000\u20ac"
+        return "Unter 5.000€"
     return "Noch unklar"
 
 
@@ -204,10 +202,9 @@ def calculate_strategy_budget(
     """
     Berechnet alle Budget- und ROI-Werte für den Strategiebericht.
 
-    v3: Phase splits are percentage-based -> phases ALWAYS sum to total.
-    ROI scenarios apply adoption factor to SAVINGS (not to final ROI).
-    Investment is segment-scaled (Solo gets less than KMU).
-    All values are deterministic -- NO LLM math.
+    Budget is scaled to match the customer's stated budget (s1_budget).
+    ROI uses segment-specific hourly rates and time savings.
+    All values are deterministic — NO LLM math.
     """
     segment = _get_segment(briefing_data)
 
@@ -217,30 +214,32 @@ def calculate_strategy_budget(
     profile = _BUDGET_PROFILES[budget_key]
     params = _SEGMENT_PARAMS.get(segment, _SEGMENT_PARAMS["KMU"])
 
-    # === INVESTMENT: segment-scaled total ===
-    seg_mult = _SEGMENT_MULTIPLIER.get(segment, 1.0)
-    gesamt_jahr1 = int(profile["base_total"] * seg_mult)
-
-    # Phase budgets from percentages -> ALWAYS sum to total
-    phase1 = int(gesamt_jahr1 * profile["phase1_pct"] / 100)
-    phase2 = int(gesamt_jahr1 * profile["phase2_pct"] / 100)
-    phase3 = gesamt_jahr1 - phase1 - phase2   # remainder ensures exact sum
-
     logger.info(
-        "[Budget] segment=%s (mult=%.1f), s1_budget=%r -> profile=%s, gesamt=%d (phase %d+%d+%d=%d)",
-        segment, seg_mult, s1_budget, budget_key, gesamt_jahr1,
-        phase1, phase2, phase3, phase1 + phase2 + phase3,
+        "[Budget] segment=%s, s1_budget=%r → profile=%s, total_year1=%d",
+        segment, s1_budget, budget_key, profile["total_year1"],
     )
 
-    # === COST BREAKDOWN (from total, percentage-based) ===
-    software_jaehrlich = int(gesamt_jahr1 * _COST_SPLIT["software_pct"] / 100)
-    software_monatlich = software_jaehrlich // 12
-    implementierung = int(gesamt_jahr1 * _COST_SPLIT["implementierung_pct"] / 100)
-    schulung_einmalig = int(gesamt_jahr1 * _COST_SPLIT["schulung_einmalig_pct"] / 100)
-    schulung_laufend = int(gesamt_jahr1 * _COST_SPLIT["schulung_laufend_pct"] / 100)
+    # === INVESTMENT BREAKDOWN ===
+    # Phase budgets from profile
+    phase1_total = profile["phase1_capex"] + profile["phase1_opex"] * 3   # 3 months
+    phase2_total = profile["phase2_capex"] + profile["phase2_opex"] * 5   # 5 months
+    phase3_total = profile["phase3_capex"] + profile["phase3_opex"] * 4   # 4 months
+    gesamt_jahr1 = profile["total_year1"]
+
+    # Derive cost breakdown from profile
+    avg_monthly_opex = (profile["phase1_opex"] * 3 + profile["phase2_opex"] * 5 + profile["phase3_opex"] * 4) // 12
+    total_capex = profile["phase1_capex"] + profile["phase2_capex"] + profile["phase3_capex"]
+
+    # Approximate cost categories for S5 display
+    software_monatlich = avg_monthly_opex
+    software_jaehrlich = avg_monthly_opex * 12
+    implementierung = int(total_capex * 0.50)
+    schulung_einmalig = int(total_capex * 0.20)
+    schulung_laufend = int(total_capex * 0.10)
     personal = gesamt_jahr1 - software_jaehrlich - implementierung - schulung_einmalig - schulung_laufend
 
-    # === SAVINGS: from Report 1 or segment defaults ===
+    # === ROI CALCULATION ===
+    # Use Report 1 values if available, otherwise segment defaults
     zeitersparnis_h = report1_values.get("zeitersparnis_stunden", params["time_savings_h"])
     if isinstance(zeitersparnis_h, str):
         try:
@@ -266,26 +265,20 @@ def calculate_strategy_budget(
     # Realistic = 100% adoption
     # Optimistic = 140% adoption (best case -> highest ROI)
     if gesamt_jahr1 > 0:
-        savings_konservativ = int(jaehrliche_ersparnis * 0.6)
-        savings_realistisch = jaehrliche_ersparnis
-        savings_optimistisch = int(jaehrliche_ersparnis * 1.4)
-
-        roi_konservativ = int(((savings_konservativ - gesamt_jahr1) / gesamt_jahr1) * 100)
-        roi_realistisch = int(((savings_realistisch - gesamt_jahr1) / gesamt_jahr1) * 100)
-        roi_optimistisch = int(((savings_optimistisch - gesamt_jahr1) / gesamt_jahr1) * 100)
+        roi_realistisch = int(((jaehrliche_ersparnis - gesamt_jahr1) / gesamt_jahr1) * 100)
+        roi_konservativ = int(roi_realistisch * 0.6)
+        roi_optimistisch = int(roi_realistisch * 1.5)
     else:
         roi_konservativ = 0
         roi_realistisch = 0
         roi_optimistisch = 0
 
-    # Cap ROI at [-100, 200]
+    # ROI Cap at 200%, floor at -100%
     roi_konservativ = max(-100, min(roi_konservativ, 200))
     roi_realistisch = max(-100, min(roi_realistisch, 200))
     roi_optimistisch = max(-100, min(roi_optimistisch, 200))
 
-    # === BREAK-EVEN (months) ===
-    # Conservative: 60% adoption -> slower break-even
-    # Optimistic: 140% adoption -> faster break-even
+    # Break-Even (months)
     if monatliche_ersparnis > 0:
         breakeven_konservativ = max(1, int(gesamt_jahr1 / (monatliche_ersparnis * 0.6)) + 1)
         breakeven_realistisch = max(1, int(gesamt_jahr1 / monatliche_ersparnis) + 1)
@@ -305,20 +298,16 @@ def calculate_strategy_budget(
 
     # Cap at 36 months max display (math is now realistic due to segment scaling)
     breakeven_konservativ = min(breakeven_konservativ, 36)
-    breakeven_realistisch = min(breakeven_realistisch, 36)
-    breakeven_optimistisch = min(breakeven_optimistisch, 24)
+    breakeven_realistisch = min(breakeven_realistisch, 24)
+    breakeven_optimistisch = min(breakeven_optimistisch, 18)
 
-    # === FUNDING ===
-    foerder_interest = strategy_questions.get("s6_foerderinteresse", "Wei\u00df nicht") or "Wei\u00df nicht"
+    # Funding potential
+    foerder_interest = strategy_questions.get("s6_foerderinteresse", "Weiß nicht") or "Weiß nicht"
     foerder_potenzial = _FOERDER_POTENTIAL.get(foerder_interest, 15000)
 
     logger.info(
-        "[Budget] result: gesamt=%d, phase1=%d+phase2=%d+phase3=%d=%d, "
-        "roi=%d/%d/%d%%, breakeven=%d/%d/%d mo, savings=%d/mo, foerder=%d",
-        gesamt_jahr1, phase1, phase2, phase3, phase1 + phase2 + phase3,
-        roi_konservativ, roi_realistisch, roi_optimistisch,
-        breakeven_konservativ, breakeven_realistisch, breakeven_optimistisch,
-        monatliche_ersparnis, foerder_potenzial,
+        "[Budget] result: gesamt=%d, roi=%d%%, breakeven=%d mo, savings=%d/mo, foerder=%d",
+        gesamt_jahr1, roi_realistisch, breakeven_realistisch, monatliche_ersparnis, foerder_potenzial,
     )
 
     return StrategyBudget(
@@ -340,8 +329,8 @@ def calculate_strategy_budget(
         stundensatz=stundensatz,
         zeitersparnis_euro=monatliche_ersparnis,
         jaehrliche_ersparnis=jaehrliche_ersparnis,
-        budget_phase_1=phase1,
-        budget_phase_2=phase2,
-        budget_phase_3=phase3,
+        budget_phase_1=phase1_total,
+        budget_phase_2=phase2_total,
+        budget_phase_3=phase3_total,
         foerder_potenzial=foerder_potenzial,
     )
