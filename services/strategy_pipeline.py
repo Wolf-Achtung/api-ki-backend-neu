@@ -168,11 +168,22 @@ async def generate_strategy_report(
         sections["S7"], sections["S8"] = await asyncio.gather(s7_task, s8_task)
 
         # Executive Summary LAST (via Claude, not GPT)
+        # Log budget values being passed to EXEC for debugging hallucination
+        logger.info(
+            "[Strategy %d] EXEC context: score=%s, budget=%s, roi=%s, breakeven=%s",
+            briefing_id,
+            base_context.get("readiness_score", "EMPTY"),
+            base_context.get("budget_gesamt_jahr1", "EMPTY"),
+            base_context.get("roi_realistisch", "EMPTY"),
+            base_context.get("breakeven_realistisch", "EMPTY"),
+        )
+
         sections["exec_summary"] = await _generate_section("EXEC", base_context, {
             "top_handlungsfeld": _extract_top_handlungsfeld(sections["S3"]),
             "anzahl_felder": str(len(handlungsfelder)),
             "quick_win": _extract_quick_win(sections["S3"]),
             "summe_foerder": _extract_foerder_summe(sections["S7"]),
+            "s5_investition_summary": _extract_summary(sections["S5"], max_words=150),
         }, use_claude=True)
 
         # === PHASE 3: Assembly ===

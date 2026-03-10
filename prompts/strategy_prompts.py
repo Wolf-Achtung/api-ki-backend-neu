@@ -350,11 +350,15 @@ ECKDATEN (EXAKT diese Werte verwenden — KEINE eigenen Zahlen erfinden!):
 - Förderpotenzial: {summe_foerder}
 - Zeitrahmen: {s2_zeitrahmen}
 
+INVESTITIONSPLAN-ZUSAMMENFASSUNG (aus Section S5):
+{s5_investition_summary}
+
 KRITISCHE REGELN:
 - Verwende AUSSCHLIESSLICH die oben genannten Zahlen für Score, Investition, ROI, Break-Even und Förderung.
 - Erfinde KEINE Zahlen, Prozentsätze oder Euro-Beträge.
 - Wenn ein Wert leer ist, lasse ihn weg statt einen Wert zu erfinden.
 - KEINE erfundenen Quellen oder Studien zitieren.
+- KEINE Quellenangaben (Bitkom, BAFA etc.) — der Bericht hat eigene Quellenverweise.
 
 AUFGABE:
 Schreibe eine prägnante Executive Summary (200-300 Wörter), die:
