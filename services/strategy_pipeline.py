@@ -229,11 +229,21 @@ async def _generate_section(
                 context[key] = ""
         prompt = prompt_template.format(**{k: str(v or "") for k, v in context.items()})
 
-    # Call LLM
+    # Call LLM — respect LLM_PROVIDER_DEFAULT (same routing as Report 1+2)
     start = time.time()
     result: Optional[str] = None
 
-    if use_claude:
+    route_to_anthropic = use_claude
+    if not route_to_anthropic:
+        from services.anthropic_client import should_use_anthropic
+        route_to_anthropic = should_use_anthropic(section=f"strategy_{section_key}")
+
+    logger.info(
+        "[Strategy] Section %s: routing to %s (use_claude=%s)",
+        section_key, "Anthropic" if route_to_anthropic else "OpenAI", use_claude,
+    )
+
+    if route_to_anthropic:
         result = await _call_anthropic(prompt, SYSTEM_PROMPT_STRATEGY_REPORT, section_key)
     else:
         result = await _call_openai(prompt, SYSTEM_PROMPT_STRATEGY_REPORT, section_key)
@@ -241,33 +251,39 @@ async def _generate_section(
     duration = time.time() - start
     word_count = len((result or "").split())
     logger.info(
-        "[Strategy] Section %s: %d words in %.1fs (claude=%s)",
-        section_key, word_count, duration, use_claude,
+        "[Strategy] Section %s: %d words in %.1fs (anthropic=%s)",
+        section_key, word_count, duration, route_to_anthropic,
     )
 
     return result or f"<p><em>Section {section_key} konnte nicht generiert werden.</em></p>"
 
 
 async def _call_openai(prompt: str, system_prompt: str, section: str) -> Optional[str]:
-    """Call OpenAI via the existing gpt_analyze infrastructure."""
+    """Call OpenAI using ENV-configured model (same as Report 1+2)."""
     try:
+        import os
         import openai
-        from settings import settings
 
-        client = openai.OpenAI(
-            api_key=settings.openai.api_key,
-            timeout=180.0,
-        )
+        api_key = os.getenv("OPENAI_API_KEY", "")
+        model = os.getenv("OPENAI_MODEL", "gpt-4o")
+
+        if not api_key:
+            logger.error("[Strategy] OPENAI_API_KEY not set — cannot call OpenAI for %s", section)
+            return None
+
+        logger.info("[Strategy] OpenAI call for %s: model=%s", section, model)
+
+        client = openai.OpenAI(api_key=api_key, timeout=180.0)
 
         def _openai_call() -> Any:
             return client.chat.completions.create(
-                model=settings.openai.model,
+                model=model,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.3,
-                max_tokens=4000,
+                max_completion_tokens=4000,
             )
 
         response = await asyncio.to_thread(_openai_call)
@@ -275,7 +291,7 @@ async def _call_openai(prompt: str, system_prompt: str, section: str) -> Optiona
         content: Optional[str] = response.choices[0].message.content if response.choices else None
         return content
     except Exception as exc:
-        logger.error("[Strategy] OpenAI call failed for %s: %s", section, exc)
+        logger.error("[Strategy] OpenAI call failed for %s: %s", section, exc, exc_info=True)
         return None
 
 
