@@ -168,11 +168,22 @@ async def generate_strategy_report(
         sections["S7"], sections["S8"] = await asyncio.gather(s7_task, s8_task)
 
         # Executive Summary LAST (via Claude, not GPT)
+        # Log budget values being passed to EXEC for debugging hallucination
+        logger.info(
+            "[Strategy %d] EXEC context: score=%s, budget=%s, roi=%s, breakeven=%s",
+            briefing_id,
+            base_context.get("readiness_score", "EMPTY"),
+            base_context.get("budget_gesamt_jahr1", "EMPTY"),
+            base_context.get("roi_realistisch", "EMPTY"),
+            base_context.get("breakeven_realistisch", "EMPTY"),
+        )
+
         sections["exec_summary"] = await _generate_section("EXEC", base_context, {
             "top_handlungsfeld": _extract_top_handlungsfeld(sections["S3"]),
             "anzahl_felder": str(len(handlungsfelder)),
             "quick_win": _extract_quick_win(sections["S3"]),
             "summe_foerder": _extract_foerder_summe(sections["S7"]),
+            "s5_investition_summary": _extract_summary(sections["S5"], max_words=150),
         }, use_claude=True)
 
         # === PHASE 3: Assembly ===
@@ -241,15 +252,21 @@ async def _generate_section(
         from services.anthropic_client import should_use_anthropic
         route_to_anthropic = should_use_anthropic(section=f"strategy_{section_key}")
 
+    prompt_len = len(prompt)
+    prompt_words = len(prompt.split())
     logger.info(
-        "[Strategy] Section %s: routing to %s (use_claude=%s)",
-        section_key, "Anthropic" if route_to_anthropic else "OpenAI", use_claude,
+        "[Strategy] Section %s: routing to %s (use_claude=%s, prompt=%d chars / %d words)",
+        section_key, "Anthropic" if route_to_anthropic else "OpenAI",
+        use_claude, prompt_len, prompt_words,
     )
 
+    # Longer sections (S8 Risiken, EXEC) get more output tokens
+    max_out_tokens = 6000 if section_key in ("S8", "EXEC", "S5") else 5000
+
     if route_to_anthropic:
-        result = await _call_anthropic(prompt, SYSTEM_PROMPT_STRATEGY_REPORT, section_key)
+        result = await _call_anthropic(prompt, SYSTEM_PROMPT_STRATEGY_REPORT, section_key, max_tokens=max_out_tokens)
     else:
-        result = await _call_openai(prompt, SYSTEM_PROMPT_STRATEGY_REPORT, section_key)
+        result = await _call_openai(prompt, SYSTEM_PROMPT_STRATEGY_REPORT, section_key, max_tokens=max_out_tokens)
 
     duration = time.time() - start
     word_count = len((result or "").split())
@@ -261,7 +278,7 @@ async def _generate_section(
     return result or f"<p><em>Section {section_key} konnte nicht generiert werden.</em></p>"
 
 
-async def _call_openai(prompt: str, system_prompt: str, section: str) -> Optional[str]:
+async def _call_openai(prompt: str, system_prompt: str, section: str, max_tokens: int = 5000) -> Optional[str]:
     """Call OpenAI using ENV-configured model (same as Report 1+2)."""
     try:
         import os
@@ -274,7 +291,7 @@ async def _call_openai(prompt: str, system_prompt: str, section: str) -> Optiona
             logger.error("[Strategy] OPENAI_API_KEY not set — cannot call OpenAI for %s", section)
             return None
 
-        logger.info("[Strategy] OpenAI call for %s: model=%s", section, model)
+        logger.info("[Strategy] OpenAI call for %s: model=%s, max_tokens=%d", section, model, max_tokens)
 
         client = openai.OpenAI(api_key=api_key, timeout=180.0)
 
@@ -286,7 +303,7 @@ async def _call_openai(prompt: str, system_prompt: str, section: str) -> Optiona
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.3,
-                max_completion_tokens=4000,
+                max_completion_tokens=max_tokens,
             )
 
         response = await asyncio.to_thread(_openai_call)
@@ -309,7 +326,7 @@ async def _call_openai(prompt: str, system_prompt: str, section: str) -> Optiona
         return None
 
 
-async def _call_anthropic(prompt: str, system_prompt: str, section: str) -> Optional[str]:
+async def _call_anthropic(prompt: str, system_prompt: str, section: str, max_tokens: int = 5000) -> Optional[str]:
     """Call Anthropic Claude via the existing anthropic_client."""
     try:
         from services.anthropic_client import call_anthropic
@@ -319,7 +336,7 @@ async def _call_anthropic(prompt: str, system_prompt: str, section: str) -> Opti
             prompt,
             section=f"strategy_{section}",
             system_prompt=system_prompt,
-            max_tokens=5000,
+            max_tokens=max_tokens,
         )
         result_len = len(result) if result else 0
         logger.info("[Strategy] Anthropic response for %s: %d chars", section, result_len)

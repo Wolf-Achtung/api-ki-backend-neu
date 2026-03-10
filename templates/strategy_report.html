@@ -913,6 +913,10 @@ sup.src-ref {
 @media print {
     body::before {
         position: fixed;
+        left: -23mm; /* shift into @page margin (content area starts at 23mm) */
+    }
+    body {
+        padding-left: 0; /* @page margin-left: 23mm already handles spacing */
     }
     .page-break {
         page-break-before: always;
