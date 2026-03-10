@@ -1847,7 +1847,7 @@ def generate_30_tage_challenge_html_v2(
 # BRANCHEN-FALLSTUDIEN (Idee #5)
 # =============================================================================
 
-FALLSTUDIEN = {
+FALLSTUDIEN: Dict[str, Dict[str, Any]] = {
     "beratung": {
         "titel": "Unternehmensberater spart 12 Stunden pro Woche",
         "unternehmen": "Solo-Berater, Strategieberatung",
