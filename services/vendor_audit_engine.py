@@ -915,17 +915,48 @@ _KNOWN_VENDOR_META = {
 
 def _extract_vendors_from_briefing(briefing: dict) -> list:
     """FIX-C5: Extract vendor info from questionnaire answers as fallback."""
-    vendors = []
-    seen = set()
-    for source in [briefing.get("VORHANDENE_TOOLS_LABELS",""), briefing.get("vorhandene_tools",""), briefing.get("ki_projekte","")]:
-        if not source: continue
-        items = source if isinstance(source, list) else [s.strip() for s in str(source).replace(";",",").split(",")]
+    vendors: list = []
+    seen: set = set()
+    # FIX-KMU-VENDOR: Check more source fields to cover all segment variants
+    source_keys = [
+        "VORHANDENE_TOOLS_LABELS", "vorhandene_tools",
+        "ki_projekte", "ki_einsatz", "KI_PROJEKTE",
+    ]
+    for src_key in source_keys:
+        source = briefing.get(src_key, "")
+        if not source:
+            continue
+        items = source if isinstance(source, list) else [s.strip() for s in str(source).replace(";", ",").split(",")]
         for item in items:
             il = item.strip().lower()
-            if not il: continue
+            if not il:
+                continue
             for key, meta in _KNOWN_VENDOR_META.items():
                 if key in il and meta["name"] not in seen:
-                    vendors.append(dict(meta)); seen.add(meta["name"])
+                    vendors.append(dict(meta))
+                    seen.add(meta["name"])
+    return vendors
+
+
+def _extract_vendors_from_sections(sections: dict) -> list:
+    """FIX-KMU-VENDOR: Extract vendor names from LLM-generated HTML sections."""
+    vendors: list = []
+    seen: set = set()
+    # Check HTML sections that commonly mention tool/vendor names
+    html_keys = [
+        "TOOLS_EMPFEHLUNGEN_HTML", "KI_STACK_SUMMARY_HTML",
+        "QUICK_WINS_HTML", "tools_empfehlungen",
+    ]
+    for html_key in html_keys:
+        html_val = sections.get(html_key, "")
+        if not html_val or not isinstance(html_val, str):
+            continue
+        # Strip HTML tags for matching
+        text = re.sub(r"<[^>]+>", " ", html_val).lower()
+        for key, meta in _KNOWN_VENDOR_META.items():
+            if key in text and meta["name"] not in seen:
+                vendors.append(dict(meta))
+                seen.add(meta["name"])
     return vendors
 
 
@@ -1170,6 +1201,7 @@ def generate_vendor_audit_report(
     risk_report_v3: Optional[Any] = None,
     briefing: Optional[Dict[str, Any]] = None,
     llm_response: Optional[Dict[str, Any]] = None,
+    sections: Optional[Dict[str, Any]] = None,
 ) -> VendorAuditReport:
     """
     Generate comprehensive Vendor Audit Report.
@@ -1184,6 +1216,7 @@ def generate_vendor_audit_report(
         risk_report_v3: Risk Engine 3.0 report
         briefing: Original briefing/answers dict
         llm_response: Parsed JSON from LLM (if available)
+        sections: Generated report sections dict (for HTML-based vendor extraction)
 
     Returns:
         VendorAuditReport with complete vendor audit
@@ -1214,6 +1247,12 @@ def generate_vendor_audit_report(
         vendors = _extract_vendors_from_briefing(briefing)
         if vendors:
             log.info("[G35][FIX-C5] Extracted %d vendors from questionnaire", len(vendors))
+
+    # FIX-KMU-VENDOR: Fallback from LLM-generated HTML sections
+    if not vendors and sections:
+        vendors = _extract_vendors_from_sections(sections)
+        if vendors:
+            log.info("[G35][FIX-KMU-VENDOR] Extracted %d vendors from generated sections", len(vendors))
 
     # Generate audit entries
     entries: List[VendorAuditEntry] = []
