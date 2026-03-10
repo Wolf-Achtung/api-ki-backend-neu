@@ -21,9 +21,11 @@ REGELN:
 5. KEINE Markdown-Syntax (kein ```, kein #, kein *). Nur HTML.
 6. Budget- und ROI-Zahlen EXAKT aus den Vorgaben übernehmen — NICHT selbst rechnen.
 7. Nenne konkrete Tool-Namen, Anbieter und Preise wo möglich.
-8. Vermeide generische Floskeln. Sei spezifisch für die Branche {branche}.
+8. Vermeide generische Floskeln. Sei spezifisch für die Branche.
 9. Jede Section hat 400-800 Wörter (Exec Summary: 200-300 Wörter).
-10. Quellenangaben am Ende jeder Section als <div class="sources">."""
+10. Quellenangaben am Ende jeder Section als <div class="sources">.
+11. STILREGEL: Verwende den Branchennamen maximal 2× pro Abschnitt. Nutze danach Variationen: "Ihr Bereich", "Ihre Branche", "diesem Sektor".
+12. Verwende "Ihr Unternehmen" / den Firmennamen maximal 3× pro Abschnitt. Variiere mit "Sie", "Ihr Team", "Ihr Betrieb"."""
 
 
 # =============================================================================
@@ -172,6 +174,12 @@ AUFGABE:
 3. Erstelle eine Vergleichstabelle.
 4. Berücksichtige den Ansatz-Wunsch: {s9_ansatz}.
 5. Berücksichtige Datenschutz-Anforderung: {s10_datenschutz}.
+
+DIVERSITÄTS-REGELN:
+- Der Kunde nutzt bereits: {s5_software}. Bevorzuge Tools die sich in diesen Stack integrieren.
+- Empfehle MAXIMAL 3 Tools vom gleichen Anbieter (z.B. max. 3× Microsoft).
+- Zeige für jedes Handlungsfeld mindestens 1 Alternative zum Hauptanbieter.
+- Berücksichtige auch Open-Source-Alternativen und EU-Anbieter.
 
 FORMAT: HTML-Fragment. Verwende Tabellen für Tool-Vergleiche.
 Quellenangaben am Ende als <div class="sources">.""",
