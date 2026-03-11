@@ -87,6 +87,12 @@ ANTI-REDUNDANZ (STRIKT!):
 - Fokus: WAS KOMMT NACH den ersten 90 Tagen?
 - Bei Wiederholung: Querverweis nutzen (→ siehe Abschnitt X)
 
+ROI-PROHIBITION (STRIKT!):
+- KEINE konkreten ROI-Prozentzahlen nennen (z.B. "ROI von 284%")
+- KEINE Payback/Amortisations-Monatsangaben (z.B. "Amortisation in 4 Monaten")
+- Stattdessen: "ROI-Nachweis → siehe Business Case"
+- Warum: ROI wird zentral im Business Case berechnet. Abweichende Werte = Inkonsistenz.
+
 THEMEN-OWNERSHIP (verbindlich):
 - Diese Section: NUR zeitliche Umsetzungsplanung (Q1-Q4 / Dimensionen)
 - NICHT hier: Daten-IST-Analyse (→ data_readiness)
