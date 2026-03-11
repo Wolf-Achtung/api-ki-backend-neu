@@ -92,6 +92,7 @@ import json
 import logging
 import os
 import re
+import time
 import threading
 import uuid
 import html
@@ -20539,6 +20540,7 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
                 log.warning("[%s] ⚠️ Could not generate briefing summary HTML: %s", run_id, str(e))
 
             for addr in _admin_recipients():
+                time.sleep(0.6)  # Resend Rate Limit: max 2 req/sec
                 ok, err = _send_email_via_resend(
                     addr,
                     f"Neuer KI‑Status‑Report – Analysis #{rep.analysis_id} / Briefing #{rep.briefing_id}",

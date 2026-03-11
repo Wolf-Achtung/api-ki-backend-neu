@@ -20,6 +20,7 @@ from __future__ import annotations
 import logging
 import math
 import os
+import re
 import time
 import traceback
 from typing import Any, Dict, List, Optional
@@ -698,6 +699,33 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
 
 
 # =============================================================================
+# 3b. BREAK-EVEN ENFORCER (Safety Net)
+# =============================================================================
+
+def _enforce_kpa_break_even(html: str, canonical_payback: float) -> str:
+    """Safety Net: Enforce Break-Even in KPA to match canonical payback value.
+
+    The sensitivity table is deterministic, but the LLM-generated prose may
+    state a different Break-Even month.  This regex pass corrects it.
+    """
+    be_month = math.ceil(canonical_payback)
+
+    # Pattern: "Break-Even: Monat X" or "Break-even: Monat X"
+    pattern = r'(Break-[Ee]ven:\s*Monat\s*)\d+'
+    replacement = rf'\g<1>{be_month}'
+
+    new_html = re.sub(pattern, replacement, html)
+
+    if new_html != html:
+        log.info(
+            "[KPA-BE-FIX] Break-Even enforced to Monat %d (canonical payback=%.1f)",
+            be_month, canonical_payback,
+        )
+
+    return new_html
+
+
+# =============================================================================
 # 4. REPORT ASSEMBLER
 # =============================================================================
 
@@ -753,6 +781,13 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
 
     # 4. Generate sections
     sections = generate_deep_dive_sections(context)
+
+    # 4b. Enforce Break-Even consistency in LLM-generated sections
+    canonical_payback = bc.get('payback', 0)
+    if canonical_payback > 0:
+        for key in sections:
+            if isinstance(sections[key], str):
+                sections[key] = _enforce_kpa_break_even(sections[key], canonical_payback)
 
     # 5. Render HTML
     html = render_deep_dive_html(sections, context)
