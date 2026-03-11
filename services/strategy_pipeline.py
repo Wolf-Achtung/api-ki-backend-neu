@@ -125,6 +125,7 @@ async def generate_strategy_report(
         })
 
         sections["S1"], sections["S2"] = await asyncio.gather(s1_task, s2_task)
+        _heartbeat(db_session, briefing_id)
 
         # S3 (needs S2)
         sections["S3"] = await _generate_section("S3", base_context, {
@@ -134,6 +135,8 @@ async def generate_strategy_report(
             "potenziale_summary": str(report2_data.get("potenziale", "")),
         })
 
+        _heartbeat(db_session, briefing_id)
+
         # S4 (needs S3)
         sections["S4"] = await _generate_section("S4", base_context, {
             "s3_handlungsfelder": _extract_handlungsfelder(sections["S3"]),
@@ -142,8 +145,12 @@ async def generate_strategy_report(
             "research_integration": research_context.get("tool_integration", {}).get("results", ""),
         })
 
+        _heartbeat(db_session, briefing_id)
+
         # S5 (needs S3, S4 — budget values already in base_context)
         sections["S5"] = await _generate_section("S5", base_context, {})
+
+        _heartbeat(db_session, briefing_id)
 
         # S6 (needs S3-S5)
         sections["S6"] = await _generate_section("S6", base_context, {
@@ -166,6 +173,7 @@ async def generate_strategy_report(
         })
 
         sections["S7"], sections["S8"] = await asyncio.gather(s7_task, s8_task)
+        _heartbeat(db_session, briefing_id)
 
         # Executive Summary LAST (via Claude, not GPT)
         # Log budget values being passed to EXEC for debugging hallucination
@@ -508,6 +516,18 @@ async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
 # =============================================================================
 # DB HELPERS
 # =============================================================================
+
+def _heartbeat(db_session: Any, briefing_id: int) -> None:
+    """Touch updated_at to prevent stale-detection during long generations."""
+    from models import StrategyReport
+
+    sr = db_session.query(StrategyReport).filter(
+        StrategyReport.briefing_id == briefing_id
+    ).first()
+    if sr:
+        sr.updated_at = datetime.now(timezone.utc)
+        db_session.commit()
+
 
 def _update_status(db_session: Any, briefing_id: int, status: str) -> None:
     """Update strategy_reports.status."""
