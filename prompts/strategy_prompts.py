@@ -366,9 +366,14 @@ VERBINDLICHE KENNZAHLEN (EXAKT diese Werte verwenden — KEINE eigenen Zahlen er
 - Quick Win: {quick_win}
 - Kundenbudget: {s1_budget_label}
 - Empfohlene Investition Jahr 1: {budget_gesamt_jahr1} €
+  - Phase 1 (Monat 1-3): {budget_phase_1} €
+  - Phase 2 (Monat 4-8): {budget_phase_2} €
+  - Phase 3 (Monat 9-12): {budget_phase_3} €
 - Monatliche Einsparung: {zeitersparnis_euro} €
-- ROI (realistisch): {roi_realistisch}%
-- Break-Even: Monat {breakeven_realistisch}
+- ROI-Szenarien:
+  - Konservativ: {roi_konservativ}% ROI, Break-Even Monat {breakeven_konservativ}
+  - Realistisch: {roi_realistisch}% ROI, Break-Even Monat {breakeven_realistisch}
+  - Optimistisch: {roi_optimistisch}% ROI, Break-Even Monat {breakeven_optimistisch}
 - Förderpotenzial: {foerder_potenzial} €
 - Zeitrahmen: {s2_zeitrahmen}
 
@@ -381,6 +386,8 @@ KRITISCHE REGELN:
 - Wenn ein Wert leer ist, lasse ihn weg statt einen Wert zu erfinden.
 - KEINE erfundenen Quellen oder Studien zitieren.
 - KEINE Quellenangaben (Bitkom, BAFA etc.) — der Bericht hat eigene Quellenverweise.
+- Die ROI-Werte sind: Konservativ={roi_konservativ}%, Realistisch={roi_realistisch}%, Optimistisch={roi_optimistisch}%.
+  Verwende in der Summary den REALISTISCHEN ROI ({roi_realistisch}%). Nenne KEINE anderen ROI-Werte.
 
 AUFGABE:
 Schreibe eine prägnante Executive Summary (200-300 Wörter), die:
