@@ -116,7 +116,7 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
             SECTION_TEMPLATE_NAECHSTE_SCHRITTE_TEAM,
         )
         # Solo gets language without "Team" references
-        is_solo = segment_key in ("1", "solo", "freelancer")
+        is_solo = segment_raw in ("1", "solo", "freelancer")
         naechste_schritte = (
             SECTION_TEMPLATE_NAECHSTE_SCHRITTE_SOLO if is_solo
             else SECTION_TEMPLATE_NAECHSTE_SCHRITTE_TEAM
