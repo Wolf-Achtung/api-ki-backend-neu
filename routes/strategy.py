@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
@@ -336,12 +336,24 @@ async def generate_strategy_report_endpoint(
     if sr.payment_status not in ("beta", "paid", "free"):
         raise HTTPException(status_code=402, detail="Zahlung erforderlich")
 
-    # 6. Already generating?
+    # 6. Already generating? Check if stale (stuck after container restart)
     if sr.status == "generating":
-        return JSONResponse(
-            content={"status": "already_generating", "briefing_id": briefing_id},
-            status_code=200,
-        )
+        stale_threshold = timedelta(minutes=10)
+        now = datetime.now(timezone.utc)
+        if sr.updated_at and (now - sr.updated_at) > stale_threshold:
+            log.info(
+                "[Strategy] Stale generation detected for briefing_id=%d (stuck since %s). Auto-reset to questions_saved.",
+                briefing_id, sr.updated_at,
+            )
+            sr.status = "questions_saved"
+            sr.updated_at = now
+            db.commit()
+            # Fall through to normal generation below
+        else:
+            return JSONResponse(
+                content={"status": "already_generating", "briefing_id": briefing_id},
+                status_code=200,
+            )
 
     # 7. Already completed? Allow re-generation
     if sr.status == "completed":
