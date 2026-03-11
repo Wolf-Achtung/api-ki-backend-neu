@@ -24,7 +24,7 @@ REGELN:
 8. Vermeide generische Floskeln. Sei spezifisch für die Branche.
 9. Jede Section hat 400-800 Wörter (Exec Summary: 200-300 Wörter).
 10. Quellenangaben am Ende jeder Section als <div class="sources">.
-11. STILREGEL: Verwende den Branchennamen maximal 2× pro Abschnitt. Nutze danach Variationen: "Ihr Bereich", "Ihre Branche", "diesem Sektor".
+11. STILREGEL BRANCHENNAME: Verwende den Branchennamen maximal 3× pro Section. Nutze danach Variationen: "Ihr Unternehmen", "Ihr Betrieb", "Ihre Branche", "in Ihrem Bereich", "in Ihrem Sektor", "für Betriebe Ihrer Größe", "in Ihrem Marktumfeld". Vermeide Konstruktionen wie "In der XY-branche" — schreibe stattdessen "In Ihrem Marktumfeld" oder "In Ihrem Sektor".
 12. Verwende "Ihr Unternehmen" / den Firmennamen maximal 3× pro Abschnitt. Variiere mit "Sie", "Ihr Team", "Ihr Betrieb"."""
 
 
@@ -175,8 +175,17 @@ AUFGABE:
 4. Berücksichtige den Ansatz-Wunsch: {s9_ansatz}.
 5. Berücksichtige Datenschutz-Anforderung: {s10_datenschutz}.
 
+BESTEHENDER SOFTWARE-STACK (KRITISCH):
+Der Kunde nutzt bereits folgende Software: {s5_software}
+REGELN:
+- Alle Tool-Empfehlungen MÜSSEN auf dem bestehenden Stack aufbauen.
+- Empfehle Erweiterungen/Add-ons für die bestehende Software (z.B. Microsoft Copilot wenn M365 vorhanden, Slack-Bots wenn Slack vorhanden).
+- Empfehle KEINE Konkurrenzprodukte zum bestehenden Stack (NICHT Google Workspace wenn M365 vorhanden, NICHT Teams wenn Slack vorhanden, NICHT Slack wenn Teams vorhanden).
+- Wenn ein Wechsel objektiv sinnvoll wäre, formuliere es als "Alternative zu prüfen", NICHT als Hauptempfehlung.
+- Nenne konkrete Integrationsmöglichkeiten mit dem bestehenden Stack.
+- Referenziere die Tools aus {s5_software} namentlich bei Integrationsbeschreibungen.
+
 DIVERSITÄTS-REGELN:
-- Der Kunde nutzt bereits: {s5_software}. Bevorzuge Tools die sich in diesen Stack integrieren.
 - Empfehle MAXIMAL 3 Tools vom gleichen Anbieter (z.B. max. 3× Microsoft).
 - Zeige für jedes Handlungsfeld mindestens 1 Alternative zum Hauptanbieter.
 - Berücksichtige auch Open-Source-Alternativen und EU-Anbieter.
@@ -312,6 +321,12 @@ AUFGABE:
 3. Berechne die potenzielle Gesamtförderung.
 4. Gib eine Handlungsempfehlung: Welches Programm zuerst beantragen?
 5. Berücksichtige das Bundesland: {bundesland} (landesspezifische Programme).
+
+REGEL REGIONALE FÖRDERPROGRAMME:
+- Nenne IMMER mindestens ein regionales/landesspezifisches Förderprogramm neben den bundesweiten Programmen (BAFA, ZIM, go-digital etc.).
+- Wenn das Bundesland "{bundesland}" bekannt ist, priorisiere Programme dieses Bundeslandes (z.B. IBB Berlin, BayTOU Bayern, NRW.BANK Digitalisierung, L-Bank Baden-Württemberg, IFB Hamburg).
+- Regionale Programme sind oft leichter zugänglich und haben kürzere Bewilligungszeiten — weise darauf hin.
+- Nenne NUR Förderprogramme, die in den Recherche-Ergebnissen belegt sind. Erfinde KEINE Programme.
 
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Programmübersicht.
 Quellenangaben am Ende als <div class="sources">.""",
