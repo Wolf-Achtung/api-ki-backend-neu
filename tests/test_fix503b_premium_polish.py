@@ -123,8 +123,8 @@ class TestPaybackCanonicalEnforcement:
         assert "konservativ" in result["BUSINESS_CASE_HTML"], \
             "Scenario context should be preserved"
 
-    def test_payback_within_tolerance_not_replaced(self):
-        """Payback values within 20% of canonical should NOT be replaced."""
+    def test_payback_within_tolerance_still_replaced(self):
+        """FIX-AMORT: ALL non-canonical values are replaced, even within old 20% tolerance."""
         from services.content_quality_enforcer import apply_canonical_payback_enforcer
 
         sections = {
@@ -138,10 +138,10 @@ class TestPaybackCanonicalEnforcement:
 
         result = apply_canonical_payback_enforcer(sections)
 
-        # 3 is within 20% of 3.5, should not be replaced
-        # (|3-3.5|/3.5 = 0.14 = 14% < 20%)
-        assert "3 Monate" in result["EXECUTIVE_SUMMARY_HTML"], \
-            "Values within tolerance should not be replaced"
+        # FIX-AMORT: No tolerance — canonical is always enforced to prevent
+        # visibly inconsistent values coexisting in the same report.
+        assert "3,5 Monate" in result["EXECUTIVE_SUMMARY_HTML"], \
+            "Non-canonical values must be replaced (no tolerance)"
 
 
 class TestRiskMatrixTableWrap:
