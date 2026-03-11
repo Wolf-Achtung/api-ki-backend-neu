@@ -133,6 +133,16 @@ _SEGMENT_MULTIPLIER = {
     "KMU": 1.8,
 }
 
+# Budget upper-bound caps (from questionnaire options).
+# After segment scaling, investment must NOT exceed these limits.
+_BUDGET_CAPS = {
+    "Unter 5.000€": 4_500,
+    "5.000–15.000€": 14_000,
+    "15.000–50.000€": 48_000,
+    "Über 50.000€": None,   # no cap
+    "Noch unklar": None,     # no cap
+}
+
 # Segment-specific hourly rates and time savings
 _SEGMENT_PARAMS = {
     "Solo": {"time_savings_h": 15, "hourly_rate": 85},
@@ -216,9 +226,14 @@ def calculate_strategy_budget(
     profile = _BUDGET_PROFILES[budget_key]
     params = _SEGMENT_PARAMS.get(segment, _SEGMENT_PARAMS["KMU"])
 
-    # === INVESTMENT: segment-scaled total ===
+    # === INVESTMENT: segment-scaled total, capped at budget upper bound ===
     seg_mult = _SEGMENT_MULTIPLIER.get(segment, 1.0)
     gesamt_jahr1 = int(profile["base_total"] * seg_mult)
+    cap = _BUDGET_CAPS.get(budget_key)
+    if cap is not None:
+        gesamt_jahr1 = min(gesamt_jahr1, cap)
+    # Round to nearest 500€ for professional appearance
+    gesamt_jahr1 = round(gesamt_jahr1 / 500) * 500
 
     # Phase budgets from percentages -> ALWAYS sum to total
     phase1 = int(gesamt_jahr1 * profile["phase1_pct"] / 100)
