@@ -459,11 +459,21 @@ def generate_deep_dive_sections(context: Dict[str, Any]) -> Dict[str, str]:
     """
     sections: Dict[str, str] = {}
 
-    # Section 1: Use expanded gamechanger from Report 1
-    gc_decision = context.get('gamechanger_decision', '')
-    gc_html = context.get('GAMECHANGER_HTML', '')
-    gc_snapshot = context.get('_GC_SNAPSHOT_642', '')
-    section1_raw = gc_decision or gc_snapshot or gc_html
+    # Section 1: LLM-generated strategic analysis (no longer a copy from Report 1)
+    # FIX-ISSUE4: Previously copied GAMECHANGER_DECISION_HTML verbatim from Report 1.
+    # Now generates unique content via dedicated prompt, using Report 1 as context only.
+    try:
+        section1_raw = _generate_gc_section('gc_strategic_analysis', context)
+    except Exception as exc:
+        log.error(
+            "[GC-DEEP-DIVE] Failed to generate gc_strategic_analysis: %s\n%s",
+            exc, traceback.format_exc()
+        )
+        # Fallback: use Report 1 content with renames (legacy behaviour)
+        gc_decision = context.get('gamechanger_decision', '')
+        gc_html = context.get('GAMECHANGER_HTML', '')
+        gc_snapshot = context.get('_GC_SNAPSHOT_642', '')
+        section1_raw = gc_decision or gc_snapshot or gc_html
 
     # Post-process: Replace customer-visible "Gamechanger" wording
     # (internal keys like GAMECHANGER_DECISION_HTML are untouched)
