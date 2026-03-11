@@ -141,7 +141,7 @@ class TestTask2SoloBlacklistTerms:
         assert "Kennzahlen" in result or "Übersicht" in result
         assert "Protokoll" in result or "Prüfung" in result
         assert "Ebene" in result
-        assert "Modul" in result
+        assert "Baustein" in result
         assert "Wachstum" in result
 
     def test_governance_executive_audit_fully_replaced(self):
