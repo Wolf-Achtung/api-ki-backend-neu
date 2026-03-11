@@ -1000,8 +1000,20 @@ SOLO_TERM_REPLACEMENTS_EXTENDED: Dict[str, str] = {
     "plattform": "lösung",
     "Skalierung": "Wachstum",
     "skalierung": "wachstum",
-    "Engine": "Modul",
-    "engine": "modul",
+    # Modul → Baustein (Solo-Persona: "Modul" klingt zu technisch)
+    # Longer forms MUST come first to prevent partial replacement
+    "Modulen": "Bausteinen",
+    "modulen": "bausteinen",
+    "Module": "Bausteine",
+    "module": "bausteine",
+    "modularer": "flexibler",
+    "modulares": "flexibles",
+    "modulare": "flexible",
+    "modular": "flexibel",
+    "Modul": "Baustein",
+    "modul": "baustein",
+    "Engine": "Baustein",
+    "engine": "baustein",
     "Baukasten": "Werkzeugkasten",
     "baukasten": "werkzeugkasten",
     # Additional enterprise terms
@@ -1028,6 +1040,7 @@ SOLO_BLACKLIST_TERMS: List[str] = [
     "Framework",
     "Pipeline",
     "Deployment",
+    "Modul",
     "Konzern",
     # FIX: Added Stack variants - commonly leak in SOLO reports
     "Tech-Stack",
@@ -1057,7 +1070,8 @@ SOLO_BLACKLIST_FALLBACKS: Dict[str, str] = {
     # TASK 2: Additional fallbacks
     "Plattform": "Lösung",
     "Skalierung": "Wachstum",
-    "Engine": "Modul",
+    "Engine": "Baustein",
+    "Modul": "Baustein",
     "Baukasten": "Werkzeugkasten",
     # FIX: Stack variants - commonly leak in SOLO reports
     "Tech-Stack": "Werkzeugkasten",
