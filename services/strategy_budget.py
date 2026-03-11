@@ -6,13 +6,14 @@ ALLE Zahlen werden hier berechnet. Das LLM darf NICHT rechnen.
 Lessons learned aus Report 1: LLMs halluzinieren Mathe (350x12 = 4.110 statt 4.200).
 
 Deutsches Zahlenformat in to_dict(): Tausenderpunkt, kein Komma.
-ROI-Cap bei 200%. Keine Float-Ausgabe an Templates — nur Integer, formatiert als String.
+ROI-Floor bei -100%. Keine Float-Ausgabe an Templates — nur Integer, formatiert als String.
 
 v3.0 — Percentage-based phase splits, segment-scaled investment, correct ROI ordering.
 """
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
@@ -36,9 +37,9 @@ class StrategyBudget:
     budget_gesamt_jahr1: int
 
     # ROI-Szenarien
-    roi_konservativ: int       # Prozent, gekappt bei 200
-    roi_realistisch: int       # Prozent, gekappt bei 200
-    roi_optimistisch: int      # Prozent, gekappt bei 200
+    roi_konservativ: int       # Prozent, floor -100
+    roi_realistisch: int       # Prozent, floor -100
+    roi_optimistisch: int      # Prozent, floor -100
     breakeven_konservativ: int  # Monat
     breakeven_realistisch: int  # Monat
     breakeven_optimistisch: int  # Monat
@@ -285,24 +286,24 @@ def calculate_strategy_budget(
         savings_realistisch = jaehrliche_ersparnis
         savings_optimistisch = int(jaehrliche_ersparnis * 1.4)
 
-        roi_konservativ = int(((savings_konservativ - gesamt_jahr1) / gesamt_jahr1) * 100)
-        roi_realistisch = int(((savings_realistisch - gesamt_jahr1) / gesamt_jahr1) * 100)
-        roi_optimistisch = int(((savings_optimistisch - gesamt_jahr1) / gesamt_jahr1) * 100)
+        roi_konservativ = round(((savings_konservativ - gesamt_jahr1) / gesamt_jahr1) * 100)
+        roi_realistisch = round(((savings_realistisch - gesamt_jahr1) / gesamt_jahr1) * 100)
+        roi_optimistisch = round(((savings_optimistisch - gesamt_jahr1) / gesamt_jahr1) * 100)
     else:
         roi_konservativ = 0
         roi_realistisch = 0
         roi_optimistisch = 0
 
-    # ROI Cap at 200%, floor at -100%
-    roi_konservativ = max(-100, min(roi_konservativ, 200))
-    roi_realistisch = max(-100, min(roi_realistisch, 200))
-    roi_optimistisch = max(-100, min(roi_optimistisch, 200))
+    # Floor at -100% (can't lose more than total investment in this model)
+    roi_konservativ = max(-100, roi_konservativ)
+    roi_realistisch = max(-100, roi_realistisch)
+    roi_optimistisch = max(-100, roi_optimistisch)
 
-    # Break-Even (months)
+    # Break-Even (months) — math.ceil: always round up to next full month
     if monatliche_ersparnis > 0:
-        breakeven_konservativ = max(1, int(gesamt_jahr1 / (monatliche_ersparnis * 0.6)) + 1)
-        breakeven_realistisch = max(1, int(gesamt_jahr1 / monatliche_ersparnis) + 1)
-        breakeven_optimistisch = max(1, int(gesamt_jahr1 / (monatliche_ersparnis * 1.4)) + 1)
+        breakeven_konservativ = max(1, math.ceil(gesamt_jahr1 / (monatliche_ersparnis * 0.6)))
+        breakeven_realistisch = max(1, math.ceil(gesamt_jahr1 / monatliche_ersparnis))
+        breakeven_optimistisch = max(1, math.ceil(gesamt_jahr1 / (monatliche_ersparnis * 1.4)))
     else:
         breakeven_konservativ = 36
         breakeven_realistisch = 18
@@ -326,8 +327,11 @@ def calculate_strategy_budget(
     foerder_potenzial = _FOERDER_POTENTIAL.get(foerder_interest, 15000)
 
     logger.info(
-        "[Budget] result: gesamt=%d, roi=%d%%, breakeven=%d mo, savings=%d/mo, foerder=%d",
-        gesamt_jahr1, roi_realistisch, breakeven_realistisch, monatliche_ersparnis, foerder_potenzial,
+        "[Budget] result: gesamt=%d, roi=%d%%/%d%%/%d%%, breakeven=%d/%d/%d mo, savings=%d/mo, foerder=%d",
+        gesamt_jahr1,
+        roi_konservativ, roi_realistisch, roi_optimistisch,
+        breakeven_konservativ, breakeven_realistisch, breakeven_optimistisch,
+        monatliche_ersparnis, foerder_potenzial,
     )
 
     return StrategyBudget(
