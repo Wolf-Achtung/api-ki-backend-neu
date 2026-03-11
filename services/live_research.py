@@ -68,8 +68,8 @@ RESEARCH_QUERIES = {
     },
     "foerdermittel": {
         "engine": "perplexity",
-        "template": "KI Förderung Mittelstand {bundesland} {branche} 2026 aktuell",
-        "fallback": "KI Förderung KMU Deutschland 2026 Übersicht",
+        "template": "KI Förderung Mittelstand {bundesland} Landesförderung regionale Förderprogramme {branche} 2026 aktuell",
+        "fallback": "KI Förderung KMU Deutschland regionale Landesförderung 2026 Übersicht",
         "feeds_into": "S7",
     },
     "foerdermittel_eu": {
