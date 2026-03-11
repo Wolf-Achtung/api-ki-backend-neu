@@ -77,12 +77,20 @@ Developer: <!-- data_readiness.md – v3.3 TRUNCATION-FIX (Daten & Systemreife, 
   - Jeder Unterabschnitt (Stärken, Lücken, Empfehlungen) muss klar abgegrenzte Inhalte haben.
 
   THEMEN-OWNERSHIP (verbindlich):
-  - Diese Section: NUR Datenlage, Systemreife, Datenqualität, Schnittstellen
+  - Diese Section: NUR Datenlage, Systemreife, Datenqualität, Schnittstellen, Daten-Governance
   - NICHT hier: KI-Pilotprojekte starten (→ roadmap_90d)
   - NICHT hier: Governance/Rollen (→ ai_policy_mini, org_change)
   - NICHT hier: Tool-Empfehlungen (→ tools_empfehlungen)
   - NICHT hier: Compliance/AI Act (→ ai_act_summary)
+  - NICHT hier: Change-Management, Lernkultur, Widerstände, Schulung (→ org_change)
+  - NICHT hier: Arbeitsroutinen, Rollenverteilung, Feedback-Kultur (→ org_change)
   - Querverweis-Format: "→ siehe [Section-Name]"
+
+  ABGRENZUNG ZU ORG_CHANGE (STRIKT!):
+  - DATA_READINESS = WO stehen Daten und Systeme? (Technik, Infrastruktur, Qualität)
+  - ORG_CHANGE = WIE gelingt der Wandel? (Menschen, Prozesse, Akzeptanz)
+  - Überlappungsgefahr: "Standards einführen" → hier NUR Daten-Standards (Benennung, Ablage)
+  - ORG_CHANGE kümmert sich um Arbeits-Standards (Routinen, Review-Zyklen, Rollen)
 -->
 
 <section class="section data-readiness">

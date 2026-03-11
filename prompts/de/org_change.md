@@ -67,11 +67,20 @@ REGELN:
 - Keine generischen Aussagen ohne klaren Nutzen
 
 THEMEN-OWNERSHIP (verbindlich):
-- Diese Section: NUR Veränderungsfähigkeit, Lernkultur, Widerstandsmanagement
+- Diese Section: NUR Veränderungsfähigkeit, Lernkultur, Widerstandsmanagement, Rollen & Routinen
 - NICHT hier: Konkrete 90-Tage-Maßnahmen im Detail (→ roadmap_90d)
 - NICHT hier: Governance-Regeln/Rollen im Detail (→ ai_policy_mini)
-- NICHT hier: Datenthemen (→ data_readiness)
+- NICHT hier: Datenquellen, Datenqualität, IT-Infrastruktur, Systemreife (→ data_readiness)
+- NICHT hier: Datenlandkarte, Schnittstellen, Datenbenennung (→ data_readiness)
+- NICHT hier: Tool-Listen, Tool-Bewertung (→ tools_empfehlungen)
 - Prinzip: WIE der Wandel gelingt, nicht WAS umgesetzt wird
+
+ABGRENZUNG ZU DATA_READINESS (STRIKT!):
+- ORG_CHANGE = Menschen, Prozesse, Akzeptanz, Arbeitsroutinen, Schulung
+- DATA_READINESS = Daten, Systeme, Infrastruktur, Datenqualität
+- Überlappungsgefahr: "Standards einführen" → hier NUR Arbeits-Standards (Routinen, Reviews)
+- DATA_READINESS kümmert sich um Daten-Standards (Benennung, Ablage, Zugriffsrechte)
+- NICHT über "vorhandene Datenquellen" oder "IT-Infrastruktur" schreiben — das ist DATA_READINESS
 -->
 
 <section class="section org-change">

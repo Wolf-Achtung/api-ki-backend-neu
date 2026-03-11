@@ -2130,6 +2130,9 @@ PAYBACK_ENFORCE_SECTIONS = [
     "GAMECHANGER_HTML",
     "RECOMMENDATIONS_HTML",
     "ROADMAP_12M_HTML",
+    "KI_STACK_SUMMARY_HTML",
+    "MANAGEMENT_SUMMARY_HTML",
+    "ROADMAP_90D_HTML",
 ]
 
 # Patterns that indicate scenario/range context (should NOT be replaced)
@@ -2163,14 +2166,17 @@ def _is_scenario_context(text: str, match_start: int, context_chars: int = 100) 
 
 def apply_canonical_payback_enforcer(sections: dict) -> dict:
     """
-    FIX-503B: Replace inconsistent Payback values with canonical value.
+    FIX-503B / FIX-AMORT: Replace ALL Payback/Amortisation values with canonical.
 
     Extracts canonical payback from sections['PAYBACK_MONTHS'] and replaces
-    any standalone payback assertions in LLM text that differ significantly.
+    ANY payback/amortisation numeric mention with the canonical value.
+
+    Previous bug: 20% tolerance allowed two different values (e.g. 3,3 and 3,9)
+    to coexist in the same report — both were "close enough" to canonical but
+    visibly inconsistent to the customer. Now: ALWAYS enforce canonical.
 
     Does NOT replace:
     - Values in scenario/range context (P50, konservativ, optimistisch, etc.)
-    - Values that are within 20% of canonical (rounding differences)
 
     Args:
         sections: Dict with all report sections
@@ -2199,11 +2205,18 @@ def apply_canonical_payback_enforcer(sections: dict) -> dict:
     if canonical_de.endswith(",0"):
         canonical_de = canonical_de[:-2]  # "3,0" -> "3"
 
-    # Pattern to find Payback/Amortisation mentions with numeric values
-    # Matches: "Payback 9 Monate", "Amortisation: 12,5 Monate", "Payback von 6 Monaten"
+    # Pattern 1: Keyword-prefixed — "Payback 9 Monate", "Amortisation: 12,5 Monate"
     payback_pattern = re.compile(
         r'((?:Payback|Amortisation|Amortisierung|payback period)[:\s]+(?:von\s+)?)'
         r'(\d+(?:[.,]\d+)?)\s*(Monate?|months?|Monaten)',
+        re.IGNORECASE
+    )
+
+    # Pattern 2: Verb-prefixed — "amortisiert sich in 3,9 Monaten",
+    #   "sich in 3,3 Monaten amortisiert", "innerhalb von 4 Monaten amortisiert"
+    amortisiert_pattern = re.compile(
+        r'((?:amortisiert\s+sich\s+in|sich\s+in|innerhalb\s+von)\s+)'
+        r'(\d+(?:[.,]\d+)?)\s*(Monate?n?)',
         re.IGNORECASE
     )
 
@@ -2218,40 +2231,42 @@ def apply_canonical_payback_enforcer(sections: dict) -> dict:
         section_replacements = 0
         modified_content = content
 
-        # Find all matches and process from end to preserve positions
-        matches = list(payback_pattern.finditer(modified_content))
+        # Apply both patterns
+        for pattern in [payback_pattern, amortisiert_pattern]:
+            matches = list(pattern.finditer(modified_content))
 
-        for match in reversed(matches):
-            prefix = match.group(1)
-            value_str = match.group(2)
-            suffix = match.group(3)
+            for match in reversed(matches):
+                prefix = match.group(1)
+                value_str = match.group(2)
+                suffix = match.group(3)
 
-            # Parse the found value
-            try:
-                found_value = float(value_str.replace(",", "."))
-            except ValueError:
-                continue
+                # Parse the found value
+                try:
+                    found_value = float(value_str.replace(",", "."))
+                except ValueError:
+                    continue
 
-            # Skip if within 20% of canonical (rounding/formatting differences)
-            if abs(found_value - canonical) / max(canonical, 0.1) <= 0.20:
-                continue
+                # FIX-AMORT: Always enforce canonical — no tolerance.
+                # Skip only if already exactly the canonical value.
+                if found_value == canonical:
+                    continue
 
-            # Skip if in scenario context
-            if _is_scenario_context(modified_content, match.start()):
-                log.debug(f"[PAYBACK-ENFORCER] Skipping scenario context: {match.group(0)}")
-                continue
+                # Skip if in scenario context
+                if _is_scenario_context(modified_content, match.start()):
+                    log.debug(f"[PAYBACK-ENFORCER] Skipping scenario context: {match.group(0)}")
+                    continue
 
-            # Replace with canonical value
-            replacement = f"{prefix}{canonical_de} {suffix}"
-            modified_content = (
-                modified_content[:match.start()] +
-                replacement +
-                modified_content[match.end():]
-            )
-            section_replacements += 1
-            log.info(
-                f"[PAYBACK-ENFORCER] {section_key}: Replaced '{match.group(0)}' -> '{replacement}'"
-            )
+                # Replace with canonical value
+                replacement = f"{prefix}{canonical_de} {suffix}"
+                modified_content = (
+                    modified_content[:match.start()] +
+                    replacement +
+                    modified_content[match.end():]
+                )
+                section_replacements += 1
+                log.info(
+                    f"[PAYBACK-ENFORCER] {section_key}: Replaced '{match.group(0)}' -> '{replacement}'"
+                )
 
         if section_replacements > 0:
             sections[section_key] = modified_content
