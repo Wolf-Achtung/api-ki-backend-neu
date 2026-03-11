@@ -313,7 +313,7 @@ def calculate_bc_deep_dive(canonical_bc: Dict[str, float]) -> Dict[str, Any]:
     # Break-even month (when cumulative net becomes positive)
     net_monthly = (base_hours * rate) - opex_month
     if net_monthly > 0:
-        break_even_month = math.ceil(capex / net_monthly)
+        break_even_month = math.ceil(round(capex / net_monthly, 1))
     else:
         break_even_month = None
 
@@ -707,14 +707,24 @@ def _enforce_kpa_break_even(html: str, canonical_payback: float) -> str:
 
     The sensitivity table is deterministic, but the LLM-generated prose may
     state a different Break-Even month.  This regex pass corrects it.
+    Handles HTML tags between tokens (e.g. <strong>Break-Even:</strong> Monat 8).
     """
     be_month = math.ceil(canonical_payback)
 
-    # Pattern: "Break-Even: Monat X" or "Break-even: Monat X"
-    pattern = r'(Break-[Ee]ven:\s*Monat\s*)\d+'
-    replacement = rf'\g<1>{be_month}'
+    # Pattern handles optional HTML tags anywhere in the text, non-breaking
+    # spaces, and Unicode hyphens (e.g. <strong>Break-Even:</strong> Monat 8)
+    _T = r'(?:<[^>]+>)*'  # skip optional HTML tags
+    pattern = (
+        r'(' + _T + r'Break[\s\-\u2011\u2013\u2014]*' + _T +    # "<strong>Break-"
+        r'[Ee]ven[:\s]*' + _T +                                   # "Even:</strong>"
+        r'(?:&nbsp;|\xa0|\s)*Monat(?:&nbsp;|\xa0|\s)*)' +         # " Monat "
+        r'(\d+)'                                                   # the month number
+    )
 
-    new_html = re.sub(pattern, replacement, html)
+    def _replace(m: re.Match) -> str:
+        return f'{m.group(1)}{be_month}'
+
+    new_html = re.sub(pattern, _replace, html)
 
     if new_html != html:
         log.info(
@@ -791,6 +801,10 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
 
     # 5. Render HTML
     html = render_deep_dive_html(sections, context)
+
+    # 5b. Final Break-Even enforcement on assembled HTML (belt-and-suspenders)
+    if canonical_payback > 0:
+        html = _enforce_kpa_break_even(html, canonical_payback)
 
     return {
         'html': html,
