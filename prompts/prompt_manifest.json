@@ -926,6 +926,14 @@
       "required": false,
       "output": "html"
     },
+    "gc_strategic_analysis": {
+      "title": "Strategische Gamechanger-Analyse",
+      "path": "gc_strategic_analysis.md",
+      "purpose": "Strategischer Bruchpunkt-Analyse für Gamechanger Deep Dive (KPA Section 1)",
+      "size_aware": true,
+      "required": false,
+      "output": "html"
+    },
     "gc_implementation_plan": {
       "title": "Gamechanger Implementierungsplan",
       "path": "gc_implementation_plan.md",
