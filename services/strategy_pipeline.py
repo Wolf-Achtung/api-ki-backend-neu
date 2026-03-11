@@ -170,12 +170,16 @@ async def generate_strategy_report(
         # Executive Summary LAST (via Claude, not GPT)
         # Log budget values being passed to EXEC for debugging hallucination
         logger.info(
-            "[Strategy %d] EXEC context: score=%s, budget=%s, roi=%s, breakeven=%s",
+            "[Strategy %d] EXEC context: score=%s, budget=%s, roi=%s/%s/%s, breakeven=%s/%s/%s",
             briefing_id,
             base_context.get("readiness_score", "EMPTY"),
             base_context.get("budget_gesamt_jahr1", "EMPTY"),
+            base_context.get("roi_konservativ", "EMPTY"),
             base_context.get("roi_realistisch", "EMPTY"),
+            base_context.get("roi_optimistisch", "EMPTY"),
+            base_context.get("breakeven_konservativ", "EMPTY"),
             base_context.get("breakeven_realistisch", "EMPTY"),
+            base_context.get("breakeven_optimistisch", "EMPTY"),
         )
 
         sections["exec_summary"] = await _generate_section("EXEC", base_context, {
