@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from datetime import datetime, timezone
 import asyncio
 from typing import Any, Dict, Optional, Union
@@ -1009,9 +1010,12 @@ def _send_deep_dive_email(
         else:
             log.warning("[%s] No user email found, skipping user email.", run_tag)
 
+        time.sleep(0.6)  # Resend Rate Limit: max 2 req/sec
+
         # --- Admin email ---
         if os.getenv("ENABLE_ADMIN_NOTIFY", "1") in ("1", "true", "TRUE", "yes", "YES"):
             for addr in _admin_recipients():
+                time.sleep(0.6)  # Resend Rate Limit: max 2 req/sec
                 ok, err = _send_email_via_resend(
                     addr,
                     f"Kopie: KI-Potenzial-Analyse — Briefing #{briefing_id}",
