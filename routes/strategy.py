@@ -10,6 +10,7 @@ Endpoints:
 - GET  /api/strategy/pdf/{briefing_id}       — PDF download
 - GET  /api/strategy/html/{briefing_id}      — HTML preview
 - POST /api/strategy/admin/unlock/{briefing_id} — Beta unlock
+- POST /api/strategy/admin/reset-status/{briefing_id} — Reset stuck generation
 """
 from __future__ import annotations
 
@@ -542,3 +543,58 @@ async def admin_unlock_strategy(
     log.info("[Strategy] Admin unlocked briefing_id=%d (beta)", briefing_id)
 
     return {"briefing_id": briefing_id, "payment_status": "beta", "message": "Beta freigeschaltet"}
+
+
+@router.post("/admin/reset-status/{briefing_id}")
+async def admin_reset_status(
+    briefing_id: int,
+    admin_key: str = Query(..., description="Admin API Key"),
+    db: Session = Depends(get_db),
+):
+    """
+    Reset stuck generation: Setzt status von 'generating' auf 'questions_saved'.
+    Nur nötig nach Container-Restart während laufender Generierung.
+    """
+    expected_key = os.getenv("STRATEGY_ADMIN_KEY", "")
+    if not expected_key:
+        raise HTTPException(status_code=500, detail="STRATEGY_ADMIN_KEY nicht konfiguriert")
+    if admin_key != expected_key:
+        return JSONResponse(
+            status_code=401,
+            content={"error": "unauthorized", "detail": "Ungültiger Admin-Key"},
+        )
+
+    sr = db.query(StrategyReport).filter(
+        StrategyReport.briefing_id == briefing_id
+    ).first()
+    if not sr:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "not_found", "detail": f"Kein Strategy-Report für briefing_id {briefing_id}"},
+        )
+
+    if sr.status != "generating":
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "not_generating",
+                "detail": f"Status ist '{sr.status}', nicht 'generating'. Reset nicht nötig.",
+            },
+        )
+
+    old_status = sr.status
+    sr.status = "questions_saved"
+    sr.updated_at = datetime.now(timezone.utc)
+    db.commit()
+
+    log.info(
+        "[Strategy] Admin reset: briefing_id=%d, old_status=%s → questions_saved (by admin)",
+        briefing_id, old_status,
+    )
+
+    return {
+        "briefing_id": briefing_id,
+        "old_status": old_status,
+        "new_status": "questions_saved",
+        "reset": True,
+    }
