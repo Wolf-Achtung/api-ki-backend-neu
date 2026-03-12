@@ -220,6 +220,14 @@ def get_logo_base64_map(
     template_path = template_path.resolve()
     log.info("[LOGO-EMBED] Resolved template_dir: %s (exists=%s)", template_path, template_path.exists())
 
+    # FIX-D3: List files in template_dir for diagnostics
+    if template_path.exists():
+        try:
+            _files = sorted(f.name for f in template_path.iterdir() if f.is_file())
+            log.info("[LOGO-EMBED] Files in template_dir: %s", _files)
+        except Exception as _e:
+            log.warning("[LOGO-EMBED] Cannot list template_dir: %s", _e)
+
     total_original = 0
     total_optimized = 0
 
@@ -228,6 +236,11 @@ def get_logo_base64_map(
         if not logo_path.exists():
             # Try assets subdirectory
             logo_path = template_path / "assets" / logo_name
+
+        log.info("[LOGO-EMBED] Looking for: %s at %s (exists=%s, size=%s)",
+                 logo_name, logo_path,
+                 logo_path.exists(),
+                 logo_path.stat().st_size if logo_path.exists() else 'N/A')
 
         if logo_path.exists():
             try:
@@ -258,11 +271,11 @@ def get_logo_base64_map(
 
                     data_uri = f"data:{mime_type};base64,{b64}"
                     logo_map[logo_name] = data_uri
-                    log.debug(f"[LOGO-EMBED] Loaded {logo_name}: {len(b64)} chars base64")
+                    log.info("[LOGO-EMBED] Embedded %s as base64 (%s, %d bytes)", logo_name, mime_type, len(data))
             except Exception as e:
                 log.warning(f"[LOGO-EMBED] Failed to load {logo_name}: {e}")
         else:
-            log.warning(f"[LOGO-EMBED] Logo not found: {logo_name}")
+            log.warning("[LOGO-EMBED] SKIPPED %s: file not found at %s", logo_name, logo_path)
 
     if optimize and total_original > 0:
         savings = (1 - total_optimized / total_original) * 100
@@ -284,6 +297,8 @@ def embed_logos_in_html(html: str, template_dir: str = "templates") -> str:
     Returns:
         HTML with embedded base64 logos
     """
+    log.info("[LOGO-EMBED] Called with template_dir=%s (exists=%s)",
+             template_dir, Path(template_dir).exists())
     logo_map = get_logo_base64_map(template_dir)
 
     if not logo_map:
@@ -302,13 +317,14 @@ def embed_logos_in_html(html: str, template_dir: str = "templates") -> str:
         ]
 
         for pattern in patterns:
-            if pattern in modified_html:
-                replacement = f'src="{data_uri}"'
-                modified_html = modified_html.replace(pattern, replacement)
+            found = pattern in modified_html
+            log.info("[LOGO-EMBED] Pattern '%s' found in HTML: %s", pattern[:60], found)
+            if found:
+                replacement = f'src="{data_uri[:50]}..."'
+                modified_html = modified_html.replace(pattern, f'src="{data_uri}"')
                 replacements += 1
-                log.debug(f"[LOGO-EMBED] Replaced: {pattern[:50]}...")
 
-    log.info(f"[LOGO-EMBED] Made {replacements} logo replacements in HTML")
+    log.info("[LOGO-EMBED] Result: %d of %d logos embedded", replacements, len(DEFAULT_LOGOS))
     return modified_html
 
 
