@@ -63,8 +63,12 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
 
     # Quality bonus: check if consistency markers exist in sections (same logic as calc_quality_bonus)
     _dod_passed = report1_sections.get("N43_DOD_PASSED", False) or report1_sections.get("_n43_dod_passed", False)
-    _consistency_grade = str(report1_sections.get("_CONSISTENCY_GRADE", "F"))
-    _consistency_score = report1_sections.get("_CONSISTENCY_SCORE", 0)
+    # FIX-Iv4c: Default "A"/100 (not "F"/0) because _CONSISTENCY_GRADE and
+    # _CONSISTENCY_SCORE are underscore-prefixed keys filtered out of
+    # serializable_sections in gpt_analyze.py (line 18186). When absent,
+    # gpt_analyze.py itself defaults to "A" (lines 18068, 18623, 19868).
+    _consistency_grade = str(report1_sections.get("_CONSISTENCY_GRADE", "A"))
+    _consistency_score = report1_sections.get("_CONSISTENCY_SCORE", 100)
     _quality_bonus = 0
     if _dod_passed:
         if _consistency_grade in ("A", "B") or (isinstance(_consistency_score, (int, float)) and _consistency_score >= 80):
