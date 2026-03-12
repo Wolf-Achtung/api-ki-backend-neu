@@ -54,6 +54,26 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     ]
     _base_score = round(sum(_dim_scores) / 4) if any(_dim_scores) else 0
 
+    # --- SCORE-DEBUG (temporary, remove after verification) ---
+    logger.warning("SCORE-DEBUG-1: [Renderer %s] meta.scores = %r", sr.briefing_id, _scores)
+    logger.warning("SCORE-DEBUG-2: [Renderer %s] dimension scores = gov=%s, sec=%s, val=%s, ena=%s",
+                    sr.briefing_id, _dim_scores[0], _dim_scores[1], _dim_scores[2], _dim_scores[3])
+    logger.warning("SCORE-DEBUG-3: [Renderer %s] calculated = %s, rounded = %d",
+                    sr.briefing_id, sum(_dim_scores) / 4 if any(_dim_scores) else 0, _base_score)
+    logger.warning("SCORE-DEBUG-KEYS: [Renderer %s] N43_DOD_PASSED=%r, _n43_dod_passed=%r, "
+                    "CONSISTENCY_GRADE=%r, _CONSISTENCY_GRADE=%r, _CONSISTENCY_SCORE=%r, "
+                    "QUALITY_BONUS=%r, score_gesamt=%r, CANONICAL_OVERALL=%r, scores.overall=%r",
+                    sr.briefing_id,
+                    report1_sections.get("N43_DOD_PASSED", "MISSING"),
+                    report1_sections.get("_n43_dod_passed", "MISSING"),
+                    report1_sections.get("CONSISTENCY_GRADE", "MISSING"),
+                    report1_sections.get("_CONSISTENCY_GRADE", "MISSING"),
+                    report1_sections.get("_CONSISTENCY_SCORE", "MISSING"),
+                    report1_sections.get("QUALITY_BONUS", "MISSING"),
+                    report1_sections.get("score_gesamt", "MISSING"),
+                    report1_sections.get("CANONICAL_OVERALL", "MISSING"),
+                    _scores.get("overall", "MISSING"))
+
     # FIX-HOTFIX3: Prefer stored QUALITY_BONUS (exact value from gpt_analyze)
     # over re-deriving from N43_DOD_PASSED/_CONSISTENCY_GRADE which may be
     # filtered from serializable_sections (underscore-prefixed keys).
@@ -64,15 +84,19 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     else:
         # Fallback: re-derive quality bonus (for older analyses without QUALITY_BONUS)
         _dod_passed = report1_sections.get("N43_DOD_PASSED", False) or report1_sections.get("_n43_dod_passed", False)
-        _consistency_grade = str(report1_sections.get("_CONSISTENCY_GRADE", "A"))
-        _consistency_score = report1_sections.get("_CONSISTENCY_SCORE", 100)
+        # FIX-HOTFIX3b: Read CONSISTENCY_GRADE (without underscore, survives
+        # serialization at gpt_analyze.py:18084) and default to 'F'/0 to match
+        # calc_quality_bonus defaults (gpt_analyze.py:2099-2100).
+        _consistency_grade = str(report1_sections.get("CONSISTENCY_GRADE",
+                                  report1_sections.get("_CONSISTENCY_GRADE", "F")))
+        _consistency_score = report1_sections.get("_CONSISTENCY_SCORE", 0)
         _quality_bonus = 0
         if _dod_passed:
             if _consistency_grade in ("A", "B") or (isinstance(_consistency_score, (int, float)) and _consistency_score >= 80):
                 _quality_bonus = 2
             else:
                 _quality_bonus = 1
-        logger.info("[Strategy-Score] Re-derived QUALITY_BONUS=%d (dod=%s, grade=%s)", _quality_bonus, _dod_passed, _consistency_grade)
+        logger.info("[Strategy-Score] Re-derived QUALITY_BONUS=%d (dod=%s, grade=%s, score=%s)", _quality_bonus, _dod_passed, _consistency_grade, _consistency_score)
     _live_score = min(_base_score + _quality_bonus, 98)
 
     # Fallback: also check stored values (for older analyses without dimension scores)
@@ -105,6 +129,9 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         sr.briefing_id, _dim_scores, _base_score, _quality_bonus, _live_score, _stored_max, readiness_score, any(_dim_scores),
     )
     reifegrad_label = report1_sections.get("score_rating", "")
+    # --- SCORE-DEBUG (temporary, remove after verification) ---
+    logger.warning("SCORE-DEBUG-4: [Renderer %s] score passed to template = %d", sr.briefing_id, readiness_score)
+    logger.warning("SCORE-DEBUG-5: [Renderer %s] score_label = %s", sr.briefing_id, reifegrad_label)
 
     # Reifegrad label: fallback to live calculation if not stored
     if not reifegrad_label and readiness_score > 0:
