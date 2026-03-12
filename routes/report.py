@@ -1177,3 +1177,82 @@ async def generate_deep_dive_pdf(
             "briefing_id": briefing_id,
         },
     )
+
+
+# FIX-H: GET endpoint for KPA PDF download (without email, for admin/testing)
+@router.get("/gamechanger-deep-dive/pdf/{briefing_id}")
+async def get_deep_dive_pdf(
+    briefing_id: int,
+) -> Response:
+    """
+    Download the Gamechanger Deep Dive as PDF (GET variant, no email).
+
+    Generates HTML on-demand, renders via Puppeteer, returns PDF.
+    Unlike the POST endpoint, this does NOT send an email.
+    """
+    try:
+        from services.gamechanger_deep_dive import generate_gamechanger_report
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Gamechanger Deep Dive module unavailable: {exc}",
+        ) from exc
+
+    log.info("[GC-DEEP-DIVE-PDF-GET] Generating PDF for briefing_id=%d", briefing_id)
+
+    try:
+        result = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: generate_gamechanger_report(briefing_id),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=f"Briefing nicht gefunden: {exc}") from exc
+    except LookupError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        log.error("[GC-DEEP-DIVE-PDF-GET] HTML generation failed for briefing %d: %s", briefing_id, exc)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Generierung fehlgeschlagen: {exc.__class__.__name__}: {exc}",
+        ) from exc
+
+    html = result.get("html", "")
+    if not html:
+        raise HTTPException(status_code=500, detail="Deep Dive generation returned empty HTML")
+
+    try:
+        from services.pdf_client import render_pdf_from_html
+    except ImportError as exc:
+        raise HTTPException(status_code=503, detail="PDF service unavailable") from exc
+
+    pdf_options = {
+        "format": "A4",
+        "printBackground": True,
+        "displayHeaderFooter": False,
+        "margin": {"top": "12mm", "right": "12mm", "bottom": "12mm", "left": "12mm"},
+    }
+
+    _pdf_meta = {"briefing_id": briefing_id, "report_type": "gamechanger_deep_dive"}
+    pdf_result = render_pdf_from_html(html=html, meta=_pdf_meta, pdf_options=pdf_options)
+
+    if pdf_result.get("error"):
+        log.warning("[GC-DEEP-DIVE-PDF-GET] Retry for briefing %d: %s", briefing_id, pdf_result.get("error"))
+        await asyncio.sleep(2)
+        pdf_result = render_pdf_from_html(html=html, meta=_pdf_meta, pdf_options=pdf_options)
+
+    if pdf_result.get("error"):
+        raise HTTPException(status_code=502, detail=f"PDF-Generierung fehlgeschlagen: {pdf_result.get('error')}")
+
+    pdf_bytes = pdf_result.get("pdf_bytes")
+    if not pdf_bytes:
+        raise HTTPException(status_code=502, detail="PDF service returned no content")
+
+    log.info("[GC-DEEP-DIVE-PDF-GET] PDF ready: %d bytes for briefing %d", len(pdf_bytes), briefing_id)
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="KI-Potenzial-Analyse-{briefing_id}.pdf"'
+        },
+    )
