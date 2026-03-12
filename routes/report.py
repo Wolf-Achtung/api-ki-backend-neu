@@ -1000,7 +1000,7 @@ def _send_deep_dive_email(
             ok, err = _send_email_via_resend(
                 user_email,
                 subject,
-                render_deep_dive_email(recipient="user"),
+                render_deep_dive_email(recipient="user", briefing_id=briefing_id),
                 attachments=[attachment],
             )
             if ok:
