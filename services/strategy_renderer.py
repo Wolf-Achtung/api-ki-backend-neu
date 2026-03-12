@@ -39,7 +39,7 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     # Load Report 1 data for scores and metadata
     analysis = db_session.query(Analysis).filter(
         Analysis.briefing_id == sr.briefing_id
-    ).first()
+    ).order_by(Analysis.id.desc()).first()
     report1_meta = (analysis.meta if analysis else {}) or {}
     report1_sections = report1_meta.get("sections", {})
 

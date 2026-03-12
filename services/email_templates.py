@@ -36,7 +36,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
     # CTA to Strategy form (user emails only)
     strategy_cta = ""
     if recipient != "admin" and briefing_id:
-        _strategy_url = f"https://api-ki-backend-neu-production.up.railway.app/public/strategy.html?briefing_id={briefing_id}"
+        _strategy_url = f"https://make.ki-sicherheit.jetzt/strategy.html?briefing_id={briefing_id}"
         strategy_cta = (
             '<hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">'
             '<p style="font-size:15px;margin:0 0 8px"><strong>N\u00e4chster Schritt:</strong></p>'
@@ -116,7 +116,7 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
     # CTA to Strategy form (user emails only)
     strategy_cta_html = ""
     if recipient != "admin" and briefing_id:
-        _strategy_url = f"https://api-ki-backend-neu-production.up.railway.app/public/strategy.html?briefing_id={briefing_id}"
+        _strategy_url = f"https://make.ki-sicherheit.jetzt/strategy.html?briefing_id={briefing_id}"
         strategy_cta_html = (
             '<hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">'
             '<p style="font-size:15px;margin:0 0 8px"><strong>Noch mehr Tiefe?</strong></p>'
