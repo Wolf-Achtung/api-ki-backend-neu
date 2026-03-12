@@ -65,3 +65,10 @@ Mindestens 1 Handlung adressiert die Führungsebene.
 - KEINE Tool-Empfehlungen (→ Report 1)
 - Handlungen müssen SOFORT umsetzbar sein (kein Budget, kein Setup)
 - Formelle Anrede "Sie" (wenn nötig)
+
+## FORMATIERUNGS-MARKER
+Verwende folgende Marker in deinem HTML-Output, wo sie inhaltlich passen:
+- Markiere praktische Tipps mit: <p><strong>Tipp:</strong> ...konkreter Tipp...</p>
+- Markiere Empfehlungen mit: <p><strong>Empfehlung:</strong> ...Handlungsempfehlung...</p>
+- Verwende "Quick Win" für schnell umsetzbare Maßnahmen.
+Andere Marker nur wo inhaltlich passend — nicht erzwingen.

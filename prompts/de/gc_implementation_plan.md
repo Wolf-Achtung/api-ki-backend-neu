@@ -71,6 +71,15 @@ Führungsebene einbinden. Budget: 10.000-50.000€.
 - Jeder Schritt muss spezifisch für {{HAUPTLEISTUNG}} sein
 - Alle Sätze vollständig, keine Fragmente
 
+## FORMATIERUNGS-MARKER
+Verwende folgende Marker in deinem HTML-Output, wo sie inhaltlich passen:
+- Beginne mit einer Zusammenfassung: <p><strong>Auf einen Blick:</strong> ...Kernaussage...</p>
+- Markiere praktische Tipps mit: <p><strong>Tipp:</strong> ...konkreter Tipp...</p>
+- Markiere Warnungen mit: <p><strong>Wichtig:</strong> ...kritischer Hinweis...</p>
+- Markiere Empfehlungen mit: <p><strong>Empfehlung:</strong> ...Handlungsempfehlung...</p>
+- Verwende "Quick Win" für schnell umsetzbare Maßnahmen.
+Nutze "Auf einen Blick:" maximal 1× (am Anfang). Andere Marker nur wo inhaltlich passend.
+
 ## TONALITÄT
 - Analytisch, sachlich, umsetzungsorientiert
 - Formelle Anrede "Sie" (wenn nötig)

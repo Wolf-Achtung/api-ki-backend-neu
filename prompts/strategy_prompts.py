@@ -25,7 +25,16 @@ REGELN:
 9. Jede Section hat 400-800 Wörter (Exec Summary: 200-300 Wörter).
 10. Quellenangaben am Ende jeder Section als <div class="sources">.
 11. STILREGEL BRANCHENNAME: Verwende den Branchennamen maximal 3× pro Section. Nutze danach Variationen: "Ihr Unternehmen", "Ihr Betrieb", "Ihre Branche", "in Ihrem Bereich", "in Ihrem Sektor", "für Betriebe Ihrer Größe", "in Ihrem Marktumfeld". Vermeide Konstruktionen wie "In der XY-branche" — schreibe stattdessen "In Ihrem Marktumfeld" oder "In Ihrem Sektor".
-12. Verwende "Ihr Unternehmen" / den Firmennamen maximal 3× pro Abschnitt. Variiere mit "Sie", "Ihr Team", "Ihr Betrieb"."""
+12. Verwende "Ihr Unternehmen" / den Firmennamen maximal 3× pro Abschnitt. Variiere mit "Sie", "Ihr Team", "Ihr Betrieb".
+13. FORMATIERUNGS-MARKER: Verwende folgende Marker in deinem HTML-Output, wo sie inhaltlich passen:
+   - Beginne Zusammenfassungen am Anfang einer Section mit: <p><strong>Auf einen Blick:</strong> ...Kernaussage in 2-3 Sätzen...</p>
+   - Markiere praktische Tipps mit: <p><strong>Tipp:</strong> ...konkreter Tipp...</p>
+   - Markiere Warnungen/Risiken mit: <p><strong>Wichtig:</strong> ...Warnung oder kritischer Hinweis...</p>
+   - Markiere strategische Empfehlungen mit: <p><strong>Empfehlung:</strong> ...konkrete Handlungsempfehlung...</p>
+   - Verwende "Quick Win" für schnell umsetzbare Maßnahmen.
+   Diese Marker werden vom Post-Processor automatisch in gestylte Boxen umgewandelt.
+   Nutze "Auf einen Blick:" maximal 1× pro Section (am Anfang). "Tipp:", "Wichtig:", "Empfehlung:" wo inhaltlich sinnvoll, aber nicht erzwingen.
+14. Schreibe NIEMALS "Ohne Angaben" oder "keine Angaben" — wenn ein Wert fehlt, formuliere den Satz um oder lasse ihn weg."""
 
 
 # =============================================================================
