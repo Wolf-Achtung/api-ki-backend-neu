@@ -522,11 +522,95 @@ async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
             sr.updated_at = datetime.now(timezone.utc)
             db_session.commit()
             logger.info("[Strategy %d] PDF generated (%d bytes)", briefing_id, len(pdf_bytes))
+
+            # FIX-J: Send email with PDF attachment (fire-and-forget)
+            try:
+                _send_strategy_email(briefing_id, pdf_bytes, db_session)
+                sr.email_sent = True
+                sr.email_sent_at = datetime.now(timezone.utc)
+                db_session.commit()
+            except Exception as mail_exc:
+                logger.error("[Strategy %d] Email sending failed: %s", briefing_id, mail_exc)
         else:
             logger.warning("[Strategy %d] PDF service returned no bytes", briefing_id)
 
     except Exception as exc:
         logger.error("[Strategy %d] PDF generation error: %s", briefing_id, exc, exc_info=True)
+
+
+# =============================================================================
+# EMAIL HELPER (FIX-J)
+# =============================================================================
+
+def _send_strategy_email(briefing_id: int, pdf_bytes: bytes, db_session: Any) -> None:
+    """Send KI-Strategiebericht PDF via email (same pattern as KPA)."""
+    import os
+    import time as _time
+
+    run_tag = f"STRATEGY-MAIL-{briefing_id}"
+
+    if os.getenv("DISABLE_EMAILS", "").lower() in ("1", "true", "yes", "on"):
+        logger.info("[%s] Emails disabled via DISABLE_EMAILS. Skipping.", run_tag)
+        return
+
+    try:
+        from gpt_analyze import (
+            _send_email_via_resend,
+            _determine_user_email,
+            _admin_recipients,
+            _mask_email,
+        )
+        from services.email_templates import render_strategy_email
+        from models import Briefing
+    except ImportError as exc:
+        logger.warning("[%s] Import failed, skipping email: %s", run_tag, exc)
+        return
+
+    briefing = db_session.query(Briefing).filter(Briefing.id == briefing_id).first()
+    if not briefing:
+        logger.warning("[%s] Briefing not found, skipping email.", run_tag)
+        return
+
+    user_email = _determine_user_email(db_session, briefing, None)
+
+    attachment = {
+        "filename": f"KI-Strategiebericht-{briefing_id}.pdf",
+        "content": pdf_bytes,
+        "mimetype": "application/pdf",
+    }
+    subject = "Ihr KI-Strategiebericht"
+
+    # --- User email ---
+    if user_email:
+        ok, err = _send_email_via_resend(
+            user_email,
+            subject,
+            render_strategy_email(recipient="user"),
+            attachments=[attachment],
+        )
+        if ok:
+            logger.info("[%s] Email sent to user %s", run_tag, _mask_email(user_email))
+        else:
+            logger.warning("[%s] User email failed: %s", run_tag, err)
+    else:
+        logger.warning("[%s] No user email found, skipping user email.", run_tag)
+
+    _time.sleep(0.6)  # Resend Rate Limit: max 2 req/sec
+
+    # --- Admin email ---
+    if os.getenv("ENABLE_ADMIN_NOTIFY", "1") in ("1", "true", "TRUE", "yes", "YES"):
+        for addr in _admin_recipients():
+            _time.sleep(0.6)
+            ok, err = _send_email_via_resend(
+                addr,
+                f"Kopie: KI-Strategiebericht — Briefing #{briefing_id}",
+                render_strategy_email(recipient="admin"),
+                attachments=[attachment],
+            )
+            if ok:
+                logger.info("[%s] Admin email sent to %s", run_tag, _mask_email(addr))
+            else:
+                logger.warning("[%s] Admin email failed for %s: %s", run_tag, _mask_email(addr), err)
 
 
 # =============================================================================
