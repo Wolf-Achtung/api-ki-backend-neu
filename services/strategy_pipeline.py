@@ -152,7 +152,7 @@ async def generate_strategy_report(
             "branche": (briefing_data.get("branche", "") or "").title(),
             "segment": _segment_label(briefing_data.get("unternehmensgroesse", "")),
             "mitarbeiter": briefing_data.get("mitarbeiter", ""),
-            "bundesland": briefing_data.get("bundesland", ""),
+            "bundesland": _bundesland_label(briefing_data.get("bundesland", "")),
             "firmenname": briefing_data.get("unternehmen_name", "Ihr Unternehmen"),
             "readiness_score": _score,
             "reifegrad": _reifegrad_label,
@@ -426,6 +426,20 @@ async def _call_anthropic(prompt: str, system_prompt: str, section: str, max_tok
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
+
+def _bundesland_label(raw: str) -> str:
+    """Map raw bundesland code to readable label for prompts."""
+    _map = {
+        "bw": "Baden-Württemberg", "by": "Bayern", "be": "Berlin",
+        "bb": "Brandenburg", "hb": "Bremen", "hh": "Hamburg",
+        "he": "Hessen", "mv": "Mecklenburg-Vorpommern", "ni": "Niedersachsen",
+        "nw": "Nordrhein-Westfalen", "rp": "Rheinland-Pfalz", "sl": "Saarland",
+        "sn": "Sachsen", "st": "Sachsen-Anhalt", "sh": "Schleswig-Holstein",
+        "th": "Thüringen",
+    }
+    key = str(raw or "").strip().lower()
+    return _map.get(key, str(raw or ""))
+
 
 def _segment_label(raw: str) -> str:
     """Map raw unternehmensgroesse value to a readable segment label for prompts."""
