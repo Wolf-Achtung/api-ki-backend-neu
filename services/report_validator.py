@@ -2580,8 +2580,11 @@ class ReportValidator:
                 continue
 
             # Fallback: Check plain percentage pattern on visible text only
+            # FIX-F: Start at 101% — "100%" without ROI context is almost always
+            # operational (e.g. "100% DSGVO-Konformität", "100% der Kernsysteme").
+            # Real ROI mentions with "100%" are caught by the context pattern above.
             matches = re.findall(roi_pattern, text_only)
-            roi_values = [int(m) for m in matches if 100 <= int(m) <= 500]
+            roi_values = [int(m) for m in matches if 101 <= int(m) <= 500]
 
             if roi_values:
                 self.errors.append(
