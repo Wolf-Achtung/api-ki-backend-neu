@@ -126,3 +126,56 @@ def render_deep_dive_email(recipient: str = "user") -> str:
     </div>
   </body>
 </html>"""
+
+
+def render_strategy_email(recipient: str = "user") -> str:
+    """Render email HTML for KI-Strategiebericht delivery.
+
+    Args:
+        recipient: "user" or "admin".
+    """
+    if recipient == "admin":
+        title = "Kopie: KI-Strategiebericht"
+        intro = "dies ist die Admin\u2011Kopie des KI-Strategieberichts."
+    else:
+        title = "Ihr KI-Strategiebericht"
+        intro = "Ihr pers\u00f6nlicher KI-Strategiebericht liegt vor."
+
+    body_text = (
+        "Basierend auf Ihrem KI-Readiness Assessment und Ihren strategischen "
+        "Zusatzangaben haben wir einen ma\u00dfgeschneiderten Strategiefahrplan "
+        "f\u00fcr Ihr Unternehmen erstellt \u2014 mit priorisierten Handlungsempfehlungen, "
+        "90-Tage-Implementierungsplan, ROI-Prognosen und passenden F\u00f6rderprogrammen."
+    )
+    cta = "Ihr KI-Strategiebericht ist als PDF angeh\u00e4ngt. Bei Fragen stehen wir Ihnen gerne zur Verf\u00fcgung."
+
+    return f"""<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{escape(title)}</title>
+    <style>
+      body{{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;line-height:1.5;margin:0;padding:0;background:#f6f9ff}}
+      .wrap{{max-width:640px;margin:0 auto;padding:24px}}
+      .card{{background:#fff;border:1px solid #e6edf3;border-radius:12px;padding:18px;box-shadow:0 6px 30px #18324a16}}
+      h1{{color:#0b3b8f;font-size:20px;margin:0 0 8px}}
+      p{{margin:8px 0;font-size:14px}}
+      .muted{{color:#64748b}}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>{escape(title)}</h1>
+        <p>Guten Tag,</p>
+        <p>{escape(intro)}</p>
+        <p>{escape(body_text)}</p>
+        <p>{escape(cta)}</p>
+        <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
+        <p class="muted">Wolf Hohl \u2014 KI\u2011Sicherheit.jetzt</p>
+        <p class="muted">Hinweis: Diese E\u2011Mail wurde automatisch erzeugt.</p>
+      </div>
+    </div>
+  </body>
+</html>"""
