@@ -44,30 +44,54 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     report1_sections = report1_meta.get("sections", {})
 
     # Extract score + reifegrad from Report 1
-    # FIX-Iv2: Collect ALL available score sources and pick the highest (post-bonus).
-    # R1 cover uses sections["score_gesamt"] which includes the quality bonus (+2).
-    _score_candidates = []
+    # FIX-Iv4: Compute score LIVE from dimension scores (same formula as R1 pipeline).
+    # Root cause of 90-vs-92 bug: meta["sections"] is serialized BEFORE quality bonus
+    # in gpt_analyze.py, so meta["sections"]["score_gesamt"] = 90 (pre-bonus).
+    # The R1 template gets sections dict directly (post-bonus = 92), but Analysis.meta
+    # stores the pre-bonus snapshot. Fix: recalculate from dimension scores + bonus.
+    _scores = report1_meta.get("scores", {})
+    _dim_scores = [
+        int(float(_scores.get("governance", 0) or 0)),
+        int(float(_scores.get("security", 0) or 0)),
+        int(float(_scores.get("value", 0) or 0)),
+        int(float(_scores.get("enablement", 0) or 0)),
+    ]
+    _dim_nonzero = [d for d in _dim_scores if d > 0]
+    _base_score = round(sum(_dim_nonzero) / len(_dim_nonzero)) if _dim_nonzero else 0
+
+    # Quality bonus: check if consistency markers exist in sections (same logic as calc_quality_bonus)
+    _dod_passed = report1_sections.get("N43_DOD_PASSED", False) or report1_sections.get("_n43_dod_passed", False)
+    _consistency_grade = str(report1_sections.get("_CONSISTENCY_GRADE", "F"))
+    _consistency_score = report1_sections.get("_CONSISTENCY_SCORE", 0)
+    _quality_bonus = 0
+    if _dod_passed:
+        if _consistency_grade in ("A", "B") or (isinstance(_consistency_score, (int, float)) and _consistency_score >= 80):
+            _quality_bonus = 2
+        else:
+            _quality_bonus = 1
+    _live_score = min(_base_score + _quality_bonus, 98)
+
+    # Fallback: also check stored values (for older analyses without dimension scores)
+    _stored_candidates = []
     for _key, _src in [
         ("sections.score_gesamt", report1_sections.get("score_gesamt", "")),
         ("sections.CANONICAL_OVERALL", report1_sections.get("CANONICAL_OVERALL", "")),
-        ("scores.overall", report1_meta.get("scores", {}).get("overall", "")),
+        ("scores.overall", _scores.get("overall", "")),
     ]:
         try:
             _val = int(float(_src)) if _src not in ("", None) else 0
         except (ValueError, TypeError):
             _val = 0
         if _val > 0:
-            _score_candidates.append((_key, _val))
+            _stored_candidates.append((_key, _val))
 
-    # Use the highest score (post-bonus is always >= pre-bonus)
-    if _score_candidates:
-        _score_candidates.sort(key=lambda x: x[1], reverse=True)
-        readiness_score = _score_candidates[0][1]
-    else:
-        readiness_score = 0
+    _stored_max = max((v for _, v in _stored_candidates), default=0)
+
+    # Use whichever is higher: live calculation or stored value
+    readiness_score = max(_live_score, _stored_max)
     logger.info(
-        "[Strategy-Score] briefing_id=%s candidates=%r → using %r",
-        sr.briefing_id, _score_candidates, readiness_score,
+        "[Strategy-Score] briefing_id=%s dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d",
+        sr.briefing_id, _dim_scores, _base_score, _quality_bonus, _live_score, _stored_max, readiness_score,
     )
     reifegrad_label = report1_sections.get("score_rating", "")
 
