@@ -237,6 +237,28 @@ td.negative { color: var(--c-danger); font-weight: 600; }
 }
 .cover-meta strong { color: var(--c-text); }
 
+/* Cover Logo */
+.cover-logo {
+    width: 180px;
+    height: auto;
+    margin-bottom: var(--sp-lg);
+}
+
+/* Trust Badges */
+.trust-badges {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--sp-lg);
+    margin-top: var(--sp-xl);
+    flex-wrap: wrap;
+}
+.trust-badges img {
+    height: 36px;
+    width: auto;
+    opacity: 0.85;
+}
+
 /* Deep Dive Icon */
 .dd-icon {
     width: 100px;
@@ -450,6 +472,7 @@ h1, h2, h3, h4 {
    PAGE 1: COVER — Deep Dive Branding
    ═══════════════════════════════════════════════════════ #}
 <div class="cover" id="dd-cover">
+    <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt" class="cover-logo">
     <div class="cover-accent"></div>
     <div class="cover-eyebrow">
         KI-Potenzial-Analyse · {{ report_date_display }}
@@ -516,6 +539,14 @@ h1, h2, h3, h4 {
             <span class="dd-toc-num">5</span>
             <span>Konkrete n&auml;chste Schritte</span>
         </div>
+    </div>
+
+    <!-- Trust Badges -->
+    <div class="trust-badges">
+        <img src="tuev-logo-transparent.webp" alt="TÜV-geprüft">
+        <img src="ki-ready-2025.webp" alt="KI-Ready 2025">
+        <img src="dsgvo.svg" alt="DSGVO-konform">
+        <img src="eu-ai.svg" alt="EU AI Act">
     </div>
 </div>
 
