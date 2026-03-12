@@ -125,9 +125,29 @@ async def generate_strategy_report(
             if _v > 0:
                 _stored.append((_key, _v))
         _stored_max = max((v for _, v in _stored), default=0)
-        _score = max(_live, _stored_max)
-        logger.info("[Strategy %d] Score: R1-formula dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d",
-                    briefing_id, _dim_vals, _base, _qb, _live, _stored_max, _score)
+        # FIX-Iv4b: Prefer live calculation when dimension data exists.
+        # max(live, stored) is wrong: stored score_gesamt can be post-bonus
+        # from an older formula (int(float()) rounding), causing stale values
+        # to override the correct live calculation.
+        if any(_dim_vals):
+            _score = _live  # Dimension data present → trust live calc
+        else:
+            _score = _stored_max  # Legacy data without dimensions → use stored
+        logger.info("[Strategy %d] Score: R1-formula dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d (live_preferred=%s)",
+                    briefing_id, _dim_vals, _base, _qb, _live, _stored_max, _score, any(_dim_vals))
+
+        # Reifegrad label: fallback to live calculation if not stored
+        _reifegrad_label = report1_sections.get("score_rating", "")
+        if not _reifegrad_label and _score > 0:
+            try:
+                from services.extra_sections import get_score_context
+                _size_raw = briefing_data.get("unternehmensgroesse", "klein")
+                _sc_ctx = get_score_context(_score, _size_raw, lang="de")
+                _reifegrad_label = _sc_ctx.get("score_rating", "")
+                logger.info("[Strategy %d] reifegrad_label computed on-demand: %s", briefing_id, _reifegrad_label)
+            except Exception:
+                pass
+
         base_context = {
             "branche": (briefing_data.get("branche", "") or "").title(),
             "segment": _segment_label(briefing_data.get("unternehmensgroesse", "")),
@@ -135,8 +155,8 @@ async def generate_strategy_report(
             "bundesland": briefing_data.get("bundesland", ""),
             "firmenname": briefing_data.get("unternehmen_name", "Ihr Unternehmen"),
             "readiness_score": _score,
-            "reifegrad": report1_sections.get("score_rating", ""),
-            "reifegrad_label": report1_sections.get("score_rating", ""),
+            "reifegrad": _reifegrad_label,
+            "reifegrad_label": _reifegrad_label,
             # Strategy questions
             "s1_budget": strategy_questions.get("s1_budget", ""),
             "s2_zeitrahmen": strategy_questions.get("s2_zeitrahmen", ""),
