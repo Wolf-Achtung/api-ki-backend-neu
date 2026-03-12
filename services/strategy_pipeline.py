@@ -88,13 +88,22 @@ async def generate_strategy_report(
 
         # Shared context for all sections
         report1_sections = report1_data.get("sections", {})
+        # FIX-I: Use post-quality-bonus score (score_gesamt) to match R1 cover.
+        _score = report1_sections.get("score_gesamt", "")
+        if not _score:
+            _score = report1_data.get("scores", {}).get("overall", "")
+        logger.info("[Strategy %d] Score resolution: score_gesamt=%r, scores.overall=%r → using %r",
+                    briefing_id,
+                    report1_sections.get("score_gesamt", ""),
+                    report1_data.get("scores", {}).get("overall", ""),
+                    _score)
         base_context = {
             "branche": (briefing_data.get("branche", "") or "").title(),
             "segment": _segment_label(briefing_data.get("unternehmensgroesse", "")),
             "mitarbeiter": briefing_data.get("mitarbeiter", ""),
             "bundesland": briefing_data.get("bundesland", ""),
             "firmenname": briefing_data.get("unternehmen_name", "Ihr Unternehmen"),
-            "readiness_score": report1_sections.get("score_gesamt", ""),
+            "readiness_score": _score,
             "reifegrad": report1_sections.get("score_rating", ""),
             "reifegrad_label": report1_sections.get("score_rating", ""),
             # Strategy questions
