@@ -64,7 +64,7 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         _score_candidates.sort(key=lambda x: x[1], reverse=True)
         readiness_score = _score_candidates[0][1]
     else:
-        readiness_score = ""
+        readiness_score = 0
     logger.info(
         "[Strategy-Score] briefing_id=%s candidates=%r → using %r",
         sr.briefing_id, _score_candidates, readiness_score,
