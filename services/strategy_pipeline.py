@@ -88,31 +88,33 @@ async def generate_strategy_report(
 
         # Shared context for all sections
         report1_sections = report1_data.get("sections", {})
-        # FIX-Iv4: Compute score LIVE from dimension scores + quality bonus.
-        # meta["sections"] is serialized BEFORE quality bonus in gpt_analyze.py,
-        # so stored score_gesamt = pre-bonus. Recalculate to match R1 cover.
+        # FIX-Iv4 + FIX-HOTFIX3: Compute score from stored post-quality value or LIVE recalc.
         _r1_scores = report1_data.get("scores", {})
         # Match R1 formula exactly: round((gov + sec + val + ena) / 4)
-        # Use float() not int(float()) to avoid truncation-induced rounding errors
         _dim_vals = [
             float(_r1_scores.get("governance", 0) or 0),
             float(_r1_scores.get("security", 0) or 0),
             float(_r1_scores.get("value", 0) or 0),
             float(_r1_scores.get("enablement", 0) or 0),
         ]
-        # Always divide by 4 (same as R1: scores["overall"] = round(sum/4))
         _base = round(sum(_dim_vals) / 4) if any(_dim_vals) else 0
 
-        _dod_ok = report1_sections.get("N43_DOD_PASSED", False) or report1_sections.get("_n43_dod_passed", False)
-        # FIX-Iv4c: Default "A"/100 (not "F"/0) because _CONSISTENCY_GRADE and
-        # _CONSISTENCY_SCORE are underscore-prefixed keys filtered out of
-        # serializable_sections in gpt_analyze.py (line 18186). When absent,
-        # gpt_analyze.py itself defaults to "A" (lines 18068, 18623, 19868).
-        _cg = str(report1_sections.get("_CONSISTENCY_GRADE", "A"))
-        _cs = report1_sections.get("_CONSISTENCY_SCORE", 100)
-        _qb = 0
-        if _dod_ok:
-            _qb = 2 if (_cg in ("A", "B") or (isinstance(_cs, (int, float)) and _cs >= 80)) else 1
+        # FIX-HOTFIX3: Prefer stored QUALITY_BONUS (exact value from gpt_analyze)
+        # over re-deriving from N43_DOD_PASSED/_CONSISTENCY_GRADE which may be
+        # filtered from serializable_sections (underscore-prefixed keys).
+        _qb_stored = report1_sections.get("QUALITY_BONUS", None)
+        if isinstance(_qb_stored, (int, float)):
+            _qb = int(_qb_stored)
+            logger.info("[Strategy %d] Using stored QUALITY_BONUS=%d", briefing_id, _qb)
+        else:
+            # Fallback: re-derive quality bonus (for older analyses without QUALITY_BONUS)
+            _dod_ok = report1_sections.get("N43_DOD_PASSED", False) or report1_sections.get("_n43_dod_passed", False)
+            _cg = str(report1_sections.get("_CONSISTENCY_GRADE", "A"))
+            _cs = report1_sections.get("_CONSISTENCY_SCORE", 100)
+            _qb = 0
+            if _dod_ok:
+                _qb = 2 if (_cg in ("A", "B") or (isinstance(_cs, (int, float)) and _cs >= 80)) else 1
+            logger.info("[Strategy %d] Re-derived QUALITY_BONUS=%d (dod=%s, grade=%s)", briefing_id, _qb, _dod_ok, _cg)
         _live = min(_base + _qb, 98)
 
         # Fallback: stored values (for older analyses)
@@ -129,12 +131,16 @@ async def generate_strategy_report(
             if _v > 0:
                 _stored.append((_key, _v))
         _stored_max = max((v for _, v in _stored), default=0)
-        # FIX-Iv4b: Prefer live calculation when dimension data exists.
-        # max(live, stored) is wrong: stored score_gesamt can be post-bonus
-        # from an older formula (int(float()) rounding), causing stale values
-        # to override the correct live calculation.
+        # FIX-HOTFIX3: Use stored max if it matches scores.overall (post-quality from FIX-HOTFIX3-SCORE).
+        # If scores.overall was updated with final score, stored_max will be correct.
+        # Prefer live calc when dims exist AND live matches stored (consistency check).
         if any(_dim_vals):
-            _score = _live  # Dimension data present → trust live calc
+            # If stored_max is available and matches or exceeds live, prefer stored
+            # (covers case where scores.overall was synced post-quality-bonus)
+            if _stored_max >= _live:
+                _score = _stored_max
+            else:
+                _score = _live
         else:
             _score = _stored_max  # Legacy data without dimensions → use stored
         logger.info("[Strategy %d] Score: R1-formula dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d (live_preferred=%s)",
