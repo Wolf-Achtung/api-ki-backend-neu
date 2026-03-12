@@ -44,19 +44,30 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     report1_sections = report1_meta.get("sections", {})
 
     # Extract score + reifegrad from Report 1
-    # FIX-I: Prefer sections.score_gesamt (post-quality-bonus, matches R1 cover).
-    # Fallback chain: score_gesamt → scores.overall_display → scores.overall
-    readiness_score = report1_sections.get("score_gesamt", "")
-    if not readiness_score:
-        readiness_score = report1_meta.get("scores", {}).get("overall_display", "")
-    if not readiness_score:
-        readiness_score = report1_meta.get("scores", {}).get("overall", "")
+    # FIX-Iv2: Collect ALL available score sources and pick the highest (post-bonus).
+    # R1 cover uses sections["score_gesamt"] which includes the quality bonus (+2).
+    _score_candidates = []
+    for _key, _src in [
+        ("sections.score_gesamt", report1_sections.get("score_gesamt", "")),
+        ("sections.CANONICAL_OVERALL", report1_sections.get("CANONICAL_OVERALL", "")),
+        ("scores.overall", report1_meta.get("scores", {}).get("overall", "")),
+    ]:
+        try:
+            _val = int(float(_src)) if _src not in ("", None) else 0
+        except (ValueError, TypeError):
+            _val = 0
+        if _val > 0:
+            _score_candidates.append((_key, _val))
+
+    # Use the highest score (post-bonus is always >= pre-bonus)
+    if _score_candidates:
+        _score_candidates.sort(key=lambda x: x[1], reverse=True)
+        readiness_score = _score_candidates[0][1]
+    else:
+        readiness_score = ""
     logger.info(
-        "[Strategy-Score] briefing_id=%s score_gesamt=%r scores.overall=%r → using %r",
-        sr.briefing_id,
-        report1_sections.get("score_gesamt", ""),
-        report1_meta.get("scores", {}).get("overall", ""),
-        readiness_score,
+        "[Strategy-Score] briefing_id=%s candidates=%r → using %r",
+        sr.briefing_id, _score_candidates, readiness_score,
     )
     reifegrad_label = report1_sections.get("score_rating", "")
 

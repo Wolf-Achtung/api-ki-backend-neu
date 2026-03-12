@@ -88,15 +88,23 @@ async def generate_strategy_report(
 
         # Shared context for all sections
         report1_sections = report1_data.get("sections", {})
-        # FIX-I: Use post-quality-bonus score (score_gesamt) to match R1 cover.
-        _score = report1_sections.get("score_gesamt", "")
-        if not _score:
-            _score = report1_data.get("scores", {}).get("overall", "")
-        logger.info("[Strategy %d] Score resolution: score_gesamt=%r, scores.overall=%r → using %r",
-                    briefing_id,
-                    report1_sections.get("score_gesamt", ""),
-                    report1_data.get("scores", {}).get("overall", ""),
-                    _score)
+        # FIX-Iv2: Pick the highest score (post-bonus >= pre-bonus) to match R1 cover.
+        _score_candidates = []
+        for _key, _src in [
+            ("sections.score_gesamt", report1_sections.get("score_gesamt", "")),
+            ("sections.CANONICAL_OVERALL", report1_sections.get("CANONICAL_OVERALL", "")),
+            ("scores.overall", report1_data.get("scores", {}).get("overall", "")),
+        ]:
+            try:
+                _val = int(float(_src)) if _src not in ("", None) else 0
+            except (ValueError, TypeError):
+                _val = 0
+            if _val > 0:
+                _score_candidates.append((_key, _val))
+        _score_candidates.sort(key=lambda x: x[1], reverse=True)
+        _score = _score_candidates[0][1] if _score_candidates else ""
+        logger.info("[Strategy %d] Score resolution: candidates=%r → using %r",
+                    briefing_id, _score_candidates, _score)
         base_context = {
             "branche": (briefing_data.get("branche", "") or "").title(),
             "segment": _segment_label(briefing_data.get("unternehmensgroesse", "")),
@@ -523,14 +531,16 @@ async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
             db_session.commit()
             logger.info("[Strategy %d] PDF generated (%d bytes)", briefing_id, len(pdf_bytes))
 
-            # FIX-J: Send email with PDF attachment (fire-and-forget)
+            # FIX-Jv2: Send email with PDF attachment
+            logger.info("[Strategy %d] Starting email delivery (%d bytes PDF)...", briefing_id, len(pdf_bytes))
             try:
                 _send_strategy_email(briefing_id, pdf_bytes, db_session)
                 sr.email_sent = True
                 sr.email_sent_at = datetime.now(timezone.utc)
                 db_session.commit()
+                logger.info("[Strategy %d] email_sent=True committed", briefing_id)
             except Exception as mail_exc:
-                logger.error("[Strategy %d] Email sending failed: %s", briefing_id, mail_exc)
+                logger.error("[Strategy %d] Email sending failed: %s", briefing_id, mail_exc, exc_info=True)
         else:
             logger.warning("[Strategy %d] PDF service returned no bytes", briefing_id)
 
@@ -548,6 +558,7 @@ def _send_strategy_email(briefing_id: int, pdf_bytes: bytes, db_session: Any) ->
     import time as _time
 
     run_tag = f"STRATEGY-MAIL-{briefing_id}"
+    logger.info("[%s] _send_strategy_email called (pdf=%d bytes)", run_tag, len(pdf_bytes))
 
     if os.getenv("DISABLE_EMAILS", "").lower() in ("1", "true", "yes", "on"):
         logger.info("[%s] Emails disabled via DISABLE_EMAILS. Skipping.", run_tag)
@@ -562,8 +573,9 @@ def _send_strategy_email(briefing_id: int, pdf_bytes: bytes, db_session: Any) ->
         )
         from services.email_templates import render_strategy_email
         from models import Briefing
+        logger.info("[%s] Imports OK", run_tag)
     except ImportError as exc:
-        logger.warning("[%s] Import failed, skipping email: %s", run_tag, exc)
+        logger.error("[%s] Import FAILED, skipping email: %s", run_tag, exc)
         return
 
     briefing = db_session.query(Briefing).filter(Briefing.id == briefing_id).first()
@@ -572,6 +584,7 @@ def _send_strategy_email(briefing_id: int, pdf_bytes: bytes, db_session: Any) ->
         return
 
     user_email = _determine_user_email(db_session, briefing, None)
+    logger.info("[%s] Resolved user_email=%s", run_tag, _mask_email(user_email) if user_email else "NONE")
 
     attachment = {
         "filename": f"KI-Strategiebericht-{briefing_id}.pdf",
