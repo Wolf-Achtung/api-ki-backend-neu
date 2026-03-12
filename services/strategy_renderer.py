@@ -44,9 +44,20 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     report1_sections = report1_meta.get("sections", {})
 
     # Extract score + reifegrad from Report 1
+    # FIX-I: Prefer sections.score_gesamt (post-quality-bonus, matches R1 cover).
+    # Fallback chain: score_gesamt → scores.overall_display → scores.overall
     readiness_score = report1_sections.get("score_gesamt", "")
     if not readiness_score:
+        readiness_score = report1_meta.get("scores", {}).get("overall_display", "")
+    if not readiness_score:
         readiness_score = report1_meta.get("scores", {}).get("overall", "")
+    logger.info(
+        "[Strategy-Score] briefing_id=%s score_gesamt=%r scores.overall=%r → using %r",
+        sr.briefing_id,
+        report1_sections.get("score_gesamt", ""),
+        report1_meta.get("scores", {}).get("overall", ""),
+        readiness_score,
+    )
     reifegrad_label = report1_sections.get("score_rating", "")
 
     # Branche: capitalize for display
