@@ -175,6 +175,10 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
 
     html = str(template.render(**context))
 
+    # Post-process LLM HTML to use CSS design classes (KPI cards, timelines, etc.)
+    from services.html_enhancer import enhance_strategy_html
+    html = enhance_strategy_html(html)
+
     # Safety net: enforce canonical budget values in final HTML
     if calculated_values:
         html = _enforce_budget_values(html, calculated_values, sr.briefing_id)

@@ -343,6 +343,13 @@ def embed_all_images_in_html(html: str, template_dir: str = "templates") -> str:
         HTML with embedded images
     """
     template_path = Path(template_dir)
+
+    # Resolve relative paths against project root (same as get_logo_base64_map)
+    if not template_path.is_absolute():
+        project_root = Path(__file__).resolve().parent.parent
+        template_path = project_root / template_path
+    template_path = template_path.resolve()
+
     modified_html = html
 
     # Find all img src attributes
