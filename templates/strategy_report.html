@@ -940,18 +940,28 @@ sup.src-ref {
 </head>
 <body>
 
+    {# ── Macro: Chapter Separator with inline styles for Puppeteer ── #}
+    {% macro chapter_sep(num, title, subtitle) %}
+    <div class="chapter-separator page-break" style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(135deg, #0a1628 0%, #1a5276 60%, #0e1f3d 100%);color:#ffffff;page-break-before:always;position:relative;overflow:hidden">
+        <div class="chapter-number" style="font-size:72pt;font-weight:300;color:rgba(255,255,255,0.3);line-height:1;position:relative;z-index:1">{{ num }}</div>
+        <div class="chapter-accent-line" style="width:60px;height:3px;background:#2e86c1;margin:16px auto;border-radius:2px;position:relative;z-index:1"></div>
+        <div class="chapter-title" style="font-size:24pt;font-weight:700;color:#ffffff;position:relative;z-index:1">{{ title }}</div>
+        <div class="chapter-subtitle" style="font-size:11pt;color:rgba(255,255,255,0.7);margin-top:8px;position:relative;z-index:1">{{ subtitle }}</div>
+    </div>
+    {% endmacro %}
+
     <!-- ====== DECKBLATT ====== -->
     <div class="cover-page">
         <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt" style="width: 180px; height: auto; margin-bottom: 24px;">
         <div class="cover-eyebrow">KI-Strategiebericht</div>
-        <div class="cover-accent-line"></div>
+        <div class="cover-accent-line" style="width:80px;height:3px;background:linear-gradient(90deg,#a68921,#2e86c1);border-radius:2px;margin:0 auto 32px"></div>
         <h1>KI-Strategiebericht</h1>
         <p class="cover-subtitle">{{ firmenname }} · {{ branche }}</p>
         <p class="cover-meta">Erstellt am <strong>{{ datum }}</strong> · Segment: {{ segment }} · {{ mitarbeiter }} Mitarbeiter</p>
 
         <!-- Score Ring -->
-        <div class="cover-score-ring">
-            <svg width="160" height="160" viewBox="0 0 160 160">
+        <div class="cover-score-ring" style="width:180px;height:180px;margin:32px auto;position:relative;display:inline-block">
+            <svg width="180" height="180" viewBox="0 0 160 160">
                 <circle cx="80" cy="80" r="70" fill="none" stroke="#E5E7EB" stroke-width="8"/>
                 <circle cx="80" cy="80" r="70" fill="none" stroke="url(#scoreGrad)" stroke-width="8"
                         stroke-dasharray="{{ (readiness_score|default(50)|float / 100 * 439.8)|round(1) }} 439.8"
@@ -971,8 +981,8 @@ sup.src-ref {
         </div>
 
         <!-- TÜV Badge -->
-        <div class="tuev-badge">
-            <svg class="tuev-badge-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <div class="tuev-badge" style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#f0f5fa 0%,#ebf5fb 100%);border:1px solid #e8f2fa;border-radius:8px;padding:12px 24px;margin-top:24px">
+            <svg class="tuev-badge-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36" style="width:36px;height:36px;min-width:36px;flex-shrink:0">
                 <circle cx="18" cy="18" r="17" stroke="#1a5276" stroke-width="2"/>
                 <path d="M12 18l4 4 8-8" stroke="#27ae60" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -1052,12 +1062,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 1 ====== -->
-    <div class="chapter-separator page-break">
-        <div class="chapter-number">1</div>
-        <div class="chapter-accent-line"></div>
-        <div class="chapter-title">Ausgangslage</div>
-        <div class="chapter-subtitle">Ihr KI-Readiness-Profil</div>
-    </div>
+    {{ chapter_sep("1", "Ausgangslage", "Ihr KI-Readiness-Profil") }}
 
     <!-- ====== S1: AUSGANGSLAGE ====== -->
     <div class="section-content">
@@ -1065,12 +1070,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 2 ====== -->
-    <div class="chapter-separator page-break">
-        <div class="chapter-number">2</div>
-        <div class="chapter-accent-line"></div>
-        <div class="chapter-title">Markt &amp; Wettbewerb</div>
-        <div class="chapter-subtitle">Aktuelle Branchendaten &amp; Benchmarks</div>
-    </div>
+    {{ chapter_sep("2", "Markt &amp; Wettbewerb", "Aktuelle Branchendaten &amp; Benchmarks") }}
 
     <!-- ====== S2: MARKT & WETTBEWERB ====== -->
     <div class="section-content">
@@ -1078,12 +1078,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 3 ====== -->
-    <div class="chapter-separator page-break">
-        <div class="chapter-number">3</div>
-        <div class="chapter-accent-line"></div>
-        <div class="chapter-title">Strategische Handlungsfelder</div>
-        <div class="chapter-subtitle">Priorisiert nach Impact &amp; Machbarkeit</div>
-    </div>
+    {{ chapter_sep("3", "Strategische Handlungsfelder", "Priorisiert nach Impact &amp; Machbarkeit") }}
 
     <!-- ====== S3: HANDLUNGSFELDER ====== -->
     <div class="section-content">
@@ -1091,12 +1086,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 4 ====== -->
-    <div class="chapter-separator page-break">
-        <div class="chapter-number">4</div>
-        <div class="chapter-accent-line"></div>
-        <div class="chapter-title">Tool-Landschaft &amp; Empfehlungen</div>
-        <div class="chapter-subtitle">DSGVO-bewertete Lösungen für Ihr Unternehmen</div>
-    </div>
+    {{ chapter_sep("4", "Tool-Landschaft &amp; Empfehlungen", "DSGVO-bewertete Lösungen für Ihr Unternehmen") }}
 
     <!-- ====== S4: TOOLS ====== -->
     <div class="section-content">
@@ -1104,12 +1094,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 5 ====== -->
-    <div class="chapter-separator page-break">
-        <div class="chapter-number">5</div>
-        <div class="chapter-accent-line"></div>
-        <div class="chapter-title">Investitionsplan &amp; ROI</div>
-        <div class="chapter-subtitle">Szenarien, Break-Even &amp; Budget-Fit</div>
-    </div>
+    {{ chapter_sep("5", "Investitionsplan &amp; ROI", "Szenarien, Break-Even &amp; Budget-Fit") }}
 
     <!-- ====== S5: INVESTITIONSPLAN ====== -->
     <div class="section-content">
@@ -1117,12 +1102,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 6 ====== -->
-    <div class="chapter-separator page-break">
-        <div class="chapter-number">6</div>
-        <div class="chapter-accent-line"></div>
-        <div class="chapter-title">Umsetzungs-Roadmap</div>
-        <div class="chapter-subtitle">Ihr Phasenplan zur produktiven KI-Nutzung</div>
-    </div>
+    {{ chapter_sep("6", "Umsetzungs-Roadmap", "Ihr Phasenplan zur produktiven KI-Nutzung") }}
 
     <!-- ====== S6: ROADMAP ====== -->
     <div class="section-content">
@@ -1130,12 +1110,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 7 ====== -->
-    <div class="chapter-separator page-break">
-        <div class="chapter-number">7</div>
-        <div class="chapter-accent-line"></div>
-        <div class="chapter-title">Fördermittel &amp; Finanzierung</div>
-        <div class="chapter-subtitle">Aktuelle Programme für Ihr Unternehmen</div>
-    </div>
+    {{ chapter_sep("7", "Fördermittel &amp; Finanzierung", "Aktuelle Programme für Ihr Unternehmen") }}
 
     <!-- ====== S7: FÖRDERMITTEL ====== -->
     <div class="section-content">
@@ -1143,12 +1118,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 8 ====== -->
-    <div class="chapter-separator page-break">
-        <div class="chapter-number">8</div>
-        <div class="chapter-accent-line"></div>
-        <div class="chapter-title">Risiken &amp; Compliance</div>
-        <div class="chapter-subtitle">EU AI Act &amp; DSGVO</div>
-    </div>
+    {{ chapter_sep("8", "Risiken &amp; Compliance", "EU AI Act &amp; DSGVO") }}
 
     <!-- ====== S8: RISIKEN ====== -->
     <div class="section-content">
