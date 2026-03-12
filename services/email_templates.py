@@ -11,7 +11,7 @@ def generate_feedback_link(email: str) -> str:
     encoded_email = quote(email)
     return f"https://make.ki-sicherheit.jetzt/feedback/feedback.html?email={encoded_email}"
 
-def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_summary_html: Optional[str] = None, user_email: Optional[str] = None) -> str:
+def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_summary_html: Optional[str] = None, user_email: Optional[str] = None, briefing_id: Optional[int] = None) -> str:
     if recipient == "admin":
         title = "Kopie: KI‑Status‑Report (inkl. Briefing)"
         intro = "dies ist die Admin‑Kopie des automatisch generierten KI‑Status‑Reports."
@@ -32,6 +32,22 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
         <p class="muted">Nachfolgend die wichtigsten Angaben des Users für Qualitätskontrolle und Nachvollziehbarkeit:</p>
         {briefing_summary_html}
         """
+
+    # CTA to Strategy form (user emails only)
+    strategy_cta = ""
+    if recipient != "admin" and briefing_id:
+        _strategy_url = f"https://api-ki-backend-neu-production.up.railway.app/public/strategy.html?briefing_id={briefing_id}"
+        strategy_cta = (
+            '<hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">'
+            '<p style="font-size:15px;margin:0 0 8px"><strong>N\u00e4chster Schritt:</strong></p>'
+            '<p style="margin:0 0 12px">Fordern Sie jetzt Ihren pers\u00f6nlichen <strong>KI\u2011Strategiebericht</strong> an '
+            '\u2014 10 Fragen, 3 Minuten, und Sie erhalten einen individuellen Implementierungsfahrplan.</p>'
+            f'<p><a href="{escape(_strategy_url)}" style="display:inline-block;background:#0b3b8f;color:#fff;'
+            'padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">'
+            'Strategiebericht anfordern \u2192</a></p>'
+            '<p class="muted" style="margin-top:8px">Tipp: In K\u00fcrze erhalten Sie au\u00dferdem Ihre '
+            'KI\u2011Potenzial\u2011Analyse mit vertiefter Bewertung Ihres strategischen KI\u2011Potenzials.</p>'
+        )
 
     # Add feedback section for user emails only
     feedback_section = ""
@@ -69,6 +85,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
         {link_html}
         {briefing_section}
         <p class="muted">{escape(cta_hint)}</p>
+        {strategy_cta}
         {feedback_section}
         <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>
       </div>
@@ -77,7 +94,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
 </html>"""
 
 
-def render_deep_dive_email(recipient: str = "user") -> str:
+def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] = None) -> str:
     """Render email HTML for KI-Potenzial-Analyse delivery.
 
     Args:
@@ -95,6 +112,20 @@ def render_deep_dive_email(recipient: str = "user") -> str:
         "mit 90‑Tage‑Implementierungsplan, Business Case, Risikobewertung und konkreten n\u00e4chsten Schritten."
     )
     cta = "Bei Fragen stehen wir Ihnen gerne zur Verf\u00fcgung."
+
+    # CTA to Strategy form (user emails only)
+    strategy_cta_html = ""
+    if recipient != "admin" and briefing_id:
+        _strategy_url = f"https://api-ki-backend-neu-production.up.railway.app/public/strategy.html?briefing_id={briefing_id}"
+        strategy_cta_html = (
+            '<hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">'
+            '<p style="font-size:15px;margin:0 0 8px"><strong>Noch mehr Tiefe?</strong></p>'
+            '<p style="margin:0 0 12px">Ihr ma\u00dfgeschneiderter <strong>KI\u2011Strategiebericht</strong> '
+            '\u2014 10 Fragen, 3 Minuten, und Sie erhalten einen individuellen 90\u2011Tage\u2011Implementierungsplan.</p>'
+            f'<p><a href="{escape(_strategy_url)}" style="display:inline-block;background:#0b3b8f;color:#fff;'
+            'padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">'
+            'Strategiebericht anfordern \u2192</a></p>'
+        )
 
     return f"""<!doctype html>
 <html lang="de">
@@ -119,6 +150,7 @@ def render_deep_dive_email(recipient: str = "user") -> str:
         <p>{escape(intro)}</p>
         <p>{escape(body_text)}</p>
         <p>{escape(cta)}</p>
+        {strategy_cta_html}
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
         <p class="muted">Wolf Hohl — KI‑Sicherheit.jetzt</p>
         <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>

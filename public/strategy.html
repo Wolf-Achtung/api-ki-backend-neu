@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI-Strategiebericht anfordern | ki-sicherheit.jetzt</title>
+    <style>
+        :root {
+            --color-primary: #0b3b8f;
+            --color-primary-light: #1e56b8;
+            --color-primary-bg: #f0f4ff;
+            --color-accent: #c9972e;
+            --color-bg: #f6f9ff;
+            --color-card: #fff;
+            --color-border: #e2e8f0;
+            --color-text: #0f172a;
+            --color-muted: #64748b;
+            --color-error: #dc2626;
+            --color-success: #16a34a;
+            --radius: 12px;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+            color: var(--color-text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background: var(--color-bg);
+        }
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 24px 16px 64px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .header h1 {
+            color: var(--color-primary);
+            font-size: 26px;
+            margin: 0 0 8px;
+            line-height: 1.3;
+        }
+        .header .subtitle {
+            color: var(--color-muted);
+            font-size: 15px;
+            margin: 0;
+        }
+        .question-group {
+            background: var(--color-card);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+        .question-group.invalid {
+            border-color: var(--color-error);
+            box-shadow: 0 0 0 2px rgba(220,38,38,0.15);
+        }
+        .question-group .q-label {
+            font-weight: 600;
+            font-size: 15px;
+            margin: 0 0 4px;
+            color: var(--color-text);
+        }
+        .question-group .q-label .required {
+            color: var(--color-error);
+            margin-left: 2px;
+        }
+        .question-group .q-hint {
+            color: var(--color-muted);
+            font-size: 13px;
+            margin: 0 0 12px;
+        }
+        .question-group .q-tag {
+            display: inline-block;
+            background: var(--color-primary-bg);
+            color: var(--color-primary);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        /* Radio / Checkbox option cards */
+        .options-grid {
+            display: grid;
+            gap: 8px;
+        }
+        .options-grid.cols-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+        .option-card {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border: 1.5px solid var(--color-border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 14px;
+            background: var(--color-card);
+        }
+        .option-card:hover {
+            border-color: var(--color-primary-light);
+            background: var(--color-primary-bg);
+        }
+        .option-card input {
+            accent-color: var(--color-primary);
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            flex-shrink: 0;
+        }
+        .option-card.selected {
+            border-color: var(--color-primary);
+            background: var(--color-primary-bg);
+        }
+        .option-card.disabled-option {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .option-card .option-label {
+            flex: 1;
+        }
+        /* Textarea */
+        .text-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid var(--color-border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            min-height: 80px;
+            transition: border-color 0.15s;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 2px rgba(11,59,143,0.12);
+        }
+        .char-counter {
+            text-align: right;
+            font-size: 12px;
+            color: var(--color-muted);
+            margin-top: 4px;
+        }
+        /* Submit button */
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: all 0.2s;
+        }
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(11,59,143,0.3);
+        }
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        /* Status section */
+        .status-container {
+            text-align: center;
+            padding: 48px 24px;
+        }
+        .spinner {
+            width: 48px; height: 48px;
+            border: 4px solid var(--color-border);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 24px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status-title {
+            font-size: 22px;
+            color: var(--color-primary);
+            margin: 0 0 8px;
+        }
+        .status-text {
+            color: var(--color-muted);
+            font-size: 15px;
+            margin: 0;
+        }
+        /* Error state */
+        .error-banner {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: var(--color-error);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        /* Responsive */
+        @media (max-width: 540px) {
+            .options-grid.cols-2 { grid-template-columns: 1fr; }
+            .header h1 { font-size: 22px; }
+            .container { padding: 16px 12px 48px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- ERROR BANNER -->
+    <div id="error-banner" class="error-banner"></div>
+
+    <!-- FORM SECTION -->
+    <div id="form-section">
+        <div class="header">
+            <h1>Ihr persönlicher KI-Strategiebericht</h1>
+            <p class="subtitle">10 Fragen &middot; 3 Minuten &middot; maßgeschneiderter Strategiefahrplan</p>
+        </div>
+
+        <form id="strategy-form" novalidate>
+
+            <!-- S1: Budget -->
+            <div class="question-group" data-field="s1_budget">
+                <span class="q-tag">Pflichtfrage</span>
+                <p class="q-label">Wie hoch ist Ihr geplantes Budget für KI-Investitionen in den nächsten 12 Monaten?<span class="required">*</span></p>
+                <p class="q-hint">Eine grobe Schätzung reicht — hilft für realistische Maßnahmenplanung.</p>
+                <div class="options-grid">
+                    <label class="option-card"><input type="radio" name="s1_budget" value="Noch unklar"><span class="option-label">Noch unklar</span></label>
+                    <label class="option-card"><input type="radio" name="s1_budget" value="Unter 5.000€"><span class="option-label">Unter 5.000 €</span></label>
+                    <label class="option-card"><input type="radio" name="s1_budget" value="5.000–15.000€"><span class="option-label">5.000 – 15.000 €</span></label>
+                    <label class="option-card"><input type="radio" name="s1_budget" value="15.000–50.000€"><span class="option-label">15.000 – 50.000 €</span></label>
+                    <label class="option-card"><input type="radio" name="s1_budget" value="Über 50.000€"><span class="option-label">Über 50.000 €</span></label>
+                </div>
+            </div>
+
+            <!-- S2: Zeitrahmen -->
+            <div class="question-group" data-field="s2_zeitrahmen">
+                <span class="q-tag">Pflichtfrage</span>
+                <p class="q-label">In welchem Zeitraum wollen Sie erste KI-Maßnahmen umsetzen?<span class="required">*</span></p>
+                <p class="q-hint">Bestimmt das Tempo und die Meilensteine Ihres Strategiefahrplans.</p>
+                <div class="options-grid cols-2">
+                    <label class="option-card"><input type="radio" name="s2_zeitrahmen" value="Sofort (1-3 Monate)"><span class="option-label">Sofort (1–3 Monate)</span></label>
+                    <label class="option-card"><input type="radio" name="s2_zeitrahmen" value="Kurzfristig (3-6 Monate)"><span class="option-label">Kurzfristig (3–6 Monate)</span></label>
+                    <label class="option-card"><input type="radio" name="s2_zeitrahmen" value="Mittelfristig (6-12 Monate)"><span class="option-label">Mittelfristig (6–12 Monate)</span></label>
+                    <label class="option-card"><input type="radio" name="s2_zeitrahmen" value="Langfristig (12-18 Monate)"><span class="option-label">Langfristig (12–18 Monate)</span></label>
+                </div>
+            </div>
+
+            <!-- S3: Prioritäten -->
+            <div class="question-group" data-field="s3_prioritaeten">
+                <span class="q-tag">Pflichtfrage</span>
+                <p class="q-label">Was sind Ihre wichtigsten Prioritäten beim KI-Einsatz? (max. 3)<span class="required">*</span></p>
+                <p class="q-hint">Damit wir Empfehlungen auf das fokussieren, was Ihnen am meisten bringt.</p>
+                <div class="options-grid cols-2">
+                    <label class="option-card"><input type="checkbox" name="s3_prioritaeten" value="Kosten senken"><span class="option-label">Kosten senken</span></label>
+                    <label class="option-card"><input type="checkbox" name="s3_prioritaeten" value="Umsatz steigern"><span class="option-label">Umsatz steigern</span></label>
+                    <label class="option-card"><input type="checkbox" name="s3_prioritaeten" value="Qualität verbessern"><span class="option-label">Qualität verbessern</span></label>
+                    <label class="option-card"><input type="checkbox" name="s3_prioritaeten" value="Geschwindigkeit erhöhen"><span class="option-label">Geschwindigkeit erhöhen</span></label>
+                    <label class="option-card"><input type="checkbox" name="s3_prioritaeten" value="Compliance sichern"><span class="option-label">Compliance sichern</span></label>
+                    <label class="option-card"><input type="checkbox" name="s3_prioritaeten" value="Neue Geschäftsfelder"><span class="option-label">Neue Geschäftsfelder</span></label>
+                    <label class="option-card"><input type="checkbox" name="s3_prioritaeten" value="Fachkräftemangel kompensieren"><span class="option-label">Fachkräftemangel kompensieren</span></label>
+                    <label class="option-card"><input type="checkbox" name="s3_prioritaeten" value="Kundenerlebnis verbessern"><span class="option-label">Kundenerlebnis verbessern</span></label>
+                </div>
+            </div>
+
+            <!-- S4: Engpass -->
+            <div class="question-group" data-field="s4_engpass">
+                <span class="q-tag">Pflichtfrage</span>
+                <p class="q-label">Was ist aktuell der größte Engpass für Ihre KI-Einführung?<span class="required">*</span></p>
+                <p class="q-hint">Damit wir im Strategiebericht gezielt Lösungen für Ihren Hauptblocker erarbeiten.</p>
+                <div class="options-grid">
+                    <label class="option-card"><input type="radio" name="s4_engpass" value="Zu wenig Know-how"><span class="option-label">Zu wenig Know-how</span></label>
+                    <label class="option-card"><input type="radio" name="s4_engpass" value="Kein Budget"><span class="option-label">Kein Budget</span></label>
+                    <label class="option-card"><input type="radio" name="s4_engpass" value="Fehlende Daten"><span class="option-label">Fehlende Daten</span></label>
+                    <label class="option-card"><input type="radio" name="s4_engpass" value="Widerstand im Team"><span class="option-label">Widerstand im Team</span></label>
+                    <label class="option-card"><input type="radio" name="s4_engpass" value="Regulatorische Unsicherheit"><span class="option-label">Regulatorische Unsicherheit</span></label>
+                    <label class="option-card"><input type="radio" name="s4_engpass" value="Kein klarer Use Case"><span class="option-label">Kein klarer Use Case</span></label>
+                    <label class="option-card"><input type="radio" name="s4_engpass" value="Andere"><span class="option-label">Andere</span></label>
+                </div>
+            </div>
+
+            <!-- S5: Software -->
+            <div class="question-group" data-field="s5_software">
+                <span class="q-tag">Optional</span>
+                <p class="q-label">Welche Software und Tools nutzen Sie aktuell im Tagesgeschäft?</p>
+                <p class="q-hint">Optional — hilft für konkrete Integrationsempfehlungen.</p>
+                <textarea id="s5_software" class="text-input" maxlength="200" placeholder="z. B. Microsoft 365, Slack, HubSpot, SAP, DATEV, Shopify..."></textarea>
+                <div class="char-counter"><span id="s5_counter">0</span>/200</div>
+            </div>
+
+            <!-- S6: Förderinteresse -->
+            <div class="question-group" data-field="s6_foerderinteresse">
+                <span class="q-tag">Pflichtfrage</span>
+                <p class="q-label">Sind Fördermittel für Ihre KI-Investitionen interessant?<span class="required">*</span></p>
+                <p class="q-hint">Damit wir passende Programme im Bericht berücksichtigen.</p>
+                <div class="options-grid cols-2">
+                    <label class="option-card"><input type="radio" name="s6_foerderinteresse" value="Ja, dringend"><span class="option-label">Ja, dringend</span></label>
+                    <label class="option-card"><input type="radio" name="s6_foerderinteresse" value="Ja, wenn passend"><span class="option-label">Ja, wenn passend</span></label>
+                    <label class="option-card"><input type="radio" name="s6_foerderinteresse" value="Nein, eigenes Budget"><span class="option-label">Nein, eigenes Budget</span></label>
+                    <label class="option-card"><input type="radio" name="s6_foerderinteresse" value="Weiß nicht"><span class="option-label">Weiß nicht</span></label>
+                </div>
+            </div>
+
+            <!-- S7: Entscheidung -->
+            <div class="question-group" data-field="s7_entscheidung">
+                <span class="q-tag">Pflichtfrage</span>
+                <p class="q-label">Wie werden bei Ihnen KI-Investitionsentscheidungen getroffen?<span class="required">*</span></p>
+                <p class="q-hint">Damit der Strategiebericht als passende Entscheidungsvorlage formuliert wird.</p>
+                <div class="options-grid">
+                    <label class="option-card"><input type="radio" name="s7_entscheidung" value="Entscheide allein"><span class="option-label">Entscheide allein</span></label>
+                    <label class="option-card"><input type="radio" name="s7_entscheidung" value="Brauche Vorlage für Geschäftsleitung"><span class="option-label">Brauche Vorlage für Geschäftsleitung</span></label>
+                    <label class="option-card"><input type="radio" name="s7_entscheidung" value="Muss Gesellschafter überzeugen"><span class="option-label">Muss Gesellschafter überzeugen</span></label>
+                    <label class="option-card"><input type="radio" name="s7_entscheidung" value="Muss Aufsichtsrat/Beirat informieren"><span class="option-label">Muss Aufsichtsrat/Beirat informieren</span></label>
+                </div>
+            </div>
+
+            <!-- S8: Erfahrung -->
+            <div class="question-group" data-field="s8_erfahrung">
+                <span class="q-tag">Optional</span>
+                <p class="q-label">Wie schätzen Sie Ihre bisherige Erfahrung mit KI ein?</p>
+                <p class="q-hint">Optional — hilft für die richtige Tiefe der Empfehlungen.</p>
+                <div class="options-grid cols-2">
+                    <label class="option-card"><input type="radio" name="s8_erfahrung" value="Noch keine"><span class="option-label">Noch keine</span></label>
+                    <label class="option-card"><input type="radio" name="s8_erfahrung" value="Experimentiert"><span class="option-label">Experimentiert</span></label>
+                    <label class="option-card"><input type="radio" name="s8_erfahrung" value="Erste Tools im Einsatz"><span class="option-label">Erste Tools im Einsatz</span></label>
+                    <label class="option-card"><input type="radio" name="s8_erfahrung" value="Fortgeschritten"><span class="option-label">Fortgeschritten</span></label>
+                </div>
+            </div>
+
+            <!-- S9: Ansatz -->
+            <div class="question-group" data-field="s9_ansatz">
+                <span class="q-tag">Optional</span>
+                <p class="q-label">Welchen Infrastruktur-Ansatz bevorzugen Sie?</p>
+                <p class="q-hint">Optional — beeinflusst Tool-Empfehlungen und Datenschutz-Bewertung.</p>
+                <div class="options-grid cols-2">
+                    <label class="option-card"><input type="radio" name="s9_ansatz" value="Cloud-SaaS"><span class="option-label">Cloud-SaaS</span></label>
+                    <label class="option-card"><input type="radio" name="s9_ansatz" value="On-Premise"><span class="option-label">On-Premise</span></label>
+                    <label class="option-card"><input type="radio" name="s9_ansatz" value="Hybrid"><span class="option-label">Hybrid</span></label>
+                    <label class="option-card"><input type="radio" name="s9_ansatz" value="Egal"><span class="option-label">Egal</span></label>
+                </div>
+            </div>
+
+            <!-- S10: Datenschutz -->
+            <div class="question-group" data-field="s10_datenschutz">
+                <span class="q-tag">Optional</span>
+                <p class="q-label">Wie hoch ist Ihre Datenschutz-Priorität?</p>
+                <p class="q-hint">Optional — bestimmt Tiefe der Compliance-Empfehlungen.</p>
+                <div class="options-grid" style="max-width:360px">
+                    <label class="option-card"><input type="radio" name="s10_datenschutz" value="Hoch"><span class="option-label">Hoch</span></label>
+                    <label class="option-card"><input type="radio" name="s10_datenschutz" value="Mittel"><span class="option-label">Mittel</span></label>
+                    <label class="option-card"><input type="radio" name="s10_datenschutz" value="Niedrig"><span class="option-label">Niedrig</span></label>
+                </div>
+            </div>
+
+            <button type="submit" id="btn-submit" class="btn-submit">
+                Strategiebericht anfordern
+            </button>
+        </form>
+    </div>
+
+    <!-- STATUS SECTION (hidden by default) -->
+    <div id="status-section" style="display:none;">
+        <div class="status-container">
+            <div id="status-spinner" class="spinner"></div>
+            <h2 id="status-title" class="status-title">Ihr KI-Strategiebericht wird erstellt...</h2>
+            <p id="status-text" class="status-text">Das dauert ca. 3–5 Minuten. Sie können diese Seite geöffnet lassen.</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+(function() {
+    "use strict";
+
+    var API_BASE = document.querySelector("meta[name='api-base']")
+        ? document.querySelector("meta[name='api-base']").getAttribute("content")
+        : "https://api-ki-backend-neu-production.up.railway.app";
+
+    var params = new URLSearchParams(window.location.search);
+    var briefingId = params.get("briefing_id");
+
+    if (!briefingId) {
+        document.getElementById("form-section").innerHTML =
+            '<div class="header"><h1>Fehler</h1>' +
+            '<p class="subtitle">Keine Briefing-ID gefunden. Bitte nutzen Sie den Link aus Ihrer Email.</p></div>';
+        return;
+    }
+
+    // === SELECTED STATE for radio/checkbox cards ===
+    function setupCardSelection() {
+        document.querySelectorAll(".option-card input").forEach(function(input) {
+            input.addEventListener("change", function() {
+                if (input.type === "radio") {
+                    var group = input.closest(".question-group");
+                    group.querySelectorAll(".option-card").forEach(function(c) {
+                        c.classList.remove("selected");
+                    });
+                    input.closest(".option-card").classList.add("selected");
+                } else {
+                    if (input.checked) {
+                        input.closest(".option-card").classList.add("selected");
+                    } else {
+                        input.closest(".option-card").classList.remove("selected");
+                    }
+                }
+                // Remove invalid state when user interacts
+                input.closest(".question-group").classList.remove("invalid");
+            });
+        });
+    }
+
+    // === CHECKBOX MAX-3 LOGIC (s3_prioritaeten) ===
+    function setupMaxCheckboxes(name, max) {
+        var boxes = document.querySelectorAll("input[name='" + name + "']");
+        boxes.forEach(function(box) {
+            box.addEventListener("change", function() {
+                var checked = document.querySelectorAll("input[name='" + name + "']:checked");
+                boxes.forEach(function(b) {
+                    var card = b.closest(".option-card");
+                    if (!b.checked) {
+                        b.disabled = (checked.length >= max);
+                        card.classList.toggle("disabled-option", checked.length >= max);
+                    }
+                });
+            });
+        });
+    }
+
+    // === CHAR COUNTER ===
+    function setupCharCounter(fieldId) {
+        var field = document.getElementById(fieldId);
+        var counter = document.getElementById(fieldId.replace("s5_software", "s5_counter"));
+        if (!field || !counter) return;
+        field.addEventListener("input", function() {
+            counter.textContent = field.value.length;
+        });
+    }
+
+    // === COLLECT FORM DATA ===
+    function collectData() {
+        var data = {};
+
+        // Radio fields
+        ["s1_budget","s2_zeitrahmen","s4_engpass","s6_foerderinteresse",
+         "s7_entscheidung","s8_erfahrung","s9_ansatz","s10_datenschutz"].forEach(function(name) {
+            var sel = document.querySelector("input[name='" + name + "']:checked");
+            if (sel) data[name] = sel.value;
+        });
+
+        // Checkbox field (array)
+        var prios = document.querySelectorAll("input[name='s3_prioritaeten']:checked");
+        data.s3_prioritaeten = [];
+        prios.forEach(function(p) { data.s3_prioritaeten.push(p.value); });
+
+        // Textarea
+        var sw = document.getElementById("s5_software");
+        if (sw && sw.value.trim()) data.s5_software = sw.value.trim();
+
+        return data;
+    }
+
+    // === VALIDATION ===
+    function validate() {
+        var required = ["s1_budget","s2_zeitrahmen","s3_prioritaeten","s4_engpass","s6_foerderinteresse","s7_entscheidung"];
+        var missing = [];
+
+        // Clear previous errors
+        document.querySelectorAll(".question-group.invalid").forEach(function(g) {
+            g.classList.remove("invalid");
+        });
+
+        required.forEach(function(name) {
+            var hasValue = false;
+            if (name === "s3_prioritaeten") {
+                hasValue = document.querySelectorAll("input[name='s3_prioritaeten']:checked").length > 0;
+            } else {
+                hasValue = !!document.querySelector("input[name='" + name + "']:checked");
+            }
+            if (!hasValue) {
+                missing.push(name);
+                var group = document.querySelector("[data-field='" + name + "']");
+                if (group) group.classList.add("invalid");
+            }
+        });
+
+        if (missing.length > 0) {
+            // Scroll to first missing
+            var first = document.querySelector(".question-group.invalid");
+            if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+            showError("Bitte füllen Sie alle Pflichtfelder aus.");
+            return false;
+        }
+        return true;
+    }
+
+    // === ERROR DISPLAY ===
+    function showError(msg) {
+        var banner = document.getElementById("error-banner");
+        banner.textContent = msg;
+        banner.style.display = "block";
+        setTimeout(function() { banner.style.display = "none"; }, 6000);
+    }
+
+    // === FORM SUBMIT ===
+    document.getElementById("strategy-form").addEventListener("submit", function(e) {
+        e.preventDefault();
+        if (!validate()) return;
+
+        var data = collectData();
+        var btn = document.getElementById("btn-submit");
+        btn.disabled = true;
+        btn.textContent = "Wird gesendet...";
+        document.getElementById("error-banner").style.display = "none";
+
+        // STEP 1: Save questions
+        fetch(API_BASE + "/api/strategy/questions/" + briefingId, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        })
+        .then(function(res) {
+            if (!res.ok) {
+                return res.json().then(function(body) {
+                    throw new Error(body.detail || "Validierungsfehler (HTTP " + res.status + ")");
+                });
+            }
+            return res.json();
+        })
+        .then(function() {
+            // STEP 2: Trigger generation
+            return fetch(API_BASE + "/api/strategy/generate/" + briefingId, {
+                method: "POST"
+            });
+        })
+        .then(function(res) {
+            if (!res.ok) {
+                return res.json().then(function(body) {
+                    throw new Error(body.detail || "Generierung starten fehlgeschlagen (HTTP " + res.status + ")");
+                });
+            }
+            // Switch to status view
+            document.getElementById("form-section").style.display = "none";
+            document.getElementById("status-section").style.display = "block";
+            pollStatus();
+        })
+        .catch(function(err) {
+            btn.disabled = false;
+            btn.textContent = "Strategiebericht anfordern";
+            showError(err.message);
+        });
+    });
+
+    // === STATUS POLLING ===
+    function pollStatus() {
+        var interval = setInterval(function() {
+            fetch(API_BASE + "/api/strategy/status/" + briefingId)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.status === "completed") {
+                    clearInterval(interval);
+                    document.getElementById("status-spinner").style.display = "none";
+                    document.getElementById("status-title").textContent =
+                        "Ihr KI-Strategiebericht ist fertig!";
+                    document.getElementById("status-title").style.color = "var(--color-success)";
+                    document.getElementById("status-text").innerHTML =
+                        "Der Bericht wurde an Ihre Email-Adresse gesendet.<br>" +
+                        '<a href="' + API_BASE + '/api/strategy/pdf/' + briefingId +
+                        '" style="color:var(--color-primary);font-weight:600;margin-top:12px;display:inline-block">' +
+                        'PDF jetzt herunterladen</a>';
+                } else if (data.status === "failed") {
+                    clearInterval(interval);
+                    document.getElementById("status-spinner").style.display = "none";
+                    document.getElementById("status-title").textContent =
+                        "Es gab ein Problem";
+                    document.getElementById("status-title").style.color = "var(--color-error)";
+                    document.getElementById("status-text").textContent =
+                        "Die Generierung ist leider fehlgeschlagen. Bitte versuchen Sie es erneut oder kontaktieren Sie uns.";
+                }
+            })
+            .catch(function() { /* network error: keep polling */ });
+        }, 5000);
+    }
+
+    // === INIT ===
+    setupCardSelection();
+    setupMaxCheckboxes("s3_prioritaeten", 3);
+    setupCharCounter("s5_software");
+})();
+</script>
+</body>
+</html>
