@@ -265,6 +265,12 @@ def calculate_bc_deep_dive(canonical_bc: Dict[str, float]) -> Dict[str, Any]:
     rate = canonical_bc.get('rate', 95)
     capex = canonical_bc.get('capex', 5000)
     opex_month = canonical_bc.get('opex', 150)
+    r1_payback = canonical_bc.get('payback', 0)
+
+    # FIX-E: Use R1 payback as Basis and scale other scenarios proportionally.
+    # R1 payback includes a conservative buffer (realistic scenario), so we
+    # must not recalculate from raw hours/rate/opex.
+    base_net_monthly = (base_hours * rate) - opex_month
 
     # Sensitivity analysis
     scenarios = [
@@ -288,7 +294,12 @@ def calculate_bc_deep_dive(canonical_bc: Dict[str, float]) -> Dict[str, Any]:
 
         net_monthly = monthly_savings - opex_month
         if net_monthly > 0:
-            payback_months = capex / net_monthly
+            if r1_payback > 0 and base_net_monthly > 0:
+                # Scale R1 payback proportionally: when net_monthly changes,
+                # payback changes by ratio of base to adjusted net.
+                payback_months = r1_payback * (base_net_monthly / net_monthly)
+            else:
+                payback_months = capex / net_monthly
         else:
             payback_months = float('inf')
 
@@ -317,12 +328,15 @@ def calculate_bc_deep_dive(canonical_bc: Dict[str, float]) -> Dict[str, Any]:
             'cumulative_net': round(cumulative_net),
         })
 
-    # Break-even month (when cumulative net becomes positive)
-    net_monthly = (base_hours * rate) - opex_month
-    if net_monthly > 0:
-        break_even_month = math.ceil(round(capex / net_monthly, 1))
+    # Break-even month — use R1 payback for consistency (FIX-E)
+    if r1_payback > 0:
+        break_even_month = math.ceil(r1_payback)
     else:
-        break_even_month = None
+        net_monthly = (base_hours * rate) - opex_month
+        if net_monthly > 0:
+            break_even_month = math.ceil(round(capex / net_monthly, 1))
+        else:
+            break_even_month = None
 
     return {
         'sensitivity': sensitivity,

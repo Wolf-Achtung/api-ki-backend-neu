@@ -218,7 +218,7 @@ def get_logo_base64_map(
         project_root = Path(__file__).resolve().parent.parent
         template_path = project_root / template_path
     template_path = template_path.resolve()
-    log.debug("[LOGO-EMBED] Resolved template_dir: %s", template_path)
+    log.info("[LOGO-EMBED] Resolved template_dir: %s (exists=%s)", template_path, template_path.exists())
 
     total_original = 0
     total_optimized = 0
