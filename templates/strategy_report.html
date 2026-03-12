@@ -942,7 +942,7 @@ sup.src-ref {
 
     {# ── Macro: Chapter Separator with inline styles for Puppeteer ── #}
     {% macro chapter_sep(num, title, subtitle) %}
-    <div class="chapter-separator page-break" style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(135deg, #0a1628 0%, #1a5276 60%, #0e1f3d 100%);color:#ffffff;page-break-before:always;position:relative;overflow:hidden">
+    <div class="chapter-separator page-break" style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background-color:#0a1628;background:linear-gradient(135deg, #0a1628 0%, #1a5276 60%, #0e1f3d 100%);color:#ffffff;page-break-before:always;position:relative;overflow:hidden">
         <div class="chapter-number" style="font-size:72pt;font-weight:300;color:rgba(255,255,255,0.3);line-height:1;position:relative;z-index:1">{{ num }}</div>
         <div class="chapter-accent-line" style="width:60px;height:3px;background:#2e86c1;margin:16px auto;border-radius:2px;position:relative;z-index:1"></div>
         <div class="chapter-title" style="font-size:24pt;font-weight:700;color:#ffffff;position:relative;z-index:1">{{ title }}</div>
