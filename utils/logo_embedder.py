@@ -211,6 +211,15 @@ def get_logo_base64_map(
     """
     logo_map: Dict[str, str] = {}
     template_path = Path(template_dir)
+
+    # FIX-B: Resolve relative paths against project root to avoid CWD issues
+    # on Railway (worker processes may have different CWD than expected).
+    if not template_path.is_absolute():
+        project_root = Path(__file__).resolve().parent.parent
+        template_path = project_root / template_path
+    template_path = template_path.resolve()
+    log.debug("[LOGO-EMBED] Resolved template_dir: %s", template_path)
+
     total_original = 0
     total_optimized = 0
 
