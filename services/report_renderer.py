@@ -1354,6 +1354,9 @@ def render(briefing_obj: Any,
     # to avoid resolving to repo root when env overrides change tpl_path.
     _tpl_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
     html = embed_logos_in_html(html, _tpl_dir)
+    # Belt-and-suspenders: catch any remaining relative img src (trust badges, etc.)
+    from utils.logo_embedder import embed_all_images_in_html
+    html = embed_all_images_in_html(html, _tpl_dir)
     log.info(f"[RENDER] Embedded logos in HTML for report {run_id}")
 
     # PDF-SLIMDOWN: Optimize HTML for smaller PDF file size
