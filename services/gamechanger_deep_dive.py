@@ -221,12 +221,19 @@ def _extract_canonical_bc(sections: Dict[str, Any],
                  roi, size_key)
         roi = 200.0
 
-    # Recalculate payback from capped values if needed
-    net_monthly = (hours * rate) - opex
-    if net_monthly > 0 and capex > 0:
-        payback = round(capex / net_monthly, 1)
-    elif net_monthly <= 0:
-        payback = 99.0
+    # FIX-C: Use R1 PAYBACK_MONTHS directly for consistency (R1 uses realistic
+    # scenario with conservative buffer). Only recalculate if R1 didn't provide one.
+    r1_payback = _safe_float(sections.get('PAYBACK_MONTHS'), 0.0)
+    if r1_payback > 0:
+        payback = r1_payback
+        log.info("[GC-DEEP-DIVE] Using R1 PAYBACK_MONTHS=%.1f (not recalculating)", payback)
+    else:
+        net_monthly = (hours * rate) - opex
+        if net_monthly > 0 and capex > 0:
+            payback = round(capex / net_monthly, 1)
+        elif net_monthly <= 0:
+            payback = 99.0
+        log.info("[GC-DEEP-DIVE] R1 PAYBACK_MONTHS missing, recalculated=%.1f", payback)
 
     return {
         'hours': hours,

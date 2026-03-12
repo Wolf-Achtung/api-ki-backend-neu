@@ -3077,7 +3077,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "RECOMMENDATIONS_HTML": 15000,  # FIX-629b
         "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
         "GAMECHANGER_HTML": 12000,
-        "FOERDERPOTENZIAL_HTML": 12000,  # FIX-B22-P2: was 10000, needs ≥800 words
+        "FOERDERPOTENZIAL_HTML": 16000,  # FIX-A: was 12000, LLM delivers ~14.6K (4 sections)
         "ORG_CHANGE_HTML": 10000,  # FIX-629b
         "BUSINESS_CASE_HTML": 10000,  # FIX-629b
         "PILOT_PLAN_HTML": 5000,  # FIX-B36a: was 2000, observed 4835 chars → trimmed to 1845 (62% lost!)
@@ -3182,7 +3182,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "ki_skillplan": 3000,
         "org_change": 8000,
         "business_case": 8000,
-        "foerderpotenzial": 10000,
+        "foerderpotenzial": 16000,  # FIX-A: was 10000, matches FOERDERPOTENZIAL_HTML
 
         "_default": 3000,  # FIX-B36a: was 2000, safer default for unmapped sections
     },
