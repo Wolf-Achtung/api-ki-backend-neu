@@ -104,8 +104,12 @@ async def generate_strategy_report(
         _base = round(sum(_dim_vals) / 4) if any(_dim_vals) else 0
 
         _dod_ok = report1_sections.get("N43_DOD_PASSED", False) or report1_sections.get("_n43_dod_passed", False)
-        _cg = str(report1_sections.get("_CONSISTENCY_GRADE", "F"))
-        _cs = report1_sections.get("_CONSISTENCY_SCORE", 0)
+        # FIX-Iv4c: Default "A"/100 (not "F"/0) because _CONSISTENCY_GRADE and
+        # _CONSISTENCY_SCORE are underscore-prefixed keys filtered out of
+        # serializable_sections in gpt_analyze.py (line 18186). When absent,
+        # gpt_analyze.py itself defaults to "A" (lines 18068, 18623, 19868).
+        _cg = str(report1_sections.get("_CONSISTENCY_GRADE", "A"))
+        _cs = report1_sections.get("_CONSISTENCY_SCORE", 100)
         _qb = 0
         if _dod_ok:
             _qb = 2 if (_cg in ("A", "B") or (isinstance(_cs, (int, float)) and _cs >= 80)) else 1
