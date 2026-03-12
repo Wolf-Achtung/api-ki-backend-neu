@@ -92,14 +92,16 @@ async def generate_strategy_report(
         # meta["sections"] is serialized BEFORE quality bonus in gpt_analyze.py,
         # so stored score_gesamt = pre-bonus. Recalculate to match R1 cover.
         _r1_scores = report1_data.get("scores", {})
+        # Match R1 formula exactly: round((gov + sec + val + ena) / 4)
+        # Use float() not int(float()) to avoid truncation-induced rounding errors
         _dim_vals = [
-            int(float(_r1_scores.get("governance", 0) or 0)),
-            int(float(_r1_scores.get("security", 0) or 0)),
-            int(float(_r1_scores.get("value", 0) or 0)),
-            int(float(_r1_scores.get("enablement", 0) or 0)),
+            float(_r1_scores.get("governance", 0) or 0),
+            float(_r1_scores.get("security", 0) or 0),
+            float(_r1_scores.get("value", 0) or 0),
+            float(_r1_scores.get("enablement", 0) or 0),
         ]
-        _dim_nz = [d for d in _dim_vals if d > 0]
-        _base = round(sum(_dim_nz) / len(_dim_nz)) if _dim_nz else 0
+        # Always divide by 4 (same as R1: scores["overall"] = round(sum/4))
+        _base = round(sum(_dim_vals) / 4) if any(_dim_vals) else 0
 
         _dod_ok = report1_sections.get("N43_DOD_PASSED", False) or report1_sections.get("_n43_dod_passed", False)
         _cg = str(report1_sections.get("_CONSISTENCY_GRADE", "F"))
@@ -124,7 +126,7 @@ async def generate_strategy_report(
                 _stored.append((_key, _v))
         _stored_max = max((v for _, v in _stored), default=0)
         _score = max(_live, _stored_max)
-        logger.info("[Strategy %d] Score resolution: dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d",
+        logger.info("[Strategy %d] Score: R1-formula dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d",
                     briefing_id, _dim_vals, _base, _qb, _live, _stored_max, _score)
         base_context = {
             "branche": (briefing_data.get("branche", "") or "").title(),

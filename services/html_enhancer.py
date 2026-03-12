@@ -518,6 +518,81 @@ def _transform_inline_kpis(html: str) -> str:
 
 
 # =============================================================================
+# RULE 8: "Auf einen Blick:" → blue highlight box
+# RULE 9: "Tipp/Hinweis:" → green tip box
+# RULE 10: "Wichtig/Achtung/Warnung:" → yellow warning box
+# RULE 11: "Empfehlung/Investitionsempfehlung/Handlungsempfehlung:" → blue gradient box
+# RULE 12: Ampel keywords in <td> → colored badges
+# RULE 13: "Quick Win" → blue inline badge
+# RULE 14: "Quellen:" → dezenter footer
+# =============================================================================
+
+def _transform_content_boxes(html: str) -> str:
+    """Apply content-level transforms: highlight boxes, tip/warning/empfehlung boxes, ampel td badges, Quick Win badges, Quellen footer."""
+
+    # 2A: "Auf einen Blick:" → blue highlight box
+    html = re.sub(
+        r'<p>\s*<strong>Auf einen Blick:?</strong>\s*(.*?)</p>',
+        r'<div style="background:#ebf5fb;border-left:4px solid #2e86c1;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;font-size:10pt;line-height:1.6"><strong>Auf einen Blick:</strong> \1</div>',
+        html, flags=re.DOTALL | re.IGNORECASE,
+    )
+
+    # 2B: "Tipp/Praxis-Tipp/Hinweis:" → green tip box
+    html = re.sub(
+        r'<p>\s*<strong>(Tipp|Praxis-Tipp|Hinweis):?</strong>\s*(.*?)</p>',
+        r'<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin:16px 0;font-size:9.5pt;line-height:1.55"><strong>\1:</strong> \2</div>',
+        html, flags=re.DOTALL | re.IGNORECASE,
+    )
+
+    # 2C: "Wichtig/Achtung/Warnung:" → yellow warning box
+    html = re.sub(
+        r'<p>\s*<strong>(Wichtig|Achtung|Warnung):?</strong>\s*(.*?)</p>',
+        r'<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin:16px 0;font-size:9.5pt;line-height:1.55"><strong>\1:</strong> \2</div>',
+        html, flags=re.DOTALL | re.IGNORECASE,
+    )
+
+    # 2D: "Empfehlung/Investitionsempfehlung/Handlungsempfehlung:" → blue gradient box
+    html = re.sub(
+        r'<p>\s*<strong>(Empfehlung|Investitionsempfehlung|Handlungsempfehlung):?</strong>\s*(.*?)</p>',
+        r'<div style="background:linear-gradient(135deg,#eff6ff,#e0f2fe);border:1px solid #93c5fd;border-left:4px solid #2563eb;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;font-size:10pt;line-height:1.6"><strong>\1:</strong> \2</div>',
+        html, flags=re.DOTALL | re.IGNORECASE,
+    )
+
+    # 2E: Ampel keywords in <td> → colored badges
+    html = re.sub(
+        r'(<td[^>]*>)\s*(?:<strong>)?(hoch|Hoch)(?:</strong>)?(\s)',
+        r'\1<span style="display:inline-block;background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Hoch</span>\3',
+        html,
+    )
+    html = re.sub(
+        r'(<td[^>]*>)\s*(?:<strong>)?(mittel|Mittel)(?:</strong>)?(\s)',
+        r'\1<span style="display:inline-block;background:#fffbeb;color:#b45309;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Mittel</span>\3',
+        html,
+    )
+    html = re.sub(
+        r'(<td[^>]*>)\s*(?:<strong>)?(niedrig|Niedrig)(?:</strong>)?(\s)',
+        r'\1<span style="display:inline-block;background:#fef2f2;color:#b91c1c;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Niedrig</span>\3',
+        html,
+    )
+
+    # 2F: "Quick Win" → blue inline badge
+    html = re.sub(
+        r'(?<!["\w-])Quick Win(?!["\w-])',
+        '<span style="display:inline-block;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Quick Win</span>',
+        html,
+    )
+
+    # 2G: "Quellen:" → dezenter footer
+    html = re.sub(
+        r'<p>\s*<strong>Quellen?:?</strong>\s*(.*?)</p>',
+        r'<div style="font-size:8pt;color:#9CA3AF;border-top:1px solid #E5E7EB;padding-top:12px;margin-top:24px"><strong>Quellen:</strong> \1</div>',
+        html, flags=re.DOTALL,
+    )
+
+    return html
+
+
+# =============================================================================
 # PUBLIC API
 # =============================================================================
 
@@ -544,6 +619,9 @@ def enhance_strategy_html(html: str) -> str:
     # 5. Ampel badges (Rule 6)
     html = _transform_ampel_badges(html)
 
+    # 6. Content boxes + inline badges (Rules 8-14)
+    html = _transform_content_boxes(html)
+
     log.info("[HTML-ENHANCE] Strategy: %d \u2192 %d chars", original_len, len(html))
     return html
 
@@ -563,6 +641,9 @@ def enhance_kpa_html(html: str) -> str:
 
     # 3. Ampel badges
     html = _transform_ampel_badges(html)
+
+    # 4. Content boxes + inline badges (Rules 8-14)
+    html = _transform_content_boxes(html)
 
     log.info("[HTML-ENHANCE] KPA: %d \u2192 %d chars", original_len, len(html))
     return html

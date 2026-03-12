@@ -50,14 +50,16 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     # The R1 template gets sections dict directly (post-bonus = 92), but Analysis.meta
     # stores the pre-bonus snapshot. Fix: recalculate from dimension scores + bonus.
     _scores = report1_meta.get("scores", {})
+    # Match R1 formula exactly: round((gov + sec + val + ena) / 4)
+    # Use float() not int(float()) to avoid truncation-induced rounding errors
     _dim_scores = [
-        int(float(_scores.get("governance", 0) or 0)),
-        int(float(_scores.get("security", 0) or 0)),
-        int(float(_scores.get("value", 0) or 0)),
-        int(float(_scores.get("enablement", 0) or 0)),
+        float(_scores.get("governance", 0) or 0),
+        float(_scores.get("security", 0) or 0),
+        float(_scores.get("value", 0) or 0),
+        float(_scores.get("enablement", 0) or 0),
     ]
-    _dim_nonzero = [d for d in _dim_scores if d > 0]
-    _base_score = round(sum(_dim_nonzero) / len(_dim_nonzero)) if _dim_nonzero else 0
+    # Always divide by 4 (same as R1: scores["overall"] = round(sum/4))
+    _base_score = round(sum(_dim_scores) / 4) if any(_dim_scores) else 0
 
     # Quality bonus: check if consistency markers exist in sections (same logic as calc_quality_bonus)
     _dod_passed = report1_sections.get("N43_DOD_PASSED", False) or report1_sections.get("_n43_dod_passed", False)
@@ -90,7 +92,7 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     # Use whichever is higher: live calculation or stored value
     readiness_score = max(_live_score, _stored_max)
     logger.info(
-        "[Strategy-Score] briefing_id=%s dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d",
+        "[Strategy-Score] briefing_id=%s R1-formula dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d",
         sr.briefing_id, _dim_scores, _base_score, _quality_bonus, _live_score, _stored_max, readiness_score,
     )
     reifegrad_label = report1_sections.get("score_rating", "")
