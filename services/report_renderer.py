@@ -858,6 +858,15 @@ def render(briefing_obj: Any,
     log.info(f"🎨 Rendering report {run_id} with {len(sections)} sections (lang={lang})")
     log.debug(f"Sections available: {list(sections.keys())}")
 
+    # --- R1-SCORE-DEBUG (temporary, remove after verification) ---
+    _r1_gov = sections.get("score_governance", sections.get("CANONICAL_GOVERNANCE", "?"))
+    _r1_sec = sections.get("score_sicherheit", sections.get("CANONICAL_SECURITY", "?"))
+    _r1_val = sections.get("score_nutzen", sections.get("score_wertschoepfung", "?"))
+    _r1_ena = sections.get("score_befaehigung", "?")
+    _r1_gesamt = sections.get("score_gesamt", sections.get("CANONICAL_OVERALL", "?"))
+    log.warning("R1-SCORE-DEBUG: [%s] gov=%s, sec=%s, val=%s, ena=%s, score_gesamt=%s",
+                run_id, _r1_gov, _r1_sec, _r1_val, _r1_ena, _r1_gesamt)
+
     # FIX-503C: Debug logging for QUICK_WINS_HTML to trace rendering issues
     qw_html = sections.get("QUICK_WINS_HTML", "")
     qw_html_left = sections.get("QUICK_WINS_HTML_LEFT", "")

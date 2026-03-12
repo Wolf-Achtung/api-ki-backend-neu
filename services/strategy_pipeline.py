@@ -99,6 +99,26 @@ async def generate_strategy_report(
         ]
         _base = round(sum(_dim_vals) / 4) if any(_dim_vals) else 0
 
+        # --- SCORE-DEBUG (temporary, remove after verification) ---
+        logger.warning("SCORE-DEBUG-1: [Strategy %d] meta.scores = %r", briefing_id, _r1_scores)
+        logger.warning("SCORE-DEBUG-2: [Strategy %d] dimension scores = gov=%s, sec=%s, val=%s, ena=%s",
+                        briefing_id, _dim_vals[0], _dim_vals[1], _dim_vals[2], _dim_vals[3])
+        logger.warning("SCORE-DEBUG-3: [Strategy %d] calculated = %s, rounded = %d",
+                        briefing_id, sum(_dim_vals) / 4 if any(_dim_vals) else 0, _base)
+        logger.warning("SCORE-DEBUG-KEYS: [Strategy %d] N43_DOD_PASSED=%r, _n43_dod_passed=%r, "
+                        "CONSISTENCY_GRADE=%r, _CONSISTENCY_GRADE=%r, _CONSISTENCY_SCORE=%r, "
+                        "QUALITY_BONUS=%r, score_gesamt=%r, CANONICAL_OVERALL=%r, scores.overall=%r",
+                        briefing_id,
+                        report1_sections.get("N43_DOD_PASSED", "MISSING"),
+                        report1_sections.get("_n43_dod_passed", "MISSING"),
+                        report1_sections.get("CONSISTENCY_GRADE", "MISSING"),
+                        report1_sections.get("_CONSISTENCY_GRADE", "MISSING"),
+                        report1_sections.get("_CONSISTENCY_SCORE", "MISSING"),
+                        report1_sections.get("QUALITY_BONUS", "MISSING"),
+                        report1_sections.get("score_gesamt", "MISSING"),
+                        report1_sections.get("CANONICAL_OVERALL", "MISSING"),
+                        _r1_scores.get("overall", "MISSING"))
+
         # FIX-HOTFIX3: Prefer stored QUALITY_BONUS (exact value from gpt_analyze)
         # over re-deriving from N43_DOD_PASSED/_CONSISTENCY_GRADE which may be
         # filtered from serializable_sections (underscore-prefixed keys).
@@ -109,12 +129,18 @@ async def generate_strategy_report(
         else:
             # Fallback: re-derive quality bonus (for older analyses without QUALITY_BONUS)
             _dod_ok = report1_sections.get("N43_DOD_PASSED", False) or report1_sections.get("_n43_dod_passed", False)
-            _cg = str(report1_sections.get("_CONSISTENCY_GRADE", "A"))
-            _cs = report1_sections.get("_CONSISTENCY_SCORE", 100)
+            # FIX-HOTFIX3b: Read CONSISTENCY_GRADE (without underscore, survives
+            # serialization at gpt_analyze.py:18084) and default to 'F'/0 to match
+            # calc_quality_bonus defaults (gpt_analyze.py:2099-2100).
+            # Previous code used _CONSISTENCY_GRADE (filtered) with default 'A'/100,
+            # which OVER-estimated the bonus vs what calc_quality_bonus actually gave.
+            _cg = str(report1_sections.get("CONSISTENCY_GRADE",
+                       report1_sections.get("_CONSISTENCY_GRADE", "F")))
+            _cs = report1_sections.get("_CONSISTENCY_SCORE", 0)
             _qb = 0
             if _dod_ok:
                 _qb = 2 if (_cg in ("A", "B") or (isinstance(_cs, (int, float)) and _cs >= 80)) else 1
-            logger.info("[Strategy %d] Re-derived QUALITY_BONUS=%d (dod=%s, grade=%s)", briefing_id, _qb, _dod_ok, _cg)
+            logger.info("[Strategy %d] Re-derived QUALITY_BONUS=%d (dod=%s, grade=%s, score=%s)", briefing_id, _qb, _dod_ok, _cg, _cs)
         _live = min(_base + _qb, 98)
 
         # Fallback: stored values (for older analyses)
@@ -145,6 +171,9 @@ async def generate_strategy_report(
             _score = _stored_max  # Legacy data without dimensions → use stored
         logger.info("[Strategy %d] Score: R1-formula dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d (live_preferred=%s)",
                     briefing_id, _dim_vals, _base, _qb, _live, _stored_max, _score, any(_dim_vals))
+        # --- SCORE-DEBUG (temporary, remove after verification) ---
+        logger.warning("SCORE-DEBUG-4: [Strategy %d] score passed to template = %d", briefing_id, _score)
+        logger.warning("SCORE-DEBUG-5: [Strategy %d] stored_candidates = %r", briefing_id, _stored)
 
         # Reifegrad label: fallback to live calculation if not stored
         _reifegrad_label = report1_sections.get("score_rating", "")
