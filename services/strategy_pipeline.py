@@ -88,23 +88,44 @@ async def generate_strategy_report(
 
         # Shared context for all sections
         report1_sections = report1_data.get("sections", {})
-        # FIX-Iv2: Pick the highest score (post-bonus >= pre-bonus) to match R1 cover.
-        _score_candidates = []
+        # FIX-Iv4: Compute score LIVE from dimension scores + quality bonus.
+        # meta["sections"] is serialized BEFORE quality bonus in gpt_analyze.py,
+        # so stored score_gesamt = pre-bonus. Recalculate to match R1 cover.
+        _r1_scores = report1_data.get("scores", {})
+        _dim_vals = [
+            int(float(_r1_scores.get("governance", 0) or 0)),
+            int(float(_r1_scores.get("security", 0) or 0)),
+            int(float(_r1_scores.get("value", 0) or 0)),
+            int(float(_r1_scores.get("enablement", 0) or 0)),
+        ]
+        _dim_nz = [d for d in _dim_vals if d > 0]
+        _base = round(sum(_dim_nz) / len(_dim_nz)) if _dim_nz else 0
+
+        _dod_ok = report1_sections.get("N43_DOD_PASSED", False) or report1_sections.get("_n43_dod_passed", False)
+        _cg = str(report1_sections.get("_CONSISTENCY_GRADE", "F"))
+        _cs = report1_sections.get("_CONSISTENCY_SCORE", 0)
+        _qb = 0
+        if _dod_ok:
+            _qb = 2 if (_cg in ("A", "B") or (isinstance(_cs, (int, float)) and _cs >= 80)) else 1
+        _live = min(_base + _qb, 98)
+
+        # Fallback: stored values (for older analyses)
+        _stored = []
         for _key, _src in [
             ("sections.score_gesamt", report1_sections.get("score_gesamt", "")),
             ("sections.CANONICAL_OVERALL", report1_sections.get("CANONICAL_OVERALL", "")),
-            ("scores.overall", report1_data.get("scores", {}).get("overall", "")),
+            ("scores.overall", _r1_scores.get("overall", "")),
         ]:
             try:
-                _val = int(float(_src)) if _src not in ("", None) else 0
+                _v = int(float(_src)) if _src not in ("", None) else 0
             except (ValueError, TypeError):
-                _val = 0
-            if _val > 0:
-                _score_candidates.append((_key, _val))
-        _score_candidates.sort(key=lambda x: x[1], reverse=True)
-        _score = _score_candidates[0][1] if _score_candidates else ""
-        logger.info("[Strategy %d] Score resolution: candidates=%r → using %r",
-                    briefing_id, _score_candidates, _score)
+                _v = 0
+            if _v > 0:
+                _stored.append((_key, _v))
+        _stored_max = max((v for _, v in _stored), default=0)
+        _score = max(_live, _stored_max)
+        logger.info("[Strategy %d] Score resolution: dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d",
+                    briefing_id, _dim_vals, _base, _qb, _live, _stored_max, _score)
         base_context = {
             "branche": (briefing_data.get("branche", "") or "").title(),
             "segment": _segment_label(briefing_data.get("unternehmensgroesse", "")),
