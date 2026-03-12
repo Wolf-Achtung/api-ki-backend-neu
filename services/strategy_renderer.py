@@ -128,10 +128,10 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         "[Strategy-Score] briefing_id=%s R1-formula dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d (live_preferred=%s)",
         sr.briefing_id, _dim_scores, _base_score, _quality_bonus, _live_score, _stored_max, readiness_score, any(_dim_scores),
     )
+    reifegrad_label = report1_sections.get("score_rating", "")
     # --- SCORE-DEBUG (temporary, remove after verification) ---
     logger.warning("SCORE-DEBUG-4: [Renderer %s] score passed to template = %d", sr.briefing_id, readiness_score)
     logger.warning("SCORE-DEBUG-5: [Renderer %s] score_label = %s", sr.briefing_id, reifegrad_label)
-    reifegrad_label = report1_sections.get("score_rating", "")
 
     # Reifegrad label: fallback to live calculation if not stored
     if not reifegrad_label and readiness_score > 0:
