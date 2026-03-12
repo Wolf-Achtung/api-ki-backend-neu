@@ -55,12 +55,12 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     _base_score = round(sum(_dim_scores) / 4) if any(_dim_scores) else 0
 
     # --- SCORE-DEBUG (temporary, remove after verification) ---
-    logger.warning("SCORE-DEBUG-1: [Renderer %s] meta.scores = %r", sr.briefing_id, _scores)
-    logger.warning("SCORE-DEBUG-2: [Renderer %s] dimension scores = gov=%s, sec=%s, val=%s, ena=%s",
+    logger.debug("SCORE-DEBUG-1: [Renderer %s] meta.scores = %r", sr.briefing_id, _scores)
+    logger.debug("SCORE-DEBUG-2: [Renderer %s] dimension scores = gov=%s, sec=%s, val=%s, ena=%s",
                     sr.briefing_id, _dim_scores[0], _dim_scores[1], _dim_scores[2], _dim_scores[3])
-    logger.warning("SCORE-DEBUG-3: [Renderer %s] calculated = %s, rounded = %d",
+    logger.debug("SCORE-DEBUG-3: [Renderer %s] calculated = %s, rounded = %d",
                     sr.briefing_id, sum(_dim_scores) / 4 if any(_dim_scores) else 0, _base_score)
-    logger.warning("SCORE-DEBUG-KEYS: [Renderer %s] N43_DOD_PASSED=%r, _n43_dod_passed=%r, "
+    logger.debug("SCORE-DEBUG-KEYS: [Renderer %s] N43_DOD_PASSED=%r, _n43_dod_passed=%r, "
                     "CONSISTENCY_GRADE=%r, _CONSISTENCY_GRADE=%r, _CONSISTENCY_SCORE=%r, "
                     "QUALITY_BONUS=%r, score_gesamt=%r, CANONICAL_OVERALL=%r, scores.overall=%r",
                     sr.briefing_id,
@@ -130,8 +130,8 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     )
     reifegrad_label = report1_sections.get("score_rating", "")
     # --- SCORE-DEBUG (temporary, remove after verification) ---
-    logger.warning("SCORE-DEBUG-4: [Renderer %s] score passed to template = %d", sr.briefing_id, readiness_score)
-    logger.warning("SCORE-DEBUG-5: [Renderer %s] score_label = %s", sr.briefing_id, reifegrad_label)
+    logger.debug("SCORE-DEBUG-4: [Renderer %s] score passed to template = %d", sr.briefing_id, readiness_score)
+    logger.debug("SCORE-DEBUG-5: [Renderer %s] score_label = %s", sr.briefing_id, reifegrad_label)
 
     # Reifegrad label: fallback to live calculation if not stored
     if not reifegrad_label and readiness_score > 0:

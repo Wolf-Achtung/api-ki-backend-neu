@@ -100,12 +100,12 @@ async def generate_strategy_report(
         _base = round(sum(_dim_vals) / 4) if any(_dim_vals) else 0
 
         # --- SCORE-DEBUG (temporary, remove after verification) ---
-        logger.warning("SCORE-DEBUG-1: [Strategy %d] meta.scores = %r", briefing_id, _r1_scores)
-        logger.warning("SCORE-DEBUG-2: [Strategy %d] dimension scores = gov=%s, sec=%s, val=%s, ena=%s",
+        logger.debug("SCORE-DEBUG-1: [Strategy %d] meta.scores = %r", briefing_id, _r1_scores)
+        logger.debug("SCORE-DEBUG-2: [Strategy %d] dimension scores = gov=%s, sec=%s, val=%s, ena=%s",
                         briefing_id, _dim_vals[0], _dim_vals[1], _dim_vals[2], _dim_vals[3])
-        logger.warning("SCORE-DEBUG-3: [Strategy %d] calculated = %s, rounded = %d",
+        logger.debug("SCORE-DEBUG-3: [Strategy %d] calculated = %s, rounded = %d",
                         briefing_id, sum(_dim_vals) / 4 if any(_dim_vals) else 0, _base)
-        logger.warning("SCORE-DEBUG-KEYS: [Strategy %d] N43_DOD_PASSED=%r, _n43_dod_passed=%r, "
+        logger.debug("SCORE-DEBUG-KEYS: [Strategy %d] N43_DOD_PASSED=%r, _n43_dod_passed=%r, "
                         "CONSISTENCY_GRADE=%r, _CONSISTENCY_GRADE=%r, _CONSISTENCY_SCORE=%r, "
                         "QUALITY_BONUS=%r, score_gesamt=%r, CANONICAL_OVERALL=%r, scores.overall=%r",
                         briefing_id,
@@ -172,8 +172,8 @@ async def generate_strategy_report(
         logger.info("[Strategy %d] Score: R1-formula dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d (live_preferred=%s)",
                     briefing_id, _dim_vals, _base, _qb, _live, _stored_max, _score, any(_dim_vals))
         # --- SCORE-DEBUG (temporary, remove after verification) ---
-        logger.warning("SCORE-DEBUG-4: [Strategy %d] score passed to template = %d", briefing_id, _score)
-        logger.warning("SCORE-DEBUG-5: [Strategy %d] stored_candidates = %r", briefing_id, _stored)
+        logger.debug("SCORE-DEBUG-4: [Strategy %d] score passed to template = %d", briefing_id, _score)
+        logger.debug("SCORE-DEBUG-5: [Strategy %d] stored_candidates = %r", briefing_id, _stored)
 
         # Reifegrad label: fallback to live calculation if not stored
         _reifegrad_label = report1_sections.get("score_rating", "")
