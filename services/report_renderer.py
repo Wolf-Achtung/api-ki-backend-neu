@@ -1350,8 +1350,10 @@ def render(briefing_obj: Any,
             log.warning(f"⚠️ Template still contains unreplaced variables in report {run_id}")
 
     # Embed logos as base64 for PDF service compatibility
-    tpl_dir_str = str(Path(tpl_path).parent)
-    html = embed_logos_in_html(html, tpl_dir_str)
+    # FIX-D4: Use project-root-relative path (same pattern as gamechanger_deep_dive.py)
+    # to avoid resolving to repo root when env overrides change tpl_path.
+    _tpl_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
+    html = embed_logos_in_html(html, _tpl_dir)
     log.info(f"[RENDER] Embedded logos in HTML for report {run_id}")
 
     # PDF-SLIMDOWN: Optimize HTML for smaller PDF file size
