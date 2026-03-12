@@ -264,23 +264,23 @@ def _try_scenario_transform(table_html: str) -> str | None:
     if len(scenario_rows) >= 2:
         headers = _cell_texts(rows[0]) if _is_header_row(rows[0]) else []
         cards = []
-        for label, texts in scenario_rows:
-            values = texts[1:]  # skip first column (scenario name)
-            main_value = values[0] if values else ""
-            desc_parts = []
-            for i, val in enumerate(values[1:], 2):
+        for scenario_label, scenario_texts in scenario_rows:
+            remaining = scenario_texts[1:]  # skip first column (scenario name)
+            row_main_value = remaining[0] if remaining else ""
+            row_desc_parts: list[str] = []
+            for i, val in enumerate(remaining[1:], 2):
                 h = headers[i] if i < len(headers) else ""
                 if val:
-                    desc_parts.append(f"{h}: {val}" if h else val)
-            desc = "<br>".join(desc_parts)
+                    row_desc_parts.append(f"{h}: {val}" if h else val)
+            row_desc = "<br>".join(row_desc_parts)
 
-            is_recommended = label == "Realistisch"
+            is_recommended = scenario_label == "Realistisch"
             cls = 'scenario-card recommended' if is_recommended else 'scenario-card'
             cards.append(
                 f'<div class="{cls}">'
-                f'<div class="scenario-label">{label}</div>'
-                f'<div class="scenario-value">{main_value}</div>'
-                + (f'<div class="scenario-desc">{desc}</div>' if desc else '')
+                f'<div class="scenario-label">{scenario_label}</div>'
+                f'<div class="scenario-value">{row_main_value}</div>'
+                + (f'<div class="scenario-desc">{row_desc}</div>' if row_desc else '')
                 + '</div>'
             )
         return f'<div class="scenario-grid">{"".join(cards)}</div>'
