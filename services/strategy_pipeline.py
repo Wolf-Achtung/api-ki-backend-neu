@@ -487,6 +487,13 @@ async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
             return
 
         html_content = render_strategy_html(sr, db_session)
+
+        # Embed logos as base64 for PDF service compatibility
+        from utils.logo_embedder import embed_logos_in_html
+        import os
+        _tpl_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
+        html_content = embed_logos_in_html(html_content, _tpl_dir)
+
         logger.info("[Strategy %d] Rendering PDF (%d chars HTML)", briefing_id, len(html_content))
 
         result = await asyncio.to_thread(
