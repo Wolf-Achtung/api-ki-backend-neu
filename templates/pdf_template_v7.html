@@ -297,6 +297,28 @@ tr:last-child td { border-bottom: none; }
 }
 .cover-meta strong { color: var(--c-text); }
 
+/* Cover Logo */
+.cover-logo {
+    width: 180px;
+    height: auto;
+    margin-bottom: var(--sp-lg);
+}
+
+/* Trust Badges */
+.trust-badges {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--sp-lg);
+    margin-top: var(--sp-xl);
+    flex-wrap: wrap;
+}
+.trust-badges img {
+    height: 36px;
+    width: auto;
+    opacity: 0.85;
+}
+
 /* Score Ring */
 .score-ring-wrap {
     margin: var(--sp-xl) auto;
@@ -947,6 +969,7 @@ h1, h2, h3, h4 {
 
 <!-- ═══════ COVER ═══════ -->
 <div class="cover" id="cover" data-category="strategy">
+    <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt" class="cover-logo">
     <div class="cover-accent" style="background: {{ variant_color }};"></div>
     <div class="cover-eyebrow">
         KI-Status-Report · {{ report_date }}
@@ -1041,6 +1064,14 @@ h1, h2, h3, h4 {
                 <div class="rg-card-pages">{% if ENABLE_APPENDIX|default(false) %}Anhang A1–A13{% else %}Nachschlagewerk{% endif %}</div>
             </div>
         </div>
+    </div>
+
+    <!-- Trust Badges -->
+    <div class="trust-badges">
+        <img src="tuev-logo-transparent.webp" alt="TÜV-geprüft">
+        <img src="ki-ready-2025.webp" alt="KI-Ready 2025">
+        <img src="dsgvo.svg" alt="DSGVO-konform">
+        <img src="eu-ai.svg" alt="EU AI Act">
     </div>
 </div>
 
