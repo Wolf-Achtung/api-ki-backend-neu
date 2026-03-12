@@ -283,7 +283,7 @@ async def get_briefing_validation(
         )
 
     # Get the analysis record
-    analysis = db.query(Analysis).filter(Analysis.briefing_id == briefing_id).first()
+    analysis = db.query(Analysis).filter(Analysis.briefing_id == briefing_id).order_by(Analysis.id.desc()).first()
 
     # Extract validation data from analysis meta
     # Use typed dicts to avoid mypy index errors

@@ -367,7 +367,7 @@ async def generate_strategy_report_endpoint(
     # Load data needed for the pipeline
     analysis = db.query(Analysis).filter(
         Analysis.briefing_id == briefing_id
-    ).first()
+    ).order_by(Analysis.id.desc()).first()
 
     briefing_data = briefing.answers or {}
     strategy_questions_data = sq.to_dict()
