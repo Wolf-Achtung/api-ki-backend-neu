@@ -1018,7 +1018,7 @@ h1, h2, h3, h4 {
             (ui("dim_enablement", "Befähigung"), bef_score, '#22c55e' if bef_score >= 80 else '#84cc16' if bef_score >= 65 else '#eab308' if bef_score >= 50 else '#ef4444')
         ] %}
         <div>
-            <div class="dim-label"><span>{{ dim_name }}</span><span>{{ dim_val }}</span></div>
+            <div class="dim-label"><span>{{ dim_name }}</span> <span>{{ dim_val }}</span></div>
             <div class="dim-track"><div class="dim-fill" style="width: {{ dim_val }}%; background: {{ dim_color }};"></div></div>
         </div>
         {% endfor %}
