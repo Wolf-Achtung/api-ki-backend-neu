@@ -44,37 +44,35 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     report1_sections = report1_meta.get("sections", {})
 
     # Extract score + reifegrad from Report 1
-    # FIX-Iv4: Compute score LIVE from dimension scores (same formula as R1 pipeline).
-    # Root cause of 90-vs-92 bug: meta["sections"] is serialized BEFORE quality bonus
-    # in gpt_analyze.py, so meta["sections"]["score_gesamt"] = 90 (pre-bonus).
-    # The R1 template gets sections dict directly (post-bonus = 92), but Analysis.meta
-    # stores the pre-bonus snapshot. Fix: recalculate from dimension scores + bonus.
+    # FIX-Iv4 + FIX-HOTFIX3: Compute score from stored post-quality value or LIVE recalc.
     _scores = report1_meta.get("scores", {})
-    # Match R1 formula exactly: round((gov + sec + val + ena) / 4)
-    # Use float() not int(float()) to avoid truncation-induced rounding errors
     _dim_scores = [
         float(_scores.get("governance", 0) or 0),
         float(_scores.get("security", 0) or 0),
         float(_scores.get("value", 0) or 0),
         float(_scores.get("enablement", 0) or 0),
     ]
-    # Always divide by 4 (same as R1: scores["overall"] = round(sum/4))
     _base_score = round(sum(_dim_scores) / 4) if any(_dim_scores) else 0
 
-    # Quality bonus: check if consistency markers exist in sections (same logic as calc_quality_bonus)
-    _dod_passed = report1_sections.get("N43_DOD_PASSED", False) or report1_sections.get("_n43_dod_passed", False)
-    # FIX-Iv4c: Default "A"/100 (not "F"/0) because _CONSISTENCY_GRADE and
-    # _CONSISTENCY_SCORE are underscore-prefixed keys filtered out of
-    # serializable_sections in gpt_analyze.py (line 18186). When absent,
-    # gpt_analyze.py itself defaults to "A" (lines 18068, 18623, 19868).
-    _consistency_grade = str(report1_sections.get("_CONSISTENCY_GRADE", "A"))
-    _consistency_score = report1_sections.get("_CONSISTENCY_SCORE", 100)
-    _quality_bonus = 0
-    if _dod_passed:
-        if _consistency_grade in ("A", "B") or (isinstance(_consistency_score, (int, float)) and _consistency_score >= 80):
-            _quality_bonus = 2
-        else:
-            _quality_bonus = 1
+    # FIX-HOTFIX3: Prefer stored QUALITY_BONUS (exact value from gpt_analyze)
+    # over re-deriving from N43_DOD_PASSED/_CONSISTENCY_GRADE which may be
+    # filtered from serializable_sections (underscore-prefixed keys).
+    _qb_stored = report1_sections.get("QUALITY_BONUS", None)
+    if isinstance(_qb_stored, (int, float)):
+        _quality_bonus = int(_qb_stored)
+        logger.info("[Strategy-Score] Using stored QUALITY_BONUS=%d", _quality_bonus)
+    else:
+        # Fallback: re-derive quality bonus (for older analyses without QUALITY_BONUS)
+        _dod_passed = report1_sections.get("N43_DOD_PASSED", False) or report1_sections.get("_n43_dod_passed", False)
+        _consistency_grade = str(report1_sections.get("_CONSISTENCY_GRADE", "A"))
+        _consistency_score = report1_sections.get("_CONSISTENCY_SCORE", 100)
+        _quality_bonus = 0
+        if _dod_passed:
+            if _consistency_grade in ("A", "B") or (isinstance(_consistency_score, (int, float)) and _consistency_score >= 80):
+                _quality_bonus = 2
+            else:
+                _quality_bonus = 1
+        logger.info("[Strategy-Score] Re-derived QUALITY_BONUS=%d (dod=%s, grade=%s)", _quality_bonus, _dod_passed, _consistency_grade)
     _live_score = min(_base_score + _quality_bonus, 98)
 
     # Fallback: also check stored values (for older analyses without dimension scores)
@@ -93,12 +91,13 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
 
     _stored_max = max((v for _, v in _stored_candidates), default=0)
 
-    # FIX-Iv4b: Prefer live calculation when dimension data exists.
-    # max(live, stored) is wrong: stored score_gesamt can be post-bonus
-    # from an older formula (int(float()) rounding), causing stale values
-    # to override the correct live calculation.
+    # FIX-HOTFIX3: Use stored max if it matches or exceeds live (covers case where
+    # scores.overall was synced post-quality-bonus by FIX-HOTFIX3-SCORE).
     if any(_dim_scores):
-        readiness_score = _live_score  # Dimension data present → trust live calc
+        if _stored_max >= _live_score:
+            readiness_score = _stored_max
+        else:
+            readiness_score = _live_score
     else:
         readiness_score = _stored_max  # Legacy data without dimensions → use stored
     logger.info(
