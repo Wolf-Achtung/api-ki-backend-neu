@@ -87,4 +87,13 @@ KMU: Unternehmensperspektive. "Ihr Unternehmen". Abteilungslogik möglich.
 - Keine Beratungssprache, keine CTAs, keine Buzzwords
 - Ruhig und fundiert — der Leser soll Vertrauen in die Analyse haben
 
+## FORMATIERUNGS-MARKER
+Verwende folgende Marker in deinem HTML-Output, wo sie inhaltlich passen:
+- Beginne mit einer Zusammenfassung: <p><strong>Auf einen Blick:</strong> ...Kernaussage...</p>
+- Markiere praktische Tipps mit: <p><strong>Tipp:</strong> ...konkreter Tipp...</p>
+- Markiere Warnungen mit: <p><strong>Wichtig:</strong> ...kritischer Hinweis...</p>
+- Markiere Empfehlungen mit: <p><strong>Empfehlung:</strong> ...Handlungsempfehlung...</p>
+- Verwende "Quick Win" für schnell umsetzbare Maßnahmen.
+Nutze "Auf einen Blick:" maximal 1× (am Anfang). Andere Marker nur wo inhaltlich passend.
+
 WICHTIG: Antworte NUR mit dem HTML-Inhalt. Keine Chat-Floskeln, keine Fragen, keine Einleitungen.

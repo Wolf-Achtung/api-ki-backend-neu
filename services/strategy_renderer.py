@@ -89,13 +89,30 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
 
     _stored_max = max((v for _, v in _stored_candidates), default=0)
 
-    # Use whichever is higher: live calculation or stored value
-    readiness_score = max(_live_score, _stored_max)
+    # FIX-Iv4b: Prefer live calculation when dimension data exists.
+    # max(live, stored) is wrong: stored score_gesamt can be post-bonus
+    # from an older formula (int(float()) rounding), causing stale values
+    # to override the correct live calculation.
+    if any(_dim_scores):
+        readiness_score = _live_score  # Dimension data present → trust live calc
+    else:
+        readiness_score = _stored_max  # Legacy data without dimensions → use stored
     logger.info(
-        "[Strategy-Score] briefing_id=%s R1-formula dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d",
-        sr.briefing_id, _dim_scores, _base_score, _quality_bonus, _live_score, _stored_max, readiness_score,
+        "[Strategy-Score] briefing_id=%s R1-formula dims=%r base=%d bonus=%d live=%d stored_max=%d → using %d (live_preferred=%s)",
+        sr.briefing_id, _dim_scores, _base_score, _quality_bonus, _live_score, _stored_max, readiness_score, any(_dim_scores),
     )
     reifegrad_label = report1_sections.get("score_rating", "")
+
+    # Reifegrad label: fallback to live calculation if not stored
+    if not reifegrad_label and readiness_score > 0:
+        try:
+            from services.extra_sections import get_score_context
+            _size_raw = briefing_data.get("unternehmensgroesse", "klein")
+            _sc_ctx = get_score_context(readiness_score, _size_raw, lang="de")
+            reifegrad_label = _sc_ctx.get("score_rating", "")
+            logger.info("[Strategy-Score] reifegrad_label computed on-demand: %s", reifegrad_label)
+        except Exception:
+            pass
 
     # Branche: capitalize for display
     branche_raw = briefing_data.get("branche", "")
