@@ -18262,6 +18262,32 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     except Exception as _b21q_err:
         log.warning(f"[FIX-B24-QUALITY-BONUS] Failed: {_b21q_err}")
 
+    # === FIX-HOTFIX3-SCORE: Sync post-quality score into serializable_sections ===
+    # serializable_sections was built at line ~18183 BEFORE quality bonus was applied.
+    # Without this sync, meta["sections"]["score_gesamt"] stores the pre-bonus value,
+    # causing strategy pipeline to show a score 1-2 points too low.
+    try:
+        _hf3_final = int(float(sections.get('score_gesamt', 0) or 0))
+        serializable_sections['score_gesamt'] = _hf3_final
+        serializable_sections['CANONICAL_OVERALL'] = _hf3_final
+        # Store quality bonus amount so strategy pipeline can use it directly
+        # instead of trying to re-derive from N43_DOD_PASSED / _CONSISTENCY_GRADE
+        # (which may be filtered from serializable_sections due to underscore prefix)
+        serializable_sections['QUALITY_BONUS'] = int(float(sections.get('score_gesamt', 0) or 0)) - int(float(scores.get('overall', 0) or 0))
+        # Also sync N43_DOD_PASSED from all sources (underscore-prefixed _n43_dod_passed
+        # is filtered out of serializable_sections, but calc_quality_bonus reads it)
+        serializable_sections['N43_DOD_PASSED'] = bool(
+            sections.get('N43_DOD_PASSED', False) or sections.get('_n43_dod_passed', False)
+        )
+        # Update scores["overall"] so meta["scores"]["overall"] has the final value
+        scores["overall"] = _hf3_final
+        log.info("[FIX-HOTFIX3-SCORE] Synced post-quality score to serializable_sections: "
+                 "score_gesamt=%d, QUALITY_BONUS=%d, N43_DOD_PASSED=%s, scores.overall=%d",
+                 _hf3_final, serializable_sections['QUALITY_BONUS'],
+                 serializable_sections['N43_DOD_PASSED'], scores["overall"])
+    except Exception as _hf3_err:
+        log.warning(f"[FIX-HOTFIX3-SCORE] Sync failed: {_hf3_err}")
+
     # === DEBUG: FINAL CHECK - Variables before render() ===
     log.info("=" * 80)
     log.info("[%s] 🔍 DEBUG: FINAL VARIABLES BEFORE RENDER", run_id)
