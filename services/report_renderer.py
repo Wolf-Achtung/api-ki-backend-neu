@@ -864,7 +864,7 @@ def render(briefing_obj: Any,
     _r1_val = sections.get("score_nutzen", sections.get("score_wertschoepfung", "?"))
     _r1_ena = sections.get("score_befaehigung", "?")
     _r1_gesamt = sections.get("score_gesamt", sections.get("CANONICAL_OVERALL", "?"))
-    log.warning("R1-SCORE-DEBUG: [%s] gov=%s, sec=%s, val=%s, ena=%s, score_gesamt=%s",
+    log.debug("R1-SCORE-DEBUG: [%s] gov=%s, sec=%s, val=%s, ena=%s, score_gesamt=%s",
                 run_id, _r1_gov, _r1_sec, _r1_val, _r1_ena, _r1_gesamt)
 
     # FIX-503C: Debug logging for QUICK_WINS_HTML to trace rendering issues
