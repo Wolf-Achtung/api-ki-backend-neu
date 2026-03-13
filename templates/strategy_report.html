@@ -37,19 +37,26 @@
 
 /* ── Design Tokens ──────────────────────────────────── */
 :root {
-    /* Navy Palette (from Report 1) */
-    --navy-900: #0a1628;
-    --navy-800: #0e1f3d;
-    --navy-700: #132952;
+    /* Report-Type Palette: Strategic Navy (R3) */
+    --report-primary: #0F1D35;
+    --report-primary-dark: #0A1225;
+    --report-accent: #C5930A;
+    --report-accent-secondary: #2563EB;
+    --report-bg-panel: #F8FAFC;
+    --report-bg-highlight: #EFF6FF;
+    /* Navy Palette */
+    --navy-900: #0F1D35;
+    --navy-800: #162444;
+    --navy-700: #1E3050;
     --navy-100: #e8f2fa;
     --navy-50: #f0f5fa;
     /* Gold Accent */
-    --gold-600: #a68921;
+    --gold-600: #C5930A;
     --gold-100: #faf4dc;
-    /* Strategy Blue (NEW) */
+    /* Strategy Blue */
     --strategy-accent: #1a5276;
-    --strategy-highlight: #2e86c1;
-    --strategy-light: #ebf5fb;
+    --strategy-highlight: #2563EB;
+    --strategy-light: #EFF6FF;
     /* Ampel / Traffic Light */
     --ampel-green: #27ae60;
     --ampel-yellow: #f39c12;
@@ -105,7 +112,8 @@ body::before {
     top: 0;
     bottom: 0;
     width: 3mm;
-    background: linear-gradient(180deg, var(--navy-900) 0%, var(--strategy-accent) 50%, var(--navy-800) 100%);
+    background-color: var(--report-primary);
+    background-image: linear-gradient(180deg, #0F1D35 0%, #1a5276 50%, #162444 100%);
     z-index: 1000;
 }
 
@@ -229,7 +237,10 @@ h1, h2, h3, h4 { break-after: avoid; }
     left: 0;
     right: 0;
     height: 6px;
-    background: linear-gradient(90deg, var(--navy-900), var(--strategy-accent), var(--gold-600));
+    background-color: var(--report-primary);
+    background-image: linear-gradient(90deg, #0F1D35, #1a5276, #C5930A);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
 }
 
 .cover-eyebrow {
@@ -422,10 +433,13 @@ h1, h2, h3, h4 { break-after: avoid; }
     justify-content: center;
     align-items: center;
     text-align: center;
-    background: linear-gradient(135deg, var(--navy-900) 0%, var(--strategy-accent) 60%, var(--navy-800) 100%);
+    background-color: var(--report-primary);
+    background-image: linear-gradient(135deg, #0F1D35 0%, #1a5276 60%, #162444 100%);
     color: white;
     position: relative;
     overflow: hidden;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
 }
 
 /* Subtle geometric decoration */
@@ -530,11 +544,13 @@ h1, h2, h3, h4 { break-after: avoid; }
     display: inline-flex;
     align-items: center;
     gap: var(--sp-md);
-    background: var(--navy-50);
+    background: var(--report-bg-panel);
     border-radius: var(--r-md);
     padding: var(--sp-md) var(--sp-lg);
     margin: var(--sp-md) 0;
     break-inside: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
 }
 .score-widget-value {
     font-family: var(--font-heading);
@@ -572,10 +588,12 @@ h1, h2, h3, h4 { break-after: avoid; }
 .kpi-card {
     text-align: center;
     padding: 16px 12px;
-    background: var(--c-bg);
+    background: var(--report-bg-panel);
     border-radius: var(--r-md);
-    border-top: 3px solid var(--strategy-accent);
+    border-top: 3px solid var(--report-primary);
     break-inside: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
 }
 .kpi-value {
     font-family: var(--font-heading);
@@ -942,9 +960,9 @@ sup.src-ref {
 
     {# ── Macro: Chapter Separator with inline styles for Puppeteer ── #}
     {% macro chapter_sep(num, title, subtitle) %}
-    <div class="chapter-separator page-break" style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background-color:#0a1628;background-image:linear-gradient(135deg, #0a1628 0%, #1a5276 60%, #0e1f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#ffffff;page-break-before:always;position:relative;overflow:hidden">
+    <div class="chapter-separator page-break" style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background-color:#0F1D35;background-image:linear-gradient(135deg, #0F1D35 0%, #1a5276 60%, #162444 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#ffffff;page-break-before:always;position:relative;overflow:hidden">
         <div class="chapter-number" style="font-size:72pt;font-weight:300;color:rgba(255,255,255,0.3);line-height:1;position:relative;z-index:1">{{ num }}</div>
-        <div class="chapter-accent-line" style="width:60px;height:3px;background:#2e86c1;margin:16px auto;border-radius:2px;position:relative;z-index:1"></div>
+        <div class="chapter-accent-line" style="width:60px;height:3px;background:#C5930A;margin:16px auto;border-radius:2px;position:relative;z-index:1;print-color-adjust:exact;-webkit-print-color-adjust:exact"></div>
         <div class="chapter-title" style="font-size:24pt;font-weight:700;color:#ffffff;position:relative;z-index:1">{{ title }}</div>
         <div class="chapter-subtitle" style="font-size:11pt;color:rgba(255,255,255,0.7);margin-top:8px;position:relative;z-index:1">{{ subtitle }}</div>
     </div>
@@ -954,7 +972,7 @@ sup.src-ref {
     <div class="cover-page">
         <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt" style="width: 180px; height: auto; margin-bottom: 24px;">
         <div class="cover-eyebrow">KI-Strategiebericht</div>
-        <div class="cover-accent-line" style="width:80px;height:3px;background:linear-gradient(90deg,#a68921,#2e86c1);border-radius:2px;margin:0 auto 32px"></div>
+        <div class="cover-accent-line" style="width:80px;height:3px;background-color:#C5930A;background-image:linear-gradient(90deg,#C5930A,#2563EB);border-radius:2px;margin:0 auto 32px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></div>
         <h1>KI-Strategiebericht</h1>
         <p class="cover-subtitle">{{ firmenname }} · {{ branche }}</p>
         <p class="cover-meta">Erstellt am <strong>{{ datum }}</strong> · Segment: {{ segment }} · {{ mitarbeiter }} Mitarbeiter</p>
@@ -974,14 +992,14 @@ sup.src-ref {
                 </defs>
             </svg>
             <div class="cover-score-content">
-                <div class="cover-score-number">{{ readiness_score }}</div>
+                <div class="cover-score-number" style="color: var(--report-accent);">{{ readiness_score }}</div>
                 <div class="cover-score-max">/ 100</div>
                 <div class="cover-score-label">{{ reifegrad_label }}</div>
             </div>
         </div>
 
         <!-- TÜV Badge -->
-        <div class="tuev-badge" style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#f0f5fa 0%,#ebf5fb 100%);border:1px solid #e8f2fa;border-radius:8px;padding:12px 24px;margin-top:24px">
+        <div class="tuev-badge" style="display:inline-flex;align-items:center;gap:10px;background-color:#F8FAFC;background-image:linear-gradient(135deg,#f0f5fa 0%,#EFF6FF 100%);border:2px solid var(--report-accent);border-radius:8px;padding:12px 24px;margin-top:24px;print-color-adjust:exact;-webkit-print-color-adjust:exact">
             <svg class="tuev-badge-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36" style="width:36px;height:36px;min-width:36px;flex-shrink:0">
                 <circle cx="18" cy="18" r="17" stroke="#1a5276" stroke-width="2"/>
                 <path d="M12 18l4 4 8-8" stroke="#27ae60" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1053,7 +1071,7 @@ sup.src-ref {
     <!-- ====== EXECUTIVE SUMMARY ====== -->
     <div class="exec-summary page-break">
         <div class="section-header">
-            <span class="section-label">ZUSAMMENFASSUNG</span>
+            <span class="section-label" style="color: var(--report-accent);">ZUSAMMENFASSUNG</span>
             <h2>Executive Summary</h2>
         </div>
         <div class="section-body">

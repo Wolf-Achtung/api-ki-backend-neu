@@ -30,14 +30,20 @@
 
 /* ── Design Tokens ──────────────────────────────────── */
 :root {
+    /* Report-Type Palette: Growth Teal (R2/KPA) */
+    --report-primary: #0D7377;
+    --report-primary-dark: #065F46;
+    --report-accent: #D97706;
+    --report-bg-panel: #F0FDFA;
+    --report-bg-highlight: #CCFBF1;
     /* Primary */
-    --c-primary: #1E3A5F;
-    --c-accent: #10B981;
+    --c-primary: #0D7377;
+    --c-accent: #D97706;
     --c-warning: #F59E0B;
     /* Deep Dive accent */
-    --c-deep: #8b5cf6;
-    --c-deep-light: #f5f3ff;
-    --c-deep-border: #c4b5fd;
+    --c-deep: #0D7377;
+    --c-deep-light: #F0FDFA;
+    --c-deep-border: #99f6e4;
     /* Grays */
     --c-text: #374151;
     --c-text-2: #6B7280;
@@ -169,7 +175,7 @@ td.negative { color: var(--c-danger); font-weight: 600; }
 .badge-action   { background: #ecfdf5; color: #047857; }
 .badge-risk     { background: #fef2f2; color: #b91c1c; }
 .badge-finance  { background: #fffbeb; color: #b45309; }
-.badge-deep     { background: #f5f3ff; color: var(--c-cat-deep); }
+.badge-deep     { background: var(--report-bg-panel); color: var(--report-primary); }
 
 /* ── Glance Box ─────────────────────────────────────── */
 .glance-box {
@@ -178,8 +184,10 @@ td.negative { color: var(--c-danger); font-weight: 600; }
     padding: 10px 14px;
     border-radius: var(--r-sm);
     margin-bottom: var(--sp-lg);
-    background: var(--c-bg);
+    background: var(--report-bg-panel);
     border-left: 3px solid var(--c-border);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
 }
 .glance-box strong { font-weight: 600; color: var(--c-text); }
 .glance-strategy { border-left-color: var(--c-cat-strategy); }
@@ -215,8 +223,11 @@ td.negative { color: var(--c-danger); font-weight: 600; }
     width: 80px;
     height: 4px;
     border-radius: 2px;
-    background: linear-gradient(90deg, var(--c-deep), var(--c-primary));
+    background-color: var(--report-primary);
+    background-image: linear-gradient(90deg, #0D7377, #065F46);
     margin: 0 auto var(--sp-xl);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
 }
 .cover-eyebrow {
     font-size: 9pt;
@@ -227,7 +238,7 @@ td.negative { color: var(--c-danger); font-weight: 600; }
 }
 .cover-subtitle {
     font-size: 12pt;
-    color: var(--c-deep);
+    color: var(--report-primary);
     font-style: italic;
     margin-bottom: var(--sp-xs);
 }
@@ -264,8 +275,11 @@ td.negative { color: var(--c-danger); font-weight: 600; }
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--c-deep-light), #ede9fe);
+    background-color: var(--report-bg-panel);
+    background-image: linear-gradient(135deg, #F0FDFA, #CCFBF1);
     border: 3px solid var(--c-deep-border);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -287,8 +301,11 @@ td.negative { color: var(--c-danger); font-weight: 600; }
 .kpi-card {
     text-align: center;
     padding: 14px 10px;
-    background: var(--c-bg);
+    background: var(--report-bg-panel);
     border-radius: var(--r-md);
+    border-top: 3px solid var(--report-primary);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
 }
 .kpi-value {
     font-size: 22pt;
@@ -385,12 +402,14 @@ td.negative {
 
 /* Next steps action cards */
 .action-card {
-    background: var(--c-bg);
-    border-left: 3px solid var(--c-deep);
+    background: var(--report-bg-panel);
+    border-left: 3px solid var(--report-primary);
     border-radius: var(--r-sm);
     padding: 12px 16px;
     margin-bottom: var(--sp-md);
     page-break-inside: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -410,9 +429,11 @@ h1, h2, h3, h4 {
 .contact-box {
     text-align: center;
     padding: 20px;
-    background: var(--c-bg);
+    background: var(--report-bg-panel);
     border-radius: var(--r-lg);
     margin-top: var(--sp-lg);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
 }
 .contact-name { font-size: 12pt; font-weight: 700; color: #111827; }
 .contact-org  { font-size: 9.5pt; color: var(--c-text-2); margin-top: 2px; }
@@ -472,11 +493,15 @@ h1, h2, h3, h4 {
    PAGE 1: COVER — Deep Dive Branding
    ═══════════════════════════════════════════════════════ #}
 <div class="cover" id="dd-cover">
-    <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt" class="cover-logo">
-    <div class="cover-accent"></div>
-    <div class="cover-eyebrow">
-        KI-Potenzial-Analyse · {{ report_date_display }}
+    <!-- Teal Gradient Header -->
+    <div style="position:absolute;top:0;left:0;right:0;padding:40px 40px 30px 40px;background-color:#0D7377;background-image:linear-gradient(135deg,#0D7377,#065F46);color:white;text-align:center;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
+        <img src="ki-sicherheit-logo.webp" alt="KI-Sicherheit.jetzt" style="width:140px;height:auto;margin-bottom:12px;filter:brightness(0) invert(1);opacity:0.9;">
+        <div style="font-size:9pt;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.8);">
+            KI-Potenzial-Analyse · {{ report_date_display }}
+        </div>
     </div>
+
+    <div style="margin-top: 120px;"></div>
 
     <!-- Deep Dive Icon -->
     <div class="dd-icon">
@@ -484,7 +509,7 @@ h1, h2, h3, h4 {
     </div>
 
     <div style="margin-bottom: var(--sp-lg); max-width: 600px;">
-        <h1 style="color: var(--c-deep);">KI-Potenzial-<br>Analyse</h1>
+        <h1 style="color: var(--report-primary);">KI-Potenzial-<br>Analyse</h1>
         <p class="cover-subtitle">Ihre individuelle Analyse des strategischen KI-Potenzials</p>
         <p class="cover-meta">
             {% if branche %}{{ branche }}{% endif %}
@@ -496,7 +521,7 @@ h1, h2, h3, h4 {
     {% if canonical_bc %}
     <div class="kpi-row">
         <div class="kpi-card">
-            <div class="kpi-value" style="color: var(--c-accent);">
+            <div class="kpi-value" style="color: var(--report-accent);">
                 {{ canonical_bc.hours|default(0)|round(0)|int }}h
             </div>
             <div class="kpi-label">Einsparung/Monat</div>
@@ -508,7 +533,7 @@ h1, h2, h3, h4 {
             <div class="kpi-label">ROI (12 Monate)</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-value" style="color: var(--c-deep);">
+            <div class="kpi-value" style="color: var(--report-primary);">
                 {{ canonical_bc.payback|default(0)|round(1)|string|replace('.', ',') }} Mon.
             </div>
             <div class="kpi-label">Amortisation</div>
