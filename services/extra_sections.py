@@ -667,15 +667,21 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
     filtered = [p for p in all_programmes if size_group in p.get("suitable_for", [])]
 
     # Regionaler Filter (optional - zeige alle, aber markiere passende)
-    if "berlin" in bundesland.lower():
+    _bl = bundesland.lower()
+    if "berlin" in _bl or _bl == "be":
         # ProFIT höher priorisieren
         for p in filtered:
             if p["id"] == "profit_berlin":
                 p["priority"] = 0  # höchste Prio
-    elif "baden" in bundesland.lower() or "württemberg" in bundesland.lower():
+    elif "baden" in _bl or "württemberg" in _bl or _bl == "bw":
         # Invest BW höher priorisieren
         for p in filtered:
             if p["id"] == "invest_bw_digital_ki":
+                p["priority"] = 0
+    elif "bayern" in _bl or _bl == "by":
+        # Digitalbonus Bayern höher priorisieren
+        for p in filtered:
+            if p["id"] == "digitalbonus_bayern":
                 p["priority"] = 0
 
     # Sortieren nach Priorität (niedrigere Zahl = höher)

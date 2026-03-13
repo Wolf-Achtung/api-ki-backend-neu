@@ -19,6 +19,28 @@ from jinja2 import Environment, FileSystemLoader
 logger = logging.getLogger(__name__)
 
 
+# B42: Regex to remove misleading cross-program funding totals from S7.
+# LLMs sometimes sum up individual programme maximums into an absurd total
+# (e.g. "Gesamtförderung: 1.583.250€") that destroys report credibility.
+_FUNDING_TOTAL_PATTERN = re.compile(
+    r'<(?:p|tr|div)[^>]*>[^<]*'
+    r'(?:[Pp]otenzielle\s+)?[Gg]esamt(?:förderung|summe|potenzial)[^<]*'
+    r'[\d.,]+\s*(?:€|Euro|EUR)'
+    r'[^<]*</(?:p|tr|div)>',
+    re.DOTALL,
+)
+
+
+def _strip_funding_total(s7_html: str) -> str:
+    """Remove misleading cross-program funding total from S7 HTML."""
+    if not s7_html:
+        return s7_html
+    cleaned, count = _FUNDING_TOTAL_PATTERN.subn('', s7_html)
+    if count > 0:
+        logger.info("[B42-FUNDING] Removed %d misleading funding total(s) from S7", count)
+    return cleaned
+
+
 def render_strategy_html(sr: Any, db_session: Any) -> str:
     """
     Render strategy report HTML from Jinja2 template.
@@ -241,7 +263,7 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         "section_s4": sections.get("S4", ""),
         "section_s5": sections.get("S5", ""),
         "section_s6": sections.get("S6", ""),
-        "section_s7": sections.get("S7", ""),
+        "section_s7": _strip_funding_total(sections.get("S7", "")),
         "section_s8": sections.get("S8", ""),
         "naechste_schritte": naechste_schritte,
     }
