@@ -39,6 +39,9 @@ ANTI-REDUNDANZ (STRIKT!):
 - NICHT in strategie_governance wiederholen (→ Querverweis)
 - 90-Tage-Fahrplan ergänzt roadmap_90d, wiederholt nicht
 - Bei Überschneidung: Querverweis nutzen
+- KEINE Textbausteine aus anderen Sections übernehmen
+- Jeder Satz muss für diese Section EINZIGARTIG formuliert sein
+- Prüfe vor Ausgabe: Enthält dieser Text Formulierungen, die wörtlich in roadmap_90d oder gamechanger vorkommen könnten? Falls ja, umformulieren
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: persönliche Routinen, Self-Review, eigene Prüfpunkte

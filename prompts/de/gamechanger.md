@@ -55,6 +55,9 @@ DIE VARIABLE {{hauptleistung}} ENTHÄLT DAS KERNGESCHÄFT DES USERS.
   - KEINE ROI-Zahlen, Payback-Werte oder Tool-Listen recyceln
   - Jeder Absatz muss EINZIGARTIG fuer diese Section sein
   - Vermeide generische Branchenbeschreibungen die auch anderswo stehen koennten
+  - Prüfe vor Ausgabe: Enthält dieser Text Formulierungen, die wörtlich in
+    roadmap_90d, org_change oder recommendations vorkommen? Falls ja, umformulieren
+  - KEINE wörtlichen Übernahmen — gleiche Sachverhalte mit eigener Wortwahl darstellen
 
   THEMEN-OWNERSHIP (verbindlich):
   - Diese Section: OWNER für strategischen Bruchpunkt und Transformationsidee
