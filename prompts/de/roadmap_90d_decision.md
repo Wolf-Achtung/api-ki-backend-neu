@@ -124,6 +124,12 @@ THEMEN-OWNERSHIP (verbindlich):
 - NICHT hier: Change Management (→ org_change)
 - NICHT hier: Detaillierte Schritte (→ roadmap_90d)
 
+ANTI-REDUNDANZ (STRIKT!):
+- Verwende KEINE wörtlichen Formulierungen aus roadmap_90d — paraphrasiere und verdichte
+- KEINE Textbausteine aus anderen Sections übernehmen
+- Jeder Satz muss für diese Section EINZIGARTIG formuliert sein
+- Bei thematischer Überschneidung: eigene Wortwahl verwenden, nicht kopieren
+
 GUARDRAIL (zwingend):
 Keine Assistenz-/Dialog-Sprache, keine Fragen, keine Imperative, keine Meta-Kommentare. Ausschließlich neutrale Berichtssprache.
 
