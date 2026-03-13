@@ -257,21 +257,41 @@ def calculate_strategy_budget(
 
     # === ROI CALCULATION ===
     # Use Report 1 values if available, otherwise segment defaults
-    zeitersparnis_h = report1_values.get("zeitersparnis_stunden", params["time_savings_h"])
-    if isinstance(zeitersparnis_h, str):
-        try:
+    _raw_zeit = report1_values.get("zeitersparnis_stunden")
+    if _raw_zeit is not None:
+        zeitersparnis_h = _raw_zeit
+        if isinstance(zeitersparnis_h, str):
+            try:
+                zeitersparnis_h = int(float(zeitersparnis_h))
+            except (ValueError, TypeError):
+                logger.warning("[Budget] R1 zeitersparnis_stunden=%r unparseable, fallback to %d",
+                               _raw_zeit, params["time_savings_h"])
+                zeitersparnis_h = params["time_savings_h"]
+        else:
             zeitersparnis_h = int(zeitersparnis_h)
-        except (ValueError, TypeError):
-            zeitersparnis_h = params["time_savings_h"]
-    zeitersparnis_h = max(1, int(zeitersparnis_h))
+        logger.info("[Budget] Using R1 zeitersparnis: %d h/month (raw=%r)", zeitersparnis_h, _raw_zeit)
+    else:
+        zeitersparnis_h = params["time_savings_h"]
+        logger.info("[Budget] No R1 zeitersparnis, using segment default: %d h/month", zeitersparnis_h)
+    zeitersparnis_h = max(1, zeitersparnis_h)
 
-    stundensatz = report1_values.get("stundensatz", params["hourly_rate"])
-    if isinstance(stundensatz, str):
-        try:
+    _raw_rate = report1_values.get("stundensatz")
+    if _raw_rate is not None:
+        stundensatz = _raw_rate
+        if isinstance(stundensatz, str):
+            try:
+                stundensatz = int(float(stundensatz))
+            except (ValueError, TypeError):
+                logger.warning("[Budget] R1 stundensatz=%r unparseable, fallback to %d",
+                               _raw_rate, params["hourly_rate"])
+                stundensatz = params["hourly_rate"]
+        else:
             stundensatz = int(stundensatz)
-        except (ValueError, TypeError):
-            stundensatz = params["hourly_rate"]
-    stundensatz = max(1, int(stundensatz))
+        logger.info("[Budget] Using R1 stundensatz: %d EUR/h (raw=%r)", stundensatz, _raw_rate)
+    else:
+        stundensatz = params["hourly_rate"]
+        logger.info("[Budget] No R1 stundensatz, using segment default: %d EUR/h", stundensatz)
+    stundensatz = max(1, stundensatz)
 
     monatliche_ersparnis = zeitersparnis_h * stundensatz
     jaehrliche_ersparnis = monatliche_ersparnis * 12
