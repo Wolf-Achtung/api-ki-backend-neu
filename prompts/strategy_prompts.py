@@ -327,7 +327,7 @@ AUFGABE:
    d) Antragsfrist (falls bekannt)
    e) Passung für {firmenname} (hoch/mittel/niedrig)
    f) Link/Kontakt
-3. Berechne die potenzielle Gesamtförderung.
+3. Zeige die Einzelprogramme mit jeweiligem Förderbetrag. Berechne KEINE programmübergreifende Gesamtsumme — Programme sind nicht kumulierbar und eine addierte Summe wäre irreführend.
 4. Gib eine Handlungsempfehlung: Welches Programm zuerst beantragen?
 5. Berücksichtige das Bundesland: {bundesland} (landesspezifische Programme).
 

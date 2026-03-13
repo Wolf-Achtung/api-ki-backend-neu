@@ -89,12 +89,22 @@ def optimize_base64_image(
     # --- PNG/JPEG → Lossless WebP with 8-bit color depth ---
     if PILLOW_AVAILABLE and mime_type in ("image/png", "image/jpeg", "image/jpg", "image/webp"):
         try:
-            # B41-FIX: Skip re-encoding for already-webp files — quantize roundtrip
-            # can corrupt transparency and produce invalid output, causing trust badges
-            # to render as alt-text instead of images in Puppeteer PDF.
+            # B42-FIX: Convert WebP → PNG for data URI embedding.
+            # WebP data URIs render correctly when loaded as files in Chromium,
+            # but can fail as inline data URIs in Puppeteer PDF rendering
+            # (badges show alt-text instead of image). PNG data URIs are
+            # universally supported. R2 template works because its rendering
+            # pipeline differs from R1's.
             if mime_type == "image/webp":
-                log.debug("[LOGO-OPTIMIZE] Skipping re-encode for already-webp file (%d bytes)", original_size)
-                return data, mime_type
+                img = Image.open(io.BytesIO(data))
+                # Resize if too large
+                if max_dimension and (img.width > max_dimension or img.height > max_dimension):
+                    img.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
+                output = io.BytesIO()
+                img.save(output, format="PNG", optimize=True)
+                png_data = output.getvalue()
+                log.info("[LOGO-OPTIMIZE] WebP→PNG for data URI: %d → %d bytes", original_size, len(png_data))
+                return png_data, "image/png"
 
             img = Image.open(io.BytesIO(data))
 
