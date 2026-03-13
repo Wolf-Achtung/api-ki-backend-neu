@@ -140,6 +140,20 @@
     "priority": 3
   },
   {
+    "id": "digitalbonus_bayern",
+    "title": "Digitalbonus Bayern",
+    "region": "Deutschland (Bayern)",
+    "country_code": "DE",
+    "funding_type": "Zuschuss",
+    "funding_rate": "bis 50%",
+    "max_amount": "Standard: bis 10.000 € / Plus: bis 50.000 €",
+    "focus": "Digitalisierung, IT-Sicherheit, KI-Einführung, Hard-/Software",
+    "suitable_for": ["solo", "team", "kmu"],
+    "notes": "Länderprogramm Bayern, für Unternehmen mit Standort in Bayern. Fördert Hard-/Software und Maßnahmen zur Digitalisierung & IT-Sicherheit",
+    "relevance_ki": "Sehr hoch – explizit für Digitalisierung und KI-Einführung",
+    "priority": 1
+  },
+  {
     "id": "invest_bw_digital_ki",
     "title": "Invest BW – Digitalisierung & KI",
     "region": "Deutschland (Baden-Württemberg)",
