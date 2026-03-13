@@ -67,12 +67,39 @@ async def generate_strategy_report(
         logger.info("[Strategy %d] Handlungsfelder: %s", briefing_id, handlungsfelder)
 
         research_task = execute_research(briefing_data, strategy_questions, handlungsfelder)
+
+        # B41-FIX: Build report1_values from R1 sections (single source of truth).
+        # Previously passed report1_data.get("business_case", {}) which is HTML, not
+        # a structured dict — causing fallback to segment defaults (Team=30h instead
+        # of canonical 36h from R1).
+        _r1_sections = report1_data.get("sections", {})
+        _r1_bc = report1_data.get("business_case", {})
+        _r1_values = _r1_bc if isinstance(_r1_bc, dict) else {}
+        # Overlay canonical values from R1 sections (these are the authoritative source)
+        _canon_hours = (
+            _r1_sections.get("CANON_HOURS_MONTH")
+            or _r1_sections.get("TIME_SAVINGS_MONTH_HOURS_CAPPED")
+            or _r1_sections.get("EINSPARUNG_STUNDEN_MONAT")
+        )
+        if _canon_hours:
+            _r1_values["zeitersparnis_stunden"] = _canon_hours
+        _canon_rate = (
+            _r1_sections.get("CANON_RATE_EUR")
+            or _r1_sections.get("stundensatz_eur")
+        )
+        if _canon_rate:
+            _r1_values["stundensatz"] = _canon_rate
+        logger.info(
+            "[Strategy %d] R1 values for budget: zeitersparnis=%s, stundensatz=%s",
+            briefing_id, _r1_values.get("zeitersparnis_stunden"), _r1_values.get("stundensatz"),
+        )
+
         budget_task = asyncio.to_thread(
             calculate_strategy_budget,
             briefing_data,
             strategy_questions,
             handlungsfelder,
-            report1_data.get("business_case", {}),
+            _r1_values,
         )
 
         research_context, budget = await asyncio.gather(research_task, budget_task)
