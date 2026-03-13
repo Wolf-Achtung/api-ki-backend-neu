@@ -89,6 +89,13 @@ def optimize_base64_image(
     # --- PNG/JPEG → Lossless WebP with 8-bit color depth ---
     if PILLOW_AVAILABLE and mime_type in ("image/png", "image/jpeg", "image/jpg", "image/webp"):
         try:
+            # B41-FIX: Skip re-encoding for already-webp files — quantize roundtrip
+            # can corrupt transparency and produce invalid output, causing trust badges
+            # to render as alt-text instead of images in Puppeteer PDF.
+            if mime_type == "image/webp":
+                log.debug("[LOGO-OPTIMIZE] Skipping re-encode for already-webp file (%d bytes)", original_size)
+                return data, mime_type
+
             img = Image.open(io.BytesIO(data))
 
             # Resize if too large
@@ -325,6 +332,11 @@ def embed_logos_in_html(html: str, template_dir: str = "templates") -> str:
                 replacements += 1
 
     log.info("[LOGO-EMBED] Result: %d of %d logos embedded", replacements, len(DEFAULT_LOGOS))
+    if replacements < len(DEFAULT_LOGOS):
+        # B41: Warn about un-embedded logos so they get caught by embed_all_images_in_html
+        missing = [f for f in DEFAULT_LOGOS if f'src="{f}"' in modified_html or f"src='{f}'" in modified_html]
+        if missing:
+            log.warning("[LOGO-EMBED] Still un-embedded after pass 1: %s", missing)
     return modified_html
 
 

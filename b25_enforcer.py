@@ -319,7 +319,7 @@ def sanitize_roi_values_in_content(
 # Funding Blacklist — remove BEFORE G22 check
 # ============================================================
 
-FUNDING_BLACKLIST = [
+_FUNDING_BLACKLIST_BASE = [
     # go-digital (alle Varianten)
     "go-digital",
     "go-digital!",
@@ -332,12 +332,42 @@ FUNDING_BLACKLIST = [
     "kmu-innovativ",
     "KMU innovativ",
     "kmu innovativ",
-    # Digitalbonus (NEU in B28)
+]
+
+_DIGITALBONUS_TERMS = [
     "Digitalbonus",
     "digitalbonus",
     "Digital-Bonus",
     "digital-bonus",
 ]
+
+# Legacy alias — kept for any external imports
+FUNDING_BLACKLIST = _FUNDING_BLACKLIST_BASE + _DIGITALBONUS_TERMS
+
+
+def _build_funding_blacklist(sections: dict[str, Any]) -> list[str]:
+    """Build the active funding blacklist, conditional on bundesland.
+
+    Digitalbonus Bayern is a legitimate Bavarian funding programme and
+    must NOT be filtered when the report belongs to Bavaria (by).
+    """
+    bundesland = (
+        sections.get("bundesland", "")
+        or sections.get("BUNDESLAND_LABEL", "")
+        or ""
+    )
+    # Normalize: BUNDESLAND_LABEL may contain full name like "Bayern"
+    _bl = bundesland.strip().lower()
+    is_bavaria = _bl in ("by", "bayern", "bavaria")
+
+    if is_bavaria:
+        logger.info(
+            "[FIX-B26-FUNDING-BL] bundesland=%r → Bavaria detected, "
+            "keeping Digitalbonus Bayern in report", bundesland,
+        )
+        return list(_FUNDING_BLACKLIST_BASE)
+
+    return list(_FUNDING_BLACKLIST_BASE) + list(_DIGITALBONUS_TERMS)
 
 
 def apply_funding_blacklist(
@@ -347,7 +377,11 @@ def apply_funding_blacklist(
     Remove blacklisted funding programs from section content.
     Must be called BEFORE G22 consistency check to prevent AUTO_005 warnings.
     B29: Also cleans dict and list sections recursively.
+    B41: Digitalbonus filtering is now conditional on bundesland — Bavaria keeps it.
     """
+    # B41: Build bundesland-aware blacklist
+    active_blacklist = _build_funding_blacklist(sections)
+
     cleaned: dict[str, Any] = {}
     total_removed = 0
 
@@ -364,28 +398,28 @@ def apply_funding_blacklist(
                     f"[FIX-B30-DEBUG-BL] Processing dict section: {name}, "
                     f"keys={list(content.keys())[:10]}"
                 )
-                cleaned[name] = _clean_dict_recursive(content)
+                cleaned[name] = _clean_dict_recursive(content, active_blacklist)
             elif hasattr(content, 'model_dump'):
                 # Pydantic v2 model
                 content_dict = content.model_dump()
-                cleaned_dict = _clean_dict_recursive(content_dict)
+                cleaned_dict = _clean_dict_recursive(content_dict, active_blacklist)
                 cleaned[name] = cleaned_dict
                 logger.info(f"[FIX-B31-PYDANTIC] Cleaned Pydantic model: {name}")
                 continue
             elif hasattr(content, 'dict'):
                 # Pydantic v1 model
                 content_dict = content.dict()
-                cleaned_dict = _clean_dict_recursive(content_dict)
+                cleaned_dict = _clean_dict_recursive(content_dict, active_blacklist)
                 cleaned[name] = cleaned_dict
                 logger.info(f"[FIX-B31-PYDANTIC] Cleaned Pydantic v1 model: {name}")
                 continue
             elif isinstance(content, list):
-                cleaned[name] = _clean_list_recursive(content)
+                cleaned[name] = _clean_list_recursive(content, active_blacklist)
             else:
                 cleaned[name] = content
             continue
         modified = content
-        for term in FUNDING_BLACKLIST:
+        for term in active_blacklist:
             if term.lower() in modified.lower():
                 lines = modified.split("\n")
                 filtered = [
@@ -410,13 +444,14 @@ def apply_funding_blacklist(
     return cleaned
 
 
-def _clean_dict_recursive(d: dict[str, Any]) -> dict[str, Any]:
+def _clean_dict_recursive(d: dict[str, Any], blacklist: list[str] | None = None) -> dict[str, Any]:
     """Recursively remove blacklisted funding terms from all string values in a dict."""
+    bl = blacklist if blacklist is not None else FUNDING_BLACKLIST
     cleaned: dict[str, Any] = {}
     for key, value in d.items():
         if isinstance(value, str):
             cleaned_val = value
-            for term in FUNDING_BLACKLIST:
+            for term in bl:
                 if term.lower() in cleaned_val.lower():
                     lines = cleaned_val.split("\n")
                     filtered = [l for l in lines if term.lower() not in l.lower()]
@@ -429,24 +464,25 @@ def _clean_dict_recursive(d: dict[str, Any]) -> dict[str, Any]:
                     cleaned_val = "\n".join(filtered)
             cleaned[key] = cleaned_val
         elif isinstance(value, dict):
-            cleaned[key] = _clean_dict_recursive(value)
+            cleaned[key] = _clean_dict_recursive(value, bl)
         elif isinstance(value, list):
-            cleaned[key] = _clean_list_recursive(value)
+            cleaned[key] = _clean_list_recursive(value, bl)
         else:
             cleaned[key] = value
     return cleaned
 
 
-def _clean_list_recursive(lst: list[Any]) -> list[Any]:
+def _clean_list_recursive(lst: list[Any], blacklist: list[str] | None = None) -> list[Any]:
     """Recursively remove blacklisted funding terms from all string items in a list.
     String items containing a blacklisted term are removed entirely.
     Dict items are removed if ANY of their leaf string values contain a blacklisted term.
     """
+    bl = blacklist if blacklist is not None else FUNDING_BLACKLIST
     cleaned: list[Any] = []
     for item in lst:
         if isinstance(item, str):
             keep = True
-            for term in FUNDING_BLACKLIST:
+            for term in bl:
                 if term.lower() in item.lower():
                     logger.info(
                         f"[FIX-B29-FUNDING-LIST] Removed list item containing '{term}'"
@@ -457,7 +493,7 @@ def _clean_list_recursive(lst: list[Any]) -> list[Any]:
                 cleaned.append(item)
         elif isinstance(item, dict):
             # Check if any string value in this dict contains a blacklisted term
-            if _dict_contains_blacklisted(item):
+            if _dict_contains_blacklisted(item, bl):
                 logger.info(
                     f"[FIX-B29-FUNDING-LIST] Removed dict item containing "
                     f"blacklisted term: {list(item.keys())}"
@@ -465,30 +501,31 @@ def _clean_list_recursive(lst: list[Any]) -> list[Any]:
             else:
                 cleaned.append(item)
         elif isinstance(item, list):
-            cleaned.append(_clean_list_recursive(item))
+            cleaned.append(_clean_list_recursive(item, bl))
         else:
             cleaned.append(item)
     return cleaned
 
 
-def _dict_contains_blacklisted(d: dict[str, Any]) -> bool:
+def _dict_contains_blacklisted(d: dict[str, Any], blacklist: list[str] | None = None) -> bool:
     """Check if any leaf string value in a dict contains a blacklisted funding term."""
+    bl = blacklist if blacklist is not None else FUNDING_BLACKLIST
     for value in d.values():
         if isinstance(value, str):
-            for term in FUNDING_BLACKLIST:
+            for term in bl:
                 if term.lower() in value.lower():
                     return True
         elif isinstance(value, dict):
-            if _dict_contains_blacklisted(value):
+            if _dict_contains_blacklisted(value, bl):
                 return True
         elif isinstance(value, list):
             for item in value:
                 if isinstance(item, str):
-                    for term in FUNDING_BLACKLIST:
+                    for term in bl:
                         if term.lower() in item.lower():
                             return True
                 elif isinstance(item, dict):
-                    if _dict_contains_blacklisted(item):
+                    if _dict_contains_blacklisted(item, bl):
                         return True
     return False
 

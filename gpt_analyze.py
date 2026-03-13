@@ -16831,6 +16831,39 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     is_html=True,
                 )
 
+        # --- B41: Prose ROI Enforcement ---
+        # The ROI sanitizer above only caps values >200%. But LLMs sometimes
+        # generate raw/uncapped ROI (e.g. 134%) in prose text instead of the
+        # canonical capped value (200%). This pass replaces any ROI percentage
+        # in prose with the canonical value.
+        _canonical_roi = min(float(_b25_report_data.get("roi_percent") or 200), 200.0)
+        _canonical_roi_int = int(_canonical_roi)
+        if _canonical_roi_int > 0:
+            _prose_roi_pattern = re.compile(
+                r'(ROI\s+von\s+|ROI\s+bei\s+|ROI\s*[:\s]\s*|'
+                r'Rendite\s+von\s+|Kapitalrendite\s+von\s+|'
+                r'Return on Investment\s+von\s+|Return on Investment\s*[:\s]\s*)'
+                r'(\d{1,4})\s*%',
+                re.IGNORECASE,
+            )
+            for _sname, _scontent in list(sections.items()):
+                if _sname in _B25_ROI_SKIP:
+                    continue
+                if not isinstance(_scontent, str) or len(_scontent) < 50:
+                    continue
+                def _replace_prose_roi(m):
+                    _old_val = int(m.group(2))
+                    if _old_val != _canonical_roi_int:
+                        log.info(
+                            "[FIX-B41-PROSE-ROI] %s: replacing '%s' → '%s%d%%'",
+                            _sname, m.group(0), m.group(1), _canonical_roi_int,
+                        )
+                        return f"{m.group(1)}{_canonical_roi_int}%"
+                    return m.group(0)
+                _new = _prose_roi_pattern.sub(_replace_prose_roi, _scontent)
+                if _new != _scontent:
+                    sections[_sname] = _new
+
         log.info(f"[FIX-B32-ALIVE] Code reached. Checking _automation_roadmap_report: "
                  f"type={type(sections.get('_automation_roadmap_report')).__name__}, "
                  f"has_model_dump={hasattr(sections.get('_automation_roadmap_report'), 'model_dump')}, "
