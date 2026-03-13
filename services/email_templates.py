@@ -28,7 +28,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
     if recipient == "admin" and briefing_summary_html:
         briefing_section = f"""
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
-        <h2 style="color:#0b3b8f;font-size:18px;margin:16px 0 8px">📋 Briefing-Details</h2>
+        <h2 style="color:#2B6CB0;font-size:18px;margin:16px 0 8px">📋 Briefing-Details</h2>
         <p class="muted">Nachfolgend die wichtigsten Angaben des Users für Qualitätskontrolle und Nachvollziehbarkeit:</p>
         {briefing_summary_html}
         """
@@ -42,7 +42,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
             '<p style="font-size:15px;margin:0 0 8px"><strong>N\u00e4chster Schritt:</strong></p>'
             '<p style="margin:0 0 12px">Fordern Sie jetzt Ihren pers\u00f6nlichen <strong>KI\u2011Strategiebericht</strong> an '
             '\u2014 10 Fragen, 3 Minuten, und Sie erhalten einen individuellen Implementierungsfahrplan.</p>'
-            f'<p><a href="{escape(_strategy_url)}" style="display:inline-block;background:#0b3b8f;color:#fff;'
+            f'<p><a href="{escape(_strategy_url)}" style="display:inline-block;background:#2B6CB0;color:#fff;'
             'padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">'
             'Strategiebericht anfordern \u2192</a></p>'
             '<p class="muted" style="margin-top:8px">Tipp: In K\u00fcrze erhalten Sie au\u00dferdem Ihre '
@@ -57,7 +57,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
         <p style="font-size:15px;margin:0 0 8px">💬 <strong>Ihr Feedback hilft!</strong></p>
         <p class="muted" style="margin:0 0 12px">Wie hilfreich war der Report? Was können wir verbessern?<br>Dauert nur 2–3 Minuten:</p>
-        <p><a href="{escape(feedback_link)}" style="color:#0b3b8f;font-weight:600">→ Feedback geben</a></p>
+        <p><a href="{escape(feedback_link)}" style="color:#2B6CB0;font-weight:600">→ Feedback geben</a></p>
         """
 
     return f"""<!doctype html>
@@ -69,11 +69,11 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
     <style>
       body{{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;line-height:1.5;margin:0;padding:0;background:#f6f9ff}}
       .wrap{{max-width:640px;margin:0 auto;padding:24px}}
-      .card{{background:#fff;border:1px solid #e6edf3;border-radius:12px;padding:18px;box-shadow:0 6px 30px #18324a16}}
-      h1{{color:#0b3b8f;font-size:20px;margin:0 0 8px}}
+      .card{{background:#fff;border:1px solid #e6edf3;border-radius:12px;padding:18px;box-shadow:0 6px 30px #18324a16;border-top:4px solid #2B6CB0}}
+      h1{{color:#2B6CB0;font-size:20px;margin:0 0 8px}}
       p{{margin:8px 0;font-size:14px}}
       .muted{{color:#64748b}}
-      a.btn{{display:inline-block;background:#0b3b8f;color:#fff;padding:8px 12px;border-radius:8px;text-decoration:none}}
+      a.btn{{display:inline-block;background:#2B6CB0;color:#fff;padding:8px 12px;border-radius:8px;text-decoration:none}}
     </style>
   </head>
   <body>
@@ -122,7 +122,7 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
             '<p style="font-size:15px;margin:0 0 8px"><strong>Noch mehr Tiefe?</strong></p>'
             '<p style="margin:0 0 12px">Ihr ma\u00dfgeschneiderter <strong>KI\u2011Strategiebericht</strong> '
             '\u2014 10 Fragen, 3 Minuten, und Sie erhalten einen individuellen 90\u2011Tage\u2011Implementierungsplan.</p>'
-            f'<p><a href="{escape(_strategy_url)}" style="display:inline-block;background:#0b3b8f;color:#fff;'
+            f'<p><a href="{escape(_strategy_url)}" style="display:inline-block;background:#0D7377;color:#fff;'
             'padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">'
             'Strategiebericht anfordern \u2192</a></p>'
         )
@@ -136,8 +136,8 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
     <style>
       body{{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;line-height:1.5;margin:0;padding:0;background:#f6f9ff}}
       .wrap{{max-width:640px;margin:0 auto;padding:24px}}
-      .card{{background:#fff;border:1px solid #e6edf3;border-radius:12px;padding:18px;box-shadow:0 6px 30px #18324a16}}
-      h1{{color:#0b3b8f;font-size:20px;margin:0 0 8px}}
+      .card{{background:#fff;border:1px solid #e6edf3;border-radius:12px;padding:18px;box-shadow:0 6px 30px #18324a16;border-top:4px solid #0D7377}}
+      h1{{color:#0D7377;font-size:20px;margin:0 0 8px}}
       p{{margin:8px 0;font-size:14px}}
       .muted{{color:#64748b}}
     </style>
@@ -190,8 +190,8 @@ def render_strategy_email(recipient: str = "user") -> str:
     <style>
       body{{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;line-height:1.5;margin:0;padding:0;background:#f6f9ff}}
       .wrap{{max-width:640px;margin:0 auto;padding:24px}}
-      .card{{background:#fff;border:1px solid #e6edf3;border-radius:12px;padding:18px;box-shadow:0 6px 30px #18324a16}}
-      h1{{color:#0b3b8f;font-size:20px;margin:0 0 8px}}
+      .card{{background:#fff;border:1px solid #e6edf3;border-radius:12px;padding:18px;box-shadow:0 6px 30px #18324a16;border-top:4px solid #0F1D35}}
+      h1{{color:#0F1D35;font-size:20px;margin:0 0 8px}}
       p{{margin:8px 0;font-size:14px}}
       .muted{{color:#64748b}}
     </style>
