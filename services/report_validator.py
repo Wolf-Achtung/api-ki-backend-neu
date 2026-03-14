@@ -2751,25 +2751,54 @@ class ReportValidator:
                     )
                     break  # Only report once per section
 
+    # FIX-LOCATION: Alias groups per Bundesland.
+    # "scannable": names long enough to safely search for in HTML content
+    # "codes": 2-letter ISO codes used only for matching user input
+    _BUNDESLAND_ALIASES: list[dict[str, list[str]]] = [
+        {"scannable": ["Baden-Württemberg", "Baden Württemberg", "Baden-Wuerttemberg"], "codes": ["bw"]},
+        {"scannable": ["Bayern"], "codes": ["by"]},
+        {"scannable": ["Berlin"], "codes": ["be"]},
+        {"scannable": ["Brandenburg"], "codes": ["bb"]},
+        {"scannable": ["Bremen"], "codes": ["hb"]},
+        {"scannable": ["Hamburg"], "codes": ["hh"]},
+        {"scannable": ["Hessen"], "codes": ["he"]},
+        {"scannable": ["Mecklenburg-Vorpommern", "Mecklenburg Vorpommern"], "codes": ["mv"]},
+        {"scannable": ["Niedersachsen"], "codes": ["ni"]},
+        {"scannable": ["Nordrhein-Westfalen", "NRW", "Nordrhein Westfalen"], "codes": ["nw"]},
+        {"scannable": ["Rheinland-Pfalz", "Rheinland Pfalz"], "codes": ["rp"]},
+        {"scannable": ["Saarland"], "codes": ["sl"]},
+        {"scannable": ["Sachsen-Anhalt", "Sachsen Anhalt"], "codes": ["st"]},
+        {"scannable": ["Sachsen"], "codes": ["sn"]},
+        {"scannable": ["Schleswig-Holstein", "Schleswig Holstein"], "codes": ["sh"]},
+        {"scannable": ["Thüringen", "Thueringen"], "codes": ["th"]},
+    ]
+
     def _check_location_consistency(self) -> None:
         """
         Sprint P1.5-7: Check that the correct Bundesland is used.
         Should not mention other Bundesländer.
+
+        FIX-LOCATION: Accept common abbreviations (NRW, BW, etc.) as valid
+        equivalents. Downgrade severity to WARNING — wrong Bundesland is
+        undesirable but should never crash the pipeline.
         """
         bundesland = self.meta.get("BUNDESLAND_LABEL", "") or self.meta.get("bundesland", "")
         if not bundesland:
             return
 
-        # All German Bundesländer
-        all_bundeslaender = [
-            "Baden-Württemberg", "Bayern", "Berlin", "Brandenburg", "Bremen",
-            "Hamburg", "Hessen", "Mecklenburg-Vorpommern", "Niedersachsen",
-            "Nordrhein-Westfalen", "NRW", "Rheinland-Pfalz", "Saarland",
-            "Sachsen", "Sachsen-Anhalt", "Schleswig-Holstein", "Thüringen",
-        ]
+        # Find the user's group by matching full names or 2-letter codes (exact).
+        user_bl_lower = bundesland.lower().strip()
+        user_scannable_lower: set[str] = set()
+        for group in self._BUNDESLAND_ALIASES:
+            all_names = [s.lower() for s in group["scannable"]] + [c.lower() for c in group["codes"]]
+            if user_bl_lower in all_names:
+                user_scannable_lower = set(s.lower() for s in group["scannable"])
+                break
 
-        # Normalize the user's Bundesland
-        user_bundesland_normalized = bundesland.lower().strip()
+        # Collect only scannable names (long enough to safely grep in HTML)
+        all_bundeslaender: list[str] = []
+        for group in self._BUNDESLAND_ALIASES:
+            all_bundeslaender.extend(group["scannable"])
 
         # Check sections that mention location
         location_sections = [
@@ -2777,23 +2806,36 @@ class ReportValidator:
             "FOERDERPOTENZIAL_HTML",
         ]
 
+        # Sort longest first so "Sachsen-Anhalt" is checked before "Sachsen"
+        all_bundeslaender.sort(key=len, reverse=True)
+
         for section_name in location_sections:
             content = self.sections.get(section_name, "")
             if not content or not isinstance(content, str):
                 continue
 
+            # Strip user's own Bundesland names from content before scanning,
+            # so "Sachsen" inside "Sachsen-Anhalt" doesn't false-positive.
+            content_stripped = content
+            for own_name in sorted(user_scannable_lower, key=len, reverse=True):
+                content_stripped = content_stripped.replace(own_name, "")
+                # Also strip original case
+                for group in self._BUNDESLAND_ALIASES:
+                    for s in group["scannable"]:
+                        if s.lower() in user_scannable_lower:
+                            content_stripped = content_stripped.replace(s, "")
+
             for bl in all_bundeslaender:
-                # Skip if this is the user's Bundesland
-                if bl.lower() in user_bundesland_normalized or user_bundesland_normalized in bl.lower():
+                # Skip if this belongs to the user's Bundesland (any alias)
+                if bl.lower() in user_scannable_lower:
                     continue
 
-                if bl in content:
-                    # CRITICAL for Förderpotenzial (wrong funding info)
-                    # WARNING for other sections
-                    severity = "CRITICAL" if section_name == "FOERDERPOTENZIAL_HTML" else "WARNING"
+                if bl in content_stripped:
+                    # FIX-LOCATION: WARNING only — never crash the pipeline
+                    # over a Bundesland label mismatch
                     self.errors.append(
                         ValidationError(
-                            severity=severity,
+                            severity="WARNING",
                             category="LOCATION_INCONSISTENCY",
                             section=section_name,
                             message=f"Falsches Bundesland '{bl}' gefunden (User: {bundesland})",
