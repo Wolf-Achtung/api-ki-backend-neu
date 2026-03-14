@@ -829,8 +829,8 @@ def render(briefing_obj: Any,
         "report_date": sections.get("report_date", ""),
         "report_id": sections.get("report_id", ""),
         "BUILD_ID": sections.get("BUILD_ID", "B734d"),
-        "LOGO_PRIMARY_B64": os.getenv("LOGO_PRIMARY_SRC", "https://make.ki-sicherheit.jetzt/badges/ki-sicherheit-logo.webp"),
-        "TUEV_LOGO_B64": os.getenv("FOOTER_LEFT_LOGO_SRC", "https://make.ki-sicherheit.jetzt/badges/tuev-logo-transparent.webp"),
+        "LOGO_PRIMARY_B64": os.getenv("LOGO_PRIMARY_SRC", "https://make.ki-sicherheit.jetzt/badges/ki-sicherheit-logo-small.png"),
+        "TUEV_LOGO_B64": os.getenv("FOOTER_LEFT_LOGO_SRC", "https://make.ki-sicherheit.jetzt/badges/tuev-logo-transparent.png"),
         "report_year": sections.get("report_year", ""),
         "BRANCHE_LABEL": sections.get("BRANCHE_LABEL", ""),
         "UNTERNEHMENSGROESSE_LABEL": sections.get("UNTERNEHMENSGROESSE_LABEL", ""),
@@ -1364,8 +1364,10 @@ def render(briefing_obj: Any,
     _tpl_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
     html = embed_logos_in_html(html, _tpl_dir)
     # Belt-and-suspenders: catch any remaining relative img src (trust badges, etc.)
-    from utils.logo_embedder import embed_all_images_in_html
+    from utils.logo_embedder import embed_all_images_in_html, convert_webp_paths_to_png_base64
     html = embed_all_images_in_html(html, _tpl_dir)
+    # Safety net: convert any remaining WebP file path references to PNG base64
+    html = convert_webp_paths_to_png_base64(html, _tpl_dir)
     log.info(f"[RENDER] Embedded logos in HTML for report {run_id}")
 
     # PDF-SLIMDOWN: Optimize HTML for smaller PDF file size

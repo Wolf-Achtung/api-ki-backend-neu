@@ -507,11 +507,12 @@ async def get_strategy_html(
 def _render_strategy_html(sr: StrategyReport, db: Session) -> str:
     """Render strategy report HTML — delegates to shared renderer."""
     from services.strategy_renderer import render_strategy_html
-    from utils.logo_embedder import embed_logos_in_html
+    from utils.logo_embedder import embed_logos_in_html, convert_webp_paths_to_png_base64
     html = render_strategy_html(sr, db)
     # FIX-G: Embed logos as base64 (same pattern as report_renderer.py / gamechanger)
     _tpl_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
     html = embed_logos_in_html(html, _tpl_dir)
+    html = convert_webp_paths_to_png_base64(html, _tpl_dir)
     return html
 
 
