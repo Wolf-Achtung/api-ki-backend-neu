@@ -3162,12 +3162,21 @@ def enforce_kpi_consistency(html: str, canonical_kpis: dict) -> tuple[str, int]:
                     try:
                         low, high = float(parts[0]), float(parts[1])
                         avg = (low + high) / 2
-                        # Check if range is way off from canonical
-                        if abs(avg - canonical_hours) / canonical_hours > 0.3:
+                        # FIX-RANGE: Reject absurdly wide ranges (ratio > 3x)
+                        # e.g. "2–36" → ratio 18x, replace with canonical value
+                        range_too_wide = low > 0 and high / low > 3
+                        off_from_canonical = (
+                            canonical_hours > 0
+                            and abs(avg - canonical_hours) / canonical_hours > 0.3
+                        )
+                        if range_too_wide or off_from_canonical:
                             enforcements += 1
-                            # Create range around canonical
-                            new_low = int(canonical_hours * 0.85)
-                            new_high = int(canonical_hours * 1.15)
+                            # Use tight ±10% range around canonical
+                            new_low = max(1, int(canonical_hours * 0.9))
+                            new_high = int(canonical_hours * 1.1)
+                            # Avoid trivial ranges like "36–39" → just show single value
+                            if new_high - new_low <= 2:
+                                return f"{int(canonical_hours)} Stunden/Monat"
                             return f"{new_low}–{new_high} Stunden/Monat"
                     except (ValueError, ZeroDivisionError):
                         pass
