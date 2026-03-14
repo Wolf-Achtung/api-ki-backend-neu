@@ -20,11 +20,17 @@ MANDATORY STRUCTURE (4 sections):
 3. "Plan for the next 90 days" (3 phases: 0–30, 31–60, 61–90)
 4. "Handling resistance" (size‑aware)
 
-ANTI‑REDUNDANCY (STRICT!):
+ANTI‑REDUNDANCY (STRICT! — HIGHEST PRIORITY!):
 - Address change aspects HERE.
 - Do NOT repeat them in strategy_governance (→ cross reference).
 - The 90‑day plan complements roadmap_90d and does not repeat it.
 - Where overlap occurs: use a cross reference.
+- Do NOT copy text blocks from other sections (Roadmap, Quick Wins, Governance).
+- Every sentence must be UNIQUELY formulated for this section.
+- This section covers EXCLUSIVELY organisational change: roles, responsibilities, change management, acceptance.
+- Reference other sections with short labels ("the phases defined in the Roadmap", "the framework described in the Governance section") instead of quoting content.
+- Max 1 sentence of context per reference, then immediately continue with NEW content.
+- SELF-CHECK BEFORE OUTPUT: Re-read every sentence — does it contain phrasing that appears verbatim or near-verbatim in roadmap_90d, gamechanger, or quick_wins? If yes: completely rephrase with new sentence structure and vocabulary.
 
 PERSONA VARIATIONS (COMPANY_SIZE):
 - solo: Personal routines, self‑review, own checkpoints.
