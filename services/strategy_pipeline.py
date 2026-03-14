@@ -629,10 +629,11 @@ async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
         html_content = render_strategy_html(sr, db_session)
 
         # Embed logos as base64 for PDF service compatibility
-        from utils.logo_embedder import embed_logos_in_html
+        from utils.logo_embedder import embed_logos_in_html, convert_webp_paths_to_png_base64
         import os
         _tpl_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
         html_content = embed_logos_in_html(html_content, _tpl_dir)
+        html_content = convert_webp_paths_to_png_base64(html_content, _tpl_dir)
 
         logger.info("[Strategy %d] Rendering PDF (%d chars HTML)", briefing_id, len(html_content))
 
