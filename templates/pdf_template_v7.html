@@ -990,7 +990,12 @@ h1, h2, h3, h4 {
 
 <!-- ═══════ COVER ═══════ -->
 <div class="cover" id="cover" data-category="strategy">
-    <img src="ki-sicherheit-logo-small.png" alt="KI-Sicherheit.jetzt" class="cover-logo">
+    <!-- R1 Corporate Blue Header-Stripe -->
+    <div style="position:absolute;top:0;left:0;right:0;background-color:#2B6CB0;color:white;padding:18px 40px;display:flex;align-items:center;justify-content:space-between;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
+        <img src="ki-sicherheit-logo-small.png" alt="KI-Sicherheit.jetzt" style="height:36px;filter:brightness(0) invert(1);opacity:0.95;">
+        <span style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;opacity:0.9;">KI-STATUS-REPORT · {{ report_date }}</span>
+    </div>
+    <div style="margin-top:56px;"></div>
     <div class="cover-accent" style="background: var(--report-primary); print-color-adjust: exact; -webkit-print-color-adjust: exact;"></div>
     <div class="cover-eyebrow">
         KI-Status-Report · {{ report_date }}
@@ -1045,7 +1050,8 @@ h1, h2, h3, h4 {
         {% endfor %}
     </div>
 
-    <!-- KPI Row -->
+    <!-- KPI Row — R1 Corporate Blue KPI-Box -->
+    <div style="background-color:#EBF4FF;border-left:4px solid #2B6CB0;border-radius:8px;padding:20px 24px;margin:24px 0;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
     <div class="kpi-row">
         <div class="kpi-card">
             <div class="kpi-value" style="color: var(--c-accent);">
@@ -1063,6 +1069,7 @@ h1, h2, h3, h4 {
             <div class="kpi-value" style="color: var(--c-primary);">{{ AI_ACT_RISK_LEVEL|default('limited') }}</div>
             <div class="kpi-label">AI Act Risikoklasse</div>
         </div>
+    </div>
     </div>
 
     <!-- Reading Guide -->

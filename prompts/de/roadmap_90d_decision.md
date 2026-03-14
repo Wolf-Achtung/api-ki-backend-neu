@@ -73,7 +73,7 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>
 <!-- WORD_MINIMUM: 200 -->
 <!-- WORD_MAXIMUM: 300 -->
 
-Erzeuge eine Entscheidungsfassung der 90-Tage-Roadmap für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
+Erzeuge eine Entscheidungsfassung des 90-Tage-Fahrplans für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
 
 INHALTLICHE GRUNDLAGE:
 Verdichte die bestehenden Roadmap-Inhalte. Erfinde nichts Neues.
@@ -119,16 +119,20 @@ STRIKTE AUSGABEREGEL (verbindlich):
 - Jeder Bullet muss sofort umsetzbar formuliert sein, nicht als Template
 
 THEMEN-OWNERSHIP (verbindlich):
-- Diese Section: NUR Entscheidungsverdichtung der 90-Tage-Roadmap
-- Basiert auf roadmap_90d, keine eigenen Maßnahmen erfinden
+- Diese Section: NUR Entscheidungsverdichtung des 90-Tage-Fahrplans
+- Basiert auf dem 90-Tage-Fahrplan, keine eigenen Maßnahmen erfinden
 - NICHT hier: Change Management (→ org_change)
-- NICHT hier: Detaillierte Schritte (→ roadmap_90d)
+- NICHT hier: Detaillierte Schritte (→ 90-Tage-Fahrplan)
 
-ANTI-REDUNDANZ (STRIKT!):
-- Verwende KEINE wörtlichen Formulierungen aus roadmap_90d — paraphrasiere und verdichte
-- KEINE Textbausteine aus anderen Sections übernehmen
+ANTI-REDUNDANZ (STRIKT! — HÖCHSTE PRIORITÄT!):
+- Verwende KEINE wörtlichen Formulierungen aus dem 90-Tage-Fahrplan — paraphrasiere und verdichte
+- KEINE Textbausteine aus anderen Sections übernehmen (Quick Wins, Executive Summary, Business Case)
 - Jeder Satz muss für diese Section EINZIGARTIG formuliert sein
 - Bei thematischer Überschneidung: eigene Wortwahl verwenden, nicht kopieren
+- Nutze Kurzlabels und Verweise ("siehe Quick Wins", "wie im Business Case dargestellt") statt Inhalte zu wiederholen
+- Jede Phase (0–30, 31–60, 61–90 Tage) muss NEUE, eigenständige Informationen liefern — keine Paraphrasierung bereits genannter Maßnahmen
+- Falls eine Maßnahme aus den Quick Wins relevant ist: referenziere sie mit maximal 5 Wörtern und ergänze den spezifischen Umsetzungskontext für den Fahrplan
+- SELBSTPRÜFUNG VOR AUSGABE: Lies jeden Satz nochmal — enthält er Formulierungen, die wörtlich oder nahezu wörtlich im 90-Tage-Fahrplan, in Quick Wins oder Executive Summary vorkommen könnten? Falls ja: komplett umformulieren mit neuer Satzstruktur und neuem Vokabular
 
 GUARDRAIL (zwingend):
 Keine Assistenz-/Dialog-Sprache, keine Fragen, keine Imperative, keine Meta-Kommentare. Ausschließlich neutrale Berichtssprache.
