@@ -1283,7 +1283,7 @@ def generate_sofort_start_html(
     
     
     # Branchen-Fallstudie (Idee #5)
-    html += generate_fallstudie_html(branche)
+    html += generate_fallstudie_html(branche, size_key)
 
     # Entscheidungsvorlage für Vorgesetzte (Idee #10) - nur für Team/KMU
     if size_key in ["team", "kmu"]:
@@ -1847,6 +1847,36 @@ def generate_30_tage_challenge_html_v2(
 # BRANCHEN-FALLSTUDIEN (Idee #5)
 # =============================================================================
 
+# FIX-PERSONA: Segment-aware company descriptions for Fallstudien.
+# Maps size_key → company description per Branche.
+_FALLSTUDIE_UNTERNEHMEN: Dict[str, Dict[str, str]] = {
+    "beratung": {
+        "solo": "Solo-Berater, Strategieberatung",
+        "team": "Beratungsteam mit 5 Mitarbeitenden",
+        "kmu": "Beratungsunternehmen mit 25 Mitarbeitenden",
+    },
+    "it": {
+        "solo": "Freelance Entwickler, Web-Anwendungen",
+        "team": "IT-Team mit 8 Entwicklern",
+        "kmu": "IT-Dienstleister mit 40 Mitarbeitenden",
+    },
+    "finanzen": {
+        "solo": "Unabhängiger Finanzberater",
+        "team": "Finanzberatungsteam mit 6 Beratern",
+        "kmu": "Finanzberatungsunternehmen mit 30 Mitarbeitenden",
+    },
+    "bildung": {
+        "solo": "Freiberuflicher Trainer, IT-Schulungen",
+        "team": "Schulungsteam mit 5 Trainern",
+        "kmu": "Weiterbildungsinstitut mit 20 Mitarbeitenden",
+    },
+    "gesundheit": {
+        "solo": "Selbstständiger Therapeut",
+        "team": "Praxis mit 3 Therapeuten",
+        "kmu": "Gesundheitszentrum mit 15 Mitarbeitenden",
+    },
+}
+
 FALLSTUDIEN: Dict[str, Dict[str, Any]] = {
     "beratung": {
         "titel": "Unternehmensberater spart 12 Stunden pro Woche",
@@ -2033,12 +2063,21 @@ FALLSTUDIEN: Dict[str, Dict[str, Any]] = {
 }
 
 
-def generate_fallstudie_html(branche: str) -> str:
+def generate_fallstudie_html(branche: str, size_key: str = "solo") -> str:
     """
-    Generiert eine branchenspezifische Fallstudie.
+    Generiert eine branchenspezifische, segment-aware Fallstudie.
+
+    FIX-PERSONA: Uses _FALLSTUDIE_UNTERNEHMEN to pick a company description
+    matching the user's size segment, avoiding persona leaks like
+    "Solo-Berater" in a KMU report.
     """
     branche_key = get_branche_key(branche)
     fallstudie: Dict[str, Any] = cast(Dict[str, Any], FALLSTUDIEN.get(branche_key, FALLSTUDIEN["default"]))
+
+    # FIX-PERSONA: Override "unternehmen" with segment-appropriate description
+    size_overrides = _FALLSTUDIE_UNTERNEHMEN.get(branche_key, {})
+    if size_key in size_overrides:
+        fallstudie = {**fallstudie, "unternehmen": size_overrides[size_key]}
     
     html = f'''
     <!-- FALLSTUDIE -->
