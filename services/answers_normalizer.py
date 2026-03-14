@@ -39,6 +39,11 @@ UNTERNEHMENSGROESSE_MAP = {
     "2-10": "team",                               # Hyphen fallback
     "11–100": "kmu",                              # En-dash (U+2013)
     "11-100": "kmu",                              # Hyphen fallback
+    # FIX-SIZE-BUCKET: Non-standard ranges that map to KMU
+    "11–49": "kmu",                               # En-dash (test data variant)
+    "11-49": "kmu",                               # Hyphen fallback
+    "50–250": "kmu",                              # En-dash (extended KMU range)
+    "50-250": "kmu",                              # Hyphen fallback
     # Frontend V2 with labels
     "1 (solo-selbstständig/freiberuflich)": "solo",
     "2–10 (kleines team)": "team",
