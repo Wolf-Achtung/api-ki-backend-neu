@@ -1109,7 +1109,10 @@ def generate_sofort_start_html(
     # Personalisiere den ersten Schritt
     erster_schritt = branche_data["erster_schritt"]
     if hauptleistung:
-        erster_schritt = f"Testen Sie ChatGPT mit einer typischen Aufgabe aus Ihrem Bereich: {hauptleistung}"
+        erster_schritt = (
+            f"Testen Sie ChatGPT mit einer typischen Aufgabe aus Ihrem Bereich "
+            f"({hauptleistung}). Nutzen Sie dafür die Copy-Paste Prompts auf der nächsten Seite."
+        )
     
     # HTML generieren
     html = f'''
