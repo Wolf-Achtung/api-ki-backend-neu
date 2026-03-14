@@ -1275,7 +1275,8 @@ def _normalize_size(size: str) -> str:
     if not size:
         return "team"
 
-    size_lower = size.lower()
+    # FIX-SIZE-BUCKET: Normalize en-dash/em-dash to hyphen for consistent matching
+    size_lower = size.lower().replace("\u2013", "-").replace("\u2014", "-").replace("\u2212", "-")
     # Check team first to avoid "2-10" matching "1" in solo check
     if "team" in size_lower or "2-10" in size_lower or "klein" in size_lower:
         return "team"
