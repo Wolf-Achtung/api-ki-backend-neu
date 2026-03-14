@@ -160,7 +160,8 @@ def summarize_news(raw_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
     try:
         data = json.loads(response_text)
-        return data.get("news_items", [])
+        items: List[Dict[str, Any]] = data.get("news_items", [])
+        return items
     except json.JSONDecodeError:
         logger.error("[NEWS] Failed to parse LLM response as JSON")
         return []
