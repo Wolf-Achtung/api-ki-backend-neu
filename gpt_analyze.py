@@ -14802,6 +14802,25 @@ def analyze_briefing(
         pass
 
     # =========================================================================
+    # FIX-SIZE-BUCKET: Normalize unternehmensgroesse to canonical segment EARLY
+    # so ALL downstream consumers (score calibration, truncation, sofort_start,
+    # starter kits, branch profile) read "solo"/"team"/"kmu" instead of raw
+    # form values like "11–49" or "11–100" that cause fallback to solo.
+    # =========================================================================
+    try:
+        from services.company_size_normalizer import get_segment as _get_size_segment
+        _raw_ug = answers.get("unternehmensgroesse", "1")
+        _normalized_segment = _get_size_segment(str(_raw_ug))
+        if _normalized_segment != str(_raw_ug):
+            log.info(
+                "[%s] [FIX-SIZE-BUCKET] unternehmensgroesse normalized: '%s' → '%s'",
+                run_id, _raw_ug, _normalized_segment,
+            )
+        answers["unternehmensgroesse"] = _normalized_segment
+    except Exception as _size_err:
+        log.warning("[%s] [FIX-SIZE-BUCKET] Normalization failed: %s", run_id, _size_err)
+
+    # =========================================================================
     # FIX-529: AUTO-DETECT REPORT VARIANT BASED ON COMPANY SIZE
     # If report_variant is None or "auto", determine based on unternehmensgroesse
     # =========================================================================
