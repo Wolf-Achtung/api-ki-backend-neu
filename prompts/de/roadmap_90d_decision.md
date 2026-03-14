@@ -73,7 +73,7 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>
 <!-- WORD_MINIMUM: 200 -->
 <!-- WORD_MAXIMUM: 300 -->
 
-Erzeuge eine Entscheidungsfassung der 90-Tage-Roadmap für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
+Erzeuge eine Entscheidungsfassung des 90-Tage-Fahrplans für {{BRANCH_CONTEXT_LABEL}} ({{COMPANY_SIZE}}).
 
 INHALTLICHE GRUNDLAGE:
 Verdichte die bestehenden Roadmap-Inhalte. Erfinde nichts Neues.
@@ -119,7 +119,7 @@ STRIKTE AUSGABEREGEL (verbindlich):
 - Jeder Bullet muss sofort umsetzbar formuliert sein, nicht als Template
 
 THEMEN-OWNERSHIP (verbindlich):
-- Diese Section: NUR Entscheidungsverdichtung der 90-Tage-Roadmap
+- Diese Section: NUR Entscheidungsverdichtung des 90-Tage-Fahrplans
 - Basiert auf roadmap_90d, keine eigenen Maßnahmen erfinden
 - NICHT hier: Change Management (→ org_change)
 - NICHT hier: Detaillierte Schritte (→ roadmap_90d)
@@ -131,7 +131,7 @@ ANTI-REDUNDANZ (STRIKT! — HÖCHSTE PRIORITÄT!):
 - Bei thematischer Überschneidung: eigene Wortwahl verwenden, nicht kopieren
 - Nutze Kurzlabels und Verweise ("siehe Quick Wins", "wie im Business Case dargestellt") statt Inhalte zu wiederholen
 - Jede Phase (0–30, 31–60, 61–90 Tage) muss NEUE, eigenständige Informationen liefern — keine Paraphrasierung bereits genannter Maßnahmen
-- Falls eine Maßnahme aus den Quick Wins relevant ist: referenziere sie mit maximal 5 Wörtern und ergänze den spezifischen Umsetzungskontext für die Roadmap
+- Falls eine Maßnahme aus den Quick Wins relevant ist: referenziere sie mit maximal 5 Wörtern und ergänze den spezifischen Umsetzungskontext für den Fahrplan
 - SELBSTPRÜFUNG VOR AUSGABE: Lies jeden Satz nochmal — enthält er Formulierungen, die wörtlich oder nahezu wörtlich in roadmap_90d, quick_wins oder executive_summary vorkommen könnten? Falls ja: komplett umformulieren mit neuer Satzstruktur und neuem Vokabular
 
 GUARDRAIL (zwingend):
