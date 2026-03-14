@@ -203,9 +203,9 @@ def _minify_svg(svg: str) -> str:
 
 # Default logo files to embed
 DEFAULT_LOGOS = [
-    "ki-sicherheit-logo.webp",
-    "tuev-logo-transparent.webp",
-    "ki-ready-2025.webp",
+    "ki-sicherheit-logo-small.png",
+    "tuev-logo-transparent.png",
+    "KI-READY-2025-badge.png",
     "dsgvo.svg",
     "eu-ai.svg",
 ]
@@ -325,13 +325,21 @@ def embed_logos_in_html(html: str, template_dir: str = "templates") -> str:
     modified_html = html
     replacements = 0
 
+    # Map new PNG filenames to their old WebP equivalents for backward compat
+    _png_to_webp_compat = {
+        "ki-sicherheit-logo-small.png": ["ki-sicherheit-logo.webp", "ki-sicherheit-logo.png"],
+        "tuev-logo-transparent.png": ["tuev-logo-transparent.webp"],
+        "KI-READY-2025-badge.png": ["ki-ready-2025.webp", "KI-READY-2025.webp", "KI-READY-2025.png"],
+    }
+
     for filename, data_uri in logo_map.items():
-        # Match various src patterns
-        patterns = [
-            f'src="{filename}"',
-            f"src='{filename}'",
-            f'src="{filename.replace(".webp", "")}"',  # Without extension
-        ]
+        # Match various src patterns (current name + old WebP names)
+        alt_names = _png_to_webp_compat.get(filename, [])
+        all_names = [filename] + alt_names
+        patterns = []
+        for name in all_names:
+            patterns.append(f'src="{name}"')
+            patterns.append(f"src='{name}'")
 
         for pattern in patterns:
             found = pattern in modified_html
@@ -393,7 +401,6 @@ def embed_all_images_in_html(html: str, template_dir: str = "templates") -> str:
             try:
                 with open(file_path, "rb") as f:
                     data = f.read()
-                    b64 = base64.b64encode(data).decode("utf-8")
 
                     ext = file_path.suffix.lower()
                     mime_type = {
@@ -405,6 +412,16 @@ def embed_all_images_in_html(html: str, template_dir: str = "templates") -> str:
                         ".gif": "image/gif",
                     }.get(ext, "application/octet-stream")
 
+                    # WEBP-SAFETY-NET: Convert WebP files to PNG for Puppeteer compat
+                    if ext == ".webp" and PILLOW_AVAILABLE:
+                        try:
+                            data, mime_type = optimize_base64_image(data, mime_type)
+                            log.info("[WEBP-SAFETY-NET] Converted %s to PNG data URI (%d chars)",
+                                     file_path.name, len(data))
+                        except Exception as conv_err:
+                            log.warning("[WEBP-SAFETY-NET] Failed to convert %s: %s", src, conv_err)
+
+                    b64 = base64.b64encode(data).decode("utf-8")
                     data_uri = f"data:{mime_type};base64,{b64}"
 
                     # Replace in HTML
@@ -417,3 +434,82 @@ def embed_all_images_in_html(html: str, template_dir: str = "templates") -> str:
 
     log.info(f"[IMAGE-EMBED] Embedded {embedded_count} images in HTML")
     return modified_html
+
+
+def convert_webp_paths_to_png_base64(html: str, base_dir: str = None) -> str:
+    """
+    Safety net: Convert any remaining <img src="...webp"> file paths
+    to PNG base64 data URIs for Puppeteer compatibility.
+
+    This complements optimize_base64_image() which handles base64-embedded WebP.
+    This function handles FILE PATH-referenced WebP images.
+    """
+    if not PILLOW_AVAILABLE:
+        log.warning("[WEBP-SAFETY-NET] Pillow not available, skipping WebP conversion")
+        return html
+
+    # Resolve base_dir
+    if base_dir:
+        base_path = Path(base_dir)
+        if not base_path.is_absolute():
+            project_root = Path(__file__).resolve().parent.parent
+            base_path = project_root / base_path
+        base_path = base_path.resolve()
+    else:
+        base_path = Path(__file__).resolve().parent.parent / "templates"
+
+    def replace_webp_src(match):
+        full_tag = match.group(0)
+        src = match.group(1)
+
+        # Skip data URIs (handled by optimize_base64_image)
+        if src.startswith("data:"):
+            return full_tag
+
+        # Skip non-webp files
+        if not src.lower().endswith(".webp"):
+            return full_tag
+
+        try:
+            # Resolve path
+            file_path = Path(src)
+            if not file_path.is_absolute():
+                file_path = base_path / file_path
+
+            if not file_path.exists():
+                # Try common asset directories
+                for try_dir in ["", "static", "assets", "images", "badges"]:
+                    alt_path = base_path / try_dir / Path(src).name if try_dir else base_path / Path(src).name
+                    if alt_path.exists():
+                        file_path = alt_path
+                        break
+
+            if not file_path.exists():
+                log.warning("[WEBP-SAFETY-NET] File not found: %s", src)
+                return full_tag
+
+            # Convert WebP -> PNG in memory
+            img = Image.open(file_path).convert("RGBA")
+
+            # Resize if too large (badges shouldn't be > 200px)
+            max_h = 200
+            if img.size[1] > max_h:
+                ratio = max_h / img.size[1]
+                img = img.resize((int(img.size[0] * ratio), max_h), Image.LANCZOS)
+
+            buf = io.BytesIO()
+            img.save(buf, format="PNG", optimize=True)
+            b64 = base64.b64encode(buf.getvalue()).decode()
+
+            new_src = f"data:image/png;base64,{b64}"
+            log.info("[WEBP-SAFETY-NET] Converted %s to PNG data URI (%d chars)",
+                     file_path.name, len(b64))
+            return full_tag.replace(src, new_src)
+
+        except Exception as e:
+            log.warning("[WEBP-SAFETY-NET] Failed to convert %s: %s", src, e)
+            return full_tag
+
+    # Match <img ... src="...webp"> tags
+    pattern = r'<img[^>]+src=["\']([^"\']+\.webp)["\'][^>]*>'
+    return re.sub(pattern, replace_webp_src, html, flags=re.IGNORECASE)
