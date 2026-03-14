@@ -34,14 +34,17 @@ PFLICHTSTRUKTUR (4 Abschnitte):
 3. "Fahrplan für die nächsten 90 Tage" (3 Phasen: 0-30, 31-60, 61-90)
 4. "Umgang mit Widerständen" (size-aware)
 
-ANTI-REDUNDANZ (STRIKT!):
+ANTI-REDUNDANZ (STRIKT! — HÖCHSTE PRIORITÄT!):
 - Change-Aspekte HIER behandeln
 - NICHT in strategie_governance wiederholen (→ Querverweis)
 - 90-Tage-Fahrplan ergänzt roadmap_90d, wiederholt nicht
 - Bei Überschneidung: Querverweis nutzen
-- KEINE Textbausteine aus anderen Sections übernehmen
+- KEINE Textbausteine aus anderen Sections übernehmen (Roadmap, Quick Wins, Governance)
 - Jeder Satz muss für diese Section EINZIGARTIG formuliert sein
-- Prüfe vor Ausgabe: Enthält dieser Text Formulierungen, die wörtlich in roadmap_90d oder gamechanger vorkommen könnten? Falls ja, umformulieren
+- Dieser Abschnitt behandelt AUSSCHLIESSLICH organisatorische Veränderungen: Rollen, Verantwortlichkeiten, Change-Management, Akzeptanz
+- Verweise auf andere Sections mit Kurzlabels ("die in der Roadmap definierten Phasen", "das im Governance-Abschnitt beschriebene Framework") statt Inhalte zu zitieren
+- Maximal 1 Satz Kontext pro Verweis, dann sofort weiter mit NEUEM Inhalt
+- SELBSTPRÜFUNG VOR AUSGABE: Lies jeden Satz nochmal — enthält er Formulierungen, die wörtlich oder nahezu wörtlich in roadmap_90d, gamechanger oder quick_wins vorkommen könnten? Falls ja: komplett umformulieren mit neuer Satzstruktur und neuem Vokabular
 
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: persönliche Routinen, Self-Review, eigene Prüfpunkte
