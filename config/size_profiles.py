@@ -304,6 +304,11 @@ _SIZE_TO_PROFILE_KEY = {
     "2\u201310": "team",  # En-dash
     "11-100": "kmu",
     "11\u2013100": "kmu",  # En-dash
+    # FIX-SIZE-BUCKET: Non-standard ranges (test data, edge cases)
+    "11-49": "kmu",
+    "11\u201349": "kmu",   # En-dash
+    "50-250": "kmu",
+    "50\u2013250": "kmu",  # En-dash
     # Normalized bucket names
     "solo": "solo",
     "small_team": "team",
