@@ -337,6 +337,10 @@ REGEL REGIONALE FÖRDERPROGRAMME:
 - Regionale Programme sind oft leichter zugänglich und haben kürzere Bewilligungszeiten — weise darauf hin.
 - Nenne NUR Förderprogramme, die in den Recherche-Ergebnissen belegt sind. Erfinde KEINE Programme.
 
+FEHLENDE DATEN:
+- Wenn eine Information (Förderquote, Antragsfrist, Förderhöhe) nicht bekannt ist, schreibe "Auf Anfrage" oder "Aktuell prüfen".
+- Verwende NIEMALS Meta-Referenzen wie "im bereitgestellten Material nicht beziffert", "nicht im Kontext vorhanden", "aus den Quellen nicht ersichtlich", "im Material nicht genannt" oder ähnliche Formulierungen die auf Datenquellen verweisen. Der Leser weiß nicht, welches "Material" gemeint ist.
+
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Programmübersicht.
 Quellenangaben am Ende als <div class="sources">.""",
 
