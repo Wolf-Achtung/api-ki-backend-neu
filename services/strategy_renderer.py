@@ -31,6 +31,31 @@ _FUNDING_TOTAL_PATTERN = re.compile(
 )
 
 
+# FIX-PROMPT-LEAK: Patterns where LLM references its input data/context.
+# These should never appear in customer-facing output.
+_PROMPT_LEAK_PATTERNS = [
+    (re.compile(r'(?:im|nicht im)\s+bereitgestellten\s+Material\s+(?:nicht\s+)?beziffert', re.IGNORECASE), 'Auf Anfrage'),
+    (re.compile(r'(?:aus|in)\s+(?:den\s+)?(?:bereitgestellten|verfügbaren)\s+(?:Quellen|Daten|Unterlagen|Informationen)\s+(?:nicht\s+)?(?:ersichtlich|beziffert|bekannt|genannt|aufgeführt|spezifiziert)', re.IGNORECASE), 'Auf Anfrage'),
+    (re.compile(r'(?:im|aus dem)\s+(?:bereitgestellten|verfügbaren|vorliegenden)\s+(?:Material|Kontext)\s+(?:nicht\s+)?(?:genannt|aufgeführt|spezifiziert|beziffert|ersichtlich|bekannt)', re.IGNORECASE), 'Auf Anfrage'),
+    (re.compile(r'laut\s+(?:den\s+)?bereitgestellten\s+(?:Daten|Unterlagen|Informationen)', re.IGNORECASE), ''),
+    (re.compile(r'(?:die|keine)\s+(?:bereitgestellten|verfügbaren)\s+(?:Daten|Informationen|Quellen)\s+(?:enthalten|zeigen|nennen)', re.IGNORECASE), ''),
+]
+
+
+def _strip_prompt_leaks(html: str) -> str:
+    """Remove LLM meta-language about data sources from any section."""
+    if not html:
+        return html
+    result = html
+    count = 0
+    for pattern, replacement in _PROMPT_LEAK_PATTERNS:
+        result, n = pattern.subn(replacement, result)
+        count += n
+    if count > 0:
+        logger.info("[FIX-PROMPT-LEAK] Removed %d prompt-leak pattern(s)", count)
+    return result
+
+
 def _strip_funding_total(s7_html: str) -> str:
     """Remove misleading cross-program funding total from S7 HTML."""
     if not s7_html:
@@ -257,14 +282,14 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         "build_id": os.getenv("BUILD_ID", ""),
         # Sections
         "exec_summary": sections.get("exec_summary", ""),
-        "section_s1": sections.get("S1", ""),
-        "section_s2": sections.get("S2", ""),
-        "section_s3": sections.get("S3", ""),
-        "section_s4": sections.get("S4", ""),
-        "section_s5": sections.get("S5", ""),
-        "section_s6": sections.get("S6", ""),
-        "section_s7": _strip_funding_total(sections.get("S7", "")),
-        "section_s8": sections.get("S8", ""),
+        "section_s1": _strip_prompt_leaks(sections.get("S1", "")),
+        "section_s2": _strip_prompt_leaks(sections.get("S2", "")),
+        "section_s3": _strip_prompt_leaks(sections.get("S3", "")),
+        "section_s4": _strip_prompt_leaks(sections.get("S4", "")),
+        "section_s5": _strip_prompt_leaks(sections.get("S5", "")),
+        "section_s6": _strip_prompt_leaks(sections.get("S6", "")),
+        "section_s7": _strip_prompt_leaks(_strip_funding_total(sections.get("S7", ""))),
+        "section_s8": _strip_prompt_leaks(sections.get("S8", "")),
         "naechste_schritte": naechste_schritte,
     }
 
