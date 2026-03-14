@@ -980,6 +980,43 @@ def render(briefing_obj: Any,
     # V7: Strip emojis from all backend-generated HTML blocks
     _strip_emojis_from_context(ctx)
 
+    # =========================================================================
+    # FIX-SCORE-INTERP: Enforce correct Gesamtscore in SCORE_INTERPRETATION_HTML
+    # The LLM sometimes confuses the overall score with a dimension sub-score
+    # (e.g. Sicherheit=2 shown as "Reifegrad 2/100" instead of overall=48).
+    # Also fix "für  analysiert" gap from empty hauptleistung in FINAL_CHECK_INTRO.
+    # =========================================================================
+    import re as _re_si
+    _final_score = int(float(ctx.get('score_gesamt', 0) or 0))
+    if _final_score > 0:
+        _si_html = ctx.get('SCORE_INTERPRETATION_HTML', '')
+        if isinstance(_si_html, str) and _si_html:
+            # Replace any wrong "X/100" pattern in the first sentence
+            # that doesn't match the actual overall score
+            _si_fixed = _re_si.sub(
+                r'(\b(?:Score|Gesamtscore|Reifegrad|KI-Score)\s+(?:von\s+)?)\d+(/100)',
+                rf'\g<1>{_final_score}\2',
+                _si_html
+            )
+            # Also fix standalone "X/100" at start of sentence context
+            _si_fixed = _re_si.sub(
+                r'(\()(\d+)(/100\s*[=–—-])',
+                lambda m: f'({_final_score}{m.group(3)}' if int(m.group(2)) != _final_score else m.group(0),
+                _si_fixed
+            )
+            if _si_fixed != _si_html:
+                ctx['SCORE_INTERPRETATION_HTML'] = _si_fixed
+                log.info("[FIX-SCORE-INTERP] Enforced correct score %d in SCORE_INTERPRETATION_HTML", _final_score)
+
+    # FIX-FCI-GAP: Fix "für  analysiert" / "für analysiert" in FINAL_CHECK_INTRO
+    _fci = ctx.get('FINAL_CHECK_INTRO', '')
+    if isinstance(_fci, str) and _fci:
+        _fci_new = _re_si.sub(r'Report\s+für\s+analysiert', 'Report analysiert', _fci)
+        _fci_new = _re_si.sub(r'für\s{2,}analysiert', 'analysiert', _fci_new)
+        if _fci_new != _fci:
+            ctx['FINAL_CHECK_INTRO'] = _fci_new
+            log.info("[FIX-FCI-GAP] Fixed empty hauptleistung gap in FINAL_CHECK_INTRO")
+
     html = env.get_template(tpl_name).render(**ctx)
 
     # Q3: Fix Kl→KI globally in final HTML (common OCR/input error)
