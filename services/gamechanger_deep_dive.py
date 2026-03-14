@@ -829,9 +829,10 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
 
     # 5b. Embed logos as base64 for PDF service compatibility
     # (PDF service has no access to local files — must inline before sending)
-    from utils.logo_embedder import embed_logos_in_html
+    from utils.logo_embedder import embed_logos_in_html, convert_webp_paths_to_png_base64
     _tpl_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
     html = embed_logos_in_html(html, _tpl_dir)
+    html = convert_webp_paths_to_png_base64(html, _tpl_dir)
 
     # 5c. Final Break-Even enforcement on assembled HTML (belt-and-suspenders)
     if canonical_payback > 0:
