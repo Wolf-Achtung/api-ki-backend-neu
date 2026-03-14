@@ -200,6 +200,9 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
     # Report 3: KI-Strategiebericht
     cfg.append(("routes.strategy", "/api", "strategy"))
 
+    # News research pipeline (cron-triggered)
+    cfg.append(("routes.content", "/api", "content"))
+
     return cfg
 
 
