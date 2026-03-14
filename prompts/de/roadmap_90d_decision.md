@@ -124,11 +124,15 @@ THEMEN-OWNERSHIP (verbindlich):
 - NICHT hier: Change Management (→ org_change)
 - NICHT hier: Detaillierte Schritte (→ roadmap_90d)
 
-ANTI-REDUNDANZ (STRIKT!):
+ANTI-REDUNDANZ (STRIKT! — HÖCHSTE PRIORITÄT!):
 - Verwende KEINE wörtlichen Formulierungen aus roadmap_90d — paraphrasiere und verdichte
-- KEINE Textbausteine aus anderen Sections übernehmen
+- KEINE Textbausteine aus anderen Sections übernehmen (Quick Wins, Executive Summary, Business Case)
 - Jeder Satz muss für diese Section EINZIGARTIG formuliert sein
 - Bei thematischer Überschneidung: eigene Wortwahl verwenden, nicht kopieren
+- Nutze Kurzlabels und Verweise ("siehe Quick Wins", "wie im Business Case dargestellt") statt Inhalte zu wiederholen
+- Jede Phase (0–30, 31–60, 61–90 Tage) muss NEUE, eigenständige Informationen liefern — keine Paraphrasierung bereits genannter Maßnahmen
+- Falls eine Maßnahme aus den Quick Wins relevant ist: referenziere sie mit maximal 5 Wörtern und ergänze den spezifischen Umsetzungskontext für die Roadmap
+- SELBSTPRÜFUNG VOR AUSGABE: Lies jeden Satz nochmal — enthält er Formulierungen, die wörtlich oder nahezu wörtlich in roadmap_90d, quick_wins oder executive_summary vorkommen könnten? Falls ja: komplett umformulieren mit neuer Satzstruktur und neuem Vokabular
 
 GUARDRAIL (zwingend):
 Keine Assistenz-/Dialog-Sprache, keine Fragen, keine Imperative, keine Meta-Kommentare. Ausschließlich neutrale Berichtssprache.

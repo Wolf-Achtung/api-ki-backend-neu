@@ -87,6 +87,15 @@ STYLE:
 - No explanations, only action directives
 - Each phase must be independently readable
 
+ANTI-REDUNDANCY (STRICT! — HIGHEST PRIORITY!):
+- Do NOT reuse phrasing from roadmap_90d — paraphrase and condense
+- Do NOT copy text blocks from other sections (Quick Wins, Executive Summary, Business Case)
+- Every sentence must be UNIQUELY formulated for this section
+- Use short labels and cross-references ("see Quick Wins", "as outlined in the Business Case") instead of repeating content
+- Each phase (0–30, 31–60, 61–90 days) must provide NEW, independent information — no paraphrasing of previously stated measures
+- If a measure from Quick Wins is relevant: reference it in max 5 words and add the specific implementation context for the roadmap
+- SELF-CHECK BEFORE OUTPUT: Re-read every sentence — does it contain phrasing that appears verbatim or near-verbatim in roadmap_90d, quick_wins, or executive_summary? If yes: completely rephrase with new sentence structure and vocabulary
+
 STRICT OUTPUT RULE (mandatory):
 - NO placeholders like [1 sentence], [Max. 2-3 steps], {variable}, {{token}}
 - NO square brackets [ ] or curly braces { } in output
