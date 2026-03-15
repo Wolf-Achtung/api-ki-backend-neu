@@ -899,16 +899,24 @@ def render(briefing_obj: Any,
                 ctx[_gs] = _gv_new
 
     # Z+1c-PRE: NUCLEAR score fix on ALL ctx sections BEFORE Jinja
+    # FIX-Z1C-GESAMT: Skip replacement pairs where the "wrong" value matches
+    # score_gesamt. Otherwise "48/100" (correct Gesamtscore) gets replaced
+    # with "2/100" (security score), corrupting Management Summary, TOC, etc.
     _cg_pre = int(float(ctx.get('CANONICAL_GOVERNANCE', 0) or 0))
     _cs_pre = int(float(ctx.get('CANONICAL_SECURITY', 0) or 0))
+    _gs_pre = int(float(ctx.get('score_gesamt', 0) or 0))
     _z1c_pre = 0
     if _cg_pre > 0 and _cs_pre > 0:
+        _z1c_pairs = [(38, _cg_pre), (42, _cs_pre), (32, _cg_pre), (48, _cs_pre)]
+        _z1c_pairs = [(_w, _r) for _w, _r in _z1c_pairs if _w != _gs_pre]
+        if _gs_pre > 0:
+            log.info("[Z+1c-PRE] score_gesamt=%d — skipping pairs where wrong==%d", _gs_pre, _gs_pre)
         for _sk in list(ctx.keys()):
             _sv = ctx.get(_sk, '')
             if not isinstance(_sv, str) or len(_sv) < 50:
                 continue
             _changed = False
-            for _w, _r in [(38, _cg_pre), (42, _cs_pre), (32, _cg_pre), (48, _cs_pre)]:
+            for _w, _r in _z1c_pairs:
                 for _pat in [f'{_w}/100', f'{_w} / 100', f'{_w} von 100']:
                     if _pat in _sv:
                         _sv = _sv.replace(_pat, _pat.replace(str(_w), str(_r)))
@@ -1215,12 +1223,18 @@ def render(briefing_obj: Any,
             log.info("[Y1b] Cleaned bare numbers from MONETARISIERUNG_HTML")
 
     # Z+1c-POST: NUCLEAR score fix on final HTML
+    # FIX-Z1C-GESAMT: Skip pairs where "wrong" == score_gesamt (same as PRE fix)
     import re as _re_z1c
     _cg_post = int(float(ctx.get('CANONICAL_GOVERNANCE', 0) or 0))
     _cs_post = int(float(ctx.get('CANONICAL_SECURITY', 0) or 0))
+    _gs_post = int(float(ctx.get('score_gesamt', 0) or 0))
     _z1c_post = 0
     if _cg_post > 0 and _cs_post > 0:
-        for _wrong, _right, _label in [(38, _cg_post, 'Gov'), (42, _cs_post, 'Sec'), (32, _cg_post, 'Gov'), (48, _cs_post, 'Sec')]:
+        _z1c_post_pairs = [(38, _cg_post, 'Gov'), (42, _cs_post, 'Sec'), (32, _cg_post, 'Gov'), (48, _cs_post, 'Sec')]
+        _z1c_post_pairs = [(_w, _r, _l) for _w, _r, _l in _z1c_post_pairs if _w != _gs_post]
+        if _gs_post > 0:
+            log.info("[Z+1c-POST] score_gesamt=%d — skipping pairs where wrong==%d", _gs_post, _gs_post)
+        for _wrong, _right, _label in _z1c_post_pairs:
             for _pat, _rep in [
                 (f'{_wrong}/100', f'{_right}/100'),
                 (f'{_wrong} / 100', f'{_right} / 100'),
@@ -1241,7 +1255,10 @@ def render(briefing_obj: Any,
                         _z1c_post += _c
                         log.info("[Z+1c-POST] %s <%s>: %d->%d (%dx)", _label, _t, _wrong, _right, _c)
         # NUCLEAR REGEX: >38</tag>/100 or >38< /100 etc
-        for _w, _r in [(38, _cg_post), (42, _cs_post)]:
+        # FIX-Z1C-GESAMT: Also skip nuclear regex for score_gesamt values
+        _z1c_nuke_pairs = [(38, _cg_post), (42, _cs_post)]
+        _z1c_nuke_pairs = [(_w, _r) for _w, _r in _z1c_nuke_pairs if _w != _gs_post]
+        for _w, _r in _z1c_nuke_pairs:
             _nuke = _re_z1c.compile(r'(?<=>)' + str(_w) + r'(?=(?:</[^>]+>)*\s*/\s*100)')
             _nc = len(_nuke.findall(html))
             if _nc > 0:
