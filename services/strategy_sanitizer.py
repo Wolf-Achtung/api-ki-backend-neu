@@ -17,10 +17,33 @@ _ADOPTION_CONTEXT = re.compile(
     re.IGNORECASE
 )
 
+# ROI-Kontext-Keywords: Prozentwerte >100% sind hier normal und valide
+ROI_CONTEXT_KEYWORDS = [
+    "roi", "return on investment", "rendite", "amortisation", "amortisierung",
+    "break-even", "break even", "breakeven", "nettonutzen", "netto-nutzen",
+    "szenario", "konservativ", "realistisch", "optimistisch",
+    "investition", "kapitalrendite", "wirtschaftlichkeit",
+]
+
 # Prozentwert-Pattern: fängt "104%", "104 %", "104,5%", "104.5 %" etc.
 _PERCENT_PATTERN = re.compile(
     r'(\d{1,4}[.,]?\d{0,2})\s*%'
 )
+
+
+def _is_roi_context(text: str, match_start: int, match_end: int) -> str | None:
+    """Check if percentage is in ROI context (where >100% is valid).
+
+    Returns the matched keyword if ROI context detected, None otherwise.
+    """
+    context_window = 200
+    start = max(0, match_start - context_window)
+    end = min(len(text), match_end + context_window)
+    context = text[start:end].lower()
+    for kw in ROI_CONTEXT_KEYWORDS:
+        if kw in context:
+            return kw
+    return None
 
 
 def _check_percent_plausibility(html: str, section_key: str) -> tuple[str, list[str]]:
@@ -46,6 +69,15 @@ def _check_percent_plausibility(html: str, section_key: str) -> tuple[str, list[
             start = max(0, match.start() - 200)
             end = min(len(html), match.end() + 200)
             context = html[start:end]
+
+            # FIX-SF1v2: Skip ROI context — >100% is valid for ROI values
+            roi_kw = _is_roi_context(html, match.start(), match.end())
+            if roi_kw:
+                log.debug(
+                    "[FIX-SF1-SKIP] '%s' in %s is ROI context (keyword: '%s') — not patched",
+                    match.group(0), section_key, roi_kw
+                )
+                continue
 
             if _ADOPTION_CONTEXT.search(context):
                 warning = (
