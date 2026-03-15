@@ -319,12 +319,32 @@ _RE_TABLE = re.compile(r'<table(?:\s[^>]*)?>.*?</table>', re.DOTALL | re.IGNOREC
 
 
 def _merge_or_add_style(match: re.Match[str], new_styles: str, tag: str) -> str:
-    """Add styles to an HTML tag, merging with existing style if present."""
+    """FIX-HE1: Add styles to an HTML tag, merging with existing style if present.
+
+    Parses CSS properties from both existing and new styles, merging them into
+    a single style attribute. New properties override existing ones with the
+    same name. Prevents duplicate style attributes.
+    """
     tag_html: str = match.group(0)
     existing = re.search(r'style="([^"]*)"', tag_html)
     if existing:
-        merged = existing.group(1).rstrip(';') + ';' + new_styles
-        return str(tag_html.replace(existing.group(0), f'style="{merged}"'))
+        # Parse existing + new properties, new overrides existing
+        props: dict[str, str] = {}
+        for prop in existing.group(1).split(';'):
+            prop = prop.strip()
+            if ':' in prop:
+                key, val = prop.split(':', 1)
+                props[key.strip()] = val.strip()
+        for prop in new_styles.split(';'):
+            prop = prop.strip()
+            if ':' in prop:
+                key, val = prop.split(':', 1)
+                props[key.strip()] = val.strip()
+        merged = ';'.join(f'{k}:{v}' for k, v in props.items())
+        result = str(tag_html.replace(existing.group(0), f'style="{merged}"'))
+        log.debug("[FIX-HE1] Merged style on <%s>: existing='%s' + new='%s'",
+                  tag, existing.group(1), new_styles)
+        return result
     else:
         attrs = match.group(1) if match.lastindex else ''
         return f'<{tag} style="{new_styles}"{attrs}>'
@@ -345,15 +365,20 @@ def _style_table_headers(table_html: str) -> str:
         table_html
     )
     # Alternating row backgrounds
+    # FIX-HE1: merge with existing style instead of creating duplicates
     row_idx = [0]
 
     def _style_tr(match: re.Match) -> str:  # type: ignore[type-arg, unused-ignore]
         row_idx[0] += 1
         bg = "#f9fafb" if row_idx[0] % 2 == 0 else "#fff"
+        existing = re.search(r'style="([^"]*)"', match.group(0))
+        if existing:
+            merged = existing.group(1).rstrip(';') + f';background:{bg}'
+            return str(match.group(0).replace(existing.group(0), f'style="{merged}"'))
         return f'<tr style="background:{bg}">'
 
-    # Only style <tr> without existing style (skip header rows)
-    table_html = re.sub(r'<tr>(?!.*?<th)', _style_tr, table_html)
+    # Style <tr> without header cells (skip header rows)
+    table_html = re.sub(r'<tr(?:\s[^>]*)?>(?!.*?<th)', _style_tr, table_html)
     return table_html
 
 
@@ -381,9 +406,11 @@ def _transform_tables(html: str) -> str:
             return result
 
         # Rule 7 fallback: styled table with inline styles + class
+        # FIX-HE1: Merge with existing style if LLM already set one
         table_html = re.sub(
-            r'^<table(?!\s+class=)',
-            f'<table class="tool-comparison" style="{_S_TABLE}"',
+            r'^<table([^>]*)>',
+            lambda m: _merge_or_add_style(m, _S_TABLE, 'table').rstrip('>') +
+                      (' class="tool-comparison"' if 'class=' not in m.group(0) else '') + '>',
             table_html
         )
         table_html = _style_table_headers(table_html)
@@ -540,33 +567,37 @@ def _transform_inline_kpis(html: str) -> str:
 # =============================================================================
 
 def _transform_content_boxes(html: str) -> str:
-    """Apply content-level transforms: highlight boxes, tip/warning/empfehlung boxes, ampel td badges, Quick Win badges, Quellen footer."""
+    """Apply content-level transforms: highlight boxes, tip/warning/empfehlung boxes, ampel td badges, Quick Win badges, Quellen footer.
 
-    # 2A: "Auf einen Blick:" → blue highlight box
+    FIX-VU3: Added CSS class names alongside inline styles so template CSS
+    definitions are activated (highlight-box, tip-box, warning-box, info-box).
+    """
+
+    # 2A: "Auf einen Blick:" → blue highlight box (class="highlight-box")
     html = re.sub(
         r'<p>\s*<strong>Auf einen Blick:?</strong>\s*(.*?)</p>',
-        r'<div style="background:#ebf5fb;border-left:4px solid #2e86c1;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;font-size:10pt;line-height:1.6"><strong>Auf einen Blick:</strong> \1</div>',
+        r'<div class="highlight-box" style="background:#ebf5fb;border-left:4px solid #2e86c1;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;font-size:10pt;line-height:1.6;break-inside:avoid"><strong>Auf einen Blick:</strong> \1</div>',
         html, flags=re.DOTALL | re.IGNORECASE,
     )
 
-    # 2B: "Tipp/Praxis-Tipp/Hinweis:" → green tip box
+    # 2B: "Tipp/Praxis-Tipp/Hinweis:" → green tip box (class="tip-box")
     html = re.sub(
         r'<p>\s*<strong>(Tipp|Praxis-Tipp|Hinweis):?</strong>\s*(.*?)</p>',
-        r'<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin:16px 0;font-size:9.5pt;line-height:1.55"><strong>\1:</strong> \2</div>',
+        r'<div class="tip-box" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin:16px 0;font-size:9.5pt;line-height:1.55;break-inside:avoid"><strong>\1:</strong> \2</div>',
         html, flags=re.DOTALL | re.IGNORECASE,
     )
 
-    # 2C: "Wichtig/Achtung/Warnung:" → yellow warning box
+    # 2C: "Wichtig/Achtung/Warnung:" → yellow warning box (class="warning-box")
     html = re.sub(
         r'<p>\s*<strong>(Wichtig|Achtung|Warnung):?</strong>\s*(.*?)</p>',
-        r'<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin:16px 0;font-size:9.5pt;line-height:1.55"><strong>\1:</strong> \2</div>',
+        r'<div class="warning-box" style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin:16px 0;font-size:9.5pt;line-height:1.55;break-inside:avoid"><strong>\1:</strong> \2</div>',
         html, flags=re.DOTALL | re.IGNORECASE,
     )
 
-    # 2D: "Empfehlung/Investitionsempfehlung/Handlungsempfehlung:" → blue gradient box
+    # 2D: "Empfehlung/Investitionsempfehlung/Handlungsempfehlung:" → blue gradient box (class="info-box")
     html = re.sub(
         r'<p>\s*<strong>(Empfehlung|Investitionsempfehlung|Handlungsempfehlung):?</strong>\s*(.*?)</p>',
-        r'<div style="background:linear-gradient(135deg,#eff6ff,#e0f2fe);border:1px solid #93c5fd;border-left:4px solid #2563eb;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;font-size:10pt;line-height:1.6"><strong>\1:</strong> \2</div>',
+        r'<div class="info-box" style="background:linear-gradient(135deg,#eff6ff,#e0f2fe);border:1px solid #93c5fd;border-left:4px solid #2563eb;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;font-size:10pt;line-height:1.6;break-inside:avoid"><strong>\1:</strong> \2</div>',
         html, flags=re.DOTALL | re.IGNORECASE,
     )
 
@@ -605,6 +636,69 @@ def _transform_content_boxes(html: str) -> str:
 
 
 # =============================================================================
+# FIX-VU3: Activate unused CSS classes from templates
+# =============================================================================
+
+_S_ACTION_CARD = "background:#F0FDFA;border-left:3px solid #0D7377;border-radius:4px;padding:12px 16px;margin-bottom:16px;break-inside:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact"
+
+
+def _enhance_data_tables(html: str) -> str:
+    """FIX-VU3: Add 'data-table' class to tables containing numeric data (€, %, Monat).
+
+    Tables already classed as tool-comparison are reclassified to data-table
+    if they contain financial/KPI data patterns.
+    """
+    _numeric_pattern = re.compile(r'[\d]+[.,]?\d*\s*[%€]|Monat\w*\s+\d|\d+\.\d{3}')
+    enhanced = 0
+
+    def _classify(match: re.Match) -> str:  # type: ignore[type-arg, unused-ignore]
+        nonlocal enhanced
+        table_html = match.group(0)
+        text = re.sub(r'<[^>]+>', '', table_html)
+        numeric_hits = len(_numeric_pattern.findall(text))
+        if numeric_hits >= 3:
+            table_html = table_html.replace('class="tool-comparison"', 'class="data-table"', 1)
+            enhanced += 1
+        return str(table_html)
+
+    html = _RE_TABLE.sub(_classify, html)
+    if enhanced:
+        log.info("[FIX-VU3] Reclassified %d table(s) as data-table", enhanced)
+    return html
+
+
+def _enhance_action_cards(html: str) -> str:
+    """FIX-VU3: Wrap action items after 'Nächste Schritte'/'Handlungsempfehlung' headings.
+
+    Converts <li> items in <ol>/<ul> following these headings into action-card divs.
+    Only applies to KPA reports (deep-dive style).
+    """
+    # Find <ol>/<ul> blocks that directly follow action-related headings
+    _action_heading = re.compile(
+        r'(<h[2-4][^>]*>(?:Nächste Schritte|Maßnahmenplan|Konkrete Maßnahmen|Umsetzungsplan)[^<]*</h[2-4]>\s*)'
+        r'(<(?:ol|ul)[^>]*>.*?</(?:ol|ul)>)',
+        re.DOTALL | re.IGNORECASE
+    )
+
+    def _wrap_list_items(match: re.Match) -> str:  # type: ignore[type-arg, unused-ignore]
+        heading = match.group(1)
+        list_html = match.group(2)
+        # Wrap each <li> content in an action-card
+        enhanced_list = re.sub(
+            r'<li([^>]*)>(.*?)</li>',
+            rf'<li\1><div class="action-card" style="{_S_ACTION_CARD}">\2</div></li>',
+            list_html, flags=re.DOTALL
+        )
+        return str(heading) + str(enhanced_list)
+
+    result = _action_heading.sub(_wrap_list_items, html)
+    if result != html:
+        count = result.count('class="action-card"') - html.count('class="action-card"')
+        log.info("[FIX-VU3] Enhanced %d list item(s) as action-card", count)
+    return result
+
+
+# =============================================================================
 # PUBLIC API
 # =============================================================================
 
@@ -634,6 +728,9 @@ def enhance_strategy_html(html: str) -> str:
     # 6. Content boxes + inline badges (Rules 8-14)
     html = _transform_content_boxes(html)
 
+    # 7. FIX-VU3: Reclassify data-heavy tables
+    html = _enhance_data_tables(html)
+
     log.info("[HTML-ENHANCE] Strategy: %d \u2192 %d chars", original_len, len(html))
     return html
 
@@ -656,6 +753,10 @@ def enhance_kpa_html(html: str) -> str:
 
     # 4. Content boxes + inline badges (Rules 8-14)
     html = _transform_content_boxes(html)
+
+    # 5. FIX-VU3: Reclassify data-heavy tables + action cards
+    html = _enhance_data_tables(html)
+    html = _enhance_action_cards(html)
 
     log.info("[HTML-ENHANCE] KPA: %d \u2192 %d chars", original_len, len(html))
     return html
