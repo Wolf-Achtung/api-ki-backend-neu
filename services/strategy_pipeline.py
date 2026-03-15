@@ -324,6 +324,16 @@ async def generate_strategy_report(
             "s5_investition_summary": _extract_summary(sections["S5"], max_words=150),
         }, use_claude=True)
 
+        # === FIX-SF1: Strategy Fact Sanitizer ===
+        from services.strategy_sanitizer import sanitize_strategy_sections
+        sections = sanitize_strategy_sections(sections, report_year=2026)
+        sf1_report = sections.get('_strategy_sanitizer_report', {})
+        if sf1_report.get('patches_applied', 0) > 0:
+            logger.warning(
+                "[Strategy %d] SF1 patched %d implausible values: %s",
+                briefing_id, sf1_report['patches_applied'], sf1_report['warnings']
+            )
+
         # === PHASE 3: Assembly ===
         generation_duration = time.time() - start_time - research_duration
         total_duration = time.time() - start_time
