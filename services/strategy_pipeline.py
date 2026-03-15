@@ -325,6 +325,10 @@ async def generate_strategy_report(
         }, use_claude=True)
 
         # === FIX-SF1: Strategy Fact Sanitizer ===
+        # Snapshot raw LLM outputs before sanitizer (for re-render / sanitizer iteration)
+        import copy
+        raw_sections = copy.deepcopy(sections)
+
         from services.strategy_sanitizer import sanitize_strategy_sections
         sections = sanitize_strategy_sections(sections, report_year=2026)
         _sf1_raw = sections.pop('_strategy_sanitizer_report', None)
@@ -344,7 +348,8 @@ async def generate_strategy_report(
             briefing_id, research_duration, generation_duration, total_duration,
         )
 
-        _save_sections(db_session, briefing_id, sections, research_duration, generation_duration, total_duration)
+        _save_sections(db_session, briefing_id, sections, research_duration, generation_duration, total_duration,
+                       raw_sections=raw_sections)
         _update_status(db_session, briefing_id, "completed")
 
         # === PHASE 4: PDF Generation ===
@@ -835,6 +840,7 @@ def _save_sections(
     r_dur: float,
     g_dur: float,
     t_dur: float,
+    raw_sections: Optional[Dict[str, str]] = None,
 ) -> None:
     """Save generated sections + timing in DB."""
     from models import StrategyReport
@@ -844,6 +850,8 @@ def _save_sections(
     ).first()
     if sr:
         sr.sections = sections
+        if raw_sections is not None:
+            sr.raw_sections = raw_sections
         sr.research_duration_seconds = r_dur
         sr.generation_duration_seconds = g_dur
         sr.total_duration_seconds = t_dur
