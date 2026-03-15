@@ -206,14 +206,14 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         "1": "Einzelunternehmer",
         "2–10": "Kleinunternehmen (2-10 MA)",
         "2-10": "Kleinunternehmen (2-10 MA)",
-        "11–100": "KMU (11-250 MA)",
-        "11-100": "KMU (11-250 MA)",
+        "11–100": "KMU (11–100 MA)",
+        "11-100": "KMU (11–100 MA)",
         # Canonical keys (from normalization)
         "solo": "Einzelunternehmer",
         "team": "Kleinunternehmen (2-10 MA)",
         "small": "Kleinunternehmen (2-10 MA)",
-        "kmu": "KMU (11-250 MA)",
-        "medium": "KMU (11-250 MA)",
+        "kmu": "KMU (11–100 MA)",
+        "medium": "KMU (11–100 MA)",
     }
     # Mitarbeiter count mapping
     mitarbeiter_map = {
