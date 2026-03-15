@@ -398,13 +398,22 @@ async def _generate_section(
         use_claude, prompt_len, prompt_words,
     )
 
-    # Longer sections (S8 Risiken, EXEC) get more output tokens
-    max_out_tokens = 6000 if section_key in ("S8", "EXEC", "S5") else 5000
+    # Longer sections get more output tokens — S4 (Tool-Landschaft) has large prompts
+    # FIX-S9-B2: Increased token budget for S4 to prevent truncation
+    max_out_tokens = 8000 if section_key in ("S4", "S8", "EXEC", "S5") else 5000
 
     if route_to_anthropic:
         result = await _call_anthropic(prompt, SYSTEM_PROMPT_STRATEGY_REPORT, section_key, max_tokens=max_out_tokens)
     else:
         result = await _call_openai(prompt, SYSTEM_PROMPT_STRATEGY_REPORT, section_key, max_tokens=max_out_tokens)
+
+        # FIX-S9-B2: If OpenAI truncated (returned empty/very short), retry with Claude
+        if not result or len(result.split()) < 20:
+            logger.warning(
+                "[Strategy] Section %s: OpenAI returned empty/truncated (%d words), retrying with Claude",
+                section_key, len((result or "").split()),
+            )
+            result = await _call_anthropic(prompt, SYSTEM_PROMPT_STRATEGY_REPORT, section_key, max_tokens=max_out_tokens)
 
     duration = time.time() - start
     word_count = len((result or "").split())
@@ -413,7 +422,14 @@ async def _generate_section(
         section_key, word_count, duration, route_to_anthropic,
     )
 
-    return result or f"<p><em>Section {section_key} konnte nicht generiert werden.</em></p>"
+    # FIX-S9-B2: Customer-friendly fallback instead of technical error message
+    if not result or len(result.split()) < 10:
+        return (
+            "<p><em>Die Tool-Landschaft und Empfehlungen werden in einem Update nachgeliefert. "
+            "Kontaktieren Sie uns unter kontakt@ki-sicherheit.jetzt für Details.</em></p>"
+        )
+
+    return result
 
 
 async def _call_openai(prompt: str, system_prompt: str, section: str, max_tokens: int = 5000) -> Optional[str]:
@@ -457,6 +473,8 @@ async def _call_openai(prompt: str, system_prompt: str, section: str, max_tokens
         )
         if finish_reason == "length":
             logger.warning("[Strategy] OpenAI response TRUNCATED for %s (hit token limit)", section)
+            # FIX-S9-B2: Return None on truncation so retry logic in _generate_section triggers
+            return None
 
         return content
     except Exception as exc:
