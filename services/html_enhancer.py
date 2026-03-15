@@ -374,7 +374,7 @@ def _style_table_headers(table_html: str) -> str:
         existing = re.search(r'style="([^"]*)"', match.group(0))
         if existing:
             merged = existing.group(1).rstrip(';') + f';background:{bg}'
-            return match.group(0).replace(existing.group(0), f'style="{merged}"')
+            return str(match.group(0).replace(existing.group(0), f'style="{merged}"'))
         return f'<tr style="background:{bg}">'
 
     # Style <tr> without header cells (skip header rows)
@@ -659,7 +659,7 @@ def _enhance_data_tables(html: str) -> str:
         if numeric_hits >= 3:
             table_html = table_html.replace('class="tool-comparison"', 'class="data-table"', 1)
             enhanced += 1
-        return table_html
+        return str(table_html)
 
     html = _RE_TABLE.sub(_classify, html)
     if enhanced:
@@ -689,7 +689,7 @@ def _enhance_action_cards(html: str) -> str:
             rf'<li\1><div class="action-card" style="{_S_ACTION_CARD}">\2</div></li>',
             list_html, flags=re.DOTALL
         )
-        return heading + enhanced_list
+        return str(heading) + str(enhanced_list)
 
     result = _action_heading.sub(_wrap_list_items, html)
     if result != html:
