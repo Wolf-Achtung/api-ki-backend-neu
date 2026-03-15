@@ -3396,12 +3396,20 @@ def apply_segment_budget(
     _b39_applied = 0
     _b39_skipped = 0
 
+    # FIX-B39b: Sections that must NEVER be truncated by clean-ending.
+    # These contain copy-paste prompts and decision templates where the
+    # trailing content is always substantive.
+    _b39_skip_sections = {"SOFORT_START_HTML", "CHALLENGE_30_TAGE_HTML", "STARTER_KIT_HTML"}
+
     for _b39_key in list(result.keys()):
         _b39_content = result[_b39_key]
         if not isinstance(_b39_content, str) or len(_b39_content) < 50:
             continue
         # Skip internal/meta keys
         if _b39_key.startswith("_"):
+            continue
+        # FIX-B39b: Never truncate protected sections
+        if _b39_key in _b39_skip_sections:
             continue
 
         _b39_text = re.sub(r'</?\w+[^>]*>', '', _b39_content).rstrip()
