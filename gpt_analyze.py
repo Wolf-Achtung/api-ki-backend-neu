@@ -18333,6 +18333,28 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         )
         # Update scores["overall"] so meta["scores"]["overall"] has the final value
         scores["overall"] = _hf3_final
+
+        # === FIX-HOTFIX3-DIMS: Sync dimension scores from CANONICAL values ===
+        # Without this, meta["scores"] can diverge from the CANONICAL display values
+        # (e.g. security=82 in meta vs 85 in CANONICAL_SECURITY after freitext bonus).
+        # Also populate uppercase SCORE keys for ReportHistory/dashboard extraction.
+        _hf3_gov = int(float(sections.get('CANONICAL_GOVERNANCE', scores.get('governance', 0)) or 0))
+        _hf3_sec = int(float(sections.get('CANONICAL_SECURITY', scores.get('security', 0)) or 0))
+        _hf3_val = int(float(sections.get('score_nutzen', scores.get('value', 0)) or 0))
+        _hf3_ena = int(float(sections.get('score_befaehigung', scores.get('enablement', 0)) or 0))
+        scores["governance"] = _hf3_gov
+        scores["security"] = _hf3_sec
+        scores["value"] = _hf3_val
+        scores["enablement"] = _hf3_ena
+        # Populate uppercase keys for extract_scores() / ReportHistory / dashboard
+        serializable_sections['GOVERNANCE_SCORE'] = _hf3_gov
+        serializable_sections['SECURITY_SCORE'] = _hf3_sec
+        serializable_sections['BENEFIT_SCORE'] = _hf3_val
+        serializable_sections['READINESS_SCORE'] = _hf3_ena
+        serializable_sections['OVERALL_SCORE'] = _hf3_final
+        log.info("[FIX-HOTFIX3-DIMS] Synced dimension scores: Gov=%d, Sec=%d, Val=%d, Ena=%d",
+                 _hf3_gov, _hf3_sec, _hf3_val, _hf3_ena)
+
         log.info("[FIX-HOTFIX3-SCORE] Synced post-quality score to serializable_sections: "
                  "score_gesamt=%d, QUALITY_BONUS=%d, N43_DOD_PASSED=%s, scores.overall=%d",
                  _hf3_final, serializable_sections['QUALITY_BONUS'],
