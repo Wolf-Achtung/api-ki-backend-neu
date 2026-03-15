@@ -20964,6 +20964,17 @@ def run_async(
         # Pass debug_attachments (bytes) directly - NOT stored in DB/meta
         _send_emails(db, rep, br, pdf_url, pdf_bytes, run_id, meta=meta, debug_attachments=debug_attachments)
 
+        # FIX-RERUN-STATUS: Update briefing status to "done" after successful
+        # report generation. The worker path (briefings_worker.py) does this
+        # automatically, but direct calls via /api/analyze/run (re-runs) bypassed
+        # this, leaving briefing.status stuck on the old value (e.g. "failed").
+        if br:
+            br.status = "done"
+            br.done_at = datetime.now(timezone.utc)
+            br.error = None
+            db.commit()
+            log.info("[%s] ✅ Briefing %s status updated to 'done'", run_id, briefing_id)
+
         # === AUTO-TRIGGER: KI-Potenzial-Analyse (fire-and-forget) ===
         try:
             _auto_trigger_potenzialanalyse(briefing_id, run_id)
@@ -20974,9 +20985,9 @@ def run_async(
         log.error("[%s] ❌ Analysis failed: %s", run_id, exc, exc_info=True)
         if rep and hasattr(rep, "status"):
             rep.status = "failed"
-            if hasattr(rep, "email_error_user"): 
+            if hasattr(rep, "email_error_user"):
                 rep.email_error_user = str(exc)
-            if hasattr(rep, "updated_at"): 
+            if hasattr(rep, "updated_at"):
                 rep.updated_at = datetime.now(timezone.utc)
             db.add(rep)
             db.commit()
