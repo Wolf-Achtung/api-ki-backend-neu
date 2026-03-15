@@ -22,7 +22,7 @@ class TestPercentPlausibility:
         html = (
             '<tr><td>EU-Unternehmen: KI-Nutzung (2025)</td>'
             '<td>104%</td>'
-            '<td>Konservativer Referenzwert</td></tr>'
+            '<td>Eurostat Referenzwert</td></tr>'
         )
         patched, warnings = _check_percent_plausibility(html, "S2")
         assert "104%" not in patched
@@ -87,13 +87,63 @@ class TestPercentPlausibility:
         """Wenn mehrere Prozentwerte: nur die >100% im Adoptionskontext patchen."""
         html = (
             '<p>Die Nutzung stieg von 45% auf 104% laut Studie. '
-            'Die Umsatzrendite beträgt 12%.</p>'
+            'Der Umsatz beträgt 12%.</p>'
         )
         patched, warnings = _check_percent_plausibility(html, "S2")
         assert "45%" in patched
         assert "12%" in patched
         assert "104%" not in patched
         assert len(warnings) == 1
+
+
+# ── Pass 1b: ROI context whitelist (FIX-SF1v2) ──────────────────────
+
+
+class TestROIContextWhitelist:
+    """ROI percentages >100% must NOT be patched."""
+
+    def test_roi_values_not_patched(self):
+        """ROI percentages >100% must NOT be patched."""
+        html = '<td>239% ROI</td><td>Break-Even Monat 4</td>'
+        result, warnings = _check_percent_plausibility(html, "S5")
+        assert "239%" in result
+        assert "\u2013*" not in result
+        assert len(warnings) == 0
+
+    def test_roi_scenario_table_preserved(self):
+        """Full ROI scenario table must survive sanitizer."""
+        html = (
+            '<tr><td>Konservativ</td><td>104% ROI</td><td>Break-Even Monat 6</td></tr>'
+            '<tr><td>Realistisch</td><td>239% ROI</td><td>Break-Even Monat 4</td></tr>'
+            '<tr><td>Optimistisch</td><td>375% ROI</td><td>Break-Even Monat 3</td></tr>'
+        )
+        result, warnings = _check_percent_plausibility(html, "S5")
+        assert "104%" in result
+        assert "239%" in result
+        assert "375%" in result
+        assert len(warnings) == 0
+
+    def test_roi_in_prose_not_patched(self):
+        """ROI mentioned in prose text must not be patched."""
+        html = 'Im realistischen Szenario erreichen Sie einen ROI von 239% und den Break-Even in Monat 4.'
+        result, warnings = _check_percent_plausibility(html, "S5")
+        assert "239%" in result
+        assert len(warnings) == 0
+
+    def test_adoption_rate_still_patched(self):
+        """Adoption rates >100% must still be patched (regression check)."""
+        html = 'Laut Eurostat nutzen 104% der Unternehmen KI-Tools.'
+        result, warnings = _check_percent_plausibility(html, "S2")
+        assert "\u2013*" in result
+        assert "104%" not in result
+        assert len(warnings) == 1
+
+    def test_investment_return_not_patched(self):
+        """Investitionsrendite context must not be patched."""
+        html = 'Die Investition ergibt eine Rendite von 375% über 12 Monate.'
+        result, warnings = _check_percent_plausibility(html, "S5")
+        assert "375%" in result
+        assert len(warnings) == 0
 
 
 # ── Pass 3: Year data freshness ──────────────────────────────────────

@@ -318,18 +318,30 @@ def _try_scenario_transform(table_html: str) -> str | None:
 _RE_TABLE = re.compile(r'<table(?:\s[^>]*)?>.*?</table>', re.DOTALL | re.IGNORECASE)
 
 
+def _merge_or_add_style(match: re.Match[str], new_styles: str, tag: str) -> str:
+    """Add styles to an HTML tag, merging with existing style if present."""
+    tag_html: str = match.group(0)
+    existing = re.search(r'style="([^"]*)"', tag_html)
+    if existing:
+        merged = existing.group(1).rstrip(';') + ';' + new_styles
+        return str(tag_html.replace(existing.group(0), f'style="{merged}"'))
+    else:
+        attrs = match.group(1) if match.lastindex else ''
+        return f'<{tag} style="{new_styles}"{attrs}>'
+
+
 def _style_table_headers(table_html: str) -> str:
     """Add inline styles to <th> and <td> elements in a table."""
-    # Style <th> elements
+    # Style <th> elements — merge with existing style if present
     table_html = re.sub(
-        r'<th(?!\s+style=)([^>]*)>',
-        f'<th style="{_S_TH}"\\1>',
+        r'<th([^>]*)>',
+        lambda m: _merge_or_add_style(m, _S_TH, 'th'),
         table_html
     )
-    # Style <td> elements
+    # Style <td> elements — merge with existing style if present
     table_html = re.sub(
-        r'<td(?!\s+style=)([^>]*)>',
-        f'<td style="{_S_TD}"\\1>',
+        r'<td([^>]*)>',
+        lambda m: _merge_or_add_style(m, _S_TD, 'td'),
         table_html
     )
     # Alternating row backgrounds
