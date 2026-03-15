@@ -319,12 +319,32 @@ _RE_TABLE = re.compile(r'<table(?:\s[^>]*)?>.*?</table>', re.DOTALL | re.IGNOREC
 
 
 def _merge_or_add_style(match: re.Match[str], new_styles: str, tag: str) -> str:
-    """Add styles to an HTML tag, merging with existing style if present."""
+    """FIX-HE1: Add styles to an HTML tag, merging with existing style if present.
+
+    Parses CSS properties from both existing and new styles, merging them into
+    a single style attribute. New properties override existing ones with the
+    same name. Prevents duplicate style attributes.
+    """
     tag_html: str = match.group(0)
     existing = re.search(r'style="([^"]*)"', tag_html)
     if existing:
-        merged = existing.group(1).rstrip(';') + ';' + new_styles
-        return str(tag_html.replace(existing.group(0), f'style="{merged}"'))
+        # Parse existing + new properties, new overrides existing
+        props: dict[str, str] = {}
+        for prop in existing.group(1).split(';'):
+            prop = prop.strip()
+            if ':' in prop:
+                key, val = prop.split(':', 1)
+                props[key.strip()] = val.strip()
+        for prop in new_styles.split(';'):
+            prop = prop.strip()
+            if ':' in prop:
+                key, val = prop.split(':', 1)
+                props[key.strip()] = val.strip()
+        merged = ';'.join(f'{k}:{v}' for k, v in props.items())
+        result = str(tag_html.replace(existing.group(0), f'style="{merged}"'))
+        log.debug("[FIX-HE1] Merged style on <%s>: existing='%s' + new='%s'",
+                  tag, existing.group(1), new_styles)
+        return result
     else:
         attrs = match.group(1) if match.lastindex else ''
         return f'<{tag} style="{new_styles}"{attrs}>'
@@ -345,15 +365,20 @@ def _style_table_headers(table_html: str) -> str:
         table_html
     )
     # Alternating row backgrounds
+    # FIX-HE1: merge with existing style instead of creating duplicates
     row_idx = [0]
 
     def _style_tr(match: re.Match) -> str:  # type: ignore[type-arg, unused-ignore]
         row_idx[0] += 1
         bg = "#f9fafb" if row_idx[0] % 2 == 0 else "#fff"
+        existing = re.search(r'style="([^"]*)"', match.group(0))
+        if existing:
+            merged = existing.group(1).rstrip(';') + f';background:{bg}'
+            return match.group(0).replace(existing.group(0), f'style="{merged}"')
         return f'<tr style="background:{bg}">'
 
-    # Only style <tr> without existing style (skip header rows)
-    table_html = re.sub(r'<tr>(?!.*?<th)', _style_tr, table_html)
+    # Style <tr> without header cells (skip header rows)
+    table_html = re.sub(r'<tr(?:\s[^>]*)?>(?!.*?<th)', _style_tr, table_html)
     return table_html
 
 
@@ -381,9 +406,11 @@ def _transform_tables(html: str) -> str:
             return result
 
         # Rule 7 fallback: styled table with inline styles + class
+        # FIX-HE1: Merge with existing style if LLM already set one
         table_html = re.sub(
-            r'^<table(?!\s+class=)',
-            f'<table class="tool-comparison" style="{_S_TABLE}"',
+            r'^<table([^>]*)>',
+            lambda m: _merge_or_add_style(m, _S_TABLE, 'table').rstrip('>') +
+                      (' class="tool-comparison"' if 'class=' not in m.group(0) else '') + '>',
             table_html
         )
         table_html = _style_table_headers(table_html)
