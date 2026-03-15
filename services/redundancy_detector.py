@@ -62,6 +62,9 @@ REDUNDANCY_SECTIONS: List[str] = [
     "business_case",
     "unternehmensprofil_markt",
     "branch_deep_dive",
+    "org_change",
+    "data_readiness",
+    "roadmap_90d_decision",
 ]
 
 # Phrases that indicate intentional repetition (allowed)
