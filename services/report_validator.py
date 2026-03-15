@@ -3443,6 +3443,8 @@ class PlatinValidator:
     ]
 
     # FIX-B24-P3: Sections that commonly end without punctuation by design
+    # FIX-V1: Extended with structured HTML sections, logo paths, and CSS vars
+    # (synchron mit B39 _b39_skip_sections und B40 _b40_skip_keys Skip-Listen)
     TRUNCATED_SAFE_SECTIONS = {
         'BUSINESS_CASE_TABLE_HTML',
         'TOOLS_HTML',
@@ -3454,6 +3456,17 @@ class PlatinValidator:
         'DUTY_MATRIX_HTML',
         'ROADMAP_90D_HTML',
         'NINETY_DAY_PLAN_HTML',
+        # FIX-V1: Structured HTML sections (forms, tables, checklists)
+        'SOFORT_START_HTML',
+        'CHALLENGE_30_TAGE_HTML',
+        'STARTER_KIT_HTML',
+        'STARTER_KIT_COMPACT_HTML',
+        # FIX-V1: Logo paths and CSS — not prose text
+        'LOGO_PRIMARY_SRC',
+        'FOOTER_LEFT_LOGO_SRC',
+        'FOOTER_MID_LOGO_SRC',
+        'FOOTER_RIGHT_LOGO_SRC',
+        'THEME_CSS_VARS',
     }
 
     def _check_sentence_completeness(self) -> None:
