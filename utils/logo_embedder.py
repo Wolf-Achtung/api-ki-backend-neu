@@ -117,10 +117,10 @@ def optimize_base64_image(
             # Only for images without critical transparency
             original_mode = img.mode
             if img.mode == "RGBA":
-                # Keep RGBA for transparency, but try to quantize
-                img_quantized = img.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
-                img_quantized = img_quantized.convert("RGBA")
-                img = img_quantized
+                # FIX-L1: RGBA images — skip quantization entirely.
+                # MEDIANCUT/FASTOCTREE don't support RGBA, and WebP handles
+                # RGBA natively. Save directly without color reduction.
+                pass
             elif img.mode in ("RGB", "L"):
                 # Convert to palette mode (8-bit)
                 img = img.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
