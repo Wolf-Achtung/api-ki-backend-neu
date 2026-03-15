@@ -106,7 +106,7 @@ def optimize_base64_image(
                 log.info("[LOGO-OPTIMIZE] WebP→PNG for data URI: %d → %d bytes", original_size, len(png_data))
                 return png_data, "image/png"
 
-            img = Image.open(io.BytesIO(data))
+            img: Image.Image = Image.open(io.BytesIO(data))
 
             # Resize if too large
             if max_dimension and (img.width > max_dimension or img.height > max_dimension):
