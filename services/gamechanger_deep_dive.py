@@ -377,7 +377,10 @@ def render_bc_deep_dive_html(bc_data: Dict[str, Any]) -> str:
     # Build sensitivity table
     sens_rows = []
     for s in sensitivity:
-        roi_display = f"{s['roi_capped']}%" if s['roi_raw'] <= 200 else f"200% (gedeckelt)"
+        # FIX: Show raw ROI in sensitivity table so scenarios are distinguishable.
+        # The 200% cap is applied in the main business case display, but in the
+        # sensitivity comparison all values were identical ("200% (gedeckelt)").
+        roi_display = f"{int(s['roi_raw'])}%"
         payback_display = f"{s['payback_months']} Mon." if s['payback_months'] != '—' else '—'
         row_class = ' class="highlight"' if s['label'] == 'Basis' else ''
         sens_rows.append(
