@@ -11,6 +11,9 @@ Endpoints:
 - GET  /api/strategy/html/{briefing_id}      — HTML preview
 - POST /api/strategy/admin/unlock/{briefing_id} — Beta unlock
 - POST /api/strategy/admin/reset-status/{briefing_id} — Reset stuck generation
+- POST /api/strategy/admin/sanitizer-check/{briefing_id} — Dry-run sanitizer check
+- POST /api/strategy/admin/re-render/{briefing_id} — Re-render strategy (sanitizer + renderer)
+- POST /api/strategy/admin/r1-re-render/{briefing_id} — Re-render R1 (healer + enforcer + renderer)
 """
 from __future__ import annotations
 
@@ -615,4 +618,282 @@ async def admin_reset_status(
         "old_status": old_status,
         "new_status": "questions_saved",
         "reset": True,
+    }
+
+
+# =============================================================================
+# ADMIN: Re-Test Endpoints (Session 11)
+# =============================================================================
+
+
+def _verify_admin_key(admin_key: str) -> None:
+    """Shared admin key verification for re-test endpoints."""
+    expected_key = os.getenv("STRATEGY_ADMIN_KEY", "")
+    if not expected_key:
+        raise HTTPException(status_code=500, detail="STRATEGY_ADMIN_KEY nicht konfiguriert")
+    if admin_key != expected_key:
+        raise HTTPException(status_code=403, detail="Ungültiger Admin-Key")
+
+
+@router.post("/admin/sanitizer-check/{briefing_id}")
+async def admin_sanitizer_check(
+    briefing_id: int,
+    admin_key: str = Query(..., description="Admin API Key"),
+    db: Session = Depends(get_db),
+):
+    """
+    Dry-Run Sanitizer Check: Zeigt was gepatcht/geskippt würde, ohne DB-Write.
+    Schnellster Feedback-Loop für Sanitizer-Bugs (~2 Sekunden).
+    """
+    _verify_admin_key(admin_key)
+
+    sr = db.query(StrategyReport).filter(
+        StrategyReport.briefing_id == briefing_id
+    ).first()
+    if not sr:
+        raise HTTPException(status_code=404, detail="Kein Strategy-Report gefunden")
+    if not sr.sections:
+        raise HTTPException(status_code=400, detail="Keine Sections vorhanden")
+
+    # Prefer raw_sections (pre-sanitizer) if available, else use current sections
+    source_sections = sr.raw_sections if sr.raw_sections else sr.sections
+    source_type = "raw_sections" if sr.raw_sections else "sections"
+
+    import copy
+    from services.strategy_sanitizer import sanitize_strategy_sections
+    test_sections = copy.deepcopy(source_sections)
+    test_sections = sanitize_strategy_sections(test_sections, report_year=2026)
+    _sf1_raw = test_sections.pop('_strategy_sanitizer_report', None)
+    sf1_report: dict = _sf1_raw if isinstance(_sf1_raw, dict) else {}
+
+    # Build detailed patch/skip info by comparing source vs sanitized
+    patches = []
+    skips = []
+    for key in source_sections:
+        if not isinstance(source_sections[key], str):
+            continue
+        if source_sections[key] != test_sections.get(key):
+            # Find what changed
+            import re
+            _pct = re.compile(r'(\d{1,4}[.,]?\d{0,2})\s*%')
+            for m in _pct.finditer(source_sections[key]):
+                try:
+                    val = float(m.group(1).replace(',', '.'))
+                except ValueError:
+                    continue
+                if val > 100.0:
+                    ctx_start = max(0, m.start() - 40)
+                    ctx_end = min(len(source_sections[key]), m.end() + 40)
+                    patches.append({
+                        "section": key,
+                        "original": m.group(0),
+                        "context": source_sections[key][ctx_start:ctx_end],
+                        "action": f"PATCH → –*",
+                    })
+
+    # Detect skips via debug logging
+    import logging
+    skip_records: list = []
+
+    class _SkipCapture(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            if "[FIX-SF1-SKIP]" in record.getMessage():
+                skip_records.append(record.getMessage())
+
+    _handler = _SkipCapture()
+    _handler.setLevel(logging.DEBUG)
+    _sanitizer_log = logging.getLogger("services.strategy_sanitizer")
+    _sanitizer_log.addHandler(_handler)
+    _orig_level = _sanitizer_log.level
+    _sanitizer_log.setLevel(logging.DEBUG)
+
+    # Re-run to capture skip logs
+    test_sections2 = copy.deepcopy(source_sections)
+    sanitize_strategy_sections(test_sections2, report_year=2026)
+
+    _sanitizer_log.removeHandler(_handler)
+    _sanitizer_log.setLevel(_orig_level)
+
+    for msg in skip_records:
+        # Parse: [FIX-SF1-SKIP] '239%' in S5 is ROI context (keyword: 'roi') — not patched
+        import re as _re
+        skip_match = _re.search(
+            r"\[FIX-SF1-SKIP\] '([^']+)' in (\S+) is ROI context \(keyword: '([^']+)'\)", msg
+        )
+        if skip_match:
+            skips.append({
+                "section": skip_match.group(2),
+                "original": skip_match.group(1),
+                "action": "SKIP (roi context)",
+                "keyword": skip_match.group(3),
+            })
+
+    return {
+        "briefing_id": briefing_id,
+        "dry_run": True,
+        "source": source_type,
+        "patches": patches,
+        "skips": skips,
+        "total_patches": sf1_report.get("patches_applied", 0),
+        "total_skips": len(skips),
+        "total_warnings": len(sf1_report.get("warnings", [])),
+        "sections_scanned": sf1_report.get("sections_scanned", 0),
+    }
+
+
+@router.post("/admin/re-render/{briefing_id}")
+async def admin_strategy_re_render(
+    briefing_id: int,
+    admin_key: str = Query(..., description="Admin API Key"),
+    db: Session = Depends(get_db),
+):
+    """
+    Strategy Section Re-Render: Re-runs Sanitizer + Renderer ohne neue LLM-Calls.
+    Lädt raw_sections (oder sections), führt Sanitizer + Renderer erneut aus,
+    speichert neues HTML in DB.
+    """
+    _verify_admin_key(admin_key)
+
+    sr = db.query(StrategyReport).filter(
+        StrategyReport.briefing_id == briefing_id
+    ).first()
+    if not sr:
+        raise HTTPException(status_code=404, detail="Kein Strategy-Report gefunden")
+    if sr.status != "completed":
+        raise HTTPException(status_code=400, detail=f"Status ist '{sr.status}', nicht 'completed'")
+    if not sr.sections:
+        raise HTTPException(status_code=400, detail="Keine Sections vorhanden")
+
+    import copy
+    # Prefer raw_sections (pre-sanitizer) if available
+    source_sections = sr.raw_sections if sr.raw_sections else sr.sections
+    source_type = "raw_sections" if sr.raw_sections else "sections"
+    working_sections = copy.deepcopy(source_sections)
+
+    # 1. Re-run sanitizer
+    from services.strategy_sanitizer import sanitize_strategy_sections
+    working_sections = sanitize_strategy_sections(working_sections, report_year=2026)
+    _sf1_raw = working_sections.pop('_strategy_sanitizer_report', None)
+    sf1_report: dict = _sf1_raw if isinstance(_sf1_raw, dict) else {}
+
+    # 2. Update sections in DB
+    sr.sections = working_sections
+    sr.updated_at = datetime.now(timezone.utc)
+    db.commit()
+
+    # 3. Re-render HTML (the GET /html endpoint re-renders from DB anyway,
+    #    but we trigger it here to verify it works)
+    html_content = _render_strategy_html(sr, db)
+
+    log.info(
+        "[Strategy] Admin re-render: briefing_id=%d, source=%s, patches=%d, html=%d chars",
+        briefing_id, source_type, sf1_report.get("patches_applied", 0), len(html_content),
+    )
+
+    return {
+        "status": "re-rendered",
+        "briefing_id": briefing_id,
+        "source": source_type,
+        "sanitizer_patches": sf1_report.get("patches_applied", 0),
+        "sanitizer_skips": len([w for w in sf1_report.get("warnings", []) if "SKIP" in str(w)]),
+        "sanitizer_warnings": sf1_report.get("warnings", []),
+        "sections_scanned": sf1_report.get("sections_scanned", 0),
+        "html_length": len(html_content),
+    }
+
+
+@router.post("/admin/r1-re-render/{briefing_id}")
+async def admin_r1_re_render(
+    briefing_id: int,
+    admin_key: str = Query(..., description="Admin API Key"),
+    db: Session = Depends(get_db),
+):
+    """
+    R1 Re-Render: Re-runs Healer → Final Sanitizer → B25 Enforcer → Renderer
+    ohne neue LLM-Calls. Lädt sections aus Analysis.meta, rendert neu, speichert HTML.
+    """
+    _verify_admin_key(admin_key)
+
+    analysis = (
+        db.query(Analysis)
+        .filter(Analysis.briefing_id == briefing_id)
+        .order_by(Analysis.id.desc())
+        .first()
+    )
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Keine Analyse gefunden")
+
+    meta = (analysis.meta if analysis.meta else {}) or {}
+    sections = meta.get("sections", {})
+    if not sections:
+        raise HTTPException(status_code=400, detail="Keine Sections in Analysis.meta")
+
+    briefing = db.query(Briefing).filter(Briefing.id == briefing_id).first()
+    if not briefing:
+        raise HTTPException(status_code=404, detail="Briefing nicht gefunden")
+
+    import copy
+    working_sections = copy.deepcopy(sections)
+    answers = (briefing.answers if briefing.answers else {}) or {}
+    steps_log = []
+
+    # 1. Report Healer
+    try:
+        from services.report_healer import heal_report_html
+        _segment = answers.get("unternehmensgroesse", "klein")
+        _payback = meta.get("PAYBACK_MONTHS")
+        _hl = answers.get("hauptleistung", "")
+        healing_result = heal_report_html(
+            sections=working_sections,
+            segment=_segment,
+            canonical_payback_months=_payback,
+            hauptleistung=_hl,
+        )
+        working_sections = healing_result.sections
+        steps_log.append(f"healer: {healing_result.total_fixes} fixes")
+    except Exception as e:
+        steps_log.append(f"healer: SKIPPED ({e})")
+
+    # 2. B25 Enforcer
+    try:
+        from b25_enforcer import enforce_b25_canonical_kpis
+        working_sections, _b25_count = enforce_b25_canonical_kpis(
+            working_sections, meta
+        )
+        steps_log.append(f"b25_enforcer: {_b25_count} injections")
+    except Exception as e:
+        steps_log.append(f"b25_enforcer: SKIPPED ({e})")
+
+    # 3. Renderer
+    try:
+        from services.report_renderer import render
+        render_result = render(
+            briefing_obj=briefing,
+            run_id=f"re-render-{briefing_id}",
+            generated_sections=working_sections,
+            scores=meta.get("scores"),
+            meta=meta,
+        )
+        html = render_result["html"]
+        steps_log.append(f"renderer: {len(html)} chars")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Renderer-Fehler: {e}")
+
+    # 4. Update DB
+    old_len = len(analysis.html or "")
+    analysis.html = html
+    db.commit()
+
+    log.info(
+        "[R1] Admin re-render: briefing_id=%d, steps=%s, html %d→%d chars",
+        briefing_id, steps_log, old_len, len(html),
+    )
+
+    return {
+        "status": "re-rendered",
+        "briefing_id": briefing_id,
+        "analysis_id": analysis.id,
+        "steps": steps_log,
+        "html_length": len(html),
+        "html_length_previous": old_len,
     }

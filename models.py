@@ -386,6 +386,9 @@ class StrategyReport(Base):
     # Generierte Sections (JSON, jede Section separat)
     sections: Mapped[Optional[dict]] = mapped_column(JSONType, nullable=True)
 
+    # Rohe LLM-Outputs VOR Sanitizer (für Re-Render und Sanitizer-Iteration)
+    raw_sections: Mapped[Optional[dict]] = mapped_column(JSONType, nullable=True)
+
     # PDF
     pdf_available: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     pdf_generated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
