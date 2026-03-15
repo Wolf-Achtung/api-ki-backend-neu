@@ -823,6 +823,10 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
             if isinstance(sections[key], str):
                 sections[key] = _enforce_kpa_break_even(sections[key], canonical_payback)
 
+    # 4c. FIX-NL1: Remove non-Latin characters from LLM output
+    from services.pipeline_sanitizers import sanitize_non_latin_sections
+    sections = sanitize_non_latin_sections(sections)
+
     # 5. Render HTML
     html = render_deep_dive_html(sections, context)
 
