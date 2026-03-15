@@ -813,6 +813,24 @@ def inject_starter_kit_into_sections(
             profile_context.update(briefing)
 
         kit = generate_starter_kit(profile_context, lang)
+
+        # FIX: If the main FOERDERPROGRAMME section exists (with regional programs),
+        # replace the starter kit's generic federal funding with a cross-reference
+        # to avoid inconsistency (e.g. ZIM 380k vs NRW-specific MID program).
+        foerder_main = sections.get("FOERDERPROGRAMME_HTML", "")
+        if foerder_main and len(foerder_main) > 100:
+            kit.funding = [
+                StarterKitFunding(
+                    program_id="crossref_foerderprogramme",
+                    name="\u2192 siehe Kapitel F\u00f6rdermittel",
+                    provider="",
+                    max_amount="",
+                    fit_reason="Detaillierte F\u00f6rderprogramme (inkl. regionaler Programme) finden Sie im Hauptkapitel F\u00f6rdermittel & Finanzierung.",
+                    application_complexity="low",
+                ),
+            ]
+            kit.potential_funding = ""
+
         sections["STARTER_KIT_HTML"] = generate_starter_kit_html(kit, lang)
         sections["STARTER_KIT_COMPACT_HTML"] = generate_starter_kit_compact_html(kit, lang)
 
