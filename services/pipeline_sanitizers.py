@@ -614,6 +614,9 @@ def sanitize_all_sections(
         stats['sentences_fixed'] += result.sentences_fixed
         stats['sections_processed'] += 1
 
+    # FIX-NL1: Non-Latin character sanitizer on all sections
+    sanitized = sanitize_non_latin_sections(sanitized)
+
     if stats['entities_decoded'] > 0 or stats['sentences_fixed'] > 0:
         log.info(
             "[FIX-528][SECTION-SANITIZE] processed=%d entities=%d sentences=%d",
@@ -884,6 +887,100 @@ def strip_sprint_codes(html: str, section_name: str = "") -> str:
     if result != html:
         log.info("[L3][SPRINT-CODE-STRIP] section=%s codes removed", section_name)
     return result
+
+
+# =============================================================================
+# FIX-NL1: Non-Latin Character Sanitizer
+# Removes Devanagari, Bengali, Arabic, Cyrillic, CJK, Korean, Japanese etc.
+# from LLM-generated text content while preserving HTML tags.
+# =============================================================================
+
+_NON_LATIN_PATTERN = re.compile(
+    r'['
+    r'\u0900-\u097F'   # Devanagari
+    r'\u0980-\u09FF'   # Bengali
+    r'\u0A00-\u0A7F'   # Gurmukhi
+    r'\u0A80-\u0AFF'   # Gujarati
+    r'\u0B00-\u0B7F'   # Oriya
+    r'\u0B80-\u0BFF'   # Tamil
+    r'\u0C00-\u0C7F'   # Telugu
+    r'\u0C80-\u0CFF'   # Kannada
+    r'\u0D00-\u0D7F'   # Malayalam
+    r'\u0D80-\u0DFF'   # Sinhala
+    r'\u0E00-\u0E7F'   # Thai
+    r'\u0600-\u06FF'   # Arabic
+    r'\u0750-\u077F'   # Arabic Supplement
+    r'\u0400-\u04FF'   # Cyrillic
+    r'\u3000-\u9FFF'   # CJK
+    r'\uAC00-\uD7AF'   # Korean
+    r'\u3040-\u309F'   # Hiragana
+    r'\u30A0-\u30FF'   # Katakana
+    r']+',
+    re.UNICODE
+)
+
+
+def sanitize_non_latin(html_content: str, section_name: str = "") -> str:
+    """FIX-NL1: Remove non-Latin character sequences from HTML text content.
+
+    Preserves HTML tags, only scans text content between tags.
+    Allowed: ASCII, German umlauts, Latin Extended, currency, typography,
+    math symbols, arrows, checkmarks, common emojis.
+    """
+    if not html_content or not isinstance(html_content, str):
+        return html_content
+
+    import unicodedata
+
+    # Split into HTML tags and text content
+    parts = re.split(r'(<[^>]+>)', html_content)
+    cleaned_parts = []
+    removed = []
+
+    for part in parts:
+        if part.startswith('<'):
+            # HTML tag: don't touch
+            cleaned_parts.append(part)
+        else:
+            # Text content: remove non-Latin sequences
+            matches = _NON_LATIN_PATTERN.findall(part)
+            if matches:
+                for m in matches:
+                    script = unicodedata.name(m[0], 'UNKNOWN').split()[0]
+                    removed.append((m, script))
+                part = _NON_LATIN_PATTERN.sub('', part)
+                # Clean up double spaces
+                part = re.sub(r'  +', ' ', part)
+                # Clean up orphaned hyphens: "1-seitige -Notiz" → "1-seitige Notiz"
+                part = re.sub(r'\s+-(?=\w)', ' ', part)
+            cleaned_parts.append(part)
+
+    for seq, script in removed:
+        log.warning(
+            "[FIX-NL1] Removed non-latin sequence from %s: '%s' (%s, %d chars)",
+            section_name, seq, script, len(seq)
+        )
+
+    if removed:
+        log.info(
+            "[FIX-NL1] Summary for %s: removed %d sequence(s)",
+            section_name, len(removed)
+        )
+
+    return ''.join(cleaned_parts)
+
+
+def sanitize_non_latin_sections(sections: dict) -> dict:
+    """FIX-NL1: Apply non-Latin sanitizer to all string sections.
+
+    Skips keys starting with '_' (internal metadata).
+    """
+    for key in list(sections.keys()):
+        if key.startswith('_'):
+            continue
+        if isinstance(sections[key], str) and len(sections[key]) > 10:
+            sections[key] = sanitize_non_latin(sections[key], section_name=key)
+    return sections
 
 
 # =============================================================================

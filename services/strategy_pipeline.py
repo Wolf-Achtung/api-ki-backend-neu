@@ -339,6 +339,10 @@ async def generate_strategy_report(
                 briefing_id, sf1_report['patches_applied'], sf1_report['warnings']
             )
 
+        # === FIX-NL1: Non-Latin Character Sanitizer ===
+        from services.pipeline_sanitizers import sanitize_non_latin_sections
+        sections = sanitize_non_latin_sections(sections)
+
         # === PHASE 3: Assembly ===
         generation_duration = time.time() - start_time - research_duration
         total_duration = time.time() - start_time
