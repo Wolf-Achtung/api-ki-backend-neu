@@ -268,6 +268,24 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     # Load canonical budget values from DB (saved by pipeline after calculation)
     calculated_values = getattr(sr, "calculated_values", None) or {}
 
+    # FIX-EXEC-METHODIK: Append ROI methodology note to exec_summary so readers
+    # understand why Strategy ROI differs from R1/KPA ROI (12-month TCO vs CAPEX-only).
+    _exec_body = sections.get("exec_summary", "")
+    _strat_budget = calculated_values.get("budget_gesamt_jahr1", "")
+    _r1_capex = report1_sections.get("capex", report1_sections.get("bc_capex", report1_meta.get("capex", "")))
+    if _exec_body and _strat_budget:
+        _r1_label = f" ({_r1_capex} € CAPEX)" if _r1_capex else ""
+        _exec_body += (
+            '\n<div class="methodik-hinweis" style="margin-top:16px;padding:10px 14px;'
+            'background:#f0f4f8;border-left:3px solid #3b82f6;font-size:0.85em;color:#475569;">'
+            '<strong>\u2139\uFE0F ROI-Methodik:</strong> '
+            f'Dieser Strategiebericht kalkuliert mit der Gesamtinvestition \u00fcber 12 Monate '
+            f'({_strat_budget} \u20ac, inkl. Software, Implementierung, Schulung, Koordination). '
+            f'Der KI-Readiness Report rechnet mit einer einmaligen Startinvestition{_r1_label}. '
+            'Abweichende ROI- und Break-Even-Werte sind methodisch bedingt, nicht widerspr\u00fcchlich.'
+            '</div>'
+        )
+
     context = {
         # Cover metadata
         "firmenname": briefing_data.get("unternehmen_name", "Ihr Unternehmen"),
@@ -281,7 +299,7 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         "report_id": f"STR-{sr.briefing_id}",
         "build_id": os.getenv("BUILD_ID", ""),
         # Sections
-        "exec_summary": sections.get("exec_summary", ""),
+        "exec_summary": _exec_body,
         "section_s1": _strip_prompt_leaks(sections.get("S1", "")),
         "section_s2": _strip_prompt_leaks(sections.get("S2", "")),
         "section_s3": _strip_prompt_leaks(sections.get("S3", "")),
