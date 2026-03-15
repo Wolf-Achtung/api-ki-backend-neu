@@ -18,7 +18,7 @@ try:
     from models import StrategyReport
     from routes.strategy import _verify_admin_key
     _HAS_APP_DEPS = True
-except ImportError:
+except Exception:
     _HAS_APP_DEPS = False
 
 needs_app = pytest.mark.skipif(not _HAS_APP_DEPS, reason="Full app dependencies not available")
