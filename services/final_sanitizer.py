@@ -144,6 +144,34 @@ def final_sanitize(sections: dict) -> dict:
             sections[key] = val
             fixes_applied.append(f"F4:hours-fix-in-{key[:30]}")
 
+    # ─── FIX-F4b-S9: Zeitersparnis-Fließtext mit falschem Monatswert korrigieren ───
+    # LLM halluziniert manchmal falsche Stundenzahlen (z.B. 18 statt 36) im Fließtext.
+    # Nur Monatswerte zwischen 1-100 patchen, die != canon_hours sind.
+    _canon_h_str = str(canon_hours)
+    _f4b_patterns = [
+        (r'Zeitersparnis\s+von\s+(\d{1,3})\s+Stunden', f'Zeitersparnis von {_canon_h_str} Stunden'),
+        (r'Einsparung\s+von\s+(\d{1,3})\s+Stunden', f'Einsparung von {_canon_h_str} Stunden'),
+        (r'(\d{1,3})\s+Stunden\s+monatlich', f'{_canon_h_str} Stunden monatlich'),
+        (r'(\d{1,3})\s+Stunden\s+pro\s+Monat', f'{_canon_h_str} Stunden pro Monat'),
+        (r'(\d{1,3})\s+Stunden/Monat', f'{_canon_h_str} Stunden/Monat'),
+    ]
+    for key in list(sections.keys()):
+        val = sections.get(key)
+        if not isinstance(val, str) or len(val) < 50:
+            continue
+        original = val
+        for _pat, _repl in _f4b_patterns:
+            def _f4b_replace(m, repl=_repl, canon=_canon_h_str):
+                # Extract the number from the match
+                num = m.group(1) if m.lastindex and m.group(1).isdigit() else None
+                if num and num != canon and 1 <= int(num) <= 100:
+                    return repl
+                return m.group(0)  # no change if already correct or out of range
+            val = re.sub(_pat, _f4b_replace, val)
+        if val != original:
+            sections[key] = val
+            fixes_applied.append(f"F4b:hours-prose-fix-{key[:30]}")
+
     # ─── FIX-F5: Prompt-Leak-Patterns entfernen ───
     LEAK_PATTERNS = [
         r'Ihr Ziel\s*\(z\.?\s*B\.[^)]*\)',
