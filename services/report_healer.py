@@ -857,6 +857,19 @@ def sanitize_template_phrases(html: str) -> Tuple[str, int]:
         except re.error as e:
             log.warning("[FIX-A] Regex error for pattern '%s': %s", bp.pattern[:50], e)
 
+    # FIX-A-SBC: Clean up "siehe Business Case" used inline as a placeholder
+    # for a number, e.g. "Der effektive siehe Business Case Zuschuss" or
+    # "ergibt sich ein siehe Business Case im ersten Jahr".
+    # These appear when the LLM replaces a number with the cross-reference text.
+    # Only remove mid-sentence occurrences preceded by article/adjective.
+    _sbc_inline = r'(?<=\s)(?:(?:der|die|das|ein|eine|einen|einem|einer|eines|effektive[rns]?|reduzierte[rns]?)\s+)+(?:→\s*)?siehe\s+Business\s+Case(?:\s*/\s*Simulation)?'
+    _sbc_found = len(re.findall(_sbc_inline, result, re.IGNORECASE))
+    if _sbc_found:
+        result = re.sub(_sbc_inline, '', result, flags=re.IGNORECASE)
+        result = re.sub(r'  +', ' ', result)
+        removed_count += _sbc_found
+        log.info("[FIX-A-SBC] Cleaned %d inline 'siehe Business Case' placeholder(s)", _sbc_found)
+
     # Clean up empty paragraphs left behind
     result = re.sub(r"<p>\s*</p>", "", result)
     result = re.sub(r"\n{3,}", "\n\n", result)
