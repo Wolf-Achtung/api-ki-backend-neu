@@ -1254,6 +1254,33 @@ def generate_vendor_audit_report(
         if vendors:
             log.info("[G35][FIX-KMU-VENDOR] Extracted %d vendors from generated sections", len(vendors))
 
+    # FIX-VENDOR-DEDUP: Deduplicate vendors by normalized name.
+    # "ChatGPT (OpenAI)" and "OpenAI" are the same vendor; similarly
+    # "Claude (Anthropic)" and "Anthropic". Merge by keeping the more
+    # specific entry (the one with the parent company in parentheses).
+    _VENDOR_ALIASES: Dict[str, str] = {
+        "openai": "ChatGPT (OpenAI)",
+        "chatgpt": "ChatGPT (OpenAI)",
+        "chatgpt (openai)": "ChatGPT (OpenAI)",
+        "openai api": "ChatGPT (OpenAI)",
+        "anthropic": "Claude (Anthropic)",
+        "claude": "Claude (Anthropic)",
+        "claude (anthropic)": "Claude (Anthropic)",
+        "anthropic api": "Claude (Anthropic)",
+    }
+    _dedup_seen: set = set()
+    _dedup_vendors: list = []
+    for v in vendors:
+        _vname = (v.get("name") or "").strip()
+        _canon = _VENDOR_ALIASES.get(_vname.lower(), _vname)
+        if _canon not in _dedup_seen:
+            _dedup_seen.add(_canon)
+            v["name"] = _canon  # normalize to canonical name
+            _dedup_vendors.append(v)
+        else:
+            log.info("[G35][FIX-VENDOR-DEDUP] Merged duplicate vendor '%s' -> '%s'", _vname, _canon)
+    vendors = _dedup_vendors
+
     # Generate audit entries
     entries: List[VendorAuditEntry] = []
     for vendor_info in vendors[:constraints["max_vendors"]]:
