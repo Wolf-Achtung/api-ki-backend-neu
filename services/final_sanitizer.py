@@ -186,6 +186,16 @@ def final_sanitize(sections: dict) -> dict:
             sections[key] = val
             fixes_applied.append(f"F5:leak-cleaned-{key[:30]}")
 
+    # ─── FIX-F5b: Remove empty parentheses left by leak-cleaning ───
+    for key in list(sections.keys()):
+        val = sections.get(key)
+        if not isinstance(val, str) or len(val) < 50:
+            continue
+        _val_new = re.sub(r'\s*\(\s*\)', '', val)
+        if _val_new != val:
+            sections[key] = _val_new
+            fixes_applied.append(f"F5b:empty-parens-{key[:30]}")
+
     # ─── FIX-F6: go-digital "(eingestellt)" ───
     # FIX-B20: Extended to also remove "Digital Jetzt" (ended Dec 2023)
     _DEPRECATED_PROGRAMS_RE = [
