@@ -53,6 +53,8 @@ jobs:
           pip install -r requirements.txt
           if [ -f requirements-test.txt ]; then pip install -r requirements-test.txt; fi
       - name: Run unit tests (ignore E2E file)
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-secret-not-for-production' }}
         run: |
           pytest -q --maxfail=3 --disable-warnings \
             --cov=services --cov=routes --cov=core \
