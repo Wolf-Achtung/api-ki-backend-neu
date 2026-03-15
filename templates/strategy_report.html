@@ -283,13 +283,19 @@ h1, h2, h3, h4 { break-after: avoid; }
 .cover-meta strong { color: var(--c-text); }
 
 /* Cover Score Ring */
+/* FIX-VU1: overflow hidden + max dimensions for PDF safety */
 .cover-score-ring {
     margin: var(--sp-lg) auto;
     position: relative;
     display: inline-block;
+    overflow: hidden;
+    max-width: 200px;
+    max-height: 200px;
 }
 .cover-score-ring svg {
     transform: rotate(-90deg);
+    max-width: 100%;
+    height: auto;
 }
 .cover-score-content {
     position: absolute;

@@ -327,11 +327,18 @@ tr:last-child td { border-bottom: none; }
     opacity: 0.85;
 }
 
-/* Score Ring */
+/* Score Ring — FIX-VU1: overflow hidden + max dimensions for PDF safety */
 .score-ring-wrap {
     margin: var(--sp-xl) auto;
     position: relative;
     display: inline-block;
+    overflow: hidden;
+    max-width: 200px;
+    max-height: 200px;
+}
+.score-ring-wrap svg {
+    max-width: 100%;
+    height: auto;
 }
 .score-content {
     position: absolute;
