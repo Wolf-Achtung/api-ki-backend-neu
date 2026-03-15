@@ -3255,6 +3255,8 @@ def apply_kpi_consistency_enforcer(sections: dict) -> dict:
     total_enforcements = 0
 
     # Sections to check for KPI consistency
+    # FIX-ZEITBUDGET: Added CHALLENGE_30_TAGE_HTML + SOFORT_START_HTML to catch
+    # hallucinated "2–36 Stunden/Monat" ranges where min=score_sicherheit
     check_sections = [
         "EXECUTIVE_SUMMARY_HTML", "executive_summary",
         "BUSINESS_CASE_HTML", "business_case",
@@ -3264,6 +3266,7 @@ def apply_kpi_consistency_enforcer(sections: dict) -> dict:
         "QUICK_WINS_HTML", "quick_wins",
         "ROADMAP_90D_HTML", "roadmap_90d",
         "ROADMAP_12M_HTML", "roadmap_12m",
+        "CHALLENGE_30_TAGE_HTML", "SOFORT_START_HTML",
     ]
 
     for key in check_sections:
