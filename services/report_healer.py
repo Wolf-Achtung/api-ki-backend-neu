@@ -3421,6 +3421,22 @@ def apply_segment_budget(
             if _b39_last_end > 0:
                 _b39_keep_ratio = (_b39_last_end + 1) / len(_b39_content)
                 if _b39_keep_ratio >= 0.65:  # FIX-B40: Schwelle von 70% auf 65% gesenkt
+                    # FIX-B39a: Check if trailing content is substantive (not noise).
+                    # If it contains structured content markers, do NOT truncate.
+                    _b39_trailing = _b39_content[_b39_last_end + 1:]
+                    _b39_trailing_text = re.sub(r'</?\w+[^>]*>', '', _b39_trailing).strip()
+                    _b39_has_content = bool(
+                        re.search(r'(?:Investition|Einarbeitung|Kosten|Budget|Lizenz|pro Nutzer|pro Monat)', _b39_trailing_text)
+                        or re.search(r'\d+\.\s+\S', _b39_trailing_text)  # numbered list items
+                    )
+                    if _b39_has_content:
+                        _b39_skipped += 1
+                        log.info(
+                            "[FIX-B39] Section '%s' skipped: trailing content is substantive (%d chars)",
+                            _b39_key, len(_b39_trailing_text)
+                        )
+                        continue
+
                     _b39_before = _b39_content
                     _b39_content = _b39_content[:_b39_last_end + 1]
 

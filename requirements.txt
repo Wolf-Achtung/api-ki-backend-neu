@@ -36,3 +36,6 @@ feedparser>=6.0,<7.0
 
 # --- UTF-8 encoding fix (optional, for enhanced Mojibake fixing) ---
 ftfy>=6.1,<7.0
+
+# --- Image processing (WebP logo optimization) ---
+Pillow>=10.0,<12.0

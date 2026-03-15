@@ -304,6 +304,17 @@ def rerun_generation(
         from gpt_analyze import run_async
     except (ImportError, RuntimeError) as exc:
         raise HTTPException(status_code=503, detail=f"analyzer_unavailable: {exc}")
+
+    # FIX-RERUN-STATUS-RESET: Set briefing status to "analyzing" BEFORE queuing
+    # the background task, so the frontend shows a loading state instead of the
+    # stale old report.
+    _, Briefing, _, _ = _models()
+    br = db.get(Briefing, briefing_id)
+    if br:
+        br.status = "analyzing"
+        br.error = None
+        db.commit()
+
     background.add_task(run_async, briefing_id, None)
     return {"ok": True, "queued": True}
 
