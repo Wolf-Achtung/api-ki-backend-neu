@@ -1107,11 +1107,14 @@ def generate_sofort_start_html(
     savings = calculate_yearly_savings(hours_per_week, stundensatz, company_size, canon_opex_monthly=canon_opex_monthly)
     
     # Personalisiere den ersten Schritt
+    # FIX-EMPTY-PARENS: Strip hauptleistung and validate before using in parentheses.
+    # If hauptleistung is whitespace-only or gets sanitized downstream, empty "()" remain.
+    _hl_clean = (hauptleistung or "").strip()
     erster_schritt = branche_data["erster_schritt"]
-    if hauptleistung:
+    if _hl_clean:
         erster_schritt = (
             f"Testen Sie ChatGPT mit einer typischen Aufgabe aus Ihrem Bereich "
-            f"({hauptleistung}). Nutzen Sie dafür die Copy-Paste Prompts auf der nächsten Seite."
+            f"({_hl_clean}). Nutzen Sie dafür die Copy-Paste Prompts auf der nächsten Seite."
         )
     
     # HTML generieren
