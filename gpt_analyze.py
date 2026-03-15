@@ -19832,12 +19832,15 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     _b40_skipped = 0
 
     # FIX-B41-SKIP: Non-text keys that must NOT be modified by clean-ending pass
+    # FIX-B40-S9: Import B39 content-critical skip sections to prevent double-truncation
     _b40_skip_keys = {
         "LOGO_PRIMARY_SRC", "FOOTER_LEFT_LOGO_SRC", "FOOTER_MID_LOGO_SRC",
         "FOOTER_RIGHT_LOGO_SRC", "FOOTER_BRANDS_HTML", "FEEDBACK_URL",
         "THEME_CSS_VARS", "BUILD_ID", "CONTACT_EMAIL", "OWNER_NAME",
         "TRANSITION_EXEC_TO_ACTION", "TRANSITION_QUICKWINS_TO_ROADMAP",
         "TRANSITION_RISK_TO_FUNDING",
+        # B39 content-critical sections — already handled by report_healer.py B39 pass
+        "SOFORT_START_HTML", "CHALLENGE_30_TAGE_HTML", "STARTER_KIT_HTML",
     }
 
     for _b40_key in list(sections.keys()):
