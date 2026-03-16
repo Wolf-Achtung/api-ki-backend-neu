@@ -20668,10 +20668,11 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
         return
 
     best_pdf = _fetch_pdf_if_needed(pdf_url, pdf_bytes)
+    from utils.report_display_id import get_report_display_id
     attachments_admin: List[Dict[str, Any]] = []
     if best_pdf:
         attachments_admin.append({
-            "filename": f"KI-Status-Report-{getattr(rep, 'id', None)}.pdf", 
+            "filename": f"KI-Status-Report-{get_report_display_id(br.id)}.pdf",
             "content": best_pdf, 
             "mimetype": "application/pdf"
         })
