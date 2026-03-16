@@ -15276,6 +15276,9 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     sections["report_id"] = report_id
     sections["report_version"] = version_mm
     sections["WATERMARK_TEXT"] = _build_watermark_text(report_id, version_mm)
+    # Unified customer-facing report number (KIS-XXXX) for all three PDFs
+    from utils.report_display_id import get_report_display_id
+    sections["REPORT_DISPLAY_ID"] = get_report_display_id(briefing_id)
     
     # Build stamp & Feedback box
     sections["BUILD_STAMP"] = f"{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')} · {report_id} · v{version_mm}"
@@ -20722,9 +20725,12 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
         
         if user_email:
             user_attachments = [] if pdf_url else attachments_admin[:1]
+            # Unified display number for customer-facing emails
+            from utils.report_display_id import get_report_display_id as _disp_id
+            _display = _disp_id(br.id)
             ok, err = _send_email_via_resend(
                 user_email,
-                "Ihr KI‑Status‑Report ist fertig",
+                f"Ihr KI\u2011Status\u2011Report ({_display})",
                 render_report_ready_email(recipient="user", pdf_url=pdf_url, user_email=user_email, briefing_id=getattr(br, "id", None)),
                 attachments=user_attachments
             )

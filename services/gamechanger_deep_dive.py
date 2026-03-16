@@ -813,6 +813,9 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
         context.get('kundencode', ''), context.get('UNTERNEHMENSGROESSE_LABEL', ''),
     )
 
+    # 3b. Inject briefing_id into context for display-ID generation
+    context['briefing_id'] = briefing_id
+
     # 4. Generate sections
     sections = generate_deep_dive_sections(context)
 
@@ -877,6 +880,10 @@ def render_deep_dive_html(sections: Dict[str, str],
             or context.get('HAUPTLEISTUNG')
             or 'Ihr Unternehmen'
         )
+        # Unified customer-facing report number (KIS-XXXX)
+        from utils.report_display_id import get_report_display_id
+        _bid = context.get('briefing_id', 0)
+        template_vars['REPORT_DISPLAY_ID'] = get_report_display_id(int(_bid)) if _bid else ''
 
         return str(template.render(**template_vars))
 

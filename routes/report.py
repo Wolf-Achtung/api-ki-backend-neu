@@ -993,7 +993,9 @@ def _send_deep_dive_email(
             "content": pdf_bytes,
             "mimetype": "application/pdf",
         }
-        subject = "Ihre KI-Potenzial-Analyse"
+        from utils.report_display_id import get_report_display_id
+        _display = get_report_display_id(briefing_id)
+        subject = f"Ihre KI-Potenzial-Analyse ({_display})"
 
         # --- User email ---
         if user_email:
