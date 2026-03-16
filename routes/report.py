@@ -988,13 +988,13 @@ def _send_deep_dive_email(
 
         user_email = _determine_user_email(db, briefing, None)
 
+        from utils.report_display_id import get_report_display_id
+        _display = get_report_display_id(briefing_id)
         attachment = {
-            "filename": f"KI-Potenzial-Analyse-{briefing_id}.pdf",
+            "filename": f"KI-Potenzial-Analyse-{_display}.pdf",
             "content": pdf_bytes,
             "mimetype": "application/pdf",
         }
-        from utils.report_display_id import get_report_display_id
-        _display = get_report_display_id(briefing_id)
         subject = f"Ihre KI-Potenzial-Analyse ({_display})"
 
         # --- User email ---
