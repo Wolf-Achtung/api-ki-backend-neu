@@ -19,6 +19,7 @@ from core.security import (
     get_settings,
 )
 from models import Briefing, Analysis, Report
+from utils.report_display_id import get_report_display_id
 
 log = logging.getLogger(__name__)
 
@@ -368,7 +369,7 @@ def get_report_pdf_v2(
             return Response(
                 content=pdf_bytes,
                 media_type="application/pdf",
-                headers={"Content-Disposition": f'inline; filename="report-{briefing_id}.pdf"'}
+                headers={"Content-Disposition": f'inline; filename="KI-Status-Report-{get_report_display_id(briefing_id)}.pdf"'}
             )
 
     # -------------------------------------------------------------------------
@@ -449,7 +450,7 @@ def get_report_pdf_v2(
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'inline; filename="report-{briefing_id}.pdf"'}
+            headers={"Content-Disposition": f'inline; filename="KI-Status-Report-{get_report_display_id(briefing_id)}.pdf"'}
         )
 
     # Check for PDF URL in result (external storage)
@@ -988,7 +989,6 @@ def _send_deep_dive_email(
 
         user_email = _determine_user_email(db, briefing, None)
 
-        from utils.report_display_id import get_report_display_id
         _display = get_report_display_id(briefing_id)
         attachment = {
             "filename": f"KI-Potenzial-Analyse-{_display}.pdf",
