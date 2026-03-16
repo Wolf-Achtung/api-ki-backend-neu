@@ -93,7 +93,7 @@ EXTENSION_PARAGRAPHS: Dict[str, Dict[str, str]] = {
 <p>Für Ihr Team empfiehlt sich eine strukturierte Herangehensweise: Definieren Sie einen klaren Projektverantwortlichen und erstellen Sie einen Zeitplan mit wöchentlichen Meilensteinen. Beginnen Sie mit Quick Wins, die schnell sichtbare Ergebnisse zeigen, um die Team-Akzeptanz zu fördern. Planen Sie regelmäßige Review-Termine ein, um den Fortschritt zu messen und bei Bedarf anzupassen.</p>
 """,
         "kmu": """
-<p>Für Ihr Unternehmen empfiehlt sich ein phasenbasierter Rollout: Starten Sie mit einer Pilotabteilung, um Erfahrungen zu sammeln, bevor Sie skalieren. Etablieren Sie KPIs für jeden Meilenstein und binden Sie Stakeholder frühzeitig ein. Berücksichtigen Sie Change-Management-Aspekte und planen Sie Schulungsressourcen für die Belegschaft ein.</p>
+<p>Für Ihr Unternehmen empfiehlt sich ein phasenbasierter Rollout: Starten Sie mit einer Pilotabteilung, um Erfahrungen zu sammeln, bevor Sie skalieren. Etablieren Sie KPIs für jeden Meilenstein und binden Sie alle Beteiligten frühzeitig ein. Berücksichtigen Sie Change-Management-Aspekte und planen Sie Schulungsressourcen für die Belegschaft ein.</p>
 """,
     },
     "roadmap_12m": {
@@ -778,7 +778,7 @@ def _get_structural_expansion(section: str, size: str, branche: str, style: str)
         "roadmap_90d": f"""
 <p><strong>Implementierungs-Checkliste{branch_context}:</strong></p>
 <ol>
-<li><strong>Woche 1-2:</strong> Stakeholder-Alignment und Ressourcenplanung abschließen</li>
+<li><strong>Woche 1-2:</strong> Abstimmung der Beteiligten und Ressourcenplanung abschließen</li>
 <li><strong>Woche 3-4:</strong> Technische Infrastruktur und Zugänge einrichten</li>
 <li><strong>Woche 5-8:</strong> Pilotimplementierung mit definiertem Scope durchführen</li>
 <li><strong>Woche 9-10:</strong> Evaluation und Optimierung basierend auf Piloterkenntnissen</li>
@@ -808,7 +808,7 @@ def _get_structural_expansion(section: str, size: str, branche: str, style: str)
         "risks": f"""
 <p><strong>Risiko-Management-Framework{branch_context}:</strong></p>
 <ol>
-<li><strong>Identifikation:</strong> Kontinuierliche Risiko-Scans und Stakeholder-Feedback</li>
+<li><strong>Identifikation:</strong> Kontinuierliche Risiko-Scans und Rückmeldung der Beteiligten</li>
 <li><strong>Bewertung:</strong> Quantifizierung nach Eintrittswahrscheinlichkeit × Impact</li>
 <li><strong>Mitigation:</strong> Definierte Maßnahmen je Risikokategorie mit Verantwortlichkeiten</li>
 <li><strong>Monitoring:</strong> Regelmäßige Reviews und Anpassung der Risikobewertung</li>
