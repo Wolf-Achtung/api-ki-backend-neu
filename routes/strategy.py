@@ -476,9 +476,8 @@ async def get_strategy_pdf(
     sr.updated_at = datetime.now(timezone.utc)
     db.commit()
 
-    briefing = db.query(Briefing).filter(Briefing.id == briefing_id).first()
-    firmenname = (briefing.answers or {}).get("unternehmen_name", "Unternehmen") if briefing else "Unternehmen"
-    filename = f"KI-Strategiebericht-{firmenname}.pdf".replace(" ", "-")
+    from utils.report_display_id import get_report_display_id
+    filename = f"KI-Strategiebericht-{get_report_display_id(briefing_id)}.pdf"
 
     return Response(
         content=pdf_bytes,
