@@ -18015,6 +18015,64 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             else:
                 log.info('[FIX-C1] KI_STACK_SUMMARY_HTML kpi-value spans already match canonical values (or pattern not found)')
 
+        # =================================================================
+        # [FIX-S13C] Enforce canonical KPIs in text-based HTML sections.
+        # FIX-C1 above handles kpi-value spans in KI_STACK_SUMMARY_HTML.
+        # This block handles inline text patterns in STARTER_KIT_HTML and
+        # other sections where KPIs appear as plain text (not in spans).
+        # Runs AFTER canonical BC injection to use authoritative values.
+        # =================================================================
+        import re as _re_s13c
+        _s13c_roi = int(round(canonical_bc.roi_12m_net))
+        _s13c_hours = int(round(canonical_bc.hours_saved_per_month))
+        _s13c_payback = canonical_bc.payback_months
+        _s13c_payback_fmt = f"{_s13c_payback:.1f}".replace('.', ',')
+
+        _s13c_target_keys = [
+            'STARTER_KIT_HTML', 'STARTER_KIT_COMPACT_HTML',
+            'KI_STACK_SUMMARY_HTML', 'ki_stack_summary',
+        ]
+
+        for _s13c_key in _s13c_target_keys:
+            _s13c_html = sections.get(_s13c_key)
+            if not _s13c_html or not isinstance(_s13c_html, str):
+                continue
+            _s13c_orig = _s13c_html
+            _s13c_patches = 0
+
+            # ROI patterns in various inline formats
+            _s13c_roi_patterns = [
+                (r'(ROI[- ]?Rate\s*:?\s*)\d+\s*%', rf'\g<1>{_s13c_roi} %'),
+                (r'(ROI\s*\(?12\s*M(?:onate?)?\)?\s*:?\s*)\d+\s*%', rf'\g<1>{_s13c_roi} %'),
+                (r'(ROI nach 12 Monaten\s*:?\s*)\d+\s*%', rf'\g<1>{_s13c_roi} %'),
+                (r'(ROI\s*:?\s*)\d+\s*%(\s*(?:nach|in)\s*12)', rf'\g<1>{_s13c_roi} %\2'),
+            ]
+
+            # Zeitersparnis patterns
+            _s13c_hours_patterns = [
+                (r'(Zeitersparnis\s*:?\s*)\d+\s*(h/Monat|Stunden/Monat)', rf'\g<1>{_s13c_hours} \2'),
+                (r'(Einsparung/Monat\s*:?\s*)\d+\s*h', rf'\g<1>{_s13c_hours} h'),
+                (r'(operative Entlastung\s*:?\s*~?\s*)\d+\s*(h/Monat|Stunden/Monat)', rf'\g<1>{_s13c_hours} \2'),
+                (r'(ca\.\s*)\d+(\s*(?:Stunden|h)\s*/?\s*Monat)', rf'\g<1>{_s13c_hours}\2'),
+            ]
+
+            # Payback patterns
+            _s13c_pb_patterns = [
+                (r'(Payback\s*:?\s*)\d+[.,]\d+(\s*Monate?)', rf'\g<1>{_s13c_payback_fmt}\2'),
+                (r'(Amortisation\s*:?\s*~?\s*)\d+[.,]\d+(\s*Monate?)', rf'\g<1>{_s13c_payback_fmt}\2'),
+            ]
+
+            for _s13c_pat, _s13c_rep in _s13c_roi_patterns + _s13c_hours_patterns + _s13c_pb_patterns:
+                _s13c_new = _re_s13c.sub(_s13c_pat, _s13c_rep, _s13c_html)
+                if _s13c_new != _s13c_html:
+                    _s13c_patches += 1
+                    _s13c_html = _s13c_new
+
+            if _s13c_patches > 0:
+                sections[_s13c_key] = _s13c_html
+                log.info(f'[FIX-S13C] Enforced {_s13c_patches} canonical KPI values in {_s13c_key} '
+                         f'(ROI={_s13c_roi}%, hours={_s13c_hours}h/Mo, payback={_s13c_payback_fmt})')
+
     except Exception as e:
         log.warning(f"[{run_id}] ⚠️ [CANONICAL-BC] Failed to inject canonical values: {e}")
 

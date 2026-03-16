@@ -116,6 +116,9 @@ CRITICAL_LEAK_TERMS: Dict[str, str] = {
     r"\bArchitektur(?:en)?\b": "Architektur → 'Aufbau' oder 'Struktur'",
     r"\bLayer(?:s)?\b": "Layer → 'Ebene(n)'",
     r"\bProzesslandschaft(?:en)?\b": "Prozesslandschaft → 'Arbeitsabläufe'",
+
+    # FIX-S13A: "Strategische Roadmap" fehlte komplett im Scanner
+    r"\bStrategische\s+Roadmap\b": "Strategische Roadmap → 'Ihr Fahrplan' oder '90-Tage-Plan'",
 }
 
 # Warning-level terms (review but don't fail gate)

@@ -60,7 +60,8 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bFull-Stack\b', 'Gesamtlösung', 'Full-Stack→Gesamtlösung'),
     (r'\bFull\s+Stack\b', 'Gesamtlösung', 'Full Stack→Gesamtlösung'),
     (r'\bStacks\b', 'Technikpakete', 'Stacks→Technikpakete (Plural)'),
-    (r'\bStack\b', 'Technikpaket', 'Stack→Technikpaket'),
+    # FIX-S13A: Sync with solo_leak_scanner — exclude KI-Stack and Stack-Komponente
+    (r'\b(?<!KI-)Stack\b(?!-Komponente)', 'Technikpaket', 'Stack→Technikpaket'),
     (r'\bLayers\b', 'Ebenen', 'Layers→Ebenen (Plural)'),
     (r'\bLayer\b', 'Ebene', 'Layer→Ebene'),
     (r'\bPipelines\b', 'Abläufe', 'Pipelines→Abläufe (Plural)'),
@@ -369,6 +370,8 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
         "AI_POLICY_MINI_HTML", "ai_policy_mini",
         "VENDOR_AUDIT_HTML", "RISK_ENGINE_V3_HTML",
         "SOFORT_START_HTML",
+        # FIX-S13A: Starter Kit sections were missing from solo language normalizer
+        "STARTER_KIT_HTML", "STARTER_KIT_COMPACT_HTML",
         # FIX-P3-C3: Shadow keys for sections that also exist as lowercase
         "templates_start", "wettbewerb_benchmark",
     ]
@@ -432,11 +435,17 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
         )
 
     # --- FIX-52x: STRICT safety net for remaining solo persona leaks ---
+    # FIX-S13A: Word-boundary regex + HTML-stripping to prevent false negatives
+    #   from HTML tags breaking word boundaries (e.g. Stake<wbr>holder)
     if os.getenv("RELEASE_STRICT_MODE") == "1":
         forbidden = ["Skalierung", "Stakeholder", "Audit-Trail", "Audit Trail", "Stack", "Tech-Stack", "Full-Stack",
                      "Enterprise-Software", "Wertschöpfungskette", "Strategische Roadmap"]
         all_text = " ".join(str(v) for v in sections.values() if isinstance(v, str))
-        still = [t for t in forbidden if t.lower() in all_text.lower()]
+        # Strip HTML tags before matching (consistent with solo_leak_scanner)
+        all_text = re.sub(r'<[^>]+>', ' ', all_text)
+        all_text = re.sub(r'&shy;', '', all_text)
+        all_text = re.sub(r'\s+', ' ', all_text)
+        still = [t for t in forbidden if re.search(r'\b' + re.escape(t) + r'\b', all_text, re.IGNORECASE)]
         if still:
             raise RuntimeError(f"[FIX-52x][SOLO-LEAK] forbidden terms remain after rewrite: {still}")
 
@@ -2056,24 +2065,37 @@ LOCATION_CHECK_SECTIONS = [
     "kosten_uebersicht", "KOSTEN_UEBERSICHT_HTML",
 ]
 
+    # FIX-S13D: Förder-Keywords — if a wrong Bundesland appears in a <li>/<tr>
+    # together with these keywords, remove the entire element (not just the name)
+_FOERDER_KEYWORDS = [
+    'Förder', 'Programm', 'Zuschuss', 'Landesförderung', 'Digitalbonus',
+    'Innovationsgutschein', 'Digitalisierungsprämie', 'Gründer', 'Fördermittel',
+]
+
+
 def validate_location_in_section(html: str, correct_bundesland: str) -> tuple[str, int]:
     """
     Entfernt Referenzen zu falschen Bundesländern.
-    
+
+    FIX-S13D: If a wrong Bundesland appears inside a <li> or <tr> that also
+    contains Förder-keywords, the entire element is removed (not just the name
+    replaced with "Ihr Bundesland"). This prevents nonsensical entries like
+    "Ihr Bundesland-Spezialförderung Digitalisierung".
+
     Args:
         html: HTML content
         correct_bundesland: Das korrekte Bundesland des Users
-        
+
     Returns:
         tuple: (cleaned_html, removal_count)
     """
     if not html or not correct_bundesland:
         return html, 0
-    
+
     removals = 0
     result = html
     correct_lower = correct_bundesland.lower()
-    
+
     for bundesland in BUNDESLAENDER:
         # Skip wenn es das korrekte Bundesland ist
         if bundesland.lower() == correct_lower:
@@ -2082,16 +2104,45 @@ def validate_location_in_section(html: str, correct_bundesland: str) -> tuple[st
             continue
         if "nordrhein" in bundesland.lower() and correct_lower == "nrw":
             continue
-        
+
         # Suche nach dem falschen Bundesland
-        pattern = rf'\b{re.escape(bundesland)}\b'
-        matches = list(re.finditer(pattern, result, re.IGNORECASE))
-        if matches:
-            # Ersetze durch "Ihr Bundesland" oder entferne den Satz
-            result = re.sub(pattern, "Ihr Bundesland", result, flags=re.IGNORECASE)
-            removals += len(matches)
-            log.warning(f"[LOCATION-VALIDATOR] Removed wrong Bundesland '{bundesland}' (correct: {correct_bundesland})")
-    
+        bl_pattern = rf'\b{re.escape(bundesland)}\b'
+        if not re.search(bl_pattern, result, re.IGNORECASE):
+            continue
+
+        # FIX-S13D: Check if wrong Bundesland is inside <li> or <tr> with Förder-keywords
+        # If so, remove the entire element instead of just replacing the name
+        for tag in ('li', 'tr'):
+            element_pattern = re.compile(
+                rf'<{tag}[^>]*>.*?</{tag}>',
+                re.DOTALL | re.IGNORECASE,
+            )
+            new_result = result
+            for el_match in reversed(list(element_pattern.finditer(result))):
+                el_html = el_match.group(0)
+                # Check if this element contains the wrong Bundesland
+                if not re.search(bl_pattern, el_html, re.IGNORECASE):
+                    continue
+                # Check if it also contains Förder-keywords
+                el_text = re.sub(r'<[^>]+>', ' ', el_html)
+                has_foerder = any(kw.lower() in el_text.lower() for kw in _FOERDER_KEYWORDS)
+                if has_foerder:
+                    new_result = new_result[:el_match.start()] + new_result[el_match.end():]
+                    removals += 1
+                    log.info(
+                        f"[FIX-S13D] Removed entire <{tag}> with wrong Bundesland "
+                        f"'{bundesland}' + Förder-keywords (correct: {correct_bundesland})"
+                    )
+            result = new_result
+
+        # For remaining occurrences (not in <li>/<tr> with Förder-keywords):
+        # Replace with "Ihr Bundesland" as before
+        remaining = list(re.finditer(bl_pattern, result, re.IGNORECASE))
+        if remaining:
+            result = re.sub(bl_pattern, "Ihr Bundesland", result, flags=re.IGNORECASE)
+            removals += len(remaining)
+            log.warning(f"[LOCATION-VALIDATOR] Replaced wrong Bundesland '{bundesland}' → 'Ihr Bundesland' (correct: {correct_bundesland})")
+
     return result, removals
 
 def apply_location_validator(sections: dict, bundesland: str) -> dict:
