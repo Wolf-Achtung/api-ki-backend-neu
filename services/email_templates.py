@@ -19,7 +19,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
     else:
         title = "Ihr KI‑Status‑Report"
         intro = "anbei erhalten Sie Ihren automatisch generierten KI‑Status‑Report."
-        cta_hint = "Auf Wunsch erstelle ich eine tabellarische Übersicht mit allen zentralen EU‑AI‑Act‑Terminen (2025–2027)."
+        cta_hint = ""
 
     link_html = f'<p>Sie können den Report <a href="{escape(pdf_url)}">hier als PDF abrufen</a>.</p>' if pdf_url else ""
 
@@ -84,7 +84,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
         <p>{escape(intro)}</p>
         {link_html}
         {briefing_section}
-        <p class="muted">{escape(cta_hint)}</p>
+        {'<p class="muted">' + escape(cta_hint) + '</p>' if cta_hint else ''}
         {strategy_cta}
         {feedback_section}
         <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>
