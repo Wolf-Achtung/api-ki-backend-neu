@@ -609,6 +609,11 @@ def sanitize_all_sections(
             if i4_rem > 0:
                 stats['redundant_blocks_stripped'] = stats.get('redundant_blocks_stripped', 0) + i4_rem
 
+        # FIX-S13B: Remove empty <strong> tags from LLM output
+        cleaned, s13b_rem = sanitize_empty_strong_tags(cleaned, key)
+        if s13b_rem > 0:
+            stats['empty_strong_stripped'] = stats.get('empty_strong_stripped', 0) + s13b_rem
+
         sanitized[key] = cleaned
         stats['entities_decoded'] += result.entities_decoded
         stats['sentences_fixed'] += result.sentences_fixed
@@ -705,6 +710,59 @@ def strip_redundant_blocks(html: str, section_name: str = "") -> tuple:
     return result, removals
 
 
+# =============================================================================
+# FIX-S13B: SANITIZE EMPTY <strong> TAGS FROM LLM OUTPUT
+# =============================================================================
+
+def sanitize_empty_strong_tags(html: str, section_name: str = "") -> Tuple[str, int]:
+    """
+    [FIX-S13B] Remove empty <strong> tags and preceding label:colon patterns.
+
+    LLMs sometimes generate "Label: <strong></strong>" when they don't know
+    a value. This is especially common in Solo reports with fewer context anchors.
+
+    Catches patterns like:
+    - "Zuständig: <strong></strong>"
+    - "Label: <strong> </strong>"
+    - "<strong></strong>" (standalone)
+
+    Args:
+        html: HTML content
+        section_name: Section identifier for logging
+
+    Returns:
+        Tuple of (cleaned_html, removal_count)
+    """
+    if not html or len(html) < 20:
+        return html, 0
+
+    removals = 0
+    result = html
+
+    # Pattern 1: "Label: <strong></strong>" or "Label:<strong> </strong>"
+    # Remove the colon + empty strong tag, keep the label
+    pattern_with_colon = re.compile(r':\s*<strong>\s*</strong>', re.IGNORECASE)
+    matches = pattern_with_colon.findall(result)
+    if matches:
+        result = pattern_with_colon.sub('', result)
+        removals += len(matches)
+
+    # Pattern 2: Standalone empty strong tags (no preceding colon)
+    pattern_standalone = re.compile(r'<strong>\s*</strong>', re.IGNORECASE)
+    matches = pattern_standalone.findall(result)
+    if matches:
+        result = pattern_standalone.sub('', result)
+        removals += len(matches)
+
+    # Pattern 3: Clean up resulting empty list items or paragraphs
+    # e.g. "<li> </li>" or "<p> </p>" left after removal
+    result = re.sub(r'<li[^>]*>\s*</li>', '', result)
+    result = re.sub(r'<p[^>]*>\s*</p>', '', result)
+
+    if removals > 0:
+        log.info("[FIX-S13B] Removed %d empty <strong> tags from section=%s", removals, section_name)
+
+    return result, removals
 
 
 
