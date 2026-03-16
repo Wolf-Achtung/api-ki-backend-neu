@@ -22,7 +22,7 @@
     size: A4;
     margin: 20mm 20mm 25mm 23mm; /* links 3mm extra für Akzentlinie */
     @bottom-center {
-        content: "Seite " counter(page) " von " counter(pages) "  ·  {{ report_id }}  ·  {{ datum }}";
+        content: "Seite " counter(page) " von " counter(pages) "  ·  {% if REPORT_DISPLAY_ID %}{{ REPORT_DISPLAY_ID }}{% else %}{{ report_id }}{% endif %}  ·  {{ datum }}";
         font-size: 7pt;
         color: #9CA3AF;
         font-family: 'Inter', system-ui, sans-serif;
@@ -1219,7 +1219,7 @@ sup.src-ref {
         </div>
 
         <p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">
-            KI-Strategiebericht v1.0 · Template: Strategy Blue · Generiert am {{ datum }} · {{ report_id }}
+            KI-Strategiebericht v1.0 · Template: Strategy Blue · Generiert am {{ datum }} · {% if REPORT_DISPLAY_ID %}{{ REPORT_DISPLAY_ID }}{% else %}{{ report_id }}{% endif %}
             {% if build_id %} · Build: {{ build_id }}{% endif %}
         </p>
     </div>
