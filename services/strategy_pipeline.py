@@ -748,13 +748,13 @@ def _send_strategy_email(briefing_id: int, pdf_bytes: bytes, db_session: Any) ->
     user_email = _determine_user_email(db_session, briefing, None)
     logger.info("[%s] Resolved user_email=%s", run_tag, _mask_email(user_email) if user_email else "NONE")
 
+    from utils.report_display_id import get_report_display_id
+    _display = get_report_display_id(briefing_id)
     attachment = {
-        "filename": f"KI-Strategiebericht-{briefing_id}.pdf",
+        "filename": f"KI-Strategiebericht-{_display}.pdf",
         "content": pdf_bytes,
         "mimetype": "application/pdf",
     }
-    from utils.report_display_id import get_report_display_id
-    _display = get_report_display_id(briefing_id)
     subject = f"Ihr KI-Strategiebericht ({_display})"
 
     # --- User email ---
