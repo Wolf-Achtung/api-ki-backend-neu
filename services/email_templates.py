@@ -6,10 +6,13 @@ from typing import Optional
 from urllib.parse import quote
 
 
-def generate_feedback_link(email: str) -> str:
+def generate_feedback_link(email: str, briefing_id: int = None) -> str:
     """Generiert den Feedback-Link mit der E-Mail als URL-Parameter."""
     encoded_email = quote(email)
-    return f"https://make.ki-sicherheit.jetzt/feedback/feedback.html?email={encoded_email}"
+    url = f"https://make.ki-sicherheit.jetzt/feedback/feedback.html?email={encoded_email}"
+    if briefing_id:
+        url += f"&briefing_id={briefing_id}"
+    return url
 
 def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_summary_html: Optional[str] = None, user_email: Optional[str] = None, briefing_id: Optional[int] = None) -> str:
     if recipient == "admin":
@@ -52,7 +55,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
     # Add feedback section for user emails only
     feedback_section = ""
     if recipient != "admin" and user_email:
-        feedback_link = generate_feedback_link(user_email)
+        feedback_link = generate_feedback_link(user_email, briefing_id=briefing_id)
         feedback_section = f"""
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
         <p style="font-size:15px;margin:0 0 8px">💬 <strong>Ihr Feedback hilft!</strong></p>
