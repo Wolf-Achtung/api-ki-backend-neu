@@ -60,7 +60,8 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bFull-Stack\b', 'Gesamtlösung', 'Full-Stack→Gesamtlösung'),
     (r'\bFull\s+Stack\b', 'Gesamtlösung', 'Full Stack→Gesamtlösung'),
     (r'\bStacks\b', 'Technikpakete', 'Stacks→Technikpakete (Plural)'),
-    (r'\bStack\b', 'Technikpaket', 'Stack→Technikpaket'),
+    # FIX-S13A: Sync with solo_leak_scanner — exclude KI-Stack and Stack-Komponente
+    (r'\b(?<!KI-)Stack\b(?!-Komponente)', 'Technikpaket', 'Stack→Technikpaket'),
     (r'\bLayers\b', 'Ebenen', 'Layers→Ebenen (Plural)'),
     (r'\bLayer\b', 'Ebene', 'Layer→Ebene'),
     (r'\bPipelines\b', 'Abläufe', 'Pipelines→Abläufe (Plural)'),
@@ -369,6 +370,8 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
         "AI_POLICY_MINI_HTML", "ai_policy_mini",
         "VENDOR_AUDIT_HTML", "RISK_ENGINE_V3_HTML",
         "SOFORT_START_HTML",
+        # FIX-S13A: Starter Kit sections were missing from solo language normalizer
+        "STARTER_KIT_HTML", "STARTER_KIT_COMPACT_HTML",
         # FIX-P3-C3: Shadow keys for sections that also exist as lowercase
         "templates_start", "wettbewerb_benchmark",
     ]
@@ -432,11 +435,17 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
         )
 
     # --- FIX-52x: STRICT safety net for remaining solo persona leaks ---
+    # FIX-S13A: Word-boundary regex + HTML-stripping to prevent false negatives
+    #   from HTML tags breaking word boundaries (e.g. Stake<wbr>holder)
     if os.getenv("RELEASE_STRICT_MODE") == "1":
         forbidden = ["Skalierung", "Stakeholder", "Audit-Trail", "Audit Trail", "Stack", "Tech-Stack", "Full-Stack",
                      "Enterprise-Software", "Wertschöpfungskette", "Strategische Roadmap"]
         all_text = " ".join(str(v) for v in sections.values() if isinstance(v, str))
-        still = [t for t in forbidden if t.lower() in all_text.lower()]
+        # Strip HTML tags before matching (consistent with solo_leak_scanner)
+        all_text = re.sub(r'<[^>]+>', ' ', all_text)
+        all_text = re.sub(r'&shy;', '', all_text)
+        all_text = re.sub(r'\s+', ' ', all_text)
+        still = [t for t in forbidden if re.search(r'\b' + re.escape(t) + r'\b', all_text, re.IGNORECASE)]
         if still:
             raise RuntimeError(f"[FIX-52x][SOLO-LEAK] forbidden terms remain after rewrite: {still}")
 
