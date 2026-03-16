@@ -2065,24 +2065,37 @@ LOCATION_CHECK_SECTIONS = [
     "kosten_uebersicht", "KOSTEN_UEBERSICHT_HTML",
 ]
 
+    # FIX-S13D: Förder-Keywords — if a wrong Bundesland appears in a <li>/<tr>
+    # together with these keywords, remove the entire element (not just the name)
+_FOERDER_KEYWORDS = [
+    'Förder', 'Programm', 'Zuschuss', 'Landesförderung', 'Digitalbonus',
+    'Innovationsgutschein', 'Digitalisierungsprämie', 'Gründer', 'Fördermittel',
+]
+
+
 def validate_location_in_section(html: str, correct_bundesland: str) -> tuple[str, int]:
     """
     Entfernt Referenzen zu falschen Bundesländern.
-    
+
+    FIX-S13D: If a wrong Bundesland appears inside a <li> or <tr> that also
+    contains Förder-keywords, the entire element is removed (not just the name
+    replaced with "Ihr Bundesland"). This prevents nonsensical entries like
+    "Ihr Bundesland-Spezialförderung Digitalisierung".
+
     Args:
         html: HTML content
         correct_bundesland: Das korrekte Bundesland des Users
-        
+
     Returns:
         tuple: (cleaned_html, removal_count)
     """
     if not html or not correct_bundesland:
         return html, 0
-    
+
     removals = 0
     result = html
     correct_lower = correct_bundesland.lower()
-    
+
     for bundesland in BUNDESLAENDER:
         # Skip wenn es das korrekte Bundesland ist
         if bundesland.lower() == correct_lower:
@@ -2091,16 +2104,45 @@ def validate_location_in_section(html: str, correct_bundesland: str) -> tuple[st
             continue
         if "nordrhein" in bundesland.lower() and correct_lower == "nrw":
             continue
-        
+
         # Suche nach dem falschen Bundesland
-        pattern = rf'\b{re.escape(bundesland)}\b'
-        matches = list(re.finditer(pattern, result, re.IGNORECASE))
-        if matches:
-            # Ersetze durch "Ihr Bundesland" oder entferne den Satz
-            result = re.sub(pattern, "Ihr Bundesland", result, flags=re.IGNORECASE)
-            removals += len(matches)
-            log.warning(f"[LOCATION-VALIDATOR] Removed wrong Bundesland '{bundesland}' (correct: {correct_bundesland})")
-    
+        bl_pattern = rf'\b{re.escape(bundesland)}\b'
+        if not re.search(bl_pattern, result, re.IGNORECASE):
+            continue
+
+        # FIX-S13D: Check if wrong Bundesland is inside <li> or <tr> with Förder-keywords
+        # If so, remove the entire element instead of just replacing the name
+        for tag in ('li', 'tr'):
+            element_pattern = re.compile(
+                rf'<{tag}[^>]*>.*?</{tag}>',
+                re.DOTALL | re.IGNORECASE,
+            )
+            new_result = result
+            for el_match in reversed(list(element_pattern.finditer(result))):
+                el_html = el_match.group(0)
+                # Check if this element contains the wrong Bundesland
+                if not re.search(bl_pattern, el_html, re.IGNORECASE):
+                    continue
+                # Check if it also contains Förder-keywords
+                el_text = re.sub(r'<[^>]+>', ' ', el_html)
+                has_foerder = any(kw.lower() in el_text.lower() for kw in _FOERDER_KEYWORDS)
+                if has_foerder:
+                    new_result = new_result[:el_match.start()] + new_result[el_match.end():]
+                    removals += 1
+                    log.info(
+                        f"[FIX-S13D] Removed entire <{tag}> with wrong Bundesland "
+                        f"'{bundesland}' + Förder-keywords (correct: {correct_bundesland})"
+                    )
+            result = new_result
+
+        # For remaining occurrences (not in <li>/<tr> with Förder-keywords):
+        # Replace with "Ihr Bundesland" as before
+        remaining = list(re.finditer(bl_pattern, result, re.IGNORECASE))
+        if remaining:
+            result = re.sub(bl_pattern, "Ihr Bundesland", result, flags=re.IGNORECASE)
+            removals += len(remaining)
+            log.warning(f"[LOCATION-VALIDATOR] Replaced wrong Bundesland '{bundesland}' → 'Ihr Bundesland' (correct: {correct_bundesland})")
+
     return result, removals
 
 def apply_location_validator(sections: dict, bundesland: str) -> dict:
