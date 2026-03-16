@@ -14488,29 +14488,57 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     # ========== v14.0: TABLE INLINE STYLES (ersetzt Colgroup) ==========
     # Direkter Ansatz: Inline-Styles auf <table> und <td> Tags
     # Dies wird von PDF-Engines besser respektiert als CSS-Klassen
+
+    def _merge_style_into_tag(tag_html: str, new_styles: str) -> str:
+        """FIX-S14A: Merge new_styles into existing style attribute, or add if none exists.
+
+        Prevents duplicate style= attributes by merging CSS properties.
+        Handles: <tag style="existing"> → <tag style="existing;new_styles">
+        And:     <tag> → <tag style="new_styles">
+        """
+        existing_match = re.search(r'style="([^"]*)"', tag_html)
+        if existing_match:
+            # Parse existing + new properties, new overrides existing
+            props: dict = {}
+            for prop in existing_match.group(1).split(';'):
+                prop = prop.strip()
+                if ':' in prop:
+                    k, v = prop.split(':', 1)
+                    props[k.strip()] = v.strip()
+            for prop in new_styles.split(';'):
+                prop = prop.strip()
+                if ':' in prop:
+                    k, v = prop.split(':', 1)
+                    props[k.strip()] = v.strip()
+            combined = ';'.join(f'{k}:{v}' for k, v in props.items())
+            return tag_html[:existing_match.start()] + f'style="{combined}"' + tag_html[existing_match.end():]
+        else:
+            # Insert style before closing >
+            return re.sub(r'(/?>)', f' style="{new_styles}"\\1', tag_html, count=1)
+
     table_sections = ["RISKS_HTML", "RECOMMENDATIONS_HTML", "BUSINESS_CASE_HTML", "FOERDERPOTENZIAL_HTML"]
     for key in table_sections:
         html = sections.get(key, "")
         if html and '<table' in html.lower():
             try:
-                # Add inline styles directly to table tag
+                # FIX-S14A: Smart merge inline styles (prevents duplicate style= attributes)
                 html_fixed = re.sub(
-                    r'<table([^>]*)>',
-                    r'<table\1 style="table-layout:fixed;width:100%;border-collapse:collapse;font-size:9pt;">',
+                    r'<table[^>]*>',
+                    lambda m: _merge_style_into_tag(m.group(0), "table-layout:fixed;width:100%;border-collapse:collapse;font-size:9pt"),
                     html,
                     flags=re.IGNORECASE
                 )
                 # Add word-wrap to all td elements
                 html_fixed = re.sub(
-                    r'<td([^>]*)>',
-                    r'<td\1 style="word-wrap:break-word;overflow-wrap:break-word;padding:6px 8px;vertical-align:top;">',
+                    r'<td[^>]*>',
+                    lambda m: _merge_style_into_tag(m.group(0), "word-wrap:break-word;overflow-wrap:break-word;padding:6px 8px;vertical-align:top"),
                     html_fixed,
                     flags=re.IGNORECASE
                 )
                 # Add word-wrap to all th elements
                 html_fixed = re.sub(
-                    r'<th([^>]*)>',
-                    r'<th\1 style="word-wrap:break-word;overflow-wrap:break-word;padding:6px 8px;vertical-align:top;font-weight:bold;">',
+                    r'<th[^>]*>',
+                    lambda m: _merge_style_into_tag(m.group(0), "word-wrap:break-word;overflow-wrap:break-word;padding:6px 8px;vertical-align:top;font-weight:bold"),
                     html_fixed,
                     flags=re.IGNORECASE
                 )
@@ -20015,10 +20043,14 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         log.warning(f"[{run_id}] [PLATIN+++] Validation failed to run: {pv_err}")
 
     # =========================================================================
-    # FIX-B42: Post-B40 Grade Recalculation
+    # FIX-B42 + FIX-S14B: Post-B40 Grade Recalculation
     # B727 grade calc runs BEFORE B40 clean-ending and PLATIN+++ post-healer
     # validation. If B40 fixed TRUNCATED issues, the grade may be too low.
     # Recalculate using the same logic as B727 but with current state.
+    # FIX-S14B: Successful heals (pipeline_heals > 0) should NOT block Grade A.
+    # Self-healing is a pipeline feature — if final state is clean (0 warnings,
+    # 0 criticals), the report quality is A regardless of how many heals were needed.
+    # Also: if PLATIN+++ passed with 0 errors/0 warnings, trust that final state.
     # =========================================================================
     try:
         _b42_vw = int(sections.get("_VALIDATOR_WARNING_COUNT", 0))
@@ -20031,8 +20063,21 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         _b42_tw = _b42_pw + _b42_vw
         _b42_old_grade = sections.get("PIPELINE_GRADE", "?")
         _b42_consistency_ok = _b42_cg in ("A", "B") or (_b42_cg == "C" and _b42_cs >= 70)
-        if _b42_tw == 0 and _b42_vc == 0 and _b42_fb == 0 and _b42_hl == 0 and _b42_consistency_ok:
+        # FIX-S14B: PLATIN+++ passed means final state is verified clean
+        _b42_platin_passed = sections.get("_PLATIN_VALIDATION_PASSED", False)
+        _b42_platin_errors = int(sections.get("_PLATIN_ERRORS", 999))
+        _b42_platin_warnings = int(sections.get("_PLATIN_WARNINGS", 999))
+        _b42_platin_clean = _b42_platin_passed and _b42_platin_errors == 0 and _b42_platin_warnings == 0
+        # FIX-S14B: Grade A if final state is clean. Heals are NOT a quality penalty —
+        # they prove the pipeline self-corrected successfully.
+        if _b42_tw == 0 and _b42_vc == 0 and _b42_fb == 0 and _b42_consistency_ok:
             _b42_grade = "A"
+            if _b42_hl > 0:
+                log.info(f"[{run_id}] [FIX-S14B] Grade A despite {_b42_hl} heals (successful self-healing, final state clean)")
+        elif _b42_platin_clean and _b42_consistency_ok and _b42_fb == 0:
+            # FIX-S14B: PLATIN+++ passed with 0 errors/warnings → trust final state
+            _b42_grade = "A"
+            log.info(f"[{run_id}] [FIX-S14B] Grade A via PLATIN+++ clean pass (tw={_b42_tw}, hl={_b42_hl})")
         elif _b42_tw <= 10 and _b42_fb <= 2 and _b42_cg in ("A", "B", "C"):
             _b42_grade = "B"
         else:
@@ -20042,12 +20087,17 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             sections["TOTAL_WARNINGS_COUNT"] = _b42_tw
             log.info(f"[{run_id}] [FIX-B42-GRADE-RECALC] Grade {_b42_old_grade}->{_b42_grade} "
                      f"(post-B40: vw={_b42_vw}, vc={_b42_vc}, fb={_b42_fb}, hl={_b42_hl}, "
-                     f"tw={_b42_tw}, consistency={_b42_cg}/{_b42_cs})")
+                     f"tw={_b42_tw}, platin_clean={_b42_platin_clean}, consistency={_b42_cg}/{_b42_cs})")
         else:
             log.info(f"[{run_id}] [FIX-B42-GRADE-RECALC] Grade unchanged: {_b42_grade} "
                      f"(vw={_b42_vw}, fb={_b42_fb}, hl={_b42_hl}, consistency={_b42_cg}/{_b42_cs})")
     except Exception as _b42_grade_err:
         log.warning(f"[{run_id}] [FIX-B42-GRADE-RECALC] Failed: {_b42_grade_err}")
+
+    # FIX-S14B: Update QUALITY_SUMMARY to reflect post-B42 grade (it was set before B42)
+    if "QUALITY_SUMMARY" in sections and isinstance(sections["QUALITY_SUMMARY"], dict):
+        sections["QUALITY_SUMMARY"]["unified_grade"] = sections.get("PIPELINE_GRADE", sections["QUALITY_SUMMARY"].get("unified_grade", "?"))
+        sections["QUALITY_SUMMARY"]["total_warnings"] = sections.get("TOTAL_WARNINGS_COUNT", sections["QUALITY_SUMMARY"].get("total_warnings", 0))
 
     # =========================================================================
     # FIX-QW1: POST-HEALER Quick Wins Restore

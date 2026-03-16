@@ -342,6 +342,27 @@ def _merge_or_add_style(match: re.Match[str], new_styles: str, tag: str) -> str:
                 props[key.strip()] = val.strip()
         merged = ';'.join(f'{k}:{v}' for k, v in props.items())
         result = str(tag_html.replace(existing.group(0), f'style="{merged}"'))
+        # FIX-S14A: Safety net — collapse any remaining duplicate style= attributes
+        while 'style="' in result and result.count('style="') > 1:
+            dup_match = re.search(r'(style="[^"]*")\s*style="([^"]*)"', result)
+            if not dup_match:
+                break
+            # Merge second style into first
+            first_styles = dup_match.group(1)[7:-1]  # strip style=" and "
+            second_styles = dup_match.group(2)
+            dup_props: dict[str, str] = {}
+            for p in first_styles.split(';'):
+                p = p.strip()
+                if ':' in p:
+                    k2, v2 = p.split(':', 1)
+                    dup_props[k2.strip()] = v2.strip()
+            for p in second_styles.split(';'):
+                p = p.strip()
+                if ':' in p:
+                    k2, v2 = p.split(':', 1)
+                    dup_props[k2.strip()] = v2.strip()
+            merged_dup = ';'.join(f'{k2}:{v2}' for k2, v2 in dup_props.items())
+            result = result[:dup_match.start()] + f'style="{merged_dup}"' + result[dup_match.end():]
         log.debug("[FIX-HE1] Merged style on <%s>: existing='%s' + new='%s'",
                   tag, existing.group(1), new_styles)
         return result
