@@ -1009,7 +1009,7 @@ h1, h2, h3, h4 {
     <div class="cover-eyebrow">
         KI-Status-Report · {{ report_date }}
         <span class="muted"> · </span>
-        Report-ID: {{ report_id }}{% if BUILD_ID %} · Build: {{ BUILD_ID }}{% endif %}
+        {% if REPORT_DISPLAY_ID %}Report-Nr: {{ REPORT_DISPLAY_ID }}{% else %}Report-ID: {{ report_id }}{% endif %}{% if BUILD_ID %} · Build: {{ BUILD_ID }}{% endif %}
     </div>
     <div style="margin-bottom: var(--sp-xl); max-width: 600px;">
         <h1>KI-Readiness Report</h1>
@@ -1949,7 +1949,7 @@ h1, h2, h3, h4 {
 </div>
 
 <p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">
-    Report v7.1 · Template v7.1.0 "Clean Corporate Plus" · Generiert am {{ report_date }} · {{ report_id }}
+    Report v7.1 · Template v7.1.0 "Clean Corporate Plus" · Generiert am {{ report_date }} · {% if REPORT_DISPLAY_ID %}{{ REPORT_DISPLAY_ID }}{% else %}{{ report_id }}{% endif %}
     {% if BUILD_ID %} · Build: {{ BUILD_ID }}{% endif %}
 </p>
 

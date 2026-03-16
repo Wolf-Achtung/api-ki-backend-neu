@@ -753,7 +753,9 @@ def _send_strategy_email(briefing_id: int, pdf_bytes: bytes, db_session: Any) ->
         "content": pdf_bytes,
         "mimetype": "application/pdf",
     }
-    subject = "Ihr KI-Strategiebericht"
+    from utils.report_display_id import get_report_display_id
+    _display = get_report_display_id(briefing_id)
+    subject = f"Ihr KI-Strategiebericht ({_display})"
 
     # --- User email ---
     if user_email:

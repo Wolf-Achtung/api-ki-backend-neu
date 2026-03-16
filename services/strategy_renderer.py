@@ -16,6 +16,8 @@ from typing import Any, Dict, Optional
 
 from jinja2 import Environment, FileSystemLoader
 
+from utils.report_display_id import get_report_display_id as _get_display_id
+
 logger = logging.getLogger(__name__)
 
 
@@ -298,6 +300,8 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         "research_date": research_date,
         "report_id": f"STR-{sr.briefing_id}",
         "build_id": os.getenv("BUILD_ID", ""),
+        # Unified customer-facing report number (KIS-XXXX)
+        "REPORT_DISPLAY_ID": _get_display_id(sr.briefing_id),
         # Sections
         "exec_summary": _exec_body,
         "section_s1": _strip_prompt_leaks(sections.get("S1", "")),
