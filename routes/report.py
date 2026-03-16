@@ -1161,7 +1161,7 @@ async def generate_deep_dive_pdf(
             media_type="application/pdf",
             headers={
                 "Content-Disposition": (
-                    f'attachment; filename="KI-Potenzial-Analyse-{briefing_id}.pdf"'
+                    f'attachment; filename="KI-Potenzial-Analyse-{get_report_display_id(briefing_id)}.pdf"'
                 )
             },
         )
@@ -1255,6 +1255,6 @@ async def get_deep_dive_pdf(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={
-            "Content-Disposition": f'attachment; filename="KI-Potenzial-Analyse-{briefing_id}.pdf"'
+            "Content-Disposition": f'attachment; filename="KI-Potenzial-Analyse-{get_report_display_id(briefing_id)}.pdf"'
         },
     )
