@@ -90,6 +90,13 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bskalierbar\b', 'erweiterbar', 'skalierbar→erweiterbar'),
 
     # Corporate governance terms
+    # FIX-S14C: Compound pattern BEFORE simple patterns (longer match first)
+    (r'\bStakeholder-Analyse\b', 'Beteiligten-Analyse', 'Stakeholder-Analyse→Beteiligten-Analyse'),
+    (r'\bStakeholder-Alignment\b', 'Abstimmung der Beteiligten', 'Stakeholder-Alignment→Abstimmung der Beteiligten'),
+    (r'\bStakeholder-Feedback\b', 'Rückmeldung der Beteiligten', 'Stakeholder-Feedback→Rückmeldung der Beteiligten'),
+    (r'\bStakeholder-Management\b', 'Beteiligten-Management', 'Stakeholder-Management→Beteiligten-Management'),
+    (r'\bStakeholder-Kommunikation\b', 'Kommunikation mit Beteiligten', 'Stakeholder-Kommunikation→Kommunikation mit Beteiligten'),
+    (r'\bStakeholder-[A-Za-zäöüÄÖÜß]+\b', 'Beteiligten-Abstimmung', 'Stakeholder-Compound→Beteiligten-Abstimmung (Fallback)'),
     (r'\bStakeholdern\b', 'Beteiligten', 'Stakeholdern→Beteiligten (Dativ)'),
     (r'\bStakeholders\b', 'Beteiligte', 'Stakeholders→Beteiligte (EN Plural)'),
     (r'\bStakeholder\b', 'Beteiligte', 'Stakeholder→Beteiligte'),
@@ -374,6 +381,14 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
         "STARTER_KIT_HTML", "STARTER_KIT_COMPACT_HTML",
         # FIX-P3-C3: Shadow keys for sections that also exist as lowercase
         "templates_start", "wettbewerb_benchmark",
+        # FIX-S14C: Missing sections that could contain Stakeholder/forbidden terms
+        "MANAGEMENT_SUMMARY_HTML", "FOERDERPROGRAMME_HTML", "COMPLIANCE_HTML",
+        "BRANCH_RISKS_HTML", "BUSINESS_CASE_ENGINE_HTML", "BUSINESS_CASE_SIM_HTML",
+        "BUSINESS_CASE_TABLE_HTML", "FUNDING_HTML", "FUNDING_BRANCH_ALIGNMENT_HTML",
+        "FUNDING_TABLE_HTML", "HERO_HTML", "KOSTEN_UEBERSICHT_HTML",
+        "OPEN_INPUTS_HTML", "ROI_HTML", "ROI_TRACKING_HTML",
+        "STARTER_KITS_HTML", "TOOLS_BRANCH_ALIGNMENT_HTML",
+        "TOOLS_FUNDING_ALIGNMENT_HTML", "TOOLS_SECTION_HTML",
     ]
 
     # Team-specific replacements

@@ -53,6 +53,13 @@ ENTERPRISE_TERM_REPLACEMENTS: List[Tuple[str, str, str]] = [
     (r"Audit[-\u2011\u2010\s]?Trail", "nachvollziehbare Protokollierung", "Audit-Trail → Protokollierung"),
 
     # --- Stakeholder ---
+    # FIX-S14C: Compound patterns first (longer match before shorter)
+    (r"Stakeholder-Analyse", "Beteiligten-Analyse", "Stakeholder-Analyse → Beteiligten-Analyse"),
+    (r"Stakeholder-Alignment", "Abstimmung der Beteiligten", "Stakeholder-Alignment → Abstimmung"),
+    (r"Stakeholder-Feedback", "Rückmeldung der Beteiligten", "Stakeholder-Feedback → Rückmeldung"),
+    (r"Stakeholder-Management", "Beteiligten-Management", "Stakeholder-Management → Beteiligten-Mgmt"),
+    (r"Stakeholder-Kommunikation", "Kommunikation mit Beteiligten", "Stakeholder-Kommunikation → Komm."),
+    (r"Stakeholder-[A-Za-zäöüÄÖÜß]+", "Beteiligten-Abstimmung", "Stakeholder-Compound → Fallback"),
     (r"Stakeholdern", "wichtigen Personen", "Stakeholdern → wichtigen Personen"),
     (r"Stakeholders", "wichtiger Personen", "Stakeholders → wichtiger Personen"),
     (r"Stakeholder", "wichtige Personen", "Stakeholder → wichtige Personen"),
