@@ -15529,17 +15529,23 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     if hauptleistung:
         hauptleistung = re.sub(r"\bKl-", "KI-", hauptleistung)
         hauptleistung = re.sub(r"\bKl\b", "KI", hauptleistung)
+    # FIX-A1: hauptleistung is free-text ("Ich haben einen Online-Shop...")
+    # and must NOT be used as display title / company name substitute.
+    # Keep it in sections for LLM prompt context only.
     if hauptleistung:
-        # Smart truncation at word boundary
         max_len = 250  # L1: was 100
-        if len(hauptleistung) <= max_len:
-            sections["REPORT_SUBTITLE"] = hauptleistung
-        else:
-            truncated = hauptleistung[:max_len].rsplit(" ", 1)[0]
-            sections["REPORT_SUBTITLE"] = truncated + "..."
+        if len(hauptleistung) > max_len:
+            hauptleistung = hauptleistung[:max_len].rsplit(" ", 1)[0] + "..."
+        sections["hauptleistung"] = hauptleistung
+    # REPORT_SUBTITLE: use clean BRANCHE_LABEL (not free-text hauptleistung)
+    branche_label = sections.get("BRANCHE_LABEL", "")
+    kundencode_val = sections.get("kundencode", "")
+    if branche_label and kundencode_val:
+        sections["REPORT_SUBTITLE"] = f"KI-Readiness Assessment · {branche_label}"
+    elif branche_label:
+        sections["REPORT_SUBTITLE"] = f"KI-Readiness Assessment · {branche_label}"
     else:
-        # Fallback to branch label
-        sections["REPORT_SUBTITLE"] = sections.get("BRANCHE_LABEL", "")
+        sections["REPORT_SUBTITLE"] = "KI-Readiness Assessment"
     
     # Werkbank
     sections["WERKBANK_HTML"] = _build_werkbank_html_dynamic(answers)
