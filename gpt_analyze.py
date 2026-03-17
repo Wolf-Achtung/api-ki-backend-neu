@@ -9034,6 +9034,17 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "JAHRESUMSATZ_LABEL": briefing.get("JAHRESUMSATZ_LABEL", briefing.get("jahresumsatz", "")),
         "INVESTITIONSBUDGET": briefing.get("investitionsbudget", ""),  # For gamechanger.md
     })
+    # FIX-A3b: Inject canonical BAFA values into prompt vars for foerderpotenzial prompt
+    try:
+        from config.bafa import get_bafa_foerderquote, get_bafa_foerderung_max_display, get_bafa_foerderung_display
+        _bl_for_bafa = base_vars.get("BUNDESLAND_LABEL", "") or base_vars.get("bundesland", "")
+        base_vars["BAFA_FOERDERQUOTE"] = str(get_bafa_foerderquote(_bl_for_bafa))
+        base_vars["BAFA_MAX_FOERDERUNG"] = get_bafa_foerderung_max_display(_bl_for_bafa)
+        base_vars["BAFA_FOERDERUNG_DISPLAY"] = get_bafa_foerderung_display(_bl_for_bafa)
+    except ImportError:
+        base_vars["BAFA_FOERDERQUOTE"] = "50"
+        base_vars["BAFA_MAX_FOERDERUNG"] = "1.750 €"
+        base_vars["BAFA_FOERDERUNG_DISPLAY"] = "bis 1.750 € (50%)"
     
     # ===== BLOCK 3: Strategy & Vision (EXTENDED Sprint Phase2) =====
     # Strategic direction and goals - NOW includes all freetext fields
@@ -14383,7 +14394,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                 # NEU: Kompakte CI-Design v2.0 Darstellung
                 foerderpotenzial_html = _generate_funding_compact_from_html(
                     raw_html=foerderpotenzial_html,
-                    bundesland=sections.get("BUNDESLAND", ""),
+                    bundesland=sections.get("BUNDESLAND_LABEL", "") or sections.get("bundesland", ""),
                     company_size=sections.get("UNTERNEHMENSGROESSE", "1")
                 )
                 # FIX-620: Post-compact word count check - revert if below min_words
@@ -16123,8 +16134,9 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
                 score_rating = "im Durchschnitt" if report_lang == "de" else "average"
 
         company_size = sections.get("size_label", "KMU")
-        hauptleistung_fc = answers.get("hauptleistung", "").strip().rstrip('.')
+        # FIX-A1b: Use BRANCHE_LABEL instead of raw hauptleistung free-text
         branch_label = sections.get("BRANCHE_LABEL", "")
+        display_label_fc = branch_label or "Ihr Unternehmen"
         # PLATIN+++ v5.4.2: Read from answers first (timing bug fix - sections populated later)
         payback_months = answers.get("PAYBACK_MONTHS") or sections.get("PAYBACK_MONTHS", 0)
         roi_12m = answers.get("ROI_12M") or sections.get("ROI_12M", 0)
@@ -16133,7 +16145,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         if report_lang == "en":
             intro_template = (
                 f"This AI Readiness Report analyzes your current AI maturity ({overall_score}/100 = {score_rating}) "
-                f"and provides actionable recommendations for {company_size} focusing on {hauptleistung_fc}. "
+                f"and provides actionable recommendations for {company_size} focusing on {display_label_fc}. "
                 f"Focus areas: Security, Efficiency, and Funding opportunities. "
                 f"ROI details and payback analysis are provided in the Business Case."
             )
@@ -16144,14 +16156,14 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             ]
         else:
             intro_template = (
-                f"Dieser KI-Readiness-Report für {hauptleistung_fc} analysiert Ihren aktuellen KI-Reifegrad ({overall_score}/100 = {score_rating}) "
+                f"Dieser KI-Readiness-Report für {display_label_fc} analysiert Ihren aktuellen KI-Reifegrad ({overall_score}/100 = {score_rating}) "
                 f"und liefert konkrete Handlungsempfehlungen für {company_size} mit Fokus auf Ihren Geschäftsbereich. "
                 f"Schwerpunkte: Sicherheit, Effizienz und Förderpotenziale. "
                 f"ROI-Details und Payback-Analyse finden Sie im Business Case."
             )
             decisions = [
-                f"Starten Sie mit 1 Quick Win für {hauptleistung_fc} innerhalb von 14 Tagen",
-                f"Prüfen Sie die 90-Tage-Roadmap für {hauptleistung_fc}",
+                f"Starten Sie mit 1 Quick Win für {display_label_fc} innerhalb von 14 Tagen",
+                f"Prüfen Sie die 90-Tage-Roadmap für {display_label_fc}",
                 "Sichten Sie die Förderprogramme für passende EU-/Bundesmittel"
             ]
 
@@ -18395,7 +18407,8 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         # Must be rebuilt with the FINAL score to prevent cover vs page-2 mismatch.
         try:
             _b24_report_lang = sections.get("LANG", "de")
-            _b24_hauptleistung = answers.get("hauptleistung", "").strip().rstrip('.')
+            # FIX-A1b: Use BRANCHE_LABEL instead of raw hauptleistung free-text
+            _b24_hauptleistung = sections.get("BRANCHE_LABEL", "") or "Ihr Unternehmen"
             _b24_company_size = sections.get("size_label", "KMU")
             # Recalculate score_rating with final score
             _b24_score_rating = sections.get("score_rating", "")
@@ -18540,50 +18553,41 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     log.info(f"[{run_id}] [Z6] FIX-R3-4B disabled (ENFORCER off, limiter unnecessary)")
 
     # =========================================================================
-    # FIX-R5-4: GLOBAL hauptleistung limiter — max 5 total across ALL sections.
-    # FIX-R3-4B limits per-section (1 per section), but with 8-9 sections each
-    # keeping one occurrence, the report still has 8-9. This pass enforces a
-    # hard global maximum of 5.
+    # FIX-A1b: Replace ALL raw hauptleistung free-text with BRANCHE_LABEL.
+    # The user types e.g. "Ich haben einen Online-Shop und ein Ladengeschäft"
+    # in the hauptleistung field. LLMs copy this 1:1 into ~9 sections.
+    # BRANCHE_LABEL (e.g. "Handel & E-Commerce") is the clean display text.
     # =========================================================================
     try:
-        _hl_r54 = answers.get("hauptleistung", "")
-        if _hl_r54 and len(_hl_r54) > 50:
-            _short_hl = _hl_r54[:60].rsplit(" ", 1)[0] + "..." if len(_hl_r54) > 60 else _hl_r54
-            for _sep in [",", ";", ".", " und ", " mit "]:
-                _pos = _hl_r54.find(_sep)
-                if 15 < _pos < 80:
-                    _short_hl = _hl_r54[:_pos]
-                    break
-            _global_count = 0
-            _global_replaced = 0
-            _MAX_GLOBAL_HL = 3  # Z7: Reduced from 5 — less fragment risk
-            # Z7: Don't protect any sections — ENFORCER is disabled (Z3)
-            _PROTECTED_HL_SECTIONS: set[str] = set()  # Was {"EXEC_SUMMARY_HTML", "RECOMMENDATIONS_HTML"}
+        _hl_a1b = answers.get("hauptleistung", "")
+        _bl_a1b = sections.get("BRANCHE_LABEL", "") or sections.get("branche", "")
+        if _hl_a1b and _bl_a1b and len(_hl_a1b) > 15:
+            _a1b_total = 0
+            # Also build partial match for truncated variants (e.g. "Lade…", "Lade...")
+            _hl_variants = [_hl_a1b]
+            # Add truncated versions that LLMs may produce
+            for _tlen in [40, 60, 80]:
+                if len(_hl_a1b) > _tlen:
+                    _trunc = _hl_a1b[:_tlen].rsplit(" ", 1)[0]
+                    for _suffix in ["\u2026", "...", "\u2026\u201c", "...\u201c"]:
+                        _hl_variants.append(_trunc + _suffix)
             for _hk in list(sections.keys()):
                 _hv = sections.get(_hk, "")
                 if not isinstance(_hv, str) or _hk.startswith("_"):
                     continue
-                if _hk in _PROTECTED_HL_SECTIONS:
-                    log.info(f"[{run_id}] [FIX-R5-4] Skipping protected section {_hk} (hauptleistung count: {_hv.count(_hl_r54)})")
+                # Skip metadata keys — only process HTML content sections
+                if _hk in ("hauptleistung", "HAUPTLEISTUNG", "BRANCHE_LABEL", "branche"):
                     continue
-                _occ = _hv.count(_hl_r54)
-                if _occ <= 0:
-                    continue
-                _parts = _hv.split(_hl_r54)
-                _rebuilt_parts = [_parts[0]]
-                for _pi in range(1, len(_parts)):
-                    _global_count += 1
-                    if _global_count <= _MAX_GLOBAL_HL:
-                        _rebuilt_parts.append(_hl_r54)
-                    else:
-                        _rebuilt_parts.append("")  # Z7: Remove entirely, don't create fragments
-                        _global_replaced += 1
-                    _rebuilt_parts.append(_parts[_pi])
-                sections[_hk] = "".join(_rebuilt_parts)
-            if _global_replaced > 0:
-                log.info(f"[{run_id}] [FIX-R5-4] Global hauptleistung limiter: kept {_MAX_GLOBAL_HL}, replaced {_global_replaced} excess (total was {_global_count})")
-    except Exception as _hl54_err:
-        log.warning(f"[{run_id}] [FIX-R5-4] Global hauptleistung limiter failed: {_hl54_err}")
+                for _variant in _hl_variants:
+                    if _variant and _variant in _hv:
+                        _count = _hv.count(_variant)
+                        _hv = _hv.replace(_variant, _bl_a1b)
+                        _a1b_total += _count
+                sections[_hk] = _hv
+            if _a1b_total > 0:
+                log.info(f"[{run_id}] [FIX-A1b] Replaced {_a1b_total} hauptleistung occurrences with BRANCHE_LABEL '{_bl_a1b}'")
+    except Exception as _a1b_err:
+        log.warning(f"[{run_id}] [FIX-A1b] hauptleistung sanitization failed: {_a1b_err}")
 
 
     # =========================================================================
