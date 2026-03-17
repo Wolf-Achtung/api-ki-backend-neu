@@ -2569,7 +2569,7 @@ def get_foerderprogramme_extended(bundesland: str, company_size: str, branche: s
         "bafa_beratung": {
             "name": "BAFA Unternehmensberatung",
             "beschreibung": "Beratungsförderung für KMU",
-            "max_foerderung": "3.200 €",
+            "max_foerderung": None,  # FIX-A3: Set dynamically via config.bafa per Bundesland
             "eignung": "Hoch",
             "komplexitaet": "Niedrig",
             "bundesland": "alle",
@@ -2876,6 +2876,19 @@ def get_foerderprogramme_extended(bundesland: str, company_size: str, branche: s
             "zielgruppe": "Deep-Tech Startups"
         }
     }
+
+    # FIX-A3: Inject dynamic BAFA amount based on Bundesland (canonical source of truth)
+    try:
+        from config.bafa import get_bafa_foerderung_display, get_bafa_foerderung_max_display
+        bafa_entry = foerder_db.get("bafa_beratung")
+        if bafa_entry and bafa_entry.get("max_foerderung") is None:
+            bafa_entry["max_foerderung"] = get_bafa_foerderung_max_display(bundesland_name)
+            log.debug("[FIX-A3] BAFA max_foerderung set to %s for %s", bafa_entry["max_foerderung"], bundesland_name)
+    except ImportError:
+        log.warning("[FIX-A3] config.bafa not available, using fallback 1.750 €")
+        bafa_entry = foerder_db.get("bafa_beratung")
+        if bafa_entry and bafa_entry.get("max_foerderung") is None:
+            bafa_entry["max_foerderung"] = "1.750 €"
 
     # Filtern nach Größe und Bundesland
     relevant = []
@@ -8139,15 +8152,22 @@ def _generate_funding_compact(
     foerderquote: str = "30-50%",
     max_foerderung: str = "16.500 €",
     programme: List[Dict[str, str]] = None,
-    next_steps: List[str] = None
+    next_steps: List[str] = None,
+    bundesland: str = "",
 ) -> str:
     """Generiert kompakte Förder-Sektion (CI-Design v2.0 Phase 4).
 
     Reduziert Förderung von 5 auf 2 Seiten.
     """
     if programme is None:
+        # FIX-A3: Use canonical BAFA amount from config
+        try:
+            from config.bafa import get_bafa_foerderung_max_display
+            _bafa_amount = get_bafa_foerderung_max_display(bundesland)
+        except ImportError:
+            _bafa_amount = "1.750 €"
         programme = [
-            {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': '3.200 €', 'komplexitaet': 'Niedrig'},
+            {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': _bafa_amount, 'komplexitaet': 'Niedrig'},
             {'name': 'KMU-innovativ', 'geber': 'BMBF', 'eignung': 'Mittel', 'betrag': 'variabel', 'komplexitaet': 'Mittel'},
         ]
 
@@ -8279,6 +8299,13 @@ def _generate_funding_compact_from_html(
 
     CI-Design v2.0: Reduziert ~5 Seiten auf ~2 Seiten.
     """
+    # FIX-A3: Canonical BAFA amount from config
+    try:
+        from config.bafa import get_bafa_foerderung_max_display
+        _bafa_amount = get_bafa_foerderung_max_display(bundesland)
+    except ImportError:
+        _bafa_amount = "1.750 €"
+
     # re already imported at module level
 
     # Versuche Programme aus dem HTML zu extrahieren
@@ -8306,7 +8333,7 @@ def _generate_funding_compact_from_html(
         # Regex fand nichts Brauchbares, verwende kuratierte Defaults
         # FIX-R3-5A: go-digital discontinued — use BAFA + KMU-innovativ
         programme = [
-            {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': '3.200 €', 'komplexitaet': 'Niedrig'},
+            {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': _bafa_amount, 'komplexitaet': 'Niedrig'},
             {'name': 'KMU-innovativ', 'geber': 'BMBF', 'eignung': 'Mittel', 'betrag': 'variabel', 'komplexitaet': 'Mittel'},
         ]
         if bundesland and bundesland != "":
@@ -8322,7 +8349,7 @@ def _generate_funding_compact_from_html(
     if not programme:
         # FIX-R3-5A: go-digital discontinued — use BAFA + KMU-innovativ
         programme = [
-            {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': '3.200 €', 'komplexitaet': 'Niedrig'},
+            {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': _bafa_amount, 'komplexitaet': 'Niedrig'},
             {'name': 'KMU-innovativ', 'geber': 'BMBF', 'eignung': 'Mittel', 'betrag': 'variabel', 'komplexitaet': 'Mittel'},
         ]
         if bundesland:
@@ -8357,7 +8384,8 @@ def _generate_funding_compact_from_html(
         foerderquote=foerderquote,
         max_foerderung=max_foerderung,
         programme=programme,
-        next_steps=next_steps
+        next_steps=next_steps,
+        bundesland=bundesland,
     )
 
 
@@ -15529,17 +15557,23 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     if hauptleistung:
         hauptleistung = re.sub(r"\bKl-", "KI-", hauptleistung)
         hauptleistung = re.sub(r"\bKl\b", "KI", hauptleistung)
+    # FIX-A1: hauptleistung is free-text ("Ich haben einen Online-Shop...")
+    # and must NOT be used as display title / company name substitute.
+    # Keep it in sections for LLM prompt context only.
     if hauptleistung:
-        # Smart truncation at word boundary
         max_len = 250  # L1: was 100
-        if len(hauptleistung) <= max_len:
-            sections["REPORT_SUBTITLE"] = hauptleistung
-        else:
-            truncated = hauptleistung[:max_len].rsplit(" ", 1)[0]
-            sections["REPORT_SUBTITLE"] = truncated + "..."
+        if len(hauptleistung) > max_len:
+            hauptleistung = hauptleistung[:max_len].rsplit(" ", 1)[0] + "..."
+        sections["hauptleistung"] = hauptleistung
+    # REPORT_SUBTITLE: use clean BRANCHE_LABEL (not free-text hauptleistung)
+    branche_label = sections.get("BRANCHE_LABEL", "")
+    kundencode_val = sections.get("kundencode", "")
+    if branche_label and kundencode_val:
+        sections["REPORT_SUBTITLE"] = f"KI-Readiness Assessment · {branche_label}"
+    elif branche_label:
+        sections["REPORT_SUBTITLE"] = f"KI-Readiness Assessment · {branche_label}"
     else:
-        # Fallback to branch label
-        sections["REPORT_SUBTITLE"] = sections.get("BRANCHE_LABEL", "")
+        sections["REPORT_SUBTITLE"] = "KI-Readiness Assessment"
     
     # Werkbank
     sections["WERKBANK_HTML"] = _build_werkbank_html_dynamic(answers)

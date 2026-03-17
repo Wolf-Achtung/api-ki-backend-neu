@@ -337,6 +337,15 @@ REGEL REGIONALE FÖRDERPROGRAMME:
 - Regionale Programme sind oft leichter zugänglich und haben kürzere Bewilligungszeiten — weise darauf hin.
 - Nenne NUR Förderprogramme, die in den Recherche-Ergebnissen belegt sind. Erfinde KEINE Programme.
 
+DETERMINISTISCHE BAFA-DATEN (verwende EXAKT diese Werte, KEINE eigenen Schätzungen):
+- Programm: BAFA "Förderung von Unternehmensberatungen für KMU"
+- Max. förderfähige Beratungskosten: 3.500 € pro Beratung
+- Förderquote für Bundesland {bundesland}: {bafa_foerderquote}%
+- Maximaler Zuschuss für Bundesland {bundesland}: {bafa_max_foerderung}
+- Geltungsdauer: bis 31.12.2026
+- Max. 5 Beratungen pro Unternehmen, max. 2 pro Jahr
+- WICHTIG: Verwende für BAFA NUR diese Werte. Erfinde KEINE anderen BAFA-Beträge.
+
 FEHLENDE DATEN:
 - Wenn eine Information (Förderquote, Antragsfrist, Förderhöhe) nicht bekannt ist, schreibe "Auf Anfrage" oder "Aktuell prüfen".
 - Verwende NIEMALS Meta-Referenzen wie "im bereitgestellten Material nicht beziffert", "nicht im Kontext vorhanden", "aus den Quellen nicht ersichtlich", "im Material nicht genannt" oder ähnliche Formulierungen die auf Datenquellen verweisen. Der Leser weiß nicht, welches "Material" gemeint ist.
