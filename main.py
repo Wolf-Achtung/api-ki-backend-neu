@@ -223,6 +223,9 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
     # News research pipeline (cron-triggered)
     cfg.append(("routes.content", "/api", "content"))
 
+    # Admin: Feedback-Liste (admin_key auth)
+    cfg.append(("routes.admin_feedback", "/api", "admin-feedback"))
+
     return cfg
 
 
