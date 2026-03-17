@@ -81,9 +81,15 @@ STRUKTUR (4 Pflicht-Abschnitte):
   H3 3. Passende Förderschwerpunkte für Ihr Vorhaben
   H3 4. Nächste Schritte für die Förderprüfung
 
+DETERMINISTISCHE BAFA-DATEN (verwende EXAKT diese Werte, KEINE eigenen Schätzungen):
+- Programm: BAFA "Förderung von Unternehmensberatungen für KMU"
+- Förderquote für {{BUNDESLAND_LABEL}}: {{BAFA_FOERDERQUOTE}}%
+- Maximaler Zuschuss für {{BUNDESLAND_LABEL}}: {{BAFA_MAX_FOERDERUNG}}
+- WICHTIG: Verwende für BAFA NUR diese Werte. Erfinde KEINE anderen BAFA-Beträge.
+
 PERSONA-VARIATIONEN (COMPANY_SIZE):
-- solo: niedrige Hürden, <10.000€, Beratungs-/Gründerförderung, BAFA, ERP-Gründerkredit
-- team: Prozessdigitalisierung, KMU-innovativ, go-digital
+- solo: niedrige Hürden, <10.000€, Beratungs-/Gründerförderung, BAFA ({{BAFA_FOERDERUNG_DISPLAY}}), ERP-Gründerkredit
+- team: Prozessdigitalisierung, KMU-innovativ, BAFA ({{BAFA_FOERDERUNG_DISPLAY}})
 - kmu: ZIM, KfW-Digitalisierung, strukturelle Förderung
 
 ANTI-REDUNDANZ:
