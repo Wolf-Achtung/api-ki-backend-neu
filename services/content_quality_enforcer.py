@@ -2002,6 +2002,9 @@ GRAMMAR_FIX_PATTERNS = [
     (r'ein\s+positives\s+ROI', 'einen positiven ROI'),
     (r'ein\s+gutes\s+ROI', 'einen guten ROI'),
     (r'das\s+ROI', 'der ROI'),
+
+    # FIX-N1/N2 (KIS-1005): "Ihr Team nutzen" → "Ihr Team nutzt", "Ihr Kollege nutzen" → "Ihr Kollege nutzt"
+    (r'\bIhr (Team|Kollege) nutzen\b', r'Ihr \1 nutzt'),
 ]
 
 def apply_grammar_fixes(html: str) -> tuple[str, int]:
