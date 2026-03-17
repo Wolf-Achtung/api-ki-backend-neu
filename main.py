@@ -226,6 +226,9 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
     # Admin: Feedback-Liste (admin_key auth)
     cfg.append(("routes.admin_feedback", "/api", "admin-feedback"))
 
+    # Admin: Testrun Replay (admin_key auth)
+    cfg.append(("routes.admin_testrun", "/api", "admin-testrun"))
+
     return cfg
 
 
