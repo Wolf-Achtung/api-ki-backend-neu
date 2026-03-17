@@ -213,10 +213,13 @@ async def get_briefing_status(
             detail=f"Briefing {briefing_id} not found"
         )
 
+    answers = briefing.answers or {}
     response = {
         "briefing_id": briefing.id,
         "status": briefing.status,
         "lang": briefing.lang,
+        "branche": answers.get("branche", ""),
+        "unternehmensgroesse": answers.get("unternehmensgroesse", ""),
         "created_at": briefing.created_at.isoformat() if briefing.created_at else None,
         "accepted_at": briefing.accepted_at.isoformat() if briefing.accepted_at else None,
         "processing_at": briefing.processing_at.isoformat() if briefing.processing_at else None,
