@@ -7,6 +7,7 @@ optional forwarding to external webhook (Make/n8n), and email notification.
 """
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import hmac
 import json
@@ -20,12 +21,12 @@ import httpx
 log = logging.getLogger("services.feedback")
 
 # Default admin email for feedback notifications
-FEEDBACK_ADMIN_EMAIL_DEFAULT = "bewertung@ki-sicherheit.jetzt"
+FEEDBACK_NOTIFY_EMAIL_DEFAULT = "kontakt@ki-sicherheit.jetzt"
 
 
-def _get_feedback_admin_email() -> str:
-    """Returns FEEDBACK_ADMIN_EMAIL or default."""
-    return (os.getenv("FEEDBACK_ADMIN_EMAIL") or "").strip() or FEEDBACK_ADMIN_EMAIL_DEFAULT
+def _get_feedback_notify_email() -> str:
+    """Returns FEEDBACK_NOTIFY_EMAIL or default (kontakt@ki-sicherheit.jetzt)."""
+    return (os.getenv("FEEDBACK_NOTIFY_EMAIL") or os.getenv("FEEDBACK_ADMIN_EMAIL") or "").strip() or FEEDBACK_NOTIFY_EMAIL_DEFAULT
 
 
 def _get_feedback_url() -> Optional[str]:
@@ -96,68 +97,69 @@ async def forward_to_webhook(payload: Dict[str, Any]) -> bool:
         return False
 
 
+def _build_notification_body(payload: Dict[str, Any], feedback_type: str, timestamp: str) -> str:
+    """Build email body text depending on feedback type."""
+    email = payload.get("email", "\u2014")
+
+    if feedback_type == "waitlist_training":
+        return (
+            f"Neues Feedback eingegangen:\n\n"
+            f"Typ: {feedback_type}\n"
+            f"Email: {email}\n"
+            f"Zeitpunkt: {timestamp}\n\n"
+            f"\u2192 Alle Eintr\u00e4ge abrufen: GET /api/admin/feedback/list?admin_key=..."
+        )
+
+    briefing_id = payload.get("briefing_id", "\u2014")
+    gesamtbewertung = payload.get("gesamtbewertung", payload.get("overall_helpfulness_score", "\u2014"))
+    zahlungsbereitschaft = payload.get("zahlungsbereitschaft", payload.get("payment_willingness", "\u2014"))
+    schulungsinteresse = payload.get("schulungsinteresse", "\u2014")
+    kontakterlaubnis = payload.get("kontakterlaubnis", "\u2014")
+
+    return (
+        f"Neues Feedback eingegangen:\n\n"
+        f"Typ: {feedback_type}\n"
+        f"Email: {email}\n"
+        f"Briefing-ID: {briefing_id}\n"
+        f"Zeitpunkt: {timestamp}\n\n"
+        f"Gesamtbewertung: {gesamtbewertung}\n"
+        f"Zahlungsbereitschaft: {zahlungsbereitschaft}\n"
+        f"Schulungsinteresse: {schulungsinteresse}\n"
+        f"Kontakterlaubnis: {kontakterlaubnis}\n\n"
+        f"\u2192 Alle Eintr\u00e4ge abrufen: GET /api/admin/feedback/list?admin_key=..."
+    )
+
+
 async def send_feedback_notification_email(payload: Dict[str, Any]) -> bool:
     """
-    Send feedback notification email to admin.
+    Send feedback notification email to admin (kontakt@ki-sicherheit.jetzt).
 
     Uses the existing Mailer service (Resend/SMTP).
     Returns True if successful, False otherwise (never raises).
     """
-    admin_email = _get_feedback_admin_email()
+    notify_email = _get_feedback_notify_email()
+    feedback_type = payload.get("type", "unbekannt")
+    timestamp = datetime.now(timezone.utc).isoformat()
 
-    # Build email content from payload
-    lines = [
-        "Neues Feedback eingegangen:",
-        "",
-        f"Unternehmensgröße: {payload.get('company_size_feedback', '-')}",
-        f"Branche: {payload.get('branch_feedback', '-')}",
-        f"Test-Referenz: {payload.get('test_reference', '-')}",
-        "",
-        "=== UX-Bewertung ===",
-        f"Klarheit (1-5): {payload.get('ux_clarity_rating', '-')}",
-        f"Aufwand (1-5): {payload.get('ux_effort_rating', '-')}",
-        f"Pflichtfelder: {payload.get('ux_required_fields', '-')}",
-        f"UX Kommentar: {payload.get('ux_comment') or '-'}",
-        "",
-        "=== Report-Bewertung ===",
-        f"Relevanz (1-5): {payload.get('report_relevance_rating', '-')}",
-        f"Ziele sichtbar: {payload.get('report_goals_visible', '-')}",
-        f"Guardrails berücksichtigt: {payload.get('report_guardrails_used', '-')}",
-        f"Report Kommentar: {payload.get('report_comment') or '-'}",
-        "",
-        "=== Gesamtbewertung ===",
-        f"Gesamtnutzen (1-10): {payload.get('overall_helpfulness_score', '-')}",
-        f"Zahlungsbereitschaft: {payload.get('payment_willingness', '-')}",
-        f"Finaler Kommentar: {payload.get('final_comment') or '-'}",
-        "",
-        "---",
-        f"Zeitstempel: {datetime.now(timezone.utc).isoformat()}",
-    ]
-
-    # Add metadata if present
-    meta = payload.get("_meta", {})
-    if meta:
-        lines.append(f"Client IP: {meta.get('client_ip', '-')}")
-
-    body_text = "\n".join(lines)
-    subject = "Neues KI-Readiness Feedback"
+    subject = f"[KI-Sicherheit] Neues Feedback: {feedback_type}"
+    body_text = _build_notification_body(payload, feedback_type, timestamp)
 
     try:
         from services.mailer import Mailer
 
         mailer = Mailer.from_settings()
         await mailer.send(
-            to=admin_email,
+            to=notify_email,
             subject=subject,
             text=body_text
         )
-        log.info("✓ Feedback notification email sent to %s", admin_email)
+        log.info("\u2713 Feedback notification email sent to %s", notify_email)
         return True
 
     except Exception as exc:
-        log.exception(
-            "✗ Failed to send feedback notification email to %s: %s - %s",
-            admin_email,
+        log.error(
+            "\u2717 Failed to send feedback notification email to %s: %s - %s",
+            notify_email,
             type(exc).__name__,
             str(exc)
         )
@@ -249,8 +251,16 @@ async def process_feedback(
     webhook_success = await forward_to_webhook(payload)
     result["forwarded_to_webhook"] = webhook_success
 
-    # 4. Send email notification to admin
-    email_success = await send_feedback_notification_email(payload)
-    result["email_sent"] = email_success
+    # 4. Send email notification to admin (fire-and-forget, non-blocking)
+    asyncio.ensure_future(_safe_send_notification(payload))
+    result["email_sent"] = True  # optimistic; errors are logged
 
     return result
+
+
+async def _safe_send_notification(payload: Dict[str, Any]) -> None:
+    """Fire-and-forget wrapper: send email, log errors, never raise."""
+    try:
+        await send_feedback_notification_email(payload)
+    except Exception as exc:
+        log.error("Background email notification failed: %s", exc)

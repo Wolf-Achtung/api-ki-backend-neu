@@ -74,6 +74,14 @@ DDL = [
         pdf_bytes_len INTEGER,
         created_at TIMESTAMPTZ DEFAULT NOW()
     )"""),
+    # feedbacks
+    text("""    CREATE TABLE IF NOT EXISTS feedbacks (
+        id SERIAL PRIMARY KEY,
+        payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+        source VARCHAR(64) NOT NULL DEFAULT 'feedback_form_v1',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )"""),
+    text("CREATE INDEX IF NOT EXISTS idx_feedbacks_created_at ON feedbacks(created_at)"),
 ]
 
 def migrate_all(engine: Engine) -> None:
