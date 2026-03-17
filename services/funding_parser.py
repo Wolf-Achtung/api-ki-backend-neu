@@ -13,7 +13,7 @@ DEFAULT_PROGRAMS: List[Dict[str, Any]] = [
         "name": "BAFA Unternehmensberatung",
         "region": "DE",
         "target": "Beratungsförderung für KMU",
-        "amount": "bis 3.200 € (50-80%)",
+        "amount": "bis 2.800 € (50-80%, je nach Bundesland)",
         "deadline": "laufend",
         "url": "https://www.bafa.de",
         "notes": "Beratungsförderung für KMU bis 249 MA; ersetzt go-digital",

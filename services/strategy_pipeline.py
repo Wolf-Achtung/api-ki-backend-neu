@@ -214,12 +214,25 @@ async def generate_strategy_report(
             except Exception:
                 pass
 
+        # FIX-A3/A2: Canonical BAFA values based on Bundesland
+        _bl_label = _bundesland_label(briefing_data.get("bundesland", ""))
+        try:
+            from config.bafa import get_bafa_foerderquote, get_bafa_foerderung_max_display
+            _bafa_quote = get_bafa_foerderquote(_bl_label)
+            _bafa_max = get_bafa_foerderung_max_display(_bl_label)
+        except ImportError:
+            _bafa_quote = 50
+            _bafa_max = "1.750 €"
+
         base_context = {
             "branche": (briefing_data.get("branche", "") or "").title(),
             "segment": _segment_label(briefing_data.get("unternehmensgroesse", "")),
             "mitarbeiter": briefing_data.get("mitarbeiter", ""),
-            "bundesland": _bundesland_label(briefing_data.get("bundesland", "")),
+            "bundesland": _bl_label,
             "firmenname": briefing_data.get("unternehmen_name", "Ihr Unternehmen"),
+            # FIX-A3: Deterministic BAFA values for S7
+            "bafa_foerderquote": str(_bafa_quote),
+            "bafa_max_foerderung": _bafa_max,
             "readiness_score": _score,
             "reifegrad": _reifegrad_label,
             "reifegrad_label": _reifegrad_label,

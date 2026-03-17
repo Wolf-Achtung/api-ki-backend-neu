@@ -504,9 +504,14 @@ h1, h2, h3, h4 {
 
     <div style="margin-top: 120px;"></div>
 
-    <!-- Deep Dive Icon -->
+    <!-- Deep Dive Icon (FIX-A7: SVG instead of emoji for Puppeteer compatibility) -->
     <div class="dd-icon">
-        <span class="dd-icon-inner">&#x1F50D;</span>
+        <span class="dd-icon-inner">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="var(--report-primary, #0D7377)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+        </span>
     </div>
 
     <div style="margin-bottom: var(--sp-lg); max-width: 600px;">
@@ -647,6 +652,11 @@ h1, h2, h3, h4 {
     <div class="glance-box glance-finance">
         <strong>Auf einen Blick:</strong> Sensitivit&auml;tsanalyse, 3-Jahres-Projektion und Break-Even-Berechnung
         f&uuml;r Ihr KI-Potenzial — rein datenbasiert, keine KI-generierte Sch&auml;tzung.
+    </div>
+    <div class="callout" style="font-size:9pt; margin-bottom:var(--sp-md); padding:8px 12px; background:#FFF7ED; border-left:3px solid #EA580C;">
+        <strong>Methodik-Hinweis ROI:</strong> Die Sensitivit&auml;tsanalyse zeigt den <em>ungedeckelten</em>
+        ROI auf Basis verschiedener Szenarien. Der KI-Status-Report (R1) verwendet eine konservative,
+        bei 200% gedeckelte ROI-Methodik. Beide Werte sind korrekt — sie beantworten unterschiedliche Fragen.
     </div>
 
     <div class="section-body">
