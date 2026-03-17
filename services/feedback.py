@@ -26,8 +26,26 @@ def _get_feedback_notify_email() -> str:
 
 
 def _build_notification_body(payload: Dict[str, Any], feedback_type: str, timestamp: str) -> str:
-    """Build email body text depending on feedback type."""
-    email = payload.get("email", "\u2014")
+    """Build comprehensive email body with all business-relevant fields.
+
+    FIX-B1: Previously only showed ~5 fields. Now shows all 18+ fields
+    from the feedback form including ratings, content feedback, and
+    business signals.
+    """
+    def _g(key: str, *alt_keys: str) -> str:
+        """Get value from payload with fallback keys."""
+        val = payload.get(key)
+        for ak in alt_keys:
+            if val is None or val == "":
+                val = payload.get(ak)
+        if val is None:
+            return "\u2014"
+        if isinstance(val, list):
+            return ", ".join(str(v) for v in val) if val else "\u2014"
+        return str(val)
+
+    email = _g("email")
+    briefing_id = _g("briefing_id")
 
     if feedback_type == "waitlist_training":
         return (
@@ -35,26 +53,44 @@ def _build_notification_body(payload: Dict[str, Any], feedback_type: str, timest
             f"Typ: {feedback_type}\n"
             f"Email: {email}\n"
             f"Zeitpunkt: {timestamp}\n\n"
-            f"\u2192 Alle Eintr\u00e4ge abrufen: GET /api/admin/feedback/list?admin_key=..."
+            f"\u2192 Alle Eintr\u00e4ge: GET /api/admin/feedback/list?admin_key=..."
         )
 
-    briefing_id = payload.get("briefing_id", "\u2014")
-    gesamtbewertung = payload.get("gesamtbewertung", payload.get("overall_helpfulness_score", "\u2014"))
-    zahlungsbereitschaft = payload.get("zahlungsbereitschaft", payload.get("payment_willingness", "\u2014"))
-    schulungsinteresse = payload.get("schulungsinteresse", "\u2014")
-    kontakterlaubnis = payload.get("kontakterlaubnis", "\u2014")
+    # Build KIS number from briefing_id
+    kis_nr = ""
+    try:
+        kis_nr = f" (KIS-{int(briefing_id) + 117})"
+    except (ValueError, TypeError):
+        pass
 
     return (
         f"Neues Feedback eingegangen:\n\n"
         f"Typ: {feedback_type}\n"
         f"Email: {email}\n"
-        f"Briefing-ID: {briefing_id}\n"
+        f"Briefing-ID: {briefing_id}{kis_nr}\n"
         f"Zeitpunkt: {timestamp}\n\n"
-        f"Gesamtbewertung: {gesamtbewertung}\n"
-        f"Zahlungsbereitschaft: {zahlungsbereitschaft}\n"
-        f"Schulungsinteresse: {schulungsinteresse}\n"
-        f"Kontakterlaubnis: {kontakterlaubnis}\n\n"
-        f"\u2192 Alle Eintr\u00e4ge abrufen: GET /api/admin/feedback/list?admin_key=..."
+        f"{'=' * 30} Bewertungen {'=' * 30}\n"
+        f"Gesamtbewertung: {_g('overall_helpfulness_score', 'gesamtbewertung')}/10\n"
+        f"Report-Relevanz: {_g('report_relevance_rating')}/5\n"
+        f"UX Klarheit: {_g('ux_clarity_rating')}/5\n"
+        f"UX Aufwand: {_g('ux_effort_rating')}/5\n"
+        f"Formularpflichtfelder: {_g('ux_required_fields')}\n\n"
+        f"{'=' * 30} Inhaltliches Feedback {'=' * 30}\n"
+        f"Hilfreichste Sections: {_g('report_helpful_sections')}\n"
+        f"Ziele sichtbar: {_g('report_goals_visible')}/5\n"
+        f"Guardrails genutzt: {_g('report_guardrails_used')}\n"
+        f"Branche-Feedback: {_g('branch_feedback')}\n"
+        f"Unternehmensgr\u00f6\u00dfe-Feedback: {_g('company_size_feedback')}\n\n"
+        f"{'=' * 30} Business-Signale {'=' * 30}\n"
+        f"Zahlungsbereitschaft: {_g('payment_willingness', 'zahlungsbereitschaft')}\n"
+        f"Schulungsinteresse: {_g('training_interest', 'schulungsinteresse')}\n"
+        f"Kontakterlaubnis: {_g('contact_permission', 'kontakterlaubnis')}\n\n"
+        f"{'=' * 30} Freitext {'=' * 30}\n"
+        f"Report-Kommentar: {_g('report_comment')}\n"
+        f"UX-Kommentar: {_g('ux_comment')}\n"
+        f"Abschluss-Kommentar: {_g('final_comment')}\n\n"
+        f"\u2192 Alle Eintr\u00e4ge: GET /api/admin/feedback/list?admin_key=...\n"
+        f"\u2192 Report ansehen: GET /api/report/html/{briefing_id}"
     )
 
 
@@ -66,7 +102,8 @@ async def send_feedback_notification_email(payload: Dict[str, Any]) -> bool:
     Returns True if successful, False otherwise (never raises).
     """
     notify_email = _get_feedback_notify_email()
-    feedback_type = payload.get("type", "unbekannt")
+    # FIX-B1: Default type to "form_feedback" when empty/missing
+    feedback_type = payload.get("type") or "form_feedback"
     timestamp = datetime.now(timezone.utc).isoformat()
 
     subject = f"[KI-Sicherheit] Neues Feedback: {feedback_type}"
