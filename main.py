@@ -76,6 +76,26 @@ async def lifespan(app: FastAPI):
         log.error("✗ Auth setup failed: %s", exc)
         log.error("⚠️  LOGIN WILL NOT WORK - Check database connection")
 
+    # Feedbacks-Tabelle sicherstellen
+    try:
+        from core.db import engine as _engine
+        from sqlalchemy import text as _text
+        with _engine.begin() as _conn:
+            _conn.execute(_text("""
+                CREATE TABLE IF NOT EXISTS feedbacks (
+                    id SERIAL PRIMARY KEY,
+                    payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    source VARCHAR(64) NOT NULL DEFAULT 'feedback_form_v1',
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+            """))
+            _conn.execute(_text(
+                "CREATE INDEX IF NOT EXISTS idx_feedbacks_created_at ON feedbacks(created_at)"
+            ))
+        log.info("✓ Feedbacks table ready")
+    except Exception as fb_exc:
+        log.warning("⚠️  Feedbacks table setup failed: %s", fb_exc)
+
     # Setup alert email notifications
     try:
         from services.alerts import setup_email_notifications
