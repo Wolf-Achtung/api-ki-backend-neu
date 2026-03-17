@@ -8299,12 +8299,14 @@ def _generate_funding_compact_from_html(
 
     CI-Design v2.0: Reduziert ~5 Seiten auf ~2 Seiten.
     """
-    # FIX-A3: Canonical BAFA amount from config
+    # FIX-A3b: Canonical BAFA values from config (single source of truth)
     try:
-        from config.bafa import get_bafa_foerderung_max_display
+        from config.bafa import get_bafa_foerderung_max_display, get_bafa_foerderquote
         _bafa_amount = get_bafa_foerderung_max_display(bundesland)
+        _bafa_quote = get_bafa_foerderquote(bundesland)  # e.g. 80 for Sachsen
     except ImportError:
         _bafa_amount = "1.750 €"
+        _bafa_quote = 50
 
     # re already imported at module level
 
@@ -8318,11 +8320,19 @@ def _generate_funding_compact_from_html(
     for match in matches[:4]:
         name = match.strip()
         if name:
+            # FIX-A3b: Use canonical BAFA amount for BAFA entries
+            _name_lower = name.lower()
+            if 'bafa' in _name_lower:
+                _prog_betrag = _bafa_amount
+            elif 'digital' in _name_lower:
+                _prog_betrag = '16.500 €'
+            else:
+                _prog_betrag = '5.000 €'
             programme.append({
                 'name': name[:40],
-                'geber': 'Bund' if any(x in name.lower() for x in ['bafa', 'zim', 'bmwk']) else bundesland or 'Land',
+                'geber': 'Bund' if any(x in _name_lower for x in ['bafa', 'zim', 'bmwk']) else bundesland or 'Land',
                 'eignung': 'Hoch',
-                'betrag': '16.500 €' if 'digital' in name.lower() else '5.000 €',
+                'betrag': _prog_betrag,
                 'komplexitaet': 'Niedrig'
             })
 
@@ -8361,17 +8371,10 @@ def _generate_funding_compact_from_html(
                 'komplexitaet': 'Mittel'
             })
 
-    # Bestimme Förderquote basierend auf Unternehmensgröße
-    size_int = int(company_size) if company_size.isdigit() else 1
-    if size_int <= 10:
-        foerderquote = "50%"
-        max_foerderung = "16.500 €"
-    elif size_int <= 50:
-        foerderquote = "40%"
-        max_foerderung = "33.000 €"
-    else:
-        foerderquote = "30%"
-        max_foerderung = "50.000 €"
+    # FIX-A3b: Förderquote from config/bafa.py (region-aware), not hardcoded
+    # _bafa_quote comes from get_bafa_foerderquote(bundesland) above
+    foerderquote = f"{_bafa_quote}%"
+    max_foerderung = _bafa_amount
 
     next_steps = [
         'Projektsteckbrief erstellen (1-2 Seiten)',
@@ -9436,6 +9439,16 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     default_bundesland: str = "your region" if briefing_lang == "en" else "Ihrem Bundesland"
     _bl_raw: str = str(briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", "") or "")
     bundesland: str = BUNDESLAND_MAPPING.get(_bl_raw.lower(), _bl_raw) if _bl_raw else default_bundesland
+    # FIX-A3b: Canonical BAFA values for fallback content (single source of truth)
+    try:
+        from config.bafa import get_bafa_foerderquote, get_bafa_foerderung_max_display, get_bafa_foerderung_display
+        _fb_bafa_quote: int = get_bafa_foerderquote(_bl_raw or bundesland)
+        _fb_bafa_max: str = get_bafa_foerderung_max_display(_bl_raw or bundesland)
+        _fb_bafa_display: str = get_bafa_foerderung_display(_bl_raw or bundesland)
+    except ImportError:
+        _fb_bafa_quote = 50
+        _fb_bafa_max = "1.750 €"
+        _fb_bafa_display = "bis 1.750 € (50%)"
     # BC-Werte mit sinnvollen Defaults (werden von calc_business_case vorher gesetzt)
     capex: int = int(briefing.get("CAPEX_REALISTISCH_EUR") or 5000)
     opex: int = int(briefing.get("OPEX_REALISTISCH_EUR") or 150)
@@ -9567,15 +9580,15 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
   <p>
     Viele Programme in {bundesland} und auf Bundesebene unterstützen KI- und Digitalisierungsinitiativen, indem sie einen
     Teil der förderfähigen Investitionskosten bezuschussen. Je nach Programm, Unternehmensgröße und Projektschwerpunkt
-    bewegen sich die Zuschussquoten typischerweise im Bereich von etwa <strong>30–50&nbsp;%</strong> der anerkannten Kosten.
+    bewegen sich die Zuschussquoten typischerweise im Bereich von etwa <strong>{_fb_bafa_quote}&nbsp;%</strong> der anerkannten Kosten.
     Für ein Investitionsvolumen von {capex_fmt}&nbsp;€ könnte das eine Entlastung von mehreren tausend Euro bedeuten.
   </p>
   <ul>
     <li><strong>Kürzere Amortisationsdauer:</strong> Durch eine Beteiligung an den Investitionskosten sinkt der Eigenanteil;
       die Amortisation kann sich von {payback} Monaten auf deutlich weniger verkürzen, ohne dass der erwartete Nutzen
-      verändert wird. Bei einer angenommenen Förderquote von 40 Prozent reduziert sich der Eigenanteil erheblich.</li>
+      verändert wird. Bei einer angenommenen Förderquote von {_fb_bafa_quote} Prozent reduziert sich der Eigenanteil erheblich.</li>
     <li><strong>Höherer effektiver ROI:</strong> Wenn ein Teil der Investitionen über Zuschüsse abgedeckt wird, steigt der
-      Effektiv-Ertrag je eingesetztem Euro – der aktuelle ROI von {roi_12m}&nbsp;% kann sich bei 40% Förderung auf über
+      Effektiv-Ertrag je eingesetztem Euro – der aktuelle ROI von {roi_12m}&nbsp;% kann sich bei {_fb_bafa_quote}% Förderung auf über
       das Doppelte erhöhen. Dies macht das Projekt noch attraktiver für interne Budgetentscheidungen.</li>
     <li><strong>Reduziertes finanzielles Risiko:</strong> Für <strong>{size_label}</strong> kann ein Zuschuss den Schritt
       in ein ambitionierteres Projekt erleichtern, ohne die Liquidität unnötig zu belasten. Die laufenden Kosten von
@@ -9604,9 +9617,9 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     <li><strong>Qualifizierungsförderung:</strong> Mittel für Schulungen, Weiterbildungen und den Aufbau von KI-Kompetenzen
       sind wichtig für die nachhaltige Nutzung. Viele Programme fördern explizit den Kompetenzaufbau als Teil von
       Digitalisierungsprojekten.</li>
-    <li><strong>Beratungsförderung:</strong> Unterstützung für externe Expertise bei der KI-Strategieentwicklung und
-      Umsetzung kann den Projekterfolg erheblich steigern. Programme wie BAFA-Unternehmensberatung oder regionale Beratungsförderung
-      decken oft einen Großteil der Beratungskosten ab.</li>
+    <li><strong>Beratungsförderung (BAFA):</strong> Unterstützung für externe Expertise bei der KI-Strategieentwicklung und
+      Umsetzung kann den Projekterfolg erheblich steigern. Die BAFA-Unternehmensberatung fördert {_fb_bafa_display} der
+      förderfähigen Beratungskosten (max. 3.500&nbsp;€ Beratungskosten).</li>
     <li><strong>Nachhaltigkeits- und Klimaförderung:</strong> KI-Projekte, die zur Ressourceneffizienz, Energieeinsparung
       oder Reduzierung des ökologischen Fußabdrucks beitragen, können zusätzlich von spezialisierten Förderprogrammen
       profitieren. Diese Kombination aus Digitalisierung und Nachhaltigkeit wird von vielen Fördergebern besonders
