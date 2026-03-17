@@ -9034,6 +9034,17 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "JAHRESUMSATZ_LABEL": briefing.get("JAHRESUMSATZ_LABEL", briefing.get("jahresumsatz", "")),
         "INVESTITIONSBUDGET": briefing.get("investitionsbudget", ""),  # For gamechanger.md
     })
+    # FIX-A3b: Inject canonical BAFA values into prompt vars for foerderpotenzial prompt
+    try:
+        from config.bafa import get_bafa_foerderquote, get_bafa_foerderung_max_display, get_bafa_foerderung_display
+        _bl_for_bafa = base_vars.get("BUNDESLAND_LABEL", "") or base_vars.get("bundesland", "")
+        base_vars["BAFA_FOERDERQUOTE"] = str(get_bafa_foerderquote(_bl_for_bafa))
+        base_vars["BAFA_MAX_FOERDERUNG"] = get_bafa_foerderung_max_display(_bl_for_bafa)
+        base_vars["BAFA_FOERDERUNG_DISPLAY"] = get_bafa_foerderung_display(_bl_for_bafa)
+    except ImportError:
+        base_vars["BAFA_FOERDERQUOTE"] = "50"
+        base_vars["BAFA_MAX_FOERDERUNG"] = "1.750 €"
+        base_vars["BAFA_FOERDERUNG_DISPLAY"] = "bis 1.750 € (50%)"
     
     # ===== BLOCK 3: Strategy & Vision (EXTENDED Sprint Phase2) =====
     # Strategic direction and goals - NOW includes all freetext fields
