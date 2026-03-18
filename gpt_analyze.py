@@ -14405,10 +14405,17 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                     pass
                 _fp_pre_compact = foerderpotenzial_html  # preserve for rollback
                 # NEU: Kompakte CI-Design v2.0 Darstellung
+                # FIX-A3b: Read BUNDESLAND_LABEL from briefing dict (enriched by
+                # _build_prompt_vars), NOT from sections which only has HTML outputs.
+                _bl_for_funding = (
+                    briefing.get("BUNDESLAND_LABEL", "")
+                    or BUNDESLAND_MAPPING.get(str(briefing.get("bundesland", "")).lower(), "")
+                    or briefing.get("bundesland", "")
+                )
                 foerderpotenzial_html = _generate_funding_compact_from_html(
                     raw_html=foerderpotenzial_html,
-                    bundesland=sections.get("BUNDESLAND_LABEL", "") or sections.get("bundesland", ""),
-                    company_size=sections.get("UNTERNEHMENSGROESSE", "1")
+                    bundesland=_bl_for_funding,
+                    company_size=briefing.get("unternehmensgroesse", "1")
                 )
                 # FIX-620: Post-compact word count check - revert if below min_words
                 _fp_text_after = re.sub(r"<[^>]+>", "", foerderpotenzial_html).strip()
