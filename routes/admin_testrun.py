@@ -13,7 +13,7 @@ import copy
 import logging
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -23,6 +23,13 @@ from routes._bootstrap import get_db
 
 router = APIRouter(prefix="/admin/testrun", tags=["admin-testrun"])
 log = logging.getLogger(__name__)
+
+# Key answer fields that affect report generation.
+# Used for diagnostics — shows which fields exist/are missing in source answers.
+_DIAGNOSTIC_FIELDS = [
+    "bundesland", "branche", "unternehmensgroesse", "hauptleistung",
+    "email", "standort", "ki_pionierstatus", "lang",
+]
 
 
 # ---------- Auth ----------
@@ -40,6 +47,7 @@ def _verify_admin_key(admin_key: str) -> None:
 
 class ReplayRequest(BaseModel):
     email_override: Optional[str] = None
+    answer_overrides: Optional[Dict[str, Any]] = None
     trigger_kpa: bool = True
     trigger_strategy: bool = True
 
@@ -59,7 +67,11 @@ def replay_testrun(
 
     - Path: briefing_id — source briefing whose answers are copied
     - Query: admin_key — STRATEGY_ADMIN_KEY
-    - Body (optional): email_override, trigger_kpa, trigger_strategy
+    - Body (optional): email_override, answer_overrides, trigger_kpa, trigger_strategy
+
+    answer_overrides merges into the copied answers, e.g.:
+        {"answer_overrides": {"bundesland": "sn"}}
+    to inject a missing Bundesland field.
     """
     _verify_admin_key(admin_key)
 
@@ -76,8 +88,25 @@ def replay_testrun(
             detail=f"Briefing {briefing_id} has no replayable answers",
         )
 
-    # 2. Copy answers, override email
-    answers = copy.deepcopy(source.answers)
+    # 2. Build diagnostics of source answers
+    source_answers = source.answers
+    source_diag: Dict[str, Any] = {}
+    for field in _DIAGNOSTIC_FIELDS:
+        val = source_answers.get(field)
+        source_diag[field] = val if val is not None else None
+
+    # 3. Copy answers, apply overrides, override email
+    answers = copy.deepcopy(source_answers)
+
+    overrides_applied: List[str] = []
+    if body and body.answer_overrides:
+        for key, val in body.answer_overrides.items():
+            old_val = answers.get(key)
+            answers[key] = val
+            overrides_applied.append(key)
+            log.info(
+                "🔄 Replay override: %s = %r (was %r)", key, val, old_val,
+            )
 
     if body and body.email_override:
         answers["email"] = body.email_override
@@ -88,7 +117,17 @@ def replay_testrun(
     trigger_kpa = body.trigger_kpa if body else True
     trigger_strategy = body.trigger_strategy if body else True
 
-    # 3. Create new briefing (same as submit handler, but bypassing auth + rate limit)
+    # 4. Warn if critical fields are missing
+    warnings: List[str] = []
+    if not answers.get("bundesland"):
+        warnings.append(
+            "bundesland is missing — BAFA will use defaults (50%/1.750€). "
+            "Use answer_overrides to set it, e.g. {\"answer_overrides\": {\"bundesland\": \"sn\"}}"
+        )
+    if not answers.get("branche"):
+        warnings.append("branche is missing — industry-specific content will use generic fallbacks")
+
+    # 5. Create new briefing (same as submit handler, bypassing auth + rate limit)
     from datetime import datetime, timezone
     from utils.encoding_fixer import clean_briefing_data
 
@@ -108,14 +147,12 @@ def replay_testrun(
 
     new_id = new_briefing.id
     log.info(
-        "🔄 Testrun replay: source=%d → new=%d, email=%s, kpa=%s, strategy=%s",
-        briefing_id, new_id, new_email, trigger_kpa, trigger_strategy,
+        "🔄 Testrun replay: source=%d → new=%d, email=%s, overrides=%s, kpa=%s, strategy=%s",
+        briefing_id, new_id, new_email, overrides_applied, trigger_kpa, trigger_strategy,
     )
 
-    # 4. Return immediately — worker picks up the new briefing
-    # KPA and Strategy triggers are handled by the existing pipeline
-    # (auto-triggered after R1 completion based on briefing_id)
-    return {
+    # 6. Return immediately — worker picks up the new briefing
+    result: Dict[str, Any] = {
         "source_briefing_id": briefing_id,
         "new_briefing_id": new_id,
         "email": new_email,
@@ -123,4 +160,42 @@ def replay_testrun(
         "status": "queued",
         "trigger_kpa": trigger_kpa,
         "trigger_strategy": trigger_strategy,
+        "source_fields": source_diag,
+    }
+    if overrides_applied:
+        result["overrides_applied"] = overrides_applied
+    if warnings:
+        result["warnings"] = warnings
+
+    return result
+
+
+@router.get("/inspect/{briefing_id}")
+def inspect_briefing_answers(
+    briefing_id: int,
+    admin_key: str = Query(..., description="Admin API Key"),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    """
+    Inspect the stored answers of a briefing for replay debugging.
+    Shows all answer keys and critical field values without exposing full data.
+    """
+    _verify_admin_key(admin_key)
+
+    from models import Briefing
+
+    source = db.get(Briefing, briefing_id)
+    if not source:
+        raise HTTPException(status_code=404, detail=f"Briefing {briefing_id} not found")
+
+    answers = source.answers or {}
+    return {
+        "briefing_id": briefing_id,
+        "lang": source.lang,
+        "status": source.status,
+        "answer_keys": sorted(answers.keys()) if isinstance(answers, dict) else [],
+        "answer_count": len(answers) if isinstance(answers, dict) else 0,
+        "critical_fields": {
+            field: answers.get(field) for field in _DIAGNOSTIC_FIELDS
+        },
     }
