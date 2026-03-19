@@ -2129,19 +2129,19 @@ def apply_bafa_amount_enforcer(sections: dict, bundesland: str) -> dict:
             if correct_quote == 50 and "80" in value:
                 # For Alte Bundesländer: 80% is wrong
                 pct_pattern = re.compile(r'(?:Zuschuss\s+von\s+)80\s*(?:%|Prozent)', re.IGNORECASE)
-                value = pct_pattern.sub(
-                    lambda m, _v=value: m.group(0).replace("80", str(correct_quote))
-                    if "bafa" in _v[max(0, m.start()-200):m.end()+200].lower() else m.group(0),
-                    value
-                )
+                def _fix_pct_80(m: re.Match[str], _v: str = value) -> str:
+                    if "bafa" in _v[max(0, m.start()-200):m.end()+200].lower():
+                        return m.group(0).replace("80", str(correct_quote))
+                    return m.group(0)
+                value = pct_pattern.sub(_fix_pct_80, value)
             elif correct_quote == 80 and "50" in value:
                 # For Neue Bundesländer: 50% is wrong
                 pct_pattern = re.compile(r'(?:Zuschuss\s+von\s+)50\s*(?:%|Prozent)', re.IGNORECASE)
-                value = pct_pattern.sub(
-                    lambda m, _v=value: m.group(0).replace("50", str(correct_quote))
-                    if "bafa" in _v[max(0, m.start()-200):m.end()+200].lower() else m.group(0),
-                    value
-                )
+                def _fix_pct_50(m: re.Match[str], _v: str = value) -> str:
+                    if "bafa" in _v[max(0, m.start()-200):m.end()+200].lower():
+                        return m.group(0).replace("50", str(correct_quote))
+                    return m.group(0)
+                value = pct_pattern.sub(_fix_pct_50, value)
 
         if value != original:
             sections[key] = value
