@@ -2054,6 +2054,99 @@ def apply_grammar_fixer(sections: dict) -> dict:
 
 
 # =============================================================================
+# NEU-1 (Session 28): BAFA Amount Enforcer
+# Prevents LLM from hallucinating wrong BAFA max amounts (e.g. 2.800€ for Bayern).
+# Uses config/bafa.py as single source of truth for regional values.
+# =============================================================================
+
+def apply_bafa_amount_enforcer(sections: dict, bundesland: str) -> dict:
+    """
+    Replace incorrect BAFA max funding amounts in foerderpotenzial section
+    with the correct regional value from config/bafa.py.
+
+    The LLM prompt already contains deterministic BAFA data, but LLMs can
+    hallucinate wrong amounts. This post-processor is a safety net.
+    """
+    if not bundesland:
+        return sections
+
+    # Only enforce in the foerderpotenzial section (where BAFA is discussed)
+    target_keys = [k for k in sections if "foerder" in k.lower() or "funding" in k.lower()]
+    if not target_keys:
+        return sections
+
+    try:
+        from config.bafa import get_bafa_foerderung_max_display, get_bafa_foerderquote
+        correct_max = get_bafa_foerderung_max_display(bundesland)  # e.g. "1.750 €"
+        correct_quote = get_bafa_foerderquote(bundesland)  # e.g. 50
+    except ImportError:
+        log.warning("[BAFA-ENFORCER] config.bafa not available, skipping")
+        return sections
+
+    # Known wrong BAFA amounts that the LLM might hallucinate
+    # Correct values: Alte BL = 1.750€/50%, Neue BL = 2.800€/80%, Berlin = 2.100€/60%
+    all_bafa_amounts = ["1.750", "2.800", "2.100"]
+    # Remove the correct amount from the "wrong" list
+    correct_amount_str = correct_max.replace(" €", "").replace("\xa0€", "").strip()
+    wrong_amounts = [a for a in all_bafa_amounts if a != correct_amount_str]
+
+    total_fixes = 0
+    for key in target_keys:
+        value = sections.get(key, "")
+        if not isinstance(value, str) or not value:
+            continue
+
+        original = value
+        for wrong in wrong_amounts:
+            # Pattern: wrong BAFA amount near BAFA context
+            # Match "maximal X.XXX €" or "X.XXX €" or "X.XXX€" patterns
+            # Only replace when in BAFA context (within ~200 chars of "BAFA" mention)
+            # Use a function-based replacement to check BAFA proximity
+            def _bafa_context_replace(m, _wrong=wrong, _correct_max=correct_max, _full=value):
+                start = max(0, m.start() - 200)
+                end = min(len(_full), m.end() + 200)
+                context = _full[start:end].lower()
+                if "bafa" in context or "beratungsförderung" in context or "unternehmensberatung" in context:
+                    return m.group(0).replace(_wrong, correct_amount_str)
+                return m.group(0)  # Not in BAFA context, leave unchanged
+
+            # Match the wrong amount with optional € sign and optional "netto"
+            pattern = re.compile(
+                rf'(?:maximal\s+)?{re.escape(wrong)}\s*(?:€|&euro;|Euro)',
+                re.IGNORECASE
+            )
+            value = pattern.sub(_bafa_context_replace, value)
+
+            # Also catch "Zuschuss von X%" with wrong percentage near BAFA
+            if correct_quote == 50 and "80" in value:
+                # For Alte Bundesländer: 80% is wrong
+                pct_pattern = re.compile(r'(?:Zuschuss\s+von\s+)80\s*(?:%|Prozent)', re.IGNORECASE)
+                value = pct_pattern.sub(
+                    lambda m, _v=value: m.group(0).replace("80", str(correct_quote))
+                    if "bafa" in _v[max(0, m.start()-200):m.end()+200].lower() else m.group(0),
+                    value
+                )
+            elif correct_quote == 80 and "50" in value:
+                # For Neue Bundesländer: 50% is wrong
+                pct_pattern = re.compile(r'(?:Zuschuss\s+von\s+)50\s*(?:%|Prozent)', re.IGNORECASE)
+                value = pct_pattern.sub(
+                    lambda m, _v=value: m.group(0).replace("50", str(correct_quote))
+                    if "bafa" in _v[max(0, m.start()-200):m.end()+200].lower() else m.group(0),
+                    value
+                )
+
+        if value != original:
+            sections[key] = value
+            total_fixes += 1
+            log.info("[BAFA-ENFORCER] Fixed BAFA amounts in section '%s' (bundesland=%s, correct=%s/%s%%)",
+                     key, bundesland, correct_max, correct_quote)
+
+    if total_fixes:
+        log.info("[BAFA-ENFORCER] Complete: %d sections corrected", total_fixes)
+    return sections
+
+
+# =============================================================================
 # MASTER FUNCTION: Apply All Quality Enforcers
 # =============================================================================
 
@@ -2961,9 +3054,13 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     
     
     # 5. Location-Validator
-    
+
+    # 5.5 NEU-1 (Session 28): BAFA Amount Enforcer — fix hallucinated BAFA max amounts
+    if bundesland:
+        sections = apply_bafa_amount_enforcer(sections, bundesland)
+
     # 6. Grammar-Fixer
-    
+
     # 7. AI-Act Konsistenz (v14.19)
     sections = apply_ai_act_consistency(sections)
     sections = apply_grammar_fixer(sections)
