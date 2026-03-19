@@ -2008,6 +2008,14 @@ GRAMMAR_FIX_PATTERNS = [
     (r'\b(Ihr|Der|Die|Das|Ein) (Team|Kollege|Mitarbeiter|Chef|Geschäftsführer) nutzen\b',
      r'\1 \2 nutzt'),
 
+    # NEU-2 (Session 28, KIS-1012): Compound-noun singular subjects + "nutzen" → "nutzt"
+    # Covers: "Ihr Motion-Design-Team nutzen", "Das Pilotteam nutzen", "Ihr Kernteam nutzen"
+    # The N1/N2 rule above only matches simple "Ihr Team nutzen" — this catches
+    # compound nouns (hyphenated) ending in singular nouns like -Team, -System, etc.
+    # "Teams nutzen" / "Sie nutzen" remain correct (plural subjects not matched).
+    (r'\b((?:Ihr|Das|Ein)\s+\S*(?:Team|Unternehmen|System|Management|Pilotteam|Kernteam))\s+nutzen\b',
+     lambda m: f'{m.group(1)} nutzt'),
+
     # KIS-1011-B1: "Ich haben" → "Ich habe" (defensive grammar fix)
     # Negative lookbehind prevents false positives like "die ich haben möchte"
     (r'(?<![a-zäöü])\bIch haben\b', 'Ich habe'),
