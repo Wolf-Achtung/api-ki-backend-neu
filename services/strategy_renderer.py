@@ -288,6 +288,56 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
             '</div>'
         )
 
+    # KIS-1011-V1a: When gross ROI < 20% and funding > 0, inject deterministic
+    # net-ROI sentence so customers see the funded perspective immediately.
+    try:
+        _roi_real_str = calculated_values.get("roi_realistisch", "0")
+        _foerder_str = calculated_values.get("foerder_potenzial", "0")
+        _gesamt_str = calculated_values.get("budget_gesamt_jahr1", "0")
+        _ersparnis_str = calculated_values.get("jaehrliche_ersparnis", "0")
+        _monat_str = calculated_values.get("zeitersparnis_euro", "0")
+
+        # Parse German format "48.000" → 48000
+        def _parse_de(s: str) -> int:
+            return int(str(s).replace(".", "").replace(",", "").strip() or "0")
+
+        _roi_real = int(_roi_real_str) if _roi_real_str.lstrip("-").isdigit() else 0
+        _foerder = _parse_de(_foerder_str)
+        _gesamt = _parse_de(_gesamt_str)
+        _ersparnis = _parse_de(_ersparnis_str)
+        _monat_spar = _parse_de(_monat_str)
+
+        if _roi_real < 20 and _foerder > 0 and _gesamt > _foerder and _monat_spar > 0:
+            import math as _math
+            _netto_invest = _gesamt - _foerder
+            _netto_roi = round((_ersparnis - _netto_invest) / _netto_invest * 100)
+            _netto_be = _math.ceil(_netto_invest / _monat_spar)
+
+            def _fmt_eur(v: int) -> str:
+                return f"{v:,}".replace(",", ".")
+
+            _foerder_note = (
+                f'\n<div style="margin-top:12px;padding:12px 16px;'
+                f'background:linear-gradient(135deg,#ecfdf5,#d1fae5);'
+                f'border-left:4px solid #10b981;border-radius:6px;'
+                f'font-size:0.95em;color:#065f46;">'
+                f'<strong>Mit Förderung:</strong> '
+                f'Unter Berücksichtigung des Förderpotenzials von '
+                f'{_fmt_eur(_foerder)}\u00a0€ reduziert sich Ihre Nettoinvestition '
+                f'auf {_fmt_eur(_netto_invest)}\u00a0€ — '
+                f'mit einem Netto-ROI von {_netto_roi}\u00a0% '
+                f'und Break-Even bereits in Monat\u00a0{_netto_be}.'
+                f'</div>'
+            )
+            _exec_body += _foerder_note
+            logger.info(
+                "[KIS-1011-V1a] Injected net-ROI: netto_invest=%d, netto_roi=%d%%, "
+                "netto_breakeven=%d mo (gross_roi=%d%%, foerder=%d)",
+                _netto_invest, _netto_roi, _netto_be, _roi_real, _foerder,
+            )
+    except Exception as _e:
+        logger.warning("[KIS-1011-V1a] Failed to inject net-ROI: %s", _e)
+
     context = {
         # Cover metadata
         "firmenname": briefing_data.get("unternehmen_name", "Ihr Unternehmen"),
