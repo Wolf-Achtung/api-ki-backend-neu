@@ -13880,7 +13880,14 @@ ERWEITERUNGSANFORDERUNGEN:
                             key, _budget, len(truncated), len(raw_cut),
                         )
                     else:
-                        truncated = raw_cut
+                        # KIS-1011-B2: Snap to word boundary instead of raw char cut
+                        _wp = _budget
+                        while _wp > 0 and raw_cut[_wp - 1] not in (' ', '\n', '.', '>', ';'):
+                            _wp -= 1
+                        if _wp >= _budget * 0.7:
+                            truncated = raw_cut[:_wp]
+                        else:
+                            truncated = raw_cut  # keep raw cut if word boundary too far back
                     log.info(
                         "[FIX-TEAM-KMU][TRUNC] budget_cap section=%s budget=%d before=%d after=%d",
                         key, _budget, original_len, len(truncated),
