@@ -2007,6 +2007,10 @@ GRAMMAR_FIX_PATTERNS = [
     # Covers: "Ihr Team nutzen", "Der Kollege nutzen", "Ein Mitarbeiter nutzen", etc.
     (r'\b(Ihr|Der|Die|Das|Ein) (Team|Kollege|Mitarbeiter|Chef|Geschäftsführer) nutzen\b',
      r'\1 \2 nutzt'),
+
+    # KIS-1011-B1: "Ich haben" → "Ich habe" (defensive grammar fix)
+    # Negative lookbehind prevents false positives like "die ich haben möchte"
+    (r'(?<![a-zäöü])\bIch haben\b', 'Ich habe'),
 ]
 
 def apply_grammar_fixes(html: str) -> tuple[str, int]:
@@ -4412,6 +4416,14 @@ def get_strict_mode_status() -> dict:
 # =============================================================================
 # FIX-506 TASK 5: POST-TRUNCATION TEMPLATE PHRASE CLEANUP
 # =============================================================================
+# KIS-1011-B2: Known broken word-boundary phrases from LLM truncation
+KNOWN_TRUNCATION_FIXES = [
+    ('Vorhabe ichtschaftlich', 'Vorhaben wirtschaftlich'),
+    ('Vorhabe nwirtschaftlich', 'Vorhaben wirtschaftlich'),
+    ('wirtschaftlich keit', 'wirtschaftlichkeit'),
+    ('Wirtschaftlich keit', 'Wirtschaftlichkeit'),
+]
+
 # When content gets truncated, it might create partial template phrases
 # that trigger TEMPLATE_PHRASE warnings in the validator.
 # This function cleans up such fragments.
@@ -4457,6 +4469,12 @@ def cleanup_truncation_artifacts(html: str) -> str:
 
     result = html
     cleanups = 0
+
+    # KIS-1011-B2: Fix known broken word-boundary phrases first
+    for broken, fixed in KNOWN_TRUNCATION_FIXES:
+        if broken in result:
+            result = result.replace(broken, fixed)
+            cleanups += 1
 
     # Apply cleanup patterns
     for pattern, replacement in TRUNCATION_PHRASE_CLEANUP:
