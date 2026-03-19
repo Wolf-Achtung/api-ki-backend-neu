@@ -2007,6 +2007,10 @@ GRAMMAR_FIX_PATTERNS = [
     # Covers: "Ihr Team nutzen", "Der Kollege nutzen", "Ein Mitarbeiter nutzen", etc.
     (r'\b(Ihr|Der|Die|Das|Ein) (Team|Kollege|Mitarbeiter|Chef|Geschäftsführer) nutzen\b',
      r'\1 \2 nutzt'),
+
+    # KIS-1011-B1: "Ich haben" → "Ich habe" (defensive grammar fix)
+    # Negative lookbehind prevents false positives like "die ich haben möchte"
+    (r'(?<![a-zäöü])\bIch haben\b', 'Ich habe'),
 ]
 
 def apply_grammar_fixes(html: str) -> tuple[str, int]:
