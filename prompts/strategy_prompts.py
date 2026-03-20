@@ -34,7 +34,54 @@ REGELN:
    - Verwende "Quick Win" für schnell umsetzbare Maßnahmen.
    Diese Marker werden vom Post-Processor automatisch in gestylte Boxen umgewandelt.
    Nutze "Auf einen Blick:" maximal 1× pro Section (am Anfang). "Tipp:", "Wichtig:", "Empfehlung:" wo inhaltlich sinnvoll, aber nicht erzwingen.
-14. Schreibe NIEMALS "Ohne Angaben" oder "keine Angaben" — wenn ein Wert fehlt, formuliere den Satz um oder lasse ihn weg."""
+14. Schreibe NIEMALS "Ohne Angaben" oder "keine Angaben" — wenn ein Wert fehlt, formuliere den Satz um oder lasse ihn weg.
+
+BRANCHENKONTEXT (PFLICHT):
+Die Hauptleistung des Kunden ist: {hauptleistung}
+Alle Empfehlungen, Beispiele, Anwendungsfälle und Tool-Vorschläge MÜSSEN auf diese
+spezifische Tätigkeit zugeschnitten sein. Vermeide generische Marketing-Empfehlungen.
+Nenne konkrete Anwendungsfälle aus dem Arbeitsalltag des Kunden.
+Wenn die Hauptleistung z.B. "Trailer-Produktion" ist, beziehe dich auf
+Videoschnitt, Post-Production, Streaming, Entertainment — nicht auf "Online-Marketing".
+
+SPRACHREGELN FÜR VERSTÄNDLICHKEIT (PFLICHT):
+Zielgruppe: KMU-Geschäftsführer ohne Beratungs-Hintergrund.
+- Schreibe klar, direkt, konkret. Maximal 25 Wörter pro Satz.
+- Vermeide englische Fachbegriffe wo ein deutsches Wort existiert:
+  - NICHT "Use Case" → SONDERN "Anwendungsbeispiel"
+  - NICHT "Stakeholder" → SONDERN "Beteiligte" oder "Entscheider"
+  - NICHT "Adoption" → SONDERN "Einführung" oder "Akzeptanz"
+  - NICHT "Skalierung/skalieren" → SONDERN "Ausweitung" oder "Wachstum"
+  - NICHT "Orchestrierung" → SONDERN "Steuerung" oder "Koordination"
+  - NICHT "Pipeline" (außer Tech-Kontext) → SONDERN "Ablauf" oder "Prozess"
+  - NICHT "Framework" → SONDERN "Rahmenwerk" oder "Leitfaden"
+  - NICHT "Onboarding" → SONDERN "Einarbeitung"
+  - NICHT "End-to-End" → SONDERN "durchgängig" oder "vollständig"
+  - NICHT "Best Practice" → SONDERN "bewährte Methode"
+- Fachbegriffe die bleiben dürfen (weil etabliert): KI, ROI, DSGVO, AI Act, BAFA, KPI, CRM, ERP, SaaS
+- Bei erster Verwendung eines Fachbegriffs: kurze Erklärung in Klammern.
+  Beispiel: "KPI (Kennzahl zur Erfolgsmessung)"
+- Vermeide Nominalisierungs-Ketten:
+  - NICHT "Implementierung der Automatisierung der Kampagnensteuerung"
+  - SONDERN "Kampagnen automatisch steuern"
+- Maximal 2× "KPI" pro Section. Schreibe stattdessen "Kennzahl" oder "Messgröße".
+
+ROI-KONTEXT (PFLICHT bei Erstnennung des Strategy-ROI in S5 und EXEC):
+Der KI-Readiness Report (Report 1) zeigt einen ROI von {r1_roi_pct}% auf die
+Startinvestition von {r1_capex} €. Dieser Strategiebericht rechnet mit der
+Gesamtinvestition über 12 Monate (inklusive Software, Schulung, Implementierung
+und Koordination). Das erklärt die unterschiedlichen Zahlen — beide sind korrekt,
+nur die Berechnungsbasis ist anders.
+Baue diese Erklärung VOR der ersten ROI-Nennung im Strategiebericht ein,
+NICHT als Fußnote danach. Verwende eine verständliche, nicht-technische Sprache.
+
+VENDOR-KONSISTENZ (PFLICHT bei Tool-Empfehlungen in S4 und S8):
+Der KI-Readiness Report hat {vendor_audit_red_count} Tools als nicht EU-konform
+(RED) bewertet und {vendor_audit_green_count} als konform (GREEN).
+Gesamtstatus: {vendor_audit_status}.
+Wenn ein Tool im Report 1 als RED bewertet wurde (z.B. ChatGPT),
+weise bei Erwähnung auf die DSGVO-Einschränkung hin und priorisiere
+EU-konforme Alternativen. Empfehle kein RED-bewertetes Tool als Hauptempfehlung."""
 
 
 # =============================================================================
@@ -51,6 +98,7 @@ STRATEGY_PROMPTS = {
 UNTERNEHMENSDATEN:
 - Firmenname: {firmenname}
 - Branche: {branche}
+- Hauptleistung/Kerntätigkeit: {hauptleistung}
 - Segment/Größe: {segment}
 - Mitarbeiter: {mitarbeiter}
 - Bundesland: {bundesland}
@@ -119,6 +167,7 @@ Quellenangaben am Ende als <div class="sources">.""",
 UNTERNEHMENSDATEN:
 - Firmenname: {firmenname}
 - Branche: {branche}
+- Hauptleistung/Kerntätigkeit: {hauptleistung}
 - Segment: {segment}
 - Prioritäten: {s3_prioritaeten}
 - Engpass: {s4_engpass}
@@ -152,6 +201,7 @@ Ampel-Farben als CSS-Klassen oder inline-styles.""",
 
 UNTERNEHMENSDATEN:
 - Branche: {branche}
+- Hauptleistung/Kerntätigkeit: {hauptleistung}
 - Segment: {segment}
 - Bestehende Software: {s5_software}
 - KI-Erfahrung: {s8_erfahrung}
@@ -198,6 +248,14 @@ DIVERSITÄTS-REGELN:
 - Empfehle MAXIMAL 3 Tools vom gleichen Anbieter (z.B. max. 3× Microsoft).
 - Zeige für jedes Handlungsfeld mindestens 1 Alternative zum Hauptanbieter.
 - Berücksichtige auch Open-Source-Alternativen und EU-Anbieter.
+
+VENDOR-AUDIT AUS REPORT 1 (PFLICHT bei Tool-Empfehlungen):
+Der KI-Readiness Report hat {vendor_audit_red_count} Tools als nicht EU-konform bewertet
+und {vendor_audit_green_count} als konform. Gesamtstatus: {vendor_audit_status}.
+Wenn ein Tool (z.B. ChatGPT) im Report 1 als RED/nicht konform bewertet wurde:
+- Erwähne bei jeder Nennung den DSGVO-Vorbehalt.
+- Empfehle es NICHT als Hauptempfehlung.
+- Priorisiere EU-konforme Alternativen (z.B. Claude, Aleph Alpha, DeepL).
 
 FORMAT: HTML-Fragment. Verwende Tabellen für Tool-Vergleiche.
 Quellenangaben am Ende als <div class="sources">.""",
@@ -251,6 +309,14 @@ AUFGABE:
 5. Gib eine klare Investitionsempfehlung.
 
 WICHTIG: Alle Zahlen EXAKT aus den Vorgaben übernehmen. NICHT selbst rechnen!
+
+ROI-BRÜCKE ZU REPORT 1 (PFLICHT — VOR der ersten ROI-Nennung einbauen):
+Der KI-Readiness Report zeigt einen ROI von {r1_roi_pct}% bezogen auf die
+Startinvestition von {r1_capex} €. Der vorliegende Strategiebericht rechnet mit
+der Gesamtinvestition über 12 Monate ({budget_gesamt_jahr1} €, inklusive Software,
+Schulung, Implementierung und Koordination). Erklären Sie dem Leser verständlich,
+warum die ROI-Zahlen unterschiedlich sind — beide sind korrekt, nur die
+Berechnungsbasis ist anders.
 
 FORMAT: HTML-Fragment. Verwende Tabellen für Budget und ROI.""",
 
@@ -396,6 +462,7 @@ FORMAT: HTML-Fragment. Verwende eine Tabelle für die Risikomatrix.""",
 
 VERBINDLICHE KENNZAHLEN (EXAKT diese Werte verwenden — KEINE eigenen Zahlen erfinden!):
 - Branche: {branche}
+- Hauptleistung/Kerntätigkeit: {hauptleistung}
 - Segment: {segment}
 - KI-Readiness-Score: {readiness_score} von 100 Punkten ({reifegrad_label})
 - Handlungsfelder: {anzahl_felder}

@@ -224,8 +224,22 @@ async def generate_strategy_report(
             _bafa_quote = 50
             _bafa_max = "1.750 €"
 
+        # S31-FIX-A: Extract hauptleistung for industry-specific context
+        _hauptleistung = (briefing_data.get("hauptleistung", "") or "").strip()
+
+        # S31-FIX-C: Extract R1 ROI values for ROI bridge explanation
+        _r1_roi_12m = _r1_sections.get("ROI_12M", "") or _r1_sections.get("ROI_12M_CAPPED", "")
+        _r1_capex = _r1_sections.get("BC_INVESTMENT_TOTAL", "") or _r1_sections.get("CAPEX", "")
+        _r1_payback = _r1_sections.get("PAYBACK_MONTHS", "")
+
+        # S31-FIX-D: Extract vendor audit results for tool consistency
+        _vendor_audit_red = str(_r1_sections.get("VENDOR_AUDIT_RED", 0) or 0)
+        _vendor_audit_green = str(_r1_sections.get("VENDOR_AUDIT_GREEN", 0) or 0)
+        _vendor_audit_status = str(_r1_sections.get("VENDOR_AUDIT_STATUS", "") or "")
+
         base_context = {
             "branche": (briefing_data.get("branche", "") or "").title(),
+            "hauptleistung": _hauptleistung,
             "segment": _segment_label(briefing_data.get("unternehmensgroesse", "")),
             "mitarbeiter": briefing_data.get("mitarbeiter", ""),
             "bundesland": _bl_label,
@@ -236,6 +250,14 @@ async def generate_strategy_report(
             "readiness_score": _score,
             "reifegrad": _reifegrad_label,
             "reifegrad_label": _reifegrad_label,
+            # S31-FIX-C: R1 ROI values for bridge explanation
+            "r1_roi_pct": str(_r1_roi_12m),
+            "r1_capex": str(_r1_capex),
+            "r1_payback_months": str(_r1_payback),
+            # S31-FIX-D: Vendor audit results
+            "vendor_audit_red_count": _vendor_audit_red,
+            "vendor_audit_green_count": _vendor_audit_green,
+            "vendor_audit_status": _vendor_audit_status,
             # Strategy questions
             "s1_budget": strategy_questions.get("s1_budget", ""),
             "s2_zeitrahmen": strategy_questions.get("s2_zeitrahmen", ""),
@@ -431,14 +453,28 @@ async def _generate_section(
         use_claude, prompt_len, prompt_words,
     )
 
+    # S31: Format system prompt with context (for industry, ROI bridge, vendor audit)
+    try:
+        system_prompt = SYSTEM_PROMPT_STRATEGY_REPORT.format(
+            **{k: str(v or "") for k, v in context.items()}
+        )
+    except KeyError:
+        system_prompt = SYSTEM_PROMPT_STRATEGY_REPORT
+        for key in re.findall(r"\{(\w+)\}", SYSTEM_PROMPT_STRATEGY_REPORT):
+            if key not in context:
+                context[key] = ""
+        system_prompt = SYSTEM_PROMPT_STRATEGY_REPORT.format(
+            **{k: str(v or "") for k, v in context.items()}
+        )
+
     # Longer sections get more output tokens — S4 (Tool-Landschaft) has large prompts
     # FIX-S9-B2: Increased token budget for S4 to prevent truncation
     max_out_tokens = 8000 if section_key in ("S4", "S8", "EXEC", "S5") else 5000
 
     if route_to_anthropic:
-        result = await _call_anthropic(prompt, SYSTEM_PROMPT_STRATEGY_REPORT, section_key, max_tokens=max_out_tokens)
+        result = await _call_anthropic(prompt, system_prompt, section_key, max_tokens=max_out_tokens)
     else:
-        result = await _call_openai(prompt, SYSTEM_PROMPT_STRATEGY_REPORT, section_key, max_tokens=max_out_tokens)
+        result = await _call_openai(prompt, system_prompt, section_key, max_tokens=max_out_tokens)
 
         # FIX-S9-B2: If OpenAI truncated (returned empty/very short), retry with Claude
         if not result or len(result.split()) < 20:
@@ -446,7 +482,7 @@ async def _generate_section(
                 "[Strategy] Section %s: OpenAI returned empty/truncated (%d words), retrying with Claude",
                 section_key, len((result or "").split()),
             )
-            result = await _call_anthropic(prompt, SYSTEM_PROMPT_STRATEGY_REPORT, section_key, max_tokens=max_out_tokens)
+            result = await _call_anthropic(prompt, system_prompt, section_key, max_tokens=max_out_tokens)
 
     duration = time.time() - start
     word_count = len((result or "").split())
