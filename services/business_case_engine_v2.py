@@ -2126,9 +2126,9 @@ def business_case_report_to_html(
 
     # Scenarios Section
     html_parts.append(f'''
-        <div class="scenarios-section" style="margin-bottom:24px;">
+        <div class="scenarios-section" style="margin-bottom:24px;page-break-inside:avoid;break-inside:avoid;overflow:visible;">
             <p style="margin:0 0 16px 0;font-weight:600;font-size:13pt;color:#1e293b;">{labels["scenarios_title"]}</p>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;page-break-inside:avoid;break-inside:avoid;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;page-break-inside:avoid;break-inside:avoid;overflow:visible;">
     ''')
 
     for scenario in report.scenarios:
@@ -2144,7 +2144,7 @@ def business_case_report_to_html(
         roi_color = "#22c55e" if _display_roi >= 100 else "#f59e0b" if _display_roi >= 50 else "#dc2626"
 
         html_parts.append(f'''
-            <div class="scenario-card" style="flex:1;min-width:180px;padding:16px;background:#fff;border-radius:10px;border:2px solid {color};box-shadow:0 2px 8px rgba(0,0,0,0.05);page-break-inside:avoid;break-inside:avoid;">
+            <div class="scenario-card" style="flex:1;min-width:180px;padding:16px;background:#fff;border-radius:10px;border:2px solid {color};box-shadow:0 2px 8px rgba(0,0,0,0.05);page-break-inside:avoid;break-inside:avoid;overflow:visible;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
                     <span style="width:12px;height:12px;background:{color};border-radius:50%;"></span>
                     <span style="font-weight:600;color:{color};">{label}</span>

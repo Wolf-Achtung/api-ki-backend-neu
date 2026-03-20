@@ -2019,6 +2019,13 @@ GRAMMAR_FIX_PATTERNS = [
     # KIS-1011-B1: "Ich haben" → "Ich habe" (defensive grammar fix)
     # Negative lookbehind prevents false positives like "die ich haben möchte"
     (r'(?<![a-zäöü])\bIch haben\b', 'Ich habe'),
+
+    # KIS-1013-NEU-3: "können ich" → "kann ich" (Wettbewerbs-Prompt grammar fix)
+    (r'\bkönnen ich\b', 'kann ich'),
+    (r'\bKönnen ich\b', 'Kann ich'),
+
+    # KIS-1013-B1: "ich haben" (lowercase) → "ich habe" — catch all case variants
+    (r'\bich haben\b', 'ich habe'),
 ]
 
 def apply_grammar_fixes(html: str) -> tuple[str, int]:
@@ -3159,6 +3166,10 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # earlier steps (LLM outputs, template expansions, etc.)
     if company_size:
         sections = apply_solo_terms_final(sections, company_size)
+
+    # 22.5 KIS-1013-B1: FINAL grammar pass — catch grammar errors introduced by
+    # any earlier pipeline step (truncation-repair, solo-normalization, etc.)
+    sections = apply_grammar_fixer(sections)
 
     # =========================================================================
     # FIX-527: Report Facts Integration
@@ -4527,6 +4538,11 @@ KNOWN_TRUNCATION_FIXES = [
     ('Vorhabe nwirtschaftlich', 'Vorhaben wirtschaftlich'),
     ('wirtschaftlich keit', 'wirtschaftlichkeit'),
     ('Wirtschaftlich keit', 'Wirtschaftlichkeit'),
+    # KIS-1013-B1: Grammar fixes for known truncation-repair artifacts
+    ('Ich haben keinen Mitarbeiter', 'Wir haben keinen Mitarbeiter'),
+    ('ich haben keinen Mitarbeiter', 'wir haben keinen Mitarbeiter'),
+    ('können ich besser machen', 'kann ich besser machen'),
+    ('Können ich besser machen', 'Kann ich besser machen'),
 ]
 
 # When content gets truncated, it might create partial template phrases
