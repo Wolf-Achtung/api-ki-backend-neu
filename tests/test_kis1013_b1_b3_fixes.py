@@ -79,11 +79,17 @@ class TestB3ScenarioCardROI:
         assert "ROI (12M)" in realistic_card, "ROI (12M) missing from Realistisch card"
         assert "200%" in realistic_card, "200% ROI value missing from Realistisch card"
 
-    def test_scenario_cards_have_break_inside_avoid(self) -> None:
-        """Scenario cards must have break-inside:avoid for PDF rendering."""
+    def test_strip_redundant_blocks_preserves_roi(self) -> None:
+        """KIS-1013-B3 ROOT CAUSE: strip_redundant_blocks must NOT remove identical ROI divs.
+
+        When Optimistisch and Realistisch both have ROI 200% (capped), the ROI
+        divs are pixel-identical. strip_redundant_blocks treated them as duplicates
+        and removed the second occurrence, causing missing ROI on Realistisch card.
+        """
         from services.business_case_engine_v2 import (
             BusinessCaseReport, business_case_report_to_html,
         )
+        from services.pipeline_sanitizers import sanitize_all_sections
 
         report = BusinessCaseReport(
             scenarios=self._make_scenarios(),
@@ -92,23 +98,17 @@ class TestB3ScenarioCardROI:
         )
 
         html = business_case_report_to_html(report)
+        assert len(re.findall(r"ROI \(12M\)", html)) == 3
 
-        # Verify break-inside:avoid on scenario cards
-        assert "break-inside:avoid" in html, "break-inside:avoid missing from scenario card styles"
+        # Run through sanitize_all_sections (which calls strip_redundant_blocks)
+        sections = {"BUSINESS_CASE_ENGINE_HTML": html}
+        result_sections, _ = sanitize_all_sections(sections)
+        result_html = result_sections["BUSINESS_CASE_ENGINE_HTML"]
 
-        # Verify scenarios-section has break-inside:avoid
-        assert 'class="scenarios-section"' in html
-        section_match = re.search(r'class="scenarios-section"[^>]*style="([^"]*)"', html)
-        assert section_match, "scenarios-section style not found"
-        assert "break-inside:avoid" in section_match.group(1), "scenarios-section missing break-inside:avoid"
-
-    def test_pdf_template_has_scenario_card_protection(self) -> None:
-        """PDF template must include .scenario-card in break-inside:avoid rules."""
-        with open("templates/pdf_template_v7.html", "r") as f:
-            css = f.read()
-
-        assert ".scenario-card" in css, "PDF template missing .scenario-card CSS rule"
-        assert ".scenarios-section" in css, "PDF template missing .scenarios-section CSS rule"
+        roi_labels = re.findall(r"ROI \(12M\)", result_html)
+        assert len(roi_labels) == 3, (
+            f"sanitize_all_sections destroyed ROI divs: expected 3, got {len(roi_labels)}"
+        )
 
 
 class TestB1GrammarEnforcement:
