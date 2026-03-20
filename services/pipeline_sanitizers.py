@@ -604,7 +604,9 @@ def sanitize_all_sections(
 
         # FIX-I4: Strip redundant content blocks
         # FIX-B19: Skip vendor_audit — identical flag badges across vendor cards are intentional
-        if 'vendor_audit' not in key.lower():
+        # KIS-1013-B3: Skip BUSINESS_CASE_ENGINE_HTML — scenario cards have intentionally
+        # identical ROI divs when multiple scenarios are capped at 200%
+        if 'vendor_audit' not in key.lower() and key != 'BUSINESS_CASE_ENGINE_HTML':
             cleaned, i4_rem = strip_redundant_blocks(cleaned, key)
             if i4_rem > 0:
                 stats['redundant_blocks_stripped'] = stats.get('redundant_blocks_stripped', 0) + i4_rem
