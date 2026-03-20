@@ -19973,6 +19973,29 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     # =========================================================================
 
     # =========================================================================
+    # KIS-1013-B1: FINAL GRAMMAR PASS — after ALL post-processors
+    # The grammar fixer in apply_all_quality_enforcers runs at step 22.5,
+    # but sanitize_all_sections (FIX-528) and heal_report_html (FIX-A-G)
+    # run AFTER it and can re-introduce grammar errors (e.g. LLM rewrites
+    # "Wir haben" → "Ich haben" without adjusting conjugation).
+    # This pass catches any grammar errors introduced by later pipeline steps.
+    # =========================================================================
+    try:
+        from services.content_quality_enforcer import apply_grammar_fixer, cleanup_truncation_artifacts
+        # First fix known truncation artifacts (e.g. "Vorhabe ichtschaftlich")
+        for _g_key, _g_val in list(sections.items()):
+            if isinstance(_g_val, str) and len(_g_val) > 100:
+                _g_cleaned = cleanup_truncation_artifacts(_g_val)
+                if _g_cleaned != _g_val:
+                    sections[_g_key] = _g_cleaned
+                    log.info("[KIS-1013-B1] Truncation artifact fixed in %s", _g_key)
+        # Then apply grammar fixes
+        sections = apply_grammar_fixer(sections)
+        log.info(f"[{run_id}] [KIS-1013-B1] Final grammar pass applied after healer+sanitizer")
+    except Exception as e:
+        log.warning(f"[{run_id}] [KIS-1013-B1] Final grammar pass failed: {e}")
+
+    # =========================================================================
     # FIX-B40: Clean-Ending-Pass über ALLE Sections (direkt auf sections{})
     # B38a/B39 in report_healer.py operieren auf string_sections (Subset).
     # Der Validator prüft aber sections{} (Superset). 8 von 10 TRUNCATED-
