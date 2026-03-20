@@ -20417,6 +20417,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     # === v14.35.12: GLOBAL FINAL ENFORCER - Letzte Chance vor PDF! ===
     try:
         # re already imported at module level
+        from services.html_safe_regex import html_safe_sub as _html_safe_sub
         final_html = result["html"]
         
         # KRITISCHE REPLACEMENTS auf dem GESAMTEN HTML
@@ -20553,7 +20554,8 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         
         fixes_count = 0
         for pattern, replacement in global_replacements:
-            new_html = re.sub(pattern, replacement, final_html, flags=re.IGNORECASE if 'skalier' in pattern.lower() or 'pipeline' in pattern.lower() else 0)
+            _flags = re.IGNORECASE if 'skalier' in pattern.lower() or 'pipeline' in pattern.lower() else 0
+            new_html = _html_safe_sub(pattern, replacement, final_html, flags=_flags)
             if new_html != final_html:
                 fixes_count += 1
                 final_html = new_html
