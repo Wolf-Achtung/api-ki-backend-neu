@@ -140,6 +140,44 @@ def _check_year_data_freshness(html: str, section_key: str, report_year: int = 2
     return warnings
 
 
+# ── Pass 4: Plain-Language Safety Net (S31-FIX-B) ────────────────────
+# Catches common jargon that the LLM may still produce despite prompt instructions.
+# Only replaces in running text (<p>, <li>), not in table headers or headings.
+
+_PLAIN_LANGUAGE_RULES = [
+    # (pattern, replacement, flags)
+    (r'\bUse\s+Cases?\b', 'Anwendungsbeispiele', 0),
+    (r'\bUse\s+Case\b', 'Anwendungsbeispiel', 0),
+    (r'\bStakeholder[ns]?\b', 'Beteiligte', 0),
+    (r'\bBest\s+Practices?\b', 'bewährte Methoden', 0),
+    (r'\bBest\s+Practice\b', 'bewährte Methode', 0),
+    (r'\bOnboarding[s]?\b', 'Einarbeitung', re.IGNORECASE),
+    (r'\bEnd-to-End\b', 'durchgängig', re.IGNORECASE),
+    (r'\bOrchestrier\w+\b', 'Steuerung', 0),
+    (r'\borchestrier\w+\b', 'Steuerung', 0),
+]
+
+# HTML tag pattern to identify text segments (only replace in <p> and <li> content)
+_TEXT_TAG_RE = re.compile(r'(<(?:p|li)\b[^>]*>)(.*?)(</(?:p|li)>)', re.DOTALL | re.IGNORECASE)
+
+
+def _apply_plain_language(html: str, section_key: str) -> tuple:
+    """Replace jargon with plain German in running text only."""
+    fixes = []
+
+    def _replace_in_tag(m):
+        prefix, content, suffix = m.group(1), m.group(2), m.group(3)
+        new_content = content
+        for pattern, replacement, flags in _PLAIN_LANGUAGE_RULES:
+            new_content = re.sub(pattern, replacement, new_content, flags=flags)
+        if new_content != content:
+            fixes.append(f"{section_key}: plain-language substitution")
+        return prefix + new_content + suffix
+
+    new_html = _TEXT_TAG_RE.sub(_replace_in_tag, html)
+    return new_html, fixes
+
+
 # ── Hauptfunktion ────────────────────────────────────────────────────
 
 def sanitize_strategy_sections(
@@ -180,6 +218,13 @@ def sanitize_strategy_sections(
         # Pass 3: Jahres-Check
         yw = _check_year_data_freshness(html, key, report_year)
         all_warnings.extend(yw)
+
+        # Pass 4: Plain-Language Safety Net (S31-FIX-B)
+        html, plw = _apply_plain_language(html, key)
+        if plw:
+            sections[key] = html
+            patches_applied += len(plw)
+            all_warnings.extend(plw)
 
     report = {
         'warnings': all_warnings,
