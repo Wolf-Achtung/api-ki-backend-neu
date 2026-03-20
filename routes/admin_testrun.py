@@ -54,10 +54,14 @@ class ReplayRequest(BaseModel):
 
 # ---------- Endpoint ----------
 
+_REPLAY_DEDUP_WINDOW_MINUTES = 30
+
+
 @router.post("/replay/{briefing_id}")
 def replay_testrun(
     briefing_id: int,
     admin_key: str = Query(..., description="Admin API Key"),
+    force: bool = Query(False, description="Bypass duplicate guard"),
     body: Optional[ReplayRequest] = None,
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
@@ -67,6 +71,7 @@ def replay_testrun(
 
     - Path: briefing_id — source briefing whose answers are copied
     - Query: admin_key — STRATEGY_ADMIN_KEY
+    - Query: force — bypass duplicate replay guard (default: false)
     - Body (optional): email_override, answer_overrides, trigger_kpa, trigger_strategy
 
     answer_overrides merges into the copied answers, e.g.:
@@ -87,6 +92,47 @@ def replay_testrun(
             status_code=422,
             detail=f"Briefing {briefing_id} has no replayable answers",
         )
+
+    # 1b. Duplicate replay guard
+    if not force:
+        from datetime import datetime, timezone, timedelta
+        from sqlalchemy import and_
+
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=_REPLAY_DEDUP_WINDOW_MINUTES)
+        existing = (
+            db.query(Briefing)
+            .filter(
+                and_(
+                    Briefing.replayed_from == briefing_id,
+                    Briefing.created_at >= cutoff,
+                    Briefing.status != "error",
+                )
+            )
+            .order_by(Briefing.created_at.desc())
+            .first()
+        )
+        if existing:
+            age_minutes = int(
+                (datetime.now(timezone.utc) - existing.created_at).total_seconds() / 60
+            )
+            log.warning(
+                "[REPLAY] Duplicate blocked: source=%d, existing=%d, age=%dmin",
+                briefing_id, existing.id, age_minutes,
+            )
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "error": "duplicate_replay",
+                    "detail": (
+                        f"Replay von Briefing {briefing_id} wurde vor {age_minutes} Minuten "
+                        f"bereits ausgeführt (→ Briefing {existing.id}, Status: {existing.status})"
+                    ),
+                    "existing_briefing_id": existing.id,
+                    "created_at": existing.created_at.isoformat(),
+                },
+            )
+    else:
+        log.info("[REPLAY] Force-override: duplicate guard bypassed for source=%d", briefing_id)
 
     # 2. Build diagnostics of source answers
     source_answers = source.answers
@@ -140,6 +186,7 @@ def replay_testrun(
         answers=cleaned_answers,
         status="accepted",
         accepted_at=now,
+        replayed_from=briefing_id,
     )
     db.add(new_briefing)
     db.commit()
@@ -147,8 +194,8 @@ def replay_testrun(
 
     new_id = new_briefing.id
     log.info(
-        "🔄 Testrun replay: source=%d → new=%d, email=%s, overrides=%s, kpa=%s, strategy=%s",
-        briefing_id, new_id, new_email, overrides_applied, trigger_kpa, trigger_strategy,
+        "[REPLAY] Created briefing %d from source %d (force=%s), email=%s, overrides=%s, kpa=%s, strategy=%s",
+        new_id, briefing_id, force, new_email, overrides_applied, trigger_kpa, trigger_strategy,
     )
 
     # 6. Return immediately — worker picks up the new briefing
