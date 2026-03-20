@@ -82,6 +82,7 @@ class Briefing(Base):
     )
     error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     worker_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    replayed_from: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
 
     user = relationship("User", lazy="joined")
 
