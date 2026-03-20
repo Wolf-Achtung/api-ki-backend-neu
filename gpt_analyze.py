@@ -20557,7 +20557,57 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             if new_html != final_html:
                 fixes_count += 1
                 final_html = new_html
-        
+
+        # =================================================================
+        # KIS-1013-B1/B2/NEU-3: POST-SUBSTITUTION GRAMMAR REPAIR
+        # The Wir→Ich substitution above (lines ~20533-20534) converts
+        # "Wir haben" → "Ich haben", "können wir" → "können ich", etc.
+        # These verb-agreement errors must be fixed AFTER the pronoun swap.
+        # Uses str.replace() to avoid regex word-boundary issues with HTML
+        # tags and truncation artifacts like "</".
+        # =================================================================
+        _post_grammar = [
+            # B1: "Ich haben" → "Ich habe"
+            ('Ich haben', 'Ich habe'),
+            ('ich haben', 'ich habe'),
+            # NEU-3: "können ich" → "kann ich"
+            ('können ich', 'kann ich'),
+            ('Können ich', 'Kann ich'),
+            # Additional verb-agreement after Wir→Ich
+            ('werden ich', 'werde ich'),
+            ('Werden ich', 'Werde ich'),
+            ('haben ich', 'habe ich'),
+            ('Haben ich', 'Habe ich'),
+            ('sind ich', 'bin ich'),
+            ('Sind ich', 'Bin ich'),
+            ('müssen ich', 'muss ich'),
+            ('Müssen ich', 'Muss ich'),
+            ('wollen ich', 'will ich'),
+            ('Wollen ich', 'Will ich'),
+            ('sollen ich', 'soll ich'),
+            ('Sollen ich', 'Soll ich'),
+            ('dürfen ich', 'darf ich'),
+            ('Dürfen ich', 'Darf ich'),
+            ('berechnen ich', 'berechne ich'),
+            ('Berechnen ich', 'Berechne ich'),
+            ('bieten ich', 'biete ich'),
+            ('Bieten ich', 'Biete ich'),
+            ('zeigen ich', 'zeige ich'),
+            ('Zeigen ich', 'Zeige ich'),
+            ('empfehlen ich', 'empfehle ich'),
+            ('Empfehlen ich', 'Empfehle ich'),
+            ('analysieren ich', 'analysiere ich'),
+            ('Analysieren ich', 'Analysiere ich'),
+            # B2: Truncation artifact
+            ('Vorhabe ichtschaftlich', 'Vorhaben wirtschaftlich'),
+            ('vorhabe ichtschaftlich', 'vorhaben wirtschaftlich'),
+        ]
+        for _old, _new in _post_grammar:
+            if _old in final_html:
+                final_html = final_html.replace(_old, _new)
+                fixes_count += 1
+                log.info(f"[{run_id}] [KIS-1013-POST] Fixed '{_old}' → '{_new}'")
+
         result["html"] = final_html
         log.info(f"[{run_id}] ✅ [GLOBAL-FINAL-ENFORCER] Applied {fixes_count} final fixes on entire HTML")
     except Exception as e:
