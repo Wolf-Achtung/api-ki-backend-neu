@@ -228,9 +228,22 @@ async def generate_strategy_report(
         _hauptleistung = (briefing_data.get("hauptleistung", "") or "").strip()
 
         # S31-FIX-C: Extract R1 ROI values for ROI bridge explanation
-        _r1_roi_12m = _r1_sections.get("ROI_12M", "") or _r1_sections.get("ROI_12M_CAPPED", "")
-        _r1_capex = _r1_sections.get("BC_INVESTMENT_TOTAL", "") or _r1_sections.get("CAPEX", "")
-        _r1_payback = _r1_sections.get("PAYBACK_MONTHS", "")
+        # FIX-911: Format as clean integers/decimals (no "48000.0" or "-28.999999996")
+        _r1_roi_12m_raw = _r1_sections.get("ROI_12M", "") or _r1_sections.get("ROI_12M_CAPPED", "")
+        _r1_capex_raw = _r1_sections.get("BC_INVESTMENT_TOTAL", "") or _r1_sections.get("CAPEX", "")
+        _r1_payback_raw = _r1_sections.get("PAYBACK_MONTHS", "")
+        try:
+            _r1_roi_12m = f"{float(_r1_roi_12m_raw):.0f}" if _r1_roi_12m_raw else ""
+        except (ValueError, TypeError):
+            _r1_roi_12m = str(_r1_roi_12m_raw)
+        try:
+            _r1_capex = f"{int(float(_r1_capex_raw)):,}".replace(",", ".") if _r1_capex_raw else ""
+        except (ValueError, TypeError):
+            _r1_capex = str(_r1_capex_raw)
+        try:
+            _r1_payback = f"{float(_r1_payback_raw):.1f}".replace(".", ",") if _r1_payback_raw else ""
+        except (ValueError, TypeError):
+            _r1_payback = str(_r1_payback_raw)
 
         # S31-FIX-D: Extract vendor audit results for tool consistency
         _vendor_audit_red = str(_r1_sections.get("VENDOR_AUDIT_RED", 0) or 0)

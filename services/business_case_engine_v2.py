@@ -165,10 +165,17 @@ SIZE_NORMALIZATION = {
 
 
 def normalize_company_size(size: Optional[str]) -> str:
-    """Normalize company size to standard categories."""
+    """Normalize company size to standard categories.
+
+    Uses canonical company_size_normalizer for robust dash/range handling,
+    with inline fallback for legacy values.
+    Canonical form values: "1", "2–10", "11–100" (from formbuilder_de_SINGLE_FULL.js).
+    """
     if not size:
         return "team"  # Default
-    size_lower = str(size).lower().strip()
+    size_str = str(size).strip()
+    # Normalize dashes before lookup (en-dash → hyphen)
+    size_lower = size_str.lower().replace("\u2013", "-").replace("\u2014", "-").replace("\u2212", "-")
     return SIZE_NORMALIZATION.get(size_lower, "team")
 
 
