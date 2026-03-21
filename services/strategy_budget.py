@@ -170,13 +170,34 @@ _FOERDER_POTENTIAL = {
 
 
 def _get_segment(briefing_data: Dict[str, Any]) -> str:
-    """Determine segment from briefing data."""
-    size_raw = briefing_data.get("unternehmensgroesse", "") or ""
-    size_lower = str(size_raw).lower().strip()
+    """Determine segment from briefing data.
 
+    Uses the canonical company_size_normalizer for robust dash/range handling,
+    with inline fallback for legacy values.
+    """
+    size_raw = briefing_data.get("unternehmensgroesse", "") or ""
+    size_str = str(size_raw).strip()
+
+    # Primary path: use the canonical normalizer (handles all dash variants,
+    # numeric ranges like "6–10", and direct mappings like "2-10")
+    try:
+        from services.company_size_normalizer import normalize_company_size
+        result = normalize_company_size(size_str)
+        segment = result.get("segment", "")
+        if segment == "solo":
+            return "Solo"
+        elif segment == "team":
+            return "Team"
+        elif segment == "kmu":
+            return "KMU"
+    except Exception:
+        pass
+
+    # Fallback: inline matching for edge cases
+    size_lower = size_str.lower()
     if "solo" in size_lower or "freelancer" in size_lower or size_lower == "1":
         return "Solo"
-    elif "team" in size_lower or any(x in size_lower for x in ["2-10", "2\u201310", "klein"]):
+    elif "team" in size_lower or "klein" in size_lower:
         return "Team"
     else:
         return "KMU"
