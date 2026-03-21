@@ -186,9 +186,9 @@ TOOL_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
     # PLATIN+++ FIX 4.2: KMU-appropriate tools (not Enterprise-grade)
     "kmu": [
         {
-            "name": "KI-Assistenz-Plattform (Team)",
+            "name": "KI-Assistenz-Plattform (KMU)",
             "category": "KI-API",
-            "purpose": "Team-weite KI-Integration für 11-100 Mitarbeiter",
+            "purpose": "Unternehmensweite KI-Integration für 11-100 Mitarbeiter",
             "priority": 1,
             "estimated_setup_days": 5,
             "funding_eligible": True,
