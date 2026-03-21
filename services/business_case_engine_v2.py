@@ -1673,8 +1673,38 @@ def extract_baseline_from_sections(
     }
 
     if briefing:
-        # Extract from briefing
-        result["effort_hours"] = float(briefing.get("EINSPARUNG_STUNDEN_MONAT", DEFAULT_EFFORT_HOURS))
+        # Extract hours from multiple sources (priority order)
+        # FIX-911b: briefing may have qw_hours_total from calc_business_case
+        # but NOT EINSPARUNG_STUNDEN_MONAT (which is set in sections, not answers)
+        _hours_candidates = [
+            briefing.get("EINSPARUNG_STUNDEN_MONAT"),
+            briefing.get("qw_hours_total"),
+            briefing.get("monatsersparnis_stunden"),
+            briefing.get("TIME_SAVINGS_MONTH_HOURS_CAPPED"),
+        ]
+        effort_h = None
+        for _cand in _hours_candidates:
+            if _cand is not None:
+                try:
+                    _v = float(_cand)
+                    if _v > 0:
+                        effort_h = _v
+                        break
+                except (ValueError, TypeError):
+                    continue
+        # Also check sections if passed (they may have canonical hours)
+        if effort_h is None and sections:
+            for _sk in ("qw_hours_total", "EINSPARUNG_STUNDEN_MONAT", "CANON_HOURS_MONTH"):
+                _sv = sections.get(_sk)
+                if _sv is not None:
+                    try:
+                        _v = float(_sv)
+                        if _v > 0:
+                            effort_h = _v
+                            break
+                    except (ValueError, TypeError):
+                        continue
+        result["effort_hours"] = effort_h if effort_h is not None else DEFAULT_EFFORT_HOURS
         result["monthly_cost"] = float(briefing.get("EINSPARUNG_MONAT_EUR", 0.0))
 
         # Check for existing KPI values
