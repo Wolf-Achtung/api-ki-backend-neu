@@ -234,14 +234,15 @@ def get_size_constraints(
     annual_revenue = revenue_mapping.get(jahresumsatz_range, 100000)
     monthly_revenue = annual_revenue / 12
 
+    # Upper-bound of stated budget band (used as CAPEX ceiling, not CAPEX value)
     investment_mapping = {
-        "unter_2000": 1000,
-        "2000_10000": 5000,
-        "10000_50000": 25000,
-        "ueber_50000": 75000,   # FIX-B729-E1: Form sends "ueber_50000"
-        "unklar": 10000,        # FIX-B729-E1: Explicit "unklar" mapping
+        "unter_2000": 2000,
+        "2000_10000": 10000,
+        "10000_50000": 50000,
+        "ueber_50000": 100000,  # FIX-B729-E1: Form sends "ueber_50000"
+        "unklar": 15000,        # FIX-B729-E1: Explicit "unklar" mapping
         # Legacy compatibility:
-        "50000_250000": 125000,
+        "50000_250000": 250000,
         "ueber_250000": 500000,
     }
     max_investment = investment_mapping.get(investitionsbudget, 10000)
@@ -260,7 +261,7 @@ def get_size_constraints(
     constraints: Dict[str, Dict[str, float]] = {
         "solo": {
             "max_monthly_savings": min(monthly_revenue * 0.3, 2000),
-            "max_capex": min(max_investment, 10000),
+            "max_capex": min(max_investment, 25000),  # Raised from 10k to align with Strategy (Solo=24k)
             "max_opex_monthly": 200,
             "hourly_rate": solo_rate,
             "max_time_savings_hours": 20,
@@ -288,9 +289,18 @@ def get_size_constraints(
         },
     }
 
-    size = unternehmensgroesse.lower()
-    if size not in constraints:
-        size = "klein"
+    # Normalize incoming size to constraint keys: solo / klein / mittel / gross
+    # Canonical form values: "1", "2–10", "11–100" (from questionnaire)
+    # Also accepts normalized segment keys: "solo", "team", "kmu"
+    try:
+        from services.company_size_normalizer import get_segment
+        _seg = get_segment(unternehmensgroesse)
+        _seg_to_constraint = {"solo": "solo", "team": "klein", "kmu": "mittel"}
+        size = _seg_to_constraint.get(_seg, "klein")
+    except Exception:
+        size = unternehmensgroesse.lower()
+        if size not in constraints:
+            size = "klein"
     return constraints[size]
 
 
@@ -333,11 +343,16 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     constraints = get_size_constraints(groesse, rev, budget)
     stundensatz = float(constraints["hourly_rate"])
 
-    qw1 = int(os.getenv("DEFAULT_QW1_H", env.get("DEFAULT_QW1_H", 10)))
-    qw2 = int(os.getenv("DEFAULT_QW2_H", env.get("DEFAULT_QW2_H", 8)))
-    fallback = int(
-        os.getenv("FALLBACK_QW_MONTHLY_H", env.get("FALLBACK_QW_MONTHLY_H", 18))
-    )
+    # Normalize segment for segment-specific defaults
+    try:
+        from services.company_size_normalizer import get_segment
+        _segment = get_segment(groesse)
+    except Exception:
+        _segment = "team"
+
+    # Segment-specific hour defaults (when qw_hours_total not yet computed)
+    # Canonical values: Solo=15, Team=25, KMU=50
+    _HOURS_DEFAULTS = {"solo": 15, "team": 25, "kmu": 50}
 
     total_hours: Optional[float] = None
     for k in ("sum_quickwin_hours", "quick_wins_total_hours", "qw_hours_total"):
@@ -345,15 +360,16 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
             total_hours = float(answers[k])
             break
     if total_hours is None:
-        total_hours = float(qw1 + qw2 + fallback)
+        total_hours = float(_HOURS_DEFAULTS.get(_segment, 25))
 
     capped_hours = min(total_hours, float(constraints["max_time_savings_hours"]))
     if capped_hours < total_hours:
         log.info(
-            "[BUSINESS-CASE] Capped hours from %s to %s for size '%s'",
+            "[BUSINESS-CASE] Capped hours from %s to %s for size '%s' (segment=%s)",
             total_hours,
             capped_hours,
             groesse,
+            _segment,
         )
 
     einsparung_monat_eur = int(round(capped_hours * stundensatz))
@@ -361,21 +377,29 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
         einsparung_monat_eur, int(constraints["max_monthly_savings"])
     )
 
+    # Segment-specific CAPEX multipliers applied to budget-band base
+    # Validated targets: Solo=24k, Team=12k, KMU=48k (for 10k-50k budget band)
+    _CAPEX_MULTIPLIERS = {"solo": 2.0, "team": 1.0, "kmu": 4.0}
+
     band = budget
     if "unter_2000" in band:
-        capex = 1500
+        capex_base = 1500
     elif "2000_10000" in band or "2000-10000" in band:
-        capex = 6000
+        capex_base = 6000
     elif "ueber_50000" in band or "ueber_250000" in band:
-        capex = 20000  # FIX-B729-E2: Higher budget → higher initial investment
+        capex_base = 20000  # FIX-B729-E2: Higher budget → higher initial investment
     elif "10000" in band:
-        capex = 12000
+        capex_base = 12000
     else:
-        capex = 4000
+        capex_base = 4000
 
+    capex_mult = _CAPEX_MULTIPLIERS.get(_segment, 1.0)
+    capex = int(capex_base * capex_mult)
     capex = min(capex, int(constraints["max_capex"]))
 
-    opex = 180 if "solo" in groesse else 350
+    # Segment-specific OPEX defaults
+    _OPEX_DEFAULTS = {"solo": 180, "team": 350, "kmu": 600}
+    opex = _OPEX_DEFAULTS.get(_segment, 350)
     if "unter_100k" in rev:
         opex = max(120, opex - 60)
     opex = min(opex, int(constraints["max_opex_monthly"]))

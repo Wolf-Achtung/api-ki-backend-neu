@@ -618,8 +618,14 @@ def render(briefing_obj: Any,
 
     # Ensure qw_hours_total has a fallback value if not set
     if not sections.get('qw_hours_total'):
-        # Fallback: 10 + 8 + 18 = 36 hours (DEFAULT_QW1_H + DEFAULT_QW2_H + FALLBACK_QW_MONTHLY_H)
-        sections['qw_hours_total'] = 36
+        # Segment-specific fallback hours (Solo=15, Team=25, KMU=50)
+        try:
+            from services.company_size_normalizer import get_segment
+            _seg = get_segment(str(sections.get('company_size', sections.get('unternehmensgroesse', 'team'))))
+            _hours_defaults = {"solo": 15, "team": 25, "kmu": 50}
+            sections['qw_hours_total'] = _hours_defaults.get(_seg, 25)
+        except Exception:
+            sections['qw_hours_total'] = 25
 
     # FINAL GO FIX: Server-side hygiene for placeholder strings
     # Clean up placeholder artifacts before template rendering - ALL string values, not just _HTML
