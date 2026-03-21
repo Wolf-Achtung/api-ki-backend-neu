@@ -90,7 +90,7 @@ SCENARIO_NAMES = ["optimistic", "realistic", "conservative"]
 # Default values
 DEFAULT_INVESTMENT = 5000.0
 DEFAULT_MONTHLY_SAVINGS = 500.0
-DEFAULT_EFFORT_HOURS = 36.0  # FIX-R4-3: was 40.0, aligned with canonical default
+DEFAULT_EFFORT_HOURS = 25.0  # Neutral fallback; segment-specific defaults in create_canonical_from_sections
 
 # Constraints
 MIN_ROI = -100.0  # -100% = total loss
