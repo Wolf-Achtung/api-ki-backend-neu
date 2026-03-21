@@ -178,8 +178,9 @@ def _get_segment(briefing_data: Dict[str, Any]) -> str:
     size_raw = briefing_data.get("unternehmensgroesse", "") or ""
     size_str = str(size_raw).strip()
 
-    # Primary path: use the canonical normalizer (handles all dash variants,
-    # numeric ranges like "6–10", and direct mappings like "2-10")
+    # Primary path: use the canonical normalizer.
+    # Canonical form values: "1", "2–10", "11–100" (from formbuilder_de_SINGLE_FULL.js).
+    # The normalizer also handles arbitrary numeric ranges defensively (e.g. "6–10").
     try:
         from services.company_size_normalizer import normalize_company_size
         result = normalize_company_size(size_str)
