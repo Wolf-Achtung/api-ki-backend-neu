@@ -97,7 +97,16 @@ def _normalize_company_size(answers: Dict[str, Any]) -> str:
 
     size = str(size_raw).lower().strip()
 
-    # Map common values to our categories
+    # Primary: use canonical normalizer for robust range/dash handling
+    try:
+        from services.company_size_normalizer import get_segment
+        segment = get_segment(size)
+        if segment in ("solo", "team", "kmu"):
+            return segment
+    except Exception:
+        pass
+
+    # Fallback: exact match for common values
     if size in ("solo", "solo-selbständig", "freelancer", "einzelunternehmer"):
         return "solo"
     elif size in ("team", "klein", "small", "2-10", "kleines team"):

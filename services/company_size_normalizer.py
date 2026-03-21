@@ -122,7 +122,9 @@ def normalize_company_size(value: str) -> Dict[str, Any]:
             "normalized": normalized,
         }
 
-    # 2) Try to parse numeric range
+    # 2) Try to parse numeric range.
+    # Canonical values are "2-10" and "11-100" (from formbuilder_de_SINGLE_FULL.js).
+    # Defensive: also handles non-canonical ranges like "6-10" via max_val bucketing.
     range_match = re.match(r'^(\d+)\s*-\s*(\d+)$', normalized)
     if range_match:
         min_val = int(range_match.group(1))

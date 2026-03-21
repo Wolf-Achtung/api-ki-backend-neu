@@ -421,12 +421,16 @@ def generate_short_labels(briefing_data: Dict[str, Any], lang: str = "de") -> Di
     if not company_size:
         # Try to infer from unternehmensgroesse
         ug = briefing_data.get("unternehmensgroesse", "").lower()
-        if "solo" in ug or "1 " in ug or "freiberuf" in ug:
-            company_size = "solo"
-        elif "2-10" in ug or "klein" in ug or "team" in ug:
-            company_size = "team"
-        else:
-            company_size = "kmu"
+        try:
+            from services.company_size_normalizer import get_segment
+            company_size = get_segment(ug)
+        except Exception:
+            if "solo" in ug or "1 " in ug or "freiberuf" in ug:
+                company_size = "solo"
+            elif "2-10" in ug or "klein" in ug or "team" in ug:
+                company_size = "team"
+            else:
+                company_size = "kmu"
 
     # Select language-specific mappings
     if lang == "en":
