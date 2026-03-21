@@ -16416,8 +16416,8 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             'data_readiness',
         ]
 
-        # Get qw_hours_total from sections or calculate fallback
-        qw_hours = sections.get('qw_hours_total', 36)
+        # Get qw_hours_total from sections (segment-specific fallback set upstream)
+        qw_hours = sections.get('qw_hours_total', 25)
 
         replacements = {
             # Single-brace patterns (GPT sometimes generates these)
@@ -21362,7 +21362,7 @@ def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], sections: Di
         "OPEX_REALISTISCH_EUR_HIGH": str(int(sections.get("OPEX_REALISTISCH_EUR_HIGH", 0) or 0)),
         "PAYBACK_MONTHS_PESSIMISTIC": format_payback_de(sections.get("PAYBACK_MONTHS_PESSIMISTIC", 0)),  # German decimal
         "PAYBACK_MONTHS_OPTIMISTIC": format_payback_de(sections.get("PAYBACK_MONTHS_OPTIMISTIC", 0)),  # German decimal
-        "qw_hours_total": str(sections.get("qw_hours_total", 36)),
+        "qw_hours_total": str(sections.get("qw_hours_total", 25)),
     }
 
     fixed = html_block
