@@ -15083,12 +15083,18 @@ def analyze_briefing(
         answers["PAYBACK_MONTHS"] = bc.get("PAYBACK_MONTHS", 0)
         answers["ROI_12M"] = bc.get("ROI_12M", 0)
         answers["BUSINESS_CASE_TABLE_HTML"] = bc.get("BUSINESS_CASE_TABLE_HTML", "")
-        log.info("[%s] 💰 Business Case pre-calculated: CAPEX=%s, OPEX=%s, Payback=%sm, ROI=%s%%",
+        # Propagate segment-specific hours so downstream content generation
+        # and canonical BC use the correct segment value (not flat 36h fallback)
+        if bc.get("qw_hours_total"):
+            answers["qw_hours_total"] = bc["qw_hours_total"]
+            answers["monatsersparnis_stunden"] = bc.get("monatsersparnis_stunden", bc["qw_hours_total"])
+        log.info("[%s] 💰 Business Case pre-calculated: CAPEX=%s, OPEX=%s, Payback=%sm, ROI=%s%%, Hours=%s",
                  run_id,
                  bc.get("CAPEX_REALISTISCH_EUR", "N/A"),
                  bc.get("OPEX_REALISTISCH_EUR", "N/A"),
                  bc.get("PAYBACK_MONTHS", "N/A"),
-                 bc.get("ROI_12M", "N/A"))
+                 bc.get("ROI_12M", "N/A"),
+                 bc.get("qw_hours_total", "N/A"))
 
     log.info("[%s] 🎨 Generating content sections with %s...", run_id, "PROMPT SYSTEM" if USE_PROMPT_SYSTEM else "legacy prompts")
     sections = _generate_content_sections(briefing=answers, scores=scores)
@@ -17572,6 +17578,27 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         persona = "kmu"
     else:
         persona = "team"
+
+    # ==========================================================================
+    # FIX-911: Inject segment-specific BC hours into sections before canonical
+    # ==========================================================================
+    # Problem: Quick Wins HTML parsing yields stale flat hours (~36h) because
+    # the LLM was prompted before segment-specific values were available.
+    # calc_business_case() computed the correct segment hours (Solo=15, Team=25,
+    # KMU=50) but they were not propagated into sections.
+    # Fix: If calc_business_case produced hours, inject them as authoritative.
+    # ==========================================================================
+    _bc_hours = answers.get("qw_hours_total")
+    if _bc_hours is not None and float(_bc_hours) > 0:
+        _bc_h = float(_bc_hours)
+        _old_h = sections.get("qw_hours_total")
+        if _old_h is not None and abs(float(_old_h) - _bc_h) > 0.5:
+            log.info("[FIX-911] Overriding stale qw_hours_total=%.0f with BC segment value=%.0f",
+                     float(_old_h), _bc_h)
+        sections["qw_hours_total"] = _bc_h
+        sections["monatsersparnis_stunden"] = _bc_h
+        sections["EINSPARUNG_STUNDEN_MONAT"] = _bc_h
+        sections["TIME_SAVINGS_MONTH_HOURS_CAPPED"] = _bc_h
 
     # ==========================================================================
     # v14.35.22: CANONICAL BUSINESS CASE - Single Source of Truth
