@@ -3019,6 +3019,38 @@ def _limit_hauptleistung_repetitions(sections: dict, hauptleistung: str, max_ful
     return sections
 
 
+def _fix_segment_labels(sections: dict, company_size: str) -> dict:
+    """FIX-911: Remove mismatched segment qualifiers like '(Team)' in KMU reports.
+
+    The LLM sometimes generates text like '36 Stunden/Monat (Team)' or
+    'KI-Assistenz-Plattform (Team)' even in KMU reports because of stale
+    prompt context. This strips wrong-segment qualifiers from HTML sections.
+    """
+    import re as _re
+    # Map segment to its correct label and the labels that are WRONG for it
+    _wrong_labels = {
+        "solo": [r"\(Team\)", r"\(KMU\)"],
+        "team": [r"\(Solo\)", r"\(KMU\)"],
+        "kmu":  [r"\(Solo\)", r"\(Team\)"],
+    }
+    wrong = _wrong_labels.get(company_size)
+    if not wrong:
+        return sections
+
+    pattern = _re.compile(r"\s*(?:" + "|".join(wrong) + r")", _re.IGNORECASE)
+    count = 0
+    for key, val in sections.items():
+        if not isinstance(val, str) or not val or key.startswith("_"):
+            continue
+        new_val = pattern.sub("", val)
+        if new_val != val:
+            sections[key] = new_val
+            count += 1
+    if count > 0:
+        log.info("[FIX-911] Removed %d mismatched segment labels for company_size=%s", count, company_size)
+    return sections
+
+
 def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesland: str = "", company_size: str = "") -> dict:
 
     """
@@ -3114,6 +3146,10 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 14.5 FIX-525: Risks Solo Padding - Ensure minimum 500 words for solo persona
     if company_size:
         sections = apply_risks_solo_padding(sections, company_size)
+
+    # 14.7 FIX-911: Segment label fixer - remove mismatched "(Team)" / "(Solo)" / "(KMU)" labels
+    if company_size:
+        sections = _fix_segment_labels(sections, company_size)
 
     # 15. Chat Artefact Filter (Fix-Batch J4) - Remove "Schreib mir", "Frag mich" etc.
     sections = apply_chat_artefact_filter(sections)
