@@ -8210,8 +8210,8 @@ def _generate_funding_compact(
             <span class="funding-stat__label">Max. Fördersumme</span>
           </div>
           <div class="funding-stat">
-            <span class="funding-stat__value">Auch ohne</span>
-            <span class="funding-stat__label">Business Case tragfähig</span>
+            <span class="funding-stat__value">Förderung</span>
+            <span class="funding-stat__label">verbessert Business Case</span>
           </div>
         </div>
       </div>
@@ -9571,9 +9571,8 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     indem sie einen Teil der Investitionsbelastung abfedern. {budget_hinweis}. Die Kombination aus nachvollziehbarem
     Business Case und klarem Digitalisierungsfokus macht Ihr Vorhaben zu einem starken Kandidaten für öffentliche Förderung.
     Die Investition von {capex_fmt}&nbsp;€ amortisiert sich bei einer monatlichen Einsparung von {einsparung_fmt}&nbsp;€ nach etwa
-    {payback} Monaten. Der ROI von {roi_12m}&nbsp;% zeigt, dass sich das Projekt auch ohne externe Unterstützung wirtschaftlich
-    rechnet – mit Förderung wird die Rentabilität noch deutlich attraktiver. Fördergeber bewerten positiv, wenn Unternehmen
-    einen substanziellen Eigenanteil einbringen und das Projekt auch ohne Förderung wirtschaftlich tragfähig erscheint.
+    {payback} Monaten. {"Der ROI von " + roi_12m + "&nbsp;% zeigt, dass sich das Projekt auch ohne externe Unterstützung wirtschaftlich rechnet – mit Förderung wird die Rentabilität noch deutlich attraktiver." if roi_capped_val > 0 else "Mit Fördermitteln kann die Rentabilität deutlich verbessert und die Amortisationszeit verkürzt werden."} Fördergeber bewerten positiv, wenn Unternehmen
+    einen substanziellen Eigenanteil einbringen und einen klaren Digitalisierungsnutzen nachweisen können.
   </p>
 
   <h3>2. Wie Fördermittel den Business Case verbessern können</h3>
