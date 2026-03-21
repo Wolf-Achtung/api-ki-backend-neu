@@ -158,3 +158,119 @@ class TestBudgetBandEdgeCases:
              "investitionsbudget": "10000_50000", "qw_hours_total": 42}, {}
         )
         assert r["qw_hours_total"] == 42, "Explicit qw_hours_total should be used"
+
+
+# =============================================================================
+# Hours Pipeline: End-to-end canonical consistency (Briefing 911)
+# =============================================================================
+
+class TestHoursPipelineConsistency:
+    """Test that hours are consistent through calc_business_case → canonical."""
+
+    @pytest.mark.parametrize("size,expected_hours,expected_rate", [
+        ("1", 15, 80),
+        ("2–10", 25, 95),
+        ("11–100", 50, 110),
+    ])
+    def test_canonical_hours_match_calculator(self, size, expected_hours, expected_rate):
+        """Canonical BC must use the SAME hours as calc_business_case."""
+        from services.business_case_engine_v2 import (
+            create_canonical_from_sections, inject_canonical_to_sections
+        )
+        bc = calc_business_case(
+            {"unternehmensgroesse": size, "jahresumsatz": "100k_500k",
+             "investitionsbudget": "10000_50000"}, {}
+        )
+        # Simulate FIX-911: inject BC hours into sections before canonical
+        sections = dict(bc)
+        sections["company_size"] = size
+        canon = create_canonical_from_sections(sections, company_size=size)
+        assert canon is not None
+        assert canon.hours_saved_per_month == expected_hours, (
+            f"Canonical hours for {size} should be {expected_hours}, got {canon.hours_saved_per_month}"
+        )
+        assert canon.hourly_rate_eur == expected_rate, (
+            f"Canonical rate for {size} should be {expected_rate}, got {canon.hourly_rate_eur}"
+        )
+
+    def test_stale_36h_overridden_by_bc_hours(self):
+        """FIX-911: Stale 36h from Quick Wins parsing must be overridden."""
+        from services.business_case_engine_v2 import create_canonical_from_sections
+        bc = calc_business_case(
+            {"unternehmensgroesse": "11–100", "jahresumsatz": "100k_500k",
+             "investitionsbudget": "10000_50000"}, {}
+        )
+        # Simulate stale sections with 36h, then apply FIX-911 override
+        sections = {"qw_hours_total": 36, "CAPEX_REALISTISCH_EUR": 48000}
+        sections["qw_hours_total"] = bc["qw_hours_total"]  # FIX-911
+        canon = create_canonical_from_sections(sections, company_size="11–100")
+        assert canon.hours_saved_per_month == 50, (
+            f"KMU hours should be 50 after override, got {canon.hours_saved_per_month}"
+        )
+
+    def test_kmu_roi_positive_with_correct_hours(self):
+        """With correct 50h KMU hours, ROI should be positive (not -16% or -46%)."""
+        from services.business_case_engine_v2 import create_canonical_from_sections
+        bc = calc_business_case(
+            {"unternehmensgroesse": "11–100", "jahresumsatz": "100k_500k",
+             "investitionsbudget": "10000_50000"}, {}
+        )
+        sections = dict(bc)
+        canon = create_canonical_from_sections(sections, company_size="11–100")
+        assert canon.roi_12m_net > 0, (
+            f"KMU ROI should be positive with 50h×110€, got {canon.roi_12m_net:.1f}%"
+        )
+
+
+# =============================================================================
+# normalize_company_size in business_case_engine_v2 (en-dash handling)
+# =============================================================================
+
+class TestBCEngineNormalizeCompanySize:
+    """Test that BC engine handles en-dash in company size values."""
+
+    def test_en_dash_kmu(self):
+        from services.business_case_engine_v2 import normalize_company_size
+        assert normalize_company_size("11–100") == "kmu"
+
+    def test_en_dash_team(self):
+        from services.business_case_engine_v2 import normalize_company_size
+        assert normalize_company_size("2–10") == "team"
+
+    def test_regular_dash_kmu(self):
+        from services.business_case_engine_v2 import normalize_company_size
+        assert normalize_company_size("11-100") == "kmu"
+
+    def test_unknown_defaults_to_team(self):
+        from services.business_case_engine_v2 import normalize_company_size
+        assert normalize_company_size("unknown") == "team"
+
+    def test_enterprise_preserved(self):
+        from services.business_case_engine_v2 import normalize_company_size
+        assert normalize_company_size("enterprise") == "enterprise"
+
+
+# =============================================================================
+# Segment label fixer (content_quality_enforcer)
+# =============================================================================
+
+class TestSegmentLabelFixer:
+    """Test that mismatched segment labels are removed."""
+
+    def test_team_label_removed_from_kmu(self):
+        from services.content_quality_enforcer import _fix_segment_labels
+        sections = {"HTML": "36 Stunden/Monat (Team) Einsparung"}
+        result = _fix_segment_labels(sections, "kmu")
+        assert "(Team)" not in result["HTML"]
+
+    def test_correct_label_preserved(self):
+        from services.content_quality_enforcer import _fix_segment_labels
+        sections = {"HTML": "Content (KMU) relevant"}
+        result = _fix_segment_labels(sections, "kmu")
+        assert "(KMU)" in result["HTML"]
+
+    def test_solo_label_removed_from_team(self):
+        from services.content_quality_enforcer import _fix_segment_labels
+        sections = {"HTML": "Plattform (Solo)"}
+        result = _fix_segment_labels(sections, "team")
+        assert "(Solo)" not in result["HTML"]
