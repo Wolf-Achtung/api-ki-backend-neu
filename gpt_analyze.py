@@ -14652,12 +14652,16 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
         bundesland_value = briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", "")
         # Derive company_size for solo-language normalizer
         size_raw_qe = (briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or "").lower()
-        if "solo" in size_raw_qe or "freiberuf" in size_raw_qe or size_raw_qe in ("1", "einzelunternehmer"):
-            company_size_qe = "solo"
-        elif any(x in size_raw_qe for x in ("2-10", "2 bis 10", "team", "klein")):
-            company_size_qe = "team"
-        else:
-            company_size_qe = "kmu"
+        try:
+            from services.company_size_normalizer import get_segment
+            company_size_qe = get_segment(size_raw_qe)
+        except Exception:
+            if "solo" in size_raw_qe or "freiberuf" in size_raw_qe or size_raw_qe in ("1", "einzelunternehmer"):
+                company_size_qe = "solo"
+            elif any(x in size_raw_qe for x in ("2-10", "2 bis 10", "team", "klein")):
+                company_size_qe = "team"
+            else:
+                company_size_qe = "kmu"
         sections = apply_all_quality_enforcers(sections, hauptleistung_value, bundesland_value, company_size_qe)
         log.info(f"[QUALITY-ENFORCER] Applied all quality fixes for hauptleistung={hauptleistung_value[:30] if hauptleistung_value else 'N/A'}, company_size={company_size_qe}")
 
@@ -14832,12 +14836,16 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
         bundesland_final = briefing.get("BUNDESLAND_LABEL") or briefing.get("bundesland", "")
         # Derive company_size for solo-language normalizer (repeat for robustness)
         size_raw_final = (briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or "").lower()
-        if "solo" in size_raw_final or "freiberuf" in size_raw_final or size_raw_final in ("1", "einzelunternehmer"):
-            company_size_final = "solo"
-        elif any(x in size_raw_final for x in ("2-10", "2 bis 10", "team", "klein")):
-            company_size_final = "team"
-        else:
-            company_size_final = "kmu"
+        try:
+            from services.company_size_normalizer import get_segment
+            company_size_final = get_segment(size_raw_final)
+        except Exception:
+            if "solo" in size_raw_final or "freiberuf" in size_raw_final or size_raw_final in ("1", "einzelunternehmer"):
+                company_size_final = "solo"
+            elif any(x in size_raw_final for x in ("2-10", "2 bis 10", "team", "klein")):
+                company_size_final = "team"
+            else:
+                company_size_final = "kmu"
         sections = apply_all_quality_enforcers(sections, hauptleistung_final, bundesland_final, company_size_final)
         log.info(f"[QUALITY-ENFORCER-FINAL] Applied FINAL quality fixes, company_size={company_size_final}")
     except Exception as e:
@@ -18539,12 +18547,16 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         bundesland_render = answers.get("BUNDESLAND_LABEL") or answers.get("bundesland", "")
         # Derive company_size for solo-language normalizer
         size_raw_render = (answers.get("UNTERNEHMENSGROESSE_LABEL") or answers.get("unternehmensgroesse") or "").lower()
-        if "solo" in size_raw_render or "freiberuf" in size_raw_render or size_raw_render in ("1", "einzelunternehmer"):
-            company_size_render = "solo"
-        elif any(x in size_raw_render for x in ("2-10", "2 bis 10", "team", "klein")):
-            company_size_render = "team"
-        else:
-            company_size_render = "kmu"
+        try:
+            from services.company_size_normalizer import get_segment
+            company_size_render = get_segment(size_raw_render)
+        except Exception:
+            if "solo" in size_raw_render or "freiberuf" in size_raw_render or size_raw_render in ("1", "einzelunternehmer"):
+                company_size_render = "solo"
+            elif any(x in size_raw_render for x in ("2-10", "2 bis 10", "team", "klein")):
+                company_size_render = "team"
+            else:
+                company_size_render = "kmu"
         sections = apply_all_quality_enforcers(sections, hauptleistung_render, bundesland_render, company_size_render)
         log.info(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Applied FINAL quality fixes before render, company_size={company_size_render}")
     except Exception as e:
