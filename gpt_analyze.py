@@ -1873,7 +1873,7 @@ def _safe_lower(value: Any) -> str:
         return ""
     if isinstance(value, list):
         # Join list elements into a single string
-        return " ".join(str(v).lower() for v in value if v)
+        return ", ".join(str(v).lower() for v in value if v)
     if isinstance(value, str):
         return value.lower()
     return str(value).lower()
