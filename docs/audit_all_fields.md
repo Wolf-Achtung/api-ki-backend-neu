@@ -121,9 +121,9 @@
 | 52 | `s2_zeitrahmen` | radio | ✅ (L276) | Ja | **E** |
 | 53 | `s3_prioritaeten` | checkbox | ✅ (L277, join(",")) | Ja | **E** |
 | 54 | `s4_engpass` | radio | ✅ (L278) | Ja | **E** |
-| 55 | `s5_tools` | checkbox | ❌ (nicht in Pipeline!) | ❌ | **D** |
-| 56 | `s5_tools_other` | text | ❌ | ❌ | **D** |
-| 57 | `s5_vision` | textarea | ❌ | ❌ | **D** |
+| 55 | `s5_tools` | — | ⚠️ **Existiert nirgends im Codebase!** Phantom-Key | ❌ | **D** |
+| 56 | `s5_tools_other` | — | ⚠️ **Existiert nirgends im Codebase!** Phantom-Key | ❌ | **D** |
+| 57 | `s5_vision` | — | ⚠️ **Existiert nirgends im Codebase!** Phantom-Key | ❌ | **D** |
 | 58 | `s5_software` | — | ✅ (L279) | Ja | **E** |
 | 59 | `s6_foerderinteresse` | radio | ✅ (L280) | Ja | **E** |
 | 60 | `s7_entscheidung` | radio | ✅ (L281) | Ja | **E** |
@@ -140,7 +140,7 @@
 | **A — Kernfeld** | 37 | branche, unternehmensgroesse, bundesland, hauptleistung, digitalisierungsgrad, **prozesse_papierlos**, **automatisierungsgrad**, ki_einsatz, ki_kompetenz, ki_ziele, ki_projekte, anwendungsfaelle, zeitersparnis_prioritaet, pilot_bereich, vision_3_jahre, strategische_ziele, massnahmen_komplexitaet, roadmap_vorhanden, governance_richtlinien, change_management, zeitbudget, trainings_interessen, vision_prioritaet, datenschutzbeauftragter, technische_massnahmen, folgenabschaetzung, meldewege, **loeschregeln**, ai_act_kenntnis, bisherige_foerdermittel, erfahrung_beratung, investitionsbudget, innovationsprozess, risikofreude, datenschutz, **it_infrastruktur** |
 | **B — Prompt-only** | 7 | country, zielgruppen, jahresumsatz, interne_ki_kompetenzen, datenquellen, geschaeftsmodell_evolution, vorhandene_tools, regulierte_branche, ki_hemmnisse, ki_guardrails |
 | **C — Display-only** | 3 | interesse_foerderung, marktposition, benchmark_wettbewerb |
-| **D — Unused** | 5 | **selbststaendig**, **s5_tools**, **s5_tools_other**, **s5_vision**, (**country** teilweise) |
+| **D — Unused** | 5 | **selbststaendig** (Frontend-Feld, Backend ignoriert), **s5_tools** / **s5_tools_other** / **s5_vision** (Phantom-Keys — existieren nirgends im Codebase, realer Key ist `s5_software`) |
 | **E — Strategy-only** | 9 | s1_budget, s2_zeitrahmen, s3_prioritaeten, s4_engpass, s5_software, s6_foerderinteresse, s7_entscheidung, s8_erfahrung, s9_ansatz, s10_datenschutz |
 
 ---
@@ -220,7 +220,11 @@ Felder die im Scoring benutzt werden, aber NICHT im Coverage-Guard (`EXPECTED_FI
 
 `gpt_analyze.py:9159` injiziert `MASSNAHMEN_KOMPLEXITAET` in die Prompt-Variablen, aber **kein einziges Prompt-Template** referenziert `{MASSNAHMEN_KOMPLEXITAET}`. Der Wert wird nur in der Profile-Box angezeigt und als Pass-Through in der Scoring-Map geführt.
 
-### 8. Strategy-Felder: `s5_tools` vs. `s5_software` Diskrepanz
+### 8. Skalen-Mismatch: `risikofreude`
+
+Frontend-Slider definiert Bereich **1–5**, aber Test-Gold-Profile verwenden Werte wie "80", "70", "60" (0–100 Skala). `gpt_analyze.py:1759` hat Default "3" (passend zu 1–5), aber die Testdaten sind inkonsistent.
+
+### 9. Strategy-Felder: `s5_tools` vs. `s5_software` Diskrepanz
 
 Das Frontend-Formular (strategy.html) definiert `s5_tools`, aber die `strategy_pipeline.py` liest `s5_software` (L279). Die Felder `s5_tools`, `s5_tools_other` und `s5_vision` werden im Strategy-Submit gesendet, aber nie verarbeitet.
 
@@ -301,7 +305,7 @@ Frontend (formbuilder)
 | Typ C (Display-only) | **3** |
 | Typ D (Unused) — ⚠️ | **5** (`selbststaendig`, `s5_tools`, `s5_tools_other`, `s5_vision`, `country` teilweise) |
 | Typ E (Strategy-only) | **9** |
-| Anomalien gefunden | **8** |
+| Anomalien gefunden | **9** |
 | Kritische Risiken | **2** (VISION_PRIORITAET Namenskollision, s5_tools/s5_software Diskrepanz) |
 
 ### Handlungsempfehlung (nach Priorität)
