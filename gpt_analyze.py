@@ -1469,6 +1469,9 @@ def build_extra_sections(answers: dict, scores: dict) -> dict:
         if callable(get_score_context):
             overall_score = scores.get("overall", 0)
             size = answers.get("unternehmensgroesse", "klein")
+            # TODO: selbststaendig (Frontend: Unternehmensform bei Solo) wird aktuell nicht ausgewertet.
+            # Relevant für Solo-spezifische Empfehlungen (Freiberufler vs GmbH vs Einzelunternehmer).
+            # Blocked by: Solo-Segment-Produktentscheidung (negativer ROI bei Solo-CAPEX).
             # Extract language from answers for bilingual support
             lang = answers.get("lang") or answers.get("LANG") or answers.get("sprache") or "de"
             score_context = get_score_context(overall_score, size, lang=lang)
