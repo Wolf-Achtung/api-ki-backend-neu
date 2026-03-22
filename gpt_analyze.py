@@ -18184,6 +18184,9 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 (r'(ROI\s*\(?12\s*M(?:onate?)?\)?\s*:?\s*)\d+\s*%', rf'\g<1>{_s13c_roi} %'),
                 (r'(ROI nach 12 Monaten\s*:?\s*)\d+\s*%', rf'\g<1>{_s13c_roi} %'),
                 (r'(ROI\s*:?\s*)\d+\s*%(\s*(?:nach|in)\s*12)', rf'\g<1>{_s13c_roi} %\2'),
+                # KIS-1034-D4: Fix hallucinated "nach 24/18/36 Monaten" → "nach 12 Monaten"
+                (r'(ROI[- ]?Rate\s*:?\s*\d+\s*%\s*\(?)nach\s+(?:24|18|36)\s+(Monat(?:en?)?)',
+                 r'\g<1>nach 12 \2'),
             ]
 
             # Zeitersparnis patterns
