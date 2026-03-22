@@ -9080,7 +9080,9 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
 
     base_vars.update({
         # Original fields
-        "VISION_PRIORITAET": vision_3_jahre,
+        # VISION_PRIORITAET = select field "Wichtigster strategischer Hebel" (vision_prioritaet)
+        # NOT vision_3_jahre (freetext) — that's in VISION_3_JAHRE below.
+        "VISION_PRIORITAET": briefing.get("vision_prioritaet", ""),
         "PROJEKTZIEL": ", ".join(briefing.get("ki_ziele", [])) if briefing.get("ki_ziele") else strategische_ziele,
         "KI_KNOWHOW": briefing.get("ki_kompetenz", ""),
         "KI_HEMMNISSE": ", ".join(hemmnisse_raw) if isinstance(hemmnisse_raw, list) else hemmnisse_raw,
