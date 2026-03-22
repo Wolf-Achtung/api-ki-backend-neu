@@ -42,8 +42,8 @@
 | # | Field Key | FE-Typ | Scoring | Prompt-Var | Profile-Box | Coverage-Guard | Typ |
 |---|-----------|--------|---------|------------|-------------|----------------|-----|
 | 12 | `digitalisierungsgrad` | slider | ✅ (L1753: Digi-Score Bonus) | `{DIGITALISIERUNGSGRAD}` (L9153) | ✅ | ❌ | **A** |
-| 13 | `prozesse_papierlos` | select | ❌ | `{PROZESSE_PAPIERLOS_LABEL}` (L9141,9375) | ✅ | ❌ | **B** |
-| 14 | `automatisierungsgrad` | select | ❌ | `{AUTOMATISIERUNGSGRAD_LABEL}` (L9371) | ✅ | ❌ | **B** |
+| 13 | `prozesse_papierlos` | select | ✅ (evaluators/efficiency.py: digital 25%) | `{PROZESSE_PAPIERLOS_LABEL}` (L9141,9375) | ✅ | ❌ | **A** |
+| 14 | `automatisierungsgrad` | select | ✅ (evaluators/efficiency.py: auto_potential 30%) | `{AUTOMATISIERUNGSGRAD_LABEL}` (L9371) | ✅ | ❌ | **A** |
 | 15 | `ki_einsatz` | checkbox | ✅ (L1890: Reifegrad-Logik) | ❌ direkt | ✅ | ❌ | **A** |
 | 16 | `ki_kompetenz` | select | ✅ (L1735: ai_skills→Enablement) | `{KI_KNOWHOW}` (L9082), `{ki_kompetenz}` | ✅ | ✅ | **A** |
 
@@ -137,8 +137,8 @@
 
 | Typ | Anzahl | Felder |
 |-----|--------|--------|
-| **A — Kernfeld** | 33 | branche, unternehmensgroesse, bundesland, hauptleistung, digitalisierungsgrad, ki_einsatz, ki_kompetenz, ki_ziele, ki_projekte, anwendungsfaelle, zeitersparnis_prioritaet, pilot_bereich, vision_3_jahre, strategische_ziele, massnahmen_komplexitaet, roadmap_vorhanden, governance_richtlinien, change_management, zeitbudget, trainings_interessen, vision_prioritaet, datenschutzbeauftragter, technische_massnahmen, folgenabschaetzung, meldewege, ai_act_kenntnis, bisherige_foerdermittel, erfahrung_beratung, investitionsbudget, innovationsprozess, risikofreude, datenschutz, ki_einsatz |
-| **B — Prompt-only** | 11 | country, zielgruppen, jahresumsatz, it_infrastruktur, interne_ki_kompetenzen, datenquellen, prozesse_papierlos, automatisierungsgrad, geschaeftsmodell_evolution, vorhandene_tools, regulierte_branche, ki_hemmnisse, loeschregeln, ki_guardrails |
+| **A — Kernfeld** | 35 | branche, unternehmensgroesse, bundesland, hauptleistung, digitalisierungsgrad, **prozesse_papierlos**, **automatisierungsgrad**, ki_einsatz, ki_kompetenz, ki_ziele, ki_projekte, anwendungsfaelle, zeitersparnis_prioritaet, pilot_bereich, vision_3_jahre, strategische_ziele, massnahmen_komplexitaet, roadmap_vorhanden, governance_richtlinien, change_management, zeitbudget, trainings_interessen, vision_prioritaet, datenschutzbeauftragter, technische_massnahmen, folgenabschaetzung, meldewege, ai_act_kenntnis, bisherige_foerdermittel, erfahrung_beratung, investitionsbudget, innovationsprozess, risikofreude, datenschutz |
+| **B — Prompt-only** | 9 | country, zielgruppen, jahresumsatz, it_infrastruktur, interne_ki_kompetenzen, datenquellen, geschaeftsmodell_evolution, vorhandene_tools, regulierte_branche, ki_hemmnisse, loeschregeln, ki_guardrails |
 | **C — Display-only** | 3 | interesse_foerderung, marktposition, benchmark_wettbewerb |
 | **D — Unused** | 5 | **selbststaendig**, **s5_tools**, **s5_tools_other**, **s5_vision**, (**country** teilweise) |
 | **E — Strategy-only** | 9 | s1_budget, s2_zeitrahmen, s3_prioritaeten, s4_engpass, s5_software, s6_foerderinteresse, s7_entscheidung, s8_erfahrung, s9_ansatz, s10_datenschutz |
@@ -222,6 +222,41 @@ Das Frontend-Formular (strategy.html) definiert `s5_tools`, aber die `strategy_p
 
 ---
 
+## Evaluator-Module (services/evaluators/)
+
+Neben der Scoring-Pipeline in `gpt_analyze.py` gibt es **dedizierte Evaluator-Module** mit eigener Scoring-Logik:
+
+### services/evaluators/efficiency.py
+
+| Dimension | Gewicht | Feld | Zugriff |
+|-----------|---------|------|---------|
+| `digital` | 25% | `prozesse_papierlos`, `digitalisierungsgrad` | `a.get('prozesse_papierlos')`, `a.get('digitalisierungsgrad')` |
+| `zeitbudget` | 25% | `zeitbudget` | `a.get('zeitbudget')` |
+| `auto_potential` | 30% | `automatisierungsgrad` | `a.get('automatisierungsgrad')` |
+| `skills` | 20% | `ki_kompetenz` | `a.get('ki_kompetenz')` |
+
+**Bedeutung:** `automatisierungsgrad` und `prozesse_papierlos` sind DOCH Scoring-relevant (nicht nur Prompt-only)! Sie fließen über den Efficiency-Evaluator in den Gesamtscore. Korrekte Klassifizierung: **Typ A**.
+
+### services/evaluators/innovation.py
+
+| Dimension | Gewicht | Feld | Zugriff |
+|-----------|---------|------|---------|
+| `vision` | 35% | `vision_3_jahre`, `roadmap_vorhanden` | `a.get('vision_3_jahre')`, `a.get('roadmap_vorhanden')` |
+| `culture` | 25% | `innovationsprozess` | `a.get('innovationsprozess')` |
+| `use_case_novelty` | 25% | `anwendungsfaelle` | `a.get('anwendungsfaelle', [])` — erwartet Array, nutzt `len()` |
+| `experimentation` | 15% | `pilot_bereich`, `ki_projekte` | `a.get('pilot_bereich')`, `a.get('ki_projekte')` |
+
+### Korrektur der Typ-Klassifizierung
+
+Durch die Evaluator-Module werden folgende Felder von **Typ B** zu **Typ A** hochgestuft:
+
+| Feld | Alter Typ | Neuer Typ | Grund |
+|------|-----------|-----------|-------|
+| `prozesse_papierlos` | B (Prompt-only) | **A** (Kern) | efficiency.py: digital dimension (25%) |
+| `automatisierungsgrad` | B (Prompt-only) | **A** (Kern) | efficiency.py: auto_potential (30%) |
+
+---
+
 ## Feld-Flussdiagramm (vereinfacht)
 
 ```
@@ -245,8 +280,8 @@ Frontend (formbuilder)
 |-----------|--------|
 | Gesamtzahl Felder (Hauptfragebogen) | **50** |
 | Gesamtzahl Felder (Strategy) | **13** |
-| Typ A (Kern — Scoring + Prompts) | **33** |
-| Typ B (Prompt-only) | **11** |
+| Typ A (Kern — Scoring + Prompts) | **35** |
+| Typ B (Prompt-only) | **9** |
 | Typ C (Display-only) | **3** |
 | Typ D (Unused) — ⚠️ | **5** (`selbststaendig`, `s5_tools`, `s5_tools_other`, `s5_vision`, `country` teilweise) |
 | Typ E (Strategy-only) | **9** |
