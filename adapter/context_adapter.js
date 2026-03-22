@@ -59,6 +59,8 @@ export function buildContext(form, extras = {}) {
   ctx.ZEITBUDGET = form.zeitbudget || "";
   ctx.KI_KNOWHOW = form.ki_kompetenz || "";
   ctx.PROJEKTZIEL = form.strategische_ziele || form.ki_ziele || "";
+  // DATENSCHUTZ = technische_massnahmen (select: IT-Sicherheitsmaßnahmen), NOT the datenschutz
+  // privacy checkbox (boolean). Prompts use DATENSCHUTZ_LABEL (from answers_normalizer) instead.
   ctx.DATENSCHUTZ = form.technische_massnahmen || "";
   ctx.GOVERNANCE = form.governance_richtlinien || "";
   ctx.DATENSCHUTZBEAUFTRAGTER = form.datenschutzbeauftragter || "";
