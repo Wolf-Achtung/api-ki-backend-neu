@@ -26,7 +26,7 @@ FORBIDDEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE‑AWARE: solo/team/kmu -->
 <!-- SPRINT G18 -->
-<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE, {{MASSNAHMEN_KOMPLEXITAET}} -->
 <!-- TOKEN‑BUDGET: 4200 (solo:0.8x=3360, team:1.0x=4200, kmu:1.15x=4830) -->
 <!-- WORD_MINIMUM_SOLO: 500 -->
 <!-- WORD_MINIMUM_TEAM: 600 -->
@@ -78,6 +78,10 @@ LEADING DECISIONS PER QUARTER (v6.1 NEW – embed implicitly, not as headings):
 - Q2: “Standards before scaling” – establish unified rules
 - Q3–Q4: “Responsibility before speed” – accompany governance
 These principles should flow into the quarter descriptions linguistically.
+
+COMPLEXITY PREFERENCE:
+- Desired implementation effort: {{MASSNAHMEN_KOMPLEXITAET}}
+- Adjust complexity and timeline of recommendations accordingly.
 
 FORMAT:
 - Milestones instead of long text
