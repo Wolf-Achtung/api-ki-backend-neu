@@ -75,7 +75,7 @@
 | # | Field Key | FE-Typ | Scoring | Prompt-Var | Profile-Box | Coverage-Guard | Typ |
 |---|-----------|--------|---------|------------|-------------|----------------|-----|
 | 30 | `zeitbudget` | select | ✅ (L1736: training_budget) | `{ZEITBUDGET}` (L9132, ctx_adapter L59) | ✅ | ✅ | **A** |
-| 31 | `vorhandene_tools` | checkbox | ❌ | `{VORHANDENE_TOOLS_LABELS}` (L9381,9385) | ✅ | ❌ | **B** |
+| 31 | `vorhandene_tools` | checkbox | Indirekt (tool_whitelist.py: Filterung) | `{VORHANDENE_TOOLS_LABELS}` (L9381,9385) | ✅ | ❌ | **B** |
 | 32 | `regulierte_branche` | checkbox | ❌ | `{REGULIERTE_BRANCHE_LABELS}` (L9377) | ✅ | ❌ | **B** |
 | 33 | `trainings_interessen` | checkbox | ✅ (L1724: security_training) | `{TRAININGS_INTERESSEN}` (L9147, ctx_adapter L71) | ✅ | ✅ | **A** |
 | 34 | `vision_prioritaet` | select | ✅ (L1730: roi_expected→Value) | `{VISION_PRIORITAET}` (ctx_adapter L58, ⚠️ gpt_analyze maps to vision_3_jahre!) | ✅ | ✅ | **A** |
@@ -216,7 +216,11 @@ Felder die im Scoring benutzt werden, aber NICHT im Coverage-Guard (`EXPECTED_FI
 | `bisherige_foerdermittel` | Direkt mapped |
 | `massnahmen_komplexitaet` | Direkt mapped |
 
-### 7. Strategy-Felder: `s5_tools` vs. `s5_software` Diskrepanz
+### 7. Verwaiste Prompt-Variable: `MASSNAHMEN_KOMPLEXITAET`
+
+`gpt_analyze.py:9159` injiziert `MASSNAHMEN_KOMPLEXITAET` in die Prompt-Variablen, aber **kein einziges Prompt-Template** referenziert `{MASSNAHMEN_KOMPLEXITAET}`. Der Wert wird nur in der Profile-Box angezeigt und als Pass-Through in der Scoring-Map geführt.
+
+### 8. Strategy-Felder: `s5_tools` vs. `s5_software` Diskrepanz
 
 Das Frontend-Formular (strategy.html) definiert `s5_tools`, aber die `strategy_pipeline.py` liest `s5_software` (L279). Die Felder `s5_tools`, `s5_tools_other` und `s5_vision` werden im Strategy-Submit gesendet, aber nie verarbeitet.
 
@@ -297,7 +301,7 @@ Frontend (formbuilder)
 | Typ C (Display-only) | **3** |
 | Typ D (Unused) — ⚠️ | **5** (`selbststaendig`, `s5_tools`, `s5_tools_other`, `s5_vision`, `country` teilweise) |
 | Typ E (Strategy-only) | **9** |
-| Anomalien gefunden | **7** |
+| Anomalien gefunden | **8** |
 | Kritische Risiken | **2** (VISION_PRIORITAET Namenskollision, s5_tools/s5_software Diskrepanz) |
 
 ### Handlungsempfehlung (nach Priorität)
