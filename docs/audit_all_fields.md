@@ -33,7 +33,7 @@
 | 6 | `hauptleistung` | textarea | Indirekt (Freetext-Injection L1203) | `{HAUPTLEISTUNG}`, `{OFFERING_LABEL}` | ✅ | ✅ | ✅ (_shorten) | ✅ L57 | 19 Profile | **A** |
 | 7 | `zielgruppen` | checkbox | ❌ | `{ZIELGRUPPEN}` (via context_adapter) | ✅ | ❌ | ❌ | ✅ L72 | 0 in gold | **B** |
 | 8 | `jahresumsatz` | select | Indirekt (Stundensatz L9216) | `{JAHRESUMSATZ_LABEL}` | ✅ | ✅ | ✅ (UMSATZ_LABELS) | ❌ | 19 Profile | **B** |
-| 9 | `it_infrastruktur` | select | ❌ | `{IT_INFRASTRUKTUR_LABEL}` (base_vars L9379) | ✅ | ❌ | ✅ (IT_LABELS) | ❌ | 0 | **B** |
+| 9 | `it_infrastruktur` | select | ✅ (evaluators/compliance.py: hosting 15%) | `{IT_INFRASTRUKTUR_LABEL}` (base_vars L9379) | ✅ | ❌ | ✅ (IT_LABELS) | ❌ | 0 | **A** |
 | 10 | `interne_ki_kompetenzen` | select | ❌ | `{INTERNE_KI_KOMPETENZEN_LABEL}` | ✅ | ❌ | ❌ | ❌ | 0 | **B** |
 | 11 | `datenquellen` | checkbox | ❌ | `{DATENQUELLEN_LABELS}` (base_vars L9138,9373) | ✅ | ❌ | ❌ | ✅ L73 | 0 | **B** |
 
@@ -88,7 +88,7 @@
 | 36 | `technische_massnahmen` | select | ✅ (L1717: data_protection) | `{DATENSCHUTZ}` Alias (ctx_adapter L62) | ✅ | ✅ | **A** |
 | 37 | `folgenabschaetzung` | select | ✅ (L1723: risk_assessment) | `{FOLGENABSCHAETZUNG_LABEL}` | ✅ | ✅ | **A** |
 | 38 | `meldewege` | select | ✅ (L1748: _sec_meldewege_bonus) | `{MELDEWEGE}` (L9156) | ✅ | ❌ | **A** |
-| 39 | `loeschregeln` | select | ❌ | `{LOESCHREGELN}` (L9140, ctx_adapter L66-67) | ✅ | ❌ | **B** |
+| 39 | `loeschregeln` | select | ✅ (evaluators/compliance.py: retention 15%) | `{LOESCHREGELN}` (L9140, ctx_adapter L66-67) | ✅ | ❌ | **A** |
 | 40 | `ai_act_kenntnis` | select | ✅ (L1744: _gov_ai_act_bonus) | `{AI_ACT_KENNTNIS}` (L9154, ctx_adapter L65) | ✅ | ❌ | **A** |
 | 41 | `ki_hemmnisse` | checkbox | ❌ | `{KI_HEMMNISSE_LABELS}` (L9054,9083, ctx_adapter L70) | ✅ | ❌ | **B** |
 
@@ -137,8 +137,8 @@
 
 | Typ | Anzahl | Felder |
 |-----|--------|--------|
-| **A — Kernfeld** | 35 | branche, unternehmensgroesse, bundesland, hauptleistung, digitalisierungsgrad, **prozesse_papierlos**, **automatisierungsgrad**, ki_einsatz, ki_kompetenz, ki_ziele, ki_projekte, anwendungsfaelle, zeitersparnis_prioritaet, pilot_bereich, vision_3_jahre, strategische_ziele, massnahmen_komplexitaet, roadmap_vorhanden, governance_richtlinien, change_management, zeitbudget, trainings_interessen, vision_prioritaet, datenschutzbeauftragter, technische_massnahmen, folgenabschaetzung, meldewege, ai_act_kenntnis, bisherige_foerdermittel, erfahrung_beratung, investitionsbudget, innovationsprozess, risikofreude, datenschutz |
-| **B — Prompt-only** | 9 | country, zielgruppen, jahresumsatz, it_infrastruktur, interne_ki_kompetenzen, datenquellen, geschaeftsmodell_evolution, vorhandene_tools, regulierte_branche, ki_hemmnisse, loeschregeln, ki_guardrails |
+| **A — Kernfeld** | 37 | branche, unternehmensgroesse, bundesland, hauptleistung, digitalisierungsgrad, **prozesse_papierlos**, **automatisierungsgrad**, ki_einsatz, ki_kompetenz, ki_ziele, ki_projekte, anwendungsfaelle, zeitersparnis_prioritaet, pilot_bereich, vision_3_jahre, strategische_ziele, massnahmen_komplexitaet, roadmap_vorhanden, governance_richtlinien, change_management, zeitbudget, trainings_interessen, vision_prioritaet, datenschutzbeauftragter, technische_massnahmen, folgenabschaetzung, meldewege, **loeschregeln**, ai_act_kenntnis, bisherige_foerdermittel, erfahrung_beratung, investitionsbudget, innovationsprozess, risikofreude, datenschutz, **it_infrastruktur** |
+| **B — Prompt-only** | 7 | country, zielgruppen, jahresumsatz, interne_ki_kompetenzen, datenquellen, geschaeftsmodell_evolution, vorhandene_tools, regulierte_branche, ki_hemmnisse, ki_guardrails |
 | **C — Display-only** | 3 | interesse_foerderung, marktposition, benchmark_wettbewerb |
 | **D — Unused** | 5 | **selbststaendig**, **s5_tools**, **s5_tools_other**, **s5_vision**, (**country** teilweise) |
 | **E — Strategy-only** | 9 | s1_budget, s2_zeitrahmen, s3_prioritaeten, s4_engpass, s5_software, s6_foerderinteresse, s7_entscheidung, s8_erfahrung, s9_ansatz, s10_datenschutz |
@@ -246,6 +246,16 @@ Neben der Scoring-Pipeline in `gpt_analyze.py` gibt es **dedizierte Evaluator-Mo
 | `use_case_novelty` | 25% | `anwendungsfaelle` | `a.get('anwendungsfaelle', [])` — erwartet Array, nutzt `len()` |
 | `experimentation` | 15% | `pilot_bereich`, `ki_projekte` | `a.get('pilot_bereich')`, `a.get('ki_projekte')` |
 
+### services/evaluators/compliance.py
+
+| Dimension | Gewicht | Feld | Zugriff |
+|-----------|---------|------|---------|
+| `gdpr_awareness` | 25% | `datenschutz`, `datenschutzbeauftragter` | `a.get('datenschutz')`, `a.get('datenschutzbeauftragter')` |
+| `technical_measures` | 25% | `technische_massnahmen` | `a.get('technische_massnahmen')` |
+| `dpia` | 20% | `folgenabschaetzung` | `a.get('folgenabschaetzung')` |
+| `retention` | 15% | `loeschregeln` | `a.get('loeschregeln')` |
+| `hosting` | 15% | `it_infrastruktur` | `a.get('it_infrastruktur')` |
+
 ### Korrektur der Typ-Klassifizierung
 
 Durch die Evaluator-Module werden folgende Felder von **Typ B** zu **Typ A** hochgestuft:
@@ -254,6 +264,8 @@ Durch die Evaluator-Module werden folgende Felder von **Typ B** zu **Typ A** hoc
 |------|-----------|-----------|-------|
 | `prozesse_papierlos` | B (Prompt-only) | **A** (Kern) | efficiency.py: digital dimension (25%) |
 | `automatisierungsgrad` | B (Prompt-only) | **A** (Kern) | efficiency.py: auto_potential (30%) |
+| `it_infrastruktur` | B (Prompt-only) | **A** (Kern) | compliance.py: hosting dimension (15%) |
+| `loeschregeln` | B (Prompt-only) | **A** (Kern) | compliance.py: retention dimension (15%) |
 
 ---
 
@@ -280,8 +292,8 @@ Frontend (formbuilder)
 |-----------|--------|
 | Gesamtzahl Felder (Hauptfragebogen) | **50** |
 | Gesamtzahl Felder (Strategy) | **13** |
-| Typ A (Kern — Scoring + Prompts) | **35** |
-| Typ B (Prompt-only) | **9** |
+| Typ A (Kern — Scoring + Prompts) | **37** |
+| Typ B (Prompt-only) | **7** |
 | Typ C (Display-only) | **3** |
 | Typ D (Unused) — ⚠️ | **5** (`selbststaendig`, `s5_tools`, `s5_tools_other`, `s5_vision`, `country` teilweise) |
 | Typ E (Strategy-only) | **9** |
