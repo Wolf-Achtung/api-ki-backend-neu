@@ -203,14 +203,20 @@ async def generate_strategy_report(
         logger.debug("SCORE-DEBUG-5: [Strategy %d] stored_candidates = %r", briefing_id, _stored)
 
         # Reifegrad label: fallback to live calculation if not stored
+        # FIX-KIS1034-D1: Use COMPANY_SIZE from R1 (normalized bucket) to ensure
+        # consistent benchmark lookup — avoids mismatch with raw form values.
         _reifegrad_label = report1_sections.get("score_rating", "")
         if not _reifegrad_label and _score > 0:
             try:
                 from services.extra_sections import get_score_context
-                _size_raw = briefing_data.get("unternehmensgroesse", "klein")
+                _size_raw = (
+                    report1_sections.get("COMPANY_SIZE")
+                    or briefing_data.get("unternehmensgroesse", "klein")
+                )
                 _sc_ctx = get_score_context(_score, _size_raw, lang="de")
                 _reifegrad_label = _sc_ctx.get("score_rating", "")
-                logger.info("[Strategy %d] reifegrad_label computed on-demand: %s", briefing_id, _reifegrad_label)
+                logger.info("[Strategy %d] reifegrad_label computed on-demand (size=%s): %s",
+                            briefing_id, _size_raw, _reifegrad_label)
             except Exception:
                 pass
 
@@ -390,6 +396,12 @@ async def generate_strategy_report(
         # === FIX-NL1: Non-Latin Character Sanitizer ===
         from services.pipeline_sanitizers import sanitize_non_latin_sections
         sections = sanitize_non_latin_sections(sections)
+
+        # === FIX-KIS1034-D3: Funding Blacklist for Strategy ===
+        # R1 already filters expired programs via apply_funding_blacklist, but
+        # Strategy was missing this step — "Digital Jetzt" / "go-digital" leaked through.
+        from b25_enforcer import apply_funding_blacklist
+        sections = apply_funding_blacklist(sections)
 
         # === PHASE 3: Assembly ===
         generation_duration = time.time() - start_time - research_duration

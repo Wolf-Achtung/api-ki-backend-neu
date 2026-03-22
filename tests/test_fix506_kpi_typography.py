@@ -63,10 +63,10 @@ class TestROISpacing:
         assert count > 0
 
     def test_roi_rate_with_nach_suffix(self):
-        """'ROI-Rate165%nach 24 Monaten' → 'ROI-Rate: 165 % (nach 24 Monaten)'"""
+        """'ROI-Rate165%nach 24 Monaten' → 'ROI-Rate: 165 % (nach 12 Monaten)' (KIS-1034-D4: force 12m)"""
         html = "<p>ROI-Rate165%nach 24 Monaten</p>"
         result, count = fix_kennzahlen_spacing(html)
-        assert "ROI-Rate: 165 % (nach 24 Monaten)" in result
+        assert "ROI-Rate: 165 % (nach 12 Monaten)" in result
 
     def test_roi_rate_decimal(self):
         """'ROI-Rate85,5%' → 'ROI-Rate: 85,5 %'"""
@@ -149,7 +149,7 @@ class TestMixedKPIBlocks:
         result, count = fix_kennzahlen_spacing(html)
 
         assert "Payback: 11 Mon." in result
-        assert "ROI-Rate: 165 % (nach 24 Monaten)" in result
+        assert "ROI-Rate: 165 % (nach 12 Monaten)" in result
         assert "Zeitersparnis/Monat: 180 Std." in result
         assert "AI Act Risiko: Mittel" in result
         assert count >= 4
