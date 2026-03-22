@@ -282,6 +282,8 @@ async def generate_strategy_report(
             "s2_zeitrahmen": strategy_questions.get("s2_zeitrahmen", ""),
             "s3_prioritaeten": ", ".join(strategy_questions.get("s3_prioritaeten", [])),
             "s4_engpass": strategy_questions.get("s4_engpass", ""),
+            # s5_software: comma-separated string, merged in Frontend (strategy.html ~L1179-1184)
+            # from s5_tools (checkboxes) + s5_tools_other (freetext). Backend only reads s5_software.
             "s5_software": strategy_questions.get("s5_software", ""),
             "s6_foerderinteresse": strategy_questions.get("s6_foerderinteresse", ""),
             "s7_entscheidung": strategy_questions.get("s7_entscheidung", ""),
