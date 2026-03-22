@@ -4152,9 +4152,10 @@ KPI_SPACING_PATTERNS = [
     # Payback without space: "Payback11 Monate" or "Payback11Monate" or "Payback11 Mon."
     (r'(Payback|Amortisation|Amortisierung)\s*(\d+(?:[,\.]\d+)?)\s*(Monate?|months?|Mon\.?)',
      r'\1: \2 \3'),
-    # ROI-Rate with suffix: "ROI-Rate165%nach 24 Monaten" → "ROI-Rate: 165 % (nach 24 Monaten)"
-    (r'(ROI[-\s]?Rate)\s*(\d+(?:[,\.]\d+)?)\s*%\s*(nach\s+\d+\s+Monat(?:en?)?)',
-     r'\1: \2 % (\3)'),
+    # ROI-Rate with suffix: "ROI-Rate165%nach 24 Monaten" → "ROI-Rate: 165 % (nach 12 Monaten)"
+    # KIS-1034-D4: Force "nach 12 Monaten" — LLM sometimes hallucinates 24/18/36.
+    (r'(ROI[-\s]?Rate)\s*(\d+(?:[,\.]\d+)?)\s*%\s*nach\s+\d+\s+(Monat(?:en?)?)',
+     r'\1: \2 % (nach 12 \3)'),
     # ROI-Rate without space: "ROI-Rate85%" or "ROI-Rate85%auf"
     (r'(ROI[-\s]?Rate)\s*(\d+(?:[,\.]\d+)?)\s*%\s*(?![(\w])',
      r'\1: \2 %'),

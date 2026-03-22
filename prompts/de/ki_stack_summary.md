@@ -82,6 +82,7 @@ INHALTLICHE STRUKTUR (5 feste Bausteine)
    - Zeitersparnis: {{ROI_STUNDEN_MONAT}} Stunden/Monat (EXAKT diesen Wert verwenden)
    - Kurz kommentieren, was diese KPIs für die Entscheidungsebene bedeuten.
    - KEINE eigenen KPI-Werte erfinden oder berechnen!
+   - WICHTIG: ROI bezieht sich IMMER auf 12 Monate. Schreibe "nach 12 Monaten", NIEMALS "24 Monate" oder andere Zeiträume.
 
 5) Branch Badge + Risikoindikator
    - Branch-Label: {{BRANCH_SHORT_LABEL}}.
