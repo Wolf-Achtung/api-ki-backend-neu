@@ -27,7 +27,7 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- SPRINT G18 -->
-<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
+<!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE, {{MASSNAHMEN_KOMPLEXITAET}} -->
 <!-- TOKEN-BUDGET: 4200 (solo:0.8x=3360, team:1.0x=4200, kmu:1.15x=4830) -->
 <!-- WORD_MINIMUM_SOLO: 500 -->
 <!-- WORD_MINIMUM_TEAM: 600 -->
@@ -74,6 +74,10 @@ LEITENTSCHEIDUNGEN PRO QUARTAL (v6.1 NEU - implizit verankern, nicht als Übersc
 - Q2: "Standards vor Erweiterung" – einheitliche Regeln etablieren
 - Q3-Q4: "Verantwortung vor Geschwindigkeit" – Governance mitführen
 Diese Prinzipien sprachlich in die Quartals-Beschreibungen einfließen lassen.
+
+KOMPLEXITÄTSPRÄFERENZ:
+- Gewünschter Einführungsaufwand: {{MASSNAHMEN_KOMPLEXITAET}}
+- Passe Komplexität und Zeitplan der Empfehlungen entsprechend an.
 
 FORMAT:
 - Meilensteine statt langer Texte
