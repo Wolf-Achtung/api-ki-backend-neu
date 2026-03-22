@@ -239,6 +239,28 @@ class TestGptAnalyzeHelpers:
         assert result["gdpr_aware"] == "no"
 
 
+class TestSafeLower:
+    """Tests for _safe_lower helper in gpt_analyze.py"""
+
+    def test_safe_lower_list_comma_separated(self):
+        """_safe_lower joins list items with comma separator"""
+        from gpt_analyze import _safe_lower
+        result = _safe_lower(["Chatbots", "Marketing", "HR"])
+        assert result == "chatbots, marketing, hr"
+
+    def test_safe_lower_string(self):
+        from gpt_analyze import _safe_lower
+        assert _safe_lower("CHATBOTS") == "chatbots"
+
+    def test_safe_lower_none(self):
+        from gpt_analyze import _safe_lower
+        assert _safe_lower(None) == ""
+
+    def test_safe_lower_empty_list(self):
+        from gpt_analyze import _safe_lower
+        assert _safe_lower([]) == ""
+
+
 class TestScoreCalculation:
     """Tests fuer Score-Berechnung"""
 
