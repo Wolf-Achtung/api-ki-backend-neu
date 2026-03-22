@@ -63,7 +63,6 @@ export function buildContext(form, extras = {}) {
   ctx.GOVERNANCE = form.governance_richtlinien || "";
   ctx.DATENSCHUTZBEAUFTRAGTER = form.datenschutzbeauftragter || "";
   ctx.AI_ACT_KENNTNIS = form.ai_act_kenntnis || "";
-  ctx.LOECHREGELN = form.loeschregeln || ""; // fallback (typo protection)
   ctx.LOESCHREGELN = form.loeschregeln || "";
 
   // Arrays zu Text (für Prompts)
