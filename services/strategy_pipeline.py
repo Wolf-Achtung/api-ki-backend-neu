@@ -397,6 +397,12 @@ async def generate_strategy_report(
         from services.pipeline_sanitizers import sanitize_non_latin_sections
         sections = sanitize_non_latin_sections(sections)
 
+        # === FIX-KIS1034-D3: Funding Blacklist for Strategy ===
+        # R1 already filters expired programs via apply_funding_blacklist, but
+        # Strategy was missing this step — "Digital Jetzt" / "go-digital" leaked through.
+        from b25_enforcer import apply_funding_blacklist
+        sections = apply_funding_blacklist(sections)
+
         # === PHASE 3: Assembly ===
         generation_duration = time.time() - start_time - research_duration
         total_duration = time.time() - start_time
