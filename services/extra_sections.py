@@ -26,7 +26,9 @@ log = logging.getLogger(__name__)
 BENCHMARK_SCORES = {
     "solo": {"avg": 65, "top10": 82},
     "klein": {"avg": 72, "top10": 88},
+    "team": {"avg": 72, "top10": 88},       # alias for klein (small_team bucket)
     "mittel": {"avg": 78, "top10": 92},
+    "kmu": {"avg": 78, "top10": 92},         # alias for mittel (kmu bucket)
     "gross": {"avg": 82, "top10": 95},
 }
 

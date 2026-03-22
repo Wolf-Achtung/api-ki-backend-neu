@@ -1351,7 +1351,7 @@ def generate_entscheidungsvorlage_html(
             
             <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Investition:</h4>
             <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
-                <li>Tool-Kosten: ca. {savings['tool_costs'] // 12}€/Monat pro Nutzer</li>
+                <li>Tool-Kosten: ca. {savings['tool_costs'] // 12}€/Monat (Organisation gesamt)</li>
                 <li>Einarbeitung: ca. 2-4 Stunden</li>
             </ul>
             

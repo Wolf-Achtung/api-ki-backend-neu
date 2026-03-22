@@ -320,13 +320,20 @@ def sanitize_roi_values_in_content(
 # ============================================================
 
 _FUNDING_BLACKLIST_BASE = [
-    # go-digital (alle Varianten)
+    # go-digital (ausgelaufen Dez 2024)
     "go-digital",
     "go-digital!",
     "Go-Digital",
     "go digital",
     "Go Digital",
     "godigital",
+    # Digital Jetzt (ausgelaufen Dez 2023) — KIS-1034-D3
+    "Digital Jetzt",
+    "digital jetzt",
+    "Digital-Jetzt",
+    "digital-jetzt",
+    "Digital Jetzt!",
+    "digitaljetzt",
     # KMU-innovativ (NEU in B28)
     "KMU-innovativ",
     "kmu-innovativ",
