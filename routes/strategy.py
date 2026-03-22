@@ -46,6 +46,7 @@ class StrategyQuestionsCreate(BaseModel):
     s2_zeitrahmen: str = Field(..., description="Gewünschter Umsetzungszeitraum")
     s3_prioritaeten: List[str] = Field(..., max_length=3, description="Top-3 Prioritäten")
     s4_engpass: str = Field(..., description="Wichtigster Engpass")
+    # s5_software: merged in Frontend from s5_tools (checkboxes) + s5_tools_other (freetext)
     s5_software: Optional[str] = Field(None, max_length=200, description="Bestehende Software")
     s6_foerderinteresse: str = Field(..., description="Interesse an Fördermitteln")
     s7_entscheidung: str = Field(..., description="Entscheidungshorizont")

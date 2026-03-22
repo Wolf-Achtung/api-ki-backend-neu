@@ -1469,6 +1469,9 @@ def build_extra_sections(answers: dict, scores: dict) -> dict:
         if callable(get_score_context):
             overall_score = scores.get("overall", 0)
             size = answers.get("unternehmensgroesse", "klein")
+            # TODO: selbststaendig (Frontend: Unternehmensform bei Solo) wird aktuell nicht ausgewertet.
+            # Relevant für Solo-spezifische Empfehlungen (Freiberufler vs GmbH vs Einzelunternehmer).
+            # Blocked by: Solo-Segment-Produktentscheidung (negativer ROI bei Solo-CAPEX).
             # Extract language from answers for bilingual support
             lang = answers.get("lang") or answers.get("LANG") or answers.get("sprache") or "de"
             score_context = get_score_context(overall_score, size, lang=lang)
@@ -1870,7 +1873,7 @@ def _safe_lower(value: Any) -> str:
         return ""
     if isinstance(value, list):
         # Join list elements into a single string
-        return " ".join(str(v).lower() for v in value if v)
+        return ", ".join(str(v).lower() for v in value if v)
     if isinstance(value, str):
         return value.lower()
     return str(value).lower()
@@ -9077,7 +9080,9 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
 
     base_vars.update({
         # Original fields
-        "VISION_PRIORITAET": vision_3_jahre,
+        # VISION_PRIORITAET = select field "Wichtigster strategischer Hebel" (vision_prioritaet)
+        # NOT vision_3_jahre (freetext) — that's in VISION_3_JAHRE below.
+        "VISION_PRIORITAET": briefing.get("vision_prioritaet", ""),
         "PROJEKTZIEL": ", ".join(briefing.get("ki_ziele", [])) if briefing.get("ki_ziele") else strategische_ziele,
         "KI_KNOWHOW": briefing.get("ki_kompetenz", ""),
         "KI_HEMMNISSE": ", ".join(hemmnisse_raw) if isinstance(hemmnisse_raw, list) else hemmnisse_raw,

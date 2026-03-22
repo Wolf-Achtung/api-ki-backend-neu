@@ -45,6 +45,16 @@ EXPECTED_FIELDS = [
     "stundensatz_eur",
     "email",
     "kontakt_email",
+    # KIS-AUDIT-A6: 9 scoring-relevant fields previously missing
+    "roadmap_vorhanden",          # maturity_level (+8/+4)
+    "meldewege",                  # _sec_meldewege_bonus
+    "ai_act_kenntnis",            # _gov_ai_act_bonus
+    "digitalisierungsgrad",       # Digi-Score Bonus
+    "risikofreude",               # direkt mapped
+    "bisherige_foerdermittel",    # direkt mapped
+    "massnahmen_komplexitaet",    # direkt mapped
+    "prozesse_papierlos",         # efficiency.py: digital 25%
+    "automatisierungsgrad",       # efficiency.py: auto_potential 30%
 ]
 
 # Felder, die sicher irgendwo im Report/Template/Prompt-System genutzt werden.
@@ -65,6 +75,16 @@ USED_IN_REPORT = {
     "stundensatz_eur",
     "email",
     "kontakt_email",
+    # KIS-AUDIT-A6: scoring-relevant fields (flow into report scores indirectly)
+    "roadmap_vorhanden",
+    "digitalisierungsgrad",
+    "risikofreude",
+    "prozesse_papierlos",
+    "automatisierungsgrad",
+    "massnahmen_komplexitaet",
+    "bisherige_foerdermittel",
+    "meldewege",
+    "ai_act_kenntnis",
 }
 
 
