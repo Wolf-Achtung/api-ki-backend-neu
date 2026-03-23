@@ -221,12 +221,13 @@ def stamp_pdf_metadata(pdf_bytes: bytes) -> bytes:
         })
         stamped: bytes = doc.tobytes()
         doc.close()
+        log.info("[PDF-META] Stamped author='%s' (%d→%d bytes)", PDF_AUTHOR, len(pdf_bytes), len(stamped))
         return stamped
     except ImportError:
-        log.debug("[PDF] PyMuPDF not available — skipping metadata stamp")
+        log.warning("[PDF-META] PyMuPDF (fitz) not installed — cannot stamp metadata. Install via: pip install PyMuPDF")
         return pdf_bytes
     except Exception as e:
-        log.warning("[PDF] Failed to stamp PDF metadata: %s", e)
+        log.warning("[PDF-META] Failed to stamp PDF metadata: %s", e)
         return pdf_bytes
 
 
