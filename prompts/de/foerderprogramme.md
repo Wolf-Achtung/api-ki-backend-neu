@@ -26,6 +26,35 @@ ERLAUBT:
 
 ###############################################################################
 
+     KONDITIONALE LOGIK (L4/L5/L8/L9):
+
+     INTERESSE AN FÖRDERUNG:
+     {% if INTERESSE_FOERDERUNG_LABEL == "nein" or INTERESSE_FOERDERUNG_LABEL == "Kein Bedarf" %}
+     → KURZ-VERSION: Nur 1-2 Sätze + Kurzliste (max 2 Programme).
+       "Obwohl aktuell kein Förderbedarf besteht, stehen folgende Programme bereit:"
+     {% endif %}
+
+     BISHERIGE FÖRDERMITTEL:
+     {% if BISHERIGE_FOERDERMITTEL == "ja" %}
+     → Hinweis am Ende der Programmliste:
+       "<p class='small muted'><strong>Hinweis:</strong> Da bereits Fördermittel bezogen wurden,
+       ist die De-minimis-Grenze (300.000 € / 3 Jahre) zu beachten. Vor Antragstellung
+       alle erhaltenen Beihilfen zusammenstellen.</p>"
+     {% endif %}
+
+     BERATUNGSERFAHRUNG:
+     {% if ERFAHRUNG_BERATUNG == "nein" %}
+     → BAFA-Beratungsförderung als erstes Programm in der Liste hervorheben.
+     {% endif %}
+
+     NICHT-DE/AT-LÄNDER (L9):
+     {% if COUNTRY not in ["DE", "AT", ""] %}
+     → Am Ende der Section einen Hinweis einbauen:
+       "<p class='small muted'>Hinweis: Für Ihr Land sind in diesem Report primär EU-weite
+       Programme aufgeführt. Zusätzliche nationale Förderprogramme können über die jeweilige
+       nationale Wirtschaftsförderung recherchiert werden.</p>"
+     {% endif %}
+
      THEMEN-OWNERSHIP (verbindlich):
      - Diese Section: OWNER für konkrete Förderprogramm-Liste und Förderquoten
      - NICHT hier: Business-Case-Einordnung (→ foerderpotenzial)

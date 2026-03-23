@@ -2228,6 +2228,13 @@ def inject_funding_branch_alignment_into_sections(
         sections["FUNDING_BRANCH_ALIGNMENT_HTML"] = ""
         return sections
 
+    # L4: Skip detailed funding alignment if user explicitly has no interest
+    interesse = briefing.get("interesse_foerderung", "")
+    if interesse and interesse.lower() in ("nein", "kein bedarf"):
+        sections["FUNDING_BRANCH_ALIGNMENT_HTML"] = ""
+        log.debug("Skipping funding branch alignment — interesse_foerderung=%s", interesse)
+        return sections
+
     try:
         html = generate_funding_branch_alignment_html(briefing, lang)
         sections["FUNDING_BRANCH_ALIGNMENT_HTML"] = html
