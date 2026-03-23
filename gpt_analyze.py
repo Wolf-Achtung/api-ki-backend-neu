@@ -12670,18 +12670,18 @@ def _mask_email(addr: Optional[str]) -> str:
         return "***"
 
 def _admin_recipients() -> List[str]:
-    """Get deduplicated list of admin email addresses for report notifications.
+    """Get the whitelist of admin email addresses for report notifications.
 
-    Excludes kontakt@ addresses — those are for website contact only,
-    not for automated report notifications.
+    Uses a fixed whitelist instead of aggregating from multiple env vars.
+    This prevents accidental admin-mail duplication when env vars contain
+    multiple @ki-sicherheit.jetzt addresses (e.g. wolf@, kontakt@).
+
+    Override via ADMIN_EMAILS env var (comma-separated) for testing.
     """
-    emails: List[str] = []
-    for raw in (os.getenv("ADMIN_EMAILS", ""),
-                os.getenv("REPORT_ADMIN_EMAIL", ""),
-                os.getenv("ADMIN_NOTIFY_EMAIL", "")):
-        if raw: emails.extend([e.strip() for e in raw.split(",") if e.strip()])
-    # Deduplicate, exclude kontakt@ (website contact only, not report notifications)
-    return [e for e in dict.fromkeys(emails) if not e.startswith("kontakt@")]
+    override = os.getenv("ADMIN_EMAILS", "").strip()
+    if override:
+        return [e.strip() for e in override.split(",") if e.strip()]
+    return ["bewertung@ki-sicherheit.jetzt"]
 
 def _determine_user_email(db: Session, briefing: Briefing, override: Optional[str]) -> Optional[str]:
     if override: return override
