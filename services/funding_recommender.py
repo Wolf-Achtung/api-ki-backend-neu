@@ -2153,6 +2153,9 @@ def inject_funding_branch_alignment_into_sections(
 
         if html:
             log.info("✅ Injected funding branch alignment into report")
+
+            # Track recommendations for distribution analysis (G17.8-A)
+            _track_report_recommendations(briefing)
         else:
             log.debug("No funding branch alignment generated")
 
@@ -2161,6 +2164,53 @@ def inject_funding_branch_alignment_into_sections(
         sections["FUNDING_BRANCH_ALIGNMENT_HTML"] = ""
 
     return sections
+
+
+def _track_report_recommendations(briefing: Dict[str, Any]) -> None:
+    """
+    Record which funding programs were recommended in a report.
+
+    This feeds the distribution analyzer (G17.8-A) so that over time
+    the optimizer can detect over/under-representation.
+    """
+    try:
+        from services.funding_distribution import record_recommendation, FUNDING_DISTRIBUTION_ENABLED
+        if not FUNDING_DISTRIBUTION_ENABLED:
+            return
+
+        branch = briefing.get("branche") or briefing.get("BRANCH_LABEL") or ""
+        size = briefing.get("unternehmensgroesse") or briefing.get("SIZE_LABEL") or "team"
+        region = briefing.get("bundesland") or "DE"
+
+        # Normalize size for segment_id
+        size_lower = size.lower()
+        if "solo" in size_lower:
+            segment = "solo"
+        elif "kmu" in size_lower:
+            segment = "kmu"
+        else:
+            segment = "team"
+
+        user_region = _resolve_user_region(region)
+
+        hits = get_branch_funding_hits(branch, size, region, "de", limit=5)
+        for hit in hits:
+            record_recommendation(
+                programme_id=hit.program_id,
+                segment_id=segment,
+                country=user_region["country"],
+                region=user_region.get("bundesland"),
+                confidence=hit.relevance_score,
+            )
+
+        if hits:
+            log.info("[G17.8-A] Tracked %d funding recommendations for segment=%s, region=%s",
+                     len(hits), segment, region)
+
+    except ImportError:
+        log.debug("[G17.8-A] Distribution tracking not available")
+    except Exception as e:
+        log.warning("[G17.8-A] Failed to track recommendations: %s", e)
 
 
 # =============================================================================
