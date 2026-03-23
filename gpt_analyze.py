@@ -20924,7 +20924,11 @@ def build_admin_report_card(br: Briefing, rep: Report, user_email: str) -> str:
 
 # -------------------- runner (kept from original) ----------------
 def _fetch_pdf_if_needed(pdf_url: Optional[str], pdf_bytes: Optional[bytes]) -> Optional[bytes]:
-    if pdf_bytes: return pdf_bytes
+    if pdf_bytes:
+        # Stamp metadata on bytes that come from render_pdf_from_html
+        # (may already be stamped, but stamp_pdf_metadata is idempotent)
+        from services.pdf_client import stamp_pdf_metadata
+        return stamp_pdf_metadata(pdf_bytes)
     if not pdf_url: return None
 
     # SECURITY: Validate URL to prevent SSRF attacks
@@ -20935,7 +20939,9 @@ def _fetch_pdf_if_needed(pdf_url: Optional[str], pdf_bytes: Optional[bytes]) -> 
     try:
         r = requests.get(pdf_url, timeout=30)
         if r.ok:
-            return bytes(r.content)
+            # Stamp metadata on URL-downloaded PDFs (bypass path)
+            from services.pdf_client import stamp_pdf_metadata
+            return stamp_pdf_metadata(bytes(r.content))
     except Exception as e:
         log.warning("Failed to fetch PDF from URL: %s", str(e)[:100])
         return None
