@@ -237,6 +237,10 @@ def _resolve_user_region(region: str) -> Dict[str, str]:
         return {"country": "DE", "bundesland": ""}
     if region_lower in ("at", "österreich", "austria"):
         return {"country": "AT", "bundesland": ""}
+    if region_lower in ("ch", "schweiz", "switzerland"):
+        return {"country": "CH", "bundesland": ""}
+    if region_lower in ("gb", "uk", "vereinigtes königreich", "united kingdom"):
+        return {"country": "GB", "bundesland": ""}
     if region_lower in ("eu", "europa", "europe"):
         return {"country": "EU", "bundesland": ""}
 
@@ -278,6 +282,10 @@ def _parse_program_region(region_str: str) -> List[str]:
                 codes.append(bl_code)
     elif "österreich" in region_lower or "austria" in region_lower:
         codes.append("AT")
+    elif "schweiz" in region_lower or "switzerland" in region_lower:
+        codes.append("CH")
+    elif "vereinigtes königreich" in region_lower or "uk" in region_lower or "united kingdom" in region_lower:
+        codes.append("GB")
     elif "eu" in region_lower or "europa" in region_lower:
         codes.append("EU")
 
@@ -358,7 +366,9 @@ def load_funding_programs() -> List[Dict[str, Any]]:
     if not programs:
         programs = list(CORE_FUNDING_PROGRAMS)
 
-    return [_normalize_program(p) for p in programs]
+    # Filter expired programs and normalize
+    active = [p for p in programs if p.get("status", "active") != "expired"]
+    return [_normalize_program(p) for p in active]
 
 
 def calculate_relevance_score(
@@ -386,11 +396,17 @@ def calculate_relevance_score(
     program_regions = program.get("regions", ["DE"])
 
     # --- COUNTRY FILTER (hard exclude) ---
-    # AT programs only for AT users
+    # National programs only for matching country
     if program_country == "AT" and user_country != "AT":
         return -1.0
-    # DE programs only for DE users (EU users see EU programs only)
-    if program_country == "DE" and user_country == "AT":
+    if program_country == "CH" and user_country != "CH":
+        return -1.0
+    if program_country == "GB" and user_country != "GB":
+        return -1.0
+    if program_country == "DE" and user_country not in ("DE", "EU"):
+        return -1.0
+    # EU programs: not for CH or GB (not EU members)
+    if program_country == "EU" and user_country in ("CH", "GB"):
         return -1.0
 
     # --- SEGMENT MATCH (required) ---
