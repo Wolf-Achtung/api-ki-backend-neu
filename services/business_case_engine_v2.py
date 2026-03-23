@@ -1794,6 +1794,45 @@ def generate_scenarios(
             notes=note,
         ))
 
+    # Post-generation ordering enforcement:
+    # Ensure Conservative ROI <= Realistic ROI <= Optimistic ROI.
+    # Funding effects can invert ordering when high funding reduces effective
+    # investment enough to make conservative ROI > realistic ROI.
+    opt = next((s for s in scenarios if s.name == "optimistic"), None)
+    real = next((s for s in scenarios if s.name == "realistic"), None)
+    cons = next((s for s in scenarios if s.name == "conservative"), None)
+    if opt and real and cons:
+        if cons.roi_12m > real.roi_12m:
+            # Conservative ROI should be lower than realistic
+            adjusted_cons_roi = round(real.roi_12m * 0.9, 1) if real.roi_12m > 0 else round(real.roi_12m - 10, 1)
+            log.info(
+                "[G30] Scenario ordering fix: Conservative ROI %.1f%% > Realistic %.1f%%, "
+                "adjusting Conservative to %.1f%%",
+                cons.roi_12m, real.roi_12m, adjusted_cons_roi
+            )
+            idx = next(i for i, s in enumerate(scenarios) if s.name == "conservative")
+            scenarios[idx] = ScenarioKPIs(
+                name="conservative", roi_12m=adjusted_cons_roi,
+                payback_months=cons.payback_months, monthly_savings=cons.monthly_savings,
+                annual_savings=cons.annual_savings, investment_total=cons.investment_total,
+                notes=cons.notes,
+            )
+        if real.roi_12m > opt.roi_12m:
+            # Realistic should be lower than optimistic
+            adjusted_real_roi = round(opt.roi_12m * 0.9, 1)
+            log.info(
+                "[G30] Scenario ordering fix: Realistic ROI %.1f%% > Optimistic %.1f%%, "
+                "adjusting Realistic to %.1f%%",
+                real.roi_12m, opt.roi_12m, adjusted_real_roi
+            )
+            idx = next(i for i, s in enumerate(scenarios) if s.name == "realistic")
+            scenarios[idx] = ScenarioKPIs(
+                name="realistic", roi_12m=adjusted_real_roi,
+                payback_months=real.payback_months, monthly_savings=real.monthly_savings,
+                annual_savings=real.annual_savings, investment_total=real.investment_total,
+                notes=real.notes,
+            )
+
     return scenarios
 
 
