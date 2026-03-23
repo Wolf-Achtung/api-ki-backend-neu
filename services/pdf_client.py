@@ -19,6 +19,10 @@ import requests
 
 log = logging.getLogger(__name__)
 
+# PDF Author Metadata
+PDF_AUTHOR = os.getenv("PDF_AUTHOR", "KI-Sicherheit.jetzt")
+PDF_PRODUCER = os.getenv("PDF_PRODUCER", "KI-Sicherheit.jetzt")
+
 PDF_SERVICE_URL = (os.getenv("PDF_SERVICE_URL") or "").rstrip("/")
 PDF_TIMEOUT = int(os.getenv("PDF_TIMEOUT_MS", "90000")) / 1000.0  # Sekunden
 MAX_RETRIES = int(os.getenv("PDF_MAX_RETRIES", "3"))
@@ -203,6 +207,29 @@ def build_footer_template(report_id: str, report_date: str, build_id: str = "") 
 </div>'''
 
 
+def stamp_pdf_metadata(pdf_bytes: bytes) -> bytes:
+    """Stamp author/producer metadata onto PDF bytes using PyMuPDF.
+
+    Returns original bytes unchanged if PyMuPDF is not available or stamping fails.
+    """
+    try:
+        import fitz
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        doc.set_metadata({
+            "author": PDF_AUTHOR,
+            "producer": PDF_PRODUCER,
+        })
+        stamped = doc.tobytes()
+        doc.close()
+        return stamped
+    except ImportError:
+        log.debug("[PDF] PyMuPDF not available — skipping metadata stamp")
+        return pdf_bytes
+    except Exception as e:
+        log.warning("[PDF] Failed to stamp PDF metadata: %s", e)
+        return pdf_bytes
+
+
 def render_pdf_from_html(
     html: str,
     meta: Optional[Dict[str, Any]] = None,
@@ -292,7 +319,7 @@ def render_pdf_from_html(
                         retry_count,
                     )
                     return {
-                        "pdf_bytes": r.content,
+                        "pdf_bytes": stamp_pdf_metadata(r.content),
                         "pdf_url": None,
                         "retry_count": retry_count,
                         "elapsed_sec": elapsed,
