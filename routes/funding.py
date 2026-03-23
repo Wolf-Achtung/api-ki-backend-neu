@@ -28,8 +28,10 @@ router = APIRouter(prefix="/funding", tags=["funding"])
 async def recommend_funding(
     report_id: Optional[int] = Query(None, description="Report ID to base recommendations on"),
     branch: Optional[str] = Query(None, description="Industry/branch"),
-    region: Optional[str] = Query("DE", description="Region/state code"),
-    size: Optional[str] = Query("team", description="Company size"),
+    region: Optional[str] = Query("DE", description="Region/state code or Bundesland name"),
+    bundesland: Optional[str] = Query(None, description="Bundesland (alias for region)"),
+    size: Optional[str] = Query("team", description="Company size (solo/team/kmu)"),
+    segment: Optional[str] = Query(None, description="Segment (alias for size)"),
     ai_act_risk: Optional[str] = Query("minimal", description="AI Act risk level"),
     lang: str = Query("de", description="Language code"),
     limit: int = Query(5, ge=1, le=10),
@@ -50,6 +52,12 @@ async def recommend_funding(
 
     try:
         from services.funding_recommender import recommend_funding as get_recommendations
+
+        # Resolve aliases: bundesland → region, segment → size
+        if bundesland and (not region or region == "DE"):
+            region = bundesland
+        if segment and (not size or size == "team"):
+            size = segment
 
         # If report_id provided, get data from report
         if report_id:
