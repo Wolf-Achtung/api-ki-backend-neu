@@ -9161,6 +9161,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "MELDEWEGE": briefing.get("meldewege", "nein"),
         "BISHERIGE_FOERDERMITTEL": briefing.get("bisherige_foerdermittel", "nein"),
         "ERFAHRUNG_BERATUNG": briefing.get("erfahrung_beratung", "nein"),
+        "COUNTRY": (briefing.get("country") or "DE").upper(),
         "MASSNAHMEN_KOMPLEXITAET": briefing.get("massnahmen_komplexitaet", "unklar"),
     })
     

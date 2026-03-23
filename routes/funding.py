@@ -30,8 +30,10 @@ async def recommend_funding(
     branch: Optional[str] = Query(None, description="Industry/branch"),
     region: Optional[str] = Query("DE", description="Region/state code or Bundesland name"),
     bundesland: Optional[str] = Query(None, description="Bundesland (alias for region)"),
+    country: Optional[str] = Query(None, description="Country code (DE, AT, CH, GB)"),
     size: Optional[str] = Query("team", description="Company size (solo/team/kmu)"),
     segment: Optional[str] = Query(None, description="Segment (alias for size)"),
+    budget: Optional[str] = Query(None, description="Investment budget (unter_2000, 2000_10000, 10000_50000, ueber_50000, unklar)"),
     ai_act_risk: Optional[str] = Query("minimal", description="AI Act risk level"),
     lang: str = Query("de", description="Language code"),
     limit: int = Query(5, ge=1, le=10),
@@ -53,9 +55,11 @@ async def recommend_funding(
     try:
         from services.funding_recommender import recommend_funding as get_recommendations
 
-        # Resolve aliases: bundesland → region, segment → size
+        # Resolve aliases: bundesland → region, segment → size, country → region
         if bundesland and (not region or region == "DE"):
             region = bundesland
+        if country and (not region or region == "DE") and not bundesland:
+            region = country
         if segment and (not size or size == "team"):
             size = segment
 
@@ -87,6 +91,7 @@ async def recommend_funding(
             ai_act_risk=ai_act_risk or "minimal",
             lang=lang,
             limit=limit,
+            budget=budget or "",
         )
 
         return {
