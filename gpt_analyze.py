@@ -17481,6 +17481,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                         r'(%)'
                     )
                     _bc_html = _re_bc.sub(
+                        _patch_pattern,
                         lambda m: str(m.group(1)) + f"{new_real:.0f}" + str(m.group(2)),
                         _bc_html, count=1, flags=_re_bc.DOTALL
                     )
