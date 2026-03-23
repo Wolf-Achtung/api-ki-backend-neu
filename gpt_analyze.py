@@ -12670,12 +12670,18 @@ def _mask_email(addr: Optional[str]) -> str:
         return "***"
 
 def _admin_recipients() -> List[str]:
+    """Get deduplicated list of admin email addresses for report notifications.
+
+    Excludes kontakt@ addresses — those are for website contact only,
+    not for automated report notifications.
+    """
     emails: List[str] = []
     for raw in (os.getenv("ADMIN_EMAILS", ""),
                 os.getenv("REPORT_ADMIN_EMAIL", ""),
                 os.getenv("ADMIN_NOTIFY_EMAIL", "")):
         if raw: emails.extend([e.strip() for e in raw.split(",") if e.strip()])
-    return list(dict.fromkeys(emails))
+    # Deduplicate, exclude kontakt@ (website contact only, not report notifications)
+    return [e for e in dict.fromkeys(emails) if not e.startswith("kontakt@")]
 
 def _determine_user_email(db: Session, briefing: Briefing, override: Optional[str]) -> Optional[str]:
     if override: return override
@@ -20714,73 +20720,148 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
 
 # -------------------- briefing summary for admin ----------------
 def _build_briefing_summary_html(br: Briefing, rep: Report, user_email: str) -> str:
-    """Build HTML summary of briefing for admin email"""
+    """Build Admin Report Card HTML for admin notification email.
+
+    Replaces the old debug-attachment approach with a clean inline card
+    showing all relevant data at a glance.
+    """
+    return build_admin_report_card(br, rep, user_email)
+
+
+def build_admin_report_card(br: Briefing, rep: Report, user_email: str) -> str:
+    """Build an HTML Admin Report Card for the admin notification mail.
+
+    Sources:
+    - br (Briefing): answers, scores, user_email, briefing_id
+    - rep (Report): analysis_id, linked Analysis with scores/sections
+    - user_email: resolved user email
+
+    Returns: HTML string for inline display in admin mail body.
+    """
     answers = getattr(br, "answers", {}) or {}
+    scores = _extract_scores_from_report(rep)
+    created = getattr(br, "created_at", None)
+    datum = created.strftime("%d.%m.%Y %H:%M") if created else "—"
 
-    # Key metrics
-    metrics = f"""
-    <div style="background:#f8f9fa;padding:16px;border-radius:8px;margin:16px 0">
-        <h3 style="margin:0 0 12px 0;color:#111827"><span class="icon">▣</span> Briefing-Übersicht</h3>
-        <table class="table-modern" style="width:100%;border-collapse:collapse">
-            <tr><td><b>Briefing ID:</b></td><td>{br.id}</td></tr>
-            <tr><td><b>Analysis ID:</b></td><td>{getattr(rep, 'analysis_id', 'N/A')}</td></tr>
-            <tr><td><b>User:</b></td><td>{user_email}</td></tr>
-            <tr><td><b>Erstellt:</b></td><td>{getattr(br, 'created_at', 'N/A')}</td></tr>
-            <tr><td><b>Sprache:</b></td><td>{getattr(br, 'lang', 'de')}</td></tr>
-        </table>
+    # --- Extract quality/pipeline data from Analysis.meta.sections ---
+    analysis = getattr(rep, "analysis", None)
+    sections: Dict[str, Any] = {}
+    if analysis:
+        meta = getattr(analysis, "meta", None) or {}
+        sections = meta.get("sections", {}) if isinstance(meta, dict) else {}
+
+    pipeline_grade = sections.get("PIPELINE_GRADE", "—")
+    consistency_grade = sections.get("CONSISTENCY_GRADE", "—")
+    consistency_score = sections.get("_CONSISTENCY_SCORE", "—")
+    total_warnings = sections.get("TOTAL_WARNINGS_COUNT", 0)
+    validator_criticals = sections.get("_VALIDATOR_CRITICAL_COUNT", 0)
+    build_stamp = sections.get("BUILD_STAMP", "—")
+    llm_config = sections.get("LLM_PROVIDER", "—")
+
+    # Determine validator status
+    has_critical = int(validator_criticals or 0) > 0
+    validator_status = "FAILED" if has_critical else "PASSED"
+
+    # Business case data
+    capex = sections.get("CAPEX_REALISTISCH_EUR", "—")
+    opex = sections.get("OPEX_REALISTISCH_EUR", "—")
+    roi_12m = sections.get("ROI_12M", "—")
+    payback = sections.get("PAYBACK_MONTHS", "—")
+    hours_month = sections.get("qw_hours_total", sections.get("ZEITERSPARNIS_STUNDEN", "—"))
+    rate_eur = sections.get("DEFAULT_STUNDENSATZ_EUR", sections.get("STUNDENSATZ_EUR", 60))
+
+    # Score rating label
+    score_overall = scores.get("overall", 0)
+    if score_overall >= 80:
+        score_rating = "exzellent"
+    elif score_overall >= 65:
+        score_rating = "gut"
+    elif score_overall >= 50:
+        score_rating = "solide"
+    elif score_overall >= 35:
+        score_rating = "ausbaufähig"
+    else:
+        score_rating = "kritisch"
+
+    # Maturity label
+    maturity_raw = sections.get("MATURITY_LEVEL", sections.get("KI_READINESS_LABEL", "—"))
+
+    # Truncated free texts
+    hauptleistung = str(answers.get("hauptleistung", "—"))[:200]
+    strategische_ziele = str(answers.get("strategische_ziele", "—"))[:300]
+    ki_guardrails = str(answers.get("ki_guardrails", "—"))[:300]
+
+    # Quality colors
+    if validator_status == "PASSED" and pipeline_grade == "A":
+        quality_bg, quality_border = "#f0fdf4", "#bbf7d0"
+    elif validator_status == "PASSED":
+        quality_bg, quality_border = "#fffbeb", "#fde68a"
+    else:
+        quality_bg, quality_border = "#fef2f2", "#fecaca"
+
+    from utils.report_display_id import get_report_display_id
+    display_id = get_report_display_id(br.id)
+
+    # Safe HTML escape helper
+    def _e(val: Any) -> str:
+        return html.escape(str(val)) if val and str(val) != "—" else "—"
+
+    return f"""<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background: #1e293b; color: white; padding: 16px 20px; border-radius: 8px 8px 0 0;">
+    <h2 style="margin: 0; font-size: 18px;">Neuer Report: {_e(display_id)}</h2>
+    <p style="margin: 4px 0 0; font-size: 13px; color: #94a3b8;">{_e(datum)} &middot; {_e(user_email)}</p>
+    <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Briefing #{br.id} &middot; Analysis #{getattr(rep, 'analysis_id', '—')}</p>
+  </div>
+
+  <div style="border: 1px solid #e2e8f0; border-top: none; padding: 20px; border-radius: 0 0 8px 8px;">
+
+    <!-- Profil -->
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px;">
+      <tr><td style="padding: 4px 8px; color: #64748b; width: 40%;">Branche</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('branche'))}</td></tr>
+      <tr style="background: #f8fafc;"><td style="padding: 4px 8px; color: #64748b;">Segment</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('unternehmensgroesse'))}</td></tr>
+      <tr><td style="padding: 4px 8px; color: #64748b;">Standort</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('bundesland'))}, {_e(answers.get('country', 'DE'))}</td></tr>
+      <tr style="background: #f8fafc;"><td style="padding: 4px 8px; color: #64748b;">Umsatz</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('jahresumsatz'))}</td></tr>
+      <tr><td style="padding: 4px 8px; color: #64748b;">Budget</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('investitionsbudget'))}</td></tr>
+      <tr style="background: #f8fafc;"><td style="padding: 4px 8px; color: #64748b;">Foerderinteresse</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('interesse_foerderung'))}</td></tr>
+    </table>
+
+    <!-- Score -->
+    <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; text-align: center; margin-bottom: 16px;">
+      <span style="font-size: 36px; font-weight: 700; color: #0369a1;">{score_overall}</span>
+      <span style="font-size: 14px; color: #64748b;">/100</span>
+      <p style="margin: 4px 0 0; font-size: 13px; color: #0369a1;">{_e(score_rating)} &middot; Reifegrad: {_e(maturity_raw)}</p>
+      <div style="display: flex; justify-content: space-around; margin-top: 12px; font-size: 12px;">
+        <span>Gov {scores.get('governance', 0)}</span>
+        <span>Sec {scores.get('security', 0)}</span>
+        <span>Val {scores.get('value', 0)}</span>
+        <span>Ena {scores.get('enablement', 0)}</span>
+      </div>
     </div>
-    """
 
-    # Scores
-    scores_html = f"""
-    <div style="background:#eff6ff;padding:16px;border-radius:8px;margin:16px 0">
-        <h3 style="margin:0 0 12px 0;color:#1e40af"><span class="icon">◎</span> Scores</h3>
-        <table class="table-modern" style="width:100%;border-collapse:collapse">
-            <tr><td><b>Gesamt:</b></td><td>{getattr(rep, 'score_overall', 0)}/100</td></tr>
-            <tr><td><b>Governance:</b></td><td>{getattr(rep, 'score_governance', 0)}/100</td></tr>
-            <tr><td><b>Sicherheit:</b></td><td>{getattr(rep, 'score_security', 0)}/100</td></tr>
-            <tr><td><b>Wertschöpfung:</b></td><td>{getattr(rep, 'score_value', 0)}/100</td></tr>
-            <tr><td><b>Befähigung:</b></td><td>{getattr(rep, 'score_enablement', 0)}/100</td></tr>
-        </table>
+    <!-- Business Case -->
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px;">
+      <tr><td style="padding: 4px 8px; color: #64748b; width: 40%;">Zeitersparnis</td><td style="padding: 4px 8px; font-weight: 600;">{_e(hours_month)}h/Monat</td></tr>
+      <tr style="background: #f8fafc;"><td style="padding: 4px 8px; color: #64748b;">Stundensatz</td><td style="padding: 4px 8px;">{_e(rate_eur)}&euro;/h</td></tr>
+      <tr><td style="padding: 4px 8px; color: #64748b;">CAPEX / OPEX</td><td style="padding: 4px 8px;">{_e(capex)}&euro; / {_e(opex)}&euro;/Monat</td></tr>
+      <tr style="background: #f8fafc;"><td style="padding: 4px 8px; color: #64748b;">ROI (12M)</td><td style="padding: 4px 8px; font-weight: 600;">{_e(roi_12m)}%</td></tr>
+      <tr><td style="padding: 4px 8px; color: #64748b;">Payback</td><td style="padding: 4px 8px; font-weight: 600;">{_e(payback)} Monate</td></tr>
+    </table>
+
+    <!-- Pipeline-Qualitaet -->
+    <div style="background: {quality_bg}; border: 1px solid {quality_border}; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 13px;">
+      <strong>{validator_status}</strong> &middot; Grade {_e(pipeline_grade)} &middot; Consistency {_e(consistency_grade)} ({_e(consistency_score)}) &middot; {int(validator_criticals or 0)} Errors &middot; {int(total_warnings or 0)} Warnings
+      <br/><span style="color: #64748b; font-size: 12px;">LLM: {_e(llm_config)} &middot; Build: {_e(build_stamp)}</span>
     </div>
-    """
 
-    # Key answers (top 10 most important)
-    key_fields = {
-        "branche": "Branche",
-        "unternehmensgroesse": "Unternehmensgröße",
-        "bundesland": "Bundesland",
-        "hauptleistung": "Hauptleistung",
-        "ai_experience": "KI-Erfahrung",
-        "ai_budget": "KI-Budget",
-        "data_quality": "Datenqualität",
-        "gdpr_aware": "DSGVO-Bewusstsein",
-        "ai_goals": "KI-Ziele",
-        "biggest_challenge": "Größte Herausforderung",
-    }
-
-    answers_rows = []
-    for key, label in key_fields.items():
-        value = answers.get(key, "—")
-        if value and value != "—":
-            # Truncate long values
-            if isinstance(value, str) and len(value) > 80:
-                value = value[:77] + "..."
-            answers_rows.append(f"<tr><td><b>{label}:</b></td><td>{html.escape(str(value))}</td></tr>")
-
-    answers_html = f"""
-    <div style="background:#fef3c7;padding:16px;border-radius:8px;margin:16px 0">
-        <h3 style="margin:0 0 12px 0;color:#92400e">📝 Wichtige Antworten</h3>
-        <table class="table-modern" style="width:100%;border-collapse:collapse">
-            {''.join(answers_rows)}
-        </table>
-        <p style="margin:8px 0 0 0;font-size:12px;color:#78716c">
-            <i>Vollständige Antworten siehe JSON-Attachment</i>
-        </p>
+    <!-- Profil-Kurztext -->
+    <div style="font-size: 12px; color: #475569; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+      <p style="margin: 0 0 8px;"><strong>Profil:</strong> {html.escape(hauptleistung)}</p>
+      <p style="margin: 0 0 8px;"><strong>Ziele:</strong> {html.escape(strategische_ziele)}</p>
+      <p style="margin: 0;"><strong>Guardrails:</strong> {html.escape(ki_guardrails)}</p>
     </div>
-    """
 
-    return metrics + scores_html + answers_html
+  </div>
+</div>"""
 
 # -------------------- runner (kept from original) ----------------
 def _fetch_pdf_if_needed(pdf_url: Optional[str], pdf_bytes: Optional[bytes]) -> Optional[bytes]:
@@ -20860,48 +20941,19 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
     if best_pdf:
         attachments_admin.append({
             "filename": f"KI-Status-Report-{get_report_display_id(br.id)}.pdf",
-            "content": best_pdf, 
+            "content": best_pdf,
             "mimetype": "application/pdf"
         })
-    try:
-        # Build comprehensive briefing data with metadata for admin review
-        user_email = _determine_user_email(db, br, getattr(rep, "user_email", None)) or "unknown"
 
-        briefing_data = {
-            "briefing_id": br.id,
-            "analysis_id": getattr(rep, "analysis_id", None),
-            "user_email": user_email,
-            "created_at": str(getattr(br, "created_at", "")),
-            "lang": getattr(br, "lang", "de"),
-            "scores": _extract_scores_from_report(rep),
-            "answers": clean_briefing_data(getattr(br, "answers", {}) or {}),  # ENCODING-FIX for old DB data
-        }
+    # Resolve user email for report card
+    user_email = _determine_user_email(db, br, getattr(rep, "user_email", None)) or "unknown"
 
-        bjson = json.dumps(briefing_data, ensure_ascii=False, indent=2).encode("utf-8")
-        attachments_admin.append({
-            "filename": f"briefing-{br.id}-full.json",
-            "content": bjson,
-            "mimetype": "application/json"
-        })
-        log.info("[%s] 📎 Added briefing JSON attachment for admin (%d bytes)", run_id, len(bjson))
-    except Exception as e:
-        log.warning("[%s] ⚠️ Could not create briefing JSON attachment: %s", run_id, str(e))
-
-    # DEBUG-503D: Attach debug artifacts when DEBUG_RENDER=1
-    # NOTE: debug_attachments is passed as a parameter (contains bytes), NOT read from meta
-    # This ensures bytes are never stored in meta which gets persisted to Postgres JSONB
+    # NOTE: Debug attachments (debug_503d_*, briefing-*-full.json) are no longer
+    # sent via email. The Admin Report Card (inline HTML) replaces them.
+    # Debug files are still generated for Railway logs/debug storage.
     if debug_attachments:
-        try:
-            for att in debug_attachments:
-                attachments_admin.append(att)
-            total_debug_bytes = sum(len(a.get("content", b"")) for a in debug_attachments)
-            log.info(
-                "[%s] [DEBUG-503D][MAIL] attaching %d artifacts: "
-                "quick_wins_block.html, risk_matrix_block.html, payback_mentions.txt, quick_wins_keys.json "
-                "(total_bytes=%d)", run_id, len(debug_attachments), total_debug_bytes
-            )
-        except Exception as debug_exc:
-            log.warning("[%s] ⚠️ Could not attach DEBUG-503D artifacts: %s", run_id, str(debug_exc))
+        log.info("[%s] [DEBUG-503D] %d debug artifacts generated (not attached to email — replaced by Admin Report Card)",
+                 run_id, len(debug_attachments))
 
     # Send to user
     try:
