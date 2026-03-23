@@ -130,7 +130,21 @@ Analysieren Sie:
 5. Was können wir besser machen?""",
                 "zeitersparnis": "2-3 Std pro Analyse"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "Werbewirkung verstehen & erklären",
+            "thema": "wie KI-gestützte Zielgruppenanalyse die Werbewirkung verbessert",
+            "zielgruppe": "Kunden",
+            "prompt": """Erkläre mir, wie KI-gestützte Zielgruppenanalyse die Werbewirkung verbessert, so dass ich es einem Kunden ohne Fachwissen in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     },
     
     # -------------------------------------------------------------------------
@@ -184,7 +198,21 @@ Format:
 - Nächster Termin""",
                 "zeitersparnis": "20-30 Min pro Meeting"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "E-Rechnung verstehen & erklären",
+            "thema": "die wichtigsten Änderungen bei der E-Rechnung ab 2025",
+            "zielgruppe": "Mandanten",
+            "prompt": """Erkläre mir die wichtigsten Änderungen bei der E-Rechnung ab 2025, so dass ich es einem Mandanten ohne Fachwissen in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     },
     
     # -------------------------------------------------------------------------
@@ -239,7 +267,21 @@ Format pro Story:
 - Geschätzter Aufwand (S/M/L)""",
                 "zeitersparnis": "30-45 Min pro Feature"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "KI-Architekturmuster verstehen & erklären",
+            "thema": "wie Retrieval Augmented Generation (RAG) funktioniert und wann es sich für Unternehmen lohnt",
+            "zielgruppe": "Kunden",
+            "prompt": """Erkläre mir, wie Retrieval Augmented Generation (RAG) funktioniert und wann es sich für Unternehmen lohnt, so dass ich es einem Kunden ohne technischen Hintergrund in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     },
     
     # -------------------------------------------------------------------------
@@ -296,7 +338,21 @@ Der Text soll:
 - Max. 200 Wörter""",
                 "zeitersparnis": "30-45 Min pro Report"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "ESG-Reporting verstehen & erklären",
+            "thema": "wie KI das ESG-Reporting und die Nachhaltigkeitsberichterstattung für Finanzdienstleister verändert",
+            "zielgruppe": "Kunden",
+            "prompt": """Erkläre mir, wie KI das ESG-Reporting und die Nachhaltigkeitsberichterstattung für Finanzdienstleister verändert, so dass ich es einem Kunden ohne Fachwissen in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     },
     
     # -------------------------------------------------------------------------
@@ -356,7 +412,21 @@ Liefern Sie:
 5. Kleingedrucktes""",
                 "zeitersparnis": "20-30 Min pro Aktion"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "Predictive Analytics verstehen & erklären",
+            "thema": "wie Predictive Analytics die Lagerhaltung und Bestandsplanung optimiert",
+            "zielgruppe": "Mitarbeitenden",
+            "prompt": """Erkläre mir, wie Predictive Analytics die Lagerhaltung und Bestandsplanung optimiert, so dass ich es einem Mitarbeitenden ohne Fachwissen in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     },
     
     # -------------------------------------------------------------------------
@@ -415,7 +485,21 @@ Das Feedback soll:
 - Motivierend enden""",
                 "zeitersparnis": "15-20 Min pro Feedback"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "KI-gestütztes Lernen verstehen & erklären",
+            "thema": "wie adaptives Lernen mit KI den Unterricht individualisiert und welche Grenzen es gibt",
+            "zielgruppe": "Kolleginnen und Kollegen",
+            "prompt": """Erkläre mir, wie adaptives Lernen mit KI den Unterricht individualisiert und welche Grenzen es gibt, so dass ich es Kolleginnen und Kollegen ohne technischen Hintergrund in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     },
     
     # -------------------------------------------------------------------------
@@ -473,9 +557,23 @@ Format:
 - Nächster Termin""",
                 "zeitersparnis": "30-45 Min pro Protokoll"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "OZG und Digitalisierungspflichten verstehen & erklären",
+            "thema": "welche Digitalisierungspflichten das Onlinezugangsgesetz (OZG 2.0) für Kommunen bringt",
+            "zielgruppe": "Bürgerinnen und Bürgern",
+            "prompt": """Erkläre mir, welche Digitalisierungspflichten das Onlinezugangsgesetz (OZG 2.0) für Kommunen bringt, so dass ich es Bürgerinnen und Bürgern ohne Fachwissen in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     },
-    
+
     # -------------------------------------------------------------------------
     # 8. GESUNDHEIT & PFLEGE
     # -------------------------------------------------------------------------
@@ -531,7 +629,21 @@ Struktur:
 5. Handout-Inhalte""",
                 "zeitersparnis": "45-60 Min pro Konzept"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "KI in der Pflege verstehen & erklären",
+            "thema": "wie KI-gestützte Dokumentation und Spracherkennung den Pflegealltag entlastet",
+            "zielgruppe": "Patientinnen und Patienten",
+            "prompt": """Erkläre mir, wie KI-gestützte Dokumentation und Spracherkennung den Pflegealltag entlastet, so dass ich es Patientinnen und Patienten ohne Fachwissen in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     },
     
     # -------------------------------------------------------------------------
@@ -589,7 +701,21 @@ Das Schreiben soll:
 - Nächste Schritte definieren""",
                 "zeitersparnis": "20-30 Min pro Schreiben"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "BIM verstehen & erklären",
+            "thema": "wie Building Information Modeling (BIM) mit KI-Unterstützung die Bauplanung verändert",
+            "zielgruppe": "Bauherren",
+            "prompt": """Erkläre mir, wie Building Information Modeling (BIM) mit KI-Unterstützung die Bauplanung verändert, so dass ich es einem Bauherren ohne Fachwissen in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     },
     
     # -------------------------------------------------------------------------
@@ -652,7 +778,21 @@ Struktur:
 - Outro""",
                 "zeitersparnis": "30-45 Min pro Outline"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "KI-generierte Inhalte verstehen & erklären",
+            "thema": "welche Kennzeichnungspflichten der EU AI Act für KI-generierte Inhalte in Medien bringt",
+            "zielgruppe": "Kunden",
+            "prompt": """Erkläre mir, welche Kennzeichnungspflichten der EU AI Act für KI-generierte Inhalte in Medien bringt, so dass ich es einem Kunden ohne Fachwissen in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     },
     
     # -------------------------------------------------------------------------
@@ -715,7 +855,21 @@ Format:
 - Offene Punkte""",
                 "zeitersparnis": "15-20 Min pro Bericht"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "Predictive Maintenance verstehen & erklären",
+            "thema": "wie KI-gestützte vorausschauende Wartung (Predictive Maintenance) ungeplante Stillstände reduziert",
+            "zielgruppe": "Mitarbeitenden",
+            "prompt": """Erkläre mir, wie KI-gestützte vorausschauende Wartung (Predictive Maintenance) ungeplante Stillstände reduziert, so dass ich es einem Mitarbeitenden ohne technischen Hintergrund in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     },
     
     # -------------------------------------------------------------------------
@@ -774,9 +928,23 @@ Die Antwort soll:
 - Verbesserungsmaßnahme nennen""",
                 "zeitersparnis": "15-20 Min pro Antwort"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "KI-Routenoptimierung verstehen & erklären",
+            "thema": "wie KI-gestützte Routenoptimierung Lieferzeiten und Kraftstoffkosten senkt",
+            "zielgruppe": "Kunden",
+            "prompt": """Erkläre mir, wie KI-gestützte Routenoptimierung Lieferzeiten und Kraftstoffkosten senkt, so dass ich es einem Kunden ohne Fachwissen in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     },
-    
+
     # -------------------------------------------------------------------------
     # 13. GASTRONOMIE & TOURISMUS
     # -------------------------------------------------------------------------
@@ -833,9 +1001,23 @@ Das Angebot soll enthalten:
 - Preis-Übersicht""",
                 "zeitersparnis": "30-45 Min pro Angebot"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "Dynamische Preisgestaltung verstehen & erklären",
+            "thema": "wie dynamische Preisgestaltung in der Gastronomie funktioniert und wo die Grenzen liegen",
+            "zielgruppe": "Team",
+            "prompt": """Erkläre mir, wie dynamische Preisgestaltung in der Gastronomie funktioniert und wo die Grenzen liegen, so dass ich es meinem Team ohne Fachwissen in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     },
-    
+
     # -------------------------------------------------------------------------
     # DEFAULT (Fallback für alle anderen)
     # -------------------------------------------------------------------------
@@ -883,7 +1065,21 @@ Liefern Sie:
 3. Empfehlung zum Starten""",
                 "zeitersparnis": "30-45 Min pro Session"
             }
-        ]
+        ],
+        "lern_prompt": {
+            "titel": "KI-Chancen & Risiken verstehen & erklären",
+            "thema": "die wichtigsten Chancen und Risiken von KI für kleine und mittlere Unternehmen",
+            "zielgruppe": "Geschäftspartnern",
+            "prompt": """Erkläre mir die wichtigsten Chancen und Risiken von KI für kleine und mittlere Unternehmen, so dass ich es einem Geschäftspartner ohne Fachwissen in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
     }
 }
 
@@ -1159,12 +1355,12 @@ def generate_sofort_start_html(
         </p>
     </div>
     
-    <!-- 3 PROMPTS – FIX-B17: heading + first box stay together, no forced page break -->
+    <!-- 4 PROMPTS – FIX-B17: heading + first box stay together, no forced page break -->
     <div style="margin-bottom: 24px;">
         <div style="page-break-inside: avoid; break-inside: avoid;">
         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 24px;">📋</span>
-            3 Copy-Paste Prompts für {branche_data["name"]}
+            4 Copy-Paste Prompts für {branche_data["name"]}
         </h3>
         <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">
             Kopieren Sie diese Prompts direkt in ChatGPT oder Claude:
@@ -1194,10 +1390,31 @@ def generate_sofort_start_html(
         {close_wrapper}
 '''
     
+    # 4. Lern-Prompt – Verstehen & Erklären (branchenspezifisch)
+    lern_prompt = branche_data.get("lern_prompt")
+    if lern_prompt:
+        lern_text = lern_prompt["prompt"][:400] + "..." if len(lern_prompt["prompt"]) > 400 else lern_prompt["prompt"]
+        html += f'''
+        <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <h4 style="font-size: 14px; font-weight: 600; margin: 0; color: #92400e;">
+                    4. {lern_prompt["titel"]}
+                    <span style="font-size: 10px; font-weight: 500; background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle;">Lern-Prompt</span>
+                </h4>
+                <span style="font-size: 11px; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; white-space: nowrap;">
+                    ⏱️ {lern_prompt["zeitersparnis"]}
+                </span>
+            </div>
+            <div style="background: white; border: 1px solid #fde68a; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 10px; line-height: 1.4; white-space: pre-wrap; color: #334155;">
+{lern_text}
+            </div>
+        </div>
+'''
+
     html += '''
     </div>
 '''
-    
+
     # Tools hinzufügen
     html += '''
     <!-- TOOL-EMPFEHLUNGEN -->
