@@ -1775,7 +1775,8 @@ def get_roi_impact_summary() -> Dict[str, Any]:
             "total_records": 0,
             "programmes_tracked": 0,
             "average_roi": 1.0,
-            "programmes_with_boost": 0
+            "programmes_with_boost": 0,
+            "top_performers": [],
         }
 
     all_stats = get_all_programme_roi_stats()
