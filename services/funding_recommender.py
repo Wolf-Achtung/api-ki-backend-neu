@@ -202,20 +202,163 @@ CORE_FUNDING_PROGRAMS: List[Dict[str, Any]] = [
 
 
 # =============================================================================
+# REGION / COUNTRY HELPERS
+# =============================================================================
+
+# Mapping: Bundesland name → ISO code
+BUNDESLAND_TO_CODE: Dict[str, str] = {
+    "bayern": "BY", "baden-württemberg": "BW", "berlin": "BE",
+    "brandenburg": "BB", "bremen": "HB", "hamburg": "HH",
+    "hessen": "HE", "mecklenburg-vorpommern": "MV",
+    "niedersachsen": "NI", "nordrhein-westfalen": "NW",
+    "rheinland-pfalz": "RP", "saarland": "SL", "sachsen": "SN",
+    "sachsen-anhalt": "ST", "schleswig-holstein": "SH", "thüringen": "TH",
+}
+
+# Reverse mapping: code → display name
+CODE_TO_BUNDESLAND: Dict[str, str] = {v: k.title() for k, v in BUNDESLAND_TO_CODE.items()}
+
+
+def _resolve_user_region(region: str) -> Dict[str, str]:
+    """
+    Parse user's region input into country_code and bundesland_code.
+
+    Handles: "Bayern", "BY", "DE", "AT", "Berlin", etc.
+    Returns: {"country": "DE"|"AT"|"EU", "bundesland": "BY"|""|...}
+    """
+    if not region:
+        return {"country": "DE", "bundesland": ""}
+
+    region_stripped = region.strip()
+    region_lower = region_stripped.lower()
+
+    # Direct country codes
+    if region_lower in ("de", "deutschland"):
+        return {"country": "DE", "bundesland": ""}
+    if region_lower in ("at", "österreich", "austria"):
+        return {"country": "AT", "bundesland": ""}
+    if region_lower in ("eu", "europa", "europe"):
+        return {"country": "EU", "bundesland": ""}
+
+    # Bundesland name → code
+    if region_lower in BUNDESLAND_TO_CODE:
+        return {"country": "DE", "bundesland": BUNDESLAND_TO_CODE[region_lower]}
+
+    # Already a Bundesland code (e.g. "BY", "BW")
+    region_upper = region_stripped.upper()
+    if region_upper in CODE_TO_BUNDESLAND:
+        return {"country": "DE", "bundesland": region_upper}
+
+    # Default: treat as DE
+    return {"country": "DE", "bundesland": ""}
+
+
+def _parse_program_region(region_str: str) -> List[str]:
+    """
+    Parse a program's region string into a list of region codes.
+
+    "Deutschland (bundesweit)" → ["DE"]
+    "Deutschland (Bayern)" → ["DE", "BY"]
+    "EU (Europa)" → ["EU"]
+    "Österreich (bundesweit)" → ["AT"]
+    """
+    if not region_str:
+        return ["DE"]
+
+    region_lower = region_str.lower()
+    codes: List[str] = []
+
+    if "deutschland" in region_lower:
+        codes.append("DE")
+        # Check for specific Bundesland in parentheses
+        if "(" in region_str and "bundesweit" not in region_lower and "länderprogramme" not in region_lower:
+            inner = region_str.split("(")[1].rstrip(")")
+            bl_code = BUNDESLAND_TO_CODE.get(inner.lower().strip())
+            if bl_code:
+                codes.append(bl_code)
+    elif "österreich" in region_lower or "austria" in region_lower:
+        codes.append("AT")
+    elif "eu" in region_lower or "europa" in region_lower:
+        codes.append("EU")
+
+    return codes or ["DE"]
+
+
+def _parse_ki_relevance(relevance_str: str) -> str:
+    """
+    Map descriptive KI-relevance string to normalized level.
+
+    "Sehr hoch – ..." → "high"
+    "Hoch – ..." → "high"
+    "Mittel ..." → "medium"
+    "Gering ..." → "low"
+    """
+    if not relevance_str:
+        return "medium"
+    lower = relevance_str.lower()
+    if lower.startswith("sehr hoch") or lower.startswith("high"):
+        return "high"
+    if lower.startswith("hoch"):
+        return "high"
+    if lower.startswith("mittel"):
+        return "medium"
+    if lower.startswith("gering") or lower.startswith("low"):
+        return "low"
+    return "medium"
+
+
+def _normalize_program(raw: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalize a program from the JSON file schema to the internal engine schema.
+
+    Bridges field name differences between funding_programmes_core_2025.json
+    and the scoring engine's expected format.
+    """
+    # Already in internal format (has 'size_match' key) → return as-is
+    if "size_match" in raw:
+        return raw
+
+    regions = _parse_program_region(raw.get("region", ""))
+    ki_rel = _parse_ki_relevance(raw.get("relevance_ki", ""))
+
+    return {
+        **raw,
+        "name": raw.get("title", raw.get("name", "")),
+        "size_match": raw.get("suitable_for", ["team", "kmu"]),
+        "regions": regions,
+        "ki_relevance": ki_rel,
+        "branches": raw.get("branches", ["all"]),
+        "complexity": "low" if raw.get("priority", 3) <= 1 else
+                      "medium" if raw.get("priority", 3) <= 2 else "high",
+        "max_funding": raw.get("max_amount", raw.get("max_funding", "")),
+        "summary_de": raw.get("focus", raw.get("summary_de", "")),
+        "summary_en": raw.get("summary_en", ""),
+        "provider": raw.get("provider", ""),
+        "url": raw.get("url"),
+        "deadline": raw.get("deadline"),
+        "deadline_notes": raw.get("deadline_notes"),
+    }
+
+
+# =============================================================================
 # RECOMMENDATION ENGINE
 # =============================================================================
 
 def load_funding_programs() -> List[Dict[str, Any]]:
-    """Load funding programs from file or use embedded data."""
+    """Load funding programs from file or use embedded data, normalizing to internal schema."""
+    programs: List[Dict[str, Any]] = []
     try:
         if os.path.exists(FUNDING_DATA_PATH):
             with open(FUNDING_DATA_PATH, 'r', encoding='utf-8') as f:
                 data: List[Dict[str, Any]] = json.load(f)
-                return data
+                programs = data
     except Exception as e:
         log.warning("[G11-Funding] Could not load funding data: %s", e)
 
-    return list(CORE_FUNDING_PROGRAMS)
+    if not programs:
+        programs = list(CORE_FUNDING_PROGRAMS)
+
+    return [_normalize_program(p) for p in programs]
 
 
 def calculate_relevance_score(
@@ -230,57 +373,90 @@ def calculate_relevance_score(
     """
     Calculate relevance score for a funding program.
 
-    Returns score from 0.0 to 1.0.
+    Scoring formula:
+      base_score (segment match) × region_boost × ki_relevance_boost
+
+    Returns score from 0.0 to 1.0, or -1.0 to signal "filter out".
     """
-    score = 0.0
-    max_score = 100.0
+    user_region = _resolve_user_region(region)
+    user_country = user_region["country"]
+    user_bundesland = user_region["bundesland"]
 
-    # Size match (30 points)
+    program_country = program.get("country_code", "DE")
+    program_regions = program.get("regions", ["DE"])
+
+    # --- COUNTRY FILTER (hard exclude) ---
+    # AT programs only for AT users
+    if program_country == "AT" and user_country != "AT":
+        return -1.0
+    # DE programs only for DE users (EU users see EU programs only)
+    if program_country == "DE" and user_country == "AT":
+        return -1.0
+
+    # --- SEGMENT MATCH (required) ---
     size_lower = size.lower() if size else "team"
-    if "all" in program.get("size_match", []) or size_lower in program.get("size_match", []):
-        score += 30
+    # Normalize verbose size labels: "KMU (11-250)" → "kmu", "Solo" → "solo"
+    if "solo" in size_lower or "1 " in size_lower or size_lower == "1":
+        size_norm = "solo"
+    elif "kmu" in size_lower or "11-" in size_lower or "250" in size_lower:
+        size_norm = "kmu"
+    else:
+        size_norm = "team" if "team" in size_lower or "2-10" in size_lower else size_lower
+    size_match_list = program.get("size_match", [])
+    if "all" not in size_match_list and size_norm not in size_match_list:
+        return -1.0  # Hard filter: segment must match
 
-    # Region match (20 points)
-    regions = program.get("regions", ["DE"])
-    region_upper = region.upper() if region else "DE"
-    if "all" in regions or "EU" in regions or region_upper in regions or "DE" in regions:
-        score += 20
-    elif region_upper[:2] in [r[:2] for r in regions]:  # Partial match
-        score += 10
+    # --- BASE SCORE: 0.5 ---
+    score = 0.5
 
-    # Branch match (20 points)
-    branches = program.get("branches", ["all"])
-    branch_lower = branch.lower() if branch else ""
-    if "all" in branches:
-        score += 20
-    elif any(b in branch_lower for b in branches):
-        score += 20
-    elif branch_lower:
-        score += 5  # Minimal score for having a branch
+    # --- REGION BOOST ---
+    if user_bundesland and user_bundesland in program_regions:
+        # Program is specifically for user's Bundesland
+        score *= 2.0
+    elif program_country == "DE" and "DE" in program_regions and len(program_regions) == 1:
+        # Bundesweit DE program
+        score *= 1.5
+    elif program_country == "EU":
+        # EU program — baseline, no boost
+        score *= 1.0
+    elif program_country == "AT" and user_country == "AT":
+        score *= 1.5
+    elif user_bundesland and user_bundesland not in program_regions and len(program_regions) > 1:
+        # Regional program but NOT for user's Bundesland → penalize
+        score *= 0.4
+    else:
+        score *= 1.2  # DE program, no specific Bundesland
 
-    # KI relevance (15 points)
+    # --- KI RELEVANCE BOOST ---
     ki_rel = program.get("ki_relevance", "medium")
     if ki_rel == "high":
-        score += 15
+        score *= 1.3
     elif ki_rel == "medium":
-        score += 10
+        score *= 1.0
     else:
-        score += 5
+        score *= 0.7
 
-    # AI Act relevance bonus (10 points)
+    # --- BRANCH MATCH BOOST ---
+    branches = program.get("branches", ["all"])
+    branch_lower = branch.lower() if branch else ""
+    if "all" not in branches and branch_lower:
+        if any(b in branch_lower for b in branches):
+            score *= 1.1  # Specific branch match bonus
+        # No penalty — most programs are "all" branches
+
+    # --- AI ACT RELEVANCE BONUS ---
     if ai_act_risk in ["high-risk", "limited"] and program.get("ai_act_relevant"):
-        score += 10
-    elif ai_act_risk == "high-risk":
-        score += 5
+        score *= 1.2
 
-    # Complexity penalty for low maturity (5 points max)
+    # --- COMPLEXITY / MATURITY ADJUSTMENT ---
     complexity = program.get("complexity", "medium")
-    if maturity >= 3 or complexity == "low":
-        score += 5
-    elif maturity >= 2 and complexity != "high":
-        score += 3
+    if complexity == "high" and maturity < 2:
+        score *= 0.8  # Penalize complex programs for low-maturity companies
+    elif complexity == "low":
+        score *= 1.05  # Slight boost for easy applications
 
-    return min(score / max_score, 1.0)
+    # Clamp to [0.0, 1.0]
+    return min(max(score, 0.0), 1.0)
 
 
 def get_match_reasons(
@@ -293,6 +469,8 @@ def get_match_reasons(
 ) -> List[str]:
     """Get list of reasons why this program matches."""
     reasons = []
+    user_region = _resolve_user_region(region)
+    user_bundesland = user_region["bundesland"]
 
     # Size match
     size_lower = size.lower() if size else "team"
@@ -324,12 +502,18 @@ def get_match_reasons(
             reasons.append("Simple application process")
 
     # Regional match
-    regions = program.get("regions", [])
-    if region and region.upper() in regions:
+    program_regions = program.get("regions", [])
+    if user_bundesland and user_bundesland in program_regions:
+        bl_name = CODE_TO_BUNDESLAND.get(user_bundesland, region)
         if lang == "de":
-            reasons.append(f"Verfügbar in {region}")
+            reasons.append(f"Speziell für {bl_name}")
         else:
-            reasons.append(f"Available in {region}")
+            reasons.append(f"Specifically for {bl_name}")
+    elif program.get("country_code") == "DE" and len(program_regions) == 1 and "DE" in program_regions:
+        if lang == "de":
+            reasons.append("Bundesweit verfügbar")
+        else:
+            reasons.append("Available nationwide")
 
     return reasons
 
@@ -372,12 +556,14 @@ def recommend_funding(
     recommendations = []
 
     for program in programs:
-        # Calculate relevance
+        # Calculate relevance (returns -1.0 for filtered-out programs)
         score = calculate_relevance_score(
             program, branch, region, size, maturity, ai_act_risk, roi
         )
 
-        if score < 0.3:  # Minimum threshold
+        if score < 0.0:  # Filtered out by country/segment
+            continue
+        if score < 0.2:  # Minimum relevance threshold
             continue
 
         # Get match reasons
@@ -385,9 +571,9 @@ def recommend_funding(
 
         rec = FundingRecommendation(
             program_id=program.get("id", "unknown"),
-            name=program.get("name", ""),
+            name=program.get("name", "") or program.get("title", ""),
             provider=program.get("provider", ""),
-            max_funding=program.get("max_funding", ""),
+            max_funding=program.get("max_funding", "") or program.get("max_amount", ""),
             funding_rate=program.get("funding_rate", ""),
             relevance_score=round(score, 2),
             match_reasons=reasons,
@@ -395,7 +581,7 @@ def recommend_funding(
             application_complexity=program.get("complexity", "medium"),
             url=program.get("url"),
             deadline=program.get("deadline"),
-            summary_de=program.get("summary_de", ""),
+            summary_de=program.get("summary_de", "") or program.get("focus", ""),
             summary_en=program.get("summary_en", ""),
         )
         recommendations.append(rec)
@@ -1804,10 +1990,14 @@ def get_branch_funding_hits(
             roi=0.0,
         )
 
+        # Skip filtered-out programs (country/segment mismatch)
+        if base_score < 0.0:
+            continue
+
         # Apply branch-specific boost
         branch_boost, match_reason = priority_map.get(program_id, (1.0, ""))
 
-        if branch_boost > 1.0 or base_score >= 0.5:
+        if branch_boost > 1.0 or base_score >= 0.4:
             boosted_score = min(1.0, base_score * branch_boost)
 
             # Generate match reason if not specified
