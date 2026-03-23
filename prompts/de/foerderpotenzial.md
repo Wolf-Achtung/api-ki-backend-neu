@@ -81,6 +81,43 @@ STRUKTUR (4 Pflicht-Abschnitte):
   H3 3. Passende Förderschwerpunkte für Ihr Vorhaben
   H3 4. Nächste Schritte für die Förderprüfung
 
+###############################################################################
+##              KONDITIONALE FÖRDER-LOGIK (L4/L5/L8)                        ##
+###############################################################################
+
+INTERESSE AN FÖRDERUNG ({{INTERESSE_FOERDERUNG_LABEL}}):
+{% if INTERESSE_FOERDERUNG_LABEL == "nein" or INTERESSE_FOERDERUNG_LABEL == "Kein Bedarf" %}
+  → KURZ-VERSION: Das gesamte Förderpotenzial-Kapitel auf MAX 150 Wörter reduzieren.
+  → Nur 1-2 Sätze: "Fördermittel stehen zur Verfügung, wurden aber aktuell nicht als
+    Priorität angegeben. Bei zukünftigem Interesse: BAFA-Beratungsförderung und
+    Digitalbonus/Landesprogramme wären erste Anlaufstellen."
+  → KEINE 4 Abschnitte, KEINE ausführliche Analyse.
+{% elif INTERESSE_FOERDERUNG_LABEL == "unklar" %}
+  → Einleitung ergänzen: "Auch wenn Sie sich noch unsicher sind — folgende Programme
+    könnten für Ihr Vorhaben relevant sein und eine Prüfung lohnt sich:"
+  → Volle Section beibehalten.
+{% endif %}
+
+BISHERIGE FÖRDERMITTEL ({{BISHERIGE_FOERDERMITTEL}}):
+{% if BISHERIGE_FOERDERMITTEL == "ja" %}
+  → Im Abschnitt "Nächste Schritte" einen DE-MINIMIS-HINWEIS einbauen:
+  → "<li><strong>De-minimis-Prüfung:</strong> Da bereits Fördermittel bezogen wurden:
+     De-minimis-Grenze beachten (300.000 € innerhalb von 3 Kalenderjahren).
+     Alle erhaltenen Beihilfen der letzten 3 Jahre zusammenstellen.
+     Kumulierungsverbot: Nicht dieselben Kosten doppelt fördern lassen.</li>"
+{% endif %}
+
+BERATUNGSERFAHRUNG ({{ERFAHRUNG_BERATUNG}}):
+{% if ERFAHRUNG_BERATUNG == "nein" %}
+  → Im Abschnitt "Passende Förderschwerpunkte" die BAFA-Beratungsförderung
+    BESONDERS hervorheben:
+  → "Da bisher keine externe Beratung zu Digitalisierung/KI stattfand, ist die
+     BAFA-Förderung von Unternehmensberatungen ein idealer Einstiegspunkt
+     ({{BAFA_FOERDERQUOTE}}% Zuschuss, max. {{BAFA_MAX_FOERDERUNG}})."
+{% endif %}
+
+###############################################################################
+
 DETERMINISTISCHE BAFA-DATEN (verwende EXAKT diese Werte, KEINE eigenen Schätzungen):
 - Programm: BAFA "Förderung von Unternehmensberatungen für KMU"
 - Förderquote für {{BUNDESLAND_LABEL}}: {{BAFA_FOERDERQUOTE}}%

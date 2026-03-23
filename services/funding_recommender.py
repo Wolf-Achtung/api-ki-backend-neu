@@ -237,6 +237,10 @@ def _resolve_user_region(region: str) -> Dict[str, str]:
         return {"country": "DE", "bundesland": ""}
     if region_lower in ("at", "österreich", "austria"):
         return {"country": "AT", "bundesland": ""}
+    if region_lower in ("ch", "schweiz", "switzerland"):
+        return {"country": "CH", "bundesland": ""}
+    if region_lower in ("gb", "uk", "vereinigtes königreich", "united kingdom"):
+        return {"country": "GB", "bundesland": ""}
     if region_lower in ("eu", "europa", "europe"):
         return {"country": "EU", "bundesland": ""}
 
@@ -278,6 +282,10 @@ def _parse_program_region(region_str: str) -> List[str]:
                 codes.append(bl_code)
     elif "österreich" in region_lower or "austria" in region_lower:
         codes.append("AT")
+    elif "schweiz" in region_lower or "switzerland" in region_lower:
+        codes.append("CH")
+    elif "vereinigtes königreich" in region_lower or "uk" in region_lower or "united kingdom" in region_lower:
+        codes.append("GB")
     elif "eu" in region_lower or "europa" in region_lower:
         codes.append("EU")
 
@@ -307,6 +315,55 @@ def _parse_ki_relevance(relevance_str: str) -> str:
     return "medium"
 
 
+import re
+
+def _parse_max_amount_eur(amount_str: str) -> Optional[float]:
+    """
+    Parse max_amount string to numeric EUR value.
+
+    "bis 310.500 €" → 310500.0
+    "bis 2,5 Mio €" → 2500000.0
+    "Standard: bis 10.000 € / Plus: bis 50.000 €" → 50000.0 (take highest)
+    "variabel" → None
+    """
+    if not amount_str:
+        return None
+
+    lower = amount_str.lower()
+    if "variabel" in lower or "unbegrenzt" in lower:
+        return None
+
+    # Find all numeric amounts
+    amounts: List[float] = []
+
+    # Match "X,X Mio" pattern (e.g. "2,5 Mio")
+    for m in re.finditer(r'(\d+[.,]?\d*)\s*Mio', amount_str):
+        val = float(m.group(1).replace('.', '').replace(',', '.'))
+        amounts.append(val * 1_000_000)
+
+    # Match "X.XXX €" or "X.XXX€" pattern (German number format)
+    for m in re.finditer(r'(\d{1,3}(?:\.\d{3})*)\s*€', amount_str):
+        val = float(m.group(1).replace('.', ''))
+        amounts.append(val)
+
+    # Match "£X" pattern for UK
+    for m in re.finditer(r'£\s*(\d+[.,]?\d*)\s*Mio', amount_str):
+        val = float(m.group(1).replace('.', '').replace(',', '.'))
+        amounts.append(val * 1_000_000 * 1.15)  # Rough GBP→EUR
+
+    return max(amounts) if amounts else None
+
+
+# Budget ranges: user's investitionsbudget → (min_relevant, max_relevant) for program filtering
+BUDGET_RANGES: Dict[str, tuple] = {
+    "unter_2000": (0, 5_000),
+    "2000_10000": (0, 25_000),
+    "10000_50000": (0, 100_000),
+    "ueber_50000": (0, float('inf')),
+    "unklar": (0, float('inf')),
+}
+
+
 def _normalize_program(raw: Dict[str, Any]) -> Dict[str, Any]:
     """
     Normalize a program from the JSON file schema to the internal engine schema.
@@ -321,6 +378,7 @@ def _normalize_program(raw: Dict[str, Any]) -> Dict[str, Any]:
     regions = _parse_program_region(raw.get("region", ""))
     ki_rel = _parse_ki_relevance(raw.get("relevance_ki", ""))
 
+    max_amount_str = raw.get("max_amount", raw.get("max_funding", ""))
     return {
         **raw,
         "name": raw.get("title", raw.get("name", "")),
@@ -330,7 +388,8 @@ def _normalize_program(raw: Dict[str, Any]) -> Dict[str, Any]:
         "branches": raw.get("branches", ["all"]),
         "complexity": "low" if raw.get("priority", 3) <= 1 else
                       "medium" if raw.get("priority", 3) <= 2 else "high",
-        "max_funding": raw.get("max_amount", raw.get("max_funding", "")),
+        "max_funding": max_amount_str,
+        "max_amount_eur": _parse_max_amount_eur(max_amount_str),
         "summary_de": raw.get("focus", raw.get("summary_de", "")),
         "summary_en": raw.get("summary_en", ""),
         "provider": raw.get("provider", ""),
@@ -358,7 +417,9 @@ def load_funding_programs() -> List[Dict[str, Any]]:
     if not programs:
         programs = list(CORE_FUNDING_PROGRAMS)
 
-    return [_normalize_program(p) for p in programs]
+    # Filter expired programs and normalize
+    active = [p for p in programs if p.get("status", "active") != "expired"]
+    return [_normalize_program(p) for p in active]
 
 
 def calculate_relevance_score(
@@ -369,6 +430,7 @@ def calculate_relevance_score(
     maturity: int,
     ai_act_risk: str,
     roi: float,
+    budget: str = "",
 ) -> float:
     """
     Calculate relevance score for a funding program.
@@ -386,11 +448,17 @@ def calculate_relevance_score(
     program_regions = program.get("regions", ["DE"])
 
     # --- COUNTRY FILTER (hard exclude) ---
-    # AT programs only for AT users
+    # National programs only for matching country
     if program_country == "AT" and user_country != "AT":
         return -1.0
-    # DE programs only for DE users (EU users see EU programs only)
-    if program_country == "DE" and user_country == "AT":
+    if program_country == "CH" and user_country != "CH":
+        return -1.0
+    if program_country == "GB" and user_country != "GB":
+        return -1.0
+    if program_country == "DE" and user_country not in ("DE", "EU"):
+        return -1.0
+    # EU programs: not for CH or GB (not EU members)
+    if program_country == "EU" and user_country in ("CH", "GB"):
         return -1.0
 
     # --- SEGMENT MATCH (required) ---
@@ -454,6 +522,18 @@ def calculate_relevance_score(
         score *= 0.8  # Penalize complex programs for low-maturity companies
     elif complexity == "low":
         score *= 1.05  # Slight boost for easy applications
+
+    # --- BUDGET RELEVANCE ADJUSTMENT (L3) ---
+    if budget and budget in BUDGET_RANGES:
+        _, max_relevant = BUDGET_RANGES[budget]
+        max_amount_eur = program.get("max_amount_eur")
+        if max_amount_eur is not None and max_relevant < float('inf'):
+            if max_amount_eur > max_relevant * 5:
+                # Program way out of budget range (e.g. ZIM 690k for 2k budget)
+                score *= 0.3
+            elif max_amount_eur > max_relevant * 2:
+                # Program above budget range but not extreme
+                score *= 0.5
 
     # Clamp to [0.0, 1.0]
     return min(max(score, 0.0), 1.0)
@@ -529,6 +609,7 @@ def recommend_funding(
     ai_act_risk: str = "minimal",
     lang: str = "de",
     limit: int = 5,
+    budget: str = "",
 ) -> List[FundingRecommendation]:
     """
     Get personalized funding recommendations.
@@ -558,7 +639,7 @@ def recommend_funding(
     for program in programs:
         # Calculate relevance (returns -1.0 for filtered-out programs)
         score = calculate_relevance_score(
-            program, branch, region, size, maturity, ai_act_risk, roi
+            program, branch, region, size, maturity, ai_act_risk, roi, budget
         )
 
         if score < 0.0:  # Filtered out by country/segment
@@ -2145,6 +2226,13 @@ def inject_funding_branch_alignment_into_sections(
     """
     if not FUNDING_BRANCH_ALIGNMENT_ENABLED:
         sections["FUNDING_BRANCH_ALIGNMENT_HTML"] = ""
+        return sections
+
+    # L4: Skip detailed funding alignment if user explicitly has no interest
+    interesse = briefing.get("interesse_foerderung", "")
+    if interesse and interesse.lower() in ("nein", "kein bedarf"):
+        sections["FUNDING_BRANCH_ALIGNMENT_HTML"] = ""
+        log.debug("Skipping funding branch alignment — interesse_foerderung=%s", interesse)
         return sections
 
     try:
