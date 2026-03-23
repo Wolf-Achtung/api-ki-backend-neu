@@ -17465,7 +17465,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                         r'(%)'
                     )
                     def _replace_roi(m: _re_bc.Match, new_roi: float = healed_roi) -> str:
-                        return m.group(1) + f"{new_roi:.0f}" + m.group(3)
+                        return str(m.group(1)) + f"{new_roi:.0f}" + str(m.group(3))
 
                     _new_html, n = _re_bc.subn(pattern, _replace_roi, _bc_html, flags=_re_bc.DOTALL)
                     if n > 0:
