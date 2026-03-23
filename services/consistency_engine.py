@@ -1891,9 +1891,12 @@ class ConsistencyEngine:
                 # Mark section as healed for bonus points
                 self.report.mark_healed("business_case_engine")
 
-                # Set healing flags in sections
+                # Set healing flags and healed values in sections
                 self.sections["_bc_healed"] = True
                 self.sections["_bc_consistency_normalized"] = True
+                self.sections["_bc_healed_roi_conservative"] = new_cons
+                self.sections["_bc_healed_roi_realistic"] = new_real
+                self.sections["_bc_healed_roi_optimistic"] = new_opt
 
                 # Log INFO instead of ERROR (auto-healed successfully)
                 self.report.add_issue(ConsistencyIssue(

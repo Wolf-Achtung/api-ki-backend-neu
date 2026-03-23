@@ -197,10 +197,18 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     branche_raw = briefing_data.get("branche", "")
     branche_label = branche_raw.title() if branche_raw else ""
 
-    # Research date from report1 or generation date
+    # Research date from report1 or generation date (always German DD.MM.YYYY format)
     research_date = report1_meta.get("research_last_updated", "")
     if not research_date:
         research_date = (sr.updated_at or datetime.now()).strftime("%d.%m.%Y")
+    else:
+        # Convert ISO format (2026-03-23) to German format (23.03.2026)
+        try:
+            if "-" in research_date and len(research_date) == 10:
+                from datetime import datetime as _dt
+                research_date = _dt.strptime(research_date, "%Y-%m-%d").strftime("%d.%m.%Y")
+        except (ValueError, TypeError):
+            pass  # Keep original if parsing fails
 
     # Segment label — briefing stores "1", "2–10", "11–100" or "solo", "team", "kmu"
     segment_map = {
