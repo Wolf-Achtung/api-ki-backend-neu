@@ -1391,7 +1391,8 @@ def generate_sofort_start_html(
 '''
     
     # 4. Lern-Prompt – Verstehen & Erklären (branchenspezifisch)
-    lern_prompt = branche_data.get("lern_prompt")
+    _lern_raw = branche_data.get("lern_prompt")
+    lern_prompt: Dict[str, str] | None = cast(Dict[str, str], _lern_raw) if isinstance(_lern_raw, dict) else None
     if lern_prompt:
         lern_text = lern_prompt["prompt"][:400] + "..." if len(lern_prompt["prompt"]) > 400 else lern_prompt["prompt"]
         html += f'''
