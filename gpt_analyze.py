@@ -17440,10 +17440,10 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         import re as _re_bc
         _bc_html = sections.get("BUSINESS_CASE_ENGINE_HTML", "")
         if _bc_html and "scenario-card" in _bc_html:
-            # Extract current ROIs from rendered HTML
+            # Extract current ROIs from rendered HTML (including negative values)
             _scenario_labels_de = ["Konservativ", "Realistisch", "Optimistisch"]
             _scenario_labels_en = ["Conservative", "Realistic", "Optimistic"]
-            _roi_pattern = r'font-weight:600;color:[^"]*;">({label})</span>.*?font-size:24pt[^>]*>(\d+(?:\.\d+)?)%'
+            _roi_pattern = r'font-weight:600;color:[^"]*;">({label})</span>.*?font-size:24pt[^>]*>(-?\d+(?:\.\d+)?)%'
 
             _extracted: dict = {}
             _labels_used = _scenario_labels_de  # Try German first
@@ -17477,7 +17477,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     _patch_pattern = (
                         r'(font-weight:600;color:[^"]*;">' + _re_bc.escape(real_label) + r'</span>'
                         r'.*?<p[^>]*font-size:24pt[^>]*>)'
-                        r'\d+(?:\.\d+)?'
+                        r'-?\d+(?:\.\d+)?'
                         r'(%)'
                     )
                     _bc_html = _re_bc.sub(
