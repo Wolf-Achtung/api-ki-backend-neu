@@ -12670,17 +12670,12 @@ def _mask_email(addr: Optional[str]) -> str:
         return "***"
 
 def _admin_recipients() -> List[str]:
-    """Get the whitelist of admin email addresses for report notifications.
+    """Fixed whitelist of admin email addresses for report notifications.
 
-    Uses a fixed whitelist instead of aggregating from multiple env vars.
-    This prevents accidental admin-mail duplication when env vars contain
-    multiple @ki-sicherheit.jetzt addresses (e.g. wolf@, kontakt@).
-
-    Override via ADMIN_EMAILS env var (comma-separated) for testing.
+    Hardcoded to prevent accidental mail duplication from env vars that
+    may contain multiple @ki-sicherheit.jetzt addresses.
+    All 3 pipelines (R1, KPA, Strategy) import and use this function.
     """
-    override = os.getenv("ADMIN_EMAILS", "").strip()
-    if override:
-        return [e.strip() for e in override.split(",") if e.strip()]
     return ["bewertung@ki-sicherheit.jetzt"]
 
 def _determine_user_email(db: Session, briefing: Briefing, override: Optional[str]) -> Optional[str]:
