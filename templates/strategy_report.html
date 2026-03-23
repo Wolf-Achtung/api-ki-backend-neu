@@ -324,6 +324,21 @@ h1, h2, h3, h4 { break-after: avoid; }
     letter-spacing: 0.06em;
 }
 
+/* Trust Badges */
+.trust-badges {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+.trust-badges img {
+    height: 36px;
+    width: auto;
+    opacity: 0.85;
+}
+
 /* TÜV Badge */
 .tuev-badge {
     display: inline-flex;
@@ -1008,16 +1023,12 @@ sup.src-ref {
             </div>
         </div>
 
-        <!-- TÜV Badge -->
-        <div class="tuev-badge" style="display:inline-flex;align-items:center;gap:10px;background-color:#F8FAFC;background-image:linear-gradient(135deg,#f0f5fa 0%,#EFF6FF 100%);border:2px solid var(--report-accent);border-radius:8px;padding:12px 24px;margin-top:24px;print-color-adjust:exact;-webkit-print-color-adjust:exact">
-            <svg class="tuev-badge-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36" style="width:36px;height:36px;min-width:36px;flex-shrink:0">
-                <circle cx="18" cy="18" r="17" stroke="#1a5276" stroke-width="2"/>
-                <path d="M12 18l4 4 8-8" stroke="#27ae60" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <div class="tuev-badge-text">
-                <div class="tuev-badge-title">Erstellt durch TÜV Austria zertifizierten KI-Manager</div>
-                <div class="tuev-badge-sub">Qualitätsgesicherte KI-Readiness-Analyse</div>
-            </div>
+        <!-- Trust Badges -->
+        <div class="trust-badges" style="display:flex;justify-content:center;align-items:center;gap:16px;margin-top:24px;flex-wrap:wrap">
+            <img src="tuev-logo-transparent.png" alt="TÜV Austria zertifiziert">
+            <img src="KI-READY-2025-badge.png" alt="KI-Ready 2025">
+            <img src="dsgvo.svg" alt="DSGVO-konform">
+            <img src="eu-ai.svg" alt="EU AI Act">
         </div>
 
         <p class="cover-research-date">Basierend auf Live-Marktdaten vom {{ research_date }}</p>
@@ -1188,7 +1199,7 @@ sup.src-ref {
             </div>
             <div class="impressum-block">
                 <h4>Haftungsausschluss</h4>
-                <p>Dieser KI-Strategiebericht dient ausschließlich der Information und strategischen Orientierung. Trotz sorgfältiger Prüfung wird keine Haftung für Richtigkeit oder Vollständigkeit übernommen.</p>
+                <p>Dieser KI-Strategiebericht dient ausschließlich der Information und strategischen Orientierung. Trotz sorgfältiger Prüfung wird keine Haftung für Richtigkeit oder Vollständigkeit übernommen. Steuerberatende Berufe: Berufsrechtliche Pflichten gemäß §&nbsp;57 StBerG (Verschwiegenheit, Datenschutz) sind eigenverantwortlich zu prüfen.</p>
                 <h4>Urheberrecht</h4>
                 <p>Alle Inhalte dieses Berichts unterliegen dem deutschen Urheberrecht.</p>
             </div>
