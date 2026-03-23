@@ -17438,6 +17438,52 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.warning(f"[{run_id}] ⚠️ G22 consistency check failed: {exc}")
     # === END G22 CONSISTENCY CHECK ===
 
+    # === G22-POST: Patch scenario ROI values in rendered HTML after BC_001 healing ===
+    try:
+        if sections.get("_bc_healed") and sections.get("_bc_healed_roi_conservative") is not None:
+            import re as _re_bc
+            _bc_html = sections.get("BUSINESS_CASE_ENGINE_HTML", "")
+            if _bc_html and "scenario-card" in _bc_html:
+                # Healed values from G22 BC_001
+                _healed = {
+                    "Konservativ": sections["_bc_healed_roi_conservative"],
+                    "Realistisch": sections["_bc_healed_roi_realistic"],
+                    "Optimistisch": sections["_bc_healed_roi_optimistic"],
+                    "Conservative": sections["_bc_healed_roi_conservative"],
+                    "Realistic": sections["_bc_healed_roi_realistic"],
+                    "Optimistic": sections["_bc_healed_roi_optimistic"],
+                }
+
+                _patched = False
+                for label, healed_roi in _healed.items():
+                    # Pattern: scenario card label followed by ROI display value
+                    # e.g. <span ...>Konservativ</span> ... <p ...>35%</p>
+                    pattern = (
+                        r'(font-weight:600;color:[^"]*;">' + _re_bc.escape(label) + r'</span>'
+                        r'.*?<p[^>]*font-size:24pt[^>]*>)'
+                        r'(\d+(?:\.\d+)?)'
+                        r'(%)'
+                    )
+                    def _replace_roi(m: _re_bc.Match, new_roi: float = healed_roi) -> str:
+                        return m.group(1) + f"{new_roi:.0f}" + m.group(3)
+
+                    _new_html, n = _re_bc.subn(pattern, _replace_roi, _bc_html, flags=_re_bc.DOTALL)
+                    if n > 0:
+                        _bc_html = _new_html
+                        _patched = True
+
+                if _patched:
+                    sections["BUSINESS_CASE_ENGINE_HTML"] = _bc_html
+                    log.info(
+                        f"[{run_id}] [G22-POST] Patched scenario ROIs in HTML: "
+                        f"Cons={sections['_bc_healed_roi_conservative']:.1f}%%, "
+                        f"Real={sections['_bc_healed_roi_realistic']:.1f}%%, "
+                        f"Opt={sections['_bc_healed_roi_optimistic']:.1f}%%"
+                    )
+    except Exception as _bc_patch_exc:
+        log.warning(f"[{run_id}] [G22-POST] Scenario ROI patch failed (non-fatal): {_bc_patch_exc}")
+    # === END G22-POST ===
+
     # === FIX-B30: Strip canonical blocks AFTER G22 but BEFORE PDF render ===
     try:
         sections = strip_canonical_blocks(sections)

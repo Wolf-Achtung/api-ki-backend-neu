@@ -219,7 +219,7 @@ def stamp_pdf_metadata(pdf_bytes: bytes) -> bytes:
             "author": PDF_AUTHOR,
             "producer": PDF_PRODUCER,
         })
-        stamped = doc.tobytes()
+        stamped: bytes = doc.tobytes()
         doc.close()
         return stamped
     except ImportError:
