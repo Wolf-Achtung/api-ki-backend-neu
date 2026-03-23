@@ -351,6 +351,26 @@ _DIGITALBONUS_TERMS = [
 # Legacy alias — kept for any external imports
 FUNDING_BLACKLIST = _FUNDING_BLACKLIST_BASE + _DIGITALBONUS_TERMS
 
+# Pre-compiled word-boundary patterns for blacklist matching (FIX-B26-WB)
+# Using \b prevents "Digital Jetzt" from matching "Digitalbonus".
+_BLACKLIST_PATTERNS: dict[str, re.Pattern[str]] = {
+    term: re.compile(r'\b' + re.escape(term) + r'\b', re.IGNORECASE)
+    for term in FUNDING_BLACKLIST
+}
+
+
+def _term_in_text(term: str, text: str) -> bool:
+    """Check if a blacklisted term appears in text using word-boundary matching.
+
+    FIX-B26-WB: Replaces naive substring matching (``term in text``) which
+    caused false positives — e.g. "Digital Jetzt" matched "Digitalbonus".
+    """
+    pat = _BLACKLIST_PATTERNS.get(term)
+    if pat is None:
+        # Dynamically added term — compile on the fly
+        pat = re.compile(r'\b' + re.escape(term) + r'\b', re.IGNORECASE)
+    return bool(pat.search(text))
+
 
 def _build_funding_blacklist(sections: dict[str, Any]) -> list[str]:
     """Build the active funding blacklist, conditional on bundesland.
@@ -427,11 +447,11 @@ def apply_funding_blacklist(
             continue
         modified = content
         for term in active_blacklist:
-            if term.lower() in modified.lower():
+            if _term_in_text(term, modified):
                 lines = modified.split("\n")
                 filtered = [
                     line for line in lines
-                    if term.lower() not in line.lower()
+                    if not _term_in_text(term, line)
                 ]
                 removed = len(lines) - len(filtered)
                 if removed > 0:
@@ -459,9 +479,9 @@ def _clean_dict_recursive(d: dict[str, Any], blacklist: list[str] | None = None)
         if isinstance(value, str):
             cleaned_val = value
             for term in bl:
-                if term.lower() in cleaned_val.lower():
+                if _term_in_text(term, cleaned_val):
                     lines = cleaned_val.split("\n")
-                    filtered = [l for l in lines if term.lower() not in l.lower()]
+                    filtered = [l for l in lines if not _term_in_text(term, l)]
                     removed = len(lines) - len(filtered)
                     if removed > 0:
                         logger.info(
@@ -490,7 +510,7 @@ def _clean_list_recursive(lst: list[Any], blacklist: list[str] | None = None) ->
         if isinstance(item, str):
             keep = True
             for term in bl:
-                if term.lower() in item.lower():
+                if _term_in_text(term, item):
                     logger.info(
                         f"[FIX-B29-FUNDING-LIST] Removed list item containing '{term}'"
                     )
@@ -520,7 +540,7 @@ def _dict_contains_blacklisted(d: dict[str, Any], blacklist: list[str] | None = 
     for value in d.values():
         if isinstance(value, str):
             for term in bl:
-                if term.lower() in value.lower():
+                if _term_in_text(term, value):
                     return True
         elif isinstance(value, dict):
             if _dict_contains_blacklisted(value, bl):
@@ -529,7 +549,7 @@ def _dict_contains_blacklisted(d: dict[str, Any], blacklist: list[str] | None = 
             for item in value:
                 if isinstance(item, str):
                     for term in bl:
-                        if term.lower() in item.lower():
+                        if _term_in_text(term, item):
                             return True
                 elif isinstance(item, dict):
                     if _dict_contains_blacklisted(item, bl):
