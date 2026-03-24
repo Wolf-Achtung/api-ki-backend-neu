@@ -141,6 +141,13 @@ AUFGABE:
 4. Ordne den aktuellen Reifegrad in den Branchenkontext ({branche}) ein.
 5. Leite über zur Strategie: "Basierend auf diesem Profil empfehlen wir folgende Strategie..."
 
+SPRINT 2 — OPT-B1 MARKTKONTEXT ANREICHERN (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
+(a) RELATIVE BRANCHENEINORDNUNG: Ordne den Score qualitativ im Branchenvergleich ein — „Im Vergleich zu anderen {branche}-Unternehmen ähnlicher Größe liegt {firmenname} [im oberen Mittelfeld / vorne / mit Nachholbedarf]." Keine erfundenen Benchmarks.
+(b) 3 BRANCHENSPEZIFISCHE KI-ANWENDUNGEN: Benenne bei der Einordnung des Reifegrads mindestens 3 konkrete KI-Anwendungen, die in {branche} bereits produktiv genutzt werden — spezifisch für die Branche, nicht generisch.
+(c) MARKTDYNAMIKEN: Benenne 2-3 Treiber, die den Handlungsdruck für dieses Unternehmen erzeugen (z.B. Fachkräftemangel, steigende Kundenerwartungen, regulatorischer Druck). Jeweils in 1 Satz erklären.
+CONSTRAINT: Keine erfundenen Adoptionszahlen. Unsicherheits-Hedge anwenden.
+
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
 FAKTEN- UND ANNAHMEN-TRENNUNG (VERBINDLICH):
@@ -187,6 +194,13 @@ AUFGABE:
 
 Verwende die Recherche-Ergebnisse als Datenbasis. Wenn keine Daten verfügbar sind,
 verwende allgemeine Mittelstands-Benchmarks für Deutschland 2025/2026.
+
+SPRINT 2 — OPT-B2 WETTBEWERBS-FRAMEWORK STÄRKEN (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Nicht „Wettbewerbsmatrix", sondern „Wie Sie sich abheben können."
+(a) KONKRETE WETTBEWERBSPOSITION: Ordne die Position des Unternehmens nicht nur in Zahlen, sondern im Fließtext ein: Was kann dieses Unternehmen bereits, was andere nicht können? Wo liegt es zurück?
+(b) DIFFERENZIERUNGSHEBEL DURCH KI: Formuliere mindestens einen konkreten Hebel — wie kann KI {firmenname} von Wettbewerbern in {branche} abheben? Basierend auf den vorhandenen Stärken und Handlungsfeldern.
+(c) DRINGLICHKEIT BEI NICHT-HANDELN: Konkretes Szenario, was passiert, wenn Wettbewerber schneller sind. Realistisch, nicht alarmistisch — mit Unsicherheits-Hedge „erfahrungsgemäß", „voraussichtlich".
+CONSTRAINT: Keine erfundenen Marktanteile. Nur Daten aus Recherche-Quellen nutzen.
 
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
@@ -326,6 +340,14 @@ Wenn ein Tool (z.B. ChatGPT) im Report 1 als RED/nicht konform bewertet wurde:
 - Priorisiere EU-konforme Alternativen (z.B. Claude, Aleph Alpha, DeepL).
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
+
+SPRINT 2 — OPT-B8 TOOL-ENTSCHEIDUNGSHILFE STÄRKEN (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Tool-Namen bei erster Nennung kurz erklären.
+(a) KLARE STARTEMPFEHLUNG: Beginne die Section mit einer klaren Empfehlung: „Starten Sie mit [Tool X], weil [Begründung basierend auf {s5_software}]." EIN Tool als Einstiegspunkt, das auf dem vorhandenen Stack aufbaut.
+(b) STARTREIHENFOLGE: Definiere eine klare Reihenfolge (1., 2., 3.) gekoppelt an die Roadmap-Phasen. Phase 1 → Tool 1, Phase 2 → Tool 2. Der Leser soll sofort wissen: Was kommt zuerst?
+(c) WARNUNG VOR OVER-ENGINEERING: Integriere: „Führen Sie maximal 1–2 Tools gleichzeitig ein. Mehr parallele Einführungen erhöhen Schulungsaufwand und Fehlerrisiko überproportional."
+(d) ENTSCHEIDUNGSLOGIK NACH STACK: Der Kunde nutzt {s5_software}. Empfehlungen MÜSSEN darauf aufbauen: „Sie nutzen bereits [X] — deshalb [Y], weil es sich direkt integrieren lässt."
+CONSTRAINT: Keine konkreten Preise im Prompt. Vendor-Audit-Daten unverändert.
 
 FORMAT: HTML-Fragment. Verwende Tabellen für Tool-Vergleiche.
 Quellenangaben am Ende als <div class="sources">.""",

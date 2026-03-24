@@ -120,6 +120,17 @@ Verwende diese Begriffe einheitlich im gesamten Report:
 - „Prüfschritt" = allgemein. „Freigabe" = formaler Akt. „Vier-Augen-Prinzip" = zwei Personen prüfen. NICHT „Review".
 - „DSGVO" = nie ausschreiben. „Tool" = Software. „Werkzeug" = nur in Metaphern. Nicht im selben Absatz wechseln.
 
+<!-- SPRINT 2: OPT-B8 Tool-Entscheidungshilfe stärken -->
+Formuliere verständlich für einen Geschäftsführer ohne KI-Vorwissen. Tool-Namen bei erster Nennung in einem Halbsatz erklären, etwa „Microsoft Copilot (KI-Assistent in Word, Outlook und Excel)".
+
+TOOL-ENTSCHEIDUNGSHILFE (PFLICHT):
+(a) KLARE STARTEMPFEHLUNG: Formuliere im Einleitungstext eine konkrete Empfehlung „Starten Sie mit [Tool/Toolklasse X]", basierend auf dem Abschnitt „Einführung in Etappen". Der Leser muss wissen, welches Tool ZUERST kommt. Begründe in 1 Satz, warum gerade dieses.
+(b) STARTREIHENFOLGE: Die bestehende Etappen-Tabelle (Stufe 1/2/3) ist die Startreihenfolge. Ergänze in der Einleitung einen Hinweis: „Folgen Sie der Reihenfolge: erst [Stufe 1], dann [Stufe 2], dann [Stufe 3]."
+(c) WARNUNG VOR OVER-ENGINEERING: Ergänze im Abschnitt „Einführung in Etappen" einen Satz: „Führen Sie maximal 1–2 Tools gleichzeitig ein. Mehr parallele Einführungen erhöhen Schulungsaufwand und Fehlerrisiko überproportional."
+(d) ENTSCHEIDUNGSLOGIK NACH VORHANDENEM STACK: Falls der Kunde bereits Software nutzt, soll der Text darauf eingehen: „Sie nutzen bereits [vorhandene Software] — deshalb empfehlen wir als Einstieg [Tool/Kategorie], weil es sich direkt integrieren lässt." Nutze {{hauptleistung}} als Kontext.
+CONSTRAINT: Vendor-Audit-Daten (Risk Engine) unverändert. Keine konkreten Preise im Prompt. Bestehende Wortlimits einhalten.
+<!-- /SPRINT 2 -->
+
 <section class="section tools">
   <h2>Empfohlener KI-Stack für {{BRANCH_CONTEXT_LABEL}}</h2>
 
