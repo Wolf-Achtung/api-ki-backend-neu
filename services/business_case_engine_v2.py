@@ -1424,16 +1424,17 @@ def normalize_scenario_order(
 
     normalized = False
 
-    # Rule 1: If realistic < conservative → realistic = conservative * 1.1
-    if real_roi < cons_roi and cons_roi > 0:
-        new_real_roi = round(cons_roi * 1.1, 1)
+    # Rule 1: If conservative > realistic → reduce conservative (not raise realistic!)
+    # The conservative scenario should always have the lowest ROI.
+    if cons_roi > real_roi:
+        new_cons_roi = round(real_roi * 0.9, 1) if real_roi > 0 else round(real_roi - 10, 1)
         log.info(
-            "[N3.4-BC] Normalizing realistic ROI: %.1f%% → %.1f%% (was < conservative %.1f%%)",
-            real_roi, new_real_roi, cons_roi
+            "[N3.4-BC] Normalizing conservative ROI: %.1f%% → %.1f%% (was > realistic %.1f%%)",
+            cons_roi, new_cons_roi, real_roi
         )
-        if isinstance(realistic, dict):
-            realistic["roi_12m"] = new_real_roi
-        real_roi = new_real_roi
+        if isinstance(conservative, dict):
+            conservative["roi_12m"] = new_cons_roi
+        cons_roi = new_cons_roi
         normalized = True
 
     # Rule 2: If realistic > optimistic → realistic = optimistic * 0.9
@@ -2207,7 +2208,41 @@ def business_case_report_to_html(
             <div style="display:flex;gap:12px;flex-wrap:wrap;page-break-inside:avoid;break-inside:avoid;overflow:visible;">
     ''')
 
-    for scenario in report.scenarios:
+    # RENDER-TIME ORDERING ENFORCEMENT: Ensure cons <= real <= opt in HTML output.
+    # This is the last defense line — runs right before HTML generation.
+    _render_scenarios = list(report.scenarios)
+    _cons_r = next((s for s in _render_scenarios if s.name == "conservative"), None)
+    _real_r = next((s for s in _render_scenarios if s.name == "realistic"), None)
+    _opt_r = next((s for s in _render_scenarios if s.name == "optimistic"), None)
+    if _cons_r and _real_r and _cons_r.roi_12m > _real_r.roi_12m:
+        _fixed_cons_roi = round(_real_r.roi_12m * 0.9, 1) if _real_r.roi_12m > 0 else round(_real_r.roi_12m - 10, 1)
+        log.warning(
+            "[G30-RENDER] Scenario ordering violation at render time! "
+            "Conservative=%.1f%% > Realistic=%.1f%%. Fixing to %.1f%%",
+            _cons_r.roi_12m, _real_r.roi_12m, _fixed_cons_roi
+        )
+        _idx = next(i for i, s in enumerate(_render_scenarios) if s.name == "conservative")
+        _render_scenarios[_idx] = ScenarioKPIs(
+            name="conservative", roi_12m=_fixed_cons_roi,
+            payback_months=_cons_r.payback_months, monthly_savings=_cons_r.monthly_savings,
+            annual_savings=_cons_r.annual_savings, investment_total=_cons_r.investment_total,
+            notes=_cons_r.notes,
+        )
+    if _real_r and _opt_r and _real_r.roi_12m > _opt_r.roi_12m:
+        _fixed_real_roi = round(_opt_r.roi_12m * 0.9, 1)
+        log.warning(
+            "[G30-RENDER] Realistic=%.1f%% > Optimistic=%.1f%%. Fixing to %.1f%%",
+            _real_r.roi_12m, _opt_r.roi_12m, _fixed_real_roi
+        )
+        _idx = next(i for i, s in enumerate(_render_scenarios) if s.name == "realistic")
+        _render_scenarios[_idx] = ScenarioKPIs(
+            name="realistic", roi_12m=_fixed_real_roi,
+            payback_months=_real_r.payback_months, monthly_savings=_real_r.monthly_savings,
+            annual_savings=_real_r.annual_savings, investment_total=_real_r.investment_total,
+            notes=_real_r.notes,
+        )
+
+    for scenario in _render_scenarios:
         color = scenario_colors.get(scenario.name, "#6b7280")
         label = labels.get(scenario.name, scenario.name.capitalize())
 
@@ -2311,14 +2346,13 @@ def business_case_report_to_html(
         ''')
 
     # ROI Explanation (Problem #3 fix - transparency)
-    import logging
-    log = logging.getLogger(__name__)
-    log.info(f"[DEBUG] roi_explanation exists: {report.roi_explanation is not None}")
+    _bc_log = logging.getLogger(__name__)
+    _bc_log.info(f"[DEBUG] roi_explanation exists: {report.roi_explanation is not None}")
     if report.roi_explanation:
-        log.info(f"[DEBUG] Adding ROI explanation to HTML")
+        _bc_log.info(f"[DEBUG] Adding ROI explanation to HTML")
         html_parts.append(report.roi_explanation.to_html(lang))
     else:
-        log.warning(f"[DEBUG] ROI explanation is None - NOT adding to HTML!")
+        _bc_log.warning(f"[DEBUG] ROI explanation is None - NOT adding to HTML!")
 
     # Narrative Summary
     if report.narrative_summary:

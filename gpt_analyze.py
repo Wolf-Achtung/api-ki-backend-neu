@@ -17433,64 +17433,21 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.warning(f"[{run_id}] ⚠️ G22 consistency check failed: {exc}")
     # === END G22 CONSISTENCY CHECK ===
 
-    # === G22-POST: Ensure scenario ROI ordering in rendered HTML ===
-    # Regardless of which healer ran (BCv2 or G22), extract current ROIs from
-    # the rendered HTML and fix if Conservative > Realistic.
+    # === G22-POST: Re-render BUSINESS_CASE_ENGINE_HTML to pick up any healed values ===
+    # The BC engine and N3.4-BC normalizer may have adjusted scenario ROI values
+    # AFTER the initial HTML was rendered. Re-render from the stored bc_report
+    # to ensure the HTML always reflects the current (healed) scenario data.
+    # The render function itself enforces ordering as a last defense line.
     try:
-        import re as _re_bc
-        _bc_html = sections.get("BUSINESS_CASE_ENGINE_HTML", "")
-        if _bc_html and "scenario-card" in _bc_html:
-            # Extract current ROIs from rendered HTML (including negative values)
-            _scenario_labels_de = ["Konservativ", "Realistisch", "Optimistisch"]
-            _scenario_labels_en = ["Conservative", "Realistic", "Optimistic"]
-            _roi_pattern = r'font-weight:600;color:[^"]*;">({label})</span>.*?font-size:24pt[^>]*>(-?\d+(?:\.\d+)?)%'
-
-            _extracted: dict = {}
-            _labels_used = _scenario_labels_de  # Try German first
-            for label in _scenario_labels_de:
-                m = _re_bc.search(_roi_pattern.replace("{label}", _re_bc.escape(label)), _bc_html, _re_bc.DOTALL)
-                if m:
-                    _extracted[label] = float(m.group(2))
-            if len(_extracted) < 3:
-                _extracted = {}
-                _labels_used = _scenario_labels_en
-                for label in _scenario_labels_en:
-                    m = _re_bc.search(_roi_pattern.replace("{label}", _re_bc.escape(label)), _bc_html, _re_bc.DOTALL)
-                    if m:
-                        _extracted[label] = float(m.group(2))
-
-            if len(_extracted) == 3:
-                cons_label, real_label, opt_label = _labels_used
-                cons_roi = _extracted[cons_label]
-                real_roi = _extracted[real_label]
-                opt_roi = _extracted[opt_label]
-
-                if cons_roi > real_roi:
-                    # Ordering violation: fix by setting Realistic = Conservative * 1.1
-                    new_real = round(cons_roi * 1.1, 1)
-                    log.info(
-                        f"[{run_id}] [G22-POST] Ordering violation: {cons_label}={cons_roi}%% > {real_label}={real_roi}%%. "
-                        f"Patching {real_label} to {new_real}%%"
-                    )
-
-                    # Patch the Realistic ROI value in the HTML
-                    _patch_pattern = (
-                        r'(font-weight:600;color:[^"]*;">' + _re_bc.escape(real_label) + r'</span>'
-                        r'.*?<p[^>]*font-size:24pt[^>]*>)'
-                        r'-?\d+(?:\.\d+)?'
-                        r'(%)'
-                    )
-                    _bc_html = _re_bc.sub(
-                        _patch_pattern,
-                        lambda m: str(m.group(1)) + f"{new_real:.0f}" + str(m.group(2)),
-                        _bc_html, count=1, flags=_re_bc.DOTALL
-                    )
-                    sections["BUSINESS_CASE_ENGINE_HTML"] = _bc_html
-                    log.info(f"[{run_id}] [G22-POST] Patched: {cons_label}={cons_roi:.0f}%% <= {real_label}={new_real:.0f}%% <= {opt_label}={opt_roi:.0f}%%")
-                else:
-                    log.debug(f"[{run_id}] [G22-POST] Scenario ordering OK: {cons_label}={cons_roi}%% <= {real_label}={real_roi}%% <= {opt_label}={opt_roi}%%")
-    except Exception as _bc_patch_exc:
-        log.warning(f"[{run_id}] [G22-POST] Scenario ROI patch failed (non-fatal): {_bc_patch_exc}")
+        _bc_report_obj = sections.get("_bc_report")
+        if _bc_report_obj and hasattr(_bc_report_obj, "scenarios"):
+            from services.business_case_engine_v2 import business_case_report_to_html as _bc_rerender
+            _bc_html_new = _bc_rerender(_bc_report_obj, lang=sections.get("LANG", "de"))
+            if _bc_html_new and "scenario-card" in _bc_html_new:
+                sections["BUSINESS_CASE_ENGINE_HTML"] = _bc_html_new
+                log.info(f"[{run_id}] [G22-POST] Re-rendered BUSINESS_CASE_ENGINE_HTML after G22 consistency check")
+    except Exception as _bc_rerender_exc:
+        log.warning(f"[{run_id}] [G22-POST] BC re-render failed (non-fatal): {_bc_rerender_exc}")
     # === END G22-POST ===
 
     # === FIX-B30: Strip canonical blocks AFTER G22 but BEFORE PDF render ===
