@@ -98,6 +98,16 @@ SPRACHMUSTER:
 - Abgeleitet: „Daraus ergibt sich ...", „Das spricht dafür, dass ..."
 - Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
 
+<!-- SPRINT 2: OPT-B1 Marktkontext anreichern -->
+Formuliere verständlich für einen Geschäftsführer ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung in einem Halbsatz erklären.
+
+MARKTKONTEXT-TIEFE (PFLICHT):
+(a) RELATIVE KI-REIFE IM BRANCHENVERGLEICH: Ordne das Unternehmen qualitativ im Branchenvergleich ein. Nicht nur Scores nennen, sondern einordnen: „Ihr Unternehmen liegt im [oberen Mittelfeld / vorderen Drittel / hinteren Bereich] vergleichbarer Betriebe in Ihrer Branche." Nutze dafür den Kontext aus den Score-Daten — KEINE Zahlen erfinden.
+(b) 3 BRANCHENSPEZIFISCHE KI-ANWENDUNGEN: Benenne im KI-Potenzial-Abschnitt mindestens 3 konkrete, branchenspezifische Anwendungen, die in {{BRANCHE_LABEL}} bereits produktiv im Einsatz sind. Nicht generisch („Texterstellung"), sondern spezifisch für die Branche (z.B. bei Steuerberatung: „Belegkategorisierung", „Mandantenkorrespondenz-Entwürfe", „Steuerbescheid-Vorprüfung"). Basiere auf CONTEXT_BLOCK-Daten, nicht auf Erfundenem.
+(c) MARKTDYNAMIKEN ALS HANDLUNGSTREIBER: Ergänze im Marktkontext-Abschnitt die konkreten Treiber, die den Handlungsdruck für DIESES Unternehmen erzeugen — z.B. Fachkräftemangel, steigende Mandantenerwartungen, regulatorischer Druck (EU AI Act). Max. 2-3 Treiber, jeweils mit 1 Satz Erklärung.
+CONSTRAINT: Keine erfundenen Prozentzahlen zur Branchenadoption. Unsicherheits-Hedge aus OPT-A1 nutzen. Bestehende Wortlimits einhalten.
+<!-- /SPRINT 2 -->
+
 <section class="section unternehmensprofil-markt">
   <h2>Unternehmensprofil &amp; Marktkontext</h2>
 
