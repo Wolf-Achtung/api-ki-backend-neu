@@ -1732,6 +1732,81 @@ def render(briefing_obj: Any,
         log.warning("[FIX-v7110-BC-EUR] Error (continuing): %s run=%s", str(e)[:200], run_id)
 
     # =========================================================================
+    # FIX-v7110-BC-ROI: Enforce scenario ROI ordering in final HTML
+    # Recalculates all 3 scenario ROIs from canonical data to ensure
+    # Conservative <= Realistic <= Optimistic. This is the LAST defense line
+    # before PDF rendering — catches LLM sign errors, stale HTML, and any
+    # upstream healing failures.
+    # =========================================================================
+    try:
+        _bc_hours_roi = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
+        _bc_rate_roi = float(sections.get("CANON_RATE_EUR") or sections.get("stundensatz_eur") or 0)
+        _bc_opex_roi = float(sections.get("CANON_OPEX_MONTH_EUR") or sections.get("OPEX_REALISTISCH_EUR") or 0)
+        _bc_capex_roi = float(sections.get("CANON_CAPEX_EUR") or sections.get("CAPEX_REALISTISCH_EUR") or 0)
+
+        if _bc_hours_roi > 0 and _bc_rate_roi > 0 and _bc_capex_roi > 0:
+            # Recalculate correct ROI for each scenario using the SAME formula as R1 page 13
+            # ROI = (hours * rate * 12 - CAPEX - OPEX * 12) / CAPEX * 100
+            _sc_factors = [
+                ("optimistic", 1.3, 0.8, 0.8),   # hours×1.3, CAPEX×0.8, OPEX×0.8
+                ("realistic", 1.0, 1.0, 1.0),
+                ("conservative", 0.7, 1.2, 1.2),  # hours×0.7, CAPEX×1.2, OPEX×1.2
+            ]
+            _sc_rois_correct: dict = {}
+            for _sc_name, _h_mult, _c_mult, _o_mult in _sc_factors:
+                _sc_annual = _bc_hours_roi * _h_mult * _bc_rate_roi * 12
+                _sc_capex = _bc_capex_roi * _c_mult
+                _sc_opex_annual = _bc_opex_roi * _o_mult * 12
+                _sc_roi = (_sc_annual - _sc_capex - _sc_opex_annual) / _sc_capex * 100
+                _sc_roi = max(-100.0, min(200.0, _sc_roi))
+                _sc_rois_correct[_sc_name] = round(_sc_roi)
+
+            log.info(
+                "[FIX-v7110-BC-ROI] Canonical ROIs: Opt=%d%%, Real=%d%%, Cons=%d%% run=%s",
+                _sc_rois_correct["optimistic"], _sc_rois_correct["realistic"],
+                _sc_rois_correct["conservative"], run_id
+            )
+
+            # Patch scenario cards in HTML: each card has label + ROI in sequence
+            _html_before_roi = html
+            _sc_labels_map = {
+                "optimistic": ["Optimistisch", "Optimistic"],
+                "realistic": ["Realistisch", "Realistic"],
+                "conservative": ["Konservativ", "Conservative"],
+            }
+            for _sc_name, _sc_labels in _sc_labels_map.items():
+                _target_roi = _sc_rois_correct[_sc_name]
+                for _sc_label in _sc_labels:
+                    _sc_pattern = (
+                        r'(font-weight:600;color:[^"]*;">'
+                        + re.escape(_sc_label)
+                        + r'</span>.*?<p[^>]*font-size:24pt[^>]*>)'
+                        + r'-?\d+(?:\.\d+)?'
+                        + r'(%)'
+                    )
+                    def _roi_replace(m: re.Match, _roi: int = _target_roi) -> str:
+                        return str(m.group(1)) + str(_roi) + str(m.group(2))
+
+                    _new_html, _n = re.subn(
+                        _sc_pattern,
+                        _roi_replace,
+                        html, count=1, flags=re.DOTALL
+                    )
+                    if _n > 0:
+                        html = _new_html
+                        break  # Found the label, no need to try alternate
+
+            if html != _html_before_roi:
+                log.info(
+                    "[FIX-v7110-BC-ROI] Corrected scenario ROIs in HTML: "
+                    "Opt=%d%%, Real=%d%%, Cons=%d%% run=%s",
+                    _sc_rois_correct["optimistic"], _sc_rois_correct["realistic"],
+                    _sc_rois_correct["conservative"], run_id
+                )
+    except Exception as e:
+        log.warning("[FIX-v7110-BC-ROI] Error (continuing): %s run=%s", str(e)[:200], run_id)
+
+    # =========================================================================
     # FIX-v720-F1: Complete truncated ROI derivation sentence
     # LLM sometimes truncates "gedeckelt auf max. 200%)" to "gedeckelt auf max."
     # =========================================================================
