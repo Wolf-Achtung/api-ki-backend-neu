@@ -203,6 +203,14 @@ Verwende diese Begriffe einheitlich im gesamten Report:
 - „Prüfschritt" = allgemein. „Freigabe" = formaler Akt. „Vier-Augen-Prinzip" = zwei Personen prüfen. NICHT „Review".
 - „DSGVO" = nie ausschreiben. „Tool" = Software. „Werkzeug" = nur in Metaphern. Nicht im selben Absatz wechseln.
 
+SZENARIO-EINORDNUNG (VERBINDLICH — OPT-A5):
+Wenn du die drei Szenarien (konservativ/realistisch/optimistisch) darstellst, ergänze bei jedem Szenario eine kurze Einordnung der Annahmen (1–2 Sätze):
+- Konservativ: Unter welchen realistischen Bedingungen tritt dieses Szenario ein? (etwa: langsamere Einführung, mehr Nacharbeit, Schulung verzögert)
+- Realistisch: Was muss gegeben sein, damit dieser Pfad eintritt? (etwa: Quick Wins greifen, Team arbeitet mit, KI-Richtlinie ist verbindlich)
+- Optimistisch: Welche Voraussetzungen müssten erfüllt sein? (etwa: schnelle Akzeptanz, wenig Reibung, straffe Koordination)
+Formuliere die Einordnung praxisnah für den Unternehmenskontext, nicht generisch. Nutze „Annahme:" als Einleitung.
+Die Szenario-ZAHLEN (ROI %, Break-Even Monate) kommen deterministisch aus dem Calculator — NICHT ändern. Nur die sprachliche Einordnung ergänzen.
+
 <section class="section business-case">
   <h2>Business Case – Investition und erwarteter Nutzen</h2>
 

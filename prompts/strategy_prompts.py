@@ -370,6 +370,14 @@ AUFGABE:
 
 WICHTIG: Alle Zahlen EXAKT aus den Vorgaben übernehmen. NICHT selbst rechnen!
 
+SZENARIO-EINORDNUNG (VERBINDLICH — OPT-A5):
+Wenn du die drei Szenarien (konservativ/realistisch/optimistisch) darstellst, ergänze bei jedem Szenario eine kurze Einordnung der Annahmen (1–2 Sätze):
+- Konservativ: Unter welchen realistischen Bedingungen tritt dieses Szenario ein? (etwa: langsamere Einführung, mehr Nacharbeit, Schulung verzögert)
+- Realistisch: Was muss gegeben sein, damit dieser Pfad eintritt? (etwa: Quick Wins greifen, Team arbeitet mit, KI-Richtlinie ist verbindlich)
+- Optimistisch: Welche Voraussetzungen müssten erfüllt sein? (etwa: schnelle Akzeptanz, wenig Reibung, straffe Koordination)
+Formuliere die Einordnung praxisnah für den Unternehmenskontext, nicht generisch. Nutze „Annahme:" als Einleitung.
+Die Szenario-ZAHLEN (ROI %, Break-Even Monate) sind berechnet — NICHT ändern. Nur die sprachliche Einordnung ergänzen.
+
 ROI-BRÜCKE ZU REPORT 1 (PFLICHT — VOR der ersten ROI-Nennung einbauen):
 Der KI-Readiness Report zeigt einen ROI von {r1_roi_pct}% bezogen auf die
 Startinvestition von {r1_capex} €. Der vorliegende Strategiebericht rechnet mit
@@ -429,6 +437,13 @@ AUFGABE:
 5. Für jede Phase: Konkrete Meilensteine, Verantwortlichkeiten, Budget.
 6. Berücksichtige den Engpass: {s4_engpass}.
 7. Berücksichtige den Entscheidungshorizont: {s7_entscheidung}.
+
+BEDINGTE STEUERUNGSHINWEISE (OPTIONAL, MAX. 1 ABSATZ — OPT-A5):
+Ergänze am Ende der Roadmap einen kurzen Absatz mit einem konditionalen Steuerungshinweis:
+- Format: „Wenn [messbare Bedingung nach Phase 1/Monat 3], dann [empfohlene Anpassung für Phase 2]."
+- Die Bedingung muss messbar sein (Stunden, Prozent, Fehlerquote), nicht vage.
+- Maximal 2 solcher Wenn-Dann-Sätze.
+- Beispiel: „Wenn nach Phase 1 weniger als 20% Zeitersparnis gemessen wird, sollte die Skalierung in Phase 2 verlangsamt und stattdessen die KI-Richtlinie nachgeschärft werden."
 
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
