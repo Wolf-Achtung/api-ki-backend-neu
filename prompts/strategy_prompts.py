@@ -68,6 +68,17 @@ Zielgruppe: KMU-Geschäftsführer ohne Beratungs-Hintergrund.
   - SONDERN "Kampagnen automatisch steuern"
 - Maximal 2× "KPI" pro Section. Schreibe stattdessen "Kennzahl" oder "Messgröße".
 
+BEGRIFFSKONSISTENZ (VERBINDLICH — OPT-A7):
+Verwende diese Begriffe einheitlich im gesamten Report:
+- „KI-Governance" = Oberbegriff für Regeln, Rollen, Freigaben rund um KI-Nutzung. „KI-Richtlinie" = das konkrete Dokument.
+- „ROI" = immer „ROI", bei erster Nennung pro Abschnitt „Return on Investment (ROI)".
+- „Break-Even" = Zeitpunkt der Amortisation im Fließtext. „Amortisation" nur in Tabellen/KPIs.
+- „EU AI Act" = immer, bei erster Nennung „EU AI Act (KI-Verordnung der EU)". NICHT standalone „KI-Verordnung".
+- „AVV" = bei erster Nennung „AV-Vertrag (AVV)", danach nur „AVV".
+- „KI-Ausgabe" = allgemein für KI-Ergebnisse. „KI-Entwurf" = Text, der noch geprüft werden muss. NICHT „KI-Output".
+- „Prüfschritt" = allgemein. „Freigabe" = formaler Akt. „Vier-Augen-Prinzip" = zwei Personen prüfen. NICHT „Review".
+- „DSGVO" = nie ausschreiben. „Tool" = Software. „Werkzeug" = nur in Metaphern. Nicht im selben Absatz wechseln.
+
 ROI-KONTEXT (PFLICHT bei Erstnennung des Strategy-ROI in S5 und EXEC):
 Der KI-Readiness Report (Report 1) zeigt einen ROI von {r1_roi_pct}% auf die
 Startinvestition von {r1_capex} €. Dieser Strategiebericht rechnet mit der
