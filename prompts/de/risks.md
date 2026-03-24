@@ -138,6 +138,24 @@ Verwende diese Begriffe einheitlich im gesamten Report:
 - „KI-Ausgabe" = allgemein für KI-Ergebnisse. „KI-Entwurf" = Text, der noch geprüft werden muss. NICHT „KI-Output".
 - „Prüfschritt" = allgemein. „Freigabe" = formaler Akt. „Vier-Augen-Prinzip" = zwei Personen prüfen. NICHT „Review".
 - „DSGVO" = nie ausschreiben. „Tool" = Software. „Werkzeug" = nur in Metaphern. Nicht im selben Absatz wechseln.
+
+<!-- SPRINT 2: OPT-B4 Risiko-Framework erweitern -->
+Formuliere verständlich für einen Geschäftsführer ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung in einem Halbsatz erklären.
+
+KONKRETE GEGENMAASSNAHMEN (PFLICHT):
+Jede Maßnahme als konkreter Handlungsschritt formulieren — NICHT als abstraktes Konzept.
+- VERBOTEN: „Mitigation implementieren", „Risikomanagement etablieren", „Prozesse optimieren"
+- RICHTIG: „Legen Sie fest, welche Daten nie in KI-Tools eingegeben werden dürfen, und teilen Sie das allen Beteiligten mit."
+- RICHTIG: „Speichern Sie KI-Ergebnisse 4 Wochen lang, damit Sie Fehler nachverfolgen können."
+
+VERKNÜPFUNG ZU HANDLUNGSFELDERN (PFLICHT):
+Verknüpfe jedes Top-Risiko mit dem passenden Handlungsfeld aus der Governance-Sektion. Format im Maßnahmen-Text: „(→ siehe auch: Strategische Leitlinie [Name])". Max. 1 Querverweis pro Risiko.
+
+STOP-SIGNALE IN DER RISIKO-MATRIX (PFLICHT):
+Ergänze in der Risiko-Matrix-Tabelle eine zusätzliche Spalte „Stop-Signal" — ein konkretes, erkennbares Warnsignal pro Risikobereich. Beispiele: „Kundenbeschwerden über fehlerhafte KI-Ausgaben häufen sich", „Mitarbeitende umgehen KI-Regeln regelmäßig", „Datenschutz-Anfragen bleiben >5 Tage unbeantwortet". Stop-Signale müssen beobachtbar sein, nicht abstrakt.
+
+CONSTRAINT: Bestehende Risk Engine v3 (quantitativ) NICHT duplizieren. Nur LLM-Narrativ anreichern. Wortlimits pro Bullet (85 Wörter) einhalten. Maßnahmen dürfen durch Konkretisierung max. 5 Wörter länger werden.
+<!-- /SPRINT 2 -->
 -->
 
 <section class="section risks">
