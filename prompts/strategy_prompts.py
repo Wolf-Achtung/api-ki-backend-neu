@@ -249,6 +249,16 @@ SPRACHMUSTER:
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
+SPRINT 2 — OPT-B3 STRATEGISCHE EINORDNUNG (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
+Ordne jedes der 3-5 Handlungsfelder im Fließtext als Stärke, Schwäche, Chance oder Bedrohung ein — NICHT als separate SWOT-Tabelle, sondern natürlich im Text eingebettet:
+- Stärke: „Das Unternehmen bringt bereits X mit — darauf lässt sich aufbauen."
+- Schwäche: „Was heute fehlt: Y. Das erhöht das Risiko, dass ..."
+- Chance: „KI eröffnet hier die Möglichkeit, Z zu erreichen, etwa durch ..."
+- Bedrohung: „Ohne Handlung in diesem Feld ist erfahrungsgemäß zu erwarten, dass ..."
+Pro Handlungsfeld mindestens EINE Einordnung. Bei der Prioritätsmatrix die Einordnung als zusätzliche Spalte „Typ" (S/W/C/T) ergänzen.
+CONSTRAINT: Max. 1-2 Zusatzsätze pro Handlungsfeld. Gesamtlänge der Section nicht über 800 Wörter.
+
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Priorisierungsmatrix.
 Ampel-Farben als CSS-Klassen oder inline-styles.""",
 
@@ -553,6 +563,14 @@ UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabe
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
+SPRINT 2 — OPT-B4 RISIKO-FRAMEWORK ERWEITERN (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
+(a) KONKRETE GEGENMASSNAHMEN: Jede Mitigationsstrategie als konkreten Handlungsschritt formulieren. NICHT „Risikomanagement implementieren", SONDERN z.B. „Definieren Sie eine Liste von Datentypen, die nie in KI-Tools eingegeben werden dürfen, und kommunizieren Sie diese an alle Beteiligten."
+(b) VERKNÜPFUNG ZU HANDLUNGSFELDERN: Jedes Top-Risiko mit dem passenden Handlungsfeld aus S3 verknüpfen. Format: „(→ Handlungsfeld: [Name aus S3])". Nutze {s3_handlungsfelder} als Referenz.
+(c) STOP-SIGNALE: Ergänze pro Top-Risiko ein konkretes Stop-Signal — woran erkennt man, dass es schiefläuft? Beispiele: „Mehr als 3 Kundenbeschwerden über fehlerhafte KI-Ausgaben in einem Monat", „Mitarbeitende umgehen die KI-Richtlinie regelmäßig". Stop-Signale müssen beobachtbar und alltagsnah sein.
+In der Risikomatrix-Tabelle eine Spalte „Stop-Signal" ergänzen.
+CONSTRAINT: Bestehende Risk Engine v3 Daten unverändert. Nur LLM-Narrativ anreichern.
+
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Risikomatrix.""",
 
     # =========================================================================
@@ -618,6 +636,13 @@ SPRACHMUSTER:
 - Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
+
+SPRINT 2 — OPT-B7 EXECUTIVE SUMMARY AUFWERTEN (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Kein Berater-Jargon. „Das bedeutet:" statt „Die strategische Implikation ist:".
+(a) „SO WHAT" zum Score: Ordne den KI-Readiness-Score ({readiness_score}/100) in 1-2 Sätzen konkret ein — was bedeutet dieser Wert für DIESES Unternehmen in DIESER Branche? Nicht nur „Score X von 100", sondern: „Mit {readiness_score} Punkten liegt {firmenname} [Einordnung]. Das bedeutet konkret: [was gut läuft / wo Nachholbedarf besteht]."
+(b) KONSEQUENZ BEI NICHT-HANDELN: Integriere einen knappen, realistischen Hinweis (1-2 Sätze), was passiert, wenn nicht gehandelt wird. Keine Panikmache, sondern nüchterne Einschätzung. Muster: „Ohne Anpassung ist erfahrungsgemäß zu erwarten, dass [konkrete Konsequenz]."
+(c) DER EINE NÄCHSTE SCHRITT: Schließe mit genau EINEM klaren, sofort machbaren nächsten Schritt. Nicht drei, nicht fünf — EINER. Konkret genug, dass der Leser heute damit anfangen kann.
+CONSTRAINT: Summary darf NICHT länger werden. Anreicherung ERSETZT generische Formulierungen. Max. 300 Wörter.
 
 FORMAT: HTML-Fragment (<p> Tags). Keine Überschrift (wird vom Template gesetzt).
 Maximal 300 Wörter. Kein Markdown. KEINE Quellenangaben.""",
