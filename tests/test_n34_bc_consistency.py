@@ -17,7 +17,7 @@ class TestNormalizeScenarioOrder:
         assert callable(normalize_scenario_order)
 
     def test_normalizes_realistic_below_conservative(self):
-        """If realistic < conservative, realistic should be set to conservative * 1.1."""
+        """If conservative > realistic, conservative should be reduced to realistic * 0.9."""
         from services.business_case_engine_v2 import normalize_scenario_order
 
         scenarios = {
@@ -28,8 +28,9 @@ class TestNormalizeScenarioOrder:
 
         result = normalize_scenario_order(scenarios)
 
-        # Realistic should now be 100 * 1.1 = 110
-        assert result["realistic"]["roi_12m"] == 110.0
+        # Conservative should now be 80 * 0.9 = 72.0
+        assert result["conservative"]["roi_12m"] == 72.0
+        assert result["realistic"]["roi_12m"] == 80.0  # Realistic unchanged
         assert result["_bc_consistency_normalized"] is True
 
     def test_normalizes_realistic_above_optimistic(self):
