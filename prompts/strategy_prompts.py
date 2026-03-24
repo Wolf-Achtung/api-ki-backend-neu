@@ -637,6 +637,13 @@ SPRACHMUSTER:
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
+SPRINT 2 — OPT-B7 EXECUTIVE SUMMARY AUFWERTEN (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Kein Berater-Jargon. „Das bedeutet:" statt „Die strategische Implikation ist:".
+(a) „SO WHAT" zum Score: Ordne den KI-Readiness-Score ({readiness_score}/100) in 1-2 Sätzen konkret ein — was bedeutet dieser Wert für DIESES Unternehmen in DIESER Branche? Nicht nur „Score X von 100", sondern: „Mit {readiness_score} Punkten liegt {firmenname} [Einordnung]. Das bedeutet konkret: [was gut läuft / wo Nachholbedarf besteht]."
+(b) KONSEQUENZ BEI NICHT-HANDELN: Integriere einen knappen, realistischen Hinweis (1-2 Sätze), was passiert, wenn nicht gehandelt wird. Keine Panikmache, sondern nüchterne Einschätzung. Muster: „Ohne Anpassung ist erfahrungsgemäß zu erwarten, dass [konkrete Konsequenz]."
+(c) DER EINE NÄCHSTE SCHRITT: Schließe mit genau EINEM klaren, sofort machbaren nächsten Schritt. Nicht drei, nicht fünf — EINER. Konkret genug, dass der Leser heute damit anfangen kann.
+CONSTRAINT: Summary darf NICHT länger werden. Anreicherung ERSETZT generische Formulierungen. Max. 300 Wörter.
+
 FORMAT: HTML-Fragment (<p> Tags). Keine Überschrift (wird vom Template gesetzt).
 Maximal 300 Wörter. Kein Markdown. KEINE Quellenangaben.""",
 }
