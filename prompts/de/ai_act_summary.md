@@ -112,6 +112,17 @@ THEMEN-OWNERSHIP (verbindlich):
          Schluss
 -->
 
+<!-- SPRINT 2: OPT-B6 Compliance-Tiefe stärken -->
+Formuliere verständlich für einen Geschäftsführer ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung in einem Halbsatz erklären.
+
+COMPLIANCE ALS OPERATIVE HANDLUNGSANWEISUNG (PFLICHT):
+(a) PFLICHTEN-ZU-PRÜFSCHRITT-MAPPING: Übersetze jede Compliance-Pflicht (Art. 5, Art. 6, Art. 50, DSGVO) in einen konkreten Prüfschritt im Arbeitsalltag. Nicht „Transparenzpflicht beachten", sondern „Vor dem Versand an Mandanten prüfen: Ist erkennbar, dass KI an der Erstellung beteiligt war?"
+(b) COMPLIANCE-CHECKLISTE MIT VERANTWORTLICHEM: In „Empfohlene nächste Schritte" pro Schritt einen Verantwortlichen und Zeitrahmen ergänzen. Solo: „Sie selbst, diese Woche". Team: „KI-Koordinator, innerhalb 2 Wochen". KMU: „Datenschutzbeauftragter + Fachbereichsleitung, innerhalb 4 Wochen".
+(c) BRANCHENSPEZIFISCHE COMPLIANCE: Im Abschnitt „Branchenspezifische Besonderheiten" konkrete Berufsrecht-Anforderungen einfordern — etwa Verschwiegenheitspflicht (StBerG §57) bei Steuerberatung, Patientendatenschutz bei Gesundheit, Beraterhaftung bei Finanzdienstleistung.
+(d) VERKNÜPFUNG ZU GOVERNANCE: Ergänze bei „Risiken bei Non-Compliance" einen Querverweis: „Bei Compliance-Verstößen greift der Eskalationspfad aus der KI-Governance (→ siehe Governance-Abschnitt)."
+CONSTRAINT: Keine Rechtsberatung. Bestehende Fristen-Tabelle und AI-Act-Klassifizierung NICHT ändern. Bestehende Wortlimits einhalten.
+<!-- /SPRINT 2 -->
+
 <section class="section ai-act">
   <h2>EU AI Act – Zusammenfassung &amp; Pflichten</h2>
 

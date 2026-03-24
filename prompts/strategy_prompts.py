@@ -601,6 +601,14 @@ Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erste
 In der Risikomatrix-Tabelle eine Spalte „Stop-Signal" ergänzen.
 CONSTRAINT: Bestehende Risk Engine v3 Daten unverändert. Nur LLM-Narrativ anreichern.
 
+SPRINT 2 — OPT-B6 COMPLIANCE-TIEFE STÄRKEN (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
+(a) PFLICHTEN-ZU-PRÜFSCHRITT: Übersetze jede Compliance-Pflicht (EU AI Act, DSGVO) in einen konkreten Prüfschritt im Arbeitsalltag. Nicht „Transparenzpflicht beachten", sondern etwa „Vor dem Versand prüfen: Ist erkennbar, dass KI beteiligt war?"
+(b) COMPLIANCE-CHECKLISTE: Pro Compliance-Aufgabe einen Verantwortlichen und Zeitrahmen benennen. Segment-gerecht formulieren.
+(c) BRANCHENSPEZIFISCHE COMPLIANCE: Konkrete Berufsrecht-Anforderungen der {branche} einfordern — etwa Verschwiegenheitspflicht bei Steuerberatung, Patientendatenschutz bei Gesundheit.
+(d) VERKNÜPFUNG ZU GOVERNANCE: Bei Compliance-Verstößen auf den Eskalationspfad aus B5/S3 verweisen.
+CONSTRAINT: Keine Rechtsberatung. Bestehende AI-Act-Klassifizierung unverändert.
+
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Risikomatrix.""",
 
     # =========================================================================
