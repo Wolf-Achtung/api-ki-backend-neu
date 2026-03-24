@@ -273,6 +273,14 @@ Ordne jedes der 3-5 Handlungsfelder im Fließtext als Stärke, Schwäche, Chance
 Pro Handlungsfeld mindestens EINE Einordnung. Bei der Prioritätsmatrix die Einordnung als zusätzliche Spalte „Typ" (S/W/C/T) ergänzen.
 CONSTRAINT: Max. 1-2 Zusatzsätze pro Handlungsfeld. Gesamtlänge der Section nicht über 800 Wörter.
 
+SPRINT 2 — OPT-B5 GOVERNANCE-TIEFE (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
+Ergänze bei Handlungsfeldern mit Governance-Bezug konkrete Steuerungshinweise:
+(a) STEUERUNGSKREIS: Wer steuert KI-Themen, wie oft? Segment-gerecht: Solo = monatliche Selbst-Reflexion, Team = KI-Koordinator + monatlicher Check, KMU = Steuerungskreis quartalsweise mit Agenda (Nutzungsstatus, Vorfälle, Regelanpassungen).
+(b) ESKALATIONSPFAD: Vorfall → Meldung an [Rolle] → Bewertung → Maßnahme. Zeitrahmen benennen.
+(c) ENTSCHEIDUNGSMATRIX: Wer gibt KI-Tools frei, wer ändert KI-Richtlinie, wer stoppt einen Prozess? In 2-3 Sätzen klären.
+CONSTRAINT: Max. 2-3 Zusatzsätze. Keine Konzern-Vokabeln bei Solo/Team.
+
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Priorisierungsmatrix.
 Ampel-Farben als CSS-Klassen oder inline-styles.""",
 
@@ -481,6 +489,16 @@ UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabe
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
+SPRINT 2 — OPT-B9 CHANGE MANAGEMENT STÄRKEN (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
+Segment-gerecht in die Roadmap integrieren:
+(a) CHANGE-NARRATIV: 2-3 Sätze „Warum KI gut für das Team ist" — aus Mitarbeiterperspektive, nicht GF-Sicht. In Phase 1 integrieren.
+(b) TOP-3-WIDERSTÄNDE + MITIGATION: Branchenspezifisch aus {branche} ableiten. Pro Widerstand 1 konkrete Gegenmaßnahme.
+(c) KOMMUNIKATIONSPLAN-LOGIK: Kick-off zu Beginn, Zwischenbericht nach Phase 1, Erfolge sichtbar machen.
+(d) ADOPTION-KENNZAHLEN: Neben technischen Meilensteinen auch: aktive Nutzer, Nutzungsfrequenz, Team-Zufriedenheit als Messgröße für Phase-Übergänge.
+(e) QUICK-WIN-KOMMUNIKATION: Erste Erfolge aus Phase 1 als Change-Beschleuniger einsetzen.
+CONSTRAINT: Kein separates Change-Kapitel — in bestehende Phasen-Struktur einweben. Bei Solo-Segment: Kein formales Change Management, nur persönliche Motivation.
+
 FORMAT: HTML-Fragment. Verwende eine Timeline-artige Darstellung mit Tabelle.""",
 
     # =========================================================================
@@ -592,6 +610,14 @@ Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erste
 (c) STOP-SIGNALE: Ergänze pro Top-Risiko ein konkretes Stop-Signal — woran erkennt man, dass es schiefläuft? Beispiele: „Mehr als 3 Kundenbeschwerden über fehlerhafte KI-Ausgaben in einem Monat", „Mitarbeitende umgehen die KI-Richtlinie regelmäßig". Stop-Signale müssen beobachtbar und alltagsnah sein.
 In der Risikomatrix-Tabelle eine Spalte „Stop-Signal" ergänzen.
 CONSTRAINT: Bestehende Risk Engine v3 Daten unverändert. Nur LLM-Narrativ anreichern.
+
+SPRINT 2 — OPT-B6 COMPLIANCE-TIEFE STÄRKEN (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
+(a) PFLICHTEN-ZU-PRÜFSCHRITT: Übersetze jede Compliance-Pflicht (EU AI Act, DSGVO) in einen konkreten Prüfschritt im Arbeitsalltag. Nicht „Transparenzpflicht beachten", sondern etwa „Vor dem Versand prüfen: Ist erkennbar, dass KI beteiligt war?"
+(b) COMPLIANCE-CHECKLISTE: Pro Compliance-Aufgabe einen Verantwortlichen und Zeitrahmen benennen. Segment-gerecht formulieren.
+(c) BRANCHENSPEZIFISCHE COMPLIANCE: Konkrete Berufsrecht-Anforderungen der {branche} einfordern — etwa Verschwiegenheitspflicht bei Steuerberatung, Patientendatenschutz bei Gesundheit.
+(d) VERKNÜPFUNG ZU GOVERNANCE: Bei Compliance-Verstößen auf den Eskalationspfad aus B5/S3 verweisen.
+CONSTRAINT: Keine Rechtsberatung. Bestehende AI-Act-Klassifizierung unverändert.
 
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Risikomatrix.""",
 

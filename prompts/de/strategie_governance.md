@@ -112,6 +112,19 @@ Im Abschnitt „Rahmenbedingungen & aktueller Status" die bestehenden Angaben (R
 CONSTRAINT: Kein separates SWOT-Kapitel. Max. 1-2 Zusatzsätze pro Listenpunkt. Bestehende Wortlimits einhalten.
 <!-- /SPRINT 2 -->
 
+<!-- SPRINT 2: OPT-B5 Governance-Tiefe stärken -->
+Formuliere verständlich für einen Geschäftsführer ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung in einem Halbsatz erklären.
+
+GOVERNANCE ALS BETRIEBSMODELL (PFLICHT — im Abschnitt „Verantwortung & Steuerung"):
+(a) STEUERUNGSKREIS: Beschreibe segment-gerecht, wer KI-Themen steuert und wie oft:
+- Solo: monatliche Selbst-Reflexion (15 Min.), halbjährlich Regeln prüfen.
+- Team: KI-Koordinator + monatlicher Kurz-Check (30 Min.) zu Nutzung, Qualität, Regeln.
+- KMU: Steuerungskreis aus Fachbereich + IT + Datenschutz, quartalsweise Governance-Runde mit fester Agenda (Nutzungsstatus, Vorfälle, Regelanpassungen).
+(b) ESKALATIONSPFAD BEI KI-VORFÄLLEN: Ergänze einen konkreten Eskalationspfad: Vorfall erkannt → Meldung an [Rolle] innerhalb [Zeitrahmen] → Bewertung → Maßnahme. Segment-gerecht formulieren.
+(c) ENTSCHEIDUNGSMATRIX: Wer gibt neue KI-Tools frei? Wer ändert die KI-Richtlinie? Wer stoppt einen KI-Prozess? In 2-3 Sätzen klären.
+CONSTRAINT: Bestehende Wortlimits einhalten. Max. 3-4 Zusatzsätze im Steuerungs-Abschnitt. Keine Konzern-Vokabeln bei Solo/Team.
+<!-- /SPRINT 2 -->
+
 <section class="section governance-strategy">
   <h2>KI-Strategie &amp; Governance</h2>
 

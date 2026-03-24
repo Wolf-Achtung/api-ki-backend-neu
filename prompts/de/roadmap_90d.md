@@ -189,6 +189,27 @@ SPRACHMUSTER:
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
+<!-- SPRINT 2: OPT-B9 Change Management stärken -->
+Formuliere verständlich für einen Geschäftsführer ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung in einem Halbsatz erklären.
+
+CHANGE-MANAGEMENT IN DER ROADMAP (PFLICHT — segment-gerecht):
+{% if COMPANY_SIZE == "solo" %}
+SOLO: Kein formales Change Management nötig. Stattdessen: 1 Satz „Warum KI gut für Ihre Arbeit ist" als persönliche Motivation in Phase 0. Kein Kommunikationsplan, keine Adoption-KPIs.
+{% elif COMPANY_SIZE == "team" %}
+TEAM: Leichtgewichtiges Change Management:
+(a) CHANGE-NARRATIV: 1-2 Sätze „Warum KI gut für das Team ist" — aus Mitarbeiterperspektive formulieren, nicht aus GF-Perspektive.
+(b) TOP-2-WIDERSTÄNDE: Benenne die 2 wahrscheinlichsten Widerstände im Team (branchenspezifisch ableiten) + je 1 Gegenmaßnahme.
+(c) QUICK-WIN-KOMMUNIKATION: Erste Erfolge aus Phase 1 als Team-Motivation nutzen — „Teilen Sie den ersten Erfolg im nächsten Team-Meeting."
+{% else %}
+KMU: Strukturiertes Change Management:
+(a) CHANGE-NARRATIV: 2-3 Sätze „Warum KI gut für die Belegschaft ist" — Mitarbeiterperspektive, nicht GF-Sicht.
+(b) TOP-3-WIDERSTÄNDE + MITIGATION: Branchenspezifisch (etwa bei Steuerberatung: „Angst vor Qualitätsverlust bei Mandantenarbeit", „Sorge um Arbeitsplätze", „Überforderung durch neue Tools").
+(c) KOMMUNIKATIONSPLAN: Kick-off zu Beginn, Zwischenbericht nach Phase 1, Erfolge sichtbar machen.
+(d) ADOPTION-KENNZAHLEN: Neben technischen Kennzahlen auch: aktive Nutzer, Nutzungsfrequenz, Team-Zufriedenheit.
+{% endif %}
+CONSTRAINT: Bestehende Wortlimits und Phasenstruktur einhalten. Max. 3-4 Zusatzsätze. OPT-A5 (Szenario-Logik) bleibt Fundament.
+<!-- /SPRINT 2 -->
+
 BEGRIFFSKONSISTENZ (VERBINDLICH — OPT-A7):
 Verwende diese Begriffe einheitlich im gesamten Report:
 - „KI-Governance" = Oberbegriff für Regeln, Rollen, Freigaben rund um KI-Nutzung. „KI-Richtlinie" = das konkrete Dokument.
