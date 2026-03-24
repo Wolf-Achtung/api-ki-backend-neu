@@ -132,6 +132,15 @@ AUFGABE:
 
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
+FAKTEN- UND ANNAHMEN-TRENNUNG (VERBINDLICH):
+- Harte Eingabedaten, Scores, deterministische Zahlen und explizite Nutzerangaben als Tatsachen behandeln.
+- Schlussfolgerungen aus mehreren Signalen als Einordnung formulieren, nicht als gesicherte Tatsache.
+- Branchenübliche Muster, Benchmarks oder fehlende Detailinformationen nur als Annahme oder plausible Ableitung formulieren.
+SPRACHMUSTER:
+- Faktisch: „Der Score liegt bei ...", „Genannt wurde ...", „Vorgegeben ist ..."
+- Abgeleitet: „Daraus ergibt sich ...", „Das spricht dafür, dass ..."
+- Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
+
 FORMAT: HTML-Fragment mit <h3>, <p>, <ul>, <table>. Kein Markdown.""",
 
     # =========================================================================
@@ -169,6 +178,15 @@ Verwende die Recherche-Ergebnisse als Datenbasis. Wenn keine Daten verfügbar si
 verwende allgemeine Mittelstands-Benchmarks für Deutschland 2025/2026.
 
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
+
+FAKTEN- UND ANNAHMEN-TRENNUNG (VERBINDLICH):
+- Harte Eingabedaten, Scores, deterministische Zahlen und explizite Nutzerangaben als Tatsachen behandeln.
+- Schlussfolgerungen aus mehreren Signalen als Einordnung formulieren, nicht als gesicherte Tatsache.
+- Branchenübliche Muster, Benchmarks oder fehlende Detailinformationen nur als Annahme oder plausible Ableitung formulieren.
+SPRACHMUSTER:
+- Faktisch: „Der Score liegt bei ...", „Genannt wurde ...", „Vorgegeben ist ..."
+- Abgeleitet: „Daraus ergibt sich ...", „Das spricht dafür, dass ..."
+- Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
 
 FORMAT: HTML-Fragment. Verwende eine Tabelle für den Branchen-Benchmark.
 Quellenangaben am Ende als <div class="sources">.""",
@@ -208,6 +226,15 @@ AUFGABE:
 4. Markiere den Quick Win (🟢) besonders hervor.
 
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
+
+FAKTEN- UND ANNAHMEN-TRENNUNG (VERBINDLICH):
+- Harte Eingabedaten, Scores, deterministische Zahlen und explizite Nutzerangaben als Tatsachen behandeln.
+- Schlussfolgerungen aus mehreren Signalen als Einordnung formulieren, nicht als gesicherte Tatsache.
+- Branchenübliche Muster, Benchmarks oder fehlende Detailinformationen nur als Annahme oder plausible Ableitung formulieren.
+SPRACHMUSTER:
+- Faktisch: „Der Score liegt bei ...", „Genannt wurde ...", „Vorgegeben ist ..."
+- Abgeleitet: „Daraus ergibt sich ...", „Das spricht dafür, dass ..."
+- Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
 
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Priorisierungsmatrix.
 Ampel-Farben als CSS-Klassen oder inline-styles.""",
@@ -335,6 +362,15 @@ der Gesamtinvestition über 12 Monate ({budget_gesamt_jahr1} €, inklusive Soft
 Schulung, Implementierung und Koordination). Erklären Sie dem Leser verständlich,
 warum die ROI-Zahlen unterschiedlich sind — beide sind korrekt, nur die
 Berechnungsbasis ist anders.
+
+FAKTEN- UND ANNAHMEN-TRENNUNG (VERBINDLICH):
+- Harte Eingabedaten, Scores, deterministische Zahlen und explizite Nutzerangaben als Tatsachen behandeln.
+- Schlussfolgerungen aus mehreren Signalen als Einordnung formulieren, nicht als gesicherte Tatsache.
+- Branchenübliche Muster, Benchmarks oder fehlende Detailinformationen nur als Annahme oder plausible Ableitung formulieren.
+SPRACHMUSTER:
+- Faktisch: „Der Score liegt bei ...", „Genannt wurde ...", „Vorgegeben ist ..."
+- Abgeleitet: „Daraus ergibt sich ...", „Das spricht dafür, dass ..."
+- Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
 
 FORMAT: HTML-Fragment. Verwende Tabellen für Budget und ROI.""",
 
@@ -535,6 +571,15 @@ Schreibe eine prägnante Executive Summary (200-300 Wörter), die:
 Zielgruppe: Geschäftsführer/Entscheider, die schnell den Kern erfassen wollen.
 
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
+
+FAKTEN- UND ANNAHMEN-TRENNUNG (VERBINDLICH):
+- Harte Eingabedaten, Scores, deterministische Zahlen und explizite Nutzerangaben als Tatsachen behandeln.
+- Schlussfolgerungen aus mehreren Signalen als Einordnung formulieren, nicht als gesicherte Tatsache.
+- Branchenübliche Muster, Benchmarks oder fehlende Detailinformationen nur als Annahme oder plausible Ableitung formulieren.
+SPRACHMUSTER:
+- Faktisch: „Der Score liegt bei ...", „Genannt wurde ...", „Vorgegeben ist ..."
+- Abgeleitet: „Daraus ergibt sich ...", „Das spricht dafür, dass ..."
+- Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
 
 FORMAT: HTML-Fragment (<p> Tags). Keine Überschrift (wird vom Template gesetzt).
 Maximal 300 Wörter. Kein Markdown. KEINE Quellenangaben.""",

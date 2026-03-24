@@ -74,6 +74,15 @@ THEMEN-OWNERSHIP (verbindlich):
 GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
 -->
 
+FAKTEN- UND ANNAHMEN-TRENNUNG (VERBINDLICH):
+- Harte Eingabedaten, Scores, deterministische Zahlen und explizite Nutzerangaben als Tatsachen behandeln.
+- Schlussfolgerungen aus mehreren Signalen als Einordnung formulieren, nicht als gesicherte Tatsache.
+- Branchenübliche Muster, Benchmarks oder fehlende Detailinformationen nur als Annahme oder plausible Ableitung formulieren.
+SPRACHMUSTER:
+- Faktisch: „Der Score liegt bei ...", „Genannt wurde ...", „Vorgegeben ist ..."
+- Abgeleitet: „Daraus ergibt sich ...", „Das spricht dafür, dass ..."
+- Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
+
 <section class="section governance-strategy">
   <h2>KI-Strategie &amp; Governance</h2>
 
