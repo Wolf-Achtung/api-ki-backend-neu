@@ -397,6 +397,22 @@ def _build_funding_blacklist(sections: dict[str, Any]) -> list[str]:
     return list(_FUNDING_BLACKLIST_BASE) + list(_DIGITALBONUS_TERMS)
 
 
+_GHOST_ROW_RE = re.compile(
+    r'<tr>\s*<td>\s*</td>.*?</tr>',
+    re.DOTALL | re.IGNORECASE,
+)
+
+
+def _remove_ghost_table_rows(html: str) -> str:
+    """Remove table rows whose first <td> is empty (ghost rows from blacklist filtering)."""
+    cleaned = _GHOST_ROW_RE.sub('', html)
+    if cleaned != html:
+        removed = html.count('<tr') - cleaned.count('<tr')
+        if removed > 0:
+            logger.info("[FIX-S7] Removed %d ghost table row(s) with empty first cell", removed)
+    return cleaned
+
+
 def apply_funding_blacklist(
     sections: dict[str, Any],
 ) -> dict[str, Any]:
@@ -461,6 +477,10 @@ def apply_funding_blacklist(
                         f"with '{term}' from {name}"
                     )
                 modified = "\n".join(filtered)
+        # FIX-S7: Remove ghost table rows — <tr> with empty first <td>
+        # This catches cases where the programme name was on a separate line
+        # and got removed, leaving a data-only row without a label.
+        modified = _remove_ghost_table_rows(modified)
         cleaned[name] = modified
 
     if total_removed > 0:

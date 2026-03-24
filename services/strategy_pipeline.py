@@ -402,7 +402,11 @@ async def generate_strategy_report(
         # === FIX-KIS1034-D3: Funding Blacklist for Strategy ===
         # R1 already filters expired programs via apply_funding_blacklist, but
         # Strategy was missing this step — "Digital Jetzt" / "go-digital" leaked through.
+        # FIX-S7: Pass bundesland into sections so _build_funding_blacklist can detect
+        # Bavaria and keep Digitalbonus Bayern (same logic as R1 pipeline).
         from b25_enforcer import apply_funding_blacklist
+        if "bundesland" not in sections and "BUNDESLAND_LABEL" not in sections:
+            sections["bundesland"] = base_context.get("bundesland", "")
         sections = apply_funding_blacklist(sections)
 
         # === PHASE 3: Assembly ===
