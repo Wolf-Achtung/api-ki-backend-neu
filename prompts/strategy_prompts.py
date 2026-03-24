@@ -195,6 +195,13 @@ AUFGABE:
 Verwende die Recherche-Ergebnisse als Datenbasis. Wenn keine Daten verfügbar sind,
 verwende allgemeine Mittelstands-Benchmarks für Deutschland 2025/2026.
 
+SPRINT 2 — OPT-B2 WETTBEWERBS-FRAMEWORK STÄRKEN (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Nicht „Wettbewerbsmatrix", sondern „Wie Sie sich abheben können."
+(a) KONKRETE WETTBEWERBSPOSITION: Ordne die Position des Unternehmens nicht nur in Zahlen, sondern im Fließtext ein: Was kann dieses Unternehmen bereits, was andere nicht können? Wo liegt es zurück?
+(b) DIFFERENZIERUNGSHEBEL DURCH KI: Formuliere mindestens einen konkreten Hebel — wie kann KI {firmenname} von Wettbewerbern in {branche} abheben? Basierend auf den vorhandenen Stärken und Handlungsfeldern.
+(c) DRINGLICHKEIT BEI NICHT-HANDELN: Konkretes Szenario, was passiert, wenn Wettbewerber schneller sind. Realistisch, nicht alarmistisch — mit Unsicherheits-Hedge „erfahrungsgemäß", „voraussichtlich".
+CONSTRAINT: Keine erfundenen Marktanteile. Nur Daten aus Recherche-Quellen nutzen.
+
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
 FAKTEN- UND ANNAHMEN-TRENNUNG (VERBINDLICH):

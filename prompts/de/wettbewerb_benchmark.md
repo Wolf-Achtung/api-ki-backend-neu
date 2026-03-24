@@ -68,6 +68,16 @@ SPRACHMUSTER:
 - Abgeleitet: „Daraus ergibt sich ...", „Das spricht dafür, dass ..."
 - Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
 
+<!-- SPRINT 2: OPT-B2 Wettbewerbs-Framework stärken -->
+Formuliere verständlich für einen Geschäftsführer ohne KI-Vorwissen. Nicht „Wettbewerbsmatrix", sondern „Wie Sie sich von anderen in Ihrer Branche abheben können."
+
+WETTBEWERBSTIEFE (PFLICHT):
+(a) KONKRETE WETTBEWERBSPOSITION: Ordne die Score-Vergleichswerte (Ø vs. Top 10%) nicht nur tabellarisch, sondern im Fließtext ein: „In der Kategorie [X] liegen Sie [über/unter] dem Durchschnitt — das bedeutet konkret: [was das Unternehmen bereits kann / wo es zurückliegt]." Pro Score-Kategorie 1 Satz Einordnung.
+(b) DIFFERENZIERUNGSHEBEL DURCH KI: Formuliere mindestens einen konkreten Differenzierungshebel — wie kann KI dieses Unternehmen von Wettbewerbern abheben? Basierend auf den Stärken aus der Score-Tabelle. Muster: „Ihre Stärke in [Kategorie] ermöglicht es, [konkreter Vorteil] schneller als Wettbewerber zu erreichen."
+(c) DRINGLICHKEITSDIMENSION (realistisch, nicht alarmistisch): Ergänze in der Überholungs-Strategie einen konkreten Hinweis, was bei Nicht-Handeln passiert. Formulierung mit Unsicherheits-Hedge: „Erfahrungsgemäß ist zu erwarten, dass Wettbewerber, die [konkreter Schritt] umsetzen, einen Vorsprung aufbauen, der sich [konkrete Konsequenz]."
+CONSTRAINT: Keine erfundenen Marktanteile oder Adoptionszahlen. Bestehende Benchmark-Zahlen (Ø 65, Top 10% = 82 etc.) unverändert.
+<!-- /SPRINT 2 -->
+
 <section class="section wettbewerb-benchmark">
   <h2>Wettbewerb &amp; Benchmarking</h2>
 
