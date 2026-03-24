@@ -189,6 +189,24 @@ SPRACHMUSTER:
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
+BEGRIFFSKONSISTENZ (VERBINDLICH — OPT-A7):
+Verwende diese Begriffe einheitlich im gesamten Report:
+- „KI-Governance" = Oberbegriff für Regeln, Rollen, Freigaben rund um KI-Nutzung. „KI-Richtlinie" = das konkrete Dokument.
+- „ROI" = immer „ROI", bei erster Nennung pro Abschnitt „Return on Investment (ROI)".
+- „Break-Even" = Zeitpunkt der Amortisation im Fließtext. „Amortisation" nur in Tabellen/KPIs.
+- „EU AI Act" = immer, bei erster Nennung „EU AI Act (KI-Verordnung der EU)". NICHT standalone „KI-Verordnung".
+- „AVV" = bei erster Nennung „AV-Vertrag (AVV)", danach nur „AVV".
+- „KI-Ausgabe" = allgemein für KI-Ergebnisse. „KI-Entwurf" = Text, der noch geprüft werden muss. NICHT „KI-Output".
+- „Prüfschritt" = allgemein. „Freigabe" = formaler Akt. „Vier-Augen-Prinzip" = zwei Personen prüfen. NICHT „Review".
+- „DSGVO" = nie ausschreiben. „Tool" = Software. „Werkzeug" = nur in Metaphern. Nicht im selben Absatz wechseln.
+
+BEDINGTE STEUERUNGSHINWEISE (OPTIONAL, MAX. 1 ABSATZ — OPT-A5):
+Ergänze am Ende der Roadmap einen kurzen Absatz mit einem konditionalen Steuerungshinweis:
+- Format: „Wenn [messbare Bedingung nach Phase 1/Woche 5], dann [empfohlene Anpassung für Phase 2]."
+- Die Bedingung muss messbar sein (Stunden, Prozent, Fehlerquote), nicht vage.
+- Maximal 2 solcher Wenn-Dann-Sätze.
+- Beispiel: „Wenn nach Phase 1 weniger als 15% Zeitersparnis gemessen wird, sollte die Skalierung in Phase 2 verlangsamt und stattdessen die KI-Richtlinie nachgeschärft werden."
+
 =============================================================================
 
 KURZLABELS (VERPFLICHTEND!):
