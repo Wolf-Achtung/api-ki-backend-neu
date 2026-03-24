@@ -629,6 +629,8 @@ SPRACHMUSTER:
 - Abgeleitet: „Daraus ergibt sich ...", „Das spricht dafür, dass ..."
 - Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
 
+ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
+
 ---
 
 ### FORMATIERUNGS-PFLICHTEN (v7.2 — PDF-Rendering)
