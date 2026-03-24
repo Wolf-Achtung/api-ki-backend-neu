@@ -563,6 +563,14 @@ UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabe
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
+SPRINT 2 — OPT-B4 RISIKO-FRAMEWORK ERWEITERN (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
+(a) KONKRETE GEGENMASSNAHMEN: Jede Mitigationsstrategie als konkreten Handlungsschritt formulieren. NICHT „Risikomanagement implementieren", SONDERN z.B. „Definieren Sie eine Liste von Datentypen, die nie in KI-Tools eingegeben werden dürfen, und kommunizieren Sie diese an alle Beteiligten."
+(b) VERKNÜPFUNG ZU HANDLUNGSFELDERN: Jedes Top-Risiko mit dem passenden Handlungsfeld aus S3 verknüpfen. Format: „(→ Handlungsfeld: [Name aus S3])". Nutze {s3_handlungsfelder} als Referenz.
+(c) STOP-SIGNALE: Ergänze pro Top-Risiko ein konkretes Stop-Signal — woran erkennt man, dass es schiefläuft? Beispiele: „Mehr als 3 Kundenbeschwerden über fehlerhafte KI-Ausgaben in einem Monat", „Mitarbeitende umgehen die KI-Richtlinie regelmäßig". Stop-Signale müssen beobachtbar und alltagsnah sein.
+In der Risikomatrix-Tabelle eine Spalte „Stop-Signal" ergänzen.
+CONSTRAINT: Bestehende Risk Engine v3 Daten unverändert. Nur LLM-Narrativ anreichern.
+
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Risikomatrix.""",
 
     # =========================================================================
