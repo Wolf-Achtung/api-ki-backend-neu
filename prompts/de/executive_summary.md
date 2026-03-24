@@ -302,6 +302,26 @@ Verwende diese Begriffe einheitlich im gesamten Report:
 - „KI-Ausgabe" = allgemein für KI-Ergebnisse. „KI-Entwurf" = Text, der noch geprüft werden muss. NICHT „KI-Output".
 - „Prüfschritt" = allgemein. „Freigabe" = formaler Akt. „Vier-Augen-Prinzip" = zwei Personen prüfen. NICHT „Review".
 - „DSGVO" = nie ausschreiben. „Tool" = Software. „Werkzeug" = nur in Metaphern. Nicht im selben Absatz wechseln.
+
+<!-- SPRINT 2: OPT-B7 Executive Summary aufwerten -->
+Formuliere verständlich für einen Geschäftsführer ohne KI-Vorwissen. Kein Berater-Jargon. „Das bedeutet für Sie:" statt „Die strategische Implikation ist:".
+
+STRATEGISCHE AUFWERTUNG (PFLICHT — ERSETZT generische Formulierungen, fügt NICHT hinzu):
+Die Executive Summary muss über eine Zusammenfassung hinausgehen und strategisch einordnen.
+
+(a) „SO WHAT" IM PROFIL-SATZ (Element 1):
+Ersetze generische Situationsbeschreibungen durch eine konkrete Einordnung. Nicht nur „steht vor der Aufgabe", sondern WAS der Score KONKRET für DIESES Unternehmen in DIESER Branche bedeutet.
+Muster: „[Branche] mit {{hauptleistung}} hat [Score-Einordnung] — das bedeutet [konkrete Konsequenz]."
+
+(b) KONSEQUENZ BEI NICHT-HANDELN (in Element 2, Entscheidung 3):
+Integriere in eine der drei Entscheidungen einen knappen Hinweis, was bei Nicht-Handeln passiert. Max. 1 Halbsatz, realistisch, keine Panikmache.
+Muster: „...bevor [realistische Konsequenz bei Nicht-Handeln]."
+
+(c) DER EINE NÄCHSTE SCHRITT (Element 3 — verschärft):
+Der nächste Schritt muss EINER sein — nicht zwei, nicht drei. Klar, konkret, diese Woche machbar. Wenn aktuell mehrere Schritte genannt werden: auf den EINEN wichtigsten reduzieren.
+
+CONSTRAINT: Executive Summary darf NICHT länger werden. Anreicherung ERSETZT bestehende generische Formulierungen. Zielkorridor bleibt 250-350 Wörter.
+<!-- /SPRINT 2 -->
 -->
 
 <section class="section executive-summary">
