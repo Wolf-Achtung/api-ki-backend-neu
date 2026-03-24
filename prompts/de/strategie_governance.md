@@ -96,6 +96,22 @@ Verwende diese Begriffe einheitlich im gesamten Report:
 - „Prüfschritt" = allgemein. „Freigabe" = formaler Akt. „Vier-Augen-Prinzip" = zwei Personen prüfen. NICHT „Review".
 - „DSGVO" = nie ausschreiben. „Tool" = Software. „Werkzeug" = nur in Metaphern. Nicht im selben Absatz wechseln.
 
+<!-- SPRINT 2: OPT-B3 Strategische Analyse vertiefen -->
+Formuliere verständlich für einen Geschäftsführer ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung in einem Halbsatz erklären.
+
+STRATEGISCHE EINORDNUNG DER HANDLUNGSFELDER (PFLICHT):
+Ordne jedes Handlungsfeld und jede Leitlinie im Fließtext natürlich ein — als Stärke, Schwäche, Chance oder Bedrohung. NICHT als separate SWOT-Tabelle oder -Box, sondern eingebettet in den bestehenden Text.
+Muster:
+- Stärke (worauf aufgebaut werden kann): „Sie haben bereits X — das ist eine solide Grundlage für ..."
+- Schwäche (was geschlossen werden muss): „Was fehlt: Y. Ohne diese Grundlage ..."
+- Chance (was KI eröffnet): „KI kann hier Z ermöglichen, etwa ..."
+- Bedrohung (was bei Nicht-Handeln passiert): „Ohne Handlung riskieren Sie, dass W ..."
+
+Pro Leitlinie (unter „Strategische Leitlinien") mindestens EINE dieser Einordnungen vornehmen.
+Im Abschnitt „Rahmenbedingungen & aktueller Status" die bestehenden Angaben (Richtlinien, Change-Management, Meldewege, Datenschutz, Kompetenzen) jeweils als Stärke ODER Schwäche einordnen — basierend auf dem konkreten Label-Wert.
+CONSTRAINT: Kein separates SWOT-Kapitel. Max. 1-2 Zusatzsätze pro Listenpunkt. Bestehende Wortlimits einhalten.
+<!-- /SPRINT 2 -->
+
 <section class="section governance-strategy">
   <h2>KI-Strategie &amp; Governance</h2>
 

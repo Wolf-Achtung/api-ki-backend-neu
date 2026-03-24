@@ -249,6 +249,16 @@ SPRACHMUSTER:
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
+SPRINT 2 — OPT-B3 STRATEGISCHE EINORDNUNG (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
+Ordne jedes der 3-5 Handlungsfelder im Fließtext als Stärke, Schwäche, Chance oder Bedrohung ein — NICHT als separate SWOT-Tabelle, sondern natürlich im Text eingebettet:
+- Stärke: „Das Unternehmen bringt bereits X mit — darauf lässt sich aufbauen."
+- Schwäche: „Was heute fehlt: Y. Das erhöht das Risiko, dass ..."
+- Chance: „KI eröffnet hier die Möglichkeit, Z zu erreichen, etwa durch ..."
+- Bedrohung: „Ohne Handlung in diesem Feld ist erfahrungsgemäß zu erwarten, dass ..."
+Pro Handlungsfeld mindestens EINE Einordnung. Bei der Prioritätsmatrix die Einordnung als zusätzliche Spalte „Typ" (S/W/C/T) ergänzen.
+CONSTRAINT: Max. 1-2 Zusatzsätze pro Handlungsfeld. Gesamtlänge der Section nicht über 800 Wörter.
+
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Priorisierungsmatrix.
 Ampel-Farben als CSS-Klassen oder inline-styles.""",
 
