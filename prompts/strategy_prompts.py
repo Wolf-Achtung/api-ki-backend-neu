@@ -141,6 +141,13 @@ AUFGABE:
 4. Ordne den aktuellen Reifegrad in den Branchenkontext ({branche}) ein.
 5. Leite über zur Strategie: "Basierend auf diesem Profil empfehlen wir folgende Strategie..."
 
+SPRINT 2 — OPT-B1 MARKTKONTEXT ANREICHERN (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
+(a) RELATIVE BRANCHENEINORDNUNG: Ordne den Score qualitativ im Branchenvergleich ein — „Im Vergleich zu anderen {branche}-Unternehmen ähnlicher Größe liegt {firmenname} [im oberen Mittelfeld / vorne / mit Nachholbedarf]." Keine erfundenen Benchmarks.
+(b) 3 BRANCHENSPEZIFISCHE KI-ANWENDUNGEN: Benenne bei der Einordnung des Reifegrads mindestens 3 konkrete KI-Anwendungen, die in {branche} bereits produktiv genutzt werden — spezifisch für die Branche, nicht generisch.
+(c) MARKTDYNAMIKEN: Benenne 2-3 Treiber, die den Handlungsdruck für dieses Unternehmen erzeugen (z.B. Fachkräftemangel, steigende Kundenerwartungen, regulatorischer Druck). Jeweils in 1 Satz erklären.
+CONSTRAINT: Keine erfundenen Adoptionszahlen. Unsicherheits-Hedge anwenden.
+
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
 FAKTEN- UND ANNAHMEN-TRENNUNG (VERBINDLICH):
