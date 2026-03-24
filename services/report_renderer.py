@@ -1732,11 +1732,9 @@ def render(briefing_obj: Any,
         log.warning("[FIX-v7110-BC-EUR] Error (continuing): %s run=%s", str(e)[:200], run_id)
 
     # =========================================================================
-    # FIX-v7110-BC-ROI: Enforce scenario ROI ordering in final HTML
-    # Recalculates all 3 scenario ROIs from canonical data to ensure
-    # Conservative <= Realistic <= Optimistic. This is the LAST defense line
-    # before PDF rendering — catches LLM sign errors, stale HTML, and any
-    # upstream healing failures.
+    # FIX-v7110-BC-ROI: Enforce scenario ROI values from canonical data
+    # Recalculates all 3 scenario ROIs deterministically and patches the HTML.
+    # This is the LAST defense line before PDF rendering.
     # =========================================================================
     try:
         _bc_hours_roi = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
@@ -1745,64 +1743,77 @@ def render(briefing_obj: Any,
         _bc_capex_roi = float(sections.get("CANON_CAPEX_EUR") or sections.get("CAPEX_REALISTISCH_EUR") or 0)
 
         if _bc_hours_roi > 0 and _bc_rate_roi > 0 and _bc_capex_roi > 0:
-            # Recalculate correct ROI for each scenario using the SAME formula as R1 page 13
+            # Recalculate correct ROI for each scenario
             # ROI = (hours * rate * 12 - CAPEX - OPEX * 12) / CAPEX * 100
             _sc_factors = [
-                ("optimistic", 1.3, 0.8, 0.8),   # hours×1.3, CAPEX×0.8, OPEX×0.8
-                ("realistic", 1.0, 1.0, 1.0),
-                ("conservative", 0.7, 1.2, 1.2),  # hours×0.7, CAPEX×1.2, OPEX×1.2
+                (1.3, 0.8, 0.8),   # optimistic: hours×1.3, CAPEX×0.8, OPEX×0.8
+                (1.0, 1.0, 1.0),   # realistic
+                (0.7, 1.2, 1.2),   # conservative: hours×0.7, CAPEX×1.2, OPEX×1.2
             ]
-            _sc_rois_correct: dict = {}
-            for _sc_name, _h_mult, _c_mult, _o_mult in _sc_factors:
+            _sc_rois: list = []
+            for _h_mult, _c_mult, _o_mult in _sc_factors:
                 _sc_annual = _bc_hours_roi * _h_mult * _bc_rate_roi * 12
                 _sc_capex = _bc_capex_roi * _c_mult
                 _sc_opex_annual = _bc_opex_roi * _o_mult * 12
-                _sc_roi = (_sc_annual - _sc_capex - _sc_opex_annual) / _sc_capex * 100
-                _sc_roi = max(-100.0, min(200.0, _sc_roi))
-                _sc_rois_correct[_sc_name] = round(_sc_roi)
+                _sc_roi_val = (_sc_annual - _sc_capex - _sc_opex_annual) / _sc_capex * 100
+                _sc_rois.append(int(max(-100.0, min(200.0, round(_sc_roi_val)))))
 
+            _roi_opt, _roi_real, _roi_cons = _sc_rois
             log.info(
                 "[FIX-v7110-BC-ROI] Canonical ROIs: Opt=%d%%, Real=%d%%, Cons=%d%% run=%s",
-                _sc_rois_correct["optimistic"], _sc_rois_correct["realistic"],
-                _sc_rois_correct["conservative"], run_id
+                _roi_opt, _roi_real, _roi_cons, run_id
             )
 
-            # Patch scenario cards in HTML: each card has label + ROI in sequence
+            # STRATEGY: Positional replacement — scenario cards render ROI values
+            # in font-size:24pt elements. They appear in order: Opt, Real, Cons.
+            # Match ALL roi-%-values inside scenario-card blocks and replace sequentially.
             _html_before_roi = html
-            _sc_labels_map = {
-                "optimistic": ["Optimistisch", "Optimistic"],
-                "realistic": ["Realistisch", "Realistic"],
-                "conservative": ["Konservativ", "Conservative"],
-            }
-            for _sc_name, _sc_labels in _sc_labels_map.items():
-                _target_roi = _sc_rois_correct[_sc_name]
-                for _sc_label in _sc_labels:
-                    _sc_pattern = (
-                        r'(font-weight:600;color:[^"]*;">'
-                        + re.escape(_sc_label)
-                        + r'</span>.*?<p[^>]*font-size:24pt[^>]*>)'
-                        + r'-?\d+(?:\.\d+)?'
-                        + r'(%)'
-                    )
-                    def _roi_replace(m: re.Match, _roi: int = _target_roi) -> str:
-                        return str(m.group(1)) + str(_roi) + str(m.group(2))
 
-                    _new_html, _n = re.subn(
-                        _sc_pattern,
-                        _roi_replace,
-                        html, count=1, flags=re.DOTALL
-                    )
-                    if _n > 0:
-                        html = _new_html
-                        break  # Found the label, no need to try alternate
+            # Find the scenario-cards container in BUSINESS_CASE_ENGINE section
+            _bc_section_match = re.search(
+                r'(business-case-engine-v2.*?scenarios-section.*?)(</div>\s*</div>\s*</div>)',
+                html, re.DOTALL
+            )
+            if _bc_section_match:
+                _bc_section = _bc_section_match.group(0)
+                _bc_start = _bc_section_match.start()
+                _bc_end = _bc_section_match.end()
 
-            if html != _html_before_roi:
-                log.info(
-                    "[FIX-v7110-BC-ROI] Corrected scenario ROIs in HTML: "
-                    "Opt=%d%%, Real=%d%%, Cons=%d%% run=%s",
-                    _sc_rois_correct["optimistic"], _sc_rois_correct["realistic"],
-                    _sc_rois_correct["conservative"], run_id
+                # Replace ROI values positionally within the BC section
+                _roi_idx = [0]
+                _roi_values = [_roi_opt, _roi_real, _roi_cons]
+
+                def _positional_roi_replace(m: re.Match) -> str:
+                    idx = _roi_idx[0]
+                    _roi_idx[0] += 1
+                    if idx < len(_roi_values):
+                        return str(m.group(1)) + str(_roi_values[idx]) + str(m.group(2))
+                    return str(m.group(0))
+
+                _patched_section, _n_replaced = re.subn(
+                    r'(<p[^>]*font-size:\s*24pt[^>]*>)-?\d+(?:\.\d+)?(%)',
+                    _positional_roi_replace,
+                    _bc_section, flags=re.DOTALL
                 )
+                if _n_replaced >= 3:
+                    html = html[:_bc_start] + _patched_section + html[_bc_end:]
+                    log.info(
+                        "[FIX-v7110-BC-ROI] Patched %d ROI values: Opt=%d%%, Real=%d%%, Cons=%d%% run=%s",
+                        _n_replaced, _roi_opt, _roi_real, _roi_cons, run_id
+                    )
+                else:
+                    log.warning(
+                        "[FIX-v7110-BC-ROI] Positional match found only %d of 3 ROI values run=%s",
+                        _n_replaced, run_id
+                    )
+            else:
+                log.warning("[FIX-v7110-BC-ROI] BC engine section not found in HTML run=%s", run_id)
+
+            # Verify: log the final state
+            if html != _html_before_roi:
+                log.info("[FIX-v7110-BC-ROI] HTML successfully patched run=%s", run_id)
+            else:
+                log.warning("[FIX-v7110-BC-ROI] HTML unchanged — regex did not match run=%s", run_id)
     except Exception as e:
         log.warning("[FIX-v7110-BC-ROI] Error (continuing): %s run=%s", str(e)[:200], run_id)
 
