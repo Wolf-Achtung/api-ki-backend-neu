@@ -214,6 +214,8 @@ STILREGELN v7.0:
 - VERBOTEN: "fundamental", "exponentiell", "ganzheitlich", "holistisch"
 - Jede Empfehlung braucht eine klare Handlungsaussage
 
+UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „typischerweise", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
+
 =============================================================================
 ANTI-TEXTWÜSTEN REGELN v2.0 (AGGRESSIV - PFLICHT!)
 =============================================================================
