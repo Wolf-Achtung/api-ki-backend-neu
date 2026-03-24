@@ -84,3 +84,5 @@ Nutze "Auf einen Blick:" maximal 1× (am Anfang). Andere Marker nur wo inhaltlic
 - Analytisch, sachlich, umsetzungsorientiert
 - Formelle Anrede "Sie" (wenn nötig)
 - Keine Beratungssprache, keine CTAs
+
+UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.

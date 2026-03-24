@@ -145,6 +145,9 @@ WICHTIG:
 - Wenn {{KI_GUARDRAILS}} vorhanden ist, erwähne Einschränkungen im nächsten Schritt
 =============================================================================
 -->
+
+UMGANG MIT LÜCKENHAFTEN EINGABEN: Wenn ein Input fehlt oder unkonkret ist: - nichts erfinden, - die Aussage auf den belastbaren Kern reduzieren, - und nur den Teil formulieren, der fachlich tragfähig bleibt. Nutze keine Meta-Sätze über fehlende Datenquellen. Lieber präzise knapp als breit spekulativ.
+
 <!--
 =============================================================================
 EXECUTIVE SUMMARY v7.0 — CONTENT QUALITY PACK
@@ -235,6 +238,8 @@ LESBARKEIT (v6.1 NEU):
 - 2–4 Sätze pro Absatz (nicht mehr)
 - Keine Schachtelsätze – ein Hauptsatz, maximal ein Nebensatz
 - Ton: analytisch, souverän, entscheidungsorientiert
+
+UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
 =============================================================================
 LEAK-PREVENTION — ABSOLUT VERBOTEN:

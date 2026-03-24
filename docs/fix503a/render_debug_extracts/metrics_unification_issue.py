@@ -73,7 +73,7 @@ class ConsistencyReport:
 
     Grade D/F NOT reflected in PIPELINE_GRADE!
     """
-    issues: List[ConsistencyIssue]  # ← Not in pipeline metrics
+    issues: list  # ← Not in pipeline metrics (ConsistencyIssue defined elsewhere)
     grade: str  # "A" to "F"
 
 # =============================================================================

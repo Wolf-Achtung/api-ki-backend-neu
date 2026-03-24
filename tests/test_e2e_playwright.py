@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import pytest
 import re
+
+pytest.importorskip("playwright", reason="playwright not installed – install via: pip install playwright && playwright install")
 from playwright.sync_api import Page, expect
 
 

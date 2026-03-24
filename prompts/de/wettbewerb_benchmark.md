@@ -8,6 +8,9 @@ Developer:
 <!-- INPUT: {{BRANCHE_LABEL}}, {{report_date}}, {{score_gesamt}}, {{score_befaehigung}}, {{score_governance}}, {{score_sicherheit}}, {{score_nutzen}}, {{UNTERNEHMENSGROESSE_LABEL}}, {{COMPANY_SIZE}} -->
 <!-- TOKEN-BUDGET: 2500 (solo:0.8x=2000, team:1.0x=2500, kmu:1.15x=2875) -->
 <!-- RESEARCH: Kann Marktdaten aus {{RESEARCH_PROVENANCE_HTML}} integrieren -->
+
+UMGANG MIT LÜCKENHAFTEN EINGABEN: Wenn ein Input fehlt oder unkonkret ist: - nichts erfinden, - die Aussage auf den belastbaren Kern reduzieren, - und nur den Teil formulieren, der fachlich tragfähig bleibt. Nutze keine Meta-Sätze über fehlende Datenquellen. Lieber präzise knapp als breit spekulativ.
+
 <!--
 BRANCHENBEZEICHNUNG-REGEL:
 Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vorkommen.
@@ -41,6 +44,8 @@ BRANCHEN-MODIFIKATOREN:
 ANTI-REDUNDANZ:
 - Benchmark-Daten HIER vollständig
 - In anderen Sektionen nur referenzieren
+
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
 
 SPRINT N - SOLO PERSONA REGELN (STRIKT!):
 {% if COMPANY_SIZE == "solo" %}

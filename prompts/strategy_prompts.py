@@ -36,6 +36,8 @@ REGELN:
    Nutze "Auf einen Blick:" maximal 1× pro Section (am Anfang). "Tipp:", "Wichtig:", "Empfehlung:" wo inhaltlich sinnvoll, aber nicht erzwingen.
 14. Schreibe NIEMALS "Ohne Angaben" oder "keine Angaben" — wenn ein Wert fehlt, formuliere den Satz um oder lasse ihn weg.
 
+UMGANG MIT LÜCKENHAFTEN EINGABEN: Wenn ein Input fehlt oder unkonkret ist: - nichts erfinden, - die Aussage auf den belastbaren Kern reduzieren, - und nur den Teil formulieren, der fachlich tragfähig bleibt. Nutze keine Meta-Sätze über fehlende Datenquellen. Lieber präzise knapp als breit spekulativ.
+
 BRANCHENKONTEXT (PFLICHT):
 Die Hauptleistung des Kunden ist: {hauptleistung}
 Alle Empfehlungen, Beispiele, Anwendungsfälle und Tool-Vorschläge MÜSSEN auf diese
@@ -117,12 +119,18 @@ STRATEGIE-FRAGEN:
 - Prioritäten: {s3_prioritaeten}
 - Engpass: {s4_engpass}
 
+UMGANG MIT LÜCKENHAFTEN EINGABEN: Wenn ein Input fehlt oder unkonkret ist: - nichts erfinden, - die Aussage auf den belastbaren Kern reduzieren, - und nur den Teil formulieren, der fachlich tragfähig bleibt. Nutze keine Meta-Sätze über fehlende Datenquellen. Lieber präzise knapp als breit spekulativ.
+
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
+
 AUFGABE:
 1. Fasse die KI-Readiness-Analyse zusammen (Score, Reifegrad, was das bedeutet).
 2. Stelle die Top-3 Stärken heraus und erkläre, wie sie für die KI-Strategie genutzt werden können.
 3. Benenne die Top-3 Handlungsfelder und warum sie prioritär sind.
 4. Ordne den aktuellen Reifegrad in den Branchenkontext ({branche}) ein.
 5. Leite über zur Strategie: "Basierend auf diesem Profil empfehlen wir folgende Strategie..."
+
+UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
 FORMAT: HTML-Fragment mit <h3>, <p>, <ul>, <table>. Kein Markdown.""",
 
@@ -146,6 +154,10 @@ LIVE-RECHERCHE-ERGEBNISSE:
 --- Branchenstatistiken (international) ---
 {research_branche_stats}
 
+UMGANG MIT LÜCKENHAFTEN EINGABEN: Wenn ein Input fehlt oder unkonkret ist: - nichts erfinden, - die Aussage auf den belastbaren Kern reduzieren, - und nur den Teil formulieren, der fachlich tragfähig bleibt. Nutze keine Meta-Sätze über fehlende Datenquellen. Lieber präzise knapp als breit spekulativ.
+
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
+
 AUFGABE:
 1. Analysiere den aktuellen Stand der KI-Adoption in der Branche {branche}.
 2. Zeige Benchmark-Daten: Wie weit sind Wettbewerber mit KI?
@@ -155,6 +167,8 @@ AUFGABE:
 
 Verwende die Recherche-Ergebnisse als Datenbasis. Wenn keine Daten verfügbar sind,
 verwende allgemeine Mittelstands-Benchmarks für Deutschland 2025/2026.
+
+UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
 FORMAT: HTML-Fragment. Verwende eine Tabelle für den Branchen-Benchmark.
 Quellenangaben am Ende als <div class="sources">.""",
@@ -180,6 +194,8 @@ AUS REPORT 1:
 AUS S2 (Markt & Wettbewerb):
 {s2_trends_summary}
 
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
+
 AUFGABE:
 1. Definiere 3-5 strategische Handlungsfelder, priorisiert nach Impact und Machbarkeit.
 2. Für jedes Handlungsfeld:
@@ -190,6 +206,8 @@ AUFGABE:
    e) Ampel-Bewertung: 🟢 Quick Win, 🟡 Standard, 🔴 Komplex
 3. Erstelle eine Prioritätsmatrix (Impact × Komplexität).
 4. Markiere den Quick Win (🟢) besonders hervor.
+
+UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Priorisierungsmatrix.
 Ampel-Farben als CSS-Klassen oder inline-styles.""",
@@ -359,6 +377,8 @@ AUFGABE:
 6. Berücksichtige den Engpass: {s4_engpass}.
 7. Berücksichtige den Entscheidungshorizont: {s7_entscheidung}.
 
+UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
+
 FORMAT: HTML-Fragment. Verwende eine Timeline-artige Darstellung mit Tabelle.""",
 
     # =========================================================================
@@ -383,6 +403,10 @@ LIVE-RECHERCHE:
 
 --- EU-Förderprogramme ---
 {research_foerdermittel_eu}
+
+UMGANG MIT LÜCKENHAFTEN EINGABEN: Wenn ein Input fehlt oder unkonkret ist: - nichts erfinden, - die Aussage auf den belastbaren Kern reduzieren, - und nur den Teil formulieren, der fachlich tragfähig bleibt. Nutze keine Meta-Sätze über fehlende Datenquellen. Lieber präzise knapp als breit spekulativ.
+
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
 
 AUFGABE:
 1. Identifiziere die 3-5 relevantesten Förderprogramme für {firmenname}.
@@ -440,6 +464,8 @@ HANDLUNGSFELDER:
 TOOL-EMPFEHLUNGEN (Zusammenfassung):
 {s4_tools_summary}
 
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
+
 AUFGABE:
 1. Erstelle eine Risikomatrix (Eintrittswahrscheinlichkeit × Auswirkung).
 2. Identifiziere die Top-5 Risiken der KI-Strategie:
@@ -452,6 +478,8 @@ AUFGABE:
    - Welche der empfohlenen Tools fallen unter den AI Act?
    - Welche Risikoklasse? Welche Pflichten?
 5. DSGVO-Checkliste für die KI-Implementierung.
+
+UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Risikomatrix.""",
 
@@ -484,6 +512,8 @@ VERBINDLICHE KENNZAHLEN (EXAKT diese Werte verwenden — KEINE eigenen Zahlen er
 INVESTITIONSPLAN-ZUSAMMENFASSUNG (aus Section S5):
 {s5_investition_summary}
 
+UMGANG MIT LÜCKENHAFTEN EINGABEN: Wenn ein Input fehlt oder unkonkret ist: - nichts erfinden, - die Aussage auf den belastbaren Kern reduzieren, - und nur den Teil formulieren, der fachlich tragfähig bleibt. Nutze keine Meta-Sätze über fehlende Datenquellen. Lieber präzise knapp als breit spekulativ.
+
 KRITISCHE REGELN:
 - Verwende AUSSCHLIESSLICH die oben genannten Zahlen für Score, Investition, ROI, Break-Even und Förderung.
 - Erfinde KEINE Zahlen, Prozentsätze oder Euro-Beträge.
@@ -503,6 +533,8 @@ Schreibe eine prägnante Executive Summary (200-300 Wörter), die:
 6. Mit einem klaren Call-to-Action endet.
 
 Zielgruppe: Geschäftsführer/Entscheider, die schnell den Kern erfassen wollen.
+
+UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
 FORMAT: HTML-Fragment (<p> Tags). Keine Überschrift (wird vom Template gesetzt).
 Maximal 300 Wörter. Kein Markdown. KEINE Quellenangaben.""",
