@@ -145,6 +145,9 @@ WICHTIG:
 - Wenn {{KI_GUARDRAILS}} vorhanden ist, erwähne Einschränkungen im nächsten Schritt
 =============================================================================
 -->
+
+UMGANG MIT LÜCKENHAFTEN EINGABEN: Wenn ein Input fehlt oder unkonkret ist: - nichts erfinden, - die Aussage auf den belastbaren Kern reduzieren, - und nur den Teil formulieren, der fachlich tragfähig bleibt. Nutze keine Meta-Sätze über fehlende Datenquellen. Lieber präzise knapp als breit spekulativ.
+
 <!--
 =============================================================================
 EXECUTIVE SUMMARY v7.0 — CONTENT QUALITY PACK
