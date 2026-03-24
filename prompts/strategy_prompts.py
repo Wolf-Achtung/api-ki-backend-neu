@@ -117,6 +117,8 @@ STRATEGIE-FRAGEN:
 - Prioritäten: {s3_prioritaeten}
 - Engpass: {s4_engpass}
 
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
+
 AUFGABE:
 1. Fasse die KI-Readiness-Analyse zusammen (Score, Reifegrad, was das bedeutet).
 2. Stelle die Top-3 Stärken heraus und erkläre, wie sie für die KI-Strategie genutzt werden können.
@@ -145,6 +147,8 @@ LIVE-RECHERCHE-ERGEBNISSE:
 
 --- Branchenstatistiken (international) ---
 {research_branche_stats}
+
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
 
 AUFGABE:
 1. Analysiere den aktuellen Stand der KI-Adoption in der Branche {branche}.
@@ -179,6 +183,8 @@ AUS REPORT 1:
 
 AUS S2 (Markt & Wettbewerb):
 {s2_trends_summary}
+
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
 
 AUFGABE:
 1. Definiere 3-5 strategische Handlungsfelder, priorisiert nach Impact und Machbarkeit.
@@ -384,6 +390,8 @@ LIVE-RECHERCHE:
 --- EU-Förderprogramme ---
 {research_foerdermittel_eu}
 
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
+
 AUFGABE:
 1. Identifiziere die 3-5 relevantesten Förderprogramme für {firmenname}.
 2. Für jedes Programm:
@@ -439,6 +447,8 @@ HANDLUNGSFELDER:
 
 TOOL-EMPFEHLUNGEN (Zusammenfassung):
 {s4_tools_summary}
+
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
 
 AUFGABE:
 1. Erstelle eine Risikomatrix (Eintrittswahrscheinlichkeit × Auswirkung).

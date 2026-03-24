@@ -145,6 +145,8 @@ WENN ein ROI-Prozentsatz gefunden: ENTFERNEN und ersetzen!
 - Verschiedene ROI-Werte in verschiedenen Sektionen = INKONSISTENZ
 - INKONSISTENZ = Report wird ABGELEHNT!
 
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
+
 ###############################################################################
 -->
 <!--
