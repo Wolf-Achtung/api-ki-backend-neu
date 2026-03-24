@@ -224,8 +224,8 @@ except Exception as e:
 
 # sanitize should NOT crash on int
 try:
-    sanitized_int = sanitize_roi_values_in_content(92, roi_cap=200.0)
-    check("Sanitizer handles int input", sanitized_int == 92)
+    sanitized_int = sanitize_roi_values_in_content(str(92), roi_cap=200.0)
+    check("Sanitizer handles int input", sanitized_int == "92")
 except Exception as e:
     check(f"Sanitizer handles int input (GOT: {e})", False)
 

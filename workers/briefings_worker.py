@@ -172,7 +172,7 @@ def claim_next_briefing(db: Session) -> Optional[Briefing]:
             briefing.processing_at = datetime.now(timezone.utc)
             briefing.worker_id = WORKER_ID
             db.commit()
-            return briefing
+            return briefing  # type: ignore[no-any-return]
         return None
 
     # PostgreSQL: Use FOR UPDATE SKIP LOCKED for race-safe claiming
@@ -201,7 +201,7 @@ def claim_next_briefing(db: Session) -> Optional[Briefing]:
             briefing.worker_id = WORKER_ID
             db.commit()
             log.info("Claimed briefing %s for processing", briefing_id)
-            return briefing
+            return briefing  # type: ignore[no-any-return]
 
         return None
 

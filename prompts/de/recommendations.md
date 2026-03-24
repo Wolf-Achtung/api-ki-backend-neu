@@ -18,6 +18,8 @@ JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN — der Report endet dann m
 Prozentwerte (ROI, Rendite, Effizienz) NIEMALS über 200% angeben. Bei höheren Werten "200% (gedeckelt)" schreiben. Alle Zahlen KONSERVATIV.
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
+
+UMGANG MIT LÜCKENHAFTEN EINGABEN: Wenn ein Input fehlt oder unkonkret ist: - nichts erfinden, - die Aussage auf den belastbaren Kern reduzieren, - und nur den Teil formulieren, der fachlich tragfähig bleibt. Nutze keine Meta-Sätze über fehlende Datenquellen. Lieber präzise knapp als breit spekulativ.
 <!-- TOKEN-BUDGET: 1200 (solo:0.8x=960, team:1.0x=1200, kmu:1.15x=1380) -->
 <!--
 HÖCHSTLÄNGE (STRIKT! — Überschreitung wird automatisch getruncated!):
@@ -145,6 +147,8 @@ WENN ein ROI-Prozentsatz gefunden: ENTFERNEN und ersetzen!
 - Verschiedene ROI-Werte in verschiedenen Sektionen = INKONSISTENZ
 - INKONSISTENZ = Report wird ABGELEHNT!
 
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
+
 ###############################################################################
 -->
 <!--
@@ -209,6 +213,8 @@ STILREGELN v7.0:
 - Mehr Verben, weniger Nominalstil
 - VERBOTEN: "fundamental", "exponentiell", "ganzheitlich", "holistisch"
 - Jede Empfehlung braucht eine klare Handlungsaussage
+
+UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
 =============================================================================
 ANTI-TEXTWÜSTEN REGELN v2.0 (AGGRESSIV - PFLICHT!)
