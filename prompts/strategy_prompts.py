@@ -273,6 +273,14 @@ Ordne jedes der 3-5 Handlungsfelder im Fließtext als Stärke, Schwäche, Chance
 Pro Handlungsfeld mindestens EINE Einordnung. Bei der Prioritätsmatrix die Einordnung als zusätzliche Spalte „Typ" (S/W/C/T) ergänzen.
 CONSTRAINT: Max. 1-2 Zusatzsätze pro Handlungsfeld. Gesamtlänge der Section nicht über 800 Wörter.
 
+SPRINT 2 — OPT-B5 GOVERNANCE-TIEFE (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
+Ergänze bei Handlungsfeldern mit Governance-Bezug konkrete Steuerungshinweise:
+(a) STEUERUNGSKREIS: Wer steuert KI-Themen, wie oft? Segment-gerecht: Solo = monatliche Selbst-Reflexion, Team = KI-Koordinator + monatlicher Check, KMU = Steuerungskreis quartalsweise mit Agenda (Nutzungsstatus, Vorfälle, Regelanpassungen).
+(b) ESKALATIONSPFAD: Vorfall → Meldung an [Rolle] → Bewertung → Maßnahme. Zeitrahmen benennen.
+(c) ENTSCHEIDUNGSMATRIX: Wer gibt KI-Tools frei, wer ändert KI-Richtlinie, wer stoppt einen Prozess? In 2-3 Sätzen klären.
+CONSTRAINT: Max. 2-3 Zusatzsätze. Keine Konzern-Vokabeln bei Solo/Team.
+
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Priorisierungsmatrix.
 Ampel-Farben als CSS-Klassen oder inline-styles.""",
 
