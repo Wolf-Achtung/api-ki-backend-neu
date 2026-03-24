@@ -489,6 +489,16 @@ UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabe
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
+SPRINT 2 — OPT-B9 CHANGE MANAGEMENT STÄRKEN (PFLICHT):
+Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
+Segment-gerecht in die Roadmap integrieren:
+(a) CHANGE-NARRATIV: 2-3 Sätze „Warum KI gut für das Team ist" — aus Mitarbeiterperspektive, nicht GF-Sicht. In Phase 1 integrieren.
+(b) TOP-3-WIDERSTÄNDE + MITIGATION: Branchenspezifisch aus {branche} ableiten. Pro Widerstand 1 konkrete Gegenmaßnahme.
+(c) KOMMUNIKATIONSPLAN-LOGIK: Kick-off zu Beginn, Zwischenbericht nach Phase 1, Erfolge sichtbar machen.
+(d) ADOPTION-KENNZAHLEN: Neben technischen Meilensteinen auch: aktive Nutzer, Nutzungsfrequenz, Team-Zufriedenheit als Messgröße für Phase-Übergänge.
+(e) QUICK-WIN-KOMMUNIKATION: Erste Erfolge aus Phase 1 als Change-Beschleuniger einsetzen.
+CONSTRAINT: Kein separates Change-Kapitel — in bestehende Phasen-Struktur einweben. Bei Solo-Segment: Kein formales Change Management, nur persönliche Motivation.
+
 FORMAT: HTML-Fragment. Verwende eine Timeline-artige Darstellung mit Tabelle.""",
 
     # =========================================================================
