@@ -200,6 +200,13 @@ Verwende diese Begriffe einheitlich im gesamten Report:
 - „Prüfschritt" = allgemein. „Freigabe" = formaler Akt. „Vier-Augen-Prinzip" = zwei Personen prüfen. NICHT „Review".
 - „DSGVO" = nie ausschreiben. „Tool" = Software. „Werkzeug" = nur in Metaphern. Nicht im selben Absatz wechseln.
 
+BEDINGTE STEUERUNGSHINWEISE (OPTIONAL, MAX. 1 ABSATZ — OPT-A5):
+Ergänze am Ende der Roadmap einen kurzen Absatz mit einem konditionalen Steuerungshinweis:
+- Format: „Wenn [messbare Bedingung nach Phase 1/Woche 5], dann [empfohlene Anpassung für Phase 2]."
+- Die Bedingung muss messbar sein (Stunden, Prozent, Fehlerquote), nicht vage.
+- Maximal 2 solcher Wenn-Dann-Sätze.
+- Beispiel: „Wenn nach Phase 1 weniger als 15% Zeitersparnis gemessen wird, sollte die Skalierung in Phase 2 verlangsamt und stattdessen die KI-Richtlinie nachgeschärft werden."
+
 =============================================================================
 
 KURZLABELS (VERPFLICHTEND!):
