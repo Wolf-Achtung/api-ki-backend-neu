@@ -42,6 +42,8 @@ ANTI-REDUNDANZ:
 - Benchmark-Daten HIER vollständig
 - In anderen Sektionen nur referenzieren
 
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
+
 SPRINT N - SOLO PERSONA REGELN (STRIKT!):
 {% if COMPANY_SIZE == "solo" %}
 NICHT VERWENDEN für Solo:

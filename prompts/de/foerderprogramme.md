@@ -24,6 +24,8 @@ ERLAUBT:
 ✅ "Ihr Bundesland" als generische Alternative
 ✅ Bundesprogramme (gelten überall)
 
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
+
 ###############################################################################
 
      KONDITIONALE LOGIK (L4/L5/L8/L9):
