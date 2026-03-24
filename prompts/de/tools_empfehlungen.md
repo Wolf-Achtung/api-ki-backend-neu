@@ -107,6 +107,8 @@ KMU-MODUS - VERBOTEN:
 {% endif %}
 -->
 
+ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
+
 <section class="section tools">
   <h2>Empfohlener KI-Stack für {{BRANCH_CONTEXT_LABEL}}</h2>
 
