@@ -340,7 +340,12 @@ def validate_business_case_plausibility(
 def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str, Any]:
     groesse = str(answers.get("unternehmensgroesse", "solo")).lower()
     rev = str(answers.get("jahresumsatz", "unter_100k")).lower()
-    budget = str(answers.get("investitionsbudget", "2000_10000")).lower()
+    # FIX-S25-CAPEX: Default changed from "2000_10000" to "10000_50000".
+    # When no explicit budget is provided, the old default "2000_10000" capped
+    # Solo CAPEX at 10k instead of canonical 24k (ceiling from investment_mapping).
+    # The canonical segment values (Solo=24k, Team=12k, KMU=48k) require the
+    # "10000_50000" band as validated in test_budget_segment_differentiation.py.
+    budget = str(answers.get("investitionsbudget", "10000_50000")).lower()
 
     constraints = get_size_constraints(groesse, rev, budget)
     stundensatz = float(constraints["hourly_rate"])
