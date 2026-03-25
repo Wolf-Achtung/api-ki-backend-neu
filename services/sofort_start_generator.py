@@ -1295,12 +1295,24 @@ def generate_sofort_start_html(
 
 
     # FIX-B732-HOURS-SYNC: Override with CANON hours if provided
+    # FIX-S25-HOURS: Use round() instead of int() to avoid precision loss
+    # (15h/month ÷ 4 = 3.75 → int()=3 WRONG, round()=4 CORRECT)
     if canon_hours_month > 0:
-        _b732_hours_week = max(1, int(canon_hours_month / 4))
+        _b732_hours_week = max(1, round(canon_hours_month / 4.33))
         if _b732_hours_week != hours_per_week:
             hours_per_week = _b732_hours_week
 
     savings = calculate_yearly_savings(hours_per_week, stundensatz, company_size, canon_opex_monthly=canon_opex_monthly)
+
+    # FIX-S25-HOURS: Override yearly hours with canonical value (month × 12)
+    # to avoid weekly→yearly rounding drift (3h/wk × 48 = 144 ≠ 15h/mo × 12 = 180)
+    if canon_hours_month > 0:
+        canon_yearly = int(canon_hours_month * 12)
+        if savings["hours_per_year"] != canon_yearly:
+            savings["hours_per_year"] = canon_yearly
+            savings["savings_per_year"] = canon_yearly * savings["hourly_rate"]
+            if savings.get("tool_costs", 0) > 0:
+                savings["net_savings"] = savings["savings_per_year"] - savings["tool_costs"]
     
     # Personalisiere den ersten Schritt
     # FIX-EMPTY-PARENS: Strip hauptleistung and validate before using in parentheses.
