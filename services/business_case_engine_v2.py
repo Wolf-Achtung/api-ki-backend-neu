@@ -1261,7 +1261,7 @@ def heal_scenario_consistency(scenarios: List[ScenarioKPIs]) -> List[ScenarioKPI
             )
             recalculated_scenarios.append(ScenarioKPIs(
                 name=scenario.name,
-                roi_12m=max(new_roi, 10.0),  # Minimum 10% ROI if savings exist
+                roi_12m=new_roi,  # FIX-S25-B3: Allow negative ROI (was floored at 10%)
                 payback_months=scenario.payback_months,
                 monthly_savings=scenario.monthly_savings,
                 annual_savings=annual,
