@@ -1199,7 +1199,7 @@ sup.src-ref {
             </div>
             <div class="impressum-block">
                 <h4>Haftungsausschluss</h4>
-                <p>Dieser KI-Strategiebericht dient ausschließlich der Information und strategischen Orientierung. Trotz sorgfältiger Prüfung wird keine Haftung für Richtigkeit oder Vollständigkeit übernommen. Steuerberatende Berufe: Berufsrechtliche Pflichten gemäß §&nbsp;57 StBerG (Verschwiegenheit, Datenschutz) sind eigenverantwortlich zu prüfen.</p>
+                <p>Dieser KI-Strategiebericht dient ausschließlich der Information und strategischen Orientierung. Trotz sorgfältiger Prüfung wird keine Haftung für Richtigkeit oder Vollständigkeit übernommen.{% if branche and ('steuer' in branche|lower or 'wirtschaftspr' in branche|lower or 'rechtsber' in branche|lower or 'buchhal' in branche|lower) %} Steuerberatende Berufe: Berufsrechtliche Pflichten gemäß §&nbsp;57 StBerG (Verschwiegenheit, Datenschutz) sind eigenverantwortlich zu prüfen.{% endif %}</p>
                 <h4>Urheberrecht</h4>
                 <p>Alle Inhalte dieses Berichts unterliegen dem deutschen Urheberrecht.</p>
             </div>
