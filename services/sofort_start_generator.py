@@ -1333,28 +1333,40 @@ def get_branche_key(branche: str) -> str:
     
     branche_lower = branche.lower()
     
-    # Mapping basierend auf den 13 Branchen
+    # Mapping basierend auf den 15 Branchen
+    # FIX-S25-FINAL-BRANCHE: Use word-boundary matching for short keywords
+    # to prevent false positives (e.g., "pr" matching "Produktion",
+    # "it" matching "gesundheit"). Keywords ≤3 chars use \b word boundary.
+    import re
+
     mappings = {
-        "marketing": ["marketing", "werbung", "pr", "kommunikation"],
+        "marketing": ["marketing", "werbung", r"\bpr\b", "kommunikation"],
         "beratung": ["berat", "consult", "coach", "dienstleist"],
-        "it": ["it", "software", "tech", "digital", "web", "entwickl"],
+        "it": [r"\bit\b", r"\bit-", "software", "tech", "digital", r"\bweb\b", "entwickl"],
         "finanzen": ["finanz", "versicher", "bank", "invest"],
         "handel": ["handel", "shop", "commerce", "retail", "verkauf", "e-commerce"],
         "bildung": ["bildung", "schul", "training", "akadem", "lehr"],
-        "verwaltung": ["verwalt", "behörd", "öffentlich", "amt"],
+        "verwaltung": ["verwalt", "behörd", "öffentlich", r"\bamt\b"],
         "gesundheit": ["gesundheit", "pflege", "medizin", "arzt", "klinik", "praxis"],
-        "handwerk": ["handwerk", "shk", "heizung", "sanitär", "elektro", "maler", "tischler", "schreiner", "dachdecker", "klempner", "schlosser", "kfz", "werkstatt", "meister", "gewerk"],
-        "bauwesen": ["bau", "architekt", "immobil"],
+        "handwerk": ["handwerk", r"\bshk\b", "heizung", "sanitär", "elektro", "maler", "tischler", "schreiner", "dachdecker", "klempner", "schlosser", r"\bkfz\b", "werkstatt", "meister", "gewerk"],
+        "bauwesen": [r"\bbau", "architekt", "immobil"],
         "medien": ["medien", "kreativ", "agentur", "design", "film", "foto"],
         "industrie": ["industrie", "produktion", "fertigung", "maschin", "herstellung"],
         "transport": ["transport", "logistik", "spedition", "versand", "lieferung"],
         "gastronomie": ["gastro", "hotel", "restaurant", "touris", "reise", "catering"],
         "recht": ["recht", "anwalt", "kanzlei", "jurist", "notar", "rechtsanwalt"],
     }
-    
+
     for key, keywords in mappings.items():
-        if any(kw in branche_lower for kw in keywords):
-            return key
+        for kw in keywords:
+            if kw.startswith(r"\b") or kw.endswith(r"\b"):
+                # Regex word-boundary match for short/ambiguous keywords
+                if re.search(kw, branche_lower):
+                    return key
+            else:
+                # Simple substring match for longer, unambiguous keywords
+                if kw in branche_lower:
+                    return key
     
     return "default"
 
