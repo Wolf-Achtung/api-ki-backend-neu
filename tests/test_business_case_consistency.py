@@ -575,18 +575,18 @@ class TestFixBatch1CanonicalConsistency:
 
     def test_canonical_payback_format_german_decimal(self):
         """Verify payback uses German decimal format (comma, 1 digit)."""
-        from services.business_case_engine_v2 import create_canonical_from_sections
+        from services.business_case_engine_v2 import create_canonical_from_sections, CAPEX_DEFAULTS_BY_SIZE
 
         sections = {
             "qw_hours_total": 25,  # Will be capped to 20h for solo (P0.3)
-            "CANON_CAPEX_EUR": 5000,
             "CANON_OPEX_MONTH_EUR": 50,
         }
         canonical = create_canonical_from_sections(sections, company_size="solo")
 
-        # Calculate expected payback (P0.3: solo capped to 20h)
+        # FIX-S25-FINAL-CAPEX: CAPEX is always canonical size-based (12000 for solo)
+        solo_capex = CAPEX_DEFAULTS_BY_SIZE["solo"]
         monthly_net = 20 * 80 - 50  # capped_hours * rate - opex
-        expected_payback = 5000 / monthly_net
+        expected_payback = solo_capex / monthly_net
 
         assert abs(canonical.payback_months - expected_payback) < 0.1
 
