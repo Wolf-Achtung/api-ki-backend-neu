@@ -2263,6 +2263,17 @@ _FALLSTUDIE_UNTERNEHMEN: Dict[str, Dict[str, str]] = {
         "team": "Praxis mit 3 Therapeuten",
         "kmu": "Gesundheitszentrum mit 15 Mitarbeitenden",
     },
+    # FIX-S25-B2: Handwerk & Recht segment overrides
+    "handwerk": {
+        "solo": "Selbstständiger Handwerksmeister, SHK",
+        "team": "SHK-Betrieb mit 5 Mitarbeitern",
+        "kmu": "Handwerksbetrieb mit 25 Mitarbeitern",
+    },
+    "recht": {
+        "solo": "Einzelanwalt, Zivilrecht",
+        "team": "Kanzlei mit 4 Anwälten",
+        "kmu": "Wirtschaftskanzlei mit 20 Mitarbeitenden",
+    },
 }
 
 FALLSTUDIEN: Dict[str, Dict[str, Any]] = {
@@ -2434,6 +2445,34 @@ FALLSTUDIEN: Dict[str, Dict[str, Any]] = {
         },
         "zitat": "Jede Bewertung bekommt jetzt eine persönliche Antwort. Das macht den Unterschied.",
         "dauer_bis_roi": "3 Wochen"
+    },
+    # FIX-S25-B2: Handwerk-specific Fallstudie
+    "handwerk": {
+        "titel": "SHK-Betrieb halbiert Dispositionszeit",
+        "unternehmen": "SHK-Betrieb mit 5 Mitarbeitern",
+        "ausgangslage": "Tägliche Disposition bindet Meister 1-2h, Angebote dauern zu lange, Wartungstermine werden vergessen",
+        "loesung": "Craftboxx Tourenplanung + ChatGPT Angebotsbausteine",
+        "ergebnis": {
+            "zeitersparnis": "25 Stunden/Monat (Team)",
+            "kosteneinsparung": "~2.375 €/Monat",
+            "qualitaet": "Kein vergessener Wartungstermin mehr"
+        },
+        "zitat": "Die KI schreibt jetzt unsere Angebote vor – der Meister prüft nur noch. Beste Entscheidung.",
+        "dauer_bis_roi": "3 Wochen"
+    },
+    # FIX-S25-B2: Recht-specific Fallstudie
+    "recht": {
+        "titel": "Einzelanwalt verdoppelt Mandantenkapazität",
+        "unternehmen": "Einzelanwalt, Zivilrecht",
+        "ausgangslage": "Zeitintensive Schriftsatzformulierung, aufwändige Recherche-Zusammenfassungen, viele Mandanten-Updates per Hand",
+        "loesung": "ChatGPT Plus für Textbausteine, Recherche und Mandantenkommunikation",
+        "ergebnis": {
+            "zeitersparnis": "10 Stunden/Woche",
+            "kosteneinsparung": "~4.000 €/Monat",
+            "qualitaet": "Schnellere Reaktionszeit, konsistentere Schriftsätze"
+        },
+        "zitat": "Meine Mandanten bekommen jetzt am gleichen Tag Antwort statt nach einer Woche.",
+        "dauer_bis_roi": "2 Wochen"
     },
     "default": {
         "titel": "Selbstständiger spart 8 Stunden pro Woche",
