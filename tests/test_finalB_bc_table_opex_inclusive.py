@@ -154,19 +154,18 @@ class TestBatchBIntegration:
     """Integration tests for Fix-Batch B."""
 
     def test_example_from_briefing(self):
-        """Test specific example: capex=5000, opex=180, monthly_savings=1600."""
-        # This tests the briefing example:
-        # net_12m = (1600 - 180) * 12 - 5000 = 1420 * 12 - 5000 = 17040 - 5000 = 12040
-        # roi_pct = 12040 / 5000 * 100 = 240.8% → capped to 200%
+        """Test CAPEX is canonical and NET ROI formula is correct.
 
+        FIX-S25-FINAL-CAPEX: Team CAPEX is always 24k (canonical), not budget-band-derived.
+        With 17h * 95€ = 1615€/month savings and canonical CAPEX, ROI may be negative.
+        """
         from services.extra_sections import calc_business_case
 
-        # Configure to get close to example values
         answers = {
             "unternehmensgroesse": "team",
             "jahresumsatz": "100k_500k",
-            "investitionsbudget": "2000_10000",  # → capex ~6000
-            "qw_hours_total": 17,  # 17h * 95€ = 1615€ ≈ 1600€
+            "investitionsbudget": "2000_10000",
+            "qw_hours_total": 17,  # 17h * 95€ = 1615€
         }
         env = {}
 
@@ -177,14 +176,17 @@ class TestBatchBIntegration:
         capex = bc.get("CAPEX_REALISTISCH_EUR", 0)
         roi_12m_eur = bc.get("ROI_12M_EUR", 0)
 
+        # FIX-S25-FINAL-CAPEX: Team CAPEX is always canonical 24k
+        assert capex == 24_000, f"Team CAPEX should be canonical 24000, got {capex}"
+
         # Verify NET formula is used
         expected_net_12m = (monthly_savings - opex) * 12 - capex
         assert roi_12m_eur == expected_net_12m, \
             f"ROI_12M_EUR ({roi_12m_eur}) should equal NET formula ({expected_net_12m})"
 
-        # ROI should be positive and capped appropriately
+        # ROI is within bounds (-100% to 200%)
         roi_pct = bc.get("ROI_12M", 0)
-        assert 0 <= roi_pct <= 200, f"ROI percentage should be 0-200%, got {roi_pct}%"
+        assert -100 <= roi_pct <= 200, f"ROI should be -100 to 200%, got {roi_pct}%"
 
     def test_net_roi_lower_than_gross(self):
         """Test that NET ROI is lower than GROSS ROI when OPEX > 0."""
