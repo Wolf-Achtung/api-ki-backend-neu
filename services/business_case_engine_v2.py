@@ -187,7 +187,23 @@ def normalize_company_size(size: Optional[str]) -> str:
     size_str = str(size).strip()
     # Normalize dashes before lookup (en-dash → hyphen)
     size_lower = size_str.lower().replace("\u2013", "-").replace("\u2014", "-").replace("\u2212", "-")
-    return SIZE_NORMALIZATION.get(size_lower, "team")
+
+    # Exact match first
+    if size_lower in SIZE_NORMALIZATION:
+        return SIZE_NORMALIZATION[size_lower]
+
+    # FIX-S25-FINAL-KMU: Substring match for label variants like "11-100 Mitarbeiter"
+    # Order matters: check larger ranges first to avoid false matches
+    if "11-100" in size_lower or "11–100" in size_lower or "kmu" in size_lower or "mittelstand" in size_lower:
+        return "kmu"
+    if "2-10" in size_lower or "2–10" in size_lower or "team" in size_lower or "klein" in size_lower:
+        return "team"
+    if ">100" in size_lower or "100+" in size_lower or "enterprise" in size_lower or "groß" in size_lower:
+        return "enterprise"
+    if "solo" in size_lower or "freiberuf" in size_lower or "selbst" in size_lower:
+        return "solo"
+
+    return "team"  # Default
 
 
 def get_funding_cap(company_size: Optional[str]) -> float:
@@ -1928,6 +1944,9 @@ def generate_business_case_report(
     baseline_monthly_cost = baseline.get("monthly_cost", 0.0)
     baseline_effort_hours = baseline.get("effort_hours", DEFAULT_EFFORT_HOURS)
 
+    # Extract company size early (needed for canonical CAPEX)
+    company_size = briefing.get("unternehmensgroesse") if briefing else None
+
     # Extract investment from tools
     tools_investment = extract_investment_from_tools(tools_data, sections)
     investment_total = tools_investment.get("capex", DEFAULT_INVESTMENT) + (
@@ -1935,14 +1954,19 @@ def generate_business_case_report(
     )
     recurring_costs_12m = tools_investment.get("opex_annual", 0.0)
 
-    # Use briefing values if available
-    if briefing.get("CAPEX_REALISTISCH_EUR"):
+    # FIX-S25-FINAL-CAPEX: Use canonical size-based CAPEX, ignoring budget-band values.
+    # The briefing's CAPEX_REALISTISCH_EUR may contain budget-band-capped values.
+    _bc_size = normalize_company_size(company_size)
+    _canonical_capex = CAPEX_DEFAULTS_BY_SIZE.get(_bc_size)
+    if _canonical_capex:
+        investment_total = float(_canonical_capex)
+        log.info("[G30] Using canonical CAPEX for %s: %.0f€ (budget-band-proof)", _bc_size, investment_total)
+    elif briefing.get("CAPEX_REALISTISCH_EUR"):
         investment_total = float(briefing.get("CAPEX_REALISTISCH_EUR", investment_total))
     if briefing.get("OPEX_REALISTISCH_EUR"):
         recurring_costs_12m = float(briefing.get("OPEX_REALISTISCH_EUR", 0.0)) * 12
 
     # Extract funding effect with size-appropriate caps
-    company_size = briefing.get("unternehmensgroesse") if briefing else None
     funding_effect, funding_programmes = extract_funding_effect(
         funding_data, investment_total, company_size
     )
