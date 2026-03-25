@@ -13253,16 +13253,25 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         
         # PLATIN+++ FIX 1.1: Pass canonical rate to sofort_start_generator
         _sofort_rate = 0  # 0 = use canonical rate from single source of truth
-        _sofort_hours_month = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 36)
+        # FIX-S25-B4: Use BC canonical hours, not QW-derived defaults.
+        # Previous default of 36h/month was too high for solo (capped to 20 → 5h/week).
+        # Size-aware defaults match typical BC outputs when CANON_HOURS_MONTH is not yet set.
+        _SIZE_DEFAULTS_HOURS = {"solo": 15, "team": 25, "kmu": 50}
+        _sofort_hours_month = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
         try:
             from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size, cap_time_savings
             _sofort_size_norm = normalize_company_size(sofort_size)
             _sofort_rate, _ = get_hourly_rate(_sofort_size_norm)
+            # FIX-S25-B4: Use size-aware default if no canonical hours available
+            if _sofort_hours_month <= 0:
+                _sofort_hours_month = float(_SIZE_DEFAULTS_HOURS.get(_sofort_size_norm, 25))
             # FIX-v720-F2-HOURS: Apply size cap BEFORE sofort-start generation
-            # Without this, solo gets 36h/month (9h/week) instead of capped 20h/month (5h/week)
             _sofort_hours_month, _ = cap_time_savings(_sofort_hours_month, _sofort_size_norm)
         except Exception:
             pass
+        # Final fallback if everything above failed
+        if _sofort_hours_month <= 0:
+            _sofort_hours_month = 15.0
         # FIX-GRAMMAR-T1: Pass canonical OPEX for consistent net savings
         _sofort_opex_monthly = float(sections.get("OPEX_REALISTISCH_EUR") or briefing.get("OPEX_REALISTISCH_EUR") or 0)
         sections["SOFORT_START_HTML"] = generate_sofort_start_html(
