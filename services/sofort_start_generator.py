@@ -148,6 +148,82 @@ Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
     },
     
     # -------------------------------------------------------------------------
+    # 1b. HANDWERK & GEWERBE (FIX-S25-B1: Separate from bauwesen)
+    # -------------------------------------------------------------------------
+    "handwerk": {
+        "name": "Handwerk & Gewerbe",
+        "erster_schritt": "Lassen Sie ChatGPT ein Angebot für eine Standardleistung formulieren",
+        "zeitersparnis_pro_woche": 5,
+        "typische_aufgaben": ["Angebote", "Wartungsprotokolle", "Kundenkommunikation"],
+        "prompts": [
+            {
+                "titel": "Angebotsbeschreibung für Standardleistungen erstellen",
+                "prompt": """Erstellen Sie ein professionelles Angebot:
+
+Leistung: [z.B. Heizungswartung, Bad-Sanierung, Elektroinstallation]
+Kunde: [Privat/Gewerbe]
+Umfang: [BESCHREIBUNG]
+
+Struktur:
+1. Leistungsbeschreibung (verständlich für Laien)
+2. Einzelpositionen mit Erläuterung
+3. Material- und Arbeitskosten (getrennt)
+4. Zeitrahmen
+5. Gewährleistungshinweise
+6. Gültigkeitsdauer""",
+                "zeitersparnis": "30-45 Min pro Angebot"
+            },
+            {
+                "titel": "Wartungsbericht/Protokoll formulieren",
+                "prompt": """Erstellen Sie einen Wartungsbericht:
+
+Anlage/Gerät: [BESCHREIBUNG]
+Kunde: [NAME/ADRESSE]
+Durchgeführte Arbeiten: [STICHPUNKTE]
+
+Struktur:
+- Anlagendaten und Zustand
+- Durchgeführte Wartungsarbeiten
+- Festgestellte Mängel
+- Empfohlene Maßnahmen
+- Nächster Wartungstermin
+- Unterschriftsfeld""",
+                "zeitersparnis": "15-20 Min pro Bericht"
+            },
+            {
+                "titel": "Kundenerinnerung für Wartungstermin schreiben",
+                "prompt": """Schreiben Sie eine freundliche Wartungserinnerung:
+
+Kunde: [NAME]
+Anlage/Gerät: [z.B. Heizung, Klimaanlage]
+Letzte Wartung: [DATUM]
+Empfohlener Termin: [ZEITRAUM]
+
+Die Erinnerung soll:
+- Freundlich und nicht aufdringlich sein
+- Den Nutzen der Wartung erklären
+- Konkrete Terminvorschläge machen
+- Kontaktmöglichkeit nennen""",
+                "zeitersparnis": "5-10 Min pro Erinnerung"
+            }
+        ],
+        "lern_prompt": {
+            "titel": "Qualitätsmanagement verstehen & erklären",
+            "thema": "wie digitales Qualitätsmanagement und Checklisten-Apps die Arbeit im Handwerk verbessern",
+            "zielgruppe": "Mitarbeitenden",
+            "prompt": """Erkläre mir, wie digitales Qualitätsmanagement und Checklisten-Apps die Arbeit im Handwerk verbessern, so dass ich es einem Mitarbeitenden ohne technischen Hintergrund in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
+    },
+
+    # -------------------------------------------------------------------------
     # 2. BERATUNG & DIENSTLEISTUNGEN
     # -------------------------------------------------------------------------
     "beratung": {
@@ -1019,6 +1095,80 @@ Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
     },
 
     # -------------------------------------------------------------------------
+    # 14. RECHT & KANZLEI (FIX-S25-B1: New branch)
+    # -------------------------------------------------------------------------
+    "recht": {
+        "name": "Recht & Kanzlei",
+        "erster_schritt": "Lassen Sie ChatGPT einen Textbaustein für ein Standardschreiben formulieren",
+        "zeitersparnis_pro_woche": 6,
+        "typische_aufgaben": ["Textbausteine", "Recherche-Zusammenfassungen", "Mandantenkommunikation"],
+        "prompts": [
+            {
+                "titel": "Textbaustein formulieren",
+                "prompt": """Formulieren Sie einen juristischen Textbaustein:
+
+Schreibentyp: [z.B. Abmahnung, Vertragsentwurf, Widerspruch]
+Sachverhalt: [KURZBESCHREIBUNG]
+Tonalität: [sachlich/bestimmt/kooperativ]
+
+Der Textbaustein soll:
+- Juristisch präzise formuliert sein
+- Den Sachverhalt klar darstellen
+- Rechtsgrundlagen referenzieren
+- Handlungsaufforderung/Frist enthalten
+- Als Vorlage wiederverwendbar sein""",
+                "zeitersparnis": "30-45 Min pro Baustein"
+            },
+            {
+                "titel": "Recherche-Zusammenfassung erstellen",
+                "prompt": """Fassen Sie diese juristische Recherche zusammen:
+
+Thema: [RECHTSFRAGE]
+Gefundene Quellen: [STICHPUNKTE/URTEILE]
+Relevanter Sachverhalt: [KONTEXT]
+
+Liefern Sie:
+1. Kernaussage in 2-3 Sätzen
+2. Relevante Rechtsprechung (Aktenzeichen)
+3. Pro/Contra-Argumente
+4. Handlungsempfehlung
+5. Offene Fragen""",
+                "zeitersparnis": "1-2 Std pro Recherche"
+            },
+            {
+                "titel": "Mandanten-Update schreiben",
+                "prompt": """Schreiben Sie ein Mandanten-Update:
+
+Mandant: [NAME/ROLLE]
+Verfahren/Sache: [KURZBESCHREIBUNG]
+Aktueller Stand: [STICHPUNKTE]
+Nächste Schritte: [GEPLANT]
+
+Das Update soll:
+- Für juristische Laien verständlich sein
+- Den aktuellen Stand klar darstellen
+- Nächste Schritte und Fristen nennen
+- Professionell aber nahbar formuliert sein""",
+                "zeitersparnis": "15-20 Min pro Update"
+            }
+        ],
+        "lern_prompt": {
+            "titel": "Fristenmanagement verstehen & erklären",
+            "thema": "wie KI-gestütztes Fristenmanagement Haftungsrisiken in der Kanzlei reduziert",
+            "zielgruppe": "Mandanten",
+            "prompt": """Erkläre mir, wie KI-gestütztes Fristenmanagement Haftungsrisiken in der Kanzlei reduziert, so dass ich es einem Mandanten ohne Fachwissen in 3 Sätzen erklären kann.
+
+Strukturiere deine Antwort als:
+1. Kernaussage (1 Satz)
+2. Warum das wichtig ist (1 Satz)
+3. Was sich dadurch ändert (1 Satz)
+
+Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
+            "zeitersparnis": "15-20 Min"
+        }
+    },
+
+    # -------------------------------------------------------------------------
     # DEFAULT (Fallback für alle anderen)
     # -------------------------------------------------------------------------
     "default": {
@@ -1193,11 +1343,13 @@ def get_branche_key(branche: str) -> str:
         "bildung": ["bildung", "schul", "training", "akadem", "lehr"],
         "verwaltung": ["verwalt", "behörd", "öffentlich", "amt"],
         "gesundheit": ["gesundheit", "pflege", "medizin", "arzt", "klinik", "praxis"],
-        "bauwesen": ["bau", "architekt", "immobil", "handwerk"],
+        "handwerk": ["handwerk", "shk", "heizung", "sanitär", "elektro", "maler", "tischler", "schreiner", "dachdecker", "klempner", "schlosser", "kfz", "werkstatt", "meister", "gewerk"],
+        "bauwesen": ["bau", "architekt", "immobil"],
         "medien": ["medien", "kreativ", "agentur", "design", "film", "foto"],
         "industrie": ["industrie", "produktion", "fertigung", "maschin", "herstellung"],
         "transport": ["transport", "logistik", "spedition", "versand", "lieferung"],
         "gastronomie": ["gastro", "hotel", "restaurant", "touris", "reise", "catering"],
+        "recht": ["recht", "anwalt", "kanzlei", "jurist", "notar", "rechtsanwalt"],
     }
     
     for key, keywords in mappings.items():
@@ -2111,6 +2263,17 @@ _FALLSTUDIE_UNTERNEHMEN: Dict[str, Dict[str, str]] = {
         "team": "Praxis mit 3 Therapeuten",
         "kmu": "Gesundheitszentrum mit 15 Mitarbeitenden",
     },
+    # FIX-S25-B2: Handwerk & Recht segment overrides
+    "handwerk": {
+        "solo": "Selbstständiger Handwerksmeister, SHK",
+        "team": "SHK-Betrieb mit 5 Mitarbeitern",
+        "kmu": "Handwerksbetrieb mit 25 Mitarbeitern",
+    },
+    "recht": {
+        "solo": "Einzelanwalt, Zivilrecht",
+        "team": "Kanzlei mit 4 Anwälten",
+        "kmu": "Wirtschaftskanzlei mit 20 Mitarbeitenden",
+    },
 }
 
 FALLSTUDIEN: Dict[str, Dict[str, Any]] = {
@@ -2282,6 +2445,34 @@ FALLSTUDIEN: Dict[str, Dict[str, Any]] = {
         },
         "zitat": "Jede Bewertung bekommt jetzt eine persönliche Antwort. Das macht den Unterschied.",
         "dauer_bis_roi": "3 Wochen"
+    },
+    # FIX-S25-B2: Handwerk-specific Fallstudie
+    "handwerk": {
+        "titel": "SHK-Betrieb halbiert Dispositionszeit",
+        "unternehmen": "SHK-Betrieb mit 5 Mitarbeitern",
+        "ausgangslage": "Tägliche Disposition bindet Meister 1-2h, Angebote dauern zu lange, Wartungstermine werden vergessen",
+        "loesung": "Craftboxx Tourenplanung + ChatGPT Angebotsbausteine",
+        "ergebnis": {
+            "zeitersparnis": "25 Stunden/Monat (Team)",
+            "kosteneinsparung": "~2.375 €/Monat",
+            "qualitaet": "Kein vergessener Wartungstermin mehr"
+        },
+        "zitat": "Die KI schreibt jetzt unsere Angebote vor – der Meister prüft nur noch. Beste Entscheidung.",
+        "dauer_bis_roi": "3 Wochen"
+    },
+    # FIX-S25-B2: Recht-specific Fallstudie
+    "recht": {
+        "titel": "Einzelanwalt verdoppelt Mandantenkapazität",
+        "unternehmen": "Einzelanwalt, Zivilrecht",
+        "ausgangslage": "Zeitintensive Schriftsatzformulierung, aufwändige Recherche-Zusammenfassungen, viele Mandanten-Updates per Hand",
+        "loesung": "ChatGPT Plus für Textbausteine, Recherche und Mandantenkommunikation",
+        "ergebnis": {
+            "zeitersparnis": "10 Stunden/Woche",
+            "kosteneinsparung": "~4.000 €/Monat",
+            "qualitaet": "Schnellere Reaktionszeit, konsistentere Schriftsätze"
+        },
+        "zitat": "Meine Mandanten bekommen jetzt am gleichen Tag Antwort statt nach einer Woche.",
+        "dauer_bis_roi": "2 Wochen"
     },
     "default": {
         "titel": "Selbstständiger spart 8 Stunden pro Woche",

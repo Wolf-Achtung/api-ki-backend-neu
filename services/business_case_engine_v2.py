@@ -1261,7 +1261,7 @@ def heal_scenario_consistency(scenarios: List[ScenarioKPIs]) -> List[ScenarioKPI
             )
             recalculated_scenarios.append(ScenarioKPIs(
                 name=scenario.name,
-                roi_12m=max(new_roi, 10.0),  # Minimum 10% ROI if savings exist
+                roi_12m=new_roi,  # FIX-S25-B3: Allow negative ROI (was floored at 10%)
                 payback_months=scenario.payback_months,
                 monthly_savings=scenario.monthly_savings,
                 annual_savings=annual,
@@ -1283,10 +1283,14 @@ def heal_scenario_consistency(scenarios: List[ScenarioKPIs]) -> List[ScenarioKPI
         return scenarios
 
     # PLATIN+++ v5.4: CRITICAL errors that persist after recalculation cannot be healed
+    # FIX-S25-B3: Skip CRITICAL raise if C4 recalc ran — negative ROI is a valid outcome,
+    # not broken data. Only raise if no recalc happened (truly 0% with no savings).
     critical_errors = [e for e in errors if "CRITICAL" in e]
-    if critical_errors:
+    if critical_errors and not needs_recalc:
         log.error("[BC_001] CRITICAL errors remain after recalculation - cannot heal: %s", critical_errors)
         raise ValueError(f"Business case has unhealable CRITICAL errors: {critical_errors}")
+    elif critical_errors:
+        log.info("[BC_001] Negative ROI after C4 recalc — valid outcome, continuing: %s", critical_errors)
 
     log.info("[BC_001] Healing scenario consistency issues: %s", errors)
 
