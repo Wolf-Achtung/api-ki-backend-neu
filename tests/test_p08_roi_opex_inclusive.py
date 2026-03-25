@@ -162,7 +162,8 @@ class TestNoBusinessCasePlaceholders:
         # ROI should be a number, not a placeholder
         roi = bc.get("ROI_12M")
         assert isinstance(roi, (int, float)), f"ROI should be numeric, got {type(roi)}"
-        assert roi > 0, "ROI should be positive"
+        # FIX-S25-FINAL-CAPEX: ROI can be negative with canonical CAPEX (24k for team)
+        assert -100 <= roi <= 200, f"ROI should be -100 to 200%, got {roi}%"
 
     def test_business_case_table_html_no_placeholders(self):
         """Test that BC table HTML contains no unresolved placeholders."""

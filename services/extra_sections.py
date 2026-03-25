@@ -404,6 +404,18 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     capex = int(capex_base * capex_mult)
     capex = min(capex, int(constraints["max_capex"]))
 
+    # FIX-S25-FINAL-CAPEX: ALWAYS use canonical size-based CAPEX.
+    # Budget-band calculation above is OVERRIDDEN — the report shows realistic
+    # market CAPEX regardless of what the customer entered as budget.
+    try:
+        from services.business_case_engine_v2 import CAPEX_DEFAULTS_BY_SIZE
+        _canonical_capex = CAPEX_DEFAULTS_BY_SIZE.get(_segment)
+        if _canonical_capex is not None:
+            capex = _canonical_capex
+            log.info("[BUSINESS-CASE] Using canonical CAPEX for %s: %d€ (budget-band-proof)", _segment, capex)
+    except ImportError:
+        pass  # Keep budget-band-derived capex as fallback
+
     # Segment-specific OPEX defaults
     _OPEX_DEFAULTS = {"solo": 180, "team": 350, "kmu": 600}
     opex = _OPEX_DEFAULTS.get(_segment, 350)

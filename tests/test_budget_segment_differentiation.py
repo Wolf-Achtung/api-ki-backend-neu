@@ -62,11 +62,11 @@ class TestCalcBusinessCaseSegmentDifferentiation:
 
     def test_solo_capex(self):
         r = self._calc("1")
-        assert r["CAPEX_REALISTISCH_EUR"] == 24_000
+        assert r["CAPEX_REALISTISCH_EUR"] == 12_000  # FIX-S25-FINAL-CAPEX: Solo=12k
 
     def test_team_capex(self):
         r = self._calc("2–10")
-        assert r["CAPEX_REALISTISCH_EUR"] == 12_000
+        assert r["CAPEX_REALISTISCH_EUR"] == 24_000  # FIX-S25-FINAL-CAPEX: Team=24k
 
     def test_kmu_capex(self):
         r = self._calc("11–100")
@@ -79,7 +79,7 @@ class TestCalcBusinessCaseSegmentDifferentiation:
         kmu = self._calc("11–100")["CAPEX_REALISTISCH_EUR"]
         assert solo != team, "Solo and Team CAPEX must differ"
         assert team != kmu, "Team and KMU CAPEX must differ"
-        assert kmu > team > 0, "KMU CAPEX > Team CAPEX"
+        assert kmu > team > solo > 0, "KMU > Team > Solo CAPEX"
 
     def test_hours_differ_across_segments(self):
         """Hours fallback must be segment-specific, not flat 36."""
@@ -135,21 +135,21 @@ class TestCalcBusinessCaseSegmentDifferentiation:
 class TestBudgetBandEdgeCases:
     """Test CAPEX across different budget bands."""
 
-    def test_small_budget_solo_capped(self):
-        """Solo with unter_2000 budget: CAPEX capped by budget ceiling."""
+    def test_small_budget_solo_canonical(self):
+        """FIX-S25-FINAL-CAPEX: Solo CAPEX is always canonical 12k, never budget-band-capped."""
         r = calc_business_case(
             {"unternehmensgroesse": "1", "jahresumsatz": "unter_100k",
              "investitionsbudget": "unter_2000"}, {}
         )
-        assert r["CAPEX_REALISTISCH_EUR"] <= 2000
+        assert r["CAPEX_REALISTISCH_EUR"] == 12_000
 
     def test_kmu_large_budget(self):
-        """KMU with ueber_50000 budget gets higher CAPEX."""
+        """KMU CAPEX is always canonical 48k, regardless of budget."""
         r = calc_business_case(
             {"unternehmensgroesse": "11–100", "jahresumsatz": "2m_10m",
              "investitionsbudget": "ueber_50000"}, {}
         )
-        assert r["CAPEX_REALISTISCH_EUR"] >= 48_000
+        assert r["CAPEX_REALISTISCH_EUR"] == 48_000
 
     def test_qw_hours_override_respected(self):
         """When qw_hours_total is provided, it overrides segment default."""
