@@ -67,6 +67,7 @@ __all__ = [
     # ROI transparency (Problem #3 fix)
     "HOURLY_RATES_BY_SIZE",
     "MAX_TIME_SAVINGS_BY_SIZE",
+    "CAPEX_DEFAULTS_BY_SIZE",
     "get_hourly_rate",
     "get_max_time_savings",
     "cap_time_savings",
@@ -142,6 +143,16 @@ OPEX_DEFAULTS_BY_SIZE = {
     "team": 150,                   # Team: ~150€/Monat (Team-Lizenzen)
     "kmu": 400,                    # KMU: ~400€/Monat (Enterprise-Tools)
     "enterprise": 1500,            # Enterprise: ~1.500€/Monat (Full-Scale)
+}
+
+# FIX-S25-FINAL-CAPEX: Canonical CAPEX by company size.
+# These are the single source of truth and MUST NOT be overridden by budget-band capping.
+# Solo=12k (Freelancer), Team=24k (small team, licenses+training), KMU=48k (full rollout).
+CAPEX_DEFAULTS_BY_SIZE = {
+    "solo": 12000,                 # Solo-Freelancer: Einrichtung + Jahreslizenzen
+    "team": 24000,                 # Kleines Team: Mehrere Lizenzen + Schulung
+    "kmu": 48000,                  # KMU: Full Rollout + Schulung + Integration
+    "enterprise": 96000,           # Enterprise: Großes Rollout
 }
 
 # Company size normalization map
@@ -572,23 +583,11 @@ def create_canonical_from_sections(
                     size, hourly_rate, expected_rates.get(size, 95))
         hourly_rate = expected_rates.get(size, 95)
 
-    # 3. Determine CAPEX
-    capex_candidates = [
-        sections.get("CANON_CAPEX_EUR"),
-        sections.get("CAPEX_REALISTISCH_EUR"),  # FIX-CAPEX: from extra_sections calc
-        sections.get("investment_total"),
-        sections.get("BC_CAPEX"),
-    ]
-    capex = DEFAULT_INVESTMENT
-    for candidate in capex_candidates:
-        if candidate is not None:
-            try:
-                val = float(candidate)
-                if val > 0:
-                    capex = val
-                    break
-            except (ValueError, TypeError):
-                continue
+    # 3. Determine CAPEX — FIX-S25-FINAL-CAPEX: ALWAYS use canonical size-based CAPEX.
+    # Budget-band capping from the briefing questionnaire must NEVER override this.
+    # The report shows the realistic market CAPEX regardless of what the customer entered.
+    capex = CAPEX_DEFAULTS_BY_SIZE.get(size, CAPEX_DEFAULTS_BY_SIZE["team"])
+    log.info("[CANON] Using canonical CAPEX for %s: %.0f€ (size-based, budget-band-proof)", size, capex)
 
     # 4. Determine OPEX (Fix-Batch-1: use size-based defaults instead of 0)
     opex_candidates = [
