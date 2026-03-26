@@ -91,7 +91,8 @@ NICHT als Fußnote danach. Verwende eine verständliche, nicht-technische Sprach
 VENDOR-KONSISTENZ (PFLICHT bei Tool-Empfehlungen in S4 und S8):
 Der KI-Readiness Report hat {vendor_audit_red_count} Tools als nicht EU-konform
 (RED) bewertet und {vendor_audit_green_count} als konform (GREEN).
-Gesamtstatus: {vendor_audit_status}.
+Vendor-Audit Compliance-Status (genutzter KI-Tools): {vendor_audit_status}.
+WICHTIG: Der Wert '{vendor_audit_status}' bezieht sich ausschließlich auf den Vendor-Audit-Compliance-Status der genutzten KI-Tools (z.B. 0 von N Tools EU-konform), NICHT auf den Gesamt-KI-Readiness-Score des Unternehmens. Formuliere dies IMMER als 'Vendor-Audit-Status', 'Tool-Compliance-Status' oder 'Konformitätsstatus der genutzten Tools'. Verwende NIEMALS 'Gesamtstatus' in Verbindung mit 'fail' — der KI-Readiness-Score des Unternehmens kann gleichzeitig hoch sein (z.B. 89/100), obwohl der Vendor-Audit-Status 'fail' ist.
 Wenn ein Tool im Report 1 als RED bewertet wurde (z.B. ChatGPT),
 weise bei Erwähnung auf die DSGVO-Einschränkung hin und priorisiere
 EU-konforme Alternativen. Empfehle kein RED-bewertetes Tool als Hauptempfehlung."""
@@ -341,7 +342,8 @@ DIVERSITÄTS-REGELN:
 
 VENDOR-AUDIT AUS REPORT 1 (PFLICHT bei Tool-Empfehlungen):
 Der KI-Readiness Report hat {vendor_audit_red_count} Tools als nicht EU-konform bewertet
-und {vendor_audit_green_count} als konform. Gesamtstatus: {vendor_audit_status}.
+und {vendor_audit_green_count} als konform. Vendor-Audit Compliance-Status (genutzter KI-Tools): {vendor_audit_status}.
+WICHTIG: '{vendor_audit_status}' bezieht sich NUR auf die EU-Konformität der genutzten KI-Tools, NICHT auf den Gesamt-KI-Readiness-Score. Schreibe NIEMALS 'Gesamtstatus fail' — formuliere stattdessen 'Vendor-Audit-Status: fail' oder 'Tool-Compliance-Status: fail'.
 Wenn ein Tool (z.B. ChatGPT) im Report 1 als RED/nicht konform bewertet wurde:
 - Erwähne bei jeder Nennung den DSGVO-Vorbehalt.
 - Empfehle es NICHT als Hauptempfehlung.
