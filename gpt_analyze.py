@@ -17678,7 +17678,9 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                             _b724r = str(sections.get("CANON_RATE_EUR", "") or "")
                             if _b724r and _b724r.strip().replace(".", "").isdigit():
                                 _b724_rate = int(float(_b724r.strip()))
+                                _b724_skip = {"BUSINESS_CASE_ENGINE_HTML"}
                                 _b724_keys = [k for k in sections if isinstance(sections.get(k), str)
+                                              and k not in _b724_skip
                                               and any(t in k.upper() for t in ("BUSINESS_CASE", "BC_", "STUNDENSATZ",
                                                       "ROI_HTML", "COSTS_OVERVIEW", "SENSITIVITY"))]
                                 _b724_fixed = []
