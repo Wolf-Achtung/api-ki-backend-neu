@@ -426,6 +426,12 @@ CROSS-SECTION-ZAHLEN IN DIESER SECTION (VERBINDLICH):
 - Berechne KEINE abgeleiteten Werte wie „Gesamtersparnis über 3 Jahre" oder „ROI nach Förderung".
 - Fördersummen, Förderquoten, Eigenkapital-Reduktionen gehören NICHT in diese Section.
 
+KOSTENTABELLE (VERBINDLICH):
+- Die Zeile "Software jährlich" MUSS exakt den Wert {budget_software_jaehrlich} € zeigen — das ist der 12-fache Wert der monatlichen Softwarekosten ({budget_software_monatlich} €).
+- Setze NIE die Gesamtinvestition ({budget_gesamt_jahr1} €) als Software-Jahreskosten ein. Das sind VERSCHIEDENE Werte.
+- Jede Zeile der Kostenaufschlüsselung MUSS exakt den oben genannten Wert der jeweiligen Variable verwenden.
+- Die Summe aller Kostenblöcke in der Tabelle muss die Gesamtinvestition ({budget_gesamt_jahr1} €) ergeben.
+
 AUFGABE:
 1. Stelle den 3-Phasen-Investitionsplan als übersichtliche Tabelle dar.
 2. Erkläre die drei ROI-Szenarien und deren Annahmen.
