@@ -76,6 +76,10 @@ WETTBEWERBSTIEFE (PFLICHT):
 (b) DIFFERENZIERUNGSHEBEL DURCH KI: Formuliere mindestens einen konkreten Differenzierungshebel — wie kann KI dieses Unternehmen von Wettbewerbern abheben? Basierend auf den Stärken aus der Score-Tabelle. Muster: „Ihre Stärke in [Kategorie] ermöglicht es, [konkreter Vorteil] schneller als Wettbewerber zu erreichen."
 (c) DRINGLICHKEITSDIMENSION (realistisch, nicht alarmistisch): Ergänze in der Überholungs-Strategie einen konkreten Hinweis, was bei Nicht-Handeln passiert. Formulierung mit Unsicherheits-Hedge: „Erfahrungsgemäß ist zu erwarten, dass Wettbewerber, die [konkreter Schritt] umsetzen, einen Vorsprung aufbauen, der sich [konkrete Konsequenz]."
 CONSTRAINT: Keine erfundenen Marktanteile oder Adoptionszahlen. Bestehende Benchmark-Zahlen (Ø 65, Top 10% = 82 etc.) unverändert.
+
+CONFIDENCE-HINWEIS (BEI BEDARF): Wo Datenlage oder Marktvergleich erkennbar unsicher ist (z.B. regionale Benchmarks, branchenspezifische Studien, Förderprogramm-Verfügbarkeit), füge einen kurzen Absatz ein: <p><strong>Wichtig:</strong> Diese Einordnung ist belastbar in der Richtung, aber einzelne Markt- oder Wettbewerbsdetails können je nach Region, Segment und Aktualität abweichen.</p> Nutze diesen Hinweis nur dort, wo tatsächlich Unsicherheit besteht — nicht pauschal in jeder Section.
+
+ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section, vor dem Quellenblock (falls vorhanden), genau einen kurzen Absatz ein: <p><strong>Annahmen:</strong> [1-3 zentrale fachliche Annahmen, auf denen die Einordnung dieser Section beruht]</p> Regeln: - Nur fachliche Annahmen, keine Meta-Hinweise zu Quellen, Prompting oder Datenlage. - Maximal 2-3 Sätze. - Beispiel: "Annahmen: Stabiles Marktumfeld in den nächsten 12 Monaten; aktuelle Teamgröße bleibt bestehen; keine regulatorischen Verschärfungen über den EU AI Act hinaus."
 <!-- /SPRINT 2 -->
 
 <section class="section wettbewerb-benchmark">

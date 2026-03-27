@@ -227,6 +227,10 @@ SPRACHMUSTER:
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
+SZENARIO-DENKEN (LEICHTGEWICHTIG, VERBINDLICH): Wo relevant, formuliere Maßnahmen so, dass ein konservativer und ein ambitionierter Pfad mitgedacht wird. Nutze dafür kurze Formulierungen im Fließtext wie: - „Minimal sinnvoll ist ..." - „Der belastbare Startpunkt ist ..." - „Bei höherer Umsetzungsreife ist als nächster Ausbau sinnvoll ..." Keine neue Tabelle und keine zusätzlichen HTML-Blöcke erzeugen.
+
+TRADE-OFF-ZEILE (PFLICHT IN TABELLEN): Erweitere jede priorisierte Maßnahme um ein kurzes Feld „Zielkonflikt". Beispiele für Werte: - „Tempo vs. Kontrolltiefe" - „Niedrige Einstiegshürde vs. begrenzter Hebel" - „DSGVO-Sicherheit vs. geringere Tool-Auswahl" - „Standardisierung vs. Individualität" - „Investition heute vs. Nutzen später" - „Automatisierung vs. Kontrolle" Halte das Feld auf maximal 4-6 Wörter. Kein generischer Fülltext.
+
 BEGRIFFSKONSISTENZ (VERBINDLICH — OPT-A7):
 Verwende diese Begriffe einheitlich im gesamten Report:
 - „KI-Governance" = Oberbegriff für Regeln, Rollen, Freigaben rund um KI-Nutzung. „KI-Richtlinie" = das konkrete Dokument.
@@ -376,16 +380,17 @@ KMU-MODUS - VERBOTEN:
   <h3>Prioritäten-Überblick</h3>
   <table class="table">
     <thead>
-      <tr><th>Typ</th><th>Empfehlung</th><th>Zeitrahmen</th><th>Hauptnutzen</th></tr>
+      <tr><th>Typ</th><th>Empfehlung</th><th>Zeitrahmen</th><th>Hauptnutzen</th><th>Zielkonflikt</th></tr>
     </thead>
     <tbody>
       <!-- TABELLE: Max 2x {{hauptleistung}} - Rest generisch oder mit Synonymen -->
-      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 1 für {{hauptleistung}}]</td><td>Sofort</td><td>Zeitersparnis</td></tr>
-      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 2]</td><td>Woche 1-2</td><td>Qualitätssteigerung</td></tr>
-      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 3]</td><td>Woche 1-2</td><td>Risikominimierung</td></tr>
-      <tr><td>Option</td><td>Wissensmanagement aufbauen</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 4-6{% endif %}</td><td>Erweiterung</td></tr>
-      <tr><td>Option</td><td>Pilot ausweiten</td><td>{% if COMPANY_SIZE == "solo" %}Monat 6+{% else %}Monat 6-9{% endif %}</td><td>Sichtbarer Erfolg</td></tr>
-      <tr><td>Option</td><td>Governance formalisieren</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 6+{% endif %}</td><td>Rechtssicherheit</td></tr>
+      <!-- TRADE-OFF-ZEILE (PFLICHT): Jede Maßnahme bekommt ein kurzes Feld „Zielkonflikt" (4-6 Wörter). Beispiele: „Tempo vs. Kontrolltiefe", „Niedrige Einstiegshürde vs. begrenzter Hebel", „DSGVO-Sicherheit vs. geringere Tool-Auswahl", „Standardisierung vs. Individualität", „Investition heute vs. Nutzen später", „Automatisierung vs. Kontrolle". Kein generischer Fülltext. -->
+      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 1 für {{hauptleistung}}]</td><td>Sofort</td><td>Zeitersparnis</td><td>[Zielkonflikt]</td></tr>
+      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 2]</td><td>Woche 1-2</td><td>Qualitätssteigerung</td><td>[Zielkonflikt]</td></tr>
+      <tr><td><strong>MUSS</strong></td><td>[Maßnahme 3]</td><td>Woche 1-2</td><td>Risikominimierung</td><td>[Zielkonflikt]</td></tr>
+      <tr><td>Option</td><td>Wissensmanagement aufbauen</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 4-6{% endif %}</td><td>Erweiterung</td><td>[Zielkonflikt]</td></tr>
+      <tr><td>Option</td><td>Pilot ausweiten</td><td>{% if COMPANY_SIZE == "solo" %}Monat 6+{% else %}Monat 6-9{% endif %}</td><td>Sichtbarer Erfolg</td><td>[Zielkonflikt]</td></tr>
+      <tr><td>Option</td><td>Governance formalisieren</td><td>{% if COMPANY_SIZE == "solo" %}Monat 3+{% else %}Monat 6+{% endif %}</td><td>Rechtssicherheit</td><td>[Zielkonflikt]</td></tr>
     </tbody>
   </table>
 </section>
