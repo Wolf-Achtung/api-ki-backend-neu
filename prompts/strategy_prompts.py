@@ -192,6 +192,12 @@ ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile
 
 QUELLENNUMMERN-REGEL (VERBINDLICH): Publikations- und Studiennummern (z.B. 'Fokus Nr. 533', 'Report Nr. 47', 'Working Paper 2024/15', 'Studie Nr. 12') sind Quellenbezeichner, KEINE Datenwerte. Sie dürfen NIEMALS als Prozentzahlen, Euro-Beträge oder sonstige Kennzahlen in Tabellen oder Fließtext erscheinen. Nutze sie ausschließlich in Quellenangaben und Fußnoten. Wenn eine Recherchequelle eine Nummer im Titel trägt (z.B. 'KfW Fokus Nr. 533'), verwende NUR den inhaltlichen Datenwert (z.B. '8% KI-Nutzung'), nicht die Publikationsnummer.
 
+BENCHMARK-TABELLE (VERBINDLICH):
+- In der Benchmark-Tabelle dürfen NUR Prozentwerte erscheinen, die aus Marktdaten stammen (z.B. KI-Nutzungsquoten, Adoptionsraten, Investitionsanteile am Umsatz).
+- Setze NIE ROI-, Break-Even- oder Investitionswerte in diese Tabelle.
+- Verwechsle NIE Marktdaten-Prozente (z.B. „20% der Mittelständler nutzen KI") mit Finanz-Prozenten (z.B. „280% ROI").
+- Wenn du unsicher bist, ob ein Wert ein Marktdatum oder ein Finanzwert ist: NICHT in die Tabelle setzen.
+
 AUFGABE:
 1. Analysiere den aktuellen Stand der KI-Adoption in der Branche {branche}.
 2. Zeige Benchmark-Daten: Wie weit sind Wettbewerber mit KI?
