@@ -416,10 +416,10 @@ ROI-SZENARIEN:
 - Realistisch: {roi_realistisch}% ROI, Break-Even Monat {breakeven_realistisch}
 - Optimistisch: {roi_optimistisch}% ROI, Break-Even Monat {breakeven_optimistisch}
 
-Förderpotenzial: {foerder_potenzial} €
-
 REGEL: Verwende AUSSCHLIESSLICH diese Werte. Erfinde KEINE anderen Zahlen.
 Deine Aufgabe: Kontextualisiere und erkläre diese Werte für die Branche.
+
+FÖRDERPOTENZIAL (VERBINDLICH): - Nenne NIE ein konkretes Förderpotenzial als Euro-Betrag in dieser Section. - Schreibe stattdessen: „Durch Förderprogramme lässt sich ein Teil der Investition abfedern (Details in Kapitel 7: Fördermittel & Finanzierung)." - Erfinde KEINE Fördersummen, auch nicht als „vorgegeben" oder „geschätzt".
 
 AUFGABE:
 1. Stelle den 3-Phasen-Investitionsplan als übersichtliche Tabelle dar.
@@ -676,7 +676,6 @@ VERBINDLICHE KENNZAHLEN (EXAKT diese Werte verwenden — KEINE eigenen Zahlen er
   - Konservativ: {roi_konservativ}% ROI, Break-Even Monat {breakeven_konservativ}
   - Realistisch: {roi_realistisch}% ROI, Break-Even Monat {breakeven_realistisch}
   - Optimistisch: {roi_optimistisch}% ROI, Break-Even Monat {breakeven_optimistisch}
-- Förderpotenzial: {foerder_potenzial} €
 - Zeitrahmen: {s2_zeitrahmen}
 
 INVESTITIONSPLAN-ZUSAMMENFASSUNG (aus Section S5):
