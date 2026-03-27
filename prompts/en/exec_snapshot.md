@@ -71,7 +71,8 @@ Deliver a single HTML fragment using `<div>`, `<p>`, `<ul>`, `<li>`, `<strong>` 
     <li><strong>Next action 3:</strong> Enrol in the regional digitalisation grant to subsidise tooling costs and accelerate adoption.</li>
   </ul>
   <p><strong>Risk & compliance:</strong> The highest risk lies in data privacy breaches; introduce a strict access management protocol and align with AI Act transparency requirements.</p>
-  <p><strong>Funding & investment:</strong> A digitalisation grant covering 40 % of the investment is available and recommended to improve ROI and shorten payback.</p>
+  <p><strong>Funding & investment:</strong> Digitalisation grants are available and may improve the overall economics — details in the Funding chapter.</p>
+  <!-- removed: hallucination risk - was "A digitalisation grant covering 40 % of the investment is available and recommended to improve ROI and shorten payback." -->
 </div>
 ```
 

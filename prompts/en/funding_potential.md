@@ -44,8 +44,8 @@ PLATIN+++ CONTENT DOD (mandatory):
     Federal and regional programmes in {{BUNDESLAND_LABEL}} support AI and digitalisation initiatives by subsidising a portion of eligible investment costs. Typical grant rates range between <strong>30–50%</strong>, depending on programme, company size and project focus.
   </p>
   <ul>
-    <li><strong>Shortened payback:</strong> Co‑financing reduces the self‑contribution and shortens the payback period below {{PAYBACK_MONTHS}} months.</li>
-    <li><strong>Enhanced ROI:</strong> A 40% grant can more than double your ROI beyond the current {{ROI_12M}}%.</li>
+    <li><strong>Shortened payback:</strong> Co‑financing reduces the self‑contribution and shortens the payback period.</li>
+    <li><strong>Enhanced ROI:</strong> A lower net investment improves the overall economics — details in the Business Case section.</li>
     <li><strong>Reduced financial risk:</strong> Grants enable more ambitious projects without straining liquidity.</li>
     <li><strong>Capacity for upskilling:</strong> Savings free up budget for training and capacity building, aligning with your {{VISION_3_JAHRE}}.</li>
     <li><strong>Improved planning security:</strong> Approved funding allows more reliable budget planning and absorption of unexpected costs.</li>
