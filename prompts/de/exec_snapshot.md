@@ -62,6 +62,13 @@ Visuelle Darstellung:
 - Öffnungsfenster
 - Strategiepotenziale
 
+## Cross-Section-Zahlen (VERBINDLICH)
+- Verwende AUSSCHLIESSLICH die oben per Variable übergebenen KPI-Werte ({{ROI_12M}}, {{PAYBACK_MONTHS}}, {{EINSPARUNG_STUNDEN_MONAT}}, {{EINSPARUNG_MONAT_EUR}}).
+- Erfinde KEINE zusätzlichen Kennzahlen, Aggregationen oder abgeleiteten Werte.
+- Berechne KEINE „Jahresersparnis", „3-Jahres-ROI", „ROI nach Förderung" oder ähnliche Ableitungen.
+- Wenn ein KPI-Wert fehlt: Feld leer lassen, NICHT schätzen.
+- Fördersummen: NUR aus {{FUNDING_SUMMARY}} übernehmen — keine eigenen Beträge erfinden.
+
 ## Output-Anforderungen
 
 - Extrem kompakt
