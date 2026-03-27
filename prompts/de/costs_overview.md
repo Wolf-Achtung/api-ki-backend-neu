@@ -23,6 +23,12 @@ Developer:
        - Regieanweisungen, Platzhaltertexte, Beispieltexte wie „xxx".
        - Unstrukturierte Ausgaben – immer mit section / table / lists.
 
+     CROSS-SECTION-ZAHLEN (VERBINDLICH):
+       - Nenne NIE konkrete ROI-Werte, Payback-Zeiträume oder Investitionssummen aus dem Business Case.
+       - Erfinde KEINE Euro-Beträge für Kostenpositionen — beschreibe Kostenstruktur QUALITATIV.
+       - Wenn du auf Business-Case-Zahlen verweisen willst: „Details siehe Business Case."
+       - Erfinde KEINE Lizenzpreise, Tool-Kosten oder Stundensätze, die nicht im Input stehen.
+
      SIZE-AWARE-LOGIK (verbindlich):
        - SOLO:
            - Sehr schlanke Tool-Landschaft.

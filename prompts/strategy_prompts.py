@@ -421,6 +421,11 @@ Deine Aufgabe: Kontextualisiere und erkläre diese Werte für die Branche.
 
 FÖRDERPOTENZIAL (VERBINDLICH): - Nenne NIE ein konkretes Förderpotenzial als Euro-Betrag in dieser Section. - Schreibe stattdessen: „Durch Förderprogramme lässt sich ein Teil der Investition abfedern (Details in Kapitel 7: Fördermittel & Finanzierung)." - Erfinde KEINE Fördersummen, auch nicht als „vorgegeben" oder „geschätzt".
 
+CROSS-SECTION-ZAHLEN IN DIESER SECTION (VERBINDLICH):
+- Alle Investitions- und ROI-Zahlen in dieser Section kommen AUS DEN OBIGEN VARIABLEN — erfinde keine zusätzlichen.
+- Berechne KEINE abgeleiteten Werte wie „Gesamtersparnis über 3 Jahre" oder „ROI nach Förderung".
+- Fördersummen, Förderquoten, Eigenkapital-Reduktionen gehören NICHT in diese Section.
+
 AUFGABE:
 1. Stelle den 3-Phasen-Investitionsplan als übersichtliche Tabelle dar.
 2. Erkläre die drei ROI-Szenarien und deren Annahmen.
@@ -487,6 +492,12 @@ PHASEN-BUDGETS (EXAKT übernehmen!):
 - Phase 1 (Quick Wins, Monat 1-3): {budget_phase_1} €
 - Phase 2 (Kernimplementierung, Monat 4-8): {budget_phase_2} €
 - Phase 3 (Skalierung, Monat 9-12): {budget_phase_3} €
+
+BUDGET-ZAHLEN IN DIESER SECTION (VERBINDLICH):
+- Verwende AUSSCHLIESSLICH die oben genannten Phasen-Budgets ({budget_phase_1}, {budget_phase_2}, {budget_phase_3}).
+- Erfinde KEINE weiteren Geldbeträge, Einsparungen, ROI-Werte oder Förderbeträge.
+- Berechne KEINE Summen oder abgeleiteten Werte (z.B. Gesamtkosten, Netto-Investition).
+- Wenn du auf ROI, Business Case oder Fördermittel verweisen willst: „Details siehe Kapitel [X]."
 
 AUFGABE:
 1. Erstelle eine 12-Monats-Roadmap in 3 Phasen.
@@ -616,6 +627,12 @@ TOOL-EMPFEHLUNGEN (Zusammenfassung):
 
 ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
 
+FINANZ-ZAHLEN IN DIESER SECTION (VERBINDLICH):
+- Nenne NIE eine konkrete Investitionssumme, ROI-Zahl oder Fördersumme in der Risikoanalyse.
+- Wenn du auf finanzielle Risiken verweist (z.B. ROI-Verfehlung), schreibe: „Details zum Investitionsrahmen siehe Kapitel 5."
+- Erfinde KEINE Euro-Beträge, Prozentwerte oder Break-Even-Zeiträume.
+- Beschreibe finanzielle Risiken QUALITATIV, nicht quantitativ.
+
 AUFGABE:
 1. Erstelle eine Risikomatrix (Eintrittswahrscheinlichkeit × Auswirkung).
 2. Identifiziere die Top-5 Risiken der KI-Strategie:
@@ -726,6 +743,13 @@ Formuliere verständlich für einen GF ohne KI-Vorwissen. Kein Berater-Jargon. �
 CONSTRAINT: Summary darf NICHT länger werden. Anreicherung ERSETZT generische Formulierungen. Max. 300 Wörter.
 
 FÖRDERMITTEL IN DER EXECUTIVE SUMMARY (VERBINDLICH): - Nenne NIE eine konkrete Fördersumme in der Executive Summary. - Nenne NIE einen konkreten reduzierten Eigenkapitalbetrag. - Stattdessen formuliere: „Durch Förderprogramme (Details in Kapitel 7) lässt sich ein Teil der Investition abfedern." - Verweise IMMER auf das Fördermittel-Kapitel für Details. - Grund: Förderhöhen hängen von Programm, Zeitpunkt und Antragserfolg ab. Konkrete Zahlen in der Zusammenfassung erwecken falsche Sicherheit.
+
+CROSS-SECTION-ZAHLEN IN DIESER SECTION (VERBINDLICH):
+- Nenne NIE eine konkrete Zahl, die du nicht direkt aus den dir übergebenen VERBINDLICHEN KENNZAHLEN ablesen kannst.
+- Erfinde KEINE Summen, Durchschnitte oder Aggregationen aus mehreren Kennzahlen.
+- Berechne KEINE abgeleiteten Werte (z.B. „Gesamtersparnis über 3 Jahre", „ROI nach Förderung", „Netto-Investition nach Abzug").
+- Wenn du auf Details aus anderen Sections verweisen willst, schreibe: „Details siehe Kapitel [X]."
+- Die ROI-Szenarien (konservativ/realistisch/optimistisch) sind die EINZIGEN erlaubten ROI-Werte. Nenne den REALISTISCHEN Wert ({roi_realistisch}%) — KEINE anderen.
 
 FORMAT: HTML-Fragment (<p> Tags). Keine Überschrift (wird vom Template gesetzt).
 Maximal 300 Wörter. Kein Markdown. KEINE Quellenangaben.""",
