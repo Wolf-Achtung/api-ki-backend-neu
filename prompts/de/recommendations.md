@@ -227,6 +227,8 @@ SPRACHMUSTER:
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
+SZENARIO-DENKEN (LEICHTGEWICHTIG, VERBINDLICH): Wo relevant, formuliere Maßnahmen so, dass ein konservativer und ein ambitionierter Pfad mitgedacht wird. Nutze dafür kurze Formulierungen im Fließtext wie: - „Minimal sinnvoll ist ..." - „Der belastbare Startpunkt ist ..." - „Bei höherer Umsetzungsreife ist als nächster Ausbau sinnvoll ..." Keine neue Tabelle und keine zusätzlichen HTML-Blöcke erzeugen.
+
 BEGRIFFSKONSISTENZ (VERBINDLICH — OPT-A7):
 Verwende diese Begriffe einheitlich im gesamten Report:
 - „KI-Governance" = Oberbegriff für Regeln, Rollen, Freigaben rund um KI-Nutzung. „KI-Richtlinie" = das konkrete Dokument.
