@@ -160,6 +160,8 @@ SPRACHMUSTER:
 - Abgeleitet: „Daraus ergibt sich ...", „Das spricht dafür, dass ..."
 - Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
 
+CONFIDENCE-HINWEIS (BEI BEDARF): Wo Datenlage oder Marktvergleich erkennbar unsicher ist (z.B. regionale Benchmarks, branchenspezifische Studien, Förderprogramm-Verfügbarkeit), füge einen kurzen Absatz ein: <p><strong>Wichtig:</strong> Diese Einordnung ist belastbar in der Richtung, aber einzelne Markt- oder Wettbewerbsdetails können je nach Region, Segment und Aktualität abweichen.</p> Nutze diesen Hinweis nur dort, wo tatsächlich Unsicherheit besteht — nicht pauschal in jeder Section.
+
 FORMAT: HTML-Fragment mit <h3>, <p>, <ul>, <table>. Kein Markdown.""",
 
     # =========================================================================
@@ -216,6 +218,8 @@ SPRACHMUSTER:
 - Abgeleitet: „Daraus ergibt sich ...", „Das spricht dafür, dass ..."
 - Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
 
+CONFIDENCE-HINWEIS (BEI BEDARF): Wo Datenlage oder Marktvergleich erkennbar unsicher ist (z.B. regionale Benchmarks, branchenspezifische Studien, Förderprogramm-Verfügbarkeit), füge einen kurzen Absatz ein: <p><strong>Wichtig:</strong> Diese Einordnung ist belastbar in der Richtung, aber einzelne Markt- oder Wettbewerbsdetails können je nach Region, Segment und Aktualität abweichen.</p> Nutze diesen Hinweis nur dort, wo tatsächlich Unsicherheit besteht — nicht pauschal in jeder Section.
+
 FORMAT: HTML-Fragment. Verwende eine Tabelle für den Branchen-Benchmark.
 Quellenangaben am Ende als <div class="sources">.""",
 
@@ -265,6 +269,8 @@ SPRACHMUSTER:
 - Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
+
+SZENARIO-DENKEN (LEICHTGEWICHTIG, VERBINDLICH): Wo relevant, formuliere Maßnahmen so, dass ein konservativer und ein ambitionierter Pfad mitgedacht wird. Nutze dafür kurze Formulierungen im Fließtext wie: - „Minimal sinnvoll ist ..." - „Der belastbare Startpunkt ist ..." - „Bei höherer Umsetzungsreife ist als nächster Ausbau sinnvoll ..." Keine neue Tabelle und keine zusätzlichen HTML-Blöcke erzeugen.
 
 SPRINT 2 — OPT-B3 STRATEGISCHE EINORDNUNG (PFLICHT):
 Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
@@ -493,6 +499,8 @@ UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabe
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
+SZENARIO-DENKEN (LEICHTGEWICHTIG, VERBINDLICH): Wo relevant, formuliere Maßnahmen so, dass ein konservativer und ein ambitionierter Pfad mitgedacht wird. Nutze dafür kurze Formulierungen im Fließtext wie: - „Minimal sinnvoll ist ..." - „Der belastbare Startpunkt ist ..." - „Bei höherer Umsetzungsreife ist als nächster Ausbau sinnvoll ..." Keine neue Tabelle und keine zusätzlichen HTML-Blöcke erzeugen.
+
 SPRINT 2 — OPT-B9 CHANGE MANAGEMENT STÄRKEN (PFLICHT):
 Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
 Segment-gerecht in die Roadmap integrieren:
@@ -531,6 +539,8 @@ LIVE-RECHERCHE:
 UMGANG MIT LÜCKENHAFTEN EINGABEN: Wenn ein Input fehlt oder unkonkret ist: - nichts erfinden, - die Aussage auf den belastbaren Kern reduzieren, - und nur den Teil formulieren, der fachlich tragfähig bleibt. Nutze keine Meta-Sätze über fehlende Datenquellen. Lieber präzise knapp als breit spekulativ.
 
 ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
+
+CONFIDENCE-HINWEIS (BEI BEDARF): Wo Datenlage oder Marktvergleich erkennbar unsicher ist (z.B. regionale Benchmarks, branchenspezifische Studien, Förderprogramm-Verfügbarkeit), füge einen kurzen Absatz ein: <p><strong>Wichtig:</strong> Diese Einordnung ist belastbar in der Richtung, aber einzelne Markt- oder Wettbewerbsdetails können je nach Region, Segment und Aktualität abweichen.</p> Nutze diesen Hinweis nur dort, wo tatsächlich Unsicherheit besteht — nicht pauschal in jeder Section.
 
 AUFGABE:
 1. Identifiziere die 3-5 relevantesten Förderprogramme für {firmenname}.
@@ -606,6 +616,8 @@ AUFGABE:
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
+
+CONFIDENCE-HINWEIS (BEI BEDARF): Wo Datenlage oder Marktvergleich erkennbar unsicher ist (z.B. regionale Benchmarks, branchenspezifische Studien, Förderprogramm-Verfügbarkeit), füge einen kurzen Absatz ein: <p><strong>Wichtig:</strong> Diese Einordnung ist belastbar in der Richtung, aber einzelne Markt- oder Wettbewerbsdetails können je nach Region, Segment und Aktualität abweichen.</p> Nutze diesen Hinweis nur dort, wo tatsächlich Unsicherheit besteht — nicht pauschal in jeder Section.
 
 SPRINT 2 — OPT-B4 RISIKO-FRAMEWORK ERWEITERN (PFLICHT):
 Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
@@ -688,6 +700,8 @@ SPRACHMUSTER:
 - Annahme: „Erfahrungsgemäß ist zu erwarten ...", „Wahrscheinlich relevant ist ..."
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
+
+SZENARIO-DENKEN (LEICHTGEWICHTIG, VERBINDLICH): Wo relevant, formuliere Maßnahmen so, dass ein konservativer und ein ambitionierter Pfad mitgedacht wird. Nutze dafür kurze Formulierungen im Fließtext wie: - „Minimal sinnvoll ist ..." - „Der belastbare Startpunkt ist ..." - „Bei höherer Umsetzungsreife ist als nächster Ausbau sinnvoll ..." Keine neue Tabelle und keine zusätzlichen HTML-Blöcke erzeugen.
 
 SPRINT 2 — OPT-B7 EXECUTIVE SUMMARY AUFWERTEN (PFLICHT):
 Formuliere verständlich für einen GF ohne KI-Vorwissen. Kein Berater-Jargon. „Das bedeutet:" statt „Die strategische Implikation ist:".

@@ -166,6 +166,8 @@ REGELN:
 - Sachlich, neutral, keine Werbung
 - Keine Platzhalter, keine Developer-Sprache
 
+CONFIDENCE-HINWEIS (BEI BEDARF): Wo Datenlage oder Marktvergleich erkennbar unsicher ist (z.B. regionale Benchmarks, branchenspezifische Studien, Förderprogramm-Verfügbarkeit), füge einen kurzen Absatz ein: <p><strong>Wichtig:</strong> Diese Einordnung ist belastbar in der Richtung, aber einzelne Markt- oder Wettbewerbsdetails können je nach Region, Segment und Aktualität abweichen.</p> Nutze diesen Hinweis nur dort, wo tatsächlich Unsicherheit besteht — nicht pauschal in jeder Section.
+
 =============================================================================
 ANTI-TEXTWÜSTEN REGELN v1.0 (STRIKT - PFLICHT!)
 =============================================================================
