@@ -211,6 +211,8 @@ Wenn du die drei Szenarien (konservativ/realistisch/optimistisch) darstellst, er
 Formuliere die Einordnung praxisnah für den Unternehmenskontext, nicht generisch. Nutze „Annahme:" als Einleitung.
 Die Szenario-ZAHLEN (ROI %, Break-Even Monate) kommen deterministisch aus dem Calculator — NICHT ändern. Nur die sprachliche Einordnung ergänzen.
 
+ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section, vor dem Quellenblock (falls vorhanden), genau einen kurzen Absatz ein: <p><strong>Annahmen:</strong> [1-3 zentrale fachliche Annahmen, auf denen die Einordnung dieser Section beruht]</p> Regeln: - Nur fachliche Annahmen, keine Meta-Hinweise zu Quellen, Prompting oder Datenlage. - Maximal 2-3 Sätze. - Beispiel: "Annahmen: Stabiles Marktumfeld in den nächsten 12 Monaten; aktuelle Teamgröße bleibt bestehen; keine regulatorischen Verschärfungen über den EU AI Act hinaus."
+
 <section class="section business-case">
   <h2>Business Case – Investition und erwarteter Nutzen</h2>
 
