@@ -26,6 +26,12 @@ ERLAUBT:
 
 ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
 
+CROSS-SECTION-ZAHLEN IN DIESER SECTION (VERBINDLICH):
+- Nenne NIE eine konkrete Fördersumme, die nicht aus {{FOERDERPROGRAMME_HTML}} stammt.
+- Berechne KEINE Gesamtsummen aus mehreren Förderprogrammen — Programme sind nicht einfach kumulierbar.
+- Erfinde KEINE Eigenkapital-Reduktionen, Netto-Investitionen oder „Ersparnis durch Förderung"-Beträge.
+- Wenn du auf den Business Case verweisen willst: „Details zur Investition siehe Business Case."
+
 ###############################################################################
 
      KONDITIONALE LOGIK (L4/L5/L8/L9):

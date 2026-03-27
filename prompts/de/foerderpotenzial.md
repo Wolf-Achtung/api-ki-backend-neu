@@ -150,6 +150,12 @@ ANTI-REDUNDANZ:
 - Business-Case-Zahlen EINMAL nennen, nicht wiederholen
 - KEINE Wiederholung der Zahlen aus business_case.md – nur Förder-Kontext
 
+CROSS-SECTION-ZAHLEN IN DIESER SECTION (VERBINDLICH):
+- Nenne NIE eine konkrete Förder-Summe, die du nicht direkt aus den dir übergebenen Daten ablesen kannst.
+- Berechne KEINE abgeleiteten Werte wie „ROI nach Förderung", „Netto-Investition nach Abzug" oder „Eigenkapital-Reduktion um X €".
+- Erfinde KEINE Summen, Durchschnitte oder Aggregationen aus Business-Case-Zahlen und Förderquoten.
+- Wenn du auf finanzielle Effekte der Förderung verweisen willst, schreibe QUALITATIV: „Eine Förderung verbessert die Wirtschaftlichkeit — Details im Business Case."
+
 THEMEN-OWNERSHIP (verbindlich):
 - Diese Section: OWNER für Förderpotenzial, Förderkategorien, Nächste Schritte Förderantrag
 - NICHT hier: Business Case Details (→ business_case)
@@ -253,7 +259,7 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   </p>
   <ul>
     <li><strong>Kürzere Amortisation:</strong> Durch geringeren Eigenanteil verkürzt sich die Amortisationsdauer.</li>
-    <li><strong>Höherer effektiver ROI:</strong> Bei 40% Förderung kann sich der ROI verdoppeln.</li>
+    <li><strong>Höherer effektiver ROI:</strong> Geringerer Eigenanteil verbessert die Wirtschaftlichkeit — Details im Business Case.</li>
     <li><strong>Reduziertes Risiko:</strong> Zuschüsse erleichtern ambitioniertere Projekte ohne Liquiditätsbelastung.</li>
     <li><strong>Spielraum für Qualifizierung:</strong> Einsparungen ermöglichen zusätzliche Schulungsmaßnahmen.</li>
     <li><strong>Bessere Planungssicherheit:</strong> Bewilligte Förderung macht das Budget verlässlicher planbar.</li>
