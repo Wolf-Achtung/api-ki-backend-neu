@@ -290,6 +290,8 @@ Ergänze bei Handlungsfeldern mit Governance-Bezug konkrete Steuerungshinweise:
 (c) ENTSCHEIDUNGSMATRIX: Wer gibt KI-Tools frei, wer ändert KI-Richtlinie, wer stoppt einen Prozess? In 2-3 Sätzen klären.
 CONSTRAINT: Max. 2-3 Zusatzsätze. Keine Konzern-Vokabeln bei Solo/Team.
 
+TRADE-OFF-ZEILE (PFLICHT IN TABELLEN): Erweitere jede priorisierte Maßnahme um ein kurzes Feld „Zielkonflikt". Beispiele für Werte: - „Tempo vs. Kontrolltiefe" - „Niedrige Einstiegshürde vs. begrenzter Hebel" - „DSGVO-Sicherheit vs. geringere Tool-Auswahl" - „Standardisierung vs. Individualität" - „Investition heute vs. Nutzen später" - „Automatisierung vs. Kontrolle" Halte das Feld auf maximal 4-6 Wörter. Kein generischer Fülltext.
+
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Priorisierungsmatrix.
 Ampel-Farben als CSS-Klassen oder inline-styles.""",
 
@@ -510,6 +512,8 @@ Segment-gerecht in die Roadmap integrieren:
 (d) ADOPTION-KENNZAHLEN: Neben technischen Meilensteinen auch: aktive Nutzer, Nutzungsfrequenz, Team-Zufriedenheit als Messgröße für Phase-Übergänge.
 (e) QUICK-WIN-KOMMUNIKATION: Erste Erfolge aus Phase 1 als Change-Beschleuniger einsetzen.
 CONSTRAINT: Kein separates Change-Kapitel — in bestehende Phasen-Struktur einweben. Bei Solo-Segment: Kein formales Change Management, nur persönliche Motivation.
+
+TRADE-OFF-ZEILE (PFLICHT IN TABELLEN): Erweitere jede priorisierte Maßnahme um ein kurzes Feld „Zielkonflikt". Beispiele für Werte: - „Tempo vs. Kontrolltiefe" - „Niedrige Einstiegshürde vs. begrenzter Hebel" - „DSGVO-Sicherheit vs. geringere Tool-Auswahl" - „Standardisierung vs. Individualität" - „Investition heute vs. Nutzen später" - „Automatisierung vs. Kontrolle" Halte das Feld auf maximal 4-6 Wörter. Kein generischer Fülltext.
 
 FORMAT: HTML-Fragment. Verwende eine Timeline-artige Darstellung mit Tabelle.""",
 
