@@ -296,6 +296,8 @@ CONSTRAINT: Max. 2-3 Zusatzsätze. Keine Konzern-Vokabeln bei Solo/Team.
 
 TRADE-OFF-ZEILE (PFLICHT IN TABELLEN): Erweitere jede priorisierte Maßnahme um ein kurzes Feld „Zielkonflikt". Beispiele für Werte: - „Tempo vs. Kontrolltiefe" - „Niedrige Einstiegshürde vs. begrenzter Hebel" - „DSGVO-Sicherheit vs. geringere Tool-Auswahl" - „Standardisierung vs. Individualität" - „Investition heute vs. Nutzen später" - „Automatisierung vs. Kontrolle" Halte das Feld auf maximal 4-6 Wörter. Kein generischer Fülltext.
 
+SZENARIO-SPALTE (PFLICHT IN ROADMAP-TABELLEN): Erweitere Roadmap- und Priorisierungstabellen um eine kompakte Spalte „Pfad" mit genau einem der drei Werte: - „Minimal" — der sichere Einstieg, geringster Aufwand - „Standard" — die empfohlene Umsetzung bei normalem Verlauf - „Ausbau" — der ambitionierte Pfad bei hoher Umsetzungsreife Ordne jede Maßnahme genau einem Pfad zu. Keine neuen Rechenmodelle, keine neuen Zahlen — nur eine Einordnung.
+
 ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section, vor dem Quellenblock (falls vorhanden), genau einen kurzen Absatz ein: <p><strong>Annahmen:</strong> [1-3 zentrale fachliche Annahmen, auf denen die Einordnung dieser Section beruht]</p> Regeln: - Nur fachliche Annahmen, keine Meta-Hinweise zu Quellen, Prompting oder Datenlage. - Maximal 2-3 Sätze. - Beispiel: "Annahmen: Stabiles Marktumfeld in den nächsten 12 Monaten; aktuelle Teamgröße bleibt bestehen; keine regulatorischen Verschärfungen über den EU AI Act hinaus."
 
 FORMAT: HTML-Fragment. Verwende eine Tabelle für die Priorisierungsmatrix.
@@ -522,6 +524,8 @@ Segment-gerecht in die Roadmap integrieren:
 CONSTRAINT: Kein separates Change-Kapitel — in bestehende Phasen-Struktur einweben. Bei Solo-Segment: Kein formales Change Management, nur persönliche Motivation.
 
 TRADE-OFF-ZEILE (PFLICHT IN TABELLEN): Erweitere jede priorisierte Maßnahme um ein kurzes Feld „Zielkonflikt". Beispiele für Werte: - „Tempo vs. Kontrolltiefe" - „Niedrige Einstiegshürde vs. begrenzter Hebel" - „DSGVO-Sicherheit vs. geringere Tool-Auswahl" - „Standardisierung vs. Individualität" - „Investition heute vs. Nutzen später" - „Automatisierung vs. Kontrolle" Halte das Feld auf maximal 4-6 Wörter. Kein generischer Fülltext.
+
+SZENARIO-SPALTE (PFLICHT IN ROADMAP-TABELLEN): Erweitere Roadmap- und Priorisierungstabellen um eine kompakte Spalte „Pfad" mit genau einem der drei Werte: - „Minimal" — der sichere Einstieg, geringster Aufwand - „Standard" — die empfohlene Umsetzung bei normalem Verlauf - „Ausbau" — der ambitionierte Pfad bei hoher Umsetzungsreife Ordne jede Maßnahme genau einem Pfad zu. Keine neuen Rechenmodelle, keine neuen Zahlen — nur eine Einordnung.
 
 FORMAT: HTML-Fragment. Verwende eine Timeline-artige Darstellung mit Tabelle.""",
 
