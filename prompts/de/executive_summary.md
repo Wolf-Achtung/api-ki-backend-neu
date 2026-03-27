@@ -65,6 +65,29 @@ WENN ein ROI-Prozentsatz gefunden: ENTFERNEN und ersetzen!
 ###############################################################################
 -->
 <!--
+###############################################################################
+##   CROSS-SECTION-ZAHLEN — ZERO TOLERANCE                                   ##
+###############################################################################
+
+Nenne in dieser Section NIE konkrete Finanzzahlen, die aus anderen Sections
+stammen. Das betrifft:
+❌ ROI-Prozentwerte (bereits verboten, s.o.)
+❌ Investitionsbeträge (€-Summen aus Business Case)
+❌ Break-Even / Payback-Monate
+❌ Fördersummen oder Förderquoten
+❌ Einsparungen (€/Monat, €/Jahr)
+❌ Aggregierte oder abgeleitete Werte (z.B. „Gesamtersparnis", „ROI nach Förderung")
+
+ERLAUBT:
+✅ Qualitative Verweise: „Details im Business Case", „Details im Förderkapitel"
+✅ Der KI-Readiness-Score (wird per Variable injiziert)
+
+Grund: Jede Zahl, die das LLM aus dem Kontext einer anderen Section zitiert,
+ist ein Halluzinations-Kandidat. Finanzzahlen gehören in ihre Owner-Section.
+
+###############################################################################
+-->
+<!--
 =============================================================================
 PLATIN+++ CONTENT DOD (verbindlich):
 =============================================================================
