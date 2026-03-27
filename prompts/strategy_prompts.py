@@ -699,7 +699,7 @@ Schreibe eine prägnante Executive Summary (200-300 Wörter), die:
 2. Die wichtigste strategische Empfehlung hervorhebt.
 3. Den Quick Win nennt (sofort umsetzbar).
 4. Die Investition ({budget_gesamt_jahr1} €) und den erwarteten ROI ({roi_realistisch}%) zusammenfasst.
-5. Das Förderpotenzial ({foerder_potenzial} €) erwähnt.
+5. Das Förderpotenzial erwähnt — OHNE konkrete Summe (→ siehe FÖRDERMITTEL-REGEL unten).
 6. Mit einem klaren Call-to-Action endet.
 
 Zielgruppe: Geschäftsführer/Entscheider, die schnell den Kern erfassen wollen.
@@ -725,6 +725,8 @@ Formuliere verständlich für einen GF ohne KI-Vorwissen. Kein Berater-Jargon. �
 (b) KONSEQUENZ BEI NICHT-HANDELN: Integriere einen knappen, realistischen Hinweis (1-2 Sätze), was passiert, wenn nicht gehandelt wird. Keine Panikmache, sondern nüchterne Einschätzung. Muster: „Ohne Anpassung ist erfahrungsgemäß zu erwarten, dass [konkrete Konsequenz]."
 (c) DER EINE NÄCHSTE SCHRITT: Schließe mit genau EINEM klaren, sofort machbaren nächsten Schritt. Nicht drei, nicht fünf — EINER. Konkret genug, dass der Leser heute damit anfangen kann.
 CONSTRAINT: Summary darf NICHT länger werden. Anreicherung ERSETZT generische Formulierungen. Max. 300 Wörter.
+
+FÖRDERMITTEL IN DER EXECUTIVE SUMMARY (VERBINDLICH): - Nenne NIE eine konkrete Fördersumme in der Executive Summary. - Nenne NIE einen konkreten reduzierten Eigenkapitalbetrag. - Stattdessen formuliere: „Durch Förderprogramme (Details in Kapitel 7) lässt sich ein Teil der Investition abfedern." - Verweise IMMER auf das Fördermittel-Kapitel für Details. - Grund: Förderhöhen hängen von Programm, Zeitpunkt und Antragserfolg ab. Konkrete Zahlen in der Zusammenfassung erwecken falsche Sicherheit.
 
 FORMAT: HTML-Fragment (<p> Tags). Keine Überschrift (wird vom Template gesetzt).
 Maximal 300 Wörter. Kein Markdown. KEINE Quellenangaben.""",
