@@ -84,8 +84,7 @@ PLATIN+++ CONTENT DOD (mandatory):
       and shortens the amortization period to below {{PAYBACK_MONTHS}} months.
     </li>
     <li>
-      <strong>Higher ROI:</strong> A 40% grant can significantly increase
-      ROI beyond the current {{ROI_12M}}%.
+      <strong>Higher ROI:</strong> A lower net investment improves the overall economics — details in the Business Case section.
     </li>
     <li>
       <strong>Lower financial risk:</strong> Grants enable more ambitious projects
