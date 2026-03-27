@@ -189,6 +189,12 @@ SPRACHMUSTER:
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
+SZENARIO-DENKEN (LEICHTGEWICHTIG, VERBINDLICH): Wo relevant, formuliere Maßnahmen so, dass ein konservativer und ein ambitionierter Pfad mitgedacht wird. Nutze dafür kurze Formulierungen im Fließtext wie: - „Minimal sinnvoll ist ..." - „Der belastbare Startpunkt ist ..." - „Bei höherer Umsetzungsreife ist als nächster Ausbau sinnvoll ..." Keine neue Tabelle und keine zusätzlichen HTML-Blöcke erzeugen.
+
+TRADE-OFF-ZEILE (PFLICHT IN TABELLEN): Erweitere jede priorisierte Maßnahme um ein kurzes Feld „Zielkonflikt". Beispiele für Werte: - „Tempo vs. Kontrolltiefe" - „Niedrige Einstiegshürde vs. begrenzter Hebel" - „DSGVO-Sicherheit vs. geringere Tool-Auswahl" - „Standardisierung vs. Individualität" - „Investition heute vs. Nutzen später" - „Automatisierung vs. Kontrolle" Halte das Feld auf maximal 4-6 Wörter. Kein generischer Fülltext.
+
+SZENARIO-SPALTE (PFLICHT IN ROADMAP-TABELLEN): Erweitere Roadmap- und Priorisierungstabellen um eine kompakte Spalte „Pfad" mit genau einem der drei Werte: - „Minimal" — der sichere Einstieg, geringster Aufwand - „Standard" — die empfohlene Umsetzung bei normalem Verlauf - „Ausbau" — der ambitionierte Pfad bei hoher Umsetzungsreife Ordne jede Maßnahme genau einem Pfad zu. Keine neuen Rechenmodelle, keine neuen Zahlen — nur eine Einordnung.
+
 <!-- SPRINT 2: OPT-B9 Change Management stärken -->
 Formuliere verständlich für einen Geschäftsführer ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung in einem Halbsatz erklären.
 

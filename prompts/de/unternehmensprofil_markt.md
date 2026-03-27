@@ -106,6 +106,10 @@ MARKTKONTEXT-TIEFE (PFLICHT):
 (b) 3 BRANCHENSPEZIFISCHE KI-ANWENDUNGEN: Benenne im KI-Potenzial-Abschnitt mindestens 3 konkrete, branchenspezifische Anwendungen, die in {{BRANCHE_LABEL}} bereits produktiv im Einsatz sind. Nicht generisch („Texterstellung"), sondern spezifisch für die Branche (z.B. bei Steuerberatung: „Belegkategorisierung", „Mandantenkorrespondenz-Entwürfe", „Steuerbescheid-Vorprüfung"). Basiere auf CONTEXT_BLOCK-Daten, nicht auf Erfundenem.
 (c) MARKTDYNAMIKEN ALS HANDLUNGSTREIBER: Ergänze im Marktkontext-Abschnitt die konkreten Treiber, die den Handlungsdruck für DIESES Unternehmen erzeugen — z.B. Fachkräftemangel, steigende Mandantenerwartungen, regulatorischer Druck (EU AI Act). Max. 2-3 Treiber, jeweils mit 1 Satz Erklärung.
 CONSTRAINT: Keine erfundenen Prozentzahlen zur Branchenadoption. Unsicherheits-Hedge aus OPT-A1 nutzen. Bestehende Wortlimits einhalten.
+
+CONFIDENCE-HINWEIS (BEI BEDARF): Wo Datenlage oder Marktvergleich erkennbar unsicher ist (z.B. regionale Benchmarks, branchenspezifische Studien, Förderprogramm-Verfügbarkeit), füge einen kurzen Absatz ein: <p><strong>Wichtig:</strong> Diese Einordnung ist belastbar in der Richtung, aber einzelne Markt- oder Wettbewerbsdetails können je nach Region, Segment und Aktualität abweichen.</p> Nutze diesen Hinweis nur dort, wo tatsächlich Unsicherheit besteht — nicht pauschal in jeder Section.
+
+ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section, vor dem Quellenblock (falls vorhanden), genau einen kurzen Absatz ein: <p><strong>Annahmen:</strong> [1-3 zentrale fachliche Annahmen, auf denen die Einordnung dieser Section beruht]</p> Regeln: - Nur fachliche Annahmen, keine Meta-Hinweise zu Quellen, Prompting oder Datenlage. - Maximal 2-3 Sätze. - Beispiel: "Annahmen: Stabiles Marktumfeld in den nächsten 12 Monaten; aktuelle Teamgröße bleibt bestehen; keine regulatorischen Verschärfungen über den EU AI Act hinaus."
 <!-- /SPRINT 2 -->
 
 <section class="section unternehmensprofil-markt">
