@@ -89,6 +89,8 @@ UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabe
 
 SZENARIO-DENKEN (LEICHTGEWICHTIG, VERBINDLICH): Wo relevant, formuliere Maßnahmen so, dass ein konservativer und ein ambitionierter Pfad mitgedacht wird. Nutze dafür kurze Formulierungen im Fließtext wie: - „Minimal sinnvoll ist ..." - „Der belastbare Startpunkt ist ..." - „Bei höherer Umsetzungsreife ist als nächster Ausbau sinnvoll ..." Keine neue Tabelle und keine zusätzlichen HTML-Blöcke erzeugen.
 
+SZENARIO-SPALTE (PFLICHT IN ROADMAP-TABELLEN): Erweitere Roadmap- und Priorisierungstabellen um eine kompakte Spalte „Pfad" mit genau einem der drei Werte: - „Minimal" — der sichere Einstieg, geringster Aufwand - „Standard" — die empfohlene Umsetzung bei normalem Verlauf - „Ausbau" — der ambitionierte Pfad bei hoher Umsetzungsreife Ordne jede Maßnahme genau einem Pfad zu. Keine neuen Rechenmodelle, keine neuen Zahlen — nur eine Einordnung.
+
 BEGRIFFSKONSISTENZ (VERBINDLICH — OPT-A7):
 Verwende diese Begriffe einheitlich im gesamten Report:
 - „KI-Governance" = Oberbegriff für Regeln, Rollen, Freigaben rund um KI-Nutzung. „KI-Richtlinie" = das konkrete Dokument.
