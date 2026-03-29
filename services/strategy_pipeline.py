@@ -783,6 +783,12 @@ async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
                 logger.info("[Strategy %d] email_sent=True committed", briefing_id)
             except Exception as mail_exc:
                 logger.error("[Strategy %d] Email sending failed: %s", briefing_id, mail_exc, exc_info=True)
+
+            # Fire-and-forget: Admin briefing email with questionnaire data
+            try:
+                _send_admin_briefing_email(briefing_id, db_session)
+            except Exception as admin_exc:
+                logger.error("[Strategy %d] Admin briefing email failed: %s", briefing_id, admin_exc, exc_info=True)
         else:
             logger.warning("[Strategy %d] PDF service returned no bytes", briefing_id)
 
@@ -868,6 +874,94 @@ def _send_strategy_email(briefing_id: int, pdf_bytes: bytes, db_session: Any) ->
                 logger.info("[%s] Admin email sent to %s", run_tag, _mask_email(addr))
             else:
                 logger.warning("[%s] Admin email failed for %s: %s", run_tag, _mask_email(addr), err)
+
+
+# =============================================================================
+# ADMIN BRIEFING EMAIL (Fragebogen-Daten)
+# =============================================================================
+
+def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
+    """Send admin email with all questionnaire data (R1 + Strategy) after strategy generation.
+
+    Fire-and-forget: errors are logged but never propagated.
+    """
+    import os
+    import time as _time
+
+    run_tag = f"ADMIN-BRIEFING-{briefing_id}"
+    logger.info("[%s] _send_admin_briefing_email called", run_tag)
+
+    if os.getenv("DISABLE_EMAILS", "").lower() in ("1", "true", "yes", "on"):
+        logger.info("[%s] Emails disabled via DISABLE_EMAILS. Skipping.", run_tag)
+        return
+
+    try:
+        from gpt_analyze import _send_email_via_resend, _mask_email
+        from services.email_templates import render_admin_briefing_email
+        from models import Briefing, StrategyQuestion, Analysis
+        logger.info("[%s] Imports OK", run_tag)
+    except ImportError as exc:
+        logger.error("[%s] Import FAILED, skipping: %s", run_tag, exc)
+        return
+
+    # --- Load briefing ---
+    briefing = db_session.query(Briefing).filter(Briefing.id == briefing_id).first()
+    if not briefing:
+        logger.warning("[%s] Briefing not found, skipping.", run_tag)
+        return
+
+    r1_answers: dict = briefing.answers or {}
+
+    # --- Load strategy questions ---
+    sq = db_session.query(StrategyQuestion).filter(
+        StrategyQuestion.briefing_id == briefing_id
+    ).first()
+    strategy_answers: dict = sq.to_dict() if sq else {}
+
+    # --- Load meta data from Analysis (Report 1) ---
+    analysis = db_session.query(Analysis).filter(
+        Analysis.briefing_id == briefing_id
+    ).first()
+    analysis_meta = analysis.meta if analysis else {}
+    scores = analysis_meta.get("scores", {}) if isinstance(analysis_meta, dict) else {}
+
+    # Derive segment label
+    size_raw = r1_answers.get("unternehmensgroesse", "")
+    segment_map = {"solo": "Solo", "team": "Team", "kmu": "KMU"}
+    segment = segment_map.get(str(size_raw).lower(), str(size_raw))
+
+    # Derive branche label (prefer enriched label)
+    branche = r1_answers.get("BRANCHE_LABEL") or r1_answers.get("branche", "\u2014")
+    region = r1_answers.get("BUNDESLAND_LABEL") or r1_answers.get("bundesland", "\u2014")
+    score = scores.get("overall", "\u2014")
+
+    meta = {
+        "segment": segment,
+        "branche": branche,
+        "region": region,
+        "score": score,
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+    }
+
+    # --- Build subject ---
+    subject = f"[KIS-Admin] Briefing #{briefing_id} \u2014 {branche} / {segment} / {region}"
+
+    # --- Render HTML ---
+    html_body = render_admin_briefing_email(
+        briefing_id=briefing_id,
+        meta=meta,
+        r1_answers=r1_answers,
+        strategy_answers=strategy_answers,
+    )
+
+    # --- Send ---
+    admin_addr = "bewertung@ki-sicherheit.jetzt"
+    _time.sleep(0.6)  # Resend rate limit
+    ok, err = _send_email_via_resend(admin_addr, subject, html_body)
+    if ok:
+        logger.info("[%s] Admin briefing email sent to %s", run_tag, _mask_email(admin_addr))
+    else:
+        logger.warning("[%s] Admin briefing email failed: %s", run_tag, err)
 
 
 # =============================================================================
