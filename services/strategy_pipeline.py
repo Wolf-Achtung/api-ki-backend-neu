@@ -926,14 +926,40 @@ def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
     scores = analysis_meta.get("scores", {}) if isinstance(analysis_meta, dict) else {}
 
     # Derive segment label
-    size_raw = r1_answers.get("unternehmensgroesse", "")
-    segment_map = {"solo": "Solo", "team": "Team", "kmu": "KMU"}
-    segment = segment_map.get(str(size_raw).lower(), str(size_raw))
+    from services.answers_normalizer import (
+        BRANCHEN_LABELS, BUNDESLAENDER_LABELS, UNTERNEHMENSGROESSEN_LABELS,
+    )
+    from utils.report_display_id import get_report_display_id
 
-    # Derive branche label (prefer enriched label)
-    branche = r1_answers.get("BRANCHE_LABEL") or r1_answers.get("branche", "\u2014")
-    region = r1_answers.get("BUNDESLAND_LABEL") or r1_answers.get("bundesland", "\u2014")
+    size_raw = r1_answers.get("unternehmensgroesse", "")
+    segment = UNTERNEHMENSGROESSEN_LABELS.get(
+        str(size_raw).lower(),
+        str(size_raw) if size_raw else "\u2014",
+    )
+
+    # Derive branche label (prefer enriched label, then resolve raw key)
+    branche_raw = r1_answers.get("branche", "")
+    branche = (
+        r1_answers.get("BRANCHE_LABEL")
+        or BRANCHEN_LABELS.get(str(branche_raw).lower(), str(branche_raw) if branche_raw else "\u2014")
+    )
+
+    # Derive region label (prefer enriched label, then resolve raw key)
+    bundesland_raw = r1_answers.get("bundesland", "")
+    region = (
+        r1_answers.get("BUNDESLAND_LABEL")
+        or BUNDESLAENDER_LABELS.get(str(bundesland_raw).lower(), str(bundesland_raw) if bundesland_raw else "\u2014")
+    )
+
+    # Country label (show when not DE)
+    country_raw = r1_answers.get("country", r1_answers.get("land", ""))
+    country_labels = {"AT": "Österreich", "CH": "Schweiz", "GB": "Vereinigtes Königreich"}
+    country_label = country_labels.get(str(country_raw).upper(), "")
+    if country_label:
+        region = f"{region} / {country_label}" if region and region != "\u2014" else country_label
+
     score = scores.get("overall", "\u2014")
+    kis_number = get_report_display_id(briefing_id)
 
     meta = {
         "segment": segment,
@@ -941,10 +967,11 @@ def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
         "region": region,
         "score": score,
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+        "kis_number": kis_number,
     }
 
     # --- Build subject ---
-    subject = f"[KIS-Admin] Briefing #{briefing_id} \u2014 {branche} / {segment} / {region}"
+    subject = f"[KIS-Admin] Briefing #{briefing_id} / {kis_number} \u2014 {branche} / {segment} / {region}"
 
     # --- Render HTML ---
     html_body = render_admin_briefing_email(

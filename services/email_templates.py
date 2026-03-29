@@ -346,10 +346,14 @@ def render_admin_briefing_email(
     region = escape(str(meta.get("region", "\u2014")))
     score = escape(str(meta.get("score", "\u2014")))
     timestamp = escape(str(meta.get("timestamp", "\u2014")))
+    kis_number = escape(str(meta.get("kis_number", "")))
+
+    kis_line = f'<p style="margin:4px 0"><strong>KIS-Nummer:</strong> {kis_number}</p>' if kis_number else ""
 
     meta_html = (
         '<div style="background:#f0f4ff;border-radius:8px;padding:12px 16px;margin-bottom:16px">'
         f'<p style="margin:4px 0"><strong>Briefing-ID:</strong> #{briefing_id}</p>'
+        f'{kis_line}'
         f'<p style="margin:4px 0"><strong>Segment:</strong> {segment}</p>'
         f'<p style="margin:4px 0"><strong>Branche:</strong> {branche}</p>'
         f'<p style="margin:4px 0"><strong>Region:</strong> {region}</p>'
