@@ -431,6 +431,7 @@ def calculate_relevance_score(
     ai_act_risk: str,
     roi: float,
     budget: str = "",
+    country: str = "",
 ) -> float:
     """
     Calculate relevance score for a funding program.
@@ -441,7 +442,13 @@ def calculate_relevance_score(
     Returns score from 0.0 to 1.0, or -1.0 to signal "filter out".
     """
     user_region = _resolve_user_region(region)
-    user_country = user_region["country"]
+    # If explicit country parameter provided, it takes precedence over
+    # the country derived from region (fixes CH/AT/GB being ignored when
+    # region is also provided, e.g. country=CH&region=be).
+    if country and country.upper() in ("DE", "AT", "CH", "GB"):
+        user_country = country.upper()
+    else:
+        user_country = user_region["country"]
     user_bundesland = user_region["bundesland"]
 
     program_country = program.get("country_code", "DE")
@@ -456,9 +463,6 @@ def calculate_relevance_score(
     if program_country == "GB" and user_country != "GB":
         return -1.0
     if program_country == "DE" and user_country not in ("DE", "EU"):
-        return -1.0
-    # EU programs: not for CH or GB (not EU members)
-    if program_country == "EU" and user_country in ("CH", "GB"):
         return -1.0
 
     # --- SEGMENT MATCH (required) ---
@@ -488,6 +492,10 @@ def calculate_relevance_score(
         # EU program — baseline, no boost
         score *= 1.0
     elif program_country == "AT" and user_country == "AT":
+        score *= 1.5
+    elif program_country == "CH" and user_country == "CH":
+        score *= 1.5
+    elif program_country == "GB" and user_country == "GB":
         score *= 1.5
     elif user_bundesland and user_bundesland not in program_regions and len(program_regions) > 1:
         # Regional program but NOT for user's Bundesland → penalize
@@ -610,6 +618,7 @@ def recommend_funding(
     lang: str = "de",
     limit: int = 5,
     budget: str = "",
+    country: str = "",
 ) -> List[FundingRecommendation]:
     """
     Get personalized funding recommendations.
@@ -639,7 +648,8 @@ def recommend_funding(
     for program in programs:
         # Calculate relevance (returns -1.0 for filtered-out programs)
         score = calculate_relevance_score(
-            program, branch, region, size, maturity, ai_act_risk, roi, budget
+            program, branch, region, size, maturity, ai_act_risk, roi, budget,
+            country=country,
         )
 
         if score < 0.0:  # Filtered out by country/segment

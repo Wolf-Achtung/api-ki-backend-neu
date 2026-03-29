@@ -55,11 +55,9 @@ async def recommend_funding(
     try:
         from services.funding_recommender import recommend_funding as get_recommendations
 
-        # Resolve aliases: bundesland → region, segment → size, country → region
+        # Resolve aliases: bundesland → region, segment → size
         if bundesland and (not region or region == "DE"):
             region = bundesland
-        if country and (not region or region == "DE") and not bundesland:
-            region = country
         if segment and (not size or size == "team"):
             size = segment
 
@@ -92,6 +90,7 @@ async def recommend_funding(
             lang=lang,
             limit=limit,
             budget=budget or "",
+            country=country or "",
         )
 
         return {
@@ -101,6 +100,7 @@ async def recommend_funding(
             "parameters": {
                 "branch": branch,
                 "region": region,
+                "country": country,
                 "size": size_norm,
                 "ai_act_risk": ai_act_risk,
             },
