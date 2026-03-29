@@ -220,8 +220,18 @@ async def generate_strategy_report(
             except Exception:
                 pass
 
+        # Country code for country-aware prompts (S7 funding, S8 compliance)
+        _country_raw = (
+            briefing_data.get("country", "")
+            or briefing_data.get("land", "")
+            or ""
+        )
+        _country_code = str(_country_raw).strip().upper() if _country_raw else "DE"
+        if _country_code not in ("DE", "AT", "CH", "GB"):
+            _country_code = "DE"
+
         # FIX-A3/A2: Canonical BAFA values based on Bundesland
-        _bl_label = _bundesland_label(briefing_data.get("bundesland", ""))
+        _bl_label = _bundesland_label(briefing_data.get("bundesland", ""), country=_country_code)
         try:
             from config.bafa import get_bafa_foerderquote, get_bafa_foerderung_max_display
             _bafa_quote = get_bafa_foerderquote(_bl_label)
@@ -256,12 +266,22 @@ async def generate_strategy_report(
         _vendor_audit_green = str(_r1_sections.get("VENDOR_AUDIT_GREEN", 0) or 0)
         _vendor_audit_status = str(_r1_sections.get("VENDOR_AUDIT_STATUS", "") or "")
 
+        _COUNTRY_NAME_MAP = {
+            "DE": "Deutschland",
+            "AT": "Österreich",
+            "CH": "Schweiz",
+            "GB": "Vereinigtes Königreich",
+        }
+        _country_name = _COUNTRY_NAME_MAP.get(_country_code, "Deutschland")
+
         base_context = {
             "branche": (briefing_data.get("branche", "") or "").title(),
             "hauptleistung": _hauptleistung,
             "segment": _segment_label(briefing_data.get("unternehmensgroesse", "")),
             "mitarbeiter": briefing_data.get("mitarbeiter", ""),
             "bundesland": _bl_label,
+            "country": _country_code,
+            "country_name": _country_name,
             "firmenname": briefing_data.get("unternehmen_name", "Ihr Unternehmen"),
             # FIX-A3: Deterministic BAFA values for S7
             "bafa_foerderquote": str(_bafa_quote),
@@ -341,11 +361,43 @@ async def generate_strategy_report(
             "s5_budget_summary": _extract_summary(sections["S5"]),
         })
 
+        # --- S7: Inject verified funding data from recommend engine ---
+        _funding_data_block = ""
+        try:
+            from services.funding_recommender import recommend_funding as _get_funding
+            _funding_recs = _get_funding(
+                branch=briefing_data.get("branche", ""),
+                region=briefing_data.get("bundesland", "DE"),
+                size=briefing_data.get("unternehmensgroesse", "team"),
+                country=_country_code,
+                lang="de",
+                limit=5,
+            )
+            if _funding_recs:
+                _lines = []
+                for _fr in _funding_recs:
+                    _lines.append(
+                        f"- {_fr.name} (Träger: {_fr.provider})\n"
+                        f"  Max. Förderung: {_fr.max_funding}\n"
+                        f"  Förderquote: {_fr.funding_rate}\n"
+                        f"  KI-Relevanz: {_fr.ki_relevance}\n"
+                        f"  URL: {_fr.url or 'k.A.'}\n"
+                        f"  Kurzbeschreibung: {_fr.summary_de or _fr.summary_en or 'k.A.'}"
+                    )
+                _funding_data_block = "\n\n".join(_lines)
+                logger.info(
+                    "[Strategy %d] S7 funding injection: %d programs for country=%s",
+                    briefing_id, len(_funding_recs), _country_code,
+                )
+        except Exception as _fe:
+            logger.warning("[Strategy %d] Funding injection failed: %s", briefing_id, _fe)
+
         # S7 + S8 parallel
         s7_task = _generate_section("S7", base_context, {
             "foerder_matches": str(report1_data.get("foerder_matches", "")),
             "research_foerdermittel": research_context.get("foerdermittel", {}).get("results", ""),
             "research_foerdermittel_eu": research_context.get("foerdermittel_eu", {}).get("results", ""),
+            "funding_endpoint_data": _funding_data_block,
         })
         s8_task = _generate_section("S8", base_context, {
             "risiko_score": str(report1_data.get("risiko_score", "")),
@@ -611,18 +663,10 @@ async def _call_anthropic(prompt: str, system_prompt: str, section: str, max_tok
 # HELPER FUNCTIONS
 # =============================================================================
 
-def _bundesland_label(raw: str) -> str:
-    """Map raw bundesland code to readable label for prompts."""
-    _map = {
-        "bw": "Baden-Württemberg", "by": "Bayern", "be": "Berlin",
-        "bb": "Brandenburg", "hb": "Bremen", "hh": "Hamburg",
-        "he": "Hessen", "mv": "Mecklenburg-Vorpommern", "ni": "Niedersachsen",
-        "nw": "Nordrhein-Westfalen", "rp": "Rheinland-Pfalz", "sl": "Saarland",
-        "sn": "Sachsen", "st": "Sachsen-Anhalt", "sh": "Schleswig-Holstein",
-        "th": "Thüringen",
-    }
-    key = str(raw or "").strip().lower()
-    return _map.get(key, str(raw or ""))
+def _bundesland_label(raw: str, country: str = "DE") -> str:
+    """Map raw bundesland/region code to readable label for prompts (country-aware)."""
+    from services.answers_normalizer import get_region_label
+    return get_region_label(raw, country=country) or str(raw or "")
 
 
 def _segment_label(raw: str) -> str:
@@ -927,14 +971,17 @@ def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
 
     # Derive segment label
     from services.answers_normalizer import (
-        BRANCHEN_LABELS, BUNDESLAENDER_LABELS, UNTERNEHMENSGROESSEN_LABELS,
+        BRANCHEN_LABELS, UNTERNEHMENSGROESSEN_LABELS,
+        UNTERNEHMENSGROESSE_MAP, get_region_label,
     )
     from utils.report_display_id import get_report_display_id
 
-    size_raw = r1_answers.get("unternehmensgroesse", "")
+    size_raw = str(r1_answers.get("unternehmensgroesse", "") or "").strip().lower()
+    # Normalize raw questionnaire values (e.g. "1" → "solo") before label lookup
+    size_normalized = UNTERNEHMENSGROESSE_MAP.get(size_raw, size_raw)
     segment = UNTERNEHMENSGROESSEN_LABELS.get(
-        str(size_raw).lower(),
-        str(size_raw) if size_raw else "\u2014",
+        size_normalized,
+        size_normalized if size_normalized else "\u2014",
     )
 
     # Derive branche label (prefer enriched label, then resolve raw key)
@@ -944,17 +991,22 @@ def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
         or BRANCHEN_LABELS.get(str(branche_raw).lower(), str(branche_raw) if branche_raw else "\u2014")
     )
 
-    # Derive region label (prefer enriched label, then resolve raw key)
+    # Derive region label (country-aware: CH→Kantone, AT→Bundesländer, GB→Regions)
+    country_raw = r1_answers.get("country", r1_answers.get("land", ""))
+    country_code = str(country_raw).strip().upper() if country_raw else "DE"
+    if country_code not in ("DE", "AT", "CH", "GB"):
+        country_code = "DE"
+
     bundesland_raw = r1_answers.get("bundesland", "")
     region = (
         r1_answers.get("BUNDESLAND_LABEL")
-        or BUNDESLAENDER_LABELS.get(str(bundesland_raw).lower(), str(bundesland_raw) if bundesland_raw else "\u2014")
+        or get_region_label(bundesland_raw, country=country_code)
+        or "\u2014"
     )
 
     # Country label (show when not DE)
-    country_raw = r1_answers.get("country", r1_answers.get("land", ""))
     country_labels = {"AT": "Österreich", "CH": "Schweiz", "GB": "Vereinigtes Königreich"}
-    country_label = country_labels.get(str(country_raw).upper(), "")
+    country_label = country_labels.get(country_code, "")
     if country_label:
         region = f"{region} / {country_label}" if region and region != "\u2014" else country_label
 

@@ -561,19 +561,23 @@ UNTERNEHMENSDATEN:
 - Firmenname: {firmenname}
 - Branche: {branche}
 - Segment: {segment}
-- Bundesland: {bundesland}
+- Land: {country_name} ({country})
+- Region: {bundesland}
 - Förderinteresse: {s6_foerderinteresse}
 - Budget: {s1_budget}
 
+VERIFIZIERTE FÖRDERPROGRAMME (aus Datenbank — verwende AUSSCHLIESSLICH diese Programme):
+{funding_endpoint_data}
+
+KRITISCH: Verwende NUR die oben aufgelisteten Programme. Erfinde KEINE weiteren Programme.
+Wenn keine Programme aufgelistet sind, weise darauf hin, dass aktuell keine passenden Programme identifiziert wurden.
+
+ERGÄNZENDE RECHERCHE (nur als Zusatzinfo, NICHT als Programmquelle verwenden):
+{research_foerdermittel}
+{research_foerdermittel_eu}
+
 AUS REPORT 1:
 {foerder_matches}
-
-LIVE-RECHERCHE:
---- Deutsche Förderprogramme ---
-{research_foerdermittel}
-
---- EU-Förderprogramme ---
-{research_foerdermittel_eu}
 
 UMGANG MIT LÜCKENHAFTEN EINGABEN: Wenn ein Input fehlt oder unkonkret ist: - nichts erfinden, - die Aussage auf den belastbaren Kern reduzieren, - und nur den Teil formulieren, der fachlich tragfähig bleibt. Nutze keine Meta-Sätze über fehlende Datenquellen. Lieber präzise knapp als breit spekulativ.
 
@@ -582,25 +586,27 @@ ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile
 CONFIDENCE-HINWEIS (BEI BEDARF): Wo Datenlage oder Marktvergleich erkennbar unsicher ist (z.B. regionale Benchmarks, branchenspezifische Studien, Förderprogramm-Verfügbarkeit), füge einen kurzen Absatz ein: <p><strong>Wichtig:</strong> Diese Einordnung ist belastbar in der Richtung, aber einzelne Markt- oder Wettbewerbsdetails können je nach Region, Segment und Aktualität abweichen.</p> Nutze diesen Hinweis nur dort, wo tatsächlich Unsicherheit besteht — nicht pauschal in jeder Section.
 
 AUFGABE:
-1. Identifiziere die 3-5 relevantesten Förderprogramme für {firmenname}.
+1. Beschreibe die 3-5 relevantesten Förderprogramme aus der VERIFIZIERTEN LISTE oben für {firmenname}.
 2. Für jedes Programm:
-   a) Name und Träger
-   b) Förderhöhe (min/max)
-   c) Förderquote (%)
+   a) Name und Träger (EXAKT wie in der verifizierten Liste)
+   b) Förderhöhe (EXAKT wie in der verifizierten Liste)
+   c) Förderquote (EXAKT wie in der verifizierten Liste)
    d) Antragsfrist (falls bekannt)
    e) Passung für {firmenname} (hoch/mittel/niedrig)
-   f) Link/Kontakt
+   f) Link/Kontakt (EXAKT wie in der verifizierten Liste)
 3. Zeige die Einzelprogramme mit jeweiligem Förderbetrag. Berechne KEINE programmübergreifende Gesamtsumme — Programme sind nicht kumulierbar und eine addierte Summe wäre irreführend.
 4. Gib eine Handlungsempfehlung: Welches Programm zuerst beantragen?
-5. Berücksichtige das Bundesland: {bundesland} (landesspezifische Programme).
+5. Berücksichtige das Land ({country_name}) und die Region ({bundesland}).
 
-REGEL REGIONALE FÖRDERPROGRAMME:
-- Nenne IMMER mindestens ein regionales/landesspezifisches Förderprogramm neben den bundesweiten Programmen (BAFA, ZIM, go-digital etc.).
-- Wenn das Bundesland "{bundesland}" bekannt ist, priorisiere Programme dieses Bundeslandes (z.B. IBB Berlin, BayTOU Bayern, NRW.BANK Digitalisierung, L-Bank Baden-Württemberg, IFB Hamburg).
-- Regionale Programme sind oft leichter zugänglich und haben kürzere Bewilligungszeiten — weise darauf hin.
-- Nenne NUR Förderprogramme, die in den Recherche-Ergebnissen belegt sind. Erfinde KEINE Programme.
+LÄNDER-REGEL (KRITISCH):
+- Land des Unternehmens: {country_name} ({country})
+- Empfehle NUR Programme, die im Land "{country}" verfügbar sind.
+- Für CH: Schweizer Programme (z.B. Innosuisse) + EU-Programme. NIEMALS BAFA, ZIM, Mittelstand-Digital oder andere DE-Programme.
+- Für AT: Österreichische Programme (z.B. aws, FFG) + EU-Programme. NIEMALS BAFA oder andere DE-Programme.
+- Für GB: UK-Programme (z.B. Innovate UK) + EU-Programme. NIEMALS BAFA oder andere DE-Programme.
+- Für DE: Deutsche Programme (BAFA, ZIM, Landesförderung) + EU-Programme.
 
-DETERMINISTISCHE BAFA-DATEN (verwende EXAKT diese Werte, KEINE eigenen Schätzungen):
+DETERMINISTISCHE BAFA-DATEN (NUR verwenden wenn Land = DE):
 - Programm: BAFA "Förderung von Unternehmensberatungen für KMU"
 - Max. förderfähige Beratungskosten: 3.500 € pro Beratung
 - Förderquote für Bundesland {bundesland}: {bafa_foerderquote}%
@@ -608,6 +614,7 @@ DETERMINISTISCHE BAFA-DATEN (verwende EXAKT diese Werte, KEINE eigenen Schätzun
 - Geltungsdauer: bis 31.12.2026
 - Max. 5 Beratungen pro Unternehmen, max. 2 pro Jahr
 - WICHTIG: Verwende für BAFA NUR diese Werte. Erfinde KEINE anderen BAFA-Beträge.
+- WICHTIG: BAFA ist ein DEUTSCHES Programm — NICHT für CH, AT oder GB empfehlen.
 
 FEHLENDE DATEN:
 - Wenn eine Information (Förderquote, Antragsfrist, Förderhöhe) nicht bekannt ist, schreibe "Auf Anfrage" oder "Aktuell prüfen".
@@ -625,7 +632,15 @@ UNTERNEHMENSDATEN:
 - Firmenname: {firmenname}
 - Branche: {branche}
 - Segment: {segment}
+- Land: {country_name} ({country})
 - Datenschutz-Anforderung: {s10_datenschutz}
+
+DATENSCHUTZ-KONTEXT NACH LAND (KRITISCH — verwende das korrekte Regelwerk):
+- DE: DSGVO (primär), BDSG (ergänzend)
+- CH: nDSG (revidiertes Schweizer Datenschutzgesetz, in Kraft seit 01.09.2023) — primär für Schweizer Unternehmen. DSGVO zusätzlich relevant bei Verarbeitung von EU-Personendaten.
+- AT: DSGVO (primär), DSG (österreichische Ergänzung)
+- GB: UK GDPR, Data Protection Act 2018
+Das Unternehmen sitzt in {country_name} — verwende das entsprechende Datenschutzregime als primäre Referenz.
 
 AUS REPORT 1:
 - Risiko-Score: {risiko_score}
@@ -650,13 +665,13 @@ AUFGABE:
 2. Identifiziere die Top-5 Risiken der KI-Strategie:
    a) Technische Risiken (z.B. Vendor Lock-in, Datenqualität)
    b) Organisatorische Risiken (z.B. Change Management, Know-how)
-   c) Regulatorische Risiken (z.B. EU AI Act, DSGVO)
+   c) Regulatorische Risiken (z.B. EU AI Act, Datenschutzgesetzgebung des Landes {country_name})
    d) Finanzielle Risiken (z.B. ROI-Verfehlung, versteckte Kosten)
 3. Für jedes Risiko: Mitigationsstrategie mit konkreten Maßnahmen.
 4. EU AI Act Compliance:
    - Welche der empfohlenen Tools fallen unter den AI Act?
    - Welche Risikoklasse? Welche Pflichten?
-5. DSGVO-Checkliste für die KI-Implementierung.
+5. Datenschutz-Checkliste für die KI-Implementierung (basierend auf dem Datenschutzregime von {country_name} — siehe DATENSCHUTZ-KONTEXT oben).
 
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
