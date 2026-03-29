@@ -561,19 +561,23 @@ UNTERNEHMENSDATEN:
 - Firmenname: {firmenname}
 - Branche: {branche}
 - Segment: {segment}
-- Bundesland: {bundesland}
+- Land: {country_name} ({country})
+- Region: {bundesland}
 - Förderinteresse: {s6_foerderinteresse}
 - Budget: {s1_budget}
 
+VERIFIZIERTE FÖRDERPROGRAMME (aus Datenbank — verwende AUSSCHLIESSLICH diese Programme):
+{funding_endpoint_data}
+
+KRITISCH: Verwende NUR die oben aufgelisteten Programme. Erfinde KEINE weiteren Programme.
+Wenn keine Programme aufgelistet sind, weise darauf hin, dass aktuell keine passenden Programme identifiziert wurden.
+
+ERGÄNZENDE RECHERCHE (nur als Zusatzinfo, NICHT als Programmquelle verwenden):
+{research_foerdermittel}
+{research_foerdermittel_eu}
+
 AUS REPORT 1:
 {foerder_matches}
-
-LIVE-RECHERCHE:
---- Deutsche Förderprogramme ---
-{research_foerdermittel}
-
---- EU-Förderprogramme ---
-{research_foerdermittel_eu}
 
 UMGANG MIT LÜCKENHAFTEN EINGABEN: Wenn ein Input fehlt oder unkonkret ist: - nichts erfinden, - die Aussage auf den belastbaren Kern reduzieren, - und nur den Teil formulieren, der fachlich tragfähig bleibt. Nutze keine Meta-Sätze über fehlende Datenquellen. Lieber präzise knapp als breit spekulativ.
 
@@ -582,25 +586,27 @@ ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile
 CONFIDENCE-HINWEIS (BEI BEDARF): Wo Datenlage oder Marktvergleich erkennbar unsicher ist (z.B. regionale Benchmarks, branchenspezifische Studien, Förderprogramm-Verfügbarkeit), füge einen kurzen Absatz ein: <p><strong>Wichtig:</strong> Diese Einordnung ist belastbar in der Richtung, aber einzelne Markt- oder Wettbewerbsdetails können je nach Region, Segment und Aktualität abweichen.</p> Nutze diesen Hinweis nur dort, wo tatsächlich Unsicherheit besteht — nicht pauschal in jeder Section.
 
 AUFGABE:
-1. Identifiziere die 3-5 relevantesten Förderprogramme für {firmenname}.
+1. Beschreibe die 3-5 relevantesten Förderprogramme aus der VERIFIZIERTEN LISTE oben für {firmenname}.
 2. Für jedes Programm:
-   a) Name und Träger
-   b) Förderhöhe (min/max)
-   c) Förderquote (%)
+   a) Name und Träger (EXAKT wie in der verifizierten Liste)
+   b) Förderhöhe (EXAKT wie in der verifizierten Liste)
+   c) Förderquote (EXAKT wie in der verifizierten Liste)
    d) Antragsfrist (falls bekannt)
    e) Passung für {firmenname} (hoch/mittel/niedrig)
-   f) Link/Kontakt
+   f) Link/Kontakt (EXAKT wie in der verifizierten Liste)
 3. Zeige die Einzelprogramme mit jeweiligem Förderbetrag. Berechne KEINE programmübergreifende Gesamtsumme — Programme sind nicht kumulierbar und eine addierte Summe wäre irreführend.
 4. Gib eine Handlungsempfehlung: Welches Programm zuerst beantragen?
-5. Berücksichtige das Bundesland: {bundesland} (landesspezifische Programme).
+5. Berücksichtige das Land ({country_name}) und die Region ({bundesland}).
 
-REGEL REGIONALE FÖRDERPROGRAMME:
-- Nenne IMMER mindestens ein regionales/landesspezifisches Förderprogramm neben den bundesweiten Programmen (BAFA, ZIM, go-digital etc.).
-- Wenn das Bundesland "{bundesland}" bekannt ist, priorisiere Programme dieses Bundeslandes (z.B. IBB Berlin, BayTOU Bayern, NRW.BANK Digitalisierung, L-Bank Baden-Württemberg, IFB Hamburg).
-- Regionale Programme sind oft leichter zugänglich und haben kürzere Bewilligungszeiten — weise darauf hin.
-- Nenne NUR Förderprogramme, die in den Recherche-Ergebnissen belegt sind. Erfinde KEINE Programme.
+LÄNDER-REGEL (KRITISCH):
+- Land des Unternehmens: {country_name} ({country})
+- Empfehle NUR Programme, die im Land "{country}" verfügbar sind.
+- Für CH: Schweizer Programme (z.B. Innosuisse) + EU-Programme. NIEMALS BAFA, ZIM, Mittelstand-Digital oder andere DE-Programme.
+- Für AT: Österreichische Programme (z.B. aws, FFG) + EU-Programme. NIEMALS BAFA oder andere DE-Programme.
+- Für GB: UK-Programme (z.B. Innovate UK) + EU-Programme. NIEMALS BAFA oder andere DE-Programme.
+- Für DE: Deutsche Programme (BAFA, ZIM, Landesförderung) + EU-Programme.
 
-DETERMINISTISCHE BAFA-DATEN (verwende EXAKT diese Werte, KEINE eigenen Schätzungen):
+DETERMINISTISCHE BAFA-DATEN (NUR verwenden wenn Land = DE):
 - Programm: BAFA "Förderung von Unternehmensberatungen für KMU"
 - Max. förderfähige Beratungskosten: 3.500 € pro Beratung
 - Förderquote für Bundesland {bundesland}: {bafa_foerderquote}%
@@ -608,6 +614,7 @@ DETERMINISTISCHE BAFA-DATEN (verwende EXAKT diese Werte, KEINE eigenen Schätzun
 - Geltungsdauer: bis 31.12.2026
 - Max. 5 Beratungen pro Unternehmen, max. 2 pro Jahr
 - WICHTIG: Verwende für BAFA NUR diese Werte. Erfinde KEINE anderen BAFA-Beträge.
+- WICHTIG: BAFA ist ein DEUTSCHES Programm — NICHT für CH, AT oder GB empfehlen.
 
 FEHLENDE DATEN:
 - Wenn eine Information (Förderquote, Antragsfrist, Förderhöhe) nicht bekannt ist, schreibe "Auf Anfrage" oder "Aktuell prüfen".

@@ -256,12 +256,32 @@ async def generate_strategy_report(
         _vendor_audit_green = str(_r1_sections.get("VENDOR_AUDIT_GREEN", 0) or 0)
         _vendor_audit_status = str(_r1_sections.get("VENDOR_AUDIT_STATUS", "") or "")
 
+        # Country code for country-aware prompts (S7 funding, S8 compliance)
+        _country_raw = (
+            briefing_data.get("country", "")
+            or briefing_data.get("land", "")
+            or ""
+        )
+        _country_code = str(_country_raw).strip().upper() if _country_raw else "DE"
+        if _country_code not in ("DE", "AT", "CH", "GB"):
+            _country_code = "DE"
+
+        _COUNTRY_NAME_MAP = {
+            "DE": "Deutschland",
+            "AT": "Österreich",
+            "CH": "Schweiz",
+            "GB": "Vereinigtes Königreich",
+        }
+        _country_name = _COUNTRY_NAME_MAP.get(_country_code, "Deutschland")
+
         base_context = {
             "branche": (briefing_data.get("branche", "") or "").title(),
             "hauptleistung": _hauptleistung,
             "segment": _segment_label(briefing_data.get("unternehmensgroesse", "")),
             "mitarbeiter": briefing_data.get("mitarbeiter", ""),
             "bundesland": _bl_label,
+            "country": _country_code,
+            "country_name": _country_name,
             "firmenname": briefing_data.get("unternehmen_name", "Ihr Unternehmen"),
             # FIX-A3: Deterministic BAFA values for S7
             "bafa_foerderquote": str(_bafa_quote),
@@ -341,11 +361,43 @@ async def generate_strategy_report(
             "s5_budget_summary": _extract_summary(sections["S5"]),
         })
 
+        # --- S7: Inject verified funding data from recommend engine ---
+        _funding_data_block = ""
+        try:
+            from services.funding_recommender import recommend_funding as _get_funding
+            _funding_recs = _get_funding(
+                branch=briefing_data.get("branche", ""),
+                region=briefing_data.get("bundesland", "DE"),
+                size=briefing_data.get("unternehmensgroesse", "team"),
+                country=_country_code,
+                lang="de",
+                limit=5,
+            )
+            if _funding_recs:
+                _lines = []
+                for _fr in _funding_recs:
+                    _lines.append(
+                        f"- {_fr.name} (Träger: {_fr.provider})\n"
+                        f"  Max. Förderung: {_fr.max_funding}\n"
+                        f"  Förderquote: {_fr.funding_rate}\n"
+                        f"  KI-Relevanz: {_fr.ki_relevance}\n"
+                        f"  URL: {_fr.url or 'k.A.'}\n"
+                        f"  Kurzbeschreibung: {_fr.summary_de or _fr.summary_en or 'k.A.'}"
+                    )
+                _funding_data_block = "\n\n".join(_lines)
+                logger.info(
+                    "[Strategy %d] S7 funding injection: %d programs for country=%s",
+                    briefing_id, len(_funding_recs), _country_code,
+                )
+        except Exception as _fe:
+            logger.warning("[Strategy %d] Funding injection failed: %s", briefing_id, _fe)
+
         # S7 + S8 parallel
         s7_task = _generate_section("S7", base_context, {
             "foerder_matches": str(report1_data.get("foerder_matches", "")),
             "research_foerdermittel": research_context.get("foerdermittel", {}).get("results", ""),
             "research_foerdermittel_eu": research_context.get("foerdermittel_eu", {}).get("results", ""),
+            "funding_endpoint_data": _funding_data_block,
         })
         s8_task = _generate_section("S8", base_context, {
             "risiko_score": str(report1_data.get("risiko_score", "")),
