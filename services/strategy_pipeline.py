@@ -980,13 +980,16 @@ def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
     # Derive segment label
     from services.answers_normalizer import (
         BRANCHEN_LABELS, BUNDESLAENDER_LABELS, UNTERNEHMENSGROESSEN_LABELS,
+        UNTERNEHMENSGROESSE_MAP,
     )
     from utils.report_display_id import get_report_display_id
 
-    size_raw = r1_answers.get("unternehmensgroesse", "")
+    size_raw = str(r1_answers.get("unternehmensgroesse", "") or "").strip().lower()
+    # Normalize raw questionnaire values (e.g. "1" → "solo") before label lookup
+    size_normalized = UNTERNEHMENSGROESSE_MAP.get(size_raw, size_raw)
     segment = UNTERNEHMENSGROESSEN_LABELS.get(
-        str(size_raw).lower(),
-        str(size_raw) if size_raw else "\u2014",
+        size_normalized,
+        size_normalized if size_normalized else "\u2014",
     )
 
     # Derive branche label (prefer enriched label, then resolve raw key)
