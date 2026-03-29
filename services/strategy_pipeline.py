@@ -220,8 +220,18 @@ async def generate_strategy_report(
             except Exception:
                 pass
 
+        # Country code for country-aware prompts (S7 funding, S8 compliance)
+        _country_raw = (
+            briefing_data.get("country", "")
+            or briefing_data.get("land", "")
+            or ""
+        )
+        _country_code = str(_country_raw).strip().upper() if _country_raw else "DE"
+        if _country_code not in ("DE", "AT", "CH", "GB"):
+            _country_code = "DE"
+
         # FIX-A3/A2: Canonical BAFA values based on Bundesland
-        _bl_label = _bundesland_label(briefing_data.get("bundesland", ""))
+        _bl_label = _bundesland_label(briefing_data.get("bundesland", ""), country=_country_code)
         try:
             from config.bafa import get_bafa_foerderquote, get_bafa_foerderung_max_display
             _bafa_quote = get_bafa_foerderquote(_bl_label)
@@ -255,16 +265,6 @@ async def generate_strategy_report(
         _vendor_audit_red = str(_r1_sections.get("VENDOR_AUDIT_RED", 0) or 0)
         _vendor_audit_green = str(_r1_sections.get("VENDOR_AUDIT_GREEN", 0) or 0)
         _vendor_audit_status = str(_r1_sections.get("VENDOR_AUDIT_STATUS", "") or "")
-
-        # Country code for country-aware prompts (S7 funding, S8 compliance)
-        _country_raw = (
-            briefing_data.get("country", "")
-            or briefing_data.get("land", "")
-            or ""
-        )
-        _country_code = str(_country_raw).strip().upper() if _country_raw else "DE"
-        if _country_code not in ("DE", "AT", "CH", "GB"):
-            _country_code = "DE"
 
         _COUNTRY_NAME_MAP = {
             "DE": "Deutschland",
@@ -663,18 +663,10 @@ async def _call_anthropic(prompt: str, system_prompt: str, section: str, max_tok
 # HELPER FUNCTIONS
 # =============================================================================
 
-def _bundesland_label(raw: str) -> str:
-    """Map raw bundesland code to readable label for prompts."""
-    _map = {
-        "bw": "Baden-Württemberg", "by": "Bayern", "be": "Berlin",
-        "bb": "Brandenburg", "hb": "Bremen", "hh": "Hamburg",
-        "he": "Hessen", "mv": "Mecklenburg-Vorpommern", "ni": "Niedersachsen",
-        "nw": "Nordrhein-Westfalen", "rp": "Rheinland-Pfalz", "sl": "Saarland",
-        "sn": "Sachsen", "st": "Sachsen-Anhalt", "sh": "Schleswig-Holstein",
-        "th": "Thüringen",
-    }
-    key = str(raw or "").strip().lower()
-    return _map.get(key, str(raw or ""))
+def _bundesland_label(raw: str, country: str = "DE") -> str:
+    """Map raw bundesland/region code to readable label for prompts (country-aware)."""
+    from services.answers_normalizer import get_region_label
+    return get_region_label(raw, country=country) or str(raw or "")
 
 
 def _segment_label(raw: str) -> str:
@@ -979,8 +971,8 @@ def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
 
     # Derive segment label
     from services.answers_normalizer import (
-        BRANCHEN_LABELS, BUNDESLAENDER_LABELS, UNTERNEHMENSGROESSEN_LABELS,
-        UNTERNEHMENSGROESSE_MAP,
+        BRANCHEN_LABELS, UNTERNEHMENSGROESSEN_LABELS,
+        UNTERNEHMENSGROESSE_MAP, get_region_label,
     )
     from utils.report_display_id import get_report_display_id
 
@@ -999,17 +991,22 @@ def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
         or BRANCHEN_LABELS.get(str(branche_raw).lower(), str(branche_raw) if branche_raw else "\u2014")
     )
 
-    # Derive region label (prefer enriched label, then resolve raw key)
+    # Derive region label (country-aware: CH→Kantone, AT→Bundesländer, GB→Regions)
+    country_raw = r1_answers.get("country", r1_answers.get("land", ""))
+    country_code = str(country_raw).strip().upper() if country_raw else "DE"
+    if country_code not in ("DE", "AT", "CH", "GB"):
+        country_code = "DE"
+
     bundesland_raw = r1_answers.get("bundesland", "")
     region = (
         r1_answers.get("BUNDESLAND_LABEL")
-        or BUNDESLAENDER_LABELS.get(str(bundesland_raw).lower(), str(bundesland_raw) if bundesland_raw else "\u2014")
+        or get_region_label(bundesland_raw, country=country_code)
+        or "\u2014"
     )
 
     # Country label (show when not DE)
-    country_raw = r1_answers.get("country", r1_answers.get("land", ""))
     country_labels = {"AT": "Österreich", "CH": "Schweiz", "GB": "Vereinigtes Königreich"}
-    country_label = country_labels.get(str(country_raw).upper(), "")
+    country_label = country_labels.get(country_code, "")
     if country_label:
         region = f"{region} / {country_label}" if region and region != "\u2014" else country_label
 
