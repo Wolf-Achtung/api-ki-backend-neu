@@ -2,7 +2,7 @@
 from __future__ import annotations
 """E‑Mail‑Templates (HTML) für den Report-Versand (UTF‑8, mobil‑tauglich)."""
 from html import escape
-from typing import Optional
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import quote
 
 
@@ -210,6 +210,210 @@ def render_strategy_email(recipient: str = "user") -> str:
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
         <p class="muted">Wolf Hohl \u2014 KI\u2011Sicherheit.jetzt</p>
         <p class="muted">Hinweis: Diese E\u2011Mail wurde automatisch erzeugt.</p>
+      </div>
+    </div>
+  </body>
+</html>"""
+
+
+# =============================================================================
+# ADMIN BRIEFING EMAIL (Fragebogen-Daten bei Strategy-Generierung)
+# =============================================================================
+
+# German labels for R1 questionnaire fields
+_R1_LABELS: Dict[str, str] = {
+    "branche": "Branche",
+    "unternehmensgroesse": "Unternehmensgröße",
+    "bundesland": "Bundesland",
+    "selbststaendig": "Selbstständig",
+    "hauptleistung": "Hauptleistung",
+    "jahresumsatz": "Jahresumsatz",
+    "zielgruppen": "Zielgruppen",
+    "it_infrastruktur": "IT-Infrastruktur",
+    "interne_ki_kompetenzen": "Interne KI-Kompetenzen",
+    "datenquellen": "Datenquellen",
+    "digitalisierungsgrad": "Digitalisierungsgrad",
+    "prozesse_papierlos": "Prozesse papierlos",
+    "automatisierungsgrad": "Automatisierungsgrad",
+    "ki_einsatz": "KI-Einsatz",
+    "ki_kompetenz": "KI-Kompetenz",
+    "ki_ziele": "KI-Ziele",
+    "ki_guardrails": "KI-Guardrails",
+    "ki_projekte": "KI-Projekte",
+    "anwendungsfaelle": "Anwendungsfälle",
+    "zeitersparnis_prioritaet": "Zeitersparnis-Priorität",
+    "pilot_bereich": "Pilot-Bereich",
+    "geschaeftsmodell_evolution": "Geschäftsmodell-Evolution",
+    "vision_3_jahre": "Vision (3 Jahre)",
+    "vision_prioritaet": "Vision-Priorität",
+    "strategische_ziele": "Strategische Ziele",
+    "massnahmen_komplexitaet": "Maßnahmen-Komplexität",
+    "roadmap_vorhanden": "Roadmap vorhanden",
+    "governance_richtlinien": "Governance-Richtlinien",
+    "change_management": "Change Management",
+    "zeitbudget": "Zeitbudget",
+    "vorhandene_tools": "Vorhandene Tools",
+    "regulierte_branche": "Regulierte Branche",
+    "trainings_interessen": "Trainings-Interessen",
+    "datenschutzbeauftragter": "Datenschutzbeauftragter",
+    "technische_massnahmen": "Technische Maßnahmen",
+    "folgenabschaetzung": "Folgenabschätzung",
+    "meldewege": "Meldewege",
+    "loeschregeln": "Löschregeln",
+    "ai_act_kenntnis": "AI-Act-Kenntnis",
+    "ki_hemmnisse": "KI-Hemmnisse",
+    "bisherige_foerdermittel": "Bisherige Fördermittel",
+    "interesse_foerderung": "Interesse an Förderung",
+    "erfahrung_beratung": "Erfahrung mit Beratung",
+    "investitionsbudget": "Investitionsbudget",
+    "marktposition": "Marktposition",
+    "benchmark_wettbewerb": "Benchmark Wettbewerb",
+    "innovationsprozess": "Innovationsprozess",
+    "risikofreude": "Risikofreude",
+    "datenschutz": "Datenschutz (Zustimmung)",
+    "country": "Land",
+}
+
+# German labels for Strategy questionnaire fields (S1–S10)
+_STRATEGY_LABELS: Dict[str, str] = {
+    "s1_budget": "Budget (12 Monate)",
+    "s2_zeitrahmen": "Zeitrahmen",
+    "s3_prioritaeten": "Prioritäten (max. 3)",
+    "s4_engpass": "Größter Engpass",
+    "s5_vision": "Vision",
+    "s5_software": "Genutzte Software/Tools",
+    "s6_foerderinteresse": "Förderinteresse",
+    "s7_entscheidung": "Entscheidungsprozess",
+    "s8_erfahrung": "KI-Erfahrung",
+    "s9_ansatz": "Infrastruktur-Ansatz",
+    "s10_datenschutz": "Datenschutz-Priorität",
+}
+
+# Conditional R1 fields – only shown if present in the record
+_CONDITIONAL_R1_KEYS = {"selbststaendig", "bundesland"}
+
+
+def _format_value(val: Any) -> str:
+    """Format a field value for display in the admin email."""
+    if val is None or val == "" or val == []:
+        return '<span style="color:#94a3b8">\u2014</span>'
+    if isinstance(val, list):
+        return ", ".join(str(v) for v in val) if val else '<span style="color:#94a3b8">\u2014</span>'
+    if isinstance(val, bool):
+        return "Ja" if val else "Nein"
+    return escape(str(val))
+
+
+def _render_table(title: str, rows: List[Tuple[str, str]], color: str = "#2B6CB0") -> str:
+    """Render a 2-column HTML table (Label | Wert) with alternating rows."""
+    header = (
+        f'<h2 style="color:{color};font-size:16px;margin:24px 0 8px">{escape(title)}</h2>'
+        '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">'
+        '<tr style="background:#f1f5f9">'
+        '<th style="text-align:left;padding:6px 10px;border:1px solid #e2e8f0;width:35%">Feld</th>'
+        '<th style="text-align:left;padding:6px 10px;border:1px solid #e2e8f0">Wert</th>'
+        '</tr>'
+    )
+    body = ""
+    for idx, (label, value) in enumerate(rows):
+        bg = ' style="background:#f8fafc"' if idx % 2 == 0 else ""
+        body += (
+            f"<tr{bg}>"
+            f'<td style="padding:6px 10px;border:1px solid #e2e8f0;font-weight:600">{escape(label)}</td>'
+            f'<td style="padding:6px 10px;border:1px solid #e2e8f0">{value}</td>'
+            "</tr>"
+        )
+    return header + body + "</table>"
+
+
+def render_admin_briefing_email(
+    briefing_id: int,
+    meta: Dict[str, Any],
+    r1_answers: Dict[str, Any],
+    strategy_answers: Dict[str, Any],
+) -> str:
+    """Render admin email with all questionnaire data for a strategy generation.
+
+    Args:
+        briefing_id: The briefing ID.
+        meta: Dict with keys: segment, branche, region, score, timestamp.
+        r1_answers: The R1 questionnaire answers dict.
+        strategy_answers: The strategy questions dict (S1–S10/S11).
+    """
+    # --- Meta block ---
+    segment = escape(str(meta.get("segment", "\u2014")))
+    branche = escape(str(meta.get("branche", "\u2014")))
+    region = escape(str(meta.get("region", "\u2014")))
+    score = escape(str(meta.get("score", "\u2014")))
+    timestamp = escape(str(meta.get("timestamp", "\u2014")))
+
+    meta_html = (
+        '<div style="background:#f0f4ff;border-radius:8px;padding:12px 16px;margin-bottom:16px">'
+        f'<p style="margin:4px 0"><strong>Briefing-ID:</strong> #{briefing_id}</p>'
+        f'<p style="margin:4px 0"><strong>Segment:</strong> {segment}</p>'
+        f'<p style="margin:4px 0"><strong>Branche:</strong> {branche}</p>'
+        f'<p style="margin:4px 0"><strong>Region:</strong> {region}</p>'
+        f'<p style="margin:4px 0"><strong>Score:</strong> {score}</p>'
+        f'<p style="margin:4px 0"><strong>Generiert am:</strong> {timestamp}</p>'
+        "</div>"
+    )
+
+    # --- R1 table ---
+    r1_rows: List[Tuple[str, str]] = []
+    for key, val in r1_answers.items():
+        if key in _CONDITIONAL_R1_KEYS and key not in r1_answers:
+            continue  # conditional field not present
+        label = _R1_LABELS.get(key, key)
+        r1_rows.append((label, _format_value(val)))
+
+    r1_table = _render_table("Fragebogen 1 \u2014 KI-Readiness", r1_rows, color="#2B6CB0")
+
+    # --- Strategy table ---
+    strategy_keys = [
+        "s1_budget", "s2_zeitrahmen", "s3_prioritaeten", "s4_engpass",
+        "s5_vision", "s5_software", "s6_foerderinteresse", "s7_entscheidung",
+        "s8_erfahrung", "s9_ansatz", "s10_datenschutz",
+    ]
+    strategy_rows: List[Tuple[str, str]] = []
+    for key in strategy_keys:
+        val = strategy_answers.get(key)
+        # Skip keys that don't exist at all in the data (e.g. s5_vision if not present)
+        if key not in strategy_answers:
+            continue
+        label = _STRATEGY_LABELS.get(key, key)
+        strategy_rows.append((label, _format_value(val)))
+    # Also include any extra keys not in the predefined list
+    for key, val in strategy_answers.items():
+        if key not in strategy_keys and key not in ("id", "briefing_id", "created_at"):
+            label = _STRATEGY_LABELS.get(key, key)
+            strategy_rows.append((label, _format_value(val)))
+
+    strategy_table = _render_table("Fragebogen 2 \u2014 Strategiefragen", strategy_rows, color="#0D7377")
+
+    return f"""<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>[KIS-Admin] Briefing #{briefing_id}</title>
+    <style>
+      body{{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;line-height:1.5;margin:0;padding:0;background:#f6f9ff}}
+      .wrap{{max-width:720px;margin:0 auto;padding:24px}}
+      .card{{background:#fff;border:1px solid #e6edf3;border-radius:12px;padding:18px;box-shadow:0 6px 30px #18324a16;border-top:4px solid #0F1D35}}
+      h1{{color:#0F1D35;font-size:18px;margin:0 0 12px}}
+      p{{margin:6px 0;font-size:13px}}
+      .muted{{color:#64748b;font-size:12px}}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>[KIS-Admin] Briefing #{briefing_id} \u2014 Fragebogen-Daten</h1>
+        {meta_html}
+        {r1_table}
+        {strategy_table}
+        <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
+        <p class="muted">Automatisch generiert bei Strategy-Generierung.</p>
       </div>
     </div>
   </body>
