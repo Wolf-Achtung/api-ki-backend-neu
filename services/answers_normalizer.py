@@ -100,6 +100,74 @@ BUNDESLAENDER_LABELS = {
     "th": "Thüringen",
 }
 
+# Schweiz (26 Kantone)
+KANTONE_LABELS = {
+    "zh": "Zürich",
+    "be_ch": "Bern",
+    "lu": "Luzern",
+    "ur": "Uri",
+    "sz": "Schwyz",
+    "ow": "Obwalden",
+    "nw_ch": "Nidwalden",
+    "gl": "Glarus",
+    "zg": "Zug",
+    "fr": "Freiburg",
+    "so": "Solothurn",
+    "bs": "Basel-Stadt",
+    "bl": "Basel-Landschaft",
+    "sh_ch": "Schaffhausen",
+    "ar": "Appenzell Ausserrhoden",
+    "ai": "Appenzell Innerrhoden",
+    "sg": "St. Gallen",
+    "gr": "Graubünden",
+    "ag": "Aargau",
+    "tg": "Thurgau",
+    "ti": "Tessin",
+    "vd": "Waadt",
+    "vs": "Wallis",
+    "ne": "Neuenburg",
+    "ge": "Genf",
+    "ju": "Jura",
+}
+
+# Österreich (9 Bundesländer)
+AT_BUNDESLAENDER_LABELS = {
+    "wi": "Wien",
+    "noe": "Niederösterreich",
+    "ooe": "Oberösterreich",
+    "sbg": "Salzburg",
+    "tir": "Tirol",
+    "vbg": "Vorarlberg",
+    "ktn": "Kärnten",
+    "stm": "Steiermark",
+    "bgl": "Burgenland",
+}
+
+# UK (4 Nations/Regionen)
+UK_REGIONS_LABELS = {
+    "eng": "England",
+    "sco": "Scotland",
+    "wal": "Wales",
+    "nir": "Northern Ireland",
+    "london": "London",
+}
+
+
+def get_region_label(region_code: str, country: str = "DE") -> str:
+    """Resolve a region code to a display label, respecting country context."""
+    key = str(region_code or "").strip().lower()
+    if not key:
+        return ""
+    country_up = str(country or "DE").strip().upper()
+    if country_up == "CH":
+        return KANTONE_LABELS.get(key, key)
+    elif country_up == "AT":
+        return AT_BUNDESLAENDER_LABELS.get(key, key)
+    elif country_up == "GB":
+        return UK_REGIONS_LABELS.get(key, key)
+    else:
+        return BUNDESLAENDER_LABELS.get(key, key)
+
 UMSATZ_LABELS = {
     "unter_100k": "unter 100 T€",
     "100k_500k": "100 T€ – 500 T€",
