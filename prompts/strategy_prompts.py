@@ -632,7 +632,15 @@ UNTERNEHMENSDATEN:
 - Firmenname: {firmenname}
 - Branche: {branche}
 - Segment: {segment}
+- Land: {country_name} ({country})
 - Datenschutz-Anforderung: {s10_datenschutz}
+
+DATENSCHUTZ-KONTEXT NACH LAND (KRITISCH — verwende das korrekte Regelwerk):
+- DE: DSGVO (primär), BDSG (ergänzend)
+- CH: nDSG (revidiertes Schweizer Datenschutzgesetz, in Kraft seit 01.09.2023) — primär für Schweizer Unternehmen. DSGVO zusätzlich relevant bei Verarbeitung von EU-Personendaten.
+- AT: DSGVO (primär), DSG (österreichische Ergänzung)
+- GB: UK GDPR, Data Protection Act 2018
+Das Unternehmen sitzt in {country_name} — verwende das entsprechende Datenschutzregime als primäre Referenz.
 
 AUS REPORT 1:
 - Risiko-Score: {risiko_score}
@@ -657,13 +665,13 @@ AUFGABE:
 2. Identifiziere die Top-5 Risiken der KI-Strategie:
    a) Technische Risiken (z.B. Vendor Lock-in, Datenqualität)
    b) Organisatorische Risiken (z.B. Change Management, Know-how)
-   c) Regulatorische Risiken (z.B. EU AI Act, DSGVO)
+   c) Regulatorische Risiken (z.B. EU AI Act, Datenschutzgesetzgebung des Landes {country_name})
    d) Finanzielle Risiken (z.B. ROI-Verfehlung, versteckte Kosten)
 3. Für jedes Risiko: Mitigationsstrategie mit konkreten Maßnahmen.
 4. EU AI Act Compliance:
    - Welche der empfohlenen Tools fallen unter den AI Act?
    - Welche Risikoklasse? Welche Pflichten?
-5. DSGVO-Checkliste für die KI-Implementierung.
+5. Datenschutz-Checkliste für die KI-Implementierung (basierend auf dem Datenschutzregime von {country_name} — siehe DATENSCHUTZ-KONTEXT oben).
 
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
