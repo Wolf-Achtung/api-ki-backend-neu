@@ -16214,7 +16214,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             decisions = [
                 f"Starten Sie mit 1 Quick Win für {display_label_fc} innerhalb von 14 Tagen",
                 f"Prüfen Sie die 90-Tage-Roadmap für {display_label_fc}",
-                "Sichten Sie die Förderprogramme für passende EU-/Bundesmittel"
+                "Sichten Sie die Förderprogramme für passende Fördermittel"
             ]
 
         # Truncate to ≤600 chars, ensure clean sentence boundary before "Schwerpunkte:"
