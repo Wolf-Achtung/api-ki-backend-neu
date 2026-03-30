@@ -1687,12 +1687,15 @@ def generate_sofort_start_html(
 
     # Entscheidungsvorlage für Vorgesetzte (Idee #10) - nur für Team/KMU
     if size_key in ["team", "kmu"]:
+        # FIX-KIS-1085: Pass canon_hours_month so the GF-Vorlage uses
+        # the exact canonical monthly hours (not lossy weekly→monthly conversion)
         html += generate_entscheidungsvorlage_html(
             hauptleistung=hauptleistung,
             branche=str(branche_data["name"]),
             company_size=size_key,
             zeitersparnis_pro_woche=int(hours_per_week),
-            stundensatz=stundensatz
+            stundensatz=stundensatz,
+            canon_hours_month=canon_hours_month,
         )
 
     log.info(f"[SOFORT-START] Generated for branche={branche_key}, size={size_key}, hauptleistung={hauptleistung[:30] if hauptleistung else 'N/A'}...")
@@ -1705,19 +1708,33 @@ def generate_entscheidungsvorlage_html(
     branche: str,
     company_size: str,
     zeitersparnis_pro_woche: int = 4,
-    stundensatz: int = 0
+    stundensatz: int = 0,
+    canon_hours_month: float = 0,
 ) -> str:
     """
     Generiert eine Entscheidungsvorlage für Vorgesetzte (Idee #10).
 
     PLATIN+++ FIX 1.1: Uses canonical rate from single source of truth.
+    FIX-KIS-1085: Shows BRUTTO time savings (hours × rate × 12), dynamically.
     """
     # PLATIN+++ FIX 1.1: Use canonical rate
     if stundensatz <= 0:
         stundensatz = _get_canonical_rate(company_size)
 
+    # FIX-KIS-1085: Use canonical monthly hours if available, otherwise derive
+    # from weekly. Compute brutto directly as hours_month × rate × 12 to avoid
+    # lossy weekly→yearly conversion (e.g. 6h/wk × 48 = 288 ≠ 25h/mo × 12 = 300).
+    if canon_hours_month > 0:
+        _hours_month = int(canon_hours_month)
+    else:
+        _hours_month = zeitersparnis_pro_woche * 4
+
+    # Constraint #4: GF-Vorlage shows BRUTTO-Zeitersparnis (hours × rate × 12)
+    _brutto_jahr = _hours_month * stundensatz * 12
+    _brutto_jahr_fmt = f"{_brutto_jahr:,}".replace(",", ".")
+
     savings = calculate_yearly_savings(zeitersparnis_pro_woche, stundensatz, company_size)
-    
+
     html = f'''
     <div style="background: white; border: 2px solid #1e40af; border-radius: 8px; padding: 20px; margin-top: 24px;">
         <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 16px 0; color: #1e40af; text-align: center;">
@@ -1726,20 +1743,20 @@ def generate_entscheidungsvorlage_html(
         <p style="font-size: 12px; color: #64748b; text-align: center; margin: 0 0 16px 0;">
             Diese Vorlage können Sie Ihrer Geschäftsführung vorlegen
         </p>
-        
+
         <div style="border-top: 1px solid #e2e8f0; padding-top: 16px;">
             <h4 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Antrag: Einführung von KI-Assistenz-Tools</h4>
-            
+
             <p style="font-size: 13px; margin: 0 0 12px 0;">
                 <strong>Bereich:</strong> {hauptleistung or branche or "Allgemein"}<br>
                 <strong>Beantragt von:</strong> [IHR NAME]<br>
                 <strong>Datum:</strong> [DATUM]
             </p>
-            
+
             <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Erwarteter Nutzen:</h4>
             <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
-                <li>Zeitersparnis: ca. {savings['hours_per_week']} Stunden/Woche</li>
-                <li>Jährliche Ersparnis: ca. {f"{savings['net_savings']:,}".replace(",", ".")}€ (netto)</li>
+                <li>Zeitersparnis: {_hours_month} Stunden/Monat</li>
+                <li>Jährliche Brutto-Zeitersparnis: ca. {_brutto_jahr_fmt}€ ({_hours_month}h × {stundensatz}€ × 12)</li>
                 <li>Qualitätssteigerung bei Routineaufgaben</li>
             </ul>
             
