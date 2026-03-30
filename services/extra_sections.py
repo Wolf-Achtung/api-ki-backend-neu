@@ -416,12 +416,15 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
     except ImportError:
         pass  # Keep budget-band-derived capex as fallback
 
-    # Segment-specific OPEX defaults
-    _OPEX_DEFAULTS = {"solo": 180, "team": 350, "kmu": 600}
-    opex = _OPEX_DEFAULTS.get(_segment, 350)
-    if "unter_100k" in rev:
-        opex = max(120, opex - 60)
-    opex = min(opex, int(constraints["max_opex_monthly"]))
+    # FIX-KIS-1080: ALWAYS use canonical OPEX (same pattern as CAPEX).
+    # Revenue-based discounts removed — canonical values are the single source of truth.
+    try:
+        from services.business_case_engine_v2 import OPEX_DEFAULTS_BY_SIZE
+        opex = OPEX_DEFAULTS_BY_SIZE.get(_segment, 350)
+        log.info("[BUSINESS-CASE] Using canonical OPEX for %s: %d€/Mo (revenue-discount-proof)", _segment, opex)
+    except ImportError:
+        _OPEX_DEFAULTS = {"solo": 120, "team": 350, "kmu": 600}
+        opex = _OPEX_DEFAULTS.get(_segment, 350)
 
     monatlicher_nutzen = einsparung_monat_eur - opex
     if monatlicher_nutzen > 0:
@@ -706,8 +709,12 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
     else:
         size_group = "kmu"
 
-    # Filter: Nur Programme, die zur Größe passen
-    filtered = [p for p in all_programmes if size_group in p.get("suitable_for", [])]
+    # FIX-KIS-1080: Filter expired programs AND match company size
+    filtered = [
+        p for p in all_programmes
+        if size_group in p.get("suitable_for", [])
+        and p.get("status", "active") != "expired"
+    ]
 
     # Regionaler Filter (optional - zeige alle, aber markiere passende)
     _bl = bundesland.lower()
