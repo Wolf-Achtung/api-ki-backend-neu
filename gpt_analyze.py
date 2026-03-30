@@ -18009,7 +18009,17 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         except (ValueError, TypeError):
             pass
         try:
-            _jahresersparnis = f"{int(float(str(_canon_einsparung_m).replace('.', '').replace(',', '.')) * 12):,}".replace(",", ".")
+            # FIX-KIS-1084: EINSPARUNG_MONAT_EUR may be a float (e.g. 2375.0)
+            # or a German-formatted string (e.g. "2.375"). Convert safely:
+            # first try direct float() (handles 2375.0, 2375, "2375.0"),
+            # then fall back to German format parsing (handles "2.375").
+            _einsparung_raw = _canon_einsparung_m
+            try:
+                _einsparung_val = float(_einsparung_raw)
+            except (ValueError, TypeError):
+                _einsparung_val = float(str(_einsparung_raw).replace('.', '').replace(',', '.'))
+            _jahresersparnis_num = int(_einsparung_val * 12)
+            _jahresersparnis = f"{_jahresersparnis_num:,}".replace(",", ".")
         except (ValueError, TypeError):
             _jahresersparnis = ""
 
@@ -18094,15 +18104,18 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                         )
                         return f"{m.group('prefix')}{_jahresersparnis}\u00a0€ brutto ({_canon_h_display}h × {_k82_stundensatz}\u00a0€ × 12)"
                     return m.group(0)
+                # FIX-KIS-1084: Consume trailing qualifiers like "(netto)",
+                # "brutto", "(brutto)" so they don't contradict the replacement.
+                _k82_suffix = r'(?:\s*(?:brutto|netto|\(brutto\)|\(netto\)))*'
                 _k82_html = _re_k82.sub(
                     r'(?P<prefix>[Jj]ährliche\s+Ersparnis\s*:?\s*(?:ca\.?\s*)?)'
-                    r'(?P<amount>[\d.,]+)\s*€',
+                    r'(?P<amount>[\d.,]+)\s*€' + _k82_suffix,
                     _k82_replace,
                     _k82_html,
                 )
                 _k82_html = _re_k82.sub(
                     r'(?P<prefix>[Jj]ahresersparnis\s*:?\s*(?:ca\.?\s*)?)'
-                    r'(?P<amount>[\d.,]+)\s*€',
+                    r'(?P<amount>[\d.,]+)\s*€' + _k82_suffix,
                     _k82_replace,
                     _k82_html,
                 )
