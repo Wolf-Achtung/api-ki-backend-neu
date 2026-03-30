@@ -18147,6 +18147,64 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             log.info(f'[FIX-R5-7] Replaced Stunden/Woche→Monat in {_r57_count} sections (canonical={_canon_h_display}h/Mo)')
 
         # =================================================================
+        # [FIX-KIS-1082] Replace misleading "Jährliche Ersparnis: 300€ (netto)"
+        # with canonical brutto annual savings. The LLM confuses
+        # ROI_NETTONUTZEN_EUR (Year-1 net after CAPEX = 300€) with annual
+        # savings (brutto = hours × rate × 12 = 28.500€). A GF reading
+        # "24k invest for 300€/year" would reject the project immediately.
+        # =================================================================
+        _brutto_jahr = sections.get('BRUTTO_ERSPARNIS_JAHR_EUR', '')
+        if _brutto_jahr and _jahresersparnis:
+            import re as _re_k82
+            # Parse brutto value for comparison
+            try:
+                _brutto_val = float(str(_brutto_jahr).replace('.', '').replace(',', '.'))
+            except (ValueError, TypeError):
+                _brutto_val = 0
+            _k82_count = 0
+            # Scan all HTML sections for misleading "Jährliche Ersparnis" with low values
+            for _k82_key in list(sections.keys()):
+                _k82_html = sections.get(_k82_key, '')
+                if not _k82_html or not isinstance(_k82_html, str) or len(_k82_html) < 50:
+                    continue
+                _k82_before = _k82_html
+                # Pattern: "Jährliche Ersparnis: ca. 300€ (netto)" and variants
+                # Catches: "Jährliche Ersparnis: ca. 300 €", "Jährliche Ersparnis: 300€",
+                #          "Jahresersparnis: ca. 300 € (netto)", etc.
+                def _k82_replace(m):
+                    try:
+                        val = float(m.group('amount').replace('.', '').replace(',', '.'))
+                    except (ValueError, TypeError):
+                        return m.group(0)
+                    # If the displayed value is < 20% of brutto, it's likely the
+                    # Year-1 net (ROI_NETTONUTZEN) being misused as annual savings
+                    if _brutto_val > 0 and val < _brutto_val * 0.2:
+                        log.warning(
+                            "[FIX-KIS-1082] Replacing misleading '%s' (Year-1 net) "
+                            "with brutto %s€ in section '%s'",
+                            m.group(0), _brutto_jahr, _k82_key,
+                        )
+                        return f"{m.group('prefix')}{_brutto_jahr}\u00a0€ brutto ({_canon_h_display}h × {sections.get('ROI_STUNDENSATZ_EUR', '95')}\u00a0€ × 12)"
+                    return m.group(0)
+                _k82_html = _re_k82.sub(
+                    r'(?P<prefix>[Jj]ährliche\s+Ersparnis\s*:?\s*(?:ca\.?\s*)?)'
+                    r'(?P<amount>[\d.,]+)\s*€',
+                    _k82_replace,
+                    _k82_html,
+                )
+                _k82_html = _re_k82.sub(
+                    r'(?P<prefix>[Jj]ahresersparnis\s*:?\s*(?:ca\.?\s*)?)'
+                    r'(?P<amount>[\d.,]+)\s*€',
+                    _k82_replace,
+                    _k82_html,
+                )
+                if _k82_html != _k82_before:
+                    sections[_k82_key] = _k82_html
+                    _k82_count += 1
+            if _k82_count > 0:
+                log.info('[FIX-KIS-1082] Replaced misleading Jährliche Ersparnis in %d sections (brutto=%s€)', _k82_count, _brutto_jahr)
+
+        # =================================================================
         # [FIX-C1] Enforce canonical KPI values in KI_STACK_SUMMARY_HTML.
         # The LLM sometimes ignores the injected {{ROI_CAPPED_PCT}} and
         # {{ROI_STUNDEN_MONAT}} template variables and generates its own
