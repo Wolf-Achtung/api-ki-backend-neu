@@ -9181,16 +9181,14 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     qw1_h = int(os.getenv("DEFAULT_QW1_H", "20"))
     qw2_h = int(os.getenv("DEFAULT_QW2_H", "15"))
 
-    # Calculate monthly and yearly savings with SIZE-BASED CAP
-    # Cap must match services/extra_sections.py get_size_constraints()
-    max_hours_by_size = {
-        "solo": 20,
-        "team": 80,
-        "kmu": 200,
-    }
-    max_hours = max_hours_by_size.get(company_size, 80)
-    raw_hours = qw1_h + qw2_h
-    monatsersparnis_stunden = min(raw_hours, max_hours)
+    # FIX-KIS-1081: Use CANONICAL segment hours, not QW defaults.
+    # QW defaults (20+15=35) don't match canonical (Solo=15, Team=25, KMU=50).
+    # The old value leaked into ROI_STUNDEN_MONAT, causing LLM to hallucinate
+    # wrong hour values in prose (e.g. "18 Stunden" instead of "25 Stunden").
+    _CANONICAL_HOURS = {"solo": 15, "team": 25, "kmu": 50}
+    monatsersparnis_stunden = _CANONICAL_HOURS.get(company_size, 25)
+    log.info("[PROMPT-VARS] FIX-KIS-1081: Using canonical hours for %s: %d h/Mo",
+             company_size, monatsersparnis_stunden)
 
     if monatsersparnis_stunden < raw_hours:
         log.info(
@@ -14410,6 +14408,19 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     log.info(f"[CI-DESIGN] Förderpotenzial HTML input: {len(foerderpotenzial_html) if foerderpotenzial_html else 0} chars")
 
     if foerderpotenzial_html and len(foerderpotenzial_html) > 100:
+        # FIX-KIS-1081: Strip LLM-generated funding tables from FOERDERPOTENZIAL.
+        # The deterministic funding table is in FOERDERPROGRAMME_HTML (separate section).
+        # LLM-generated tables often have broken rendering (e.g. "3× Baden-Württemberg").
+        import re as _re_fp
+        _fp_table_count = foerderpotenzial_html.count("<table")
+        if _fp_table_count > 0:
+            foerderpotenzial_html = _re_fp.sub(
+                r'<table[^>]*>.*?</table>',
+                '<p class="muted small"><em>→ Detaillierte Programmübersicht siehe Förderprogramme-Tabelle unten.</em></p>',
+                foerderpotenzial_html,
+                flags=_re_fp.DOTALL,
+            )
+            log.info("[FIX-KIS-1081] Stripped %d LLM-generated table(s) from FOERDERPOTENZIAL", _fp_table_count)
         try:
             if use_compact_design:
                 # FIX-620: Get min_words for current segment
