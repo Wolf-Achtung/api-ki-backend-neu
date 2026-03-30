@@ -8161,39 +8161,17 @@ def _generate_funding_compact(
     """Generiert kompakte Förder-Sektion (CI-Design v2.0 Phase 4).
 
     Reduziert Förderung von 5 auf 2 Seiten.
+    FIX-KIS-1082: Programme table REMOVED — the deterministic funding table
+    is rendered separately via FOERDERPROGRAMME_HTML (build_core_funding_table_html).
+    The old regex-extracted programme list produced garbage entries with
+    Eignung/Komplexität columns from body-text fragments.
     """
-    if programme is None:
-        # FIX-A3: Use canonical BAFA amount from config
-        try:
-            from config.bafa import get_bafa_foerderung_max_display
-            _bafa_amount = get_bafa_foerderung_max_display(bundesland)
-        except ImportError:
-            _bafa_amount = "1.750 €"
-        programme = [
-            {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': _bafa_amount, 'komplexitaet': 'Niedrig'},
-            {'name': 'KMU-innovativ', 'geber': 'BMBF', 'eignung': 'Mittel', 'betrag': 'variabel', 'komplexitaet': 'Mittel'},
-        ]
-
     if next_steps is None:
         next_steps = [
             'Projektsteckbrief erstellen (1-2 Seiten)',
             'Förderfähigkeit mit BAFA-Beratung prüfen',
             'Antrag VOR Projektstart einreichen'
         ]
-
-    # Programm-Tabelle
-    rows_html = ''
-    for prog in programme[:4]:
-        eignung = prog.get('eignung', 'Mittel')
-        badge_class = 'badge--success' if eignung == 'Hoch' else 'badge--warning'
-        rows_html += f'''
-        <tr>
-          <td><strong>{html.escape(prog.get("name", ""))}</strong><br><span class="text-muted">{html.escape(prog.get("geber", ""))}</span></td>
-          <td><span class="badge {badge_class}">{html.escape(eignung)}</span></td>
-          <td>{html.escape(prog.get("betrag", "—"))}</td>
-          <td>{html.escape(prog.get("komplexitaet", "Mittel"))}</td>
-        </tr>
-        '''
 
     # Next Steps
     steps_html = ''.join(f'<li>{html.escape(str(s))}</li>' for s in next_steps[:4])
@@ -8219,21 +8197,7 @@ def _generate_funding_compact(
         </div>
       </div>
 
-      <!-- Programme als kompakte Tabelle -->
-      <h3>Relevante Programme</h3>
-      <table class="funding-table compact">
-        <thead>
-          <tr>
-            <th>Programm</th>
-            <th>Eignung</th>
-            <th>Max. Förderung</th>
-            <th>Komplexität</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows_html}
-        </tbody>
-      </table>
+      <!-- FIX-KIS-1082: Programme table removed — see FOERDERPROGRAMME_HTML -->
 
       <!-- Nächste Schritte -->
       <div class="funding-next-steps card" style="margin-top: 16px;">
@@ -8298,9 +8262,12 @@ def _generate_funding_compact_from_html(
     bundesland: str = "",
     company_size: str = "1"
 ) -> str:
-    """Wrapper: Extrahiert Daten aus raw_html und generiert kompakte Förderübersicht.
+    """Wrapper: Generiert kompakte Förderübersicht mit kanonischen BAFA-Werten.
 
     CI-Design v2.0: Reduziert ~5 Seiten auf ~2 Seiten.
+    FIX-KIS-1082: Programme extraction from LLM HTML REMOVED — regex-extracted
+    programme names produced garbage entries (body-text fragments as programme names).
+    The deterministic funding table is rendered via FOERDERPROGRAMME_HTML.
     """
     # FIX-A3b: Canonical BAFA values from config (single source of truth)
     try:
@@ -8311,71 +8278,7 @@ def _generate_funding_compact_from_html(
         _bafa_amount = "1.750 €"
         _bafa_quote = 50
 
-    # re already imported at module level
-
-    # Versuche Programme aus dem HTML zu extrahieren
-    programme = []
-
-    # Suche nach Programmnamen in H2/H3/strong Tags
-    pattern = r'<(?:h[23]|strong)[^>]*>([^<]*(?:digital|BAFA|ZIM|Innovationskredit|Förder)[^<]*)</(?:h[23]|strong)>'
-    matches = re.findall(pattern, raw_html, re.IGNORECASE)
-
-    for match in matches[:4]:
-        name = match.strip()
-        if name:
-            # FIX-A3b: Use canonical BAFA amount for BAFA entries
-            _name_lower = name.lower()
-            if 'bafa' in _name_lower:
-                _prog_betrag = _bafa_amount
-            elif 'digital' in _name_lower:
-                _prog_betrag = '16.500 €'
-            else:
-                _prog_betrag = '5.000 €'
-            programme.append({
-                'name': name[:40],
-                'geber': 'Bund' if any(x in _name_lower for x in ['bafa', 'zim', 'bmwk']) else bundesland or 'Land',
-                'eignung': 'Hoch',
-                'betrag': _prog_betrag,
-                'komplexitaet': 'Niedrig'
-            })
-
-
-    # FIX #3: Wenn zu viele "Land" Einträge, verwende bessere Defaults
-    land_count = sum(1 for p in programme if p.get('geber') == 'Land')
-    if land_count > 2:
-        # Regex fand nichts Brauchbares, verwende kuratierte Defaults
-        # FIX-R3-5A: go-digital discontinued — use BAFA + KMU-innovativ
-        programme = [
-            {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': _bafa_amount, 'komplexitaet': 'Niedrig'},
-            {'name': 'KMU-innovativ', 'geber': 'BMBF', 'eignung': 'Mittel', 'betrag': 'variabel', 'komplexitaet': 'Mittel'},
-        ]
-        if bundesland and bundesland != "":
-            programme.append({
-                'name': f'{bundesland}-Digitalbonus',
-                'geber': bundesland,
-                'eignung': 'Mittel',
-                'betrag': '10.000 €',
-                'komplexitaet': 'Mittel'
-            })
-
-    # Fallback wenn keine Programme gefunden
-    if not programme:
-        # FIX-R3-5A: go-digital discontinued — use BAFA + KMU-innovativ
-        programme = [
-            {'name': 'BAFA-Beratung', 'geber': 'Bund', 'eignung': 'Hoch', 'betrag': _bafa_amount, 'komplexitaet': 'Niedrig'},
-            {'name': 'KMU-innovativ', 'geber': 'BMBF', 'eignung': 'Mittel', 'betrag': 'variabel', 'komplexitaet': 'Mittel'},
-        ]
-        if bundesland:
-            programme.append({
-                'name': f'{bundesland}-Digitalbonus',
-                'geber': bundesland,
-                'eignung': 'Mittel',
-                'betrag': '10.000 €',
-                'komplexitaet': 'Mittel'
-            })
-
     # FIX-A3b: Förderquote from config/bafa.py (region-aware), not hardcoded
-    # _bafa_quote comes from get_bafa_foerderquote(bundesland) above
     foerderquote = f"{_bafa_quote}%"
     max_foerderung = _bafa_amount
 
@@ -8389,7 +8292,6 @@ def _generate_funding_compact_from_html(
     return _generate_funding_compact(
         foerderquote=foerderquote,
         max_foerderung=max_foerderung,
-        programme=programme,
         next_steps=next_steps,
         bundesland=bundesland,
     )
