@@ -104,15 +104,43 @@ def _check_percent_plausibility(html: str, section_key: str) -> tuple[str, list[
     return html, warnings
 
 
-# ── Pass 2: Duplikat-Zahlen-Check in Tabellen ───────────────────────
+# ── Pass 2: Benchmark table >100% validator (FIX-KIS-1082) ──────────
+
+_TABLE_RE = re.compile(r'<table[^>]*>.*?</table>', re.DOTALL | re.IGNORECASE)
 
 def _check_table_consistency(html: str, section_key: str) -> list[str]:
     """
-    Prüft ob in einer Tabelle dieselbe Metrik-Bezeichnung
-    mit verschiedenen Werten vorkommt. Nur Warning, kein Patch.
-    (Platzhalter für v2-Erweiterung)
+    FIX-KIS-1082: In benchmark tables (S2), percentage values >100% are
+    ALWAYS invalid (benchmark = market data, not financial returns).
+    Patches them to "–*" and logs a warning.
+    Also catches non-S2 table issues (placeholder for v2).
     """
-    return []
+    if section_key != "S2":
+        return [], html
+
+    warnings = []
+
+    def _patch_table_percents(table_match):
+        table_html = table_match.group(0)
+
+        def _replace_over100(m):
+            try:
+                val = float(m.group(1).replace(',', '.'))
+            except ValueError:
+                return m.group(0)
+            if val > 100.0:
+                warnings.append(
+                    f"[FIX-KIS-1082] Section '{section_key}': "
+                    f"Benchmark table value {val}% > 100% — likely ROI leak. Patched to '–*'."
+                )
+                log.warning(warnings[-1])
+                return "\u2013*"
+            return m.group(0)
+
+        return _PERCENT_PATTERN.sub(_replace_over100, table_html)
+
+    new_html = _TABLE_RE.sub(_patch_table_percents, html)
+    return warnings, new_html
 
 
 # ── Pass 3: Jahres-Zuordnungs-Check ─────────────────────────────────
@@ -211,9 +239,12 @@ def sanitize_strategy_sections(
             patches_applied += len(pw)
             all_warnings.extend(pw)
 
-        # Pass 2: Tabellen-Konsistenz (nur Warnings)
-        tw = _check_table_consistency(html, key)
-        all_warnings.extend(tw)
+        # Pass 2: Benchmark table >100% validator (FIX-KIS-1082)
+        tw, html = _check_table_consistency(html, key)
+        if tw:
+            sections[key] = html
+            patches_applied += len(tw)
+            all_warnings.extend(tw)
 
         # Pass 3: Jahres-Check
         yw = _check_year_data_freshness(html, key, report_year)
