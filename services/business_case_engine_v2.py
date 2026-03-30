@@ -1987,11 +1987,13 @@ def generate_business_case_report(
     elif briefing and briefing.get("sum_quickwin_hours"):
         time_savings_source = "Summe aus Quick Wins"
 
-    # Calculate base monthly savings with size-appropriate rate
-    base_monthly_savings = baseline_monthly_cost
-    if base_monthly_savings <= 0:
-        # Estimate from effort hours using size-appropriate hourly rate
-        base_monthly_savings = calculate_monthly_savings(capped_effort_hours, hourly_rate=float(hourly_rate))
+    # FIX-KIS-1081: ALWAYS compute base_monthly_savings from canonical hours × rate.
+    # The briefing's EINSPARUNG_MONAT_EUR may be capped by revenue-based constraints
+    # (e.g. unter_100k → max_monthly_savings=1667 < canonical 2375 for Team).
+    # This caused scenarios to use wrong savings, producing ROI=-34% instead of +1%.
+    base_monthly_savings = float(capped_effort_hours * hourly_rate)
+    log.info("[G30] FIX-KIS-1081: Using canonical monthly savings: %.0f€ (%.0fh × %.0f€/h)",
+             base_monthly_savings, capped_effort_hours, hourly_rate)
 
     # Build ROI explanation for transparency
     # Fix-Batch-1: Use size-based default OPEX instead of 0.0
