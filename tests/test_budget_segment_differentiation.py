@@ -106,7 +106,8 @@ class TestCalcBusinessCaseSegmentDifferentiation:
         assert solo < team < kmu, f"OPEX must increase: Solo={solo} < Team={team} < KMU={kmu}"
 
     def test_solo_opex(self):
-        assert self._calc("1")["OPEX_REALISTISCH_EUR"] == 180
+        # FIX-KIS-1080: Canonical OPEX Solo=120 (was 180 with revenue discount)
+        assert self._calc("1")["OPEX_REALISTISCH_EUR"] == 120
 
     def test_team_opex(self):
         assert self._calc("2–10")["OPEX_REALISTISCH_EUR"] == 350

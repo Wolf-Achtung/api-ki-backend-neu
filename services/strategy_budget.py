@@ -144,10 +144,11 @@ _BUDGET_CAPS = {
     "Noch unklar": None,     # no cap
 }
 
-# Segment-specific hourly rates and time savings
+# FIX-KIS-1080: Segment-specific hourly rates and time savings — aligned with canonical.
+# Solo=15h/80€, Team=25h/95€, KMU=50h/110€ (audit KIS-1080 reference table).
 _SEGMENT_PARAMS = {
-    "Solo": {"time_savings_h": 15, "hourly_rate": 85},
-    "Team": {"time_savings_h": 30, "hourly_rate": 95},
+    "Solo": {"time_savings_h": 15, "hourly_rate": 80},
+    "Team": {"time_savings_h": 25, "hourly_rate": 95},
     "KMU":  {"time_savings_h": 50, "hourly_rate": 110},
 }
 
