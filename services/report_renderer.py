@@ -1597,11 +1597,14 @@ def render(briefing_obj: Any,
                 html
             )
 
-            # --- FIX 3: Entscheidungsvorlage "Jährliche Ersparnis" ---
-            # Korrigiere auf kanonischen Nettonutzen
+            # --- FIX 3: Entscheidungsvorlage "Jährliche Brutto-Zeitersparnis" ---
+            # FIX-KIS-1085: Use brutto time savings (_jahresersparnis = hours × rate × 12),
+            # NOT _nettonutzen (Year-1 net after CAPEX+OPEX = 300€ for Team).
+            # Constraint #4: GF-Vorlage shows BRUTTO, never Year-1 net.
+            _jahresersparnis_str = _fmt_de_eur(_jahresersparnis)
             html = re.sub(
-                r'(Jährliche Ersparnis:?\s*(?:ca\.?\s*)?)[\d.,]{4,6}(\s*€)',
-                rf'\g<1>{_nettonutzen_str}\2',
+                r'(Jährliche\s+(?:Brutto-?)?(?:Zeit)?[Ee]rsparnis:?\s*(?:ca\.?\s*)?)[\d.,]{3,7}(\s*€)',
+                rf'\g<1>{_jahresersparnis_str}\2',
                 html
             )
 
