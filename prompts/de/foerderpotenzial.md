@@ -150,6 +150,13 @@ ANTI-REDUNDANZ:
 - Business-Case-Zahlen EINMAL nennen, nicht wiederholen
 - KEINE Wiederholung der Zahlen aus business_case.md – nur Förder-Kontext
 
+TABELLEN-VERBOT (FIX-KIS-1081 — KRITISCH!):
+- Erstelle KEINE Tabelle mit Förderprogrammen (kein <table> mit Programmnamen, Eignung, Max. Förderung etc.)
+- Die konkrete Programmübersicht wird AUTOMATISCH als separate Tabelle eingefügt
+- In DIESEM Abschnitt nur PROSA über Förderstrategie, Förderschwerpunkte und nächste Schritte
+- BAFA-Daten ({{BAFA_FOERDERQUOTE}}%, max. {{BAFA_MAX_FOERDERUNG}}) dürfen im Fließtext erwähnt werden
+- VERBOTEN: <table>-Tags mit Programmlisten, Eignungsbewertungen oder Förderbeträgen
+
 CROSS-SECTION-ZAHLEN IN DIESER SECTION (VERBINDLICH):
 - Nenne NIE eine konkrete Förder-Summe, die du nicht direkt aus den dir übergebenen Daten ablesen kannst.
 - Berechne KEINE abgeleiteten Werte wie „ROI nach Förderung", „Netto-Investition nach Abzug" oder „Eigenkapital-Reduktion um X €".

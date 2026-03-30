@@ -89,6 +89,7 @@ STIL & REGELN:
 - Keine Platzhalter oder Developer-Sprache
 - Gesamtlänge: 180–250 Wörter, keine Bullet-Orgien, keine Tool-Listen
 - Fokus auf Funktionslogik statt Markennamen
+- ZAHLENREGEL: Wenn du Stunden, Zeitersparnis oder Entlastung erwähnst, verwende EXAKT {{ROI_STUNDEN_MONAT}} Stunden/Monat — NIEMALS andere Zahlen erfinden!
 
 SPRINT G6 - PERSONA HARD-GUARDS (STRIKT!):
 {% if COMPANY_SIZE == "solo" %}

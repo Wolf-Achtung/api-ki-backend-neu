@@ -379,10 +379,10 @@ def calc_business_case(answers: Dict[str, Any], env: Dict[str, Any]) -> Dict[str
             _segment,
         )
 
+    # FIX-KIS-1081: Monthly savings = canonical hours × rate, NOT capped by revenue.
+    # Revenue-based max_monthly_savings (e.g. 1667 for unter_100k) incorrectly
+    # reduced Team savings from 2375 to 1667, causing ROI=-34% in scenarios.
     einsparung_monat_eur = int(round(capped_hours * stundensatz))
-    einsparung_monat_eur = min(
-        einsparung_monat_eur, int(constraints["max_monthly_savings"])
-    )
 
     # Segment-specific CAPEX multipliers applied to budget-band base
     # Validated targets: Solo=24k, Team=12k, KMU=48k (for 10k-50k budget band)
