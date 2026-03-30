@@ -18054,15 +18054,21 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         # ROI_NETTONUTZEN_EUR (Year-1 net after CAPEX = 300€) with annual
         # savings (brutto = hours × rate × 12 = 28.500€). A GF reading
         # "24k invest for 300€/year" would reject the project immediately.
+        #
+        # FIX-KIS-1083: BRUTTO_ERSPARNIS_JAHR_EUR is in base_vars (prompt
+        # template vars), NOT in sections (HTML outputs). Use _jahresersparnis
+        # which is already computed above from EINSPARUNG_MONAT_EUR × 12.
         # =================================================================
-        _brutto_jahr = sections.get('BRUTTO_ERSPARNIS_JAHR_EUR', '')
-        if _brutto_jahr and _jahresersparnis:
+        if _jahresersparnis:
             import re as _re_k82
-            # Parse brutto value for comparison
+            # _jahresersparnis is the canonical brutto annual savings (e.g. "28.500")
+            # Parse numeric value for the < 20% comparison threshold
             try:
-                _brutto_val = float(str(_brutto_jahr).replace('.', '').replace(',', '.'))
+                _brutto_val = float(str(_jahresersparnis).replace('.', '').replace(',', '.'))
             except (ValueError, TypeError):
                 _brutto_val = 0
+            # Stundensatz from sections or canonical default
+            _k82_stundensatz = sections.get('ROI_STUNDENSATZ_EUR') or sections.get('stundensatz_eur') or '95'
             _k82_count = 0
             # Scan all HTML sections for misleading "Jährliche Ersparnis" with low values
             for _k82_key in list(sections.keys()):
@@ -18084,9 +18090,9 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                         log.warning(
                             "[FIX-KIS-1082] Replacing misleading '%s' (Year-1 net) "
                             "with brutto %s€ in section '%s'",
-                            m.group(0), _brutto_jahr, _k82_key,
+                            m.group(0), _jahresersparnis, _k82_key,
                         )
-                        return f"{m.group('prefix')}{_brutto_jahr}\u00a0€ brutto ({_canon_h_display}h × {sections.get('ROI_STUNDENSATZ_EUR', '95')}\u00a0€ × 12)"
+                        return f"{m.group('prefix')}{_jahresersparnis}\u00a0€ brutto ({_canon_h_display}h × {_k82_stundensatz}\u00a0€ × 12)"
                     return m.group(0)
                 _k82_html = _re_k82.sub(
                     r'(?P<prefix>[Jj]ährliche\s+Ersparnis\s*:?\s*(?:ca\.?\s*)?)'
@@ -18104,7 +18110,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     sections[_k82_key] = _k82_html
                     _k82_count += 1
             if _k82_count > 0:
-                log.info('[FIX-KIS-1082] Replaced misleading Jährliche Ersparnis in %d sections (brutto=%s€)', _k82_count, _brutto_jahr)
+                log.info('[FIX-KIS-1082] Replaced misleading Jährliche Ersparnis in %d sections (brutto=%s€)', _k82_count, _jahresersparnis)
 
         # =================================================================
         # [FIX-C1] Enforce canonical KPI values in KI_STACK_SUMMARY_HTML.
