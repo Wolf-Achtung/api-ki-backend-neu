@@ -14402,19 +14402,41 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     log.info(f"[CI-DESIGN] Förderpotenzial HTML input: {len(foerderpotenzial_html) if foerderpotenzial_html else 0} chars")
 
     if foerderpotenzial_html and len(foerderpotenzial_html) > 100:
-        # FIX-KIS-1081: Strip LLM-generated funding tables from FOERDERPOTENZIAL.
+        # FIX-KIS-1082: Strip ALL LLM-generated tables from FOERDERPOTENZIAL.
         # The deterministic funding table is in FOERDERPROGRAMME_HTML (separate section).
-        # LLM-generated tables often have broken rendering (e.g. "3× Baden-Württemberg").
+        # LLM-generated tables cause broken rendering (e.g. "3× Baden-Württemberg" rows).
+        # Catches: HTML <table>, markdown pipe tables, and stray table fragments.
         import re as _re_fp
+        _fp_replacement = '<p class="muted small"><em>→ Detaillierte Programmübersicht siehe Förderprogramme-Tabelle unten.</em></p>'
+
+        # 1) HTML tables
         _fp_table_count = foerderpotenzial_html.count("<table")
         if _fp_table_count > 0:
             foerderpotenzial_html = _re_fp.sub(
                 r'<table[^>]*>.*?</table>',
-                '<p class="muted small"><em>→ Detaillierte Programmübersicht siehe Förderprogramme-Tabelle unten.</em></p>',
+                _fp_replacement,
                 foerderpotenzial_html,
                 flags=_re_fp.DOTALL,
             )
-            log.info("[FIX-KIS-1081] Stripped %d LLM-generated table(s) from FOERDERPOTENZIAL", _fp_table_count)
+            log.info("[FIX-KIS-1082] Stripped %d HTML table(s) from FOERDERPOTENZIAL", _fp_table_count)
+
+        # 2) Markdown pipe tables (e.g. "| Programm | Region | ..." lines)
+        _fp_pipe_lines = [ln for ln in foerderpotenzial_html.split('\n') if ln.strip().startswith('|') and ln.strip().endswith('|')]
+        if len(_fp_pipe_lines) >= 2:
+            # Remove all pipe-table lines and separator lines (|---|---|)
+            _cleaned_lines = []
+            for ln in foerderpotenzial_html.split('\n'):
+                stripped = ln.strip()
+                if stripped.startswith('|') and stripped.endswith('|'):
+                    continue  # skip pipe table rows
+                if _re_fp.match(r'^\|[\s\-:|]+\|$', stripped):
+                    continue  # skip separator rows
+                _cleaned_lines.append(ln)
+            foerderpotenzial_html = '\n'.join(_cleaned_lines)
+            # Insert replacement if pipe table was removed
+            if _fp_replacement not in foerderpotenzial_html:
+                foerderpotenzial_html += f'\n{_fp_replacement}'
+            log.info("[FIX-KIS-1082] Stripped %d markdown pipe-table line(s) from FOERDERPOTENZIAL", len(_fp_pipe_lines))
         try:
             if use_compact_design:
                 # FIX-620: Get min_words for current segment
