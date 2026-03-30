@@ -638,10 +638,9 @@ def recommend_funding(
     Returns:
         List of funding recommendations sorted by relevance
     """
-    if not ENABLE_PREMIUM_FUNDING:
-        log.debug("[G11-Funding] Premium funding disabled")
-        return []
-
+    # FIX-KIS-1080: Core funding recommendations are always available.
+    # ENABLE_PREMIUM_FUNDING now only gates advanced scoring — the basic program
+    # list from the JSON is always returned to ensure R1/Strategy consistency.
     programs = load_funding_programs()
     recommendations = []
 
