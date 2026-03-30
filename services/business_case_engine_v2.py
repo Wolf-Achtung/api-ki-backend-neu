@@ -136,12 +136,14 @@ MAX_TIME_SAVINGS_BY_SIZE = {
     "enterprise": 400,             # Größere Unternehmen: max 400h/Monat
 }
 
-# Fix-Batch-1: Default OPEX by company size (prevents opex=0 issue)
-# Realistic tool costs based on typical AI tool subscriptions
+# FIX-KIS-1080: Canonical OPEX by company size — single source of truth.
+# These match the canonical reference table and MUST NOT be overridden by
+# revenue-based discounts or budget-band adjustments.
+# Solo=120, Team=350, KMU=600 (validated against audit KIS-1080).
 OPEX_DEFAULTS_BY_SIZE = {
-    "solo": 50,                    # Solo: ~50€/Monat (ChatGPT Plus, einfache Tools)
-    "team": 150,                   # Team: ~150€/Monat (Team-Lizenzen)
-    "kmu": 400,                    # KMU: ~400€/Monat (Enterprise-Tools)
+    "solo": 120,                   # Solo: 120€/Monat (Lizenzen + einfache Tools)
+    "team": 350,                   # Team: 350€/Monat (Team-Lizenzen + Betrieb)
+    "kmu": 600,                    # KMU: 600€/Monat (Enterprise-Tools + Support)
     "enterprise": 1500,            # Enterprise: ~1.500€/Monat (Full-Scale)
 }
 
@@ -2025,7 +2027,7 @@ def generate_business_case_report(
         roi_was_capped=roi_was_capped_flag,
     )
 
-    # If LLM response provided, use it
+    # If LLM response provided, use it for scenarios and narrative
     if llm_response:
         scenarios_data = llm_response.get("scenarios", [])
         scenarios = [
@@ -2033,8 +2035,6 @@ def generate_business_case_report(
             for s in scenarios_data
         ]
 
-        kpi_targets_6m = llm_response.get("kpi_targets_6m", {})
-        kpi_targets_12m = llm_response.get("kpi_targets_12m", {})
         narrative_summary = llm_response.get("narrative_summary", "")
 
         # Override extracted values if provided
@@ -2042,6 +2042,11 @@ def generate_business_case_report(
             baseline_monthly_cost = float(llm_response["baseline_monthly_cost"])
         if llm_response.get("investment_total"):
             investment_total = float(llm_response["investment_total"])
+
+        # FIX-KIS-1080: KPI targets ALWAYS deterministic — "LLMs machen NIE Mathe."
+        # LLM-generated KPI targets caused ROI contradictions (e.g. headline 4% vs KPI -31%).
+        kpi_targets_6m, kpi_targets_12m = generate_kpi_targets(scenarios, capped_effort_hours)
+        log.info("[G30] FIX-KIS-1080: Using deterministic KPI targets (LLM values ignored)")
     else:
         # Generate scenarios (Fix-Batch-2: pass opex for net payback)
         scenarios = generate_scenarios(investment_total, base_monthly_savings, funding_effect, opex_monthly)
