@@ -108,7 +108,7 @@ def _check_percent_plausibility(html: str, section_key: str) -> tuple[str, list[
 
 _TABLE_RE = re.compile(r'<table[^>]*>.*?</table>', re.DOTALL | re.IGNORECASE)
 
-def _check_table_consistency(html: str, section_key: str) -> list[str]:
+def _check_table_consistency(html: str, section_key: str) -> tuple[list[str], str]:
     """
     FIX-KIS-1082: In benchmark tables (S2), percentage values >100% are
     ALWAYS invalid (benchmark = market data, not financial returns).
