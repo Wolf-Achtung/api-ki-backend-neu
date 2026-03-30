@@ -14402,19 +14402,41 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     log.info(f"[CI-DESIGN] Förderpotenzial HTML input: {len(foerderpotenzial_html) if foerderpotenzial_html else 0} chars")
 
     if foerderpotenzial_html and len(foerderpotenzial_html) > 100:
-        # FIX-KIS-1081: Strip LLM-generated funding tables from FOERDERPOTENZIAL.
+        # FIX-KIS-1082: Strip ALL LLM-generated tables from FOERDERPOTENZIAL.
         # The deterministic funding table is in FOERDERPROGRAMME_HTML (separate section).
-        # LLM-generated tables often have broken rendering (e.g. "3× Baden-Württemberg").
+        # LLM-generated tables cause broken rendering (e.g. "3× Baden-Württemberg" rows).
+        # Catches: HTML <table>, markdown pipe tables, and stray table fragments.
         import re as _re_fp
+        _fp_replacement = '<p class="muted small"><em>→ Detaillierte Programmübersicht siehe Förderprogramme-Tabelle unten.</em></p>'
+
+        # 1) HTML tables
         _fp_table_count = foerderpotenzial_html.count("<table")
         if _fp_table_count > 0:
             foerderpotenzial_html = _re_fp.sub(
                 r'<table[^>]*>.*?</table>',
-                '<p class="muted small"><em>→ Detaillierte Programmübersicht siehe Förderprogramme-Tabelle unten.</em></p>',
+                _fp_replacement,
                 foerderpotenzial_html,
                 flags=_re_fp.DOTALL,
             )
-            log.info("[FIX-KIS-1081] Stripped %d LLM-generated table(s) from FOERDERPOTENZIAL", _fp_table_count)
+            log.info("[FIX-KIS-1082] Stripped %d HTML table(s) from FOERDERPOTENZIAL", _fp_table_count)
+
+        # 2) Markdown pipe tables (e.g. "| Programm | Region | ..." lines)
+        _fp_pipe_lines = [ln for ln in foerderpotenzial_html.split('\n') if ln.strip().startswith('|') and ln.strip().endswith('|')]
+        if len(_fp_pipe_lines) >= 2:
+            # Remove all pipe-table lines and separator lines (|---|---|)
+            _cleaned_lines = []
+            for ln in foerderpotenzial_html.split('\n'):
+                stripped = ln.strip()
+                if stripped.startswith('|') and stripped.endswith('|'):
+                    continue  # skip pipe table rows
+                if _re_fp.match(r'^\|[\s\-:|]+\|$', stripped):
+                    continue  # skip separator rows
+                _cleaned_lines.append(ln)
+            foerderpotenzial_html = '\n'.join(_cleaned_lines)
+            # Insert replacement if pipe table was removed
+            if _fp_replacement not in foerderpotenzial_html:
+                foerderpotenzial_html += f'\n{_fp_replacement}'
+            log.info("[FIX-KIS-1082] Stripped %d markdown pipe-table line(s) from FOERDERPOTENZIAL", len(_fp_pipe_lines))
         try:
             if use_compact_design:
                 # FIX-620: Get min_words for current segment
@@ -18123,6 +18145,64 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 _r57_count += 1
         if _r57_count > 0:
             log.info(f'[FIX-R5-7] Replaced Stunden/Woche→Monat in {_r57_count} sections (canonical={_canon_h_display}h/Mo)')
+
+        # =================================================================
+        # [FIX-KIS-1082] Replace misleading "Jährliche Ersparnis: 300€ (netto)"
+        # with canonical brutto annual savings. The LLM confuses
+        # ROI_NETTONUTZEN_EUR (Year-1 net after CAPEX = 300€) with annual
+        # savings (brutto = hours × rate × 12 = 28.500€). A GF reading
+        # "24k invest for 300€/year" would reject the project immediately.
+        # =================================================================
+        _brutto_jahr = sections.get('BRUTTO_ERSPARNIS_JAHR_EUR', '')
+        if _brutto_jahr and _jahresersparnis:
+            import re as _re_k82
+            # Parse brutto value for comparison
+            try:
+                _brutto_val = float(str(_brutto_jahr).replace('.', '').replace(',', '.'))
+            except (ValueError, TypeError):
+                _brutto_val = 0
+            _k82_count = 0
+            # Scan all HTML sections for misleading "Jährliche Ersparnis" with low values
+            for _k82_key in list(sections.keys()):
+                _k82_html = sections.get(_k82_key, '')
+                if not _k82_html or not isinstance(_k82_html, str) or len(_k82_html) < 50:
+                    continue
+                _k82_before = _k82_html
+                # Pattern: "Jährliche Ersparnis: ca. 300€ (netto)" and variants
+                # Catches: "Jährliche Ersparnis: ca. 300 €", "Jährliche Ersparnis: 300€",
+                #          "Jahresersparnis: ca. 300 € (netto)", etc.
+                def _k82_replace(m):
+                    try:
+                        val = float(m.group('amount').replace('.', '').replace(',', '.'))
+                    except (ValueError, TypeError):
+                        return m.group(0)
+                    # If the displayed value is < 20% of brutto, it's likely the
+                    # Year-1 net (ROI_NETTONUTZEN) being misused as annual savings
+                    if _brutto_val > 0 and val < _brutto_val * 0.2:
+                        log.warning(
+                            "[FIX-KIS-1082] Replacing misleading '%s' (Year-1 net) "
+                            "with brutto %s€ in section '%s'",
+                            m.group(0), _brutto_jahr, _k82_key,
+                        )
+                        return f"{m.group('prefix')}{_brutto_jahr}\u00a0€ brutto ({_canon_h_display}h × {sections.get('ROI_STUNDENSATZ_EUR', '95')}\u00a0€ × 12)"
+                    return m.group(0)
+                _k82_html = _re_k82.sub(
+                    r'(?P<prefix>[Jj]ährliche\s+Ersparnis\s*:?\s*(?:ca\.?\s*)?)'
+                    r'(?P<amount>[\d.,]+)\s*€',
+                    _k82_replace,
+                    _k82_html,
+                )
+                _k82_html = _re_k82.sub(
+                    r'(?P<prefix>[Jj]ahresersparnis\s*:?\s*(?:ca\.?\s*)?)'
+                    r'(?P<amount>[\d.,]+)\s*€',
+                    _k82_replace,
+                    _k82_html,
+                )
+                if _k82_html != _k82_before:
+                    sections[_k82_key] = _k82_html
+                    _k82_count += 1
+            if _k82_count > 0:
+                log.info('[FIX-KIS-1082] Replaced misleading Jährliche Ersparnis in %d sections (brutto=%s€)', _k82_count, _brutto_jahr)
 
         # =================================================================
         # [FIX-C1] Enforce canonical KPI values in KI_STACK_SUMMARY_HTML.
