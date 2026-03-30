@@ -9190,12 +9190,6 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     log.info("[PROMPT-VARS] FIX-KIS-1081: Using canonical hours for %s: %d h/Mo",
              company_size, monatsersparnis_stunden)
 
-    if monatsersparnis_stunden < raw_hours:
-        log.info(
-            "[gpt_analyze] Capped monatsersparnis_stunden from %d to %d for size '%s'",
-            raw_hours, monatsersparnis_stunden, company_size
-        )
-
     monatsersparnis_eur = monatsersparnis_stunden * stundensatz_eur
     jahresersparnis_stunden = monatsersparnis_stunden * 12
     jahresersparnis_eur = monatsersparnis_eur * 12
