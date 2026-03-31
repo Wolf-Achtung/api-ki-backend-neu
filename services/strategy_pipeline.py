@@ -510,41 +510,51 @@ async def generate_strategy_report(
 
             if _s7_html and _cc == "DE":
                 # --- Step 1: Remove irrelevant AT/CH/wrong-Bundesland programmes ---
-                _irrelevant_patterns = [
-                    # Austrian programmes (for DE customers)
-                    (r'<tr[^>]*>(?:(?!</tr>).)*?(?:aws[\s\-]digi|digi4KMU|Forschungsprämie\s*Österreich|FFG\b|aws\s+Digitalisierung)(?:(?!</tr>).)*?</tr>', 'AT programme'),
-                    # Swiss programmes (for DE customers)
-                    (r'<tr[^>]*>(?:(?!</tr>).)*?Innosuisse(?:(?!</tr>).)*?</tr>', 'CH programme'),
+                # Use short, case-insensitive search keys that match partial names.
+                # The LLM may abbreviate or rephrase titles from the prompt context.
+                _irrelevant_keys: list[tuple[str, str]] = [
+                    # Austrian programmes
+                    ("aws digi", "AT"),
+                    ("aws Digitalisierung", "AT"),
+                    ("digi4KMU", "AT"),
+                    ("digi4kmu", "AT"),
+                    ("Forschungsprämie Österreich", "AT"),
+                    ("Forschungsprämie AT", "AT"),
+                    # Swiss programmes
+                    ("Innosuisse", "CH"),
                 ]
-                # LfA Bayern only for non-Bayern customers
                 if _bl_raw not in ("by", "bayern", "bavaria"):
-                    _irrelevant_patterns.append(
-                        (r'<tr[^>]*>(?:(?!</tr>).)*?LfA\s*(?:Förderbank|Bayern)(?:(?!</tr>).)*?</tr>', 'Bayern programme')
-                    )
+                    _irrelevant_keys.extend([
+                        ("LfA Förderbank", "Bayern"),
+                        ("LfA Bayern", "Bayern"),
+                        ("LfA-Förderbank", "Bayern"),
+                    ])
 
                 _removed_count = 0
-                for _pat, _label in _irrelevant_patterns:
+                for _search_key, _origin in _irrelevant_keys:
+                    # Skip if not present (case-insensitive)
+                    if _search_key.lower() not in _s7_html.lower():
+                        continue
+                    _esc = re.escape(_search_key)
                     _s7_before = _s7_html
-                    _s7_html = re.sub(_pat, '', _s7_html, flags=re.DOTALL | re.IGNORECASE)
+                    # Try multiple HTML element patterns: tr, li, p, div, h3/h4
+                    for _tag_pat in [
+                        rf'<tr[^>]*>(?:(?!</tr>).)*?{_esc}(?:(?!</tr>).)*?</tr>\s*',
+                        rf'<li[^>]*>(?:(?!</li>).)*?{_esc}(?:(?!</li>).)*?</li>\s*',
+                        rf'<p[^>]*>(?:(?!</p>).)*?{_esc}(?:(?!</p>).)*?</p>\s*',
+                        rf'<div[^>]*>(?:(?!</div>).)*?{_esc}(?:(?!</div>).)*?</div>\s*',
+                        rf'<h[34][^>]*>(?:(?!</h[34]>).)*?{_esc}(?:(?!</h[34]>).)*?</h[34]>\s*',
+                    ]:
+                        _s7_html = re.sub(_tag_pat, '', _s7_html, flags=re.DOTALL | re.IGNORECASE)
+                        if _s7_html != _s7_before:
+                            break
                     if _s7_html != _s7_before:
                         _removed_count += 1
-                        logger.info("[FIX-KIS-1091-FUND] Removed %s from S7", _label)
-
-                # Also remove non-table mentions (bullet lists, paragraphs)
-                _irrelevant_names = ["aws digi", "digi4KMU", "Innosuisse",
-                                     "Forschungsprämie Österreich", "FFG"]
-                if _bl_raw not in ("by", "bayern", "bavaria"):
-                    _irrelevant_names.append("LfA Förderbank")
-                    _irrelevant_names.append("LfA Bayern")
-                for _iname in _irrelevant_names:
-                    # Remove <li> elements containing the programme name
-                    _s7_html = re.sub(
-                        rf'<li[^>]*>(?:(?!</li>).)*?{re.escape(_iname)}(?:(?!</li>).)*?</li>\s*',
-                        '', _s7_html, flags=re.DOTALL | re.IGNORECASE,
-                    )
+                        logger.info("[FIX-KIS-1091-FUND] Removed %s programme '%s' from S7", _origin, _search_key)
 
                 # --- Step 2: Inject missing R1 programmes ---
                 _r1_fund_html = str(report1_sections.get("FOERDERPROGRAMME_HTML", "") or "")
+                _r1_progs = []
                 if _r1_fund_html:
                     _r1_progs = re.findall(
                         r'<tr>\s*<td[^>]*>.*?<strong>([^<]+)</strong>.*?</td>'
@@ -553,14 +563,36 @@ async def generate_strategy_report(
                         r'\s*<td[^>]*>(.*?)</td>',     # Max Volumen
                         _r1_fund_html, re.DOTALL,
                     )
+                    logger.info(
+                        "[FIX-KIS-1091-FUND] R1 programmes parsed: %d found: %s",
+                        len(_r1_progs),
+                        [re.sub(r'<[^>]+>', '', p[0]).strip() for p in _r1_progs],
+                    )
+
+                if _r1_progs:
+                    _s7_lower = _s7_html.lower()
                     _missing = []
                     for _pname, _pregion, _pquote, _pvol in _r1_progs:
                         _pname_clean = re.sub(r'<[^>]+>', '', _pname).strip()
-                        if _pname_clean and _pname_clean.lower() not in _s7_html.lower():
-                            _missing.append((_pname_clean,
-                                             re.sub(r'<[^>]+>', '', _pregion).strip(),
-                                             re.sub(r'<[^>]+>', '', _pquote).strip(),
-                                             re.sub(r'<[^>]+>', '', _pvol).strip()))
+                        if not _pname_clean:
+                            continue
+                        # Fuzzy presence check: full name, first two alpha words,
+                        # or first word. Handles "BAFA – Förderung..." where "–"
+                        # is a separate token after split().
+                        _name_lower = _pname_clean.lower()
+                        _alpha_words = [w for w in _pname_clean.split() if w[0].isalnum()]
+                        _present = _name_lower in _s7_lower
+                        if not _present and len(_alpha_words) >= 2:
+                            _present = " ".join(_alpha_words[:2]).lower() in _s7_lower
+                        if not _present and _alpha_words:
+                            _present = _alpha_words[0].lower() in _s7_lower
+                        if not _present:
+                            _missing.append((
+                                _pname_clean,
+                                re.sub(r'<[^>]+>', '', _pregion).strip(),
+                                re.sub(r'<[^>]+>', '', _pquote).strip(),
+                                re.sub(r'<[^>]+>', '', _pvol).strip(),
+                            ))
 
                     if _missing:
                         _rows = ""
@@ -597,13 +629,13 @@ async def generate_strategy_report(
                             len(_missing), [m[0] for m in _missing],
                         )
                     else:
-                        logger.info("[FIX-KIS-1091-FUND] All R1 programmes present in Strategy S7")
+                        logger.info("[FIX-KIS-1091-FUND] All R1 programmes already present in Strategy S7")
 
                 sections["S7"] = _s7_html
                 if _removed_count > 0:
-                    logger.info("[FIX-KIS-1091-FUND] Removed %d irrelevant programme blocks from S7", _removed_count)
+                    logger.info("[FIX-KIS-1091-FUND] Total: removed %d irrelevant programme blocks from S7", _removed_count)
         except Exception as _fund_err:
-            logger.warning("[FIX-KIS-1091-FUND] S7 funding sync failed: %s", _fund_err)
+            logger.warning("[FIX-KIS-1091-FUND] S7 funding sync failed: %s", _fund_err, exc_info=True)
 
         # === PHASE 3: Assembly ===
         generation_duration = time.time() - start_time - research_duration
