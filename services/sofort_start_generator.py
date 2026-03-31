@@ -1711,15 +1711,11 @@ def generate_entscheidungsvorlage_html(
     stundensatz: int = 0,
     canon_hours_month: float = 0,
 ) -> str:
-    """
-    Emits a placeholder for the GF-Entscheidungsvorlage.
+    """No-op: GF-Vorlage is now injected via bypass in gpt_analyze.py (KIS-1094).
 
-    KIS-1093-A: The actual HTML is rendered AFTER the full pipeline via
-    build_gf_vorlage_html() using canonical values. This avoids all
-    regex patching — the placeholder is replaced with deterministic HTML
-    in the final assembly step.
+    Kept as empty stub so existing call sites don't break.
     """
-    return '\n<div id="gf-vorlage-slot"></div>\n'
+    return ""
 
 
 def build_gf_vorlage_html(
