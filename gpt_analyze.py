@@ -15254,6 +15254,8 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         "TRAININGS_INTERESSEN_LABELS",
         # Strategic context block
         "strategic_context_block",
+        # Canonical financial values needed by report_renderer FIX-v7110-MATH guard
+        "stundensatz_eur",
     ]
     for key in direct_copy_keys:
         sections[key] = answers.get(key, "")
