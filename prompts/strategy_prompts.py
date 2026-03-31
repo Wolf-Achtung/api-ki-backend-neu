@@ -568,11 +568,14 @@ UNTERNEHMENSDATEN:
 - Förderinteresse: {s6_foerderinteresse}
 - Budget: {s1_budget}
 
-VERIFIZIERTE FÖRDERPROGRAMME (aus Datenbank — verwende AUSSCHLIESSLICH diese Programme):
+VERIFIZIERTE FÖRDERPROGRAMME (aus Datenbank und Report 1 — verwende ALLE diese Programme):
 {funding_endpoint_data}
 
-KRITISCH: Verwende NUR die oben aufgelisteten Programme. Erfinde KEINE weiteren Programme.
-Wenn keine Programme aufgelistet sind, weise darauf hin, dass aktuell keine passenden Programme identifiziert wurden.
+KRITISCH:
+- Du MUSST ALLE oben aufgelisteten Programme in deiner Ausgabe aufführen. Lasse KEIN Programm weg.
+- Erfinde KEINE zusätzlichen Programme, die nicht in der Liste stehen.
+- Programme mit dem Vermerk "bereits validiert" oder "aus Report 1" wurden bereits im KI-Status-Report empfohlen und MÜSSEN hier ebenfalls erscheinen, um Cross-Report-Konsistenz zu gewährleisten.
+- Wenn keine Programme aufgelistet sind, weise darauf hin, dass aktuell keine passenden Programme identifiziert wurden.
 
 ERGÄNZENDE RECHERCHE (nur als Zusatzinfo, NICHT als Programmquelle verwenden):
 {research_foerdermittel}
