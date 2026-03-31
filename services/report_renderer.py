@@ -1597,52 +1597,7 @@ def render(briefing_obj: Any,
                 html
             )
 
-            # --- FIX 3: Entscheidungsvorlage — Deterministic Financial Block ---
-            # FIX-KIS-1086: Replace the ENTIRE financial block ("Erwarteter Nutzen"
-            # through "Investition") with deterministic canonical values.
-            # Previous regex-only approaches were unstable — sanitizers/healers
-            # could strip individual values between generation and rendering.
-            # This block-level replacement runs on the FINAL HTML, so no
-            # post-processor can corrupt it afterward.
-            _canon_hours_int = int(_canon_hours)
-            _canon_rate_int = int(_canon_rate)
-            _canon_opex_m_int = int(_canon_opex_m)
-            _jahresersparnis_str = _fmt_de_eur(_jahresersparnis)
-
-            _gf_financial_block = (
-                f'<h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Erwarteter Nutzen:</h4>\n'
-                f'            <ul style="font-size: 13px; margin: 0; padding-left: 20px;">\n'
-                f'                <li>Zeitersparnis: {_canon_hours_int} Stunden/Monat</li>\n'
-                f'                <li>Jährliche Brutto-Zeitersparnis: ca. {_jahresersparnis_str}\u00a0€ ({_canon_hours_int}h \u00d7 {_canon_rate_int}\u00a0€ \u00d7 12)</li>\n'
-                f'                <li>Qualitätssteigerung bei Routineaufgaben</li>\n'
-                f'            </ul>\n'
-                f'            \n'
-                f'            <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Investition:</h4>\n'
-                f'            <ul style="font-size: 13px; margin: 0; padding-left: 20px;">\n'
-                f'                <li>Tool-Kosten: ca. {_canon_opex_m_int}\u00a0€/Monat (Organisation gesamt)</li>\n'
-                f'                <li>Einarbeitung: ca. 2-4 Stunden</li>\n'
-                f'            </ul>'
-            )
-
-            # Match the entire block from "Erwarteter Nutzen:" through the
-            # Investition list, regardless of what values/formatting are inside.
-            _gf_pattern = re.compile(
-                r'<h4[^>]*>\s*Erwarteter Nutzen:?\s*</h4>'
-                r'.*?'
-                r'<h4[^>]*>\s*Investition:?\s*</h4>'
-                r'\s*<ul[^>]*>.*?</ul>',
-                re.DOTALL | re.IGNORECASE,
-            )
-            _gf_match = _gf_pattern.search(html)
-            if _gf_match:
-                html = html[:_gf_match.start()] + _gf_financial_block + html[_gf_match.end():]
-                log.info(
-                    "[FIX-KIS-1086] Injected deterministic GF-Vorlage financial block: "
-                    "%dh × %d€ × 12 = %s€ run=%s",
-                    _canon_hours_int, _canon_rate_int, _jahresersparnis_str, run_id,
-                )
-            else:
-                log.info("[FIX-KIS-1086] GF-Vorlage financial block not found in HTML (Solo?) run=%s", run_id)
+            # --- FIX 3: (moved to standalone block FIX-KIS-1087-GF below) ---
 
             # --- FIX 4: Tool-Kosten "400€/Monat" → kanonische OPEX/Monat ---
             # LLM rundet OPEX auf 400€ statt 350€
@@ -1664,6 +1619,67 @@ def render(briefing_obj: Any,
                      _canon_opex_m, _canon_hours, _canon_rate, run_id)
     except Exception as e:
         log.warning("[FIX-v7110-MATH] Error during math correction (continuing): %s run=%s", str(e)[:200], run_id)
+
+    # =========================================================================
+    # FIX-KIS-1087-GF: Standalone GF-Vorlage Financial Block Replacement
+    # Belt-and-suspenders: This block runs INDEPENDENTLY of the FIX-v7110-MATH
+    # guard above. Even if _canon_rate is missing from sections (the bug that
+    # caused KIS-1086/1087 failures), this block resolves its own canonical
+    # values with broader fallbacks and fires regardless.
+    # =========================================================================
+    try:
+        _gf_opex_m = float(sections.get("CANON_OPEX_MONTH_EUR") or sections.get("OPEX_REALISTISCH_EUR") or 0)
+        _gf_hours = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
+        _gf_rate = float(sections.get("CANON_RATE_EUR") or sections.get("stundensatz_eur") or sections.get("hourly_rate") or 0)
+
+        if _gf_hours > 0 and _gf_rate > 0:
+            _gf_hours_int = int(_gf_hours)
+            _gf_rate_int = int(_gf_rate)
+            _gf_opex_m_int = int(_gf_opex_m) if _gf_opex_m > 0 else 0
+            _gf_jahresersparnis = _gf_hours * _gf_rate * 12
+
+            def _gf_fmt_de_eur(val: float) -> str:
+                return f"{int(val):,}".replace(",", ".")
+
+            _gf_jahresersparnis_str = _gf_fmt_de_eur(_gf_jahresersparnis)
+
+            _gf_financial_block = (
+                f'<h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Erwarteter Nutzen:</h4>\n'
+                f'            <ul style="font-size: 13px; margin: 0; padding-left: 20px;">\n'
+                f'                <li>Zeitersparnis: {_gf_hours_int} Stunden/Monat</li>\n'
+                f'                <li>Jährliche Brutto-Zeitersparnis: ca. {_gf_jahresersparnis_str}\u00a0€ ({_gf_hours_int}h \u00d7 {_gf_rate_int}\u00a0€ \u00d7 12)</li>\n'
+                f'                <li>Qualitätssteigerung bei Routineaufgaben</li>\n'
+                f'            </ul>\n'
+                f'            \n'
+                f'            <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Investition:</h4>\n'
+                f'            <ul style="font-size: 13px; margin: 0; padding-left: 20px;">\n'
+                f'                <li>Tool-Kosten: ca. {_gf_opex_m_int}\u00a0€/Monat (Organisation gesamt)</li>\n'
+                f'                <li>Einarbeitung: ca. 2-4 Stunden</li>\n'
+                f'            </ul>'
+            )
+
+            _gf_pattern = re.compile(
+                r'<h4[^>]*>\s*Erwarteter Nutzen:?\s*</h4>'
+                r'.*?'
+                r'<h4[^>]*>\s*Investition:?\s*</h4>'
+                r'\s*<ul[^>]*>.*?</ul>',
+                re.DOTALL | re.IGNORECASE,
+            )
+            _gf_match = _gf_pattern.search(html)
+            if _gf_match:
+                html = html[:_gf_match.start()] + _gf_financial_block + html[_gf_match.end():]
+                log.info(
+                    "[FIX-KIS-1087-GF] Injected deterministic GF-Vorlage financial block: "
+                    "%dh × %d€ × 12 = %s€ run=%s",
+                    _gf_hours_int, _gf_rate_int, _gf_jahresersparnis_str, run_id,
+                )
+            else:
+                log.info("[FIX-KIS-1087-GF] GF-Vorlage financial block not found in HTML (Solo?) run=%s", run_id)
+        else:
+            log.info("[FIX-KIS-1087-GF] Skipped — hours=%.0f, rate=%.0f insufficient run=%s",
+                     _gf_hours, _gf_rate, run_id)
+    except Exception as e:
+        log.warning("[FIX-KIS-1087-GF] Error during GF-Vorlage replacement (continuing): %s run=%s", str(e)[:200], run_id)
 
     # =========================================================================
     # FIX-v7110-BC-EUR: Correct EUR values in ROI-Herleitung and Scenario Cards
