@@ -134,7 +134,7 @@ async def generate_solo_compact(payload: ReportVariantRequest) -> Dict[str, Any]
     # Pass resolved variant to the analyzer
     try:
         if asyncio.iscoroutinefunction(run_async):
-            await run_async(  # type: ignore[func-returns-value]
+            await run_async(  # type: ignore
                 payload.briefing_id,
                 report_variant=resolved_variant_str,
             )
@@ -151,7 +151,7 @@ async def generate_solo_compact(payload: ReportVariantRequest) -> Dict[str, Any]
         # Fallback: run_async might not support report_variant yet
         log.warning("[FIX-529] run_async doesn't support report_variant, using default")
         if asyncio.iscoroutinefunction(run_async):
-            await run_async(payload.briefing_id)  # type: ignore[func-returns-value]
+            await run_async(payload.briefing_id)  # type: ignore
         else:
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, lambda: run_async(payload.briefing_id))
@@ -231,7 +231,7 @@ async def generate(payload: Dict[str, Any]) -> Dict[str, Any]:
     # Support sync/async implementations transparently
     try:
         if asyncio.iscoroutinefunction(run_async):
-            await run_async(  # type: ignore[func-returns-value]
+            await run_async(  # type: ignore
                 briefing_id,
                 email=email,
                 report_variant=resolved_variant_str,
@@ -250,7 +250,7 @@ async def generate(payload: Dict[str, Any]) -> Dict[str, Any]:
         # Fallback: run_async might not support new parameters
         log.warning("[FIX-529] run_async fallback: trying without report_variant")
         if asyncio.iscoroutinefunction(run_async):
-            await run_async(briefing_id)  # type: ignore[func-returns-value]
+            await run_async(briefing_id)  # type: ignore
         else:
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, lambda: run_async(briefing_id))
