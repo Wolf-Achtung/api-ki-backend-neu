@@ -20814,43 +20814,41 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     # === END L3 ===
 
     # =========================================================================
-    # FIX-KIS-1090-GF-L3: Defense Layer 3 — FINAL HTML guard before DB storage
-    # This is the ABSOLUTE LAST chance. Runs on result["html"] after ALL
-    # post-processing. If "Brutto-Zeitersparnis: ca." exists without a digit
-    # following, inject the canonical value derived from get_hourly_rate().
-    # Same mechanism as FIX-v715 (Schwerpunkte) — nothing can undo this.
+    # FIX-KIS-1091-GF: Nuclear Fallback — regex on FINAL HTML before DB write
+    # Previous L3 had two bugs:
+    #   1) Detection: checked if ANY "ca." had a digit → missed cases where
+    #      one occurrence (SOFORT_START) had value but another (GF-Vorlage) didn't.
+    #   2) Replacement regex: (?=<|$|\n) only matched "ca." followed by tag/EOL/newline,
+    #      but in Team segment "ca." can be followed by space+text → no match.
+    # Fix: Use re.subn with negative lookahead (?!\d) to replace ALL occurrences
+    # of "ca." NOT followed by a digit, regardless of what comes after.
     # =========================================================================
     try:
         _l3_html = result["html"]
         if _l3_html and "Brutto-Zeitersparnis" in _l3_html:
-            _l3_has_value = bool(re.search(r'Brutto-Zeitersparnis:\s*ca\.\s*\d', _l3_html))
-            if not _l3_has_value:
-                log.error("[FIX-KIS-1090-GF-L3] CRITICAL: 'ca.' still missing value in FINAL HTML! Repairing...")
-                from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
-                _l3_size = normalize_company_size(size_raw)
-                _l3_rate, _ = get_hourly_rate(_l3_size)
-                _l3_hours = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
-                if _l3_hours <= 0:
-                    _l3_hours = {"solo": 15, "team": 25, "kmu": 50}.get(_l3_size, 25)
-                _l3_brutto = int(_l3_hours) * int(_l3_rate) * 12
-                _l3_fmt = f"{_l3_brutto:,}".replace(",", ".")
-                # Use MULTILINE so $ matches at line boundaries in the HTML
-                _nbsp = "\u00a0"
-                _times = "\u00d7"
-                _eur = "\u20ac"
-                _l3_repl = f"\\1 {_l3_fmt}{_nbsp}{_eur} ({int(_l3_hours)}h {_times} {int(_l3_rate)}{_nbsp}{_eur} {_times} 12)"
-                _l3_html = re.sub(
-                    r'(Brutto-Zeitersparnis:\s*ca\.)\s*(?=<|$|\n)',
-                    _l3_repl,
-                    _l3_html,
-                    flags=re.MULTILINE
-                )
-                result["html"] = _l3_html
-                log.info("[FIX-KIS-1090-GF-L3] FINAL repair: ca. %s€ (%dh × %d€ × 12)", _l3_fmt, int(_l3_hours), int(_l3_rate))
+            from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
+            _l3_size = normalize_company_size(size_raw)
+            _l3_rate, _ = get_hourly_rate(_l3_size)
+            _l3_hours = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
+            if _l3_hours <= 0:
+                _l3_hours = {"solo": 15, "team": 25, "kmu": 50}.get(_l3_size, 25)
+            _l3_brutto = int(_l3_hours) * int(_l3_rate) * 12
+            _l3_fmt = f"{_l3_brutto:,}".replace(",", ".")
+            # Negative lookahead: match "ca." NOT followed by a digit
+            # This catches ALL broken occurrences regardless of trailing content
+            _l3_html, _l3_count = re.subn(
+                r'(Brutto-Zeitersparnis:\s*ca\.)\s*(?!\d)',
+                rf'\1 {_l3_fmt}\u20ac',
+                _l3_html,
+            )
+            result["html"] = _l3_html
+            if _l3_count > 0:
+                log.info("[FIX-KIS-1091-GF] Injected Brutto-Zeitersparnis: %s€ (%d replacements, %dh × %d€ × 12)",
+                         _l3_fmt, _l3_count, int(_l3_hours), int(_l3_rate))
             else:
-                log.info("[FIX-KIS-1090-GF-L3] OK — value present in final HTML")
+                log.info("[FIX-KIS-1091-GF] OK — all Brutto-Zeitersparnis values present")
     except Exception as _l3_err:
-        log.warning("[FIX-KIS-1090-GF-L3] Failed: %s", _l3_err)
+        log.warning("[FIX-KIS-1091-GF] Failed: %s", _l3_err)
 
     an = Analysis(
         user_id=br.user_id,
