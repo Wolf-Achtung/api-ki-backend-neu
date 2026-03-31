@@ -15254,8 +15254,6 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         "TRAININGS_INTERESSEN_LABELS",
         # Strategic context block
         "strategic_context_block",
-        # Canonical financial values needed by report_renderer FIX-v7110-MATH guard
-        "stundensatz_eur",
     ]
     for key in direct_copy_keys:
         sections[key] = answers.get(key, "")
@@ -17570,10 +17568,24 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             inject_canonical_to_sections,
             cap_time_savings,
             normalize_company_size,
+            get_hourly_rate,
         )
         canonical_bc = create_canonical_from_sections(sections, company_size=size_raw)
         canon_updates = inject_canonical_to_sections(canonical_bc, sections)
         log.info(f"[{run_id}] ✅ [CANONICAL-BC] Injected {canon_updates} canonical KPI values")
+        # FIX-KIS-1087: Safety net — ensure canonical rate is in sections even if
+        # inject_canonical was skipped (FINAL LOCK) or canonical_bc was None.
+        # The report_renderer FIX-v7110-MATH guard requires CANON_RATE_EUR or
+        # stundensatz_eur in sections. Without this, the entire math correction
+        # block (including GF-Vorlage replacement) is dead code.
+        if not sections.get("CANON_RATE_EUR") and not sections.get("stundensatz_eur"):
+            try:
+                _fix1087_rate, _ = get_hourly_rate(normalize_company_size(size_raw))
+                sections["CANON_RATE_EUR"] = int(_fix1087_rate)
+                sections["stundensatz_eur"] = int(_fix1087_rate)
+                log.info("[FIX-KIS-1087] Safety net: injected CANON_RATE_EUR=%d into sections", int(_fix1087_rate))
+            except Exception as _e1087:
+                log.warning("[FIX-KIS-1087] Safety net failed: %s", _e1087)
         # FIX-B723: Enforce canonical rate in BUSINESS_CASE_TABLE_HTML
         # BC table is pre-rendered HTML where "95 €" sits in a <td> cell.
         # Rate Sweep regex can't match "Stundensatz" across HTML tags.
@@ -20975,6 +20987,49 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
             "content": best_pdf,
             "mimetype": "application/pdf"
         })
+
+    # --- Briefing-PDF attachment for admin archiving ---
+    try:
+        from services.email_templates import render_briefing_pdf_html
+        from utils.report_display_id import get_report_display_id as _briefing_disp_id
+
+        _briefing_display_id = _briefing_disp_id(br.id)
+        _briefing_answers = getattr(br, "answers", {}) or {}
+        _briefing_scores = _extract_scores_from_report(rep)
+        _briefing_sections: Dict[str, Any] = {}
+        _briefing_analysis = getattr(rep, "analysis", None)
+        if _briefing_analysis:
+            _briefing_meta = getattr(_briefing_analysis, "meta", None) or {}
+            _briefing_sections = _briefing_meta.get("sections", {}) if isinstance(_briefing_meta, dict) else {}
+
+        _briefing_created = getattr(br, "created_at", None)
+        _briefing_datum = _briefing_created.strftime("%d.%m.%Y %H:%M") if _briefing_created else ""
+
+        _briefing_html = render_briefing_pdf_html(
+            display_id=_briefing_display_id,
+            datum=_briefing_datum,
+            answers=_briefing_answers,
+            scores=_briefing_scores,
+            sections=_briefing_sections,
+        )
+
+        from services.pdf_client import render_pdf_from_html
+        _briefing_pdf_result = render_pdf_from_html(
+            _briefing_html,
+            pdf_options={"format": "A4", "margin": {"top": "15mm", "bottom": "15mm", "left": "10mm", "right": "10mm"}},
+        )
+        _briefing_pdf_bytes = _briefing_pdf_result.get("pdf_bytes")
+        if _briefing_pdf_bytes:
+            attachments_admin.append({
+                "filename": f"Briefing-{_briefing_display_id}.pdf",
+                "content": _briefing_pdf_bytes,
+                "mimetype": "application/pdf",
+            })
+            log.info("[%s] 📋 Generated Briefing-PDF attachment (%d bytes)", run_id, len(_briefing_pdf_bytes))
+        else:
+            log.warning("[%s] ⚠️ Briefing-PDF: no pdf_bytes returned from Puppeteer", run_id)
+    except Exception as _bp_err:
+        log.warning("[%s] ⚠️ Briefing-PDF generation failed (continuing): %s", run_id, str(_bp_err)[:200])
 
     # Resolve user email for report card
     user_email = _determine_user_email(db, br, getattr(rep, "user_email", None)) or "unknown"
