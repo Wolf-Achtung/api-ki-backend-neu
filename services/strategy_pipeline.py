@@ -392,6 +392,24 @@ async def generate_strategy_report(
         except Exception as _fe:
             logger.warning("[Strategy %d] Funding injection failed: %s", briefing_id, _fe)
 
+        # FIX-KIS-1089: Inject R1 funding table as additional context for S7.
+        # R1 uses a deterministic table (build_core_funding_table_html) that always
+        # has correct programmes. Strategy was inconsistent because it relied solely
+        # on recommend_funding() + LLM generation, which could produce empty results.
+        _r1_funding_html = str(report1_sections.get("FOERDERPROGRAMME_HTML", "") or "")
+        if _r1_funding_html and not _funding_data_block:
+            # Fallback: extract programme names from R1 HTML table for the prompt
+            import re as _re_s7
+            _r1_prog_names = _re_s7.findall(r'<strong>([^<]+)</strong>', _r1_funding_html)
+            if _r1_prog_names:
+                _funding_data_block = "Programme aus Report 1 (verifiziert):\n" + "\n".join(
+                    f"- {name}" for name in _r1_prog_names
+                )
+                logger.info(
+                    "[Strategy %d] S7 funding fallback from R1: %d programmes",
+                    briefing_id, len(_r1_prog_names),
+                )
+
         # S7 + S8 parallel
         s7_task = _generate_section("S7", base_context, {
             "foerder_matches": str(report1_data.get("foerder_matches", "")),
