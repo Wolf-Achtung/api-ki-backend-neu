@@ -20833,12 +20833,14 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             if _l3_hours <= 0:
                 _l3_hours = {"solo": 15, "team": 25, "kmu": 50}.get(_l3_size, 25)
             _l3_brutto = int(_l3_hours) * int(_l3_rate) * 12
-            _l3_fmt = f"{_l3_brutto:,}".replace(",", ".")
-            # Negative lookahead: match "ca." NOT followed by a digit
-            # This catches ALL broken occurrences regardless of trailing content
+            _l3_fmt = f"{_l3_brutto:,.0f}€".replace(",", ".")
+            # Negative lookahead (?!\s*\d) checks past whitespace for digits,
+            # preventing backtracking false-positives on already-correct values.
+            # Trailing \s* consumes leftover whitespace only when lookahead passes.
+            # Replacement: \1 keeps "Brutto-Zeitersparnis: ca." then appends " 28.500€"
             _l3_html, _l3_count = re.subn(
-                r'(Brutto-Zeitersparnis:\s*ca\.)\s*(?!\d)',
-                rf'\1 {_l3_fmt}\u20ac',
+                r'(Brutto-Zeitersparnis:\s*ca\.)(?!\s*\d)\s*',
+                rf'\1 {_l3_fmt}',
                 _l3_html,
             )
             result["html"] = _l3_html
