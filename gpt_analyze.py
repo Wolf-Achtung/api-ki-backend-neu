@@ -13175,7 +13175,44 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     except Exception as e:
         log.warning("[SOFORT-START] ⚠️ Failed to generate: %s", e)
         sections["SOFORT_START_HTML"] = ""
-    
+
+    # =========================================================================
+    # FIX-KIS-1090-GF-L1: Defense Layer 1 — Validate GF-Vorlage immediately
+    # after generation. If "ca." is not followed by a digit, re-derive the
+    # canonical value from get_hourly_rate() (independent of sections dict).
+    # =========================================================================
+    try:
+        _gf_l1_html = sections.get("SOFORT_START_HTML", "")
+        if _gf_l1_html and "Brutto-Zeitersparnis" in _gf_l1_html:
+            _gf_l1_match = re.search(r'Brutto-Zeitersparnis:\s*ca\.\s*(\d)', _gf_l1_html)
+            if not _gf_l1_match:
+                log.warning("[FIX-KIS-1090-GF-L1] Detected 'ca.' WITHOUT value in SOFORT_START_HTML — repairing")
+                try:
+                    from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
+                    _l1_size = normalize_company_size(sofort_size)
+                    _l1_rate, _ = get_hourly_rate(_l1_size)
+                    _l1_hours = _sofort_hours_month if _sofort_hours_month > 0 else 25
+                    _l1_brutto = int(_l1_hours) * int(_l1_rate) * 12
+                    _l1_fmt = f"{_l1_brutto:,}".replace(",", ".")
+                    # Replace "ca." or "ca. " at end of pattern (missing value)
+                    _nbsp = "\u00a0"
+                    _times = "\u00d7"
+                    _l1_repl = f"\\1 {_l1_fmt}{_nbsp}€ ({int(_l1_hours)}h {_times} {int(_l1_rate)}{_nbsp}€ {_times} 12)"
+                    _gf_l1_html = re.sub(
+                        r'(Brutto-Zeitersparnis:\s*ca\.)\s*(?=<|$|\n)',
+                        _l1_repl,
+                        _gf_l1_html,
+                        flags=re.MULTILINE
+                    )
+                    sections["SOFORT_START_HTML"] = _gf_l1_html
+                    log.info("[FIX-KIS-1090-GF-L1] Repaired: ca. %s€ (%dh × %d€ × 12)", _l1_fmt, int(_l1_hours), int(_l1_rate))
+                except Exception as _l1_err:
+                    log.warning("[FIX-KIS-1090-GF-L1] Repair failed: %s", _l1_err)
+            else:
+                log.info("[FIX-KIS-1090-GF-L1] OK — value present after 'ca.'")
+    except Exception as _l1_outer:
+        log.warning("[FIX-KIS-1090-GF-L1] Check failed: %s", _l1_outer)
+
     # ========== v14.12: 30-TAGE CHALLENGE (Gamechanger #8) ==========
     try:
         sofort_zeitbudget = briefing.get("zeitbudget", "") or "2_5"
@@ -20371,6 +20408,42 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             sections["FINAL_CHECK_INTRO"] = _fci_patched
             log.info(f"[{run_id}] [FIX-GRAMMAR-3] Inserted period before 'Schwerpunkte:' in FINAL_CHECK_INTRO")
 
+    # =========================================================================
+    # FIX-KIS-1090-GF-L2: Defense Layer 2 — Pre-render SOFORT_START_HTML check
+    # Last chance to repair BEFORE Jinja2 template rendering.
+    # Derives canonical values from get_hourly_rate() independently.
+    # =========================================================================
+    try:
+        _gf_l2_html = sections.get("SOFORT_START_HTML", "")
+        if _gf_l2_html and "Brutto-Zeitersparnis" in _gf_l2_html:
+            _gf_l2_has_value = bool(re.search(r'Brutto-Zeitersparnis:\s*ca\.\s*\d', _gf_l2_html))
+            if not _gf_l2_has_value:
+                log.warning("[FIX-KIS-1090-GF-L2] 'ca.' missing value pre-render! sections CANON_RATE_EUR=%s, stundensatz_eur=%s, CANON_HOURS_MONTH=%s",
+                            sections.get("CANON_RATE_EUR"), sections.get("stundensatz_eur"), sections.get("CANON_HOURS_MONTH"))
+                from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
+                _l2_size = normalize_company_size(size_raw)
+                _l2_rate, _ = get_hourly_rate(_l2_size)
+                _l2_hours = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
+                if _l2_hours <= 0:
+                    _l2_hours = {"solo": 15, "team": 25, "kmu": 50}.get(_l2_size, 25)
+                _l2_brutto = int(_l2_hours) * int(_l2_rate) * 12
+                _l2_fmt = f"{_l2_brutto:,}".replace(",", ".")
+                _nbsp = "\u00a0"
+                _times = "\u00d7"
+                _l2_repl = f"\\1 {_l2_fmt}{_nbsp}€ ({int(_l2_hours)}h {_times} {int(_l2_rate)}{_nbsp}€ {_times} 12)"
+                _gf_l2_html = re.sub(
+                    r'(Brutto-Zeitersparnis:\s*ca\.)\s*(?=<|$|\n)',
+                    _l2_repl,
+                    _gf_l2_html,
+                    flags=re.MULTILINE
+                )
+                sections["SOFORT_START_HTML"] = _gf_l2_html
+                log.info("[FIX-KIS-1090-GF-L2] Repaired pre-render: ca. %s€", _l2_fmt)
+            else:
+                log.info("[FIX-KIS-1090-GF-L2] OK — value present")
+    except Exception as _l2_err:
+        log.warning("[FIX-KIS-1090-GF-L2] Failed: %s", _l2_err)
+
     result = render(
         br,
         run_id=run_id,
@@ -20740,11 +20813,50 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         log.warning(f"[{run_id}] [L3] Sprint code strip failed: {e}")
     # === END L3 ===
 
+    # =========================================================================
+    # FIX-KIS-1090-GF-L3: Defense Layer 3 — FINAL HTML guard before DB storage
+    # This is the ABSOLUTE LAST chance. Runs on result["html"] after ALL
+    # post-processing. If "Brutto-Zeitersparnis: ca." exists without a digit
+    # following, inject the canonical value derived from get_hourly_rate().
+    # Same mechanism as FIX-v715 (Schwerpunkte) — nothing can undo this.
+    # =========================================================================
+    try:
+        _l3_html = result["html"]
+        if _l3_html and "Brutto-Zeitersparnis" in _l3_html:
+            _l3_has_value = bool(re.search(r'Brutto-Zeitersparnis:\s*ca\.\s*\d', _l3_html))
+            if not _l3_has_value:
+                log.error("[FIX-KIS-1090-GF-L3] CRITICAL: 'ca.' still missing value in FINAL HTML! Repairing...")
+                from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
+                _l3_size = normalize_company_size(size_raw)
+                _l3_rate, _ = get_hourly_rate(_l3_size)
+                _l3_hours = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
+                if _l3_hours <= 0:
+                    _l3_hours = {"solo": 15, "team": 25, "kmu": 50}.get(_l3_size, 25)
+                _l3_brutto = int(_l3_hours) * int(_l3_rate) * 12
+                _l3_fmt = f"{_l3_brutto:,}".replace(",", ".")
+                # Use MULTILINE so $ matches at line boundaries in the HTML
+                _nbsp = "\u00a0"
+                _times = "\u00d7"
+                _eur = "\u20ac"
+                _l3_repl = f"\\1 {_l3_fmt}{_nbsp}{_eur} ({int(_l3_hours)}h {_times} {int(_l3_rate)}{_nbsp}{_eur} {_times} 12)"
+                _l3_html = re.sub(
+                    r'(Brutto-Zeitersparnis:\s*ca\.)\s*(?=<|$|\n)',
+                    _l3_repl,
+                    _l3_html,
+                    flags=re.MULTILINE
+                )
+                result["html"] = _l3_html
+                log.info("[FIX-KIS-1090-GF-L3] FINAL repair: ca. %s€ (%dh × %d€ × 12)", _l3_fmt, int(_l3_hours), int(_l3_rate))
+            else:
+                log.info("[FIX-KIS-1090-GF-L3] OK — value present in final HTML")
+    except Exception as _l3_err:
+        log.warning("[FIX-KIS-1090-GF-L3] Failed: %s", _l3_err)
+
     an = Analysis(
-        user_id=br.user_id, 
-        briefing_id=briefing_id, 
-        html=result["html"], 
-        meta=result.get("meta", {}), 
+        user_id=br.user_id,
+        briefing_id=briefing_id,
+        html=result["html"],
+        meta=result.get("meta", {}),
         created_at=datetime.now(timezone.utc)
     )
     db.add(an)

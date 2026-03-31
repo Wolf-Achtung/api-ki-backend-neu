@@ -392,22 +392,42 @@ async def generate_strategy_report(
         except Exception as _fe:
             logger.warning("[Strategy %d] Funding injection failed: %s", briefing_id, _fe)
 
-        # FIX-KIS-1089: Inject R1 funding table as additional context for S7.
-        # R1 uses a deterministic table (build_core_funding_table_html) that always
-        # has correct programmes. Strategy was inconsistent because it relied solely
-        # on recommend_funding() + LLM generation, which could produce empty results.
+        # FIX-KIS-1090: Always merge R1 funding table into S7 context.
+        # R1 uses build_core_funding_table_html() from JSON — always has correct,
+        # region-specific programmes (L-Bank, Innovationsgutscheine BW, etc.).
+        # The recommend_funding() engine may miss regional programmes, so we
+        # ALWAYS append R1 programmes to ensure cross-report consistency.
         _r1_funding_html = str(report1_sections.get("FOERDERPROGRAMME_HTML", "") or "")
-        if _r1_funding_html and not _funding_data_block:
-            # Fallback: extract programme names from R1 HTML table for the prompt
+        if _r1_funding_html:
             import re as _re_s7
-            _r1_prog_names = _re_s7.findall(r'<strong>([^<]+)</strong>', _r1_funding_html)
-            if _r1_prog_names:
-                _funding_data_block = "Programme aus Report 1 (verifiziert):\n" + "\n".join(
-                    f"- {name}" for name in _r1_prog_names
-                )
+            # Extract full programme details from R1 HTML table rows
+            _r1_rows = _re_s7.findall(
+                r'<tr>\s*<td[^>]*>.*?<strong>([^<]+)</strong>.*?</td>'
+                r'\s*<td[^>]*>(.*?)</td>'      # Region
+                r'\s*<td[^>]*>(.*?)</td>'      # Förderquote
+                r'\s*<td[^>]*>(.*?)</td>',     # Max Volumen
+                _r1_funding_html, _re_s7.DOTALL,
+            )
+            if _r1_rows:
+                _r1_lines = []
+                for _name, _region, _quote, _vol in _r1_rows:
+                    _region_clean = _re_s7.sub(r'<[^>]+>', '', _region).strip()
+                    _quote_clean = _re_s7.sub(r'<[^>]+>', '', _quote).strip()
+                    _vol_clean = _re_s7.sub(r'<[^>]+>', '', _vol).strip()
+                    _r1_lines.append(
+                        f"- {_name.strip()}\n"
+                        f"  Region: {_region_clean}\n"
+                        f"  Förderquote: {_quote_clean}\n"
+                        f"  Max. Förderung: {_vol_clean}"
+                    )
+                _r1_block = "\n\n".join(_r1_lines)
+                if _funding_data_block:
+                    _funding_data_block += "\n\nZUSÄTZLICHE PROGRAMME AUS REPORT 1 (bereits validiert — MÜSSEN übernommen werden):\n" + _r1_block
+                else:
+                    _funding_data_block = _r1_block
                 logger.info(
-                    "[Strategy %d] S7 funding fallback from R1: %d programmes",
-                    briefing_id, len(_r1_prog_names),
+                    "[Strategy %d] S7 funding: merged %d R1 programmes into context",
+                    briefing_id, len(_r1_rows),
                 )
 
         # S7 + S8 parallel
@@ -1051,10 +1071,44 @@ def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
         strategy_answers=strategy_answers,
     )
 
+    # --- FIX-KIS-1090: Generate Briefing-PDF attachment ---
+    _briefing_attachments = []
+    try:
+        from services.email_templates import render_briefing_pdf_html
+        from services.pdf_client import render_pdf_from_html
+
+        _sections = analysis_meta.get("sections", {}) if isinstance(analysis_meta, dict) else {}
+        _created = getattr(briefing, "created_at", None)
+        _datum = _created.strftime("%d.%m.%Y %H:%M") if _created else ""
+
+        _briefing_html = render_briefing_pdf_html(
+            display_id=kis_number,
+            datum=_datum,
+            answers=r1_answers,
+            scores=scores,
+            sections=_sections,
+        )
+        _pdf_result = render_pdf_from_html(
+            _briefing_html,
+            pdf_options={"format": "A4", "margin": {"top": "15mm", "bottom": "15mm", "left": "10mm", "right": "10mm"}},
+        )
+        _pdf_bytes = _pdf_result.get("pdf_bytes")
+        if _pdf_bytes:
+            _briefing_attachments.append({
+                "filename": f"Briefing-{kis_number}.pdf",
+                "content": _pdf_bytes,
+                "mimetype": "application/pdf",
+            })
+            logger.info("[%s] Generated Briefing-PDF attachment (%d bytes)", run_tag, len(_pdf_bytes))
+        else:
+            logger.warning("[%s] Briefing-PDF: no pdf_bytes from Puppeteer", run_tag)
+    except Exception as _bp_err:
+        logger.warning("[%s] Briefing-PDF generation failed (continuing): %s", run_tag, str(_bp_err)[:200])
+
     # --- Send ---
     admin_addr = "bewertung@ki-sicherheit.jetzt"
     _time.sleep(0.6)  # Resend rate limit
-    ok, err = _send_email_via_resend(admin_addr, subject, html_body)
+    ok, err = _send_email_via_resend(admin_addr, subject, html_body, attachments=_briefing_attachments or None)
     if ok:
         logger.info("[%s] Admin briefing email sent to %s", run_tag, _mask_email(admin_addr))
     else:
