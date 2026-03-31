@@ -361,74 +361,30 @@ async def generate_strategy_report(
             "s5_budget_summary": _extract_summary(sections["S5"]),
         })
 
-        # --- S7: Inject verified funding data from recommend engine ---
+        # --- S7: KIS-1093-B — Structured JSON funding data for S7 prompt ---
+        # Programs are filtered ONCE by region/country/size at the source.
+        # No HTML parsing, no regex removal, no re-injection needed.
         _funding_data_block = ""
         try:
-            from services.funding_recommender import recommend_funding as _get_funding
-            _funding_recs = _get_funding(
-                branch=briefing_data.get("branche", ""),
-                region=briefing_data.get("bundesland", "DE"),
-                size=briefing_data.get("unternehmensgroesse", "team"),
-                country=_country_code,
-                lang="de",
-                limit=5,
+            from services.funding_recommender import (
+                get_filtered_funding_programs,
+                format_funding_programs_for_prompt,
             )
-            if _funding_recs:
-                _lines = []
-                for _fr in _funding_recs:
-                    _lines.append(
-                        f"- {_fr.name} (Träger: {_fr.provider})\n"
-                        f"  Max. Förderung: {_fr.max_funding}\n"
-                        f"  Förderquote: {_fr.funding_rate}\n"
-                        f"  KI-Relevanz: {_fr.ki_relevance}\n"
-                        f"  URL: {_fr.url or 'k.A.'}\n"
-                        f"  Kurzbeschreibung: {_fr.summary_de or _fr.summary_en or 'k.A.'}"
-                    )
-                _funding_data_block = "\n\n".join(_lines)
-                logger.info(
-                    "[Strategy %d] S7 funding injection: %d programs for country=%s",
-                    briefing_id, len(_funding_recs), _country_code,
-                )
+            _filtered_programs = get_filtered_funding_programs(
+                bundesland=briefing_data.get("bundesland", ""),
+                country=_country_code,
+                size=briefing_data.get("unternehmensgroesse", "team"),
+                branch=briefing_data.get("branche", ""),
+                limit=8,
+            )
+            _funding_data_block = format_funding_programs_for_prompt(_filtered_programs)
+            logger.info(
+                "[Strategy %d] S7 funding (KIS-1093-B): %d pre-filtered programs for country=%s, bl=%s",
+                briefing_id, len(_filtered_programs), _country_code,
+                briefing_data.get("bundesland", ""),
+            )
         except Exception as _fe:
             logger.warning("[Strategy %d] Funding injection failed: %s", briefing_id, _fe)
-
-        # FIX-KIS-1090: Always merge R1 funding table into S7 context.
-        # R1 uses build_core_funding_table_html() from JSON — always has correct,
-        # region-specific programmes (L-Bank, Innovationsgutscheine BW, etc.).
-        # The recommend_funding() engine may miss regional programmes, so we
-        # ALWAYS append R1 programmes to ensure cross-report consistency.
-        _r1_funding_html = str(report1_sections.get("FOERDERPROGRAMME_HTML", "") or "")
-        if _r1_funding_html:
-            import re as _re_s7
-            # Extract full programme details from R1 HTML table rows
-            _r1_rows = _re_s7.findall(
-                r'<tr>\s*<td[^>]*>.*?<strong>([^<]+)</strong>.*?</td>'
-                r'\s*<td[^>]*>(.*?)</td>'      # Region
-                r'\s*<td[^>]*>(.*?)</td>'      # Förderquote
-                r'\s*<td[^>]*>(.*?)</td>',     # Max Volumen
-                _r1_funding_html, _re_s7.DOTALL,
-            )
-            if _r1_rows:
-                _r1_lines = []
-                for _name, _region, _quote, _vol in _r1_rows:
-                    _region_clean = _re_s7.sub(r'<[^>]+>', '', _region).strip()
-                    _quote_clean = _re_s7.sub(r'<[^>]+>', '', _quote).strip()
-                    _vol_clean = _re_s7.sub(r'<[^>]+>', '', _vol).strip()
-                    _r1_lines.append(
-                        f"- {_name.strip()}\n"
-                        f"  Region: {_region_clean}\n"
-                        f"  Förderquote: {_quote_clean}\n"
-                        f"  Max. Förderung: {_vol_clean}"
-                    )
-                _r1_block = "\n\n".join(_r1_lines)
-                if _funding_data_block:
-                    _funding_data_block += "\n\nZUSÄTZLICHE PROGRAMME AUS REPORT 1 (bereits validiert — MÜSSEN übernommen werden):\n" + _r1_block
-                else:
-                    _funding_data_block = _r1_block
-                logger.info(
-                    "[Strategy %d] S7 funding: merged %d R1 programmes into context",
-                    briefing_id, len(_r1_rows),
-                )
 
         # S7 + S8 parallel
         s7_task = _generate_section("S7", base_context, {
@@ -499,143 +455,9 @@ async def generate_strategy_report(
             sections["bundesland"] = base_context.get("bundesland", "")
         sections = apply_funding_blacklist(sections)
 
-        # === FIX-KIS-1091-FUND: Deterministic R1→Strategy S7 funding sync ===
-        # The LLM ignores R1 programmes in context and hallucninates AT/CH/Bayern
-        # programmes. Two-step fix: (1) remove irrelevant programmes, (2) inject
-        # missing R1 programmes deterministically.
-        try:
-            _s7_html = sections.get("S7", "")
-            _bl_raw = (base_context.get("bundesland", "") or "").strip().lower()
-            _cc = _country_code  # already set above (DE/AT/CH/GB)
-
-            if _s7_html and _cc == "DE":
-                # --- Step 1: Remove irrelevant AT/CH/wrong-Bundesland programmes ---
-                # Use short, case-insensitive search keys that match partial names.
-                # The LLM may abbreviate or rephrase titles from the prompt context.
-                _irrelevant_keys: list[tuple[str, str]] = [
-                    # Austrian programmes
-                    ("aws digi", "AT"),
-                    ("aws Digitalisierung", "AT"),
-                    ("digi4KMU", "AT"),
-                    ("digi4kmu", "AT"),
-                    ("Forschungsprämie Österreich", "AT"),
-                    ("Forschungsprämie AT", "AT"),
-                    # Swiss programmes
-                    ("Innosuisse", "CH"),
-                ]
-                if _bl_raw not in ("by", "bayern", "bavaria"):
-                    _irrelevant_keys.extend([
-                        ("LfA Förderbank", "Bayern"),
-                        ("LfA Bayern", "Bayern"),
-                        ("LfA-Förderbank", "Bayern"),
-                    ])
-
-                _removed_count = 0
-                for _search_key, _origin in _irrelevant_keys:
-                    # Skip if not present (case-insensitive)
-                    if _search_key.lower() not in _s7_html.lower():
-                        continue
-                    _esc = re.escape(_search_key)
-                    _s7_before = _s7_html
-                    # Try multiple HTML element patterns: tr, li, p, div, h3/h4
-                    for _tag_pat in [
-                        rf'<tr[^>]*>(?:(?!</tr>).)*?{_esc}(?:(?!</tr>).)*?</tr>\s*',
-                        rf'<li[^>]*>(?:(?!</li>).)*?{_esc}(?:(?!</li>).)*?</li>\s*',
-                        rf'<p[^>]*>(?:(?!</p>).)*?{_esc}(?:(?!</p>).)*?</p>\s*',
-                        rf'<div[^>]*>(?:(?!</div>).)*?{_esc}(?:(?!</div>).)*?</div>\s*',
-                        rf'<h[34][^>]*>(?:(?!</h[34]>).)*?{_esc}(?:(?!</h[34]>).)*?</h[34]>\s*',
-                    ]:
-                        _s7_html = re.sub(_tag_pat, '', _s7_html, flags=re.DOTALL | re.IGNORECASE)
-                        if _s7_html != _s7_before:
-                            break
-                    if _s7_html != _s7_before:
-                        _removed_count += 1
-                        logger.info("[FIX-KIS-1091-FUND] Removed %s programme '%s' from S7", _origin, _search_key)
-
-                # --- Step 2: Inject missing R1 programmes ---
-                _r1_fund_html = str(report1_sections.get("FOERDERPROGRAMME_HTML", "") or "")
-                _r1_progs = []
-                if _r1_fund_html:
-                    _r1_progs = re.findall(
-                        r'<tr>\s*<td[^>]*>.*?<strong>([^<]+)</strong>.*?</td>'
-                        r'\s*<td[^>]*>(.*?)</td>'      # Region
-                        r'\s*<td[^>]*>(.*?)</td>'      # Förderquote
-                        r'\s*<td[^>]*>(.*?)</td>',     # Max Volumen
-                        _r1_fund_html, re.DOTALL,
-                    )
-                    logger.info(
-                        "[FIX-KIS-1091-FUND] R1 programmes parsed: %d found: %s",
-                        len(_r1_progs),
-                        [re.sub(r'<[^>]+>', '', p[0]).strip() for p in _r1_progs],
-                    )
-
-                if _r1_progs:
-                    _s7_lower = _s7_html.lower()
-                    _missing = []
-                    for _pname, _pregion, _pquote, _pvol in _r1_progs:
-                        _pname_clean = re.sub(r'<[^>]+>', '', _pname).strip()
-                        if not _pname_clean:
-                            continue
-                        # Fuzzy presence check: full name, first two alpha words,
-                        # or first word. Handles "BAFA – Förderung..." where "–"
-                        # is a separate token after split().
-                        _name_lower = _pname_clean.lower()
-                        _alpha_words = [w for w in _pname_clean.split() if w[0].isalnum()]
-                        _present = _name_lower in _s7_lower
-                        if not _present and len(_alpha_words) >= 2:
-                            _present = " ".join(_alpha_words[:2]).lower() in _s7_lower
-                        if not _present and _alpha_words:
-                            _present = _alpha_words[0].lower() in _s7_lower
-                        if not _present:
-                            _missing.append((
-                                _pname_clean,
-                                re.sub(r'<[^>]+>', '', _pregion).strip(),
-                                re.sub(r'<[^>]+>', '', _pquote).strip(),
-                                re.sub(r'<[^>]+>', '', _pvol).strip(),
-                            ))
-
-                    if _missing:
-                        _rows = ""
-                        for _mn, _mr, _mq, _mv in _missing:
-                            _rows += (
-                                f'<tr><td style="padding:8px;border-bottom:1px solid #e2e8f0;">'
-                                f'<strong>{_mn}</strong></td>'
-                                f'<td style="padding:8px;border-bottom:1px solid #e2e8f0;">{_mr}</td>'
-                                f'<td style="padding:8px;border-bottom:1px solid #e2e8f0;">{_mq}</td>'
-                                f'<td style="padding:8px;border-bottom:1px solid #e2e8f0;">{_mv}</td></tr>'
-                            )
-                        _inject = (
-                            '<div style="margin-top:24px;padding:16px;'
-                            'border:1px solid #3b82f6;border-radius:8px;background:#f0f7ff;">'
-                            '<h4 style="color:#1e40af;margin:0 0 12px 0;font-size:15px;">'
-                            'Weitere relevante Förderprogramme (aus Ihrem KI-Readiness Report)</h4>'
-                            '<table style="width:100%;border-collapse:collapse;">'
-                            '<thead><tr style="background:#dbeafe;">'
-                            '<th style="padding:8px;text-align:left;">Programm</th>'
-                            '<th style="padding:8px;text-align:left;">Region</th>'
-                            '<th style="padding:8px;text-align:left;">Förderquote</th>'
-                            '<th style="padding:8px;text-align:left;">Max. Förderung</th>'
-                            '</tr></thead>'
-                            f'<tbody>{_rows}</tbody></table></div>'
-                        )
-                        # Inject before the last closing </div> or </section> of S7
-                        _inject_pos = _s7_html.rfind('</div>')
-                        if _inject_pos > 0:
-                            _s7_html = _s7_html[:_inject_pos] + _inject + _s7_html[_inject_pos:]
-                        else:
-                            _s7_html += _inject
-                        logger.info(
-                            "[FIX-KIS-1091-FUND] Injected %d missing R1 programmes into Strategy S7: %s",
-                            len(_missing), [m[0] for m in _missing],
-                        )
-                    else:
-                        logger.info("[FIX-KIS-1091-FUND] All R1 programmes already present in Strategy S7")
-
-                sections["S7"] = _s7_html
-                if _removed_count > 0:
-                    logger.info("[FIX-KIS-1091-FUND] Total: removed %d irrelevant programme blocks from S7", _removed_count)
-        except Exception as _fund_err:
-            logger.warning("[FIX-KIS-1091-FUND] S7 funding sync failed: %s", _fund_err, exc_info=True)
+        # KIS-1093-B: FIX-KIS-1091-FUND block removed — S7 now receives
+        # pre-filtered funding programs as JSON via get_filtered_funding_programs().
+        # No HTML parsing, no regex removal, no re-injection needed.
 
         # === PHASE 3: Assembly ===
         generation_duration = time.time() - start_time - research_duration
