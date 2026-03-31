@@ -1712,33 +1712,34 @@ def generate_entscheidungsvorlage_html(
     canon_hours_month: float = 0,
 ) -> str:
     """
-    Generiert eine Entscheidungsvorlage für Vorgesetzte (Idee #10).
+    Emits a placeholder for the GF-Entscheidungsvorlage.
 
-    PLATIN+++ FIX 1.1: Uses canonical rate from single source of truth.
-    FIX-KIS-1085: Shows BRUTTO time savings (hours × rate × 12), dynamically.
+    KIS-1093-A: The actual HTML is rendered AFTER the full pipeline via
+    build_gf_vorlage_html() using canonical values. This avoids all
+    regex patching — the placeholder is replaced with deterministic HTML
+    in the final assembly step.
     """
-    # PLATIN+++ FIX 1.1: Use canonical rate
-    if stundensatz <= 0:
-        stundensatz = _get_canonical_rate(company_size)
+    return '\n<!-- GF_VORLAGE_PLACEHOLDER -->\n'
 
-    # FIX-KIS-1085: Use canonical monthly hours if available, otherwise derive
-    # from weekly. Compute brutto directly as hours_month × rate × 12 to avoid
-    # lossy weekly→yearly conversion (e.g. 6h/wk × 48 = 288 ≠ 25h/mo × 12 = 300).
-    if canon_hours_month > 0:
-        _hours_month = int(canon_hours_month)
-    else:
-        _hours_month = zeitersparnis_pro_woche * 4
 
-    # Constraint #4: GF-Vorlage shows BRUTTO-Zeitersparnis (hours × rate × 12)
-    _brutto_jahr = _hours_month * stundensatz * 12
-    _brutto_jahr_fmt = f"{_brutto_jahr:,}".replace(",", ".")
+def build_gf_vorlage_html(
+    hours: int,
+    rate: int,
+    opex_month: int,
+    hauptleistung: str,
+) -> str:
+    """Deterministic template for GF-Entscheidungsvorlage.
 
-    savings = calculate_yearly_savings(zeitersparnis_pro_woche, stundensatz, company_size)
+    KIS-1093-A: Built from canonical values AFTER the full rendering pipeline.
+    No LLM, no regex, no broken HTML possible.
+    """
+    brutto = hours * rate * 12
+    brutto_fmt = f"{brutto:,}".replace(",", ".")
 
-    html = f'''
+    return f'''
     <div style="background: white; border: 2px solid #1e40af; border-radius: 8px; padding: 20px; margin-top: 24px;">
         <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 16px 0; color: #1e40af; text-align: center;">
-            📄 Entscheidungsvorlage: KI-Tools einführen
+            \U0001f4c4 Entscheidungsvorlage: KI-Tools einführen
         </h3>
         <p style="font-size: 12px; color: #64748b; text-align: center; margin: 0 0 16px 0;">
             Diese Vorlage können Sie Ihrer Geschäftsführung vorlegen
@@ -1748,31 +1749,31 @@ def generate_entscheidungsvorlage_html(
             <h4 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Antrag: Einführung von KI-Assistenz-Tools</h4>
 
             <p style="font-size: 13px; margin: 0 0 12px 0;">
-                <strong>Bereich:</strong> {hauptleistung or branche or "Allgemein"}<br>
+                <strong>Bereich:</strong> {hauptleistung or "Allgemein"}<br>
                 <strong>Beantragt von:</strong> [IHR NAME]<br>
                 <strong>Datum:</strong> [DATUM]
             </p>
 
             <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Erwarteter Nutzen:</h4>
             <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
-                <li>Zeitersparnis: {_hours_month} Stunden/Monat</li>
-                <li>Jährliche Brutto-Zeitersparnis: ca. {_brutto_jahr_fmt}€ ({_hours_month}h × {stundensatz}€ × 12)</li>
+                <li>Zeitersparnis: {hours} Stunden/Monat</li>
+                <li>Jährliche Brutto-Zeitersparnis: ca. {brutto_fmt}\u00a0\u20ac ({hours}h \u00d7 {rate}\u00a0\u20ac \u00d7 12)</li>
                 <li>Qualitätssteigerung bei Routineaufgaben</li>
             </ul>
-            
+
             <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Investition:</h4>
             <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
-                <li>Tool-Kosten: ca. {savings['tool_costs'] // 12}€/Monat (Organisation gesamt)</li>
+                <li>Tool-Kosten: ca. {opex_month}\u00a0\u20ac/Monat (Organisation gesamt)</li>
                 <li>Einarbeitung: ca. 2-4 Stunden</li>
             </ul>
-            
+
             <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Risikominimierung:</h4>
             <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
                 <li>Keine sensiblen Daten in KI-Tools</li>
                 <li>Alle Ergebnisse werden geprüft</li>
                 <li>Testphase von 30 Tagen möglich</li>
             </ul>
-            
+
             <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
                 <div>
                     <p style="font-size: 11px; color: #64748b; margin: 0;">Unterschrift Antragsteller</p>
@@ -1786,8 +1787,6 @@ def generate_entscheidungsvorlage_html(
         </div>
     </div>
 '''
-    
-    return html
 
 
 # =============================================================================

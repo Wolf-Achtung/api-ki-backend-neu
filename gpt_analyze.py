@@ -13176,42 +13176,8 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         log.warning("[SOFORT-START] ⚠️ Failed to generate: %s", e)
         sections["SOFORT_START_HTML"] = ""
 
-    # =========================================================================
-    # FIX-KIS-1090-GF-L1: Defense Layer 1 — Validate GF-Vorlage immediately
-    # after generation. If "ca." is not followed by a digit, re-derive the
-    # canonical value from get_hourly_rate() (independent of sections dict).
-    # =========================================================================
-    try:
-        _gf_l1_html = sections.get("SOFORT_START_HTML", "")
-        if _gf_l1_html and "Brutto-Zeitersparnis" in _gf_l1_html:
-            _gf_l1_match = re.search(r'Brutto-Zeitersparnis:\s*ca\.\s*(\d)', _gf_l1_html)
-            if not _gf_l1_match:
-                log.warning("[FIX-KIS-1090-GF-L1] Detected 'ca.' WITHOUT value in SOFORT_START_HTML — repairing")
-                try:
-                    from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
-                    _l1_size = normalize_company_size(sofort_size)
-                    _l1_rate, _ = get_hourly_rate(_l1_size)
-                    _l1_hours = _sofort_hours_month if _sofort_hours_month > 0 else 25
-                    _l1_brutto = int(_l1_hours) * int(_l1_rate) * 12
-                    _l1_fmt = f"{_l1_brutto:,}".replace(",", ".")
-                    # Replace "ca." or "ca. " at end of pattern (missing value)
-                    _nbsp = "\u00a0"
-                    _times = "\u00d7"
-                    _l1_repl = f"\\1 {_l1_fmt}{_nbsp}€ ({int(_l1_hours)}h {_times} {int(_l1_rate)}{_nbsp}€ {_times} 12)"
-                    _gf_l1_html = re.sub(
-                        r'(Brutto-Zeitersparnis:\s*ca\.)\s*(?=<|$|\n)',
-                        _l1_repl,
-                        _gf_l1_html,
-                        flags=re.MULTILINE
-                    )
-                    sections["SOFORT_START_HTML"] = _gf_l1_html
-                    log.info("[FIX-KIS-1090-GF-L1] Repaired: ca. %s€ (%dh × %d€ × 12)", _l1_fmt, int(_l1_hours), int(_l1_rate))
-                except Exception as _l1_err:
-                    log.warning("[FIX-KIS-1090-GF-L1] Repair failed: %s", _l1_err)
-            else:
-                log.info("[FIX-KIS-1090-GF-L1] OK — value present after 'ca.'")
-    except Exception as _l1_outer:
-        log.warning("[FIX-KIS-1090-GF-L1] Check failed: %s", _l1_outer)
+    # KIS-1093-A: L1 defense layer removed — GF-Vorlage now uses placeholder +
+    # deterministic template (build_gf_vorlage_html), no regex patching needed.
 
     # ========== v14.12: 30-TAGE CHALLENGE (Gamechanger #8) ==========
     try:
@@ -20408,41 +20374,8 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             sections["FINAL_CHECK_INTRO"] = _fci_patched
             log.info(f"[{run_id}] [FIX-GRAMMAR-3] Inserted period before 'Schwerpunkte:' in FINAL_CHECK_INTRO")
 
-    # =========================================================================
-    # FIX-KIS-1090-GF-L2: Defense Layer 2 — Pre-render SOFORT_START_HTML check
-    # Last chance to repair BEFORE Jinja2 template rendering.
-    # Derives canonical values from get_hourly_rate() independently.
-    # =========================================================================
-    try:
-        _gf_l2_html = sections.get("SOFORT_START_HTML", "")
-        if _gf_l2_html and "Brutto-Zeitersparnis" in _gf_l2_html:
-            _gf_l2_has_value = bool(re.search(r'Brutto-Zeitersparnis:\s*ca\.\s*\d', _gf_l2_html))
-            if not _gf_l2_has_value:
-                log.warning("[FIX-KIS-1090-GF-L2] 'ca.' missing value pre-render! sections CANON_RATE_EUR=%s, stundensatz_eur=%s, CANON_HOURS_MONTH=%s",
-                            sections.get("CANON_RATE_EUR"), sections.get("stundensatz_eur"), sections.get("CANON_HOURS_MONTH"))
-                from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
-                _l2_size = normalize_company_size(size_raw)
-                _l2_rate, _ = get_hourly_rate(_l2_size)
-                _l2_hours = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
-                if _l2_hours <= 0:
-                    _l2_hours = {"solo": 15, "team": 25, "kmu": 50}.get(_l2_size, 25)
-                _l2_brutto = int(_l2_hours) * int(_l2_rate) * 12
-                _l2_fmt = f"{_l2_brutto:,}".replace(",", ".")
-                _nbsp = "\u00a0"
-                _times = "\u00d7"
-                _l2_repl = f"\\1 {_l2_fmt}{_nbsp}€ ({int(_l2_hours)}h {_times} {int(_l2_rate)}{_nbsp}€ {_times} 12)"
-                _gf_l2_html = re.sub(
-                    r'(Brutto-Zeitersparnis:\s*ca\.)\s*(?=<|$|\n)',
-                    _l2_repl,
-                    _gf_l2_html,
-                    flags=re.MULTILINE
-                )
-                sections["SOFORT_START_HTML"] = _gf_l2_html
-                log.info("[FIX-KIS-1090-GF-L2] Repaired pre-render: ca. %s€", _l2_fmt)
-            else:
-                log.info("[FIX-KIS-1090-GF-L2] OK — value present")
-    except Exception as _l2_err:
-        log.warning("[FIX-KIS-1090-GF-L2] Failed: %s", _l2_err)
+    # KIS-1093-A: L2 defense layer removed — GF-Vorlage now uses placeholder +
+    # deterministic template (build_gf_vorlage_html), no regex patching needed.
 
     result = render(
         br,
@@ -20814,43 +20747,36 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     # === END L3 ===
 
     # =========================================================================
-    # FIX-KIS-1091-GF: Nuclear Fallback — regex on FINAL HTML before DB write
-    # Previous L3 had two bugs:
-    #   1) Detection: checked if ANY "ca." had a digit → missed cases where
-    #      one occurrence (SOFORT_START) had value but another (GF-Vorlage) didn't.
-    #   2) Replacement regex: (?=<|$|\n) only matched "ca." followed by tag/EOL/newline,
-    #      but in Team segment "ca." can be followed by space+text → no match.
-    # Fix: Use re.subn with negative lookahead (?!\d) to replace ALL occurrences
-    # of "ca." NOT followed by a digit, regardless of what comes after.
+    # KIS-1093-A: Deterministic GF-Vorlage — replace placeholder with template
+    # The placeholder <!-- GF_VORLAGE_PLACEHOLDER --> was emitted by
+    # generate_entscheidungsvorlage_html(). We now substitute it with a
+    # fully deterministic HTML block built from canonical values.
+    # No regex on LLM output, no defense layers needed.
     # =========================================================================
     try:
-        _l3_html = result["html"]
-        if _l3_html and "Brutto-Zeitersparnis" in _l3_html:
+        _gf_html = result.get("html", "")
+        if _gf_html and "<!-- GF_VORLAGE_PLACEHOLDER -->" in _gf_html:
             from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
-            _l3_size = normalize_company_size(size_raw)
-            _l3_rate, _ = get_hourly_rate(_l3_size)
-            _l3_hours = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
-            if _l3_hours <= 0:
-                _l3_hours = {"solo": 15, "team": 25, "kmu": 50}.get(_l3_size, 25)
-            _l3_brutto = int(_l3_hours) * int(_l3_rate) * 12
-            _l3_fmt = f"{_l3_brutto:,.0f}€".replace(",", ".")
-            # Negative lookahead (?!\s*\d) checks past whitespace for digits,
-            # preventing backtracking false-positives on already-correct values.
-            # Trailing \s* consumes leftover whitespace only when lookahead passes.
-            # Replacement: \1 keeps "Brutto-Zeitersparnis: ca." then appends " 28.500€"
-            _l3_html, _l3_count = re.subn(
-                r'(Brutto-Zeitersparnis:\s*ca\.)(?!\s*\d)\s*',
-                rf'\1 {_l3_fmt}',
-                _l3_html,
+            from services.sofort_start_generator import build_gf_vorlage_html
+            _gf_size = normalize_company_size(size_raw)
+            _gf_rate, _ = get_hourly_rate(_gf_size)
+            _gf_hours = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
+            if _gf_hours <= 0:
+                _gf_hours = {"solo": 15, "team": 25, "kmu": 50}.get(_gf_size, 25)
+            _gf_opex = int(float(sections.get("CANON_OPEX_MONTH_EUR") or sections.get("OPEX_REALISTISCH_EUR") or 0))
+            _gf_hauptleistung = sections.get("HAUPTLEISTUNG", "") or sections.get("hauptleistung", "") or ""
+            _gf_template = build_gf_vorlage_html(
+                hours=int(_gf_hours),
+                rate=int(_gf_rate),
+                opex_month=_gf_opex,
+                hauptleistung=_gf_hauptleistung,
             )
-            result["html"] = _l3_html
-            if _l3_count > 0:
-                log.info("[FIX-KIS-1091-GF] Injected Brutto-Zeitersparnis: %s€ (%d replacements, %dh × %d€ × 12)",
-                         _l3_fmt, _l3_count, int(_l3_hours), int(_l3_rate))
-            else:
-                log.info("[FIX-KIS-1091-GF] OK — all Brutto-Zeitersparnis values present")
-    except Exception as _l3_err:
-        log.warning("[FIX-KIS-1091-GF] Failed: %s", _l3_err)
+            result["html"] = _gf_html.replace("<!-- GF_VORLAGE_PLACEHOLDER -->", _gf_template)
+            log.info("[KIS-1093-A] GF-Vorlage: deterministic template inserted (%dh × %d€ × 12 = %s€)",
+                     int(_gf_hours), int(_gf_rate),
+                     f"{int(_gf_hours) * int(_gf_rate) * 12:,}".replace(",", "."))
+    except Exception as _gf_err:
+        log.warning("[KIS-1093-A] GF-Vorlage placeholder replacement failed: %s", _gf_err)
 
     an = Analysis(
         user_id=br.user_id,
