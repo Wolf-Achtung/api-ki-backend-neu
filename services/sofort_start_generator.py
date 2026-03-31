@@ -1719,7 +1719,7 @@ def generate_entscheidungsvorlage_html(
     regex patching — the placeholder is replaced with deterministic HTML
     in the final assembly step.
     """
-    return '\n<!-- GF_VORLAGE_PLACEHOLDER -->\n'
+    return '\n<div id="gf-vorlage-slot"></div>\n'
 
 
 def build_gf_vorlage_html(

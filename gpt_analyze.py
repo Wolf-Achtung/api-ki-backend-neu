@@ -20748,14 +20748,14 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
 
     # =========================================================================
     # KIS-1093-A: Deterministic GF-Vorlage — replace placeholder with template
-    # The placeholder <!-- GF_VORLAGE_PLACEHOLDER --> was emitted by
+    # The placeholder <div id="gf-vorlage-slot"></div> was emitted by
     # generate_entscheidungsvorlage_html(). We now substitute it with a
     # fully deterministic HTML block built from canonical values.
     # No regex on LLM output, no defense layers needed.
     # =========================================================================
     try:
         _gf_html = result.get("html", "")
-        if _gf_html and "<!-- GF_VORLAGE_PLACEHOLDER -->" in _gf_html:
+        if _gf_html and '<div id="gf-vorlage-slot"></div>' in _gf_html:
             from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
             from services.sofort_start_generator import build_gf_vorlage_html
             _gf_size = normalize_company_size(size_raw)
@@ -20771,7 +20771,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                 opex_month=_gf_opex,
                 hauptleistung=_gf_hauptleistung,
             )
-            result["html"] = _gf_html.replace("<!-- GF_VORLAGE_PLACEHOLDER -->", _gf_template)
+            result["html"] = _gf_html.replace('<div id="gf-vorlage-slot"></div>', _gf_template)
             log.info("[KIS-1093-A] GF-Vorlage: deterministic template inserted (%dh × %d€ × 12 = %s€)",
                      int(_gf_hours), int(_gf_rate),
                      f"{int(_gf_hours) * int(_gf_rate) * 12:,}".replace(",", "."))
