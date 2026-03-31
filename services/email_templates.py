@@ -422,3 +422,157 @@ def render_admin_briefing_email(
     </div>
   </body>
 </html>"""
+
+
+def render_briefing_pdf_html(
+    display_id: str,
+    datum: str,
+    answers: Dict[str, Any],
+    scores: Dict[str, Any],
+    sections: Dict[str, Any],
+) -> str:
+    """Render a compact briefing summary as a self-contained HTML page for PDF conversion.
+
+    This produces a clean, print-ready document that can be archived as a customer dossier.
+    Rendered to PDF via Puppeteer and attached to the admin email.
+    """
+    from datetime import date as _date
+
+    _dash = "\u2014"  # em dash
+    _nbsp = "\u00a0"  # non-breaking space
+    _eur = "\u20ac"   # euro sign
+
+    def _e(val: Any) -> str:
+        return escape(str(val)) if val and str(val).strip() and str(val) != _dash else _dash
+
+    def _fmt_eur(val: Any) -> str:
+        try:
+            v = float(val)
+            return f"{int(v):,}".replace(",", ".")
+        except (ValueError, TypeError):
+            return str(val) if val else _dash
+
+    # --- Extract data ---
+    branche = answers.get("branche", "") or ""
+    segment = answers.get("unternehmensgroesse", "") or ""
+    bundesland = answers.get("bundesland", "") or ""
+    country = answers.get("country", "DE") or "DE"
+    firmenname = answers.get("unternehmen_name", "") or ""
+
+    score_overall = int(scores.get("overall", 0) or 0)
+    gov = int(scores.get("governance", 0) or 0)
+    sec = int(scores.get("security", 0) or 0)
+    val = int(scores.get("value", 0) or 0)
+    ena = int(scores.get("enablement", 0) or 0)
+
+    if score_overall >= 80:
+        score_label = "Exzellent"
+    elif score_overall >= 65:
+        score_label = "Gut"
+    elif score_overall >= 50:
+        score_label = "Solide"
+    elif score_overall >= 35:
+        score_label = "Ausbauf\u00e4hig"
+    else:
+        score_label = "Kritisch"
+
+    hours = sections.get("CANON_HOURS_MONTH") or sections.get("qw_hours_total") or sections.get("monatsersparnis_stunden") or _dash
+    rate = sections.get("CANON_RATE_EUR") or sections.get("stundensatz_eur") or _dash
+    capex = sections.get("CANON_CAPEX_EUR") or sections.get("CAPEX_REALISTISCH_EUR") or _dash
+    opex = sections.get("CANON_OPEX_MONTH_EUR") or sections.get("OPEX_REALISTISCH_EUR") or _dash
+    roi = sections.get("ROI_12M") or sections.get("ROI_12M_CAPPED") or _dash
+    payback = sections.get("PAYBACK_MONTHS") or _dash
+
+    try:
+        brutto_jahr = float(hours) * float(rate) * 12
+        brutto_jahr_str = _fmt_eur(brutto_jahr)
+    except (ValueError, TypeError):
+        brutto_jahr_str = _dash
+
+    pipeline_grade = sections.get("PIPELINE_GRADE", _dash)
+    consistency_grade = sections.get("CONSISTENCY_GRADE", _dash)
+
+    # Free text (truncated)
+    hauptleistung = escape(str(answers.get("hauptleistung", ""))[:200])
+    ziele = escape(str(answers.get("strategische_ziele", ""))[:300])
+
+    today_str = _date.today().strftime("%d.%m.%Y")
+
+    return (
+        "<!doctype html>\n"
+        '<html lang="de">\n'
+        "<head>\n"
+        '<meta charset="utf-8">\n'
+        f"<title>Kunden-Briefing {_e(display_id)}</title>\n"
+        "<style>\n"
+        "  @page { size: A4; margin: 20mm 15mm; }\n"
+        "  body { font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; color: #0f172a; line-height: 1.5; margin: 0; padding: 20px; font-size: 13px; }\n"
+        "  h1 { font-size: 18px; color: #1e293b; margin: 0 0 4px; }\n"
+        "  h2 { font-size: 14px; color: #2B6CB0; margin: 20px 0 8px; border-bottom: 2px solid #2B6CB0; padding-bottom: 4px; }\n"
+        "  .meta { font-size: 12px; color: #64748b; margin: 0 0 16px; }\n"
+        "  table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }\n"
+        "  td { padding: 5px 8px; font-size: 13px; border-bottom: 1px solid #e2e8f0; }\n"
+        "  td:first-child { color: #64748b; width: 40%; }\n"
+        "  td:last-child { font-weight: 600; }\n"
+        "  .score-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 12px 16px; text-align: center; margin-bottom: 16px; }\n"
+        "  .score-big { font-size: 32px; font-weight: 700; color: #0369a1; }\n"
+        "  .score-label { font-size: 13px; color: #0369a1; }\n"
+        "  .dims { display: flex; justify-content: space-around; margin-top: 8px; font-size: 12px; color: #475569; }\n"
+        "  .footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; }\n"
+        "</style>\n"
+        "</head>\n"
+        "<body>\n"
+        "\n"
+        f"<h1>KUNDEN-BRIEFING {_dash} {_e(display_id)}</h1>\n"
+        f'<p class="meta">{_e(datum)} &middot; Erstellt: {today_str} &middot; ki-sicherheit.jetzt</p>\n'
+        "\n"
+        "<h2>Unternehmen</h2>\n"
+        "<table>\n"
+        f"  <tr><td>Firma</td><td>{_e(firmenname)}</td></tr>\n"
+        f"  <tr><td>Branche</td><td>{_e(branche)}</td></tr>\n"
+        f"  <tr><td>Segment</td><td>{_e(segment)}</td></tr>\n"
+        f"  <tr><td>Region</td><td>{_e(bundesland)}, {_e(country)}</td></tr>\n"
+        "</table>\n"
+        "\n"
+        "<h2>Scores</h2>\n"
+        '<div class="score-box">\n'
+        f'  <span class="score-big">{score_overall}</span><span style="font-size:14px;color:#64748b">/100</span>\n'
+        f'  <div class="score-label">{score_label}</div>\n'
+        '  <div class="dims">\n'
+        f"    <span>Governance {gov}</span>\n"
+        f"    <span>Sicherheit {sec}</span>\n"
+        f"    <span>Wertsch\u00f6pfung {val}</span>\n"
+        f"    <span>Bef\u00e4higung {ena}</span>\n"
+        "  </div>\n"
+        "</div>\n"
+        "\n"
+        "<h2>Financials (Canonical)</h2>\n"
+        "<table>\n"
+        f"  <tr><td>Zeitersparnis</td><td>{_e(hours)}h/Monat</td></tr>\n"
+        f"  <tr><td>Stundensatz</td><td>{_e(rate)}{_nbsp}{_eur}</td></tr>\n"
+        f"  <tr><td>CAPEX</td><td>{_fmt_eur(capex)}{_nbsp}{_eur}</td></tr>\n"
+        f"  <tr><td>OPEX</td><td>{_fmt_eur(opex)}{_nbsp}{_eur}/Monat</td></tr>\n"
+        f"  <tr><td>Brutto-Jahresersparnis</td><td>{brutto_jahr_str}{_nbsp}{_eur}</td></tr>\n"
+        f"  <tr><td>ROI (12M)</td><td>{_e(roi)}%</td></tr>\n"
+        f"  <tr><td>Payback</td><td>{_e(payback)} Monate</td></tr>\n"
+        "</table>\n"
+        "\n"
+        "<h2>Qualit\u00e4t</h2>\n"
+        "<table>\n"
+        f"  <tr><td>Pipeline Grade</td><td>{_e(pipeline_grade)}</td></tr>\n"
+        f"  <tr><td>Consistency Grade</td><td>{_e(consistency_grade)}</td></tr>\n"
+        "</table>\n"
+        "\n"
+        "<h2>Profil</h2>\n"
+        "<table>\n"
+        f"  <tr><td>Hauptleistung</td><td>{hauptleistung or _dash}</td></tr>\n"
+        f"  <tr><td>Strategische Ziele</td><td>{ziele or _dash}</td></tr>\n"
+        "</table>\n"
+        "\n"
+        '<div class="footer">\n'
+        "  Dieses Briefing wurde automatisch generiert. Alle Werte basieren auf den Fragebogen-Eingaben und dem kanonischen Business Case.\n"
+        "</div>\n"
+        "\n"
+        "</body>\n"
+        "</html>"
+    )
