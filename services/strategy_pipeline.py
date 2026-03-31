@@ -499,6 +499,112 @@ async def generate_strategy_report(
             sections["bundesland"] = base_context.get("bundesland", "")
         sections = apply_funding_blacklist(sections)
 
+        # === FIX-KIS-1091-FUND: Deterministic R1→Strategy S7 funding sync ===
+        # The LLM ignores R1 programmes in context and hallucninates AT/CH/Bayern
+        # programmes. Two-step fix: (1) remove irrelevant programmes, (2) inject
+        # missing R1 programmes deterministically.
+        try:
+            _s7_html = sections.get("S7", "")
+            _bl_raw = (base_context.get("bundesland", "") or "").strip().lower()
+            _cc = _country_code  # already set above (DE/AT/CH/GB)
+
+            if _s7_html and _cc == "DE":
+                # --- Step 1: Remove irrelevant AT/CH/wrong-Bundesland programmes ---
+                _irrelevant_patterns = [
+                    # Austrian programmes (for DE customers)
+                    (r'<tr[^>]*>(?:(?!</tr>).)*?(?:aws[\s\-]digi|digi4KMU|Forschungsprämie\s*Österreich|FFG\b|aws\s+Digitalisierung)(?:(?!</tr>).)*?</tr>', 'AT programme'),
+                    # Swiss programmes (for DE customers)
+                    (r'<tr[^>]*>(?:(?!</tr>).)*?Innosuisse(?:(?!</tr>).)*?</tr>', 'CH programme'),
+                ]
+                # LfA Bayern only for non-Bayern customers
+                if _bl_raw not in ("by", "bayern", "bavaria"):
+                    _irrelevant_patterns.append(
+                        (r'<tr[^>]*>(?:(?!</tr>).)*?LfA\s*(?:Förderbank|Bayern)(?:(?!</tr>).)*?</tr>', 'Bayern programme')
+                    )
+
+                _removed_count = 0
+                for _pat, _label in _irrelevant_patterns:
+                    _s7_before = _s7_html
+                    _s7_html = re.sub(_pat, '', _s7_html, flags=re.DOTALL | re.IGNORECASE)
+                    if _s7_html != _s7_before:
+                        _removed_count += 1
+                        logger.info("[FIX-KIS-1091-FUND] Removed %s from S7", _label)
+
+                # Also remove non-table mentions (bullet lists, paragraphs)
+                _irrelevant_names = ["aws digi", "digi4KMU", "Innosuisse",
+                                     "Forschungsprämie Österreich", "FFG"]
+                if _bl_raw not in ("by", "bayern", "bavaria"):
+                    _irrelevant_names.append("LfA Förderbank")
+                    _irrelevant_names.append("LfA Bayern")
+                for _iname in _irrelevant_names:
+                    # Remove <li> elements containing the programme name
+                    _s7_html = re.sub(
+                        rf'<li[^>]*>(?:(?!</li>).)*?{re.escape(_iname)}(?:(?!</li>).)*?</li>\s*',
+                        '', _s7_html, flags=re.DOTALL | re.IGNORECASE,
+                    )
+
+                # --- Step 2: Inject missing R1 programmes ---
+                _r1_fund_html = str(report1_sections.get("FOERDERPROGRAMME_HTML", "") or "")
+                if _r1_fund_html:
+                    _r1_progs = re.findall(
+                        r'<tr>\s*<td[^>]*>.*?<strong>([^<]+)</strong>.*?</td>'
+                        r'\s*<td[^>]*>(.*?)</td>'      # Region
+                        r'\s*<td[^>]*>(.*?)</td>'      # Förderquote
+                        r'\s*<td[^>]*>(.*?)</td>',     # Max Volumen
+                        _r1_fund_html, re.DOTALL,
+                    )
+                    _missing = []
+                    for _pname, _pregion, _pquote, _pvol in _r1_progs:
+                        _pname_clean = re.sub(r'<[^>]+>', '', _pname).strip()
+                        if _pname_clean and _pname_clean.lower() not in _s7_html.lower():
+                            _missing.append((_pname_clean,
+                                             re.sub(r'<[^>]+>', '', _pregion).strip(),
+                                             re.sub(r'<[^>]+>', '', _pquote).strip(),
+                                             re.sub(r'<[^>]+>', '', _pvol).strip()))
+
+                    if _missing:
+                        _rows = ""
+                        for _mn, _mr, _mq, _mv in _missing:
+                            _rows += (
+                                f'<tr><td style="padding:8px;border-bottom:1px solid #e2e8f0;">'
+                                f'<strong>{_mn}</strong></td>'
+                                f'<td style="padding:8px;border-bottom:1px solid #e2e8f0;">{_mr}</td>'
+                                f'<td style="padding:8px;border-bottom:1px solid #e2e8f0;">{_mq}</td>'
+                                f'<td style="padding:8px;border-bottom:1px solid #e2e8f0;">{_mv}</td></tr>'
+                            )
+                        _inject = (
+                            '<div style="margin-top:24px;padding:16px;'
+                            'border:1px solid #3b82f6;border-radius:8px;background:#f0f7ff;">'
+                            '<h4 style="color:#1e40af;margin:0 0 12px 0;font-size:15px;">'
+                            'Weitere relevante Förderprogramme (aus Ihrem KI-Readiness Report)</h4>'
+                            '<table style="width:100%;border-collapse:collapse;">'
+                            '<thead><tr style="background:#dbeafe;">'
+                            '<th style="padding:8px;text-align:left;">Programm</th>'
+                            '<th style="padding:8px;text-align:left;">Region</th>'
+                            '<th style="padding:8px;text-align:left;">Förderquote</th>'
+                            '<th style="padding:8px;text-align:left;">Max. Förderung</th>'
+                            '</tr></thead>'
+                            f'<tbody>{_rows}</tbody></table></div>'
+                        )
+                        # Inject before the last closing </div> or </section> of S7
+                        _inject_pos = _s7_html.rfind('</div>')
+                        if _inject_pos > 0:
+                            _s7_html = _s7_html[:_inject_pos] + _inject + _s7_html[_inject_pos:]
+                        else:
+                            _s7_html += _inject
+                        logger.info(
+                            "[FIX-KIS-1091-FUND] Injected %d missing R1 programmes into Strategy S7: %s",
+                            len(_missing), [m[0] for m in _missing],
+                        )
+                    else:
+                        logger.info("[FIX-KIS-1091-FUND] All R1 programmes present in Strategy S7")
+
+                sections["S7"] = _s7_html
+                if _removed_count > 0:
+                    logger.info("[FIX-KIS-1091-FUND] Removed %d irrelevant programme blocks from S7", _removed_count)
+        except Exception as _fund_err:
+            logger.warning("[FIX-KIS-1091-FUND] S7 funding sync failed: %s", _fund_err)
+
         # === PHASE 3: Assembly ===
         generation_duration = time.time() - start_time - research_duration
         total_duration = time.time() - start_time
