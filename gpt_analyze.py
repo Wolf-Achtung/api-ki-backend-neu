@@ -15254,8 +15254,6 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         "TRAININGS_INTERESSEN_LABELS",
         # Strategic context block
         "strategic_context_block",
-        # Canonical financial values needed by report_renderer FIX-v7110-MATH guard
-        "stundensatz_eur",
     ]
     for key in direct_copy_keys:
         sections[key] = answers.get(key, "")
@@ -17570,10 +17568,24 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             inject_canonical_to_sections,
             cap_time_savings,
             normalize_company_size,
+            get_hourly_rate,
         )
         canonical_bc = create_canonical_from_sections(sections, company_size=size_raw)
         canon_updates = inject_canonical_to_sections(canonical_bc, sections)
         log.info(f"[{run_id}] ✅ [CANONICAL-BC] Injected {canon_updates} canonical KPI values")
+        # FIX-KIS-1087: Safety net — ensure canonical rate is in sections even if
+        # inject_canonical was skipped (FINAL LOCK) or canonical_bc was None.
+        # The report_renderer FIX-v7110-MATH guard requires CANON_RATE_EUR or
+        # stundensatz_eur in sections. Without this, the entire math correction
+        # block (including GF-Vorlage replacement) is dead code.
+        if not sections.get("CANON_RATE_EUR") and not sections.get("stundensatz_eur"):
+            try:
+                _fix1087_rate, _ = get_hourly_rate(normalize_company_size(size_raw))
+                sections["CANON_RATE_EUR"] = int(_fix1087_rate)
+                sections["stundensatz_eur"] = int(_fix1087_rate)
+                log.info("[FIX-KIS-1087] Safety net: injected CANON_RATE_EUR=%d into sections", int(_fix1087_rate))
+            except Exception as _e1087:
+                log.warning("[FIX-KIS-1087] Safety net failed: %s", _e1087)
         # FIX-B723: Enforce canonical rate in BUSINESS_CASE_TABLE_HTML
         # BC table is pre-rendered HTML where "95 €" sits in a <td> cell.
         # Rate Sweep regex can't match "Stundensatz" across HTML tags.
