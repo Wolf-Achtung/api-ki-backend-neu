@@ -683,6 +683,85 @@ def recommend_funding(
 
 
 # =============================================================================
+# KIS-1093-B: Structured funding data for pipeline injection
+# =============================================================================
+
+
+def get_filtered_funding_programs(
+    bundesland: str,
+    country: str = "DE",
+    size: str = "team",
+    branch: str = "",
+    limit: int = 8,
+) -> list[dict]:
+    """Return a pre-filtered, JSON-serializable list of funding programs.
+
+    KIS-1093-B: This is called ONCE and then passed as structured data
+    through the entire pipeline (R1, KPA, Strategy S7). No HTML parsing,
+    no regex removal, no re-injection needed.
+
+    BAFA values are deterministic from config/bafa.py.
+    """
+    recs = recommend_funding(
+        branch=branch,
+        region=bundesland,
+        size=size,
+        country=country,
+        lang="de",
+        limit=limit,
+    )
+
+    # Inject deterministic BAFA values from config
+    try:
+        from config.bafa import get_bafa_foerderquote, get_bafa_max_foerderung
+        bafa_quote = get_bafa_foerderquote(bundesland)
+        bafa_max = get_bafa_max_foerderung(bundesland)
+    except ImportError:
+        bafa_quote = 50
+        bafa_max = 1750
+
+    programs = []
+    for rec in recs:
+        entry = {
+            "name": rec.name,
+            "provider": rec.provider,
+            "funding_rate": rec.funding_rate,
+            "max_funding": rec.max_funding,
+            "ki_relevance": rec.ki_relevance,
+            "url": rec.url or "",
+            "summary": rec.summary_de or "",
+        }
+        # Override BAFA values with deterministic regional values
+        if "bafa" in rec.name.lower():
+            entry["funding_rate"] = f"{bafa_quote}%"
+            entry["max_funding"] = f"{bafa_max:,} €".replace(",", ".")
+        programs.append(entry)
+
+    return programs
+
+
+def format_funding_programs_for_prompt(programs: list[dict]) -> str:
+    """Format the filtered program list as a text block for LLM prompts.
+
+    KIS-1093-B: Used by both R1 and Strategy S7 to inject the same
+    pre-filtered program list into LLM context.
+    """
+    if not programs:
+        return ""
+    lines = []
+    for p in programs:
+        lines.append(
+            f"- {p['name']} (Träger: {p['provider']})\n"
+            f"  Förderquote: {p['funding_rate']}\n"
+            f"  Max. Förderung: {p['max_funding']}\n"
+            f"  KI-Relevanz: {p['ki_relevance']}\n"
+            f"  URL: {p['url'] or 'k.A.'}\n"
+            f"  Kurzbeschreibung: {p['summary'] or 'k.A.'}"
+        )
+    return "\n\n".join(lines)
+
+
+# =============================================================================
 # PDF INTEGRATION
 # =============================================================================
 

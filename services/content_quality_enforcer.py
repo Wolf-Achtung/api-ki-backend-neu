@@ -2132,23 +2132,25 @@ def apply_bafa_amount_enforcer(sections: dict, bundesland: str) -> dict:
             )
             value = pattern.sub(_bafa_context_replace, value)
 
-            # Also catch "Zuschuss von X%" with wrong percentage near BAFA
-            if correct_quote == 50 and "80" in value:
-                # For Alte Bundesländer: 80% is wrong
-                pct_pattern = re.compile(r'(?:Zuschuss\s+von\s+)80\s*(?:%|Prozent)', re.IGNORECASE)
-                def _fix_pct_80(m: re.Match[str], _v: str = value) -> str:
+            # KIS-1093-B: Comprehensive BAFA percentage enforcement.
+            # Catches all wrong percentage patterns near BAFA context:
+            # "Zuschuss von X%", "bis zu X%", "X % der Kosten", just "X%" etc.
+            all_bafa_quotes = {50, 60, 80}
+            wrong_quotes = [q for q in all_bafa_quotes if q != correct_quote]
+            for wrong_q in wrong_quotes:
+                if str(wrong_q) not in value:
+                    continue
+                # Match wrong percentage in any form near BAFA context
+                pct_pattern = re.compile(
+                    rf'(?:(?:Zuschuss\s+von\s+)|(?:bis\s+(?:zu\s+)?)|(?:Förderquote[:\s]+))?'
+                    rf'{wrong_q}\s*(?:%|Prozent|%)',
+                    re.IGNORECASE,
+                )
+                def _fix_pct(m: re.Match[str], _v: str = value, _wq: int = wrong_q) -> str:
                     if "bafa" in _v[max(0, m.start()-200):m.end()+200].lower():
-                        return m.group(0).replace("80", str(correct_quote))
+                        return m.group(0).replace(str(_wq), str(correct_quote))
                     return m.group(0)
-                value = pct_pattern.sub(_fix_pct_80, value)
-            elif correct_quote == 80 and "50" in value:
-                # For Neue Bundesländer: 50% is wrong
-                pct_pattern = re.compile(r'(?:Zuschuss\s+von\s+)50\s*(?:%|Prozent)', re.IGNORECASE)
-                def _fix_pct_50(m: re.Match[str], _v: str = value) -> str:
-                    if "bafa" in _v[max(0, m.start()-200):m.end()+200].lower():
-                        return m.group(0).replace("50", str(correct_quote))
-                    return m.group(0)
-                value = pct_pattern.sub(_fix_pct_50, value)
+                value = pct_pattern.sub(_fix_pct, value)
 
         if value != original:
             sections[key] = value
