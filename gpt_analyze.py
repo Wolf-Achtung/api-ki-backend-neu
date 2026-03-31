@@ -13176,8 +13176,8 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         log.warning("[SOFORT-START] ⚠️ Failed to generate: %s", e)
         sections["SOFORT_START_HTML"] = ""
 
-    # KIS-1093-A: L1 defense layer removed — GF-Vorlage now uses placeholder +
-    # deterministic template (build_gf_vorlage_html), no regex patching needed.
+    # KIS-1094: L1 defense layer removed — GF-Vorlage is injected via bypass
+    # in the post-render step (before sofort-start section).
 
     # ========== v14.12: 30-TAGE CHALLENGE (Gamechanger #8) ==========
     try:
@@ -20374,8 +20374,8 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             sections["FINAL_CHECK_INTRO"] = _fci_patched
             log.info(f"[{run_id}] [FIX-GRAMMAR-3] Inserted period before 'Schwerpunkte:' in FINAL_CHECK_INTRO")
 
-    # KIS-1093-A: L2 defense layer removed — GF-Vorlage now uses placeholder +
-    # deterministic template (build_gf_vorlage_html), no regex patching needed.
+    # KIS-1094: L2 defense layer removed — GF-Vorlage is injected via bypass
+    # in the post-render step (before sofort-start section).
 
     result = render(
         br,
@@ -20747,22 +20747,24 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     # === END L3 ===
 
     # =========================================================================
-    # KIS-1093-A: Deterministic GF-Vorlage — replace placeholder with template
-    # The placeholder <div id="gf-vorlage-slot"></div> was emitted by
-    # generate_entscheidungsvorlage_html(). We now substitute it with a
-    # fully deterministic HTML block built from canonical values.
-    # No regex on LLM output, no defense layers needed.
+    # KIS-1094: GF-Vorlage Bypass-Injection
+    # The placeholder approach failed (emitter output gets lost in render
+    # pipeline). Instead: inject the deterministic template directly into
+    # the final HTML, anchored before <section id="sofort-start">.
+    # Only for Team/KMU segments (Solo has no GF-Vorlage).
     # =========================================================================
     try:
         _gf_html = result.get("html", "")
-        if _gf_html and '<div id="gf-vorlage-slot"></div>' in _gf_html:
-            from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
+        _gf_already = "Antrag: Einführung von KI-Assistenz-Tools" in (_gf_html or "")
+        from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
+        _gf_size = normalize_company_size(size_raw)
+
+        if _gf_html and not _gf_already and _gf_size in ("team", "kmu"):
             from services.sofort_start_generator import build_gf_vorlage_html
-            _gf_size = normalize_company_size(size_raw)
             _gf_rate, _ = get_hourly_rate(_gf_size)
             _gf_hours = float(sections.get("CANON_HOURS_MONTH") or sections.get("monatsersparnis_stunden") or 0)
             if _gf_hours <= 0:
-                _gf_hours = {"solo": 15, "team": 25, "kmu": 50}.get(_gf_size, 25)
+                _gf_hours = {"team": 25, "kmu": 50}.get(_gf_size, 25)
             _gf_opex = int(float(sections.get("CANON_OPEX_MONTH_EUR") or sections.get("OPEX_REALISTISCH_EUR") or 0))
             _gf_hauptleistung = sections.get("HAUPTLEISTUNG", "") or sections.get("hauptleistung", "") or ""
             _gf_template = build_gf_vorlage_html(
@@ -20771,12 +20773,21 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                 opex_month=_gf_opex,
                 hauptleistung=_gf_hauptleistung,
             )
-            result["html"] = _gf_html.replace('<div id="gf-vorlage-slot"></div>', _gf_template)
-            log.info("[KIS-1093-A] GF-Vorlage: deterministic template inserted (%dh × %d€ × 12 = %s€)",
-                     int(_gf_hours), int(_gf_rate),
-                     f"{int(_gf_hours) * int(_gf_rate) * 12:,}".replace(",", "."))
+            # Anchor: inject before <section ... id="sofort-start">
+            _anchor_idx = _gf_html.find('id="sofort-start"')
+            if _anchor_idx > -1:
+                _section_start = _gf_html.rfind('<section', max(0, _anchor_idx - 200), _anchor_idx)
+                if _section_start > -1:
+                    result["html"] = _gf_html[:_section_start] + _gf_template + _gf_html[_section_start:]
+                    log.info("[KIS-1094] GF-Vorlage: injected before sofort-start (%dh × %d€ × 12 = %s€)",
+                             int(_gf_hours), int(_gf_rate),
+                             f"{int(_gf_hours) * int(_gf_rate) * 12:,}".replace(",", "."))
+                else:
+                    log.warning("[KIS-1094] GF-Vorlage: sofort-start anchor found but no <section tag before it")
+            else:
+                log.info("[KIS-1094] GF-Vorlage: no sofort-start section in HTML (skipped)")
     except Exception as _gf_err:
-        log.warning("[KIS-1093-A] GF-Vorlage placeholder replacement failed: %s", _gf_err)
+        log.warning("[KIS-1094] GF-Vorlage bypass injection failed: %s", _gf_err)
 
     an = Analysis(
         user_id=br.user_id,
