@@ -76,7 +76,17 @@ async def lifespan(app: FastAPI):
         log.error("✗ Auth setup failed: %s", exc)
         log.error("⚠️  LOGIN WILL NOT WORK - Check database connection")
 
-    # Feedbacks-Tabelle sicherstellen
+    # FIX-KIS-1098-BE-hotfix-A: Run all DDL migrations (users, briefings,
+    # reports, feedbacks, reports_history, etc.) — idempotent via IF NOT EXISTS.
+    try:
+        from core.db import engine as _engine
+        from core.migrate import migrate_all
+        migrate_all(_engine)
+        log.info("✓ All database migrations completed (core.migrate)")
+    except Exception as mig_exc:
+        log.error("✗ Database migrations failed: %s", mig_exc)
+
+    # Feedbacks-Tabelle sicherstellen (legacy — now also covered by migrate_all above)
     try:
         from core.db import engine as _engine
         from sqlalchemy import text as _text
