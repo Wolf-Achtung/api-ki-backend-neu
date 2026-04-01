@@ -18759,6 +18759,49 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.warning(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Failed: {e}")
 
     # =========================================================================
+    # FIX-KIS-1104: RE-INJECT PROGRAMMATIC FUNDING TABLE AFTER QUALITY ENFORCER
+    # The LOCATION-VALIDATOR (inside apply_all_quality_enforcers) removes <tr>
+    # rows that mention wrong Bundesländer and replaces remaining names with
+    # "Ihr Bundesland".  This damages the funding table — even the programmatic
+    # table injected at line ~15517 can be affected after 3 enforcer passes.
+    # Solution: rebuild the programmatic table from scratch AFTER the final
+    # enforcer pass and inject it as the primary funding display.
+    # =========================================================================
+    try:
+        from services.extra_sections import build_core_funding_table_html
+        import re as _re_kis1104
+        _core_html = build_core_funding_table_html(sections)
+        if _core_html and '<table' in _core_html.lower():
+            # --- FOERDERPOTENZIAL_HTML (rendered by PDF template) ---
+            _fp_html = sections.get("FOERDERPOTENZIAL_HTML", "") or ""
+            # Strip ALL existing <table>…</table> from the section (damaged tables)
+            _fp_prose = _re_kis1104.sub(
+                r'<table[^>]*>.*?</table>', '', _fp_html, flags=_re_kis1104.DOTALL,
+            )
+            # Strip orphaned funding headings left over from table removal
+            _fp_prose = _re_kis1104.sub(
+                r'<h3[^>]*>[^<]*(?:Kernprogramme|Förder(?:programm|mittel)|Programmüberblick)[^<]*</h3>\s*',
+                '', _fp_prose, flags=_re_kis1104.IGNORECASE,
+            )
+            _fp_prose = _fp_prose.strip()
+            _heading = '<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n'
+            if _fp_prose:
+                sections["FOERDERPOTENZIAL_HTML"] = (
+                    f"{_heading}{_core_html}\n\n{_fp_prose}"
+                )
+            else:
+                sections["FOERDERPOTENZIAL_HTML"] = f"{_heading}{_core_html}"
+            # --- FOERDERPROGRAMME_HTML + FUNDING_HTML ---
+            sections["FOERDERPROGRAMME_HTML"] = (
+                f"<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"
+                f"{_core_html}"
+            )
+            sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
+            log.info(f"[{run_id}] [FIX-KIS-1104] Re-injected programmatic funding table after final enforcer")
+    except Exception as e:
+        log.warning(f"[{run_id}] [FIX-KIS-1104] Failed to re-inject funding table: {e}")
+
+    # =========================================================================
     # FIX-R3-5B: QUICK-WINS RECONCILIATION (replaces R2-3)
     # QUICK_WINS_HTML may have been shortened by enforcer passes, losing the
     # premium-rendered PROBLEM/WIRKUNG/UMSETZUNG blocks.  _QUICK_WINS_PRISTINE
