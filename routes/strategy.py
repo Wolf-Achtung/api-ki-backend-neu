@@ -67,6 +67,9 @@ class StrategyQuestionsResponse(BaseModel):
 # =============================================================================
 
 VALID_BUDGET = [
+    # New R1-aligned values (Frontend Issue 3):
+    "unter_2000", "2000_10000", "10000_50000", "ueber_50000", "unklar",
+    # Legacy display labels (backward compatibility):
     "Noch unklar",
     "Unter 5.000€",
     "5.000–15.000€",
