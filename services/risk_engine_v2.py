@@ -499,6 +499,13 @@ def extract_dsgvo_risk_from_sections(
             if any(s in dtype_lower for s in sensitive_types):
                 risk_factors.append(f"Sensible Daten: {dtype}")
 
+        # FIX-KIS-1098-P3-3: Check regulierte_branche for vertraulich_nda
+        regulierte = briefing.get("regulierte_branche", [])
+        if isinstance(regulierte, str):
+            regulierte = [regulierte]
+        if "vertraulich_nda" in regulierte:
+            risk_factors.append("Vertrauliche Kundendaten / NDA-Material")
+
         # Check for automated decisions
         if briefing.get("automatisierte_entscheidungen") or briefing.get("automated_decisions"):
             risk_factors.append("Automatisierte Entscheidungsfindung")

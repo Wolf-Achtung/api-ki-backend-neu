@@ -502,6 +502,13 @@ def _determine_dpia_required(
         if any(b in branch for b in ["gesundheit", "bildung", "kinder", "healthcare", "education"]):
             reasons.append("Verarbeitung von Daten schutzbedürftiger Gruppen")
 
+        # FIX-KIS-1098-P3-3: NDA/confidential data raises DPIA relevance
+        regulierte = briefing.get("regulierte_branche", [])
+        if isinstance(regulierte, str):
+            regulierte = [regulierte]
+        if "vertraulich_nda" in regulierte:
+            reasons.append("Vertrauliche Kundendaten unter NDA")
+
     dpia_required = len(reasons) >= 1
     reason_text = "; ".join(reasons) if reasons else "Keine DPIA-Anforderung identifiziert"
 
