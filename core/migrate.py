@@ -82,6 +82,28 @@ DDL = [
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )"""),
     text("CREATE INDEX IF NOT EXISTS idx_feedbacks_created_at ON feedbacks(created_at)"),
+    # reports_history (Sprint G11 — report versioning)
+    text("""    CREATE TABLE IF NOT EXISTS reports_history (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        report_id INTEGER NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+        version INTEGER NOT NULL DEFAULT 1,
+        scores_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+        bc_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+        ai_act_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+        labels_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+        section_stats_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+        html_path VARCHAR(512),
+        pdf_path VARCHAR(512),
+        lang VARCHAR(5) NOT NULL DEFAULT 'de',
+        size_category VARCHAR(32),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(report_id, version)
+    )"""),
+    text("CREATE INDEX IF NOT EXISTS ix_reports_history_user_report ON reports_history(user_id, report_id)"),
+    text("CREATE INDEX IF NOT EXISTS ix_reports_history_created_at ON reports_history(created_at)"),
+    text("CREATE INDEX IF NOT EXISTS ix_reports_history_report_id ON reports_history(report_id)"),
+    text("CREATE INDEX IF NOT EXISTS ix_reports_history_user_id ON reports_history(user_id)"),
 ]
 
 def migrate_all(engine: Engine) -> None:
