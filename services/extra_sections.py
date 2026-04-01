@@ -700,6 +700,7 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
     branche = briefing.get("BRANCHE_LABEL", "")
     bundesland = briefing.get("BUNDESLAND_LABEL", "")
     size_label = (briefing.get("UNTERNEHMENSGROESSE_LABEL") or "").lower()
+    country = (briefing.get("country") or briefing.get("COUNTRY") or "DE").upper()
 
     # Size-Erkennung
     if "solo" in size_label or "freiberuf" in size_label or "1" in size_label:
@@ -709,11 +710,14 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
     else:
         size_group = "kmu"
 
-    # FIX-KIS-1080: Filter expired programs AND match company size
+    # FIX-KIS-1098-R1-FUNDING: Filter by country AND size AND status
+    # DE companies see DE + EU programs only; AT sees AT + EU; etc.
+    allowed_countries = {country, "EU"}
     filtered = [
         p for p in all_programmes
         if size_group in p.get("suitable_for", [])
         and p.get("status", "active") != "expired"
+        and p.get("country_code", "DE").upper() in allowed_countries
     ]
 
     # Regionaler Filter (optional - zeige alle, aber markiere passende)
