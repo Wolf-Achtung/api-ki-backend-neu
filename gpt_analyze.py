@@ -15487,6 +15487,19 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             # Nur Kern-Matrix (kein Research)
             sections["FOERDERPROGRAMME_HTML"] = core_funding_html
 
+        # FIX-KIS-1098-BE-1: Inject core funding table into FOERDERPOTENZIAL_HTML
+        # The PDF template renders FOERDERPOTENZIAL_HTML (LLM prose), not
+        # FOERDERPROGRAMME_HTML. Without this injection, regional programs like
+        # Digitalbonus Bayern never appear in the rendered R1 report.
+        if core_funding_html and sections.get("FOERDERPOTENZIAL_HTML"):
+            sections["FOERDERPOTENZIAL_HTML"] = (
+                f"{sections['FOERDERPOTENZIAL_HTML']}\n\n"
+                f"<h3 style='margin-top: 16pt;'>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"
+                f"{core_funding_html}"
+            )
+        elif core_funding_html and not sections.get("FOERDERPOTENZIAL_HTML"):
+            sections["FOERDERPOTENZIAL_HTML"] = core_funding_html
+
     sections["SOURCES_BOX_HTML"] = _build_sources_box_html(sections, sections["research_last_updated"])
 
     # Freitext snippets
