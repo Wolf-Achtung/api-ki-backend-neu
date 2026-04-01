@@ -466,7 +466,7 @@ def calculate_relevance_score(
         return -1.0
 
     # --- SEGMENT MATCH (required) ---
-    size_lower = size.lower() if size else "team"
+    size_lower = size.lower().replace("\u2013", "-").replace("\u2014", "-") if size else "team"
     # Normalize verbose size labels: "KMU (11-250)" → "kmu", "Solo" → "solo"
     if "solo" in size_lower or "1 " in size_lower or size_lower == "1":
         size_norm = "solo"

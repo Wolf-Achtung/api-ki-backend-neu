@@ -370,10 +370,14 @@ async def generate_strategy_report(
                 get_filtered_funding_programs,
                 format_funding_programs_for_prompt,
             )
+            # KIS-1098: Normalize size before passing — DB stores "11–100" (en-dash)
+            # but funding_recommender's inline normalization only checks hyphen "11-".
+            from services.business_case_engine_v2 import normalize_company_size as _norm_size
+            _funding_size = _norm_size(briefing_data.get("unternehmensgroesse", "team"))
             _filtered_programs = get_filtered_funding_programs(
                 bundesland=briefing_data.get("bundesland", ""),
                 country=_country_code,
-                size=briefing_data.get("unternehmensgroesse", "team"),
+                size=_funding_size,
                 branch=briefing_data.get("branche", ""),
                 limit=8,
             )
