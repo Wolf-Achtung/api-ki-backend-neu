@@ -21615,6 +21615,14 @@ def _fix_exec_placeholders(html_block: str, scores: Dict[str, Any], sections: Di
         fixed = fixed.replace(f"{{{{{tpl}}}}}", "")  # Doppelte {{}}
         fixed = fixed.replace(f"{{{tpl}}}", "")       # Einfache {}
 
+    # FIX-KIS-1098-BE-3: Remove any remaining unsubstituted {{...}} placeholders
+    # and orphaned }} that GPT may have generated as template artefacts.
+    import re as _re
+    fixed = _re.sub(r'\{\{[^}]*\}\}', '', fixed)
+    # Remove orphaned }} not inside <style> or <script> — only standalone }}
+    # that appear in visible HTML text (not CSS/JSON blocks)
+    fixed = _re.sub(r'(?<![{])\}\}(?![}])', '', fixed)
+
     return fixed
 def _build_top_3_massnahmen_html(top_3_recommendations: List, lang: str = "de") -> str:
     """
