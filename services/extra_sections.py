@@ -703,12 +703,18 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
     country = (briefing.get("country") or briefing.get("COUNTRY") or "DE").upper()
 
     # Size-Erkennung
-    if "solo" in size_label or "freiberuf" in size_label or "1" in size_label:
-        size_group = "solo"
-    elif "2" in size_label or "team" in size_label or "klein" in size_label:
-        size_group = "team"
-    else:
-        size_group = "kmu"
+    # FIX-KIS-1104: Use company_size_normalizer for robust size detection.
+    # Previous logic ("1" in size_label) matched "1" inside "11-100" → mis-classified KMU as solo.
+    try:
+        from services.company_size_normalizer import get_segment
+        size_group = get_segment(size_label)
+    except Exception:
+        if "solo" in size_label or "freiberuf" in size_label or size_label in ("1", "einzelunternehmer"):
+            size_group = "solo"
+        elif any(x in size_label for x in ("2-10", "2 bis 10", "team", "klein")):
+            size_group = "team"
+        else:
+            size_group = "kmu"
 
     # FIX-KIS-1098-R1-FUNDING: Filter by country AND size AND status
     # DE companies see DE + EU programs only; AT sees AT + EU; etc.
@@ -720,20 +726,45 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
         and p.get("country_code", "DE").upper() in allowed_countries
     ]
 
-    # Regionaler Filter (optional - zeige alle, aber markiere passende)
+    # FIX-KIS-1104: Regional filter — exclude state-specific programs from OTHER states.
+    # Keep: bundesweit, EU, Länderprogramme (generic), and the user's own state.
     _bl = bundesland.lower()
+    _BUNDESLAND_REGIONS = {
+        "berlin": "Berlin", "be": "Berlin",
+        "bayern": "Bayern", "by": "Bayern",
+        "baden-württemberg": "Baden-Württemberg", "bw": "Baden-Württemberg",
+        "hamburg": "Hamburg", "hh": "Hamburg",
+        "hessen": "Hessen", "he": "Hessen",
+        "niedersachsen": "Niedersachsen", "ni": "Niedersachsen",
+        "nordrhein-westfalen": "Nordrhein-Westfalen", "nrw": "Nordrhein-Westfalen",
+        "sachsen": "Sachsen", "sn": "Sachsen",
+        "brandenburg": "Brandenburg", "bb": "Brandenburg",
+        "bremen": "Bremen", "hb": "Bremen",
+        "mecklenburg-vorpommern": "Mecklenburg-Vorpommern", "mv": "Mecklenburg-Vorpommern",
+        "rheinland-pfalz": "Rheinland-Pfalz", "rp": "Rheinland-Pfalz",
+        "saarland": "Saarland", "sl": "Saarland",
+        "sachsen-anhalt": "Sachsen-Anhalt", "st": "Sachsen-Anhalt",
+        "schleswig-holstein": "Schleswig-Holstein", "sh": "Schleswig-Holstein",
+        "thüringen": "Thüringen", "th": "Thüringen",
+    }
+    _user_region = _BUNDESLAND_REGIONS.get(_bl, bundesland)
+    _safe_regions = {"bundesweit", "Länderprogramme", "Europa"}
+    filtered = [
+        p for p in filtered
+        if _user_region in p.get("region", "")
+        or any(sr in p.get("region", "") for sr in _safe_regions)
+    ]
+
+    # Prioritize the user's own state program
     if "berlin" in _bl or _bl == "be":
-        # ProFIT höher priorisieren
         for p in filtered:
             if p["id"] == "profit_berlin":
-                p["priority"] = 0  # höchste Prio
+                p["priority"] = 0
     elif "baden" in _bl or "württemberg" in _bl or _bl == "bw":
-        # Invest BW höher priorisieren
         for p in filtered:
             if p["id"] == "invest_bw_digital_ki":
                 p["priority"] = 0
     elif "bayern" in _bl or _bl == "by":
-        # Digitalbonus Bayern höher priorisieren
         for p in filtered:
             if p["id"] == "digitalbonus_bayern":
                 p["priority"] = 0
