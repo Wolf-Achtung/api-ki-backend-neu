@@ -1071,6 +1071,7 @@ def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
             answers=r1_answers,
             scores=scores,
             sections=_sections,
+            strategy_answers=strategy_answers,
         )
         _pdf_result = render_pdf_from_html(
             _briefing_html,
