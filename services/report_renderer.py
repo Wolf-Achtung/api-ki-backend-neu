@@ -1418,6 +1418,14 @@ def render(briefing_obj: Any,
         else:
             log.warning(f"⚠️ Template still contains unreplaced variables in report {run_id}")
 
+    # FIX-KIS-1098-BE-3: Strip orphaned }} outside <style>/<script> blocks
+    import re as _re
+    _clean = _re.sub(r'<style[^>]*>.*?</style>', '', html, flags=_re.DOTALL)
+    _clean = _re.sub(r'<script[^>]*>.*?</script>', '', _clean, flags=_re.DOTALL)
+    if '}}' in _clean:
+        log.info(f"[FIX-KIS-1098-BE-3] Stripping orphaned '}}' from rendered HTML for {run_id}")
+        html = _re.sub(r'(?<![{])\}\}(?![}])', '', html)
+
     # Embed logos as base64 for PDF service compatibility
     # FIX-D4: Use project-root-relative path (same pattern as gamechanger_deep_dive.py)
     # to avoid resolving to repo root when env overrides change tpl_path.
