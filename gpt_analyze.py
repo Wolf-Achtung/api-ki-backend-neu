@@ -8967,7 +8967,35 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         base_vars["BAFA_FOERDERQUOTE"] = "50"
         base_vars["BAFA_MAX_FOERDERUNG"] = "1.750 €"
         base_vars["BAFA_FOERDERUNG_DISPLAY"] = "bis 1.750 € (50%)"
-    
+
+    # FIX-KIS-1098-R1-FUNDING: Inject filtered funding program list into prompt context
+    # so the LLM knows exactly which programs to discuss (prevents AT/CH hallucinations).
+    try:
+        from services.funding_recommender import get_filtered_funding_programs
+        from services.company_size_normalizer import normalize_company_size
+        _bl_code = base_vars.get("bundesland", "") or ""
+        _size_info = normalize_company_size(briefing.get("unternehmensgroesse", "team"))
+        _size_bucket = _size_info.get("bucket", "team") if isinstance(_size_info, dict) else str(_size_info)
+        _branch = briefing.get("branche", "")
+        _country = (briefing.get("country") or "DE").upper()
+        _funding_progs = get_filtered_funding_programs(
+            bundesland=_bl_code, size=_size_bucket, branch=_branch, country=_country
+        )
+        if _funding_progs:
+            _prog_lines = []
+            for _fp in _funding_progs[:8]:
+                _name = _fp.get("name", "")
+                _provider = _fp.get("provider", "")
+                _rate = _fp.get("funding_rate", "")
+                _max = _fp.get("max_funding", _fp.get("max_amount", ""))
+                _prog_lines.append(f"- {_name} ({_provider}): {_rate}, max. {_max}")
+            base_vars["FUNDING_PROGRAMS_LIST"] = "\n".join(_prog_lines)
+        else:
+            base_vars["FUNDING_PROGRAMS_LIST"] = ""
+    except Exception as _fund_exc:
+        log.debug("Funding programs list injection failed: %s", _fund_exc)
+        base_vars["FUNDING_PROGRAMS_LIST"] = ""
+
     # ===== BLOCK 3: Strategy & Vision (EXTENDED Sprint Phase2) =====
     # Strategic direction and goals - NOW includes all freetext fields
     hemmnisse_raw = briefing.get("ki_hemmnisse", [])  # Fixed: was "hemmnisse", should be "ki_hemmnisse"
@@ -15513,6 +15541,40 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             )
         elif core_funding_html and not sections.get("FOERDERPOTENZIAL_HTML"):
             sections["FOERDERPOTENZIAL_HTML"] = core_funding_html
+
+    # FIX-KIS-1098-R1-FUNDING: Strip foreign program mentions from LLM prose
+    # for DE companies. The LLM sometimes hallucinates AT/CH/GB programs.
+    _report_country = (answers.get("country") or "DE").upper()
+    if _report_country == "DE" and sections.get("FOERDERPOTENZIAL_HTML"):
+        import re as _re_fund
+        _FOREIGN_PROGRAM_PATTERNS = [
+            r'<[^>]*>[^<]*(?:aws\s+digi|Forschungsprämie|digi4KMU|Innosuisse|Innovate\s+UK)[^<]*</[^>]+>',
+        ]
+        _FOREIGN_LINE_MARKERS = [
+            "aws digi", "Forschungsprämie", "forschungsprämie",
+            "digi4KMU", "digi4kmu", "Innosuisse", "innosuisse",
+            "Innovate UK", "innovate uk",
+            "Österreich", "österreich", "Schweiz", "schweiz",
+        ]
+        _fp_html = sections["FOERDERPOTENZIAL_HTML"]
+        _fp_lines = _fp_html.split("\n")
+        _fp_cleaned = []
+        _fp_removed = 0
+        for _line in _fp_lines:
+            if any(_marker in _line for _marker in _FOREIGN_LINE_MARKERS):
+                # Skip lines mentioning foreign programs (but keep table structure)
+                if "<tr" in _line.lower() or "<li" in _line.lower() or "<td" in _line.lower():
+                    _fp_removed += 1
+                    continue
+                # For prose lines, only skip if the foreign program is the main subject
+                if any(_line.strip().startswith(f"<") or _marker in _line[:80]
+                       for _marker in _FOREIGN_LINE_MARKERS if _marker in _line):
+                    _fp_removed += 1
+                    continue
+            _fp_cleaned.append(_line)
+        if _fp_removed > 0:
+            sections["FOERDERPOTENZIAL_HTML"] = "\n".join(_fp_cleaned)
+            log.info("[FIX-KIS-1098-R1-FUNDING] Removed %d lines with foreign programs from FOERDERPOTENZIAL_HTML", _fp_removed)
 
     sections["SOURCES_BOX_HTML"] = _build_sources_box_html(sections, sections["research_last_updated"])
 
