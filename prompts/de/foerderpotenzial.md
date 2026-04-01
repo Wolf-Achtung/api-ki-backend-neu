@@ -141,6 +141,14 @@ DETERMINISTISCHE BAFA-DATEN (verwende EXAKT diese Werte, KEINE eigenen Schätzun
 - Maximaler Zuschuss für {{BUNDESLAND_LABEL}}: {{BAFA_MAX_FOERDERUNG}}
 - WICHTIG: Verwende für BAFA NUR diese Werte. Erfinde KEINE anderen BAFA-Beträge.
 
+VERFÜGBARE FÖRDERPROGRAMME (FIX-KIS-1098 — VERBINDLICH):
+{% if FUNDING_PROGRAMS_LIST %}
+Diese Programme wurden automatisch für das Unternehmensprofil gefiltert.
+Nenne NUR Programme aus dieser Liste oder allgemeine Bundesprogramme (BAFA, ZIM, KfW).
+KEINE österreichischen, schweizer oder britischen Programme nennen!
+{{FUNDING_PROGRAMS_LIST}}
+{% endif %}
+
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: niedrige Hürden, <10.000€, Beratungs-/Gründerförderung, BAFA ({{BAFA_FOERDERUNG_DISPLAY}}), ERP-Gründerkredit
 - team: Prozessdigitalisierung, KMU-innovativ, BAFA ({{BAFA_FOERDERUNG_DISPLAY}})
