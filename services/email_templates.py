@@ -424,12 +424,88 @@ def render_admin_briefing_email(
 </html>"""
 
 
+def _render_pdf_questionnaire_tables(
+    answers: Dict[str, Any],
+    strategy_answers: Optional[Dict[str, Any]],
+    dash: str,
+) -> str:
+    """Render full R1 + Strategy questionnaire data as print-friendly HTML tables for the PDF."""
+    html_parts: List[str] = []
+
+    # --- R1 Questionnaire ---
+    r1_rows: List[str] = []
+    # Keys already shown in the summary section above — skip to avoid duplication
+    _skip_r1 = {"branche", "unternehmensgroesse", "bundesland", "country",
+                 "unternehmen_name", "hauptleistung", "strategische_ziele"}
+    for key, label in _R1_LABELS.items():
+        if key in _skip_r1:
+            continue
+        val = answers.get(key)
+        if val is None or val == "" or val == []:
+            continue
+        display = escape(", ".join(str(v) for v in val)) if isinstance(val, list) else escape(str(val))
+        r1_rows.append(f"  <tr><td>{escape(label)}</td><td>{display}</td></tr>")
+
+    # Also include any answer keys not in _R1_LABELS (catch-all)
+    for key, val in answers.items():
+        if key in _skip_r1 or key in _R1_LABELS:
+            continue
+        if val is None or val == "" or val == []:
+            continue
+        if key in ("id", "briefing_id", "created_at", "updated_at", "email", "user_id"):
+            continue
+        display = escape(", ".join(str(v) for v in val)) if isinstance(val, list) else escape(str(val))
+        r1_rows.append(f"  <tr><td>{escape(key)}</td><td>{display}</td></tr>")
+
+    if r1_rows:
+        html_parts.append('<h2 style="page-break-before:always">Fragebogen 1 \u2014 KI-Readiness</h2>\n')
+        html_parts.append("<table>\n")
+        html_parts.extend(r + "\n" for r in r1_rows)
+        html_parts.append("</table>\n\n")
+
+    # --- Strategy Questionnaire ---
+    if strategy_answers:
+        s_rows: List[str] = []
+        strategy_keys = [
+            "s1_budget", "s2_zeitrahmen", "s3_prioritaeten", "s4_engpass",
+            "s5_vision", "s5_software", "s6_foerderinteresse", "s7_entscheidung",
+            "s8_erfahrung", "s9_ansatz", "s10_datenschutz",
+        ]
+        seen: set = set()
+        for key in strategy_keys:
+            val = strategy_answers.get(key)
+            seen.add(key)
+            if val is None or val == "" or val == []:
+                continue
+            label = _STRATEGY_LABELS.get(key, key)
+            display = escape(", ".join(str(v) for v in val)) if isinstance(val, list) else escape(str(val))
+            s_rows.append(f"  <tr><td>{escape(label)}</td><td>{display}</td></tr>")
+        # Catch-all for extra strategy keys
+        for key, val in strategy_answers.items():
+            if key in seen or key in ("id", "briefing_id", "created_at"):
+                continue
+            if val is None or val == "" or val == []:
+                continue
+            label = _STRATEGY_LABELS.get(key, key)
+            display = escape(", ".join(str(v) for v in val)) if isinstance(val, list) else escape(str(val))
+            s_rows.append(f"  <tr><td>{escape(label)}</td><td>{display}</td></tr>")
+
+        if s_rows:
+            html_parts.append("<h2>Fragebogen 2 \u2014 Strategiefragen</h2>\n")
+            html_parts.append("<table>\n")
+            html_parts.extend(r + "\n" for r in s_rows)
+            html_parts.append("</table>\n\n")
+
+    return "".join(html_parts)
+
+
 def render_briefing_pdf_html(
     display_id: str,
     datum: str,
     answers: Dict[str, Any],
     scores: Dict[str, Any],
     sections: Dict[str, Any],
+    strategy_answers: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Render a compact briefing summary as a self-contained HTML page for PDF conversion.
 
@@ -569,7 +645,8 @@ def render_briefing_pdf_html(
         f"  <tr><td>Strategische Ziele</td><td>{ziele or _dash}</td></tr>\n"
         "</table>\n"
         "\n"
-        '<div class="footer">\n'
+        + _render_pdf_questionnaire_tables(answers, strategy_answers, _dash)
+        + '<div class="footer">\n'
         "  Dieses Briefing wurde automatisch generiert. Alle Werte basieren auf den Fragebogen-Eingaben und dem kanonischen Business Case.\n"
         "</div>\n"
         "\n"
