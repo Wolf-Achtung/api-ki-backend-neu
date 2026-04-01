@@ -60,6 +60,16 @@ Zielgruppe: KMU-Geschäftsführer ohne Beratungs-Hintergrund.
   - NICHT "Onboarding" → SONDERN "Einarbeitung"
   - NICHT "End-to-End" → SONDERN "durchgängig" oder "vollständig"
   - NICHT "Best Practice" → SONDERN "bewährte Methode"
+- KI-Fachbegriffe IMMER in verständliches Deutsch übersetzen:
+  - NICHT "RAG" oder "Retrieval-Augmented Generation" → SONDERN "KI-gestützte Wissensabfrage" oder "KI mit Unternehmens-Dokumenten"
+  - NICHT "Fine-Tuning" → SONDERN "Feinanpassung" oder "KI-Spezialisierung"
+  - NICHT "Inference" → SONDERN "KI-Verarbeitung" oder "KI-Berechnung"
+  - NICHT "Embedding" oder "Vector Database" → SONDERN "Dokumenten-Speicher" oder "digitale Wissensbasis"
+  - NICHT "Prompt Engineering" → SONDERN "Anweisungen für KI" oder "KI-Eingaben optimieren"
+  - NICHT "Token" (im KI-Kontext) → SONDERN "Texteinheit" oder weglassen
+  - NICHT "Large Language Model" oder "LLM" → SONDERN "KI-Sprachmodell" oder einfach "KI"
+  - NICHT "Context Window" → SONDERN "Verarbeitungskapazität"
+  - NICHT "Hallucination" (im KI-Kontext) → SONDERN "fehlerhafte KI-Ausgabe" oder "KI-Fehler"
 - Fachbegriffe die bleiben dürfen (weil etabliert): KI, ROI, DSGVO, AI Act, BAFA, KPI, CRM, ERP, SaaS
 - Bei erster Verwendung eines Fachbegriffs: kurze Erklärung in Klammern.
   Beispiel: "KPI (Kennzahl zur Erfolgsmessung)"
