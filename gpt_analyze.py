@@ -1230,6 +1230,20 @@ def build_strategic_context_block(answers: dict, lang: str = "de") -> str:
         if val and val != "—":
             lines.append(f"Vision für die nächsten 2–3 Jahre:\n{val}")
 
+    # FIX-KIS-1098-P3-3: Add NDA/confidentiality context when vertraulich_nda is set
+    regulierte = answers.get("regulierte_branche", [])
+    if isinstance(regulierte, str):
+        regulierte = [regulierte]
+    if "vertraulich_nda" in regulierte:
+        lines.append(
+            "Datenschutz-Kontext (NDA):\n"
+            "Das Unternehmen arbeitet mit vertraulichem Kundenmaterial unter NDA "
+            "(z.B. unveröffentlichte Produkte, geschützte Inhalte). Empfehlungen "
+            "sollten lokale/private KI-Verarbeitung bevorzugen, AVV-Prüfung als "
+            "Pflichtschritt betonen und Cloud-basierte Lösungen nur mit "
+            "entsprechenden Datenschutzgarantien empfehlen."
+        )
+
     # === Guardrails: Explizit angegeben + Auto-Detection v5 ===
     explicit_guardrails = answers.get("ki_guardrails", "")
     has_explicit = explicit_guardrails and explicit_guardrails != "—"
