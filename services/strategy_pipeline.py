@@ -384,7 +384,31 @@ async def generate_strategy_report(
                 briefing_data.get("bundesland", ""),
             )
         except Exception as _fe:
-            logger.warning("[Strategy %d] Funding injection failed: %s", briefing_id, _fe)
+            logger.warning("[Strategy %d] Funding injection failed: %s", briefing_id, _fe, exc_info=True)
+
+        # KIS-1097: Fallback — if get_filtered_funding_programs returned nothing
+        # (e.g. import error, JSON load failure), ensure S7 at least gets BAFA data
+        # from the base_context that was already computed deterministically.
+        if not _funding_data_block.strip():
+            _funding_data_block = (
+                f"- BAFA – Förderung von Unternehmensberatungen für KMU (Träger: BAFA)\n"
+                f"  Förderquote: {_bafa_quote}%\n"
+                f"  Max. Förderung: {_bafa_max}\n"
+                f"  KI-Relevanz: high\n"
+                f"  Frist: bis 31.12.2026"
+            )
+            # Also try to merge R1 programme names from report1_sections
+            _r1_foerder = str(report1_sections.get("FOERDERPROGRAMME_HTML", "") or "")
+            if _r1_foerder and "BAFA" not in _r1_foerder[:50]:
+                # R1 has a funding table — mention it so LLM doesn't ignore it
+                _funding_data_block += (
+                    "\n\nHINWEIS: Weitere Programme wurden im KI-Status-Report identifiziert. "
+                    "Verwende die BAFA-Daten oben als Minimum."
+                )
+            logger.warning(
+                "[Strategy %d] S7 funding fallback: primary source empty, using BAFA baseline (%s%%, %s)",
+                briefing_id, _bafa_quote, _bafa_max,
+            )
 
         # S7 + S8 parallel
         s7_task = _generate_section("S7", base_context, {
@@ -1047,6 +1071,7 @@ def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
             answers=r1_answers,
             scores=scores,
             sections=_sections,
+            strategy_answers=strategy_answers,
         )
         _pdf_result = render_pdf_from_html(
             _briefing_html,
