@@ -15529,15 +15529,34 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             # Nur Kern-Matrix (kein Research)
             sections["FOERDERPROGRAMME_HTML"] = core_funding_html
 
-        # FIX-KIS-1098-BE-1: Inject core funding table into FOERDERPOTENZIAL_HTML
-        # The PDF template renders FOERDERPOTENZIAL_HTML (LLM prose), not
-        # FOERDERPROGRAMME_HTML. Without this injection, regional programs like
-        # Digitalbonus Bayern never appear in the rendered R1 report.
+        # FIX-KIS-1098-BE-1 + R1-FUNDING-2: Inject core funding table into
+        # FOERDERPOTENZIAL_HTML.  The PDF template renders FOERDERPOTENZIAL_HTML
+        # (LLM prose), not FOERDERPROGRAMME_HTML.
+        # The programmatic table is the PRIMARY funding display — it replaces
+        # any LLM-generated <table> (which contains generic placeholders like
+        # "Ihr Bundesland Digital") and is placed BEFORE the LLM prose.
         if core_funding_html and sections.get("FOERDERPOTENZIAL_HTML"):
+            import re as _re_tbl
+            _llm_html = sections["FOERDERPOTENZIAL_HTML"]
+            # Strip LLM-generated <table>…</table> blocks — they contain
+            # hallucinated programs ("Digitalprämie", "Ihr Bundesland").
+            _llm_html = _re_tbl.sub(
+                r'<table[^>]*>.*?</table>',
+                '',
+                _llm_html,
+                flags=_re_tbl.DOTALL,
+            )
+            # Also strip any leftover <h3> headings that referenced the removed table
+            _llm_html = _re_tbl.sub(
+                r'<h3[^>]*>[^<]*(?:Förder(?:programm|mittel)|Förderschwerpunkt|Programmüberblick|Kernprogramme)[^<]*</h3>\s*',
+                '',
+                _llm_html,
+                flags=_re_tbl.IGNORECASE,
+            )
             sections["FOERDERPOTENZIAL_HTML"] = (
-                f"{sections['FOERDERPOTENZIAL_HTML']}\n\n"
-                f"<h3 style='margin-top: 16pt;'>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"
-                f"{core_funding_html}"
+                f"<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"
+                f"{core_funding_html}\n\n"
+                f"{_llm_html.strip()}"
             )
         elif core_funding_html and not sections.get("FOERDERPOTENZIAL_HTML"):
             sections["FOERDERPOTENZIAL_HTML"] = core_funding_html
@@ -15556,6 +15575,13 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             "Innovate UK", "innovate uk",
             "Österreich", "österreich", "Schweiz", "schweiz",
         ]
+        # FIX-KIS-1098-R1-FUNDING-2: Also catch LLM-hallucinated generic placeholders
+        _GENERIC_PLACEHOLDER_MARKERS = [
+            "Ihr Bundesland", "Ihr_Bundesland", "ihr bundesland",
+            "Digitalprämie", "digitalprämie",
+            "Landesprogramm Digital", "landesprogramm digital",
+        ]
+        _FOREIGN_LINE_MARKERS.extend(_GENERIC_PLACEHOLDER_MARKERS)
         _fp_html = sections["FOERDERPOTENZIAL_HTML"]
         _fp_lines = _fp_html.split("\n")
         _fp_cleaned = []
