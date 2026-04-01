@@ -8974,11 +8974,12 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         from services.funding_recommender import get_filtered_funding_programs
         from services.company_size_normalizer import normalize_company_size
         _bl_code = base_vars.get("bundesland", "") or ""
-        _size_norm = normalize_company_size(briefing.get("unternehmensgroesse", "team"))
+        _size_info = normalize_company_size(briefing.get("unternehmensgroesse", "team"))
+        _size_bucket = _size_info.get("bucket", "team") if isinstance(_size_info, dict) else str(_size_info)
         _branch = briefing.get("branche", "")
         _country = (briefing.get("country") or "DE").upper()
         _funding_progs = get_filtered_funding_programs(
-            bundesland=_bl_code, size=_size_norm, branch=_branch, country=_country
+            bundesland=_bl_code, size=_size_bucket, branch=_branch, country=_country
         )
         if _funding_progs:
             _prog_lines = []
