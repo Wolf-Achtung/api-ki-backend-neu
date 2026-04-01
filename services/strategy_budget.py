@@ -210,6 +210,18 @@ def _match_budget_key(s1_budget: str) -> str:
     if not s1_budget:
         return "Noch unklar"
     budget_lower = s1_budget.lower().strip()
+
+    # FIX-KIS-1098-BE-hotfix-B: Map new R1-aligned underscore values
+    _NEW_BUDGET_MAP = {
+        "unter_2000": "Unter 5.000€",
+        "2000_10000": "5.000–15.000€",
+        "10000_50000": "15.000–50.000€",
+        "ueber_50000": "Über 50.000€",
+        "unklar": "Noch unklar",
+    }
+    if budget_lower in _NEW_BUDGET_MAP:
+        return _NEW_BUDGET_MAP[budget_lower]
+
     for key in _BUDGET_PROFILES:
         if key.lower() in budget_lower or budget_lower in key.lower():
             return key
