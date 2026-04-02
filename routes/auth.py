@@ -26,6 +26,7 @@ from core.security import create_access_token, get_current_user, TokenPayload
 EMAIL_WHITELIST = {email.lower() for email in [
     "j.hohl@freenet.de",
     "kerstin.geffert@gmail.com",
+    "daniel.effinger@web.de",
     "post@zero2.de",
     "giselapeter@peter-partner.de",
     "wolf.hohl@web.de",
