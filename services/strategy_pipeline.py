@@ -314,6 +314,11 @@ async def generate_strategy_report(
             **budget.to_dict(),
         }
 
+        # FIX-GUARDRAIL-STRATEGY: Pass ki_guardrails into base_context
+        base_context["ki_guardrails"] = (
+            briefing_data.get("ki_guardrails", "") or ""
+        )
+
         # S1 + S2 parallel (independent)
         s1_task = _generate_section("S1", base_context, {
             "staerken_top3": str(report1_data.get("staerken", "")),
@@ -512,6 +517,61 @@ async def generate_strategy_report(
 
 
 # =============================================================================
+# FIX-GUARDRAIL-STRATEGY: Detect local-only / no-cloud guardrails
+# =============================================================================
+
+_LOCAL_ONLY_KEYWORDS = [
+    "nur lokal", "keine online", "keine cloud", "kein cloud",
+    "on-premise", "on premise", "selbst gehostet", "self-hosted",
+    "lokal nutzbar", "keine saas", "keine externen ki",
+    "no cloud", "local only", "on-prem",
+]
+
+
+def _detect_local_only_guardrail(context: dict) -> tuple:
+    """Check if ki_guardrails contains a local-only / no-cloud constraint."""
+    guardrails = str(context.get("ki_guardrails", "") or "")
+    if not guardrails:
+        return False, ""
+    gl = guardrails.lower()
+    is_local = any(kw in gl for kw in _LOCAL_ONLY_KEYWORDS)
+    return is_local, guardrails
+
+
+_GUARDRAIL_BLOCK_S4 = """
+## VERPFLICHTENDE EINSCHRÄNKUNG — KUNDENGUARDRAIL
+
+Der Kunde hat folgende KI-Leitplanken definiert:
+"{guardrail_text}"
+
+BINDENDE REGELN für deine Tool-Empfehlungen:
+1. Empfehle PRIMÄR lokale/on-premise/self-hosted Tools (z.B. Whisper lokal, \
+Ollama, LM Studio, DaVinci Resolve AI, n8n self-hosted, lokale LLMs)
+2. Wenn der Kunde BEREITS Cloud-Tools nutzt (siehe "Bestehende Software"), \
+weise auf den Widerspruch zu seinem Guardrail hin und empfehle einen \
+Migrationspfad zu lokalen Alternativen
+3. Cloud-Tools dürfen NUR als "Übergangs-Option mit DSGVO-Vorbehalt" genannt \
+werden, NICHT als Hauptempfehlung
+4. Stelle IMMER eine lokale Alternative als erste Empfehlung dar
+5. Begründe bei jeder Tool-Empfehlung, ob sie das Guardrail erfüllt oder nicht
+
+WICHTIG: Der Kunde vertraut darauf, dass seine Guardrails respektiert werden. \
+Ein Strategiebericht, der Cloud-Tools als Hauptempfehlung gibt, obwohl der \
+Kunde "keine Online-Tools" gesagt hat, untergräbt das Kundenvertrauen.
+
+"""
+
+_GUARDRAIL_BLOCK_SHORT = """
+## KUNDENGUARDRAIL (BINDEND)
+Guardrail: "{guardrail_text}"
+→ Alle Handlungsempfehlungen und Tool-Referenzen MÜSSEN dieses Guardrail \
+respektieren. Bevorzuge lokale/on-premise-Lösungen. Cloud-Tools nur als \
+Übergangs-Option mit Vorbehalt.
+
+"""
+
+
+# =============================================================================
 # SECTION GENERATION
 # =============================================================================
 
@@ -544,6 +604,20 @@ async def _generate_section(
             if key not in context:
                 context[key] = ""
         prompt = prompt_template.format(**{k: str(v or "") for k, v in context.items()})
+
+    # FIX-GUARDRAIL-STRATEGY: Inject local-only guardrail into S3/S4/S6 prompts
+    if section_key in ("S4", "S3", "S6"):
+        _is_local, _guardrail_text = _detect_local_only_guardrail(context)
+        if _is_local:
+            if section_key == "S4":
+                _block = _GUARDRAIL_BLOCK_S4.format(guardrail_text=_guardrail_text)
+            else:
+                _block = _GUARDRAIL_BLOCK_SHORT.format(guardrail_text=_guardrail_text)
+            prompt = _block + prompt
+            logger.info(
+                "[Strategy %s] LOCAL-ONLY guardrail injected: '%s'",
+                section_key, _guardrail_text[:80],
+            )
 
     # Call LLM — respect LLM_PROVIDER_DEFAULT (same routing as Report 1+2)
     start = time.time()
