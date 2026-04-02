@@ -158,7 +158,9 @@ SOLO_COMPACT_EXCLUDED = [
     "PROMPT_FRAMEWORK_HTML",
     "ROADMAP_12M_HTML",  # Use 90D instead
     "BUSINESS_CASE_HTML",  # Simplified in summary
-    "FOERDERPOTENZIAL_HTML",  # Minimal funding info in summary
+    # FIX-KIS-1108: FOERDERPOTENZIAL_HTML no longer excluded — Solo users
+    # need the programmatic funding table (Digitalbonus, BAFA, etc.)
+    # "FOERDERPOTENZIAL_HTML",
 ]
 
 # Max word counts for solo-compact sections
