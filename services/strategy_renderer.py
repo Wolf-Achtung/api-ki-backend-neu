@@ -296,8 +296,8 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
             '</div>'
         )
 
-    # KIS-1011-V1a: When gross ROI < 20% and funding > 0, inject deterministic
-    # net-ROI sentence so customers see the funded perspective immediately.
+    # KIS-1011-V1a / KIS-1110-P3: Inject "Mit Förderung" box into exec summary
+    # for ALL segments when funding potential > 0 (not just low-ROI reports).
     try:
         _roi_real_str = calculated_values.get("roi_realistisch", "0")
         _foerder_str = calculated_values.get("foerder_potenzial", "0")
@@ -315,9 +315,12 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         _ersparnis = _parse_de(_ersparnis_str)
         _monat_spar = _parse_de(_monat_str)
 
-        if _roi_real < 20 and _foerder > 0 and _gesamt > _foerder and _monat_spar > 0:
+        # Plausibility cap: funding may not exceed 70% of total investment
+        _foerder_capped = min(_foerder, int(_gesamt * 0.7))
+
+        if _foerder_capped > 0 and _gesamt > _foerder_capped and _monat_spar > 0:
             import math as _math
-            _netto_invest = _gesamt - _foerder
+            _netto_invest = _gesamt - _foerder_capped
             _netto_roi = round((_ersparnis - _netto_invest) / _netto_invest * 100)
             _netto_be = _math.ceil(_netto_invest / _monat_spar)
 
@@ -329,22 +332,24 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
                 f'background:linear-gradient(135deg,#ecfdf5,#d1fae5);'
                 f'border-left:4px solid #10b981;border-radius:6px;'
                 f'font-size:0.95em;color:#065f46;">'
-                f'<strong>Mit Förderung:</strong> '
-                f'Unter Berücksichtigung des Förderpotenzials von '
-                f'{_fmt_eur(_foerder)}\u00a0€ reduziert sich Ihre Nettoinvestition '
-                f'auf {_fmt_eur(_netto_invest)}\u00a0€ — '
+                f'<strong>Mit F\u00f6rderung:</strong> '
+                f'Unter Ber\u00fccksichtigung des maximalen F\u00f6rderpotenzials von '
+                f'{_fmt_eur(_foerder_capped)}\u00a0\u20ac reduziert sich Ihre Nettoinvestition '
+                f'auf {_fmt_eur(_netto_invest)}\u00a0\u20ac \u2014 '
                 f'mit einem Netto-ROI von {_netto_roi}\u00a0% '
-                f'und Break-Even bereits in Monat\u00a0{_netto_be}.'
+                f'und Break-Even bereits in Monat\u00a0{_netto_be}. '
+                f'<span style="font-size:0.85em;color:#047857;">'
+                f'(bei vollst\u00e4ndiger Bewilligung \u2014 Details in Kapitel\u00a07)</span>'
                 f'</div>'
             )
             _exec_body += _foerder_note
             logger.info(
-                "[KIS-1011-V1a] Injected net-ROI: netto_invest=%d, netto_roi=%d%%, "
-                "netto_breakeven=%d mo (gross_roi=%d%%, foerder=%d)",
-                _netto_invest, _netto_roi, _netto_be, _roi_real, _foerder,
+                "[KIS-1110-P3] Injected net-ROI: netto_invest=%d, netto_roi=%d%%, "
+                "netto_breakeven=%d mo (gross_roi=%d%%, foerder_raw=%d, foerder_capped=%d)",
+                _netto_invest, _netto_roi, _netto_be, _roi_real, _foerder, _foerder_capped,
             )
     except Exception as _e:
-        logger.warning("[KIS-1011-V1a] Failed to inject net-ROI: %s", _e)
+        logger.warning("[KIS-1110-P3] Failed to inject net-ROI: %s", _e)
 
     context = {
         # Cover metadata
