@@ -365,6 +365,7 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         "section_s1": _strip_prompt_leaks(sections.get("S1", "")),
         "section_s2": _strip_prompt_leaks(sections.get("S2", "")),
         "section_s3": _strip_prompt_leaks(sections.get("S3", "")),
+        "section_s3b": _strip_prompt_leaks(sections.get("S3b", "")),
         "section_s4": _strip_prompt_leaks(sections.get("S4", "")),
         "section_s5": _strip_prompt_leaks(sections.get("S5", "")),
         "section_s6": _strip_prompt_leaks(sections.get("S6", "")),
