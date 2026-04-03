@@ -134,6 +134,16 @@ _SEGMENT_MULTIPLIER = {
     "KMU": 1.8,
 }
 
+# Minimum credible total investment per segment (12-month TCO incl.
+# software, implementation, training, coordination).  Values below these
+# thresholds undermine report credibility — a professional AI strategy
+# cannot realistically be executed for less.
+_SEGMENT_FLOOR = {
+    "Solo": 8_000,
+    "Team": 18_000,
+    "KMU": 35_000,
+}
+
 # Budget upper-bound caps (from questionnaire options).
 # After segment scaling, investment must NOT exceed these limits.
 _BUDGET_CAPS = {
@@ -268,6 +278,11 @@ def calculate_strategy_budget(
     cap = _BUDGET_CAPS.get(budget_key)
     if cap is not None:
         gesamt_jahr1 = min(gesamt_jahr1, cap)
+    # Enforce minimum credible investment per segment
+    floor = _SEGMENT_FLOOR.get(segment, 0)
+    if gesamt_jahr1 < floor:
+        logger.info("[Budget] Raising gesamt from %d to segment floor %d (%s)", gesamt_jahr1, floor, segment)
+        gesamt_jahr1 = floor
     # Round to nearest 500€ for professional appearance
     gesamt_jahr1 = round(gesamt_jahr1 / 500) * 500
 
