@@ -9,7 +9,7 @@ Pipeline order:
 1. Research + Budget-Calc (parallel)
 2. S1 + S2 (parallel)
 3. S3 (needs S2)
-4. S4 (needs S3)
+4. S3b + S4 (parallel; S3b independent, S4 needs S3)
 5. S5 (needs S3, S4)
 6. S6 (needs S3-S5)
 7. S7 + S8 (parallel)
@@ -344,14 +344,34 @@ async def generate_strategy_report(
 
         _heartbeat(db_session, briefing_id)
 
-        # S4 (needs S3)
-        sections["S4"] = await _generate_section("S4", base_context, {
+        # S3b + S4 parallel (S3b is independent, S4 needs S3)
+        s3b_extra = {
+            "geschaeftsmodell_evolution": briefing_data.get("geschaeftsmodell_evolution", ""),
+            "vision_3_jahre": briefing_data.get("vision_3_jahre", ""),
+            "strategische_ziele": briefing_data.get("strategische_ziele", ""),
+            "ki_ziele_labels": str(report1_sections.get("KI_ZIELE_LABELS", "") or briefing_data.get("ki_ziele", "")),
+            "zeitersparnis_prioritaet": briefing_data.get("zeitersparnis_prioritaet", ""),
+            "ki_projekte": briefing_data.get("ki_projekte", ""),
+            "ki_kompetenz": briefing_data.get("ki_kompetenz", ""),
+            "zielgruppen_labels": str(report1_sections.get("ZIELGRUPPEN_LABELS", "") or briefing_data.get("zielgruppen", "")),
+            "marktposition_label": str(report1_sections.get("MARKTPOSITION_LABEL", "") or briefing_data.get("marktposition", "")),
+            "anwendungsfaelle_labels": str(report1_sections.get("ANWENDUNGSFAELLE_LABELS", "") or briefing_data.get("anwendungsfaelle", "")),
+            "vorhandene_tools_labels": str(report1_sections.get("VORHANDENE_TOOLS_LABELS", "") or briefing_data.get("vorhandene_tools", "")),
+            "jahresumsatz_label": str(report1_sections.get("JAHRESUMSATZ_LABEL", "") or briefing_data.get("jahresumsatz", "")),
+            "canon_hours_month": str(report1_sections.get("CANON_HOURS_MONTH", "") or ""),
+            "canon_rate_eur": str(report1_sections.get("CANON_RATE_EUR", "") or ""),
+            "canon_capex_eur": str(report1_sections.get("CANON_CAPEX_EUR", "") or ""),
+            "s5_vision": strategy_questions.get("s5_vision", ""),
+        }
+        s3b_task = _generate_section("S3b", base_context, s3b_extra)
+        s4_task = _generate_section("S4", base_context, {
             "s3_handlungsfelder": _extract_handlungsfelder(sections["S3"]),
             "research_tool_1": research_context.get("tool_vergleich_1", {}).get("results", ""),
             "research_tool_2": research_context.get("tool_vergleich_2", {}).get("results", ""),
             "research_integration": research_context.get("tool_integration", {}).get("results", ""),
         })
 
+        sections["S3b"], sections["S4"] = await asyncio.gather(s3b_task, s4_task)
         _heartbeat(db_session, briefing_id)
 
         # S5 (needs S3, S4 — budget values already in base_context)
@@ -606,7 +626,7 @@ async def _generate_section(
         prompt = prompt_template.format(**{k: str(v or "") for k, v in context.items()})
 
     # FIX-GUARDRAIL-STRATEGY: Inject local-only guardrail into S3/S4/S6 prompts
-    if section_key in ("S4", "S3", "S6"):
+    if section_key in ("S4", "S3", "S3b", "S6"):
         _is_local, _guardrail_text = _detect_local_only_guardrail(context)
         if _is_local:
             if section_key == "S4":
