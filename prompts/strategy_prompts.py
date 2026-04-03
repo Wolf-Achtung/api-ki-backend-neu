@@ -322,6 +322,106 @@ FORMAT: HTML-Fragment. Verwende eine Tabelle für die Priorisierungsmatrix.
 Ampel-Farben als CSS-Klassen oder inline-styles.""",
 
     # =========================================================================
+    # S3b: KI-Umsatzpotenziale — Neue Erlösquellen durch KI
+    # =========================================================================
+    "S3b": """Erstelle die Section "KI-Umsatzpotenziale — Neue Erlösquellen durch KI" für den KI-Strategiebericht.
+
+UNTERNEHMENSDATEN:
+- Firmenname: {firmenname}
+- Branche: {branche}
+- Hauptleistung/Kerntätigkeit: {hauptleistung}
+- Segment/Größe: {segment}
+- Mitarbeiter: {mitarbeiter}
+- Bundesland: {bundesland}
+
+STRATEGISCHE EINGABEN:
+- Geschäftsmodell-Evolution: {geschaeftsmodell_evolution}
+- 3-Jahres-Vision: {vision_3_jahre}
+- Strategische Ziele: {strategische_ziele}
+- KI-Ziele: {ki_ziele_labels}
+- Zeitersparnis-Priorität: {zeitersparnis_prioritaet}
+- Laufende KI-Projekte: {ki_projekte}
+- KI-Kompetenz im Team: {ki_kompetenz}
+- Zielgruppen: {zielgruppen_labels}
+- Marktposition: {marktposition_label}
+- Anwendungsfälle: {anwendungsfaelle_labels}
+- Vorhandene Tools: {vorhandene_tools_labels}
+- Jahresumsatz: {jahresumsatz_label}
+
+AUS REPORT 1:
+- KI-Readiness-Score: {readiness_score}
+- Reifegrad: {reifegrad_label}
+- Zeitersparnis: {canon_hours_month} Stunden/Monat
+- Stundensatz: {canon_rate_eur} €
+- CAPEX: {canon_capex_eur} €
+
+STRATEGIE-FRAGEN (FB2):
+- Budget (12 Monate): {s1_budget}
+- Zeitrahmen: {s2_zeitrahmen}
+- Prioritäten: {s3_prioritaeten}
+- KI-Erfahrung: {s8_erfahrung}
+- Infrastruktur-Ansatz: {s9_ansatz}
+- Datenschutz-Priorität: {s10_datenschutz}
+- KI-Vision (Freitext): {s5_vision}
+
+EINSCHRÄNKUNGEN (BINDEND):
+- KI-Guardrails: {ki_guardrails}
+- Vorhandene Software: {s5_software}
+
+AUFGABE:
+Erstelle genau 3 KI-gestützte Umsatzstrategien, die über reine Kosteneinsparung hinausgehen und NEUEN Umsatz generieren.
+
+ANFORDERUNGEN AN DIE 3 STRATEGIEN:
+
+Strategie 1: Kurzfristiger Cashflow (1–3 Monate)
+- Schnell umsetzbar mit vorhandenen Ressourcen
+- Niedriger Investitionsaufwand
+- Sofort adressierbarer Käufermarkt
+
+Strategie 2: Systematisiertes Produkt oder Service (3–6 Monate)
+- Wiederholbares, standardisierbares Angebot
+- Klares Preismodell (Paket, Abo, Projekt)
+- Aufbauend auf Strategie 1
+
+Strategie 3: Langfristiger Vermögenswert (6–12 Monate)
+- Proprietäre Kompetenz oder Plattform
+- Wettbewerbsvorteil durch KI-Integration
+- Skalierbar über das bestehende Team hinaus
+
+STRUKTUR JE STRATEGIE (PFLICHT):
+Für JEDE der 3 Strategien liefere:
+1. Name — kurz, prägnant, kundenverständlich (als <h3>)
+2. Was genau — konkretes Angebot in 2–3 Sätzen
+3. Für wen — spezifischer Zielkäufer (nicht generisch)
+4. Preismodell — konkreter Preisvorschlag in € (Spanne oder Festpreis)
+5. KI-Hebel — welche KI-Tools/Prozesse ermöglichen das?
+6. Erster Validierungsschritt — 1 konkreter Test (maximal 2 Wochen, maximal 500 €)
+7. Umsatzprojektion — konservative Schätzung: Monatsumsatz nach 6 Monaten
+
+Gib abschließend eine Empfehlung: Welche Strategie zuerst, warum, und wie die drei aufeinander aufbauen.
+
+SEGMENTIERUNG (PFLICHT):
+Passe Preismodelle und Komplexität an die Unternehmensgröße ({segment}) an:
+- Einzelunternehmer: Persönliche Dienstleistungen, Stundensatz/Projektpakete, niedrige Fixkosten
+- Kleinunternehmen (2–10 MA): Kleine standardisierte Angebote, Team-Kapazität berücksichtigen
+- KMU (11–100 MA): Skalierbare Produkte/Services, Abteilungsstruktur nutzen
+
+ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input stehen. Umsatzprojektionen KONSERVATIV und BELASTBAR. Formuliere Projektionen als „voraussichtlich" oder „bei plausiblen Annahmen".
+
+REGELN:
+- DEUTSCH, KMU-gerecht, ohne Marketing-Jargon
+- Alle Strategien müssen ETHISCH, NACHHALTIG und REPUTATIONSSICHER sein
+- Strategien müssen zur BRANCHE und zum GESCHÄFTSMODELL passen
+- KEINE generischen Ideen (z.B. „verkaufen Sie KI-Beratung")
+- Stattdessen: BRANCHENSPEZIFISCHE Monetarisierung der KI-Fähigkeiten
+- Respektiere die KI-Guardrails des Kunden bei Tool-Empfehlungen
+- Wenn der Kunde „nur lokal" als Guardrail hat: KEINE Cloud-Tools als Hauptempfehlung
+
+ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section genau einen kurzen Absatz ein: <p><strong>Annahmen:</strong> [1-3 zentrale fachliche Annahmen, auf denen die Umsatzprojektionen beruhen]</p> Maximal 2-3 Sätze.
+
+FORMAT: HTML-Fragment. Verwende für die Strategien jeweils eine eigene <h3>-Überschrift und strukturierte Absätze. Nutze eine abschließende Tabelle für die Übersicht aller 3 Strategien (Name, Zeithorizont, Preismodell, Umsatzprojektion).""",
+
+    # =========================================================================
     # S4: Tool-Landschaft & Empfehlungen
     # =========================================================================
     "S4": """Erstelle die Section "Tool-Landschaft & Empfehlungen" für den KI-Strategiebericht.
