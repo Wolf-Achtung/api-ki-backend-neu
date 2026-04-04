@@ -54,6 +54,10 @@ class StrategyQuestionsCreate(BaseModel):
     s8_erfahrung: Optional[str] = None
     s9_ansatz: Optional[str] = None
     s10_datenschutz: Optional[str] = None
+    # S-Moat Felder (optional)
+    wettbewerber_anzahl: Optional[str] = None
+    kundenbindung_typ: Optional[str] = None
+    datenreife: Optional[str] = None
 
 
 class StrategyQuestionsResponse(BaseModel):
@@ -139,6 +143,10 @@ VALID_DATENSCHUTZ = [
     "Niedrig",
 ]
 
+VALID_WETTBEWERBER_ANZAHL = ["wenige", "mehrere", "viele", "unklar"]
+VALID_KUNDENBINDUNG_TYP = ["einmalig", "wiederkehrend", "gemischt"]
+VALID_DATENREIFE = ["keine", "basis", "umfangreich", "unklar"]
+
 
 def _validate_questions(q: StrategyQuestionsCreate) -> Optional[str]:
     """Validate question values against allowed lists. Returns error message or None."""
@@ -164,6 +172,13 @@ def _validate_questions(q: StrategyQuestionsCreate) -> Optional[str]:
         return f"Ungültiger Wert für s9_ansatz: {q.s9_ansatz}"
     if q.s10_datenschutz is not None and q.s10_datenschutz not in VALID_DATENSCHUTZ:
         return f"Ungültiger Wert für s10_datenschutz: {q.s10_datenschutz}"
+    # S-Moat fields (optional)
+    if q.wettbewerber_anzahl is not None and q.wettbewerber_anzahl not in VALID_WETTBEWERBER_ANZAHL:
+        return f"Ungültiger Wert für wettbewerber_anzahl: {q.wettbewerber_anzahl}"
+    if q.kundenbindung_typ is not None and q.kundenbindung_typ not in VALID_KUNDENBINDUNG_TYP:
+        return f"Ungültiger Wert für kundenbindung_typ: {q.kundenbindung_typ}"
+    if q.datenreife is not None and q.datenreife not in VALID_DATENREIFE:
+        return f"Ungültiger Wert für datenreife: {q.datenreife}"
     return None
 
 
@@ -215,6 +230,9 @@ async def save_strategy_questions(
         existing.s8_erfahrung = questions.s8_erfahrung
         existing.s9_ansatz = questions.s9_ansatz
         existing.s10_datenschutz = questions.s10_datenschutz
+        existing.wettbewerber_anzahl = questions.wettbewerber_anzahl
+        existing.kundenbindung_typ = questions.kundenbindung_typ
+        existing.datenreife = questions.datenreife
         log.info("[Strategy] Updated questions for briefing_id=%d", briefing_id)
     else:
         # Insert
@@ -230,6 +248,9 @@ async def save_strategy_questions(
             s8_erfahrung=questions.s8_erfahrung,
             s9_ansatz=questions.s9_ansatz,
             s10_datenschutz=questions.s10_datenschutz,
+            wettbewerber_anzahl=questions.wettbewerber_anzahl,
+            kundenbindung_typ=questions.kundenbindung_typ,
+            datenreife=questions.datenreife,
         )
         db.add(sq)
         log.info("[Strategy] Saved new questions for briefing_id=%d", briefing_id)
