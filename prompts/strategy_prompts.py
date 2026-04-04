@@ -925,7 +925,7 @@ Datenreife: {datenreife}
 
 <constraints>
 - Schreibe auf Deutsch, Zielgruppe: KMU-Geschäftsführer:in.
-- Maximal 800–1.000 Wörter für die gesamte Section.
+- Maximal 1.000 Wörter für die gesamte Section. Kürze lieber bei Maßnahme C oder den Risiken, nicht bei der Moat-Matrix.
 - Vermeide englische Fachbegriffe wo möglich; wenn nötig, erkläre sie in Klammern.
 - Beziehe dich konkret auf die KPA-Use-Cases – keine generischen Ratschläge.
 - Nenne keine konkreten Produkt- oder Toolnamen (diese kommen aus anderen Sections).
