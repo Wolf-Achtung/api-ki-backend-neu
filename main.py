@@ -158,6 +158,7 @@ else:
             "https://make.ki-sicherheit.jetzt",
             "https://www.ki-sicherheit.jetzt",
             "https://www.make.ki-sicherheit.jetzt",
+            "https://report.ki-sicherheit.jetzt",
         ]
     app.add_middleware(
         CORSMiddleware,
@@ -229,6 +230,9 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
 
     # Report 3: KI-Strategiebericht
     cfg.append(("routes.strategy", "/api", "strategy"))
+
+    # KI-Potenzial-Check Appetizer
+    cfg.append(("routes.appetizer", "/api/appetizer", "generate"))
 
     # News research pipeline (cron-triggered)
     cfg.append(("routes.content", "/api", "content"))
