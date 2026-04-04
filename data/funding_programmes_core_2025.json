@@ -253,8 +253,8 @@
     "country_code": "DE",
     "status": "active",
     "funding_type": "Zuschuss",
-    "funding_rate": "50% (neue BL) / 80% (alte BL)",
-    "max_amount": "3.500 € pro Beratung",
+    "funding_rate": "80% (neue BL) / 50% (alte BL)",
+    "max_amount": "bis 2.800 € (neue BL) / bis 1.750 € (alte BL)",
     "focus": "Unternehmensberatung, KI-Strategie, Digitalisierung",
     "suitable_for": ["solo", "team", "kmu"],
     "notes": "Max. 5 Beratungen pro Unternehmen, max. 2 pro Jahr. Laufzeit bis 31.12.2026.",
@@ -263,7 +263,7 @@
     "url": "https://www.bafa.de/DE/Wirtschaft/Beratung_Finanzierung/Unternehmensberatung/unternehmensberatung_node.html",
     "provider": "BAFA (Bundesamt für Wirtschaft und Ausfuhrkontrolle)",
     "deadline": "31.12.2026",
-    "deadline_notes": "Max 5 Beratungen pro Unternehmen, max 2 pro Jahr. Förderquote: 50% West / 80% Ost. Max förderfähig: 2.800€ pro Beratung."
+    "deadline_notes": "Max 5 Beratungen pro Unternehmen, max 2 pro Jahr. Förderquote: 80% Ost (neue BL) / 50% West (alte BL). Max Zuschuss: 2.800 € (neue BL) / 1.750 € (alte BL)."
   },
   {
     "id": "zim",
