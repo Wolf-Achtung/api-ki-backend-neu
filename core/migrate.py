@@ -104,6 +104,36 @@ DDL = [
     text("CREATE INDEX IF NOT EXISTS ix_reports_history_created_at ON reports_history(created_at)"),
     text("CREATE INDEX IF NOT EXISTS ix_reports_history_report_id ON reports_history(report_id)"),
     text("CREATE INDEX IF NOT EXISTS ix_reports_history_user_id ON reports_history(user_id)"),
+    # appetizer_leads (KI-Potenzial-Check)
+    text("""    CREATE TABLE IF NOT EXISTS appetizer_leads (
+        id SERIAL PRIMARY KEY,
+        firma VARCHAR(100),
+        branche VARCHAR(50) NOT NULL,
+        mitarbeiter VARCHAR(10) NOT NULL,
+        hauptleistung TEXT,
+        zeitaufwand_repetitiv VARCHAR(20) NOT NULL,
+        ki_erfahrung VARCHAR(20) NOT NULL,
+        groesste_herausforderung TEXT,
+        email VARCHAR(200),
+        newsletter_optin BOOLEAN DEFAULT FALSE,
+        score_wert INTEGER NOT NULL,
+        score_einordnung VARCHAR(20) NOT NULL,
+        result_json JSONB,
+        created_at TIMESTAMP DEFAULT NOW(),
+        converted_to_report BOOLEAN DEFAULT FALSE,
+        converted_at TIMESTAMP
+    )"""),
+    text("CREATE INDEX IF NOT EXISTS idx_appetizer_leads_email ON appetizer_leads(email)"),
+    # appetizer_analytics (anonymous, always saved)
+    text("""    CREATE TABLE IF NOT EXISTS appetizer_analytics (
+        id SERIAL PRIMARY KEY,
+        branche VARCHAR(50) NOT NULL,
+        mitarbeiter VARCHAR(10) NOT NULL,
+        score_wert INTEGER NOT NULL,
+        score_einordnung VARCHAR(20) NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+    )"""),
+    text("CREATE INDEX IF NOT EXISTS idx_appetizer_analytics_branche ON appetizer_analytics(branche)"),
 ]
 
 def migrate_all(engine: Engine) -> None:
