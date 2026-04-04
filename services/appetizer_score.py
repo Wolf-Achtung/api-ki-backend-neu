@@ -62,6 +62,10 @@ def enforce_zeitersparnis_caps(hebel: list, mitarbeiter: str) -> list:
     Skaliert proportional, wenn Summe > Cap.
     Architektur-Regel: LLMs rechnen nie — Enforcement im Backend.
     """
+    # Minimum 1h pro Hebel — ein Hebel mit 0h Zeitersparnis ist sinnlos
+    for h in hebel:
+        h["zeitersparnis_pro_woche_stunden"] = max(1, h["zeitersparnis_pro_woche_stunden"])
+
     caps = {
         "1": 15,
         "2-10": 25,
