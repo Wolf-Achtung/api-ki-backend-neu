@@ -334,6 +334,11 @@ class StrategyQuestion(Base):
     s9_ansatz: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     s10_datenschutz: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
+    # S-Moat Felder (optional, für Wettbewerbsvorteil-Section)
+    wettbewerber_anzahl: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    kundenbindung_typ: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    datenreife: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+
     # Metadaten
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -360,6 +365,9 @@ class StrategyQuestion(Base):
             "s8_erfahrung": self.s8_erfahrung,
             "s9_ansatz": self.s9_ansatz,
             "s10_datenschutz": self.s10_datenschutz,
+            "wettbewerber_anzahl": self.wettbewerber_anzahl,
+            "kundenbindung_typ": self.kundenbindung_typ,
+            "datenreife": self.datenreife,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
