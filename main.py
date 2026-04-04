@@ -138,6 +138,11 @@ app = FastAPI(
 allowed_origins_raw = os.getenv("CORS_ORIGINS", "") or os.getenv("CORS_ALLOW_ORIGINS", "")
 allowed_origins = [o.strip() for o in allowed_origins_raw.split(",") if o.strip()]
 
+# Appetizer (KI-Potenzial-Check) frontend origin — always required
+_appetizer_origin = "https://report.ki-sicherheit.jetzt"
+if allowed_origins and _appetizer_origin not in allowed_origins:
+    allowed_origins.append(_appetizer_origin)
+
 if not allowed_origins and _bool_env("CORS_ALLOW_ANY", "0"):
     # SECURITY: Cannot use allow_credentials=True with allow_origins=["*"]
     # Choose one: either allow all origins OR allow credentials
