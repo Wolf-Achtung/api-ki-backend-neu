@@ -790,15 +790,32 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
     html_parts.append('    </thead>')
     html_parts.append('    <tbody>')
 
+    # BAFA override: show region-specific rate and max subsidy
+    try:
+        from config.bafa import get_bafa_foerderquote, get_bafa_max_foerderung
+        _bafa_quote = get_bafa_foerderquote(bundesland)
+        _bafa_max = get_bafa_max_foerderung(bundesland)
+        _bafa_override = True
+    except ImportError:
+        _bafa_override = False
+
     for prog in top_programmes:
         relevance_class = prog.get("relevance_ki", "Mittel").split()[0].lower()
+        display_rate = prog["funding_rate"]
+        display_amount = prog["max_amount"]
+
+        # Override BAFA with deterministic regional values
+        if _bafa_override and prog.get("id") == "bafa_beratung":
+            display_rate = f"{_bafa_quote}%"
+            display_amount = f"bis {_bafa_max:,} €".replace(",", ".")
+
         html_parts.append('      <tr>')
         html_parts.append(f'        <td><strong>{prog["title"]}</strong><br>')
         html_parts.append(f'          <span class="small muted">{prog["focus"]}</span>')
         html_parts.append('        </td>')
         html_parts.append(f'        <td>{prog["region"]}</td>')
-        html_parts.append(f'        <td>{prog["funding_rate"]}</td>')
-        html_parts.append(f'        <td>{prog["max_amount"]}</td>')
+        html_parts.append(f'        <td>{display_rate}</td>')
+        html_parts.append(f'        <td>{display_amount}</td>')
         html_parts.append(f'        <td><span class="relevance-badge relevance-{relevance_class}">{prog.get("relevance_ki", "Mittel")}</span></td>')
         html_parts.append('      </tr>')
 
