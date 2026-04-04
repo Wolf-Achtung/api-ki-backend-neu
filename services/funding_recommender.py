@@ -2175,12 +2175,26 @@ def get_branch_funding_hits(
                 reasons = get_match_reasons(program, branch, region, size, "minimal", lang)
                 match_reason = reasons[0] if reasons else ""
 
+            hit_funding_rate = program.get("funding_rate", "")
+            hit_max_funding = program.get("max_funding") or program.get("max_amount", "")
+
+            # Override BAFA values with deterministic regional values
+            if program_id == "bafa_beratung" or "bafa" in (program.get("name") or program.get("title", "")).lower():
+                try:
+                    from config.bafa import get_bafa_foerderquote, get_bafa_max_foerderung
+                    bafa_quote = get_bafa_foerderquote(region)
+                    bafa_max = get_bafa_max_foerderung(region)
+                    hit_funding_rate = f"{bafa_quote}%"
+                    hit_max_funding = f"{bafa_max:,} €".replace(",", ".")
+                except ImportError:
+                    pass
+
             hits.append(BranchFundingHit(
                 program_id=program_id,
                 program_name=program.get("name") or program.get("title", ""),
                 provider=program.get("provider") or program.get("region", ""),
-                max_funding=program.get("max_funding") or program.get("max_amount", ""),
-                funding_rate=program.get("funding_rate", ""),
+                max_funding=hit_max_funding,
+                funding_rate=hit_funding_rate,
                 branch_boost=branch_boost,
                 match_reason=match_reason,
                 relevance_score=round(boosted_score, 2),
