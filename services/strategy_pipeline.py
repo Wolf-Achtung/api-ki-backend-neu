@@ -12,7 +12,7 @@ Pipeline order:
 4. S3b + S4 (parallel; S3b independent, S4 needs S3)
 5. S5 (needs S3, S4)
 6. S6 (needs S3-S5)
-7. S7 + S8 (parallel)
+7. S7 + S8 + s_moat (parallel)
 8. Executive Summary (needs all sections, via Claude)
 """
 from __future__ import annotations
@@ -439,7 +439,7 @@ async def generate_strategy_report(
                 briefing_id, _bafa_quote, _bafa_max,
             )
 
-        # S7 + S8 parallel
+        # S7 + S8 + s_moat parallel (s_moat is independent of S7/S8)
         s7_task = _generate_section("S7", base_context, {
             "foerder_matches": str(report1_data.get("foerder_matches", "")),
             "research_foerdermittel": research_context.get("foerdermittel", {}).get("results", ""),
@@ -453,7 +453,33 @@ async def generate_strategy_report(
             "s4_tools_summary": _extract_summary(sections["S4"]),
         })
 
-        sections["S7"], sections["S8"] = await asyncio.gather(s7_task, s8_task)
+        # S-Moat: KI-gestützter Wettbewerbsvorteil
+        # Build KPA top use cases from R1 analysis data
+        _kpa_top_use_cases = (
+            str(report1_sections.get("ANWENDUNGSFAELLE_LABELS", "")
+                or briefing_data.get("anwendungsfaelle", ""))
+        )
+        # Fallback: derive from report2 potenziale if available
+        if not _kpa_top_use_cases.strip():
+            _r2_potenziale = report2_data.get("potenziale", "")
+            _kpa_top_use_cases = str(_r2_potenziale) if _r2_potenziale else "keine Angabe"
+
+        s_moat_task = _generate_section("s_moat", base_context, {
+            "groesse": _segment_label(briefing_data.get("unternehmensgroesse", "")),
+            "geschaeftsmodell_evolution": briefing_data.get("geschaeftsmodell_evolution", "") or "",
+            "vision_3_jahre": briefing_data.get("vision_3_jahre", "") or "",
+            "strategische_ziele": briefing_data.get("strategische_ziele", "") or "",
+            "ki_projekte": briefing_data.get("ki_projekte", "") or "",
+            "r1_readiness_score": str(_score),
+            "kpa_top_use_cases": _kpa_top_use_cases,
+            "wettbewerber_anzahl": strategy_questions.get("wettbewerber_anzahl") or "keine Angabe",
+            "kundenbindung_typ": strategy_questions.get("kundenbindung_typ") or "keine Angabe",
+            "datenreife": strategy_questions.get("datenreife") or "keine Angabe",
+        })
+
+        sections["S7"], sections["S8"], sections["s_moat"] = await asyncio.gather(
+            s7_task, s8_task, s_moat_task,
+        )
         _heartbeat(db_session, briefing_id)
 
         # Executive Summary LAST (via Claude, not GPT)
