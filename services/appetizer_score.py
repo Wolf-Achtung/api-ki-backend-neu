@@ -54,3 +54,29 @@ def calculate_appetizer_score(
         einordnung = "ADVANCED"
 
     return {"wert": score, "einordnung": einordnung}
+
+
+def enforce_zeitersparnis_caps(hebel: list, mitarbeiter: str) -> list:
+    """
+    Erzwingt Zeitersparnis-Caps pro Segment.
+    Skaliert proportional, wenn Summe > Cap.
+    Architektur-Regel: LLMs rechnen nie — Enforcement im Backend.
+    """
+    caps = {
+        "1": 15,
+        "2-10": 25,
+        "11-100": 60,
+    }
+    max_hours = caps.get(mitarbeiter, 15)
+
+    total = sum(h["zeitersparnis_pro_woche_stunden"] for h in hebel)
+
+    if total > max_hours:
+        scale_factor = max_hours / total
+        for h in hebel:
+            h["zeitersparnis_pro_woche_stunden"] = max(
+                1,
+                round(h["zeitersparnis_pro_woche_stunden"] * scale_factor),
+            )
+
+    return hebel

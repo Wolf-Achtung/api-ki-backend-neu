@@ -15,7 +15,7 @@ from sqlalchemy import text
 
 from core.db import SessionLocal
 from prompts.appetizer_prompts import APPETIZER_SYSTEM_PROMPT, build_user_prompt
-from services.appetizer_score import calculate_appetizer_score
+from services.appetizer_score import calculate_appetizer_score, enforce_zeitersparnis_caps
 
 logger = logging.getLogger(__name__)
 
@@ -243,11 +243,16 @@ def generate_appetizer(request: AppetizerRequest):
     result["score"]["wert"] = score["wert"]
     result["score"]["einordnung"] = score["einordnung"]
 
-    # 4. Save lead if email provided
+    # 4. Enforce Zeitersparnis-Caps (LLMs rechnen nie)
+    result["hebel"] = enforce_zeitersparnis_caps(
+        result["hebel"], request.mitarbeiter.value
+    )
+
+    # 5. Save lead if email provided
     if request.email:
         save_appetizer_lead(request, result, score)
 
-    # 5. Always save anonymous analytics
+    # 6. Always save anonymous analytics
     save_appetizer_analytics(request.branche.value, request.mitarbeiter.value, score)
 
     return {"status": "success", "result": result}
