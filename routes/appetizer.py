@@ -102,7 +102,10 @@ def call_claude_sonnet(system_prompt: str, user_prompt: str) -> str:
         system=system_prompt,
         messages=[{"role": "user", "content": user_prompt}],
     )
-    return message.content[0].text
+    block = message.content[0]
+    assert hasattr(block, "text"), f"Unexpected content block type: {block.type}"
+    result: str = block.text
+    return result
 
 
 def parse_and_validate_json(raw: str) -> dict:
@@ -114,16 +117,16 @@ def parse_and_validate_json(raw: str) -> dict:
             text_content = text_content[:-3]
         text_content = text_content.strip()
 
-    result = json.loads(text_content)
+    parsed: dict = json.loads(text_content)
 
     # Basic structural validation
-    assert "score" in result, "Missing score"
-    assert "hebel" in result and len(result["hebel"]) == 3, "Need exactly 3 hebel"
-    assert "monetarisierung" in result and len(result["monetarisierung"]) == 3, "Need exactly 3 monetarisierung"
-    assert "positionierung" in result, "Missing positionierung"
-    assert "cta" in result, "Missing cta"
+    assert "score" in parsed, "Missing score"
+    assert "hebel" in parsed and len(parsed["hebel"]) == 3, "Need exactly 3 hebel"
+    assert "monetarisierung" in parsed and len(parsed["monetarisierung"]) == 3, "Need exactly 3 monetarisierung"
+    assert "positionierung" in parsed, "Missing positionierung"
+    assert "cta" in parsed, "Missing cta"
 
-    return result
+    return parsed
 
 
 # ---------------------------------------------------------------------------
