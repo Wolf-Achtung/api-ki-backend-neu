@@ -12865,6 +12865,10 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     """
     sections: Dict[str, Any] = {}
 
+    # KIS-1117: Save original hauptleistung BEFORE parallel threads can mutate
+    # briefing dict via _build_prompt_vars() (FIX-B726 cleanup + truncation).
+    _raw_hauptleistung = str(briefing.get("hauptleistung", "") or "")
+
     # Alle GPT-Sektionen, die parallel erzeugt werden
     parallel_sections = [
         ("executive_summary", "EXECUTIVE_SUMMARY_HTML"),
@@ -13176,7 +13180,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     
     # ========== v14.10: SOFORT-START-SEITE (Gamechanger Feature) ==========
     try:
-        sofort_hauptleistung = briefing.get("hauptleistung", "")
+        sofort_hauptleistung = _raw_hauptleistung or briefing.get("hauptleistung", "")
         sofort_branche = briefing.get("BRANCHE_LABEL", "") or briefing.get("branche", "") or ""
         sofort_size = briefing.get("UNTERNEHMENSGROESSE_LABEL", "") or briefing.get("unternehmensgroesse", "solo")
         sofort_zeit = briefing.get("ZEITERSPARNIS_PRIORITAET", "") or briefing.get("zeitersparnis_prioritaet", "")
