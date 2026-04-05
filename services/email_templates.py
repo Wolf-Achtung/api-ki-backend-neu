@@ -206,6 +206,183 @@ def render_strategy_email(recipient: str = "user") -> str:
 
 
 # =============================================================================
+# APPETIZER (Schnell-Check) EMAIL
+# =============================================================================
+
+_ZEITAUFWAND_LABELS = {
+    "unter_25": "unter 25 %",
+    "25_50": "25–50 %",
+    "ueber_50": "über 50 %",
+}
+
+_KI_ERFAHRUNG_LABELS = {
+    "keine": "Keine",
+    "erste_versuche": "Erste Versuche",
+    "regelmaessig": "Regelmäßig",
+}
+
+_MITARBEITER_LABELS = {
+    "1": "Solo (1)",
+    "2-10": "Team (2–10)",
+    "11-100": "KMU (11–100)",
+}
+
+
+def render_appetizer_result_email(
+    recipient: str,
+    request_data: dict,
+    result: dict,
+) -> str:
+    """Render email HTML for KI-Schnell-Check result.
+
+    Args:
+        recipient: "user" or "admin".
+        request_data: Dict with all AppetizerRequest fields.
+        result: The full appetizer result dict (score, hebel, monetarisierung, etc.).
+    """
+    score = result.get("score", {})
+    score_wert = score.get("wert", 0)
+    einordnung = score.get("einordnung", "")
+    einordnung_text = score.get("einordnung_text", "")
+
+    if recipient == "admin":
+        return _render_appetizer_admin_email(request_data, result)
+
+    # --- USER EMAIL ---
+    hebel = result.get("hebel", [])
+    hebel_html = ""
+    for h in hebel:
+        hebel_html += (
+            f'<tr><td style="padding:6px 8px;border-bottom:1px solid #e6edf3">'
+            f'<strong>{escape(h.get("titel", ""))}</strong><br>'
+            f'<span style="color:#64748b;font-size:13px">{escape(h.get("beschreibung", ""))}</span></td>'
+            f'<td style="padding:6px 8px;border-bottom:1px solid #e6edf3;white-space:nowrap;text-align:right;vertical-align:top">'
+            f'<strong>{h.get("zeitersparnis_pro_woche_stunden", 0)} h/Wo</strong></td></tr>'
+        )
+
+    monet = result.get("monetarisierung", [])
+    monet_html = ""
+    for m in monet:
+        monet_html += (
+            f'<tr><td style="padding:6px 8px;border-bottom:1px solid #e6edf3">'
+            f'<strong>{escape(m.get("titel", ""))}</strong></td>'
+            f'<td style="padding:6px 8px;border-bottom:1px solid #e6edf3;white-space:nowrap;text-align:right">'
+            f'{m.get("umsatzpotenzial_monat_eur", 0):,}\u202f\u20ac/Mon</td></tr>'.replace(",", ".")
+        )
+
+    positionierung = escape(result.get("positionierung", ""))
+    cta = result.get("cta", {})
+    cta_headline = escape(cta.get("headline", "Vollständigen Report anfordern"))
+
+    return f"""<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ihr KI\u2011Schnell\u2011Check Ergebnis</title>
+    <style>
+      body{{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;line-height:1.5;margin:0;padding:0;background:#f6f9ff}}
+      .wrap{{max-width:640px;margin:0 auto;padding:24px}}
+      .card{{background:#fff;border:1px solid #e6edf3;border-radius:12px;padding:18px;box-shadow:0 6px 30px #18324a16;border-top:4px solid #2B6CB0}}
+      h1{{color:#2B6CB0;font-size:20px;margin:0 0 8px}}
+      h2{{color:#2B6CB0;font-size:16px;margin:16px 0 6px}}
+      p{{margin:8px 0;font-size:14px}}
+      .muted{{color:#64748b}}
+      .score-box{{background:#f0f7ff;border:1px solid #b8d4f0;border-radius:8px;padding:12px 16px;text-align:center;margin:12px 0}}
+      .score-val{{font-size:32px;font-weight:700;color:#2B6CB0}}
+      table{{width:100%;border-collapse:collapse;font-size:14px}}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>Ihr KI\u2011Schnell\u2011Check Ergebnis</h1>
+        <p>Guten Tag,</p>
+        <p>vielen Dank f\u00fcr Ihren KI\u2011Schnell\u2011Check. Hier ist Ihr Ergebnis:</p>
+
+        <div class="score-box">
+          <div class="score-val">{score_wert}/100</div>
+          <div style="font-weight:600">{escape(einordnung)}</div>
+          <div class="muted" style="font-size:13px">{escape(einordnung_text)}</div>
+        </div>
+
+        <h2>Top\u20113 KI\u2011Hebel</h2>
+        <table>{hebel_html}</table>
+
+        <h2>Monetarisierungs\u2011Potenzial</h2>
+        <table>{monet_html}</table>
+
+        <p style="margin-top:14px"><em>{positionierung}</em></p>
+
+        <hr style="border:none;border-top:1px solid #e6edf3;margin:20px 0">
+        <p style="text-align:center">
+          <a href="https://make.ki-sicherheit.jetzt" style="display:inline-block;background:#2B6CB0;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600">
+            {cta_headline} \u2192
+          </a>
+        </p>
+        <p class="muted" style="text-align:center;font-size:13px">{escape(cta.get("subline", ""))}</p>
+
+        <hr style="border:none;border-top:1px solid #e6edf3;margin:20px 0">
+        <p class="muted">Wolf Hohl \u2014 KI\u2011Sicherheit.jetzt</p>
+        <p class="muted">Hinweis: Diese E\u2011Mail wurde automatisch erzeugt.</p>
+      </div>
+    </div>
+  </body>
+</html>"""
+
+
+def _render_appetizer_admin_email(request_data: dict, result: dict) -> str:
+    """Internal: admin lead-notification for Schnell-Check."""
+    score = result.get("score", {})
+    rows = [
+        ("Firma", request_data.get("firma", "")),
+        ("Branche", request_data.get("branche", "")),
+        ("Mitarbeiter", _MITARBEITER_LABELS.get(request_data.get("mitarbeiter", ""), request_data.get("mitarbeiter", ""))),
+        ("Hauptleistung", request_data.get("hauptleistung", "")),
+        ("Zeitaufwand repetitiv", _ZEITAUFWAND_LABELS.get(request_data.get("zeitaufwand_repetitiv", ""), request_data.get("zeitaufwand_repetitiv", ""))),
+        ("KI-Erfahrung", _KI_ERFAHRUNG_LABELS.get(request_data.get("ki_erfahrung", ""), request_data.get("ki_erfahrung", ""))),
+        ("Größte Herausforderung", request_data.get("groesste_herausforderung", "")),
+        ("Email", request_data.get("email", "")),
+        ("Newsletter Opt-in", "Ja" if request_data.get("newsletter_optin") else "Nein"),
+        ("Score", f'{score.get("wert", 0)}/100 — {score.get("einordnung", "")}'),
+    ]
+    rows_html = ""
+    for label, value in rows:
+        rows_html += (
+            f'<tr><td style="padding:6px 8px;border-bottom:1px solid #e6edf3;font-weight:600;white-space:nowrap;vertical-align:top">'
+            f'{escape(label)}</td>'
+            f'<td style="padding:6px 8px;border-bottom:1px solid #e6edf3">{escape(str(value))}</td></tr>'
+        )
+
+    return f"""<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Schnell-Check Lead</title>
+    <style>
+      body{{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;line-height:1.5;margin:0;padding:0;background:#f6f9ff}}
+      .wrap{{max-width:640px;margin:0 auto;padding:24px}}
+      .card{{background:#fff;border:1px solid #e6edf3;border-radius:12px;padding:18px;box-shadow:0 6px 30px #18324a16;border-top:4px solid #2B6CB0}}
+      h1{{color:#2B6CB0;font-size:18px;margin:0 0 12px}}
+      p{{margin:8px 0;font-size:14px}}
+      .muted{{color:#64748b}}
+      table{{width:100%;border-collapse:collapse;font-size:14px}}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>Schnell-Check Lead</h1>
+        <table>{rows_html}</table>
+        <p class="muted" style="margin-top:12px">Hinweis: Diese E\u2011Mail wurde automatisch erzeugt.</p>
+      </div>
+    </div>
+  </body>
+</html>"""
+
+
+# =============================================================================
 # ADMIN BRIEFING EMAIL (Fragebogen-Daten bei Strategy-Generierung)
 # =============================================================================
 
