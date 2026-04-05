@@ -116,19 +116,8 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
     )
     cta = "Bei Fragen stehen wir Ihnen gerne zur Verf\u00fcgung."
 
-    # CTA to Strategy form (user emails only)
+    # KIS-1116: Strategy-Upsell removed from KPA-Email (belongs in R1-Email only)
     strategy_cta_html = ""
-    if recipient != "admin" and briefing_id:
-        _strategy_url = f"https://make.ki-sicherheit.jetzt/strategy.html?briefing_id={briefing_id}"
-        strategy_cta_html = (
-            '<hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">'
-            '<p style="font-size:15px;margin:0 0 8px"><strong>Noch mehr Tiefe?</strong></p>'
-            '<p style="margin:0 0 12px">Ihr ma\u00dfgeschneiderter <strong>KI\u2011Strategiebericht</strong> '
-            '\u2014 10 Fragen, 3 Minuten, und Sie erhalten einen individuellen 90\u2011Tage\u2011Implementierungsplan.</p>'
-            f'<p><a href="{escape(_strategy_url)}" style="display:inline-block;background:#0D7377;color:#fff;'
-            'padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">'
-            'Strategiebericht anfordern \u2192</a></p>'
-        )
 
     return f"""<!doctype html>
 <html lang="de">
