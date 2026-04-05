@@ -5,17 +5,20 @@ Registered via _build_router_config in main.py.
 
 import json
 import logging
+import os
+import time
 from enum import Enum
 from typing import Optional
 
 import anthropic
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import text
 
 from core.db import SessionLocal
 from prompts.appetizer_prompts import APPETIZER_SYSTEM_PROMPT, build_user_prompt
 from services.appetizer_score import calculate_appetizer_score, enforce_zeitersparnis_caps
+from services.email_templates import render_appetizer_result_email
 
 logger = logging.getLogger(__name__)
 
@@ -200,11 +203,64 @@ def save_appetizer_analytics(branche: str, mitarbeiter: str, score: dict):
 
 
 # ---------------------------------------------------------------------------
+# Email helper (runs as BackgroundTask)
+# ---------------------------------------------------------------------------
+
+def _send_appetizer_emails(email: str, request_data: dict, result: dict):
+    """Send Schnell-Check result to user + admin. Fire-and-forget."""
+    if os.getenv("DISABLE_EMAILS", "") in ("1", "true", "TRUE"):
+        logger.info("DISABLE_EMAILS is set — skipping appetizer emails for %s", email)
+        return
+
+    from gpt_analyze import _send_email_via_resend, _admin_recipients, _mask_email
+
+    score_wert = result.get("score", {}).get("wert", 0)
+    branche = request_data.get("branche", "")
+
+    # --- User email ---
+    try:
+        user_html = render_appetizer_result_email(
+            recipient="user", request_data=request_data, result=result,
+        )
+        ok, err = _send_email_via_resend(
+            email,
+            f"Ihr KI\u2011Schnell\u2011Check Ergebnis \u2014 {score_wert}/100",
+            user_html,
+        )
+        if ok:
+            logger.info("Appetizer email sent to user %s", _mask_email(email))
+        else:
+            logger.warning("Appetizer email to user %s failed: %s", _mask_email(email), err)
+    except Exception as exc:
+        logger.warning("Appetizer user email failed: %s", exc)
+
+    # --- Admin email ---
+    try:
+        if os.getenv("ENABLE_ADMIN_NOTIFY", "1") in ("1", "true", "TRUE", "yes", "YES"):
+            admin_html = render_appetizer_result_email(
+                recipient="admin", request_data=request_data, result=result,
+            )
+            for addr in _admin_recipients():
+                time.sleep(0.6)  # Resend rate limit: max 2 req/sec
+                ok, err = _send_email_via_resend(
+                    addr,
+                    f"[Schnell-Check Lead] {score_wert}/100 \u2014 {branche} \u2014 {email}",
+                    admin_html,
+                )
+                if ok:
+                    logger.info("Appetizer admin email sent to %s", _mask_email(addr))
+                else:
+                    logger.warning("Appetizer admin email to %s failed: %s", _mask_email(addr), err)
+    except Exception as exc:
+        logger.warning("Appetizer admin email failed: %s", exc)
+
+
+# ---------------------------------------------------------------------------
 # Endpoint (sync — FastAPI runs it in threadpool automatically)
 # ---------------------------------------------------------------------------
 
 @router.post("/generate")
-def generate_appetizer(request: AppetizerRequest):
+def generate_appetizer(request: AppetizerRequest, background: BackgroundTasks):
     # 1. Score berechnen (deterministic, no LLM)
     score = calculate_appetizer_score(
         ki_erfahrung=request.ki_erfahrung.value,
@@ -248,9 +304,25 @@ def generate_appetizer(request: AppetizerRequest):
         result["hebel"], request.mitarbeiter.value
     )
 
-    # 5. Save lead if email provided
+    # 5. Save lead if email provided + schedule email
     if request.email:
         save_appetizer_lead(request, result, score)
+        background.add_task(
+            _send_appetizer_emails,
+            email=request.email,
+            request_data={
+                "firma": request.firma,
+                "branche": request.branche.value,
+                "mitarbeiter": request.mitarbeiter.value,
+                "hauptleistung": request.hauptleistung,
+                "zeitaufwand_repetitiv": request.zeitaufwand_repetitiv.value,
+                "ki_erfahrung": request.ki_erfahrung.value,
+                "groesste_herausforderung": request.groesste_herausforderung,
+                "email": request.email,
+                "newsletter_optin": request.newsletter_optin,
+            },
+            result=result,
+        )
 
     # 6. Always save anonymous analytics
     save_appetizer_analytics(request.branche.value, request.mitarbeiter.value, score)
