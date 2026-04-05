@@ -16,6 +16,7 @@ from typing import Any, Dict, Optional
 
 from jinja2 import Environment, FileSystemLoader
 
+from services.answers_normalizer import BRANCHEN_LABELS
 from utils.report_display_id import get_report_display_id as _get_display_id
 
 logger = logging.getLogger(__name__)
@@ -193,9 +194,9 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         except Exception:
             pass
 
-    # Branche: capitalize for display
+    # Branche: use canonical display label (KIS-1116 Fix 1)
     branche_raw = briefing_data.get("branche", "")
-    branche_label = branche_raw.title() if branche_raw else ""
+    branche_label = BRANCHEN_LABELS.get(branche_raw.lower(), branche_raw.title()) if branche_raw else ""
 
     # Research date from report1 or generation date (always German DD.MM.YYYY format)
     research_date = report1_meta.get("research_last_updated", "")
