@@ -1,0 +1,139 @@
+# -*- coding: utf-8 -*-
+"""Pydantic schemas for the conversational AI questionnaire (Chat)."""
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, Literal, Optional
+from uuid import UUID
+
+from pydantic import BaseModel
+
+
+# ---------------------------------------------------------------------------
+# Chat Message
+# ---------------------------------------------------------------------------
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant", "system"]
+    content: str
+    timestamp: datetime
+    turn: int
+    fields_extracted: Optional[dict] = None
+    section_index: Optional[int] = None
+    quick_replies: Optional[list] = None
+
+
+# ---------------------------------------------------------------------------
+# Quick Replies
+# ---------------------------------------------------------------------------
+
+class QuickReplyOption(BaseModel):
+    value: str
+    label: str
+    description: Optional[str] = None
+
+
+class QuickReply(BaseModel):
+    field: str
+    label: str
+    options: list[QuickReplyOption]
+
+
+# ---------------------------------------------------------------------------
+# Session State (returned with every turn)
+# ---------------------------------------------------------------------------
+
+class ChatSessionState(BaseModel):
+    session_id: UUID
+    report_type: str
+    status: str
+
+    # Progress
+    current_section: int
+    current_section_name: str
+    total_sections: int = 8
+    progress_percent: int
+
+    # Fields
+    collected_fields: dict
+    collected_count: int
+    missing_required: list[str]
+    missing_optional: list[str]
+    total_fields: int
+
+    # Next steps
+    next_fields: list[str]
+    is_completable: bool
+
+    # Quick Replies
+    quick_replies: Optional[list[QuickReply]] = None
+
+
+# ---------------------------------------------------------------------------
+# POST /api/chat/start
+# ---------------------------------------------------------------------------
+
+class ChatStartRequest(BaseModel):
+    report_type: Literal["r1", "strategy", "kpa"] = "r1"
+    lang: str = "de"
+    consent_report: bool
+    prefill: Optional[dict[str, Any]] = None
+
+
+class ChatStartResponse(BaseModel):
+    session_id: UUID
+    state: ChatSessionState
+    welcome_message: str
+
+
+# ---------------------------------------------------------------------------
+# POST /api/chat/message
+# ---------------------------------------------------------------------------
+
+class ChatMessageRequest(BaseModel):
+    session_id: UUID
+    message: str
+    quick_reply_field: Optional[str] = None
+    quick_reply_value: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# GET /api/chat/session/{session_id}
+# ---------------------------------------------------------------------------
+
+class ChatSessionResponse(BaseModel):
+    state: ChatSessionState
+    messages: list[ChatMessage]
+    resumable: bool
+    last_activity: datetime
+
+
+# ---------------------------------------------------------------------------
+# POST /api/chat/complete  (not in PoC)
+# ---------------------------------------------------------------------------
+
+class ChatCompleteRequest(BaseModel):
+    session_id: UUID
+    confirmed: bool = True
+
+
+class ChatCompleteResponse(BaseModel):
+    success: bool
+    briefing_id: int
+    report_type: str
+    redirect_url: str
+
+
+# ---------------------------------------------------------------------------
+# POST /api/chat/fallback  (not in PoC)
+# ---------------------------------------------------------------------------
+
+class ChatFallbackRequest(BaseModel):
+    session_id: UUID
+
+
+class ChatFallbackResponse(BaseModel):
+    prefill_answers: dict
+    missing_fields: list[str]
+    current_section: int
+    form_url: str
