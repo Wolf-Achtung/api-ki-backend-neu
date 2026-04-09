@@ -40,9 +40,15 @@ from services.chat_normalizer import (
     ENUM_VALUES,
     FIELD_REGISTRY,
     SECTIONS,
+    STRATEGY_ENUM_VALUES,
+    STRATEGY_FIELD_REGISTRY,
+    STRATEGY_SECTIONS,
     calculate_progress,
+    get_enum_values_for_report,
     get_missing_fields,
     get_next_fields,
+    get_registry_for_report,
+    get_sections_for_report,
     is_field_visible,
     is_section_complete,
     normalize_field,
@@ -51,7 +57,7 @@ from services.chat_normalizer import (
 router = APIRouter(prefix="/chat", tags=["chat"])
 log = logging.getLogger(__name__)
 
-WELCOME_MESSAGE = (
+R1_WELCOME = (
     "Willkommen bei ki-sicherheit.jetzt! Ich bin ein KI-Assistent und "
     "führe Sie durch eine kurze Bestandsaufnahme Ihres Unternehmens.\n\n"
     "Lassen Sie uns mit den Grundlagen beginnen: "
@@ -59,6 +65,28 @@ WELCOME_MESSAGE = (
     "Falls Sie unsicher sind, beschreiben Sie einfach, was Sie tun "
     "— ich helfe bei der Zuordnung."
 )
+
+STRATEGY_WELCOME = (
+    "Willkommen zurück! Auf Basis Ihrer KI-Readiness-Analyse erstelle ich "
+    "jetzt Ihren individuellen KI-Strategiebericht.\n\n"
+    "Dafür benötige ich noch einige Angaben zu Ihrer konkreten Umsetzungsplanung. "
+    "Das dauert ca. 3 Minuten. Falls Sie bei einer Frage unsicher sind, "
+    "fragen Sie einfach nach — ich erkläre gern.\n\n"
+    "Beginnen wir: Wie hoch ist Ihr geplantes Budget speziell für die "
+    "KI-Implementierung der nächsten 12 Monate?"
+)
+
+
+def _get_welcome(report_type: str) -> str:
+    if report_type == "strategy":
+        return STRATEGY_WELCOME
+    return R1_WELCOME
+
+
+def _get_first_qr_fields(report_type: str) -> list[str]:
+    if report_type == "strategy":
+        return ["s1_budget"]
+    return ["branche"]
 
 
 # ===========================================================================
@@ -70,6 +98,14 @@ async def chat_start(req: ChatStartRequest, db: Session = Depends(get_db)):
     """Start a new chat conversation."""
     if not req.consent_report:
         raise HTTPException(status_code=400, detail="consent_report must be true")
+
+    # Strategy requires a briefing_id
+    if req.report_type == "strategy":
+        if not req.briefing_id:
+            raise HTTPException(status_code=400, detail="briefing_id erforderlich für Strategy-Report")
+        briefing = db.query(Briefing).filter(Briefing.id == req.briefing_id).first()
+        if not briefing:
+            raise HTTPException(status_code=404, detail="Briefing nicht gefunden")
 
     now = datetime.now(timezone.utc)
 
@@ -84,6 +120,7 @@ async def chat_start(req: ChatStartRequest, db: Session = Depends(get_db)):
         status="active",
         messages=[],
         turn_count=0,
+        briefing_id=req.briefing_id,
     )
     db.add(session)
     db.commit()
@@ -92,14 +129,16 @@ async def chat_start(req: ChatStartRequest, db: Session = Depends(get_db)):
     # Build initial state
     state = _build_session_state(session)
 
-    # Build welcome quick replies (branche)
-    welcome_qr = _build_quick_replies(["branche"])
+    # Build welcome quick replies (first field for this report type)
+    first_fields = _get_first_qr_fields(req.report_type)
+    welcome_qr = _build_quick_replies(first_fields, req.report_type)
     state.quick_replies = welcome_qr
 
     # Save welcome message
+    welcome = _get_welcome(req.report_type)
     welcome_msg = {
         "role": "assistant",
-        "content": WELCOME_MESSAGE,
+        "content": welcome,
         "timestamp": now.isoformat(),
         "turn": 0,
         "fields_extracted": None,
@@ -114,7 +153,7 @@ async def chat_start(req: ChatStartRequest, db: Session = Depends(get_db)):
     return ChatStartResponse(
         session_id=session.id,
         state=state,
-        welcome_message=WELCOME_MESSAGE,
+        welcome_message=welcome,
     )
 
 
@@ -156,8 +195,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # Phase 1: Extraction (Claude Haiku)
         from services.chat_extractor import extract_fields
 
+        rt = session.report_type
         missing_req, missing_opt = get_missing_fields(
-            session.collected_fields, session.current_section
+            session.collected_fields, session.current_section, rt
         )
         all_missing = missing_req + missing_opt
 
@@ -168,6 +208,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     messages[-6:],
                     all_missing,
                     session.collected_fields,
+                    report_type=rt,
                 ),
                 timeout=30,
             )
@@ -180,6 +221,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         messages[-6:],
                         all_missing,
                         session.collected_fields,
+                        report_type=rt,
                     ),
                     timeout=30,
                 )
@@ -188,18 +230,20 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 log.error("[CHAT] Extraction timeout on retry")
 
     # Phase 1b: Normalize extracted fields
+    rt = session.report_type
+    registry = get_registry_for_report(rt)
     normalized = {}
     field_meta = dict(session.field_meta or {})
     collected = dict(session.collected_fields or {})
 
     for field_name, raw_value in raw_extracted.items():
-        if field_name not in FIELD_REGISTRY:
+        if field_name not in registry:
             continue
         # Skip fields not visible due to conditionals
         if not is_field_visible(field_name, collected):
             continue
 
-        result = normalize_field(field_name, raw_value, collected)
+        result = normalize_field(field_name, raw_value, collected, report_type=rt)
 
         if result.confidence == "low":
             log.info("[CHAT] Field %s: low confidence, skipping", field_name)
@@ -235,15 +279,16 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
     db.commit()
 
     # Check section transition: advance if all required fields done
-    section_advanced = _check_section_transition(session, collected)
+    section_advanced = _check_section_transition(session, collected, rt)
     if section_advanced:
         db.commit()
 
     # Determine next fields
-    missing_req, missing_opt = get_missing_fields(collected, session.current_section)
+    sections = get_sections_for_report(rt)
+    missing_req, missing_opt = get_missing_fields(collected, session.current_section, rt)
     all_missing = missing_req + missing_opt
-    next_fields = get_next_fields(collected, session.current_section)
-    current_section = SECTIONS[session.current_section]
+    next_fields = get_next_fields(collected, session.current_section, report_type=rt)
+    current_section = sections[session.current_section]
 
     # Phase 2: Conversation (Claude Sonnet streaming)
     from services.chat_conversation import generate_response
@@ -261,6 +306,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 missing_fields=all_missing,
                 next_fields=next_fields,
                 section=current_section,
+                report_type=rt,
             ):
                 full_response += token
                 yield f"event: token\ndata: {json.dumps({'text': token})}\n\n"
@@ -271,7 +317,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             return
 
         # Save assistant message
-        quick_replies = _build_quick_replies(next_fields)
+        quick_replies = _build_quick_replies(next_fields, rt)
         assistant_msg = {
             "role": "assistant",
             "content": full_response,
@@ -322,9 +368,10 @@ async def chat_session_get(session_id: UUID, db: Session = Depends(get_db)):
     if not session:
         raise HTTPException(status_code=404, detail="Session nicht gefunden")
 
+    rt = session.report_type
     state = _build_session_state(session)
-    next_fields = get_next_fields(session.collected_fields, session.current_section)
-    state.quick_replies = _build_quick_replies(next_fields)
+    next_fields = get_next_fields(session.collected_fields, session.current_section, report_type=rt)
+    state.quick_replies = _build_quick_replies(next_fields, rt)
 
     # Last 10 messages
     all_msgs = session.messages or []
@@ -366,20 +413,25 @@ async def chat_complete(req: ChatCompleteRequest, db: Session = Depends(get_db))
     if not req.confirmed:
         raise HTTPException(status_code=400, detail="Bestätigung erforderlich")
 
+    rt = session.report_type
+    sections = get_sections_for_report(rt)
+
     # Idempotency: if already completed, return existing briefing_id
     if session.status == "completed" and session.briefing_id:
+        redirect = _complete_redirect(rt, session.briefing_id)
         return ChatCompleteResponse(
             success=True,
             briefing_id=session.briefing_id,
-            report_type=session.report_type,
-            redirect_url=f"/formular/status.html?id={session.briefing_id}",
+            report_type=rt,
+            redirect_url=redirect,
         )
 
     # Check all required fields (across all sections)
     collected = dict(session.collected_fields or {})
     missing_all: list[str] = []
-    for section in SECTIONS:
-        missing_req, _ = get_missing_fields(collected, section["index"])  # type: ignore[arg-type]
+    for section in sections:
+        sec_idx: int = section["index"]  # type: ignore[assignment]
+        missing_req, _ = get_missing_fields(collected, sec_idx, rt)
         missing_all.extend(missing_req)
     if missing_all:
         raise HTTPException(
@@ -387,14 +439,59 @@ async def chat_complete(req: ChatCompleteRequest, db: Session = Depends(get_db))
             detail=f"Pflichtfelder fehlen: {', '.join(missing_all)}",
         )
 
-    # Build answers dict (same format as static form submit)
-    answers = dict(collected)
-    # Auto-set datenschutz from chat consent
-    answers["datenschutz"] = True
-
     now = datetime.now(timezone.utc)
 
-    # Create briefing directly (same as routes/briefings.py submit_briefing)
+    if rt == "strategy":
+        briefing_id = await _complete_strategy(session, collected, db, now)
+    else:
+        briefing_id = _complete_r1(session, collected, db, now)
+
+    redirect = _complete_redirect(rt, briefing_id)
+
+    log.info(
+        "[CHAT] Session %s completed -> briefing_id=%s (report_type=%s, fields=%d)",
+        session.id, briefing_id, rt, len(collected),
+    )
+
+    return ChatCompleteResponse(
+        success=True,
+        briefing_id=briefing_id,
+        report_type=rt,
+        redirect_url=redirect,
+    )
+
+
+# ===========================================================================
+# Helpers
+# ===========================================================================
+
+def _check_section_transition(session: ChatSession, collected: dict, report_type: str = "r1") -> bool:
+    """
+    Check if all required fields of the current section are collected.
+    If so, advance current_section. Returns True if section advanced.
+    """
+    sections = get_sections_for_report(report_type)
+    if session.current_section >= len(sections) - 1:
+        return False
+
+    if not is_section_complete(collected, session.current_section, report_type):
+        return False
+
+    session.current_section += 1
+    log.info(
+        "[CHAT] Section transition: %d -> %d (%s)",
+        session.current_section - 1,
+        session.current_section,
+        sections[session.current_section]["name"],
+    )
+    return True
+
+
+def _complete_r1(session: ChatSession, collected: dict, db: Session, now: datetime) -> int:
+    """Complete R1 chat: create a Briefing for the report pipeline."""
+    answers = dict(collected)
+    answers["datenschutz"] = True  # consent given at chat start
+
     briefing = Briefing(
         user_id=session.user_id,
         lang=session.lang,
@@ -403,64 +500,89 @@ async def chat_complete(req: ChatCompleteRequest, db: Session = Depends(get_db))
         accepted_at=now,
     )
     db.add(briefing)
-    db.flush()  # get briefing.id
+    db.flush()
 
-    # Update session
     session.status = "completed"
     session.completed_at = now
     session.briefing_id = briefing.id
     session.updated_at = now
     db.commit()
-
-    log.info(
-        "[CHAT] Session %s completed -> Briefing %s (fields=%d)",
-        session.id, briefing.id, len(answers),
-    )
-
-    return ChatCompleteResponse(
-        success=True,
-        briefing_id=briefing.id,
-        report_type=session.report_type,
-        redirect_url=f"/formular/status.html?id={briefing.id}",
-    )
+    return briefing.id
 
 
-# ===========================================================================
-# Helpers
-# ===========================================================================
+async def _complete_strategy(
+    session: ChatSession, collected: dict, db: Session, now: datetime,
+) -> int:
+    """Complete strategy chat: save questions + create strategy report entry."""
+    from models import StrategyQuestion, StrategyReport
 
-def _check_section_transition(session: ChatSession, collected: dict) -> bool:
-    """
-    Check if all required fields of the current section are collected.
-    If so, advance current_section. Returns True if section advanced.
-    """
-    if session.current_section >= len(SECTIONS) - 1:
-        return False
+    briefing_id = session.briefing_id
+    if not briefing_id:
+        raise HTTPException(status_code=400, detail="Keine briefing_id in der Session")
 
-    if not is_section_complete(collected, session.current_section):
-        return False
+    # Upsert strategy questions (same logic as routes/strategy.py)
+    existing = db.query(StrategyQuestion).filter(
+        StrategyQuestion.briefing_id == briefing_id
+    ).first()
 
-    session.current_section += 1
-    log.info(
-        "[CHAT] Section transition: %d -> %d (%s)",
-        session.current_section - 1,
-        session.current_section,
-        SECTIONS[session.current_section]["name"],
-    )
-    return True
+    fields = {
+        "s1_budget": collected.get("s1_budget", ""),
+        "s2_zeitrahmen": collected.get("s2_zeitrahmen", ""),
+        "s3_prioritaeten": collected.get("s3_prioritaeten", []),
+        "s4_engpass": collected.get("s4_engpass", ""),
+        "s5_software": collected.get("s5_software", ""),
+        "s6_foerderinteresse": collected.get("s6_foerderinteresse", ""),
+        "s7_entscheidung": collected.get("s7_entscheidung", ""),
+        "s8_erfahrung": collected.get("s8_erfahrung"),
+        "s9_ansatz": collected.get("s9_ansatz"),
+        "s10_datenschutz": collected.get("s10_datenschutz"),
+        "wettbewerber_anzahl": collected.get("wettbewerber_anzahl"),
+        "kundenbindung_typ": collected.get("kundenbindung_typ"),
+        "datenreife": collected.get("datenreife"),
+    }
+
+    if existing:
+        for k, v in fields.items():
+            setattr(existing, k, v)
+    else:
+        sq = StrategyQuestion(briefing_id=briefing_id, **fields)
+        db.add(sq)
+
+    # Ensure strategy_reports entry exists
+    sr = db.query(StrategyReport).filter(
+        StrategyReport.briefing_id == briefing_id
+    ).first()
+    if not sr:
+        sr = StrategyReport(briefing_id=briefing_id, status="pending")
+        db.add(sr)
+
+    session.status = "completed"
+    session.completed_at = now
+    session.updated_at = now
+    db.commit()
+    return briefing_id
+
+
+def _complete_redirect(report_type: str, briefing_id: int) -> str:
+    """Build the redirect URL after completion."""
+    if report_type == "strategy":
+        return f"/strategy.html?briefing_id={briefing_id}&status=generating"
+    return f"/formular/status.html?id={briefing_id}"
 
 
 def _build_session_state(session: ChatSession) -> ChatSessionState:
     """Build ChatSessionState from a ChatSession DB model."""
+    rt = session.report_type
+    sections = get_sections_for_report(rt)
+    registry = get_registry_for_report(rt)
     collected = session.collected_fields or {}
     section_idx = session.current_section
-    section = SECTIONS[section_idx]
+    section = sections[section_idx]
 
-    missing_req, missing_opt = get_missing_fields(collected, section_idx)
-    next_fields = get_next_fields(collected, section_idx)
+    missing_req, missing_opt = get_missing_fields(collected, section_idx, rt)
+    next_fields = get_next_fields(collected, section_idx, report_type=rt)
 
-    # Count total fields (across all sections)
-    total = len(FIELD_REGISTRY)
+    total = len(registry)
     collected_count = len(collected)
 
     section_name: str = section["name"]  # type: ignore[assignment]
@@ -471,8 +593,8 @@ def _build_session_state(session: ChatSession) -> ChatSessionState:
         status=session.status,
         current_section=section_idx,
         current_section_name=section_name,
-        total_sections=len(SECTIONS),
-        progress_percent=calculate_progress(collected),
+        total_sections=len(sections),
+        progress_percent=calculate_progress(collected, rt),
         collected_fields=collected,
         collected_count=collected_count,
         missing_required=missing_req,
@@ -768,6 +890,85 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "nein", "label": "Nein"},
         {"value": "selten", "label": "Selten"},
     ],
+    # --- Strategy Fields ---
+    "s1_budget": [
+        {"value": "unter_2000", "label": "Unter 2.000 €"},
+        {"value": "2000_10000", "label": "2.000 – 10.000 €"},
+        {"value": "10000_50000", "label": "10.000 – 50.000 €"},
+        {"value": "ueber_50000", "label": "Über 50.000 €"},
+        {"value": "unklar", "label": "Noch unklar"},
+    ],
+    "s2_zeitrahmen": [
+        {"value": "Sofort (1-3 Monate)", "label": "Sofort (1–3 Monate)"},
+        {"value": "Kurzfristig (3-6 Monate)", "label": "Kurzfristig (3–6 Monate)"},
+        {"value": "Mittelfristig (6-12 Monate)", "label": "Mittelfristig (6–12 Monate)"},
+        {"value": "Langfristig (12-18 Monate)", "label": "Langfristig (12–18 Monate)"},
+    ],
+    "s3_prioritaeten": [
+        {"value": "Kosten senken", "label": "Kosten senken"},
+        {"value": "Umsatz steigern", "label": "Umsatz steigern"},
+        {"value": "Qualität verbessern", "label": "Qualität verbessern"},
+        {"value": "Geschwindigkeit erhöhen", "label": "Geschwindigkeit erhöhen"},
+        {"value": "Compliance sichern", "label": "Compliance sichern"},
+        {"value": "Neue Geschäftsfelder", "label": "Neue Geschäftsfelder"},
+        {"value": "Fachkräftemangel kompensieren", "label": "Fachkräftemangel kompensieren"},
+        {"value": "Kundenerlebnis verbessern", "label": "Kundenerlebnis verbessern"},
+    ],
+    "s4_engpass": [
+        {"value": "Zu wenig Know-how", "label": "Zu wenig Know-how"},
+        {"value": "Kein Budget", "label": "Kein Budget"},
+        {"value": "Fehlende Daten", "label": "Fehlende Daten"},
+        {"value": "Widerstand im Team", "label": "Widerstand im Team"},
+        {"value": "Regulatorische Unsicherheit", "label": "Regulatorische Unsicherheit"},
+        {"value": "Kein klarer Use Case", "label": "Kein klarer Use Case"},
+        {"value": "Andere", "label": "Andere"},
+    ],
+    "s6_foerderinteresse": [
+        {"value": "Ja, dringend", "label": "Ja, dringend"},
+        {"value": "Ja, wenn passend", "label": "Ja, wenn passend"},
+        {"value": "Nein, eigenes Budget", "label": "Nein, eigenes Budget"},
+        {"value": "Weiß nicht", "label": "Weiß nicht"},
+    ],
+    "s7_entscheidung": [
+        {"value": "Entscheide allein", "label": "Entscheide allein"},
+        {"value": "Brauche Vorlage für Geschäftsleitung", "label": "Vorlage für Geschäftsleitung"},
+        {"value": "Muss Gesellschafter überzeugen", "label": "Gesellschafter überzeugen"},
+        {"value": "Muss Aufsichtsrat/Beirat informieren", "label": "Aufsichtsrat/Beirat informieren"},
+    ],
+    "s8_erfahrung": [
+        {"value": "Noch keine", "label": "Noch keine"},
+        {"value": "Experimentiert", "label": "Experimentiert"},
+        {"value": "Erste Tools im Einsatz", "label": "Erste Tools im Einsatz"},
+        {"value": "Fortgeschritten", "label": "Fortgeschritten"},
+    ],
+    "s9_ansatz": [
+        {"value": "Cloud-SaaS", "label": "Cloud-SaaS"},
+        {"value": "On-Premise", "label": "On-Premise"},
+        {"value": "Hybrid", "label": "Hybrid"},
+        {"value": "Egal", "label": "Noch unklar / Egal"},
+    ],
+    "s10_datenschutz": [
+        {"value": "Hoch", "label": "Hoch"},
+        {"value": "Mittel", "label": "Mittel"},
+        {"value": "Niedrig", "label": "Niedrig"},
+    ],
+    "wettbewerber_anzahl": [
+        {"value": "wenige", "label": "Wenige (1–3)"},
+        {"value": "mehrere", "label": "Mehrere (4–10)"},
+        {"value": "viele", "label": "Viele (mehr als 10)"},
+        {"value": "unklar", "label": "Schwer einzuschätzen"},
+    ],
+    "kundenbindung_typ": [
+        {"value": "einmalig", "label": "Überwiegend Einmalkunden"},
+        {"value": "wiederkehrend", "label": "Wiederkehrende Kunden / Verträge"},
+        {"value": "gemischt", "label": "Mischung aus beidem"},
+    ],
+    "datenreife": [
+        {"value": "keine", "label": "Kaum / keine strukturierten Daten"},
+        {"value": "basis", "label": "Grundlegende Daten (CRM, Buchhaltung)"},
+        {"value": "umfangreich", "label": "Umfangreiche eigene Datenbestände"},
+        {"value": "unklar", "label": "Bin mir nicht sicher"},
+    ],
 }
 
 # Field labels for quick replies
@@ -807,16 +1008,26 @@ _QR_LABELS: dict[str, str] = {
     "erfahrung_beratung": "Beratungserfahrung", "investitionsbudget": "Investitionsbudget",
     "marktposition": "Marktposition", "benchmark_wettbewerb": "Wettbewerber-Vergleich",
     "risikofreude": "Risikofreude (1–5)",
+    # Strategy
+    "s1_budget": "KI-Implementierungsbudget", "s2_zeitrahmen": "Umsetzungszeitraum",
+    "s3_prioritaeten": "Top-Prioritäten (max. 3)", "s4_engpass": "Größter Engpass",
+    "s5_software": "Genutzte Software", "s5_vision": "KI-Vision",
+    "s6_foerderinteresse": "Förderinteresse", "s7_entscheidung": "Entscheidungsstruktur",
+    "s8_erfahrung": "KI-Erfahrung", "s9_ansatz": "Infrastruktur-Ansatz",
+    "s10_datenschutz": "Datenschutz-Priorität",
+    "wettbewerber_anzahl": "Wettbewerber", "kundenbindung_typ": "Kundenbeziehungen",
+    "datenreife": "Datenreife",
 }
 
 
-def _build_quick_replies(next_fields: list[str]) -> list[QuickReply]:
+def _build_quick_replies(next_fields: list[str], report_type: str = "r1") -> list[QuickReply]:
     """Build quick reply buttons for the next enum fields."""
+    registry = get_registry_for_report(report_type)
     replies = []
     for field_name in next_fields:
-        reg = FIELD_REGISTRY.get(field_name, {})
-        # Only build QR for enum fields with known options
-        if reg.get("chat_mode") != "QR":
+        reg = registry.get(field_name, {})
+        # Only build QR for enum/multi fields with known options
+        if reg.get("chat_mode") not in ("QR", "qr"):
             continue
 
         options_data = _QR_OPTIONS.get(field_name)
