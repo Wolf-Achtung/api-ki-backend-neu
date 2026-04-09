@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-routes/chat.py — Conversational AI Questionnaire (PoC Block 1)
+routes/chat.py — Conversational AI Questionnaire
 
 Endpoints:
-  POST /api/chat/start      — Start new chat session
-  POST /api/chat/message     — Process user message + stream AI response (SSE)
-  GET  /api/chat/session/{id} — Get session state (for resume / frontend init)
+  POST /api/chat/start        — Start new chat session
+  POST /api/chat/message       — Process user message + stream AI response (SSE)
+  GET  /api/chat/session/{id}  — Get session state (for resume / frontend init)
+  POST /api/chat/complete      — Finalize session and submit to report pipeline
 """
 from __future__ import annotations
 
@@ -19,9 +20,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from models import ChatSession
+from models import Briefing, ChatSession
 from routes._bootstrap import get_db
 from schemas.chat import (
+    ChatCompleteRequest,
+    ChatCompleteResponse,
     ChatMessage,
     ChatMessageRequest,
     ChatSessionResponse,
@@ -47,11 +50,6 @@ from services.chat_normalizer import (
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 log = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-POC_SECTION = 0  # Only section 0 in PoC
 
 WELCOME_MESSAGE = (
     "Willkommen bei ki-sicherheit.jetzt! Ich bin ein KI-Assistent und "
@@ -82,7 +80,7 @@ async def chat_start(req: ChatStartRequest, db: Session = Depends(get_db)):
         consent_at=now,
         collected_fields=req.prefill or {},
         field_meta={},
-        current_section=POC_SECTION,
+        current_section=0,
         status="active",
         messages=[],
         turn_count=0,
@@ -105,7 +103,7 @@ async def chat_start(req: ChatStartRequest, db: Session = Depends(get_db)):
         "timestamp": now.isoformat(),
         "turn": 0,
         "fields_extracted": None,
-        "section_index": POC_SECTION,
+        "section_index": 0,
         "quick_replies": [qr.model_dump() for qr in welcome_qr] if welcome_qr else None,
     }
     session.messages = [welcome_msg]
@@ -236,6 +234,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
     db.commit()
 
+    # Check section transition: advance if all required fields done
+    section_advanced = _check_section_transition(session, collected)
+    if section_advanced:
+        db.commit()
+
     # Determine next fields
     missing_req, missing_opt = get_missing_fields(collected, session.current_section)
     all_missing = missing_req + missing_opt
@@ -349,8 +352,103 @@ async def chat_session_get(session_id: UUID, db: Session = Depends(get_db)):
 
 
 # ===========================================================================
+# POST /api/chat/complete
+# ===========================================================================
+
+@router.post("/complete", response_model=ChatCompleteResponse)
+async def chat_complete(req: ChatCompleteRequest, db: Session = Depends(get_db)):
+    """Finalize chat session and submit collected data to report pipeline."""
+    session = db.query(ChatSession).filter(ChatSession.id == req.session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+    if session.status != "active":
+        raise HTTPException(status_code=400, detail="Session ist nicht aktiv")
+    if not req.confirmed:
+        raise HTTPException(status_code=400, detail="Bestätigung erforderlich")
+
+    # Idempotency: if already completed, return existing briefing_id
+    if session.status == "completed" and session.briefing_id:
+        return ChatCompleteResponse(
+            success=True,
+            briefing_id=session.briefing_id,
+            report_type=session.report_type,
+            redirect_url=f"/formular/status.html?id={session.briefing_id}",
+        )
+
+    # Check all required fields (across all sections)
+    collected = dict(session.collected_fields or {})
+    missing_all: list[str] = []
+    for section in SECTIONS:
+        missing_req, _ = get_missing_fields(collected, section["index"])  # type: ignore[arg-type]
+        missing_all.extend(missing_req)
+    if missing_all:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Pflichtfelder fehlen: {', '.join(missing_all)}",
+        )
+
+    # Build answers dict (same format as static form submit)
+    answers = dict(collected)
+    # Auto-set datenschutz from chat consent
+    answers["datenschutz"] = True
+
+    now = datetime.now(timezone.utc)
+
+    # Create briefing directly (same as routes/briefings.py submit_briefing)
+    briefing = Briefing(
+        user_id=session.user_id,
+        lang=session.lang,
+        answers=answers,
+        status="accepted",
+        accepted_at=now,
+    )
+    db.add(briefing)
+    db.flush()  # get briefing.id
+
+    # Update session
+    session.status = "completed"
+    session.completed_at = now
+    session.briefing_id = briefing.id
+    session.updated_at = now
+    db.commit()
+
+    log.info(
+        "[CHAT] Session %s completed -> Briefing %s (fields=%d)",
+        session.id, briefing.id, len(answers),
+    )
+
+    return ChatCompleteResponse(
+        success=True,
+        briefing_id=briefing.id,
+        report_type=session.report_type,
+        redirect_url=f"/formular/status.html?id={briefing.id}",
+    )
+
+
+# ===========================================================================
 # Helpers
 # ===========================================================================
+
+def _check_section_transition(session: ChatSession, collected: dict) -> bool:
+    """
+    Check if all required fields of the current section are collected.
+    If so, advance current_section. Returns True if section advanced.
+    """
+    if session.current_section >= len(SECTIONS) - 1:
+        return False
+
+    if not is_section_complete(collected, session.current_section):
+        return False
+
+    session.current_section += 1
+    log.info(
+        "[CHAT] Section transition: %d -> %d (%s)",
+        session.current_section - 1,
+        session.current_section,
+        SECTIONS[session.current_section]["name"],
+    )
+    return True
+
 
 def _build_session_state(session: ChatSession) -> ChatSessionState:
     """Build ChatSessionState from a ChatSession DB model."""
@@ -389,8 +487,9 @@ def _build_session_state(session: ChatSession) -> ChatSessionState:
 # Quick Reply Builder
 # ---------------------------------------------------------------------------
 
-# Maps field → quick reply options (for enum fields in PoC)
+# Maps field → quick reply options (labels from formbuilder_de_SINGLE_FULL.js)
 _QR_OPTIONS: dict[str, list[dict]] = {
+    # --- Sektion 0 ---
     "branche": [
         {"value": "marketing", "label": "Marketing & Werbung"},
         {"value": "beratung", "label": "Beratung & Dienstleistungen"},
@@ -431,17 +530,283 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "ueber_10m", "label": "Über 10 Mio. €"},
         {"value": "keine_angabe", "label": "Keine Angabe"},
     ],
+    # --- Sektion 1 ---
+    "zielgruppen": [
+        {"value": "b2b", "label": "B2B (Geschäftskunden)"},
+        {"value": "b2c", "label": "B2C (Endverbraucher)"},
+        {"value": "kmu", "label": "KMU"},
+        {"value": "grossunternehmen", "label": "Großunternehmen"},
+        {"value": "selbststaendige", "label": "Selbstständige/Freiberufler"},
+        {"value": "oeffentliche_hand", "label": "Öffentliche Hand"},
+        {"value": "privatpersonen", "label": "Privatpersonen"},
+        {"value": "startups", "label": "Startups"},
+        {"value": "andere", "label": "Andere"},
+    ],
+    "it_infrastruktur": [
+        {"value": "cloud", "label": "Cloud-basiert (z.\u00A0B. Microsoft 365)"},
+        {"value": "on_premise", "label": "Eigenes Rechenzentrum"},
+        {"value": "hybrid", "label": "Hybrid (Cloud + eigene Server)"},
+        {"value": "unklar", "label": "Unklar / noch offen"},
+    ],
+    "interne_ki_kompetenzen": [
+        {"value": "ja", "label": "Ja"},
+        {"value": "nein", "label": "Nein"},
+        {"value": "in_planung", "label": "In Planung"},
+    ],
+    "datenquellen": [
+        {"value": "kundendaten", "label": "Kundendaten (CRM, Service)"},
+        {"value": "verkaufsdaten", "label": "Verkaufs-/Bestelldaten"},
+        {"value": "produktionsdaten", "label": "Produktions-/Betriebsdaten"},
+        {"value": "personaldaten", "label": "Personal-/HR-Daten"},
+        {"value": "marketingdaten", "label": "Marketing-/Kampagnendaten"},
+        {"value": "sonstige", "label": "Sonstige Datenquellen"},
+    ],
+    # --- Sektion 2 ---
+    "prozesse_papierlos": [
+        {"value": "0-20", "label": "0–20 %"},
+        {"value": "21-50", "label": "21–50 %"},
+        {"value": "51-80", "label": "51–80 %"},
+        {"value": "81-100", "label": "81–100 %"},
+    ],
+    "automatisierungsgrad": [
+        {"value": "sehr_niedrig", "label": "Sehr niedrig"},
+        {"value": "eher_niedrig", "label": "Eher niedrig"},
+        {"value": "mittel", "label": "Mittel"},
+        {"value": "eher_hoch", "label": "Eher hoch"},
+        {"value": "sehr_hoch", "label": "Sehr hoch"},
+    ],
+    "ki_einsatz": [
+        {"value": "chatbots", "label": "Chatbots / Kundenservice"},
+        {"value": "marketing", "label": "Marketing & Content"},
+        {"value": "vertrieb", "label": "Vertrieb & CRM"},
+        {"value": "datenanalyse", "label": "Datenanalyse"},
+        {"value": "produktion", "label": "Produktion / Logistik"},
+        {"value": "hr", "label": "Personalmanagement"},
+        {"value": "andere", "label": "Andere Bereiche"},
+        {"value": "noch_keine", "label": "Noch keine Nutzung"},
+    ],
+    "ki_kompetenz": [
+        {"value": "hoch", "label": "Hoch"},
+        {"value": "mittel", "label": "Mittel"},
+        {"value": "niedrig", "label": "Niedrig"},
+        {"value": "keine", "label": "Keine"},
+    ],
+    # --- Sektion 3 ---
+    "ki_ziele": [
+        {"value": "effizienz", "label": "Effizienz steigern"},
+        {"value": "automatisierung", "label": "Automatisierung"},
+        {"value": "neue_produkte", "label": "Neue Produkte/Services"},
+        {"value": "kundenservice", "label": "Kundenservice verbessern"},
+        {"value": "datenauswertung", "label": "Daten besser nutzen"},
+        {"value": "kosten_senken", "label": "Kosten senken"},
+        {"value": "wettbewerbsfaehigkeit", "label": "Wettbewerbsfähigkeit"},
+        {"value": "keine_angabe", "label": "Noch unklar"},
+    ],
+    "anwendungsfaelle": [
+        {"value": "chatbots", "label": "Chatbots / FAQ-Automatisierung"},
+        {"value": "content_generation", "label": "Content-Generierung"},
+        {"value": "datenanalyse", "label": "Datenanalyse & Reporting"},
+        {"value": "dokumentation", "label": "Dokumentation & Wissen"},
+        {"value": "prozess_automation", "label": "Prozessautomation"},
+        {"value": "personalisierung", "label": "Personalisierung"},
+        {"value": "andere", "label": "Andere"},
+        {"value": "keine_angabe", "label": "Noch unklar"},
+    ],
+    "pilot_bereich": [
+        {"value": "kundenservice", "label": "Kundenservice"},
+        {"value": "marketing", "label": "Marketing / Content"},
+        {"value": "vertrieb", "label": "Vertrieb"},
+        {"value": "verwaltung", "label": "Verwaltung / Backoffice"},
+        {"value": "produktion", "label": "Produktion / Logistik"},
+        {"value": "andere", "label": "Andere"},
+    ],
+    # --- Sektion 4 ---
+    "massnahmen_komplexitaet": [
+        {"value": "niedrig", "label": "Niedrig"},
+        {"value": "mittel", "label": "Mittel"},
+        {"value": "hoch", "label": "Hoch"},
+        {"value": "unklar", "label": "Unklar"},
+    ],
+    "roadmap_vorhanden": [
+        {"value": "ja", "label": "Ja"},
+        {"value": "teilweise", "label": "Teilweise"},
+        {"value": "nein", "label": "Nein"},
+    ],
+    "governance_richtlinien": [
+        {"value": "ja", "label": "Ja"},
+        {"value": "teilweise", "label": "Teilweise"},
+        {"value": "nein", "label": "Nein"},
+    ],
+    "change_management": [
+        {"value": "sehr_hoch", "label": "Sehr hoch"},
+        {"value": "hoch", "label": "Hoch"},
+        {"value": "mittel", "label": "Mittel"},
+        {"value": "niedrig", "label": "Niedrig"},
+        {"value": "sehr_niedrig", "label": "Sehr niedrig"},
+    ],
+    # --- Sektion 5 ---
+    "zeitbudget": [
+        {"value": "unter_2", "label": "Unter 2 Stunden"},
+        {"value": "2_5", "label": "2–5 Stunden"},
+        {"value": "5_10", "label": "5–10 Stunden"},
+        {"value": "ueber_10", "label": "Über 10 Stunden"},
+    ],
+    "vorhandene_tools": [
+        {"value": "crm", "label": "CRM (HubSpot, Salesforce)"},
+        {"value": "erp", "label": "ERP (SAP, Odoo)"},
+        {"value": "projektmanagement", "label": "Projektmanagement (Asana, Trello)"},
+        {"value": "marketing_automation", "label": "Marketing Automation"},
+        {"value": "buchhaltung", "label": "Buchhaltungssoftware"},
+        {"value": "keine", "label": "Keine / andere"},
+    ],
+    "trainings_interessen": [
+        {"value": "prompt_engineering", "label": "Prompt Engineering"},
+        {"value": "llm_basics", "label": "LLM-Grundlagen"},
+        {"value": "datenqualitaet_governance", "label": "Datenqualität & Governance"},
+        {"value": "automatisierung", "label": "Automatisierung & Skripte"},
+        {"value": "ethik_recht", "label": "Ethische & rechtliche Grundlagen"},
+        {"value": "keine", "label": "Keine / noch unklar"},
+    ],
+    "vision_prioritaet": [
+        {"value": "gpt_services", "label": "KI-gestützte Services und Produkte"},
+        {"value": "kundenservice", "label": "Optimierung Kundenservice"},
+        {"value": "datenprodukte", "label": "Datenbasierte Angebote"},
+        {"value": "prozessautomation", "label": "Automatisierung interner Prozesse"},
+        {"value": "marktfuehrerschaft", "label": "Technologieführerschaft"},
+        {"value": "keine_angabe", "label": "Noch unklar"},
+    ],
+    "innovationsprozess": [
+        {"value": "innovationsteam", "label": "Innovationsteam"},
+        {"value": "mitarbeitende", "label": "Durch Mitarbeitende"},
+        {"value": "kunden", "label": "Mit Kunden"},
+        {"value": "berater", "label": "Externe Berater"},
+        {"value": "zufall", "label": "Zufällig"},
+        {"value": "unbekannt", "label": "Keine klare Strategie"},
+    ],
+    "regulierte_branche": [
+        {"value": "gesundheit", "label": "Gesundheit & Medizin"},
+        {"value": "finanzen", "label": "Finanzen & Versicherungen"},
+        {"value": "oeffentlich", "label": "Öffentlicher Sektor"},
+        {"value": "recht", "label": "Rechtliche Dienstleistungen"},
+        {"value": "vertraulich_nda", "label": "Vertrauliche Kundendaten / NDA"},
+        {"value": "keine", "label": "Keine dieser Branchen"},
+    ],
+    # --- Sektion 6 ---
+    "datenschutzbeauftragter": [
+        {"value": "ja", "label": "Ja"},
+        {"value": "nein", "label": "Nein"},
+        {"value": "teilweise", "label": "Teilweise (extern/Planung)"},
+    ],
+    "technische_massnahmen": [
+        {"value": "alle", "label": "Alle relevanten Maßnahmen"},
+        {"value": "teilweise", "label": "Teilweise vorhanden"},
+        {"value": "keine", "label": "Noch keine"},
+    ],
+    "folgenabschaetzung": [
+        {"value": "ja", "label": "Ja, durchgeführt"},
+        {"value": "nein", "label": "Nein, noch nicht"},
+        {"value": "teilweise", "label": "In Planung"},
+    ],
+    "meldewege": [
+        {"value": "ja", "label": "Ja, klar definiert"},
+        {"value": "teilweise", "label": "Teilweise vorhanden"},
+        {"value": "nein", "label": "Nein, noch nicht geregelt"},
+    ],
+    "loeschregeln": [
+        {"value": "ja", "label": "Ja, dokumentiert"},
+        {"value": "teilweise", "label": "Teilweise vorhanden"},
+        {"value": "nein", "label": "Nein, noch nicht definiert"},
+    ],
+    "ai_act_kenntnis": [
+        {"value": "sehr_gut", "label": "Sehr gut"},
+        {"value": "gut", "label": "Gut"},
+        {"value": "gehoert", "label": "Schon mal gehört"},
+        {"value": "unbekannt", "label": "Noch nicht bekannt"},
+    ],
+    "ki_hemmnisse": [
+        {"value": "rechtsunsicherheit", "label": "Rechtsunsicherheit"},
+        {"value": "datenschutz", "label": "Datenschutz"},
+        {"value": "knowhow", "label": "Fehlendes Know-how"},
+        {"value": "budget", "label": "Begrenztes Budget"},
+        {"value": "teamakzeptanz", "label": "Teamakzeptanz"},
+        {"value": "zeitmangel", "label": "Zeitmangel"},
+        {"value": "it_integration", "label": "IT-Integration"},
+        {"value": "keine", "label": "Keine Hemmnisse"},
+        {"value": "andere", "label": "Andere"},
+    ],
+    # --- Sektion 7 ---
+    "bisherige_foerdermittel": [
+        {"value": "ja", "label": "Ja"},
+        {"value": "nein", "label": "Nein"},
+    ],
+    "interesse_foerderung": [
+        {"value": "ja", "label": "Ja, Programme vorschlagen"},
+        {"value": "nein", "label": "Kein Bedarf"},
+        {"value": "unklar", "label": "Unklar, bitte beraten"},
+    ],
+    "erfahrung_beratung": [
+        {"value": "ja", "label": "Ja"},
+        {"value": "nein", "label": "Nein"},
+        {"value": "unklar", "label": "Unklar"},
+    ],
+    "investitionsbudget": [
+        {"value": "unter_2000", "label": "Unter 2.000 €"},
+        {"value": "2000_10000", "label": "2.000–10.000 €"},
+        {"value": "10000_50000", "label": "10.000–50.000 €"},
+        {"value": "ueber_50000", "label": "Über 50.000 €"},
+        {"value": "unklar", "label": "Noch unklar"},
+    ],
+    "marktposition": [
+        {"value": "marktfuehrer", "label": "Marktführer"},
+        {"value": "oberes_drittel", "label": "Oberes Drittel"},
+        {"value": "mittelfeld", "label": "Mittelfeld"},
+        {"value": "nachzuegler", "label": "Nachzügler"},
+        {"value": "unsicher", "label": "Schwer einzuschätzen"},
+    ],
+    "benchmark_wettbewerb": [
+        {"value": "ja", "label": "Ja, regelmäßig"},
+        {"value": "nein", "label": "Nein"},
+        {"value": "selten", "label": "Selten"},
+    ],
 }
 
 # Field labels for quick replies
 _QR_LABELS: dict[str, str] = {
-    "branche": "Branche",
-    "unternehmensgroesse": "Unternehmensgröße",
-    "selbststaendig": "Unternehmensform",
-    "country": "Land",
-    "bundesland": "Bundesland / Region",
-    "hauptleistung": "Hauptleistung",
+    # Sektion 0
+    "branche": "Branche", "unternehmensgroesse": "Unternehmensgröße",
+    "selbststaendig": "Unternehmensform", "country": "Land",
+    "bundesland": "Bundesland / Region", "hauptleistung": "Hauptleistung",
     "jahresumsatz": "Jahresumsatz",
+    # Sektion 1
+    "zielgruppen": "Zielgruppen", "it_infrastruktur": "IT-Infrastruktur",
+    "interne_ki_kompetenzen": "Internes KI-Team", "datenquellen": "Verfügbare Daten",
+    # Sektion 2
+    "digitalisierungsgrad": "Digitalisierungsgrad (1–10)",
+    "prozesse_papierlos": "Papierlose Prozesse", "automatisierungsgrad": "Automatisierungsgrad",
+    "ki_einsatz": "Aktueller KI-Einsatz", "ki_kompetenz": "KI-Kompetenz",
+    # Sektion 3
+    "ki_ziele": "KI-Ziele", "anwendungsfaelle": "Anwendungsfälle",
+    "ki_projekte": "Bestehende KI-Projekte", "pilot_bereich": "Pilotbereich",
+    "zeitersparnis_prioritaet": "Zeitfresser", "geschaeftsmodell_evolution": "Geschäftsmodell-Ideen",
+    "vision_3_jahre": "3-Jahres-Vision",
+    # Sektion 4
+    "strategische_ziele": "Strategische Ziele", "ki_guardrails": "KI-Leitplanken",
+    "massnahmen_komplexitaet": "Einführungsaufwand", "roadmap_vorhanden": "KI-Roadmap",
+    "governance_richtlinien": "Governance-Richtlinien", "change_management": "Veränderungsbereitschaft",
+    # Sektion 5
+    "zeitbudget": "Zeitbudget pro Woche", "vorhandene_tools": "Genutzte Systeme",
+    "trainings_interessen": "Trainingsthemen", "vision_prioritaet": "Strategischer Hebel",
+    "innovationsprozess": "Innovationsprozess", "regulierte_branche": "Regulierte Branche",
+    # Sektion 6
+    "datenschutzbeauftragter": "Datenschutzbeauftragter", "technische_massnahmen": "Schutzmaßnahmen",
+    "folgenabschaetzung": "Datenschutz-Folgenabschätzung", "meldewege": "Meldewege",
+    "loeschregeln": "Löschrichtlinien", "ai_act_kenntnis": "EU AI Act Kenntnis",
+    "ki_hemmnisse": "KI-Hemmnisse",
+    # Sektion 7
+    "bisherige_foerdermittel": "Bisherige Fördermittel", "interesse_foerderung": "Förderinteresse",
+    "erfahrung_beratung": "Beratungserfahrung", "investitionsbudget": "Investitionsbudget",
+    "marktposition": "Marktposition", "benchmark_wettbewerb": "Wettbewerber-Vergleich",
+    "risikofreude": "Risikofreude (1–5)",
 }
 
 
