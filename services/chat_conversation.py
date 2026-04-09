@@ -14,8 +14,12 @@ from typing import AsyncGenerator
 from services.chat_normalizer import (
     FIELD_REGISTRY,
     SECTIONS,
+    STRATEGY_SECTIONS,
+    STRATEGY_FIELD_REGISTRY,
     BUNDESLAND_LABELS,
     ENUM_VALUES,
+    get_registry_for_report,
+    get_sections_for_report,
 )
 
 log = logging.getLogger(__name__)
@@ -205,6 +209,21 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     "marktposition": "Marktposition (Marktführer bis Nachzügler)",
     "benchmark_wettbewerb": "Regelmäßiger Vergleich mit Wettbewerbern (Ja / Nein / Selten)",
     "risikofreude": "Risikofreude bei Innovation (Skala 1–5)",
+    # Strategy fields
+    "s1_budget": "KI-Implementierungsbudget nächste 12 Monate (Unter 2.000€ bis Über 50.000€ / Unklar)",
+    "s2_zeitrahmen": "Umsetzungszeitraum für erste KI-Maßnahmen (Sofort bis Langfristig)",
+    "s3_prioritaeten": "Top 3 Prioritäten beim KI-Einsatz (max. 3 auswählen)",
+    "s4_engpass": "Der einzelne größte Engpass/Blocker für die KI-Einführung",
+    "s5_software": "Aktuell genutzte Software und Tools im Tagesgeschäft (Freitext)",
+    "s5_vision": "Persönliche KI-Vision: Wo soll das Unternehmen mit KI hin? (Freitext)",
+    "s6_foerderinteresse": "Interesse an Fördermitteln für KI-Investitionen",
+    "s7_entscheidung": "Wie werden KI-Investitionsentscheidungen getroffen",
+    "s8_erfahrung": "Bisherige KI-Erfahrung (Noch keine bis Fortgeschritten)",
+    "s9_ansatz": "Bevorzugter Infrastruktur-Ansatz (Cloud-SaaS / On-Premise / Hybrid / Egal)",
+    "s10_datenschutz": "Datenschutz-Priorität (Hoch / Mittel / Niedrig)",
+    "wettbewerber_anzahl": "Anzahl direkter Wettbewerber im Kernmarkt",
+    "kundenbindung_typ": "Art der Kundenbeziehungen (Einmal / Wiederkehrend / Gemischt)",
+    "datenreife": "Verfügbarkeit eigener Datenbestände für KI-Nutzung",
 }
 
 
@@ -223,14 +242,83 @@ SECTION_HINTS: dict[int, str] = {
 }
 
 
-def _format_next_fields(field_names: list[str]) -> str:
+# ---------------------------------------------------------------------------
+# Strategy Conversation Prompt
+# ---------------------------------------------------------------------------
+STRATEGY_CONVERSATION_PROMPT = """\
+Sie sind ein KI-Assistent von ki-sicherheit.jetzt und führen
+Nutzerinnen und Nutzer durch die Zusatzfragen für einen individuellen
+KI-Strategiebericht.
+
+KONTEXT:
+Der Nutzer hat bereits eine KI-Readiness-Analyse (Status-Report) abgeschlossen.
+Jetzt geht es um die konkrete Umsetzungsplanung — Budget, Zeitrahmen, Prioritäten
+und strategische Einschätzungen.
+
+IHRE ROLLE:
+Sie sind ein kompetenter KI-Strategieberater. Sie erklären Fachbegriffe
+verständlich und geben branchenspezifische Beispiele.
+
+REGELN:
+1. Siezen Sie durchgehend.
+2. Maximal 2–3 Fragen pro Turn.
+3. Bestätigen Sie was Sie verstanden haben, dann fragen Sie weiter.
+4. Erklären Sie proaktiv:
+   - Bei S3 (Prioritäten): Was bedeutet "Compliance sichern" konkret?
+   - Bei S9 (Infrastruktur): Cloud vs. On-Premise verständlich erklären
+   - Bei Moat-Feldern: Warum Wettbewerber-Analyse für die Strategie relevant ist
+5. Bei S3: Weisen Sie darauf hin dass maximal 3 Prioritäten gewählt werden sollen.
+6. Bei S5 (Software): Fragen Sie nach konkreten Tools, nicht abstrakt.
+   Beispiel: "Nutzen Sie Microsoft 365, Google Workspace, ein CRM wie HubSpot?"
+7. Erfinden Sie keine Angaben.
+8. Wenn der User unsicher ist: "Falls Sie sich nicht sicher sind, ist das völlig \
+in Ordnung — wählen Sie einfach die Option die am ehesten passt, oder \
+beschreiben Sie Ihre Situation in eigenen Worten."
+9. Fragen Sie NUR nach Feldern, die noch nicht erfasst sind. \
+Bereits erfasste Felder nicht erneut als Optionsliste anzeigen.
+
+AKTUELLER STAND:
+- Abschnitt: {section_name} (Schritt {section_number} von {total_sections})
+- Bereits erfasst: {collected_fields_summary}
+- Noch offen: {missing_in_section}
+
+ALS NÄCHSTES ERFRAGEN:
+{next_fields_with_descriptions}
+
+ABSCHLUSS:
+Wenn alle Felder erfasst sind, fassen Sie zusammen und fragen:
+"Soll ich Ihren Strategiebericht jetzt erstellen?"
+"""
+
+STRATEGY_SECTION_HINTS: dict[int, str] = {
+    0: "Budget und Zeitrahmen sind oft die schwierigsten Fragen. Vermitteln Sie: 'unklar' ist eine valide Antwort. Bei Prioritäten (S3) aktiv helfen: 'Kosten senken bedeutet z.B. Prozesse automatisieren, damit weniger Handarbeit anfällt. Compliance sichern bedeutet z.B. DSGVO und EU AI Act einhalten.'",
+    1: "Dieser Abschnitt ist komplett optional — machen Sie das transparent. Bei S9 (Infrastruktur) unbedingt erklären was Cloud/On-Premise/Hybrid bedeutet, viele KMU kennen die Begriffe nicht. Die Moat-Felder (Wettbewerber, Kundenbindung, Datenreife) sind für die Wettbewerbsanalyse im Report — erklären Sie warum das relevant ist.",
+}
+
+
+def _get_system_prompt(report_type: str) -> str:
+    """Get the system prompt template for a report type."""
+    if report_type == "strategy":
+        return STRATEGY_CONVERSATION_PROMPT
+    return CONVERSATION_SYSTEM_PROMPT
+
+
+def _get_section_hints(report_type: str) -> dict[int, str]:
+    """Get section hints for a report type."""
+    if report_type == "strategy":
+        return STRATEGY_SECTION_HINTS
+    return SECTION_HINTS
+
+
+def _format_next_fields(field_names: list[str], report_type: str = "r1") -> str:
     """Format field descriptions for the system prompt."""
     if not field_names:
         return "Alle Felder dieses Abschnitts sind erfasst."
+    registry = get_registry_for_report(report_type)
     lines = []
     for name in field_names:
         desc = FIELD_DESCRIPTIONS.get(name, name)
-        reg = FIELD_REGISTRY.get(name, {})
+        reg = registry.get(name, {})
         pflicht = "Pflicht" if reg.get("required") else "Optional"
         lines.append(f"- {name} ({pflicht}): {desc}")
     return "\n".join(lines)
@@ -261,6 +349,7 @@ async def generate_response(
     missing_fields: list[str],
     next_fields: list[str],
     section: dict,
+    report_type: str = "r1",
 ) -> AsyncGenerator[str, None]:
     """
     Generate streaming AI response.
@@ -272,18 +361,21 @@ async def generate_response(
         yield "Entschuldigung, ich bin gerade nicht erreichbar. Bitte versuchen Sie es gleich nochmal."
         return
 
+    sections = get_sections_for_report(report_type)
     section_index: int = section["index"]
-    system_prompt = CONVERSATION_SYSTEM_PROMPT.format(
+    prompt_template = _get_system_prompt(report_type)
+    system_prompt = prompt_template.format(
         section_name=section["name"],
         section_number=section_index + 1,
-        total_sections=8,
+        total_sections=len(sections),
         collected_fields_summary=_format_collected_summary(collected_fields),
         missing_in_section=", ".join(missing_fields) if missing_fields else "alle erfasst",
-        next_fields_with_descriptions=_format_next_fields(next_fields),
+        next_fields_with_descriptions=_format_next_fields(next_fields, report_type),
     )
 
     # Inject section-specific hint
-    hint = SECTION_HINTS.get(section_index, "")
+    hints = _get_section_hints(report_type)
+    hint = hints.get(section_index, "")
     if hint:
         system_prompt += f"\n\nHINWEIS FÜR DIESEN ABSCHNITT:\n{hint}"
 
@@ -321,16 +413,18 @@ _ENUM_DISPLAY: dict[str, dict[str, str]] = {
 }
 
 
-def build_summary(collected_fields: dict) -> str:
+def build_summary(collected_fields: dict, report_type: str = "r1") -> str:
     """
     Build a structured, template-based summary of all collected fields.
     No LLM involved — purely deterministic from collected data.
     """
+    sections = get_sections_for_report(report_type)
+    registry = get_registry_for_report(report_type)
     lines = ["**Zusammenfassung Ihrer Angaben:**\n"]
 
-    for section in SECTIONS:
+    for section in sections:
         section_lines: list[str] = []
-        section_fields: list[str] = section["fields"]  # type: ignore[assignment]
+        section_fields: list[str] = section["fields"]
         for field_name in section_fields:
             if field_name not in collected_fields:
                 continue
@@ -349,7 +443,7 @@ def build_summary(collected_fields: dict) -> str:
 
 def _format_value_for_display(field_name: str, value: object) -> str:
     """Format a field value for human-readable display."""
-    reg = FIELD_REGISTRY.get(field_name, {})
+    reg = FIELD_REGISTRY.get(field_name) or STRATEGY_FIELD_REGISTRY.get(field_name, {})
     field_type = reg.get("type", "text")
 
     # Enum: use display label
