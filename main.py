@@ -236,6 +236,9 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
     # Report 3: KI-Strategiebericht
     cfg.append(("routes.strategy", "/api", "strategy"))
 
+    # Conversational AI Questionnaire (Chat PoC)
+    cfg.append(("routes.chat", "/api", "chat"))
+
     # KI-Potenzial-Check Appetizer
     cfg.append(("routes.appetizer", "/api/appetizer", "generate"))
 

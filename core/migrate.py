@@ -134,6 +134,30 @@ DDL = [
         created_at TIMESTAMP DEFAULT NOW()
     )"""),
     text("CREATE INDEX IF NOT EXISTS idx_appetizer_analytics_branche ON appetizer_analytics(branche)"),
+    # chat_sessions (Konversationeller KI-Fragebogen)
+    text("""    CREATE TABLE IF NOT EXISTS chat_sessions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        report_type VARCHAR(20) NOT NULL DEFAULT 'r1',
+        lang VARCHAR(5) DEFAULT 'de',
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        briefing_id INTEGER REFERENCES briefings(id) ON DELETE SET NULL,
+        consent_report BOOLEAN DEFAULT FALSE,
+        consent_at TIMESTAMPTZ,
+        collected_fields JSONB DEFAULT '{}'::jsonb,
+        field_meta JSONB DEFAULT '{}'::jsonb,
+        current_section INTEGER DEFAULT 0,
+        status VARCHAR(20) DEFAULT 'active',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        last_activity_at TIMESTAMPTZ DEFAULT NOW(),
+        completed_at TIMESTAMPTZ,
+        messages JSONB DEFAULT '[]'::jsonb,
+        turn_count INTEGER DEFAULT 0,
+        conversation_summary TEXT
+    )"""),
+    text("CREATE INDEX IF NOT EXISTS idx_chat_sessions_status ON chat_sessions(status)"),
+    text("CREATE INDEX IF NOT EXISTS idx_chat_sessions_user ON chat_sessions(user_id)"),
+    text("CREATE INDEX IF NOT EXISTS idx_chat_sessions_activity ON chat_sessions(last_activity_at)"),
 ]
 
 def migrate_all(engine: Engine) -> None:
