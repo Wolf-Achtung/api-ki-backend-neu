@@ -208,6 +208,21 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Section-specific conversation hints
+# ---------------------------------------------------------------------------
+SECTION_HINTS: dict[int, str] = {
+    0: "",
+    1: "Fragen Sie nach IT-Infrastruktur und Datenquellen pragmatisch. Viele kleine Unternehmen haben keine klare Antwort — 'unklar' ist völlig ok.",
+    2: "Der Digitalisierungsgrad ist eine Selbsteinschätzung 1–10. Geben Sie Orientierung: 1–3 = überwiegend papierbasiert, 4–6 = teilweise digital, 7–10 = weitgehend digital. Bei ki_einsatz: 'noch_keine' ist die häufigste Antwort bei KMU — normalisieren Sie das.",
+    3: "Dies ist der wichtigste Abschnitt für die Report-Qualität. Freitextfelder (ki_projekte, zeitersparnis_prioritaet, vision_3_jahre) sollten möglichst konkrete Antworten enthalten. Ermutigen Sie: 'Stichworte und kurze Sätze reichen völlig.'",
+    4: "Viele KMU haben noch keine formelle KI-Strategie — das ist normal. Vermitteln Sie: 'Nein' bei Roadmap oder Governance ist eine absolut valide Antwort.",
+    5: "Halten Sie diesen Abschnitt kurz. Zeitbudget und Tools sind schnell erfasst.",
+    6: "Datenschutz-Fragen verunsichern viele KMU-Geschäftsführer. Machen Sie deutlich: Ehrliche Antworten helfen, den tatsächlichen Handlungsbedarf realistisch einzuschätzen. 'Nein' oder 'noch nicht' ist kein Problem.",
+    7: "Letzter Abschnitt — fast geschafft. Förderung und Budget zügig abfragen, dann zur Zusammenfassung überleiten.",
+}
+
+
 def _format_next_fields(field_names: list[str]) -> str:
     """Format field descriptions for the system prompt."""
     if not field_names:
@@ -257,14 +272,20 @@ async def generate_response(
         yield "Entschuldigung, ich bin gerade nicht erreichbar. Bitte versuchen Sie es gleich nochmal."
         return
 
+    section_index: int = section["index"]  # type: ignore[assignment]
     system_prompt = CONVERSATION_SYSTEM_PROMPT.format(
         section_name=section["name"],
-        section_number=section["index"] + 1,
+        section_number=section_index + 1,
         total_sections=8,
         collected_fields_summary=_format_collected_summary(collected_fields),
         missing_in_section=", ".join(missing_fields) if missing_fields else "alle erfasst",
         next_fields_with_descriptions=_format_next_fields(next_fields),
     )
+
+    # Inject section-specific hint
+    hint = SECTION_HINTS.get(section_index, "")
+    if hint:
+        system_prompt += f"\n\nHINWEIS FÜR DIESEN ABSCHNITT:\n{hint}"
 
     messages = build_conversation_messages(session_messages)
 
@@ -280,3 +301,86 @@ async def generate_response(
     except Exception as exc:
         log.error("[CHAT-CONV] Streaming failed: %s", exc, exc_info=True)
         yield "Entschuldigung, es gab einen Verbindungsfehler. Könnten Sie das bitte nochmal versuchen?"
+
+
+# ===========================================================================
+# Template-based summary (no LLM — deterministic)
+# ===========================================================================
+
+# Display labels for enum values (value -> German label)
+_ENUM_DISPLAY: dict[str, dict[str, str]] = {
+    "branche": {
+        "marketing": "Marketing & Werbung", "beratung": "Beratung & Dienstleistungen",
+        "it": "IT & Software", "finanzen": "Finanzen & Versicherungen",
+        "handel": "Handel & E-Commerce", "bildung": "Bildung", "verwaltung": "Verwaltung",
+        "gesundheit": "Gesundheit & Pflege", "bau": "Bauwesen & Architektur",
+        "medien": "Medien & Kreativwirtschaft", "industrie": "Industrie & Produktion",
+        "logistik": "Transport & Logistik", "gastronomie": "Gastronomie & Tourismus",
+    },
+    "unternehmensgroesse": {"1": "1 (Solo)", "2–10": "2–10 (Kleines Team)", "11–100": "11–100 (KMU)"},
+}
+
+
+def build_summary(collected_fields: dict) -> str:
+    """
+    Build a structured, template-based summary of all collected fields.
+    No LLM involved — purely deterministic from collected data.
+    """
+    lines = ["**Zusammenfassung Ihrer Angaben:**\n"]
+
+    for section in SECTIONS:
+        section_lines: list[str] = []
+        section_fields: list[str] = section["fields"]  # type: ignore[assignment]
+        for field_name in section_fields:
+            if field_name not in collected_fields:
+                continue
+            value = collected_fields[field_name]
+            label = FIELD_DESCRIPTIONS.get(field_name, field_name).split("(")[0].strip()
+            display = _format_value_for_display(field_name, value)
+            section_lines.append(f"- {label}: {display}")
+
+        if section_lines:
+            lines.append(f"\n**{section['name']}**")
+            lines.extend(section_lines)
+
+    lines.append("\n\nSind alle Angaben korrekt? Dann starte ich die Auswertung.")
+    return "\n".join(lines)
+
+
+def _format_value_for_display(field_name: str, value: object) -> str:
+    """Format a field value for human-readable display."""
+    reg = FIELD_REGISTRY.get(field_name, {})
+    field_type = reg.get("type", "text")
+
+    # Enum: use display label
+    if field_type == "enum":
+        str_val = str(value)
+        enum_labels = _ENUM_DISPLAY.get(field_name)
+        if enum_labels and str_val in enum_labels:
+            return enum_labels[str_val]
+        # Bundesland code → label
+        if field_name == "bundesland":
+            return BUNDESLAND_LABELS.get(str_val, str_val)
+        return str_val
+
+    # Multi: comma-separated
+    if field_type == "multi" and isinstance(value, list):
+        return ", ".join(str(v) for v in value) if value else "–"
+
+    # Slider: number with context
+    if field_type == "slider":
+        mx = reg.get("max", 10)
+        return f"{value} von {mx}"
+
+    # Bool
+    if field_type == "bool":
+        return "Ja" if value else "Nein"
+
+    # Text: truncate
+    if field_type == "text":
+        text = str(value).strip()
+        if len(text) > 100:
+            return text[:97] + "..."
+        return text
+
+    return str(value)
