@@ -57,7 +57,9 @@ WELCOME_MESSAGE = (
     "Willkommen bei ki-sicherheit.jetzt! Ich bin ein KI-Assistent und "
     "führe Sie durch eine kurze Bestandsaufnahme Ihres Unternehmens.\n\n"
     "Lassen Sie uns mit den Grundlagen beginnen: "
-    "In welcher Branche ist Ihr Unternehmen tätig?"
+    "In welcher Branche ist Ihr Unternehmen tätig? "
+    "Falls Sie unsicher sind, beschreiben Sie einfach, was Sie tun "
+    "— ich helfe bei der Zuordnung."
 )
 
 
