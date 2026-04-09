@@ -272,7 +272,7 @@ async def generate_response(
         yield "Entschuldigung, ich bin gerade nicht erreichbar. Bitte versuchen Sie es gleich nochmal."
         return
 
-    section_index: int = section["index"]  # type: ignore[assignment]
+    section_index: int = section["index"]
     system_prompt = CONVERSATION_SYSTEM_PROMPT.format(
         section_name=section["name"],
         section_number=section_index + 1,
