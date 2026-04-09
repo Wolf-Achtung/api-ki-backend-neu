@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-routes/chat.py — Conversational AI Questionnaire (PoC Block 1)
+routes/chat.py — Conversational AI Questionnaire
 
 Endpoints:
-  POST /api/chat/start      — Start new chat session
-  POST /api/chat/message     — Process user message + stream AI response (SSE)
-  GET  /api/chat/session/{id} — Get session state (for resume / frontend init)
+  POST /api/chat/start        — Start new chat session
+  POST /api/chat/message       — Process user message + stream AI response (SSE)
+  GET  /api/chat/session/{id}  — Get session state (for resume / frontend init)
+  POST /api/chat/complete      — Finalize session and submit to report pipeline
 """
 from __future__ import annotations
 
@@ -19,9 +20,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from models import ChatSession
+from models import Briefing, ChatSession
 from routes._bootstrap import get_db
 from schemas.chat import (
+    ChatCompleteRequest,
+    ChatCompleteResponse,
     ChatMessage,
     ChatMessageRequest,
     ChatSessionResponse,
@@ -345,6 +348,80 @@ async def chat_session_get(session_id: UUID, db: Session = Depends(get_db)):
         messages=chat_messages,
         resumable=resumable,
         last_activity=session.last_activity_at,
+    )
+
+
+# ===========================================================================
+# POST /api/chat/complete
+# ===========================================================================
+
+@router.post("/complete", response_model=ChatCompleteResponse)
+async def chat_complete(req: ChatCompleteRequest, db: Session = Depends(get_db)):
+    """Finalize chat session and submit collected data to report pipeline."""
+    session = db.query(ChatSession).filter(ChatSession.id == req.session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+    if session.status != "active":
+        raise HTTPException(status_code=400, detail="Session ist nicht aktiv")
+    if not req.confirmed:
+        raise HTTPException(status_code=400, detail="Bestätigung erforderlich")
+
+    # Idempotency: if already completed, return existing briefing_id
+    if session.status == "completed" and session.briefing_id:
+        return ChatCompleteResponse(
+            success=True,
+            briefing_id=session.briefing_id,
+            report_type=session.report_type,
+            redirect_url=f"/formular/status.html?id={session.briefing_id}",
+        )
+
+    # Check all required fields (across all sections)
+    collected = dict(session.collected_fields or {})
+    missing_all: list[str] = []
+    for section in SECTIONS:
+        missing_req, _ = get_missing_fields(collected, section["index"])  # type: ignore[arg-type]
+        missing_all.extend(missing_req)
+    if missing_all:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Pflichtfelder fehlen: {', '.join(missing_all)}",
+        )
+
+    # Build answers dict (same format as static form submit)
+    answers = dict(collected)
+    # Auto-set datenschutz from chat consent
+    answers["datenschutz"] = True
+
+    now = datetime.now(timezone.utc)
+
+    # Create briefing directly (same as routes/briefings.py submit_briefing)
+    briefing = Briefing(
+        user_id=session.user_id,
+        lang=session.lang,
+        answers=answers,
+        status="accepted",
+        accepted_at=now,
+    )
+    db.add(briefing)
+    db.flush()  # get briefing.id
+
+    # Update session
+    session.status = "completed"
+    session.completed_at = now
+    session.briefing_id = briefing.id
+    session.updated_at = now
+    db.commit()
+
+    log.info(
+        "[CHAT] Session %s completed -> Briefing %s (fields=%d)",
+        session.id, briefing.id, len(answers),
+    )
+
+    return ChatCompleteResponse(
+        success=True,
+        briefing_id=briefing.id,
+        report_type=session.report_type,
+        redirect_url=f"/formular/status.html?id={briefing.id}",
     )
 
 
