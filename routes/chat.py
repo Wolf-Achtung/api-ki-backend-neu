@@ -430,7 +430,7 @@ async def chat_complete(req: ChatCompleteRequest, db: Session = Depends(get_db))
     collected = dict(session.collected_fields or {})
     missing_all: list[str] = []
     for section in sections:
-        sec_idx: int = section["index"]  # type: ignore[assignment]
+        sec_idx: int = section["index"]
         missing_req, _ = get_missing_fields(collected, sec_idx, rt)
         missing_all.extend(missing_req)
     if missing_all:
@@ -585,7 +585,7 @@ def _build_session_state(session: ChatSession) -> ChatSessionState:
     total = len(registry)
     collected_count = len(collected)
 
-    section_name: str = section["name"]  # type: ignore[assignment]
+    section_name: str = section["name"]
 
     return ChatSessionState(
         session_id=session.id,
