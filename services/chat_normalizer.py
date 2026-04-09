@@ -791,7 +791,7 @@ def get_missing_fields(
     section = sections[section_index]
     missing_required: list[str] = []
     missing_optional: list[str] = []
-    fields: list[str] = section["fields"]  # type: ignore[assignment]
+    fields: list[str] = section["fields"]
 
     for field_name in fields:
         if field_name in collected:

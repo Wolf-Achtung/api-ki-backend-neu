@@ -424,7 +424,7 @@ def build_summary(collected_fields: dict, report_type: str = "r1") -> str:
 
     for section in sections:
         section_lines: list[str] = []
-        section_fields: list[str] = section["fields"]  # type: ignore[assignment]
+        section_fields: list[str] = section["fields"]
         for field_name in section_fields:
             if field_name not in collected_fields:
                 continue
