@@ -8,10 +8,11 @@ Warum: Dev/CI ohne Postgres soll nicht brechen.
 
 from datetime import datetime, timezone
 from typing import Any, Optional
+from uuid import uuid4, UUID
 
 from sqlalchemy import (
     Boolean, DateTime, ForeignKey, Integer, String, Text,
-    UniqueConstraint, Index
+    UniqueConstraint, Index, Uuid
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -442,3 +443,65 @@ class StrategyReport(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+
+# =============================================================================
+# KONVERSATIONELLER KI-FRAGEBOGEN (Chat Sessions)
+# =============================================================================
+
+class ChatSession(Base):
+    """
+    Chat session for conversational AI questionnaire.
+    Stores conversation state, collected fields, and message history.
+    """
+    __tablename__ = "chat_sessions"
+
+    id: Mapped[UUID] = mapped_column(
+        Uuid, primary_key=True, default=uuid4
+    )
+    report_type: Mapped[str] = mapped_column(String(20), default="r1", nullable=False)
+    lang: Mapped[str] = mapped_column(String(5), default="de", nullable=False)
+    user_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    briefing_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("briefings.id", ondelete="SET NULL"), nullable=True
+    )
+
+    # Consent
+    consent_report: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    consent_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # State
+    collected_fields: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
+    field_meta: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
+    current_section: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="active", nullable=False)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
+    last_activity_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Conversation
+    messages: Mapped[list] = mapped_column(JSONType, default=list, nullable=False)
+    turn_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    conversation_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    user = relationship("User", lazy="joined")
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"<ChatSession id={self.id} status={self.status!r} turn={self.turn_count}>"
