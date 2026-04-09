@@ -176,7 +176,7 @@ async def extract_fields(
         # Extract tool result
         for block in response.content:
             if block.type == "tool_use" and block.name == "update_intake_fields":
-                extracted: dict = block.input  # type: ignore[assignment]
+                extracted: dict = block.input
                 log.info(
                     "[CHAT-EXTRACT] Extracted %d fields: %s",
                     len(extracted),
