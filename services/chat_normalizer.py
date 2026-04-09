@@ -199,6 +199,7 @@ def is_field_visible(field_name: str, collected: dict) -> bool:
 # ===========================================================================
 
 ENUM_VALUES: dict[str, list[str]] = {
+    # --- Sektion 0 ---
     "branche": [
         "marketing", "beratung", "it", "finanzen", "handel", "bildung",
         "verwaltung", "gesundheit", "bau", "medien", "industrie",
@@ -217,6 +218,73 @@ ENUM_VALUES: dict[str, list[str]] = {
     "jahresumsatz": [
         "unter_100k", "100k_500k", "500k_2m", "2m_10m", "ueber_10m", "keine_angabe",
     ],
+    # --- Sektion 1 ---
+    "zielgruppen": [
+        "b2b", "b2c", "kmu", "grossunternehmen", "selbststaendige",
+        "oeffentliche_hand", "privatpersonen", "startups", "andere",
+    ],
+    "it_infrastruktur": ["cloud", "on_premise", "hybrid", "unklar"],
+    "interne_ki_kompetenzen": ["ja", "nein", "in_planung"],
+    "datenquellen": [
+        "kundendaten", "verkaufsdaten", "produktionsdaten",
+        "personaldaten", "marketingdaten", "sonstige",
+    ],
+    # --- Sektion 2 ---
+    "prozesse_papierlos": ["0-20", "21-50", "51-80", "81-100"],
+    "automatisierungsgrad": ["sehr_niedrig", "eher_niedrig", "mittel", "eher_hoch", "sehr_hoch"],
+    "ki_einsatz": [
+        "chatbots", "marketing", "vertrieb", "datenanalyse",
+        "produktion", "hr", "andere", "noch_keine",
+    ],
+    "ki_kompetenz": ["hoch", "mittel", "niedrig", "keine"],
+    # --- Sektion 3 ---
+    "ki_ziele": [
+        "effizienz", "automatisierung", "neue_produkte", "kundenservice",
+        "datenauswertung", "kosten_senken", "wettbewerbsfaehigkeit", "keine_angabe",
+    ],
+    "anwendungsfaelle": [
+        "chatbots", "content_generation", "datenanalyse", "dokumentation",
+        "prozess_automation", "personalisierung", "andere", "keine_angabe",
+    ],
+    "pilot_bereich": ["kundenservice", "marketing", "vertrieb", "verwaltung", "produktion", "andere"],
+    # --- Sektion 4 ---
+    "massnahmen_komplexitaet": ["niedrig", "mittel", "hoch", "unklar"],
+    "roadmap_vorhanden": ["ja", "teilweise", "nein"],
+    "governance_richtlinien": ["ja", "teilweise", "nein"],
+    "change_management": ["sehr_hoch", "hoch", "mittel", "niedrig", "sehr_niedrig"],
+    # --- Sektion 5 ---
+    "zeitbudget": ["unter_2", "2_5", "5_10", "ueber_10"],
+    "vorhandene_tools": ["crm", "erp", "projektmanagement", "marketing_automation", "buchhaltung", "keine"],
+    "trainings_interessen": [
+        "prompt_engineering", "llm_basics", "datenqualitaet_governance",
+        "automatisierung", "ethik_recht", "keine",
+    ],
+    "vision_prioritaet": [
+        "gpt_services", "kundenservice", "datenprodukte",
+        "prozessautomation", "marktfuehrerschaft", "keine_angabe",
+    ],
+    "innovationsprozess": ["innovationsteam", "mitarbeitende", "kunden", "berater", "zufall", "unbekannt"],
+    "regulierte_branche": [
+        "gesundheit", "finanzen", "oeffentlich", "recht", "vertraulich_nda", "keine",
+    ],
+    # --- Sektion 6 ---
+    "datenschutzbeauftragter": ["ja", "nein", "teilweise"],
+    "technische_massnahmen": ["alle", "teilweise", "keine"],
+    "folgenabschaetzung": ["ja", "nein", "teilweise"],
+    "meldewege": ["ja", "teilweise", "nein"],
+    "loeschregeln": ["ja", "teilweise", "nein"],
+    "ai_act_kenntnis": ["sehr_gut", "gut", "gehoert", "unbekannt"],
+    "ki_hemmnisse": [
+        "rechtsunsicherheit", "datenschutz", "knowhow", "budget",
+        "teamakzeptanz", "zeitmangel", "it_integration", "keine", "andere",
+    ],
+    # --- Sektion 7 ---
+    "bisherige_foerdermittel": ["ja", "nein"],
+    "interesse_foerderung": ["ja", "nein", "unklar"],
+    "erfahrung_beratung": ["ja", "nein", "unklar"],
+    "investitionsbudget": ["unter_2000", "2000_10000", "10000_50000", "ueber_50000", "unklar"],
+    "marktposition": ["marktfuehrer", "oberes_drittel", "mittelfeld", "nachzuegler", "unsicher"],
+    "benchmark_wettbewerb": ["ja", "nein", "selten"],
 }
 
 # Bundesland codes per country (from frontend REGION_OPTIONS)

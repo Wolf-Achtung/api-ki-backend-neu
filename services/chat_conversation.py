@@ -148,6 +148,7 @@ def build_conversation_messages(messages: list[dict]) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 FIELD_DESCRIPTIONS: dict[str, str] = {
+    # Sektion 0
     "branche": "Branche des Unternehmens (13 Optionen: Marketing, Beratung, IT, Finanzen, Handel, Bildung, Verwaltung, Gesundheit, Bau, Medien, Industrie, Logistik, Gastronomie)",
     "unternehmensgroesse": "Unternehmensgröße (1 Person / 2–10 / 11–100 Mitarbeiter)",
     "selbststaendig": "Unternehmensform bei Einzelperson (Freiberufler, Kapitalgesellschaft, Einzelunternehmer, Sonstiges)",
@@ -155,6 +156,55 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     "bundesland": "Bundesland / Kanton / Region (für regionale Fördermöglichkeiten)",
     "hauptleistung": "Hauptdienstleistung oder wichtigstes Produkt (Freitext, 2–3 Sätze)",
     "jahresumsatz": "Geschätzter Jahresumsatz (bis 100T€ / 100–500T€ / 500T€–2Mio / 2–10Mio / >10Mio / keine Angabe)",
+    # Sektion 1
+    "zielgruppen": "Zielgruppen (Mehrfachauswahl: B2B, B2C, KMU, Großunternehmen, Öffentliche Hand, etc.)",
+    "it_infrastruktur": "IT-Infrastruktur (Cloud / On-Premise / Hybrid / Unklar)",
+    "interne_ki_kompetenzen": "Internes KI-/Digitalisierungsteam vorhanden (Ja / Nein / In Planung)",
+    "datenquellen": "Verfügbare Datentypen für KI (Kundendaten, Verkaufsdaten, Produktionsdaten, etc.)",
+    # Sektion 2
+    "digitalisierungsgrad": "Digitalisierungsgrad der internen Prozesse (Skala 1–10)",
+    "prozesse_papierlos": "Anteil papierloser Prozesse (0–20% / 21–50% / 51–80% / 81–100%)",
+    "automatisierungsgrad": "Automatisierungsgrad (Sehr niedrig bis Sehr hoch)",
+    "ki_einsatz": "Wo wird KI bereits eingesetzt (Mehrfachauswahl, auch 'noch keine')",
+    "ki_kompetenz": "KI-Kompetenz im Team (Hoch / Mittel / Niedrig / Keine)",
+    # Sektion 3
+    "ki_ziele": "Ziele mit KI in den nächsten 3–6 Monaten (Mehrfachauswahl)",
+    "ki_projekte": "Bestehende KI-Tests, Tools oder Projekte — auch informell (Freitext)",
+    "anwendungsfaelle": "Interessante KI-Anwendungsfälle (Mehrfachauswahl)",
+    "zeitersparnis_prioritaet": "Wo frisst heute am meisten Zeit oder Nerven? (Freitext)",
+    "pilot_bereich": "Bester Bereich für ein Pilotprojekt (Kundenservice, Marketing, Vertrieb, etc.)",
+    "geschaeftsmodell_evolution": "Ideen, wie KI das Geschäftsmodell verändern könnte (Freitext)",
+    "vision_3_jahre": "Wie soll das Unternehmen in 2–3 Jahren mit KI arbeiten? (Freitext)",
+    # Sektion 4
+    "strategische_ziele": "Was soll KI in 6–12 Monaten konkret verbessern? (Freitext)",
+    "ki_guardrails": "No-Gos oder sensible Themen beim KI-Einsatz (Freitext)",
+    "massnahmen_komplexitaet": "Geschätzter Aufwand für KI-Einführung (Niedrig / Mittel / Hoch / Unklar)",
+    "roadmap_vorhanden": "KI-Roadmap/Strategie vorhanden (Ja / Teilweise / Nein)",
+    "governance_richtlinien": "KI-Governance-Richtlinien vorhanden (Ja / Teilweise / Nein)",
+    "change_management": "Veränderungsbereitschaft im Team (Sehr hoch bis Sehr niedrig)",
+    # Sektion 5
+    "zeitbudget": "Zeit pro Woche für KI-Projekte (Unter 2h / 2–5h / 5–10h / Über 10h)",
+    "vorhandene_tools": "Bereits genutzte Systeme (CRM, ERP, Projektmanagement, etc.)",
+    "trainings_interessen": "Interessante KI-Trainingsthemen (Prompt Engineering, LLM-Basics, etc.)",
+    "vision_prioritaet": "Wichtigster strategischer Hebel (KI-Services, Kundenservice, Datenprodukte, etc.)",
+    "innovationsprozess": "Wie entstehen Innovationen (Team, Mitarbeitende, Kunden, Berater, etc.)",
+    # Sektion 6
+    "datenschutzbeauftragter": "Datenschutzbeauftragter vorhanden (Ja / Nein / Teilweise)",
+    "technische_massnahmen": "Technische Schutzmaßnahmen (Alle / Teilweise / Keine)",
+    "folgenabschaetzung": "Datenschutz-Folgenabschätzung durchgeführt (Ja / Nein / In Planung)",
+    "meldewege": "Meldewege bei Sicherheitsvorfällen definiert (Ja / Teilweise / Nein)",
+    "loeschregeln": "Lösch- und Anonymisierungsrichtlinien (Ja / Teilweise / Nein)",
+    "ai_act_kenntnis": "Kenntnisse zum EU AI Act (Sehr gut / Gut / Gehört / Unbekannt)",
+    "regulierte_branche": "Regulierte Branche (Gesundheit, Finanzen, Öffentlich, Recht, etc.)",
+    "ki_hemmnisse": "Hemmnisse beim KI-Einsatz (Rechtsunsicherheit, Budget, Know-how, etc.)",
+    # Sektion 7
+    "bisherige_foerdermittel": "Bereits Fördermittel erhalten (Ja / Nein)",
+    "interesse_foerderung": "Interesse an Fördermöglichkeiten (Ja / Nein / Unklar)",
+    "erfahrung_beratung": "Bisherige Beratung zu Digitalisierung/KI (Ja / Nein / Unklar)",
+    "investitionsbudget": "Budget für KI nächstes Jahr (Unter 2.000€ bis Über 50.000€)",
+    "marktposition": "Marktposition (Marktführer bis Nachzügler)",
+    "benchmark_wettbewerb": "Regelmäßiger Vergleich mit Wettbewerbern (Ja / Nein / Selten)",
+    "risikofreude": "Risikofreude bei Innovation (Skala 1–5)",
 }
 
 
