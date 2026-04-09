@@ -48,11 +48,6 @@ from services.chat_normalizer import (
 router = APIRouter(prefix="/chat", tags=["chat"])
 log = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-POC_SECTION = 0  # Only section 0 in PoC
-
 WELCOME_MESSAGE = (
     "Willkommen bei ki-sicherheit.jetzt! Ich bin ein KI-Assistent und "
     "führe Sie durch eine kurze Bestandsaufnahme Ihres Unternehmens.\n\n"
@@ -82,7 +77,7 @@ async def chat_start(req: ChatStartRequest, db: Session = Depends(get_db)):
         consent_at=now,
         collected_fields=req.prefill or {},
         field_meta={},
-        current_section=POC_SECTION,
+        current_section=0,
         status="active",
         messages=[],
         turn_count=0,
@@ -105,7 +100,7 @@ async def chat_start(req: ChatStartRequest, db: Session = Depends(get_db)):
         "timestamp": now.isoformat(),
         "turn": 0,
         "fields_extracted": None,
-        "section_index": POC_SECTION,
+        "section_index": 0,
         "quick_replies": [qr.model_dump() for qr in welcome_qr] if welcome_qr else None,
     }
     session.messages = [welcome_msg]
@@ -236,6 +231,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
     db.commit()
 
+    # Check section transition: advance if all required fields done
+    section_advanced = _check_section_transition(session, collected)
+    if section_advanced:
+        db.commit()
+
     # Determine next fields
     missing_req, missing_opt = get_missing_fields(collected, session.current_section)
     all_missing = missing_req + missing_opt
@@ -351,6 +351,27 @@ async def chat_session_get(session_id: UUID, db: Session = Depends(get_db)):
 # ===========================================================================
 # Helpers
 # ===========================================================================
+
+def _check_section_transition(session: ChatSession, collected: dict) -> bool:
+    """
+    Check if all required fields of the current section are collected.
+    If so, advance current_section. Returns True if section advanced.
+    """
+    if session.current_section >= len(SECTIONS) - 1:
+        return False
+
+    if not is_section_complete(collected, session.current_section):
+        return False
+
+    session.current_section += 1
+    log.info(
+        "[CHAT] Section transition: %d -> %d (%s)",
+        session.current_section - 1,
+        session.current_section,
+        SECTIONS[session.current_section]["name"],
+    )
+    return True
+
 
 def _build_session_state(session: ChatSession) -> ChatSessionState:
     """Build ChatSessionState from a ChatSession DB model."""
