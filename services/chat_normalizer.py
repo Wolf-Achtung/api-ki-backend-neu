@@ -161,7 +161,96 @@ SECTIONS = [
 
 
 # ===========================================================================
-# Conditional Logic
+# Strategy Field Registry (Report 3: KI-Strategiebericht)
+# ===========================================================================
+
+STRATEGY_FIELD_REGISTRY: dict[str, dict] = {
+    # --- Sektion 0: Umsetzungsplanung ---
+    "s1_budget":          {"type": "enum",  "required": True,  "section": 0, "chat_mode": "QR"},
+    "s2_zeitrahmen":      {"type": "enum",  "required": True,  "section": 0, "chat_mode": "QR"},
+    "s3_prioritaeten":    {"type": "multi", "required": True,  "section": 0, "chat_mode": "QR", "max_select": 3},
+    "s4_engpass":         {"type": "enum",  "required": True,  "section": 0, "chat_mode": "QR"},
+    "s5_software":        {"type": "text",  "required": False, "section": 0, "chat_mode": "FT"},
+    "s5_vision":          {"type": "text",  "required": False, "section": 0, "chat_mode": "FT"},
+    "s6_foerderinteresse": {"type": "enum", "required": True,  "section": 0, "chat_mode": "QR"},
+    "s7_entscheidung":    {"type": "enum",  "required": True,  "section": 0, "chat_mode": "QR"},
+    # --- Sektion 1: Erfahrung & Marktposition ---
+    "s8_erfahrung":       {"type": "enum",  "required": False, "section": 1, "chat_mode": "QR"},
+    "s9_ansatz":          {"type": "enum",  "required": False, "section": 1, "chat_mode": "QR"},
+    "s10_datenschutz":    {"type": "enum",  "required": False, "section": 1, "chat_mode": "QR"},
+    "wettbewerber_anzahl": {"type": "enum", "required": False, "section": 1, "chat_mode": "QR"},
+    "kundenbindung_typ":  {"type": "enum",  "required": False, "section": 1, "chat_mode": "QR"},
+    "datenreife":         {"type": "enum",  "required": False, "section": 1, "chat_mode": "QR"},
+}
+
+STRATEGY_SECTIONS = [
+    {
+        "index": 0,
+        "name": "Umsetzungsplanung",
+        "fields": ["s1_budget", "s2_zeitrahmen", "s3_prioritaeten", "s4_engpass",
+                    "s5_software", "s5_vision", "s6_foerderinteresse", "s7_entscheidung"],
+        "intro": "Für Ihren individuellen Strategiebericht benötige ich noch einige Angaben zu Ihrer konkreten Umsetzungsplanung.",
+    },
+    {
+        "index": 1,
+        "name": "Erfahrung & Marktposition",
+        "fields": ["s8_erfahrung", "s9_ansatz", "s10_datenschutz",
+                    "wettbewerber_anzahl", "kundenbindung_typ", "datenreife"],
+        "intro": "Zum Abschluss: Ein paar Fragen zu Ihrer bisherigen Erfahrung und Marktposition.",
+    },
+]
+
+STRATEGY_ENUM_VALUES: dict[str, list[str]] = {
+    "s1_budget": ["unter_2000", "2000_10000", "10000_50000", "ueber_50000", "unklar"],
+    "s2_zeitrahmen": [
+        "Sofort (1-3 Monate)", "Kurzfristig (3-6 Monate)",
+        "Mittelfristig (6-12 Monate)", "Langfristig (12-18 Monate)",
+    ],
+    "s3_prioritaeten": [
+        "Kosten senken", "Umsatz steigern", "Qualität verbessern",
+        "Geschwindigkeit erhöhen", "Compliance sichern", "Neue Geschäftsfelder",
+        "Fachkräftemangel kompensieren", "Kundenerlebnis verbessern",
+    ],
+    "s4_engpass": [
+        "Zu wenig Know-how", "Kein Budget", "Fehlende Daten",
+        "Widerstand im Team", "Regulatorische Unsicherheit",
+        "Kein klarer Use Case", "Andere",
+    ],
+    "s6_foerderinteresse": [
+        "Ja, dringend", "Ja, wenn passend", "Nein, eigenes Budget", "Weiß nicht",
+    ],
+    "s7_entscheidung": [
+        "Entscheide allein", "Brauche Vorlage für Geschäftsleitung",
+        "Muss Gesellschafter überzeugen", "Muss Aufsichtsrat/Beirat informieren",
+    ],
+    "s8_erfahrung": ["Noch keine", "Experimentiert", "Erste Tools im Einsatz", "Fortgeschritten"],
+    "s9_ansatz": ["Cloud-SaaS", "On-Premise", "Hybrid", "Egal"],
+    "s10_datenschutz": ["Hoch", "Mittel", "Niedrig"],
+    "wettbewerber_anzahl": ["wenige", "mehrere", "viele", "unklar"],
+    "kundenbindung_typ": ["einmalig", "wiederkehrend", "gemischt"],
+    "datenreife": ["keine", "basis", "umfangreich", "unklar"],
+}
+
+
+def get_registry_for_report(report_type: str) -> dict[str, dict]:
+    """Get the field registry for a given report type."""
+    if report_type == "strategy":
+        return STRATEGY_FIELD_REGISTRY
+    return FIELD_REGISTRY
+
+
+def get_sections_for_report(report_type: str) -> list[dict]:
+    """Get the sections list for a given report type."""
+    if report_type == "strategy":
+        return STRATEGY_SECTIONS
+    return SECTIONS
+
+
+def get_enum_values_for_report(report_type: str) -> dict[str, list[str]]:
+    """Get the enum values for a given report type."""
+    if report_type == "strategy":
+        return STRATEGY_ENUM_VALUES
+    return ENUM_VALUES
 # ===========================================================================
 
 CONDITIONALS: dict[str, dict] = {
@@ -496,7 +585,7 @@ COUNTRY_ALIASES: dict[str, str] = {
 # Normalizer Functions
 # ===========================================================================
 
-def normalize_field(field_name: str, raw_value: Any, collected: dict) -> NormResult:
+def normalize_field(field_name: str, raw_value: Any, collected: dict, report_type: str = "r1") -> NormResult:
     """
     Normalize a single extracted field value.
 
@@ -505,16 +594,37 @@ def normalize_field(field_name: str, raw_value: Any, collected: dict) -> NormRes
     - confidence "medium": plausible but ask for confirmation
     - confidence "low": cannot determine, do NOT store
     """
-    reg = FIELD_REGISTRY.get(field_name)
+    registry = get_registry_for_report(report_type)
+    enum_values = get_enum_values_for_report(report_type)
+
+    reg = registry.get(field_name)
     if not reg:
-        log.warning("[CHAT-NORM] Unknown field: %s", field_name)
+        log.warning("[CHAT-NORM] Unknown field: %s (report_type=%s)", field_name, report_type)
         return NormResult(None, "low", True)
 
     # 1. Multi-fields: ensure list
     if reg["type"] == "multi" and isinstance(raw_value, str):
         raw_value = [raw_value]
 
-    # 2. Special normalizers
+    # 2. Strategy-specific: s3_prioritaeten max 3
+    if field_name == "s3_prioritaeten":
+        if isinstance(raw_value, str):
+            raw_value = [raw_value]
+        if isinstance(raw_value, list) and len(raw_value) > 3:
+            raw_value = raw_value[:3]
+        allowed = enum_values.get(field_name, [])
+        if isinstance(raw_value, list) and allowed:
+            raw_value = [v for v in raw_value if v in allowed]
+        return NormResult(raw_value, "high", False) if raw_value else NormResult(None, "low", True)
+
+    # 3. Strategy-specific: s5_software (list → comma string)
+    if field_name == "s5_software":
+        if isinstance(raw_value, list):
+            raw_value = ", ".join(str(v) for v in raw_value)
+        cleaned = str(raw_value).strip()
+        return NormResult(cleaned, "high", False) if cleaned else NormResult(None, "low", True)
+
+    # 4. R1-specific special normalizers
     if field_name == "branche":
         return _normalize_branche(raw_value)
 
@@ -530,9 +640,9 @@ def normalize_field(field_name: str, raw_value: Any, collected: dict) -> NormRes
     if field_name == "selbststaendig":
         return _normalize_selbststaendig(raw_value)
 
-    # 3. Generic enum check
+    # 5. Generic enum check
     if reg["type"] == "enum":
-        allowed = ENUM_VALUES.get(field_name, [])
+        allowed = enum_values.get(field_name, [])
         val = str(raw_value).strip()
         if val in allowed:
             return NormResult(val, "high", False)
@@ -668,13 +778,17 @@ def _normalize_selbststaendig(raw: Any) -> NormResult:
 # Helper: get missing / next fields
 # ===========================================================================
 
-def get_missing_fields(collected: dict, section_index: int) -> tuple[list[str], list[str]]:
+def get_missing_fields(
+    collected: dict, section_index: int, report_type: str = "r1",
+) -> tuple[list[str], list[str]]:
     """
     Get missing required and optional fields for a given section.
     Returns (missing_required, missing_optional).
     Respects conditional logic.
     """
-    section = SECTIONS[section_index]
+    sections = get_sections_for_report(report_type)
+    registry = get_registry_for_report(report_type)
+    section = sections[section_index]
     missing_required: list[str] = []
     missing_optional: list[str] = []
     fields: list[str] = section["fields"]  # type: ignore[assignment]
@@ -684,7 +798,7 @@ def get_missing_fields(collected: dict, section_index: int) -> tuple[list[str], 
             continue
         if not is_field_visible(field_name, collected):
             continue
-        reg = FIELD_REGISTRY.get(field_name)
+        reg = registry.get(field_name)
         if not reg:
             continue
         if reg.get("skip_in_chat"):
@@ -697,10 +811,11 @@ def get_missing_fields(collected: dict, section_index: int) -> tuple[list[str], 
     return missing_required, missing_optional
 
 
-def get_next_fields(collected: dict, section_index: int, max_fields: int = 3) -> list[str]:
+def get_next_fields(
+    collected: dict, section_index: int, max_fields: int = 3, report_type: str = "r1",
+) -> list[str]:
     """Get the next fields to ask about (max 3 at a time)."""
-    missing_req, missing_opt = get_missing_fields(collected, section_index)
-    # Prioritize required fields
+    missing_req, missing_opt = get_missing_fields(collected, section_index, report_type)
     next_fields = missing_req[:max_fields]
     remaining = max_fields - len(next_fields)
     if remaining > 0:
@@ -708,17 +823,20 @@ def get_next_fields(collected: dict, section_index: int, max_fields: int = 3) ->
     return next_fields
 
 
-def is_section_complete(collected: dict, section_index: int) -> bool:
+def is_section_complete(
+    collected: dict, section_index: int, report_type: str = "r1",
+) -> bool:
     """Check if all required fields in a section are collected."""
-    missing_req, _ = get_missing_fields(collected, section_index)
+    missing_req, _ = get_missing_fields(collected, section_index, report_type)
     return len(missing_req) == 0
 
 
-def calculate_progress(collected: dict) -> int:
+def calculate_progress(collected: dict, report_type: str = "r1") -> int:
     """Calculate overall progress percentage (0-100)."""
+    registry = get_registry_for_report(report_type)
     total = 0
     filled = 0
-    for field_name, reg in FIELD_REGISTRY.items():
+    for field_name, reg in registry.items():
         if not reg["required"]:
             continue
         if reg.get("skip_in_chat"):
