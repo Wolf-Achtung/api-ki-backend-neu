@@ -489,11 +489,11 @@ def normalize_field(field_name: str, raw_value: Any, collected: dict) -> NormRes
     # 6. Slider
     if reg["type"] == "slider":
         try:
-            val = int(raw_value)
-            mn = reg.get("min", 1)
-            mx = reg.get("max", 10)
-            val = max(mn, min(val, mx))
-            return NormResult(val, "high", False)
+            slider_val = int(raw_value)
+            mn = int(reg.get("min", 1))
+            mx = int(reg.get("max", 10))
+            slider_val = max(mn, min(slider_val, mx))
+            return NormResult(slider_val, "high", False)
         except (ValueError, TypeError):
             return NormResult(None, "low", True)
 
@@ -607,10 +607,11 @@ def get_missing_fields(collected: dict, section_index: int) -> tuple[list[str], 
     Respects conditional logic.
     """
     section = SECTIONS[section_index]
-    missing_required = []
-    missing_optional = []
+    missing_required: list[str] = []
+    missing_optional: list[str] = []
+    fields: list[str] = section["fields"]  # type: ignore[assignment]
 
-    for field_name in section["fields"]:
+    for field_name in fields:
         if field_name in collected:
             continue
         if not is_field_visible(field_name, collected):

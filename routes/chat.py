@@ -363,12 +363,14 @@ def _build_session_state(session: ChatSession) -> ChatSessionState:
     total = len(FIELD_REGISTRY)
     collected_count = len(collected)
 
+    section_name: str = section["name"]  # type: ignore[assignment]
+
     return ChatSessionState(
         session_id=session.id,
         report_type=session.report_type,
         status=session.status,
         current_section=section_idx,
-        current_section_name=section["name"],
+        current_section_name=section_name,
         total_sections=len(SECTIONS),
         progress_percent=calculate_progress(collected),
         collected_fields=collected,
