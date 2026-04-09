@@ -276,6 +276,87 @@ EXTRACTOR_TOOL: dict[str, Any] = {
     },
 }
 
+# ---------------------------------------------------------------------------
+# Tool Definition — Strategy (Report 3, 14 fields)
+# ---------------------------------------------------------------------------
+EXTRACTOR_TOOL_STRATEGY: dict[str, Any] = {
+    "name": "update_intake_fields",
+    "description": (
+        "Extrahiert Strategy-Felder aus der Nutzerantwort. "
+        "Nur Felder setzen, die der User tatsächlich genannt hat."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "s1_budget": {
+                "type": "string",
+                "description": "KI-Budget nächste 12 Monate: unter_2000, 2000_10000, 10000_50000, ueber_50000, unklar",
+            },
+            "s2_zeitrahmen": {
+                "type": "string",
+                "description": "Umsetzungszeitraum: Sofort (1-3 Monate), Kurzfristig (3-6 Monate), Mittelfristig (6-12 Monate), Langfristig (12-18 Monate)",
+            },
+            "s3_prioritaeten": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Top 3 Prioritäten beim KI-Einsatz (max 3): Kosten senken, Umsatz steigern, Qualität verbessern, Geschwindigkeit erhöhen, Compliance sichern, Neue Geschäftsfelder, Fachkräftemangel kompensieren, Kundenerlebnis verbessern",
+            },
+            "s4_engpass": {
+                "type": "string",
+                "description": "Größter einzelner Engpass: Zu wenig Know-how, Kein Budget, Fehlende Daten, Widerstand im Team, Regulatorische Unsicherheit, Kein klarer Use Case, Andere",
+            },
+            "s5_software": {
+                "type": "string",
+                "description": "Kommagetrennte Liste aktuell genutzter Software und Tools im Tagesgeschäft",
+            },
+            "s5_vision": {
+                "type": "string",
+                "description": "Persönliche KI-Vision für das Unternehmen (Freitext)",
+            },
+            "s6_foerderinteresse": {
+                "type": "string",
+                "description": "Interesse an Fördermitteln: Ja, dringend / Ja, wenn passend / Nein, eigenes Budget / Weiß nicht",
+            },
+            "s7_entscheidung": {
+                "type": "string",
+                "description": "Entscheidungsstruktur: Entscheide allein / Brauche Vorlage für Geschäftsleitung / Muss Gesellschafter überzeugen / Muss Aufsichtsrat/Beirat informieren",
+            },
+            "s8_erfahrung": {
+                "type": "string",
+                "description": "Bisherige KI-Erfahrung: Noch keine, Experimentiert, Erste Tools im Einsatz, Fortgeschritten",
+            },
+            "s9_ansatz": {
+                "type": "string",
+                "description": "Bevorzugter Infrastruktur-Ansatz: Cloud-SaaS, On-Premise, Hybrid, Egal",
+            },
+            "s10_datenschutz": {
+                "type": "string",
+                "description": "Datenschutz-Priorität: Hoch, Mittel, Niedrig",
+            },
+            "wettbewerber_anzahl": {
+                "type": "string",
+                "description": "Anzahl direkter Wettbewerber: wenige, mehrere, viele, unklar",
+            },
+            "kundenbindung_typ": {
+                "type": "string",
+                "description": "Art der Kundenbeziehungen: einmalig, wiederkehrend, gemischt",
+            },
+            "datenreife": {
+                "type": "string",
+                "description": "Verfügbarkeit eigener Datenbestände: keine, basis, umfangreich, unklar",
+            },
+        },
+        "required": [],
+    },
+}
+
+
+def _get_tool_for_report(report_type: str) -> dict[str, Any]:
+    """Select the right extractor tool schema for a report type."""
+    if report_type == "strategy":
+        return EXTRACTOR_TOOL_STRATEGY
+    return EXTRACTOR_TOOL
+
 
 # ---------------------------------------------------------------------------
 # Async Anthropic Client (singleton)
@@ -318,6 +399,7 @@ async def extract_fields(
     conversation_context: list[dict],
     missing_fields: list[str],
     collected_fields: dict,
+    report_type: str = "r1",
 ) -> dict:
     """
     Call Claude Haiku with tool_use to extract structured fields.
@@ -354,7 +436,7 @@ async def extract_fields(
             max_tokens=500,
             system=system,
             messages=messages,
-            tools=[EXTRACTOR_TOOL],
+            tools=[_get_tool_for_report(report_type)],
             tool_choice={"type": "auto"},  # auto: no tool call if user asks question
         )
 

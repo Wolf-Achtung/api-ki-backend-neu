@@ -77,6 +77,7 @@ class ChatStartRequest(BaseModel):
     report_type: Literal["r1", "strategy", "kpa"] = "r1"
     lang: str = "de"
     consent_report: bool
+    briefing_id: Optional[int] = None  # Required for strategy (existing R1 briefing)
     prefill: Optional[dict[str, Any]] = None
 
 
