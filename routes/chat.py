@@ -213,9 +213,14 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
     else:
         # Free text: call LLM extractor (Claude Haiku)
         from services.chat_extractor import extract_fields
+        from services.chat_conversation import FIELD_DESCRIPTIONS
 
         missing_req, missing_opt = get_missing_fields(collected, session.current_section, rt)
         all_missing = missing_req + missing_opt
+        # Tell the extractor which field the AI just asked about
+        asked_fields = get_next_fields(collected, session.current_section, report_type=rt)
+        cur_field = asked_fields[0] if asked_fields else ""
+        cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
 
         try:
             raw_extracted = await asyncio.wait_for(
@@ -225,6 +230,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     all_missing,
                     collected,
                     report_type=rt,
+                    current_field=cur_field,
+                    current_field_description=cur_desc,
                 ),
                 timeout=30,
             )
@@ -238,6 +245,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         all_missing,
                         collected,
                         report_type=rt,
+                        current_field=cur_field,
+                        current_field_description=cur_desc,
                     ),
                     timeout=30,
                 )
