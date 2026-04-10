@@ -290,6 +290,12 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
     next_fields = get_next_fields(collected, session.current_section, report_type=rt)
     current_section = sections[session.current_section]
 
+    # DEBUG POINT 1: State after normalization, before streaming
+    print(f"[CHAT DEBUG 1] collected_fields after update: {list(collected.keys())}")
+    print(f"[CHAT DEBUG 1] next_fields for prompt: {next_fields}")
+    print(f"[CHAT DEBUG 1] all_missing: {all_missing}")
+    print(f"[CHAT DEBUG 1] normalized this turn: {list(normalized.keys())}")
+
     # Phase 2: Conversation (Claude Sonnet streaming)
     from services.chat_conversation import generate_response
 
@@ -318,13 +324,14 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         # Build QR from the closure-captured `collected` dict — NOT from
         # session.collected_fields which may be expired after db.commit()
+        # DEBUG POINT 2: Inside streaming callback, QR generation
+        print(f"[CHAT DEBUG 2] QR generation - collected keys: {list(collected.keys())}")
+        print(f"[CHAT DEBUG 2] session.current_section: {session.current_section}")
         qr_next = get_next_fields(collected, session.current_section, report_type=rt)
+        print(f"[CHAT DEBUG 2] QR next_fields: {qr_next}")
         quick_replies = _build_quick_replies(qr_next, rt, collected)
-        log.info(
-            "[CHAT] QR generation: collected_keys=%s, next=%s, qr_fields=%s",
-            list(collected.keys()), qr_next,
-            [qr.field for qr in quick_replies],
-        )
+        print(f"[CHAT DEBUG 2] QR result fields: {[r.field for r in quick_replies]}")
+        print(f"[CHAT DEBUG 2] QR result options count: {[len(r.options) for r in quick_replies]}")
         assistant_msg = {
             "role": "assistant",
             "content": full_response,
@@ -349,6 +356,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # Send quick replies
         if quick_replies:
             qr_data = [qr.model_dump() for qr in quick_replies]
+            # DEBUG POINT 3: What we actually send over SSE
+            print(f"[CHAT DEBUG 3] Sending QR event with fields: {[r['field'] for r in qr_data]}")
             yield f"event: quick_replies\ndata: {json.dumps(qr_data)}\n\n"
 
         # Done signal
