@@ -37,10 +37,14 @@ REGELN:
    - "in München" → bundesland: "München" (wird extern normalisiert)
    - "8 Mitarbeiter" → unternehmensgroesse: "8" (wird extern normalisiert)
    - "Handwerksbetrieb" → branche: "Handwerk" (wird extern normalisiert)
-5. Bei Freitextfeldern (hauptleistung): den Kern der Aussage
-   in 1–3 Sätzen zusammenfassen.
+5. Bei Freitextfeldern: den Kern der Aussage in 1–3 Sätzen zusammenfassen.
 6. Wenn der Nutzer eine Rückfrage stellt statt zu antworten,
    rufe das Tool NICHT auf.
+
+AKTUELL GEFRAGTES FELD: {current_field}
+{current_field_hint}
+Die Antwort des Nutzers bezieht sich höchstwahrscheinlich auf dieses Feld.
+Wenn die Antwort plausibel zu diesem Feld passt, setze es.
 
 Aktuell fehlende Felder: {missing_fields}
 Bereits erfasst: {collected_fields}"""
@@ -400,6 +404,8 @@ async def extract_fields(
     missing_fields: list[str],
     collected_fields: dict,
     report_type: str = "r1",
+    current_field: str = "",
+    current_field_description: str = "",
 ) -> dict:
     """
     Call Claude Haiku with tool_use to extract structured fields.
@@ -409,6 +415,8 @@ async def extract_fields(
         conversation_context: Last 6 messages (3 turns) for context
         missing_fields: Fields still needed
         collected_fields: Already collected field values
+        current_field: The field the AI just asked about
+        current_field_description: Human description of that field
 
     Returns:
         Dict of extracted fields (may be empty if user asked a question).
@@ -424,8 +432,18 @@ async def extract_fields(
         messages.append({"role": turn["role"], "content": turn["content"]})
     messages.append({"role": "user", "content": user_message})
 
+    # Build current field hint
+    if current_field and current_field_description:
+        field_hint = f"{current_field} — {current_field_description}"
+    elif current_field:
+        field_hint = current_field
+    else:
+        field_hint = "keines (allgemeine Nachricht)"
+
     # Format system prompt with current state
     system = EXTRACTOR_SYSTEM_PROMPT.format(
+        current_field=current_field or "keines",
+        current_field_hint=f"Beschreibung: {current_field_description}" if current_field_description else "",
         missing_fields=", ".join(missing_fields) if missing_fields else "keine",
         collected_fields=_format_collected(collected_fields),
     )

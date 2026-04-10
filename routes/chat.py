@@ -213,9 +213,14 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
     else:
         # Free text: call LLM extractor (Claude Haiku)
         from services.chat_extractor import extract_fields
+        from services.chat_conversation import FIELD_DESCRIPTIONS
 
         missing_req, missing_opt = get_missing_fields(collected, session.current_section, rt)
         all_missing = missing_req + missing_opt
+        # Tell the extractor which field the AI just asked about
+        asked_fields = get_next_fields(collected, session.current_section, report_type=rt)
+        cur_field = asked_fields[0] if asked_fields else ""
+        cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
 
         try:
             raw_extracted = await asyncio.wait_for(
@@ -225,6 +230,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     all_missing,
                     collected,
                     report_type=rt,
+                    current_field=cur_field,
+                    current_field_description=cur_desc,
                 ),
                 timeout=30,
             )
@@ -238,6 +245,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         all_missing,
                         collected,
                         report_type=rt,
+                        current_field=cur_field,
+                        current_field_description=cur_desc,
                     ),
                     timeout=30,
                 )
@@ -1052,12 +1061,34 @@ _QR_LABELS: dict[str, str] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Freetext field suggestions (branche-specific)
+# ---------------------------------------------------------------------------
+
+FREETEXT_SUGGESTIONS: dict[str, dict[str, list[str]]] = {
+    "zeitersparnis_prioritaet": {
+        "beratung": ["Angebotserstellung", "Kundendokumentation", "Recherche", "Administration"],
+        "it": ["Bug-Tracking", "Dokumentation", "Meetings", "Deployment"],
+        "bau": ["Aufmaß & Kalkulation", "Baustellendokumentation", "Behördenkommunikation"],
+        "handel": ["Bestellabwicklung", "Inventur", "Kundenkommunikation"],
+        "marketing": ["Content-Erstellung", "Reporting", "Kampagnenplanung", "Kundenbriefings"],
+        "finanzen": ["Compliance-Prüfung", "Reporting", "Kundenkommunikation"],
+        "gesundheit": ["Dokumentation", "Terminverwaltung", "Abrechnung"],
+        "gastronomie": ["Bestellmanagement", "Personalplanung", "Buchhaltung"],
+        "default": ["E-Mails & Kommunikation", "Dokumentation", "Recherche", "Administration"],
+    },
+    "ki_projekte": {
+        "default": ["ChatGPT im Team genutzt", "Automatisierungs-Tests", "Noch keine Projekte"],
+    },
+}
+
+
 def _build_quick_replies(
     next_fields: list[str],
     report_type: str = "r1",
     collected_fields: dict | None = None,
 ) -> list[QuickReply]:
-    """Build quick reply buttons for the next enum fields."""
+    """Build quick reply buttons for enum fields and freetext suggestions."""
     registry = get_registry_for_report(report_type)
     collected = collected_fields or {}
     replies = []
@@ -1066,6 +1097,18 @@ def _build_quick_replies(
             continue  # Already collected — no buttons
 
         reg = registry.get(field_name, {})
+
+        # Freetext suggestions (for selected text fields)
+        if reg.get("type") == "text" and field_name in FREETEXT_SUGGESTIONS:
+            suggestions = _get_freetext_suggestions(field_name, collected)
+            if suggestions:
+                options = [QuickReplyOption(value=s, label=s) for s in suggestions]
+                label = _QR_LABELS.get(field_name, field_name)
+                replies.append(QuickReply(
+                    field=field_name, label=f"{label} (Vorschläge)", options=options,
+                ))
+            continue
+
         # Only build QR for enum/multi fields with known options
         if reg.get("chat_mode") not in ("QR", "qr"):
             continue
@@ -1092,6 +1135,15 @@ def _build_quick_replies(
         ))
 
     return replies
+
+
+def _get_freetext_suggestions(field_name: str, collected: dict) -> list[str]:
+    """Get branche-specific suggestions for a freetext field."""
+    suggestions_map = FREETEXT_SUGGESTIONS.get(field_name, {})
+    if not suggestions_map:
+        return []
+    branche = collected.get("branche", "default")
+    return suggestions_map.get(branche, suggestions_map.get("default", []))
 
 
 def _build_bundesland_options(country: str) -> list[dict]:
