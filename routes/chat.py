@@ -29,6 +29,7 @@ from schemas.chat import (
     ChatMessageRequest,
     ChatSessionResponse,
     ChatSessionState,
+    ChatSessionSummary,
     ChatStartRequest,
     ChatStartResponse,
     QuickReply,
@@ -94,7 +95,9 @@ def _get_first_qr_fields(report_type: str) -> list[str]:
 # ===========================================================================
 
 @router.post("/start", response_model=ChatStartResponse)
-async def chat_start(req: ChatStartRequest, db: Session = Depends(get_db)):
+async def chat_start(
+    req: ChatStartRequest, request: Request, db: Session = Depends(get_db),
+):
     """Start a new chat conversation."""
     if not req.consent_report:
         raise HTTPException(status_code=400, detail="consent_report must be true")
@@ -106,6 +109,9 @@ async def chat_start(req: ChatStartRequest, db: Session = Depends(get_db)):
         briefing = db.query(Briefing).filter(Briefing.id == req.briefing_id).first()
         if not briefing:
             raise HTTPException(status_code=404, detail="Briefing nicht gefunden")
+
+    # Extract user from JWT (optional — unauthenticated sessions work too)
+    user_id, user_email = _resolve_user(request, db)
 
     now = datetime.now(timezone.utc)
 
@@ -121,6 +127,7 @@ async def chat_start(req: ChatStartRequest, db: Session = Depends(get_db)):
         messages=[],
         turn_count=0,
         briefing_id=req.briefing_id,
+        user_id=user_id,
     )
     db.add(session)
     db.commit()
@@ -468,6 +475,50 @@ async def chat_session_get(session_id: UUID, db: Session = Depends(get_db)):
 
 
 # ===========================================================================
+# GET /api/chat/sessions — list open sessions for authenticated user
+# ===========================================================================
+
+@router.get("/sessions", response_model=list[ChatSessionSummary])
+async def chat_sessions_list(
+    request: Request,
+    db: Session = Depends(get_db),
+    status: str = "active",
+):
+    """List chat sessions for the authenticated user, filtered by status."""
+    user_id, _ = _resolve_user(request, db)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentifizierung erforderlich")
+
+    sessions = (
+        db.query(ChatSession)
+        .filter(ChatSession.user_id == user_id, ChatSession.status == status)
+        .order_by(ChatSession.last_activity_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    result = []
+    for s in sessions:
+        rt = s.report_type
+        registry = get_registry_for_report(rt)
+        collected = s.collected_fields or {}
+        result.append(ChatSessionSummary(
+            session_id=s.id,
+            report_type=rt,
+            status=s.status,
+            current_section=s.current_section,
+            collected_count=len(collected),
+            total_fields=len(registry),
+            progress_percent=calculate_progress(collected, rt),
+            created_at=s.created_at,
+            last_activity=s.last_activity_at,
+            resumable=s.status == "active",
+        ))
+
+    return result
+
+
+# ===========================================================================
 # POST /api/chat/complete
 # ===========================================================================
 
@@ -569,17 +620,13 @@ def _complete_r1(
     answers = dict(collected)
     answers["datenschutz"] = True  # consent given at chat start
 
-    # Extract user email from JWT (same pattern as routes/briefings.py)
-    user_id = session.user_id
-    user_email = _extract_user_email(request, db)
+    # Extract user from JWT — user_id may already be set from /start
+    user_id, user_email = _resolve_user(request, db)
+    if not user_id:
+        user_id = session.user_id  # fallback to session's user_id
     if user_email:
         answers["email"] = user_email
-        # Ensure user_id is set (may be None if chat started without auth)
-        if not user_id:
-            user = db.query(User).filter(User.email == user_email).first()
-            if user:
-                user_id = user.id
-        log.info("[CHAT] Complete R1: user_email=%s, user_id=%s", user_email, user_id)
+    log.info("[CHAT] Complete R1: user_email=%s, user_id=%s", user_email, user_id)
 
     briefing = Briefing(
         user_id=user_id,
@@ -652,10 +699,13 @@ async def _complete_strategy(
     return briefing_id
 
 
-def _extract_user_email(request: Request | None, db: Session) -> str | None:
-    """Extract user email from JWT cookie/header (optional, non-throwing)."""
+def _resolve_user(request: Request | None, db: Session) -> tuple[int | None, str | None]:
+    """Extract user_id and email from JWT cookie/header. Non-throwing.
+
+    Returns (user_id, email). Both may be None for unauthenticated sessions.
+    """
     if not request:
-        return None
+        return None, None
     try:
         from core.security import verify_access_token
         token = request.cookies.get("auth_token")
@@ -665,11 +715,20 @@ def _extract_user_email(request: Request | None, db: Session) -> str | None:
             if scheme.lower() == "bearer" and header_token:
                 token = header_token
         if not token:
-            return None
+            return None, None
         payload = verify_access_token(token)
-        return payload.email if payload else None
+        email = payload.email if payload else None
+        if not email:
+            return None, None
+        # Look up or create user (same pattern as routes/briefings.py)
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            user = User(email=email)
+            db.add(user)
+            db.flush()
+        return user.id, email
     except Exception:
-        return None
+        return None, None
 
 
 def _complete_redirect(report_type: str, briefing_id: int) -> str:
