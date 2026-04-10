@@ -90,7 +90,7 @@ FIELD_REGISTRY: dict[str, dict] = {
     "investitionsbudget":   {"type": "enum",  "required": True,  "section": 7, "chat_mode": "QR"},
     "marktposition":        {"type": "enum",  "required": False, "section": 7, "chat_mode": "QR"},
     "benchmark_wettbewerb": {"type": "enum",  "required": False, "section": 7, "chat_mode": "QR"},
-    "risikofreude":         {"type": "slider", "required": False, "section": 7, "chat_mode": "SC", "min": 1, "max": 5},
+    "risikofreude":         {"type": "slider", "required": False, "section": 7, "chat_mode": "QR", "min": 1, "max": 5},
 }
 
 
