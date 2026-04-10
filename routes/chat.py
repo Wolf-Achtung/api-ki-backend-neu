@@ -278,6 +278,23 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 "confirmed": False,
             }
 
+    # Handle "weiter" / skip for optional fields
+    skip_words = {"weiter", "skip", "überspringen", "nächste", "weiter bitte", "nächste frage"}
+    if req.message.strip().lower() in skip_words and not normalized:
+        # User wants to skip the current optional field
+        asked = get_next_fields(collected, session.current_section, report_type=rt)
+        if asked:
+            skip_field = asked[0]
+            skip_reg = registry.get(skip_field, {})
+            if not skip_reg.get("required"):
+                # Mark as skipped with a sentinel value
+                collected[skip_field] = "" if skip_reg.get("type") == "text" else None
+                field_meta[skip_field] = {
+                    "confidence": "high", "source_turn": turn,
+                    "raw_input": "skipped", "normalized": True, "confirmed": True,
+                }
+                log.info("[CHAT] User skipped optional field: %s", skip_field)
+
     # Update session state
     session.collected_fields = collected
     session.field_meta = field_meta
@@ -362,6 +379,25 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         session.messages = msgs
         session.updated_at = datetime.now(timezone.utc)
         db.commit()
+
+        # Check if all fields are done → send summary
+        last_section = session.current_section >= len(sections) - 1
+        all_fields_done = len(qr_next) == 0 and last_section
+        if all_fields_done and not _has_summary_been_sent(session):
+            from services.chat_conversation import build_summary
+            summary_text = build_summary(collected, rt)
+            yield f"event: token\ndata: {json.dumps({'text': summary_text})}\n\n"
+            summary_msg = {
+                "role": "assistant",
+                "content": summary_text,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "turn": turn,
+                "section_index": session.current_section,
+            }
+            msgs2 = list(session.messages)
+            msgs2.append(summary_msg)
+            session.messages = msgs2
+            db.commit()
 
         # Send state update — pass collected explicitly to avoid
         # stale session.collected_fields after db.commit() expiry
@@ -500,14 +536,15 @@ async def chat_complete(req: ChatCompleteRequest, db: Session = Depends(get_db))
 
 def _check_section_transition(session: ChatSession, collected: dict, report_type: str = "r1") -> bool:
     """
-    Check if all required fields of the current section are collected.
-    If so, advance current_section. Returns True if section advanced.
+    Check if all fields (required + optional) of the current section are
+    collected. If so, advance current_section. Returns True if advanced.
     """
     sections = get_sections_for_report(report_type)
     if session.current_section >= len(sections) - 1:
         return False
 
-    if not is_section_complete(collected, session.current_section, report_type):
+    missing_req, missing_opt = get_missing_fields(collected, session.current_section, report_type)
+    if missing_req or missing_opt:
         return False
 
     session.current_section += 1
@@ -628,6 +665,12 @@ def _build_session_state(
 
     section_name: str = section["name"]
 
+    # is_completable: only after last section and summary has been sent
+    last_section = section_idx >= len(sections) - 1
+    all_done = len(missing_req) == 0 and len(missing_opt) == 0
+    summary_sent = _has_summary_been_sent(session)
+    completable = last_section and all_done and summary_sent
+
     return ChatSessionState(
         session_id=session.id,
         report_type=session.report_type,
@@ -642,8 +685,20 @@ def _build_session_state(
         missing_optional=missing_opt,
         total_fields=total,
         next_fields=next_fields,
-        is_completable=len(missing_req) == 0,
+        is_completable=completable,
     )
+
+
+def _has_summary_been_sent(session: ChatSession) -> bool:
+    """Check if the summary message has already been sent in this session."""
+    messages = session.messages or []
+    for msg in reversed(messages):
+        if msg.get("role") == "assistant":
+            content = msg.get("content", "")
+            if "Zusammenfassung" in content and ("korrekt?" in content or "korrekt" in content):
+                return True
+            break  # Only check the last assistant message
+    return False
 
 
 # ---------------------------------------------------------------------------
