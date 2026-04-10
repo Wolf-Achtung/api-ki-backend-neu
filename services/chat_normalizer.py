@@ -170,7 +170,7 @@ STRATEGY_FIELD_REGISTRY: dict[str, dict] = {
     "s2_zeitrahmen":      {"type": "enum",  "required": True,  "section": 0, "chat_mode": "QR"},
     "s3_prioritaeten":    {"type": "multi", "required": True,  "section": 0, "chat_mode": "QR", "max_select": 3},
     "s4_engpass":         {"type": "enum",  "required": True,  "section": 0, "chat_mode": "QR"},
-    "s5_software":        {"type": "text",  "required": False, "section": 0, "chat_mode": "FT"},
+    "s5_software":        {"type": "multi", "required": False, "section": 0, "chat_mode": "QR"},
     "s5_vision":          {"type": "text",  "required": False, "section": 0, "chat_mode": "FT"},
     "s6_foerderinteresse": {"type": "enum", "required": True,  "section": 0, "chat_mode": "QR"},
     "s7_entscheidung":    {"type": "enum",  "required": True,  "section": 0, "chat_mode": "QR"},
@@ -602,19 +602,25 @@ def normalize_field(field_name: str, raw_value: Any, collected: dict, report_typ
         log.warning("[CHAT-NORM] Unknown field: %s (report_type=%s)", field_name, report_type)
         return NormResult(None, "low", True)
 
-    # 1. Multi-fields: ensure list
-    if reg["type"] == "multi" and isinstance(raw_value, str):
+    # 1. Multi-fields: ensure list (but DON'T split commas yet — special cases handle that)
+    if reg["type"] == "multi" and isinstance(raw_value, str) and "," not in raw_value:
         raw_value = [raw_value]
 
     # 2. Strategy-specific: s3_prioritaeten max 3
     if field_name == "s3_prioritaeten":
         if isinstance(raw_value, str):
-            raw_value = [raw_value]
+            # Handle comma-separated string: "Kosten senken, Umsatz steigern"
+            if "," in raw_value:
+                raw_value = [v.strip() for v in raw_value.split(",") if v.strip()]
+            else:
+                raw_value = [raw_value]
         if isinstance(raw_value, list) and len(raw_value) > 3:
             raw_value = raw_value[:3]
         allowed = enum_values.get(field_name, [])
         if isinstance(raw_value, list) and allowed:
-            raw_value = [v for v in raw_value if v in allowed]
+            # Case-insensitive matching against allowed values
+            allowed_lower = {v.lower(): v for v in allowed}
+            raw_value = [allowed_lower[v.lower()] for v in raw_value if v.lower() in allowed_lower]
         return NormResult(raw_value, "high", False) if raw_value else NormResult(None, "low", True)
 
     # 3. Strategy-specific: s5_software (list → comma string)
@@ -678,11 +684,18 @@ def normalize_field(field_name: str, raw_value: Any, collected: dict, report_typ
         except (ValueError, TypeError):
             return NormResult(None, "low", True)
 
-    # 7. Multi — validate each element
+    # 7. Multi — validate each element, handle comma-separated strings
     if reg["type"] == "multi":
-        if not isinstance(raw_value, list):
-            raw_value = [raw_value]
-        return NormResult(raw_value, "high", False)
+        if isinstance(raw_value, str):
+            if "," in raw_value:
+                raw_value = [v.strip() for v in raw_value.split(",") if v.strip()]
+            else:
+                raw_value = [raw_value]
+        allowed = enum_values.get(field_name, [])
+        if isinstance(raw_value, list) and allowed:
+            allowed_lower = {v.lower(): v for v in allowed}
+            raw_value = [allowed_lower.get(v.lower(), v) for v in raw_value]
+        return NormResult(raw_value, "high", False) if raw_value else NormResult(None, "low", True)
 
     return NormResult(raw_value, "medium", True)
 
