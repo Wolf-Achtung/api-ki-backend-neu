@@ -878,6 +878,18 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "sonstige", "label": "Sonstige Datenquellen"},
     ],
     # --- Sektion 2 ---
+    "digitalisierungsgrad": [
+        {"value": "1", "label": "1 (kaum digital)"},
+        {"value": "2", "label": "2"},
+        {"value": "3", "label": "3"},
+        {"value": "4", "label": "4"},
+        {"value": "5", "label": "5 (halb-halb)"},
+        {"value": "6", "label": "6"},
+        {"value": "7", "label": "7"},
+        {"value": "8", "label": "8"},
+        {"value": "9", "label": "9"},
+        {"value": "10", "label": "10 (voll digital)"},
+    ],
     "prozesse_papierlos": [
         {"value": "0-20", "label": "0–20 %"},
         {"value": "21-50", "label": "21–50 %"},

@@ -47,7 +47,7 @@ FIELD_REGISTRY: dict[str, dict] = {
     "interne_ki_kompetenzen": {"type": "enum", "required": False, "section": 1, "chat_mode": "QR"},
     "datenquellen":         {"type": "multi", "required": False, "section": 1, "chat_mode": "QR"},
     # --- Section 2: Digitalisierung & KI-Status ---
-    "digitalisierungsgrad": {"type": "slider", "required": True,  "section": 2, "chat_mode": "SC", "min": 1, "max": 10},
+    "digitalisierungsgrad": {"type": "slider", "required": True,  "section": 2, "chat_mode": "QR", "min": 1, "max": 10},
     "prozesse_papierlos":   {"type": "enum",  "required": False, "section": 2, "chat_mode": "QR"},
     "automatisierungsgrad": {"type": "enum",  "required": False, "section": 2, "chat_mode": "QR"},
     "ki_einsatz":           {"type": "multi", "required": False, "section": 2, "chat_mode": "QR"},
