@@ -317,7 +317,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             return
 
         # Save assistant message
-        quick_replies = _build_quick_replies(next_fields, rt)
+        quick_replies = _build_quick_replies(next_fields, rt, collected)
         assistant_msg = {
             "role": "assistant",
             "content": full_response,
@@ -371,7 +371,7 @@ async def chat_session_get(session_id: UUID, db: Session = Depends(get_db)):
     rt = session.report_type
     state = _build_session_state(session)
     next_fields = get_next_fields(session.collected_fields, session.current_section, report_type=rt)
-    state.quick_replies = _build_quick_replies(next_fields, rt)
+    state.quick_replies = _build_quick_replies(next_fields, rt, session.collected_fields)
 
     # Last 10 messages
     all_msgs = session.messages or []
@@ -1020,9 +1020,14 @@ _QR_LABELS: dict[str, str] = {
 }
 
 
-def _build_quick_replies(next_fields: list[str], report_type: str = "r1") -> list[QuickReply]:
+def _build_quick_replies(
+    next_fields: list[str],
+    report_type: str = "r1",
+    collected_fields: dict | None = None,
+) -> list[QuickReply]:
     """Build quick reply buttons for the next enum fields."""
     registry = get_registry_for_report(report_type)
+    collected = collected_fields or {}
     replies = []
     for field_name in next_fields:
         reg = registry.get(field_name, {})
@@ -1030,7 +1035,12 @@ def _build_quick_replies(next_fields: list[str], report_type: str = "r1") -> lis
         if reg.get("chat_mode") not in ("QR", "qr"):
             continue
 
-        options_data = _QR_OPTIONS.get(field_name)
+        # Dynamic bundesland options based on collected country
+        if field_name == "bundesland":
+            options_data = _build_bundesland_options(collected.get("country", "DE"))
+        else:
+            options_data = _QR_OPTIONS.get(field_name)
+
         if not options_data:
             continue
 
@@ -1042,3 +1052,9 @@ def _build_quick_replies(next_fields: list[str], report_type: str = "r1") -> lis
         replies.append(QuickReply(field=field_name, label=label, options=options))
 
     return replies
+
+
+def _build_bundesland_options(country: str) -> list[dict]:
+    """Build bundesland/region QR options for the given country."""
+    codes = BUNDESLAND_VALUES.get(country, BUNDESLAND_VALUES.get("DE", []))
+    return [{"value": code, "label": BUNDESLAND_LABELS.get(code, code)} for code in codes]
