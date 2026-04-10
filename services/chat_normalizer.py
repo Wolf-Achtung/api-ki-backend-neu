@@ -812,9 +812,9 @@ def get_missing_fields(
 
 
 def get_next_fields(
-    collected: dict, section_index: int, max_fields: int = 3, report_type: str = "r1",
+    collected: dict, section_index: int, max_fields: int = 1, report_type: str = "r1",
 ) -> list[str]:
-    """Get the next fields to ask about (max 3 at a time)."""
+    """Get the next field(s) to ask about. Default: 1 field for focused conversation."""
     missing_req, missing_opt = get_missing_fields(collected, section_index, report_type)
     next_fields = missing_req[:max_fields]
     remaining = max_fields - len(next_fields)
