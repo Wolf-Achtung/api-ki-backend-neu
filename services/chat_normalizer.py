@@ -170,7 +170,7 @@ STRATEGY_FIELD_REGISTRY: dict[str, dict] = {
     "s2_zeitrahmen":      {"type": "enum",  "required": True,  "section": 0, "chat_mode": "QR"},
     "s3_prioritaeten":    {"type": "multi", "required": True,  "section": 0, "chat_mode": "QR", "max_select": 3},
     "s4_engpass":         {"type": "enum",  "required": True,  "section": 0, "chat_mode": "QR"},
-    "s5_software":        {"type": "text",  "required": False, "section": 0, "chat_mode": "FT"},
+    "s5_software":        {"type": "multi", "required": False, "section": 0, "chat_mode": "QR"},
     "s5_vision":          {"type": "text",  "required": False, "section": 0, "chat_mode": "FT"},
     "s6_foerderinteresse": {"type": "enum", "required": True,  "section": 0, "chat_mode": "QR"},
     "s7_entscheidung":    {"type": "enum",  "required": True,  "section": 0, "chat_mode": "QR"},
