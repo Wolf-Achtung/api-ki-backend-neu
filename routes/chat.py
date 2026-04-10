@@ -316,8 +316,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             yield f"event: error\ndata: {json.dumps({'code': 'stream_error', 'message': error_msg})}\n\n"
             return
 
-        # Save assistant message
-        quick_replies = _build_quick_replies(next_fields, rt, collected)
+        # Save assistant message — recompute next fields from current state
+        # to ensure QR matches what was actually collected this turn
+        current_collected = dict(session.collected_fields or {})
+        updated_next = get_next_fields(current_collected, session.current_section, report_type=rt)
+        quick_replies = _build_quick_replies(updated_next, rt, current_collected)
         assistant_msg = {
             "role": "assistant",
             "content": full_response,
