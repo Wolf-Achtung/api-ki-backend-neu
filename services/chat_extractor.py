@@ -40,6 +40,12 @@ REGELN:
 5. Bei Freitextfeldern: den Kern der Aussage in 1–3 Sätzen zusammenfassen.
 6. Wenn der Nutzer eine Rückfrage stellt statt zu antworten,
    rufe das Tool NICHT auf.
+7. Wenn der Nutzer auf ein optionales Feld mit einer Ablehnung oder \
+einem Skip-Signal antwortet (z.B. „nein", „keine Ahnung", „noch keine Idee", \
+„weiß nicht", „weiter", „skip", „überspringen", „keine", „k.A.", \
+„noch nicht", „nicht wirklich", „keine Angabe"), dann extrahiere \
+das aktuell gefragte Feld mit dem Wert „keine_angabe". \
+Skip-Signale sind GÜLTIGE Antworten auf optionale Felder, NICHT „off-topic".
 
 AKTUELL GEFRAGTES FELD: {current_field}
 {current_field_hint}
