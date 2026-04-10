@@ -188,17 +188,33 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
     session.updated_at = now
     db.commit()
 
-    # Handle quick reply shortcut
+    # Phase 1: Extract fields from user message
+    rt = session.report_type
+    registry = get_registry_for_report(rt)
+    normalized = {}
+    field_meta = dict(session.field_meta or {})
+    collected = dict(session.collected_fields or {})
+
     if req.quick_reply_field and req.quick_reply_value:
-        raw_extracted = {req.quick_reply_field: req.quick_reply_value}
+        # Quick reply: normalize directly — no LLM extractor needed
+        qr_field = req.quick_reply_field
+        qr_result = normalize_field(qr_field, req.quick_reply_value, collected, report_type=rt)
+        if qr_result.confidence != "low":
+            collected[qr_field] = qr_result.value
+            normalized[qr_field] = qr_result.value
+            field_meta[qr_field] = {
+                "confidence": qr_result.confidence,
+                "source_turn": turn,
+                "raw_input": req.quick_reply_value,
+                "normalized": True,
+                "confirmed": True,  # User clicked explicitly
+            }
+        log.info("[CHAT] Quick reply: %s=%s → %s", qr_field, req.quick_reply_value, qr_result.value)
     else:
-        # Phase 1: Extraction (Claude Haiku)
+        # Free text: call LLM extractor (Claude Haiku)
         from services.chat_extractor import extract_fields
 
-        rt = session.report_type
-        missing_req, missing_opt = get_missing_fields(
-            session.collected_fields, session.current_section, rt
-        )
+        missing_req, missing_opt = get_missing_fields(collected, session.current_section, rt)
         all_missing = missing_req + missing_opt
 
         try:
@@ -207,7 +223,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     req.message,
                     messages[-6:],
                     all_missing,
-                    session.collected_fields,
+                    collected,
                     report_type=rt,
                 ),
                 timeout=30,
@@ -220,7 +236,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         req.message,
                         messages[-6:],
                         all_missing,
-                        session.collected_fields,
+                        collected,
                         report_type=rt,
                     ),
                     timeout=30,
@@ -229,38 +245,29 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 raw_extracted = {}
                 log.error("[CHAT] Extraction timeout on retry")
 
-    # Phase 1b: Normalize extracted fields
-    rt = session.report_type
-    registry = get_registry_for_report(rt)
-    normalized = {}
-    field_meta = dict(session.field_meta or {})
-    collected = dict(session.collected_fields or {})
+        # Normalize extracted fields
+        for field_name, raw_value in raw_extracted.items():
+            if field_name not in registry:
+                continue
+            if not is_field_visible(field_name, collected):
+                continue
 
-    for field_name, raw_value in raw_extracted.items():
-        if field_name not in registry:
-            continue
-        # Skip fields not visible due to conditionals
-        if not is_field_visible(field_name, collected):
-            continue
+            result = normalize_field(field_name, raw_value, collected, report_type=rt)
 
-        result = normalize_field(field_name, raw_value, collected, report_type=rt)
+            if result.confidence == "low":
+                log.info("[CHAT] Field %s: low confidence, skipping", field_name)
+                continue
 
-        if result.confidence == "low":
-            log.info("[CHAT] Field %s: low confidence, skipping", field_name)
-            continue
+            collected[field_name] = result.value
+            normalized[field_name] = result.value
 
-        # Store in collected_fields
-        collected[field_name] = result.value
-        normalized[field_name] = result.value
-
-        # Store metadata
-        field_meta[field_name] = {
-            "confidence": result.confidence,
-            "source_turn": turn,
-            "raw_input": str(raw_value),
-            "normalized": True,
-            "confirmed": False,
-        }
+            field_meta[field_name] = {
+                "confidence": result.confidence,
+                "source_turn": turn,
+                "raw_input": str(raw_value),
+                "normalized": True,
+                "confirmed": False,
+            }
 
     # Update session state
     session.collected_fields = collected
