@@ -649,12 +649,17 @@ def _complete_r1(
 async def _complete_strategy(
     session: ChatSession, collected: dict, db: Session, now: datetime,
 ) -> int:
-    """Complete strategy chat: save questions + create strategy report entry."""
-    from models import StrategyQuestion, StrategyReport
+    """Complete strategy chat: save questions, create report entry, trigger generation."""
+    from models import Analysis, StrategyQuestion, StrategyReport
 
     briefing_id = session.briefing_id
     if not briefing_id:
         raise HTTPException(status_code=400, detail="Keine briefing_id in der Session")
+
+    # Verify briefing exists
+    briefing = db.query(Briefing).filter(Briefing.id == briefing_id).first()
+    if not briefing:
+        raise HTTPException(status_code=404, detail="Briefing nicht gefunden")
 
     # Upsert strategy questions (same logic as routes/strategy.py)
     existing = db.query(StrategyQuestion).filter(
@@ -680,6 +685,7 @@ async def _complete_strategy(
     if existing:
         for k, v in fields.items():
             setattr(existing, k, v)
+        sq = existing
     else:
         sq = StrategyQuestion(briefing_id=briefing_id, **fields)
         db.add(sq)
@@ -695,8 +701,62 @@ async def _complete_strategy(
     session.status = "completed"
     session.completed_at = now
     session.updated_at = now
+
+    # Set status to generating BEFORE commit so pipeline picks it up
+    sr.status = "generating"
+    sr.updated_at = now
     db.commit()
+    db.refresh(sq)
+
+    # Trigger strategy pipeline in background (same as POST /api/strategy/generate)
+    analysis = db.query(Analysis).filter(
+        Analysis.briefing_id == briefing_id
+    ).order_by(Analysis.id.desc()).first()
+
+    import asyncio
+    asyncio.create_task(_run_strategy_pipeline_bg(
+        briefing_id=briefing_id,
+        briefing_data=briefing.answers or {},
+        strategy_questions=sq.to_dict(),
+        report1_data=(analysis.meta if analysis else {}) or {},
+    ))
+    log.info("[CHAT] Strategy pipeline triggered for briefing_id=%d", briefing_id)
+
     return briefing_id
+
+
+async def _run_strategy_pipeline_bg(
+    briefing_id: int,
+    briefing_data: dict,
+    strategy_questions: dict,
+    report1_data: dict,
+) -> None:
+    """Background task: run the strategy report pipeline (same as routes/strategy.py)."""
+    from core.db import SessionLocal
+    from models import StrategyReport
+
+    db = SessionLocal()
+    try:
+        from services.strategy_pipeline import generate_strategy_report
+        await generate_strategy_report(
+            briefing_id=briefing_id,
+            briefing_data=briefing_data,
+            strategy_questions=strategy_questions,
+            report1_data=report1_data,
+            report2_data={},
+            db_session=db,
+        )
+    except Exception as exc:
+        log.error("[CHAT] Strategy pipeline failed for briefing_id=%d: %s", briefing_id, exc)
+        sr = db.query(StrategyReport).filter(
+            StrategyReport.briefing_id == briefing_id
+        ).first()
+        if sr:
+            sr.status = "failed"
+            sr.updated_at = datetime.now(timezone.utc)
+            db.commit()
+    finally:
+        db.close()
 
 
 def _resolve_user(request: Request | None, db: Session) -> tuple[int | None, str | None]:
@@ -1135,6 +1195,22 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "Regulatorische Unsicherheit", "label": "Regulatorische Unsicherheit"},
         {"value": "Kein klarer Use Case", "label": "Kein klarer Use Case"},
         {"value": "Andere", "label": "Andere"},
+    ],
+    "s5_software": [
+        {"value": "Microsoft 365", "label": "Microsoft 365"},
+        {"value": "Google Workspace", "label": "Google Workspace"},
+        {"value": "Notion", "label": "Notion"},
+        {"value": "Asana / Monday / Trello", "label": "Asana / Monday / Trello"},
+        {"value": "Slack", "label": "Slack"},
+        {"value": "Jira / Confluence", "label": "Jira / Confluence"},
+        {"value": "ChatGPT / OpenAI", "label": "ChatGPT / OpenAI"},
+        {"value": "Claude / Anthropic", "label": "Claude / Anthropic"},
+        {"value": "Perplexity", "label": "Perplexity"},
+        {"value": "Microsoft Copilot", "label": "Microsoft Copilot"},
+        {"value": "GitHub / GitLab", "label": "GitHub / GitLab"},
+        {"value": "AWS / Azure / Google Cloud", "label": "AWS / Azure / GCP"},
+        {"value": "Salesforce / HubSpot", "label": "Salesforce / HubSpot"},
+        {"value": "Mailchimp / Brevo", "label": "Mailchimp / Brevo"},
     ],
     "s6_foerderinteresse": [
         {"value": "Ja, dringend", "label": "Ja, dringend"},
