@@ -316,11 +316,15 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             yield f"event: error\ndata: {json.dumps({'code': 'stream_error', 'message': error_msg})}\n\n"
             return
 
-        # Save assistant message — recompute next fields from current state
-        # to ensure QR matches what was actually collected this turn
-        current_collected = dict(session.collected_fields or {})
-        updated_next = get_next_fields(current_collected, session.current_section, report_type=rt)
-        quick_replies = _build_quick_replies(updated_next, rt, current_collected)
+        # Build QR from the closure-captured `collected` dict — NOT from
+        # session.collected_fields which may be expired after db.commit()
+        qr_next = get_next_fields(collected, session.current_section, report_type=rt)
+        quick_replies = _build_quick_replies(qr_next, rt, collected)
+        log.info(
+            "[CHAT] QR generation: collected_keys=%s, next=%s, qr_fields=%s",
+            list(collected.keys()), qr_next,
+            [qr.field for qr in quick_replies],
+        )
         assistant_msg = {
             "role": "assistant",
             "content": full_response,
@@ -336,8 +340,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         session.updated_at = datetime.now(timezone.utc)
         db.commit()
 
-        # Send state update
-        state = _build_session_state(session)
+        # Send state update — pass collected explicitly to avoid
+        # stale session.collected_fields after db.commit() expiry
+        state = _build_session_state(session, collected_override=collected)
         state.quick_replies = quick_replies
         yield f"event: state_update\ndata: {state.model_dump_json()}\n\n"
 
@@ -573,12 +578,20 @@ def _complete_redirect(report_type: str, briefing_id: int) -> str:
     return f"/formular/status.html?id={briefing_id}"
 
 
-def _build_session_state(session: ChatSession) -> ChatSessionState:
-    """Build ChatSessionState from a ChatSession DB model."""
+def _build_session_state(
+    session: ChatSession, collected_override: dict | None = None,
+) -> ChatSessionState:
+    """Build ChatSessionState from a ChatSession DB model.
+
+    Args:
+        collected_override: If provided, use this instead of session.collected_fields.
+            Needed inside streaming callbacks where session attributes may be expired
+            after db.commit().
+    """
     rt = session.report_type
     sections = get_sections_for_report(rt)
     registry = get_registry_for_report(rt)
-    collected = session.collected_fields or {}
+    collected = collected_override if collected_override is not None else (session.collected_fields or {})
     section_idx = session.current_section
     section = sections[section_idx]
 
