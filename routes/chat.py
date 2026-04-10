@@ -16,11 +16,11 @@ import logging
 from datetime import datetime, timezone
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from models import Briefing, ChatSession
+from models import Briefing, ChatSession, User
 from routes._bootstrap import get_db
 from schemas.chat import (
     ChatCompleteRequest,
@@ -472,7 +472,11 @@ async def chat_session_get(session_id: UUID, db: Session = Depends(get_db)):
 # ===========================================================================
 
 @router.post("/complete", response_model=ChatCompleteResponse)
-async def chat_complete(req: ChatCompleteRequest, db: Session = Depends(get_db)):
+async def chat_complete(
+    req: ChatCompleteRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
     """Finalize chat session and submit collected data to report pipeline."""
     session = db.query(ChatSession).filter(ChatSession.id == req.session_id).first()
     if not session:
@@ -513,7 +517,7 @@ async def chat_complete(req: ChatCompleteRequest, db: Session = Depends(get_db))
     if rt == "strategy":
         briefing_id = await _complete_strategy(session, collected, db, now)
     else:
-        briefing_id = _complete_r1(session, collected, db, now)
+        briefing_id = _complete_r1(session, collected, db, now, request)
 
     redirect = _complete_redirect(rt, briefing_id)
 
@@ -557,13 +561,28 @@ def _check_section_transition(session: ChatSession, collected: dict, report_type
     return True
 
 
-def _complete_r1(session: ChatSession, collected: dict, db: Session, now: datetime) -> int:
+def _complete_r1(
+    session: ChatSession, collected: dict, db: Session, now: datetime,
+    request: Request | None = None,
+) -> int:
     """Complete R1 chat: create a Briefing for the report pipeline."""
     answers = dict(collected)
     answers["datenschutz"] = True  # consent given at chat start
 
+    # Extract user email from JWT (same pattern as routes/briefings.py)
+    user_id = session.user_id
+    user_email = _extract_user_email(request, db)
+    if user_email:
+        answers["email"] = user_email
+        # Ensure user_id is set (may be None if chat started without auth)
+        if not user_id:
+            user = db.query(User).filter(User.email == user_email).first()
+            if user:
+                user_id = user.id
+        log.info("[CHAT] Complete R1: user_email=%s, user_id=%s", user_email, user_id)
+
     briefing = Briefing(
-        user_id=session.user_id,
+        user_id=user_id,
         lang=session.lang,
         answers=answers,
         status="accepted",
@@ -631,6 +650,26 @@ async def _complete_strategy(
     session.updated_at = now
     db.commit()
     return briefing_id
+
+
+def _extract_user_email(request: Request | None, db: Session) -> str | None:
+    """Extract user email from JWT cookie/header (optional, non-throwing)."""
+    if not request:
+        return None
+    try:
+        from core.security import verify_access_token
+        token = request.cookies.get("auth_token")
+        if not token:
+            auth_header = request.headers.get("authorization", "")
+            scheme, _, header_token = auth_header.partition(" ")
+            if scheme.lower() == "bearer" and header_token:
+                token = header_token
+        if not token:
+            return None
+        payload = verify_access_token(token)
+        return payload.email if payload else None
+    except Exception:
+        return None
 
 
 def _complete_redirect(report_type: str, briefing_id: int) -> str:
