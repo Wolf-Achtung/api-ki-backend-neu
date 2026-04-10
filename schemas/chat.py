@@ -37,6 +37,8 @@ class QuickReply(BaseModel):
     field: str
     label: str
     options: list[QuickReplyOption]
+    multi_select: bool = False
+    max_select: Optional[int] = None
 
 
 # ---------------------------------------------------------------------------
