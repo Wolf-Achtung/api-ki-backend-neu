@@ -656,6 +656,9 @@ def normalize_field(field_name: str, raw_value: Any, collected: dict, report_typ
     # 4. Free text
     if reg["type"] == "text":
         cleaned = str(raw_value).strip()
+        # "keine_angabe" is a valid skip for optional text fields
+        if cleaned.lower() in ("keine_angabe", "keine angabe"):
+            return NormResult("", "high", False)
         if len(cleaned) < 3:
             return NormResult(None, "low", True)
         return NormResult(cleaned, "high", False)
