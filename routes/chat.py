@@ -278,6 +278,23 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 "confirmed": False,
             }
 
+    # Handle "weiter" / skip for optional fields
+    skip_words = {"weiter", "skip", "überspringen", "nächste", "weiter bitte", "nächste frage"}
+    if req.message.strip().lower() in skip_words and not normalized:
+        # User wants to skip the current optional field
+        asked = get_next_fields(collected, session.current_section, report_type=rt)
+        if asked:
+            skip_field = asked[0]
+            skip_reg = registry.get(skip_field, {})
+            if not skip_reg.get("required"):
+                # Mark as skipped with a sentinel value
+                collected[skip_field] = "" if skip_reg.get("type") == "text" else None
+                field_meta[skip_field] = {
+                    "confidence": "high", "source_turn": turn,
+                    "raw_input": "skipped", "normalized": True, "confirmed": True,
+                }
+                log.info("[CHAT] User skipped optional field: %s", skip_field)
+
     # Update session state
     session.collected_fields = collected
     session.field_meta = field_meta
@@ -519,14 +536,15 @@ async def chat_complete(req: ChatCompleteRequest, db: Session = Depends(get_db))
 
 def _check_section_transition(session: ChatSession, collected: dict, report_type: str = "r1") -> bool:
     """
-    Check if all required fields of the current section are collected.
-    If so, advance current_section. Returns True if section advanced.
+    Check if all fields (required + optional) of the current section are
+    collected. If so, advance current_section. Returns True if advanced.
     """
     sections = get_sections_for_report(report_type)
     if session.current_section >= len(sections) - 1:
         return False
 
-    if not is_section_complete(collected, session.current_section, report_type):
+    missing_req, missing_opt = get_missing_fields(collected, session.current_section, report_type)
+    if missing_req or missing_opt:
         return False
 
     session.current_section += 1

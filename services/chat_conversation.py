@@ -73,6 +73,9 @@ darauf hin: „Sie können mehrere Optionen auswählen und dann bestätigen."
 Sie Orientierung zur Skala, z.B.: „1–3 = überwiegend papierbasiert, \
 4–6 = Mix aus analog und digital, 7–10 = weitgehend digital."
 8. Fragen Sie NUR nach Feldern, die noch nicht erfasst sind.
+9. Wenn ein Feld optional ist (als „Optional" markiert), weisen Sie darauf hin: \
+„Diese Angabe ist optional, hilft aber die Empfehlungen zu verbessern. \
+Sie können auch einfach ‚weiter' sagen."
 
 KONVERSATIONSQUALITÄT:
 - Gehen Sie kurz auf die Antwort des Nutzers ein, bevor Sie weiterfragen.
