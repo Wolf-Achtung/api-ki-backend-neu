@@ -1096,6 +1096,13 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "nein", "label": "Nein"},
         {"value": "selten", "label": "Selten"},
     ],
+    "risikofreude": [
+        {"value": "1", "label": "1 (sehr vorsichtig)"},
+        {"value": "2", "label": "2"},
+        {"value": "3", "label": "3 (ausgewogen)"},
+        {"value": "4", "label": "4"},
+        {"value": "5", "label": "5 (experimentierfreudig)"},
+    ],
     # --- Strategy Fields ---
     "s1_budget": [
         {"value": "unter_2000", "label": "Unter 2.000 €"},
