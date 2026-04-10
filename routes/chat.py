@@ -1030,6 +1030,9 @@ def _build_quick_replies(
     collected = collected_fields or {}
     replies = []
     for field_name in next_fields:
+        if field_name in collected:
+            continue  # Already collected — no buttons
+
         reg = registry.get(field_name, {})
         # Only build QR for enum/multi fields with known options
         if reg.get("chat_mode") not in ("QR", "qr"):
@@ -1049,7 +1052,12 @@ def _build_quick_replies(
             for o in options_data
         ]
         label = _QR_LABELS.get(field_name, field_name)
-        replies.append(QuickReply(field=field_name, label=label, options=options))
+        is_multi = reg.get("type") == "multi"
+        max_sel = reg.get("max_select") if is_multi else None
+        replies.append(QuickReply(
+            field=field_name, label=label, options=options,
+            multi_select=is_multi, max_select=max_sel,
+        ))
 
     return replies
 
