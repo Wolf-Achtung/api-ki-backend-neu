@@ -140,3 +140,20 @@ class ChatFallbackResponse(BaseModel):
     missing_fields: list[str]
     current_section: int
     form_url: str
+
+
+# ---------------------------------------------------------------------------
+# GET /api/chat/sessions
+# ---------------------------------------------------------------------------
+
+class ChatSessionSummary(BaseModel):
+    session_id: UUID
+    report_type: str
+    status: str
+    current_section: int
+    collected_count: int
+    total_fields: int
+    progress_percent: int
+    created_at: datetime
+    last_activity: datetime
+    resumable: bool
