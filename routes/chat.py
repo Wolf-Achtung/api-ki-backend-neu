@@ -221,13 +221,15 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # Force fresh DB read — after db.commit() at l.202 all ORM
         # attributes are expired.  The lazy-load that SQLAlchemy would do
         # on first access can return stale/empty collected_fields, causing
-        # every QR turn to overwrite previous fields.  db.refresh()
+        # every QR turn to overwrite previous fields.  Fresh query
         # guarantees a SELECT with the latest committed state.
-        session_id = session.id  # capture before reassignment
-        session = db.query(ChatSession).filter(ChatSession.id == session_id).one()
+        # NOTE: must NOT reassign `session` — it's a closure variable from
+        # the outer scope; any `session = ...` would make it local to the
+        # entire generator and break all prior references.
+        _fresh = db.query(ChatSession).filter(ChatSession.id == session.id).one()
 
-        field_meta = dict(session.field_meta or {})
-        collected = dict(session.collected_fields or {})
+        field_meta = dict(_fresh.field_meta or {})
+        collected = dict(_fresh.collected_fields or {})
         log.info("[CHAT] Turn %d init: collected_keys=%s", turn, list(collected.keys()))
 
         # Draft-mode tracking variables (only meaningful when DRAFT_MODE_ENABLED)
