@@ -228,7 +228,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _draft_confirmed_value = None
 
         if req.quick_reply_field and req.quick_reply_value:
-            # Quick reply: normalize directly — no LLM extractor needed
+            # Quick reply: direct write, no Draft — user click is explicit confirmation.
+            # This applies to both QR (single-select) and MS (multi-select) fields,
+            # regardless of DRAFT_MODE_ENABLED. Only free-text goes through Draft.
             qr_field = req.quick_reply_field
             qr_result = normalize_field(qr_field, req.quick_reply_value, collected, report_type=rt)
             if qr_result.confidence != "low":
