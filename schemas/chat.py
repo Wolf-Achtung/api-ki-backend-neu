@@ -117,6 +117,17 @@ class ChatSessionResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# POST /api/chat/confirm  (Draft-Pattern — Sprint 2 logic, Sprint 1 skeleton)
+# ---------------------------------------------------------------------------
+
+class ConfirmFieldRequest(BaseModel):
+    session_id: UUID
+    field: str
+    value: Optional[Any] = None  # Optional: user can send corrected value
+    action: str = "confirm"  # "confirm" or "edit"
+
+
+# ---------------------------------------------------------------------------
 # POST /api/chat/complete  (not in PoC)
 # ---------------------------------------------------------------------------
 

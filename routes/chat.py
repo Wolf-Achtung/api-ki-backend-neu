@@ -33,6 +33,7 @@ from schemas.chat import (
     ChatSessionSummary,
     ChatStartRequest,
     ChatStartResponse,
+    ConfirmFieldRequest,
     QuickReply,
     QuickReplyOption,
 )
@@ -463,6 +464,19 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             "X-Accel-Buffering": "no",
         },
     )
+
+
+# ===========================================================================
+# POST /api/chat/confirm  (Draft-Pattern — Sprint 1 skeleton only)
+# ===========================================================================
+
+@router.post("/confirm")
+async def confirm_field(req: ConfirmFieldRequest, db: Session = Depends(get_db)):
+    """Confirm a draft value and write it to collected_fields (Sprint 2)."""
+    if not DRAFT_MODE_ENABLED:
+        raise HTTPException(status_code=404, detail="Draft mode not enabled")
+    # TODO Sprint 2: Implement confirm/edit logic
+    raise HTTPException(status_code=501, detail="Not yet implemented")
 
 
 # ===========================================================================
