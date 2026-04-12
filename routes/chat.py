@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -57,6 +58,9 @@ from services.chat_normalizer import (
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 log = logging.getLogger(__name__)
+
+# Feature flag: Draft-Pattern (Sprint 1 infra — default off)
+DRAFT_MODE_ENABLED = os.getenv("DRAFT_MODE_ENABLED", "false").lower() == "true"
 
 R1_WELCOME = (
     "Willkommen bei ki-sicherheit.jetzt! Ich bin ein KI-Assistent und "
