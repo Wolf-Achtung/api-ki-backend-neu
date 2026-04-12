@@ -48,6 +48,7 @@ from services.chat_normalizer import (
     STRATEGY_SECTIONS,
     calculate_progress,
     get_enum_values_for_report,
+    get_field_label,
     get_missing_fields,
     get_next_fields,
     get_registry_for_report,
@@ -532,7 +533,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 yield _sse_draft_value(
                     field=_draft_new_field,
                     value=_draft_new_value,
-                    label=_get_field_label(_draft_new_field, rt),
+                    label=get_field_label(_draft_new_field, rt),
                 )
                 yield _sse_dialog_mode(active=False)
             if _signal == "question":
@@ -863,23 +864,6 @@ def _sse_dialog_mode(active: bool) -> str:
     """SSE event: dialog mode toggled (follow-up question vs. progression)."""
     data = json.dumps({"active": active})
     return f"event: dialog_mode\ndata: {data}\n\n"
-
-
-def _get_field_label(field_name: str, report_type: str = "r1") -> str:
-    """Return a human-readable label for a field name.
-
-    Uses FIELD_DESCRIPTIONS (short part before the parenthesized detail).
-    Falls back to title-cased field name with underscores replaced.
-    """
-    from services.chat_conversation import FIELD_DESCRIPTIONS
-    desc = FIELD_DESCRIPTIONS.get(field_name)
-    if desc:
-        # Take part before first parenthesis: "Branche des Unternehmens (13 Optionen...)" → "Branche des Unternehmens"
-        label = desc.split("(")[0].strip()
-        if label:
-            return label
-    # Fallback: "geschaeftsmodell_evolution" → "Geschaeftsmodell Evolution"
-    return field_name.replace("_", " ").title()
 
 
 # ===========================================================================
