@@ -754,8 +754,10 @@ wenn diese Wörter in den letzten 3 Antworten bereits vorkamen."""
 # Template-based summary (no LLM — deterministic)
 # ===========================================================================
 
-# Display labels for enum values (value -> German label)
+# Display labels for enum/multi values (value -> German label)
+# Source of truth: formbuilder_de_SINGLE_FULL.js + strategy.html
 _ENUM_DISPLAY: dict[str, dict[str, str]] = {
+    # ── R1: Block 1 – Firmendaten & Branche ──
     "branche": {
         "marketing": "Marketing & Werbung", "beratung": "Beratung & Dienstleistungen",
         "it": "IT & Software", "finanzen": "Finanzen & Versicherungen",
@@ -764,7 +766,202 @@ _ENUM_DISPLAY: dict[str, dict[str, str]] = {
         "medien": "Medien & Kreativwirtschaft", "industrie": "Industrie & Produktion",
         "logistik": "Transport & Logistik", "gastronomie": "Gastronomie & Tourismus",
     },
-    "unternehmensgroesse": {"1": "1 (Solo)", "2–10": "2–10 (Kleines Team)", "11–100": "11–100 (KMU)"},
+    "unternehmensgroesse": {
+        "1": "1 (Solo)", "2–10": "2–10 (Kleines Team)", "11–100": "11–100 (KMU)",
+    },
+    "country": {
+        "DE": "Deutschland", "AT": "Österreich", "CH": "Schweiz",
+        "FR": "Frankreich", "NL": "Niederlande", "IT": "Italien", "ES": "Spanien",
+        "BE": "Belgien", "LU": "Luxemburg", "DK": "Dänemark", "SE": "Schweden",
+        "PL": "Polen", "CZ": "Tschechien", "IE": "Irland", "PT": "Portugal",
+        "FI": "Finnland", "GR": "Griechenland", "HR": "Kroatien", "SI": "Slowenien",
+        "SK": "Slowakei", "HU": "Ungarn", "RO": "Rumänien", "BG": "Bulgarien",
+        "EE": "Estland", "LV": "Lettland", "LT": "Litauen", "MT": "Malta", "CY": "Zypern",
+        "GB": "Vereinigtes Königreich (UK)", "NO": "Norwegen", "IS": "Island",
+        "LI": "Liechtenstein", "other_europe": "Anderes europäisches Land",
+        "other": "Nicht-europäisches Land",
+    },
+    "zielgruppen": {
+        "b2b": "B2B (Geschäftskunden)", "b2c": "B2C (Endverbraucher)",
+        "kmu": "KMU", "grossunternehmen": "Großunternehmen",
+        "selbststaendige": "Selbstständige/Freiberufler",
+        "oeffentliche_hand": "Öffentliche Hand", "privatpersonen": "Privatpersonen",
+        "startups": "Startups", "andere": "Andere",
+    },
+    "jahresumsatz": {
+        "unter_100k": "Bis 100.000 €", "100k_500k": "100.000–500.000 €",
+        "500k_2m": "500.000–2 Mio. €", "2m_10m": "2–10 Mio. €",
+        "ueber_10m": "Über 10 Mio. €", "keine_angabe": "Keine Angabe",
+    },
+    "it_infrastruktur": {
+        "cloud": "Cloud-basiert", "on_premise": "On-Premises",
+        "hybrid": "Hybrid (Cloud + eigene Server)", "unklar": "Unklar / noch offen",
+    },
+    "interne_ki_kompetenzen": {
+        "ja": "Ja", "nein": "Nein", "in_planung": "In Planung",
+    },
+    "datenquellen": {
+        "kundendaten": "Kundendaten (CRM, Service)", "verkaufsdaten": "Verkaufs-/Bestelldaten",
+        "produktionsdaten": "Produktions-/Betriebsdaten", "personaldaten": "Personal-/HR-Daten",
+        "marketingdaten": "Marketing-/Kampagnendaten", "sonstige": "Sonstige Datenquellen",
+    },
+    # ── R1: Block 2 – Status Quo ──
+    "prozesse_papierlos": {
+        "0-20": "0–20 %", "21-50": "21–50 %", "51-80": "51–80 %", "81-100": "81–100 %",
+    },
+    "automatisierungsgrad": {
+        "sehr_niedrig": "Sehr niedrig", "eher_niedrig": "Eher niedrig",
+        "mittel": "Mittel", "eher_hoch": "Eher hoch", "sehr_hoch": "Sehr hoch",
+    },
+    "ki_einsatz": {
+        "chatbots": "Chatbots / Kundenservice", "marketing": "Marketing & Content",
+        "vertrieb": "Vertrieb & CRM", "datenanalyse": "Datenanalyse",
+        "produktion": "Produktion / Logistik", "hr": "Personalmanagement",
+        "andere": "Andere Bereiche", "noch_keine": "Noch keine Nutzung",
+    },
+    "ki_kompetenz": {
+        "hoch": "Hoch", "mittel": "Mittel", "niedrig": "Niedrig", "keine": "Keine",
+    },
+    # ── R1: Block 3 – Ziele & Use Cases ──
+    "ki_ziele": {
+        "effizienz": "Effizienz steigern", "automatisierung": "Automatisierung",
+        "neue_produkte": "Neue Produkte/Services", "kundenservice": "Kundenservice verbessern",
+        "datenauswertung": "Daten besser nutzen", "kosten_senken": "Kosten senken",
+        "wettbewerbsfaehigkeit": "Wettbewerbsfähigkeit", "keine_angabe": "Noch unklar",
+    },
+    "anwendungsfaelle": {
+        "chatbots": "Chatbots / FAQ-Automatisierung", "content_generation": "Content-Generierung",
+        "datenanalyse": "Datenanalyse & Reporting", "dokumentation": "Dokumentation & Wissen",
+        "prozess_automation": "Prozessautomation", "personalisierung": "Personalisierung",
+        "andere": "Andere", "keine_angabe": "Noch unklar",
+    },
+    "pilot_bereich": {
+        "kundenservice": "Kundenservice", "marketing": "Marketing / Content",
+        "vertrieb": "Vertrieb", "verwaltung": "Verwaltung / Backoffice",
+        "produktion": "Produktion / Logistik", "andere": "Andere",
+    },
+    # ── R1: Block 4 – Strategie & Governance ──
+    "massnahmen_komplexitaet": {
+        "niedrig": "Niedrig", "mittel": "Mittel", "hoch": "Hoch", "unklar": "Unklar",
+    },
+    "roadmap_vorhanden": {
+        "ja": "Ja", "teilweise": "Teilweise", "nein": "Nein",
+    },
+    "governance_richtlinien": {
+        "ja": "Ja", "teilweise": "Teilweise", "nein": "Nein",
+    },
+    "change_management": {
+        "sehr_hoch": "Sehr hoch", "hoch": "Hoch", "mittel": "Mittel",
+        "niedrig": "Niedrig", "sehr_niedrig": "Sehr niedrig",
+    },
+    # ── R1: Block 5 – Ressourcen & Präferenzen ──
+    "zeitbudget": {
+        "unter_2": "Unter 2 Stunden", "2_5": "2–5 Stunden",
+        "5_10": "5–10 Stunden", "ueber_10": "Über 10 Stunden",
+    },
+    "vorhandene_tools": {
+        "crm": "CRM-Systeme (HubSpot, Salesforce)", "erp": "ERP-Systeme (SAP, Odoo)",
+        "projektmanagement": "Projektmanagement (Asana, Trello)",
+        "marketing_automation": "Marketing Automation",
+        "buchhaltung": "Buchhaltungssoftware", "keine": "Keine / andere",
+    },
+    "regulierte_branche": {
+        "gesundheit": "Gesundheit & Medizin", "finanzen": "Finanzen & Versicherungen",
+        "oeffentlich": "Öffentlicher Sektor", "recht": "Rechtliche Dienstleistungen",
+        "vertraulich_nda": "Vertrauliche Kundendaten / NDA-Material",
+        "keine": "Keine dieser Branchen",
+    },
+    "trainings_interessen": {
+        "prompt_engineering": "Prompt Engineering", "llm_basics": "LLM-Grundlagen",
+        "datenqualitaet_governance": "Datenqualität & Governance",
+        "automatisierung": "Automatisierung & Skripte",
+        "ethik_recht": "Ethische & rechtliche Grundlagen", "keine": "Keine / noch unklar",
+    },
+    "vision_prioritaet": {
+        "gpt_services": "KI-gestützte Services und Produkte",
+        "kundenservice": "Optimierung Kundenservice und Support",
+        "datenprodukte": "Entwicklung datenbasierter Angebote",
+        "prozessautomation": "Automatisierung interner Prozesse",
+        "marktfuehrerschaft": "Technologieführerschaft im Markt",
+        "keine_angabe": "Noch unklar",
+    },
+    # ── R1: Block 6 – Rechtliches & Compliance ──
+    "datenschutzbeauftragter": {
+        "ja": "Ja", "nein": "Nein", "teilweise": "Teilweise (extern/Planung)",
+    },
+    "technische_massnahmen": {
+        "alle": "Alle relevanten Maßnahmen", "teilweise": "Teilweise vorhanden",
+        "keine": "Noch keine",
+    },
+    "folgenabschaetzung": {
+        "ja": "Ja, durchgeführt", "nein": "Nein, noch nicht", "teilweise": "In Planung",
+    },
+    "meldewege": {
+        "ja": "Ja, klar definiert", "teilweise": "Teilweise vorhanden",
+        "nein": "Nein, noch nicht geregelt",
+    },
+    "loeschregeln": {
+        "ja": "Ja, dokumentiert", "teilweise": "Teilweise vorhanden",
+        "nein": "Nein, noch nicht definiert",
+    },
+    "ai_act_kenntnis": {
+        "sehr_gut": "Sehr gut", "gut": "Gut",
+        "gehoert": "Schon mal gehört", "unbekannt": "Noch nicht bekannt",
+    },
+    "ki_hemmnisse": {
+        "rechtsunsicherheit": "Rechtsunsicherheit", "datenschutz": "Datenschutz",
+        "knowhow": "Fehlendes Know-how", "budget": "Begrenztes Budget",
+        "teamakzeptanz": "Teamakzeptanz", "zeitmangel": "Zeitmangel",
+        "it_integration": "IT-Integration", "keine": "Keine Hemmnisse", "andere": "Andere",
+    },
+    # ── R1: Block 7 – Förderung & Investition ──
+    "bisherige_foerdermittel": {"ja": "Ja", "nein": "Nein"},
+    "interesse_foerderung": {
+        "ja": "Ja, Programme vorschlagen", "nein": "Kein Bedarf",
+        "unklar": "Unklar, bitte beraten",
+    },
+    "erfahrung_beratung": {"ja": "Ja", "nein": "Nein", "unklar": "Unklar"},
+    "investitionsbudget": {
+        "unter_2000": "Unter 2.000 €", "2000_10000": "2.000–10.000 €",
+        "10000_50000": "10.000–50.000 €", "ueber_50000": "Über 50.000 €",
+        "unklar": "Noch unklar",
+    },
+    "marktposition": {
+        "marktfuehrer": "Marktführer", "oberes_drittel": "Oberes Drittel",
+        "mittelfeld": "Mittelfeld", "nachzuegler": "Nachzügler",
+        "unsicher": "Schwer einzuschätzen",
+    },
+    "benchmark_wettbewerb": {
+        "ja": "Ja, regelmäßig", "nein": "Nein", "selten": "Selten",
+    },
+    "innovationsprozess": {
+        "innovationsteam": "Innovationsteam", "mitarbeitende": "Durch Mitarbeitende",
+        "kunden": "Mit Kunden", "berater": "Externe Berater",
+        "zufall": "Zufällig", "unbekannt": "Keine klare Strategie",
+    },
+    # ── Strategy: S1–S10 ──
+    "s1_budget": {
+        "unter_2000": "Unter 2.000 €", "2000_10000": "2.000–10.000 €",
+        "10000_50000": "10.000–50.000 €", "ueber_50000": "Über 50.000 €",
+        "unklar": "Noch unklar",
+    },
+    # s2–s10: values are already human-readable labels in the form
+    # ── Strategy: Moat-Felder ──
+    "wettbewerber_anzahl": {
+        "wenige": "Wenige (1–3)", "mehrere": "Mehrere (4–10)",
+        "viele": "Viele (mehr als 10)", "unklar": "Schwer einzuschätzen",
+    },
+    "kundenbindung_typ": {
+        "einmalig": "Einmalkunden / Projektgeschäft",
+        "wiederkehrend": "Wiederkehrende Kunden / Verträge / Abos",
+        "gemischt": "Mischung aus beidem",
+    },
+    "datenreife": {
+        "keine": "Kaum / keine strukturierten Daten",
+        "basis": "Grundlegende Daten (CRM, Buchhaltung)",
+        "umfangreich": "Umfangreiche eigene Datenbestände",
+        "unklar": "Bin mir nicht sicher",
+    },
 }
 
 
@@ -812,9 +1009,13 @@ def _format_value_for_display(field_name: str, value: object) -> str:
             return BUNDESLAND_LABELS.get(str_val, str_val)
         return str_val
 
-    # Multi: comma-separated
+    # Multi: resolve labels, then comma-separated
     if field_type == "multi" and isinstance(value, list):
-        return ", ".join(str(v) for v in value) if value else "–"
+        if not value:
+            return "–"
+        enum_labels = _ENUM_DISPLAY.get(field_name, {})
+        resolved = [enum_labels.get(str(v), str(v)) for v in value]
+        return ", ".join(resolved)
 
     # Slider: number with context
     if field_type == "slider":
@@ -825,11 +1026,9 @@ def _format_value_for_display(field_name: str, value: object) -> str:
     if field_type == "bool":
         return "Ja" if value else "Nein"
 
-    # Text: truncate
+    # Text: show full text in summary (truncation removed –
+    # the summary is the last touchpoint before report generation)
     if field_type == "text":
-        text = str(value).strip()
-        if len(text) > 100:
-            return text[:97] + "..."
-        return text
+        return str(value).strip() or "–"
 
     return str(value)
