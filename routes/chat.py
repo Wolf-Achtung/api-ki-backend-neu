@@ -195,162 +195,167 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
     session.updated_at = now
     db.commit()
 
-    # Phase 1: Extract fields from user message
+    # Capture values needed inside the stream; actual extraction runs
+    # inside event_stream() so the SSE connection starts immediately and
+    # heartbeats keep the connection alive during the Haiku call.
     rt = session.report_type
-    registry = get_registry_for_report(rt)
-    normalized = {}
-    field_meta = dict(session.field_meta or {})
-    collected = dict(session.collected_fields or {})
+    from services.chat_conversation import generate_response, FIELD_DESCRIPTIONS
 
-    if req.quick_reply_field and req.quick_reply_value:
-        # Quick reply: normalize directly — no LLM extractor needed
-        qr_field = req.quick_reply_field
-        qr_result = normalize_field(qr_field, req.quick_reply_value, collected, report_type=rt)
-        if qr_result.confidence != "low":
-            collected[qr_field] = qr_result.value
-            normalized[qr_field] = qr_result.value
-            field_meta[qr_field] = {
-                "confidence": qr_result.confidence,
-                "source_turn": turn,
-                "raw_input": req.quick_reply_value,
-                "normalized": True,
-                "confirmed": True,  # User clicked explicitly
-            }
-        log.info("[CHAT] Quick reply: %s=%s → %s", qr_field, req.quick_reply_value, qr_result.value)
-    else:
-        # Free text: call LLM extractor (Claude Haiku)
-        from services.chat_extractor import extract_fields
-        from services.chat_conversation import FIELD_DESCRIPTIONS
-
-        missing_req, missing_opt = get_missing_fields(collected, session.current_section, rt)
-        all_missing = missing_req + missing_opt
-        # Tell the extractor which field the AI just asked about
-        asked_fields = get_next_fields(collected, session.current_section, report_type=rt)
-        cur_field = asked_fields[0] if asked_fields else ""
-        cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
-
-        try:
-            raw_extracted = await asyncio.wait_for(
-                extract_fields(
-                    req.message,
-                    messages[-6:],
-                    all_missing,
-                    collected,
-                    report_type=rt,
-                    current_field=cur_field,
-                    current_field_description=cur_desc,
-                ),
-                timeout=30,
-            )
-        except asyncio.TimeoutError:
-            log.warning("[CHAT] Extraction timeout, retrying once...")
-            try:
-                raw_extracted = await asyncio.wait_for(
-                    extract_fields(
-                        req.message,
-                        messages[-6:],
-                        all_missing,
-                        collected,
-                        report_type=rt,
-                        current_field=cur_field,
-                        current_field_description=cur_desc,
-                    ),
-                    timeout=30,
-                )
-            except asyncio.TimeoutError:
-                raw_extracted = {}
-                log.error("[CHAT] Extraction timeout on retry")
-
-        # Normalize extracted fields
-        for field_name, raw_value in raw_extracted.items():
-            if field_name not in registry:
-                continue
-            if not is_field_visible(field_name, collected):
-                continue
-
-            result = normalize_field(field_name, raw_value, collected, report_type=rt)
-
-            if result.confidence == "low":
-                log.info("[CHAT] Field %s: low confidence, skipping", field_name)
-                continue
-
-            collected[field_name] = result.value
-            normalized[field_name] = result.value
-
-            field_meta[field_name] = {
-                "confidence": result.confidence,
-                "source_turn": turn,
-                "raw_input": str(raw_value),
-                "normalized": True,
-                "confirmed": False,
-            }
-
-    # Handle "weiter" / skip for optional fields
-    skip_words = {"weiter", "skip", "überspringen", "nächste", "weiter bitte", "nächste frage"}
-    if req.message.strip().lower() in skip_words and not normalized:
-        # User wants to skip the current optional field
-        asked = get_next_fields(collected, session.current_section, report_type=rt)
-        if asked:
-            skip_field = asked[0]
-            skip_reg = registry.get(skip_field, {})
-            if not skip_reg.get("required"):
-                # Mark as skipped with a sentinel value
-                collected[skip_field] = "" if skip_reg.get("type") == "text" else None
-                field_meta[skip_field] = {
-                    "confidence": "high", "source_turn": turn,
-                    "raw_input": "skipped", "normalized": True, "confirmed": True,
-                }
-                log.info("[CHAT] User skipped optional field: %s", skip_field)
-
-    # Update session state
-    session.collected_fields = collected
-    session.field_meta = field_meta
-    session.updated_at = now
-
-    # Evaluate conditionals: remove hidden fields
-    for cond_field in ["selbststaendig", "bundesland"]:
-        if cond_field in collected and not is_field_visible(cond_field, collected):
-            del collected[cond_field]
-            if cond_field in field_meta:
-                del field_meta[cond_field]
-            session.collected_fields = collected
-            session.field_meta = field_meta
-
-    db.commit()
-
-    # Check section transition: advance if all required fields done
-    section_advanced = _check_section_transition(session, collected, rt)
-    if section_advanced:
-        db.commit()
-
-    # Determine next fields
-    sections = get_sections_for_report(rt)
-    missing_req, missing_opt = get_missing_fields(collected, session.current_section, rt)
-    all_missing = missing_req + missing_opt
-    next_fields = get_next_fields(collected, session.current_section, report_type=rt)
-    current_section = sections[session.current_section]
-
-    # DEBUG POINT 1: State after normalization, before streaming
-    print(f"[CHAT DEBUG 1] collected_fields after update: {list(collected.keys())}")
-    print(f"[CHAT DEBUG 1] next_fields for prompt: {next_fields}")
-    print(f"[CHAT DEBUG 1] all_missing: {all_missing}")
-    print(f"[CHAT DEBUG 1] normalized this turn: {list(normalized.keys())}")
-
-    # Phase 2: Conversation (Claude Sonnet streaming)
-    from services.chat_conversation import generate_response
+    _HB_INTERVAL = 12  # seconds between keepalive heartbeats
 
     async def event_stream():
-        # Heartbeat while processing
         yield f"event: heartbeat\ndata: {{}}\n\n"
 
-        # Stream tokens with periodic heartbeats to prevent idle timeout.
-        # Reverse proxies (Railway, Cloudflare, Nginx) kill SSE connections
-        # that are idle for ~30-60s. Sonnet can take 5-15s before the first
-        # token arrives, so we send heartbeats every 12s during gaps.
-        #
-        # We use a Queue so the Anthropic stream runs uninterrupted in a
-        # background task while we can yield heartbeats from the generator.
-        _HB_INTERVAL = 12  # seconds between keepalive heartbeats
+        # ------------------------------------------------------------------
+        # Phase 1: Extract fields (inside the stream so heartbeats flow)
+        # ------------------------------------------------------------------
+        registry = get_registry_for_report(rt)
+        normalized = {}
+        field_meta = dict(session.field_meta or {})
+        collected = dict(session.collected_fields or {})
+
+        if req.quick_reply_field and req.quick_reply_value:
+            # Quick reply: normalize directly — no LLM extractor needed
+            qr_field = req.quick_reply_field
+            qr_result = normalize_field(qr_field, req.quick_reply_value, collected, report_type=rt)
+            if qr_result.confidence != "low":
+                collected[qr_field] = qr_result.value
+                normalized[qr_field] = qr_result.value
+                field_meta[qr_field] = {
+                    "confidence": qr_result.confidence,
+                    "source_turn": turn,
+                    "raw_input": req.quick_reply_value,
+                    "normalized": True,
+                    "confirmed": True,  # User clicked explicitly
+                }
+            log.info("[CHAT] Quick reply: %s=%s → %s", qr_field, req.quick_reply_value, qr_result.value)
+        else:
+            # Free text: call LLM extractor (Claude Haiku)
+            # Run in background task so we can yield heartbeats while waiting.
+            from services.chat_extractor import extract_fields
+
+            missing_req, missing_opt = get_missing_fields(collected, session.current_section, rt)
+            _all_missing = missing_req + missing_opt
+            asked_fields = get_next_fields(collected, session.current_section, report_type=rt)
+            cur_field = asked_fields[0] if asked_fields else ""
+            cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
+
+            async def _run_extraction() -> dict:
+                try:
+                    return await asyncio.wait_for(
+                        extract_fields(
+                            req.message,
+                            messages[-6:],
+                            _all_missing,
+                            collected,
+                            report_type=rt,
+                            current_field=cur_field,
+                            current_field_description=cur_desc,
+                        ),
+                        timeout=30,
+                    )
+                except asyncio.TimeoutError:
+                    log.warning("[CHAT] Extraction timeout, retrying once...")
+                    try:
+                        return await asyncio.wait_for(
+                            extract_fields(
+                                req.message,
+                                messages[-6:],
+                                _all_missing,
+                                collected,
+                                report_type=rt,
+                                current_field=cur_field,
+                                current_field_description=cur_desc,
+                            ),
+                            timeout=30,
+                        )
+                    except asyncio.TimeoutError:
+                        log.error("[CHAT] Extraction timeout on retry")
+                        return {}
+
+            extract_task = asyncio.create_task(_run_extraction())
+            while not extract_task.done():
+                try:
+                    await asyncio.wait_for(asyncio.shield(extract_task), timeout=_HB_INTERVAL)
+                except asyncio.TimeoutError:
+                    yield f"event: heartbeat\ndata: {{}}\n\n"
+                except Exception:
+                    break  # task raised — handled below
+
+            raw_extracted = extract_task.result() if not extract_task.cancelled() else {}
+
+            # Normalize extracted fields
+            for field_name, raw_value in raw_extracted.items():
+                if field_name not in registry:
+                    continue
+                if not is_field_visible(field_name, collected):
+                    continue
+
+                result = normalize_field(field_name, raw_value, collected, report_type=rt)
+
+                if result.confidence == "low":
+                    log.info("[CHAT] Field %s: low confidence, skipping", field_name)
+                    continue
+
+                collected[field_name] = result.value
+                normalized[field_name] = result.value
+
+                field_meta[field_name] = {
+                    "confidence": result.confidence,
+                    "source_turn": turn,
+                    "raw_input": str(raw_value),
+                    "normalized": True,
+                    "confirmed": False,
+                }
+
+        # Handle "weiter" / skip for optional fields
+        skip_words = {"weiter", "skip", "überspringen", "nächste", "weiter bitte", "nächste frage"}
+        if req.message.strip().lower() in skip_words and not normalized:
+            asked = get_next_fields(collected, session.current_section, report_type=rt)
+            if asked:
+                skip_field = asked[0]
+                skip_reg = registry.get(skip_field, {})
+                if not skip_reg.get("required"):
+                    collected[skip_field] = "" if skip_reg.get("type") == "text" else None
+                    field_meta[skip_field] = {
+                        "confidence": "high", "source_turn": turn,
+                        "raw_input": "skipped", "normalized": True, "confirmed": True,
+                    }
+                    log.info("[CHAT] User skipped optional field: %s", skip_field)
+
+        # Update session state
+        session.collected_fields = collected
+        session.field_meta = field_meta
+        session.updated_at = now
+
+        # Evaluate conditionals: remove hidden fields
+        for cond_field in ["selbststaendig", "bundesland"]:
+            if cond_field in collected and not is_field_visible(cond_field, collected):
+                del collected[cond_field]
+                if cond_field in field_meta:
+                    del field_meta[cond_field]
+                session.collected_fields = collected
+                session.field_meta = field_meta
+
+        db.commit()
+
+        # Check section transition
+        section_advanced = _check_section_transition(session, collected, rt)
+        if section_advanced:
+            db.commit()
+
+        # Determine next fields
+        sections = get_sections_for_report(rt)
+        missing_req, missing_opt = get_missing_fields(collected, session.current_section, rt)
+        all_missing = missing_req + missing_opt
+        next_fields = get_next_fields(collected, session.current_section, report_type=rt)
+        current_section = sections[session.current_section]
+
+        log.info("[CHAT] Turn %d: normalized=%s, next=%s", turn, list(normalized.keys()), next_fields)
+
+        # ------------------------------------------------------------------
+        # Phase 2: Stream Sonnet response with heartbeat keepalive
+        # ------------------------------------------------------------------
         _SENTINEL = object()
         queue: asyncio.Queue = asyncio.Queue()
 
@@ -396,16 +401,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             if not producer.done():
                 producer.cancel()
 
-        # Build QR from the closure-captured `collected` dict — NOT from
-        # session.collected_fields which may be expired after db.commit()
-        # DEBUG POINT 2: Inside streaming callback, QR generation
-        print(f"[CHAT DEBUG 2] QR generation - collected keys: {list(collected.keys())}")
-        print(f"[CHAT DEBUG 2] session.current_section: {session.current_section}")
+        # ------------------------------------------------------------------
+        # Phase 3: QR generation, state update, done
+        # ------------------------------------------------------------------
         qr_next = get_next_fields(collected, session.current_section, report_type=rt)
-        print(f"[CHAT DEBUG 2] QR next_fields: {qr_next}")
         quick_replies = _build_quick_replies(qr_next, rt, collected)
-        print(f"[CHAT DEBUG 2] QR result fields: {[r.field for r in quick_replies]}")
-        print(f"[CHAT DEBUG 2] QR result options count: {[len(r.options) for r in quick_replies]}")
         assistant_msg = {
             "role": "assistant",
             "content": full_response,
@@ -440,20 +440,14 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             session.messages = msgs2
             db.commit()
 
-        # Send state update — pass collected explicitly to avoid
-        # stale session.collected_fields after db.commit() expiry
         state = _build_session_state(session, collected_override=collected)
         state.quick_replies = quick_replies
         yield f"event: state_update\ndata: {state.model_dump_json()}\n\n"
 
-        # Send quick replies
         if quick_replies:
             qr_data = [qr.model_dump() for qr in quick_replies]
-            # DEBUG POINT 3: What we actually send over SSE
-            print(f"[CHAT DEBUG 3] Sending QR event with fields: {[r['field'] for r in qr_data]}")
             yield f"event: quick_replies\ndata: {json.dumps(qr_data)}\n\n"
 
-        # Done signal
         yield f"event: done\ndata: {json.dumps({'turn': turn})}\n\n"
 
     return StreamingResponse(
