@@ -67,6 +67,11 @@ class ChatSessionState(BaseModel):
     next_fields: list[str]
     is_completable: bool
 
+    # Draft-Pattern (Sprint 1: always null/false until Sprint 2 activates writes)
+    pending_field: Optional[str] = None
+    pending_value: Optional[Any] = None
+    dialog_mode: bool = False
+
     # Quick Replies
     quick_replies: Optional[list[QuickReply]] = None
 
@@ -109,6 +114,17 @@ class ChatSessionResponse(BaseModel):
     messages: list[ChatMessage]
     resumable: bool
     last_activity: datetime
+
+
+# ---------------------------------------------------------------------------
+# POST /api/chat/confirm  (Draft-Pattern — Sprint 2 logic, Sprint 1 skeleton)
+# ---------------------------------------------------------------------------
+
+class ConfirmFieldRequest(BaseModel):
+    session_id: UUID
+    field: str
+    value: Optional[Any] = None  # Optional: user can send corrected value
+    action: str = "confirm"  # "confirm" or "edit"
 
 
 # ---------------------------------------------------------------------------
