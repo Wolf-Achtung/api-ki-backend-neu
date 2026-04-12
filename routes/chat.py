@@ -690,7 +690,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             session.messages = msgs2
             db.commit()
 
-        state = _build_session_state(session, collected_override=collected)
+        state = _build_session_state(session, collected_override=collected, section_override=_current_section)
         state.quick_replies = quick_replies
         # Draft fields only included when DRAFT_MODE_ENABLED — otherwise identical to pre-draft output
         _draft_exclude = None if DRAFT_MODE_ENABLED else {"pending_field", "pending_value", "dialog_mode"}
@@ -1177,7 +1177,9 @@ def _complete_redirect(report_type: str, briefing_id: int) -> str:
 
 
 def _build_session_state(
-    session: ChatSession, collected_override: dict | None = None,
+    session: ChatSession,
+    collected_override: dict | None = None,
+    section_override: int | None = None,
 ) -> ChatSessionState:
     """Build ChatSessionState from a ChatSession DB model.
 
@@ -1185,12 +1187,13 @@ def _build_session_state(
         collected_override: If provided, use this instead of session.collected_fields.
             Needed inside streaming callbacks where session attributes may be expired
             after db.commit().
+        section_override: If provided, use this instead of session.current_section.
     """
     rt = session.report_type
     sections = get_sections_for_report(rt)
     registry = get_registry_for_report(rt)
     collected = collected_override if collected_override is not None else (session.collected_fields or {})
-    section_idx = session.current_section
+    section_idx = section_override if section_override is not None else session.current_section
     section = sections[section_idx]
 
     missing_req, missing_opt = get_missing_fields(collected, section_idx, rt)
