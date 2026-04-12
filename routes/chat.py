@@ -533,13 +533,6 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         )
         db.commit()
 
-        # TEMPORARY DEBUG — remove after verification
-        _verify = db.execute(
-            _sa_text("SELECT collected_fields FROM chat_sessions WHERE id = :sid"),
-            {"sid": str(session.id)}
-        ).fetchone()
-        log.info("[CHAT-DEBUG] After raw SQL write: collected_keys=%s", list((_verify[0] or {}).keys()))
-
         # Check section transition (raw SQL inside, commits internally)
         section_advanced = _check_section_transition(session, collected, db, rt)
         if section_advanced:
