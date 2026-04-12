@@ -251,6 +251,66 @@ def get_enum_values_for_report(report_type: str) -> dict[str, list[str]]:
     if report_type == "strategy":
         return STRATEGY_ENUM_VALUES
     return ENUM_VALUES
+
+
+# ===========================================================================
+# User Profile Detection (for context-aware UX)
+# ===========================================================================
+
+def compute_user_profile(collected: dict) -> dict:
+    """
+    Derive user profile flags from collected fields.
+
+    Returns dict with:
+      - is_solo: True if unternehmensgroesse == "1"
+      - is_small_team: True if unternehmensgroesse == "2–10"
+      - is_kmu: True if unternehmensgroesse == "11–100"
+      - is_expert: True if 2+ expert signals detected
+      - is_intermediate: True if exactly 1 expert signal
+      - expert_signals: int count (0-4)
+
+    Used by chat.py to filter QR options, adapt labels, and skip
+    irrelevant fields.
+    """
+    size = collected.get("unternehmensgroesse")
+    is_solo = size == "1"
+    is_small_team = size in ("2–10", "2-10")
+    is_kmu = size == "11–100" or size == "11-100"
+
+    expert_signals = 0
+
+    # Signal (a): ki_einsatz has 3+ active areas
+    ki_einsatz = collected.get("ki_einsatz", [])
+    if isinstance(ki_einsatz, list):
+        active = [x for x in ki_einsatz if x != "noch_keine"]
+        if len(active) >= 3:
+            expert_signals += 1
+
+    # Signal (b): ki_kompetenz is high
+    if collected.get("ki_kompetenz") in ("hoch", "sehr_hoch"):
+        expert_signals += 1
+
+    # Signal (c): hauptleistung mentions KI/API/LLM
+    hl = str(collected.get("hauptleistung", "")).lower()
+    ki_keywords = ("ki", " ai ", "api", "llm", "machine learning",
+                   "automation", "künstliche intelligenz", "deep learning",
+                   "prompt", "chatgpt", "anthropic", "openai")
+    if any(kw in hl for kw in ki_keywords):
+        expert_signals += 1
+
+    # Signal (d): digitalisierungsgrad >= 8
+    dg = collected.get("digitalisierungsgrad")
+    if isinstance(dg, (int, float)) and dg >= 8:
+        expert_signals += 1
+
+    return {
+        "is_solo": is_solo,
+        "is_small_team": is_small_team,
+        "is_kmu": is_kmu,
+        "is_expert": expert_signals >= 2,
+        "is_intermediate": expert_signals == 1,
+        "expert_signals": expert_signals,
+    }
 # ===========================================================================
 
 CONDITIONALS: dict[str, dict] = {
