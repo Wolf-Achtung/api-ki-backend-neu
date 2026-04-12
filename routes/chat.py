@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -32,6 +33,7 @@ from schemas.chat import (
     ChatSessionSummary,
     ChatStartRequest,
     ChatStartResponse,
+    ConfirmFieldRequest,
     QuickReply,
     QuickReplyOption,
 )
@@ -57,6 +59,9 @@ from services.chat_normalizer import (
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 log = logging.getLogger(__name__)
+
+# Feature flag: Draft-Pattern (Sprint 1 infra — default off)
+DRAFT_MODE_ENABLED = os.getenv("DRAFT_MODE_ENABLED", "false").lower() == "true"
 
 R1_WELCOME = (
     "Willkommen bei ki-sicherheit.jetzt! Ich bin ein KI-Assistent und "
@@ -442,7 +447,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         state = _build_session_state(session, collected_override=collected)
         state.quick_replies = quick_replies
-        yield f"event: state_update\ndata: {state.model_dump_json()}\n\n"
+        # Draft fields only included when DRAFT_MODE_ENABLED — otherwise identical to pre-draft output
+        _draft_exclude = None if DRAFT_MODE_ENABLED else {"pending_field", "pending_value", "dialog_mode"}
+        yield f"event: state_update\ndata: {state.model_dump_json(exclude=_draft_exclude)}\n\n"
 
         if quick_replies:
             qr_data = [qr.model_dump() for qr in quick_replies]
@@ -459,6 +466,19 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             "X-Accel-Buffering": "no",
         },
     )
+
+
+# ===========================================================================
+# POST /api/chat/confirm  (Draft-Pattern — Sprint 1 skeleton only)
+# ===========================================================================
+
+@router.post("/confirm")
+async def confirm_field(req: ConfirmFieldRequest, db: Session = Depends(get_db)):
+    """Confirm a draft value and write it to collected_fields (Sprint 2)."""
+    if not DRAFT_MODE_ENABLED:
+        raise HTTPException(status_code=404, detail="Draft mode not enabled")
+    # TODO Sprint 2: Implement confirm/edit logic
+    raise HTTPException(status_code=501, detail="Not yet implemented")
 
 
 # ===========================================================================
@@ -611,6 +631,28 @@ async def chat_complete(
         report_type=rt,
         redirect_url=redirect,
     )
+
+
+# ===========================================================================
+# SSE Event Helpers — Draft-Pattern (Sprint 1: defined, not yet called)
+# ===========================================================================
+
+def _sse_draft_value(field: str, value, label: str) -> str:
+    """SSE event: draft value extracted, awaiting user confirmation."""
+    data = json.dumps({"field": field, "value": value, "label": label})
+    return f"event: draft_value\ndata: {data}\n\n"
+
+
+def _sse_field_confirmed(field: str, value) -> str:
+    """SSE event: draft confirmed, value written to collected_fields."""
+    data = json.dumps({"field": field, "value": value})
+    return f"event: field_confirmed\ndata: {data}\n\n"
+
+
+def _sse_dialog_mode(active: bool) -> str:
+    """SSE event: dialog mode toggled (follow-up question vs. progression)."""
+    data = json.dumps({"active": active})
+    return f"event: dialog_mode\ndata: {data}\n\n"
 
 
 # ===========================================================================
@@ -857,6 +899,9 @@ def _build_session_state(
     summary_sent = _has_summary_been_sent(session)
     completable = last_section and all_done and summary_sent
 
+    # Draft-Pattern state (backward-compatible: old sessions without column → {})
+    draft = getattr(session, 'draft_state', None) or {}
+
     return ChatSessionState(
         session_id=session.id,
         report_type=session.report_type,
@@ -872,6 +917,9 @@ def _build_session_state(
         total_fields=total,
         next_fields=next_fields,
         is_completable=completable,
+        pending_field=draft.get("pending_field"),
+        pending_value=draft.get("pending_value"),
+        dialog_mode=draft.get("dialog_mode", False),
     )
 
 
