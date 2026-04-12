@@ -621,11 +621,74 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
 @router.post("/confirm")
 async def confirm_field(req: ConfirmFieldRequest, db: Session = Depends(get_db)):
-    """Confirm a draft value and write it to collected_fields (Sprint 2)."""
+    """Confirm or discard a draft value via explicit endpoint."""
     if not DRAFT_MODE_ENABLED:
         raise HTTPException(status_code=404, detail="Draft mode not enabled")
-    # TODO Sprint 2: Implement confirm/edit logic
-    raise HTTPException(status_code=501, detail="Not yet implemented")
+
+    session = db.query(ChatSession).filter(ChatSession.id == req.session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+    if session.status != "active":
+        raise HTTPException(status_code=400, detail="Session ist nicht aktiv")
+
+    pending = dict(getattr(session, 'draft_state', None) or {})
+    if not pending.get("pending_field"):
+        raise HTTPException(status_code=400, detail="Kein offener Entwurf vorhanden")
+
+    rt = session.report_type
+    now = datetime.now(timezone.utc)
+
+    if req.action == "confirm":
+        field = pending["pending_field"]
+        value = req.value if req.value is not None else pending["pending_value"]
+
+        collected = dict(session.collected_fields or {})
+        collected[field] = value
+        session.collected_fields = collected
+
+        field_meta = dict(session.field_meta or {})
+        field_meta[field] = {
+            "confidence": "high",
+            "source_turn": session.turn_count,
+            "raw_input": "confirmed_via_endpoint",
+            "normalized": True,
+            "confirmed": True,
+        }
+        session.field_meta = field_meta
+        session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
+        session.updated_at = now
+
+        # Section transition check
+        _check_section_transition(session, collected, rt)
+        db.commit()
+
+        next_fields = get_next_fields(collected, session.current_section, report_type=rt)
+        log.info("[CHAT] Confirm endpoint: %s=%r confirmed", field, value)
+
+        return {
+            "status": "confirmed",
+            "field": field,
+            "value": value,
+            "next_fields": next_fields,
+            "progress_percent": calculate_progress(collected, rt),
+        }
+
+    elif req.action == "edit":
+        cleared_field = pending["pending_field"]
+        session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
+        session.updated_at = now
+        db.commit()
+
+        log.info("[CHAT] Confirm endpoint: draft for %s cleared (edit)", cleared_field)
+
+        return {
+            "status": "cleared",
+            "field": cleared_field,
+            "message": "Entwurf verworfen, bitte erneut antworten",
+        }
+
+    else:
+        raise HTTPException(status_code=400, detail=f"Ungültige Aktion: {req.action}")
 
 
 # ===========================================================================
