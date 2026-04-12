@@ -540,11 +540,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         ).fetchone()
         log.info("[CHAT-DEBUG] After raw SQL write: collected_keys=%s", list((_verify[0] or {}).keys()))
 
-        # Check section transition
-        section_advanced = _check_section_transition(session, collected, rt)
+        # Check section transition (raw SQL inside, commits internally)
+        section_advanced = _check_section_transition(session, collected, db, rt)
         if section_advanced:
-            db.commit()
-            _current_section = session.current_section  # refresh after transition
+            _current_section = session.current_section
 
         # Determine next fields
         sections = get_sections_for_report(rt)
@@ -756,9 +755,9 @@ async def confirm_field(req: ConfirmFieldRequest, db: Session = Depends(get_db))
         session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
         session.updated_at = now
 
-        # Section transition check
-        _check_section_transition(session, collected, rt)
-        db.commit()
+        # Section transition check (raw SQL inside, commits internally)
+        _check_section_transition(session, collected, db, rt)
+        db.commit()  # for remaining ORM fields (collected_fields, draft_state, etc.)
 
         next_fields = get_next_fields(collected, session.current_section, report_type=rt)
         log.info("[CHAT] Confirm endpoint: %s=%r confirmed", field, value)
@@ -967,10 +966,14 @@ def _sse_dialog_mode(active: bool) -> str:
 # Helpers
 # ===========================================================================
 
-def _check_section_transition(session: ChatSession, collected: dict, report_type: str = "r1") -> bool:
+def _check_section_transition(
+    session: ChatSession, collected: dict, db: Session, report_type: str = "r1",
+) -> bool:
     """
     Check if all fields (required + optional) of the current section are
-    collected. If so, advance current_section. Returns True if advanced.
+    collected. If so, advance current_section via raw SQL (same pattern as
+    collected_fields) to avoid expired-ORM-object issues. Returns True if
+    advanced.
     """
     sections = get_sections_for_report(report_type)
     if session.current_section >= len(sections) - 1:
@@ -980,13 +983,23 @@ def _check_section_transition(session: ChatSession, collected: dict, report_type
     if missing_req or missing_opt:
         return False
 
-    session.current_section += 1
+    new_section = session.current_section + 1
     log.info(
         "[CHAT] Section transition: %d -> %d (%s)",
-        session.current_section - 1,
         session.current_section,
-        sections[session.current_section]["name"],
+        new_section,
+        sections[new_section]["name"],
     )
+
+    # Persist via raw SQL — ORM object may be expired after prior raw SQL commit
+    db.execute(
+        _sa_text(
+            "UPDATE chat_sessions SET current_section = :idx, updated_at = :ts WHERE id = :sid"
+        ),
+        {"idx": new_section, "sid": str(session.id), "ts": datetime.now(timezone.utc)},
+    )
+    db.commit()
+    session.current_section = new_section  # keep local object in sync
     return True
 
 
