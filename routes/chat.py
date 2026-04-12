@@ -48,6 +48,7 @@ from services.chat_normalizer import (
     STRATEGY_FIELD_REGISTRY,
     STRATEGY_SECTIONS,
     calculate_progress,
+    compute_user_profile,
     get_enum_values_for_report,
     get_field_label,
     get_missing_fields,
@@ -627,10 +628,16 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # QR generation — QR clicks always get normal next-field buttons.
         # Draft suppression only applies to free-text turns.
         qr_next = get_next_fields(collected, _current_section, report_type=rt)
+
+        # Fix 4: For strategy sessions, load R1 profile for context-aware QR
+        _profile_ctx = None
+        if rt == "strategy":
+            _profile_ctx = _load_r1_profile_for_strategy(session, db)
+
         if _is_qr_click:
             # QR clicks are explicit user actions — never show confirm/edit
             # buttons. Draft was already handled in the QR housekeeping step.
-            quick_replies = _build_quick_replies(qr_next, rt, collected)
+            quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
         elif DRAFT_MODE_ENABLED and _pending_after_turn:
             # Free-text turn with pending draft value → show confirm/edit
             quick_replies = [QuickReply(
@@ -646,7 +653,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             # Dialog mode → no QR buttons
             quick_replies = []
         else:
-            quick_replies = _build_quick_replies(qr_next, rt, collected)
+            quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
 
         assistant_msg = {
             "role": "assistant",
@@ -795,7 +802,8 @@ async def chat_session_get(session_id: UUID, db: Session = Depends(get_db)):
     rt = session.report_type
     state = _build_session_state(session)
     next_fields = get_next_fields(session.collected_fields, session.current_section, report_type=rt)
-    state.quick_replies = _build_quick_replies(next_fields, rt, session.collected_fields)
+    _profile_ctx = _load_r1_profile_for_strategy(session, db) if rt == "strategy" else None
+    state.quick_replies = _build_quick_replies(next_fields, rt, session.collected_fields, _profile_ctx)
 
     # Last 10 messages
     all_msgs = session.messages or []
@@ -1703,7 +1711,8 @@ _QR_LABELS: dict[str, str] = {
 
 
 # ---------------------------------------------------------------------------
-# Freetext field suggestions (branche-specific)
+# Freetext field suggestions (branche-specific + profile-aware)
+# Fix 2: All 13 branches covered for zeitersparnis_prioritaet
 # ---------------------------------------------------------------------------
 
 FREETEXT_SUGGESTIONS: dict[str, dict[str, list[str]]] = {
@@ -1716,6 +1725,11 @@ FREETEXT_SUGGESTIONS: dict[str, dict[str, list[str]]] = {
         "finanzen": ["Compliance-Prüfung", "Reporting", "Kundenkommunikation"],
         "gesundheit": ["Dokumentation", "Terminverwaltung", "Abrechnung"],
         "gastronomie": ["Bestellmanagement", "Personalplanung", "Buchhaltung"],
+        "bildung": ["Unterrichtsvorbereitung", "Teilnehmerverwaltung", "Zertifikatserstellung", "Evaluationen"],
+        "verwaltung": ["Antragsbearbeitung", "Berichtswesen", "Bürgerkommunikation", "Dokumentation"],
+        "medien": ["Briefings & Konzepte", "Rechtemanagement", "Postproduktion", "Projektkoordination"],
+        "industrie": ["Qualitätsdokumentation", "Wartungsplanung", "Lieferanten-Kommunikation", "Reporting"],
+        "logistik": ["Tourenplanung", "Sendungsverfolgung", "Zolldokumentation", "Kundenkommunikation"],
         "default": ["E-Mails & Kommunikation", "Dokumentation", "Recherche", "Administration"],
     },
     "ki_projekte": {
@@ -1723,16 +1737,98 @@ FREETEXT_SUGGESTIONS: dict[str, dict[str, list[str]]] = {
     },
 }
 
+# Expert-override: when is_expert=True, use these instead
+_EXPERT_FREETEXT_SUGGESTIONS: dict[str, list[str]] = {
+    "ki_projekte": ["API-Integration (OpenAI, Anthropic, etc.)", "Eigene KI-Workflows", "RAG / Retrieval-Systeme"],
+}
+
+# Solo-override: when is_solo=True, use these instead
+_SOLO_FREETEXT_SUGGESTIONS: dict[str, list[str]] = {
+    "ki_projekte": ["KI-Tools im Einsatz", "Automatisierungs-Tests", "Noch keine Projekte"],
+}
+
+
+# ---------------------------------------------------------------------------
+# Profile-aware QR label overrides
+# ---------------------------------------------------------------------------
+
+# Solo: replace team-centric labels
+_SOLO_QR_LABELS: dict[str, str] = {
+    "ki_kompetenz": "KI-Kompetenz",
+    "change_management": "Veränderungsbereitschaft",
+    "interne_ki_kompetenzen": "KI-/Digitalisierungskompetenz",
+    "innovationsprozess": "Innovationsansatz",
+}
+
+# Small team (2–10): slightly adapted labels
+_SMALL_TEAM_QR_LABELS: dict[str, str] = {
+    "innovationsprozess": "Innovationsansatz",
+}
+
+# Expert: replace beginner-centric labels
+_EXPERT_QR_LABELS: dict[str, str] = {
+    "pilot_bereich": "KI-Ausbau-Potenzial",
+    "ki_projekte": "Aktive KI-Projekte",
+}
+
+# Intermediate (1 expert signal): softer expert labels
+_INTERMEDIATE_QR_LABELS: dict[str, str] = {
+    "pilot_bereich": "Nächstes KI-Projekt",
+}
+
+
+# ---------------------------------------------------------------------------
+# Profile-aware QR option filters
+# ---------------------------------------------------------------------------
+
+# Fix 1: change_management removed — all options stay, only label adapted
+# Solo: QR option values to REMOVE per field
+_SOLO_QR_REMOVE: dict[str, set[str]] = {
+    "innovationsprozess": {"innovationsteam", "mitarbeitende"},
+    "ki_hemmnisse": {"teamakzeptanz"},
+}
+
+# Fix 3: Small team (2–10): remove enterprise-only options
+_SMALL_TEAM_QR_REMOVE: dict[str, set[str]] = {
+    "innovationsprozess": {"innovationsteam"},
+    "s7_entscheidung": {"Muss Aufsichtsrat/Beirat informieren"},
+}
+
+# Expert: QR option values to REMOVE per field
+_EXPERT_QR_REMOVE: dict[str, set[str]] = {
+    "ki_einsatz": {"noch_keine"},
+    "ki_kompetenz": {"keine"},
+    "anwendungsfaelle": {"keine_angabe"},
+    "ki_ziele": {"keine_angabe"},
+}
+
+# Intermediate: lighter expert filter (only remove most obvious)
+_INTERMEDIATE_QR_REMOVE: dict[str, set[str]] = {
+    "ki_einsatz": {"noch_keine"},
+}
+
 
 def _build_quick_replies(
     next_fields: list[str],
     report_type: str = "r1",
     collected_fields: dict | None = None,
+    profile_context: dict | None = None,
 ) -> list[QuickReply]:
-    """Build quick reply buttons for enum fields and freetext suggestions."""
+    """Build quick reply buttons for enum fields and freetext suggestions.
+
+    Profile-aware: adapts labels and filters options based on
+    Solo/Team/Expert/Intermediate detection from collected_fields.
+
+    Args:
+        profile_context: Optional pre-computed profile dict. Used by
+            Strategy sessions to pass R1-derived profile data that
+            isn't in the Strategy collected_fields.
+    """
     registry = get_registry_for_report(report_type)
     collected = collected_fields or {}
+    profile = profile_context or compute_user_profile(collected)
     replies = []
+
     for field_name in next_fields:
         if field_name in collected:
             continue  # Already collected — no buttons
@@ -1741,10 +1837,10 @@ def _build_quick_replies(
 
         # Freetext suggestions (for selected text fields)
         if reg.get("type") == "text" and field_name in FREETEXT_SUGGESTIONS:
-            suggestions = _get_freetext_suggestions(field_name, collected)
+            suggestions = _get_freetext_suggestions(field_name, collected, profile)
             if suggestions:
                 options = [QuickReplyOption(value=s, label=s) for s in suggestions]
-                label = _QR_LABELS.get(field_name, field_name)
+                label = _get_context_label(field_name, profile)
                 replies.append(QuickReply(
                     field=field_name, label=f"{label} (Vorschläge)", options=options,
                 ))
@@ -1763,11 +1859,14 @@ def _build_quick_replies(
         if not options_data:
             continue
 
+        # Profile-aware option filtering
+        options_data = _filter_options_by_profile(field_name, options_data, profile)
+
         options = [
             QuickReplyOption(value=o["value"], label=o["label"], description=o.get("description"))
             for o in options_data
         ]
-        label = _QR_LABELS.get(field_name, field_name)
+        label = _get_context_label(field_name, profile)
         is_multi = reg.get("type") == "multi"
         max_sel = reg.get("max_select") if is_multi else None
         replies.append(QuickReply(
@@ -1778,13 +1877,98 @@ def _build_quick_replies(
     return replies
 
 
-def _get_freetext_suggestions(field_name: str, collected: dict) -> list[str]:
-    """Get branche-specific suggestions for a freetext field."""
+def _get_context_label(field_name: str, profile: dict) -> str:
+    """Get profile-aware QR label. Priority: expert > intermediate > solo > small_team > default."""
+    if profile.get("is_expert"):
+        label = _EXPERT_QR_LABELS.get(field_name)
+        if label:
+            return label
+    if profile.get("is_intermediate"):
+        label = _INTERMEDIATE_QR_LABELS.get(field_name)
+        if label:
+            return label
+    if profile.get("is_solo"):
+        label = _SOLO_QR_LABELS.get(field_name)
+        if label:
+            return label
+    if profile.get("is_small_team"):
+        label = _SMALL_TEAM_QR_LABELS.get(field_name)
+        if label:
+            return label
+    return _QR_LABELS.get(field_name, field_name)
+
+
+def _filter_options_by_profile(
+    field_name: str, options: list[dict], profile: dict,
+) -> list[dict]:
+    """Remove QR options that are irrelevant for the user's profile."""
+    remove_values: set[str] = set()
+    # Size-based filters
+    if profile.get("is_solo"):
+        remove_values |= _SOLO_QR_REMOVE.get(field_name, set())
+    if profile.get("is_small_team"):
+        remove_values |= _SMALL_TEAM_QR_REMOVE.get(field_name, set())
+    # Expertise-based filters
+    if profile.get("is_expert"):
+        remove_values |= _EXPERT_QR_REMOVE.get(field_name, set())
+    elif profile.get("is_intermediate"):
+        remove_values |= _INTERMEDIATE_QR_REMOVE.get(field_name, set())
+    if not remove_values:
+        return options
+    filtered = [o for o in options if o["value"] not in remove_values]
+    # Safety: never return empty list — keep at least original
+    return filtered if filtered else options
+
+
+def _get_freetext_suggestions(
+    field_name: str, collected: dict, profile: dict | None = None,
+) -> list[str]:
+    """Get branche-specific + profile-aware suggestions for a freetext field."""
+    # Expert override takes priority
+    if profile and profile.get("is_expert"):
+        expert = _EXPERT_FREETEXT_SUGGESTIONS.get(field_name)
+        if expert:
+            return expert
+    # Solo override
+    if profile and profile.get("is_solo"):
+        solo = _SOLO_FREETEXT_SUGGESTIONS.get(field_name)
+        if solo:
+            return solo
+    # Default: branche-specific
     suggestions_map = FREETEXT_SUGGESTIONS.get(field_name, {})
     if not suggestions_map:
         return []
     branche = collected.get("branche", "default")
     return suggestions_map.get(branche, suggestions_map.get("default", []))
+
+
+# ---------------------------------------------------------------------------
+# Fix 4: R1 profile loading for Strategy sessions
+# ---------------------------------------------------------------------------
+
+def _load_r1_profile_for_strategy(session, db) -> dict | None:
+    """Load R1 collected_fields via briefing to compute user profile for Strategy.
+
+    Strategy sessions only have strategy fields in collected_fields.
+    To enable profile-aware QR filtering, we need the R1 data
+    (hauptleistung, ki_einsatz, ki_kompetenz, digitalisierungsgrad, etc.)
+
+    Returns a pre-computed profile dict, or None if R1 data unavailable.
+    """
+    if not getattr(session, "briefing_id", None):
+        return None
+    try:
+        briefing = db.query(Briefing).filter(Briefing.id == session.briefing_id).first()
+        if not briefing:
+            return None
+        # Briefing.questionnaire contains the R1 form data
+        r1_data = getattr(briefing, "questionnaire", None) or {}
+        if not r1_data or not isinstance(r1_data, dict):
+            return None
+        return compute_user_profile(r1_data)
+    except Exception as exc:
+        log.warning("[CHAT] Could not load R1 profile for strategy: %s", exc)
+        return None
 
 
 def _build_bundesland_options(country: str) -> list[dict]:
