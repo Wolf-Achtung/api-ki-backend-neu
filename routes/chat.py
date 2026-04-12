@@ -632,6 +632,28 @@ async def chat_complete(
 
 
 # ===========================================================================
+# SSE Event Helpers — Draft-Pattern (Sprint 1: defined, not yet called)
+# ===========================================================================
+
+def _sse_draft_value(field: str, value, label: str) -> str:
+    """SSE event: draft value extracted, awaiting user confirmation."""
+    data = json.dumps({"field": field, "value": value, "label": label})
+    return f"event: draft_value\ndata: {data}\n\n"
+
+
+def _sse_field_confirmed(field: str, value) -> str:
+    """SSE event: draft confirmed, value written to collected_fields."""
+    data = json.dumps({"field": field, "value": value})
+    return f"event: field_confirmed\ndata: {data}\n\n"
+
+
+def _sse_dialog_mode(active: bool) -> str:
+    """SSE event: dialog mode toggled (follow-up question vs. progression)."""
+    data = json.dumps({"active": active})
+    return f"event: dialog_mode\ndata: {data}\n\n"
+
+
+# ===========================================================================
 # Helpers
 # ===========================================================================
 
