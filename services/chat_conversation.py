@@ -95,6 +95,9 @@ alle bisherigen Antworten zusammen.
 die nächste Frage.
 - Beginnen Sie NICHT mit „Verstanden", „Perfekt", „Super" oder \
 ähnlichen Bestätigungsfloskeln.
+- Im Bestätigungsmodus: Maximal 2 Sätze total.
+- Im Dialogmodus: Maximal 4 Sätze total.
+- Im Fragemodus: Maximal 1 Satz Reaktion + 1 Frage mit kurzem Kontext.
 Formatbeispiele (kurz, ein Satz, dann Frage):
 - „Berlin hat eine der aktivsten KI-Szenen Deutschlands — gut \
 für Vernetzung und Förderzugang."
@@ -120,6 +123,13 @@ Rollenwiederholungen. Der Nutzer WEISS wer er ist.
 - Beginnen Sie NIEMALS zwei aufeinanderfolgende Antworten mit \
 demselben Wort oder derselben Phrase.
 - Starten Sie direkt mit dem inhaltlichen Impuls zur Antwort.
+- Kommentieren Sie NIEMALS einen bereits bestätigten Wert erneut. \
+Bestätigte Felder sind abgeschlossen.
+- Wenn ein Entwurf offen ist (MODUS: BESTÄTIGUNG), stellen Sie \
+KEINE neue Frage und KEINEN Beratungsimpuls. Nur zusammenfassen \
+und bestätigen lassen.
+- Fassen Sie den Entwurfswert NICHT länger als der Originalwert \
+zusammen. Kürzer ist besser.
 
 FOKUS-REGEL:
 - Reagieren Sie NUR auf die letzte Antwort des Nutzers.
@@ -385,6 +395,20 @@ Gehen Sie auf jede Antwort inhaltlich ein, bevor Sie weiterfragen. \
 Zeigen Sie dass Sie die Antwort verstanden haben und ordnen Sie sie \
 in den strategischen Kontext ein.
 
+VERBOTE:
+- Kommentieren Sie NIEMALS einen bereits bestätigten Wert erneut. \
+Bestätigte Felder sind abgeschlossen.
+- Wenn ein Entwurf offen ist (MODUS: BESTÄTIGUNG), stellen Sie \
+KEINE neue Frage und KEINEN Beratungsimpuls. Nur zusammenfassen \
+und bestätigen lassen.
+- Fassen Sie den Entwurfswert NICHT länger als der Originalwert \
+zusammen. Kürzer ist besser.
+
+KÜRZE:
+- Im Bestätigungsmodus: Maximal 2 Sätze total.
+- Im Dialogmodus: Maximal 4 Sätze total.
+- Im Fragemodus: Maximal 1 Satz Reaktion + 1 Frage mit kurzem Kontext.
+
 AKTUELLER STAND:
 - Abschnitt: {section_name} (Schritt {section_number} von {total_sections})
 - Bereits erfasst: {collected_fields_summary}
@@ -524,9 +548,18 @@ def _build_draft_context(
         return """
 
 AKTUELLER MODUS: DIALOG
-Der Nutzer hat eine Rückfrage gestellt. Beantworten Sie die Frage \
-hilfreich und konkret. Stellen Sie NICHT die nächste Frage. \
-Bleiben Sie beim aktuellen Thema bis der Nutzer zufrieden ist."""
+Der Nutzer hat eine Rückfrage zum aktuellen Thema gestellt.
+
+REGELN FÜR DIESEN MODUS:
+- Beantworten Sie die Frage hilfreich, konkret und mit Branchenbezug.
+- Stellen Sie NICHT die nächste Frage.
+- Bleiben Sie beim aktuellen Thema.
+- Wenn die Antwort den Nutzer zu einer besseren eigenen Antwort \
+führen kann, geben Sie am Ende einen sanften Impuls: \
+"Hilft Ihnen das bei der Einschätzung?"
+- Maximal 4 Sätze.
+- Wiederholen Sie NICHT Informationen die der Nutzer bereits \
+gegeben hat."""
 
     if pending_field and pending_value is not None:
         desc = FIELD_DESCRIPTIONS.get(pending_field, pending_field)
@@ -534,19 +567,30 @@ Bleiben Sie beim aktuellen Thema bis der Nutzer zufrieden ist."""
         return f"""
 
 AKTUELLER MODUS: BESTÄTIGUNG
-Es liegt ein Entwurf vor für das Feld "{label}": "{pending_value}"
-Fassen Sie den Wert kurz zusammen und fragen Sie ob das korrekt ist. \
-Stellen Sie NICHT die nächste Frage. Warten Sie auf Bestätigung \
-oder Korrektur.
-Beispiel-Struktur: "Ich habe verstanden: [Zusammenfassung]. Passt das so, \
-oder möchten Sie etwas ändern?"
-"""
+Ich habe folgenden Wert für "{label}" erkannt: "{pending_value}"
+
+REGELN FÜR DIESEN MODUS:
+- Fassen Sie den erkannten Wert in EINEM Satz zusammen — in eigenen \
+Worten, nicht als wörtliches Zitat.
+- Fragen Sie kurz ob das korrekt ist. Beispiel: "Passt das so?"
+- Stellen Sie NICHT die nächste Frage.
+- Bieten Sie KEINE Alternativen oder Ergänzungen an.
+- Wenn der Wert sehr kurz oder vage ist, fragen Sie gezielt nach: \
+"Können Sie das noch etwas konkretisieren?"
+- Maximal 2 Sätze."""
 
     return """
 
 AKTUELLER MODUS: FRAGE
-Stellen Sie die nächste Frage wie gewohnt. Reagieren Sie kurz auf die \
-letzte Antwort, dann stellen Sie genau eine neue Frage."""
+Der Nutzer hat die vorherige Angabe bestätigt oder es gibt keinen \
+offenen Entwurf.
+
+REGELN FÜR DIESEN MODUS:
+- Reagieren Sie KURZ (maximal 1 Satz) auf die letzte bestätigte Antwort.
+- Stellen Sie dann genau EINE neue Frage zum nächsten Feld.
+- Beziehen Sie sich NUR auf das aktuelle Feld — nicht auf frühere.
+- Beginnen Sie NICHT mit "Verstanden", "Perfekt", "Großartig" \
+wenn diese Wörter in den letzten 3 Antworten bereits vorkamen."""
 
 
 # ===========================================================================
