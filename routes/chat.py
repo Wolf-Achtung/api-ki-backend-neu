@@ -1961,8 +1961,8 @@ def _load_r1_profile_for_strategy(session, db) -> dict | None:
         briefing = db.query(Briefing).filter(Briefing.id == session.briefing_id).first()
         if not briefing:
             return None
-        # Briefing.questionnaire contains the R1 form data
-        r1_data = getattr(briefing, "questionnaire", None) or {}
+        # Briefing.answers contains the R1 form data
+        r1_data = getattr(briefing, "answers", None) or {}
         if not r1_data or not isinstance(r1_data, dict):
             return None
         return compute_user_profile(r1_data)
