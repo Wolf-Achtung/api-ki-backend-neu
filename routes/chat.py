@@ -447,7 +447,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         state = _build_session_state(session, collected_override=collected)
         state.quick_replies = quick_replies
-        yield f"event: state_update\ndata: {state.model_dump_json()}\n\n"
+        # Draft fields only included when DRAFT_MODE_ENABLED — otherwise identical to pre-draft output
+        _draft_exclude = None if DRAFT_MODE_ENABLED else {"pending_field", "pending_value", "dialog_mode"}
+        yield f"event: state_update\ndata: {state.model_dump_json(exclude=_draft_exclude)}\n\n"
 
         if quick_replies:
             qr_data = [qr.model_dump() for qr in quick_replies]
