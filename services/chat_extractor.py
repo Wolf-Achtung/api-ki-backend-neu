@@ -391,10 +391,12 @@ def _get_async_client():
         log.error("[CHAT-EXTRACT] ANTHROPIC_API_KEY not set")
         return None
 
-    timeout = float(os.getenv("ANTHROPIC_TIMEOUT", "60"))
+    import httpx as _httpx
+
+    base_timeout = float(os.getenv("ANTHROPIC_TIMEOUT", "60"))
     _async_client = anthropic.AsyncAnthropic(
         api_key=api_key,
-        timeout=timeout,
+        timeout=_httpx.Timeout(base_timeout, read=120.0),
     )
     log.info("[CHAT-EXTRACT] AsyncAnthropic client initialized (model=%s)", EXTRACTOR_MODEL)
     return _async_client
