@@ -861,6 +861,9 @@ def _build_session_state(
     summary_sent = _has_summary_been_sent(session)
     completable = last_section and all_done and summary_sent
 
+    # Draft-Pattern state (backward-compatible: old sessions without column → {})
+    draft = getattr(session, 'draft_state', None) or {}
+
     return ChatSessionState(
         session_id=session.id,
         report_type=session.report_type,
@@ -876,6 +879,9 @@ def _build_session_state(
         total_fields=total,
         next_fields=next_fields,
         is_completable=completable,
+        pending_field=draft.get("pending_field"),
+        pending_value=draft.get("pending_value"),
+        dialog_mode=draft.get("dialog_mode", False),
     )
 
 

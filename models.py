@@ -496,6 +496,9 @@ class ChatSession(Base):
     )
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    # Draft-Pattern State (Sprint 1: infra only, never written yet)
+    draft_state: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
+
     # Conversation
     messages: Mapped[list] = mapped_column(JSONType, default=list, nullable=False)
     turn_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
