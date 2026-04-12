@@ -343,24 +343,58 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # Heartbeat while processing
         yield f"event: heartbeat\ndata: {{}}\n\n"
 
-        # Stream tokens
+        # Stream tokens with periodic heartbeats to prevent idle timeout.
+        # Reverse proxies (Railway, Cloudflare, Nginx) kill SSE connections
+        # that are idle for ~30-60s. Sonnet can take 5-15s before the first
+        # token arrives, so we send heartbeats every 12s during gaps.
+        #
+        # We use a Queue so the Anthropic stream runs uninterrupted in a
+        # background task while we can yield heartbeats from the generator.
+        _HB_INTERVAL = 12  # seconds between keepalive heartbeats
+        _SENTINEL = object()
+        queue: asyncio.Queue = asyncio.Queue()
+
+        async def _token_producer():
+            try:
+                async for token in generate_response(
+                    session_messages=list(session.messages),
+                    collected_fields=collected,
+                    missing_fields=all_missing,
+                    next_fields=next_fields,
+                    section=current_section,
+                    report_type=rt,
+                ):
+                    await queue.put(token)
+            except Exception as exc:
+                await queue.put(exc)
+            finally:
+                await queue.put(_SENTINEL)
+
+        producer = asyncio.create_task(_token_producer())
         full_response = ""
         try:
-            async for token in generate_response(
-                session_messages=list(session.messages),
-                collected_fields=collected,
-                missing_fields=all_missing,
-                next_fields=next_fields,
-                section=current_section,
-                report_type=rt,
-            ):
-                full_response += token
-                yield f"event: token\ndata: {json.dumps({'text': token})}\n\n"
+            while True:
+                try:
+                    item = await asyncio.wait_for(
+                        queue.get(), timeout=_HB_INTERVAL,
+                    )
+                except asyncio.TimeoutError:
+                    yield f"event: heartbeat\ndata: {{}}\n\n"
+                    continue
+                if item is _SENTINEL:
+                    break
+                if isinstance(item, Exception):
+                    raise item
+                full_response += item
+                yield f"event: token\ndata: {json.dumps({'text': item})}\n\n"
         except Exception as exc:
             log.error("[CHAT] Streaming error: %s", exc, exc_info=True)
             error_msg = "Entschuldigung, es gab einen Fehler. Bitte versuchen Sie es nochmal."
             yield f"event: error\ndata: {json.dumps({'code': 'stream_error', 'message': error_msg})}\n\n"
             return
+        finally:
+            if not producer.done():
+                producer.cancel()
 
         # Build QR from the closure-captured `collected` dict — NOT from
         # session.collected_fields which may be expired after db.commit()
