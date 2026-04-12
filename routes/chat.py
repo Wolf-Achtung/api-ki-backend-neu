@@ -226,14 +226,18 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _draft_new_value = None
         _draft_confirmed_field = None
         _draft_confirmed_value = None
+        _pending_after_turn = False  # True when a pending draft exists AFTER this turn's processing
 
-        if req.quick_reply_field and req.quick_reply_value:
+        _is_qr_click = bool(req.quick_reply_field and req.quick_reply_value)
+
+        if _is_qr_click:
             # Quick reply: direct write, no Draft — user click is explicit confirmation.
             # This applies to both QR (single-select) and MS (multi-select) fields,
             # regardless of DRAFT_MODE_ENABLED. Only free-text goes through Draft.
             qr_field = req.quick_reply_field
 
-            # --- Draft-mode QR handling (confirm/edit buttons + stale draft cleanup) ---
+            # --- Draft housekeeping (pre-step, only when DRAFT_MODE_ENABLED) ---
+            # Clears any pending draft. Does NOT affect the QR value write below.
             if DRAFT_MODE_ENABLED:
                 _qr_draft = dict(getattr(session, 'draft_state', None) or {})
                 _qr_pending = _qr_draft.get("pending_field")
@@ -257,45 +261,28 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         log.info("[CHAT] Draft QR confirm: %s=%r", _cf, _cv)
                     else:
                         log.info("[CHAT] Draft QR edit/discard: clearing pending %s", _qr_pending)
-                    # Always clear draft state after _draft_action
-                    session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
-
-                else:
+                elif _qr_pending:
                     # Regular QR click while draft pending → auto-confirm the pending
                     # value (user explicitly moved on by clicking a different field).
-                    if _qr_pending:
-                        _cf = _qr_draft["pending_field"]
-                        _cv = _qr_draft["pending_value"]
-                        collected[_cf] = _cv
-                        normalized[_cf] = _cv
-                        field_meta[_cf] = {
-                            "confidence": "high",
-                            "source_turn": turn,
-                            "raw_input": "auto_confirmed_via_qr",
-                            "normalized": True,
-                            "confirmed": True,
-                        }
-                        _draft_confirmed_field = _cf
-                        _draft_confirmed_value = _cv
-                        log.info("[CHAT] Draft auto-confirm (QR click on %s): %s=%r", qr_field, _cf, _cv)
-                    session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
+                    _cf = _qr_draft["pending_field"]
+                    _cv = _qr_draft["pending_value"]
+                    collected[_cf] = _cv
+                    normalized[_cf] = _cv
+                    field_meta[_cf] = {
+                        "confidence": "high",
+                        "source_turn": turn,
+                        "raw_input": "auto_confirmed_via_qr",
+                        "normalized": True,
+                        "confirmed": True,
+                    }
+                    _draft_confirmed_field = _cf
+                    _draft_confirmed_value = _cv
+                    log.info("[CHAT] Draft auto-confirm (QR click on %s): %s=%r", qr_field, _cf, _cv)
+                # Always clear draft state after any QR click
+                session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
 
-                    # Now process the actual QR click (same as non-draft path)
-                    qr_result = normalize_field(qr_field, req.quick_reply_value, collected, report_type=rt)
-                    if qr_result.confidence != "low":
-                        collected[qr_field] = qr_result.value
-                        normalized[qr_field] = qr_result.value
-                        field_meta[qr_field] = {
-                            "confidence": qr_result.confidence,
-                            "source_turn": turn,
-                            "raw_input": req.quick_reply_value,
-                            "normalized": True,
-                            "confirmed": True,  # User clicked explicitly
-                        }
-                    log.info("[CHAT] Quick reply: %s=%s → %s", qr_field, req.quick_reply_value, qr_result.value)
-
-            else:
-                # Non-draft mode: standard QR handling
+            # --- QR value write (single code path, draft-agnostic) ---
+            if qr_field != "_draft_action":
                 qr_result = normalize_field(qr_field, req.quick_reply_value, collected, report_type=rt)
                 if qr_result.confidence != "low":
                     collected[qr_field] = qr_result.value
@@ -462,6 +449,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         break  # Only one field at a time in draft mode
 
                 session.draft_state = draft_state
+                _pending_after_turn = bool(draft_state.get("pending_field"))
 
         # Handle "weiter" / skip for optional fields
         skip_words = {"weiter", "skip", "überspringen", "nächste", "weiter bitte", "nächste frage"}
@@ -487,6 +475,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     _draft_confirmed_field = _cf
                     _draft_confirmed_value = _cv
                     _skip_confirmed_draft = True
+                    _pending_after_turn = False
                     log.info("[CHAT] Draft: 'weiter' confirmed pending %s=%r", _cf, _cv)
 
             # Only skip the next optional field if we didn't just confirm a draft.
@@ -611,11 +600,15 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             if _signal == "question":
                 yield _sse_dialog_mode(active=True)
 
-        # QR generation — suppress normal QRs when draft is pending
+        # QR generation — QR clicks always get normal next-field buttons.
+        # Draft suppression only applies to free-text turns.
         qr_next = get_next_fields(collected, session.current_section, report_type=rt)
-        _pending_ds = dict(getattr(session, 'draft_state', None) or {})
-        if DRAFT_MODE_ENABLED and _pending_ds.get("pending_field"):
-            # Draft open → show confirm/edit buttons instead of next-field QRs
+        if _is_qr_click:
+            # QR clicks are explicit user actions — never show confirm/edit
+            # buttons. Draft was already handled in the QR housekeeping step.
+            quick_replies = _build_quick_replies(qr_next, rt, collected)
+        elif DRAFT_MODE_ENABLED and _pending_after_turn:
+            # Free-text turn with pending draft value → show confirm/edit
             quick_replies = [QuickReply(
                 field="_draft_action",
                 label="Angabe bestätigen",
