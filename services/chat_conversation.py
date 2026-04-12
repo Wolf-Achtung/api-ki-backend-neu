@@ -458,11 +458,18 @@ async def generate_response(
     next_fields: list[str],
     section: dict,
     report_type: str = "r1",
+    draft_mode: bool = False,
+    pending_field: str | None = None,
+    pending_value: object = None,
+    dialog_mode: bool = False,
 ) -> AsyncGenerator[str, None]:
     """
     Generate streaming AI response.
 
     Yields text tokens as they arrive from Claude Sonnet.
+
+    When draft_mode=True, injects a context block describing the current
+    draft state (dialog / pending confirmation / normal question).
     """
     client = _get_async_client()
     if client is None:
@@ -487,6 +494,10 @@ async def generate_response(
     if hint:
         system_prompt += f"\n\nHINWEIS FÜR DIESEN ABSCHNITT:\n{hint}"
 
+    # Draft-mode context injection
+    if draft_mode:
+        system_prompt += _build_draft_context(pending_field, pending_value, dialog_mode)
+
     messages = build_conversation_messages(session_messages)
 
     try:
@@ -501,6 +512,41 @@ async def generate_response(
     except Exception as exc:
         log.error("[CHAT-CONV] Streaming failed: %s", exc, exc_info=True)
         yield "Entschuldigung, es gab einen Verbindungsfehler. Könnten Sie das bitte nochmal versuchen?"
+
+
+def _build_draft_context(
+    pending_field: str | None,
+    pending_value: object,
+    dialog_mode: bool,
+) -> str:
+    """Build the draft-mode context block for the system prompt."""
+    if dialog_mode and not pending_field:
+        return """
+
+AKTUELLER MODUS: DIALOG
+Der Nutzer hat eine Rückfrage gestellt. Beantworten Sie die Frage \
+hilfreich und konkret. Stellen Sie NICHT die nächste Frage. \
+Bleiben Sie beim aktuellen Thema bis der Nutzer zufrieden ist."""
+
+    if pending_field and pending_value is not None:
+        desc = FIELD_DESCRIPTIONS.get(pending_field, pending_field)
+        label = desc.split("(")[0].strip() if desc else pending_field
+        return f"""
+
+AKTUELLER MODUS: BESTÄTIGUNG
+Es liegt ein Entwurf vor für das Feld "{label}": "{pending_value}"
+Fassen Sie den Wert kurz zusammen und fragen Sie ob das korrekt ist. \
+Stellen Sie NICHT die nächste Frage. Warten Sie auf Bestätigung \
+oder Korrektur.
+Beispiel-Struktur: "Ich habe verstanden: [Zusammenfassung]. Passt das so, \
+oder möchten Sie etwas ändern?"
+"""
+
+    return """
+
+AKTUELLER MODUS: FRAGE
+Stellen Sie die nächste Frage wie gewohnt. Reagieren Sie kurz auf die \
+letzte Antwort, dann stellen Sie genau eine neue Frage."""
 
 
 # ===========================================================================

@@ -48,6 +48,7 @@ from services.chat_normalizer import (
     STRATEGY_SECTIONS,
     calculate_progress,
     get_enum_values_for_report,
+    get_field_label,
     get_missing_fields,
     get_next_fields,
     get_registry_for_report,
@@ -219,6 +220,13 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         field_meta = dict(session.field_meta or {})
         collected = dict(session.collected_fields or {})
 
+        # Draft-mode tracking variables (only meaningful when DRAFT_MODE_ENABLED)
+        _signal = None
+        _draft_new_field = None
+        _draft_new_value = None
+        _draft_confirmed_field = None
+        _draft_confirmed_value = None
+
         if req.quick_reply_field and req.quick_reply_value:
             # Quick reply: normalize directly — no LLM extractor needed
             qr_field = req.quick_reply_field
@@ -245,6 +253,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             cur_field = asked_fields[0] if asked_fields else ""
             cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
 
+            # Draft-mode: read pending state for extractor context
+            _draft = dict(getattr(session, 'draft_state', None) or {})
+            _pf = _draft.get("pending_field") if DRAFT_MODE_ENABLED else None
+            _pv = _draft.get("pending_value") if DRAFT_MODE_ENABLED else None
+
             async def _run_extraction() -> dict:
                 try:
                     return await asyncio.wait_for(
@@ -256,6 +269,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                             report_type=rt,
                             current_field=cur_field,
                             current_field_description=cur_desc,
+                            draft_mode=DRAFT_MODE_ENABLED,
+                            pending_field=_pf,
+                            pending_value=_pv,
                         ),
                         timeout=30,
                     )
@@ -271,12 +287,15 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                                 report_type=rt,
                                 current_field=cur_field,
                                 current_field_description=cur_desc,
+                                draft_mode=DRAFT_MODE_ENABLED,
+                                pending_field=_pf,
+                                pending_value=_pv,
                             ),
                             timeout=30,
                         )
                     except asyncio.TimeoutError:
                         log.error("[CHAT] Extraction timeout on retry")
-                        return {}
+                        return {"signal": None, "fields": {}} if DRAFT_MODE_ENABLED else {}
 
             extract_task = asyncio.create_task(_run_extraction())
             while not extract_task.done():
@@ -287,35 +306,120 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 except Exception:
                     break  # task raised — handled below
 
-            raw_extracted = extract_task.result() if not extract_task.cancelled() else {}
+            raw_extracted = extract_task.result() if not extract_task.cancelled() else (
+                {"signal": None, "fields": {}} if DRAFT_MODE_ENABLED else {}
+            )
 
-            # Normalize extracted fields
-            for field_name, raw_value in raw_extracted.items():
-                if field_name not in registry:
-                    continue
-                if not is_field_visible(field_name, collected):
-                    continue
+            if not DRAFT_MODE_ENABLED:
+                # ----- Legacy flow: normalize + direct write to collected_fields -----
+                for field_name, raw_value in raw_extracted.items():
+                    if field_name not in registry:
+                        continue
+                    if not is_field_visible(field_name, collected):
+                        continue
 
-                result = normalize_field(field_name, raw_value, collected, report_type=rt)
+                    result = normalize_field(field_name, raw_value, collected, report_type=rt)
 
-                if result.confidence == "low":
-                    log.info("[CHAT] Field %s: low confidence, skipping", field_name)
-                    continue
+                    if result.confidence == "low":
+                        log.info("[CHAT] Field %s: low confidence, skipping", field_name)
+                        continue
 
-                collected[field_name] = result.value
-                normalized[field_name] = result.value
+                    collected[field_name] = result.value
+                    normalized[field_name] = result.value
 
-                field_meta[field_name] = {
-                    "confidence": result.confidence,
-                    "source_turn": turn,
-                    "raw_input": str(raw_value),
-                    "normalized": True,
-                    "confirmed": False,
-                }
+                    field_meta[field_name] = {
+                        "confidence": result.confidence,
+                        "source_turn": turn,
+                        "raw_input": str(raw_value),
+                        "normalized": True,
+                        "confirmed": False,
+                    }
+            else:
+                # ----- Draft flow: extract → pending, not collected -----
+                _signal = raw_extracted.get("signal")
+                _ext_fields = raw_extracted.get("fields", {})
+                draft_state = dict(getattr(session, 'draft_state', None) or {})
+
+                if _signal == "question":
+                    draft_state["dialog_mode"] = True
+                    # No write, no pending change
+                    log.info("[CHAT] Draft: user question detected")
+
+                elif _signal == "confirm":
+                    if draft_state.get("pending_field"):
+                        # Pending → Collected
+                        _cf = draft_state["pending_field"]
+                        _cv = draft_state["pending_value"]
+                        collected[_cf] = _cv
+                        normalized[_cf] = _cv
+                        field_meta[_cf] = {
+                            "confidence": "high",
+                            "source_turn": turn,
+                            "raw_input": "confirmed",
+                            "normalized": True,
+                            "confirmed": True,
+                        }
+                        draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
+                        _draft_confirmed_field = _cf
+                        _draft_confirmed_value = _cv
+                        log.info("[CHAT] Draft: confirmed %s=%r", _cf, _cv)
+                    else:
+                        # No pending → treat like skip
+                        log.info("[CHAT] Draft: confirm without pending, treating as skip")
+
+                else:
+                    # Normal extraction or correction — process extracted fields
+                    for field_name, raw_value in _ext_fields.items():
+                        if field_name not in registry:
+                            continue
+                        if not is_field_visible(field_name, collected):
+                            continue
+
+                        result = normalize_field(field_name, raw_value, collected, report_type=rt)
+                        if result.confidence == "low":
+                            log.info("[CHAT] Draft: field %s low confidence, skipping", field_name)
+                            continue
+
+                        # Warn if overwriting a different pending field
+                        if draft_state.get("pending_field") and draft_state["pending_field"] != field_name:
+                            log.warning(
+                                "[CHAT] Draft: overwriting pending %s with new field %s",
+                                draft_state["pending_field"], field_name,
+                            )
+
+                        draft_state["pending_field"] = field_name
+                        draft_state["pending_value"] = result.value
+                        draft_state["dialog_mode"] = False
+                        _draft_new_field = field_name
+                        _draft_new_value = result.value
+                        log.info("[CHAT] Draft: pending %s=%r (signal=%s)", field_name, result.value, _signal)
+                        break  # Only one field at a time in draft mode
+
+                session.draft_state = draft_state
 
         # Handle "weiter" / skip for optional fields
         skip_words = {"weiter", "skip", "überspringen", "nächste", "weiter bitte", "nächste frage"}
         if req.message.strip().lower() in skip_words and not normalized:
+            # In draft mode with pending: "weiter" confirms the pending value
+            if DRAFT_MODE_ENABLED:
+                draft_state = dict(getattr(session, 'draft_state', None) or {})
+                if draft_state.get("pending_field"):
+                    _cf = draft_state["pending_field"]
+                    _cv = draft_state["pending_value"]
+                    collected[_cf] = _cv
+                    normalized[_cf] = _cv
+                    field_meta[_cf] = {
+                        "confidence": "high",
+                        "source_turn": turn,
+                        "raw_input": "confirmed_via_skip",
+                        "normalized": True,
+                        "confirmed": True,
+                    }
+                    session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
+                    _draft_confirmed_field = _cf
+                    _draft_confirmed_value = _cv
+                    log.info("[CHAT] Draft: 'weiter' confirmed pending %s=%r", _cf, _cv)
+
             asked = get_next_fields(collected, session.current_section, report_type=rt)
             if asked:
                 skip_field = asked[0]
@@ -364,6 +468,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _SENTINEL = object()
         queue: asyncio.Queue = asyncio.Queue()
 
+        # Draft context for Sonnet
+        _ds = dict(getattr(session, 'draft_state', None) or {})
+
         async def _token_producer():
             try:
                 async for token in generate_response(
@@ -373,6 +480,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     next_fields=next_fields,
                     section=current_section,
                     report_type=rt,
+                    draft_mode=DRAFT_MODE_ENABLED,
+                    pending_field=_ds.get("pending_field"),
+                    pending_value=_ds.get("pending_value"),
+                    dialog_mode=_ds.get("dialog_mode", False),
                 ):
                     await queue.put(token)
             except Exception as exc:
@@ -407,10 +518,47 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 producer.cancel()
 
         # ------------------------------------------------------------------
-        # Phase 3: QR generation, state update, done
+        # Phase 3: Draft SSE events, QR generation, state update, done
         # ------------------------------------------------------------------
+
+        # Emit draft SSE events (before state_update, after token stream)
+        if DRAFT_MODE_ENABLED:
+            if _draft_confirmed_field:
+                yield _sse_field_confirmed(
+                    field=_draft_confirmed_field,
+                    value=_draft_confirmed_value,
+                )
+                yield _sse_dialog_mode(active=False)
+            if _draft_new_field:
+                yield _sse_draft_value(
+                    field=_draft_new_field,
+                    value=_draft_new_value,
+                    label=get_field_label(_draft_new_field, rt),
+                )
+                yield _sse_dialog_mode(active=False)
+            if _signal == "question":
+                yield _sse_dialog_mode(active=True)
+
+        # QR generation — suppress normal QRs when draft is pending
         qr_next = get_next_fields(collected, session.current_section, report_type=rt)
-        quick_replies = _build_quick_replies(qr_next, rt, collected)
+        _pending_ds = dict(getattr(session, 'draft_state', None) or {})
+        if DRAFT_MODE_ENABLED and _pending_ds.get("pending_field"):
+            # Draft open → show confirm/edit buttons instead of next-field QRs
+            quick_replies = [QuickReply(
+                field="_draft_action",
+                label="Angabe bestätigen",
+                options=[
+                    QuickReplyOption(value="confirm", label="✓ Übernehmen"),
+                    QuickReplyOption(value="edit", label="✏️ Ändern"),
+                ],
+                multi_select=False,
+            )]
+        elif DRAFT_MODE_ENABLED and _signal == "question":
+            # Dialog mode → no QR buttons
+            quick_replies = []
+        else:
+            quick_replies = _build_quick_replies(qr_next, rt, collected)
+
         assistant_msg = {
             "role": "assistant",
             "content": full_response,
@@ -474,11 +622,74 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
 @router.post("/confirm")
 async def confirm_field(req: ConfirmFieldRequest, db: Session = Depends(get_db)):
-    """Confirm a draft value and write it to collected_fields (Sprint 2)."""
+    """Confirm or discard a draft value via explicit endpoint."""
     if not DRAFT_MODE_ENABLED:
         raise HTTPException(status_code=404, detail="Draft mode not enabled")
-    # TODO Sprint 2: Implement confirm/edit logic
-    raise HTTPException(status_code=501, detail="Not yet implemented")
+
+    session = db.query(ChatSession).filter(ChatSession.id == req.session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+    if session.status != "active":
+        raise HTTPException(status_code=400, detail="Session ist nicht aktiv")
+
+    pending = dict(getattr(session, 'draft_state', None) or {})
+    if not pending.get("pending_field"):
+        raise HTTPException(status_code=400, detail="Kein offener Entwurf vorhanden")
+
+    rt = session.report_type
+    now = datetime.now(timezone.utc)
+
+    if req.action == "confirm":
+        field = pending["pending_field"]
+        value = req.value if req.value is not None else pending["pending_value"]
+
+        collected = dict(session.collected_fields or {})
+        collected[field] = value
+        session.collected_fields = collected
+
+        field_meta = dict(session.field_meta or {})
+        field_meta[field] = {
+            "confidence": "high",
+            "source_turn": session.turn_count,
+            "raw_input": "confirmed_via_endpoint",
+            "normalized": True,
+            "confirmed": True,
+        }
+        session.field_meta = field_meta
+        session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
+        session.updated_at = now
+
+        # Section transition check
+        _check_section_transition(session, collected, rt)
+        db.commit()
+
+        next_fields = get_next_fields(collected, session.current_section, report_type=rt)
+        log.info("[CHAT] Confirm endpoint: %s=%r confirmed", field, value)
+
+        return {
+            "status": "confirmed",
+            "field": field,
+            "value": value,
+            "next_fields": next_fields,
+            "progress_percent": calculate_progress(collected, rt),
+        }
+
+    elif req.action == "edit":
+        cleared_field = pending["pending_field"]
+        session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
+        session.updated_at = now
+        db.commit()
+
+        log.info("[CHAT] Confirm endpoint: draft for %s cleared (edit)", cleared_field)
+
+        return {
+            "status": "cleared",
+            "field": cleared_field,
+            "message": "Entwurf verworfen, bitte erneut antworten",
+        }
+
+    else:
+        raise HTTPException(status_code=400, detail=f"Ungültige Aktion: {req.action}")
 
 
 # ===========================================================================

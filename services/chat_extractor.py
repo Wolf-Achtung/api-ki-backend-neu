@@ -55,6 +55,33 @@ Wenn die Antwort plausibel zu diesem Feld passt, setze es.
 Aktuell fehlende Felder: {missing_fields}
 Bereits erfasst: {collected_fields}"""
 
+# Draft-mode extension — appended to EXTRACTOR_SYSTEM_PROMPT when draft_mode=True
+_DRAFT_SIGNAL_EXTENSION = """
+
+SIGNAL-ERKENNUNG (Draft-Modus aktiv):
+Zusätzlich zum Tool-Call gib ein Signal über das Feld "_signal" zurück:
+
+1. Wenn der User eine RÜCKFRAGE stellt (Fragezeichen, "was meinst du",
+   "kannst du erklären", "warum", "wie genau", "was bedeutet"):
+   → Rufe das Tool mit einem einzigen Feld auf: {{"_signal": "question"}}
+   → Extrahiere KEINE inhaltlichen Felder.
+
+2. Wenn der User einen BESTEHENDEN WERT BESTÄTIGT ("ja", "stimmt",
+   "passt", "genau", "korrekt", "übernehmen", "ok"):
+   → Rufe das Tool mit: {{"_signal": "confirm"}}
+   → Extrahiere KEINE inhaltlichen Felder.
+
+3. Wenn der User einen BESTEHENDEN WERT KORRIGIEREN will ("nein",
+   "nicht ganz", "ich meinte", "eigentlich", "ändere das"):
+   → Extrahiere den korrigierten Wert ganz normal als Feld.
+   → Zusätzlich: {{"_signal": "correction"}}
+
+4. Wenn der User eine INHALTLICHE ANTWORT gibt:
+   → Extrahiere wie bisher.
+   → Kein _signal-Feld nötig.
+
+{pending_context}"""
+
 # ---------------------------------------------------------------------------
 # Tool Definition — ALL fields (Sektionen 0–7)
 # ---------------------------------------------------------------------------
@@ -414,6 +441,9 @@ async def extract_fields(
     report_type: str = "r1",
     current_field: str = "",
     current_field_description: str = "",
+    draft_mode: bool = False,
+    pending_field: str | None = None,
+    pending_value: Any = None,
 ) -> dict:
     """
     Call Claude Haiku with tool_use to extract structured fields.
@@ -425,14 +455,18 @@ async def extract_fields(
         collected_fields: Already collected field values
         current_field: The field the AI just asked about
         current_field_description: Human description of that field
+        draft_mode: When True, extractor returns signal + fields dict
+        pending_field: Currently pending draft field (draft_mode only)
+        pending_value: Currently pending draft value (draft_mode only)
 
     Returns:
-        Dict of extracted fields (may be empty if user asked a question).
+        When draft_mode=False: Dict of extracted fields (backward compat).
+        When draft_mode=True: {"signal": str|None, "fields": dict}
     """
     client = _get_async_client()
     if client is None:
         log.error("[CHAT-EXTRACT] No async client available")
-        return {}
+        return {"signal": None, "fields": {}} if draft_mode else {}
 
     # Build messages: recent context + current message
     messages: list[dict] = []
@@ -456,34 +490,73 @@ async def extract_fields(
         collected_fields=_format_collected(collected_fields),
     )
 
+    # Draft-mode: append signal detection instructions
+    if draft_mode:
+        pending_ctx = ""
+        if pending_field and pending_value is not None:
+            pending_ctx = (
+                f'OFFENER ENTWURF: Feld "{pending_field}" hat den Entwurfswert: "{pending_value}"\n'
+                f"Der User bestätigt, korrigiert oder fragt nach — handle entsprechend."
+            )
+        system += _DRAFT_SIGNAL_EXTENSION.format(pending_context=pending_ctx)
+
+    # Build tool — add _signal property in draft mode
+    tool = _get_tool_for_report(report_type)
+    if draft_mode:
+        tool = _add_signal_property(tool)
+
     try:
         response = await client.messages.create(
             model=EXTRACTOR_MODEL,
             max_tokens=500,
             system=system,
             messages=messages,
-            tools=[_get_tool_for_report(report_type)],
+            tools=[tool],
             tool_choice={"type": "auto"},  # auto: no tool call if user asks question
         )
 
         # Extract tool result
         for block in response.content:
             if block.type == "tool_use" and block.name == "update_intake_fields":
-                extracted: dict = block.input
+                extracted: dict = dict(block.input)
+                signal = extracted.pop("_signal", None)
                 log.info(
-                    "[CHAT-EXTRACT] Extracted %d fields: %s",
+                    "[CHAT-EXTRACT] Extracted %d fields: %s (signal=%s)",
                     len(extracted),
                     list(extracted.keys()),
+                    signal,
                 )
+                if draft_mode:
+                    return {"signal": signal, "fields": extracted}
                 return extracted
 
         # No tool call — user probably asked a question
         log.info("[CHAT-EXTRACT] No fields extracted (user question or off-topic)")
+        if draft_mode:
+            # No tool call in draft mode = likely a question
+            return {"signal": "question", "fields": {}}
         return {}
 
     except Exception as exc:
         log.error("[CHAT-EXTRACT] Extraction failed: %s", exc, exc_info=True)
-        return {}
+        return {"signal": None, "fields": {}} if draft_mode else {}
+
+
+def _add_signal_property(tool: dict[str, Any]) -> dict[str, Any]:
+    """Return a copy of the tool definition with _signal added to properties."""
+    import copy
+    tool = copy.deepcopy(tool)
+    tool["input_schema"]["properties"]["_signal"] = {
+        "type": "string",
+        "enum": ["question", "confirm", "correction"],
+        "description": (
+            "Signal-Typ: 'question' wenn User eine Rückfrage stellt, "
+            "'confirm' wenn User einen Entwurf bestätigt, "
+            "'correction' wenn User einen Wert korrigiert. "
+            "Nur setzen wenn zutreffend."
+        ),
+    }
+    return tool
 
 
 def _format_collected(collected: dict) -> str:
