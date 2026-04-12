@@ -20,6 +20,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import text as _sa_text
 
 from models import Briefing, ChatSession, User
 from routes._bootstrap import get_db
@@ -218,15 +219,18 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         registry = get_registry_for_report(rt)
         normalized = {}
 
-        # Force-refresh the expired session object via identity map.
-        # populate_existing() guarantees the already-tracked `session`
-        # object gets its attributes overwritten with fresh DB data.
-        db.query(ChatSession).populate_existing().filter(
-            ChatSession.id == session.id
-        ).one()
-        # `session` is now refreshed — safe to read.
-        field_meta = dict(session.field_meta or {})
-        collected = dict(session.collected_fields or {})
+        # Raw SQL read — bypasses ORM stale/expired attribute problem.
+        # After db.commit() at l.202 the closure `session` object is
+        # unreliable inside this async generator.
+        _row = db.execute(
+            _sa_text("SELECT collected_fields, field_meta, current_section, draft_state "
+                     "FROM chat_sessions WHERE id = :sid"),
+            {"sid": str(session.id)}
+        ).fetchone()
+        collected = dict(_row[0] or {})
+        field_meta = dict(_row[1] or {})
+        _current_section = _row[2]
+        _draft_state_snapshot = dict(_row[3] or {})
         log.info("[CHAT] Turn %d init: collected_keys=%s", turn, list(collected.keys()))
 
         # Draft-mode tracking variables (only meaningful when DRAFT_MODE_ENABLED)
@@ -248,7 +252,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             # --- Draft housekeeping (pre-step, only when DRAFT_MODE_ENABLED) ---
             # Clears any pending draft. Does NOT affect the QR value write below.
             if DRAFT_MODE_ENABLED:
-                _qr_draft = dict(getattr(session, 'draft_state', None) or {})
+                _qr_draft = dict(_draft_state_snapshot)
                 _qr_pending = _qr_draft.get("pending_field")
 
                 if qr_field == "_draft_action":
@@ -309,14 +313,14 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             # Run in background task so we can yield heartbeats while waiting.
             from services.chat_extractor import extract_fields
 
-            missing_req, missing_opt = get_missing_fields(collected, session.current_section, rt)
+            missing_req, missing_opt = get_missing_fields(collected, _current_section, rt)
             _all_missing = missing_req + missing_opt
-            asked_fields = get_next_fields(collected, session.current_section, report_type=rt)
+            asked_fields = get_next_fields(collected, _current_section, report_type=rt)
             cur_field = asked_fields[0] if asked_fields else ""
             cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
 
             # Draft-mode: read pending state for extractor context
-            _draft = dict(getattr(session, 'draft_state', None) or {})
+            _draft = dict(_draft_state_snapshot)
             _pf = _draft.get("pending_field") if DRAFT_MODE_ENABLED else None
             _pv = _draft.get("pending_value") if DRAFT_MODE_ENABLED else None
 
@@ -400,7 +404,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 # ----- Draft flow: extract → pending, not collected -----
                 _signal = raw_extracted.get("signal")
                 _ext_fields = raw_extracted.get("fields", {})
-                draft_state = dict(getattr(session, 'draft_state', None) or {})
+                draft_state = dict(_draft_state_snapshot)
 
                 if _signal == "question":
                     draft_state["dialog_mode"] = True
@@ -467,7 +471,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             # In draft mode with pending: "weiter" confirms the pending value
             # but does NOT also skip the next field (confirm only).
             if DRAFT_MODE_ENABLED:
-                draft_state = dict(getattr(session, 'draft_state', None) or {})
+                draft_state = dict(_draft_state_snapshot)
                 if draft_state.get("pending_field"):
                     _cf = draft_state["pending_field"]
                     _cv = draft_state["pending_value"]
@@ -490,7 +494,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             # Only skip the next optional field if we didn't just confirm a draft.
             # "weiter" + pending draft = confirm only; "weiter" + no draft = skip.
             if not _skip_confirmed_draft:
-                asked = get_next_fields(collected, session.current_section, report_type=rt)
+                asked = get_next_fields(collected, _current_section, report_type=rt)
                 if asked:
                     skip_field = asked[0]
                     skip_reg = registry.get(skip_field, {})
@@ -502,33 +506,45 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         }
                         log.info("[CHAT] User skipped optional field: %s", skip_field)
 
-        # Update session state
-        session.collected_fields = collected
-        session.field_meta = field_meta
-        session.updated_at = now
-
-        # Evaluate conditionals: remove hidden fields
+        # Evaluate conditionals: remove hidden fields BEFORE writing
         for cond_field in ["selbststaendig", "bundesland"]:
             if cond_field in collected and not is_field_visible(cond_field, collected):
                 del collected[cond_field]
                 if cond_field in field_meta:
                     del field_meta[cond_field]
-                session.collected_fields = collected
-                session.field_meta = field_meta
 
+        # Raw SQL write — direct SET, no ORM involvement.
+        # `collected` was read fresh at turn start and contains the full
+        # desired state (previous fields + this turn's additions/deletions).
+        db.execute(
+            _sa_text("""
+                UPDATE chat_sessions
+                SET collected_fields = :cf::jsonb,
+                    field_meta = :fm::jsonb,
+                    updated_at = :ts
+                WHERE id = :sid
+            """),
+            {
+                "sid": str(session.id),
+                "cf": json.dumps(collected),
+                "fm": json.dumps(field_meta),
+                "ts": now,
+            }
+        )
         db.commit()
 
         # Check section transition
         section_advanced = _check_section_transition(session, collected, rt)
         if section_advanced:
             db.commit()
+            _current_section = session.current_section  # refresh after transition
 
         # Determine next fields
         sections = get_sections_for_report(rt)
-        missing_req, missing_opt = get_missing_fields(collected, session.current_section, rt)
+        missing_req, missing_opt = get_missing_fields(collected, _current_section, rt)
         all_missing = missing_req + missing_opt
-        next_fields = get_next_fields(collected, session.current_section, report_type=rt)
-        current_section = sections[session.current_section]
+        next_fields = get_next_fields(collected, _current_section, report_type=rt)
+        current_section = sections[_current_section]
 
         log.info("[CHAT] Turn %d: normalized=%s, next=%s", turn, list(normalized.keys()), next_fields)
 
@@ -539,7 +555,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         queue: asyncio.Queue = asyncio.Queue()
 
         # Draft context for Sonnet
-        _ds = dict(getattr(session, 'draft_state', None) or {})
+        _ds = dict(_draft_state_snapshot)
 
         async def _token_producer():
             try:
@@ -611,7 +627,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         # QR generation — QR clicks always get normal next-field buttons.
         # Draft suppression only applies to free-text turns.
-        qr_next = get_next_fields(collected, session.current_section, report_type=rt)
+        qr_next = get_next_fields(collected, _current_section, report_type=rt)
         if _is_qr_click:
             # QR clicks are explicit user actions — never show confirm/edit
             # buttons. Draft was already handled in the QR housekeeping step.
@@ -639,7 +655,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "turn": turn,
             "fields_extracted": normalized if normalized else None,
-            "section_index": session.current_section,
+            "section_index": _current_section,
             "quick_replies": [qr.model_dump() for qr in quick_replies] if quick_replies else None,
         }
         msgs = list(session.messages)
@@ -649,7 +665,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         db.commit()
 
         # Check if all fields are done → send summary
-        last_section = session.current_section >= len(sections) - 1
+        last_section = _current_section >= len(sections) - 1
         all_fields_done = len(qr_next) == 0 and last_section
         if all_fields_done and not _has_summary_been_sent(session):
             from services.chat_conversation import build_summary
@@ -660,7 +676,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 "content": summary_text,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "turn": turn,
-                "section_index": session.current_section,
+                "section_index": _current_section,
             }
             msgs2 = list(session.messages)
             msgs2.append(summary_msg)
