@@ -865,3 +865,84 @@ def calculate_progress(collected: dict, report_type: str = "r1") -> int:
     if total == 0:
         return 0
     return int(filled / total * 100)
+
+
+# Human-readable field labels (field_name → short German label)
+_FIELD_LABELS: dict[str, str] = {
+    "branche": "Branche",
+    "unternehmensgroesse": "Unternehmensgröße",
+    "selbststaendig": "Unternehmensform",
+    "country": "Land",
+    "bundesland": "Bundesland",
+    "hauptleistung": "Hauptdienstleistung",
+    "jahresumsatz": "Jahresumsatz",
+    "zielgruppen": "Zielgruppen",
+    "it_infrastruktur": "IT-Infrastruktur",
+    "interne_ki_kompetenzen": "KI-Kompetenzen",
+    "datenquellen": "Datenquellen",
+    "digitalisierungsgrad": "Digitalisierungsgrad",
+    "prozesse_papierlos": "Papierlose Prozesse",
+    "automatisierungsgrad": "Automatisierungsgrad",
+    "ki_einsatz": "KI-Einsatzbereiche",
+    "ki_kompetenz": "KI-Kompetenz im Team",
+    "ki_ziele": "KI-Ziele",
+    "ki_projekte": "Bestehende KI-Projekte",
+    "anwendungsfaelle": "KI-Anwendungsfälle",
+    "zeitersparnis_prioritaet": "Zeitersparnis-Priorität",
+    "pilot_bereich": "Pilotprojekt-Bereich",
+    "geschaeftsmodell_evolution": "Geschäftsmodell-Evolution",
+    "vision_3_jahre": "3-Jahres-Vision",
+    "strategische_ziele": "Strategische Ziele",
+    "ki_guardrails": "KI-Guardrails",
+    "massnahmen_komplexitaet": "Aufwand KI-Einführung",
+    "roadmap_vorhanden": "KI-Roadmap",
+    "governance_richtlinien": "Governance-Richtlinien",
+    "change_management": "Veränderungsbereitschaft",
+    "zeitbudget": "Zeitbudget für KI",
+    "vorhandene_tools": "Vorhandene Tools",
+    "trainings_interessen": "Trainings-Interessen",
+    "vision_prioritaet": "Strategischer Hebel",
+    "innovationsprozess": "Innovationsprozess",
+    "datenschutzbeauftragter": "Datenschutzbeauftragter",
+    "technische_massnahmen": "Technische Schutzmaßnahmen",
+    "folgenabschaetzung": "Datenschutz-Folgenabschätzung",
+    "meldewege": "Meldewege Sicherheitsvorfälle",
+    "loeschregeln": "Löschrichtlinien",
+    "ai_act_kenntnis": "EU AI Act Kenntnis",
+    "regulierte_branche": "Regulierte Branche",
+    "ki_hemmnisse": "KI-Hemmnisse",
+    "bisherige_foerdermittel": "Bisherige Fördermittel",
+    "interesse_foerderung": "Interesse Förderung",
+    "erfahrung_beratung": "Beratungserfahrung",
+    "investitionsbudget": "Investitionsbudget",
+    "marktposition": "Marktposition",
+    "benchmark_wettbewerb": "Wettbewerbs-Benchmark",
+    "risikofreude": "Risikofreude",
+    # Strategy fields
+    "s1_budget": "KI-Budget",
+    "s2_zeitrahmen": "Umsetzungszeitraum",
+    "s3_prioritaeten": "KI-Prioritäten",
+    "s4_engpass": "Größter Engpass",
+    "s5_software": "Genutzte Software",
+    "s5_vision": "KI-Vision",
+    "s6_foerderinteresse": "Förderinteresse",
+    "s7_entscheidung": "Entscheidungsstruktur",
+    "s8_erfahrung": "KI-Erfahrung",
+    "s9_ansatz": "Infrastruktur-Ansatz",
+    "s10_datenschutz": "Datenschutz-Priorität",
+    "wettbewerber_anzahl": "Wettbewerber-Anzahl",
+    "kundenbindung_typ": "Kundenbindung",
+    "datenreife": "Datenreife",
+}
+
+
+def get_field_label(field_name: str, report_type: str = "r1") -> str:
+    """Return a human-readable German label for a field name.
+
+    Uses the _FIELD_LABELS lookup. Falls back to title-cased field name.
+    """
+    label = _FIELD_LABELS.get(field_name)
+    if label:
+        return label
+    # Fallback: "geschaeftsmodell_evolution" → "Geschaeftsmodell Evolution"
+    return field_name.replace("_", " ").title()
