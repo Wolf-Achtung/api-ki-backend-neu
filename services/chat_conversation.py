@@ -195,10 +195,16 @@ def _get_async_client():
         log.error("[CHAT-CONV] ANTHROPIC_API_KEY not set")
         return None
 
-    timeout = float(os.getenv("ANTHROPIC_TIMEOUT", "120"))
+    import httpx as _httpx
+
+    base_timeout = float(os.getenv("ANTHROPIC_TIMEOUT", "120"))
+    # Streaming needs a generous read timeout — Sonnet can pause 20-30s
+    # between token chunks under load.  The default httpx Timeout treats
+    # "timeout=N" as a blanket cap on *every* phase including per-read,
+    # which causes "Stream idle timeout" on long thinking gaps.
     _async_client = anthropic.AsyncAnthropic(
         api_key=api_key,
-        timeout=timeout,
+        timeout=_httpx.Timeout(base_timeout, read=300.0),
     )
     log.info("[CHAT-CONV] AsyncAnthropic client initialized (model=%s)", CONVERSATION_MODEL)
     return _async_client
