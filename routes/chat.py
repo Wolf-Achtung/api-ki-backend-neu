@@ -228,7 +228,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _draft_confirmed_value = None
 
         if req.quick_reply_field and req.quick_reply_value:
-            # Quick reply: normalize directly — no LLM extractor needed
+            # Quick reply: direct write, no Draft — user click is explicit confirmation.
+            # This applies to both QR (single-select) and MS (multi-select) fields,
+            # regardless of DRAFT_MODE_ENABLED. Only free-text goes through Draft.
             qr_field = req.quick_reply_field
             qr_result = normalize_field(qr_field, req.quick_reply_value, collected, report_type=rt)
             if qr_result.confidence != "low":
@@ -399,8 +401,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         # Handle "weiter" / skip for optional fields
         skip_words = {"weiter", "skip", "überspringen", "nächste", "weiter bitte", "nächste frage"}
+        _skip_confirmed_draft = False
         if req.message.strip().lower() in skip_words and not normalized:
             # In draft mode with pending: "weiter" confirms the pending value
+            # but does NOT also skip the next field (confirm only).
             if DRAFT_MODE_ENABLED:
                 draft_state = dict(getattr(session, 'draft_state', None) or {})
                 if draft_state.get("pending_field"):
@@ -418,19 +422,23 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
                     _draft_confirmed_field = _cf
                     _draft_confirmed_value = _cv
+                    _skip_confirmed_draft = True
                     log.info("[CHAT] Draft: 'weiter' confirmed pending %s=%r", _cf, _cv)
 
-            asked = get_next_fields(collected, session.current_section, report_type=rt)
-            if asked:
-                skip_field = asked[0]
-                skip_reg = registry.get(skip_field, {})
-                if not skip_reg.get("required"):
-                    collected[skip_field] = "" if skip_reg.get("type") == "text" else None
-                    field_meta[skip_field] = {
-                        "confidence": "high", "source_turn": turn,
-                        "raw_input": "skipped", "normalized": True, "confirmed": True,
-                    }
-                    log.info("[CHAT] User skipped optional field: %s", skip_field)
+            # Only skip the next optional field if we didn't just confirm a draft.
+            # "weiter" + pending draft = confirm only; "weiter" + no draft = skip.
+            if not _skip_confirmed_draft:
+                asked = get_next_fields(collected, session.current_section, report_type=rt)
+                if asked:
+                    skip_field = asked[0]
+                    skip_reg = registry.get(skip_field, {})
+                    if not skip_reg.get("required"):
+                        collected[skip_field] = "" if skip_reg.get("type") == "text" else None
+                        field_meta[skip_field] = {
+                            "confidence": "high", "source_turn": turn,
+                            "raw_input": "skipped", "normalized": True, "confirmed": True,
+                        }
+                        log.info("[CHAT] User skipped optional field: %s", skip_field)
 
         # Update session state
         session.collected_fields = collected
