@@ -519,8 +519,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         db.execute(
             _sa_text("""
                 UPDATE chat_sessions
-                SET collected_fields = :cf::jsonb,
-                    field_meta = :fm::jsonb,
+                SET collected_fields = CAST(:cf AS jsonb),
+                    field_meta = CAST(:fm AS jsonb),
                     updated_at = :ts
                 WHERE id = :sid
             """),
