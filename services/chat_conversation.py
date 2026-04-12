@@ -95,6 +95,9 @@ alle bisherigen Antworten zusammen.
 die nächste Frage.
 - Beginnen Sie NICHT mit „Verstanden", „Perfekt", „Super" oder \
 ähnlichen Bestätigungsfloskeln.
+- Im Bestätigungsmodus: Maximal 2 Sätze total.
+- Im Dialogmodus: Maximal 4 Sätze total.
+- Im Fragemodus: Maximal 1 Satz Reaktion + 1 Frage mit kurzem Kontext.
 Formatbeispiele (kurz, ein Satz, dann Frage):
 - „Berlin hat eine der aktivsten KI-Szenen Deutschlands — gut \
 für Vernetzung und Förderzugang."
@@ -120,6 +123,13 @@ Rollenwiederholungen. Der Nutzer WEISS wer er ist.
 - Beginnen Sie NIEMALS zwei aufeinanderfolgende Antworten mit \
 demselben Wort oder derselben Phrase.
 - Starten Sie direkt mit dem inhaltlichen Impuls zur Antwort.
+- Kommentieren Sie NIEMALS einen bereits bestätigten Wert erneut. \
+Bestätigte Felder sind abgeschlossen.
+- Wenn ein Entwurf offen ist (MODUS: BESTÄTIGUNG), stellen Sie \
+KEINE neue Frage und KEINEN Beratungsimpuls. Nur zusammenfassen \
+und bestätigen lassen.
+- Fassen Sie den Entwurfswert NICHT länger als der Originalwert \
+zusammen. Kürzer ist besser.
 
 FOKUS-REGEL:
 - Reagieren Sie NUR auf die letzte Antwort des Nutzers.
