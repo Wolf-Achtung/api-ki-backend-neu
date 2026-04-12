@@ -217,8 +217,17 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # ------------------------------------------------------------------
         registry = get_registry_for_report(rt)
         normalized = {}
+
+        # Force fresh DB read — after db.commit() at l.202 all ORM
+        # attributes are expired.  The lazy-load that SQLAlchemy would do
+        # on first access can return stale/empty collected_fields, causing
+        # every QR turn to overwrite previous fields.  db.refresh()
+        # guarantees a SELECT with the latest committed state.
+        db.refresh(session, attribute_names=["collected_fields", "field_meta", "current_section", "draft_state"])
+
         field_meta = dict(session.field_meta or {})
         collected = dict(session.collected_fields or {})
+        log.info("[CHAT] Turn %d init: collected_keys=%s", turn, list(collected.keys()))
 
         # Draft-mode tracking variables (only meaningful when DRAFT_MODE_ENABLED)
         _signal = None
