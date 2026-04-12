@@ -67,6 +67,11 @@ class ChatSessionState(BaseModel):
     next_fields: list[str]
     is_completable: bool
 
+    # Draft-Pattern (Sprint 1: always null/false until Sprint 2 activates writes)
+    pending_field: Optional[str] = None
+    pending_value: Optional[Any] = None
+    dialog_mode: bool = False
+
     # Quick Replies
     quick_replies: Optional[list[QuickReply]] = None
 
