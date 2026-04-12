@@ -67,9 +67,11 @@ log = logging.getLogger(__name__)
 DRAFT_MODE_ENABLED = os.getenv("DRAFT_MODE_ENABLED", "false").lower() == "true"
 
 R1_WELCOME = (
-    "Willkommen bei ki-sicherheit.jetzt! Ich bin ein KI-Assistent und "
-    "führe Sie durch eine kurze Bestandsaufnahme Ihres Unternehmens.\n\n"
-    "Lassen Sie uns mit den Grundlagen beginnen: "
+    "Willkommen bei ki-sicherheit.jetzt! Ich führe Sie durch eine "
+    "kurze Bestandsaufnahme — in ca. 10–15 Minuten. Am Ende erhalten "
+    "Sie einen individuellen KI-Report mit konkreten Empfehlungen "
+    "für Ihr Unternehmen. Ihre Angaben werden ausschließlich für "
+    "die Analyse verwendet.\n\n"
     "In welcher Branche ist Ihr Unternehmen tätig? "
     "Falls Sie unsicher sind, beschreiben Sie einfach, was Sie tun "
     "— ich helfe bei der Zuordnung."
