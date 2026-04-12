@@ -223,7 +223,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # on first access can return stale/empty collected_fields, causing
         # every QR turn to overwrite previous fields.  db.refresh()
         # guarantees a SELECT with the latest committed state.
-        db.refresh(session, attribute_names=["collected_fields", "field_meta", "current_section", "draft_state"])
+        session = db.query(ChatSession).filter(ChatSession.id == session.id).one()
 
         field_meta = dict(session.field_meta or {})
         collected = dict(session.collected_fields or {})
