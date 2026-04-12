@@ -322,6 +322,27 @@ CONDITIONALS: dict[str, dict] = {
         "show_if": {"country": ["DE", "AT", "CH", "GB"]},
         "hide_action": "delete",
     },
+    # Section 6: Extended compliance fields only for regulated industries
+    "technische_massnahmen": {
+        "show_if": {"branche": ["gesundheit", "finanzen", "verwaltung"]},
+        "hide_action": "skip",
+    },
+    "folgenabschaetzung": {
+        "show_if": {"branche": ["gesundheit", "finanzen", "verwaltung"]},
+        "hide_action": "skip",
+    },
+    "meldewege": {
+        "show_if": {"branche": ["gesundheit", "finanzen", "verwaltung"]},
+        "hide_action": "skip",
+    },
+    "loeschregeln": {
+        "show_if": {"branche": ["gesundheit", "finanzen", "verwaltung"]},
+        "hide_action": "skip",
+    },
+    "regulierte_branche": {
+        "show_if": {"branche": ["gesundheit", "finanzen", "verwaltung"]},
+        "hide_action": "skip",
+    },
 }
 
 
