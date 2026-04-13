@@ -395,6 +395,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 # Help request: skip extraction entirely
                 raw_extracted = {"signal": "question", "fields": {}} if DRAFT_MODE_ENABLED else {}
             else:
+                # KIS-1124: Increased extraction timeout from 30s to 45s.
+                # Under load, Haiku can take >30s especially with long prompts.
+                _EXTRACT_TIMEOUT = 45
+
                 async def _run_extraction() -> dict:
                     try:
                         return await asyncio.wait_for(
@@ -410,10 +414,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                                 pending_field=_pf,
                                 pending_value=_pv,
                             ),
-                            timeout=30,
+                            timeout=_EXTRACT_TIMEOUT,
                         )
                     except asyncio.TimeoutError:
-                        log.warning("[CHAT] Extraction timeout, retrying once...")
+                        log.warning("[CHAT] Extraction timeout (%ds), retrying once...", _EXTRACT_TIMEOUT)
                         try:
                             return await asyncio.wait_for(
                                 extract_fields(
@@ -428,7 +432,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                                     pending_field=_pf,
                                     pending_value=_pv,
                                 ),
-                                timeout=30,
+                                timeout=_EXTRACT_TIMEOUT,
                             )
                         except asyncio.TimeoutError:
                             log.error("[CHAT] Extraction timeout on retry")
