@@ -1029,6 +1029,119 @@ def build_help_context(
 
 
 # ---------------------------------------------------------------------------
+# KIS-1124 Sprint 2: Phase 1 Prompt — Open Conversation Mode
+# ---------------------------------------------------------------------------
+
+PHASE_1_SYSTEM_PROMPT = """\
+Sie sind ein KI-Assistent von ki-sicherheit.jetzt und führen ein kurzes \
+Kennenlerngespräch mit dem Nutzer, um sein Unternehmen zu verstehen.
+
+IHRE ROLLE:
+Sie sind ein kompetenter, freundlicher Berater — kein Chatbot und kein \
+Formular. Sie führen ein natürliches Gespräch, das sich wie ein \
+professionelles Erstgespräch anfühlt. Sie siezen durchgehend.
+
+ZIEL:
+Lernen Sie das Unternehmen des Nutzers kennen. Stellen Sie offene \
+Fragen, die zum Erzählen einladen. Im Hintergrund werden die \
+Antworten automatisch zu strukturierten Daten extrahiert.
+
+TRANSPARENZ:
+Sie sind ein KI-Assistent. Machen Sie das nur zu Gesprächsbeginn \
+transparent (falls noch nicht geschehen).
+
+BEREITS ERFASST:
+{collected_fields_summary}
+
+NOCH FEHLENDE KERNFELDER:
+{missing_phase_1_fields}
+
+GESPRÄCHS-REGELN:
+1. Stelle 1 Frage pro Nachricht, die idealerweise 2–3 Felder abdeckt.
+2. Maximal 2 Sätze pro Antwort.
+3. Keine QR-Button-Themen im Text vorwegnehmen — Felder wie Branche, \
+Unternehmensgröße, Land und Budget werden als Buttons angezeigt.
+4. Kein Bestätigungs-Overkill — kurze Reaktion, dann nächste Frage.
+5. Wenn der Nutzer viel erzählt: Zusammenfassen und weiterfragen.
+6. Wenn der Nutzer "weiß nicht" sagt: Feld überspringen, nicht insistieren.
+7. Tonfall: Professionell, aber nicht steif. Wie ein Berater-Erstgespräch.
+8. Fragen Sie NIEMALS nach dem Namen des Unternehmens oder der Firma.
+
+QR-FELDER (werden als Buttons angezeigt, NICHT im Text fragen):
+branche, unternehmensgroesse, country, bundesland, investitionsbudget
+
+FREI EXTRAHIERBARE FELDER (aus dem Gespräch ableitbar):
+hauptleistung, ki_kompetenz, digitalisierungsgrad, ki_ziele, \
+zielgruppen, jahresumsatz, ki_einsatz
+
+GESPRÄCHS-STRATEGIE:
+- Frage 1 (deckt: hauptleistung, ggf. zielgruppen, ki_kompetenz): \
+"Erzählen Sie mir von Ihrem Unternehmen — was machen Sie, und wie \
+ist Ihr Team aufgestellt?"
+- Frage 2 (deckt: ki_kompetenz, digitalisierungsgrad, ki_einsatz): \
+"Wie digital arbeiten Sie heute — von der Tool-Landschaft bis zum \
+KI-Einsatz?"
+- Frage 3 (deckt: ki_ziele, zeitersparnis_prioritaet): \
+"Was erhoffen Sie sich vom KI-Einsatz — wo soll sich am meisten \
+verändern?"
+Dies sind Beispiele — passen Sie die Fragen an den bisherigen \
+Gesprächsverlauf an.
+
+BESTÄTIGUNGS-REGELN (STRIKT):
+- Maximal 1 Satz Bestätigung, dann direkt zur nächsten Frage.
+- Verwende JEDE Bestätigung nur EINMAL im gesamten Chat.
+- Varianten-Pool (verwende jede nur 1×, dann streichen):
+  "Notiert.", "Danke.", "Klar.", "Verstehe.", "Gut.", \
+  "Passt.", "Erfasst.", "Alles klar.", "In Ordnung.", \
+  direkter Einstieg OHNE Bestätigungswort, \
+  kurzer Rückbezug, Einordnung.
+- VERBOTEN: "Verstanden." (max. 1×), "Gut erfasst.", "Perfekt.", \
+  "Da Sie..." als Satzeinstieg nach Bestätigung.
+- NIE zweimal denselben Satzanfang in 3 aufeinanderfolgenden Antworten.
+
+VERBOTENE FORMULIERUNGEN:
+- "als KI-Berater" in jeder Schreibweise
+- "Als [Branche]-Experte", "Als Solo-Berater..."
+- "Das ist eine gute/wichtige/interessante Frage"
+- "die ideale Basis", "ohne große Vorarbeit"
+- "Alles klar zu..." (zu generisch)
+- "Bei Ihrer Expertise", "eine starke/solide/gute Basis"
+
+KÜRZE-REGEL (STRIKT):
+- Bei QR-Feldern: Maximal 2 Sätze.
+- Bei Freitext-Feldern: Maximal 3 Sätze.
+- NIEMALS Aufzählungen von Optionen im Bot-Text.
+
+NÄCHSTES FELD:
+{next_field_info}
+"""
+
+
+def _build_phase_1_prompt(
+    collected_fields: dict,
+    missing_phase_1: list[str],
+    next_fields: list[str],
+    next_field_qr_context: str | None = None,
+) -> str:
+    """Build the Phase 1 system prompt for open conversation mode."""
+    # Format missing fields
+    missing_lines = []
+    for fname in missing_phase_1:
+        desc = FIELD_DESCRIPTIONS.get(fname, fname)
+        missing_lines.append(f"- {fname}: {desc}")
+    missing_str = "\n".join(missing_lines) if missing_lines else "Alle Kernfelder erfasst."
+
+    # Next field info
+    nf_info = next_field_qr_context or "Kein spezifisches nächstes Feld."
+
+    return PHASE_1_SYSTEM_PROMPT.format(
+        collected_fields_summary=_format_collected_summary(collected_fields),
+        missing_phase_1_fields=missing_str,
+        next_field_info=nf_info,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Streaming Response Generator
 # ---------------------------------------------------------------------------
 
@@ -1047,6 +1160,8 @@ async def generate_response(
     next_field_qr_context: str | None = None,
     user_profile_summary: str | None = None,
     recent_bot_messages: list[str] | None = None,
+    conversation_phase: str | None = None,
+    missing_phase_1_fields: list[str] | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Generate streaming AI response.
@@ -1056,29 +1171,40 @@ async def generate_response(
     When draft_mode=True, injects a context block describing the current
     draft state (dialog / pending confirmation / normal question).
     When help_context is provided, appends field-specific help instructions.
+    When conversation_phase="phase_1", uses the Phase 1 open conversation prompt.
     """
     client = _get_async_client()
     if client is None:
         yield "Entschuldigung, ich bin gerade nicht erreichbar. Bitte versuchen Sie es gleich nochmal."
         return
 
-    sections = get_sections_for_report(report_type)
-    section_index: int = section["index"]
-    prompt_template = _get_system_prompt(report_type)
-    system_prompt = prompt_template.format(
-        section_name=section["name"],
-        section_number=section_index + 1,
-        total_sections=len(sections),
-        collected_fields_summary=_format_collected_summary(collected_fields),
-        missing_in_section=", ".join(missing_fields) if missing_fields else "alle erfasst",
-        next_fields_with_descriptions=_format_next_fields(next_fields, report_type),
-    )
+    # Phase 1: Use dedicated open conversation prompt
+    if conversation_phase == "phase_1":
+        system_prompt = _build_phase_1_prompt(
+            collected_fields=collected_fields,
+            missing_phase_1=missing_phase_1_fields or [],
+            next_fields=next_fields,
+            next_field_qr_context=next_field_qr_context,
+        )
+    else:
+        # Legacy / Phase 2 / Strategy: use section-based prompt
+        sections = get_sections_for_report(report_type)
+        section_index: int = section["index"]
+        prompt_template = _get_system_prompt(report_type)
+        system_prompt = prompt_template.format(
+            section_name=section["name"],
+            section_number=section_index + 1,
+            total_sections=len(sections),
+            collected_fields_summary=_format_collected_summary(collected_fields),
+            missing_in_section=", ".join(missing_fields) if missing_fields else "alle erfasst",
+            next_fields_with_descriptions=_format_next_fields(next_fields, report_type),
+        )
 
-    # Inject section-specific hint
-    hints = _get_section_hints(report_type)
-    hint = hints.get(section_index, "")
-    if hint:
-        system_prompt += f"\n\nHINWEIS FÜR DIESEN ABSCHNITT:\n{hint}"
+        # Inject section-specific hint
+        hints = _get_section_hints(report_type)
+        hint = hints.get(section_index, "")
+        if hint:
+            system_prompt += f"\n\nHINWEIS FÜR DIESEN ABSCHNITT:\n{hint}"
 
     # Draft-mode context injection (also used in legacy mode for dialog_mode)
     if draft_mode or dialog_mode:
@@ -1113,7 +1239,8 @@ async def generate_response(
     # Next-field QR context for coherent transitions (KIS-1123 Fix 1).
     # Skip in dialog/help mode — Sonnet should answer the user's question,
     # not transition to the next field.
-    if next_field_qr_context and not dialog_mode and not help_context:
+    # Skip in Phase 1 — already embedded in the Phase 1 prompt template.
+    if next_field_qr_context and not dialog_mode and not help_context and conversation_phase != "phase_1":
         system_prompt += (
             f"\n\nNÄCHSTES FELD (für deine Überleitung):\n"
             f"{next_field_qr_context}\n\n"
