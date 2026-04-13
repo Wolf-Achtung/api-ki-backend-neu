@@ -74,14 +74,14 @@ DRAFT_MODE_ENABLED = os.getenv("DRAFT_MODE_ENABLED", "false").lower() == "true"
 PHASE_1_FIELDS: list[str] = [
     "branche", "unternehmensgroesse", "country", "bundesland",
     "hauptleistung", "ki_kompetenz", "digitalisierungsgrad",
-    "ki_ziele", "investitionsbudget", "datenschutz",
+    "ki_ziele", "investitionsbudget",
 ]
 
 # Phase 1a: QR fields collected sequentially (ordered)
 PHASE_1A_QR_FIELDS: list[str] = [
     "branche", "unternehmensgroesse", "selbststaendig",
     "country", "bundesland",
-    "investitionsbudget", "datenschutz",
+    "investitionsbudget",
 ]
 
 # Phase 1b: Open conversation fields (extracted via multi-field Haiku)
@@ -102,10 +102,10 @@ PHASE_1_EXTRACTABLE_FIELDS: set[str] = {
 def _get_datenschutz_block_fields(branche: str) -> list[str]:
     """Return Block D fields based on branche (Beratung → reduced set)."""
     if branche == "beratung":
-        return ["datenschutzbeauftragter", "ai_act_kenntnis", "ki_hemmnisse",
-                "governance_richtlinien"]
+        return ["datenschutz", "datenschutzbeauftragter", "ai_act_kenntnis",
+                "ki_hemmnisse", "governance_richtlinien"]
     return [
-        "datenschutzbeauftragter", "technische_massnahmen",
+        "datenschutz", "datenschutzbeauftragter", "technische_massnahmen",
         "folgenabschaetzung", "meldewege", "loeschregeln",
         "ai_act_kenntnis", "regulierte_branche", "ki_hemmnisse",
         "governance_richtlinien",
