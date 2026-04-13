@@ -999,7 +999,8 @@ async def generate_response(
 
     # Draft-mode context injection (also used in legacy mode for dialog_mode)
     if draft_mode or dialog_mode:
-        system_prompt += _build_draft_context(pending_field, pending_value, dialog_mode)
+        _current_field = next_fields[0] if next_fields else None
+        system_prompt += _build_draft_context(pending_field, pending_value, dialog_mode, _current_field)
 
     # Help-request context injection (field-specific explanation prompt)
     if help_context:
@@ -1025,13 +1026,30 @@ def _build_draft_context(
     pending_field: str | None,
     pending_value: object,
     dialog_mode: bool,
+    current_field: str | None = None,
 ) -> str:
     """Build the draft-mode context block for the system prompt."""
     if dialog_mode and not pending_field:
-        return """
+        # Build current-field hint so Sonnet ties follow-ups to the right topic
+        field_hint = ""
+        if current_field:
+            desc = FIELD_DESCRIPTIONS.get(current_field, current_field)
+            label = desc.split("(")[0].strip() if desc else current_field
+            field_hint = (
+                f"\n\nAKTUELLES FELD: {current_field}"
+                f"\nFELD-LABEL: {label}"
+                f"\nFELD-BESCHREIBUNG: {desc}"
+                f"\n\nWenn der Nutzer nachfragt (\"was meinst du?\", \"wie ist das gemeint?\", "
+                f"\"kannst du das erklären?\"):"
+                f"\n- Beziehe die Rückfrage IMMER auf das AKTUELLE FELD (oben), "
+                f"NICHT auf vorherige Themen."
+                f"\n- Auch wenn deine letzte Nachricht mehrere Themen enthielt: "
+                f"Die Rückfrage bezieht sich auf die LETZTE GESTELLTE FRAGE."
+            )
+        return f"""
 
 AKTUELLER MODUS: DIALOG
-Der Nutzer hat eine Rückfrage zum aktuellen Thema gestellt.
+Der Nutzer hat eine Rückfrage zum aktuellen Thema gestellt.{field_hint}
 
 REGELN FÜR DIESEN MODUS:
 - Beantworten Sie die Frage hilfreich, konkret und mit Branchenbezug.
