@@ -562,12 +562,12 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         sections = get_sections_for_report(rt)
         missing_req, missing_opt = get_missing_fields(collected, _current_section, rt)
         all_missing = missing_req + missing_opt
-        # Smart Grouping: ask up to 3 optional fields at once
+        # Smart Grouping: ask up to 2 optional fields at once
         # (required fields still come one at a time)
         if missing_req:
             next_fields = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
         else:
-            next_fields = get_next_fields(collected, _current_section, max_fields=3, report_type=rt)
+            next_fields = get_next_fields(collected, _current_section, max_fields=2, report_type=rt)
         current_section = sections[_current_section]
 
         log.info("[CHAT] Turn %d: normalized=%s, next=%s", turn, list(normalized.keys()), next_fields)
@@ -673,12 +673,12 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         # QR generation — QR clicks always get normal next-field buttons.
         # Draft suppression only applies to free-text turns.
-        # Smart Grouping: group up to 3 optional fields for QR
+        # Smart Grouping: group up to 2 optional fields for QR
         _qr_miss_req, _qr_miss_opt = get_missing_fields(collected, _current_section, rt)
         if _qr_miss_req:
             qr_next = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
         else:
-            qr_next = get_next_fields(collected, _current_section, max_fields=3, report_type=rt)
+            qr_next = get_next_fields(collected, _current_section, max_fields=2, report_type=rt)
 
         # Fix 4: For strategy sessions, load R1 profile for context-aware QR
         _profile_ctx = None
@@ -852,9 +852,10 @@ async def chat_session_get(session_id: UUID, db: Session = Depends(get_db)):
 
     rt = session.report_type
     state = _build_session_state(session)
-    next_fields = get_next_fields(session.collected_fields, session.current_section, report_type=rt)
+    # Use state.next_fields (already computed with correct max_fields logic)
+    # instead of calling get_next_fields again with default max_fields=1
     _profile_ctx = _load_r1_profile_for_strategy(session, db) if rt == "strategy" else None
-    state.quick_replies = _build_quick_replies(next_fields, rt, session.collected_fields, _profile_ctx)
+    state.quick_replies = _build_quick_replies(state.next_fields, rt, session.collected_fields, _profile_ctx)
 
     # Last 10 messages
     all_msgs = session.messages or []
@@ -1262,11 +1263,11 @@ def _build_session_state(
     section = sections[section_idx]
 
     missing_req, missing_opt = get_missing_fields(collected, section_idx, rt)
-    # Smart Grouping: group up to 3 optional fields
+    # Smart Grouping: group up to 2 optional fields
     if missing_req:
         next_fields = get_next_fields(collected, section_idx, max_fields=1, report_type=rt)
     else:
-        next_fields = get_next_fields(collected, section_idx, max_fields=3, report_type=rt)
+        next_fields = get_next_fields(collected, section_idx, max_fields=2, report_type=rt)
 
     total = len(registry)
     collected_count = len(collected)
