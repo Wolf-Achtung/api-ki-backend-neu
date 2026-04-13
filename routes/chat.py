@@ -692,6 +692,12 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 _profile_parts.append(f"- {_pf_label}: {_pf_val}")
         _user_profile_summary = "\n".join(_profile_parts) if len(_profile_parts) >= 2 else None
 
+        # Extract last 3 bot messages for anti-repetition (KIS-1123 Fix 3).
+        _recent_bot_msgs = [
+            m["content"] for m in session.messages
+            if m.get("role") == "assistant" and m.get("content")
+        ][-3:]
+
         # ------------------------------------------------------------------
         # Phase 2: Stream Sonnet response with heartbeat keepalive
         # ------------------------------------------------------------------
@@ -776,6 +782,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     help_context=_help_ctx,
                     next_field_qr_context=_next_field_qr_context,
                     user_profile_summary=_user_profile_summary,
+                    recent_bot_messages=_recent_bot_msgs,
                 ):
                     await queue.put(token)
             except Exception as exc:
