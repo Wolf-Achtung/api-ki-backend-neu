@@ -674,6 +674,24 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     f"Der Nutzer gibt Freitext ein."
                 )
 
+        # Build user profile summary for Sonnet context (KIS-1123 Fix 2).
+        _PROFILE_FIELDS = [
+            ("branche", "Branche"),
+            ("unternehmensgroesse", "Unternehmensgröße"),
+            ("hauptleistung", "Hauptleistung"),
+            ("ki_kompetenz", "KI-Kompetenz"),
+            ("ki_einsatz", "KI-Einsatzbereiche"),
+            ("digitalisierungsgrad", "Digitalisierungsgrad"),
+            ("ki_projekte", "Bestehende KI-Projekte"),
+            ("zielgruppen", "Zielgruppen"),
+        ]
+        _profile_parts = []
+        for _pf_key, _pf_label in _PROFILE_FIELDS:
+            _pf_val = collected.get(_pf_key)
+            if _pf_val:
+                _profile_parts.append(f"- {_pf_label}: {_pf_val}")
+        _user_profile_summary = "\n".join(_profile_parts) if len(_profile_parts) >= 2 else None
+
         # ------------------------------------------------------------------
         # Phase 2: Stream Sonnet response with heartbeat keepalive
         # ------------------------------------------------------------------
@@ -757,6 +775,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     dialog_mode=_sonnet_dialog_mode,
                     help_context=_help_ctx,
                     next_field_qr_context=_next_field_qr_context,
+                    user_profile_summary=_user_profile_summary,
                 ):
                     await queue.put(token)
             except Exception as exc:
