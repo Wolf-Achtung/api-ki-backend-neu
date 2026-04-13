@@ -30,22 +30,27 @@ Analysiere die Nutzerantwort und extrahiere strukturierte Felder
 mit dem Tool update_intake_fields.
 
 REGELN:
-1. Setze NUR Felder, die der Nutzer tatsächlich genannt hat.
-2. Erfinde NIEMALS Werte.
+1. Setze NUR Felder, die der Nutzer EXPLIZIT genannt hat.
+2. Erfinde NIEMALS Werte. Inferiere KEINE Werte aus dem Kontext.
 3. Wenn unsicher, setze das Feld NICHT.
-4. Extrahiere auch implizite Informationen:
+4. ERLAUBTE Normalisierung (Format-Transformation, KEINE Inhalts-Inferenz):
    - "in München" → bundesland: "München" (wird extern normalisiert)
    - "8 Mitarbeiter" → unternehmensgroesse: "8" (wird extern normalisiert)
    - "Handwerksbetrieb" → branche: "Handwerk" (wird extern normalisiert)
+   VERBOTENE Inferenz: Leite KEINE Feldwerte ab, die der User nicht \
+   direkt genannt hat. Beispiel: Wenn der User "Beratung von Unternehmen" \
+   sagt, extrahiere NICHT daraus zielgruppen — das muss separat gefragt werden.
 5. Bei Freitextfeldern: den Kern der Aussage in 1–3 Sätzen zusammenfassen.
 6. Wenn der Nutzer eine Rückfrage stellt statt zu antworten,
    rufe das Tool NICHT auf.
 7. Wenn der Nutzer auf ein Feld mit einer Ablehnung oder \
 einem Skip-Signal antwortet (z.B. „nein", „keine Ahnung", „noch keine Idee", \
-„weiß nicht", „weiter", „skip", „überspringen", „keine", „k.A.", \
-„noch nicht", „nicht wirklich", „keine Angabe", „das kann ich nicht \
-entscheiden", „schwer zu sagen", „müsste ich nachschauen", „egal", \
-„ist mir nicht wichtig", „spielt keine Rolle"), dann extrahiere \
+„weiß nicht", „weiß nicht genau", „weiter", „skip", „überspringen", \
+„keine", „k.A.", „noch nicht", „nicht wirklich", „keine Angabe", \
+„das kann ich nicht entscheiden", „schwer zu sagen", „müsste ich nachschauen", \
+„egal", „ist mir nicht wichtig", „spielt keine Rolle", \
+„kann ich nicht sagen", „keine Vorstellung", „passe", \
+„überspring das", „kein Plan", „keine Idee"), dann extrahiere \
 das aktuell gefragte Feld mit dem Wert „keine_angabe". \
 Skip-Signale sind GÜLTIGE Antworten, NICHT „off-topic". \
 Auch bei Pflichtfeldern: Wenn der Nutzer klar signalisiert, dass er \
@@ -584,23 +589,29 @@ für die unten aufgelisteten Felder. Antworte NUR mit einem JSON-Objekt
 über das Tool extract_multi_fields.
 
 REGELN:
-1. Setze NUR Felder, die der Nutzer tatsächlich genannt oder klar impliziert hat.
-2. Erfinde NIEMALS Werte.
+1. Setze NUR Felder, die der Nutzer EXPLIZIT genannt hat.
+2. Erfinde NIEMALS Werte. Inferiere KEINE Werte aus dem Kontext.
 3. Bei Unsicherheit: Feld NICHT setzen (weglassen).
 4. Bei enum-Feldern: Exakt einen der vorgegebenen Werte verwenden.
 5. Bei multi-Feldern: Array der erkannten Werte.
 6. Bei text-Feldern: Relevanten Textabschnitt in 1–3 Sätzen zusammenfassen.
 7. Bei slider-Feldern: Numerischen Wert ableiten (1–10).
-8. Extrahiere auch implizite Informationen:
-   - "in München" → bundesland: "by" (Bayern)
-   - "8 Mitarbeiter" → unternehmensgroesse: "team"
-   - "komplett digital" → digitalisierungsgrad: 9 oder 10
-   - "viel Papier" → digitalisierungsgrad: 2 oder 3
-   - "ich arbeite mit LLM-APIs" → ki_kompetenz: "hoch"
-   - "ich will automatisieren" → ki_ziele: ["automatisierung"]
+8. ERLAUBTE Normalisierung (Format-Transformation, KEINE Inhalts-Inferenz):
+   - "in München" → bundesland: "by" (Bayern) — Ort → Region
+   - "8 Mitarbeiter" → unternehmensgroesse: "team" — Zahl → Kategorie
+   - "komplett digital" → digitalisierungsgrad: 9 oder 10 — Beschreibung → Skala
+   - "viel Papier" → digitalisierungsgrad: 2 oder 3 — Beschreibung → Skala
+   - "ich arbeite mit LLM-APIs" → ki_kompetenz: "hoch" — Aussage → Einstufung
+   VERBOTENE Inferenz (Inhalte ableiten, die der User NICHT gesagt hat):
+   - "Beratung von Unternehmen" → NICHT zielgruppen: ["b2b"] ableiten
+   - "KI-Beratung" → NICHT ki_ziele oder ki_einsatz daraus ableiten
+   - "Automatisierung" als Hauptleistung → NICHT ki_ziele: ["automatisierung"] setzen
+   Regel: Wenn der User ein Feld nicht DIREKT anspricht, setze es NICHT.
 9. Wenn der Nutzer signalisiert, nicht antworten zu wollen \
-(z.B. "weiß nicht", "keine Ahnung", "überspring", "egal", "später", \
-"kann ich nicht", "schwer zu sagen", "nächste Frage"), setze \
+(z.B. "weiß nicht", "weiß nicht genau", "keine Ahnung", "überspring", \
+"egal", "später", "kann ich nicht", "kann ich nicht sagen", \
+"schwer zu sagen", "nächste Frage", "keine Vorstellung", "passe", \
+"überspring das", "kein Plan", "keine Idee"), setze \
 __skip_signal auf true.
 
 FELDER ZUM EXTRAHIEREN:

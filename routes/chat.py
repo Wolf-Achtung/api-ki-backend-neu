@@ -167,6 +167,8 @@ def _init_phase_state() -> dict:
         "completed_blocks": [],
         "current_block": None,
         "block_stale_turns": 0,
+        "phase_1b_asked_fields": [],   # KIS-1124 Testrun-Fix Bug 7
+        "block_asked_fields": [],      # KIS-1124 Testrun-Fix Bug 8
     }
 
 
@@ -180,6 +182,8 @@ def _get_phase_state(session) -> dict:
         "completed_blocks": ps.get("completed_blocks", []),
         "current_block": ps.get("current_block"),
         "block_stale_turns": ps.get("block_stale_turns", 0),
+        "phase_1b_asked_fields": ps.get("phase_1b_asked_fields", []),
+        "block_asked_fields": ps.get("block_asked_fields", []),
     }
 
 
@@ -462,6 +466,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 elif _bt_value == "continue":
                     # Continue with next block (current_block already set)
                     _phase_state["block_stale_turns"] = 0
+                    _phase_state["block_asked_fields"] = []  # Reset for new block
                     log.info("[CHAT] Block transition: user chose CONTINUE → block %s",
                              _phase_state.get("current_block"))
                 _no_extraction = True
@@ -915,6 +920,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             "kann ich nicht sagen", "keine angabe", "k.a.", "kein kommentar",
             "keine meinung", "weiß ich nicht", "weiss ich nicht",
             "kann ich nicht beantworten", "keine idee", "noch keine idee",
+            # KIS-1124 Testrun-Fix Bug 4: additional skip-signal phrases
+            "weiß nicht genau", "weiss nicht genau", "keine vorstellung",
+            "passe", "überspring das", "kein plan", "wüsste ich nicht",
+            "da bin ich überfragt", "keine präferenz", "mir egal",
         ]
         _msg_lower = req.message.strip().lower()
         _is_skip_word = _msg_lower in skip_words
@@ -1055,19 +1064,48 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                                  and not _should_skip_qr_field(f, collected)]
             all_missing = _missing_p1_after
 
-            if not _missing_p1_after:
-                # All Phase 1 fields collected → trigger checkpoint
-                _phase_state["conversation_phase"] = "checkpoint"
-                _checkpoint_triggered = True
-                next_fields = []
-                log.info("[CHAT] Phase 1 COMPLETE — triggering checkpoint")
+            # KIS-1124 Testrun-Fix Bug 7: Track which Phase 1b fields
+            # Sonnet has asked about. A field extracted via multi-field
+            # extraction is only considered "covered" if Sonnet asked
+            # about it (it appeared in next_fields) at least once.
+            _p1b_asked = _phase_state.get("phase_1b_asked_fields", [])
+            if not _post_phase_1a and _asked_field and _asked_field in PHASE_1B_OPEN_FIELDS:
+                if _asked_field not in _p1b_asked:
+                    _p1b_asked.append(_asked_field)
+                    _phase_state["phase_1b_asked_fields"] = _p1b_asked
 
-                # Persist phase_state change immediately
-                db.execute(
-                    _sa_text("UPDATE chat_sessions SET phase_state = CAST(:ps AS jsonb) WHERE id = :sid"),
-                    {"ps": json.dumps(_phase_state), "sid": str(session.id)},
-                )
-                db.commit()
+            if not _missing_p1_after:
+                # All Phase 1 fields are in collected. But before triggering
+                # checkpoint, verify all Phase 1b fields were actually asked about.
+                _unasked_p1b = [f for f in PHASE_1B_OPEN_FIELDS
+                                if f in collected and f not in _p1b_asked]
+                if _unasked_p1b:
+                    # Some Phase 1b fields were extracted but never asked about.
+                    # Force Sonnet to ask about the first unasked field before checkpoint.
+                    next_fields = [_unasked_p1b[0]]
+                    # Add it to asked list so next turn can proceed
+                    _p1b_asked.append(_unasked_p1b[0])
+                    _phase_state["phase_1b_asked_fields"] = _p1b_asked
+                    log.info("[CHAT] Phase 1b: field %s was extracted but never asked — forcing question before checkpoint", _unasked_p1b[0])
+                    # Persist phase_state
+                    db.execute(
+                        _sa_text("UPDATE chat_sessions SET phase_state = CAST(:ps AS jsonb) WHERE id = :sid"),
+                        {"ps": json.dumps(_phase_state), "sid": str(session.id)},
+                    )
+                    db.commit()
+                else:
+                    # All Phase 1b fields were asked about → trigger checkpoint
+                    _phase_state["conversation_phase"] = "checkpoint"
+                    _checkpoint_triggered = True
+                    next_fields = []
+                    log.info("[CHAT] Phase 1 COMPLETE — triggering checkpoint")
+
+                    # Persist phase_state change immediately
+                    db.execute(
+                        _sa_text("UPDATE chat_sessions SET phase_state = CAST(:ps AS jsonb) WHERE id = :sid"),
+                        {"ps": json.dumps(_phase_state), "sid": str(session.id)},
+                    )
+                    db.commit()
             elif _no_extraction and _asked_field and _asked_field not in collected:
                 next_fields = [_asked_field]
                 log.info("[CHAT] Phase 1 QR-Sync: keeping next_fields=[%s]", _asked_field)
@@ -1079,6 +1117,12 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 # Phase 1b: next open-conversation field (no QR)
                 _p1b_missing = [f for f in PHASE_1B_OPEN_FIELDS if f not in collected]
                 next_fields = _p1b_missing[:1]
+                # Persist phase_1b_asked_fields
+                db.execute(
+                    _sa_text("UPDATE chat_sessions SET phase_state = CAST(:ps AS jsonb) WHERE id = :sid"),
+                    {"ps": json.dumps(_phase_state), "sid": str(session.id)},
+                )
+                db.commit()
 
         elif _cur_conv_phase == "checkpoint" and rt == "r1":
             # Checkpoint phase — next_fields is empty, QR handles navigation
@@ -1096,6 +1140,13 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             if _cur_block:
                 _block_remaining = _get_block_fields(_cur_block, collected)
 
+                # KIS-1124 Testrun-Fix Bug 8: Track which fields in the
+                # current block Sonnet has asked about.
+                _block_asked = _phase_state.get("block_asked_fields", [])
+                if _asked_field and _asked_field not in _block_asked:
+                    _block_asked.append(_asked_field)
+                    _phase_state["block_asked_fields"] = _block_asked
+
                 # Stale turn tracking: increment on no extraction, reset on extraction
                 if normalized and not _no_extraction:
                     _phase_state["block_stale_turns"] = 0
@@ -1104,12 +1155,24 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
                 _stale = _phase_state.get("block_stale_turns", 0)
 
+                # KIS-1124 Testrun-Fix Bug 8: Check if there are remaining
+                # fields that Sonnet has never asked about. If so, the block
+                # should NOT auto-close — instead redirect Sonnet to ask about
+                # those unasked fields first.
+                _unasked_remaining = [f for f in _block_remaining if f not in _block_asked]
+
                 # Block completion: no remaining fields OR stale >= 2
-                if not _block_remaining or _stale >= 2:
+                # BUT: don't auto-close if there are unasked remaining fields
+                _should_close = (
+                    not _block_remaining
+                    or (_stale >= 2 and not _unasked_remaining)
+                    or _stale >= 4  # Hard limit: force-close after 4 stale turns
+                )
+                if _should_close:
                     if not _block_remaining:
                         log.info("[CHAT] Phase 2: block %s complete (all fields collected)", _cur_block)
                     else:
-                        log.info("[CHAT] Phase 2: block %s auto-close (stale_turns=%d)", _cur_block, _stale)
+                        log.info("[CHAT] Phase 2: block %s auto-close (stale_turns=%d, unasked=%d)", _cur_block, _stale, len(_unasked_remaining))
 
                     # Mark block as completed
                     completed = _phase_state.get("completed_blocks", [])
@@ -1117,6 +1180,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         completed.append(_cur_block)
                     _phase_state["completed_blocks"] = completed
                     _phase_state["block_stale_turns"] = 0
+                    _phase_state["block_asked_fields"] = []  # Reset for next block
 
                     # Determine next block
                     remaining_blocks = [b for b in _phase_state.get("selected_blocks", [])
@@ -1131,6 +1195,14 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     _block_just_completed = True
                     all_missing = []
                     next_fields = []
+                elif _stale >= 2 and _unasked_remaining:
+                    # Stale threshold hit but there are unasked fields — redirect
+                    # Sonnet to ask about the first unasked field instead of closing.
+                    all_missing = _block_remaining
+                    next_fields = [_unasked_remaining[0]]
+                    _phase_state["block_stale_turns"] = 0  # Reset to give the field a chance
+                    log.info("[CHAT] Phase 2 block %s: stale but %d unasked fields remain — redirecting to %s",
+                             _cur_block, len(_unasked_remaining), _unasked_remaining[0])
                 else:
                     all_missing = _block_remaining
                     if _no_extraction and _asked_field and _asked_field not in collected:
@@ -1214,6 +1286,25 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             if m.get("role") == "assistant" and m.get("content")
         ][-3:]
 
+        # KIS-1124 Testrun-Fix Bug 2: Track used confirmation phrases
+        # across the entire conversation so Sonnet can avoid repeating them.
+        _CONFIRMATION_WORDS = {
+            "notiert.", "danke.", "klar.", "verstehe.", "gut.",
+            "passt.", "erfasst.", "alles klar.", "in ordnung.",
+            "verstanden.", "weiter.", "okay.", "gut erfasst.",
+        }
+        _used_confirmations: list[str] = []
+        for _bot_msg in (m["content"] for m in session.messages
+                         if m.get("role") == "assistant" and m.get("content")):
+            _first_sentence = _bot_msg.strip().split("\n")[0].split(".")[0] + "." if _bot_msg.strip() else ""
+            _first_word_lower = _first_sentence.strip().lower()
+            for _cw in _CONFIRMATION_WORDS:
+                if _first_word_lower.startswith(_cw):
+                    _canon = _cw.capitalize()
+                    if _canon not in _used_confirmations:
+                        _used_confirmations.append(_canon)
+                    break
+
         # ------------------------------------------------------------------
         # Phase 2: Stream Sonnet response with heartbeat keepalive
         # ------------------------------------------------------------------
@@ -1282,8 +1373,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 f"Fragen Sie den Nutzer, welches Feld geändert werden soll und auf welchen Wert."
             )
 
-        # KIS-1124-S0-BE-2: When user declines a required field, tell Sonnet
-        # to acknowledge gracefully and point to QR buttons as easy fallback.
+        # KIS-1124-S0-BE-2: When user declines a field, tell Sonnet
+        # to acknowledge gracefully.
         if _is_decline and not _help_ctx:
             _decline_field = _asked_field
             _decline_reg = registry.get(_decline_field, {})
@@ -1301,6 +1392,17 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         f"die die Antwort erleichtern.\n"
                         f"- Maximal 2 Sätze total. NICHT insistieren."
                     )
+            else:
+                # KIS-1124 Testrun-Fix Bug 4: Skip-friendly message for optional fields
+                _help_ctx = (
+                    f"\n\nAKTUELLER MODUS: FELD ÜBERSPRUNGEN\n"
+                    f"Der Nutzer hat das optionale Feld \"{_decline_field}\" übersprungen.\n"
+                    f"REAGIERE SO:\n"
+                    f"- Kurze freundliche Bestätigung (z.B. 'Kein Problem, das lassen wir offen.').\n"
+                    f"- Dann SOFORT zur nächsten Frage weiter.\n"
+                    f"- NICHT 'Notiert.' sagen — das klingt so, als wäre die Ablehnung ein Wert.\n"
+                    f"- Maximal 1 Satz, dann die nächste Frage."
+                )
 
         # Compute Phase 1 missing fields for Sonnet prompt
         _missing_p1_for_sonnet = None
@@ -1389,6 +1491,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     missing_phase_1_fields=_missing_p1_for_sonnet,
                     current_block=_sonnet_block_id,
                     remaining_block_fields=_sonnet_block_remaining,
+                    used_confirmations=_used_confirmations,
                 ):
                     await queue.put(token)
             except Exception as exc:
