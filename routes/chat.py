@@ -209,7 +209,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
     # inside event_stream() so the SSE connection starts immediately and
     # heartbeats keep the connection alive during the Haiku call.
     rt = session.report_type
-    from services.chat_conversation import generate_response, FIELD_DESCRIPTIONS
+    from services.chat_conversation import (
+        generate_response, FIELD_DESCRIPTIONS, build_help_context,
+        EDIT_MODE_SONNET_PROMPT, build_edit_extraction_context,
+    )
 
     _HB_INTERVAL = 12  # seconds between keepalive heartbeats
 
@@ -243,8 +246,22 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _draft_confirmed_field = None
         _draft_confirmed_value = None
         _pending_after_turn = False  # True when a pending draft exists AFTER this turn's processing
+        _no_extraction = False  # True when free-text yielded no field extraction (user asked a question)
+        _asked_field = ""  # The field that was being asked when the user sent this message
 
         _is_qr_click = bool(req.quick_reply_field and req.quick_reply_value)
+        _is_help_request = "__HELP_REQUEST__" in req.message
+
+        # Edit-mode detection: check if user wants to change a field after summary
+        _is_in_edit_mode = bool(_draft_state_snapshot.get("edit_mode"))
+        _edit_words = {"ändern", "etwas ändern", "korrigieren", "anpassen", "nein, etwas ändern", "nein ändern"}
+        _is_edit_request = (
+            not _is_qr_click
+            and not _is_help_request
+            and _has_summary_been_sent(session)
+            and req.message.strip().lower() in _edit_words
+        )
+        _edit_applied = False  # True when an edit was successfully applied this turn
 
         if _is_qr_click:
             # Quick reply: direct write, no Draft — user click is explicit confirmation.
@@ -321,31 +338,64 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             asked_fields = get_next_fields(collected, _current_section, report_type=rt)
             cur_field = asked_fields[0] if asked_fields else ""
             cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
+            _asked_field = cur_field
+
+            # Help-request: skip extraction entirely, stay on current field
+            if _is_help_request:
+                _no_extraction = True
+                log.info("[CHAT] Help request detected for field %s, skipping extraction", cur_field)
+
+            # Edit-request: user wants to change a field after summary
+            if _is_edit_request:
+                _no_extraction = True
+                # Activate edit_mode in draft_state
+                session.draft_state = {
+                    **(session.draft_state or {}),
+                    "edit_mode": True,
+                }
+                log.info("[CHAT] Edit request detected, activating edit_mode")
+
+            # Edit-mode: try to parse field change from user message
+            if _is_in_edit_mode and not _is_edit_request:
+                _no_extraction = True  # Skip normal extraction
+                _edit_field, _edit_value = _parse_edit_from_message(
+                    req.message, collected, registry, rt,
+                )
+                if _edit_field and _edit_value is not None:
+                    # Apply the edit
+                    result = normalize_field(_edit_field, _edit_value, collected, report_type=rt)
+                    if result.confidence != "low":
+                        collected[_edit_field] = result.value
+                        normalized[_edit_field] = result.value
+                        field_meta[_edit_field] = {
+                            "confidence": result.confidence,
+                            "source_turn": turn,
+                            "raw_input": str(_edit_value),
+                            "normalized": True,
+                            "confirmed": True,
+                        }
+                        _edit_applied = True
+                        # Deactivate edit_mode
+                        session.draft_state = {
+                            **(session.draft_state or {}),
+                            "edit_mode": False,
+                        }
+                        log.info("[CHAT] Edit applied: %s=%r", _edit_field, result.value)
+                    else:
+                        log.info("[CHAT] Edit: low confidence for %s=%r, asking again", _edit_field, _edit_value)
+                else:
+                    log.info("[CHAT] Edit: could not parse field change from message")
 
             # Draft-mode: read pending state for extractor context
             _draft = dict(_draft_state_snapshot)
             _pf = _draft.get("pending_field") if DRAFT_MODE_ENABLED else None
             _pv = _draft.get("pending_value") if DRAFT_MODE_ENABLED else None
 
-            async def _run_extraction() -> dict:
-                try:
-                    return await asyncio.wait_for(
-                        extract_fields(
-                            req.message,
-                            messages[-6:],
-                            _all_missing,
-                            collected,
-                            report_type=rt,
-                            current_field=cur_field,
-                            current_field_description=cur_desc,
-                            draft_mode=DRAFT_MODE_ENABLED,
-                            pending_field=_pf,
-                            pending_value=_pv,
-                        ),
-                        timeout=30,
-                    )
-                except asyncio.TimeoutError:
-                    log.warning("[CHAT] Extraction timeout, retrying once...")
+            if _is_help_request:
+                # Help request: skip extraction entirely
+                raw_extracted = {"signal": "question", "fields": {}} if DRAFT_MODE_ENABLED else {}
+            else:
+                async def _run_extraction() -> dict:
                     try:
                         return await asyncio.wait_for(
                             extract_fields(
@@ -363,21 +413,39 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                             timeout=30,
                         )
                     except asyncio.TimeoutError:
-                        log.error("[CHAT] Extraction timeout on retry")
-                        return {"signal": None, "fields": {}} if DRAFT_MODE_ENABLED else {}
+                        log.warning("[CHAT] Extraction timeout, retrying once...")
+                        try:
+                            return await asyncio.wait_for(
+                                extract_fields(
+                                    req.message,
+                                    messages[-6:],
+                                    _all_missing,
+                                    collected,
+                                    report_type=rt,
+                                    current_field=cur_field,
+                                    current_field_description=cur_desc,
+                                    draft_mode=DRAFT_MODE_ENABLED,
+                                    pending_field=_pf,
+                                    pending_value=_pv,
+                                ),
+                                timeout=30,
+                            )
+                        except asyncio.TimeoutError:
+                            log.error("[CHAT] Extraction timeout on retry")
+                            return {"signal": None, "fields": {}} if DRAFT_MODE_ENABLED else {}
 
-            extract_task = asyncio.create_task(_run_extraction())
-            while not extract_task.done():
-                try:
-                    await asyncio.wait_for(asyncio.shield(extract_task), timeout=_HB_INTERVAL)
-                except asyncio.TimeoutError:
-                    yield f"event: heartbeat\ndata: {{}}\n\n"
-                except Exception:
-                    break  # task raised — handled below
+                extract_task = asyncio.create_task(_run_extraction())
+                while not extract_task.done():
+                    try:
+                        await asyncio.wait_for(asyncio.shield(extract_task), timeout=_HB_INTERVAL)
+                    except asyncio.TimeoutError:
+                        yield f"event: heartbeat\ndata: {{}}\n\n"
+                    except Exception:
+                        break  # task raised — handled below
 
-            raw_extracted = extract_task.result() if not extract_task.cancelled() else (
-                {"signal": None, "fields": {}} if DRAFT_MODE_ENABLED else {}
-            )
+                raw_extracted = extract_task.result() if not extract_task.cancelled() else (
+                    {"signal": None, "fields": {}} if DRAFT_MODE_ENABLED else {}
+                )
 
             if not DRAFT_MODE_ENABLED:
                 # ----- Legacy flow: normalize + direct write to collected_fields -----
@@ -406,6 +474,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         "normalized": True,
                         "confirmed": False,
                     }
+                # No fields extracted from free text → user likely asked a question
+                if not normalized:
+                    _no_extraction = True
+                    log.info("[CHAT] Legacy: no extraction from free text, staying on field %s", _asked_field)
             else:
                 # ----- Draft flow: extract → pending, not collected -----
                 _signal = raw_extracted.get("signal")
@@ -528,7 +600,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # draft_state MUST be included here — ORM assignments to
         # session.draft_state are not reliably flushed after raw SQL commits.
         _draft_for_sql = None
-        if DRAFT_MODE_ENABLED:
+        if DRAFT_MODE_ENABLED or _is_edit_request or _is_in_edit_mode:
             _draft_for_sql = json.dumps(
                 getattr(session, 'draft_state', None)
                 or {"pending_field": None, "pending_value": None, "dialog_mode": False}
@@ -562,15 +634,22 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         sections = get_sections_for_report(rt)
         missing_req, missing_opt = get_missing_fields(collected, _current_section, rt)
         all_missing = missing_req + missing_opt
-        # Smart Grouping: ask up to 2 optional fields at once
-        # (required fields still come one at a time)
-        if missing_req:
-            next_fields = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
+
+        if _no_extraction and _asked_field and _asked_field not in collected:
+            # No extraction: user asked a question or gave unclear answer.
+            # Stay on current field — do NOT advance to next field.
+            next_fields = [_asked_field]
+            log.info("[CHAT] QR-Sync: no extraction, keeping next_fields=[%s]", _asked_field)
         else:
-            next_fields = get_next_fields(collected, _current_section, max_fields=2, report_type=rt)
+            # Smart Grouping: ask up to 2 optional fields at once
+            # (required fields still come one at a time)
+            if missing_req:
+                next_fields = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
+            else:
+                next_fields = get_next_fields(collected, _current_section, max_fields=2, report_type=rt)
         current_section = sections[_current_section]
 
-        log.info("[CHAT] Turn %d: normalized=%s, next=%s", turn, list(normalized.keys()), next_fields)
+        log.info("[CHAT] Turn %d: normalized=%s, next=%s, no_extraction=%s", turn, list(normalized.keys()), next_fields, _no_extraction)
 
         # ------------------------------------------------------------------
         # Phase 2: Stream Sonnet response with heartbeat keepalive
@@ -595,6 +674,17 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             _sonnet_pending_field = None
             _sonnet_pending_value = None
             _sonnet_dialog_mode = False
+        elif _is_edit_request or (_is_in_edit_mode and not _edit_applied):
+            # Edit mode: Sonnet asks what to change or clarifies
+            _sonnet_pending_field = None
+            _sonnet_pending_value = None
+            _sonnet_dialog_mode = True
+        elif _no_extraction and not DRAFT_MODE_ENABLED:
+            # Legacy mode: no extraction → dialog mode so Sonnet answers
+            # the user's question instead of advancing to next field
+            _sonnet_pending_field = None
+            _sonnet_pending_value = None
+            _sonnet_dialog_mode = True
         else:
             # No change → use snapshot (covers: no draft mode, or
             # existing pending draft carried over from previous turn)
@@ -602,6 +692,32 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             _sonnet_pending_field = _ds.get("pending_field")
             _sonnet_pending_value = _ds.get("pending_value")
             _sonnet_dialog_mode = _ds.get("dialog_mode", False)
+
+        # Build help context if this is a help request
+        _help_ctx = None
+        if _is_help_request and _asked_field:
+            _help_ctx = build_help_context(_asked_field, collected, rt)
+        elif _is_edit_request:
+            _help_ctx = EDIT_MODE_SONNET_PROMPT
+        elif _edit_applied:
+            # Edit was applied — Sonnet confirms the change
+            edit_field_label = FIELD_DESCRIPTIONS.get(list(normalized.keys())[0], "").split("(")[0].strip() if normalized else "Feld"
+            edit_new_val = list(normalized.values())[0] if normalized else ""
+            _help_ctx = (
+                f"\n\nAKTUELLER MODUS: ÄNDERUNG BESTÄTIGT\n"
+                f"Die Angabe wurde geändert: {edit_field_label} = \"{edit_new_val}\".\n"
+                f"Bestätigen Sie die Änderung in EINEM kurzen Satz.\n"
+                f"Danach folgt automatisch die aktualisierte Zusammenfassung."
+            )
+        elif _is_in_edit_mode and not _edit_applied:
+            # Still in edit mode but couldn't parse the change — ask for clarification
+            field_list = build_edit_extraction_context(collected, rt)
+            _help_ctx = (
+                f"\n\nAKTUELLER MODUS: ÄNDERUNG\n"
+                f"Der Nutzer möchte eine Angabe ändern, aber die Angabe war nicht eindeutig.\n"
+                f"Aktuelle Felder:\n{field_list}\n\n"
+                f"Fragen Sie den Nutzer, welches Feld geändert werden soll und auf welchen Wert."
+            )
 
         async def _token_producer():
             try:
@@ -616,6 +732,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     pending_field=_sonnet_pending_field,
                     pending_value=_sonnet_pending_value,
                     dialog_mode=_sonnet_dialog_mode,
+                    help_context=_help_ctx,
                 ):
                     await queue.put(token)
             except Exception as exc:
@@ -674,11 +791,15 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # QR generation — QR clicks always get normal next-field buttons.
         # Draft suppression only applies to free-text turns.
         # Smart Grouping: group up to 2 optional fields for QR
-        _qr_miss_req, _qr_miss_opt = get_missing_fields(collected, _current_section, rt)
-        if _qr_miss_req:
-            qr_next = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
+        if _no_extraction and _asked_field and _asked_field not in collected:
+            # No extraction: keep QR on the current field
+            qr_next = [_asked_field]
         else:
-            qr_next = get_next_fields(collected, _current_section, max_fields=2, report_type=rt)
+            _qr_miss_req, _qr_miss_opt = get_missing_fields(collected, _current_section, rt)
+            if _qr_miss_req:
+                qr_next = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
+            else:
+                qr_next = get_next_fields(collected, _current_section, max_fields=2, report_type=rt)
 
         # Fix 4: For strategy sessions, load R1 profile for context-aware QR
         _profile_ctx = None
@@ -703,6 +824,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         elif DRAFT_MODE_ENABLED and _signal == "question":
             # Dialog mode → no QR buttons
             quick_replies = []
+        elif _is_edit_request or (_is_in_edit_mode and not _edit_applied):
+            # Edit mode: no QR buttons, user types what to change
+            quick_replies = []
         else:
             quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
 
@@ -722,9 +846,14 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         db.commit()
 
         # Check if all fields are done → send summary
+        # Also regenerate summary after an edit was applied
         last_section = _current_section >= len(sections) - 1
         all_fields_done = len(qr_next) == 0 and last_section
-        if all_fields_done and not _has_summary_been_sent(session):
+        _should_send_summary = (
+            (all_fields_done and not _has_summary_been_sent(session))
+            or _edit_applied
+        )
+        if _should_send_summary:
             from services.chat_conversation import build_summary
             summary_text = build_summary(collected, rt)
             yield f"event: token\ndata: {json.dumps({'text': summary_text})}\n\n"
@@ -1272,6 +1401,16 @@ def _build_session_state(
     total = len(registry)
     collected_count = len(collected)
 
+    # Build per-field metadata for next_fields (optional flag, type)
+    nf_meta = {}
+    for nf in next_fields:
+        nf_reg = registry.get(nf, {})
+        nf_meta[nf] = {
+            "optional": not nf_reg.get("required", False),
+            "type": nf_reg.get("type", "text"),
+            "chat_mode": nf_reg.get("chat_mode", "FT"),
+        }
+
     section_name: str = section["name"]
 
     # is_completable: only after last section and summary has been sent
@@ -1297,6 +1436,7 @@ def _build_session_state(
         missing_optional=missing_opt,
         total_fields=total,
         next_fields=next_fields,
+        next_fields_meta=nf_meta,
         is_completable=completable,
         pending_field=draft.get("pending_field"),
         pending_value=draft.get("pending_value"),
@@ -1314,6 +1454,74 @@ def _has_summary_been_sent(session: ChatSession) -> bool:
                 return True
             break  # Only check the last assistant message
     return False
+
+
+def _parse_edit_from_message(
+    message: str,
+    collected: dict,
+    registry: dict,
+    report_type: str = "r1",
+) -> tuple[str | None, object]:
+    """Parse a field edit from a user message. Returns (field_name, new_value) or (None, None).
+
+    Tries deterministic matching first:
+    - Match field labels or technical names in the message
+    - Extract the value from common patterns like "X soll Y sein" or "X auf Y"
+    """
+    from services.chat_conversation import FIELD_DESCRIPTIONS
+    msg_lower = message.strip().lower()
+
+    # Build lookup: label fragments → field_name
+    label_map: dict[str, str] = {}
+    for field_name in collected:
+        if field_name not in registry:
+            continue
+        desc = FIELD_DESCRIPTIONS.get(field_name, "")
+        label = desc.split("(")[0].strip().lower() if desc else ""
+        if label:
+            label_map[label] = field_name
+        # Also map the technical name
+        label_map[field_name.lower()] = field_name
+
+    # Try to find which field the user is referring to
+    matched_field = None
+    for label, field_name in sorted(label_map.items(), key=lambda x: -len(x[0])):
+        if label in msg_lower:
+            matched_field = field_name
+            break
+
+    if not matched_field:
+        return None, None
+
+    # Try to extract the new value from common patterns
+    # Patterns: "X soll Y sein", "X auf Y", "X: Y", "X = Y", "X ändern auf Y"
+    import re
+    patterns = [
+        rf"(?:soll|auf|=|:|ändern auf|ändern zu|wird|wäre)\s+(.+)",
+        rf"{re.escape(matched_field)}\s+(.+)",
+    ]
+    new_value = None
+    for pattern in patterns:
+        m = re.search(pattern, message, re.IGNORECASE)
+        if m:
+            new_value = m.group(1).strip().rstrip(".")
+            break
+
+    # If no pattern matched but field was found, the message might just be the value
+    # e.g., user says "Bayern" after being asked what to change
+    if not new_value and matched_field:
+        # Check if the whole message (minus the field reference) could be a value
+        remainder = msg_lower
+        for label, fn in label_map.items():
+            if fn == matched_field:
+                remainder = remainder.replace(label, "").strip()
+        if remainder and remainder != msg_lower:
+            new_value = remainder.strip().rstrip(".")
+
+    if not new_value:
+        return matched_field, None
+
+    return matched_field, new_value
 
 
 # ---------------------------------------------------------------------------
@@ -1897,8 +2105,10 @@ def _build_quick_replies(
             if suggestions:
                 options = [QuickReplyOption(value=s, label=s) for s in suggestions]
                 label = _get_context_label(field_name, profile)
+                is_optional = not reg.get("required", False)
                 replies.append(QuickReply(
                     field=field_name, label=f"{label} (Vorschläge)", options=options,
+                    optional=is_optional,
                 ))
             continue
 
@@ -1925,9 +2135,11 @@ def _build_quick_replies(
         label = _get_context_label(field_name, profile)
         is_multi = reg.get("type") == "multi"
         max_sel = reg.get("max_select") if is_multi else None
+        is_optional = not reg.get("required", False)
         replies.append(QuickReply(
             field=field_name, label=label, options=options,
             multi_select=is_multi, max_select=max_sel,
+            optional=is_optional,
         ))
 
     return replies

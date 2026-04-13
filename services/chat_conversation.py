@@ -94,13 +94,36 @@ Oft reicht auch GAR KEINE Bestätigung — einfach die nächste Frage stellen.
 die konkrete Antwort verstanden haben, dann die nächste Frage.
 - KEINE generischen Einordnungen wie "X ist ein Bereich mit enormem \
 KI-Potenzial" oder "von A bis B lassen sich oft X% automatisieren".
+
+SMART GROUPING — BESTÄTIGUNGSREGEL:
+Wenn der Nutzer auf eine Frage mit mehreren Feldern antwortet:
+- Bestätigen Sie die Eingabe KURZ: "Verstanden." oder "Notiert." \
+oder "Erfasst."
+- Wiederholen Sie NICHT die einzelnen Werte die der Nutzer gewählt hat.
+- Verwenden Sie NICHT die Wörter "teilweise", "zum Teil" oder \
+"bedingt" in Bestätigungen, es sei denn der Nutzer hat exakt \
+diesen Wert gewählt.
+- Gehen Sie direkt zur nächsten Frage über.
+FALSCH: "Teilweise, verstanden. Bei KI-Governance..."
+RICHTIG: "Verstanden. Weiter zu den Governance-Aspekten:"
+
 - Variieren Sie Ihre Satzanfänge RADIKAL. Beginnen Sie NIEMALS \
 zwei Antworten im Gespräch mit demselben Wort oder derselben \
-Phrase. VERBOTENE Anfänge (über das gesamte Gespräch): \
-"Als KI-Berater...", "Als Solo-Berater...", "Als [Branche]...", \
-"Mit Ihrer...", "Mit KI...", "Ihre [Noun]...". \
+Phrase.
+
+VERBOTENE FORMULIERUNGEN (NIEMALS verwenden, auch nicht in Variationen):
+- Jede Formulierung die mit "Als KI-Berater" beginnt — egal was danach \
+kommt ("Als KI-Berater...", "Als erfahrener KI-Berater...", \
+"Als KI-Berater mit...", "Als Ihr KI-Berater..." — ALLES verboten)
+- Jede Formulierung die mit "Als [Branche]-Experte" oder \
+"Als [Branche]-Berater" beginnt
+- "Als Solo-Berater...", "Als [Branche]...", \
+"Mit Ihrer...", "Mit KI...", "Ihre [Noun]..."
+- "Das ist eine gute/wichtige/interessante Frage"
+- "Gute Frage"
 STATTDESSEN direkt inhaltlich einsteigen: Fakt, Zahl, Frage, \
 oder kurze Bestätigung ("Gut.", "Verstanden.", "Weiter.").
+
 - Ihre Reaktion muss sich IMMER auf die LETZTE Antwort des Nutzers \
 beziehen, nicht auf eine frühere Frage oder ein früheres Feld.
 
@@ -169,9 +192,11 @@ nächsten Mal eine völlig andere Formulierung. Variieren Sie: \
 Fragesätze, kurze Fakten, direkte Ansprache, Vergleiche.
 - Die Fakten des Nutzers nur zurückspiegeln ohne Mehrwert.
 - Den bisherigen Gesprächsverlauf zusammenfassen.
-- Beginnen Sie NIEMALS eine Antwort mit „Als [Branche]...", \
-„Als KI-Berater...", „Als Solo-Berater..." oder ähnlichen \
-Rollenwiederholungen. Der Nutzer WEISS wer er ist.
+- Beginnen Sie NIEMALS eine Antwort mit „Als KI-Berater" — in keiner \
+Variante (auch nicht „Als erfahrener KI-Berater", „Als Ihr KI-Berater", \
+„Als KI-Berater mit…"). Gleiches gilt für „Als [Branche]...", \
+„Als Solo-Berater..." oder ähnliche Rollenwiederholungen. \
+Der Nutzer WEISS wer er ist.
 - Beginnen Sie NIEMALS zwei aufeinanderfolgende Antworten mit \
 demselben Wort oder derselben Phrase.
 - Starten Sie direkt mit dem inhaltlichen Impuls zur Antwort.
@@ -587,13 +612,36 @@ als Bestätigung, dann SOFORT die nächste Frage.
 die konkrete Antwort verstanden haben, dann die nächste Frage.
 - KEINE generischen Einordnungen wie "X ist ein Bereich mit enormem \
 KI-Potenzial" oder "von A bis B lassen sich oft X% automatisieren".
+
+SMART GROUPING — BESTÄTIGUNGSREGEL:
+Wenn der Nutzer auf eine Frage mit mehreren Feldern antwortet:
+- Bestätigen Sie die Eingabe KURZ: "Verstanden." oder "Notiert." \
+oder "Erfasst."
+- Wiederholen Sie NICHT die einzelnen Werte die der Nutzer gewählt hat.
+- Verwenden Sie NICHT die Wörter "teilweise", "zum Teil" oder \
+"bedingt" in Bestätigungen, es sei denn der Nutzer hat exakt \
+diesen Wert gewählt.
+- Gehen Sie direkt zur nächsten Frage über.
+FALSCH: "Teilweise, verstanden. Bei KI-Governance..."
+RICHTIG: "Verstanden. Weiter zu den Governance-Aspekten:"
+
 - Variieren Sie Ihre Satzanfänge RADIKAL. Beginnen Sie NIEMALS \
 zwei Antworten im Gespräch mit demselben Wort oder derselben \
-Phrase. VERBOTENE Anfänge (über das gesamte Gespräch): \
-"Als KI-Berater...", "Als Solo-Berater...", "Als [Branche]...", \
-"Mit Ihrer...", "Mit KI...", "Ihre [Noun]...". \
+Phrase.
+
+VERBOTENE FORMULIERUNGEN (NIEMALS verwenden, auch nicht in Variationen):
+- Jede Formulierung die mit "Als KI-Berater" beginnt — egal was danach \
+kommt ("Als KI-Berater...", "Als erfahrener KI-Berater...", \
+"Als KI-Berater mit...", "Als Ihr KI-Berater..." — ALLES verboten)
+- Jede Formulierung die mit "Als [Branche]-Experte" oder \
+"Als [Branche]-Berater" beginnt
+- "Als Solo-Berater...", "Als [Branche]...", \
+"Mit Ihrer...", "Mit KI...", "Ihre [Noun]..."
+- "Das ist eine gute/wichtige/interessante Frage"
+- "Gute Frage"
 STATTDESSEN direkt inhaltlich einsteigen: Fakt, Zahl, Frage, \
 oder kurze Bestätigung ("Gut.", "Verstanden.", "Weiter.").
+
 - Ihre Reaktion muss sich IMMER auf die LETZTE Antwort des Nutzers \
 beziehen, nicht auf eine frühere Frage oder ein früheres Feld.
 
@@ -817,6 +865,75 @@ def _format_collected_summary(collected: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Help-Request Prompt
+# ---------------------------------------------------------------------------
+
+HELP_REQUEST_PROMPT = """\
+Der Nutzer hat um eine Erklärung zum Feld "{field_label}" gebeten.
+
+Kontext des Nutzers:
+- Branche: {branche}
+- Unternehmensgröße: {segment_label}
+- Hauptleistung: {hauptleistung}
+- KI-Erfahrungslevel: {experience_level}
+
+Deine Aufgabe:
+1. Erkläre in 2–3 Sätzen, was mit diesem Feld gemeint ist — \
+branchenspezifisch für {branche}.
+2. Erkläre kurz, warum diese Angabe für den KI-Status-Report relevant ist.
+3. Gib 2–3 KURZE Stichworte als Denkanstoß.
+
+WICHTIGE REGELN:
+- Gib KEINE fertigen Antworten vor, die der Nutzer kopieren könnte.
+- Gib KEINE Listen mit konkreten Beispielen ("Typische No-Gos sind: ...").
+- Stattdessen: Stelle Reflexionsfragen ("Wo wären für Sie rote Linien?", \
+"In welchem Bereich sehen Sie den größten Hebel?").
+- Halte dich kurz: maximal 4 Sätze.
+- Schließe mit der ursprünglichen Frage ab (reformuliert, nicht \
+wortwörtlich wiederholt).
+"""
+
+
+def build_help_context(
+    field_name: str,
+    collected_fields: dict,
+    report_type: str = "r1",
+) -> str:
+    """Build the help-request context block for the system prompt."""
+    desc = FIELD_DESCRIPTIONS.get(field_name, field_name)
+    label = desc.split("(")[0].strip() if desc else field_name
+
+    branche = collected_fields.get("branche", "unbekannt")
+    groesse = collected_fields.get("unternehmensgroesse", "unbekannt")
+    hauptleistung = collected_fields.get("hauptleistung", "")
+    ki_kompetenz = collected_fields.get("ki_kompetenz", "")
+
+    segment_labels = {
+        "1": "Solo/Freiberuflich",
+        "2–10": "Kleines Team (2–10)",
+        "11–100": "KMU (11–100)",
+    }
+    segment_label = segment_labels.get(groesse, groesse)
+
+    experience_map = {
+        "hoch": "Fortgeschritten",
+        "sehr_hoch": "Experte",
+        "mittel": "Mittel",
+        "niedrig": "Einsteiger",
+        "keine": "Keine KI-Erfahrung",
+    }
+    experience_level = experience_map.get(ki_kompetenz, "Nicht erfasst")
+
+    return HELP_REQUEST_PROMPT.format(
+        field_label=label,
+        branche=branche,
+        segment_label=segment_label,
+        hauptleistung=hauptleistung or "Nicht erfasst",
+        experience_level=experience_level,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Streaming Response Generator
 # ---------------------------------------------------------------------------
 
@@ -831,6 +948,7 @@ async def generate_response(
     pending_field: str | None = None,
     pending_value: object = None,
     dialog_mode: bool = False,
+    help_context: str | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Generate streaming AI response.
@@ -839,6 +957,7 @@ async def generate_response(
 
     When draft_mode=True, injects a context block describing the current
     draft state (dialog / pending confirmation / normal question).
+    When help_context is provided, appends field-specific help instructions.
     """
     client = _get_async_client()
     if client is None:
@@ -863,9 +982,13 @@ async def generate_response(
     if hint:
         system_prompt += f"\n\nHINWEIS FÜR DIESEN ABSCHNITT:\n{hint}"
 
-    # Draft-mode context injection
-    if draft_mode:
+    # Draft-mode context injection (also used in legacy mode for dialog_mode)
+    if draft_mode or dialog_mode:
         system_prompt += _build_draft_context(pending_field, pending_value, dialog_mode)
+
+    # Help-request context injection (field-specific explanation prompt)
+    if help_context:
+        system_prompt += f"\n\nHILFE-ANFRAGE:\n{help_context}"
 
     messages = build_conversation_messages(session_messages)
 
@@ -936,6 +1059,55 @@ REGELN FÜR DIESEN MODUS:
 - Beziehen Sie sich NUR auf das aktuelle Feld — nicht auf frühere.
 - Beginnen Sie NICHT mit "Verstanden", "Perfekt", "Großartig" \
 wenn diese Wörter in den letzten 3 Antworten bereits vorkamen."""
+
+
+# ---------------------------------------------------------------------------
+# Edit-Mode Prompts (Summary-Edit-Flow)
+# ---------------------------------------------------------------------------
+
+EDIT_MODE_SONNET_PROMPT = """\
+
+AKTUELLER MODUS: ÄNDERUNG
+Der Nutzer möchte eine Angabe ändern.
+
+REGELN FÜR DIESEN MODUS:
+- Fragen Sie den Nutzer, was genau geändert werden soll.
+- Akzeptieren Sie Freitext wie "Bundesland soll Bayern sein" oder \
+"KI-Kompetenz auf Mittel ändern".
+- Akzeptieren Sie auch kurze Angaben wie "Branche" oder "Budget".
+- Wenn der Nutzer ein Feld nennt ohne neuen Wert: Fragen Sie nach \
+dem gewünschten neuen Wert.
+- Maximal 2 Sätze.
+"""
+
+
+EDIT_EXTRACTION_PROMPT = """\
+Der Nutzer möchte eine Angabe im Fragebogen ändern.
+Aktuelle Felder und Werte:
+{field_list_with_values}
+
+Extrahiere aus der Nutzer-Nachricht:
+- field_name: Der technische Feldname (aus der Liste oben)
+- new_value: Der neue Wert
+
+Falls der Nutzer nicht klar genug ist, gib zurück:
+- field_name: null
+- new_value: null
+"""
+
+
+def build_edit_extraction_context(collected_fields: dict, report_type: str = "r1") -> str:
+    """Build the field list for edit extraction."""
+    registry = get_registry_for_report(report_type)
+    lines = []
+    for field_name, value in collected_fields.items():
+        if field_name not in registry:
+            continue
+        desc = FIELD_DESCRIPTIONS.get(field_name, field_name)
+        label = desc.split("(")[0].strip() if desc else field_name
+        display = _format_value_for_display(field_name, value)
+        lines.append(f"- {field_name} ({label}): {display}")
+    return "\n".join(lines) if lines else "Keine Felder erfasst."
 
 
 # ===========================================================================
