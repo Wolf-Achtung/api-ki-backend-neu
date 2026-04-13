@@ -649,6 +649,55 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         log.info("[CHAT] Turn %d: normalized=%s, next=%s, no_extraction=%s", turn, list(normalized.keys()), next_fields, _no_extraction)
 
+        # Pre-compute next-field QR context so Sonnet can create
+        # coherent transitions (KIS-1123 Fix 1).
+        _next_field_qr_context = None
+        if next_fields:
+            _preview_qrs = _build_quick_replies(next_fields, rt, collected)
+            _nf = next_fields[0]
+            if _preview_qrs:
+                _qr = _preview_qrs[0]
+                _opt_labels = ", ".join(o.label for o in _qr.options[:10])
+                _next_field_qr_context = (
+                    f"Feldname: {_qr.field}\n"
+                    f"Label: {_qr.label}\n"
+                    f"Hat Quick-Reply-Buttons: ja\n"
+                    f"Optionen: {_opt_labels}\n"
+                    f"Mehrfachauswahl: {'ja' if _qr.multi_select else 'nein'}"
+                )
+            else:
+                _nf_desc = FIELD_DESCRIPTIONS.get(_nf, _nf)
+                _next_field_qr_context = (
+                    f"Feldname: {_nf}\n"
+                    f"Beschreibung: {_nf_desc}\n"
+                    f"Hat Quick-Reply-Buttons: nein\n"
+                    f"Der Nutzer gibt Freitext ein."
+                )
+
+        # Build user profile summary for Sonnet context (KIS-1123 Fix 2).
+        _PROFILE_FIELDS = [
+            ("branche", "Branche"),
+            ("unternehmensgroesse", "Unternehmensgröße"),
+            ("hauptleistung", "Hauptleistung"),
+            ("ki_kompetenz", "KI-Kompetenz"),
+            ("ki_einsatz", "KI-Einsatzbereiche"),
+            ("digitalisierungsgrad", "Digitalisierungsgrad"),
+            ("ki_projekte", "Bestehende KI-Projekte"),
+            ("zielgruppen", "Zielgruppen"),
+        ]
+        _profile_parts = []
+        for _pf_key, _pf_label in _PROFILE_FIELDS:
+            _pf_val = collected.get(_pf_key)
+            if _pf_val:
+                _profile_parts.append(f"- {_pf_label}: {_pf_val}")
+        _user_profile_summary = "\n".join(_profile_parts) if len(_profile_parts) >= 2 else None
+
+        # Extract last 3 bot messages for anti-repetition (KIS-1123 Fix 3).
+        _recent_bot_msgs = [
+            m["content"] for m in session.messages
+            if m.get("role") == "assistant" and m.get("content")
+        ][-3:]
+
         # ------------------------------------------------------------------
         # Phase 2: Stream Sonnet response with heartbeat keepalive
         # ------------------------------------------------------------------
@@ -731,6 +780,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     pending_value=_sonnet_pending_value,
                     dialog_mode=_sonnet_dialog_mode,
                     help_context=_help_ctx,
+                    next_field_qr_context=_next_field_qr_context,
+                    user_profile_summary=_user_profile_summary,
+                    recent_bot_messages=_recent_bot_msgs,
                 ):
                     await queue.put(token)
             except Exception as exc:
