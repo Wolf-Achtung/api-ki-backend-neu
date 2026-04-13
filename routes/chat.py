@@ -1340,9 +1340,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             if _remaining_blocks_after:
                 _next_label = BLOCK_LABELS.get(_remaining_blocks_after[0], "")
                 _block_transition_text = (
-                    f"Bereich „{_completed_label}" abgeschlossen. "
-                    f"Sollen wir mit „{_next_label}" weitermachen, "
-                    f"oder reicht das für den Report?"
+                    f'Bereich \u201e{_completed_label}\u201c abgeschlossen. '
+                    f'Sollen wir mit \u201e{_next_label}\u201c weitermachen, '
+                    f'oder reicht das f\u00fcr den Report?'
                 )
             else:
                 # All blocks done → transition to summary
@@ -1353,9 +1353,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 )
                 db.commit()
                 _block_transition_text = (
-                    f"Bereich „{_completed_label}" abgeschlossen — "
-                    f"damit haben wir alle gewählten Bereiche behandelt. "
-                    f"Ich erstelle jetzt Ihre Zusammenfassung."
+                    f'Bereich \u201e{_completed_label}\u201c abgeschlossen \u2014 '
+                    f'damit haben wir alle gew\u00e4hlten Bereiche behandelt. '
+                    f'Ich erstelle jetzt Ihre Zusammenfassung.'
                 )
 
         async def _token_producer():
