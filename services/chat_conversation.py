@@ -148,8 +148,10 @@ Frage stellen ohne "letzte/abschließend". \
 Erlaubt: "Diese Angabe ist optional" (ohne "letzte").
 - "die ideale Basis" (zu generisch, wird zu oft wiederverwendet)
 - "ohne große Vorarbeit" (gleicher Grund)
+- "Alles klar zu..." (zu generisch, erzeugt identische Sätze bei \
+verschiedenen Themen — verwende themenspezifische Bestätigungen)
 STATTDESSEN direkt inhaltlich einsteigen: Fakt, Zahl, Frage, \
-oder kurze Bestätigung ("Gut.", "Verstanden.", "Weiter.").
+oder kurze Bestätigung ("Gut.", "Weiter.").
 
 - Ihre Reaktion muss sich IMMER auf die LETZTE Antwort des Nutzers \
 beziehen, nicht auf eine frühere Frage oder ein früheres Feld.
@@ -710,8 +712,10 @@ Frage stellen ohne "letzte/abschließend". \
 Erlaubt: "Diese Angabe ist optional" (ohne "letzte").
 - "die ideale Basis" (zu generisch, wird zu oft wiederverwendet)
 - "ohne große Vorarbeit" (gleicher Grund)
+- "Alles klar zu..." (zu generisch, erzeugt identische Sätze bei \
+verschiedenen Themen — verwende themenspezifische Bestätigungen)
 STATTDESSEN direkt inhaltlich einsteigen: Fakt, Zahl, Frage, \
-oder kurze Bestätigung ("Gut.", "Verstanden.", "Weiter.").
+oder kurze Bestätigung ("Gut.", "Weiter.").
 
 - Ihre Reaktion muss sich IMMER auf die LETZTE Antwort des Nutzers \
 beziehen, nicht auf eine frühere Frage oder ein früheres Feld.
@@ -1116,6 +1120,7 @@ async def generate_response(
         )
 
     # Recent bot messages as anti-repetition context (KIS-1123 Fix 3).
+    # KIS-1124-S0-BE-5: Strengthened anti-repetition rules.
     if recent_bot_messages:
         _msgs_block = "\n".join(
             f'"""\n{msg}\n"""' for msg in recent_bot_messages
@@ -1123,18 +1128,18 @@ async def generate_response(
         system_prompt += (
             f"\n\nDEINE LETZTEN ANTWORTEN (NICHT WIEDERHOLEN):\n"
             f"{_msgs_block}\n\n"
-            "VARIANZ-REGELN:\n"
-            "- Verwende NIE zweimal hintereinander den gleichen "
-            "Satzanfang.\n"
-            "- Variiere deine Bestätigungen: mal Einordnung "
-            '("Das zeigt..."), mal Überleitung ("Dann schauen '
-            'wir..."), mal kurze Bestätigung ("Verstanden."), '
-            'mal Rückbezug ("Zusammen mit Ihrer Erfahrung...").\n'
-            "- Wenn du gerade \"Perfekt\" gesagt hast, sage beim "
-            "nächsten Mal NICHT \"Perfekt\". Alternativen: "
-            '"Gut.", "Verstanden.", "Danke.", oder direkter '
-            "Einstieg ohne Bestätigungswort.\n"
-            "- Maximal 1 Satz Bestätigung, dann Überleitung zur "
+            "ANTI-WIEDERHOLUNGS-REGELN (STRIKT — Verstöße sind VERBOTEN):\n"
+            "1. KEIN Satz aus deinen letzten Antworten darf in deiner "
+            "neuen Antwort wörtlich oder sinngemäß wiederholt werden.\n"
+            "2. KEIN Satzanfang (erstes Wort/Phrase) darf identisch "
+            "sein mit einem Satzanfang aus den letzten 3 Antworten.\n"
+            "3. Wenn du oben 'Alles klar zu...' gesagt hast, verwende "
+            "NICHT nochmal 'Alles klar zu...' — verwende einen "
+            "komplett anderen Satzanfang.\n"
+            "4. Bestätigungswörter: Jedes nur EINMAL im gesamten "
+            "Gespräch. Prüfe VOR dem Schreiben ob du es schon "
+            "oben verwendet hast.\n"
+            "5. Maximal 1 Satz Bestätigung, dann Überleitung zur "
             "nächsten Frage."
         )
 
