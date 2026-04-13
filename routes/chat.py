@@ -386,6 +386,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         continue
                     if not is_field_visible(field_name, collected):
                         continue
+                    if field_name in collected:
+                        log.info("[CHAT] Legacy: field %s already collected, skipping re-extraction", field_name)
+                        continue
 
                     result = normalize_field(field_name, raw_value, collected, report_type=rt)
 
@@ -442,6 +445,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         if field_name not in registry:
                             continue
                         if not is_field_visible(field_name, collected):
+                            continue
+                        if field_name in collected:
+                            log.info("[CHAT] Draft: field %s already collected, skipping re-extraction", field_name)
                             continue
 
                         result = normalize_field(field_name, raw_value, collected, report_type=rt)
