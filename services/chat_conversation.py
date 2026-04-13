@@ -1156,25 +1156,7 @@ verändern?"
 Dies sind Beispiele — passen Sie die Fragen an den bisherigen \
 Gesprächsverlauf an.
 
-BESTÄTIGUNGS-REGELN (STRIKT):
-- Maximal 1 Satz Bestätigung, dann direkt zur nächsten Frage.
-- Verwende JEDE Bestätigung nur EINMAL im gesamten Chat.
-- Varianten-Pool (verwende jede nur 1×, dann streichen):
-  "Notiert.", "Danke.", "Klar.", "Verstehe.", "Gut.", \
-  "Passt.", "Erfasst.", "Alles klar.", "In Ordnung.", \
-  direkter Einstieg OHNE Bestätigungswort, \
-  kurzer Rückbezug, Einordnung.
-- VERBOTEN: "Verstanden." (max. 1×), "Gut erfasst.", "Perfekt.", \
-  "Da Sie..." als Satzeinstieg nach Bestätigung.
-- NIE zweimal denselben Satzanfang in 3 aufeinanderfolgenden Antworten.
-
-VERBOTENE FORMULIERUNGEN:
-- "als KI-Berater" in jeder Schreibweise
-- "Als [Branche]-Experte", "Als Solo-Berater..."
-- "Das ist eine gute/wichtige/interessante Frage"
-- "die ideale Basis", "ohne große Vorarbeit"
-- "Alles klar zu..." (zu generisch)
-- "Bei Ihrer Expertise", "eine starke/solide/gute Basis"
+{{shared_prompt_rules}}
 
 KÜRZE-REGEL (STRIKT):
 - Bei QR-Feldern: Maximal 2 Sätze.
@@ -1191,6 +1173,7 @@ def _build_phase_1_prompt(
     missing_phase_1: list[str],
     next_fields: list[str],
     next_field_qr_context: str | None = None,
+    used_confirmations: list[str] | None = None,
 ) -> str:
     """Build the Phase 1 system prompt for open conversation mode."""
     # Format missing fields
@@ -1203,35 +1186,129 @@ def _build_phase_1_prompt(
     # Next field info
     nf_info = next_field_qr_context or "Kein spezifisches nächstes Feld."
 
-    return PHASE_1_SYSTEM_PROMPT.format(
+    # Inject shared prompt rules (blacklist, confirmation pool, neutrality)
+    shared_rules = _build_shared_prompt_rules(used_confirmations)
+
+    prompt = PHASE_1_SYSTEM_PROMPT.format(
         collected_fields_summary=_format_collected_summary(collected_fields),
         missing_phase_1_fields=missing_str,
         next_field_info=nf_info,
     )
+    # Replace the placeholder with actual shared rules
+    prompt = prompt.replace("{{shared_prompt_rules}}", shared_rules)
+    return prompt
 
 
 # ---------------------------------------------------------------------------
 # KIS-1124 Sprint 3: Phase 2 Block-Specific Prompts
 # ---------------------------------------------------------------------------
 
-_PHASE_2_BASE_RULES = """\
+# ---------------------------------------------------------------------------
+# KIS-1124 Testrun-Fix: Centralized confirmation & blacklist rules
+# Injected into ALL Sonnet prompts (Phase 1b, Blocks A–D) to ensure
+# consistent enforcement across the entire conversation.
+# ---------------------------------------------------------------------------
+
+CONFIRMATION_POOL = [
+    "Notiert.", "Danke.", "Klar.", "Verstehe.", "Gut.",
+    "Passt.", "Erfasst.", "Alles klar.", "In Ordnung.",
+    "Weiter.", "Okay.",
+    # Plus: direkter Einstieg OHNE Bestätigungswort
+    # Plus: kurzer Rückbezug (z.B. "Zusammen mit Ihrer Angabe zu [Feld]...")
+    # Plus: Einordnung (z.B. "Das ist typisch für [Branche].")
+]
+
+CONFIRMATION_BLACKLIST = [
+    "Perfekt",
+    "Verstanden",
+    "Gut erfasst",
+    "Alles klar zu",
+    "Bei Ihrer Expertise",
+    "eine starke Basis",
+    "eine solide Basis",
+    "eine gute Basis",
+    "das macht die Umsetzung",
+    "als KI-Berater",
+    "als Ihr KI-Berater",
+    "als erfahrener KI-Berater",
+    "die ideale Basis",
+    "ohne große Vorarbeit",
+]
+
+FORBIDDEN_PATTERNS = [
+    "als KI-Berater",
+    "Als [Branche]-Experte",
+    "Als [Branche]-Berater",
+    "Als Solo-Berater",
+    "Das ist eine gute Frage",
+    "Das ist eine wichtige Frage",
+    "Das ist eine interessante Frage",
+    "Gute Frage",
+    "die ideale Basis",
+    "ohne große Vorarbeit",
+    "Alles klar zu...",
+    "Bei Ihrer Expertise",
+    "eine starke Basis",
+    "eine solide Basis",
+    "eine gute Basis",
+    "das macht die Umsetzung",
+    "Das ist eine solide Basis",
+    "Das klingt vielversprechend",
+    "Gute Wahl",
+    "Ihre Ziele sind klar definiert",
+]
+
+
+def _build_shared_prompt_rules(used_confirmations: list[str] | None = None) -> str:
+    """Build the shared confirmation/blacklist/neutrality rules block.
+
+    This is injected into EVERY Sonnet prompt (Phase 1b, Blocks A-D)
+    to ensure consistent enforcement.
+
+    Args:
+        used_confirmations: list of confirmation phrases already used
+            in this conversation (from phase_state). Sonnet must avoid these.
+    """
+    blacklist_str = ", ".join(f'"{b}"' for b in CONFIRMATION_BLACKLIST)
+    forbidden_str = "\n".join(f"- {p}" for p in FORBIDDEN_PATTERNS)
+
+    used_str = ""
+    if used_confirmations:
+        used_items = ", ".join(f'"{c}"' for c in used_confirmations)
+        used_str = (
+            f"\n\nBEREITS VERWENDETE BESTÄTIGUNGEN (VERBRANNT — NICHT WIEDERVERWENDEN):\n"
+            f"{used_items}\n"
+            "Wähle eine Bestätigung aus dem Pool, die NICHT in dieser Liste steht. "
+            "Wenn alle verbrannt sind: verwende einen direkten Einstieg OHNE "
+            "Bestätigungswort (z.B. direkt die nächste Frage stellen)."
+        )
+
+    return f"""\
 BESTÄTIGUNGS-REGELN (STRIKT):
 - Maximal 1 Satz Bestätigung, dann direkt zur nächsten Frage.
-- Verwende JEDE Bestätigung nur EINMAL im gesamten Chat.
+- Verwende JEDE Bestätigung nur EINMAL im gesamten Chat. \
+Nach Gebrauch ist sie verbrannt.
 - Varianten-Pool (verwende jede nur 1×, dann streichen):
   "Notiert.", "Danke.", "Klar.", "Verstehe.", "Gut.", \
   "Passt.", "Erfasst.", "Alles klar.", "In Ordnung.", \
-  direkter Einstieg OHNE Bestätigungswort.
-- VERBOTEN: "Verstanden." (max. 1×), "Gut erfasst.", "Perfekt.", \
-  "Da Sie..." als Satzeinstieg.
+  direkter Einstieg OHNE Bestätigungswort, \
+  kurzer Rückbezug, Einordnung.
 - NIE zweimal denselben Satzanfang in 3 aufeinanderfolgenden Antworten.
+- Variiere deine Satzanfänge RADIKAL.{used_str}
 
-VERBOTENE FORMULIERUNGEN:
-- "als KI-Berater" in jeder Schreibweise
-- "Als [Branche]-Experte", "Als Solo-Berater..."
-- "Das ist eine gute/wichtige/interessante Frage"
-- "die ideale Basis", "Alles klar zu..."
-- "Bei Ihrer Expertise", "eine starke/solide/gute Basis"
+BESTÄTIGUNGS-BLACKLIST (NIEMALS verwenden, in KEINER Form):
+{blacklist_str}
+
+VERBOTENE FORMULIERUNGEN (NIEMALS verwenden):
+{forbidden_str}
+
+NEUTRALITÄTS-REGEL (STRIKT):
+- Bewerte NIEMALS eine Antwort, bevor sie gegeben wurde.
+- Formuliere KEINE Einschätzung zu einem Feld, das noch offen ist.
+- Frage NEUTRAL — ohne inhaltliche Einleitung oder Vorwegnahme.
+- FALSCH: "Bei Ihrer hohen Risikobereitschaft..." (Feld noch nicht beantwortet)
+- RICHTIG: "Wie risikofreudig sind Sie bei neuen KI-Technologien?"
+- Bei Quick-Reply-Feldern: Stelle die Frage OHNE den Wert vorwegzunehmen.
 """
 
 
@@ -1259,6 +1336,8 @@ Feld einzeln beantworten.
 - QR-Buttons nur wenn nötig (z.B. Budget-Bänder, Ja/Nein).
 - Max 2 Sätze pro Antwort.
 - Bei "weiß nicht" → Feld überspringen, nicht insistieren.
+- Frage ALLE offenen Felder dieses Blocks ab — insbesondere \
+jahresumsatz NICHT auslassen.
 
 BEISPIEL-FRAGEN:
 - "Haben Sie schon Erfahrung mit Fördermitteln für Digitalisierung?"
@@ -1267,7 +1346,8 @@ BEISPIEL-FRAGEN:
 NÄCHSTES FELD:
 {next_field_info}
 
-""" + _PHASE_2_BASE_RULES
+{{shared_prompt_rules}}
+"""
 
 
 BLOCK_B_PROMPT = """\
@@ -1303,7 +1383,8 @@ BEISPIEL-FRAGEN:
 NÄCHSTES FELD:
 {next_field_info}
 
-""" + _PHASE_2_BASE_RULES
+{{shared_prompt_rules}}
+"""
 
 
 BLOCK_C_PROMPT = """\
@@ -1339,7 +1420,8 @@ BEISPIEL-FRAGEN:
 NÄCHSTES FELD:
 {next_field_info}
 
-""" + _PHASE_2_BASE_RULES
+{{shared_prompt_rules}}
+"""
 
 
 BLOCK_D_PROMPT = """\
@@ -1376,7 +1458,8 @@ zu technischen Maßnahmen?"
 NÄCHSTES FELD:
 {next_field_info}
 
-""" + _PHASE_2_BASE_RULES
+{{shared_prompt_rules}}
+"""
 
 
 _BLOCK_PROMPTS: dict[str, str] = {
@@ -1393,6 +1476,7 @@ def _build_phase_2_prompt(
     remaining_block_fields: list[str],
     next_field_qr_context: str | None = None,
     user_profile_summary: str | None = None,
+    used_confirmations: list[str] | None = None,
 ) -> str:
     """Build the Phase 2 system prompt for a specific thematic block."""
     template = _BLOCK_PROMPTS.get(block_id, BLOCK_A_PROMPT)
@@ -1420,13 +1504,17 @@ def _build_phase_2_prompt(
         else:
             beratung_hint = "CONDITIONAL: Vollständige Datenschutz-Prüfung (alle Felder)."
 
-    return template.format(
+    prompt = template.format(
         user_profile_summary=profile_str,
         collected_fields_summary=_format_collected_summary(collected_fields),
         remaining_fields=remaining_str,
         next_field_info=nf_info,
         beratung_hint=beratung_hint,
     )
+    # Inject shared prompt rules (blacklist, confirmation pool, neutrality)
+    shared_rules = _build_shared_prompt_rules(used_confirmations)
+    prompt = prompt.replace("{{shared_prompt_rules}}", shared_rules)
+    return prompt
 
 
 # ---------------------------------------------------------------------------
@@ -1452,6 +1540,7 @@ async def generate_response(
     missing_phase_1_fields: list[str] | None = None,
     current_block: str | None = None,
     remaining_block_fields: list[str] | None = None,
+    used_confirmations: list[str] | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Generate streaming AI response.
@@ -1475,6 +1564,7 @@ async def generate_response(
             missing_phase_1=missing_phase_1_fields or [],
             next_fields=next_fields,
             next_field_qr_context=next_field_qr_context,
+            used_confirmations=used_confirmations,
         )
     elif conversation_phase == "phase_1a":
         # Phase 1a: QR-focused — use legacy prompt with Phase 1 context
@@ -1490,6 +1580,7 @@ async def generate_response(
             remaining_block_fields=remaining_block_fields or [],
             next_field_qr_context=next_field_qr_context,
             user_profile_summary=user_profile_summary,
+            used_confirmations=used_confirmations,
         )
     else:
         # Legacy / Strategy: use section-based prompt
@@ -1760,6 +1851,12 @@ _ENUM_DISPLAY: dict[str, dict[str, str]] = {
     "unternehmensgroesse": {
         "1": "1 (Solo)", "2–10": "2–10 (Kleines Team)", "11–100": "11–100 (KMU)",
     },
+    "selbststaendig": {
+        "freiberufler": "Freiberuflich/Selbstständig",
+        "kapitalgesellschaft": "Kapitalgesellschaft",
+        "einzelunternehmer": "Einzelunternehmer",
+        "sonstiges": "Sonstiges",
+    },
     "country": {
         "DE": "Deutschland", "AT": "Österreich", "CH": "Schweiz",
         "FR": "Frankreich", "NL": "Niederlande", "IT": "Italien", "ES": "Spanien",
@@ -1972,8 +2069,15 @@ def build_summary(collected_fields: dict, report_type: str = "r1") -> str:
             if field_name not in collected_fields:
                 continue
             value = collected_fields[field_name]
+            # KIS-1124 Testrun-Fix Bug 6: Skip fields with keine_angabe/empty/None
+            if value is None or value == "" or (isinstance(value, str) and value.strip().lower() in ("keine_angabe", "keine angabe")):
+                continue
+            if isinstance(value, list) and all(str(v).lower() in ("keine_angabe",) for v in value):
+                continue
             label = FIELD_DESCRIPTIONS.get(field_name, field_name).split("(")[0].strip()
             display = _format_value_for_display(field_name, value)
+            if display == "Nicht angegeben":
+                continue  # Don't show "Nicht angegeben" lines in summary
             section_lines.append(f"- {label}: {display}")
 
         if section_lines:
@@ -1986,6 +2090,11 @@ def build_summary(collected_fields: dict, report_type: str = "r1") -> str:
 
 def _format_value_for_display(field_name: str, value: object) -> str:
     """Format a field value for human-readable display."""
+    # KIS-1124 Testrun-Fix Bug 6: Universal catch for raw "keine_angabe" key
+    str_check = str(value).strip().lower() if value is not None else ""
+    if str_check in ("keine_angabe", "keine angabe"):
+        return "Nicht angegeben"
+
     reg = FIELD_REGISTRY.get(field_name) or STRATEGY_FIELD_REGISTRY.get(field_name, {})
     field_type = reg.get("type", "text")
 
@@ -2005,8 +2114,14 @@ def _format_value_for_display(field_name: str, value: object) -> str:
         if not value:
             return "–"
         enum_labels = _ENUM_DISPLAY.get(field_name, {})
-        resolved = [enum_labels.get(str(v), str(v)) for v in value]
-        return ", ".join(resolved)
+        # Filter out "keine_angabe" items from multi-select lists
+        resolved = []
+        for v in value:
+            sv = str(v)
+            if sv.lower() in ("keine_angabe", "keine angabe"):
+                continue
+            resolved.append(enum_labels.get(sv, sv))
+        return ", ".join(resolved) if resolved else "Nicht angegeben"
 
     # Slider: number with context
     if field_type == "slider":
