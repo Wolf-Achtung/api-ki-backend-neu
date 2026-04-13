@@ -852,9 +852,10 @@ async def chat_session_get(session_id: UUID, db: Session = Depends(get_db)):
 
     rt = session.report_type
     state = _build_session_state(session)
-    next_fields = get_next_fields(session.collected_fields, session.current_section, report_type=rt)
+    # Use state.next_fields (already computed with correct max_fields logic)
+    # instead of calling get_next_fields again with default max_fields=1
     _profile_ctx = _load_r1_profile_for_strategy(session, db) if rt == "strategy" else None
-    state.quick_replies = _build_quick_replies(next_fields, rt, session.collected_fields, _profile_ctx)
+    state.quick_replies = _build_quick_replies(state.next_fields, rt, session.collected_fields, _profile_ctx)
 
     # Last 10 messages
     all_msgs = session.messages or []
