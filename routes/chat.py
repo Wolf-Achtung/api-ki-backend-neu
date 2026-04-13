@@ -209,7 +209,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
     # inside event_stream() so the SSE connection starts immediately and
     # heartbeats keep the connection alive during the Haiku call.
     rt = session.report_type
-    from services.chat_conversation import generate_response, FIELD_DESCRIPTIONS
+    from services.chat_conversation import generate_response, FIELD_DESCRIPTIONS, build_help_context
 
     _HB_INTERVAL = 12  # seconds between keepalive heartbeats
 
@@ -247,6 +247,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _asked_field = ""  # The field that was being asked when the user sent this message
 
         _is_qr_click = bool(req.quick_reply_field and req.quick_reply_value)
+        _is_help_request = "__HELP_REQUEST__" in req.message
 
         if _is_qr_click:
             # Quick reply: direct write, no Draft — user click is explicit confirmation.
@@ -325,30 +326,23 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
             _asked_field = cur_field
 
+            # Help-request: skip extraction entirely, stay on current field
+            if _is_help_request:
+                _no_extraction = True
+                log.info("[CHAT] Help request detected for field %s, skipping extraction", cur_field)
+                # Clean the marker from the message for Sonnet context
+                # (the marker is a frontend signal, not user-visible text)
+
             # Draft-mode: read pending state for extractor context
             _draft = dict(_draft_state_snapshot)
             _pf = _draft.get("pending_field") if DRAFT_MODE_ENABLED else None
             _pv = _draft.get("pending_value") if DRAFT_MODE_ENABLED else None
 
-            async def _run_extraction() -> dict:
-                try:
-                    return await asyncio.wait_for(
-                        extract_fields(
-                            req.message,
-                            messages[-6:],
-                            _all_missing,
-                            collected,
-                            report_type=rt,
-                            current_field=cur_field,
-                            current_field_description=cur_desc,
-                            draft_mode=DRAFT_MODE_ENABLED,
-                            pending_field=_pf,
-                            pending_value=_pv,
-                        ),
-                        timeout=30,
-                    )
-                except asyncio.TimeoutError:
-                    log.warning("[CHAT] Extraction timeout, retrying once...")
+            if _is_help_request:
+                # Help request: skip extraction entirely
+                raw_extracted = {"signal": "question", "fields": {}} if DRAFT_MODE_ENABLED else {}
+            else:
+                async def _run_extraction() -> dict:
                     try:
                         return await asyncio.wait_for(
                             extract_fields(
@@ -366,21 +360,39 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                             timeout=30,
                         )
                     except asyncio.TimeoutError:
-                        log.error("[CHAT] Extraction timeout on retry")
-                        return {"signal": None, "fields": {}} if DRAFT_MODE_ENABLED else {}
+                        log.warning("[CHAT] Extraction timeout, retrying once...")
+                        try:
+                            return await asyncio.wait_for(
+                                extract_fields(
+                                    req.message,
+                                    messages[-6:],
+                                    _all_missing,
+                                    collected,
+                                    report_type=rt,
+                                    current_field=cur_field,
+                                    current_field_description=cur_desc,
+                                    draft_mode=DRAFT_MODE_ENABLED,
+                                    pending_field=_pf,
+                                    pending_value=_pv,
+                                ),
+                                timeout=30,
+                            )
+                        except asyncio.TimeoutError:
+                            log.error("[CHAT] Extraction timeout on retry")
+                            return {"signal": None, "fields": {}} if DRAFT_MODE_ENABLED else {}
 
-            extract_task = asyncio.create_task(_run_extraction())
-            while not extract_task.done():
-                try:
-                    await asyncio.wait_for(asyncio.shield(extract_task), timeout=_HB_INTERVAL)
-                except asyncio.TimeoutError:
-                    yield f"event: heartbeat\ndata: {{}}\n\n"
-                except Exception:
-                    break  # task raised — handled below
+                extract_task = asyncio.create_task(_run_extraction())
+                while not extract_task.done():
+                    try:
+                        await asyncio.wait_for(asyncio.shield(extract_task), timeout=_HB_INTERVAL)
+                    except asyncio.TimeoutError:
+                        yield f"event: heartbeat\ndata: {{}}\n\n"
+                    except Exception:
+                        break  # task raised — handled below
 
-            raw_extracted = extract_task.result() if not extract_task.cancelled() else (
-                {"signal": None, "fields": {}} if DRAFT_MODE_ENABLED else {}
-            )
+                raw_extracted = extract_task.result() if not extract_task.cancelled() else (
+                    {"signal": None, "fields": {}} if DRAFT_MODE_ENABLED else {}
+                )
 
             if not DRAFT_MODE_ENABLED:
                 # ----- Legacy flow: normalize + direct write to collected_fields -----
@@ -623,6 +635,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             _sonnet_pending_value = _ds.get("pending_value")
             _sonnet_dialog_mode = _ds.get("dialog_mode", False)
 
+        # Build help context if this is a help request
+        _help_ctx = None
+        if _is_help_request and _asked_field:
+            _help_ctx = build_help_context(_asked_field, collected, rt)
+
         async def _token_producer():
             try:
                 async for token in generate_response(
@@ -636,6 +653,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     pending_field=_sonnet_pending_field,
                     pending_value=_sonnet_pending_value,
                     dialog_mode=_sonnet_dialog_mode,
+                    help_context=_help_ctx,
                 ):
                     await queue.put(token)
             except Exception as exc:
