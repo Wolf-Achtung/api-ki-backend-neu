@@ -209,7 +209,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
     # inside event_stream() so the SSE connection starts immediately and
     # heartbeats keep the connection alive during the Haiku call.
     rt = session.report_type
-    from services.chat_conversation import generate_response, FIELD_DESCRIPTIONS, build_help_context
+    from services.chat_conversation import (
+        generate_response, FIELD_DESCRIPTIONS, build_help_context,
+        EDIT_MODE_SONNET_PROMPT, build_edit_extraction_context,
+    )
 
     _HB_INTERVAL = 12  # seconds between keepalive heartbeats
 
@@ -248,6 +251,17 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         _is_qr_click = bool(req.quick_reply_field and req.quick_reply_value)
         _is_help_request = "__HELP_REQUEST__" in req.message
+
+        # Edit-mode detection: check if user wants to change a field after summary
+        _is_in_edit_mode = bool(_draft_state_snapshot.get("edit_mode"))
+        _edit_words = {"ändern", "etwas ändern", "korrigieren", "anpassen", "nein, etwas ändern", "nein ändern"}
+        _is_edit_request = (
+            not _is_qr_click
+            and not _is_help_request
+            and _has_summary_been_sent(session)
+            and req.message.strip().lower() in _edit_words
+        )
+        _edit_applied = False  # True when an edit was successfully applied this turn
 
         if _is_qr_click:
             # Quick reply: direct write, no Draft — user click is explicit confirmation.
@@ -330,8 +344,47 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             if _is_help_request:
                 _no_extraction = True
                 log.info("[CHAT] Help request detected for field %s, skipping extraction", cur_field)
-                # Clean the marker from the message for Sonnet context
-                # (the marker is a frontend signal, not user-visible text)
+
+            # Edit-request: user wants to change a field after summary
+            if _is_edit_request:
+                _no_extraction = True
+                # Activate edit_mode in draft_state
+                session.draft_state = {
+                    **(session.draft_state or {}),
+                    "edit_mode": True,
+                }
+                log.info("[CHAT] Edit request detected, activating edit_mode")
+
+            # Edit-mode: try to parse field change from user message
+            if _is_in_edit_mode and not _is_edit_request:
+                _no_extraction = True  # Skip normal extraction
+                _edit_field, _edit_value = _parse_edit_from_message(
+                    req.message, collected, registry, rt,
+                )
+                if _edit_field and _edit_value is not None:
+                    # Apply the edit
+                    result = normalize_field(_edit_field, _edit_value, collected, report_type=rt)
+                    if result.confidence != "low":
+                        collected[_edit_field] = result.value
+                        normalized[_edit_field] = result.value
+                        field_meta[_edit_field] = {
+                            "confidence": result.confidence,
+                            "source_turn": turn,
+                            "raw_input": str(_edit_value),
+                            "normalized": True,
+                            "confirmed": True,
+                        }
+                        _edit_applied = True
+                        # Deactivate edit_mode
+                        session.draft_state = {
+                            **(session.draft_state or {}),
+                            "edit_mode": False,
+                        }
+                        log.info("[CHAT] Edit applied: %s=%r", _edit_field, result.value)
+                    else:
+                        log.info("[CHAT] Edit: low confidence for %s=%r, asking again", _edit_field, _edit_value)
+                else:
+                    log.info("[CHAT] Edit: could not parse field change from message")
 
             # Draft-mode: read pending state for extractor context
             _draft = dict(_draft_state_snapshot)
@@ -547,7 +600,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # draft_state MUST be included here — ORM assignments to
         # session.draft_state are not reliably flushed after raw SQL commits.
         _draft_for_sql = None
-        if DRAFT_MODE_ENABLED:
+        if DRAFT_MODE_ENABLED or _is_edit_request or _is_in_edit_mode:
             _draft_for_sql = json.dumps(
                 getattr(session, 'draft_state', None)
                 or {"pending_field": None, "pending_value": None, "dialog_mode": False}
@@ -621,6 +674,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             _sonnet_pending_field = None
             _sonnet_pending_value = None
             _sonnet_dialog_mode = False
+        elif _is_edit_request or (_is_in_edit_mode and not _edit_applied):
+            # Edit mode: Sonnet asks what to change or clarifies
+            _sonnet_pending_field = None
+            _sonnet_pending_value = None
+            _sonnet_dialog_mode = True
         elif _no_extraction and not DRAFT_MODE_ENABLED:
             # Legacy mode: no extraction → dialog mode so Sonnet answers
             # the user's question instead of advancing to next field
@@ -639,6 +697,27 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _help_ctx = None
         if _is_help_request and _asked_field:
             _help_ctx = build_help_context(_asked_field, collected, rt)
+        elif _is_edit_request:
+            _help_ctx = EDIT_MODE_SONNET_PROMPT
+        elif _edit_applied:
+            # Edit was applied — Sonnet confirms the change
+            edit_field_label = FIELD_DESCRIPTIONS.get(list(normalized.keys())[0], "").split("(")[0].strip() if normalized else "Feld"
+            edit_new_val = list(normalized.values())[0] if normalized else ""
+            _help_ctx = (
+                f"\n\nAKTUELLER MODUS: ÄNDERUNG BESTÄTIGT\n"
+                f"Die Angabe wurde geändert: {edit_field_label} = \"{edit_new_val}\".\n"
+                f"Bestätigen Sie die Änderung in EINEM kurzen Satz.\n"
+                f"Danach folgt automatisch die aktualisierte Zusammenfassung."
+            )
+        elif _is_in_edit_mode and not _edit_applied:
+            # Still in edit mode but couldn't parse the change — ask for clarification
+            field_list = build_edit_extraction_context(collected, rt)
+            _help_ctx = (
+                f"\n\nAKTUELLER MODUS: ÄNDERUNG\n"
+                f"Der Nutzer möchte eine Angabe ändern, aber die Angabe war nicht eindeutig.\n"
+                f"Aktuelle Felder:\n{field_list}\n\n"
+                f"Fragen Sie den Nutzer, welches Feld geändert werden soll und auf welchen Wert."
+            )
 
         async def _token_producer():
             try:
@@ -745,6 +824,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         elif DRAFT_MODE_ENABLED and _signal == "question":
             # Dialog mode → no QR buttons
             quick_replies = []
+        elif _is_edit_request or (_is_in_edit_mode and not _edit_applied):
+            # Edit mode: no QR buttons, user types what to change
+            quick_replies = []
         else:
             quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
 
@@ -764,9 +846,14 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         db.commit()
 
         # Check if all fields are done → send summary
+        # Also regenerate summary after an edit was applied
         last_section = _current_section >= len(sections) - 1
         all_fields_done = len(qr_next) == 0 and last_section
-        if all_fields_done and not _has_summary_been_sent(session):
+        _should_send_summary = (
+            (all_fields_done and not _has_summary_been_sent(session))
+            or _edit_applied
+        )
+        if _should_send_summary:
             from services.chat_conversation import build_summary
             summary_text = build_summary(collected, rt)
             yield f"event: token\ndata: {json.dumps({'text': summary_text})}\n\n"
@@ -1367,6 +1454,74 @@ def _has_summary_been_sent(session: ChatSession) -> bool:
                 return True
             break  # Only check the last assistant message
     return False
+
+
+def _parse_edit_from_message(
+    message: str,
+    collected: dict,
+    registry: dict,
+    report_type: str = "r1",
+) -> tuple[str | None, object]:
+    """Parse a field edit from a user message. Returns (field_name, new_value) or (None, None).
+
+    Tries deterministic matching first:
+    - Match field labels or technical names in the message
+    - Extract the value from common patterns like "X soll Y sein" or "X auf Y"
+    """
+    from services.chat_conversation import FIELD_DESCRIPTIONS
+    msg_lower = message.strip().lower()
+
+    # Build lookup: label fragments → field_name
+    label_map: dict[str, str] = {}
+    for field_name in collected:
+        if field_name not in registry:
+            continue
+        desc = FIELD_DESCRIPTIONS.get(field_name, "")
+        label = desc.split("(")[0].strip().lower() if desc else ""
+        if label:
+            label_map[label] = field_name
+        # Also map the technical name
+        label_map[field_name.lower()] = field_name
+
+    # Try to find which field the user is referring to
+    matched_field = None
+    for label, field_name in sorted(label_map.items(), key=lambda x: -len(x[0])):
+        if label in msg_lower:
+            matched_field = field_name
+            break
+
+    if not matched_field:
+        return None, None
+
+    # Try to extract the new value from common patterns
+    # Patterns: "X soll Y sein", "X auf Y", "X: Y", "X = Y", "X ändern auf Y"
+    import re
+    patterns = [
+        rf"(?:soll|auf|=|:|ändern auf|ändern zu|wird|wäre)\s+(.+)",
+        rf"{re.escape(matched_field)}\s+(.+)",
+    ]
+    new_value = None
+    for pattern in patterns:
+        m = re.search(pattern, message, re.IGNORECASE)
+        if m:
+            new_value = m.group(1).strip().rstrip(".")
+            break
+
+    # If no pattern matched but field was found, the message might just be the value
+    # e.g., user says "Bayern" after being asked what to change
+    if not new_value and matched_field:
+        # Check if the whole message (minus the field reference) could be a value
+        remainder = msg_lower
+        for label, fn in label_map.items():
+            if fn == matched_field:
+                remainder = remainder.replace(label, "").strip()
+        if remainder and remainder != msg_lower:
+            new_value = remainder.strip().rstrip(".")
+
+    if not new_value:
+        return matched_field, None
+
+    return matched_field, new_value
 
 
 # ---------------------------------------------------------------------------
