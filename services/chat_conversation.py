@@ -1136,7 +1136,8 @@ Unternehmensgröße, Land und Budget werden als Buttons angezeigt.
 8. Fragen Sie NIEMALS nach dem Namen des Unternehmens oder der Firma.
 
 QR-FELDER (werden als Buttons angezeigt, NICHT im Text fragen):
-branche, unternehmensgroesse, country, bundesland, investitionsbudget
+branche, unternehmensgroesse, selbststaendig, country, bundesland, \
+investitionsbudget, datenschutz
 
 FREI EXTRAHIERBARE FELDER (aus dem Gespräch ableitbar):
 hauptleistung, ki_kompetenz, digitalisierungsgrad, ki_ziele, \

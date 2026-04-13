@@ -74,14 +74,14 @@ DRAFT_MODE_ENABLED = os.getenv("DRAFT_MODE_ENABLED", "false").lower() == "true"
 PHASE_1_FIELDS: list[str] = [
     "branche", "unternehmensgroesse", "country", "bundesland",
     "hauptleistung", "ki_kompetenz", "digitalisierungsgrad",
-    "ki_ziele", "investitionsbudget",
+    "ki_ziele", "investitionsbudget", "datenschutz",
 ]
 
 # Phase 1a: QR fields collected sequentially (ordered)
 PHASE_1A_QR_FIELDS: list[str] = [
     "branche", "unternehmensgroesse", "selbststaendig",
     "country", "bundesland",
-    "investitionsbudget",
+    "investitionsbudget", "datenschutz",
 ]
 
 # Phase 1b: Open conversation fields (extracted via multi-field Haiku)
@@ -994,7 +994,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # --- Phase 1: Completion check + checkpoint trigger ---
         _checkpoint_triggered = False
         if _cur_conv_phase == "phase_1" and rt == "r1":
-            _missing_p1_after = [f for f in PHASE_1_FIELDS if f not in collected]
+            _missing_p1_after = [f for f in PHASE_1_FIELDS if f not in collected
+                                 and not _should_skip_qr_field(f, collected)]
             all_missing = _missing_p1_after
 
             if not _missing_p1_after:
