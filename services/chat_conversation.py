@@ -1137,7 +1137,7 @@ Unternehmensgröße, Land und Budget werden als Buttons angezeigt.
 
 QR-FELDER (werden als Buttons angezeigt, NICHT im Text fragen):
 branche, unternehmensgroesse, selbststaendig, country, bundesland, \
-investitionsbudget, datenschutz
+investitionsbudget
 
 FREI EXTRAHIERBARE FELDER (aus dem Gespräch ableitbar):
 hauptleistung, ki_kompetenz, digitalisierungsgrad, ki_ziele, \
@@ -1413,9 +1413,9 @@ def _build_phase_2_prompt(
         branche = collected_fields.get("branche", "")
         if branche == "beratung":
             beratung_hint = (
-                "CONDITIONAL: Branche ist Beratung → nur 4 Felder abfragen: "
-                "datenschutzbeauftragter, ai_act_kenntnis, ki_hemmnisse, "
-                "governance_richtlinien. Restliche Felder überspringen."
+                "CONDITIONAL: Branche ist Beratung → nur 5 Felder abfragen: "
+                "datenschutz, datenschutzbeauftragter, ai_act_kenntnis, "
+                "ki_hemmnisse, governance_richtlinien. Restliche Felder überspringen."
             )
         else:
             beratung_hint = "CONDITIONAL: Vollständige Datenschutz-Prüfung (alle Felder)."
