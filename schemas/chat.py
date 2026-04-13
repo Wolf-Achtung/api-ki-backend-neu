@@ -39,6 +39,7 @@ class QuickReply(BaseModel):
     options: list[QuickReplyOption]
     multi_select: bool = False
     max_select: Optional[int] = None
+    optional: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -65,6 +66,7 @@ class ChatSessionState(BaseModel):
 
     # Next steps
     next_fields: list[str]
+    next_fields_meta: Optional[dict[str, dict]] = None
     is_completable: bool
 
     # Draft-Pattern (Sprint 1: always null/false until Sprint 2 activates writes)
