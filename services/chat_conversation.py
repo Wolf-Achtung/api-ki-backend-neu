@@ -1211,6 +1211,225 @@ def _build_phase_1_prompt(
 
 
 # ---------------------------------------------------------------------------
+# KIS-1124 Sprint 3: Phase 2 Block-Specific Prompts
+# ---------------------------------------------------------------------------
+
+_PHASE_2_BASE_RULES = """\
+BESTÄTIGUNGS-REGELN (STRIKT):
+- Maximal 1 Satz Bestätigung, dann direkt zur nächsten Frage.
+- Verwende JEDE Bestätigung nur EINMAL im gesamten Chat.
+- Varianten-Pool (verwende jede nur 1×, dann streichen):
+  "Notiert.", "Danke.", "Klar.", "Verstehe.", "Gut.", \
+  "Passt.", "Erfasst.", "Alles klar.", "In Ordnung.", \
+  direkter Einstieg OHNE Bestätigungswort.
+- VERBOTEN: "Verstanden." (max. 1×), "Gut erfasst.", "Perfekt.", \
+  "Da Sie..." als Satzeinstieg.
+- NIE zweimal denselben Satzanfang in 3 aufeinanderfolgenden Antworten.
+
+VERBOTENE FORMULIERUNGEN:
+- "als KI-Berater" in jeder Schreibweise
+- "Als [Branche]-Experte", "Als Solo-Berater..."
+- "Das ist eine gute/wichtige/interessante Frage"
+- "die ideale Basis", "Alles klar zu..."
+- "Bei Ihrer Expertise", "eine starke/solide/gute Basis"
+"""
+
+
+BLOCK_A_PROMPT = """\
+Sie sind ein KI-Assistent von ki-sicherheit.jetzt. \
+Sie führen ein kurzes Fachgespräch zum Thema Fördermittel, \
+Budget und Marktpositionierung. Sie siezen durchgehend.
+
+PHASE 2 — THEMENBLOCK: Fördermittel & Budget
+
+BISHERIGES PROFIL:
+{user_profile_summary}
+
+BEREITS ERFASST:
+{collected_fields_summary}
+
+NOCH OFFENE FELDER IN DIESEM BLOCK:
+{remaining_fields}
+
+REGELN:
+- Stelle 1–2 offene Fragen zum Thema Fördermittel, Budget \
+und Marktposition.
+- Nutze Multi-Feld-Extraktion — der User muss nicht jedes \
+Feld einzeln beantworten.
+- QR-Buttons nur wenn nötig (z.B. Budget-Bänder, Ja/Nein).
+- Max 2 Sätze pro Antwort.
+- Bei "weiß nicht" → Feld überspringen, nicht insistieren.
+
+BEISPIEL-FRAGEN:
+- "Haben Sie schon Erfahrung mit Fördermitteln für Digitalisierung?"
+- "Wie schätzen Sie Ihre Position im Markt ein?"
+
+NÄCHSTES FELD:
+{next_field_info}
+
+""" + _PHASE_2_BASE_RULES
+
+
+BLOCK_B_PROMPT = """\
+Sie sind ein KI-Assistent von ki-sicherheit.jetzt. \
+Sie führen ein kurzes Fachgespräch zum Thema KI-Strategie, \
+Vision und Governance. Sie siezen durchgehend.
+
+PHASE 2 — THEMENBLOCK: KI-Strategie & Roadmap
+
+BISHERIGES PROFIL:
+{user_profile_summary}
+
+BEREITS ERFASST:
+{collected_fields_summary}
+
+NOCH OFFENE FELDER IN DIESEM BLOCK:
+{remaining_fields}
+
+REGELN:
+- Stelle 1–2 offene Fragen zu Vision, Strategie und Governance.
+- Bei "weiß nicht" / "kann ich nicht sagen" → Feld SOFORT \
+überspringen. NICHT insistieren, NICHT alternative \
+Formulierung versuchen.
+- Max 3 Sätze pro Antwort (Strategie-Fragen brauchen etwas \
+mehr Kontext).
+- Keine Aufzählungen von Optionen — der User soll frei erzählen.
+
+BEISPIEL-FRAGEN:
+- "Wo sehen Sie Ihr Unternehmen in 2–3 Jahren mit KI?"
+- "Gibt es No-Gos oder sensible Bereiche beim KI-Einsatz?"
+- "Haben Sie bereits eine KI-Roadmap oder Strategie entwickelt?"
+
+NÄCHSTES FELD:
+{next_field_info}
+
+""" + _PHASE_2_BASE_RULES
+
+
+BLOCK_C_PROMPT = """\
+Sie sind ein KI-Assistent von ki-sicherheit.jetzt. \
+Sie führen ein kurzes Fachgespräch zum Thema Tools, \
+Automatisierung und konkrete KI-Anwendungsfälle. \
+Sie siezen durchgehend.
+
+PHASE 2 — THEMENBLOCK: Tools & Automatisierung
+
+BISHERIGES PROFIL:
+{user_profile_summary}
+
+BEREITS ERFASST:
+{collected_fields_summary}
+
+NOCH OFFENE FELDER IN DIESEM BLOCK:
+{remaining_fields}
+
+REGELN:
+- Stelle 1–2 Fragen zu Tools, Automatisierung und konkreten \
+Use Cases.
+- QR-Buttons bei Feldern mit vordefinierten Listen \
+(ki_einsatz, anwendungsfaelle, vorhandene_tools).
+- Freitext bei offenen Feldern (ki_projekte, pilot_bereich, \
+zeitersparnis_prioritaet).
+- Max 2 Sätze pro Antwort.
+
+BEISPIEL-FRAGEN:
+- "Welche Tools nutzen Sie aktuell und wo liegt der größte Zeitfresser?"
+- "Welche KI-Anwendungen interessieren Sie am meisten?"
+
+NÄCHSTES FELD:
+{next_field_info}
+
+""" + _PHASE_2_BASE_RULES
+
+
+BLOCK_D_PROMPT = """\
+Sie sind ein KI-Assistent von ki-sicherheit.jetzt. \
+Sie führen ein kurzes Fachgespräch zum Thema Recht, \
+Datenschutz und Compliance. Sie siezen durchgehend.
+
+PHASE 2 — THEMENBLOCK: Recht & Datenschutz
+
+{beratung_hint}
+
+BISHERIGES PROFIL:
+{user_profile_summary}
+
+BEREITS ERFASST:
+{collected_fields_summary}
+
+NOCH OFFENE FELDER IN DIESEM BLOCK:
+{remaining_fields}
+
+REGELN:
+- Kurz und sachlich — Datenschutz-Fragen brauchen keine \
+lange Einleitung.
+- QR-Buttons bei Ja/Nein-Feldern und Auswahl-Feldern.
+- Max 2 Sätze pro Antwort.
+- Bei Beratungsbranche: Nur 1–2 Fragen, dann Block abschließen.
+
+BEISPIEL-FRAGEN:
+- Beratung: "Haben Sie einen DSB, und wie gut kennen Sie den \
+EU AI Act?"
+- Andere: "Wie ist Ihr Datenschutz aufgestellt — vom DSB bis \
+zu technischen Maßnahmen?"
+
+NÄCHSTES FELD:
+{next_field_info}
+
+""" + _PHASE_2_BASE_RULES
+
+
+_BLOCK_PROMPTS: dict[str, str] = {
+    "A": BLOCK_A_PROMPT,
+    "B": BLOCK_B_PROMPT,
+    "C": BLOCK_C_PROMPT,
+    "D": BLOCK_D_PROMPT,
+}
+
+
+def _build_phase_2_prompt(
+    block_id: str,
+    collected_fields: dict,
+    remaining_block_fields: list[str],
+    next_field_qr_context: str | None = None,
+    user_profile_summary: str | None = None,
+) -> str:
+    """Build the Phase 2 system prompt for a specific thematic block."""
+    template = _BLOCK_PROMPTS.get(block_id, BLOCK_A_PROMPT)
+
+    # Format remaining fields with descriptions
+    remaining_lines = []
+    for fname in remaining_block_fields:
+        desc = FIELD_DESCRIPTIONS.get(fname, fname)
+        remaining_lines.append(f"- {fname}: {desc}")
+    remaining_str = "\n".join(remaining_lines) if remaining_lines else "Alle Felder dieses Blocks erfasst."
+
+    profile_str = user_profile_summary or "Noch nicht genügend Daten für ein Profil."
+    nf_info = next_field_qr_context or "Kein spezifisches nächstes Feld."
+
+    # Block D special: beratung hint
+    beratung_hint = ""
+    if block_id == "D":
+        branche = collected_fields.get("branche", "")
+        if branche == "beratung":
+            beratung_hint = (
+                "CONDITIONAL: Branche ist Beratung → nur 4 Felder abfragen: "
+                "datenschutzbeauftragter, ai_act_kenntnis, ki_hemmnisse, "
+                "governance_richtlinien. Restliche Felder überspringen."
+            )
+        else:
+            beratung_hint = "CONDITIONAL: Vollständige Datenschutz-Prüfung (alle Felder)."
+
+    return template.format(
+        user_profile_summary=profile_str,
+        collected_fields_summary=_format_collected_summary(collected_fields),
+        remaining_fields=remaining_str,
+        next_field_info=nf_info,
+        beratung_hint=beratung_hint,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Streaming Response Generator
 # ---------------------------------------------------------------------------
 
@@ -1231,6 +1450,8 @@ async def generate_response(
     recent_bot_messages: list[str] | None = None,
     conversation_phase: str | None = None,
     missing_phase_1_fields: list[str] | None = None,
+    current_block: str | None = None,
+    remaining_block_fields: list[str] | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Generate streaming AI response.
@@ -1261,8 +1482,17 @@ async def generate_response(
             collected_fields=collected_fields,
             next_field_qr_context=next_field_qr_context,
         )
+    elif conversation_phase == "phase_2" and current_block:
+        # Phase 2: block-specific thematic prompt
+        system_prompt = _build_phase_2_prompt(
+            block_id=current_block,
+            collected_fields=collected_fields,
+            remaining_block_fields=remaining_block_fields or [],
+            next_field_qr_context=next_field_qr_context,
+            user_profile_summary=user_profile_summary,
+        )
     else:
-        # Legacy / Phase 2 / Strategy: use section-based prompt
+        # Legacy / Strategy: use section-based prompt
         sections = get_sections_for_report(report_type)
         section_index: int = section["index"]
         prompt_template = _get_system_prompt(report_type)

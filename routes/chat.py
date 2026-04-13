@@ -1219,6 +1219,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         # Compute Phase 1 missing fields for Sonnet prompt
         _missing_p1_for_sonnet = None
+        # Phase 2 block context for Sonnet
+        _sonnet_block_id = None
+        _sonnet_block_remaining = None
         # Determine effective sub-phase for Sonnet prompt routing
         _sonnet_conv_phase = _cur_conv_phase
         if _cur_conv_phase == "phase_1" and rt == "r1":
@@ -1227,6 +1230,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             else:
                 _sonnet_conv_phase = "phase_1b"
                 _missing_p1_for_sonnet = [f for f in PHASE_1B_OPEN_FIELDS if f not in collected]
+        elif _cur_conv_phase == "phase_2" and rt == "r1":
+            _sonnet_conv_phase = "phase_2"
+            _sonnet_block_id = _phase_state.get("current_block")
+            if _sonnet_block_id:
+                _sonnet_block_remaining = _get_block_fields(_sonnet_block_id, collected)
 
         # Checkpoint: inject checkpoint text instead of streaming Sonnet
         _checkpoint_text = None
@@ -1262,6 +1270,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     recent_bot_messages=_recent_bot_msgs,
                     conversation_phase=_sonnet_conv_phase,
                     missing_phase_1_fields=_missing_p1_for_sonnet,
+                    current_block=_sonnet_block_id,
+                    remaining_block_fields=_sonnet_block_remaining,
                 ):
                     await queue.put(token)
             except Exception as exc:
