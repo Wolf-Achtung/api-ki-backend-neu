@@ -77,11 +77,19 @@ PHASE_1_FIELDS: list[str] = [
     "ki_ziele", "investitionsbudget",
 ]
 
-# Fields that need QR buttons in Phase 1 (not extractable from free text)
-PHASE_1_QR_FIELDS: set[str] = {
+# Phase 1a: QR fields collected sequentially (ordered)
+PHASE_1A_QR_FIELDS: list[str] = [
     "branche", "unternehmensgroesse", "country", "bundesland",
     "investitionsbudget",
-}
+]
+
+# Phase 1b: Open conversation fields (extracted via multi-field Haiku)
+PHASE_1B_OPEN_FIELDS: list[str] = [
+    "hauptleistung", "ki_kompetenz", "digitalisierungsgrad", "ki_ziele",
+]
+
+# Fields that need QR buttons in Phase 1 (not extractable from free text)
+PHASE_1_QR_FIELDS: set[str] = set(PHASE_1A_QR_FIELDS)
 
 # Fields that Haiku can extract from free conversation in Phase 1
 PHASE_1_EXTRACTABLE_FIELDS: set[str] = {
@@ -145,6 +153,7 @@ def _init_phase_state() -> dict:
     """Create initial phase_state for a new R1 session."""
     return {
         "conversation_phase": "phase_1",
+        "phase_1_qr_complete": False,
         "selected_blocks": [],
         "completed_blocks": [],
         "current_block": None,
@@ -156,10 +165,40 @@ def _get_phase_state(session) -> dict:
     ps = getattr(session, "phase_state", None) or {}
     return {
         "conversation_phase": ps.get("conversation_phase", "phase_1"),
+        "phase_1_qr_complete": ps.get("phase_1_qr_complete", False),
         "selected_blocks": ps.get("selected_blocks", []),
         "completed_blocks": ps.get("completed_blocks", []),
         "current_block": ps.get("current_block"),
     }
+
+
+def _is_phase_1a(phase_state: dict, collected: dict) -> bool:
+    """Check if we're in Phase 1a (QR fields still missing)."""
+    if phase_state.get("conversation_phase") != "phase_1":
+        return False
+    if phase_state.get("phase_1_qr_complete"):
+        return False
+    # Check if any QR fields are still missing
+    return any(f not in collected for f in PHASE_1A_QR_FIELDS
+               if f != "bundesland" or collected.get("country") in ("DE", "AT"))
+
+
+def _is_phase_1b(phase_state: dict, collected: dict) -> bool:
+    """Check if we're in Phase 1b (open conversation, QR done)."""
+    if phase_state.get("conversation_phase") != "phase_1":
+        return False
+    return not _is_phase_1a(phase_state, collected)
+
+
+def _get_next_phase_1a_field(collected: dict) -> str | None:
+    """Get the next QR field in Phase 1a sequence."""
+    for f in PHASE_1A_QR_FIELDS:
+        # Skip bundesland if country is not DE or AT
+        if f == "bundesland" and collected.get("country") not in ("DE", "AT"):
+            continue
+        if f not in collected:
+            return f
+    return None
 
 R1_WELCOME = (
     "Willkommen bei ki-sicherheit.jetzt! Ich führe Sie durch eine "
@@ -460,16 +499,22 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
             # Phase 1 mode: determine fields differently
             _conv_phase = _phase_state.get("conversation_phase", "phase_1") if rt == "r1" else None
-            _is_phase_1 = (_conv_phase == "phase_1" and rt == "r1")
+            _in_phase_1a = (rt == "r1" and _is_phase_1a(_phase_state, collected))
+            _in_phase_1b = (rt == "r1" and _is_phase_1b(_phase_state, collected))
 
-            if _is_phase_1:
-                # Phase 1: next fields come from PHASE_1_FIELDS, not sections
-                _missing_p1 = [f for f in PHASE_1_FIELDS if f not in collected]
+            if _in_phase_1a:
+                # Phase 1a: QR sequential — single-field extraction like legacy
+                _next_qr = _get_next_phase_1a_field(collected)
+                _all_missing = [f for f in PHASE_1_FIELDS if f not in collected]
+                asked_fields = [_next_qr] if _next_qr else []
+                cur_field = _next_qr or ""
+                cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
+                _asked_field = cur_field
+            elif _in_phase_1b:
+                # Phase 1b: open conversation — multi-field extraction
+                _missing_p1 = [f for f in PHASE_1B_OPEN_FIELDS if f not in collected]
                 _all_missing = _missing_p1
-                # Determine which Phase 1 field to ask next (QR fields first if missing)
-                _missing_qr = [f for f in _missing_p1 if f in PHASE_1_QR_FIELDS]
-                _missing_free = [f for f in _missing_p1 if f not in PHASE_1_QR_FIELDS]
-                asked_fields = (_missing_qr[:1] if _missing_qr else _missing_free[:1])
+                asked_fields = _missing_p1[:1]
                 cur_field = asked_fields[0] if asked_fields else ""
                 cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
                 _asked_field = cur_field
@@ -535,7 +580,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             if _is_help_request:
                 # Help request: skip extraction entirely
                 raw_extracted = {"signal": "question", "fields": {}} if DRAFT_MODE_ENABLED else {}
-            elif _is_phase_1 and not _is_in_edit_mode and not _is_edit_request:
+            elif _in_phase_1b and not _is_in_edit_mode and not _is_edit_request:
                 # --- Phase 1: Multi-field extraction ---
                 from services.chat_extractor import extract_fields_multi
                 from services.chat_normalizer import ENUM_VALUES
@@ -919,6 +964,20 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # Determine next fields
         sections = get_sections_for_report(rt)
 
+        # Re-evaluate sub-phase after extraction (collected may have changed)
+        _post_phase_1a = (rt == "r1" and _is_phase_1a(_phase_state, collected))
+        _post_phase_1b = (rt == "r1" and _is_phase_1b(_phase_state, collected))
+
+        # Auto-transition Phase 1a → 1b when all QR fields are collected
+        if _cur_conv_phase == "phase_1" and rt == "r1" and not _post_phase_1a and not _phase_state.get("phase_1_qr_complete"):
+            _phase_state["phase_1_qr_complete"] = True
+            db.execute(
+                _sa_text("UPDATE chat_sessions SET phase_state = CAST(:ps AS jsonb) WHERE id = :sid"),
+                {"ps": json.dumps(_phase_state), "sid": str(session.id)},
+            )
+            db.commit()
+            log.info("[CHAT] Phase 1a → 1b transition: all QR fields collected")
+
         # --- Phase 1: Completion check + checkpoint trigger ---
         _checkpoint_triggered = False
         if _cur_conv_phase == "phase_1" and rt == "r1":
@@ -941,11 +1000,14 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             elif _no_extraction and _asked_field and _asked_field not in collected:
                 next_fields = [_asked_field]
                 log.info("[CHAT] Phase 1 QR-Sync: keeping next_fields=[%s]", _asked_field)
+            elif _post_phase_1a:
+                # Phase 1a: next QR field in sequence
+                _next_qr = _get_next_phase_1a_field(collected)
+                next_fields = [_next_qr] if _next_qr else []
             else:
-                # Phase 1: next QR field first, then free-text fields
-                _p1_qr_missing = [f for f in _missing_p1_after if f in PHASE_1_QR_FIELDS]
-                _p1_free_missing = [f for f in _missing_p1_after if f not in PHASE_1_QR_FIELDS]
-                next_fields = (_p1_qr_missing[:1] if _p1_qr_missing else _p1_free_missing[:1])
+                # Phase 1b: next open-conversation field (no QR)
+                _p1b_missing = [f for f in PHASE_1B_OPEN_FIELDS if f not in collected]
+                next_fields = _p1b_missing[:1]
 
         elif _cur_conv_phase == "checkpoint" and rt == "r1":
             # Checkpoint phase — next_fields is empty, QR handles navigation
@@ -1111,8 +1173,14 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         # Compute Phase 1 missing fields for Sonnet prompt
         _missing_p1_for_sonnet = None
-        if _cur_conv_phase == "phase_1":
-            _missing_p1_for_sonnet = [f for f in PHASE_1_FIELDS if f not in collected]
+        # Determine effective sub-phase for Sonnet prompt routing
+        _sonnet_conv_phase = _cur_conv_phase
+        if _cur_conv_phase == "phase_1" and rt == "r1":
+            if _post_phase_1a:
+                _sonnet_conv_phase = "phase_1a"
+            else:
+                _sonnet_conv_phase = "phase_1b"
+                _missing_p1_for_sonnet = [f for f in PHASE_1B_OPEN_FIELDS if f not in collected]
 
         # Checkpoint: inject checkpoint text instead of streaming Sonnet
         _checkpoint_text = None
@@ -1146,7 +1214,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     next_field_qr_context=_next_field_qr_context,
                     user_profile_summary=_user_profile_summary,
                     recent_bot_messages=_recent_bot_msgs,
-                    conversation_phase=_cur_conv_phase,
+                    conversation_phase=_sonnet_conv_phase,
                     missing_phase_1_fields=_missing_p1_for_sonnet,
                 ):
                     await queue.put(token)
@@ -1231,16 +1299,17 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         elif _final_phase == "summary":
             # Summary phase: no QR, will generate summary below
             quick_replies = []
-        elif _final_phase == "phase_1":
-            # Phase 1: show QR for next Phase 1 field
+        elif _final_phase == "phase_1" and _post_phase_1a:
+            # Phase 1a: show QR for next sequential QR field
             if _no_extraction and _asked_field and _asked_field not in collected:
                 qr_next = [_asked_field]
             else:
-                _p1_missing = [f for f in PHASE_1_FIELDS if f not in collected]
-                _p1_qr = [f for f in _p1_missing if f in PHASE_1_QR_FIELDS]
-                _p1_free = [f for f in _p1_missing if f not in PHASE_1_QR_FIELDS]
-                qr_next = _p1_qr[:1] if _p1_qr else _p1_free[:1]
+                _next_qr = _get_next_phase_1a_field(collected)
+                qr_next = [_next_qr] if _next_qr else []
             quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
+        elif _final_phase == "phase_1":
+            # Phase 1b: open conversation — NO QR buttons
+            quick_replies = []
         else:
             # Legacy / Phase 2: section-based QR
             if _no_extraction and _asked_field and _asked_field not in collected:

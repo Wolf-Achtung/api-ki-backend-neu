@@ -1029,7 +1029,65 @@ def build_help_context(
 
 
 # ---------------------------------------------------------------------------
-# KIS-1124 Sprint 2: Phase 1 Prompt — Open Conversation Mode
+# KIS-1124 S2-HOTFIX: Phase 1a Prompt — QR Sequential Mode
+# ---------------------------------------------------------------------------
+
+PHASE_1A_SYSTEM_PROMPT = """\
+Sie sind ein KI-Assistent von ki-sicherheit.jetzt und führen den \
+Einstieg in eine professionelle Bestandsaufnahme zur KI-Readiness.
+
+IHRE ROLLE:
+Kompetenter, freundlicher Berater. Sie siezen durchgehend.
+In dieser Phase klären wir einige Basisdaten per Auswahl-Buttons.
+
+BEREITS ERFASST:
+{collected_fields_summary}
+
+NÄCHSTES FELD:
+{next_field_info}
+
+REGELN:
+1. Bestätigen Sie die letzte Angabe des Nutzers kurz (max 1 Satz).
+2. Leiten Sie zum nächsten Feld über — die Auswahl-Buttons sprechen \
+für sich, Sie müssen die Optionen NICHT aufzählen.
+3. Maximal 2 Sätze gesamt.
+4. Stellen Sie KEINE offene Freitext-Frage in dieser Phase.
+5. Fragen Sie NIEMALS nach dem Firmennamen.
+6. Erwähnen Sie KEINEN konkreten Standort, bevor der Nutzer \
+ihn angegeben hat.
+
+BESTÄTIGUNGS-REGELN (STRIKT):
+- Varianten-Pool (jede nur 1× verwenden):
+  "Notiert.", "Danke.", "Klar.", "Verstehe.", "Gut.", \
+  "Passt.", "Erfasst.", "Alles klar.", "In Ordnung.", \
+  oder GAR KEINE Bestätigung — direkt die Überleitung.
+- VERBOTEN: "Verstanden." (max 1× pro Gespräch), "Gut erfasst.", \
+  "Perfekt.", "Da Sie..." als Satzeinstieg.
+- NIE zweimal denselben Satzanfang hintereinander.
+
+VERBOTENE FORMULIERUNGEN:
+- "als KI-Berater" in jeder Variante
+- "Als [Branche]-Experte", "Als Solo-Berater..."
+- "Das ist eine gute/wichtige/interessante Frage"
+- "die ideale Basis", "Alles klar zu..."
+- "Bei Ihrer Expertise", "eine starke/solide/gute Basis"
+"""
+
+
+def _build_phase_1a_prompt(
+    collected_fields: dict,
+    next_field_qr_context: str | None = None,
+) -> str:
+    """Build the Phase 1a system prompt for QR sequential mode."""
+    nf_info = next_field_qr_context or "Kein spezifisches nächstes Feld."
+    return PHASE_1A_SYSTEM_PROMPT.format(
+        collected_fields_summary=_format_collected_summary(collected_fields),
+        next_field_info=nf_info,
+    )
+
+
+# ---------------------------------------------------------------------------
+# KIS-1124 Sprint 2: Phase 1b Prompt — Open Conversation Mode
 # ---------------------------------------------------------------------------
 
 PHASE_1_SYSTEM_PROMPT = """\
@@ -1178,12 +1236,18 @@ async def generate_response(
         yield "Entschuldigung, ich bin gerade nicht erreichbar. Bitte versuchen Sie es gleich nochmal."
         return
 
-    # Phase 1: Use dedicated open conversation prompt
-    if conversation_phase == "phase_1":
+    # Phase 1b: open conversation prompt
+    if conversation_phase == "phase_1b":
         system_prompt = _build_phase_1_prompt(
             collected_fields=collected_fields,
             missing_phase_1=missing_phase_1_fields or [],
             next_fields=next_fields,
+            next_field_qr_context=next_field_qr_context,
+        )
+    elif conversation_phase == "phase_1a":
+        # Phase 1a: QR-focused — use legacy prompt with Phase 1 context
+        system_prompt = _build_phase_1a_prompt(
+            collected_fields=collected_fields,
             next_field_qr_context=next_field_qr_context,
         )
     else:
@@ -1239,8 +1303,8 @@ async def generate_response(
     # Next-field QR context for coherent transitions (KIS-1123 Fix 1).
     # Skip in dialog/help mode — Sonnet should answer the user's question,
     # not transition to the next field.
-    # Skip in Phase 1 — already embedded in the Phase 1 prompt template.
-    if next_field_qr_context and not dialog_mode and not help_context and conversation_phase != "phase_1":
+    # Skip in Phase 1a/1b — already embedded in their prompt templates.
+    if next_field_qr_context and not dialog_mode and not help_context and conversation_phase not in ("phase_1a", "phase_1b"):
         system_prompt += (
             f"\n\nNÄCHSTES FELD (für deine Überleitung):\n"
             f"{next_field_qr_context}\n\n"
