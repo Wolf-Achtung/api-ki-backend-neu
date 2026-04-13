@@ -1272,6 +1272,16 @@ def _build_session_state(
     total = len(registry)
     collected_count = len(collected)
 
+    # Build per-field metadata for next_fields (optional flag, type)
+    nf_meta = {}
+    for nf in next_fields:
+        nf_reg = registry.get(nf, {})
+        nf_meta[nf] = {
+            "optional": not nf_reg.get("required", False),
+            "type": nf_reg.get("type", "text"),
+            "chat_mode": nf_reg.get("chat_mode", "FT"),
+        }
+
     section_name: str = section["name"]
 
     # is_completable: only after last section and summary has been sent
@@ -1297,6 +1307,7 @@ def _build_session_state(
         missing_optional=missing_opt,
         total_fields=total,
         next_fields=next_fields,
+        next_fields_meta=nf_meta,
         is_completable=completable,
         pending_field=draft.get("pending_field"),
         pending_value=draft.get("pending_value"),
@@ -1897,8 +1908,10 @@ def _build_quick_replies(
             if suggestions:
                 options = [QuickReplyOption(value=s, label=s) for s in suggestions]
                 label = _get_context_label(field_name, profile)
+                is_optional = not reg.get("required", False)
                 replies.append(QuickReply(
                     field=field_name, label=f"{label} (Vorschläge)", options=options,
+                    optional=is_optional,
                 ))
             continue
 
@@ -1925,9 +1938,11 @@ def _build_quick_replies(
         label = _get_context_label(field_name, profile)
         is_multi = reg.get("type") == "multi"
         max_sel = reg.get("max_select") if is_multi else None
+        is_optional = not reg.get("required", False)
         replies.append(QuickReply(
             field=field_name, label=label, options=options,
             multi_select=is_multi, max_select=max_sel,
+            optional=is_optional,
         ))
 
     return replies
