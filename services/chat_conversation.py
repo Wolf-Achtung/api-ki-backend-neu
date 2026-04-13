@@ -128,6 +128,8 @@ Beispiele: "Als KI-Berater können Sie...", \
 suggerieren, dass der Fragebogen fast fertig ist. Einfach die \
 Frage stellen ohne "letzte/abschließend". \
 Erlaubt: "Diese Angabe ist optional" (ohne "letzte").
+- "die ideale Basis" (zu generisch, wird zu oft wiederverwendet)
+- "ohne große Vorarbeit" (gleicher Grund)
 STATTDESSEN direkt inhaltlich einsteigen: Fakt, Zahl, Frage, \
 oder kurze Bestätigung ("Gut.", "Verstanden.", "Weiter.").
 
@@ -662,6 +664,8 @@ Beispiele: "Als KI-Berater können Sie...", \
 suggerieren, dass der Fragebogen fast fertig ist. Einfach die \
 Frage stellen ohne "letzte/abschließend". \
 Erlaubt: "Diese Angabe ist optional" (ohne "letzte").
+- "die ideale Basis" (zu generisch, wird zu oft wiederverwendet)
+- "ohne große Vorarbeit" (gleicher Grund)
 STATTDESSEN direkt inhaltlich einsteigen: Fakt, Zahl, Frage, \
 oder kurze Bestätigung ("Gut.", "Verstanden.", "Weiter.").
 
@@ -972,6 +976,9 @@ async def generate_response(
     pending_value: object = None,
     dialog_mode: bool = False,
     help_context: str | None = None,
+    next_field_qr_context: str | None = None,
+    user_profile_summary: str | None = None,
+    recent_bot_messages: list[str] | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Generate streaming AI response.
@@ -1013,6 +1020,71 @@ async def generate_response(
     # Help-request context injection (field-specific explanation prompt)
     if help_context:
         system_prompt += f"\n\nHILFE-ANFRAGE:\n{help_context}"
+
+    # User profile context for adaptive questions (KIS-1123 Fix 2).
+    # Only injected when at least 2 profile fields are available.
+    if user_profile_summary:
+        system_prompt += (
+            f"\n\nBISHERIGES PROFIL DES USERS:\n"
+            f"{user_profile_summary}\n\n"
+            "PROFIL-ANPASSUNG:\n"
+            "- Ein User mit hoher KI-Kompetenz oder KI-bezogener "
+            "Hauptleistung braucht keine Grundlagen-Fragen. "
+            "Frage nach konkreten Optimierungszielen.\n"
+            "- Ein User, der selbst KI-Berater/KI-Dienstleister ist, "
+            "braucht keine Frage wie 'In welchem Bereich würden Sie "
+            "KI einsetzen?' — frage stattdessen nach dem Bereich "
+            "seines EIGENEN Geschäfts, der am meisten von "
+            "Automatisierung profitieren würde.\n"
+            "- Ein User mit niedrigem Digitalisierungsgrad braucht "
+            "einfachere Sprache und weniger Fachbegriffe.\n"
+            "- Nutze die Hauptleistung des Users, um "
+            "branchenspezifische Beispiele zu geben."
+        )
+
+    # Next-field QR context for coherent transitions (KIS-1123 Fix 1).
+    # Skip in dialog/help mode — Sonnet should answer the user's question,
+    # not transition to the next field.
+    if next_field_qr_context and not dialog_mode and not help_context:
+        system_prompt += (
+            f"\n\nNÄCHSTES FELD (für deine Überleitung):\n"
+            f"{next_field_qr_context}\n\n"
+            "ÜBERLEITUNG-REGEL:\n"
+            "- Beende deine Antwort mit einer natürlichen Überleitung "
+            "zum nächsten Feld.\n"
+            "- Wenn das nächste Feld QR-Buttons hat: Stelle KEINE offene "
+            "Frage zu einem anderen Thema. Leite stattdessen zum "
+            "QR-Thema über.\n"
+            "- Formuliere die Überleitung so, dass sie zum nächsten Feld "
+            "passt, NICHT zum vorherigen.\n"
+            "- NIEMALS eine offene Frage stellen, wenn darunter "
+            "QR-Buttons zu einem anderen Thema erscheinen.\n"
+            "- Bei Mehrfachauswahl-Feldern: Erwähne dass mehrere "
+            "Optionen gewählt werden können."
+        )
+
+    # Recent bot messages as anti-repetition context (KIS-1123 Fix 3).
+    if recent_bot_messages:
+        _msgs_block = "\n".join(
+            f'"""\n{msg}\n"""' for msg in recent_bot_messages
+        )
+        system_prompt += (
+            f"\n\nDEINE LETZTEN ANTWORTEN (NICHT WIEDERHOLEN):\n"
+            f"{_msgs_block}\n\n"
+            "VARIANZ-REGELN:\n"
+            "- Verwende NIE zweimal hintereinander den gleichen "
+            "Satzanfang.\n"
+            "- Variiere deine Bestätigungen: mal Einordnung "
+            '("Das zeigt..."), mal Überleitung ("Dann schauen '
+            'wir..."), mal kurze Bestätigung ("Verstanden."), '
+            'mal Rückbezug ("Zusammen mit Ihrer Erfahrung...").\n'
+            "- Wenn du gerade \"Perfekt\" gesagt hast, sage beim "
+            "nächsten Mal NICHT \"Perfekt\". Alternativen: "
+            '"Gut.", "Verstanden.", "Danke.", oder direkter '
+            "Einstieg ohne Bestätigungswort.\n"
+            "- Maximal 1 Satz Bestätigung, dann Überleitung zur "
+            "nächsten Frage."
+        )
 
     messages = build_conversation_messages(session_messages)
 
