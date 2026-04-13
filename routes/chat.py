@@ -546,12 +546,28 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 _pending_after_turn = bool(draft_state.get("pending_field"))
 
         # Handle "weiter" / skip for optional fields
+        # KIS-1124-S0-BE-2: Extended skip detection with decline phrases
         skip_words = {"weiter", "skip", "überspringen", "nächste", "weiter bitte", "nächste frage"}
+        _DECLINE_PATTERNS = [
+            "weiß nicht", "weiss nicht", "keine ahnung", "kann ich nicht",
+            "überspring", "überspringen", "skip", "egal", "später",
+            "das kann ich jetzt nicht", "schwer zu sagen", "müsste ich nachschauen",
+            "ist mir nicht wichtig", "spielt keine rolle", "unwichtig",
+            "nächste frage", "weiter", "kann ich nicht entscheiden",
+            "kann ich nicht sagen", "keine angabe", "k.a.", "kein kommentar",
+            "keine meinung", "weiß ich nicht", "weiss ich nicht",
+            "kann ich nicht beantworten", "keine idee", "noch keine idee",
+        ]
+        _msg_lower = req.message.strip().lower()
+        _is_skip_word = _msg_lower in skip_words
+        _is_decline = (not normalized and not _is_qr_click and not _is_help_request
+                       and any(p in _msg_lower for p in _DECLINE_PATTERNS))
         _skip_confirmed_draft = False
-        if req.message.strip().lower() in skip_words and not normalized:
+
+        if (_is_skip_word or _is_decline) and not normalized:
             # In draft mode with pending: "weiter" confirms the pending value
             # but does NOT also skip the next field (confirm only).
-            if DRAFT_MODE_ENABLED:
+            if DRAFT_MODE_ENABLED and _is_skip_word:
                 draft_state = dict(_draft_state_snapshot)
                 if draft_state.get("pending_field"):
                     _cf = draft_state["pending_field"]
@@ -579,13 +595,34 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 if asked:
                     skip_field = asked[0]
                     skip_reg = registry.get(skip_field, {})
+                    # Count how many times this field has been declined
+                    _field_meta_entry = field_meta.get(skip_field, {})
+                    _skip_attempts = _field_meta_entry.get("skip_attempts", 0) + 1
                     if not skip_reg.get("required"):
+                        # Optional field → skip immediately
                         collected[skip_field] = "" if skip_reg.get("type") == "text" else None
                         field_meta[skip_field] = {
                             "confidence": "high", "source_turn": turn,
                             "raw_input": "skipped", "normalized": True, "confirmed": True,
                         }
                         log.info("[CHAT] User skipped optional field: %s", skip_field)
+                    elif _skip_attempts >= 2:
+                        # Required field declined 2+ times → force-skip with keine_angabe
+                        collected[skip_field] = "keine_angabe"
+                        field_meta[skip_field] = {
+                            "confidence": "medium", "source_turn": turn,
+                            "raw_input": "declined_twice", "normalized": True, "confirmed": True,
+                        }
+                        log.info("[CHAT] User declined required field %s twice, setting keine_angabe", skip_field)
+                    else:
+                        # Required field, first decline → track attempt, stay on field
+                        # Sonnet will offer QR buttons as fallback
+                        field_meta[skip_field] = {
+                            **_field_meta_entry,
+                            "skip_attempts": _skip_attempts,
+                        }
+                        _no_extraction = True
+                        log.info("[CHAT] User declined required field %s (attempt %d), staying on field", skip_field, _skip_attempts)
 
         # Evaluate conditionals: remove hidden fields BEFORE writing
         for cond_field in ["selbststaendig", "bundesland"]:
@@ -766,6 +803,26 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 f"Fragen Sie den Nutzer, welches Feld geändert werden soll und auf welchen Wert."
             )
 
+        # KIS-1124-S0-BE-2: When user declines a required field, tell Sonnet
+        # to acknowledge gracefully and point to QR buttons as easy fallback.
+        if _is_decline and not _help_ctx:
+            _decline_field = _asked_field
+            _decline_reg = registry.get(_decline_field, {})
+            if _decline_reg.get("required"):
+                _decline_meta = field_meta.get(_decline_field, {})
+                _decline_attempts = _decline_meta.get("skip_attempts", 0)
+                if _decline_attempts == 1:
+                    _help_ctx = (
+                        f"\n\nAKTUELLER MODUS: NUTZER KANN NICHT ANTWORTEN\n"
+                        f"Der Nutzer hat signalisiert, dass er das Feld \"{_decline_field}\" "
+                        f"gerade nicht beantworten kann.\n"
+                        f"REAGIERE SO:\n"
+                        f"- Verstehe und akzeptiere das (1 kurzer Satz, z.B. 'Verstehe.').\n"
+                        f"- Weise darauf hin, dass es unten Buttons zur Auswahl gibt, "
+                        f"die die Antwort erleichtern.\n"
+                        f"- Maximal 2 Sätze total. NICHT insistieren."
+                    )
+
         async def _token_producer():
             try:
                 async for token in generate_response(
@@ -893,8 +950,18 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         # Check if all fields are done → send summary
         # Also regenerate summary after an edit was applied
+        # KIS-1124-S0-BE-1: Check ALL sections, not just current, to prevent
+        # premature summary when earlier-section fields (e.g. ki_hemmnisse) are missing.
         last_section = _current_section >= len(sections) - 1
-        all_fields_done = len(qr_next) == 0 and last_section
+        _globally_complete = False
+        if last_section and len(qr_next) == 0:
+            _globally_complete = True
+            for _si in range(len(sections)):
+                _mr, _mo = get_missing_fields(collected, _si, rt)
+                if _mr or _mo:
+                    _globally_complete = False
+                    break
+        all_fields_done = last_section and _globally_complete
         _should_send_summary = (
             (all_fields_done and not _has_summary_been_sent(session))
             or _edit_applied
