@@ -243,6 +243,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _draft_confirmed_field = None
         _draft_confirmed_value = None
         _pending_after_turn = False  # True when a pending draft exists AFTER this turn's processing
+        _no_extraction = False  # True when free-text yielded no field extraction (user asked a question)
+        _asked_field = ""  # The field that was being asked when the user sent this message
 
         _is_qr_click = bool(req.quick_reply_field and req.quick_reply_value)
 
@@ -321,6 +323,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             asked_fields = get_next_fields(collected, _current_section, report_type=rt)
             cur_field = asked_fields[0] if asked_fields else ""
             cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
+            _asked_field = cur_field
 
             # Draft-mode: read pending state for extractor context
             _draft = dict(_draft_state_snapshot)
@@ -406,6 +409,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         "normalized": True,
                         "confirmed": False,
                     }
+                # No fields extracted from free text → user likely asked a question
+                if not normalized:
+                    _no_extraction = True
+                    log.info("[CHAT] Legacy: no extraction from free text, staying on field %s", _asked_field)
             else:
                 # ----- Draft flow: extract → pending, not collected -----
                 _signal = raw_extracted.get("signal")
@@ -562,15 +569,22 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         sections = get_sections_for_report(rt)
         missing_req, missing_opt = get_missing_fields(collected, _current_section, rt)
         all_missing = missing_req + missing_opt
-        # Smart Grouping: ask up to 2 optional fields at once
-        # (required fields still come one at a time)
-        if missing_req:
-            next_fields = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
+
+        if _no_extraction and _asked_field and _asked_field not in collected:
+            # No extraction: user asked a question or gave unclear answer.
+            # Stay on current field — do NOT advance to next field.
+            next_fields = [_asked_field]
+            log.info("[CHAT] QR-Sync: no extraction, keeping next_fields=[%s]", _asked_field)
         else:
-            next_fields = get_next_fields(collected, _current_section, max_fields=2, report_type=rt)
+            # Smart Grouping: ask up to 2 optional fields at once
+            # (required fields still come one at a time)
+            if missing_req:
+                next_fields = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
+            else:
+                next_fields = get_next_fields(collected, _current_section, max_fields=2, report_type=rt)
         current_section = sections[_current_section]
 
-        log.info("[CHAT] Turn %d: normalized=%s, next=%s", turn, list(normalized.keys()), next_fields)
+        log.info("[CHAT] Turn %d: normalized=%s, next=%s, no_extraction=%s", turn, list(normalized.keys()), next_fields, _no_extraction)
 
         # ------------------------------------------------------------------
         # Phase 2: Stream Sonnet response with heartbeat keepalive
@@ -595,6 +609,12 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             _sonnet_pending_field = None
             _sonnet_pending_value = None
             _sonnet_dialog_mode = False
+        elif _no_extraction and not DRAFT_MODE_ENABLED:
+            # Legacy mode: no extraction → dialog mode so Sonnet answers
+            # the user's question instead of advancing to next field
+            _sonnet_pending_field = None
+            _sonnet_pending_value = None
+            _sonnet_dialog_mode = True
         else:
             # No change → use snapshot (covers: no draft mode, or
             # existing pending draft carried over from previous turn)
@@ -674,11 +694,15 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # QR generation — QR clicks always get normal next-field buttons.
         # Draft suppression only applies to free-text turns.
         # Smart Grouping: group up to 2 optional fields for QR
-        _qr_miss_req, _qr_miss_opt = get_missing_fields(collected, _current_section, rt)
-        if _qr_miss_req:
-            qr_next = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
+        if _no_extraction and _asked_field and _asked_field not in collected:
+            # No extraction: keep QR on the current field
+            qr_next = [_asked_field]
         else:
-            qr_next = get_next_fields(collected, _current_section, max_fields=2, report_type=rt)
+            _qr_miss_req, _qr_miss_opt = get_missing_fields(collected, _current_section, rt)
+            if _qr_miss_req:
+                qr_next = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
+            else:
+                qr_next = get_next_fields(collected, _current_section, max_fields=2, report_type=rt)
 
         # Fix 4: For strategy sessions, load R1 profile for context-aware QR
         _profile_ctx = None
