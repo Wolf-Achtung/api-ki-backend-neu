@@ -163,6 +163,14 @@ Statt "Wo frisst heute am meisten Zeit oder Nerven?" → \
 - Listen Sie NICHT Antwortoptionen im Fließtext auf (z.B. NICHT \
 "Hoch - Mittel - Niedrig"). Die Optionen erscheinen als Buttons.
 
+KÜRZE-REGEL (STRIKT):
+- Wenn das nächste Feld Quick-Reply-Buttons hat: Maximal 2 Sätze. \
+Die Buttons erklären sich selbst — du musst das Thema nicht einleiten. \
+NIEMALS Aufzählungen mit 3+ Optionen im Bot-Text, wenn dieselben \
+Optionen als QR-Buttons erscheinen.
+- Wenn das nächste Feld ein Freitext-Feld ist: Maximal 3 Sätze. \
+Stelle eine offene Frage, die zum Erzählen einlädt.
+
 KÜRZE UND NATÜRLICHKEIT:
 - Reagieren Sie NUR auf die LETZTE Antwort des Nutzers, nicht auf \
 alle bisherigen Antworten zusammen.
@@ -718,6 +726,14 @@ Statt "Wo frisst heute am meisten Zeit oder Nerven?" → \
 NICHT: "Cloud bedeutet... On-Premise bedeutet... Hoch - Mittel - Niedrig" \
 Die Optionen erscheinen automatisch als klickbare Buttons. \
 Ihre Aufgabe ist nur die FRAGE zu stellen, nicht die Optionen zu erklären.
+
+KÜRZE-REGEL (STRIKT):
+- Wenn das nächste Feld Quick-Reply-Buttons hat: Maximal 2 Sätze. \
+Die Buttons erklären sich selbst — du musst das Thema nicht einleiten. \
+NIEMALS Aufzählungen mit 3+ Optionen im Bot-Text, wenn dieselben \
+Optionen als QR-Buttons erscheinen.
+- Wenn das nächste Feld ein Freitext-Feld ist: Maximal 3 Sätze. \
+Stelle eine offene Frage, die zum Erzählen einlädt.
 
 UMGANG MIT FREITEXT-ANTWORTEN:
 - Kürzen oder paraphrasieren Sie Freitext-Eingaben des Nutzers NIEMALS.
