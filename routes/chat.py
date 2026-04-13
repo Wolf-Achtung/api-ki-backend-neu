@@ -880,6 +880,29 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 session.draft_state = draft_state
                 _pending_after_turn = bool(draft_state.get("pending_field"))
 
+        # KIS-1124-S3-BE-4: Block-level skip detection (Phase 2 only)
+        # These phrases end the ENTIRE block, not just one field.
+        _BLOCK_SKIP_PATTERNS = [
+            "reicht", "genug", "nächster bereich", "nächster block",
+            "weitermachen", "das reicht", "können wir weiter",
+            "nächstes thema", "thema wechseln", "report erstellen",
+            "report reicht", "das genügt", "fertig mit dem bereich",
+            "mir reicht das", "reicht mir",
+        ]
+        _conv_phase_for_skip = _phase_state.get("conversation_phase", "phase_1") if rt == "r1" else None
+        _msg_lower_pre = req.message.strip().lower()
+        _is_block_skip = (
+            _conv_phase_for_skip == "phase_2"
+            and not _is_qr_click
+            and not _is_help_request
+            and any(p in _msg_lower_pre for p in _BLOCK_SKIP_PATTERNS)
+        )
+        if _is_block_skip:
+            # Force block_stale_turns to 2 → triggers block completion in the phase_2 branch
+            _phase_state["block_stale_turns"] = 2
+            _no_extraction = True
+            log.info("[CHAT] Block-level skip detected: '%s' → force-closing current block", _msg_lower_pre)
+
         # Handle "weiter" / skip for optional fields
         # KIS-1124-S0-BE-2: Extended skip detection with decline phrases
         skip_words = {"weiter", "skip", "überspringen", "nächste", "weiter bitte", "nächste frage"}
