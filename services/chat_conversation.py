@@ -523,7 +523,15 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     "loeschregeln": "Lösch- und Anonymisierungsrichtlinien (Ja / Teilweise / Nein)",
     "ai_act_kenntnis": "Kenntnisse zum EU AI Act (Sehr gut / Gut / Gehört / Unbekannt)",
     "regulierte_branche": "Regulierte Branche (Gesundheit, Finanzen, Öffentlich, Recht, etc.)",
-    "ki_hemmnisse": "Hemmnisse beim KI-Einsatz (Rechtsunsicherheit, Budget, Know-how, etc.)",
+    "ki_hemmnisse": "Was bremst aktuell beim KI-Einsatz? "
+        "NICHT abstrakt 'Herausforderungen' fragen — stattdessen konkret formulieren: "
+        "'Was bremst Sie aktuell am meisten beim KI-Einsatz — Kosten, Datenschutz, "
+        "fehlende Ressourcen, oder etwas anderes?' Passe die Beispiele an die Branche an "
+        "(Beratung: API-Kosten, Qualitätskontrolle; Gesundheit: Datenschutz, Zertifizierung; "
+        "Handel: Datenqualität, Warenwirtschaft; IT: Integration, Legacy-Systeme; "
+        "Industrie: Maschinenanbindung, Datensilos). "
+        "(Mehrfachauswahl: Rechtsunsicherheit, Datenschutz, Know-how, Budget, "
+        "Teamakzeptanz, Zeitmangel, IT-Integration, Keine, Andere)",
     # Sektion 7
     "bisherige_foerdermittel": "Bereits Fördermittel erhalten (Ja / Nein)",
     "interesse_foerderung": "Interesse an Fördermöglichkeiten (Ja / Nein / Unklar)",
