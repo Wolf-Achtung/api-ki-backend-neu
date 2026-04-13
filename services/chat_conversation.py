@@ -911,8 +911,8 @@ async def generate_response(
     if hint:
         system_prompt += f"\n\nHINWEIS FÜR DIESEN ABSCHNITT:\n{hint}"
 
-    # Draft-mode context injection
-    if draft_mode:
+    # Draft-mode context injection (also used in legacy mode for dialog_mode)
+    if draft_mode or dialog_mode:
         system_prompt += _build_draft_context(pending_field, pending_value, dialog_mode)
 
     messages = build_conversation_messages(session_messages)
