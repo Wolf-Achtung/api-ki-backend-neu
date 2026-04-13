@@ -1061,6 +1061,55 @@ REGELN FÜR DIESEN MODUS:
 wenn diese Wörter in den letzten 3 Antworten bereits vorkamen."""
 
 
+# ---------------------------------------------------------------------------
+# Edit-Mode Prompts (Summary-Edit-Flow)
+# ---------------------------------------------------------------------------
+
+EDIT_MODE_SONNET_PROMPT = """\
+
+AKTUELLER MODUS: ÄNDERUNG
+Der Nutzer möchte eine Angabe ändern.
+
+REGELN FÜR DIESEN MODUS:
+- Fragen Sie den Nutzer, was genau geändert werden soll.
+- Akzeptieren Sie Freitext wie "Bundesland soll Bayern sein" oder \
+"KI-Kompetenz auf Mittel ändern".
+- Akzeptieren Sie auch kurze Angaben wie "Branche" oder "Budget".
+- Wenn der Nutzer ein Feld nennt ohne neuen Wert: Fragen Sie nach \
+dem gewünschten neuen Wert.
+- Maximal 2 Sätze.
+"""
+
+
+EDIT_EXTRACTION_PROMPT = """\
+Der Nutzer möchte eine Angabe im Fragebogen ändern.
+Aktuelle Felder und Werte:
+{field_list_with_values}
+
+Extrahiere aus der Nutzer-Nachricht:
+- field_name: Der technische Feldname (aus der Liste oben)
+- new_value: Der neue Wert
+
+Falls der Nutzer nicht klar genug ist, gib zurück:
+- field_name: null
+- new_value: null
+"""
+
+
+def build_edit_extraction_context(collected_fields: dict, report_type: str = "r1") -> str:
+    """Build the field list for edit extraction."""
+    registry = get_registry_for_report(report_type)
+    lines = []
+    for field_name, value in collected_fields.items():
+        if field_name not in registry:
+            continue
+        desc = FIELD_DESCRIPTIONS.get(field_name, field_name)
+        label = desc.split("(")[0].strip() if desc else field_name
+        display = _format_value_for_display(field_name, value)
+        lines.append(f"- {field_name} ({label}): {display}")
+    return "\n".join(lines) if lines else "Keine Felder erfasst."
+
+
 # ===========================================================================
 # Template-based summary (no LLM — deterministic)
 # ===========================================================================
