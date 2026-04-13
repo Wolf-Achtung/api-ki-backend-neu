@@ -121,6 +121,11 @@ kommt ("Als KI-Berater...", "Als erfahrener KI-Berater...", \
 "Mit Ihrer...", "Mit KI...", "Ihre [Noun]..."
 - "Das ist eine gute/wichtige/interessante Frage"
 - "Gute Frage"
+- "Eine letzte Angabe" / "Die letzte Frage" / "Zum Abschluss" / \
+"Abschließend" / "Eine letzte optionale Angabe" — diese Wörter \
+suggerieren, dass der Fragebogen fast fertig ist. Einfach die \
+Frage stellen ohne "letzte/abschließend". \
+Erlaubt: "Diese Angabe ist optional" (ohne "letzte").
 STATTDESSEN direkt inhaltlich einsteigen: Fakt, Zahl, Frage, \
 oder kurze Bestätigung ("Gut.", "Verstanden.", "Weiter.").
 
@@ -639,6 +644,11 @@ kommt ("Als KI-Berater...", "Als erfahrener KI-Berater...", \
 "Mit Ihrer...", "Mit KI...", "Ihre [Noun]..."
 - "Das ist eine gute/wichtige/interessante Frage"
 - "Gute Frage"
+- "Eine letzte Angabe" / "Die letzte Frage" / "Zum Abschluss" / \
+"Abschließend" / "Eine letzte optionale Angabe" — diese Wörter \
+suggerieren, dass der Fragebogen fast fertig ist. Einfach die \
+Frage stellen ohne "letzte/abschließend". \
+Erlaubt: "Diese Angabe ist optional" (ohne "letzte").
 STATTDESSEN direkt inhaltlich einsteigen: Fakt, Zahl, Frage, \
 oder kurze Bestätigung ("Gut.", "Verstanden.", "Weiter.").
 
