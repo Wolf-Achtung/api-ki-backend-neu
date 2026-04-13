@@ -74,6 +74,12 @@ class ChatSessionState(BaseModel):
     pending_value: Optional[Any] = None
     dialog_mode: bool = False
 
+    # Phase tracking (hybrid conversation model, KIS-1124 Sprint 2)
+    conversation_phase: str = "phase_1"
+    selected_blocks: list[str] = []
+    completed_blocks: list[str] = []
+    current_block: Optional[str] = None
+
     # Quick Replies
     quick_replies: Optional[list[QuickReply]] = None
 

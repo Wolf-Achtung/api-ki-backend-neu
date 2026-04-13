@@ -571,3 +571,196 @@ def _format_collected(collected: dict) -> str:
     for k, v in collected.items():
         parts.append(f"{k}={v!r}")
     return ", ".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# KIS-1124 Sprint 2: Multi-Field Extraction for Phase 1 Free Conversation
+# ---------------------------------------------------------------------------
+
+MULTI_FIELD_SYSTEM_PROMPT = """\
+Du bist ein Daten-Extractor für einen KI-Readiness-Fragebogen.
+Analysiere die Nutzerantwort und extrahiere ALLE erkennbaren Werte
+für die unten aufgelisteten Felder. Antworte NUR mit einem JSON-Objekt
+über das Tool extract_multi_fields.
+
+REGELN:
+1. Setze NUR Felder, die der Nutzer tatsächlich genannt oder klar impliziert hat.
+2. Erfinde NIEMALS Werte.
+3. Bei Unsicherheit: Feld NICHT setzen (weglassen).
+4. Bei enum-Feldern: Exakt einen der vorgegebenen Werte verwenden.
+5. Bei multi-Feldern: Array der erkannten Werte.
+6. Bei text-Feldern: Relevanten Textabschnitt in 1–3 Sätzen zusammenfassen.
+7. Bei slider-Feldern: Numerischen Wert ableiten (1–10).
+8. Extrahiere auch implizite Informationen:
+   - "in München" → bundesland: "by" (Bayern)
+   - "8 Mitarbeiter" → unternehmensgroesse: "team"
+   - "komplett digital" → digitalisierungsgrad: 9 oder 10
+   - "viel Papier" → digitalisierungsgrad: 2 oder 3
+   - "ich arbeite mit LLM-APIs" → ki_kompetenz: "hoch"
+   - "ich will automatisieren" → ki_ziele: ["automatisierung"]
+9. Wenn der Nutzer signalisiert, nicht antworten zu wollen \
+(z.B. "weiß nicht", "keine Ahnung", "überspring", "egal", "später", \
+"kann ich nicht", "schwer zu sagen", "nächste Frage"), setze \
+__skip_signal auf true.
+
+FELDER ZUM EXTRAHIEREN:
+{fields_descriptions}
+
+Bereits erfasst (NICHT nochmal setzen): {collected_fields}"""
+
+
+def _build_multi_field_tool(target_fields: list[dict[str, Any]]) -> dict[str, Any]:
+    """Build a dynamic tool schema for multi-field extraction.
+
+    Args:
+        target_fields: List of dicts with keys: name, type, description,
+                       and optionally options (for enum/multi).
+    """
+    properties: dict[str, Any] = {}
+
+    for field in target_fields:
+        fname = field["name"]
+        ftype = field.get("type", "text")
+        fdesc = field.get("description", fname)
+        foptions = field.get("options")
+
+        if ftype == "enum" and foptions:
+            properties[fname] = {
+                "type": "string",
+                "enum": foptions,
+                "description": fdesc,
+            }
+        elif ftype == "multi" and foptions:
+            properties[fname] = {
+                "type": "array",
+                "items": {"type": "string", "enum": foptions},
+                "description": fdesc,
+            }
+        elif ftype == "slider":
+            properties[fname] = {
+                "type": "integer",
+                "description": fdesc,
+            }
+        else:
+            # text or fallback
+            properties[fname] = {
+                "type": "string",
+                "description": fdesc,
+            }
+
+    # Add skip signal
+    properties["__skip_signal"] = {
+        "type": "boolean",
+        "description": (
+            "true wenn der User signalisiert, nicht antworten zu wollen "
+            "(weiß nicht, überspring, egal, etc.)"
+        ),
+    }
+
+    return {
+        "name": "extract_multi_fields",
+        "description": (
+            "Extrahiert mehrere strukturierte Felder gleichzeitig aus der "
+            "User-Nachricht. Nur Felder setzen, die erkennbar sind."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": properties,
+            "required": [],
+        },
+    }
+
+
+def _format_fields_for_prompt(target_fields: list[dict[str, Any]]) -> str:
+    """Format target fields as a readable list for the system prompt."""
+    lines = []
+    for f in target_fields:
+        fname = f["name"]
+        ftype = f.get("type", "text")
+        fdesc = f.get("description", fname)
+        opts = f.get("options")
+        if opts:
+            opts_str = ", ".join(opts[:15])
+            lines.append(f"- {fname} ({ftype}): {fdesc} | Optionen: [{opts_str}]")
+        else:
+            lines.append(f"- {fname} ({ftype}): {fdesc}")
+    return "\n".join(lines)
+
+
+async def extract_fields_multi(
+    user_message: str,
+    conversation_context: list[dict],
+    target_fields: list[dict[str, Any]],
+    collected_fields: dict,
+) -> dict:
+    """
+    Multi-field extraction for Phase 1 free conversation mode.
+
+    Instead of extracting one field at a time, this extracts ALL recognizable
+    values from a single user message across multiple target fields.
+
+    Args:
+        user_message: The current user message
+        conversation_context: Last 6 messages for context
+        target_fields: List of field descriptors, each with:
+            name, type, description, and optionally options
+        collected_fields: Already collected field values
+
+    Returns:
+        Dict with extracted fields. Keys are field names, values are
+        extracted values. Special key "__skip_signal" is True if the
+        user signaled unwillingness to answer.
+    """
+    client = _get_async_client()
+    if client is None:
+        log.error("[CHAT-EXTRACT-MULTI] No async client available")
+        return {}
+
+    # Build messages
+    messages: list[dict] = []
+    for turn in conversation_context[-6:]:
+        messages.append({"role": turn["role"], "content": turn["content"]})
+    messages.append({"role": "user", "content": user_message})
+
+    # Build system prompt
+    fields_desc = _format_fields_for_prompt(target_fields)
+    system = MULTI_FIELD_SYSTEM_PROMPT.format(
+        fields_descriptions=fields_desc,
+        collected_fields=_format_collected(collected_fields),
+    )
+
+    # Build dynamic tool
+    tool = _build_multi_field_tool(target_fields)
+
+    try:
+        response = await client.messages.create(
+            model=EXTRACTOR_MODEL,
+            max_tokens=800,
+            system=system,
+            messages=messages,
+            tools=[tool],
+            tool_choice={"type": "auto"},
+        )
+
+        for block in response.content:
+            if block.type == "tool_use" and block.name == "extract_multi_fields":
+                extracted: dict = dict(block.input)
+                skip = extracted.pop("__skip_signal", False)
+                # Remove None values
+                extracted = {k: v for k, v in extracted.items() if v is not None}
+                log.info(
+                    "[CHAT-EXTRACT-MULTI] Extracted %d fields: %s (skip=%s)",
+                    len(extracted),
+                    list(extracted.keys()),
+                    skip,
+                )
+                if skip:
+                    extracted["__skip_signal"] = True
+                return extracted
+
+        log.info("[CHAT-EXTRACT-MULTI] No fields extracted (question or off-topic)")
+        return {}
+
+    except Exception as exc:
+        log.error("[CHAT-EXTRACT-MULTI] Multi-extraction failed: %s", exc, exc_info=True)
+        return {}
