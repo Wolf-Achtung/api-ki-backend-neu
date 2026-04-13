@@ -66,6 +66,101 @@ log = logging.getLogger(__name__)
 # Feature flag: Draft-Pattern (Sprint 1 infra — default off)
 DRAFT_MODE_ENABLED = os.getenv("DRAFT_MODE_ENABLED", "false").lower() == "true"
 
+# ---------------------------------------------------------------------------
+# KIS-1124 Sprint 2: Hybrid Conversation Model — Phase & Block Definitions
+# ---------------------------------------------------------------------------
+
+# Phase 1 required fields — must be collected before checkpoint
+PHASE_1_FIELDS: list[str] = [
+    "branche", "unternehmensgroesse", "country", "bundesland",
+    "hauptleistung", "ki_kompetenz", "digitalisierungsgrad",
+    "ki_ziele", "investitionsbudget",
+]
+
+# Fields that need QR buttons in Phase 1 (not extractable from free text)
+PHASE_1_QR_FIELDS: set[str] = {
+    "branche", "unternehmensgroesse", "country", "bundesland",
+    "investitionsbudget",
+}
+
+# Fields that Haiku can extract from free conversation in Phase 1
+PHASE_1_EXTRACTABLE_FIELDS: set[str] = {
+    "hauptleistung", "ki_kompetenz", "digitalisierungsgrad",
+    "ki_ziele", "zielgruppen", "jahresumsatz", "ki_einsatz",
+}
+
+
+def _get_datenschutz_block_fields(branche: str) -> list[str]:
+    """Return Block D fields based on branche (Beratung → reduced set)."""
+    if branche == "beratung":
+        return ["datenschutzbeauftragter", "ai_act_kenntnis", "ki_hemmnisse"]
+    return [
+        "datenschutzbeauftragter", "technische_massnahmen",
+        "folgenabschaetzung", "meldewege", "loeschregeln",
+        "ai_act_kenntnis", "regulierte_branche", "ki_hemmnisse",
+    ]
+
+
+# Phase 2 thematic blocks
+BLOCK_FIELDS: dict[str, list[str]] = {
+    "A": [
+        "bisherige_foerdermittel", "interesse_foerderung",
+        "erfahrung_beratung", "marktposition",
+        "benchmark_wettbewerb", "risikofreude", "jahresumsatz",
+    ],
+    "B": [
+        "vision_3_jahre", "strategische_ziele", "ki_guardrails",
+        "geschaeftsmodell_evolution", "roadmap_vorhanden",
+        "change_management", "massnahmen_komplexitaet",
+        "vision_prioritaet", "innovationsprozess",
+    ],
+    "C": [
+        "automatisierungsgrad", "ki_einsatz", "anwendungsfaelle",
+        "ki_projekte", "pilot_bereich", "zeitersparnis_prioritaet",
+        "vorhandene_tools", "trainings_interessen", "zeitbudget",
+        "prozesse_papierlos",
+    ],
+    # Block D is dynamic — see _get_datenschutz_block_fields()
+}
+
+BLOCK_LABELS: dict[str, str] = {
+    "A": "Fördermittel & Budget",
+    "B": "KI-Strategie & Roadmap",
+    "C": "Tools & Automatisierung",
+    "D": "Recht & Datenschutz",
+}
+
+
+def _get_block_fields(block_id: str, collected_fields: dict) -> list[str]:
+    """Get remaining (uncollected) fields for a block."""
+    if block_id == "D":
+        branche = collected_fields.get("branche", "")
+        all_fields = _get_datenschutz_block_fields(branche)
+    else:
+        all_fields = BLOCK_FIELDS.get(block_id, [])
+    return [f for f in all_fields if f not in collected_fields]
+
+
+def _init_phase_state() -> dict:
+    """Create initial phase_state for a new R1 session."""
+    return {
+        "conversation_phase": "phase_1",
+        "selected_blocks": [],
+        "completed_blocks": [],
+        "current_block": None,
+    }
+
+
+def _get_phase_state(session) -> dict:
+    """Read phase_state from session, with safe defaults."""
+    ps = getattr(session, "phase_state", None) or {}
+    return {
+        "conversation_phase": ps.get("conversation_phase", "phase_1"),
+        "selected_blocks": ps.get("selected_blocks", []),
+        "completed_blocks": ps.get("completed_blocks", []),
+        "current_block": ps.get("current_block"),
+    }
+
 R1_WELCOME = (
     "Willkommen bei ki-sicherheit.jetzt! Ich führe Sie durch eine "
     "kurze Bestandsaufnahme — in ca. 10–15 Minuten. Am Ende erhalten "
@@ -125,6 +220,9 @@ async def chat_start(
 
     now = datetime.now(timezone.utc)
 
+    # Initialize phase_state for R1 sessions (hybrid conversation model)
+    phase_state = _init_phase_state() if req.report_type == "r1" else {}
+
     session = ChatSession(
         report_type=req.report_type,
         lang=req.lang,
@@ -138,6 +236,7 @@ async def chat_start(
         turn_count=0,
         briefing_id=req.briefing_id,
         user_id=user_id,
+        phase_state=phase_state,
     )
     db.add(session)
     db.commit()
@@ -229,7 +328,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # After db.commit() at l.202 the closure `session` object is
         # unreliable inside this async generator.
         _row = db.execute(
-            _sa_text("SELECT collected_fields, field_meta, current_section, draft_state "
+            _sa_text("SELECT collected_fields, field_meta, current_section, draft_state, phase_state "
                      "FROM chat_sessions WHERE id = :sid"),
             {"sid": str(session.id)}
         ).fetchone()
@@ -237,6 +336,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         field_meta = dict(_row[1] or {})
         _current_section = _row[2]
         _draft_state_snapshot = dict(_row[3] or {})
+        _phase_state = dict(_row[4] or {})
         log.info("[CHAT] Turn %d init: collected_keys=%s", turn, list(collected.keys()))
 
         # Draft-mode tracking variables (only meaningful when DRAFT_MODE_ENABLED)
@@ -268,6 +368,31 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             # This applies to both QR (single-select) and MS (multi-select) fields,
             # regardless of DRAFT_MODE_ENABLED. Only free-text goes through Draft.
             qr_field = req.quick_reply_field
+
+            # --- Checkpoint QR handling (Phase 1 → Phase 2 transition) ---
+            if qr_field == "__checkpoint__":
+                _cp_value = req.quick_reply_value
+                if _cp_value == "REPORT":
+                    # User wants report now → skip to summary
+                    _phase_state["conversation_phase"] = "summary"
+                    log.info("[CHAT] Checkpoint: user chose REPORT NOW")
+                elif _cp_value == "ALL":
+                    _phase_state["conversation_phase"] = "phase_2"
+                    _phase_state["selected_blocks"] = ["A", "B", "C", "D"]
+                    _phase_state["current_block"] = "A"
+                    log.info("[CHAT] Checkpoint: user chose ALL blocks")
+                else:
+                    # Individual block(s) selected — may be comma-separated
+                    _selected = [b.strip() for b in _cp_value.split(",") if b.strip() in BLOCK_LABELS]
+                    if _selected:
+                        _phase_state["conversation_phase"] = "phase_2"
+                        _phase_state["selected_blocks"] = _selected
+                        _phase_state["current_block"] = _selected[0]
+                        log.info("[CHAT] Checkpoint: user chose blocks %s", _selected)
+                    else:
+                        log.warning("[CHAT] Checkpoint: invalid selection %r", _cp_value)
+                # Skip normal QR processing for checkpoint
+                _no_extraction = True
 
             # --- Draft housekeeping (pre-step, only when DRAFT_MODE_ENABLED) ---
             # Clears any pending draft. Does NOT affect the QR value write below.
@@ -333,12 +458,28 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             # Run in background task so we can yield heartbeats while waiting.
             from services.chat_extractor import extract_fields
 
-            missing_req, missing_opt = get_missing_fields(collected, _current_section, rt)
-            _all_missing = missing_req + missing_opt
-            asked_fields = get_next_fields(collected, _current_section, report_type=rt)
-            cur_field = asked_fields[0] if asked_fields else ""
-            cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
-            _asked_field = cur_field
+            # Phase 1 mode: determine fields differently
+            _conv_phase = _phase_state.get("conversation_phase", "phase_1") if rt == "r1" else None
+            _is_phase_1 = (_conv_phase == "phase_1" and rt == "r1")
+
+            if _is_phase_1:
+                # Phase 1: next fields come from PHASE_1_FIELDS, not sections
+                _missing_p1 = [f for f in PHASE_1_FIELDS if f not in collected]
+                _all_missing = _missing_p1
+                # Determine which Phase 1 field to ask next (QR fields first if missing)
+                _missing_qr = [f for f in _missing_p1 if f in PHASE_1_QR_FIELDS]
+                _missing_free = [f for f in _missing_p1 if f not in PHASE_1_QR_FIELDS]
+                asked_fields = (_missing_qr[:1] if _missing_qr else _missing_free[:1])
+                cur_field = asked_fields[0] if asked_fields else ""
+                cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
+                _asked_field = cur_field
+            else:
+                missing_req, missing_opt = get_missing_fields(collected, _current_section, rt)
+                _all_missing = missing_req + missing_opt
+                asked_fields = get_next_fields(collected, _current_section, report_type=rt)
+                cur_field = asked_fields[0] if asked_fields else ""
+                cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
+                _asked_field = cur_field
 
             # Help-request: skip extraction entirely, stay on current field
             if _is_help_request:
@@ -394,6 +535,109 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             if _is_help_request:
                 # Help request: skip extraction entirely
                 raw_extracted = {"signal": "question", "fields": {}} if DRAFT_MODE_ENABLED else {}
+            elif _is_phase_1 and not _is_in_edit_mode and not _is_edit_request:
+                # --- Phase 1: Multi-field extraction ---
+                from services.chat_extractor import extract_fields_multi
+                from services.chat_normalizer import ENUM_VALUES
+
+                # Build target fields for multi-field extractor
+                _target_fields = []
+                for _fname in PHASE_1_FIELDS:
+                    if _fname in collected:
+                        continue
+                    _freg = registry.get(_fname, {})
+                    _fdesc = FIELD_DESCRIPTIONS.get(_fname, _fname)
+                    _ftype = _freg.get("type", "text")
+                    _field_def: dict = {"name": _fname, "type": _ftype, "description": _fdesc}
+                    # Add enum options
+                    if _ftype in ("enum", "multi"):
+                        _opts = ENUM_VALUES.get(_fname)
+                        if _opts:
+                            _field_def["options"] = _opts
+                    _target_fields.append(_field_def)
+
+                # Also try to extract bonus fields (zielgruppen, jahresumsatz, etc.)
+                for _bname in PHASE_1_EXTRACTABLE_FIELDS:
+                    if _bname in collected or _bname in [f["name"] for f in _target_fields]:
+                        continue
+                    _breg = registry.get(_bname, {})
+                    _bdesc = FIELD_DESCRIPTIONS.get(_bname, _bname)
+                    _btype = _breg.get("type", "text")
+                    _bfield_def: dict = {"name": _bname, "type": _btype, "description": _bdesc}
+                    if _btype in ("enum", "multi"):
+                        _bopts = ENUM_VALUES.get(_bname)
+                        if _bopts:
+                            _bfield_def["options"] = _bopts
+                    _target_fields.append(_bfield_def)
+
+                async def _run_multi_extraction() -> dict:
+                    try:
+                        return await asyncio.wait_for(
+                            extract_fields_multi(
+                                req.message,
+                                messages[-6:],
+                                _target_fields,
+                                collected,
+                            ),
+                            timeout=30,
+                        )
+                    except asyncio.TimeoutError:
+                        log.warning("[CHAT] Phase 1 multi-extraction timeout, retrying...")
+                        try:
+                            return await asyncio.wait_for(
+                                extract_fields_multi(
+                                    req.message,
+                                    messages[-6:],
+                                    _target_fields,
+                                    collected,
+                                ),
+                                timeout=30,
+                            )
+                        except asyncio.TimeoutError:
+                            log.error("[CHAT] Phase 1 multi-extraction timeout on retry")
+                            return {}
+
+                extract_task = asyncio.create_task(_run_multi_extraction())
+                while not extract_task.done():
+                    try:
+                        await asyncio.wait_for(asyncio.shield(extract_task), timeout=_HB_INTERVAL)
+                    except asyncio.TimeoutError:
+                        yield f"event: heartbeat\ndata: {{}}\n\n"
+                    except Exception:
+                        break
+
+                _multi_raw = extract_task.result() if not extract_task.cancelled() else {}
+                _skip = _multi_raw.pop("__skip_signal", False)
+
+                # Normalize and write all extracted fields
+                for _mf_name, _mf_val in _multi_raw.items():
+                    if _mf_name not in registry:
+                        continue
+                    if not is_field_visible(_mf_name, collected):
+                        continue
+                    if _mf_name in collected:
+                        continue
+                    result = normalize_field(_mf_name, _mf_val, collected, report_type=rt)
+                    if result.confidence == "low":
+                        log.info("[CHAT] Phase 1: field %s low confidence, skipping", _mf_name)
+                        continue
+                    collected[_mf_name] = result.value
+                    normalized[_mf_name] = result.value
+                    field_meta[_mf_name] = {
+                        "confidence": result.confidence,
+                        "source_turn": turn,
+                        "raw_input": str(_mf_val),
+                        "normalized": True,
+                        "confirmed": True,
+                    }
+                    log.info("[CHAT] Phase 1: extracted %s=%r", _mf_name, result.value)
+
+                if not normalized and not _skip:
+                    _no_extraction = True
+                    log.info("[CHAT] Phase 1: no extraction from free text")
+
+                # Wrap as raw_extracted for compatibility with downstream code
+                raw_extracted = {}
             else:
                 async def _run_extraction() -> dict:
                     try:
@@ -649,6 +893,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 SET collected_fields = CAST(:cf AS jsonb),
                     field_meta = CAST(:fm AS jsonb),
                     draft_state = CAST(:ds AS jsonb),
+                    phase_state = CAST(:ps AS jsonb),
                     updated_at = :ts
                 WHERE id = :sid
             """),
@@ -657,32 +902,73 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 "cf": json.dumps(collected),
                 "fm": json.dumps(field_meta),
                 "ds": _draft_for_sql or json.dumps({}),
+                "ps": json.dumps(_phase_state),
                 "ts": now,
             }
         )
         db.commit()
 
         # Check section transition (raw SQL inside, commits internally)
-        section_advanced = _check_section_transition(session, collected, db, rt)
-        if section_advanced:
-            _current_section = session.current_section
+        # Skip for Phase 1 — sections aren't used until Phase 2/legacy
+        _cur_conv_phase = _phase_state.get("conversation_phase", "phase_1") if rt == "r1" else None
+        if _cur_conv_phase not in ("phase_1", "checkpoint"):
+            section_advanced = _check_section_transition(session, collected, db, rt)
+            if section_advanced:
+                _current_section = session.current_section
 
         # Determine next fields
         sections = get_sections_for_report(rt)
-        missing_req, missing_opt = get_missing_fields(collected, _current_section, rt)
-        all_missing = missing_req + missing_opt
 
-        if _no_extraction and _asked_field and _asked_field not in collected:
-            # No extraction: user asked a question or gave unclear answer.
-            # Stay on current field — do NOT advance to next field.
-            next_fields = [_asked_field]
-            log.info("[CHAT] QR-Sync: no extraction, keeping next_fields=[%s]", _asked_field)
+        # --- Phase 1: Completion check + checkpoint trigger ---
+        _checkpoint_triggered = False
+        if _cur_conv_phase == "phase_1" and rt == "r1":
+            _missing_p1_after = [f for f in PHASE_1_FIELDS if f not in collected]
+            all_missing = _missing_p1_after
+
+            if not _missing_p1_after:
+                # All Phase 1 fields collected → trigger checkpoint
+                _phase_state["conversation_phase"] = "checkpoint"
+                _checkpoint_triggered = True
+                next_fields = []
+                log.info("[CHAT] Phase 1 COMPLETE — triggering checkpoint")
+
+                # Persist phase_state change immediately
+                db.execute(
+                    _sa_text("UPDATE chat_sessions SET phase_state = CAST(:ps AS jsonb) WHERE id = :sid"),
+                    {"ps": json.dumps(_phase_state), "sid": str(session.id)},
+                )
+                db.commit()
+            elif _no_extraction and _asked_field and _asked_field not in collected:
+                next_fields = [_asked_field]
+                log.info("[CHAT] Phase 1 QR-Sync: keeping next_fields=[%s]", _asked_field)
+            else:
+                # Phase 1: next QR field first, then free-text fields
+                _p1_qr_missing = [f for f in _missing_p1_after if f in PHASE_1_QR_FIELDS]
+                _p1_free_missing = [f for f in _missing_p1_after if f not in PHASE_1_QR_FIELDS]
+                next_fields = (_p1_qr_missing[:1] if _p1_qr_missing else _p1_free_missing[:1])
+
+        elif _cur_conv_phase == "checkpoint" and rt == "r1":
+            # Checkpoint phase — next_fields is empty, QR handles navigation
+            all_missing = []
+            next_fields = []
+
+        elif _cur_conv_phase == "summary" and rt == "r1":
+            # Summary phase — triggered by checkpoint "Report jetzt erstellen"
+            all_missing = []
+            next_fields = []
+
         else:
-            # Smart Grouping disabled: always ask 1 field at a time.
-            # With max_fields=2 Sonnet didn't reliably address both fields
-            # in its question, leaving QR buttons without context (KIS-1122).
-            next_fields = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
-        current_section = sections[_current_section]
+            # Legacy / Phase 2 / Strategy: section-based next fields
+            missing_req, missing_opt = get_missing_fields(collected, _current_section, rt)
+            all_missing = missing_req + missing_opt
+
+            if _no_extraction and _asked_field and _asked_field not in collected:
+                next_fields = [_asked_field]
+                log.info("[CHAT] QR-Sync: no extraction, keeping next_fields=[%s]", _asked_field)
+            else:
+                next_fields = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
+
+        current_section = sections[min(_current_section, len(sections) - 1)]
 
         log.info("[CHAT] Turn %d: normalized=%s, next=%s, no_extraction=%s", turn, list(normalized.keys()), next_fields, _no_extraction)
 
@@ -823,8 +1109,28 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         f"- Maximal 2 Sätze total. NICHT insistieren."
                     )
 
+        # Compute Phase 1 missing fields for Sonnet prompt
+        _missing_p1_for_sonnet = None
+        if _cur_conv_phase == "phase_1":
+            _missing_p1_for_sonnet = [f for f in PHASE_1_FIELDS if f not in collected]
+
+        # Checkpoint: inject checkpoint text instead of streaming Sonnet
+        _checkpoint_text = None
+        if _checkpoint_triggered:
+            _checkpoint_text = (
+                "Ich habe jetzt ein gutes Bild von Ihrem Unternehmen. "
+                "Damit kann ich bereits einen soliden KI-Report erstellen.\n\n"
+                "Sie können die Analyse aber gezielt vertiefen — "
+                "welche Bereiche interessieren Sie besonders?"
+            )
+
         async def _token_producer():
             try:
+                if _checkpoint_text:
+                    # Checkpoint: send static text, no Sonnet call
+                    await queue.put(_checkpoint_text)
+                    return
+
                 async for token in generate_response(
                     session_messages=list(session.messages),
                     collected_fields=collected,
@@ -840,6 +1146,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     next_field_qr_context=_next_field_qr_context,
                     user_profile_summary=_user_profile_summary,
                     recent_bot_messages=_recent_bot_msgs,
+                    conversation_phase=_cur_conv_phase,
+                    missing_phase_1_fields=_missing_p1_for_sonnet,
                 ):
                     await queue.put(token)
             except Exception as exc:
@@ -895,43 +1203,69 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             if _signal == "question":
                 yield _sse_dialog_mode(active=True)
 
-        # QR generation — QR clicks always get normal next-field buttons.
-        # Draft suppression only applies to free-text turns.
-        # QR always shows 1 field at a time (Smart Grouping disabled, KIS-1122)
-        if _no_extraction and _asked_field and _asked_field not in collected:
-            # No extraction: keep QR on the current field
-            qr_next = [_asked_field]
-        else:
-            qr_next = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
-
+        # QR generation — phase-aware
         # Fix 4: For strategy sessions, load R1 profile for context-aware QR
         _profile_ctx = None
         if rt == "strategy":
             _profile_ctx = _load_r1_profile_for_strategy(session, db)
 
-        if _is_qr_click:
-            # QR clicks are explicit user actions — never show confirm/edit
-            # buttons. Draft was already handled in the QR housekeeping step.
-            quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
-        elif DRAFT_MODE_ENABLED and _pending_after_turn:
-            # Free-text turn with pending draft value → show confirm/edit
+        # Determine qr_next based on conversation phase
+        _final_phase = _phase_state.get("conversation_phase") if rt == "r1" else None
+
+        if _checkpoint_triggered or _final_phase == "checkpoint":
+            # Checkpoint: show topic selection buttons
             quick_replies = [QuickReply(
-                field="_draft_action",
-                label="Angabe bestätigen",
+                field="__checkpoint__",
+                label="Bereiche vertiefen",
                 options=[
-                    QuickReplyOption(value="confirm", label="✓ Übernehmen"),
-                    QuickReplyOption(value="edit", label="✏️ Ändern"),
+                    QuickReplyOption(value="A", label="Fördermittel & Budget"),
+                    QuickReplyOption(value="B", label="KI-Strategie & Roadmap"),
+                    QuickReplyOption(value="C", label="Tools & Automatisierung"),
+                    QuickReplyOption(value="D", label="Recht & Datenschutz"),
+                    QuickReplyOption(value="ALL", label="Alle Bereiche vertiefen"),
+                    QuickReplyOption(value="REPORT", label="Report jetzt erstellen"),
                 ],
-                multi_select=False,
+                multi_select=True,
+                max_select=4,
             )]
-        elif DRAFT_MODE_ENABLED and _signal == "question":
-            # Dialog mode → no QR buttons
+        elif _final_phase == "summary":
+            # Summary phase: no QR, will generate summary below
             quick_replies = []
-        elif _is_edit_request or (_is_in_edit_mode and not _edit_applied):
-            # Edit mode: no QR buttons, user types what to change
-            quick_replies = []
-        else:
+        elif _final_phase == "phase_1":
+            # Phase 1: show QR for next Phase 1 field
+            if _no_extraction and _asked_field and _asked_field not in collected:
+                qr_next = [_asked_field]
+            else:
+                _p1_missing = [f for f in PHASE_1_FIELDS if f not in collected]
+                _p1_qr = [f for f in _p1_missing if f in PHASE_1_QR_FIELDS]
+                _p1_free = [f for f in _p1_missing if f not in PHASE_1_QR_FIELDS]
+                qr_next = _p1_qr[:1] if _p1_qr else _p1_free[:1]
             quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
+        else:
+            # Legacy / Phase 2: section-based QR
+            if _no_extraction and _asked_field and _asked_field not in collected:
+                qr_next = [_asked_field]
+            else:
+                qr_next = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
+
+            if _is_qr_click and not (req.quick_reply_field == "__checkpoint__"):
+                quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
+            elif DRAFT_MODE_ENABLED and _pending_after_turn:
+                quick_replies = [QuickReply(
+                    field="_draft_action",
+                    label="Angabe bestätigen",
+                    options=[
+                        QuickReplyOption(value="confirm", label="✓ Übernehmen"),
+                        QuickReplyOption(value="edit", label="✏️ Ändern"),
+                    ],
+                    multi_select=False,
+                )]
+            elif DRAFT_MODE_ENABLED and _signal == "question":
+                quick_replies = []
+            elif _is_edit_request or (_is_in_edit_mode and not _edit_applied):
+                quick_replies = []
+            else:
+                quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
 
         assistant_msg = {
             "role": "assistant",
@@ -950,11 +1284,15 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         # Check if all fields are done → send summary
         # Also regenerate summary after an edit was applied
+        # KIS-1124: Also trigger summary when user selects "Report jetzt erstellen"
+        # from the checkpoint (conversation_phase == "summary").
+        _phase_summary_requested = (_final_phase == "summary" and not _has_summary_been_sent(session))
+
         # KIS-1124-S0-BE-1: Check ALL sections, not just current, to prevent
         # premature summary when earlier-section fields (e.g. ki_hemmnisse) are missing.
         last_section = _current_section >= len(sections) - 1
         _globally_complete = False
-        if last_section and len(qr_next) == 0:
+        if last_section and not next_fields:
             _globally_complete = True
             for _si in range(len(sections)):
                 _mr, _mo = get_missing_fields(collected, _si, rt)
@@ -965,6 +1303,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _should_send_summary = (
             (all_fields_done and not _has_summary_been_sent(session))
             or _edit_applied
+            or _phase_summary_requested
         )
         if _should_send_summary:
             from services.chat_conversation import build_summary
@@ -1532,6 +1871,9 @@ def _build_session_state(
     # Draft-Pattern state (backward-compatible: old sessions without column → {})
     draft = getattr(session, 'draft_state', None) or {}
 
+    # Phase tracking (hybrid conversation model, KIS-1124)
+    ps = _get_phase_state(session)
+
     return ChatSessionState(
         session_id=session.id,
         report_type=session.report_type,
@@ -1551,6 +1893,10 @@ def _build_session_state(
         pending_field=draft.get("pending_field"),
         pending_value=draft.get("pending_value"),
         dialog_mode=draft.get("dialog_mode", False),
+        conversation_phase=ps["conversation_phase"],
+        selected_blocks=ps["selected_blocks"],
+        completed_blocks=ps["completed_blocks"],
+        current_block=ps["current_block"],
     )
 
 
