@@ -973,6 +973,7 @@ async def generate_response(
     dialog_mode: bool = False,
     help_context: str | None = None,
     next_field_qr_context: str | None = None,
+    user_profile_summary: str | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Generate streaming AI response.
@@ -1014,6 +1015,27 @@ async def generate_response(
     # Help-request context injection (field-specific explanation prompt)
     if help_context:
         system_prompt += f"\n\nHILFE-ANFRAGE:\n{help_context}"
+
+    # User profile context for adaptive questions (KIS-1123 Fix 2).
+    # Only injected when at least 2 profile fields are available.
+    if user_profile_summary:
+        system_prompt += (
+            f"\n\nBISHERIGES PROFIL DES USERS:\n"
+            f"{user_profile_summary}\n\n"
+            "PROFIL-ANPASSUNG:\n"
+            "- Ein User mit hoher KI-Kompetenz oder KI-bezogener "
+            "Hauptleistung braucht keine Grundlagen-Fragen. "
+            "Frage nach konkreten Optimierungszielen.\n"
+            "- Ein User, der selbst KI-Berater/KI-Dienstleister ist, "
+            "braucht keine Frage wie 'In welchem Bereich würden Sie "
+            "KI einsetzen?' — frage stattdessen nach dem Bereich "
+            "seines EIGENEN Geschäfts, der am meisten von "
+            "Automatisierung profitieren würde.\n"
+            "- Ein User mit niedrigem Digitalisierungsgrad braucht "
+            "einfachere Sprache und weniger Fachbegriffe.\n"
+            "- Nutze die Hauptleistung des Users, um "
+            "branchenspezifische Beispiele zu geben."
+        )
 
     # Next-field QR context for coherent transitions (KIS-1123 Fix 1).
     # Skip in dialog/help mode — Sonnet should answer the user's question,
