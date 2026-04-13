@@ -166,6 +166,7 @@ def _init_phase_state() -> dict:
         "selected_blocks": [],
         "completed_blocks": [],
         "current_block": None,
+        "block_stale_turns": 0,
     }
 
 
@@ -178,6 +179,7 @@ def _get_phase_state(session) -> dict:
         "selected_blocks": ps.get("selected_blocks", []),
         "completed_blocks": ps.get("completed_blocks", []),
         "current_block": ps.get("current_block"),
+        "block_stale_turns": ps.get("block_stale_turns", 0),
     }
 
 
@@ -448,6 +450,20 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     else:
                         log.warning("[CHAT] Checkpoint: invalid selection %r", _cp_value)
                 # Skip normal QR processing for checkpoint
+                _no_extraction = True
+
+            # --- Block transition QR handling (Phase 2 inter-block) ---
+            elif qr_field == "__block_transition__":
+                _bt_value = req.quick_reply_value
+                if _bt_value == "report":
+                    # User wants report now → skip to summary
+                    _phase_state["conversation_phase"] = "summary"
+                    log.info("[CHAT] Block transition: user chose REPORT")
+                elif _bt_value == "continue":
+                    # Continue with next block (current_block already set)
+                    _phase_state["block_stale_turns"] = 0
+                    log.info("[CHAT] Block transition: user chose CONTINUE → block %s",
+                             _phase_state.get("current_block"))
                 _no_extraction = True
 
             # --- Draft housekeeping (pre-step, only when DRAFT_MODE_ENABLED) ---
@@ -1010,6 +1026,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         # --- Phase 1: Completion check + checkpoint trigger ---
         _checkpoint_triggered = False
+        _block_just_completed = False
         if _cur_conv_phase == "phase_1" and rt == "r1":
             _missing_p1_after = [f for f in PHASE_1_FIELDS if f not in collected
                                  and not _should_skip_qr_field(f, collected)]
@@ -1055,15 +1072,60 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             _cur_block = _phase_state.get("current_block")
             if _cur_block:
                 _block_remaining = _get_block_fields(_cur_block, collected)
-                all_missing = _block_remaining
-                if _no_extraction and _asked_field and _asked_field not in collected:
-                    next_fields = [_asked_field]
-                    log.info("[CHAT] Phase 2 block %s: no extraction, keeping next_fields=[%s]", _cur_block, _asked_field)
+
+                # Stale turn tracking: increment on no extraction, reset on extraction
+                if normalized and not _no_extraction:
+                    _phase_state["block_stale_turns"] = 0
+                elif not _is_qr_click or (req.quick_reply_field == "__block_transition__"):
+                    _phase_state["block_stale_turns"] = _phase_state.get("block_stale_turns", 0) + 1
+
+                _stale = _phase_state.get("block_stale_turns", 0)
+
+                # Block completion: no remaining fields OR stale >= 2
+                if not _block_remaining or _stale >= 2:
+                    if not _block_remaining:
+                        log.info("[CHAT] Phase 2: block %s complete (all fields collected)", _cur_block)
+                    else:
+                        log.info("[CHAT] Phase 2: block %s auto-close (stale_turns=%d)", _cur_block, _stale)
+
+                    # Mark block as completed
+                    completed = _phase_state.get("completed_blocks", [])
+                    if _cur_block not in completed:
+                        completed.append(_cur_block)
+                    _phase_state["completed_blocks"] = completed
+                    _phase_state["block_stale_turns"] = 0
+
+                    # Determine next block
+                    remaining_blocks = [b for b in _phase_state.get("selected_blocks", [])
+                                        if b not in completed]
+                    if remaining_blocks:
+                        _phase_state["current_block"] = remaining_blocks[0]
+                        log.info("[CHAT] Phase 2: next block → %s", remaining_blocks[0])
+                    else:
+                        _phase_state["current_block"] = None
+                        log.info("[CHAT] Phase 2: all blocks done → summary")
+
+                    _block_just_completed = True
+                    all_missing = []
+                    next_fields = []
                 else:
-                    next_fields = _block_remaining[:1]
+                    all_missing = _block_remaining
+                    if _no_extraction and _asked_field and _asked_field not in collected:
+                        next_fields = [_asked_field]
+                        log.info("[CHAT] Phase 2 block %s: no extraction, keeping next_fields=[%s]", _cur_block, _asked_field)
+                    else:
+                        next_fields = _block_remaining[:1]
             else:
                 all_missing = []
                 next_fields = []
+
+            # Persist stale_turns update
+            if _cur_conv_phase == "phase_2":
+                db.execute(
+                    _sa_text("UPDATE chat_sessions SET phase_state = CAST(:ps AS jsonb) WHERE id = :sid"),
+                    {"ps": json.dumps(_phase_state), "sid": str(session.id)},
+                )
+                db.commit()
 
         else:
             # Legacy / Strategy: section-based next fields
@@ -1246,11 +1308,43 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 "welche Bereiche interessieren Sie besonders?"
             )
 
+        # Block completion: inject inter-block transition text
+        _block_transition_text = None
+        if _cur_conv_phase == "phase_2" and rt == "r1" and _block_just_completed:
+            _completed_label = BLOCK_LABELS.get(_cur_block, _cur_block)
+            _remaining_blocks_after = [b for b in _phase_state.get("selected_blocks", [])
+                                       if b not in _phase_state.get("completed_blocks", [])]
+            if _remaining_blocks_after:
+                _next_label = BLOCK_LABELS.get(_remaining_blocks_after[0], "")
+                _block_transition_text = (
+                    f"Bereich „{_completed_label}" abgeschlossen. "
+                    f"Sollen wir mit „{_next_label}" weitermachen, "
+                    f"oder reicht das für den Report?"
+                )
+            else:
+                # All blocks done → transition to summary
+                _phase_state["conversation_phase"] = "summary"
+                db.execute(
+                    _sa_text("UPDATE chat_sessions SET phase_state = CAST(:ps AS jsonb) WHERE id = :sid"),
+                    {"ps": json.dumps(_phase_state), "sid": str(session.id)},
+                )
+                db.commit()
+                _block_transition_text = (
+                    f"Bereich „{_completed_label}" abgeschlossen — "
+                    f"damit haben wir alle gewählten Bereiche behandelt. "
+                    f"Ich erstelle jetzt Ihre Zusammenfassung."
+                )
+
         async def _token_producer():
             try:
                 if _checkpoint_text:
                     # Checkpoint: send static text, no Sonnet call
                     await queue.put(_checkpoint_text)
+                    return
+
+                if _block_transition_text:
+                    # Block transition: send static text, no Sonnet call
+                    await queue.put(_block_transition_text)
                     return
 
                 async for token in generate_response(
@@ -1367,14 +1461,34 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             # Phase 1b: open conversation — NO QR buttons
             quick_replies = []
         elif _final_phase == "phase_2" and rt == "r1":
-            # Phase 2: block-scoped QR only
-            _cur_block = _phase_state.get("current_block")
-            _block_remaining = _get_block_fields(_cur_block, collected) if _cur_block else []
-            if _no_extraction and _asked_field and _asked_field not in collected:
-                qr_next = [_asked_field]
+            if _block_just_completed:
+                # Block just completed — show inter-block transition QR
+                _remaining_blocks_qr = [b for b in _phase_state.get("selected_blocks", [])
+                                        if b not in _phase_state.get("completed_blocks", [])]
+                if _remaining_blocks_qr:
+                    _next_b = _remaining_blocks_qr[0]
+                    quick_replies = [QuickReply(
+                        field="__block_transition__",
+                        label="Nächster Schritt",
+                        options=[
+                            QuickReplyOption(value="continue",
+                                             label=f"Weiter: {BLOCK_LABELS.get(_next_b, _next_b)}"),
+                            QuickReplyOption(value="report", label="Report erstellen"),
+                        ],
+                        multi_select=False,
+                    )]
+                else:
+                    # All blocks done → summary, no QR needed
+                    quick_replies = []
             else:
-                qr_next = _block_remaining[:1]
-            quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
+                # Phase 2: block-scoped QR only
+                _cur_block = _phase_state.get("current_block")
+                _block_remaining = _get_block_fields(_cur_block, collected) if _cur_block else []
+                if _no_extraction and _asked_field and _asked_field not in collected:
+                    qr_next = [_asked_field]
+                else:
+                    qr_next = _block_remaining[:1]
+                quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
         else:
             # Legacy / Strategy: section-based QR
             if _no_extraction and _asked_field and _asked_field not in collected:
