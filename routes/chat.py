@@ -525,11 +525,21 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # Raw SQL write — direct SET, no ORM involvement.
         # `collected` was read fresh at turn start and contains the full
         # desired state (previous fields + this turn's additions/deletions).
+        # draft_state MUST be included here — ORM assignments to
+        # session.draft_state are not reliably flushed after raw SQL commits.
+        _draft_for_sql = None
+        if DRAFT_MODE_ENABLED:
+            _draft_for_sql = json.dumps(
+                getattr(session, 'draft_state', None)
+                or {"pending_field": None, "pending_value": None, "dialog_mode": False}
+            )
+
         db.execute(
             _sa_text("""
                 UPDATE chat_sessions
                 SET collected_fields = CAST(:cf AS jsonb),
                     field_meta = CAST(:fm AS jsonb),
+                    draft_state = CAST(:ds AS jsonb),
                     updated_at = :ts
                 WHERE id = :sid
             """),
@@ -537,6 +547,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 "sid": str(session.id),
                 "cf": json.dumps(collected),
                 "fm": json.dumps(field_meta),
+                "ds": _draft_for_sql or json.dumps({}),
                 "ts": now,
             }
         )
