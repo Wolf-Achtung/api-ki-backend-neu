@@ -7,6 +7,7 @@ Streams tokens via an async generator for SSE delivery.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from typing import AsyncGenerator
@@ -130,13 +131,15 @@ zwei Antworten im Gespräch mit demselben Wort oder derselben \
 Phrase.
 
 VERBOTENE FORMULIERUNGEN (NIEMALS verwenden, auch nicht in Variationen):
-- "als KI-Berater" in JEDER Schreibweise und an JEDER Stelle im Satz \
-(Satzanfang, Satzmitte, nach Gedankenstrich — ALLES verboten). \
-Beispiele: "Als KI-Berater können Sie...", \
-"als KI-Berater haben Sie...", "Perfekt — als KI-Berater...", \
+- "als KI-Berater" — TOTAL VERBOTEN, case-insensitive. Das heißt: \
+"als KI-Berater", "Als KI-Berater", "ALS KI-BERATER", "als ki-berater" — \
+ALLES verboten. Nicht am Satzanfang, nicht in der Satzmitte, \
+nicht nach Gedankenstrich, NIRGENDWO. \
+Auch verboten: "als Ihr KI-Berater", "als erfahrener KI-Berater", \
+"als KI-Berater mit", "Perfekt — als KI-Berater...", \
 "Da Sie als KI-Berater..." — ALLES verboten.
 - Jede Formulierung die mit "Als [Branche]-Experte" oder \
-"Als [Branche]-Berater" beginnt
+"Als [Branche]-Berater" beginnt (case-insensitive)
 - "Als Solo-Berater...", "Als [Branche]...", \
 "Mit Ihrer...", "Mit KI...", "Ihre [Noun]..."
 - "Das ist eine gute/wichtige/interessante Frage"
@@ -229,10 +232,11 @@ nächsten Mal eine völlig andere Formulierung. Variieren Sie: \
 Fragesätze, kurze Fakten, direkte Ansprache, Vergleiche.
 - Die Fakten des Nutzers nur zurückspiegeln ohne Mehrwert.
 - Den bisherigen Gesprächsverlauf zusammenfassen.
-- Verwenden Sie NIEMALS „als KI-Berater" — nicht am Satzanfang, \
-nicht in der Satzmitte, nicht nach Gedankenstrich. In keiner \
-Variante („Als erfahrener KI-Berater", „als Ihr KI-Berater", \
-„als KI-Berater mit…", „Perfekt — als KI-Berater..."). \
+- NIEMALS „als KI-Berater" — case-insensitive, TOTAL VERBOTEN: \
+„als KI-Berater", „Als KI-Berater", „ALS KI-BERATER" — alles \
+verboten. Nicht am Satzanfang, nicht in der Satzmitte, nicht \
+nach Gedankenstrich. KEINE Variante: „Als erfahrener KI-Berater", \
+„als Ihr KI-Berater", „als KI-Berater mit…". \
 Gleiches gilt für „Als [Branche]...", „Als Solo-Berater..." \
 oder ähnliche Rollenwiederholungen. Der Nutzer WEISS wer er ist.
 - Beginnen Sie NIEMALS zwei aufeinanderfolgende Antworten mit \
@@ -255,9 +259,11 @@ Sie zum NÄCHSTEN Feld weiter. Ausnahme: offensichtliche Widersprüche \
 (siehe PLAUSIBILITÄTSPRÜFUNG).
 - Sagen Sie NIEMALS "Verstehen Sie!" — das klingt belehrend. \
 Verwenden Sie stattdessen "Verstanden." oder "Alles klar."
-- Beginnen Sie NICHT mehr als 2 Antworten im gesamten Gespräch \
-mit "Perfekt". Variieren Sie: "Gut.", "Alles klar.", \
-"Verstanden.", "Weiter gehts.", oder GAR KEINE Einleitung.
+- "Perfekt" ist KOMPLETT VERBOTEN — nicht als Satzanfang, nicht \
+als Einleitung, nicht mit Punkt, nicht mit Komma, nicht als \
+Teil eines Satzes. In KEINER Form. Null Verwendungen erlaubt. \
+Verwende stattdessen: "Gut.", "Klar.", "Notiert.", "Danke.", \
+oder GAR KEINE Einleitung — direkt zur nächsten Frage.
 - Sagen Sie NICHT "Perfekt, damit haben wir..." als Floskel.
 - Beginnen Sie NICHT 2 aufeinanderfolgende Antworten mit \
 demselben Wort (auch nicht "Verstanden" zweimal hintereinander).
@@ -700,13 +706,15 @@ zwei Antworten im Gespräch mit demselben Wort oder derselben \
 Phrase.
 
 VERBOTENE FORMULIERUNGEN (NIEMALS verwenden, auch nicht in Variationen):
-- "als KI-Berater" in JEDER Schreibweise und an JEDER Stelle im Satz \
-(Satzanfang, Satzmitte, nach Gedankenstrich — ALLES verboten). \
-Beispiele: "Als KI-Berater können Sie...", \
-"als KI-Berater haben Sie...", "Perfekt — als KI-Berater...", \
+- "als KI-Berater" — TOTAL VERBOTEN, case-insensitive. Das heißt: \
+"als KI-Berater", "Als KI-Berater", "ALS KI-BERATER", "als ki-berater" — \
+ALLES verboten. Nicht am Satzanfang, nicht in der Satzmitte, \
+nicht nach Gedankenstrich, NIRGENDWO. \
+Auch verboten: "als Ihr KI-Berater", "als erfahrener KI-Berater", \
+"als KI-Berater mit", "Perfekt — als KI-Berater...", \
 "Da Sie als KI-Berater..." — ALLES verboten.
 - Jede Formulierung die mit "Als [Branche]-Experte" oder \
-"Als [Branche]-Berater" beginnt
+"Als [Branche]-Berater" beginnt (case-insensitive)
 - "Als Solo-Berater...", "Als [Branche]...", \
 "Mit Ihrer...", "Mit KI...", "Ihre [Noun]..."
 - "Das ist eine gute/wichtige/interessante Frage"
@@ -772,9 +780,11 @@ das gerade beantwortet wurde. Sobald ein Wert erfasst ist, gehen \
 Sie zum NÄCHSTEN Feld weiter.
 - Sagen Sie NIEMALS "Verstehen Sie!" — das klingt belehrend. \
 Verwenden Sie stattdessen "Verstanden." oder "Alles klar."
-- Beginnen Sie NICHT mehr als 2 Antworten im gesamten Gespräch \
-mit "Perfekt". Variieren Sie: "Gut.", "Alles klar.", \
-"Verstanden.", "Weiter gehts.", oder GAR KEINE Einleitung.
+- "Perfekt" ist KOMPLETT VERBOTEN — nicht als Satzanfang, nicht \
+als Einleitung, nicht mit Punkt, nicht mit Komma, nicht als \
+Teil eines Satzes. In KEINER Form. Null Verwendungen erlaubt. \
+Verwende stattdessen: "Gut.", "Klar.", "Notiert.", "Danke.", \
+oder GAR KEINE Einleitung — direkt zur nächsten Frage.
 - Sagen Sie NICHT "Perfekt, damit haben wir..." als Floskel.
 - Beginnen Sie NICHT 2 aufeinanderfolgende Antworten mit \
 demselben Wort (auch nicht "Verstanden" zweimal hintereinander).
@@ -1279,23 +1289,40 @@ async def generate_response(
             "Gespräch. Prüfe VOR dem Schreiben ob du es schon "
             "oben verwendet hast.\n"
             "5. Maximal 1 Satz Bestätigung, dann Überleitung zur "
-            "nächsten Frage."
+            "nächsten Frage.\n"
+            "6. ABSOLUT VERBOTEN in dieser Antwort: 'Perfekt' (in "
+            "jeder Form), 'als KI-Berater' (case-insensitive)."
         )
 
     messages = build_conversation_messages(session_messages)
 
-    try:
-        async with client.messages.stream(
-            model=CONVERSATION_MODEL,
-            max_tokens=800,
-            system=system_prompt,
-            messages=messages,
-        ) as stream:
-            async for text in stream.text_stream:
-                yield text
-    except Exception as exc:
-        log.error("[CHAT-CONV] Streaming failed: %s", exc, exc_info=True)
-        yield "Entschuldigung, es gab einen Verbindungsfehler. Könnten Sie das bitte nochmal versuchen?"
+    # KIS-1124: Retry once on transient errors (timeout, connection).
+    # Content errors (invalid_request, auth) are NOT retried.
+    _RETRYABLE_ERRORS = ("timeout", "connection", "overloaded", "529", "503", "502")
+
+    async def _is_retryable(exc: Exception) -> bool:
+        exc_str = str(exc).lower()
+        return any(err in exc_str for err in _RETRYABLE_ERRORS)
+
+    for _attempt in range(2):
+        try:
+            async with client.messages.stream(
+                model=CONVERSATION_MODEL,
+                max_tokens=800,
+                system=system_prompt,
+                messages=messages,
+            ) as stream:
+                async for text in stream.text_stream:
+                    yield text
+            return  # Success — exit generator
+        except Exception as exc:
+            if _attempt == 0 and await _is_retryable(exc):
+                log.warning("[CHAT-CONV] Streaming failed (attempt 1), retrying: %s", exc)
+                await asyncio.sleep(2)  # Brief backoff before retry
+                continue
+            log.error("[CHAT-CONV] Streaming failed (attempt %d): %s", _attempt + 1, exc, exc_info=True)
+            yield "Entschuldigung, es gab einen Verbindungsfehler. Könnten Sie das bitte nochmal versuchen?"
+            return
 
 
 def _build_draft_context(
