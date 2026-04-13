@@ -893,8 +893,18 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         # Check if all fields are done → send summary
         # Also regenerate summary after an edit was applied
+        # KIS-1124-S0-BE-1: Check ALL sections, not just current, to prevent
+        # premature summary when earlier-section fields (e.g. ki_hemmnisse) are missing.
         last_section = _current_section >= len(sections) - 1
-        all_fields_done = len(qr_next) == 0 and last_section
+        _globally_complete = False
+        if last_section and len(qr_next) == 0:
+            _globally_complete = True
+            for _si in range(len(sections)):
+                _mr, _mo = get_missing_fields(collected, _si, rt)
+                if _mr or _mo:
+                    _globally_complete = False
+                    break
+        all_fields_done = last_section and _globally_complete
         _should_send_summary = (
             (all_fields_done and not _has_summary_been_sent(session))
             or _edit_applied
