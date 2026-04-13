@@ -158,6 +158,8 @@ DDL = [
     )"""),
     # FIX: draft_state column was missing — existing tables need ALTER TABLE
     text("ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS draft_state JSONB DEFAULT '{}'::jsonb"),
+    # KIS-1124 Sprint 2: phase tracking for hybrid conversation model
+    text("ALTER TABLE chat_sessions ADD COLUMN IF NOT EXISTS phase_state JSONB DEFAULT '{}'::jsonb"),
     text("CREATE INDEX IF NOT EXISTS idx_chat_sessions_status ON chat_sessions(status)"),
     text("CREATE INDEX IF NOT EXISTS idx_chat_sessions_user ON chat_sessions(user_id)"),
     text("CREATE INDEX IF NOT EXISTS idx_chat_sessions_activity ON chat_sessions(last_activity_at)"),

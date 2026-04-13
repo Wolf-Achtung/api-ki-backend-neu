@@ -66,6 +66,101 @@ log = logging.getLogger(__name__)
 # Feature flag: Draft-Pattern (Sprint 1 infra — default off)
 DRAFT_MODE_ENABLED = os.getenv("DRAFT_MODE_ENABLED", "false").lower() == "true"
 
+# ---------------------------------------------------------------------------
+# KIS-1124 Sprint 2: Hybrid Conversation Model — Phase & Block Definitions
+# ---------------------------------------------------------------------------
+
+# Phase 1 required fields — must be collected before checkpoint
+PHASE_1_FIELDS: list[str] = [
+    "branche", "unternehmensgroesse", "country", "bundesland",
+    "hauptleistung", "ki_kompetenz", "digitalisierungsgrad",
+    "ki_ziele", "investitionsbudget",
+]
+
+# Fields that need QR buttons in Phase 1 (not extractable from free text)
+PHASE_1_QR_FIELDS: set[str] = {
+    "branche", "unternehmensgroesse", "country", "bundesland",
+    "investitionsbudget",
+}
+
+# Fields that Haiku can extract from free conversation in Phase 1
+PHASE_1_EXTRACTABLE_FIELDS: set[str] = {
+    "hauptleistung", "ki_kompetenz", "digitalisierungsgrad",
+    "ki_ziele", "zielgruppen", "jahresumsatz", "ki_einsatz",
+}
+
+
+def _get_datenschutz_block_fields(branche: str) -> list[str]:
+    """Return Block D fields based on branche (Beratung → reduced set)."""
+    if branche == "beratung":
+        return ["datenschutzbeauftragter", "ai_act_kenntnis", "ki_hemmnisse"]
+    return [
+        "datenschutzbeauftragter", "technische_massnahmen",
+        "folgenabschaetzung", "meldewege", "loeschregeln",
+        "ai_act_kenntnis", "regulierte_branche", "ki_hemmnisse",
+    ]
+
+
+# Phase 2 thematic blocks
+BLOCK_FIELDS: dict[str, list[str]] = {
+    "A": [
+        "bisherige_foerdermittel", "interesse_foerderung",
+        "erfahrung_beratung", "marktposition",
+        "benchmark_wettbewerb", "risikofreude", "jahresumsatz",
+    ],
+    "B": [
+        "vision_3_jahre", "strategische_ziele", "ki_guardrails",
+        "geschaeftsmodell_evolution", "roadmap_vorhanden",
+        "change_management", "massnahmen_komplexitaet",
+        "vision_prioritaet", "innovationsprozess",
+    ],
+    "C": [
+        "automatisierungsgrad", "ki_einsatz", "anwendungsfaelle",
+        "ki_projekte", "pilot_bereich", "zeitersparnis_prioritaet",
+        "vorhandene_tools", "trainings_interessen", "zeitbudget",
+        "prozesse_papierlos",
+    ],
+    # Block D is dynamic — see _get_datenschutz_block_fields()
+}
+
+BLOCK_LABELS: dict[str, str] = {
+    "A": "Fördermittel & Budget",
+    "B": "KI-Strategie & Roadmap",
+    "C": "Tools & Automatisierung",
+    "D": "Recht & Datenschutz",
+}
+
+
+def _get_block_fields(block_id: str, collected_fields: dict) -> list[str]:
+    """Get remaining (uncollected) fields for a block."""
+    if block_id == "D":
+        branche = collected_fields.get("branche", "")
+        all_fields = _get_datenschutz_block_fields(branche)
+    else:
+        all_fields = BLOCK_FIELDS.get(block_id, [])
+    return [f for f in all_fields if f not in collected_fields]
+
+
+def _init_phase_state() -> dict:
+    """Create initial phase_state for a new R1 session."""
+    return {
+        "conversation_phase": "phase_1",
+        "selected_blocks": [],
+        "completed_blocks": [],
+        "current_block": None,
+    }
+
+
+def _get_phase_state(session) -> dict:
+    """Read phase_state from session, with safe defaults."""
+    ps = getattr(session, "phase_state", None) or {}
+    return {
+        "conversation_phase": ps.get("conversation_phase", "phase_1"),
+        "selected_blocks": ps.get("selected_blocks", []),
+        "completed_blocks": ps.get("completed_blocks", []),
+        "current_block": ps.get("current_block"),
+    }
+
 R1_WELCOME = (
     "Willkommen bei ki-sicherheit.jetzt! Ich führe Sie durch eine "
     "kurze Bestandsaufnahme — in ca. 10–15 Minuten. Am Ende erhalten "
@@ -125,6 +220,9 @@ async def chat_start(
 
     now = datetime.now(timezone.utc)
 
+    # Initialize phase_state for R1 sessions (hybrid conversation model)
+    phase_state = _init_phase_state() if req.report_type == "r1" else {}
+
     session = ChatSession(
         report_type=req.report_type,
         lang=req.lang,
@@ -138,6 +236,7 @@ async def chat_start(
         turn_count=0,
         briefing_id=req.briefing_id,
         user_id=user_id,
+        phase_state=phase_state,
     )
     db.add(session)
     db.commit()
@@ -229,7 +328,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # After db.commit() at l.202 the closure `session` object is
         # unreliable inside this async generator.
         _row = db.execute(
-            _sa_text("SELECT collected_fields, field_meta, current_section, draft_state "
+            _sa_text("SELECT collected_fields, field_meta, current_section, draft_state, phase_state "
                      "FROM chat_sessions WHERE id = :sid"),
             {"sid": str(session.id)}
         ).fetchone()
@@ -237,6 +336,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         field_meta = dict(_row[1] or {})
         _current_section = _row[2]
         _draft_state_snapshot = dict(_row[3] or {})
+        _phase_state = dict(_row[4] or {})
         log.info("[CHAT] Turn %d init: collected_keys=%s", turn, list(collected.keys()))
 
         # Draft-mode tracking variables (only meaningful when DRAFT_MODE_ENABLED)
@@ -649,6 +749,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 SET collected_fields = CAST(:cf AS jsonb),
                     field_meta = CAST(:fm AS jsonb),
                     draft_state = CAST(:ds AS jsonb),
+                    phase_state = CAST(:ps AS jsonb),
                     updated_at = :ts
                 WHERE id = :sid
             """),
@@ -657,6 +758,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 "cf": json.dumps(collected),
                 "fm": json.dumps(field_meta),
                 "ds": _draft_for_sql or json.dumps({}),
+                "ps": json.dumps(_phase_state),
                 "ts": now,
             }
         )
@@ -1532,6 +1634,9 @@ def _build_session_state(
     # Draft-Pattern state (backward-compatible: old sessions without column → {})
     draft = getattr(session, 'draft_state', None) or {}
 
+    # Phase tracking (hybrid conversation model, KIS-1124)
+    ps = _get_phase_state(session)
+
     return ChatSessionState(
         session_id=session.id,
         report_type=session.report_type,
@@ -1551,6 +1656,10 @@ def _build_session_state(
         pending_field=draft.get("pending_field"),
         pending_value=draft.get("pending_value"),
         dialog_mode=draft.get("dialog_mode", False),
+        conversation_phase=ps["conversation_phase"],
+        selected_blocks=ps["selected_blocks"],
+        completed_blocks=ps["completed_blocks"],
+        current_block=ps["current_block"],
     )
 
 

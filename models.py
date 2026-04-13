@@ -499,6 +499,9 @@ class ChatSession(Base):
     # Draft-Pattern State (Sprint 1: infra only, never written yet)
     draft_state: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
 
+    # Phase tracking (hybrid conversation model, KIS-1124 Sprint 2)
+    phase_state: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
+
     # Conversation
     messages: Mapped[list] = mapped_column(JSONType, default=list, nullable=False)
     turn_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
