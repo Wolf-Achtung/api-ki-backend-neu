@@ -102,15 +102,19 @@ PHASE_1_EXTRACTABLE_FIELDS: set[str] = {
 def _get_datenschutz_block_fields(branche: str) -> list[str]:
     """Return Block D fields based on branche (Beratung → reduced set)."""
     if branche == "beratung":
-        return ["datenschutzbeauftragter", "ai_act_kenntnis", "ki_hemmnisse"]
+        return ["datenschutzbeauftragter", "ai_act_kenntnis", "ki_hemmnisse",
+                "governance_richtlinien"]
     return [
         "datenschutzbeauftragter", "technische_massnahmen",
         "folgenabschaetzung", "meldewege", "loeschregeln",
         "ai_act_kenntnis", "regulierte_branche", "ki_hemmnisse",
+        "governance_richtlinien",
     ]
 
 
 # Phase 2 thematic blocks
+# Every R1 field must be in exactly ONE location:
+#   Phase 1a (QR), Phase 1b (open), or one Block (A/B/C/D).
 BLOCK_FIELDS: dict[str, list[str]] = {
     "A": [
         "bisherige_foerdermittel", "interesse_foerderung",
@@ -122,12 +126,16 @@ BLOCK_FIELDS: dict[str, list[str]] = {
         "geschaeftsmodell_evolution", "roadmap_vorhanden",
         "change_management", "massnahmen_komplexitaet",
         "vision_prioritaet", "innovationsprozess",
+        "zielgruppen",          # S3-BE-1: was orphan (Section 1)
     ],
     "C": [
         "automatisierungsgrad", "ki_einsatz", "anwendungsfaelle",
         "ki_projekte", "pilot_bereich", "zeitersparnis_prioritaet",
         "vorhandene_tools", "trainings_interessen", "zeitbudget",
         "prozesse_papierlos",
+        "it_infrastruktur",     # S3-BE-1: was orphan (Section 1)
+        "interne_ki_kompetenzen",  # S3-BE-1: was orphan (Section 1)
+        "datenquellen",         # S3-BE-1: was orphan (Section 1)
     ],
     # Block D is dynamic — see _get_datenschutz_block_fields()
 }
@@ -524,6 +532,15 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 _missing_p1 = [f for f in PHASE_1B_OPEN_FIELDS if f not in collected]
                 _all_missing = _missing_p1
                 asked_fields = _missing_p1[:1]
+                cur_field = asked_fields[0] if asked_fields else ""
+                cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
+                _asked_field = cur_field
+            elif _conv_phase == "phase_2" and rt == "r1":
+                # Phase 2: block-scoped extraction — only current block fields
+                _cur_block = _phase_state.get("current_block")
+                _block_remaining = _get_block_fields(_cur_block, collected) if _cur_block else []
+                _all_missing = _block_remaining
+                asked_fields = _block_remaining[:1]
                 cur_field = asked_fields[0] if asked_fields else ""
                 cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
                 _asked_field = cur_field
@@ -1033,8 +1050,23 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             all_missing = []
             next_fields = []
 
+        elif _cur_conv_phase == "phase_2" and rt == "r1":
+            # Phase 2: block-scoped fields ONLY — no orphan leakage
+            _cur_block = _phase_state.get("current_block")
+            if _cur_block:
+                _block_remaining = _get_block_fields(_cur_block, collected)
+                all_missing = _block_remaining
+                if _no_extraction and _asked_field and _asked_field not in collected:
+                    next_fields = [_asked_field]
+                    log.info("[CHAT] Phase 2 block %s: no extraction, keeping next_fields=[%s]", _cur_block, _asked_field)
+                else:
+                    next_fields = _block_remaining[:1]
+            else:
+                all_missing = []
+                next_fields = []
+
         else:
-            # Legacy / Phase 2 / Strategy: section-based next fields
+            # Legacy / Strategy: section-based next fields
             missing_req, missing_opt = get_missing_fields(collected, _current_section, rt)
             all_missing = missing_req + missing_opt
 
@@ -1324,8 +1356,17 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         elif _final_phase == "phase_1":
             # Phase 1b: open conversation — NO QR buttons
             quick_replies = []
+        elif _final_phase == "phase_2" and rt == "r1":
+            # Phase 2: block-scoped QR only
+            _cur_block = _phase_state.get("current_block")
+            _block_remaining = _get_block_fields(_cur_block, collected) if _cur_block else []
+            if _no_extraction and _asked_field and _asked_field not in collected:
+                qr_next = [_asked_field]
+            else:
+                qr_next = _block_remaining[:1]
+            quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
         else:
-            # Legacy / Phase 2: section-based QR
+            # Legacy / Strategy: section-based QR
             if _no_extraction and _asked_field and _asked_field not in collected:
                 qr_next = [_asked_field]
             else:
