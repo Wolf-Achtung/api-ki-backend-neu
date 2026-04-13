@@ -112,15 +112,22 @@ zwei Antworten im Gespräch mit demselben Wort oder derselben \
 Phrase.
 
 VERBOTENE FORMULIERUNGEN (NIEMALS verwenden, auch nicht in Variationen):
-- Jede Formulierung die mit "Als KI-Berater" beginnt — egal was danach \
-kommt ("Als KI-Berater...", "Als erfahrener KI-Berater...", \
-"Als KI-Berater mit...", "Als Ihr KI-Berater..." — ALLES verboten)
+- "als KI-Berater" in JEDER Schreibweise und an JEDER Stelle im Satz \
+(Satzanfang, Satzmitte, nach Gedankenstrich — ALLES verboten). \
+Beispiele: "Als KI-Berater können Sie...", \
+"als KI-Berater haben Sie...", "Perfekt — als KI-Berater...", \
+"Da Sie als KI-Berater..." — ALLES verboten.
 - Jede Formulierung die mit "Als [Branche]-Experte" oder \
 "Als [Branche]-Berater" beginnt
 - "Als Solo-Berater...", "Als [Branche]...", \
 "Mit Ihrer...", "Mit KI...", "Ihre [Noun]..."
 - "Das ist eine gute/wichtige/interessante Frage"
 - "Gute Frage"
+- "Eine letzte Angabe" / "Die letzte Frage" / "Zum Abschluss" / \
+"Abschließend" / "Eine letzte optionale Angabe" — diese Wörter \
+suggerieren, dass der Fragebogen fast fertig ist. Einfach die \
+Frage stellen ohne "letzte/abschließend". \
+Erlaubt: "Diese Angabe ist optional" (ohne "letzte").
 STATTDESSEN direkt inhaltlich einsteigen: Fakt, Zahl, Frage, \
 oder kurze Bestätigung ("Gut.", "Verstanden.", "Weiter.").
 
@@ -192,11 +199,12 @@ nächsten Mal eine völlig andere Formulierung. Variieren Sie: \
 Fragesätze, kurze Fakten, direkte Ansprache, Vergleiche.
 - Die Fakten des Nutzers nur zurückspiegeln ohne Mehrwert.
 - Den bisherigen Gesprächsverlauf zusammenfassen.
-- Beginnen Sie NIEMALS eine Antwort mit „Als KI-Berater" — in keiner \
-Variante (auch nicht „Als erfahrener KI-Berater", „Als Ihr KI-Berater", \
-„Als KI-Berater mit…"). Gleiches gilt für „Als [Branche]...", \
-„Als Solo-Berater..." oder ähnliche Rollenwiederholungen. \
-Der Nutzer WEISS wer er ist.
+- Verwenden Sie NIEMALS „als KI-Berater" — nicht am Satzanfang, \
+nicht in der Satzmitte, nicht nach Gedankenstrich. In keiner \
+Variante („Als erfahrener KI-Berater", „als Ihr KI-Berater", \
+„als KI-Berater mit…", „Perfekt — als KI-Berater..."). \
+Gleiches gilt für „Als [Branche]...", „Als Solo-Berater..." \
+oder ähnliche Rollenwiederholungen. Der Nutzer WEISS wer er ist.
 - Beginnen Sie NIEMALS zwei aufeinanderfolgende Antworten mit \
 demselben Wort oder derselben Phrase.
 - Starten Sie direkt mit dem inhaltlichen Impuls zur Antwort.
@@ -515,7 +523,15 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     "loeschregeln": "Lösch- und Anonymisierungsrichtlinien (Ja / Teilweise / Nein)",
     "ai_act_kenntnis": "Kenntnisse zum EU AI Act (Sehr gut / Gut / Gehört / Unbekannt)",
     "regulierte_branche": "Regulierte Branche (Gesundheit, Finanzen, Öffentlich, Recht, etc.)",
-    "ki_hemmnisse": "Hemmnisse beim KI-Einsatz (Rechtsunsicherheit, Budget, Know-how, etc.)",
+    "ki_hemmnisse": "Was bremst aktuell beim KI-Einsatz? "
+        "NICHT abstrakt 'Herausforderungen' fragen — stattdessen konkret formulieren: "
+        "'Was bremst Sie aktuell am meisten beim KI-Einsatz — Kosten, Datenschutz, "
+        "fehlende Ressourcen, oder etwas anderes?' Passe die Beispiele an die Branche an "
+        "(Beratung: API-Kosten, Qualitätskontrolle; Gesundheit: Datenschutz, Zertifizierung; "
+        "Handel: Datenqualität, Warenwirtschaft; IT: Integration, Legacy-Systeme; "
+        "Industrie: Maschinenanbindung, Datensilos). "
+        "(Mehrfachauswahl: Rechtsunsicherheit, Datenschutz, Know-how, Budget, "
+        "Teamakzeptanz, Zeitmangel, IT-Integration, Keine, Andere)",
     # Sektion 7
     "bisherige_foerdermittel": "Bereits Fördermittel erhalten (Ja / Nein)",
     "interesse_foerderung": "Interesse an Fördermöglichkeiten (Ja / Nein / Unklar)",
@@ -630,15 +646,22 @@ zwei Antworten im Gespräch mit demselben Wort oder derselben \
 Phrase.
 
 VERBOTENE FORMULIERUNGEN (NIEMALS verwenden, auch nicht in Variationen):
-- Jede Formulierung die mit "Als KI-Berater" beginnt — egal was danach \
-kommt ("Als KI-Berater...", "Als erfahrener KI-Berater...", \
-"Als KI-Berater mit...", "Als Ihr KI-Berater..." — ALLES verboten)
+- "als KI-Berater" in JEDER Schreibweise und an JEDER Stelle im Satz \
+(Satzanfang, Satzmitte, nach Gedankenstrich — ALLES verboten). \
+Beispiele: "Als KI-Berater können Sie...", \
+"als KI-Berater haben Sie...", "Perfekt — als KI-Berater...", \
+"Da Sie als KI-Berater..." — ALLES verboten.
 - Jede Formulierung die mit "Als [Branche]-Experte" oder \
 "Als [Branche]-Berater" beginnt
 - "Als Solo-Berater...", "Als [Branche]...", \
 "Mit Ihrer...", "Mit KI...", "Ihre [Noun]..."
 - "Das ist eine gute/wichtige/interessante Frage"
 - "Gute Frage"
+- "Eine letzte Angabe" / "Die letzte Frage" / "Zum Abschluss" / \
+"Abschließend" / "Eine letzte optionale Angabe" — diese Wörter \
+suggerieren, dass der Fragebogen fast fertig ist. Einfach die \
+Frage stellen ohne "letzte/abschließend". \
+Erlaubt: "Diese Angabe ist optional" (ohne "letzte").
 STATTDESSEN direkt inhaltlich einsteigen: Fakt, Zahl, Frage, \
 oder kurze Bestätigung ("Gut.", "Verstanden.", "Weiter.").
 
@@ -984,7 +1007,8 @@ async def generate_response(
 
     # Draft-mode context injection (also used in legacy mode for dialog_mode)
     if draft_mode or dialog_mode:
-        system_prompt += _build_draft_context(pending_field, pending_value, dialog_mode)
+        _current_field = next_fields[0] if next_fields else None
+        system_prompt += _build_draft_context(pending_field, pending_value, dialog_mode, _current_field)
 
     # Help-request context injection (field-specific explanation prompt)
     if help_context:
@@ -1010,13 +1034,30 @@ def _build_draft_context(
     pending_field: str | None,
     pending_value: object,
     dialog_mode: bool,
+    current_field: str | None = None,
 ) -> str:
     """Build the draft-mode context block for the system prompt."""
     if dialog_mode and not pending_field:
-        return """
+        # Build current-field hint so Sonnet ties follow-ups to the right topic
+        field_hint = ""
+        if current_field:
+            desc = FIELD_DESCRIPTIONS.get(current_field, current_field)
+            label = desc.split("(")[0].strip() if desc else current_field
+            field_hint = (
+                f"\n\nAKTUELLES FELD: {current_field}"
+                f"\nFELD-LABEL: {label}"
+                f"\nFELD-BESCHREIBUNG: {desc}"
+                f"\n\nWenn der Nutzer nachfragt (\"was meinst du?\", \"wie ist das gemeint?\", "
+                f"\"kannst du das erklären?\"):"
+                f"\n- Beziehe die Rückfrage IMMER auf das AKTUELLE FELD (oben), "
+                f"NICHT auf vorherige Themen."
+                f"\n- Auch wenn deine letzte Nachricht mehrere Themen enthielt: "
+                f"Die Rückfrage bezieht sich auf die LETZTE GESTELLTE FRAGE."
+            )
+        return f"""
 
 AKTUELLER MODUS: DIALOG
-Der Nutzer hat eine Rückfrage zum aktuellen Thema gestellt.
+Der Nutzer hat eine Rückfrage zum aktuellen Thema gestellt.{field_hint}
 
 REGELN FÜR DIESEN MODUS:
 - Beantworten Sie die Frage hilfreich, konkret und mit Branchenbezug.
