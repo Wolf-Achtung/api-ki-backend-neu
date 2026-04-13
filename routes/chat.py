@@ -79,7 +79,8 @@ PHASE_1_FIELDS: list[str] = [
 
 # Phase 1a: QR fields collected sequentially (ordered)
 PHASE_1A_QR_FIELDS: list[str] = [
-    "branche", "unternehmensgroesse", "country", "bundesland",
+    "branche", "unternehmensgroesse", "selbststaendig",
+    "country", "bundesland",
     "investitionsbudget",
 ]
 
@@ -172,15 +173,24 @@ def _get_phase_state(session) -> dict:
     }
 
 
+def _should_skip_qr_field(field: str, collected: dict) -> bool:
+    """Check if a Phase 1a QR field should be skipped due to conditionals."""
+    if field == "bundesland" and collected.get("country") not in ("DE", "AT"):
+        return True
+    if field == "selbststaendig" and collected.get("unternehmensgroesse") != "1":
+        return True
+    return False
+
+
 def _is_phase_1a(phase_state: dict, collected: dict) -> bool:
     """Check if we're in Phase 1a (QR fields still missing)."""
     if phase_state.get("conversation_phase") != "phase_1":
         return False
     if phase_state.get("phase_1_qr_complete"):
         return False
-    # Check if any QR fields are still missing
+    # Check if any QR fields are still missing (skip conditional fields)
     return any(f not in collected for f in PHASE_1A_QR_FIELDS
-               if f != "bundesland" or collected.get("country") in ("DE", "AT"))
+               if not _should_skip_qr_field(f, collected))
 
 
 def _is_phase_1b(phase_state: dict, collected: dict) -> bool:
@@ -193,8 +203,7 @@ def _is_phase_1b(phase_state: dict, collected: dict) -> bool:
 def _get_next_phase_1a_field(collected: dict) -> str | None:
     """Get the next QR field in Phase 1a sequence."""
     for f in PHASE_1A_QR_FIELDS:
-        # Skip bundesland if country is not DE or AT
-        if f == "bundesland" and collected.get("country") not in ("DE", "AT"):
+        if _should_skip_qr_field(f, collected):
             continue
         if f not in collected:
             return f
