@@ -561,8 +561,30 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _SENTINEL = object()
         queue: asyncio.Queue = asyncio.Queue()
 
-        # Draft context for Sonnet
-        _ds = dict(_draft_state_snapshot)
+        # Draft context for Sonnet — must reflect THIS turn's state,
+        # not the snapshot from turn start.
+        if DRAFT_MODE_ENABLED and _draft_new_field:
+            # New draft created this turn → tell Sonnet to confirm
+            _sonnet_pending_field = _draft_new_field
+            _sonnet_pending_value = _draft_new_value
+            _sonnet_dialog_mode = False
+        elif DRAFT_MODE_ENABLED and _signal == "question":
+            # User asked a question → dialog mode, keep existing draft
+            _sonnet_pending_field = _draft_state_snapshot.get("pending_field")
+            _sonnet_pending_value = _draft_state_snapshot.get("pending_value")
+            _sonnet_dialog_mode = True
+        elif DRAFT_MODE_ENABLED and _draft_confirmed_field:
+            # Draft was just confirmed → no pending, ask next question
+            _sonnet_pending_field = None
+            _sonnet_pending_value = None
+            _sonnet_dialog_mode = False
+        else:
+            # No change → use snapshot (covers: no draft mode, or
+            # existing pending draft carried over from previous turn)
+            _ds = dict(_draft_state_snapshot)
+            _sonnet_pending_field = _ds.get("pending_field")
+            _sonnet_pending_value = _ds.get("pending_value")
+            _sonnet_dialog_mode = _ds.get("dialog_mode", False)
 
         async def _token_producer():
             try:
@@ -574,9 +596,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     section=current_section,
                     report_type=rt,
                     draft_mode=DRAFT_MODE_ENABLED,
-                    pending_field=_ds.get("pending_field"),
-                    pending_value=_ds.get("pending_value"),
-                    dialog_mode=_ds.get("dialog_mode", False),
+                    pending_field=_sonnet_pending_field,
+                    pending_value=_sonnet_pending_value,
+                    dialog_mode=_sonnet_dialog_mode,
                 ):
                     await queue.put(token)
             except Exception as exc:
