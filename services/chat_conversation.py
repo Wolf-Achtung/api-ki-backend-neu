@@ -972,6 +972,7 @@ async def generate_response(
     pending_value: object = None,
     dialog_mode: bool = False,
     help_context: str | None = None,
+    next_field_qr_context: str | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Generate streaming AI response.
@@ -1013,6 +1014,27 @@ async def generate_response(
     # Help-request context injection (field-specific explanation prompt)
     if help_context:
         system_prompt += f"\n\nHILFE-ANFRAGE:\n{help_context}"
+
+    # Next-field QR context for coherent transitions (KIS-1123 Fix 1).
+    # Skip in dialog/help mode — Sonnet should answer the user's question,
+    # not transition to the next field.
+    if next_field_qr_context and not dialog_mode and not help_context:
+        system_prompt += (
+            f"\n\nNÄCHSTES FELD (für deine Überleitung):\n"
+            f"{next_field_qr_context}\n\n"
+            "ÜBERLEITUNG-REGEL:\n"
+            "- Beende deine Antwort mit einer natürlichen Überleitung "
+            "zum nächsten Feld.\n"
+            "- Wenn das nächste Feld QR-Buttons hat: Stelle KEINE offene "
+            "Frage zu einem anderen Thema. Leite stattdessen zum "
+            "QR-Thema über.\n"
+            "- Formuliere die Überleitung so, dass sie zum nächsten Feld "
+            "passt, NICHT zum vorherigen.\n"
+            "- NIEMALS eine offene Frage stellen, wenn darunter "
+            "QR-Buttons zu einem anderen Thema erscheinen.\n"
+            "- Bei Mehrfachauswahl-Feldern: Erwähne dass mehrere "
+            "Optionen gewählt werden können."
+        )
 
     messages = build_conversation_messages(session_messages)
 
