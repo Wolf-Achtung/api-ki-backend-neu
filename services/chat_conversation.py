@@ -130,13 +130,15 @@ zwei Antworten im Gespräch mit demselben Wort oder derselben \
 Phrase.
 
 VERBOTENE FORMULIERUNGEN (NIEMALS verwenden, auch nicht in Variationen):
-- "als KI-Berater" in JEDER Schreibweise und an JEDER Stelle im Satz \
-(Satzanfang, Satzmitte, nach Gedankenstrich — ALLES verboten). \
-Beispiele: "Als KI-Berater können Sie...", \
-"als KI-Berater haben Sie...", "Perfekt — als KI-Berater...", \
+- "als KI-Berater" — TOTAL VERBOTEN, case-insensitive. Das heißt: \
+"als KI-Berater", "Als KI-Berater", "ALS KI-BERATER", "als ki-berater" — \
+ALLES verboten. Nicht am Satzanfang, nicht in der Satzmitte, \
+nicht nach Gedankenstrich, NIRGENDWO. \
+Auch verboten: "als Ihr KI-Berater", "als erfahrener KI-Berater", \
+"als KI-Berater mit", "Perfekt — als KI-Berater...", \
 "Da Sie als KI-Berater..." — ALLES verboten.
 - Jede Formulierung die mit "Als [Branche]-Experte" oder \
-"Als [Branche]-Berater" beginnt
+"Als [Branche]-Berater" beginnt (case-insensitive)
 - "Als Solo-Berater...", "Als [Branche]...", \
 "Mit Ihrer...", "Mit KI...", "Ihre [Noun]..."
 - "Das ist eine gute/wichtige/interessante Frage"
@@ -229,10 +231,11 @@ nächsten Mal eine völlig andere Formulierung. Variieren Sie: \
 Fragesätze, kurze Fakten, direkte Ansprache, Vergleiche.
 - Die Fakten des Nutzers nur zurückspiegeln ohne Mehrwert.
 - Den bisherigen Gesprächsverlauf zusammenfassen.
-- Verwenden Sie NIEMALS „als KI-Berater" — nicht am Satzanfang, \
-nicht in der Satzmitte, nicht nach Gedankenstrich. In keiner \
-Variante („Als erfahrener KI-Berater", „als Ihr KI-Berater", \
-„als KI-Berater mit…", „Perfekt — als KI-Berater..."). \
+- NIEMALS „als KI-Berater" — case-insensitive, TOTAL VERBOTEN: \
+„als KI-Berater", „Als KI-Berater", „ALS KI-BERATER" — alles \
+verboten. Nicht am Satzanfang, nicht in der Satzmitte, nicht \
+nach Gedankenstrich. KEINE Variante: „Als erfahrener KI-Berater", \
+„als Ihr KI-Berater", „als KI-Berater mit…". \
 Gleiches gilt für „Als [Branche]...", „Als Solo-Berater..." \
 oder ähnliche Rollenwiederholungen. Der Nutzer WEISS wer er ist.
 - Beginnen Sie NIEMALS zwei aufeinanderfolgende Antworten mit \
@@ -255,9 +258,11 @@ Sie zum NÄCHSTEN Feld weiter. Ausnahme: offensichtliche Widersprüche \
 (siehe PLAUSIBILITÄTSPRÜFUNG).
 - Sagen Sie NIEMALS "Verstehen Sie!" — das klingt belehrend. \
 Verwenden Sie stattdessen "Verstanden." oder "Alles klar."
-- Beginnen Sie NICHT mehr als 2 Antworten im gesamten Gespräch \
-mit "Perfekt". Variieren Sie: "Gut.", "Alles klar.", \
-"Verstanden.", "Weiter gehts.", oder GAR KEINE Einleitung.
+- "Perfekt" ist KOMPLETT VERBOTEN — nicht als Satzanfang, nicht \
+als Einleitung, nicht mit Punkt, nicht mit Komma, nicht als \
+Teil eines Satzes. In KEINER Form. Null Verwendungen erlaubt. \
+Verwende stattdessen: "Gut.", "Klar.", "Notiert.", "Danke.", \
+oder GAR KEINE Einleitung — direkt zur nächsten Frage.
 - Sagen Sie NICHT "Perfekt, damit haben wir..." als Floskel.
 - Beginnen Sie NICHT 2 aufeinanderfolgende Antworten mit \
 demselben Wort (auch nicht "Verstanden" zweimal hintereinander).
@@ -700,13 +705,15 @@ zwei Antworten im Gespräch mit demselben Wort oder derselben \
 Phrase.
 
 VERBOTENE FORMULIERUNGEN (NIEMALS verwenden, auch nicht in Variationen):
-- "als KI-Berater" in JEDER Schreibweise und an JEDER Stelle im Satz \
-(Satzanfang, Satzmitte, nach Gedankenstrich — ALLES verboten). \
-Beispiele: "Als KI-Berater können Sie...", \
-"als KI-Berater haben Sie...", "Perfekt — als KI-Berater...", \
+- "als KI-Berater" — TOTAL VERBOTEN, case-insensitive. Das heißt: \
+"als KI-Berater", "Als KI-Berater", "ALS KI-BERATER", "als ki-berater" — \
+ALLES verboten. Nicht am Satzanfang, nicht in der Satzmitte, \
+nicht nach Gedankenstrich, NIRGENDWO. \
+Auch verboten: "als Ihr KI-Berater", "als erfahrener KI-Berater", \
+"als KI-Berater mit", "Perfekt — als KI-Berater...", \
 "Da Sie als KI-Berater..." — ALLES verboten.
 - Jede Formulierung die mit "Als [Branche]-Experte" oder \
-"Als [Branche]-Berater" beginnt
+"Als [Branche]-Berater" beginnt (case-insensitive)
 - "Als Solo-Berater...", "Als [Branche]...", \
 "Mit Ihrer...", "Mit KI...", "Ihre [Noun]..."
 - "Das ist eine gute/wichtige/interessante Frage"
@@ -772,9 +779,11 @@ das gerade beantwortet wurde. Sobald ein Wert erfasst ist, gehen \
 Sie zum NÄCHSTEN Feld weiter.
 - Sagen Sie NIEMALS "Verstehen Sie!" — das klingt belehrend. \
 Verwenden Sie stattdessen "Verstanden." oder "Alles klar."
-- Beginnen Sie NICHT mehr als 2 Antworten im gesamten Gespräch \
-mit "Perfekt". Variieren Sie: "Gut.", "Alles klar.", \
-"Verstanden.", "Weiter gehts.", oder GAR KEINE Einleitung.
+- "Perfekt" ist KOMPLETT VERBOTEN — nicht als Satzanfang, nicht \
+als Einleitung, nicht mit Punkt, nicht mit Komma, nicht als \
+Teil eines Satzes. In KEINER Form. Null Verwendungen erlaubt. \
+Verwende stattdessen: "Gut.", "Klar.", "Notiert.", "Danke.", \
+oder GAR KEINE Einleitung — direkt zur nächsten Frage.
 - Sagen Sie NICHT "Perfekt, damit haben wir..." als Floskel.
 - Beginnen Sie NICHT 2 aufeinanderfolgende Antworten mit \
 demselben Wort (auch nicht "Verstanden" zweimal hintereinander).
@@ -1152,7 +1161,9 @@ async def generate_response(
             "Gespräch. Prüfe VOR dem Schreiben ob du es schon "
             "oben verwendet hast.\n"
             "5. Maximal 1 Satz Bestätigung, dann Überleitung zur "
-            "nächsten Frage."
+            "nächsten Frage.\n"
+            "6. ABSOLUT VERBOTEN in dieser Antwort: 'Perfekt' (in "
+            "jeder Form), 'als KI-Berater' (case-insensitive)."
         )
 
     messages = build_conversation_messages(session_messages)
