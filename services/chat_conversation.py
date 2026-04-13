@@ -7,6 +7,7 @@ Streams tokens via an async generator for SSE delivery.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from typing import AsyncGenerator
@@ -1168,18 +1169,33 @@ async def generate_response(
 
     messages = build_conversation_messages(session_messages)
 
-    try:
-        async with client.messages.stream(
-            model=CONVERSATION_MODEL,
-            max_tokens=800,
-            system=system_prompt,
-            messages=messages,
-        ) as stream:
-            async for text in stream.text_stream:
-                yield text
-    except Exception as exc:
-        log.error("[CHAT-CONV] Streaming failed: %s", exc, exc_info=True)
-        yield "Entschuldigung, es gab einen Verbindungsfehler. Könnten Sie das bitte nochmal versuchen?"
+    # KIS-1124: Retry once on transient errors (timeout, connection).
+    # Content errors (invalid_request, auth) are NOT retried.
+    _RETRYABLE_ERRORS = ("timeout", "connection", "overloaded", "529", "503", "502")
+
+    async def _is_retryable(exc: Exception) -> bool:
+        exc_str = str(exc).lower()
+        return any(err in exc_str for err in _RETRYABLE_ERRORS)
+
+    for _attempt in range(2):
+        try:
+            async with client.messages.stream(
+                model=CONVERSATION_MODEL,
+                max_tokens=800,
+                system=system_prompt,
+                messages=messages,
+            ) as stream:
+                async for text in stream.text_stream:
+                    yield text
+            return  # Success — exit generator
+        except Exception as exc:
+            if _attempt == 0 and await _is_retryable(exc):
+                log.warning("[CHAT-CONV] Streaming failed (attempt 1), retrying: %s", exc)
+                await asyncio.sleep(2)  # Brief backoff before retry
+                continue
+            log.error("[CHAT-CONV] Streaming failed (attempt %d): %s", _attempt + 1, exc, exc_info=True)
+            yield "Entschuldigung, es gab einen Verbindungsfehler. Könnten Sie das bitte nochmal versuchen?"
+            return
 
 
 def _build_draft_context(
