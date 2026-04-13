@@ -272,6 +272,12 @@ VERBOTEN: "Das ist eine solide Basis", "Gute Wahl", \
 ERLAUBT (selten): "Mit Digitalisierungsgrad 9 können Sie \
 KI-Automatisierung ohne große Vorarbeit einsetzen." \
 Im Zweifel: NICHT loben, sondern einen nützlichen Fakt liefern.
+- ERWEITERTE MUSTER-BLACKLIST (strukturelle Wiederholungen): \
+"Bei Ihrer Expertise" (zu repetitiv), \
+"eine starke Basis" / "eine solide Basis" / "eine gute Basis" \
+(generisches Lob — nie verwenden), \
+"das macht die Umsetzung" (Floskel). \
+Formulieren Sie stattdessen immer einen NEUEN, konkreten Satz.
 
 PLAUSIBILITÄTSPRÜFUNG:
 - Wenn die Hauptleistung des Nutzers KI-bezogen ist (KI-Beratung, \
@@ -782,6 +788,12 @@ VERBOTEN: "Das ist eine solide Basis", "Gute Wahl", \
 ERLAUBT (selten): "Mit Digitalisierungsgrad 9 können Sie \
 KI-Automatisierung ohne große Vorarbeit einsetzen." \
 Im Zweifel: NICHT loben, sondern einen nützlichen Fakt liefern.
+- ERWEITERTE MUSTER-BLACKLIST (strukturelle Wiederholungen): \
+"Bei Ihrer Expertise" (zu repetitiv), \
+"eine starke Basis" / "eine solide Basis" / "eine gute Basis" \
+(generisches Lob — nie verwenden), \
+"das macht die Umsetzung" (Floskel). \
+Formulieren Sie stattdessen immer einen NEUEN, konkreten Satz.
 
 EXPERTISE-ADAPTION:
 - Wenn die Hauptleistung des Nutzers KI-bezogen ist (KI-Beratung, \
