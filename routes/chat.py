@@ -174,6 +174,62 @@ _FIELD_DEFAULTS: dict[str, object] = {
 }
 
 
+# KIS-1124 Sprint 4 S4-BE-2: Conservative defaults for fields in blocks that
+# the user chose NOT to survey.  These are injected at _complete_r1 time so
+# the report pipeline receives plausible, non-hallucinated values.
+# Fields set to None are intentionally omitted → pipeline produces shorter /
+# "recommend deepening" sections.
+_REPORT_BLOCK_DEFAULTS: dict[str, dict[str, object]] = {
+    "A": {
+        "bisherige_foerdermittel": "nein",
+        "interesse_foerderung": "unklar",
+        "erfahrung_beratung": "unklar",
+        "marktposition": "unsicher",
+        "benchmark_wettbewerb": "selten",
+        "risikofreude": 3,
+        "jahresumsatz": None,   # omit — no guessing revenue
+    },
+    "B": {
+        "vision_3_jahre": None,              # omit — pipeline skips section
+        "strategische_ziele": None,          # omit
+        "ki_guardrails": None,               # omit
+        "geschaeftsmodell_evolution": None,   # omit
+        "roadmap_vorhanden": "nein",
+        "change_management": "mittel",
+        "massnahmen_komplexitaet": "unklar",
+        "vision_prioritaet": None,           # omit
+        "innovationsprozess": None,          # omit
+        "zielgruppen": None,                 # omit
+    },
+    "C": {
+        "automatisierungsgrad": "mittel",
+        "ki_einsatz": "nein",
+        "anwendungsfaelle": None,            # omit
+        "ki_projekte": None,                 # omit
+        "pilot_bereich": None,               # omit
+        "zeitersparnis_prioritaet": None,    # omit
+        "vorhandene_tools": None,            # omit
+        "trainings_interessen": None,        # omit
+        "zeitbudget": None,                  # omit
+        "prozesse_papierlos": None,          # omit
+        "it_infrastruktur": "unklar",
+        "interne_ki_kompetenzen": "nein",
+        "datenquellen": None,               # omit
+    },
+    "D": {
+        "datenschutzbeauftragter": None,     # omit
+        "technische_massnahmen": None,       # omit
+        "folgenabschaetzung": None,          # omit
+        "meldewege": None,                   # omit
+        "loeschregeln": None,                # omit
+        "ai_act_kenntnis": "nein",
+        "regulierte_branche": None,          # omit
+        "ki_hemmnisse": None,                # omit
+        "governance_richtlinien": "nein",
+    },
+}
+
+
 def _get_block_fields(block_id: str, collected_fields: dict) -> list[str]:
     """Get remaining (uncollected) fields for a block."""
     if block_id == "D":
@@ -2263,6 +2319,24 @@ def _complete_r1(
     """Complete R1 chat: create a Briefing for the report pipeline."""
     answers = dict(collected)
     answers["datenschutz"] = True  # consent given at chat start
+
+    # KIS-1124 Sprint 4 S4-BE-2: Apply conservative defaults for blocks
+    # that the user chose not to survey.  Only non-None defaults are written;
+    # None means "intentionally omit → pipeline produces shorter section".
+    ps = session.phase_state or {}
+    surveyed_blocks = ps.get("selected_blocks", [])
+    all_blocks = ["A", "B", "C", "D"]
+    unsurveyed = [b for b in all_blocks if b not in surveyed_blocks]
+    for block_id in unsurveyed:
+        defaults = _REPORT_BLOCK_DEFAULTS.get(block_id, {})
+        for field, default_val in defaults.items():
+            if field not in answers and default_val is not None:
+                answers[field] = default_val
+    # Pass metadata so the report pipeline knows which areas were surveyed
+    if unsurveyed:
+        answers["_chat_unsurveyed_blocks"] = unsurveyed
+        answers["_chat_surveyed_blocks"] = surveyed_blocks
+        log.info("[CHAT] Complete R1: unsurveyed blocks %s → defaults applied", unsurveyed)
 
     # Extract user from JWT — user_id may already be set from /start
     user_id, user_email = _resolve_user(request, db)
