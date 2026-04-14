@@ -241,6 +241,57 @@ def _get_block_fields(block_id: str, collected_fields: dict) -> list[str]:
     return [f for f in all_fields if f not in collected_fields]
 
 
+# ---------------------------------------------------------------------------
+# KIS-1128C V6-BE-1: Smart Skip — derive answers for redundant Block C fields
+# ---------------------------------------------------------------------------
+
+# Mapping: single anwendungsfall → obvious pilot_bereich
+_ANWENDUNG_TO_PILOT: dict[str, str] = {
+    "chatbot": "kundenservice",
+    "content_generation": "marketing",
+    "datenanalyse": "verwaltung",
+    "prozess_automation": "verwaltung",
+    "dokumentenanalyse": "verwaltung",
+    "qualitaetskontrolle": "produktion",
+}
+
+
+def _smart_skip_field(field: str, collected: dict) -> str | None:
+    """Return a derived default if *field* can be inferred, else None (= ask).
+
+    Only called for Phase 2 block fields. Every derived value must be
+    report-quality — never "keine_angabe".
+    """
+    digi = collected.get("digitalisierungsgrad")
+    ki_komp = collected.get("ki_kompetenz", "")
+    groesse = collected.get("unternehmensgroesse", "")
+    anwendungen = collected.get("anwendungsfaelle")
+
+    # High digitisation → paperless is nearly 100%
+    if field == "prozesse_papierlos" and digi is not None:
+        try:
+            if int(digi) >= 8:
+                return "81-100"
+        except (ValueError, TypeError):
+            pass
+
+    # Solo entrepreneur → no internal KI team
+    if field == "interne_ki_kompetenzen" and groesse == "1":
+        return "nein"
+
+    # Single use-case → obvious pilot area
+    if field == "pilot_bereich" and isinstance(anwendungen, list) and len(anwendungen) == 1:
+        mapped = _ANWENDUNG_TO_PILOT.get(anwendungen[0])
+        if mapped:
+            return mapped
+
+    # High KI competence → high expansion potential (trivially derivable)
+    if field == "ki_ausbau_potenzial" and ki_komp == "hoch":
+        return "hoch"
+
+    return None
+
+
 def _init_phase_state() -> dict:
     """Create initial phase_state for a new R1 session."""
     return {
@@ -1327,6 +1378,21 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         {"cf": json.dumps(collected), "sid": str(session.id)},
                     )
                     # Re-compute remaining after force-defaults
+                    _block_remaining = _get_block_fields(_cur_block, collected)
+
+                # KIS-1128C V6-BE-1: Smart Skip — auto-fill derivable fields
+                _smart_skipped = False
+                for _ss_field in list(_block_remaining):
+                    _ss_value = _smart_skip_field(_ss_field, collected)
+                    if _ss_value is not None:
+                        collected[_ss_field] = _ss_value
+                        _smart_skipped = True
+                        log.info("[CHAT] SMART SKIP: %s=%s (derived)", _ss_field, _ss_value)
+                if _smart_skipped:
+                    db.execute(
+                        _sa_text("UPDATE chat_sessions SET collected_fields = CAST(:cf AS jsonb) WHERE id = :sid"),
+                        {"cf": json.dumps(collected), "sid": str(session.id)},
+                    )
                     _block_remaining = _get_block_fields(_cur_block, collected)
 
                 # Stale turn tracking: increment on no extraction, reset on extraction
