@@ -2658,6 +2658,12 @@ def _build_session_state(
 
     section_name: str = section["name"]
 
+    # Draft-Pattern state (backward-compatible: old sessions without column → {})
+    draft = getattr(session, 'draft_state', None) or {}
+
+    # Phase tracking (hybrid conversation model, KIS-1124)
+    ps = _get_phase_state(session)
+
     # is_completable: after summary has been sent.
     # KIS-1124-HOTFIX: In the hybrid Phase 2 model, unsurveyed blocks have
     # empty fields that get defaults at /complete time. So we can't require
@@ -2668,12 +2674,6 @@ def _build_session_state(
     summary_sent = _has_summary_been_sent(session)
     _in_summary_phase = ps["conversation_phase"] == "summary"
     completable = summary_sent and (all_done or _in_summary_phase)
-
-    # Draft-Pattern state (backward-compatible: old sessions without column → {})
-    draft = getattr(session, 'draft_state', None) or {}
-
-    # Phase tracking (hybrid conversation model, KIS-1124)
-    ps = _get_phase_state(session)
 
     # KIS-1124: Unsurveyed note — only in summary phase when blocks were skipped
     unsurveyed_note: str | None = None
