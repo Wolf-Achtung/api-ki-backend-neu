@@ -149,6 +149,31 @@ BLOCK_LABELS: dict[str, str] = {
 }
 
 
+# KIS-1124 Testrun 6 Fix 2: Conservative defaults for fields that couldn't
+# be extracted after 2 attempts. Better to move on than loop.
+_FIELD_DEFAULTS: dict[str, object] = {
+    "marktposition": "unsicher",
+    "benchmark_wettbewerb": "selten",
+    "risikofreude": 3,  # Midpoint of 1-5
+    "bisherige_foerdermittel": "nein",
+    "interesse_foerderung": "unklar",
+    "erfahrung_beratung": "unklar",
+    "roadmap_vorhanden": "nein",
+    "governance_richtlinien": "nein",
+    "massnahmen_komplexitaet": "unklar",
+    "change_management": "mittel",
+    "datenschutzbeauftragter": "nein",
+    "technische_massnahmen": "teilweise",
+    "folgenabschaetzung": "nein",
+    "meldewege": "nein",
+    "loeschregeln": "nein",
+    "ai_act_kenntnis": "unbekannt",
+    "automatisierungsgrad": "mittel",
+    "it_infrastruktur": "unklar",
+    "interne_ki_kompetenzen": "nein",
+}
+
+
 def _get_block_fields(block_id: str, collected_fields: dict) -> list[str]:
     """Get remaining (uncollected) fields for a block."""
     if block_id == "D":
@@ -171,6 +196,7 @@ def _init_phase_state() -> dict:
         "phase_1b_asked_fields": [],   # KIS-1124 Testrun-Fix Bug 7
         "block_asked_fields": [],      # KIS-1124 Testrun-Fix Bug 8
         "phase_1b_turn_count": 0,      # KIS-1124 Testrun 5 safeguard
+        "field_ask_counts": {},        # KIS-1124 Testrun 6 per-field safeguard
     }
 
 
@@ -187,6 +213,7 @@ def _get_phase_state(session) -> dict:
         "phase_1b_asked_fields": ps.get("phase_1b_asked_fields", []),
         "block_asked_fields": ps.get("block_asked_fields", []),
         "phase_1b_turn_count": ps.get("phase_1b_turn_count", 0),
+        "field_ask_counts": ps.get("field_ask_counts", {}),
     }
 
 
@@ -1181,6 +1208,39 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     _block_asked.append(_asked_field)
                     _phase_state["block_asked_fields"] = _block_asked
 
+                # KIS-1124 Testrun 6 Fix 2: Per-field ask count tracking.
+                # If the same field was asked 2× without extraction → force-default.
+                _field_ask_counts: dict = _phase_state.get("field_ask_counts", {})
+                if _asked_field and _asked_field not in collected:
+                    _field_ask_counts[_asked_field] = _field_ask_counts.get(_asked_field, 0) + 1
+                    _phase_state["field_ask_counts"] = _field_ask_counts
+                elif _asked_field and _asked_field in collected:
+                    # Field was just collected → reset its count
+                    _field_ask_counts.pop(_asked_field, None)
+
+                # Force-default for fields asked ≥2× without success
+                _force_defaulted = False
+                for _fd_field, _fd_count in list(_field_ask_counts.items()):
+                    if _fd_count >= 2 and _fd_field not in collected:
+                        _default = _FIELD_DEFAULTS.get(_fd_field, "keine_angabe")
+                        collected[_fd_field] = _default
+                        log.warning(
+                            "[CHAT] Phase 2 field safeguard: %s asked %d× without "
+                            "extraction — defaulting to '%s'",
+                            _fd_field, _fd_count, _default,
+                        )
+                        _force_defaulted = True
+                        _field_ask_counts.pop(_fd_field, None)
+                if _force_defaulted:
+                    _phase_state["field_ask_counts"] = _field_ask_counts
+                    # Persist force-defaulted collected fields
+                    db.execute(
+                        _sa_text("UPDATE chat_sessions SET collected_fields = CAST(:cf AS jsonb) WHERE id = :sid"),
+                        {"cf": json.dumps(collected), "sid": str(session.id)},
+                    )
+                    # Re-compute remaining after force-defaults
+                    _block_remaining = _get_block_fields(_cur_block, collected)
+
                 # Stale turn tracking: increment on no extraction, reset on extraction
                 if normalized and not _no_extraction:
                     _phase_state["block_stale_turns"] = 0
@@ -1217,6 +1277,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     _phase_state["completed_blocks"] = completed
                     _phase_state["block_stale_turns"] = 0
                     _phase_state["block_asked_fields"] = []  # Reset for next block
+                    _phase_state["field_ask_counts"] = {}    # Reset for next block
 
                     # Determine next block
                     remaining_blocks = [b for b in _phase_state.get("selected_blocks", [])
@@ -2068,7 +2129,13 @@ def _post_process_response(
         # R1 Format B: Emoji radio buttons ("🔘 Option")
         text = re.sub(r'(?:^|\n)\s*🔘\s*.+', '', text)
 
-        # R1 Format C: Bold label headers ("**Bisherige Fördermittel:**")
+        # R1 Format C: Bold label headers + subsequent list items
+        # Matches "**Marktposition:**\n- Option1\n- Option2\n- Option3"
+        text = re.sub(
+            r'\*\*[^*]{3,40}:\*\*\s*\n(?:\s*[-*]\s*.+\n?)+',
+            '', text,
+        )
+        # Standalone bold headers without list (fallback)
         text = re.sub(r'\*\*[^*]{3,40}:\*\*\s*\n?', '', text)
 
         # Original Bug 14: contiguous block of labels (slash/comma/pipe separated)
