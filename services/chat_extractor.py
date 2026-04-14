@@ -203,7 +203,9 @@ EXTRACTOR_TOOL: dict[str, Any] = {
             "ki_ziele": {
                 "type": "array",
                 "items": {"type": "string"},
-                "description": "Ziele mit KI (z.B. effizienz, automatisierung, neue_produkte, kundenservice, datenauswertung, kosten_senken, wettbewerbsfaehigkeit)",
+                "description": "Ziele mit KI — verwende die EXAKTEN WORTE des Users, "
+                "NICHT vordefinierte Kategorien. Wenn der User 'von der Testphase "
+                "auf den Markt kommen' sagt, extrahiere genau das.",
             },
             "ki_projekte": {
                 "type": "string",
@@ -640,9 +642,40 @@ def _validate_extracted(extracted: dict) -> dict:
                 )
                 extracted[field] = extracted[field][:max_len]
 
-    # Digitalisierungsgrad: cap at 9 (10 = no analog process conceivable)
+    # Digitalisierungsgrad: verbal→numeric mapping + cap at 9
     if "digitalisierungsgrad" in extracted:
         val = extracted["digitalisierungsgrad"]
+        # KIS-1124 Testrun 3 Bugs 16+17: Map verbal answers to numeric
+        if isinstance(val, str):
+            _verbal_map = {
+                "sehr niedrig": 2, "kaum digital": 2, "kaum": 2,
+                "niedrig": 3, "wenig": 3,
+                "mittel": 5, "durchschnittlich": 5, "halb-halb": 5,
+                "hoch": 7, "gut": 7, "fortgeschritten": 7,
+                "sehr hoch": 8, "weit fortgeschritten": 8,
+                "komplett digital": 9, "voll digital": 9, "komplett": 9,
+            }
+            mapped = _verbal_map.get(val.lower().strip())
+            if mapped:
+                log.info(
+                    "[CHAT-EXTRACT-VALIDATE] digitalisierungsgrad '%s' → %d",
+                    val, mapped,
+                )
+                extracted["digitalisierungsgrad"] = mapped
+                val = mapped
+            else:
+                # Try to parse as integer
+                try:
+                    val = int(val)
+                    extracted["digitalisierungsgrad"] = val
+                except (ValueError, TypeError):
+                    log.warning(
+                        "[CHAT-EXTRACT-VALIDATE] digitalisierungsgrad '%s' "
+                        "could not be mapped — removing",
+                        val,
+                    )
+                    del extracted["digitalisierungsgrad"]
+                    val = None
         if isinstance(val, int) and val >= 10:
             log.info(
                 "[CHAT-EXTRACT-VALIDATE] digitalisierungsgrad %d → capped to 9",

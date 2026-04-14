@@ -14,6 +14,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -633,6 +634,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 from services.chat_normalizer import ENUM_VALUES
 
                 # Build target fields for multi-field extractor
+                # KIS-1124 Testrun 3: Fields where the extractor should use
+                # user's own words instead of mapping to predefined categories
+                _FREETEXT_EXTRACTION_FIELDS = {"ki_ziele"}
+
                 _target_fields = []
                 for _fname in PHASE_1_FIELDS:
                     if _fname in collected:
@@ -641,8 +646,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     _fdesc = FIELD_DESCRIPTIONS.get(_fname, _fname)
                     _ftype = _freg.get("type", "text")
                     _field_def: dict = {"name": _fname, "type": _ftype, "description": _fdesc}
-                    # Add enum options
-                    if _ftype in ("enum", "multi"):
+                    # Add enum options (but skip for freetext extraction fields)
+                    if _ftype in ("enum", "multi") and _fname not in _FREETEXT_EXTRACTION_FIELDS:
                         _opts = ENUM_VALUES.get(_fname)
                         if _opts:
                             _field_def["options"] = _opts
@@ -656,7 +661,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     _bdesc = FIELD_DESCRIPTIONS.get(_bname, _bname)
                     _btype = _breg.get("type", "text")
                     _bfield_def: dict = {"name": _bname, "type": _btype, "description": _bdesc}
-                    if _btype in ("enum", "multi"):
+                    if _btype in ("enum", "multi") and _bname not in _FREETEXT_EXTRACTION_FIELDS:
                         _bopts = ENUM_VALUES.get(_bname)
                         if _bopts:
                             _bfield_def["options"] = _bopts
@@ -1586,8 +1591,15 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 qr_next = [_next_qr] if _next_qr else []
             quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
         elif _final_phase == "phase_1":
-            # Phase 1b: open conversation — NO QR buttons
-            quick_replies = []
+            # Phase 1b: open conversation — show QR for structured fields
+            # KIS-1124 Testrun 3 Bugs 16+17: Show QR buttons for fields that
+            # need structured input (digitalisierungsgrad, ki_kompetenz) to
+            # prevent Doppelfrage and unclear free text answers.
+            _p1b_qr_fields = [f for f in next_fields
+                              if f in ("digitalisierungsgrad", "ki_kompetenz")]
+            quick_replies = _build_quick_replies(
+                _p1b_qr_fields, rt, collected, _profile_ctx,
+            ) if _p1b_qr_fields else []
         elif _final_phase == "phase_2" and rt == "r1":
             if _block_just_completed:
                 # Block just completed — show inter-block transition QR
@@ -1642,6 +1654,17 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 quick_replies = []
             else:
                 quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
+
+        # ------------------------------------------------------------------
+        # Post-process response text (KIS-1124 Testrun 3: Bugs 13, 14, 9)
+        # ------------------------------------------------------------------
+        _qr_labels = []
+        if quick_replies:
+            for qr in quick_replies:
+                _qr_labels.extend(opt.label for opt in (qr.options or []))
+        full_response = _post_process_response(full_response, _qr_labels or None)
+        # Send cleaned text as replacement so frontend can swap out streamed version
+        yield f"event: text_replace\ndata: {json.dumps({'text': full_response})}\n\n"
 
         assistant_msg = {
             "role": "assistant",
@@ -1948,6 +1971,84 @@ async def chat_complete(
         report_type=rt,
         redirect_url=redirect,
     )
+
+
+# ===========================================================================
+# Response Post-Processing (KIS-1124 Testrun 3)
+# ===========================================================================
+
+# Regex to strip <quick_reply_buttons>...</quick_reply_buttons> tags
+_QR_TAG_RE = re.compile(
+    r'\s*<quick_reply_buttons>.*?</quick_reply_buttons>\s*',
+    re.DOTALL,
+)
+
+# English exclamations that Sonnet sometimes outputs despite German-only rule
+_ENGLISH_EXCLAMATIONS = [
+    "Excellent", "Great", "Amazing", "Perfect", "Wonderful",
+    "Awesome", "Brilliant", "Fantastic",
+]
+
+# German flattery words forbidden as sentence starters
+_FORBIDDEN_STARTERS = [
+    "Ausgezeichnet", "Exzellent", "Hervorragend", "Wunderbar",
+    "Beeindruckend", "Fantastisch", "Großartig", "Spannend",
+    "Interessant",
+]
+
+
+def _post_process_response(
+    text: str,
+    qr_labels: list[str] | None = None,
+) -> str:
+    """Clean Sonnet response before sending to frontend.
+
+    1. Strip <quick_reply_buttons> XML tags (Bug 13)
+    2. Remove QR-label blocks duplicated in prose (Bug 14)
+    3. Remove English exclamations (Bug 9 reopen)
+    4. Remove forbidden flattery starters (Schmeichelei)
+    """
+    if not text:
+        return text
+
+    # 1. Strip <quick_reply_buttons> tags
+    text = _QR_TAG_RE.sub('', text)
+
+    # 2. Strip other XML-like tags Sonnet might generate
+    text = re.sub(r'</?quick_reply[^>]*>', '', text)
+
+    # 3. Remove QR-labels duplicated in prose (Bug 14)
+    # If ≥3 QR labels appear as a contiguous block (bold, list, or slash-separated)
+    if qr_labels and len(qr_labels) >= 3:
+        # Pattern: labels joined by " / ", newlines, or as markdown bold block
+        # Build escaped label list for regex
+        escaped = [re.escape(lbl) for lbl in qr_labels]
+        # Match lines that contain ≥3 QR labels (possibly bold, separated by whitespace/slashes)
+        # This catches "**Label1 Label2 Label3 Label4**" or "Label1 / Label2 / Label3"
+        label_pattern = r'[\s/,\|]*'.join(escaped[:6])  # First 6 labels
+        text = re.sub(
+            rf'\*{{0,2}}{label_pattern}\*{{0,2}}',
+            '', text, flags=re.IGNORECASE,
+        )
+
+    # 4. English exclamations (Bug 9 reopen)
+    for word in _ENGLISH_EXCLAMATIONS:
+        # Remove "Excellent!" / "Excellent," / "Excellent." at sentence boundaries
+        text = re.sub(
+            rf'\b{word}[!.,]?\s*', '', text, flags=re.IGNORECASE,
+        )
+
+    # 5. Forbidden flattery at sentence start
+    for word in _FORBIDDEN_STARTERS:
+        # Remove "Ausgezeichnet!" or "Ausgezeichnet," at sentence start
+        text = re.sub(
+            rf'(?:^|(?<=\. )){word}[!.,]\s*', '', text, flags=re.IGNORECASE,
+        )
+
+    # Clean up double spaces and leading/trailing whitespace
+    text = re.sub(r'  +', ' ', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
 
 
 # ===========================================================================
@@ -2435,17 +2536,14 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "sonstige", "label": "Sonstige Datenquellen"},
     ],
     # --- Sektion 2 ---
+    # KIS-1124 Testrun 3 Bugs 16+17: Grouped scale instead of 10 individual buttons
+    # Prevents Doppelfrage ("sehr hoch" → numeric re-ask) and unclear free text
     "digitalisierungsgrad": [
-        {"value": "1", "label": "1 (kaum digital)"},
-        {"value": "2", "label": "2"},
-        {"value": "3", "label": "3"},
-        {"value": "4", "label": "4"},
-        {"value": "5", "label": "5 (halb-halb)"},
-        {"value": "6", "label": "6"},
-        {"value": "7", "label": "7"},
-        {"value": "8", "label": "8"},
-        {"value": "9", "label": "9"},
-        {"value": "10", "label": "10 (voll digital)"},
+        {"value": "2", "label": "Niedrig (1–3)"},
+        {"value": "5", "label": "Mittel (4–5)"},
+        {"value": "7", "label": "Fortgeschritten (6–7)"},
+        {"value": "8", "label": "Hoch (8–9)"},
+        {"value": "9", "label": "Voll digital (10)"},
     ],
     "prozesse_papierlos": [
         {"value": "0-20", "label": "0–20 %"},
@@ -2884,6 +2982,16 @@ _SOLO_QR_REMOVE: dict[str, set[str]] = {
     "ki_hemmnisse": {"teamakzeptanz"},
 }
 
+# KIS-1124 Testrun 3 Bug 15: Solo-specific option REPLACEMENTS
+# (completely overrides _QR_OPTIONS for these fields when is_solo=True)
+_SOLO_QR_OVERRIDE: dict[str, list[dict]] = {
+    "interne_ki_kompetenzen": [
+        {"value": "ja", "label": "Ja, mit externen Partnern"},
+        {"value": "nein", "label": "Nein, alles selbst"},
+        {"value": "in_planung", "label": "Geplant"},
+    ],
+}
+
 # Fix 3: Small team (2–10): remove enterprise-only options
 _SMALL_TEAM_QR_REMOVE: dict[str, set[str]] = {
     "innovationsprozess": {"innovationsteam"},
@@ -2948,8 +3056,11 @@ def _build_quick_replies(
         if reg.get("chat_mode") not in ("QR", "qr"):
             continue
 
+        # Solo QR overrides (Bug 15: interne_ki_kompetenzen for solo)
+        if profile.get("is_solo") and field_name in _SOLO_QR_OVERRIDE:
+            options_data = _SOLO_QR_OVERRIDE[field_name]
         # Dynamic bundesland options based on collected country
-        if field_name == "bundesland":
+        elif field_name == "bundesland":
             options_data = _build_bundesland_options(collected.get("country", "DE"))
         else:
             options_data = _QR_OPTIONS.get(field_name)
