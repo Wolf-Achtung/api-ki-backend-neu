@@ -1278,6 +1278,7 @@ FORBIDDEN_PATTERNS = [
     "Großartig",
     "Hervorragend",
     "Wunderbar",
+    "Fantastisch",
     "Excellent",
     "Amazing",
     "Great",
