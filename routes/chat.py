@@ -1123,6 +1123,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # desired state (previous fields + this turn's additions/deletions).
         # draft_state MUST be included here — ORM assignments to
         # session.draft_state are not reliably flushed after raw SQL commits.
+        now = datetime.now(timezone.utc)
         _draft_for_sql = None
         if DRAFT_MODE_ENABLED or _is_edit_request or _is_in_edit_mode:
             _draft_for_sql = json.dumps(
