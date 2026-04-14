@@ -2016,6 +2016,39 @@ async def chat_session_get(session_id: UUID, db: Session = Depends(get_db)):
 
 
 # ===========================================================================
+# GET /api/chat/session/{session_id}/fields — export collected fields for form pre-fill
+# KIS-1124 Sprint 4 S4-BE-3: Formular-Wechsel mit Feld-Übernahme
+# ===========================================================================
+
+@router.get("/session/{session_id}/fields")
+async def chat_session_fields(session_id: UUID, db: Session = Depends(get_db)):
+    """Export all collected fields as JSON for form pre-fill.
+
+    Used when the user clicks "Zum Formular wechseln" — the frontend
+    fetches this endpoint and pre-fills the static form with already
+    collected chat values.
+    """
+    from schemas.chat import ChatFieldsExportResponse
+
+    session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+
+    collected = dict(session.collected_fields or {})
+    ps = session.phase_state or {}
+
+    return ChatFieldsExportResponse(
+        fields=collected,
+        conversation_phase=ps.get("conversation_phase", "phase_1"),
+        selected_blocks=ps.get("selected_blocks", []),
+        completed_blocks=ps.get("completed_blocks", []),
+        current_block=ps.get("current_block"),
+        collected_count=len(collected),
+        report_type=session.report_type,
+    )
+
+
+# ===========================================================================
 # GET /api/chat/sessions — list open sessions for authenticated user
 # ===========================================================================
 
