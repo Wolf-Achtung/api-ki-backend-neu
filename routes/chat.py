@@ -2253,6 +2253,25 @@ def _post_process_response(
                 '', text, flags=re.IGNORECASE,
             )
 
+        # KIS-1124: Catch-all — remove any line whose content (after stripping
+        # list markers "- ", "* ", "🔘 ", digits) exactly matches a QR label.
+        label_set = {lbl.lower().strip() for lbl in qr_labels}
+        cleaned_lines = []
+        for line in text.split('\n'):
+            stripped = line.strip().lstrip('-*🔘 ').strip()
+            # Also strip leading digits + optional parenthesized text
+            stripped_no_num = re.sub(r'^\d+\s*(?:\([^)]*\))?\s*', '', stripped).strip()
+            if stripped.lower() in label_set or stripped_no_num.lower() in label_set:
+                continue  # drop this line — it's a bare QR label
+            cleaned_lines.append(line)
+        text = '\n'.join(cleaned_lines)
+
+        # KIS-1124: Numbered scale labels like "1 (sehr vorsichtig)", "2", "3 (ausgewogen)"
+        text = re.sub(
+            r'(?:^|\n)\s*[-*]?\s*\d+\s*(?:\([^)]*\))?\s*$',
+            '', text, flags=re.MULTILINE,
+        )
+
     # 4. English exclamations (Bug 9 reopen)
     for word in _ENGLISH_EXCLAMATIONS:
         text = re.sub(
@@ -2274,6 +2293,16 @@ def _post_process_response(
             rf'(?:^|\.\s+){pattern}[^.!?]*[.!?]',
             '.', text, flags=re.IGNORECASE,
         )
+
+    # 7. Double-question guard: when QR buttons are present and text contains
+    # 2+ questions, truncate after the first question mark to prevent
+    # Sonnet from asking about two fields in one turn.
+    if qr_labels and text.count('?') >= 2:
+        first_q = text.index('?')
+        rest = text[first_q + 1:].strip()
+        # Only truncate if the second question starts a new sentence
+        if rest and rest[0].isupper():
+            text = text[:first_q + 1].strip()
 
     # Clean up artifacts
     text = re.sub(r'^[\s.]+', '', text)  # Leading dots/spaces

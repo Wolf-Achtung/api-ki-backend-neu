@@ -466,9 +466,12 @@ ENUM_VALUES: dict[str, list[str]] = {
 _ENUM_SYNONYMS: dict[str, dict[str, str]] = {
     "marktposition": {
         "im aufbau": "nachzuegler",
+        "noch im aufbau": "nachzuegler",
         "aufbau": "nachzuegler",
         "testphase": "nachzuegler",
         "gerade erst gestartet": "nachzuegler",
+        "gerade erst angefangen": "nachzuegler",
+        "ganz am anfang": "nachzuegler",
         "neu am markt": "nachzuegler",
         "start": "nachzuegler",
         "startup": "nachzuegler",
