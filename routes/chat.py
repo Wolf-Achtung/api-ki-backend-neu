@@ -1801,8 +1801,18 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # Skip for template turns (checkpoint, block transition, report start,
         # KIS-1128B template mode) which are fast enough (<200ms) that a
         # typing indicator would flicker.
-        if not (_checkpoint_text or _block_transition_text or _report_start_requested or _template_text):
+        _is_sonnet_turn = not (_checkpoint_text or _block_transition_text or _report_start_requested or _template_text)
+        if _is_sonnet_turn:
             yield f'event: typing\ndata: {json.dumps({"status": "thinking"})}\n\n'
+
+            # KIS-1128C V5-BE: Optimistic QR preview — send preview of QR buttons
+            # before Sonnet responds, so the frontend can render them early.
+            # Only for freetext→QR transitions (template mode already bypasses Sonnet).
+            if next_fields and is_template_field(next_fields[0]):
+                _pqr = _build_quick_replies(next_fields[:1], rt, collected, _profile_ctx)
+                if _pqr:
+                    _pqr_data = [qr.model_dump() for qr in _pqr]
+                    yield f'event: preview_qr\ndata: {json.dumps(_pqr_data)}\n\n'
 
         producer = asyncio.create_task(_token_producer())
         full_response = ""
