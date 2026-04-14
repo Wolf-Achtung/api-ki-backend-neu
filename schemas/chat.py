@@ -79,6 +79,7 @@ class ChatSessionState(BaseModel):
     selected_blocks: list[str] = []
     completed_blocks: list[str] = []
     current_block: Optional[str] = None
+    unsurveyed_note: Optional[str] = None
 
     # Quick Replies
     quick_replies: Optional[list[QuickReply]] = None

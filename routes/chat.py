@@ -2253,6 +2253,25 @@ def _post_process_response(
                 '', text, flags=re.IGNORECASE,
             )
 
+        # KIS-1124: Catch-all — remove any line whose content (after stripping
+        # list markers "- ", "* ", "🔘 ", digits) exactly matches a QR label.
+        label_set = {lbl.lower().strip() for lbl in qr_labels}
+        cleaned_lines = []
+        for line in text.split('\n'):
+            stripped = line.strip().lstrip('-*🔘 ').strip()
+            # Also strip leading digits + optional parenthesized text
+            stripped_no_num = re.sub(r'^\d+\s*(?:\([^)]*\))?\s*', '', stripped).strip()
+            if stripped.lower() in label_set or stripped_no_num.lower() in label_set:
+                continue  # drop this line — it's a bare QR label
+            cleaned_lines.append(line)
+        text = '\n'.join(cleaned_lines)
+
+        # KIS-1124: Numbered scale labels like "1 (sehr vorsichtig)", "2", "3 (ausgewogen)"
+        text = re.sub(
+            r'(?:^|\n)\s*[-*]?\s*\d+\s*(?:\([^)]*\))?\s*$',
+            '', text, flags=re.MULTILINE,
+        )
+
     # 4. English exclamations (Bug 9 reopen)
     for word in _ENGLISH_EXCLAMATIONS:
         text = re.sub(
@@ -2274,6 +2293,16 @@ def _post_process_response(
             rf'(?:^|\.\s+){pattern}[^.!?]*[.!?]',
             '.', text, flags=re.IGNORECASE,
         )
+
+    # 7. Double-question guard: when QR buttons are present and text contains
+    # 2+ questions, truncate after the first question mark to prevent
+    # Sonnet from asking about two fields in one turn.
+    if qr_labels and text.count('?') >= 2:
+        first_q = text.index('?')
+        rest = text[first_q + 1:].strip()
+        # Only truncate if the second question starts a new sentence
+        if rest and rest[0].isupper():
+            text = text[:first_q + 1].strip()
 
     # Clean up artifacts
     text = re.sub(r'^[\s.]+', '', text)  # Leading dots/spaces
@@ -2600,6 +2629,24 @@ def _build_session_state(
     # Phase tracking (hybrid conversation model, KIS-1124)
     ps = _get_phase_state(session)
 
+    # KIS-1124: Unsurveyed note — only in summary phase when blocks were skipped
+    unsurveyed_note: str | None = None
+    if ps["conversation_phase"] == "summary":
+        _all_blocks = ["A", "B", "C", "D"]
+        _unsurveyed = [b for b in _all_blocks if b not in ps["selected_blocks"]]
+        if _unsurveyed:
+            _block_labels = {
+                "A": "Fördermittel & Budget",
+                "B": "KI-Strategie & Roadmap",
+                "C": "Tools & Automatisierung",
+                "D": "Recht & Datenschutz",
+            }
+            _names = [_block_labels.get(b, b) for b in _unsurveyed]
+            unsurveyed_note = (
+                f"Nicht vertiefte Bereiche: {', '.join(_names)}. "
+                "Diese werden im Report mit branchenüblichen Standardwerten ergänzt."
+            )
+
     return ChatSessionState(
         session_id=session.id,
         report_type=session.report_type,
@@ -2623,6 +2670,7 @@ def _build_session_state(
         selected_blocks=ps["selected_blocks"],
         completed_blocks=ps["completed_blocks"],
         current_block=ps["current_block"],
+        unsurveyed_note=unsurveyed_note,
     )
 
 
