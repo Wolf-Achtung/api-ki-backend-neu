@@ -203,7 +203,9 @@ EXTRACTOR_TOOL: dict[str, Any] = {
             "ki_ziele": {
                 "type": "array",
                 "items": {"type": "string"},
-                "description": "Ziele mit KI (z.B. effizienz, automatisierung, neue_produkte, kundenservice, datenauswertung, kosten_senken, wettbewerbsfaehigkeit)",
+                "description": "Ziele mit KI — verwende die EXAKTEN WORTE des Users, "
+                "NICHT vordefinierte Kategorien. Wenn der User 'von der Testphase "
+                "auf den Markt kommen' sagt, extrahiere genau das.",
             },
             "ki_projekte": {
                 "type": "string",
