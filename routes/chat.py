@@ -2298,6 +2298,8 @@ _FORBIDDEN_STARTERS = [
     "Interessant",
     # KIS-1124 Testrun 4 R5: eingedeutschte Varianten
     "Brillant", "Prima", "Klasse", "Super", "Toll",
+    # KIS-1128C P2: "Sehr + Adjektiv" Testrun-9
+    "Sehr interessant", "Sehr gut", "Sehr spannend",
 ]
 
 # KIS-1124 Testrun 4 R3: Context reference patterns that Sonnet over-uses
@@ -2319,6 +2321,7 @@ _PREAMBLE_PATTERNS = [
     re.compile(r'^Spannend\b', re.IGNORECASE),
     re.compile(r'^Interessant\b', re.IGNORECASE),
     re.compile(r'^Sehr gut\b', re.IGNORECASE),
+    re.compile(r'^Sehr\s+(interessant|spannend|gut)\b', re.IGNORECASE),  # P2: "Sehr interessant!" etc.
     re.compile(r'^Perfekt\b', re.IGNORECASE),
     re.compile(r'^Verstanden\b.*,\s', re.IGNORECASE),
     re.compile(r'^Notiert\b.*,\s', re.IGNORECASE),
@@ -2371,6 +2374,12 @@ def _post_process_response(
 
     # 2. Strip other XML-like tags Sonnet might generate
     text = re.sub(r'</?quick_reply[^>]*>', '', text)
+
+    # 2b. KIS-1128C P1: Strip <button>...</button> tags (Sonnet generates HTML buttons)
+    text = re.sub(r'\s*<button>[^<]*</button>\s*', '', text, flags=re.DOTALL)
+
+    # 2c. KIS-1128C P3: Strip **Option** | **Option** pipe-separated QR format
+    text = re.sub(r'\n*(?:\*\*[^*]+\*\*\s*\|\s*)+\*\*[^*]+\*\*\s*', '', text)
 
     # 3. Remove QR-labels duplicated in prose (Bug 14 + R1)
     if qr_labels and len(qr_labels) >= 2:
