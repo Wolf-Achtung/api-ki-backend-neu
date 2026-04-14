@@ -2600,6 +2600,24 @@ def _build_session_state(
     # Phase tracking (hybrid conversation model, KIS-1124)
     ps = _get_phase_state(session)
 
+    # KIS-1124: Unsurveyed note — only in summary phase when blocks were skipped
+    unsurveyed_note: str | None = None
+    if ps["conversation_phase"] == "summary":
+        _all_blocks = ["A", "B", "C", "D"]
+        _unsurveyed = [b for b in _all_blocks if b not in ps["selected_blocks"]]
+        if _unsurveyed:
+            _block_labels = {
+                "A": "Fördermittel & Budget",
+                "B": "KI-Strategie & Roadmap",
+                "C": "Tools & Automatisierung",
+                "D": "Recht & Datenschutz",
+            }
+            _names = [_block_labels.get(b, b) for b in _unsurveyed]
+            unsurveyed_note = (
+                f"Nicht vertiefte Bereiche: {', '.join(_names)}. "
+                "Diese werden im Report mit branchenüblichen Standardwerten ergänzt."
+            )
+
     return ChatSessionState(
         session_id=session.id,
         report_type=session.report_type,
@@ -2623,6 +2641,7 @@ def _build_session_state(
         selected_blocks=ps["selected_blocks"],
         completed_blocks=ps["completed_blocks"],
         current_block=ps["current_block"],
+        unsurveyed_note=unsurveyed_note,
     )
 
 
