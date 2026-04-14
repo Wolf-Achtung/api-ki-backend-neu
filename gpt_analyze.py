@@ -1273,6 +1273,25 @@ def build_strategic_context_block(answers: dict, lang: str = "de") -> str:
         high_conf_count = sum(1 for h in hits if h.is_high_confidence)
         log.info("🛡️ Guardrails v5: %d auto-detected (high_conf=%d, no explicit)", len(hits), high_conf_count)
 
+    # KIS-1124 Sprint 4 S4-BE-2: Signal unsurveyed areas to LLM
+    unsurveyed = answers.get("_chat_unsurveyed_blocks", [])
+    if unsurveyed:
+        _block_labels = {
+            "A": "Fördermittel & Budget",
+            "B": "KI-Strategie & Roadmap",
+            "C": "Tools & Automatisierung",
+            "D": "Recht & Datenschutz",
+        }
+        _unsurveyed_names = [_block_labels.get(b, b) for b in unsurveyed]
+        lines.append(
+            "HINWEIS — Nicht vertiefte Bereiche:\n"
+            f"Die folgenden Themenbereiche wurden im Chat nicht vertieft: "
+            f"{', '.join(_unsurveyed_names)}.\n"
+            "Für diese Bereiche: Keine spezifischen Empfehlungen aussprechen. "
+            "Stattdessen allgemeine Best-Practice-Hinweise geben und den "
+            "Bereich kürzer halten. Empfehlung zur Vertiefung aussprechen."
+        )
+
     return "\n\n".join(lines)
 # =========================================================================
 
