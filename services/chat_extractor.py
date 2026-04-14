@@ -613,7 +613,16 @@ def _format_collected(collected: dict) -> str:
 # KIS-1124 Testrun 4 R2: Fields that must NEVER be auto-extracted.
 # These fields are only set via explicit QR selection or direct question.
 # Prompt rules alone cannot prevent Haiku from inferring these.
-NEVER_AUTO_EXTRACT: set[str] = {"zielgruppen"}
+# KIS-1124-HOTFIX: Extended — Haiku was hallucinating values for all of these
+# from unrelated answers (e.g. "Nein" → marktposition: "Nachzügler").
+NEVER_AUTO_EXTRACT: set[str] = {
+    "zielgruppen",
+    "marktposition",
+    "benchmark_wettbewerb",
+    "risikofreude",
+    "innovationsprozess",
+    "interne_ki_kompetenzen",
+}
 
 # Array fields where Haiku tends to over-generate via category-mapping
 _ARRAY_FIELDS_MAX = {
