@@ -634,6 +634,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 from services.chat_normalizer import ENUM_VALUES
 
                 # Build target fields for multi-field extractor
+                # KIS-1124 Testrun 3: Fields where the extractor should use
+                # user's own words instead of mapping to predefined categories
+                _FREETEXT_EXTRACTION_FIELDS = {"ki_ziele"}
+
                 _target_fields = []
                 for _fname in PHASE_1_FIELDS:
                     if _fname in collected:
@@ -642,8 +646,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     _fdesc = FIELD_DESCRIPTIONS.get(_fname, _fname)
                     _ftype = _freg.get("type", "text")
                     _field_def: dict = {"name": _fname, "type": _ftype, "description": _fdesc}
-                    # Add enum options
-                    if _ftype in ("enum", "multi"):
+                    # Add enum options (but skip for freetext extraction fields)
+                    if _ftype in ("enum", "multi") and _fname not in _FREETEXT_EXTRACTION_FIELDS:
                         _opts = ENUM_VALUES.get(_fname)
                         if _opts:
                             _field_def["options"] = _opts
@@ -657,7 +661,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     _bdesc = FIELD_DESCRIPTIONS.get(_bname, _bname)
                     _btype = _breg.get("type", "text")
                     _bfield_def: dict = {"name": _bname, "type": _btype, "description": _bdesc}
-                    if _btype in ("enum", "multi"):
+                    if _btype in ("enum", "multi") and _bname not in _FREETEXT_EXTRACTION_FIELDS:
                         _bopts = ENUM_VALUES.get(_bname)
                         if _bopts:
                             _bfield_def["options"] = _bopts
