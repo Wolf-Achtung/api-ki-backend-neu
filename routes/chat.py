@@ -60,6 +60,7 @@ from services.chat_normalizer import (
     is_section_complete,
     normalize_field,
 )
+from services.field_templates import get_confirmation, get_template_question, is_template_field
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 log = logging.getLogger(__name__)
@@ -1653,6 +1654,34 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     f'Ich erstelle jetzt Ihre Zusammenfassung.'
                 )
 
+        # KIS-1128B V1-BE-2: Template mode — bypass Sonnet for QR-to-QR turns.
+        # When user clicked a QR button AND the next field has a deterministic
+        # template, serve the response without calling Sonnet (~200ms vs ~3300ms).
+        _template_text = None
+        if (
+            _is_qr_click
+            and next_fields
+            and is_template_field(next_fields[0])
+            and not _checkpoint_triggered
+            and not _block_just_completed
+            and not _report_start_requested
+            and not _is_help_request
+            and not _is_edit_request
+            and not (_is_in_edit_mode and not _edit_applied)
+            and not _no_extraction  # e.g. __checkpoint__, __block_transition__
+        ):
+            _tpl_field = next_fields[0]
+            _tpl_question = get_template_question(_tpl_field)
+            if _tpl_question:
+                # KIS-1128B V1-BE-3: Prepend varied confirmation sentence
+                _last_conf = _used_confirmations[-1] if _used_confirmations else None
+                _conf = get_confirmation(_tpl_field, _last_conf)
+                _template_text = f"{_conf} {_tpl_question}"
+                log.info(
+                    "[CHAT] TEMPLATE MODE: next_field=%s, confirm=%r (no Sonnet, ~200ms)",
+                    _tpl_field, _conf,
+                )
+
         async def _token_producer():
             try:
                 if _checkpoint_text:
@@ -1668,6 +1697,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 if _report_start_requested:
                     # KIS-1125: Skip Sonnet — send confirmation, trigger completion below
                     await queue.put("Ihre Auswertung wird jetzt erstellt. Sie erhalten den Report in Kürze.")
+                    return
+
+                if _template_text:
+                    # KIS-1128B: Template mode — deterministic text, no Sonnet call
+                    await queue.put(_template_text)
                     return
 
                 async for token in generate_response(
@@ -1698,9 +1732,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 await queue.put(_SENTINEL)
 
         # KIS-1128A V4-BE: Send typing event before Sonnet call.
-        # Skip for template turns (checkpoint, block transition, report start)
-        # which are fast enough (<200ms) that a typing indicator would flicker.
-        if not (_checkpoint_text or _block_transition_text or _report_start_requested):
+        # Skip for template turns (checkpoint, block transition, report start,
+        # KIS-1128B template mode) which are fast enough (<200ms) that a
+        # typing indicator would flicker.
+        if not (_checkpoint_text or _block_transition_text or _report_start_requested or _template_text):
             yield f'event: typing\ndata: {json.dumps({"status": "thinking"})}\n\n'
 
         producer = asyncio.create_task(_token_producer())
