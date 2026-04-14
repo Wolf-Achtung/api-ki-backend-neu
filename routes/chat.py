@@ -2828,6 +2828,20 @@ def _build_session_state(
                 "Diese werden im Report mit branchenüblichen Standardwerten ergänzt."
             )
 
+    # KIS-1128C V7-BE: Block progress metadata
+    _cur_blk = ps.get("current_block")
+    _blk_label: str | None = None
+    _blk_progress = 0
+    _blk_total = 0
+    if _cur_blk:
+        _blk_label = BLOCK_LABELS.get(_cur_blk, "")
+        if _cur_blk == "D":
+            _blk_all = _get_datenschutz_block_fields(collected.get("branche", ""))
+        else:
+            _blk_all = BLOCK_FIELDS.get(_cur_blk, [])
+        _blk_total = len(_blk_all)
+        _blk_progress = len([f for f in _blk_all if f in collected])
+
     return ChatSessionState(
         session_id=session.id,
         report_type=session.report_type,
@@ -2852,6 +2866,9 @@ def _build_session_state(
         completed_blocks=ps["completed_blocks"],
         current_block=ps["current_block"],
         unsurveyed_note=unsurveyed_note,
+        block_label=_blk_label,
+        block_progress=_blk_progress,
+        block_total=_blk_total,
     )
 
 
