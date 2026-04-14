@@ -1535,7 +1535,15 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         if _is_help_request and _asked_field:
             _help_ctx = build_help_context(_asked_field, collected, rt)
         elif _is_edit_request:
-            _help_ctx = EDIT_MODE_SONNET_PROMPT
+            # KIS-1125-HOTFIX: Include field list in initial edit prompt.
+            # Previously, Sonnet only got EDIT_MODE_SONNET_PROMPT (no data),
+            # so it asked "Was möchten Sie ändern?" without showing fields.
+            _edit_field_list = build_edit_extraction_context(collected, rt)
+            _help_ctx = (
+                f"{EDIT_MODE_SONNET_PROMPT}\n"
+                f"Aktuelle Felder und Werte:\n{_edit_field_list}\n\n"
+                f"Fragen Sie kurz, welches Feld geändert werden soll."
+            )
         elif _edit_applied:
             # Edit was applied — Sonnet confirms the change
             edit_field_label = FIELD_DESCRIPTIONS.get(list(normalized.keys())[0], "").split("(")[0].strip() if normalized else "Feld"
