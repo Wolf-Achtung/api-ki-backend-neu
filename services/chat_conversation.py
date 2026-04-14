@@ -2133,14 +2133,22 @@ _ENUM_DISPLAY: dict[str, dict[str, str]] = {
 }
 
 
+# KIS-1124 Sprint 4 S4-BE-1: Values treated as "empty" in summary display
+_SUMMARY_SKIP_VALUES = {None, "", "keine_angabe", "keine angabe", "nicht_angegeben", "Nicht angegeben"}
+
+
 def build_summary(collected_fields: dict, report_type: str = "r1") -> str:
     """
     Build a structured, template-based summary of all collected fields.
     No LLM involved — purely deterministic from collected data.
+
+    KIS-1124 Sprint 4: Sections with no collected fields are hidden entirely.
+    A "not surveyed" note is appended when sections were skipped.
     """
     sections = get_sections_for_report(report_type)
     registry = get_registry_for_report(report_type)
     lines = ["**Zusammenfassung Ihrer Angaben:**\n"]
+    skipped_sections: list[str] = []
 
     for section in sections:
         section_lines: list[str] = []
@@ -2150,19 +2158,31 @@ def build_summary(collected_fields: dict, report_type: str = "r1") -> str:
                 continue
             value = collected_fields[field_name]
             # KIS-1124 Testrun-Fix Bug 6: Skip fields with keine_angabe/empty/None
-            if value is None or value == "" or (isinstance(value, str) and value.strip().lower() in ("keine_angabe", "keine angabe")):
+            if value is None or value == "" or (isinstance(value, str) and value.strip().lower() in _SUMMARY_SKIP_VALUES):
                 continue
-            if isinstance(value, list) and all(str(v).lower() in ("keine_angabe",) for v in value):
+            if isinstance(value, list) and all(str(v).lower() in ("keine_angabe", "nicht_angegeben") for v in value):
                 continue
             label = FIELD_DESCRIPTIONS.get(field_name, field_name).split("(")[0].strip()
             display = _format_value_for_display(field_name, value)
-            if display == "Nicht angegeben":
-                continue  # Don't show "Nicht angegeben" lines in summary
+            if display in ("Nicht angegeben", "–"):
+                continue  # Don't show empty-ish lines in summary
             section_lines.append(f"- {label}: {display}")
 
         if section_lines:
             lines.append(f"\n**{section['name']}**")
             lines.extend(section_lines)
+        else:
+            # Track sections with zero visible fields (but only real content
+            # sections — skip "Ihr Unternehmen" which is always filled)
+            if section.get("index", 0) >= 1:
+                skipped_sections.append(section["name"])
+
+    # KIS-1124 Sprint 4: Inform user about sections not covered
+    if skipped_sections:
+        lines.append(
+            "\n*Bereiche, die nicht vertieft wurden, werden im Report "
+            "mit branchenüblichen Standardwerten ergänzt.*"
+        )
 
     lines.append("\n\nSind alle Angaben korrekt? Dann starte ich die Auswertung.")
     return "\n".join(lines)
