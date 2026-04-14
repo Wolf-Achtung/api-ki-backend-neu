@@ -1288,6 +1288,20 @@ FORBIDDEN_PATTERNS = [
     "Perfect!",
     "Amazing!",
     "Wonderful!",
+    # KIS-1124 Testrun 4 R3: Kontextreferenz-Wiederholungen
+    "Da Sie bereits",
+    "Da Sie ja bereits",
+    "Bei Ihrer hohen",
+    "Bei Ihrer aktuellen",
+    "Bei Ihrer starken",
+    "Mit Ihren umfangreichen",
+    "Mit Ihrer bisherigen",
+    # KIS-1124 Testrun 4 R5: Eingedeutschte Schmeicheleien
+    "Brillant",
+    "Prima",
+    "Klasse",
+    "Super",
+    "Toll",
 ]
 
 
@@ -2159,6 +2173,18 @@ def _format_value_for_display(field_name: str, value: object) -> str:
     str_check = str(value).strip().lower() if value is not None else ""
     if str_check in ("keine_angabe", "keine angabe"):
         return "Nicht angegeben"
+
+    # KIS-1124 Testrun 4 R4: JSON array strings → Python list
+    # When a list is stored as a JSON string (e.g. '["item1", "item2"]'),
+    # parse it back to a list for proper formatting.
+    if isinstance(value, str) and value.startswith("["):
+        import json as _json
+        try:
+            parsed = _json.loads(value)
+            if isinstance(parsed, list):
+                value = parsed
+        except (ValueError, _json.JSONDecodeError):
+            pass
 
     reg = FIELD_REGISTRY.get(field_name) or STRATEGY_FIELD_REGISTRY.get(field_name, {})
     field_type = reg.get("type", "text")

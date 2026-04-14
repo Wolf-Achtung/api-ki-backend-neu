@@ -1994,6 +1994,15 @@ _FORBIDDEN_STARTERS = [
     "Ausgezeichnet", "Exzellent", "Hervorragend", "Wunderbar",
     "Beeindruckend", "Fantastisch", "Großartig", "Spannend",
     "Interessant",
+    # KIS-1124 Testrun 4 R5: eingedeutschte Varianten
+    "Brillant", "Prima", "Klasse", "Super", "Toll",
+]
+
+# KIS-1124 Testrun 4 R3: Context reference patterns that Sonnet over-uses
+_CONTEXT_REF_PATTERNS = [
+    r'Da Sie bereits\b',
+    r'Bei Ihrer (?:hohen|aktuellen|starken|bisherigen|umfangreichen)\b',
+    r'Mit Ihren? (?:umfangreichen|hohen|breiten|starken|bisherigen)\b',
 ]
 
 
@@ -2004,9 +2013,10 @@ def _post_process_response(
     """Clean Sonnet response before sending to frontend.
 
     1. Strip <quick_reply_buttons> XML tags (Bug 13)
-    2. Remove QR-label blocks duplicated in prose (Bug 14)
+    2. Remove QR-label blocks duplicated in prose (Bug 14, R1)
     3. Remove English exclamations (Bug 9 reopen)
-    4. Remove forbidden flattery starters (Schmeichelei)
+    4. Remove forbidden flattery starters (Schmeichelei, R5)
+    5. Remove context repetition patterns (R3)
     """
     if not text:
         return text
@@ -2017,35 +2027,52 @@ def _post_process_response(
     # 2. Strip other XML-like tags Sonnet might generate
     text = re.sub(r'</?quick_reply[^>]*>', '', text)
 
-    # 3. Remove QR-labels duplicated in prose (Bug 14)
-    # If ≥3 QR labels appear as a contiguous block (bold, list, or slash-separated)
-    if qr_labels and len(qr_labels) >= 3:
-        # Pattern: labels joined by " / ", newlines, or as markdown bold block
-        # Build escaped label list for regex
-        escaped = [re.escape(lbl) for lbl in qr_labels]
-        # Match lines that contain ≥3 QR labels (possibly bold, separated by whitespace/slashes)
-        # This catches "**Label1 Label2 Label3 Label4**" or "Label1 / Label2 / Label3"
-        label_pattern = r'[\s/,\|]*'.join(escaped[:6])  # First 6 labels
-        text = re.sub(
-            rf'\*{{0,2}}{label_pattern}\*{{0,2}}',
-            '', text, flags=re.IGNORECASE,
-        )
+    # 3. Remove QR-labels duplicated in prose (Bug 14 + R1)
+    if qr_labels and len(qr_labels) >= 2:
+        # R1 Format A/C: Markdown list items matching QR labels ("- Ja\n- Nein")
+        for label in qr_labels:
+            text = re.sub(
+                rf'(?:^|\n)\s*[-*]\s*{re.escape(label)}\s*(?=\n|$)',
+                '', text, flags=re.IGNORECASE,
+            )
+
+        # R1 Format B: Emoji radio buttons ("🔘 Option")
+        text = re.sub(r'(?:^|\n)\s*🔘\s*.+', '', text)
+
+        # R1 Format C: Bold label headers ("**Bisherige Fördermittel:**")
+        text = re.sub(r'\*\*[^*]{3,40}:\*\*\s*\n?', '', text)
+
+        # Original Bug 14: contiguous block of labels (slash/comma/pipe separated)
+        if len(qr_labels) >= 3:
+            escaped = [re.escape(lbl) for lbl in qr_labels]
+            label_pattern = r'[\s/,\|]+'.join(escaped[:6])
+            text = re.sub(
+                rf'\*{{0,2}}{label_pattern}\*{{0,2}}',
+                '', text, flags=re.IGNORECASE,
+            )
 
     # 4. English exclamations (Bug 9 reopen)
     for word in _ENGLISH_EXCLAMATIONS:
-        # Remove "Excellent!" / "Excellent," / "Excellent." at sentence boundaries
         text = re.sub(
             rf'\b{word}[!.,]?\s*', '', text, flags=re.IGNORECASE,
         )
 
-    # 5. Forbidden flattery at sentence start
+    # 5. Forbidden flattery at sentence start (R5: +Exzellent, Brillant, etc.)
     for word in _FORBIDDEN_STARTERS:
-        # Remove "Ausgezeichnet!" or "Ausgezeichnet," at sentence start
         text = re.sub(
             rf'(?:^|(?<=\. )){word}[!.,]\s*', '', text, flags=re.IGNORECASE,
         )
 
-    # Clean up double spaces and leading/trailing whitespace
+    # 6. Context repetition filter (R3: "Da Sie bereits..." etc.)
+    for pattern in _CONTEXT_REF_PATTERNS:
+        # Remove entire sentence starting with the pattern
+        text = re.sub(
+            rf'(?:^|\.\s+){pattern}[^.!?]*[.!?]',
+            '.', text, flags=re.IGNORECASE,
+        )
+
+    # Clean up artifacts
+    text = re.sub(r'^[\s.]+', '', text)  # Leading dots/spaces
     text = re.sub(r'  +', ' ', text)
     text = re.sub(r'\n{3,}', '\n\n', text)
     return text.strip()
