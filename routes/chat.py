@@ -1621,6 +1621,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             _checkpoint_text = (
                 "Ich habe jetzt ein gutes Bild von Ihrem Unternehmen. "
                 "Damit kann ich bereits einen soliden KI-Report erstellen.\n\n"
+                "Am Ende können Sie alle Angaben nochmal prüfen und bei Bedarf korrigieren.\n\n"
                 "Sie können die Analyse aber gezielt vertiefen — "
                 "welche Bereiche interessieren Sie besonders?"
             )
