@@ -610,6 +610,11 @@ def _format_collected(collected: dict) -> str:
 # Post-Extraction Validation (Hallucination Guard)
 # ---------------------------------------------------------------------------
 
+# KIS-1124 Testrun 4 R2: Fields that must NEVER be auto-extracted.
+# These fields are only set via explicit QR selection or direct question.
+# Prompt rules alone cannot prevent Haiku from inferring these.
+NEVER_AUTO_EXTRACT: set[str] = {"zielgruppen"}
+
 # Array fields where Haiku tends to over-generate via category-mapping
 _ARRAY_FIELDS_MAX = {
     "ki_einsatz": 4,
@@ -627,10 +632,21 @@ _ARRAY_FIELDS_MAX = {
 def _validate_extracted(extracted: dict) -> dict:
     """Post-extraction validation to catch hallucination patterns.
 
+    - Removes NEVER_AUTO_EXTRACT fields (e.g. zielgruppen).
     - Caps array fields at a reasonable max (truncates excess).
     - Clamps digitalisierungsgrad: "komplett digital" → max 9.
     - Logs warnings for suspicious extractions.
     """
+    # Remove fields that must not be auto-extracted
+    for field in NEVER_AUTO_EXTRACT:
+        if field in extracted:
+            log.info(
+                "[CHAT-EXTRACT-VALIDATE] Removing auto-extracted '%s' "
+                "(NEVER_AUTO_EXTRACT): %s",
+                field, extracted[field],
+            )
+            del extracted[field]
+
     for field, max_len in _ARRAY_FIELDS_MAX.items():
         if field in extracted and isinstance(extracted[field], list):
             original_len = len(extracted[field])
