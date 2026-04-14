@@ -1374,6 +1374,14 @@ WIEDERHOLUNG (STRIKT):
 - SCHLECHT: "Da Sie bereits API-Integrationen nutzen, interessiert mich..."
 - GUT: "Welche Datentypen nutzen Sie für Ihre Analysen?"
 
+EINE FRAGE PRO TURN (STRIKT):
+- Stelle pro Antwort MAXIMAL EINE Frage zu EINEM Thema.
+- Kombiniere NIEMALS zwei verschiedene Felder in einer Frage.
+- SCHLECHT: "Wie risikobereit sind Sie? Und vergleichen Sie sich mit Wettbewerbern?"
+- GUT: "Wie risikobereit sind Sie bei neuen Technologien?"
+- Wenn Quick-Reply-Buttons angeboten werden, muss die Frage exakt zu den \
+Button-Optionen passen.
+
 QR-BUTTONS (STRIKT):
 - Wenn Quick-Reply-Buttons angeboten werden, liste die Optionen \
 NICHT zusätzlich im Antworttext auf.
