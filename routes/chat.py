@@ -496,6 +496,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _pending_after_turn = False  # True when a pending draft exists AFTER this turn's processing
         _no_extraction = False  # True when free-text yielded no field extraction (user asked a question)
         _asked_field = ""  # The field that was being asked when the user sent this message
+        _report_start_requested = False  # True when user clicked "Auswertung starten"
 
         _is_qr_click = bool(req.quick_reply_field and req.quick_reply_value)
         _is_help_request = "__HELP_REQUEST__" in req.message
@@ -568,8 +569,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             elif qr_field == "__summary_action__":
                 _sa_value = req.quick_reply_value
                 if _sa_value == "__start_report__":
-                    # User confirms summary → trigger report completion
-                    # (handled below via _should_complete logic)
+                    # KIS-1125-HOTFIX: Trigger report completion directly
+                    _report_start_requested = True
                     log.info("[CHAT] Summary action: user chose START REPORT")
                 elif _sa_value == "__edit_summary__":
                     # User wants to edit → activate edit mode
@@ -1654,6 +1655,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     await queue.put(_block_transition_text)
                     return
 
+                if _report_start_requested:
+                    # KIS-1125: Skip Sonnet — send confirmation, trigger completion below
+                    await queue.put("Ihre Auswertung wird jetzt erstellt. Sie erhalten den Report in Kürze.")
+                    return
+
                 async for token in generate_response(
                     session_messages=list(session.messages),
                     collected_fields=collected,
@@ -1905,6 +1911,24 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             session.messages = msgs2
             db.commit()
 
+        # KIS-1125-HOTFIX: Report completion — trigger directly when user clicks
+        # "Auswertung starten". Skips Sonnet (confirmation text already streamed
+        # via _token_producer), creates Briefing, sends report_started event.
+        _briefing_id = None
+        _redirect_url = None
+        if _report_start_requested:
+            try:
+                now = datetime.now(timezone.utc)
+                _briefing_id = _complete_r1(session, collected, db, now)
+                _redirect_url = _complete_redirect(rt, _briefing_id)
+                log.info("[CHAT] Report triggered: briefing_id=%s, session=%s", _briefing_id, session.id)
+                yield f"event: report_started\ndata: {json.dumps({'briefing_id': _briefing_id, 'redirect_url': _redirect_url})}\n\n"
+            except Exception as exc:
+                log.error("[CHAT] Report completion failed: %s", exc, exc_info=True)
+                yield f"event: error\ndata: {json.dumps({'code': 'completion_error', 'message': 'Report-Erstellung fehlgeschlagen. Bitte versuchen Sie es erneut.'})}\n\n"
+            # No QR buttons after report start
+            quick_replies = []
+
         state = _build_session_state(session, collected_override=collected, section_override=_current_section)
         state.quick_replies = quick_replies
         # Draft fields only included when DRAFT_MODE_ENABLED — otherwise identical to pre-draft output
@@ -1920,7 +1944,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # cleaned version but the frontend doesn't handle that event yet.
         # By including the final text in done (which the frontend already
         # processes), the frontend can replace the streamed tokens.
-        yield f"event: done\ndata: {json.dumps({'turn': turn, 'text': full_response})}\n\n"
+        _done_data: dict = {'turn': turn, 'text': full_response}
+        if _briefing_id is not None:
+            _done_data['briefing_id'] = _briefing_id
+            _done_data['redirect_url'] = _redirect_url
+        yield f"event: done\ndata: {json.dumps(_done_data)}\n\n"
 
     return StreamingResponse(
         event_stream(),
