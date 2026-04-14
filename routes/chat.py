@@ -1123,6 +1123,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # desired state (previous fields + this turn's additions/deletions).
         # draft_state MUST be included here — ORM assignments to
         # session.draft_state are not reliably flushed after raw SQL commits.
+        now = datetime.now(timezone.utc)
         _draft_for_sql = None
         if DRAFT_MODE_ENABLED or _is_edit_request or _is_in_edit_mode:
             _draft_for_sql = json.dumps(
@@ -1620,6 +1621,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             _checkpoint_text = (
                 "Ich habe jetzt ein gutes Bild von Ihrem Unternehmen. "
                 "Damit kann ich bereits einen soliden KI-Report erstellen.\n\n"
+                "Am Ende können Sie alle Angaben nochmal prüfen und bei Bedarf korrigieren.\n\n"
                 "Sie können die Analyse aber gezielt vertiefen — "
                 "welche Bereiche interessieren Sie besonders?"
             )
@@ -1694,6 +1696,12 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 await queue.put(exc)
             finally:
                 await queue.put(_SENTINEL)
+
+        # KIS-1128A V4-BE: Send typing event before Sonnet call.
+        # Skip for template turns (checkpoint, block transition, report start)
+        # which are fast enough (<200ms) that a typing indicator would flicker.
+        if not (_checkpoint_text or _block_transition_text or _report_start_requested):
+            yield f'event: typing\ndata: {json.dumps({"status": "thinking"})}\n\n'
 
         producer = asyncio.create_task(_token_producer())
         full_response = ""
@@ -2264,6 +2272,45 @@ _CONTEXT_REF_PATTERNS = [
     r'Mit Ihren? (?:umfangreichen|hohen|breiten|starken|bisherigen)\b',
 ]
 
+# KIS-1128A V2-BE: Preamble patterns to strip (Danke/Lob/Rückbezug)
+_PREAMBLE_PATTERNS = [
+    re.compile(r'^Danke\b', re.IGNORECASE),
+    re.compile(r'^Vielen Dank\b', re.IGNORECASE),
+    re.compile(r'^Da Sie\b', re.IGNORECASE),
+    re.compile(r'^Mit Ihrer\b', re.IGNORECASE),
+    re.compile(r'^Bei Ihrer\b', re.IGNORECASE),
+    re.compile(r'^Bei Ihrem\b', re.IGNORECASE),
+    re.compile(r'^Ihre\b.*zeig', re.IGNORECASE),
+    re.compile(r'^Spannend\b', re.IGNORECASE),
+    re.compile(r'^Interessant\b', re.IGNORECASE),
+    re.compile(r'^Sehr gut\b', re.IGNORECASE),
+    re.compile(r'^Perfekt\b', re.IGNORECASE),
+    re.compile(r'^Verstanden\b.*,\s', re.IGNORECASE),
+    re.compile(r'^Notiert\b.*,\s', re.IGNORECASE),
+]
+
+
+def _strip_context_preamble(text: str) -> str:
+    """Strip Danke/context preamble sentences, keep only the question.
+
+    KIS-1128A V2-BE: Phase 2 answers should be ≤15 words. This safety net
+    strips known preamble patterns (Danke, Rückbezug, Lob) when the last
+    sentence is a question.
+    """
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    if len(sentences) <= 1:
+        return text
+
+    # Only strip if last sentence is a question
+    if not sentences[-1].strip().endswith('?'):
+        return text
+
+    cleaned = [s for s in sentences
+               if not any(p.search(s) for p in _PREAMBLE_PATTERNS)]
+    if cleaned:
+        return ' '.join(cleaned)
+    return text
+
 
 def _post_process_response(
     text: str,
@@ -2372,6 +2419,9 @@ def _post_process_response(
             rf'(?:^|\.\s+){pattern}[^.!?]*[.!?]',
             '.', text, flags=re.IGNORECASE,
         )
+
+    # 6b. KIS-1128A V2-BE: Strip Danke/context preambles, keep only the question.
+    text = _strip_context_preamble(text)
 
     # 7. Double-question guard: when QR buttons are present and text contains
     # 2+ questions, truncate after the first question mark to prevent
