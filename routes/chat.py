@@ -483,6 +483,13 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         log.info("[CHAT] Checkpoint: user chose blocks %s", _selected)
                     else:
                         log.warning("[CHAT] Checkpoint: invalid selection %r", _cp_value)
+                # KIS-1124 Sprint 4 Fix B: Auto-set interesse_foerderung when
+                # user chose Block A (Fördermittel & Budget) — interest is obvious.
+                _sel = _phase_state.get("selected_blocks", [])
+                if "A" in _sel and "interesse_foerderung" not in collected:
+                    collected["interesse_foerderung"] = "ja"
+                    log.info("[CHAT] Checkpoint: auto-set interesse_foerderung=ja (Block A selected)")
+
                 # Skip normal QR processing for checkpoint
                 _no_extraction = True
 
@@ -2138,6 +2145,16 @@ def _post_process_response(
         # Standalone bold headers without list (fallback)
         text = re.sub(r'\*\*[^*]{3,40}:\*\*\s*\n?', '', text)
 
+        # KIS-1124 Sprint 4 Fix C: Non-bold header + markdown list of QR labels
+        # Catches e.g. "Risikofreude (1–5):\n- 1 (sehr vorsichtig)\n- 2\n..."
+        # Header is any line ending with ":" where subsequent list items match QR labels
+        escaped_labels = [re.escape(lbl) for lbl in qr_labels]
+        label_alt = "|".join(escaped_labels)
+        text = re.sub(
+            rf'(?:^|\n)[^\n]{{3,50}}:\s*\n(?:\s*[-*]\s*(?:{label_alt})\s*\n?)+',
+            '', text, flags=re.IGNORECASE,
+        )
+
         # Original Bug 14: contiguous block of labels (slash/comma/pipe separated)
         if len(qr_labels) >= 3:
             escaped = [re.escape(lbl) for lbl in qr_labels]
@@ -2154,9 +2171,11 @@ def _post_process_response(
         )
 
     # 5. Forbidden flattery at sentence start (R5: +Exzellent, Brillant, etc.)
+    # KIS-1124 Sprint 4: also match em dash, colon, semicolon, whitespace after word
     for word in _FORBIDDEN_STARTERS:
         text = re.sub(
-            rf'(?:^|(?<=\. )){word}[!.,]\s*', '', text, flags=re.IGNORECASE,
+            rf'(?:^|(?<=\. )){word}[!.,;:\u2014\u2013]?\s*(?:[\u2014\u2013]\s*)?',
+            '', text, flags=re.IGNORECASE,
         )
 
     # 6. Context repetition filter (R3: "Da Sie bereits..." etc.)
