@@ -650,14 +650,19 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
                 _asked_field = cur_field
             elif _conv_phase == "phase_2" and rt == "r1":
-                # Phase 2: block-scoped extraction — only current block fields
+                # Phase 2: block-scoped — determine block fields for Sonnet,
+                # but ONLY pass current field to extractor to prevent hallucination.
+                # Haiku was inferring values for all block fields from a single "Nein".
                 _cur_block = _phase_state.get("current_block")
                 _block_remaining = _get_block_fields(_cur_block, collected) if _cur_block else []
-                _all_missing = _block_remaining
                 asked_fields = _block_remaining[:1]
                 cur_field = asked_fields[0] if asked_fields else ""
                 cur_desc = FIELD_DESCRIPTIONS.get(cur_field, "")
                 _asked_field = cur_field
+                # KIS-1124-HOTFIX: Only extract the field Sonnet actually asked about
+                _all_missing = [cur_field] if cur_field else []
+                log.info("[CHAT] Phase 2 block %s: cur_field=%s, block_remaining=%d, extraction_target=%s",
+                         _cur_block, cur_field, len(_block_remaining), _all_missing)
             else:
                 missing_req, missing_opt = get_missing_fields(collected, _current_section, rt)
                 _all_missing = missing_req + missing_opt
