@@ -1915,7 +1915,12 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             qr_data = [qr.model_dump() for qr in quick_replies]
             yield f"event: quick_replies\ndata: {json.dumps(qr_data)}\n\n"
 
-        yield f"event: done\ndata: {json.dumps({'turn': turn})}\n\n"
+        # KIS-1125-HOTFIX: Include post-processed text in done event.
+        # The token stream sends raw Sonnet output; text_replace sends the
+        # cleaned version but the frontend doesn't handle that event yet.
+        # By including the final text in done (which the frontend already
+        # processes), the frontend can replace the streamed tokens.
+        yield f"event: done\ndata: {json.dumps({'turn': turn, 'text': full_response})}\n\n"
 
     return StreamingResponse(
         event_stream(),
