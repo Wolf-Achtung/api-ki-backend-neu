@@ -167,6 +167,21 @@ class ChatFallbackResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# GET /api/chat/session/{session_id}/fields  (S4-BE-3: form switch)
+# ---------------------------------------------------------------------------
+
+class ChatFieldsExportResponse(BaseModel):
+    """Export collected fields for form pre-fill on chat→form switch."""
+    fields: dict
+    conversation_phase: str
+    selected_blocks: list[str]
+    completed_blocks: list[str]
+    current_block: Optional[str] = None
+    collected_count: int
+    report_type: str
+
+
+# ---------------------------------------------------------------------------
 # GET /api/chat/sessions
 # ---------------------------------------------------------------------------
 
