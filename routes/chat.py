@@ -1885,8 +1885,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 field="__summary_action__",
                 label="Nächster Schritt",
                 options=[
-                    QuickReplyOption(value="__start_report__", label="Auswertung starten"),
-                    QuickReplyOption(value="__edit_summary__", label="Etwas ändern"),
+                    QuickReplyOption(value="__start_report__", label="Auswertung starten", style="primary"),
+                    QuickReplyOption(value="__edit_summary__", label="Angaben korrigieren", style="secondary"),
                 ],
                 multi_select=False,
             )]

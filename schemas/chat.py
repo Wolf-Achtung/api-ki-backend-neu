@@ -31,6 +31,7 @@ class QuickReplyOption(BaseModel):
     value: str
     label: str
     description: Optional[str] = None
+    style: Optional[str] = None  # KIS-1128C V8-BE: "primary" | "secondary"
 
 
 class QuickReply(BaseModel):
