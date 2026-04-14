@@ -1873,17 +1873,31 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         if _checkpoint_triggered or _final_phase == "checkpoint":
             # Checkpoint: show topic selection buttons
+            _cp_options = [
+                QuickReplyOption(value="A", label="Fördermittel & Budget"),
+                QuickReplyOption(value="B", label="KI-Strategie & Roadmap"),
+                QuickReplyOption(value="C", label="Tools & Automatisierung"),
+                QuickReplyOption(value="D", label="Recht & Datenschutz"),
+                QuickReplyOption(value="ALL", label="Alle Bereiche vertiefen"),
+                QuickReplyOption(value="REPORT", label="Report jetzt erstellen"),
+            ]
+            # KIS-1128C V9-BE-1: Schnellmodus for expert users
+            _cp_ki = collected.get("ki_kompetenz", "")
+            _cp_digi = 0
+            try:
+                _cp_digi = int(collected.get("digitalisierungsgrad", 0))
+            except (ValueError, TypeError):
+                pass
+            if _cp_ki == "hoch" and _cp_digi >= 7:
+                _cp_options.append(QuickReplyOption(
+                    value="__fast_mode__",
+                    label="Schnellmodus (alle Fragen auf einmal)",
+                    style="secondary",
+                ))
             quick_replies = [QuickReply(
                 field="__checkpoint__",
                 label="Bereiche vertiefen",
-                options=[
-                    QuickReplyOption(value="A", label="Fördermittel & Budget"),
-                    QuickReplyOption(value="B", label="KI-Strategie & Roadmap"),
-                    QuickReplyOption(value="C", label="Tools & Automatisierung"),
-                    QuickReplyOption(value="D", label="Recht & Datenschutz"),
-                    QuickReplyOption(value="ALL", label="Alle Bereiche vertiefen"),
-                    QuickReplyOption(value="REPORT", label="Report jetzt erstellen"),
-                ],
+                options=_cp_options,
                 multi_select=True,
                 max_select=4,
             )]
