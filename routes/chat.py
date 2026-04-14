@@ -151,7 +151,7 @@ BLOCK_LABELS: dict[str, str] = {
 
 # KIS-1124 Testrun 6 Fix 2: Conservative defaults for fields that couldn't
 # be extracted after 2 attempts. Better to move on than loop.
-_FIELD_DEFAULTS: dict[str, str] = {
+_FIELD_DEFAULTS: dict[str, object] = {
     "marktposition": "unsicher",
     "benchmark_wettbewerb": "selten",
     "risikofreude": 3,  # Midpoint of 1-5
