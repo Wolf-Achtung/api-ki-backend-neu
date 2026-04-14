@@ -60,7 +60,7 @@ from services.chat_normalizer import (
     is_section_complete,
     normalize_field,
 )
-from services.field_templates import get_confirmation, get_template_question, is_template_field
+from services.field_templates import FIELD_QUESTIONS, get_confirmation, get_template_question, is_template_field
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 log = logging.getLogger(__name__)
@@ -2252,6 +2252,118 @@ async def chat_session_fields(session_id: UUID, db: Session = Depends(get_db)):
         collected_count=len(collected),
         report_type=session.report_type,
     )
+
+
+# ===========================================================================
+# KIS-1128C V9-BE-2: Schnellmodus — fast-mode endpoints
+# ===========================================================================
+
+@router.get("/session/{session_id}/fast-mode")
+async def get_fast_mode_fields(session_id: UUID, db: Session = Depends(get_db)):
+    """Return all remaining fields grouped by block for the fast-mode form.
+
+    Only returns fields for selected blocks that haven't been collected yet.
+    Each field includes its question text, input type, and QR options (if any).
+    """
+    session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+
+    collected = dict(session.collected_fields or {})
+    ps = session.phase_state or {}
+    selected = ps.get("selected_blocks", ["A", "B", "C", "D"])
+    rt = session.report_type
+
+    registry = get_registry_for_report(rt)
+    result = []
+    for block_id in selected:
+        if block_id == "D":
+            all_fields = _get_datenschutz_block_fields(collected.get("branche", ""))
+        else:
+            all_fields = BLOCK_FIELDS.get(block_id, [])
+
+        block_fields = []
+        for field in all_fields:
+            if field in collected:
+                continue
+            reg = registry.get(field, {})
+            qr_options = _QR_OPTIONS.get(field)
+            question = FIELD_QUESTIONS.get(field, get_field_label(field))
+            block_fields.append({
+                "field": field,
+                "question": question,
+                "type": "select" if qr_options else reg.get("type", "text"),
+                "multi_select": reg.get("type") == "multi",
+                "options": qr_options,
+            })
+
+        if block_fields:
+            result.append({
+                "block": block_id,
+                "label": BLOCK_LABELS.get(block_id, block_id),
+                "fields": block_fields,
+            })
+
+    return {"blocks": result}
+
+
+@router.post("/session/{session_id}/fast-mode/submit")
+async def submit_fast_mode(session_id: UUID, data: dict, db: Session = Depends(get_db)):
+    """Bulk-submit all fast-mode field values, then redirect to summary.
+
+    Expects: {"fields": {"field_name": "value", ...}}
+    Each value is normalized via the standard normalize_field pipeline.
+    """
+    session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+
+    collected = dict(session.collected_fields or {})
+    rt = session.report_type
+    now = datetime.now(timezone.utc)
+
+    submitted = data.get("fields", {})
+    accepted = 0
+    for field, value in submitted.items():
+        if value is None or value == "":
+            continue
+        result = normalize_field(field, value, collected, report_type=rt)
+        if result.value is not None and result.confidence != "low":
+            collected[field] = result.value
+            accepted += 1
+            log.info("[CHAT] FAST-MODE: %s=%s (confidence=%s)", field, result.value, result.confidence)
+
+    # Persist collected fields + move to summary phase
+    ps = dict(session.phase_state or {})
+    ps["conversation_phase"] = "summary"
+    ps["current_block"] = None
+
+    db.execute(
+        _sa_text("""
+            UPDATE chat_sessions
+            SET collected_fields = CAST(:cf AS jsonb),
+                phase_state = CAST(:ps AS jsonb),
+                updated_at = :ts
+            WHERE id = :sid
+        """),
+        {
+            "cf": json.dumps(collected),
+            "ps": json.dumps(ps),
+            "ts": now.isoformat(),
+            "sid": str(session.id),
+        },
+    )
+    db.commit()
+
+    log.info("[CHAT] FAST-MODE submit: session=%s, accepted=%d/%d fields",
+             session_id, accepted, len(submitted))
+
+    return {
+        "status": "ok",
+        "collected_count": len(collected),
+        "accepted": accepted,
+        "redirect": "summary",
+    }
 
 
 # ===========================================================================
