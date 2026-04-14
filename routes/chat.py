@@ -60,7 +60,7 @@ from services.chat_normalizer import (
     is_section_complete,
     normalize_field,
 )
-from services.field_templates import get_confirmation, get_template_question, is_template_field
+from services.field_templates import FIELD_QUESTIONS, get_confirmation, get_template_question, is_template_field
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 log = logging.getLogger(__name__)
@@ -239,6 +239,57 @@ def _get_block_fields(block_id: str, collected_fields: dict) -> list[str]:
     else:
         all_fields = BLOCK_FIELDS.get(block_id, [])
     return [f for f in all_fields if f not in collected_fields]
+
+
+# ---------------------------------------------------------------------------
+# KIS-1128C V6-BE-1: Smart Skip — derive answers for redundant Block C fields
+# ---------------------------------------------------------------------------
+
+# Mapping: single anwendungsfall → obvious pilot_bereich
+_ANWENDUNG_TO_PILOT: dict[str, str] = {
+    "chatbot": "kundenservice",
+    "content_generation": "marketing",
+    "datenanalyse": "verwaltung",
+    "prozess_automation": "verwaltung",
+    "dokumentenanalyse": "verwaltung",
+    "qualitaetskontrolle": "produktion",
+}
+
+
+def _smart_skip_field(field: str, collected: dict) -> str | None:
+    """Return a derived default if *field* can be inferred, else None (= ask).
+
+    Only called for Phase 2 block fields. Every derived value must be
+    report-quality — never "keine_angabe".
+    """
+    digi = collected.get("digitalisierungsgrad")
+    ki_komp = collected.get("ki_kompetenz", "")
+    groesse = collected.get("unternehmensgroesse", "")
+    anwendungen = collected.get("anwendungsfaelle")
+
+    # High digitisation → paperless is nearly 100%
+    if field == "prozesse_papierlos" and digi is not None:
+        try:
+            if int(digi) >= 8:
+                return "81-100"
+        except (ValueError, TypeError):
+            pass
+
+    # Solo entrepreneur → no internal KI team
+    if field == "interne_ki_kompetenzen" and groesse == "1":
+        return "nein"
+
+    # Single use-case → obvious pilot area
+    if field == "pilot_bereich" and isinstance(anwendungen, list) and len(anwendungen) == 1:
+        mapped = _ANWENDUNG_TO_PILOT.get(anwendungen[0])
+        if mapped:
+            return mapped
+
+    # High KI competence → high expansion potential (trivially derivable)
+    if field == "ki_ausbau_potenzial" and ki_komp == "hoch":
+        return "hoch"
+
+    return None
 
 
 def _init_phase_state() -> dict:
@@ -1329,6 +1380,21 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     # Re-compute remaining after force-defaults
                     _block_remaining = _get_block_fields(_cur_block, collected)
 
+                # KIS-1128C V6-BE-1: Smart Skip — auto-fill derivable fields
+                _smart_skipped = False
+                for _ss_field in list(_block_remaining):
+                    _ss_value = _smart_skip_field(_ss_field, collected)
+                    if _ss_value is not None:
+                        collected[_ss_field] = _ss_value
+                        _smart_skipped = True
+                        log.info("[CHAT] SMART SKIP: %s=%s (derived)", _ss_field, _ss_value)
+                if _smart_skipped:
+                    db.execute(
+                        _sa_text("UPDATE chat_sessions SET collected_fields = CAST(:cf AS jsonb) WHERE id = :sid"),
+                        {"cf": json.dumps(collected), "sid": str(session.id)},
+                    )
+                    _block_remaining = _get_block_fields(_cur_block, collected)
+
                 # Stale turn tracking: increment on no extraction, reset on extraction
                 if normalized and not _no_extraction:
                     _phase_state["block_stale_turns"] = 0
@@ -1735,8 +1801,18 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # Skip for template turns (checkpoint, block transition, report start,
         # KIS-1128B template mode) which are fast enough (<200ms) that a
         # typing indicator would flicker.
-        if not (_checkpoint_text or _block_transition_text or _report_start_requested or _template_text):
+        _is_sonnet_turn = not (_checkpoint_text or _block_transition_text or _report_start_requested or _template_text)
+        if _is_sonnet_turn:
             yield f'event: typing\ndata: {json.dumps({"status": "thinking"})}\n\n'
+
+            # KIS-1128C V5-BE: Optimistic QR preview — send preview of QR buttons
+            # before Sonnet responds, so the frontend can render them early.
+            # Only for freetext→QR transitions (template mode already bypasses Sonnet).
+            if next_fields and is_template_field(next_fields[0]):
+                _pqr = _build_quick_replies(next_fields[:1], rt, collected, _profile_ctx)
+                if _pqr:
+                    _pqr_data = [qr.model_dump() for qr in _pqr]
+                    yield f'event: preview_qr\ndata: {json.dumps(_pqr_data)}\n\n'
 
         producer = asyncio.create_task(_token_producer())
         full_response = ""
@@ -1797,17 +1873,31 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         if _checkpoint_triggered or _final_phase == "checkpoint":
             # Checkpoint: show topic selection buttons
+            _cp_options = [
+                QuickReplyOption(value="A", label="Fördermittel & Budget"),
+                QuickReplyOption(value="B", label="KI-Strategie & Roadmap"),
+                QuickReplyOption(value="C", label="Tools & Automatisierung"),
+                QuickReplyOption(value="D", label="Recht & Datenschutz"),
+                QuickReplyOption(value="ALL", label="Alle Bereiche vertiefen"),
+                QuickReplyOption(value="REPORT", label="Report jetzt erstellen"),
+            ]
+            # KIS-1128C V9-BE-1: Schnellmodus for expert users
+            _cp_ki = collected.get("ki_kompetenz", "")
+            _cp_digi = 0
+            try:
+                _cp_digi = int(collected.get("digitalisierungsgrad", 0))
+            except (ValueError, TypeError):
+                pass
+            if _cp_ki == "hoch" and _cp_digi >= 7:
+                _cp_options.append(QuickReplyOption(
+                    value="__fast_mode__",
+                    label="Schnellmodus (alle Fragen auf einmal)",
+                    style="secondary",
+                ))
             quick_replies = [QuickReply(
                 field="__checkpoint__",
                 label="Bereiche vertiefen",
-                options=[
-                    QuickReplyOption(value="A", label="Fördermittel & Budget"),
-                    QuickReplyOption(value="B", label="KI-Strategie & Roadmap"),
-                    QuickReplyOption(value="C", label="Tools & Automatisierung"),
-                    QuickReplyOption(value="D", label="Recht & Datenschutz"),
-                    QuickReplyOption(value="ALL", label="Alle Bereiche vertiefen"),
-                    QuickReplyOption(value="REPORT", label="Report jetzt erstellen"),
-                ],
+                options=_cp_options,
                 multi_select=True,
                 max_select=4,
             )]
@@ -1819,8 +1909,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 field="__summary_action__",
                 label="Nächster Schritt",
                 options=[
-                    QuickReplyOption(value="__start_report__", label="Auswertung starten"),
-                    QuickReplyOption(value="__edit_summary__", label="Etwas ändern"),
+                    QuickReplyOption(value="__start_report__", label="Auswertung starten", style="primary"),
+                    QuickReplyOption(value="__edit_summary__", label="Angaben korrigieren", style="secondary"),
                 ],
                 multi_select=False,
             )]
@@ -2165,6 +2255,118 @@ async def chat_session_fields(session_id: UUID, db: Session = Depends(get_db)):
 
 
 # ===========================================================================
+# KIS-1128C V9-BE-2: Schnellmodus — fast-mode endpoints
+# ===========================================================================
+
+@router.get("/session/{session_id}/fast-mode")
+async def get_fast_mode_fields(session_id: UUID, db: Session = Depends(get_db)):
+    """Return all remaining fields grouped by block for the fast-mode form.
+
+    Only returns fields for selected blocks that haven't been collected yet.
+    Each field includes its question text, input type, and QR options (if any).
+    """
+    session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+
+    collected = dict(session.collected_fields or {})
+    ps = session.phase_state or {}
+    selected = ps.get("selected_blocks", ["A", "B", "C", "D"])
+    rt = session.report_type
+
+    registry = get_registry_for_report(rt)
+    result = []
+    for block_id in selected:
+        if block_id == "D":
+            all_fields = _get_datenschutz_block_fields(collected.get("branche", ""))
+        else:
+            all_fields = BLOCK_FIELDS.get(block_id, [])
+
+        block_fields = []
+        for field in all_fields:
+            if field in collected:
+                continue
+            reg = registry.get(field, {})
+            qr_options = _QR_OPTIONS.get(field)
+            question = FIELD_QUESTIONS.get(field, get_field_label(field))
+            block_fields.append({
+                "field": field,
+                "question": question,
+                "type": "select" if qr_options else reg.get("type", "text"),
+                "multi_select": reg.get("type") == "multi",
+                "options": qr_options,
+            })
+
+        if block_fields:
+            result.append({
+                "block": block_id,
+                "label": BLOCK_LABELS.get(block_id, block_id),
+                "fields": block_fields,
+            })
+
+    return {"blocks": result}
+
+
+@router.post("/session/{session_id}/fast-mode/submit")
+async def submit_fast_mode(session_id: UUID, data: dict, db: Session = Depends(get_db)):
+    """Bulk-submit all fast-mode field values, then redirect to summary.
+
+    Expects: {"fields": {"field_name": "value", ...}}
+    Each value is normalized via the standard normalize_field pipeline.
+    """
+    session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+
+    collected = dict(session.collected_fields or {})
+    rt = session.report_type
+    now = datetime.now(timezone.utc)
+
+    submitted = data.get("fields", {})
+    accepted = 0
+    for field, value in submitted.items():
+        if value is None or value == "":
+            continue
+        result = normalize_field(field, value, collected, report_type=rt)
+        if result.value is not None and result.confidence != "low":
+            collected[field] = result.value
+            accepted += 1
+            log.info("[CHAT] FAST-MODE: %s=%s (confidence=%s)", field, result.value, result.confidence)
+
+    # Persist collected fields + move to summary phase
+    ps = dict(session.phase_state or {})
+    ps["conversation_phase"] = "summary"
+    ps["current_block"] = None
+
+    db.execute(
+        _sa_text("""
+            UPDATE chat_sessions
+            SET collected_fields = CAST(:cf AS jsonb),
+                phase_state = CAST(:ps AS jsonb),
+                updated_at = :ts
+            WHERE id = :sid
+        """),
+        {
+            "cf": json.dumps(collected),
+            "ps": json.dumps(ps),
+            "ts": now.isoformat(),
+            "sid": str(session.id),
+        },
+    )
+    db.commit()
+
+    log.info("[CHAT] FAST-MODE submit: session=%s, accepted=%d/%d fields",
+             session_id, accepted, len(submitted))
+
+    return {
+        "status": "ok",
+        "collected_count": len(collected),
+        "accepted": accepted,
+        "redirect": "summary",
+    }
+
+
+# ===========================================================================
 # GET /api/chat/sessions — list open sessions for authenticated user
 # ===========================================================================
 
@@ -2298,6 +2500,8 @@ _FORBIDDEN_STARTERS = [
     "Interessant",
     # KIS-1124 Testrun 4 R5: eingedeutschte Varianten
     "Brillant", "Prima", "Klasse", "Super", "Toll",
+    # KIS-1128C P2: "Sehr + Adjektiv" Testrun-9
+    "Sehr interessant", "Sehr gut", "Sehr spannend",
 ]
 
 # KIS-1124 Testrun 4 R3: Context reference patterns that Sonnet over-uses
@@ -2319,6 +2523,7 @@ _PREAMBLE_PATTERNS = [
     re.compile(r'^Spannend\b', re.IGNORECASE),
     re.compile(r'^Interessant\b', re.IGNORECASE),
     re.compile(r'^Sehr gut\b', re.IGNORECASE),
+    re.compile(r'^Sehr\s+(interessant|spannend|gut)\b', re.IGNORECASE),  # P2: "Sehr interessant!" etc.
     re.compile(r'^Perfekt\b', re.IGNORECASE),
     re.compile(r'^Verstanden\b.*,\s', re.IGNORECASE),
     re.compile(r'^Notiert\b.*,\s', re.IGNORECASE),
@@ -2371,6 +2576,12 @@ def _post_process_response(
 
     # 2. Strip other XML-like tags Sonnet might generate
     text = re.sub(r'</?quick_reply[^>]*>', '', text)
+
+    # 2b. KIS-1128C P1: Strip <button>...</button> tags (Sonnet generates HTML buttons)
+    text = re.sub(r'\s*<button>[^<]*</button>\s*', '', text, flags=re.DOTALL)
+
+    # 2c. KIS-1128C P3: Strip **Option** | **Option** pipe-separated QR format
+    text = re.sub(r'\n*(?:\*\*[^*]+\*\*\s*\|\s*)+\*\*[^*]+\*\*\s*', '', text)
 
     # 3. Remove QR-labels duplicated in prose (Bug 14 + R1)
     if qr_labels and len(qr_labels) >= 2:
@@ -2819,6 +3030,20 @@ def _build_session_state(
                 "Diese werden im Report mit branchenüblichen Standardwerten ergänzt."
             )
 
+    # KIS-1128C V7-BE: Block progress metadata
+    _cur_blk = ps.get("current_block")
+    _blk_label: str | None = None
+    _blk_progress = 0
+    _blk_total = 0
+    if _cur_blk:
+        _blk_label = BLOCK_LABELS.get(_cur_blk, "")
+        if _cur_blk == "D":
+            _blk_all = _get_datenschutz_block_fields(collected.get("branche", ""))
+        else:
+            _blk_all = BLOCK_FIELDS.get(_cur_blk, [])
+        _blk_total = len(_blk_all)
+        _blk_progress = len([f for f in _blk_all if f in collected])
+
     return ChatSessionState(
         session_id=session.id,
         report_type=session.report_type,
@@ -2843,6 +3068,9 @@ def _build_session_state(
         completed_blocks=ps["completed_blocks"],
         current_block=ps["current_block"],
         unsurveyed_note=unsurveyed_note,
+        block_label=_blk_label,
+        block_progress=_blk_progress,
+        block_total=_blk_total,
     )
 
 
