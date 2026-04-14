@@ -81,6 +81,11 @@ class ChatSessionState(BaseModel):
     current_block: Optional[str] = None
     unsurveyed_note: Optional[str] = None
 
+    # Block progress (KIS-1128C V7-BE)
+    block_label: Optional[str] = None
+    block_progress: int = 0
+    block_total: int = 0
+
     # Quick Replies
     quick_replies: Optional[list[QuickReply]] = None
 
