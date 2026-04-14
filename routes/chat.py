@@ -170,6 +170,7 @@ def _init_phase_state() -> dict:
         "block_stale_turns": 0,
         "phase_1b_asked_fields": [],   # KIS-1124 Testrun-Fix Bug 7
         "block_asked_fields": [],      # KIS-1124 Testrun-Fix Bug 8
+        "phase_1b_turn_count": 0,      # KIS-1124 Testrun 5 safeguard
     }
 
 
@@ -185,6 +186,7 @@ def _get_phase_state(session) -> dict:
         "block_stale_turns": ps.get("block_stale_turns", 0),
         "phase_1b_asked_fields": ps.get("phase_1b_asked_fields", []),
         "block_asked_fields": ps.get("block_asked_fields", []),
+        "phase_1b_turn_count": ps.get("phase_1b_turn_count", 0),
     }
 
 
@@ -1079,19 +1081,28 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     _p1b_asked.append(_asked_field)
                     _phase_state["phase_1b_asked_fields"] = _p1b_asked
 
+            # KIS-1124 Testrun 5: Phase 1b turn counter safeguard
+            if not _post_phase_1a:
+                _p1b_turns = _phase_state.get("phase_1b_turn_count", 0) + 1
+                _phase_state["phase_1b_turn_count"] = _p1b_turns
+            else:
+                _p1b_turns = 0
+
             if not _missing_p1_after:
-                # All Phase 1 fields are in collected. But before triggering
-                # checkpoint, verify all Phase 1b fields were actually asked about.
+                # All Phase 1 fields are in collected → trigger checkpoint.
+                # KIS-1124 Testrun 5 Fix: Previously we force-asked about
+                # collected-but-unasked fields, causing an infinite loop when
+                # _p1b_asked state was lost between turns. New logic: if the
+                # field is collected, it's done — no need to re-ask.
                 _unasked_p1b = [f for f in PHASE_1B_OPEN_FIELDS
-                                if f in collected and f not in _p1b_asked]
+                                if f not in _p1b_asked and f not in collected]
                 if _unasked_p1b:
-                    # Some Phase 1b fields were extracted but never asked about.
-                    # Force Sonnet to ask about the first unasked field before checkpoint.
+                    # Fields neither collected nor asked — should be rare since
+                    # _missing_p1_after is empty. Ask about them.
                     next_fields = [_unasked_p1b[0]]
-                    # Add it to asked list so next turn can proceed
                     _p1b_asked.append(_unasked_p1b[0])
                     _phase_state["phase_1b_asked_fields"] = _p1b_asked
-                    log.info("[CHAT] Phase 1b: field %s was extracted but never asked — forcing question before checkpoint", _unasked_p1b[0])
+                    log.info("[CHAT] Phase 1b: field %s uncollected+unasked — forcing question before checkpoint", _unasked_p1b[0])
                     # Persist phase_state
                     db.execute(
                         _sa_text("UPDATE chat_sessions SET phase_state = CAST(:ps AS jsonb) WHERE id = :sid"),
@@ -1099,11 +1110,12 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                     )
                     db.commit()
                 else:
-                    # All Phase 1b fields were asked about → trigger checkpoint
+                    # All Phase 1b fields covered (collected or asked) → checkpoint
                     _phase_state["conversation_phase"] = "checkpoint"
                     _checkpoint_triggered = True
                     next_fields = []
-                    log.info("[CHAT] Phase 1 COMPLETE — triggering checkpoint")
+                    log.info("[CHAT] Phase 1 COMPLETE — triggering checkpoint (p1b_asked=%s, p1b_turns=%d)",
+                             _p1b_asked, _p1b_turns)
 
                     # Persist phase_state change immediately
                     db.execute(
@@ -1111,6 +1123,23 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                         {"ps": json.dumps(_phase_state), "sid": str(session.id)},
                     )
                     db.commit()
+            elif _p1b_turns >= 6 and not _post_phase_1a:
+                # KIS-1124 Testrun 5: Safeguard — force checkpoint after 6
+                # Phase 1b turns to prevent infinite loops. Missing fields
+                # can be collected in Phase 2 blocks or skipped entirely.
+                log.warning(
+                    "[CHAT] Phase 1b SAFEGUARD: forcing checkpoint after %d turns "
+                    "(missing: %s, p1b_asked: %s)",
+                    _p1b_turns, _missing_p1_after, _p1b_asked,
+                )
+                _phase_state["conversation_phase"] = "checkpoint"
+                _checkpoint_triggered = True
+                next_fields = []
+                db.execute(
+                    _sa_text("UPDATE chat_sessions SET phase_state = CAST(:ps AS jsonb) WHERE id = :sid"),
+                    {"ps": json.dumps(_phase_state), "sid": str(session.id)},
+                )
+                db.commit()
             elif _no_extraction and _asked_field and _asked_field not in collected:
                 next_fields = [_asked_field]
                 log.info("[CHAT] Phase 1 QR-Sync: keeping next_fields=[%s]", _asked_field)
