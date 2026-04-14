@@ -1563,6 +1563,28 @@ _BLOCK_PROMPTS: dict[str, str] = {
     "D": BLOCK_D_PROMPT,
 }
 
+# ---------------------------------------------------------------------------
+# KIS-1128A V2-BE: Phase 2 brevity enforcement
+# ---------------------------------------------------------------------------
+PHASE2_BREVITY_RULES = """
+ANTWORT-LÄNGE — ABSOLUT VERBINDLICH (Phase 2):
+- Deine Antwort hat MAXIMAL 15 Wörter.
+- KEIN Dank ("Danke", "Vielen Dank", "Danke für die Einschätzung")
+- KEIN Rückbezug ("Da Sie bereits...", "Mit Ihrer...", "Bei Ihrem...")
+- KEIN Lob ("Spannend!", "Interessant!", "Sehr gut!", "Perfekt!")
+- NUR die nächste Frage, direkt und klar.
+
+BEISPIELE:
+FALSCH: "Danke für die Einschätzung! Da Sie bereits einen hohen \
+Automatisierungsgrad haben, interessiert mich besonders, in welchen \
+Bereichen Sie KI einsetzen möchten."
+RICHTIG: "In welchen Bereichen setzen Sie KI ein?"
+
+FALSCH: "Vielen Dank für die detaillierten Informationen! Jetzt \
+schauen wir uns Ihre Marktposition an."
+RICHTIG: "Wie schätzen Sie Ihre Marktposition ein?"
+"""
+
 
 def _build_phase_2_prompt(
     block_id: str,
@@ -1608,6 +1630,8 @@ def _build_phase_2_prompt(
     # Inject shared prompt rules (blacklist, confirmation pool, neutrality)
     shared_rules = _build_shared_prompt_rules(used_confirmations)
     prompt = prompt.replace("{{shared_prompt_rules}}", shared_rules)
+    # KIS-1128A V2-BE: append Phase 2 brevity enforcement
+    prompt += PHASE2_BREVITY_RULES
     return prompt
 
 

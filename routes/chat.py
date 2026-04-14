@@ -2266,6 +2266,45 @@ _CONTEXT_REF_PATTERNS = [
     r'Mit Ihren? (?:umfangreichen|hohen|breiten|starken|bisherigen)\b',
 ]
 
+# KIS-1128A V2-BE: Preamble patterns to strip (Danke/Lob/Rückbezug)
+_PREAMBLE_PATTERNS = [
+    re.compile(r'^Danke\b', re.IGNORECASE),
+    re.compile(r'^Vielen Dank\b', re.IGNORECASE),
+    re.compile(r'^Da Sie\b', re.IGNORECASE),
+    re.compile(r'^Mit Ihrer\b', re.IGNORECASE),
+    re.compile(r'^Bei Ihrer\b', re.IGNORECASE),
+    re.compile(r'^Bei Ihrem\b', re.IGNORECASE),
+    re.compile(r'^Ihre\b.*zeig', re.IGNORECASE),
+    re.compile(r'^Spannend\b', re.IGNORECASE),
+    re.compile(r'^Interessant\b', re.IGNORECASE),
+    re.compile(r'^Sehr gut\b', re.IGNORECASE),
+    re.compile(r'^Perfekt\b', re.IGNORECASE),
+    re.compile(r'^Verstanden\b.*,\s', re.IGNORECASE),
+    re.compile(r'^Notiert\b.*,\s', re.IGNORECASE),
+]
+
+
+def _strip_context_preamble(text: str) -> str:
+    """Strip Danke/context preamble sentences, keep only the question.
+
+    KIS-1128A V2-BE: Phase 2 answers should be ≤15 words. This safety net
+    strips known preamble patterns (Danke, Rückbezug, Lob) when the last
+    sentence is a question.
+    """
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    if len(sentences) <= 1:
+        return text
+
+    # Only strip if last sentence is a question
+    if not sentences[-1].strip().endswith('?'):
+        return text
+
+    cleaned = [s for s in sentences
+               if not any(p.search(s) for p in _PREAMBLE_PATTERNS)]
+    if cleaned:
+        return ' '.join(cleaned)
+    return text
+
 
 def _post_process_response(
     text: str,
@@ -2374,6 +2413,9 @@ def _post_process_response(
             rf'(?:^|\.\s+){pattern}[^.!?]*[.!?]',
             '.', text, flags=re.IGNORECASE,
         )
+
+    # 6b. KIS-1128A V2-BE: Strip Danke/context preambles, keep only the question.
+    text = _strip_context_preamble(text)
 
     # 7. Double-question guard: when QR buttons are present and text contains
     # 2+ questions, truncate after the first question mark to prevent
