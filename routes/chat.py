@@ -564,6 +564,23 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                              _phase_state.get("current_block"))
                 _no_extraction = True
 
+            # --- Summary action QR handling (Summary → Report or Edit) ---
+            elif qr_field == "__summary_action__":
+                _sa_value = req.quick_reply_value
+                if _sa_value == "__start_report__":
+                    # User confirms summary → trigger report completion
+                    # (handled below via _should_complete logic)
+                    log.info("[CHAT] Summary action: user chose START REPORT")
+                elif _sa_value == "__edit_summary__":
+                    # User wants to edit → activate edit mode
+                    session.draft_state = {
+                        **(session.draft_state or {}),
+                        "edit_mode": True,
+                    }
+                    _is_edit_request = True
+                    log.info("[CHAT] Summary action: user chose EDIT")
+                _no_extraction = True
+
             # --- Draft housekeeping (pre-step, only when DRAFT_MODE_ENABLED) ---
             # Clears any pending draft. Does NOT affect the QR value write below.
             if DRAFT_MODE_ENABLED:
@@ -1738,8 +1755,18 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 max_select=4,
             )]
         elif _final_phase == "summary":
-            # Summary phase: no QR, will generate summary below
-            quick_replies = []
+            # KIS-1124-HOTFIX: Summary phase needs action buttons so user can
+            # start the report or request edits. Previously was [] → user had
+            # to type manually, which is not discoverable.
+            quick_replies = [QuickReply(
+                field="__summary_action__",
+                label="Nächster Schritt",
+                options=[
+                    QuickReplyOption(value="__start_report__", label="Auswertung starten"),
+                    QuickReplyOption(value="__edit_summary__", label="Etwas ändern"),
+                ],
+                multi_select=False,
+            )]
         elif _final_phase == "phase_1" and _post_phase_1a:
             # Phase 1a: show QR for next sequential QR field
             if _no_extraction and _asked_field and _asked_field not in collected:
@@ -2208,9 +2235,13 @@ def _post_process_response(
     3. Remove English exclamations (Bug 9 reopen)
     4. Remove forbidden flattery starters (Schmeichelei, R5)
     5. Remove context repetition patterns (R3)
+    6. Double-question guard (KIS-1124-HOTFIX)
     """
     if not text:
         return text
+
+    log.info("[POST-PROCESS] Input (first 120 chars): %s | qr_labels=%s",
+             text[:120].replace('\n', '\\n'), qr_labels)
 
     # 1. Strip <quick_reply_buttons> tags
     text = _QR_TAG_RE.sub('', text)
@@ -2284,11 +2315,13 @@ def _post_process_response(
         )
 
     # 5. Forbidden flattery at sentence start (R5: +Exzellent, Brillant, etc.)
-    # KIS-1124 Sprint 4: also match em dash, colon, semicolon, whitespace after word
+    # KIS-1124-HOTFIX: Previous regex only matched at absolute string start (^)
+    # or after ". " — missed "Hervorragend!" after newlines. Now matches at
+    # line starts (re.MULTILINE) and after common sentence boundaries.
     for word in _FORBIDDEN_STARTERS:
         text = re.sub(
-            rf'(?:^|(?<=\. )){word}[!.,;:\u2014\u2013]?\s*(?:[\u2014\u2013]\s*)?',
-            '', text, flags=re.IGNORECASE,
+            rf'(?:^|(?<=\. )|(?<=\.\n)|(?<=\n)){word}[!.,;:\u2014\u2013]?\s*(?:[\u2014\u2013]\s*)?',
+            '', text, flags=re.IGNORECASE | re.MULTILINE,
         )
 
     # 6. Context repetition filter (R3: "Da Sie bereits..." etc.)
@@ -2313,7 +2346,10 @@ def _post_process_response(
     text = re.sub(r'^[\s.]+', '', text)  # Leading dots/spaces
     text = re.sub(r'  +', ' ', text)
     text = re.sub(r'\n{3,}', '\n\n', text)
-    return text.strip()
+    result = text.strip()
+
+    log.info("[POST-PROCESS] Output (first 120 chars): %s", result[:120].replace('\n', '\\n'))
+    return result
 
 
 # ===========================================================================
@@ -2622,11 +2658,16 @@ def _build_session_state(
 
     section_name: str = section["name"]
 
-    # is_completable: only after last section and summary has been sent
+    # is_completable: after summary has been sent.
+    # KIS-1124-HOTFIX: In the hybrid Phase 2 model, unsurveyed blocks have
+    # empty fields that get defaults at /complete time. So we can't require
+    # all_done when conversation_phase == "summary" — the summary phase
+    # itself means the user is ready to complete.
     last_section = section_idx >= len(sections) - 1
     all_done = len(missing_req) == 0 and len(missing_opt) == 0
     summary_sent = _has_summary_been_sent(session)
-    completable = last_section and all_done and summary_sent
+    _in_summary_phase = ps["conversation_phase"] == "summary"
+    completable = summary_sent and (all_done or _in_summary_phase)
 
     # Draft-Pattern state (backward-compatible: old sessions without column → {})
     draft = getattr(session, 'draft_state', None) or {}
