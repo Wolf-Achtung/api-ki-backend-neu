@@ -457,6 +457,53 @@ ENUM_VALUES: dict[str, list[str]] = {
     "benchmark_wettbewerb": ["ja", "nein", "selten"],
 }
 
+
+# ---------------------------------------------------------------------------
+# KIS-1124 Testrun 6 Fix 1: Synonym mapping for enum fields
+# Maps free-text user answers to canonical enum values.
+# ---------------------------------------------------------------------------
+
+_ENUM_SYNONYMS: dict[str, dict[str, str]] = {
+    "marktposition": {
+        "im aufbau": "nachzuegler",
+        "aufbau": "nachzuegler",
+        "testphase": "nachzuegler",
+        "gerade erst gestartet": "nachzuegler",
+        "neu am markt": "nachzuegler",
+        "start": "nachzuegler",
+        "startup": "nachzuegler",
+        "anfang": "nachzuegler",
+        "etabliert": "oberes_drittel",
+        "gut aufgestellt": "oberes_drittel",
+        "stark": "oberes_drittel",
+        "vorreiter": "marktfuehrer",
+        "pionier": "marktfuehrer",
+        "marktführer": "marktfuehrer",
+        "nummer eins": "marktfuehrer",
+        "führend": "marktfuehrer",
+        "durchschnitt": "mittelfeld",
+        "mittel": "mittelfeld",
+        "normal": "mittelfeld",
+        "keine ahnung": "unsicher",
+        "weiß nicht": "unsicher",
+        "schwer zu sagen": "unsicher",
+        "kann ich nicht sagen": "unsicher",
+        "schwer einzuschätzen": "unsicher",
+    },
+    "benchmark_wettbewerb": {
+        "manchmal": "selten",
+        "gelegentlich": "selten",
+        "ab und zu": "selten",
+        "nicht wirklich": "nein",
+        "nie": "nein",
+        "gar nicht": "nein",
+        "regelmäßig": "ja",
+        "immer": "ja",
+        "oft": "ja",
+    },
+}
+
+
 # Bundesland codes per country (from frontend REGION_OPTIONS)
 BUNDESLAND_VALUES: dict[str, list[str]] = {
     "DE": ["bw", "by", "be", "bb", "hb", "hh", "he", "mv", "ni", "nw", "rp", "sl", "sn", "st", "sh", "th"],
@@ -727,7 +774,19 @@ def normalize_field(field_name: str, raw_value: Any, collected: dict, report_typ
     if field_name == "selbststaendig":
         return _normalize_selbststaendig(raw_value)
 
-    # 5. Generic enum check
+    # 5. Field-specific synonym mapping (before generic enum check)
+    if field_name in _ENUM_SYNONYMS:
+        val_lower = str(raw_value).strip().lower()
+        synonyms = _ENUM_SYNONYMS[field_name]
+        # Exact match first
+        if val_lower in synonyms:
+            return NormResult(synonyms[val_lower], "high", False)
+        # Substring match (e.g. "im aufbau" matches "aufbau")
+        for synonym, canonical in synonyms.items():
+            if synonym in val_lower or val_lower in synonym:
+                return NormResult(canonical, "high", False)
+
+    # 6. Generic enum check
     if reg["type"] == "enum":
         allowed = enum_values.get(field_name, [])
         val = str(raw_value).strip()
