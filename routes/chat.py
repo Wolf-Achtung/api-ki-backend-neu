@@ -496,6 +496,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _pending_after_turn = False  # True when a pending draft exists AFTER this turn's processing
         _no_extraction = False  # True when free-text yielded no field extraction (user asked a question)
         _asked_field = ""  # The field that was being asked when the user sent this message
+        _report_start_requested = False  # True when user clicked "Auswertung starten"
 
         _is_qr_click = bool(req.quick_reply_field and req.quick_reply_value)
         _is_help_request = "__HELP_REQUEST__" in req.message
@@ -568,8 +569,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             elif qr_field == "__summary_action__":
                 _sa_value = req.quick_reply_value
                 if _sa_value == "__start_report__":
-                    # User confirms summary → trigger report completion
-                    # (handled below via _should_complete logic)
+                    # KIS-1125-HOTFIX: Trigger report completion directly
+                    _report_start_requested = True
                     log.info("[CHAT] Summary action: user chose START REPORT")
                 elif _sa_value == "__edit_summary__":
                     # User wants to edit → activate edit mode
@@ -1534,7 +1535,15 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         if _is_help_request and _asked_field:
             _help_ctx = build_help_context(_asked_field, collected, rt)
         elif _is_edit_request:
-            _help_ctx = EDIT_MODE_SONNET_PROMPT
+            # KIS-1125-HOTFIX: Include field list in initial edit prompt.
+            # Previously, Sonnet only got EDIT_MODE_SONNET_PROMPT (no data),
+            # so it asked "Was möchten Sie ändern?" without showing fields.
+            _edit_field_list = build_edit_extraction_context(collected, rt)
+            _help_ctx = (
+                f"{EDIT_MODE_SONNET_PROMPT}\n"
+                f"Aktuelle Felder und Werte:\n{_edit_field_list}\n\n"
+                f"Fragen Sie kurz, welches Feld geändert werden soll."
+            )
         elif _edit_applied:
             # Edit was applied — Sonnet confirms the change
             edit_field_label = FIELD_DESCRIPTIONS.get(list(normalized.keys())[0], "").split("(")[0].strip() if normalized else "Feld"
@@ -1652,6 +1661,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 if _block_transition_text:
                     # Block transition: send static text, no Sonnet call
                     await queue.put(_block_transition_text)
+                    return
+
+                if _report_start_requested:
+                    # KIS-1125: Skip Sonnet — send confirmation, trigger completion below
+                    await queue.put("Ihre Auswertung wird jetzt erstellt. Sie erhalten den Report in Kürze.")
                     return
 
                 async for token in generate_response(
@@ -1905,6 +1919,24 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             session.messages = msgs2
             db.commit()
 
+        # KIS-1125-HOTFIX: Report completion — trigger directly when user clicks
+        # "Auswertung starten". Skips Sonnet (confirmation text already streamed
+        # via _token_producer), creates Briefing, sends report_started event.
+        _briefing_id = None
+        _redirect_url = None
+        if _report_start_requested:
+            try:
+                now = datetime.now(timezone.utc)
+                _briefing_id = _complete_r1(session, collected, db, now)
+                _redirect_url = _complete_redirect(rt, _briefing_id)
+                log.info("[CHAT] Report triggered: briefing_id=%s, session=%s", _briefing_id, session.id)
+                yield f"event: report_started\ndata: {json.dumps({'briefing_id': _briefing_id, 'redirect_url': _redirect_url})}\n\n"
+            except Exception as exc:
+                log.error("[CHAT] Report completion failed: %s", exc, exc_info=True)
+                yield f"event: error\ndata: {json.dumps({'code': 'completion_error', 'message': 'Report-Erstellung fehlgeschlagen. Bitte versuchen Sie es erneut.'})}\n\n"
+            # No QR buttons after report start
+            quick_replies = []
+
         state = _build_session_state(session, collected_override=collected, section_override=_current_section)
         state.quick_replies = quick_replies
         # Draft fields only included when DRAFT_MODE_ENABLED — otherwise identical to pre-draft output
@@ -1915,7 +1947,16 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             qr_data = [qr.model_dump() for qr in quick_replies]
             yield f"event: quick_replies\ndata: {json.dumps(qr_data)}\n\n"
 
-        yield f"event: done\ndata: {json.dumps({'turn': turn})}\n\n"
+        # KIS-1125-HOTFIX: Include post-processed text in done event.
+        # The token stream sends raw Sonnet output; text_replace sends the
+        # cleaned version but the frontend doesn't handle that event yet.
+        # By including the final text in done (which the frontend already
+        # processes), the frontend can replace the streamed tokens.
+        _done_data: dict = {'turn': turn, 'text': full_response}
+        if _briefing_id is not None:
+            _done_data['briefing_id'] = _briefing_id
+            _done_data['redirect_url'] = _redirect_url
+        yield f"event: done\ndata: {json.dumps(_done_data)}\n\n"
 
     return StreamingResponse(
         event_stream(),
