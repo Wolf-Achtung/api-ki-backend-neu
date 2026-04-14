@@ -215,6 +215,10 @@ Sie den VOLLEN Wortlaut oder erwähnen Sie sie gar nicht.
 Beschreibung" oder ähnlichen Bewertungen.
 
 ABSOLUTE VERBOTE:
+- Weisen Sie den Nutzer NICHT darauf hin, dass er Antworten ändern \
+kann. Bieten Sie KEINE Korrekturmöglichkeit pro Frage an. \
+Am Ende gibt es eine Zusammenfassung, wo alle Angaben geprüft \
+werden können — das reicht.
 - Fragen Sie NIEMALS nach dem Namen des Unternehmens, der Firma \
 oder des Geschäfts. Der Firmenname wird aus Datenschutzgründen \
 nicht erhoben. Sie kennen: Branche, Größe, Standort und \
@@ -1134,6 +1138,8 @@ Unternehmensgröße, Land und Budget werden als Buttons angezeigt.
 6. Wenn der Nutzer "weiß nicht" sagt: Feld überspringen, nicht insistieren.
 7. Tonfall: Professionell, aber nicht steif. Wie ein Berater-Erstgespräch.
 8. Fragen Sie NIEMALS nach dem Namen des Unternehmens oder der Firma.
+9. Weisen Sie den Nutzer NICHT darauf hin, dass er Antworten ändern \
+kann. Bieten Sie KEINE Korrekturmöglichkeit pro Frage an.
 
 QR-FELDER (werden als Buttons angezeigt, NICHT im Text fragen):
 branche, unternehmensgroesse, selbststaendig, country, bundesland, \
@@ -1557,6 +1563,28 @@ _BLOCK_PROMPTS: dict[str, str] = {
     "D": BLOCK_D_PROMPT,
 }
 
+# ---------------------------------------------------------------------------
+# KIS-1128A V2-BE: Phase 2 brevity enforcement
+# ---------------------------------------------------------------------------
+PHASE2_BREVITY_RULES = """
+ANTWORT-LÄNGE — ABSOLUT VERBINDLICH (Phase 2):
+- Deine Antwort hat MAXIMAL 15 Wörter.
+- KEIN Dank ("Danke", "Vielen Dank", "Danke für die Einschätzung")
+- KEIN Rückbezug ("Da Sie bereits...", "Mit Ihrer...", "Bei Ihrem...")
+- KEIN Lob ("Spannend!", "Interessant!", "Sehr gut!", "Perfekt!")
+- NUR die nächste Frage, direkt und klar.
+
+BEISPIELE:
+FALSCH: "Danke für die Einschätzung! Da Sie bereits einen hohen \
+Automatisierungsgrad haben, interessiert mich besonders, in welchen \
+Bereichen Sie KI einsetzen möchten."
+RICHTIG: "In welchen Bereichen setzen Sie KI ein?"
+
+FALSCH: "Vielen Dank für die detaillierten Informationen! Jetzt \
+schauen wir uns Ihre Marktposition an."
+RICHTIG: "Wie schätzen Sie Ihre Marktposition ein?"
+"""
+
 
 def _build_phase_2_prompt(
     block_id: str,
@@ -1602,6 +1630,8 @@ def _build_phase_2_prompt(
     # Inject shared prompt rules (blacklist, confirmation pool, neutrality)
     shared_rules = _build_shared_prompt_rules(used_confirmations)
     prompt = prompt.replace("{{shared_prompt_rules}}", shared_rules)
+    # KIS-1128A V2-BE: append Phase 2 brevity enforcement
+    prompt += PHASE2_BREVITY_RULES
     return prompt
 
 
