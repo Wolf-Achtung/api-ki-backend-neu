@@ -31,6 +31,7 @@ class QuickReplyOption(BaseModel):
     value: str
     label: str
     description: Optional[str] = None
+    style: Optional[str] = None  # KIS-1128C V8-BE: "primary" | "secondary"
 
 
 class QuickReply(BaseModel):
@@ -80,6 +81,11 @@ class ChatSessionState(BaseModel):
     completed_blocks: list[str] = []
     current_block: Optional[str] = None
     unsurveyed_note: Optional[str] = None
+
+    # Block progress (KIS-1128C V7-BE)
+    block_label: Optional[str] = None
+    block_progress: int = 0
+    block_total: int = 0
 
     # Quick Replies
     quick_replies: Optional[list[QuickReply]] = None
