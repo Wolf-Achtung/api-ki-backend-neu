@@ -2428,15 +2428,12 @@ async def chat_complete(
     session = db.query(ChatSession).filter(ChatSession.id == req.session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session nicht gefunden")
-    if session.status != "active":
-        raise HTTPException(status_code=400, detail="Session ist nicht aktiv")
-    if not req.confirmed:
-        raise HTTPException(status_code=400, detail="Bestätigung erforderlich")
 
+    # KIS-1131 Fix 3: Idempotency check BEFORE status guard — the SSE stream
+    # may have already completed the session via _complete_r1(), so a
+    # subsequent /complete call should return the existing briefing_id
+    # instead of 400.
     rt = session.report_type
-    sections = get_sections_for_report(rt)
-
-    # Idempotency: if already completed, return existing briefing_id
     if session.status == "completed" and session.briefing_id:
         redirect = _complete_redirect(rt, session.briefing_id)
         return ChatCompleteResponse(
@@ -2445,6 +2442,13 @@ async def chat_complete(
             report_type=rt,
             redirect_url=redirect,
         )
+
+    if session.status != "active":
+        raise HTTPException(status_code=400, detail="Session ist nicht aktiv")
+    if not req.confirmed:
+        raise HTTPException(status_code=400, detail="Bestätigung erforderlich")
+
+    sections = get_sections_for_report(rt)
 
     # Check all required fields (across all sections)
     collected = dict(session.collected_fields or {})
@@ -2580,6 +2584,9 @@ def _post_process_response(
 
     # 2. Strip other XML-like tags Sonnet might generate
     text = re.sub(r'</?quick_reply[^>]*>', '', text)
+
+    # 2a-bis. KIS-1131 Fix 1: Strip [Quick-Reply Buttons:] header (new Sonnet format)
+    text = re.sub(r'\[Quick-Reply Buttons?:\]\s*', '', text, flags=re.IGNORECASE)
 
     # 2b. KIS-1128C P1: Strip <button>...</button> tags (Sonnet generates HTML buttons)
     text = re.sub(r'\s*<button>[^<]*</button>\s*', '', text, flags=re.DOTALL)
@@ -3045,8 +3052,11 @@ def _build_session_state(
             _blk_all = _get_datenschutz_block_fields(collected.get("branche", ""))
         else:
             _blk_all = BLOCK_FIELDS.get(_cur_blk, [])
-        _blk_total = len(_blk_all)
-        _blk_progress = len([f for f in _blk_all if f in collected])
+        # KIS-1131 Fix 2: Exclude smart-skipped fields from progress count
+        _skip_count = sum(1 for f in _blk_all
+                         if f in collected and _smart_skip_field(f, collected) is not None)
+        _blk_total = len(_blk_all) - _skip_count
+        _blk_progress = len([f for f in _blk_all if f in collected]) - _skip_count
 
     return ChatSessionState(
         session_id=session.id,
