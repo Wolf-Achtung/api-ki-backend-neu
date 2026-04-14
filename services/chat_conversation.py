@@ -540,7 +540,7 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     "ki_ziele": "Ziele mit KI in den nächsten 3–6 Monaten (Mehrfachauswahl)",
     "ki_projekte": "Bestehende KI-Tests, Tools oder Projekte — auch informell (Freitext)",
     "anwendungsfaelle": "Interessante KI-Anwendungsfälle (Mehrfachauswahl)",
-    "zeitersparnis_prioritaet": "Wo frisst heute am meisten Zeit oder Nerven? (Freitext)",
+    "zeitersparnis_prioritaet": "Welche Aufgabe kostet im Arbeitsalltag am meisten Zeit oder Nerven? (Freitext)",
     "pilot_bereich": "Bester Bereich für ein Pilotprojekt (Kundenservice, Marketing, Vertrieb, etc.)",
     "geschaeftsmodell_evolution": "Ideen, wie KI das Geschäftsmodell verändern könnte (Freitext)",
     "vision_3_jahre": "Wie soll das Unternehmen in 2–3 Jahren mit KI arbeiten? (Freitext)",
@@ -1233,6 +1233,13 @@ CONFIRMATION_BLACKLIST = [
     "als erfahrener KI-Berater",
     "die ideale Basis",
     "ohne große Vorarbeit",
+    # KIS-1124 Testrun 2 Bug 10: Langform-Bestätigungen
+    "Vielen Dank für die",
+    "Vielen Dank für Ihre",
+    "Danke für die ausführlichen",
+    "Danke für die detaillierten",
+    "Danke für die umfangreichen",
+    "Herzlichen Dank",
 ]
 
 FORBIDDEN_PATTERNS = [
@@ -1256,6 +1263,31 @@ FORBIDDEN_PATTERNS = [
     "Das klingt vielversprechend",
     "Gute Wahl",
     "Ihre Ziele sind klar definiert",
+    # KIS-1124 Testrun 2 Bug 10: Langform-Bestätigungen
+    "Vielen Dank für die",
+    "Vielen Dank für Ihre",
+    "Danke für die ausführlichen",
+    "Danke für die detaillierten",
+    # KIS-1124 Testrun 2: Schmeichelei / evaluative Satzanfänge
+    "Spannend",
+    "Interessant",
+    "Exzellent",
+    "Ausgezeichnet",
+    "Beeindruckend",
+    "Sehr gut",
+    "Großartig",
+    "Hervorragend",
+    "Wunderbar",
+    "Excellent",
+    "Amazing",
+    "Great",
+    "Perfect",
+    # KIS-1124 Testrun 2 Bug 9: Englische Ausrufe
+    "Excellent!",
+    "Great!",
+    "Perfect!",
+    "Amazing!",
+    "Wonderful!",
 ]
 
 
@@ -1284,8 +1316,12 @@ def _build_shared_prompt_rules(used_confirmations: list[str] | None = None) -> s
         )
 
     return f"""\
+SPRACHE (STRIKT):
+- Antworte IMMER auf Deutsch. Keine englischen Wörter, Ausrufe oder Phrasen.
+- Auch nicht "Excellent", "Great", "Perfect", "Amazing", "Wonderful".
+
 BESTÄTIGUNGS-REGELN (STRIKT):
-- Maximal 1 Satz Bestätigung, dann direkt zur nächsten Frage.
+- Maximal 3–5 Wörter Bestätigung, dann direkt zur nächsten Frage.
 - Verwende JEDE Bestätigung nur EINMAL im gesamten Chat. \
 Nach Gebrauch ist sie verbrannt.
 - Varianten-Pool (verwende jede nur 1×, dann streichen):
@@ -1294,13 +1330,32 @@ Nach Gebrauch ist sie verbrannt.
   direkter Einstieg OHNE Bestätigungswort, \
   kurzer Rückbezug, Einordnung.
 - NIE zweimal denselben Satzanfang in 3 aufeinanderfolgenden Antworten.
-- Variiere deine Satzanfänge RADIKAL.{used_str}
+- Variiere deine Satzanfänge RADIKAL.
+- KEINE bewertenden Einleitungen. Starte direkt mit der nächsten Frage \
+oder einem kurzen thematischen Übergang.
+- Beginne KEINE Antwort mit "Vielen Dank für die…". \
+Maximal 1× "Vielen Dank" pro gesamtem Gespräch.{used_str}
 
 BESTÄTIGUNGS-BLACKLIST (NIEMALS verwenden, in KEINER Form):
 {blacklist_str}
 
 VERBOTENE FORMULIERUNGEN (NIEMALS verwenden):
 {forbidden_str}
+
+TONALITÄT (STRIKT):
+- Sei sachlich-freundlich, nicht bewertend.
+- VERBOTEN als Satzanfang: "Spannend", "Interessant", "Exzellent", \
+"Ausgezeichnet", "Beeindruckend", "Sehr gut", "Großartig", \
+"Hervorragend", "Wunderbar".
+- Starte mit thematischem Übergang oder direkt mit der Frage.
+- SCHLECHT: "Spannend, dass Sie KI nutzen! Wie digital ist..."
+- GUT: "Wie digital läuft Ihr Geschäft ab — von der Akquise bis zur Lieferung?"
+
+WIEDERHOLUNG (STRIKT):
+- Beziehe dich NICHT wiederholt auf dieselbe Aussage des Users.
+- Wenn du einmal erwähnt hast, dass der User z.B. API-Integrationen nutzt, \
+erwähne es NICHT erneut. Jede Kontextreferenz maximal 1× pro Gespräch.
+- "Da Sie bereits..." — maximal 1× im gesamten Gespräch verwenden.
 
 NEUTRALITÄTS-REGEL (STRIKT):
 - Bewerte NIEMALS eine Antwort, bevor sie gegeben wurde.

@@ -29,6 +29,12 @@ Du bist ein Daten-Extractor für einen KI-Readiness-Fragebogen.
 Analysiere die Nutzerantwort und extrahiere strukturierte Felder
 mit dem Tool update_intake_fields.
 
+STRIKTE EXTRAKTIONSREGEL:
+Du bist ein EXTRAKTOR, kein ANALYST.
+- Extrahiere NUR Werte, die der User mit eigenen Worten EXPLIZIT gesagt hat.
+- VERBOTEN: Logische Schlussfolgerungen, Kategorie-Mapping, Kontextableitung.
+- Leere Felder sind BESSER als falsche Felder.
+
 REGELN:
 1. Setze NUR Felder, die der Nutzer EXPLIZIT genannt hat.
 2. Erfinde NIEMALS Werte. Inferiere KEINE Werte aus dem Kontext.
@@ -37,13 +43,32 @@ REGELN:
    - "in München" → bundesland: "München" (wird extern normalisiert)
    - "8 Mitarbeiter" → unternehmensgroesse: "8" (wird extern normalisiert)
    - "Handwerksbetrieb" → branche: "Handwerk" (wird extern normalisiert)
-   VERBOTENE Inferenz: Leite KEINE Feldwerte ab, die der User nicht \
-   direkt genannt hat. Beispiel: Wenn der User "Beratung von Unternehmen" \
-   sagt, extrahiere NICHT daraus zielgruppen — das muss separat gefragt werden.
-5. Bei Freitextfeldern: den Kern der Aussage in 1–3 Sätzen zusammenfassen.
-6. Wenn der Nutzer eine Rückfrage stellt statt zu antworten,
+   - "komplett digital" → digitalisierungsgrad: 9 (NICHT 10 — 10 = kein \
+   einziger analoger Prozess denkbar; "komplett/voll digital" → maximal 9)
+   VERBOTENE Inferenz (Inhalte ableiten, die der User NICHT gesagt hat):
+   - "Beratung von Unternehmen" → NICHT zielgruppen: ["b2b"] ableiten. \
+     Das ist NUR relevant für "hauptleistung". Daraus NICHT ableiten: \
+     zielgruppen, ki_einsatz, oder andere Felder.
+   - User nennt "Content-Generierung, Datenanalyse" als Anwendungsfälle → \
+     Trage das NUR bei "anwendungsfaelle" ein — NICHT bei "ki_einsatz".
+   - User sagt "Markteintritt, Kundenakquise" als Ziele → Extrahiere die \
+     WORTE des Users, NICHT Synonyme wie "Wettbewerbsfähigkeit" oder \
+     "Automatisierung".
+   Regel: Wenn der User ein Feld nicht DIREKT anspricht, setze es NICHT.
+5. FELD-ISOLATION (Cross-Contamination verhindern):
+   - ki_einsatz = wo KI HEUTE SCHON produktiv im Einsatz ist. \
+     NUR setzen wenn der User sagt "wir nutzen KI für X" oder "KI läuft bei uns in Y".
+   - anwendungsfaelle = was den User INTERESSIERT oder was er PLANT. \
+     Wenn User Anwendungsfälle als Interesse nennt, NICHT in ki_einsatz kopieren.
+   - ki_ziele = was der User als ZIEL oder WUNSCH formuliert. \
+     NUR die Worte des Users verwenden, KEINE Buzzwords substituieren. \
+     NICHT aus hauptleistung oder anwendungsfaelle ableiten.
+   - zielgruppen = NUR setzen wenn der User explizit "meine Zielgruppe ist X" sagt. \
+     NICHT aus Branche, Hauptleistung oder Kontext ableiten.
+6. Bei Freitextfeldern: den Kern der Aussage in 1–3 Sätzen zusammenfassen.
+7. Wenn der Nutzer eine Rückfrage stellt statt zu antworten,
    rufe das Tool NICHT auf.
-7. Wenn der Nutzer auf ein Feld mit einer Ablehnung oder \
+8. Wenn der Nutzer auf ein Feld mit einer Ablehnung oder \
 einem Skip-Signal antwortet (z.B. „nein", „keine Ahnung", „noch keine Idee", \
 „weiß nicht", „weiß nicht genau", „weiter", „skip", „überspringen", \
 „keine", „k.A.", „noch nicht", „nicht wirklich", „keine Angabe", \
@@ -529,6 +554,7 @@ async def extract_fields(
             if block.type == "tool_use" and block.name == "update_intake_fields":
                 extracted: dict = dict(block.input)
                 signal = extracted.pop("_signal", None)
+                extracted = _validate_extracted(extracted)
                 log.info(
                     "[CHAT-EXTRACT] Extracted %d fields: %s (signal=%s)",
                     len(extracted),
@@ -579,14 +605,71 @@ def _format_collected(collected: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Post-Extraction Validation (Hallucination Guard)
+# ---------------------------------------------------------------------------
+
+# Array fields where Haiku tends to over-generate via category-mapping
+_ARRAY_FIELDS_MAX = {
+    "ki_einsatz": 4,
+    "ki_ziele": 4,
+    "zielgruppen": 4,
+    "anwendungsfaelle": 5,
+    "datenquellen": 5,
+    "ki_hemmnisse": 4,
+    "trainings_interessen": 4,
+    "vorhandene_tools": 6,
+    "regulierte_branche": 3,
+}
+
+
+def _validate_extracted(extracted: dict) -> dict:
+    """Post-extraction validation to catch hallucination patterns.
+
+    - Caps array fields at a reasonable max (truncates excess).
+    - Clamps digitalisierungsgrad: "komplett digital" → max 9.
+    - Logs warnings for suspicious extractions.
+    """
+    for field, max_len in _ARRAY_FIELDS_MAX.items():
+        if field in extracted and isinstance(extracted[field], list):
+            original_len = len(extracted[field])
+            if original_len > max_len:
+                log.warning(
+                    "[CHAT-EXTRACT-VALIDATE] Suspicious: %s has %d values "
+                    "(max %d) — truncating. Values: %s",
+                    field, original_len, max_len, extracted[field],
+                )
+                extracted[field] = extracted[field][:max_len]
+
+    # Digitalisierungsgrad: cap at 9 (10 = no analog process conceivable)
+    if "digitalisierungsgrad" in extracted:
+        val = extracted["digitalisierungsgrad"]
+        if isinstance(val, int) and val >= 10:
+            log.info(
+                "[CHAT-EXTRACT-VALIDATE] digitalisierungsgrad %d → capped to 9",
+                val,
+            )
+            extracted["digitalisierungsgrad"] = 9
+
+    return extracted
+
+
+# ---------------------------------------------------------------------------
 # KIS-1124 Sprint 2: Multi-Field Extraction for Phase 1 Free Conversation
 # ---------------------------------------------------------------------------
 
 MULTI_FIELD_SYSTEM_PROMPT = """\
 Du bist ein Daten-Extractor für einen KI-Readiness-Fragebogen.
-Analysiere die Nutzerantwort und extrahiere ALLE erkennbaren Werte
-für die unten aufgelisteten Felder. Antworte NUR mit einem JSON-Objekt
+Analysiere die Nutzerantwort und extrahiere Werte für die unten
+aufgelisteten Felder. Antworte NUR mit einem JSON-Objekt
 über das Tool extract_multi_fields.
+
+STRIKTE EXTRAKTIONSREGEL:
+Du bist ein EXTRAKTOR, kein ANALYST.
+- Extrahiere NUR Werte, die der User mit eigenen Worten EXPLIZIT gesagt hat.
+- VERBOTEN: Logische Schlussfolgerungen, Kategorie-Mapping, Kontextableitung.
+- Leere Felder sind BESSER als falsche Felder.
+- Wenn ein Feld mehr als 3 Werte hätte: Prüfe kritisch, ob der User wirklich \
+  ALLE diese Werte explizit genannt hat. Im Zweifel weniger extrahieren.
 
 REGELN:
 1. Setze NUR Felder, die der Nutzer EXPLIZIT genannt hat.
@@ -599,15 +682,30 @@ REGELN:
 8. ERLAUBTE Normalisierung (Format-Transformation, KEINE Inhalts-Inferenz):
    - "in München" → bundesland: "by" (Bayern) — Ort → Region
    - "8 Mitarbeiter" → unternehmensgroesse: "team" — Zahl → Kategorie
-   - "komplett digital" → digitalisierungsgrad: 9 oder 10 — Beschreibung → Skala
+   - "komplett digital" → digitalisierungsgrad: 9 (NICHT 10 — 10 = kein \
+   einziger analoger Prozess denkbar; "komplett/voll digital" → maximal 9)
    - "viel Papier" → digitalisierungsgrad: 2 oder 3 — Beschreibung → Skala
    - "ich arbeite mit LLM-APIs" → ki_kompetenz: "hoch" — Aussage → Einstufung
    VERBOTENE Inferenz (Inhalte ableiten, die der User NICHT gesagt hat):
-   - "Beratung von Unternehmen" → NICHT zielgruppen: ["b2b"] ableiten
+   - "Beratung von Unternehmen" → NICHT zielgruppen: ["b2b"] ableiten. \
+     Das ist NUR relevant für "hauptleistung". Daraus NICHT ableiten: \
+     zielgruppen, ki_einsatz, oder andere Felder.
    - "KI-Beratung" → NICHT ki_ziele oder ki_einsatz daraus ableiten
    - "Automatisierung" als Hauptleistung → NICHT ki_ziele: ["automatisierung"] setzen
+   - User nennt Anwendungsfälle → NICHT in ki_einsatz kopieren
+   - User nennt Ziele → NUR seine Worte verwenden, KEINE Buzzword-Synonyme
    Regel: Wenn der User ein Feld nicht DIREKT anspricht, setze es NICHT.
-9. Wenn der Nutzer signalisiert, nicht antworten zu wollen \
+9. FELD-ISOLATION (Cross-Contamination verhindern):
+   - ki_einsatz = wo KI HEUTE SCHON produktiv im Einsatz ist. \
+     NUR setzen wenn der User sagt "wir nutzen KI für X" / "KI läuft bei uns in Y".
+   - anwendungsfaelle = was den User INTERESSIERT oder was er PLANT. \
+     Wenn User Anwendungsfälle als Interesse nennt, NICHT in ki_einsatz kopieren.
+   - ki_ziele = was der User als ZIEL oder WUNSCH formuliert. \
+     NUR die Worte des Users verwenden, KEINE Buzzwords substituieren. \
+     NICHT aus hauptleistung oder anwendungsfaelle ableiten.
+   - zielgruppen = NUR setzen wenn der User explizit "meine Zielgruppe ist X" sagt. \
+     NICHT aus Branche, Hauptleistung oder Kontext ableiten.
+10. Wenn der Nutzer signalisiert, nicht antworten zu wollen \
 (z.B. "weiß nicht", "weiß nicht genau", "keine Ahnung", "überspring", \
 "egal", "später", "kann ich nicht", "kann ich nicht sagen", \
 "schwer zu sagen", "nächste Frage", "keine Vorstellung", "passe", \
@@ -759,6 +857,7 @@ async def extract_fields_multi(
                 skip = extracted.pop("__skip_signal", False)
                 # Remove None values
                 extracted = {k: v for k, v in extracted.items() if v is not None}
+                extracted = _validate_extracted(extracted)
                 log.info(
                     "[CHAT-EXTRACT-MULTI] Extracted %d fields: %s (skip=%s)",
                     len(extracted),
