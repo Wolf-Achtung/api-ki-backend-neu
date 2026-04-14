@@ -1697,6 +1697,12 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             finally:
                 await queue.put(_SENTINEL)
 
+        # KIS-1128A V4-BE: Send typing event before Sonnet call.
+        # Skip for template turns (checkpoint, block transition, report start)
+        # which are fast enough (<200ms) that a typing indicator would flicker.
+        if not (_checkpoint_text or _block_transition_text or _report_start_requested):
+            yield f'event: typing\ndata: {json.dumps({"status": "thinking"})}\n\n'
+
         producer = asyncio.create_task(_token_producer())
         full_response = ""
         try:
