@@ -1808,6 +1808,10 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             # KIS-1128C V5-BE: Optimistic QR preview — send preview of QR buttons
             # before Sonnet responds, so the frontend can render them early.
             # Only for freetext→QR transitions (template mode already bypasses Sonnet).
+            # Hotfix: initialise _profile_ctx early to avoid UnboundLocalError
+            _profile_ctx = None
+            if rt == "strategy":
+                _profile_ctx = _load_r1_profile_for_strategy(session, db)
             if next_fields and is_template_field(next_fields[0]):
                 _pqr = _build_quick_replies(next_fields[:1], rt, collected, _profile_ctx)
                 if _pqr:
