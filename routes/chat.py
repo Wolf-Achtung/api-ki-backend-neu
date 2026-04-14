@@ -1163,10 +1163,12 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
                 # Block completion: no remaining fields OR stale >= 2
                 # BUT: don't auto-close if there are unasked remaining fields
+                # KIS-1124 Testrun 2 Bug 12: Hard limit raised to 6 to give
+                # unasked fields (like jahresumsatz) a chance to be asked.
                 _should_close = (
                     not _block_remaining
                     or (_stale >= 2 and not _unasked_remaining)
-                    or _stale >= 4  # Hard limit: force-close after 4 stale turns
+                    or _stale >= 6  # Hard limit: force-close after 6 stale turns
                 )
                 if _should_close:
                     if not _block_remaining:
