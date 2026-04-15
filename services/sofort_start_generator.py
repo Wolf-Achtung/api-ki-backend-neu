@@ -1885,8 +1885,8 @@ def generate_30_tage_challenge_html(company_size: str = "solo") -> str:
     """
     
     html = '''
-    <div style="page-break-before: always;"></div>
-    
+    <!-- M1-FIX: page-break-before entfernt — #challenge-section hat break-before:page in CSS -->
+
     <!-- 30-TAGE CHALLENGE HEADER -->
     <div style="text-align: center; margin-bottom: 24px; padding-top: 20px;">
         <h2 style="font-size: 28px; font-weight: 700; margin: 0 0 8px 0; color: #1e40af;">
@@ -2134,8 +2134,8 @@ def generate_30_tage_challenge_html_v2(
         show_prio = False
     
     html = f'''
-    <div style="page-break-before: always;"></div>
-    
+    <!-- M1-FIX: page-break-before entfernt — #challenge-section hat break-before:page in CSS -->
+
     <!-- 30-TAGE CHALLENGE HEADER -->
     <div style="text-align: center; margin-bottom: 24px; padding-top: 20px;">
         <h2 style="font-size: 28px; font-weight: 700; margin: 0 0 8px 0; color: #1e40af;">
