@@ -86,86 +86,46 @@ def optimize_base64_image(
             log.warning("[LOGO-OPTIMIZE] SVG minification failed: %s", e)
             return data, mime_type
 
-    # --- PNG/JPEG → Lossless WebP with 8-bit color depth ---
+    # --- PNG/JPEG/WebP → Optimized PNG for data URI embedding ---
+    # KIS-1130/Bug1: ALWAYS output PNG format for data URIs.
+    # B42-FIX established that WebP data URIs can fail in Puppeteer PDF rendering
+    # (badges/logos show alt-text instead of image). The original B42-FIX only
+    # converted WebP inputs to PNG but still converted PNG inputs TO WebP —
+    # which caused the same rendering failure. Now ALL raster images are
+    # output as optimized PNG, which is universally supported.
     if PILLOW_AVAILABLE and mime_type in ("image/png", "image/jpeg", "image/jpg", "image/webp"):
         try:
-            # B42-FIX: Convert WebP → PNG for data URI embedding.
-            # WebP data URIs render correctly when loaded as files in Chromium,
-            # but can fail as inline data URIs in Puppeteer PDF rendering
-            # (badges show alt-text instead of image). PNG data URIs are
-            # universally supported. R2 template works because its rendering
-            # pipeline differs from R1's.
-            if mime_type == "image/webp":
-                img: Image.Image = Image.open(io.BytesIO(data))
-                # Resize if too large
-                if max_dimension and (img.width > max_dimension or img.height > max_dimension):
-                    img.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
-                output = io.BytesIO()
-                img.save(output, format="PNG", optimize=True)
-                png_data = output.getvalue()
-                log.info("[LOGO-OPTIMIZE] WebP→PNG for data URI: %d → %d bytes", original_size, len(png_data))
-                return png_data, "image/png"
-
-            img = Image.open(io.BytesIO(data))
+            img: Image.Image = Image.open(io.BytesIO(data))
 
             # Resize if too large
             if max_dimension and (img.width > max_dimension or img.height > max_dimension):
                 img.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
                 log.debug("[LOGO-OPTIMIZE] Resized to %dx%d", img.width, img.height)
 
+            # Ensure compatible mode for PNG output
+            if img.mode not in ("RGB", "RGBA", "L", "P"):
+                img = img.convert("RGBA")
+
             # Reduce color depth to 8-bit (palette mode) for smaller files
-            # Only for images without critical transparency
-            original_mode = img.mode
-            if img.mode == "RGBA":
-                # FIX-L1: RGBA images — skip quantization entirely.
-                # MEDIANCUT/FASTOCTREE don't support RGBA, and WebP handles
-                # RGBA natively. Save directly without color reduction.
-                pass
-            elif img.mode in ("RGB", "L"):
-                # Convert to palette mode (8-bit)
+            # Only for images without transparency
+            if img.mode in ("RGB", "L"):
                 img = img.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
                 img = img.convert("RGB")
+            # RGBA images keep full color depth (transparency needs it)
 
-            # Try lossless WebP first
             output = io.BytesIO()
-            if lossless:
-                img.save(output, format="WEBP", lossless=True, quality=100)
-            else:
-                img.save(output, format="WEBP", quality=webp_quality, lossless=False)
-
+            img.save(output, format="PNG", optimize=True)
             optimized_bytes = output.getvalue()
             new_size = len(optimized_bytes)
 
-            # If lossless is too large, fall back to lossy with quality reduction
-            if new_size > MAX_LOGO_SIZE_BYTES and lossless:
-                log.debug("[LOGO-OPTIMIZE] Lossless too large (%d bytes), trying lossy", new_size)
-                output = io.BytesIO()
-                img.save(output, format="WEBP", quality=webp_quality, lossless=False)
-                optimized_bytes = output.getvalue()
-                new_size = len(optimized_bytes)
-
-                # If still too large, reduce quality further
-                if new_size > MAX_LOGO_SIZE_BYTES:
-                    for quality in [60, 50, 40]:
-                        output = io.BytesIO()
-                        img.save(output, format="WEBP", quality=quality, lossless=False)
-                        optimized_bytes = output.getvalue()
-                        new_size = len(optimized_bytes)
-                        if new_size <= MAX_LOGO_SIZE_BYTES:
-                            log.debug("[LOGO-OPTIMIZE] Reduced quality to %d to meet size limit", quality)
-                            break
-
-            # Only use WebP if actually smaller
-            if new_size < original_size:
-                log.debug("[LOGO-OPTIMIZE] %s → WebP: %d → %d bytes (%.0f%% saved)",
-                         mime_type, original_size, new_size, (1 - new_size/original_size) * 100)
-                return optimized_bytes, "image/webp"
-            else:
-                log.debug("[LOGO-OPTIMIZE] WebP not smaller, keeping original")
-                return data, mime_type
+            log.info("[LOGO-OPTIMIZE] %s → PNG: %d → %d bytes (%.0f%% %s)",
+                     mime_type, original_size, new_size,
+                     abs(1 - new_size / original_size) * 100,
+                     "saved" if new_size < original_size else "larger but PNG-safe")
+            return optimized_bytes, "image/png"
 
         except Exception as e:
-            log.warning("[LOGO-OPTIMIZE] PNG/JPEG→WebP failed: %s", e)
+            log.warning("[LOGO-OPTIMIZE] Image optimization failed: %s", e)
             return data, mime_type
 
     # No optimization possible
