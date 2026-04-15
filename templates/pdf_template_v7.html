@@ -861,6 +861,46 @@ h1, h2, h3, h4 {
     break-inside: avoid;
 }
 
+/* KIS-1127 / C3 FIX: Allow page breaks INSIDE large containers
+   to prevent near-empty pages (Puppeteer pushes oversized blocks
+   to the next page as a whole, leaving >40% whitespace). */
+
+/* 90-Tage-Roadmap: Phase cards may break internally */
+.roadmap-phase-card {
+    break-inside: auto;
+    page-break-inside: auto;
+}
+
+/* Starter-Kit: Container and tool grid may break across pages */
+.starter-kit {
+    break-inside: auto;
+    page-break-inside: auto;
+}
+.starter-kit__tools {
+    break-inside: auto;
+    page-break-inside: auto;
+}
+/* Individual tool cards are small — keep together */
+.tool-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+/* Vendor-Audit: Allow break between summary and details */
+.vendor-audit-engine {
+    break-inside: auto;
+    page-break-inside: auto;
+}
+.vendor-details-section {
+    break-inside: auto;
+    page-break-inside: auto;
+}
+/* Individual vendor cards are compact — keep together */
+.vendor-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
 /* ══════════════════════════════════════════════════════
    v7.1 NEUE ELEMENTE — Clean Corporate Plus
    ══════════════════════════════════════════════════════ */
@@ -1003,6 +1043,11 @@ h1, h2, h3, h4 {
     .section { break-inside: auto; }
     .mgmt-card, .decision-card, .funding-card, .kpi-card,
     .glance-box, .contact-box, .card-nobreak { break-inside: avoid; }
+    /* KIS-1127/C3: Large containers flow across pages */
+    .roadmap-phase-card, .starter-kit, .starter-kit__tools,
+    .vendor-audit-engine, .vendor-details-section { break-inside: auto; }
+    /* Small cards stay together */
+    .tool-card, .vendor-card { break-inside: avoid; }
 }
     </style>
 </head>

@@ -1305,9 +1305,9 @@ def render(briefing_obj: Any,
     log.info("[Z+1c-POST] Total post-render: %d", _z1c_post)
 
     # U1b (V1): Global hauptleistung replace using ORIGINAL saved before U2
-    # KIS-1126 / C2 FIX: Increased from 77→150 to prevent mid-word cuts
-    if _hl_original and len(_hl_original) > 160:
-        _hl_trunc = _hl_original[:150].rsplit(' ', 1)[0] + '…'
+    # KIS-1126 / C2 FIX: Increased from 77→150→300 to prevent mid-word cuts
+    if _hl_original and len(_hl_original) > 310:
+        _hl_trunc = _hl_original[:300].rsplit(' ', 1)[0] + '…'
         _before = len(re.findall(re.escape(_hl_original), html, re.IGNORECASE))
         # W2: Case-insensitive replace to catch GPT casing variants
         html = re.sub(re.escape(_hl_original), _hl_trunc, html, flags=re.IGNORECASE)

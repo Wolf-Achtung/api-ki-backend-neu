@@ -1025,8 +1025,8 @@ SOLO_TERM_REPLACEMENTS_EXTENDED: Dict[str, str] = {
     "modular": "flexibel",
     "Modul": "Baustein",
     "modul": "baustein",
-    "Engine": "Baustein",
-    "engine": "baustein",
+    # "Engine" removed: str.replace("Engine", "Baustein") corrupts "Engineering"
+    # → "Bausteinering". Handled by content_quality_enforcer with regex word boundaries.
     "Baukasten": "Werkzeugkasten",
     "baukasten": "werkzeugkasten",
     # Additional enterprise terms
