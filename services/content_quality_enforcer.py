@@ -617,6 +617,8 @@ TEXT_GLITCH_REPLACEMENTS = [
     # Word corruption glitches
     (r'\bresourceselung\b', 'Ressourcenstaffelung', 'corrupted word'),
     (r'\bRessourceselung\b', 'Ressourcenstaffelung', 'corrupted word capitalized'),
+    # KIS-1127/C9: "Bausteinering" = corrupted "Engineering" (Engine→Baustein leaking into compound)
+    (r'\bBausteinering\b', 'Engineering', 'corrupted Engineering'),
     # Zero resource display suppression
     (r'Ressourcen:\s*0\b', '', 'zero resources'),
     (r'Ressourcen\s*:\s*0\b', '', 'zero resources with space'),
