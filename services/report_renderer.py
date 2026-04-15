@@ -741,9 +741,10 @@ def render(briefing_obj: Any,
     log.info("[W1] Saved original hauptleistung from briefing (%d chars) for final-HTML replace", len(_hl_original))
 
     # U2: Truncate hauptleistung in sections for template rendering
+    # KIS-1126 / C2 FIX: Threshold raised from 80→200 to match X1 source limit
     for _u2_key in ("hauptleistung", "HAUPTLEISTUNG"):
         _u2_val = sections.get(_u2_key, "")
-        if isinstance(_u2_val, str) and len(_u2_val) > 80:
+        if isinstance(_u2_val, str) and len(_u2_val) > 200:
             sections[_u2_key] = _u2_val[:200].rsplit(' ', 1)[0]
             log.info("[U2] Trimmed sections['%s']: %d→%d chars", _u2_key, len(_u2_val), len(sections[_u2_key]))
 
@@ -1304,8 +1305,9 @@ def render(briefing_obj: Any,
     log.info("[Z+1c-POST] Total post-render: %d", _z1c_post)
 
     # U1b (V1): Global hauptleistung replace using ORIGINAL saved before U2
-    if _hl_original and len(_hl_original) > 80:
-        _hl_trunc = _hl_original[:77].rsplit(' ', 1)[0] + '…'
+    # KIS-1126 / C2 FIX: Increased from 77→150 to prevent mid-word cuts
+    if _hl_original and len(_hl_original) > 160:
+        _hl_trunc = _hl_original[:150].rsplit(' ', 1)[0] + '…'
         _before = len(re.findall(re.escape(_hl_original), html, re.IGNORECASE))
         # W2: Case-insensitive replace to catch GPT casing variants
         html = re.sub(re.escape(_hl_original), _hl_trunc, html, flags=re.IGNORECASE)
