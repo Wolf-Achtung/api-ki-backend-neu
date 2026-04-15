@@ -1289,6 +1289,114 @@ TOOL_EMPFEHLUNGEN = {
 }
 
 # =============================================================================
+# KIS-1132: EXPERTISE-AWARE TOOL-EMPFEHLUNGEN
+# =============================================================================
+# beginner → uses TOOL_EMPFEHLUNGEN above (unchanged)
+# intermediate/expert → use these upgraded recommendations
+
+TOOL_EMPFEHLUNGEN_INTERMEDIATE = {
+    "solo": [
+        {
+            "name": "Claude Pro / ChatGPT Plus",
+            "preis": "20 €/Monat",
+            "url": "https://claude.ai",
+            "nutzen": "Lange Dokumente, komplexe Analysen, Brainstorming",
+            "empfehlung": "Primäres Arbeitstool für strukturierte Aufgaben"
+        },
+        {
+            "name": "Make (ehem. Integromat)",
+            "preis": "ab 9 €/Monat",
+            "url": "https://make.com",
+            "nutzen": "Workflow-Automatisierung ohne Code",
+            "empfehlung": "Verknüpft KI-Tools mit bestehenden Systemen"
+        }
+    ],
+    "team": [
+        {
+            "name": "Claude Team / ChatGPT Team",
+            "preis": "25-30 €/Nutzer/Monat",
+            "url": "https://claude.ai",
+            "nutzen": "Gemeinsame Nutzung, Prompt-Bibliotheken",
+            "empfehlung": "Team-weite KI-Produktivität"
+        },
+        {
+            "name": "Make / n8n",
+            "preis": "ab 9 €/Monat",
+            "url": "https://make.com",
+            "nutzen": "Workflow-Automatisierung, API-Integrationen",
+            "empfehlung": "Automatisiert wiederkehrende Team-Prozesse"
+        }
+    ],
+    "kmu": [
+        {
+            "name": "Microsoft Copilot + Azure OpenAI",
+            "preis": "30 €/Nutzer/Monat + API-Kosten",
+            "url": "https://microsoft.com/copilot",
+            "nutzen": "Office-Integration + eigene KI-Workflows",
+            "empfehlung": "Enterprise-ready mit Datenschutz-Kontrolle"
+        },
+        {
+            "name": "n8n / Make Enterprise",
+            "preis": "ab 50 €/Monat",
+            "url": "https://n8n.io",
+            "nutzen": "Komplexe Automatisierungen, Self-hosted möglich",
+            "empfehlung": "Skalierbare Workflow-Engine für KMU"
+        }
+    ]
+}
+
+TOOL_EMPFEHLUNGEN_EXPERT = {
+    "solo": [
+        {
+            "name": "Anthropic / OpenAI API",
+            "preis": "nutzungsbasiert (ab ~20 €/Monat)",
+            "url": "https://console.anthropic.com",
+            "nutzen": "Direkte API-Integration, volle Kontrolle",
+            "empfehlung": "Für eigene Pipelines und Custom-Workflows"
+        },
+        {
+            "name": "Langfuse (Monitoring)",
+            "preis": "Open Source / ab 0 €",
+            "url": "https://langfuse.com",
+            "nutzen": "LLM-Observability, Prompt-Tracking, Kosten-Monitoring",
+            "empfehlung": "Unverzichtbar für produktive LLM-Pipelines"
+        }
+    ],
+    "team": [
+        {
+            "name": "Anthropic / OpenAI API + Gateway",
+            "preis": "nutzungsbasiert",
+            "url": "https://console.anthropic.com",
+            "nutzen": "API-Zugang, zentrale Steuerung, Rate Limiting",
+            "empfehlung": "Team-weite API-Nutzung mit Governance"
+        },
+        {
+            "name": "Langfuse / Helicone",
+            "preis": "Open Source / ab 0 €",
+            "url": "https://langfuse.com",
+            "nutzen": "Monitoring, Evaluierung, Cost-Tracking",
+            "empfehlung": "Transparenz über LLM-Nutzung im Team"
+        }
+    ],
+    "kmu": [
+        {
+            "name": "LLM-Gateway (LiteLLM / Portkey)",
+            "preis": "Open Source / ab 99 €/Monat",
+            "url": "https://litellm.ai",
+            "nutzen": "Multi-Provider-Routing, Fallback, Cost Control",
+            "empfehlung": "Zentrales API-Management für alle LLM-Aufrufe"
+        },
+        {
+            "name": "Langfuse + Evaluierung",
+            "preis": "Cloud oder Self-hosted",
+            "url": "https://langfuse.com",
+            "nutzen": "Monitoring, A/B-Testing, Prompt-Versionierung",
+            "empfehlung": "Produktionsreife LLM-Operations"
+        }
+    ]
+}
+
+# =============================================================================
 # WARNUNGEN / DON'Ts
 # =============================================================================
 
@@ -1310,6 +1418,43 @@ WARNUNGEN = [
     }
 ]
 
+# KIS-1132: Expertise-aware Warnungen
+WARNUNGEN_INTERMEDIATE = [
+    {
+        "icon": "🔒",
+        "titel": "Datenschutz bei Automatisierung",
+        "text": "Bei Workflow-Automatisierung: Prüfen Sie, welche Daten über welche APIs fließen. DSGVO gilt auch für KI-Pipelines."
+    },
+    {
+        "icon": "🔍",
+        "titel": "Output-Qualität sichern",
+        "text": "Automatisierte KI-Outputs brauchen Stichproben-Kontrolle. Definieren Sie Quality Gates für kritische Prozesse."
+    },
+    {
+        "icon": "📋",
+        "titel": "Prozesse dokumentieren",
+        "text": "Dokumentieren Sie KI-gestützte Workflows, damit auch Kollegen sie nutzen und pflegen können."
+    }
+]
+
+WARNUNGEN_EXPERT = [
+    {
+        "icon": "🔒",
+        "titel": "API-Keys & Secrets Management",
+        "text": "Keine API-Keys in Code oder Logs. Nutzen Sie Secret-Manager (Vault, AWS Secrets Manager) und rotieren Sie regelmäßig."
+    },
+    {
+        "icon": "📊",
+        "titel": "Kosten-Monitoring ist Pflicht",
+        "text": "LLM-API-Kosten können exponentiell steigen. Setzen Sie Budgetlimits, Alerts und Cost-per-Request-Tracking von Tag 1."
+    },
+    {
+        "icon": "⚖️",
+        "titel": "AI Act Compliance beachten",
+        "text": "Dokumentieren Sie Ihr KI-System gemäß EU AI Act: Zweckbestimmung, Risikoeinstufung, menschliche Aufsicht, Transparenzpflichten."
+    }
+]
+
 # =============================================================================
 # CHECKLISTE FÜR DEN START (Idee #9)
 # =============================================================================
@@ -1320,6 +1465,142 @@ CHECKLISTE_START = [
     {"text": "Eine echte Arbeitsaufgabe mit KI lösen", "dauer": "30 Min"},
     {"text": "Ergebnis prüfen und anpassen", "dauer": "15 Min"},
     {"text": "Zeitersparnis notieren", "dauer": "5 Min"},
+]
+
+# KIS-1132: Expertise-aware Checklisten
+CHECKLISTE_START_INTERMEDIATE = [
+    {"text": "Wiederkehrenden Prozess identifizieren, der >1h/Woche kostet", "dauer": "15 Min"},
+    {"text": "Strukturierten Prompt für diesen Prozess entwickeln", "dauer": "30 Min"},
+    {"text": "Prompt mit 3 echten Beispielen testen und verfeinern", "dauer": "30 Min"},
+    {"text": "Workflow-Automatisierung skizzieren (z.B. Make/n8n)", "dauer": "20 Min"},
+    {"text": "Zeitersparnis pro Woche schätzen und dokumentieren", "dauer": "10 Min"},
+]
+
+CHECKLISTE_START_EXPERT = [
+    {"text": "Bestehenden KI-Stack auf größten Engpass analysieren", "dauer": "30 Min"},
+    {"text": "Messbares Optimierungsziel definieren (Latenz/Kosten/Qualität)", "dauer": "15 Min"},
+    {"text": "Monitoring-Setup prüfen oder einrichten (Langfuse/Helicone)", "dauer": "30 Min"},
+    {"text": "Prompt-Versionierung und Evaluierungsprozess dokumentieren", "dauer": "20 Min"},
+    {"text": "Cost-per-Output-Baseline für Top-3-Use-Cases erfassen", "dauer": "20 Min"},
+]
+
+# =============================================================================
+# KIS-1132: EXPERT/INTERMEDIATE COPY-PASTE PROMPTS
+# =============================================================================
+# These replace the branch-specific beginner prompts for higher expertise levels.
+
+EXPERT_PROMPT_PATTERNS = [
+    {
+        "titel": "System-Prompt für konsistente Outputs",
+        "prompt": """Sie sind ein erfahrener {hauptleistung}-Experte. Ihre Aufgabe ist es, [AUFGABE] auszuführen.
+
+## Kontext
+- Zielgruppe: [ZIELGRUPPE]
+- Qualitätsstandard: [STANDARD]
+- Bestehende Constraints: [EINSCHRÄNKUNGEN]
+
+## Output-Anforderungen
+- Format: [JSON/Markdown/Structured Text]
+- Maximale Länge: [TOKENS/WÖRTER]
+- Sprache: Deutsch, formell
+
+## Evaluierungskriterien
+1. Fachliche Korrektheit (Priorität 1)
+2. Strukturierte Ausgabe (Priorität 2)
+3. Handlungsrelevanz (Priorität 3)
+
+Antworte NUR im definierten Format. Keine Einleitungen, keine Meta-Kommentare.""",
+        "zeitersparnis": "Basis für alle Prompts"
+    },
+    {
+        "titel": "Chain-of-Thought für komplexe Analysen",
+        "prompt": """Analysiere folgendes Problem Schritt für Schritt:
+
+Problem: [BESCHREIBUNG]
+Kontext: {hauptleistung}
+
+Schritt 1: Identifiziere die 3 wichtigsten Einflussfaktoren.
+Schritt 2: Bewerte jeden Faktor auf einer Skala 1-5 (Impact × Wahrscheinlichkeit).
+Schritt 3: Leite konkrete Handlungsempfehlungen ab.
+Schritt 4: Priorisiere nach Aufwand/Wirkung-Verhältnis.
+
+Format: Strukturierte Tabelle mit Faktor | Bewertung | Empfehlung | Priorität""",
+        "zeitersparnis": "Bessere Analyse-Qualität"
+    },
+    {
+        "titel": "Few-Shot Pattern für konsistente Bewertungen",
+        "prompt": """Du bewertest [OBJEKT] nach folgenden Kriterien. Hier sind 2 Beispiele:
+
+### Beispiel 1 (Bewertung: GUT)
+Input: [BEISPIEL-INPUT-1]
+Bewertung: [STRUKTURIERTE-BEWERTUNG-1]
+Begründung: [BEGRÜNDUNG-1]
+
+### Beispiel 2 (Bewertung: VERBESSERUNGSBEDARF)
+Input: [BEISPIEL-INPUT-2]
+Bewertung: [STRUKTURIERTE-BEWERTUNG-2]
+Begründung: [BEGRÜNDUNG-2]
+
+### Jetzt bewerten:
+Input: [NEUER INPUT]
+
+Bewerte exakt im gleichen Format wie die Beispiele.""",
+        "zeitersparnis": "Konsistente Ergebnisse"
+    },
+]
+
+INTERMEDIATE_PROMPTS = [
+    {
+        "titel": "Prozess-Optimierung mit KI",
+        "prompt": """Analysieren Sie folgenden Arbeitsprozess und identifizieren Sie KI-Automatisierungspotenzial:
+
+Prozess: [BESCHREIBUNG DES PROZESSES]
+Bereich: {hauptleistung}
+Häufigkeit: [täglich/wöchentlich/monatlich]
+Aktueller Zeitaufwand: [STUNDEN]
+
+Liefern Sie:
+1. Welche Teilschritte sind automatisierbar?
+2. Welches KI-Tool eignet sich jeweils? (konkrete Namen)
+3. Erwartete Zeitersparnis pro Durchlauf
+4. Empfohlene Implementierungsreihenfolge
+5. Mögliche Stolperfallen und wie man sie vermeidet""",
+        "zeitersparnis": "1-2 Std Setup, dann fortlaufend"
+    },
+    {
+        "titel": "Branchen-spezifische Vorlage erstellen",
+        "prompt": """Erstellen Sie eine wiederverwendbare Vorlage für:
+
+Aufgabe: [z.B. Kundenreport, Angebot, Analyse]
+Branche: {hauptleistung}
+Zielgruppe: [WER LIEST DAS?]
+
+Die Vorlage soll enthalten:
+1. Feste Strukturelemente (immer gleich)
+2. Variable Platzhalter (pro Auftrag anpassen)
+3. Qualitätskriterien zur Prüfung
+4. Beispiel-Prompt, um die Vorlage mit KI zu befüllen
+
+Ziel: 60-70% Zeitersparnis bei gleichbleibender Qualität.""",
+        "zeitersparnis": "30-45 Min pro Vorlage"
+    },
+    {
+        "titel": "KI-gestützte Recherche & Zusammenfassung",
+        "prompt": """Recherchieren und fassen Sie zusammen:
+
+Thema: [THEMA]
+Kontext: {hauptleistung}
+Tiefe: [Überblick / Detailanalyse / Entscheidungsgrundlage]
+
+Anforderungen:
+1. Aktuelle Entwicklungen (letzte 12 Monate)
+2. Relevanz für mein Geschäftsfeld bewerten
+3. 3 konkrete Handlungsempfehlungen ableiten
+4. Quellen und weiterführende Ressourcen nennen
+
+Format: Executive Summary (max. 500 Wörter) + Detail-Anhang""",
+        "zeitersparnis": "1-2 Std pro Recherche"
+    },
 ]
 
 # =============================================================================
@@ -1419,11 +1700,14 @@ def generate_sofort_start_html(
     stundensatz: int = 0,
     canon_hours_month: float = 0,  # FIX-B732: CANON hours for consistency
     canon_opex_monthly: float = 0,  # FIX-GRAMMAR-T1: CANON OPEX for consistency
+    expertise_level: str = "beginner",  # KIS-1132: competence-aware content
+    ki_projekte: str = "",  # KIS-1132: existing AI projects for context
 ) -> str:
     """
     Generiert die SOFORT_START_HTML Section.
 
     PLATIN+++ FIX 1.1/1.2/1.4: Uses canonical rates and size-based time savings.
+    KIS-1132: Expertise-aware content calibration.
     """
 
     branche_key = get_branche_key(branche)
@@ -1438,7 +1722,13 @@ def generate_sofort_start_html(
         elif any(x in size_lower for x in ["kmu", "mittel", "11-100", "11–100", "100"]):
             size_key = "kmu"
 
-    tools = TOOL_EMPFEHLUNGEN.get(size_key, TOOL_EMPFEHLUNGEN["solo"])
+    # KIS-1132: Select tools based on expertise level
+    if expertise_level == "expert":
+        tools = TOOL_EMPFEHLUNGEN_EXPERT.get(size_key, TOOL_EMPFEHLUNGEN_EXPERT["solo"])
+    elif expertise_level == "intermediate":
+        tools = TOOL_EMPFEHLUNGEN_INTERMEDIATE.get(size_key, TOOL_EMPFEHLUNGEN_INTERMEDIATE["solo"])
+    else:
+        tools = TOOL_EMPFEHLUNGEN.get(size_key, TOOL_EMPFEHLUNGEN["solo"])
 
     # PLATIN+++ FIX 1.1: Use canonical rate from single source of truth
     if stundensatz <= 0:
@@ -1482,12 +1772,38 @@ def generate_sofort_start_html(
     # FIX-EMPTY-PARENS: Strip hauptleistung and validate before using in parentheses.
     # If hauptleistung is whitespace-only or gets sanitized downstream, empty "()" remain.
     _hl_clean = (hauptleistung or "").strip()
-    erster_schritt = branche_data["erster_schritt"]
-    if _hl_clean:
+    _ki_proj_clean = (ki_projekte or "").strip()
+
+    # KIS-1132: Expertise-aware first step
+    if expertise_level == "expert":
+        if _ki_proj_clean:
+            erster_schritt = (
+                f"Analysieren Sie Ihren bestehenden KI-Stack ({_ki_proj_clean[:80]}) auf den "
+                f"größten Engpass: Ist es Latenz, Kosten, Output-Qualität oder Governance? "
+                f"Definieren Sie ein messbares Optimierungsziel für die nächsten 30 Tage."
+            )
+        else:
+            erster_schritt = (
+                f"Analysieren Sie Ihren bestehenden KI-Einsatz im Bereich "
+                f"{_hl_clean or branche_data['name']} auf den größten Engpass: "
+                f"Latenz, Kosten, Output-Qualität oder Governance? "
+                f"Definieren Sie ein messbares Optimierungsziel für die nächsten 30 Tage."
+            )
+    elif expertise_level == "intermediate":
         erster_schritt = (
-            f"Testen Sie ChatGPT mit einer typischen Aufgabe aus Ihrem Bereich "
-            f"({_hl_clean}). Nutzen Sie dafür die Copy-Paste Prompts auf der nächsten Seite."
+            f"Identifizieren Sie den zeitintensivsten wiederkehrenden Prozess in "
+            f"{_hl_clean or 'Ihrem Arbeitsalltag'} und erstellen Sie einen strukturierten "
+            f"Prompt, der diesen Prozess in 3 Schritte zerlegt. Testen Sie das Ergebnis "
+            f"mit einem realen Beispiel."
         )
+    else:
+        # Beginner: original logic
+        erster_schritt = branche_data["erster_schritt"]
+        if _hl_clean:
+            erster_schritt = (
+                f"Testen Sie ChatGPT mit einer typischen Aufgabe aus Ihrem Bereich "
+                f"({_hl_clean}). Nutzen Sie dafür die Copy-Paste Prompts auf der nächsten Seite."
+            )
     
     # HTML generieren
     html = f'''
@@ -1531,9 +1847,83 @@ def generate_sofort_start_html(
         </p>
     </div>
     
-    <!-- 4 PROMPTS – FIX-B17: heading + first box stay together, no forced page break -->
+    <!-- PROMPTS SECTION – KIS-1132: expertise-aware -->
     <div style="margin-bottom: 24px;">
         <div style="page-break-inside: avoid; break-inside: avoid;">
+'''
+
+    # KIS-1132: Select prompts based on expertise level
+    _hl_context_prefix = ""
+    if _hl_clean:
+        _hl_context_prefix = f"Kontext: Mein Unternehmen ist spezialisiert auf {_hl_clean}.\n\n"
+
+    if expertise_level == "expert":
+        # Expert: Prompt-Engineering-Patterns statt generische Prompts
+        html += f'''
+        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 24px;">🧠</span>
+            Prompt-Engineering-Patterns für Ihren Stack
+        </h3>
+        <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">
+            Wiederverwendbare Patterns für konsistente, hochwertige LLM-Outputs:
+        </p>
+'''
+        _expert_prompts = EXPERT_PROMPT_PATTERNS
+        for i, prompt_data in enumerate(_expert_prompts, 1):
+            _prompt_text = prompt_data["prompt"].replace("{hauptleistung}", _hl_clean or branche_data["name"])
+            close_wrapper = "</div>" if i == 1 else ""
+            html += f'''
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <h4 style="font-size: 14px; font-weight: 600; margin: 0; color: #1e293b;">
+                    {i}. {prompt_data["titel"]}
+                </h4>
+                <span style="font-size: 11px; background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; white-space: nowrap;">
+                    {prompt_data["zeitersparnis"]}
+                </span>
+            </div>
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 10px; line-height: 1.4; white-space: pre-wrap; color: #334155;">
+{_prompt_text}
+            </div>
+        </div>
+        {close_wrapper}
+'''
+
+    elif expertise_level == "intermediate":
+        # Intermediate: structured workflow prompts
+        html += f'''
+        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 24px;">📋</span>
+            3 Workflow-Prompts für {branche_data["name"]}
+        </h3>
+        <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">
+            Strukturierte Prompts für Workflow-Optimierung – kopieren und anpassen:
+        </p>
+'''
+        _inter_prompts = INTERMEDIATE_PROMPTS
+        for i, prompt_data in enumerate(_inter_prompts, 1):
+            _prompt_text = prompt_data["prompt"].replace("{hauptleistung}", _hl_clean or branche_data["name"])
+            close_wrapper = "</div>" if i == 1 else ""
+            html += f'''
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <h4 style="font-size: 14px; font-weight: 600; margin: 0; color: #1e293b;">
+                    {i}. {prompt_data["titel"]}
+                </h4>
+                <span style="font-size: 11px; background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; white-space: nowrap;">
+                    ⏱️ {prompt_data["zeitersparnis"]}
+                </span>
+            </div>
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 10px; line-height: 1.4; white-space: pre-wrap; color: #334155;">
+{_prompt_text}
+            </div>
+        </div>
+        {close_wrapper}
+'''
+
+    else:
+        # Beginner: original branch-specific prompts (unchanged)
+        html += f'''
         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 24px;">📋</span>
             4 Copy-Paste Prompts für {branche_data["name"]}
@@ -1542,22 +1932,12 @@ def generate_sofort_start_html(
             Kopieren Sie diese Prompts direkt in ChatGPT oder Claude:
         </p>
 '''
-
-    # Prompts hinzufügen
-    # KIS-1116 Fix 2: Inject hauptleistung context so prompts are sub-sector-specific
-    _hl_context_prefix = ""
-    if _hl_clean:
-        _hl_context_prefix = f"Kontext: Mein Unternehmen ist spezialisiert auf {_hl_clean}.\n\n"
-    prompts_list: List[Dict[str, Any]] = cast(List[Dict[str, Any]], branche_data["prompts"])
-    for i, prompt_data in enumerate(prompts_list, 1):
-        _raw_prompt = _hl_context_prefix + prompt_data["prompt"] if _hl_context_prefix else prompt_data["prompt"]
-        # KIS-1126 / C8 FIX: Removed 400-char truncation — prompts must be complete
-        # to be usable as copy-paste content. Box has white-space:pre-wrap and no
-        # max-height, so full text renders correctly.
-        prompt_text = _raw_prompt
-        # FIX-B17: Close the avoid-break wrapper after first prompt box
-        close_wrapper = "</div>" if i == 1 else ""
-        html += f'''
+        prompts_list: List[Dict[str, Any]] = cast(List[Dict[str, Any]], branche_data["prompts"])
+        for i, prompt_data in enumerate(prompts_list, 1):
+            _raw_prompt = _hl_context_prefix + prompt_data["prompt"] if _hl_context_prefix else prompt_data["prompt"]
+            prompt_text = _raw_prompt
+            close_wrapper = "</div>" if i == 1 else ""
+            html += f'''
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                 <h4 style="font-size: 14px; font-weight: 600; margin: 0; color: #1e293b;">
@@ -1573,15 +1953,13 @@ def generate_sofort_start_html(
         </div>
         {close_wrapper}
 '''
-    
-    # 4. Lern-Prompt – Verstehen & Erklären (branchenspezifisch)
-    _lern_raw = branche_data.get("lern_prompt")
-    lern_prompt: Dict[str, str] | None = cast(Dict[str, str], _lern_raw) if isinstance(_lern_raw, dict) else None
-    if lern_prompt:
-        _raw_lern = _hl_context_prefix + lern_prompt["prompt"] if _hl_context_prefix else lern_prompt["prompt"]
-        # KIS-1126 / C8 FIX: Removed 400-char truncation — prompts must be complete
-        lern_text = _raw_lern
-        html += f'''
+        # Lern-Prompt (beginner only)
+        _lern_raw = branche_data.get("lern_prompt")
+        lern_prompt: Dict[str, str] | None = cast(Dict[str, str], _lern_raw) if isinstance(_lern_raw, dict) else None
+        if lern_prompt:
+            _raw_lern = _hl_context_prefix + lern_prompt["prompt"] if _hl_context_prefix else lern_prompt["prompt"]
+            lern_text = _raw_lern
+            html += f'''
         <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                 <h4 style="font-size: 14px; font-weight: 600; margin: 0; color: #92400e;">
@@ -1638,18 +2016,28 @@ def generate_sofort_start_html(
     </div>
 '''
     
-    # Checkliste hinzufügen (Idee #9)
-    html += '''
+    # KIS-1132: Expertise-aware Checkliste
+    if expertise_level == "expert":
+        _checkliste = CHECKLISTE_START_EXPERT
+        _checkliste_title = "Ihr Optimierungs-Fahrplan (erste 2 Stunden)"
+    elif expertise_level == "intermediate":
+        _checkliste = CHECKLISTE_START_INTERMEDIATE
+        _checkliste_title = "Ihr Workflow-Optimierungs-Plan (erste 90 Minuten)"
+    else:
+        _checkliste = CHECKLISTE_START
+        _checkliste_title = "Ihre Start-Checkliste (erste 60 Minuten)"
+
+    html += f'''
     <!-- CHECKLISTE -->
     <div style="background: #eff6ff; border: 1px solid #3b82f6; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
         <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #1e40af; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 20px;">✅</span>
-            Ihre Start-Checkliste (erste 60 Minuten)
+            {_checkliste_title}
         </h3>
         <div style="display: flex; flex-direction: column; gap: 6px;">
 '''
-    
-    for item in CHECKLISTE_START:
+
+    for item in _checkliste:
         html += f'''
             <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
                 <span style="width: 18px; height: 18px; border: 2px solid #3b82f6; border-radius: 4px; display: inline-block;"></span>
@@ -1657,13 +2045,20 @@ def generate_sofort_start_html(
                 <span style="font-size: 11px; color: #64748b; background: white; padding: 2px 6px; border-radius: 4px;">{item["dauer"]}</span>
             </div>
 '''
-    
+
     html += '''
         </div>
     </div>
 '''
-    
-    # Warnungen hinzufügen
+
+    # KIS-1132: Expertise-aware Warnungen
+    if expertise_level == "expert":
+        _warnungen = WARNUNGEN_EXPERT
+    elif expertise_level == "intermediate":
+        _warnungen = WARNUNGEN_INTERMEDIATE
+    else:
+        _warnungen = WARNUNGEN
+
     html += '''
     <!-- WARNUNGEN -->
     <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px;">
@@ -1673,8 +2068,8 @@ def generate_sofort_start_html(
         </h3>
         <div style="display: flex; flex-direction: column; gap: 8px;">
 '''
-    
-    for warnung in WARNUNGEN:
+
+    for warnung in _warnungen:
         html += f'''
             <div style="display: flex; align-items: flex-start; gap: 8px;">
                 <span style="font-size: 16px;">{warnung["icon"]}</span>
@@ -1684,7 +2079,7 @@ def generate_sofort_start_html(
                 </div>
             </div>
 '''
-    
+
     html += '''
         </div>
     </div>
@@ -1876,6 +2271,140 @@ KATEGORIE_ICONS = {
     "Qualität": "✅",
     "Scaling": "📈",
     "Planung": "📋",
+    "Monitoring": "📊",
+    "Governance": "⚖️",
+    "Strategie": "🎯",
+    "Analyse": "🔬",
+}
+
+# =============================================================================
+# KIS-1132: EXPERT 30-TAGE CHALLENGE
+# =============================================================================
+
+CHALLENGE_30_TAGE_EXPERT = {
+    "woche_1": {
+        "titel": "Stack-Audit",
+        "ziel": "Ist-Zustand erfassen: Kosten, Latenz, Qualität messen",
+        "tage": [
+            {"tag": 1, "aufgabe": "Alle LLM-API-Aufrufe inventarisieren", "dauer": "30 Min", "kategorie": "Analyse"},
+            {"tag": 2, "aufgabe": "Cost-per-Request für Top-3-Use-Cases messen", "dauer": "45 Min", "kategorie": "Monitoring"},
+            {"tag": 3, "aufgabe": "Durchschnittliche Latenz pro Endpoint erfassen", "dauer": "30 Min", "kategorie": "Monitoring"},
+            {"tag": 4, "aufgabe": "Output-Qualität mit 10 Testfällen bewerten", "dauer": "45 Min", "kategorie": "Qualität"},
+            {"tag": 5, "aufgabe": "Monitoring-Dashboard aufsetzen (Langfuse/Helicone)", "dauer": "60 Min", "kategorie": "Setup"},
+            {"tag": 6, "aufgabe": "Baseline-Report erstellen: Kosten/Qualität/Latenz", "dauer": "30 Min", "kategorie": "Analyse"},
+            {"tag": 7, "aufgabe": "Woche 1 Review: Top-3-Optimierungspotenziale priorisieren", "dauer": "20 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_2": {
+        "titel": "Governance & Compliance",
+        "ziel": "KI-Richtlinie erstellen, Prüfschritte definieren, Dokumentation",
+        "tage": [
+            {"tag": 8, "aufgabe": "KI-Nutzungsrichtlinie Entwurf (Scope, Rollen, Verantwortung)", "dauer": "45 Min", "kategorie": "Governance"},
+            {"tag": 9, "aufgabe": "Datenklassifikation: Was darf in welches LLM?", "dauer": "30 Min", "kategorie": "Governance"},
+            {"tag": 10, "aufgabe": "AI Act Risikoeinstufung für eigene Use Cases", "dauer": "45 Min", "kategorie": "Governance"},
+            {"tag": 11, "aufgabe": "Quality Gates definieren: Wann ist LLM-Output produktionsreif?", "dauer": "30 Min", "kategorie": "Qualität"},
+            {"tag": 12, "aufgabe": "Prompt-Versionierung einrichten (Git/Langfuse)", "dauer": "45 Min", "kategorie": "Optimierung"},
+            {"tag": 13, "aufgabe": "Incident-Response-Plan für LLM-Fehler erstellen", "dauer": "30 Min", "kategorie": "Governance"},
+            {"tag": 14, "aufgabe": "Woche 2 Review: Governance-Dokumente finalisieren", "dauer": "20 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_3": {
+        "titel": "Optimierung",
+        "ziel": "Prompt-Engineering, Caching, Cost-per-Output optimieren",
+        "tage": [
+            {"tag": 15, "aufgabe": "Top-Prompt mit A/B-Varianten testen", "dauer": "45 Min", "kategorie": "Optimierung"},
+            {"tag": 16, "aufgabe": "Semantic Caching für häufige Anfragen evaluieren", "dauer": "30 Min", "kategorie": "Optimierung"},
+            {"tag": 17, "aufgabe": "Model-Routing: Günstigeres Modell für einfache Tasks", "dauer": "45 Min", "kategorie": "Optimierung"},
+            {"tag": 18, "aufgabe": "Prompt-Kompression testen (Kosten vs. Qualität)", "dauer": "30 Min", "kategorie": "Optimierung"},
+            {"tag": 19, "aufgabe": "Evaluierungs-Suite mit 20+ Testfällen aufbauen", "dauer": "60 Min", "kategorie": "Qualität"},
+            {"tag": 20, "aufgabe": "Cost-per-Output nach Optimierung messen (Delta)", "dauer": "30 Min", "kategorie": "Monitoring"},
+            {"tag": 21, "aufgabe": "Woche 3 Review: ROI der Optimierungen berechnen", "dauer": "20 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_4": {
+        "titel": "Skalierung",
+        "ziel": "Monitoring, Error-Handling, Fallback-Strategien, Team-Rollout",
+        "tage": [
+            {"tag": 22, "aufgabe": "Fallback-Strategie definieren (Provider B, Cached Response)", "dauer": "30 Min", "kategorie": "Strategie"},
+            {"tag": 23, "aufgabe": "Rate-Limiting und Budget-Alerts konfigurieren", "dauer": "30 Min", "kategorie": "Monitoring"},
+            {"tag": 24, "aufgabe": "Error-Handling und Retry-Logik überprüfen", "dauer": "45 Min", "kategorie": "Optimierung"},
+            {"tag": 25, "aufgabe": "Team-Dokumentation: Onboarding-Guide für LLM-Nutzung", "dauer": "45 Min", "kategorie": "Sharing"},
+            {"tag": 26, "aufgabe": "Compliance-Check: Alle Dokumentationspflichten erfüllt?", "dauer": "30 Min", "kategorie": "Governance"},
+            {"tag": 27, "aufgabe": "Nächste 3 Use Cases für LLM-Integration identifizieren", "dauer": "30 Min", "kategorie": "Strategie"},
+            {"tag": 28, "aufgabe": "Team-Präsentation: Ergebnisse und Learnings teilen", "dauer": "45 Min", "kategorie": "Sharing"},
+        ]
+    },
+    "abschluss": {
+        "titel": "Abschluss & Skalierungs-Roadmap",
+        "ziel": "Ergebnisse sichern und Q2-Roadmap planen",
+        "tage": [
+            {"tag": 29, "aufgabe": "Kosten-Qualität-Delta vs. Baseline dokumentieren", "dauer": "30 Min", "kategorie": "Reflexion"},
+            {"tag": 30, "aufgabe": "90-Tage-Roadmap für LLM-Skalierung erstellen", "dauer": "45 Min", "kategorie": "Planung"},
+        ]
+    }
+}
+
+CHALLENGE_30_TAGE_INTERMEDIATE = {
+    "woche_1": {
+        "titel": "Workflow-Analyse",
+        "ziel": "Zeitfresser identifizieren und erste KI-Workflows aufsetzen",
+        "tage": [
+            {"tag": 1, "aufgabe": "Top-5-Zeitfresser in Ihrem Arbeitstag auflisten", "dauer": "15 Min", "kategorie": "Analyse"},
+            {"tag": 2, "aufgabe": "Für #1 Zeitfresser: Strukturierten Prompt entwickeln", "dauer": "25 Min", "kategorie": "Praxis"},
+            {"tag": 3, "aufgabe": "Prompt mit 3 realen Beispielen testen und verfeinern", "dauer": "25 Min", "kategorie": "Praxis"},
+            {"tag": 4, "aufgabe": "Für #2 Zeitfresser: Prompt entwickeln und testen", "dauer": "30 Min", "kategorie": "Praxis"},
+            {"tag": 5, "aufgabe": "Mehrstufigen Prompt testen (Schritt-für-Schritt-Anleitung)", "dauer": "25 Min", "kategorie": "Fortgeschritten"},
+            {"tag": 6, "aufgabe": "Prompt-Vorlage für Ihren häufigsten Use Case speichern", "dauer": "15 Min", "kategorie": "Optimierung"},
+            {"tag": 7, "aufgabe": "Woche 1 Review: Welcher Prompt spart am meisten Zeit?", "dauer": "15 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_2": {
+        "titel": "Automatisierung",
+        "ziel": "Wiederkehrende Aufgaben mit KI-Workflows automatisieren",
+        "tage": [
+            {"tag": 8, "aufgabe": "Make/n8n Account erstellen und ersten Workflow anlegen", "dauer": "30 Min", "kategorie": "Setup"},
+            {"tag": 9, "aufgabe": "E-Mail-zu-Zusammenfassung-Workflow aufsetzen", "dauer": "30 Min", "kategorie": "Praxis"},
+            {"tag": 10, "aufgabe": "Dokument-Analyse-Workflow mit KI-Unterstützung", "dauer": "30 Min", "kategorie": "Praxis"},
+            {"tag": 11, "aufgabe": "Qualitätskriterien für automatische Outputs definieren", "dauer": "20 Min", "kategorie": "Qualität"},
+            {"tag": 12, "aufgabe": "Zweites KI-Tool evaluieren (Claude/Perplexity/Spezialtool)", "dauer": "25 Min", "kategorie": "Exploration"},
+            {"tag": 13, "aufgabe": "Prompt-Bibliothek mit Top-5-Prompts anlegen", "dauer": "20 Min", "kategorie": "Optimierung"},
+            {"tag": 14, "aufgabe": "Woche 2 Review: Zeitersparnis pro Workflow dokumentieren", "dauer": "15 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_3": {
+        "titel": "Vertiefung & Qualität",
+        "ziel": "Fortgeschrittene Techniken, Qualitätssicherung",
+        "tage": [
+            {"tag": 15, "aufgabe": "System-Prompts für konsistente Ergebnisse einrichten", "dauer": "30 Min", "kategorie": "Fortgeschritten"},
+            {"tag": 16, "aufgabe": "KI als Sparringspartner für Entscheidungsfindung nutzen", "dauer": "30 Min", "kategorie": "Praxis"},
+            {"tag": 17, "aufgabe": "Branchen-spezifisches Template mit KI erstellen", "dauer": "30 Min", "kategorie": "Praxis"},
+            {"tag": 18, "aufgabe": "Qualitäts-Checkliste: Wann ist KI-Output verwendbar?", "dauer": "20 Min", "kategorie": "Qualität"},
+            {"tag": 19, "aufgabe": "Workflow-Integration: KI-Tool an bestehendes System anbinden", "dauer": "45 Min", "kategorie": "Fortgeschritten"},
+            {"tag": 20, "aufgabe": "Kolleg:innen einweisen: Bester Use Case demonstrieren", "dauer": "30 Min", "kategorie": "Sharing"},
+            {"tag": 21, "aufgabe": "Woche 3 Review: Top-3-Use-Cases nach ROI ranken", "dauer": "20 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_4": {
+        "titel": "Skalierung & Standardisierung",
+        "ziel": "Workflows standardisieren, Team einbeziehen, nächste Schritte",
+        "tage": [
+            {"tag": 22, "aufgabe": "Standard-Prompts dokumentieren und mit Team teilen", "dauer": "25 Min", "kategorie": "Sharing"},
+            {"tag": 23, "aufgabe": "Einfache KI-Nutzungsregeln aufschreiben (Do's & Don'ts)", "dauer": "20 Min", "kategorie": "Governance"},
+            {"tag": 24, "aufgabe": "Komplexeres Projekt mit KI-Workflow durchführen", "dauer": "45 Min", "kategorie": "Praxis"},
+            {"tag": 25, "aufgabe": "Feedback-Loop: Output-Qualität systematisch verbessern", "dauer": "25 Min", "kategorie": "Optimierung"},
+            {"tag": 26, "aufgabe": "Tool-Stack evaluieren: Was behalten, was ersetzen?", "dauer": "20 Min", "kategorie": "Analyse"},
+            {"tag": 27, "aufgabe": "Automatisierungs-Roadmap für nächste 3 Monate", "dauer": "30 Min", "kategorie": "Planung"},
+            {"tag": 28, "aufgabe": "Budgetplanung: Tools + Zeitinvest für nächstes Quartal", "dauer": "20 Min", "kategorie": "Planung"},
+        ]
+    },
+    "abschluss": {
+        "titel": "Abschluss & Nächste Phase",
+        "ziel": "Ergebnisse sichern und Ausbau planen",
+        "tage": [
+            {"tag": 29, "aufgabe": "ROI berechnen: Zeitersparnis × Stundensatz", "dauer": "20 Min", "kategorie": "Reflexion"},
+            {"tag": 30, "aufgabe": "Nächste 30 Tage planen: Welche Workflows werden Standard?", "dauer": "30 Min", "kategorie": "Planung"},
+        ]
+    }
 }
 
 
@@ -2112,27 +2641,43 @@ CHALLENGE_LIGHT = {
 
 def generate_30_tage_challenge_html_v2(
     company_size: str = "solo",
-    zeitbudget: str = "2_5"
+    zeitbudget: str = "2_5",
+    expertise_level: str = "beginner",  # KIS-1132
+    hauptleistung: str = "",  # KIS-1132
 ) -> str:
     """
-    Generiert die 30-Tage Challenge angepasst ans Zeitbudget.
-    
+    Generiert die 30-Tage Challenge angepasst ans Zeitbudget und Kompetenz-Level.
+
     Args:
         company_size: solo/team/kmu
         zeitbudget: unter_2/2_5/5_10/ueber_10
+        expertise_level: beginner/intermediate/expert (KIS-1132)
+        hauptleistung: Core business description (KIS-1132)
     """
-    
+
     # Zeitbudget-Config holen
     zeit_config = ZEITBUDGET_CONFIG.get(zeitbudget, ZEITBUDGET_CONFIG["2_5"])
-    
-    # Challenge-Daten basierend auf Intensität wählen
-    if zeit_config["intensitaet"] == "light":
+
+    # KIS-1132: Challenge-Daten basierend auf Expertise UND Intensität wählen
+    show_prio = False
+    if expertise_level == "expert":
+        challenge_data = CHALLENGE_30_TAGE_EXPERT
+    elif expertise_level == "intermediate":
+        challenge_data = CHALLENGE_30_TAGE_INTERMEDIATE
+    elif zeit_config["intensitaet"] == "light":
         challenge_data = CHALLENGE_LIGHT
         show_prio = True
     else:
         challenge_data = CHALLENGE_30_TAGE
-        show_prio = False
-    
+
+    # KIS-1132: Expertise-aware subtitle
+    if expertise_level == "expert":
+        _subtitle = "Stack-Optimierung und Governance in 4 Wochen"
+    elif expertise_level == "intermediate":
+        _subtitle = "Vom Anwender zum Workflow-Profi in 4 Wochen"
+    else:
+        _subtitle = "Von Null auf KI-Profi – angepasst an Ihr Zeitbudget"
+
     html = f'''
     <!-- M1-FIX: page-break-before entfernt — #challenge-section hat break-before:page in CSS -->
 
@@ -2142,7 +2687,7 @@ def generate_30_tage_challenge_html_v2(
             🏆 Ihre 30-Tage KI-Challenge
         </h2>
         <p style="font-size: 16px; color: #64748b; margin: 0;">
-            Von Null auf KI-Profi – angepasst an Ihr Zeitbudget
+            {_subtitle}
         </p>
     </div>
     
