@@ -2237,9 +2237,9 @@ def business_case_report_to_html(
 
     # Scenarios Section
     html_parts.append(f'''
-        <div class="scenarios-section" style="margin-bottom:24px;page-break-inside:avoid;break-inside:avoid;overflow:visible;">
+        <div class="scenarios-section" style="margin-bottom:24px;overflow:visible;">
             <p style="margin:0 0 16px 0;font-weight:600;font-size:13pt;color:#1e293b;">{labels["scenarios_title"]}</p>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;page-break-inside:avoid;break-inside:avoid;overflow:visible;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;overflow:visible;">
     ''')
 
     # RENDER-TIME ORDERING ENFORCEMENT: Ensure cons <= real <= opt in HTML output.

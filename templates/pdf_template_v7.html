@@ -79,7 +79,7 @@
 
 body {
     font-family: var(--font);
-    font-size: 10pt;
+    font-size: 11pt; /* M5-FIX: 10pt→11pt for better readability, consistent with strategy_report */
     line-height: 1.6;
     color: var(--c-text);
     background: var(--c-white);
@@ -122,12 +122,12 @@ tr:last-child td { border-bottom: none; }
 .break-action-to-imprint { break-before: page; }
 
 /* Major chapter starts — new page */
+/* M3-FIX: #funding-section removed — flows after AI Act to avoid 70% whitespace on preceding page */
 #mgmt-summary,
 #sofort-start,
 #business-case-compact,
 #challenge-section,
 #risks-compact,
-#funding-section,
 #outlook-section,
 #gamechanger-section,
 #advisor-note {
@@ -140,7 +140,7 @@ tr:last-child td { border-bottom: none; }
 }
 /* Sub-sections flow naturally (no forced break):
    #quick-wins-section, #roadmap-90d, #tools-section,
-   #prompts-section, #vendor-section, #aiact-compact, #next-steps */
+   #prompts-section, #vendor-section, #aiact-compact, #funding-section, #next-steps */
 
 /* ── Section Base ───────────────────────────────────── */
 .section {
@@ -260,13 +260,13 @@ tr:last-child td { border-bottom: none; }
 
 /* ── Section Body ───────────────────────────────────── */
 .section-body {
-    font-size: 10pt;
+    font-size: 11pt; /* M5-FIX: 10pt→11pt consistent with body and strategy_report */
     line-height: 1.65;
 }
 .section-body p + p { margin-top: 6px; }
 .section-body h4 + p { margin-top: 4px; }
-/* KIS-1126 / C3 FIX: Increased from 3→5 to prevent near-empty pages */
-.section-body p, .section-body li { orphans: 5; widows: 5; }
+/* M6-FIX: Reduced from 5→3 (KPA uses 3/3 successfully — lower values give Chromium more flexibility) */
+.section-body p, .section-body li { orphans: 3; widows: 3; }
 .section-body h3 { margin-top: var(--sp-lg); }
 
 /* ── Chapter Banner (KIS-1127/C4) ─────────────────────── */
@@ -879,15 +879,16 @@ tr:last-child td { border-bottom: none; }
     break-inside: avoid;
 }
 
-/* FIX-B3: Scenario cards — keep each card and the entire scenario row together */
+/* FIX-B3: Scenario cards — keep each card together, but allow the group to break between cards */
 .scenario-card {
     break-inside: avoid;
 }
+/* M2-FIX: changed from avoid→auto — container often exceeds page height, causing half-empty pages */
 .scenarios-section {
-    break-inside: avoid;
+    break-inside: auto;
 }
 .business-case-engine-v2 {
-    break-inside: avoid;
+    break-inside: auto;
 }
 
 /* Headings must stay with following content */
@@ -1094,11 +1095,12 @@ h1, h2, h3, h4 {
     .section { break-inside: auto; }
     .mgmt-card, .decision-card, .funding-card, .kpi-card,
     .glance-box, .contact-box, .card-nobreak { break-inside: avoid; }
-    /* KIS-1127/C3: Large containers flow across pages */
+    /* KIS-1127/C3 + M2-FIX: Large containers flow across pages */
     .roadmap-phase-card, .starter-kit, .starter-kit__tools,
-    .vendor-audit-engine, .vendor-details-section { break-inside: auto; }
+    .vendor-audit-engine, .vendor-details-section,
+    .scenarios-section, .business-case-engine-v2 { break-inside: auto; }
     /* Small cards stay together */
-    .tool-card, .vendor-card { break-inside: avoid; }
+    .tool-card, .vendor-card, .scenario-card { break-inside: avoid; }
     /* KIS-1127/C4: Chapter banners */
     .chapter-banner { break-inside: avoid; break-after: avoid; }
 }
