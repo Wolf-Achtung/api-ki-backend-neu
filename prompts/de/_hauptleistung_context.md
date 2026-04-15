@@ -47,4 +47,18 @@ Nutze {{OFFERING_LABEL}} als Fallback: "{{OFFERING_LABEL}}"
 - **KI_GUARDRAILS:** "{{KI_GUARDRAILS}}"
 - **BRANCHE:** "{{BRANCHE_LABEL}}"
 - **COMPANY_SIZE:** "{{COMPANY_SIZE}}"
+- **expertise_level:** "{{expertise_level}}"
+- **expertise_label:** "{{expertise_label}}"
+
+### KIS-1132: KOMPETENZ-KALIBRIERUNG
+{% if expertise_level == "expert" %}
+**ACHTUNG: Der Nutzer ist ein {{expertise_label}} (KI-Kompetenz: hoch).**
+Er arbeitet bereits mit KI-APIs und baut eigene Systeme.
+KEINE Einsteiger-Tipps. Empfehlungen muessen auf BESTEHENDEM Niveau aufbauen.
+Fokus: Pipeline-Optimierung, Governance, Monitoring, Skalierung.
+{% elif expertise_level == "intermediate" %}
+**Der Nutzer ist ein {{expertise_label}} (KI-Kompetenz: mittel).**
+Kennt Grundlagen, nutzt Tools aktiv. Keine Grundlagen-Erklärungen.
+Fokus: Workflow-Optimierung, Automatisierung, spezialisierte Tools.
+{% endif %}
 

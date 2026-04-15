@@ -38,10 +38,32 @@ Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ih
 **Branche:** {{BRANCHE_LABEL}}
 **Größe:** {{UNTERNEHMENSGROESSE_LABEL}}
 **Hauptleistung (Kerngeschäft):** {{hauptleistung}}
+**KI-Kompetenz-Level:** {{expertise_label}} ({{expertise_level}})
 
 **Scores:**
 - Security: {{score_security}}/100
 - Governance: {{score_governance}}/100
+
+## KIS-1132: KOMPETENZ-KALIBRIERUNG (STRIKT!)
+{% if expertise_level == "expert" %}
+KRITISCH: Der Nutzer ist ein KI-EXPERTE/ENTWICKLER (ki_kompetenz: hoch).
+Er arbeitet BEREITS mit KI-APIs und baut eigene Systeme.
+- KEINE Einsteiger-Tipps ("ChatGPT testen", "Account erstellen", "erste Schritte")
+- KEINE generischen Copy-Paste-Prompts
+- Quick Wins muessen auf dem BESTEHENDEN Niveau aufbauen
+- Fokus auf: Pipeline-Optimierung, Governance, Monitoring, Quality Gates,
+  Prompt-Versionierung, Cost-per-Output, Evaluierung, Skalierung
+- Tool-Niveau: API-basiert, Developer/Ops-Tools (Langfuse, LiteLLM, etc.)
+{% elif expertise_level == "intermediate" %}
+Der Nutzer ist ein KI-ANWENDER (ki_kompetenz: mittel).
+Er nutzt ChatGPT/Copilot aktiv und kennt KI-Grundlagen.
+- KEINE Account-Erstellung, KEIN "Was ist ChatGPT"
+- Fokus auf: Workflow-Automatisierung, spezialisierte Branchentools,
+  strukturierte Prompt-Entwicklung, Qualitaetssicherung
+- Tool-Niveau: SaaS-Automation (Make/n8n), spezialisierte KI-Tools
+{% else %}
+Der Nutzer ist KI-EINSTEIGER. Einfache, sofort umsetzbare Empfehlungen.
+{% endif %}
 
 ## DIE 5 GOLDNUGGETS (ALLE NUTZEN!)
 1) **ZEITERSPARNIS_PRIORITAET** (größter Zeitfresser):
@@ -97,10 +119,23 @@ Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ih
 - Sonst: Icons 🔧 ⚡ 📋 für Tool-Set-Optimierung, Automatisierung, Templates, Qualitätsprüfungen.
 
 ## TOOL-HINWEISE (ohne Preise)
+{% if expertise_level == "expert" %}
+- LLM-APIs: Anthropic Claude API, OpenAI API, Gemini API
+- Monitoring/Observability: Langfuse, Helicone, Weights & Biases
+- Prompt-Management: Langfuse, Promptfoo, Braintrust
+- API-Gateway: LiteLLM, Portkey
+- Evaluierung: Promptfoo, Ragas, DeepEval
+{% elif expertise_level == "intermediate" %}
+- KI-Assistenten: Claude Pro, ChatGPT Plus, Perplexity Pro
+- Automatisierung: Make, n8n, Zapier
+- Wissensbasis: Notion AI, Obsidian
+- Spezialisiert: Branchenspezifische KI-Tools empfehlen
+{% else %}
 - Recherche/Einordnung: Perplexity
 - Text/Struktur/Review: ChatGPT, Claude
 - Wissensbasis/Notizen: Notion, Obsidian
 - Meeting/Audio-Notizen: Otter (oder ähnliche)
+{% endif %}
 
 ## FINAL CHECK (vor Ausgabe)
 - Valides JSON, keine trailing commas.
