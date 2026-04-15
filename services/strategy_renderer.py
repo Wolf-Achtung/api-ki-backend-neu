@@ -183,16 +183,17 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     logger.debug("SCORE-DEBUG-4: [Renderer %s] score passed to template = %d", sr.briefing_id, readiness_score)
     logger.debug("SCORE-DEBUG-5: [Renderer %s] score_label = %s", sr.briefing_id, reifegrad_label)
 
-    # Reifegrad label: fallback to live calculation if not stored
-    if not reifegrad_label and readiness_score > 0:
+    # KIS-1126 / C1 FIX: Always use deterministic absolute label from get_score_label()
+    # to ensure cross-report consistency (R1, KPA, Strategy all show same label for same score)
+    if readiness_score > 0:
         try:
-            from services.extra_sections import get_score_context
-            _size_raw = briefing_data.get("unternehmensgroesse", "klein")
-            _sc_ctx = get_score_context(readiness_score, _size_raw, lang="de")
-            reifegrad_label = _sc_ctx.get("score_rating", "")
-            logger.info("[Strategy-Score] reifegrad_label computed on-demand: %s", reifegrad_label)
+            from services.extra_sections import get_score_label
+            reifegrad_label = get_score_label(readiness_score, lang="de")
+            logger.info("[Strategy-Score] reifegrad_label from deterministic lookup: %s (score=%d)",
+                        reifegrad_label, readiness_score)
         except Exception:
-            pass
+            if not reifegrad_label:
+                reifegrad_label = report1_sections.get("score_rating", "")
 
     # Branche: use canonical display label (KIS-1116 Fix 1)
     branche_raw = briefing_data.get("branche", "")

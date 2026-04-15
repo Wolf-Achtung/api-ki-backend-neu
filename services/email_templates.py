@@ -707,16 +707,9 @@ def render_briefing_pdf_html(
     val = int(scores.get("value", 0) or 0)
     ena = int(scores.get("enablement", 0) or 0)
 
-    if score_overall >= 80:
-        score_label = "Exzellent"
-    elif score_overall >= 65:
-        score_label = "Gut"
-    elif score_overall >= 50:
-        score_label = "Solide"
-    elif score_overall >= 35:
-        score_label = "Ausbauf\u00e4hig"
-    else:
-        score_label = "Kritisch"
+    # KIS-1126 / C1 FIX: Use central deterministic score label
+    from services.extra_sections import get_score_label
+    score_label = get_score_label(score_overall, lang="de").capitalize()
 
     hours = sections.get("CANON_HOURS_MONTH") or sections.get("qw_hours_total") or sections.get("monatsersparnis_stunden") or _dash
     rate = sections.get("CANON_RATE_EUR") or sections.get("stundensatz_eur") or _dash
