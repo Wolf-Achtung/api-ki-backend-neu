@@ -889,7 +889,9 @@ SOLO_TERM_REPLACEMENTS: Dict[str, str] = {
     "Stack": "Tool-Set",
     "KI-Stack": "KI-Werkzeugkasten",
     "Tech-Stack": "Werkzeugkasten",
-    "Engine": "Modul",
+    # "Engine" removed: re.compile("Engine", IGNORECASE) has no word boundaries,
+    # matches inside "Engineering" → "Modulering" → chain to "Bausteinering".
+    # Handled by content_quality_enforcer with \bEngine\b(?!ering).
     "Pipeline": "Ablauf",
     "Framework": "Rahmenwerk",
     "Infrastruktur": "Grundausstattung",
@@ -1083,7 +1085,8 @@ SOLO_BLACKLIST_FALLBACKS: Dict[str, str] = {
     # TASK 2: Additional fallbacks
     "Plattform": "Lösung",
     "Skalierung": "Wachstum",
-    "Engine": "Baustein",
+    # "Engine" removed: not in SOLO_BLACKLIST_TERMS (dead code) and
+    # handled by content_quality_enforcer with proper word boundaries.
     "Modul": "Baustein",
     "Baukasten": "Werkzeugkasten",
     # FIX: Stack variants - commonly leak in SOLO reports
