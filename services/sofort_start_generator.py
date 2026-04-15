@@ -1798,7 +1798,7 @@ def generate_sofort_start_html(
         )
     else:
         # Beginner: original logic
-        erster_schritt = branche_data["erster_schritt"]
+        erster_schritt = str(branche_data["erster_schritt"])
         if _hl_clean:
             erster_schritt = (
                 f"Testen Sie ChatGPT mit einer typischen Aufgabe aus Ihrem Bereich "
@@ -1870,7 +1870,7 @@ def generate_sofort_start_html(
 '''
         _expert_prompts = EXPERT_PROMPT_PATTERNS
         for i, prompt_data in enumerate(_expert_prompts, 1):
-            _prompt_text = prompt_data["prompt"].replace("{hauptleistung}", _hl_clean or branche_data["name"])
+            _prompt_text = prompt_data["prompt"].replace("{hauptleistung}", _hl_clean or str(branche_data["name"]))
             close_wrapper = "</div>" if i == 1 else ""
             html += f'''
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
@@ -1902,7 +1902,7 @@ def generate_sofort_start_html(
 '''
         _inter_prompts = INTERMEDIATE_PROMPTS
         for i, prompt_data in enumerate(_inter_prompts, 1):
-            _prompt_text = prompt_data["prompt"].replace("{hauptleistung}", _hl_clean or branche_data["name"])
+            _prompt_text = prompt_data["prompt"].replace("{hauptleistung}", _hl_clean or str(branche_data["name"]))
             close_wrapper = "</div>" if i == 1 else ""
             html += f'''
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">

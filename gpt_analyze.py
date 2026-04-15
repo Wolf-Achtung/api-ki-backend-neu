@@ -13242,7 +13242,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         # FIX-GRAMMAR-T1: Pass canonical OPEX for consistent net savings
         _sofort_opex_monthly = float(sections.get("OPEX_REALISTISCH_EUR") or briefing.get("OPEX_REALISTISCH_EUR") or 0)
         # KIS-1132: Pass expertise level + answers for competence-aware content
-        _sofort_expertise = detect_expertise_level(answers)
+        _sofort_expertise = detect_expertise_level(briefing)
         sections["SOFORT_START_HTML"] = generate_sofort_start_html(
             hauptleistung=sofort_hauptleistung,
             branche=sofort_branche,
@@ -13252,7 +13252,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             canon_hours_month=_sofort_hours_month,
             canon_opex_monthly=_sofort_opex_monthly,
             expertise_level=_sofort_expertise,
-            ki_projekte=str(answers.get("ki_projekte", "") or ""),
+            ki_projekte=str(briefing.get("ki_projekte", "") or ""),
         )
         log.info("[SOFORT-START] ✅ Generated Sofort-Start page for %s", sofort_branche[:30] if sofort_branche else "default")
     except Exception as e:
