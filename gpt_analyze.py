@@ -139,6 +139,7 @@ from utils.hotfix_gold_standard import apply_hotfix, UTF8Handler
 from utils.encoding_fixer import clean_briefing_data
 from services.anthropic_client import call_anthropic, should_use_anthropic
 from services.sofort_start_generator import generate_sofort_start_html, generate_30_tage_challenge_html, generate_30_tage_challenge_html_v2
+from services.expertise_detector import detect_expertise_level, get_expertise_label, build_expertise_context_block
 from services.guardrails import (
     detect_guardrails_v5,
     format_guardrail_hits_for_context,
@@ -9072,6 +9073,17 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "hauptleistung": hauptleistung,  # lowercase for Jinja2
     })
 
+    # KIS-1132: Expertise level for content calibration in LLM prompts
+    _exp_level = detect_expertise_level(briefing)
+    _exp_label = get_expertise_label(_exp_level)
+    base_vars.update({
+        "EXPERTISE_LEVEL": _exp_level,
+        "expertise_level": _exp_level,
+        "EXPERTISE_LABEL": _exp_label,
+        "expertise_label": _exp_label,
+        "EXPERTISE_CONTEXT": build_expertise_context_block(briefing, _exp_level),
+    })
+
     # FIX-QW-PROMPT-STABILIZE CHANGE 2: SAFE context fields (deterministic, no LLM)
     try:
         from services.prompt_enhancer import sanitize_for_prompt
@@ -13229,6 +13241,8 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             _sofort_hours_month = 15.0
         # FIX-GRAMMAR-T1: Pass canonical OPEX for consistent net savings
         _sofort_opex_monthly = float(sections.get("OPEX_REALISTISCH_EUR") or briefing.get("OPEX_REALISTISCH_EUR") or 0)
+        # KIS-1132: Pass expertise level + answers for competence-aware content
+        _sofort_expertise = detect_expertise_level(answers)
         sections["SOFORT_START_HTML"] = generate_sofort_start_html(
             hauptleistung=sofort_hauptleistung,
             branche=sofort_branche,
@@ -13237,6 +13251,8 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             stundensatz=_sofort_rate,
             canon_hours_month=_sofort_hours_month,
             canon_opex_monthly=_sofort_opex_monthly,
+            expertise_level=_sofort_expertise,
+            ki_projekte=str(answers.get("ki_projekte", "") or ""),
         )
         log.info("[SOFORT-START] ✅ Generated Sofort-Start page for %s", sofort_branche[:30] if sofort_branche else "default")
     except Exception as e:
@@ -13249,9 +13265,12 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     # ========== v14.12: 30-TAGE CHALLENGE (Gamechanger #8) ==========
     try:
         sofort_zeitbudget = briefing.get("zeitbudget", "") or "2_5"
+        # KIS-1132: Pass expertise level + hauptleistung for competence-aware challenge
         sections["CHALLENGE_30_TAGE_HTML"] = generate_30_tage_challenge_html_v2(
             company_size=sofort_size,
-            zeitbudget=sofort_zeitbudget
+            zeitbudget=sofort_zeitbudget,
+            expertise_level=_sofort_expertise,
+            hauptleistung=sofort_hauptleistung,
         )
     except Exception as e:
         log.warning("[30-TAGE-CHALLENGE] ⚠️ Failed: %s", e)
@@ -15193,6 +15212,13 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     sections["transparency_text"] = os.getenv("TRANSPARENCY_TEXT", "")
     sections["user_email"] = answers.get("email") or answers.get("kontakt_email") or ""
     sections["ki_kompetenz"] = answers.get("ki_kompetenz") or answers.get("ki_knowhow", "")
+
+    # === KIS-1132: Expertise Level Detection ===
+    _expertise_level = detect_expertise_level(answers)
+    _expertise_label = get_expertise_label(_expertise_level)
+    sections["expertise_level"] = _expertise_level
+    sections["expertise_label"] = _expertise_label
+    log.info("[%s] [KIS-1132] Expertise level: %s (%s)", run_id, _expertise_level, _expertise_label)
 
     # === PAGE 4 CONTEXT CARDS - User Input Variables for Template ===
     # These variables are needed for the Page 4 emoji-cards and Guardrails box
