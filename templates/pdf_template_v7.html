@@ -269,6 +269,57 @@ tr:last-child td { border-bottom: none; }
 .section-body p, .section-body li { orphans: 5; widows: 5; }
 .section-body h3 { margin-top: var(--sp-lg); }
 
+/* ── Chapter Banner (KIS-1127/C4) ─────────────────────── */
+.chapter-banner {
+    padding: 20px 32px 16px;
+    margin: 0 0 20px 0;
+    position: relative;
+    break-inside: avoid;
+    break-after: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+.chapter-banner__number {
+    font-size: 36px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    top: 14px;
+    left: 32px;
+    line-height: 1;
+}
+.chapter-banner__accent {
+    width: 32px;
+    height: 2px;
+    background: #c8954c;
+    margin: 4px 0 8px;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.chapter-banner--numbered .chapter-banner__content { padding-left: 40px; }
+.chapter-banner--unnumbered .chapter-banner__content { padding-left: 0; }
+.chapter-banner__category {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 0 0 4px;
+}
+.chapter-banner__title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #ffffff;
+    margin: 0 0 2px;
+}
+.chapter-banner__subtitle {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+}
+.chapter-banner--r1 {
+    background: linear-gradient(135deg, #1a3a2a 0%, #2a5f3d 100%);
+}
+
 /* ── Funding section spacing ──────────────────────────── */
 #funding-section .section-body p { margin-bottom: 8px; }
 #funding-section .section-body ul,
@@ -1048,6 +1099,8 @@ h1, h2, h3, h4 {
     .vendor-audit-engine, .vendor-details-section { break-inside: auto; }
     /* Small cards stay together */
     .tool-card, .vendor-card { break-inside: avoid; }
+    /* KIS-1127/C4: Chapter banners */
+    .chapter-banner { break-inside: avoid; break-after: avoid; }
 }
     </style>
 </head>
@@ -1298,9 +1351,14 @@ h1, h2, h3, h4 {
 
 <!-- ═══════ MANAGEMENT SUMMARY ═══════ -->
 <div class="section" id="mgmt-summary" data-category="strategy">
-    <div class="level-indicator"><span class="level-dot level-dot-exec"></span> EXECUTIVE VIEW</div>
-    <span class="badge badge-strategy">Strategie</span>
-    <h2>Management Summary</h2>
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">STRATEGIE</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Management Summary</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Score, Reifegrad und strategische Leitplanken</p>
+        </div>
+    </div>
 
     <div class="glance-box glance-strategy">
         <strong>Auf einen Blick:</strong>
@@ -1450,11 +1508,13 @@ h1, h2, h3, h4 {
     {% if TRANSITION_EXEC_TO_ACTION and TRANSITION_EXEC_TO_ACTION|trim %}
     <div class="section-transition">{{ TRANSITION_EXEC_TO_ACTION }}</div>
     {% endif %}
-    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
-    <span class="badge badge-action">Umsetzung</span>
-    <h2>{{ ui("sofort_start_title", "Ihr Sofort-Start") }}</h2>
-    <div class="glance-box glance-action">
-        <strong>Auf einen Blick:</strong> Der wichtigste erste Schritt – heute noch machbar.
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">UMSETZUNG</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">{{ ui("sofort_start_title", "Ihr Sofort-Start") }}</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Der wichtigste erste Schritt – heute noch machbar</p>
+        </div>
     </div>
     <div class="section-body">{{ SOFORT_START_HTML|safe }}</div>
 </section>
@@ -1508,14 +1568,13 @@ h1, h2, h3, h4 {
 <!-- ═══════ BUSINESS CASE ═══════ -->
 {% if BUSINESS_CASE_ENGINE_HTML %}
 <section class="section" id="business-case-compact" data-category="finance">
-    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
-    <div class="section-header">
-        <div>
-            <span class="badge badge-finance">Finanzen</span>
-            <span class="section-kicker">ROI-Simulation</span>
-            <h2>Business Case – 3 Szenarien</h2>
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">FINANZEN</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Business Case</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">ROI, Payback, Kennzahlen-Prognosen</p>
         </div>
-        <span class="section-pill"><span class="pill-dot"></span>ROI · Payback · KPI-Forecasts</span>
     </div>
     <div class="glance-box glance-finance">
         <strong>Auf einen Blick:</strong>
@@ -1569,11 +1628,13 @@ h1, h2, h3, h4 {
 <!-- ═══════ 30-TAGE CHALLENGE ═══════ -->
 {% if CHALLENGE_30_TAGE_HTML and CHALLENGE_30_TAGE_HTML|trim %}
 <section class="section {% if 'challenge' in skip_pages %}section-optional{% endif %}" id="challenge-section" data-category="action">
-    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
-    <span class="badge badge-action">Umsetzung</span>
-    <h2>30-Tage KI-Challenge</h2>
-    <div class="glance-box glance-action">
-        <strong>Auf einen Blick:</strong> 30 Tage, kleine Schritte, große Wirkung. Von Null auf produktiv.
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">UMSETZUNG</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">30-Tage KI-Challenge</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">30 Tage, kleine Schritte, große Wirkung</p>
+        </div>
     </div>
     <div class="section-body">{{ CHALLENGE_30_TAGE_HTML|safe }}</div>
     {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Wochen 2–4 (Fortgeschrittene) → Anhang A11</div>{% endif %}
@@ -1605,17 +1666,13 @@ h1, h2, h3, h4 {
 <!-- ═══════ VENDOR-AUDIT ═══════ -->
 {% if VENDOR_AUDIT_HTML %}
 <section class="section" id="vendor-section" data-category="risk">
-    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
-    <div class="section-header">
-        <div>
-            <span class="badge badge-risk">Risiko</span>
-            <span class="section-kicker">Vendor Audit</span>
-            <h2>KI-TÜV für Ihre Tools &amp; Anbieter</h2>
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">RISIKO</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Vendor Prüfung</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Datenschutz- und Compliance-Prüfung Ihrer KI-Tools</p>
         </div>
-        <span class="section-pill"><span class="pill-dot pill-danger"></span>DSGVO · AI Act · Vendor Risk</span>
-    </div>
-    <div class="glance-box glance-risk">
-        <strong>Auf einen Blick:</strong> Datenschutz- und Compliance-Prüfung aller genutzten KI-Tools.
     </div>
     <div class="section-body">{{ VENDOR_AUDIT_HTML|safe }}</div>
 </section>
@@ -1670,14 +1727,13 @@ h1, h2, h3, h4 {
     {% if TRANSITION_RISK_TO_FUNDING and TRANSITION_RISK_TO_FUNDING|trim %}
     <div class="section-transition">{{ TRANSITION_RISK_TO_FUNDING }}</div>
     {% endif %}
-    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
-    <div class="section-header">
-        <div>
-            <span class="badge badge-finance">Finanzen</span>
-            <span class="section-kicker">Förderung</span>
-            <h2>Förderprogramme</h2>
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">FINANZEN</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Förderprogramme</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Schnellste Pfade zu Fördermitteln</p>
         </div>
-        <span class="section-pill"><span class="pill-dot"></span>Schnellste Pfade zu Fördermitteln</span>
     </div>
     <div class="glance-box glance-finance">
         <strong>Auf einen Blick:</strong> Ausgewählte Förderprogramme mit höchster Eignung für Ihr Profil. Business Case ist auch ohne Förderung tragfähig.
@@ -1730,14 +1786,13 @@ h1, h2, h3, h4 {
 <!-- ═══════ GAMECHANGER ═══════ -->
 {% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim and '<' in GAMECHANGER_DECISION_HTML %}
 <section class="section {% if 'gamechanger' in skip_pages %}section-optional{% endif %}" id="gamechanger-section" data-category="strategy">
-    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
-    <div class="section-header">
-        <div>
-            <span class="badge badge-strategy">Strategie</span>
-            <span class="section-kicker">{{ ui("gamechanger_kicker", "Strategische Optionen") }}</span>
-            <h2>{{ ui("gamechanger_title", "KI-Potenzial-Analyse") }}</h2>
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">STRATEGIE</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">{{ ui("gamechanger_title", "KI-Potenzial-Analyse") }}</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Transformatives Potenzial</p>
         </div>
-        <span class="section-pill"><span class="pill-dot"></span>Transformatives Potenzial</span>
     </div>
     <div class="glance-box glance-strategy">
         <strong>Auf einen Blick:</strong> Der strategische Bruchpunkt, der Ihr Geschäftsmodell transformieren kann.
