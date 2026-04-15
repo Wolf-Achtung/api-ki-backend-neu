@@ -133,8 +133,13 @@ tr:last-child td { border-bottom: none; }
 #advisor-note {
     break-before: page;
 }
+/* KIS-1126 / C6 FIX: #decision gets its own page so the GF-Entscheidungsvorlage
+   is standalone-printable (was on same page as Management Summary) */
+#decision {
+    break-before: page;
+}
 /* Sub-sections flow naturally (no forced break):
-   #decision, #quick-wins-section, #roadmap-90d, #tools-section,
+   #quick-wins-section, #roadmap-90d, #tools-section,
    #prompts-section, #vendor-section, #aiact-compact, #next-steps */
 
 /* ── Section Base ───────────────────────────────────── */
