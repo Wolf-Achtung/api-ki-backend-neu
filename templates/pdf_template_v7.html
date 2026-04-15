@@ -6,7 +6,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>KI-Status-Report {{ report_id }} – {{ company_name or kundencode or ('Your Company' if ((lang or briefing_lang or report_lang or 'de')|lower)[:2] == 'en' else 'Ihr Unternehmen') }}</title>
+    <title>KI-Status-Report {{ report_id }} – {{ BRANCHE_LABEL|default('KI-Readiness Assessment') }}</title>
     <style>
 /* ═══════════════════════════════════════════════════════
    v7.1 CLEAN CORPORATE PLUS — Design System
@@ -1149,9 +1149,10 @@ h1, h2, h3, h4 {
         <p class="cover-subtitle">{{ REPORT_SUBTITLE }}</p>
         {% endif %}
         <p class="cover-meta">
-            {{ ui("company_label_colon") }}
-            <strong>{{ company_name or kundencode or ui("your_company") }}</strong>
-            <span class="muted"> · </span>{{ BRANCHE_LABEL }}
+            {# KIS-1130/Bug2: Removed company_name/kundencode display — we don't collect
+               company names for privacy reasons, so the internal kundencode (e.g. "KND")
+               was leaking to the cover, damaging customer trust. #}
+            <strong>{{ BRANCHE_LABEL }}</strong>
             <span class="muted"> · </span>{{ UNTERNEHMENSGROESSE_LABEL }}
         </p>
     </div>
@@ -1367,7 +1368,7 @@ h1, h2, h3, h4 {
         {% if CORE_MESSAGE_HTML %}
         {{ CORE_MESSAGE_HTML }}
         {% else %}
-        Score {{ score_int }}/100 ({{ score_rating }}). {{ REPORT_SUBTITLE|default('KI-Readiness Assessment für ' ~ (company_name or kundencode or 'Ihr Unternehmen')) }}.
+        Score {{ score_int }}/100 ({{ score_rating }}). {{ REPORT_SUBTITLE|default('KI-Readiness Assessment') }}.
         {% endif %}
     </div>
 

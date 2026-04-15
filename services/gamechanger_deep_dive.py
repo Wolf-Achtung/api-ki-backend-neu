@@ -874,9 +874,10 @@ def render_deep_dive_html(sections: Dict[str, str],
         # Set report_date for "Generiert am" display (same pattern as Report 1)
         from datetime import datetime
         template_vars['report_date'] = datetime.now().strftime("%d.%m.%Y")
-        # Use kundencode (company identifier) as company_name, NOT hauptleistung
+        # KIS-1130: Use BRANCHE_LABEL for company_name — kundencode is internal
+        # and must not appear as customer-facing company name
         template_vars['company_name'] = (
-            context.get('kundencode')
+            context.get('BRANCHE_LABEL')
             or context.get('HAUPTLEISTUNG')
             or 'Ihr Unternehmen'
         )
