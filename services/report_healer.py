@@ -1055,6 +1055,7 @@ SOLO_BLACKLIST_TERMS: List[str] = [
     "Framework",
     "Pipeline",
     "Deployment",
+    "Engine",  # KIS-1128: via blacklist path (\b word boundaries), NOT SOLO_TERM_REPLACEMENTS
     "Modul",
     "Konzern",
     # FIX: Added Stack variants - commonly leak in SOLO reports
@@ -1085,8 +1086,7 @@ SOLO_BLACKLIST_FALLBACKS: Dict[str, str] = {
     # TASK 2: Additional fallbacks
     "Plattform": "Lösung",
     "Skalierung": "Wachstum",
-    # "Engine" removed: not in SOLO_BLACKLIST_TERMS (dead code) and
-    # handled by content_quality_enforcer with proper word boundaries.
+    "Engine": "Baustein",  # KIS-1128: now active — "Engine" added to SOLO_BLACKLIST_TERMS
     "Modul": "Baustein",
     "Baukasten": "Werkzeugkasten",
     # FIX: Stack variants - commonly leak in SOLO reports
