@@ -889,7 +889,9 @@ SOLO_TERM_REPLACEMENTS: Dict[str, str] = {
     "Stack": "Tool-Set",
     "KI-Stack": "KI-Werkzeugkasten",
     "Tech-Stack": "Werkzeugkasten",
-    "Engine": "Modul",
+    # "Engine" removed: re.compile("Engine", IGNORECASE) has no word boundaries,
+    # matches inside "Engineering" → "Modulering" → chain to "Bausteinering".
+    # Handled by content_quality_enforcer with \bEngine\b(?!ering).
     "Pipeline": "Ablauf",
     "Framework": "Rahmenwerk",
     "Infrastruktur": "Grundausstattung",
@@ -1053,6 +1055,7 @@ SOLO_BLACKLIST_TERMS: List[str] = [
     "Framework",
     "Pipeline",
     "Deployment",
+    "Engine",  # KIS-1128: via blacklist path (\b word boundaries), NOT SOLO_TERM_REPLACEMENTS
     "Modul",
     "Konzern",
     # FIX: Added Stack variants - commonly leak in SOLO reports
@@ -1083,7 +1086,7 @@ SOLO_BLACKLIST_FALLBACKS: Dict[str, str] = {
     # TASK 2: Additional fallbacks
     "Plattform": "Lösung",
     "Skalierung": "Wachstum",
-    "Engine": "Baustein",
+    "Engine": "Baustein",  # KIS-1128: now active — "Engine" added to SOLO_BLACKLIST_TERMS
     "Modul": "Baustein",
     "Baukasten": "Werkzeugkasten",
     # FIX: Stack variants - commonly leak in SOLO reports
