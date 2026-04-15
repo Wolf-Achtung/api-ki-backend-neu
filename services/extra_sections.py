@@ -33,6 +33,43 @@ BENCHMARK_SCORES = {
 }
 
 
+def get_score_label(overall_score: int, lang: str = "de") -> str:
+    """
+    Deterministic, absolute score label — identical result for identical score,
+    regardless of company size.  Used as the canonical label across ALL reports
+    (R1, KPA, Strategy) to prevent cross-report contradictions (KIS-1126 / C1).
+
+    Thresholds (absolute, not benchmark-relative):
+        0-34   → kritisch / critical
+        35-49  → ausbaufähig / developing
+        50-64  → solide / solid
+        65-79  → gut / good
+        80-100 → exzellent / excellent
+    """
+    if lang == "en":
+        if overall_score >= 80:
+            return "excellent"
+        elif overall_score >= 65:
+            return "good"
+        elif overall_score >= 50:
+            return "solid"
+        elif overall_score >= 35:
+            return "developing"
+        else:
+            return "critical"
+    else:
+        if overall_score >= 80:
+            return "exzellent"
+        elif overall_score >= 65:
+            return "gut"
+        elif overall_score >= 50:
+            return "solide"
+        elif overall_score >= 35:
+            return "ausbaufähig"
+        else:
+            return "kritisch"
+
+
 def get_score_context(overall_score: int, size: str, lang: str = "de") -> Dict[str, Any]:
     """
     Calculate score context with size-relative benchmarking.
@@ -43,22 +80,24 @@ def get_score_context(overall_score: int, size: str, lang: str = "de") -> Dict[s
         lang: Language code ('de' or 'en')
 
     Returns:
-        Dict with score_rating, size_label, avg_score_for_size, top10_score_for_size
+        Dict with score_rating, size_label, avg_score_for_size, top10_score_for_size,
+        benchmark_context (size-relative description)
     """
     benchmark = BENCHMARK_SCORES.get(size.lower(), BENCHMARK_SCORES["klein"])
 
-    # Bilingual rating labels
+    # KIS-1126 / C1 FIX: score_rating is now ABSOLUTE (deterministic, size-independent)
+    rating = get_score_label(overall_score, lang)
+
+    # Benchmark-relative context (kept as separate field for additional insight)
     if lang == "en":
         if overall_score >= benchmark["top10"]:
-            rating = "excellent - You are in the Top 10%"
-        elif overall_score >= benchmark["avg"] + 10:
-            rating = "above average"
+            benchmark_context = "You are in the Top 10% for your company size"
         elif overall_score >= benchmark["avg"]:
-            rating = "good - above average"
+            benchmark_context = "above average for your company size"
         elif overall_score >= benchmark["avg"] - 10:
-            rating = "solid - on average"
+            benchmark_context = "on average for your company size"
         else:
-            rating = "developing - below average"
+            benchmark_context = "below average for your company size"
 
         size_labels = {
             "solo": "Solo Consultant",
@@ -69,17 +108,14 @@ def get_score_context(overall_score: int, size: str, lang: str = "de") -> Dict[s
         }
         default_label = "Company"
     else:
-        # German (default)
         if overall_score >= benchmark["top10"]:
-            rating = "exzellent - Sie gehören zu den Top 10%"
-        elif overall_score >= benchmark["avg"] + 10:
-            rating = "überdurchschnittlich"
+            benchmark_context = "Sie gehören zu den Top 10% für Ihre Unternehmensgröße"
         elif overall_score >= benchmark["avg"]:
-            rating = "gut - über dem Durchschnitt"
+            benchmark_context = "über dem Durchschnitt für Ihre Unternehmensgröße"
         elif overall_score >= benchmark["avg"] - 10:
-            rating = "solide - im Durchschnitt"
+            benchmark_context = "im Durchschnitt für Ihre Unternehmensgröße"
         else:
-            rating = "ausbaufähig - unter dem Durchschnitt"
+            benchmark_context = "unter dem Durchschnitt für Ihre Unternehmensgröße"
 
         size_labels = {
             "solo": "Solo-Berater",
@@ -92,6 +128,7 @@ def get_score_context(overall_score: int, size: str, lang: str = "de") -> Dict[s
 
     return {
         "score_rating": rating,
+        "benchmark_context": benchmark_context,
         "size_label": size_labels.get(size.lower(), default_label),
         "avg_score_for_size": benchmark["avg"],
         "top10_score_for_size": benchmark["top10"],

@@ -94,13 +94,15 @@
 
 body {
     font-family: var(--font-body);
-    font-size: 10pt;
-    line-height: 1.65;
+    /* KIS-1126 / C5 FIX: Increased from 10pt→11pt for better readability.
+       Audit found "Walls of Text" with 200+ word paragraphs at 10pt. */
+    font-size: 11pt;
+    line-height: 1.7;
     color: var(--c-text);
     background: var(--c-white);
     -webkit-font-smoothing: antialiased;
-    orphans: 4;
-    widows: 4;
+    orphans: 5;
+    widows: 5;
     padding-left: 5mm; /* Platz für Akzentlinie (3mm) + Abstand (2mm) */
 }
 
@@ -532,13 +534,17 @@ h1, h2, h3, h4 { break-after: avoid; }
    ══════════════════════════════════════════════════════ */
 .section-content {
     padding: var(--sp-xl) 0 var(--sp-lg);
-    font-size: 10pt;
-    line-height: 1.65;
+    /* KIS-1126 / C5 FIX: Matched to new body font-size for consistency */
+    font-size: 11pt;
+    line-height: 1.7;
 }
-.section-content p + p { margin-top: 6px; }
-.section-content h4 + p { margin-top: 4px; }
-.section-content p, .section-content li { orphans: 3; widows: 3; }
-.section-content h3 { margin-top: var(--sp-lg); }
+/* KIS-1126 / C5 FIX: Increased paragraph spacing from 6px→10px for visual breathing room */
+.section-content p + p { margin-top: 10px; }
+.section-content h4 + p { margin-top: 6px; }
+/* KIS-1126 / C5 FIX: Increased orphans/widows from 3→5 */
+.section-content p, .section-content li { orphans: 5; widows: 5; }
+.section-content h3 { margin-top: var(--sp-lg); break-after: avoid; }
+.section-content h4 { break-after: avoid; }
 
 /* Management / Detail Level Separator */
 /* FIX-VU2: Static values for Puppeteer PDF rendering reliability */
@@ -555,8 +561,9 @@ h1, h2, h3, h4 { break-after: avoid; }
     padding: var(--sp-xl) 0;
 }
 .exec-summary .section-body {
-    font-size: 10.5pt;
-    line-height: 1.7;
+    /* KIS-1126 / C5 FIX: Adjusted proportionally (was 10.5pt when body was 10pt) */
+    font-size: 11.5pt;
+    line-height: 1.75;
 }
 
 /* ══════════════════════════════════════════════════════

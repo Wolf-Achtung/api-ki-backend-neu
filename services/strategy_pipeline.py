@@ -202,23 +202,18 @@ async def generate_strategy_report(
         logger.debug("SCORE-DEBUG-4: [Strategy %d] score passed to template = %d", briefing_id, _score)
         logger.debug("SCORE-DEBUG-5: [Strategy %d] stored_candidates = %r", briefing_id, _stored)
 
-        # Reifegrad label: fallback to live calculation if not stored
-        # FIX-KIS1034-D1: Use COMPANY_SIZE from R1 (normalized bucket) to ensure
-        # consistent benchmark lookup — avoids mismatch with raw form values.
+        # KIS-1126 / C1 FIX: Always use deterministic absolute label from get_score_label()
+        # to ensure cross-report consistency (R1, KPA, Strategy all show same label for same score)
         _reifegrad_label = report1_sections.get("score_rating", "")
-        if not _reifegrad_label and _score > 0:
+        if _score > 0:
             try:
-                from services.extra_sections import get_score_context
-                _size_raw = (
-                    report1_sections.get("COMPANY_SIZE")
-                    or briefing_data.get("unternehmensgroesse", "klein")
-                )
-                _sc_ctx = get_score_context(_score, _size_raw, lang="de")
-                _reifegrad_label = _sc_ctx.get("score_rating", "")
-                logger.info("[Strategy %d] reifegrad_label computed on-demand (size=%s): %s",
-                            briefing_id, _size_raw, _reifegrad_label)
+                from services.extra_sections import get_score_label
+                _reifegrad_label = get_score_label(_score, lang="de")
+                logger.info("[Strategy %d] reifegrad_label from deterministic lookup: %s (score=%d)",
+                            briefing_id, _reifegrad_label, _score)
             except Exception:
-                pass
+                if not _reifegrad_label:
+                    _reifegrad_label = report1_sections.get("score_rating", "")
 
         # Country code for country-aware prompts (S7 funding, S8 compliance)
         _country_raw = (

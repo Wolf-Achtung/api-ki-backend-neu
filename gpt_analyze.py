@@ -8817,15 +8817,17 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # - sections gets deduped by O2 (42 chars) → html.replace misses 194-char GPT text
     # - html.replace fails on UTF-8 encoded HTML (für ≠ fÃ¼r)
     # Solution: Truncate in briefing ONCE → ALL GPT prompts get short version
+    # KIS-1126 / C2 FIX: Increased from 77→150 chars to prevent mid-word cuts
+    # in German compound descriptions (e.g. "Einführung" was cut to "Einfü")
     _hl_source = briefing.get("hauptleistung", "")
-    if isinstance(_hl_source, str) and len(_hl_source) > 80:
-        _hl_truncated = _hl_source[:77].rsplit(' ', 1)[0] + '…'
+    if isinstance(_hl_source, str) and len(_hl_source) > 160:
+        _hl_truncated = _hl_source[:150].rsplit(' ', 1)[0] + '…'
         briefing["hauptleistung"] = _hl_truncated
         log.info("[X1] DEFINITIVE: briefing['hauptleistung'] truncated at source: %d→%d chars", len(_hl_source), len(_hl_truncated))
     # X4: Also truncate uppercase variant
     _hl_upper = briefing.get("HAUPTLEISTUNG", "")
-    if isinstance(_hl_upper, str) and len(_hl_upper) > 80:
-        briefing["HAUPTLEISTUNG"] = _hl_upper[:77].rsplit(' ', 1)[0] + '…'
+    if isinstance(_hl_upper, str) and len(_hl_upper) > 160:
+        briefing["HAUPTLEISTUNG"] = _hl_upper[:150].rsplit(' ', 1)[0] + '…'
         log.info("[X4] briefing['HAUPTLEISTUNG'] truncated: %d→%d chars", len(_hl_upper), len(briefing["HAUPTLEISTUNG"]))
     hauptleistung_raw = briefing.get("hauptleistung", "")
 
@@ -16237,21 +16239,22 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         overall_score = int(scores.get("overall", 0))
 
         # FIX: Calculate score_rating dynamically if not yet in sections
-        # This prevents the "Starter" vs "exzellent" contradiction
+        # KIS-1126 / C1 FIX: Use deterministic absolute label via get_score_label()
         score_rating = sections.get("score_rating")
         if not score_rating:
             try:
-                from services.extra_sections import get_score_context
+                from services.extra_sections import get_score_context, get_score_label
                 size = answers.get("unternehmensgroesse", "klein")
                 score_context = get_score_context(overall_score, size, lang=report_lang)
-                score_rating = score_context.get("score_rating", "im Durchschnitt" if report_lang == "de" else "average")
+                score_rating = score_context.get("score_rating", get_score_label(overall_score, report_lang))
                 # Also populate sections for downstream usage
                 sections["score_rating"] = score_rating
                 sections["size_label"] = score_context.get("size_label", "KMU" if report_lang == "de" else "SME")
                 log.info("[%s] ✅ score_rating calculated on-demand: %s (lang=%s)", run_id, score_rating, report_lang)
             except Exception as e:
                 log.warning("[%s] ⚠️ score_rating fallback failed: %s", run_id, e)
-                score_rating = "im Durchschnitt" if report_lang == "de" else "average"
+                from services.extra_sections import get_score_label
+                score_rating = get_score_label(overall_score, report_lang)
 
         company_size = sections.get("size_label", "KMU")
         # FIX-A1b: Use BRANCHE_LABEL instead of raw hauptleistung free-text
@@ -21037,18 +21040,10 @@ def build_admin_report_card(br: Briefing, rep: Report, user_email: str) -> str:
     hours_month = sections.get("qw_hours_total", sections.get("ZEITERSPARNIS_STUNDEN", "—"))
     rate_eur = sections.get("DEFAULT_STUNDENSATZ_EUR", sections.get("STUNDENSATZ_EUR", 60))
 
-    # Score rating label
+    # KIS-1126 / C1 FIX: Use central deterministic score label
     score_overall = scores.get("overall", 0)
-    if score_overall >= 80:
-        score_rating = "exzellent"
-    elif score_overall >= 65:
-        score_rating = "gut"
-    elif score_overall >= 50:
-        score_rating = "solide"
-    elif score_overall >= 35:
-        score_rating = "ausbaufähig"
-    else:
-        score_rating = "kritisch"
+    from services.extra_sections import get_score_label
+    score_rating = get_score_label(score_overall, lang="de")
 
     # Maturity label
     maturity_raw = sections.get("MATURITY_LEVEL", sections.get("KI_READINESS_LABEL", "—"))

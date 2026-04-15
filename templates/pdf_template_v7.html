@@ -133,14 +133,34 @@ tr:last-child td { border-bottom: none; }
 #advisor-note {
     break-before: page;
 }
+/* KIS-1126 / C6 FIX: #decision gets its own page so the GF-Entscheidungsvorlage
+   is standalone-printable (was on same page as Management Summary) */
+#decision {
+    break-before: page;
+}
 /* Sub-sections flow naturally (no forced break):
-   #decision, #quick-wins-section, #roadmap-90d, #tools-section,
+   #quick-wins-section, #roadmap-90d, #tools-section,
    #prompts-section, #vendor-section, #aiact-compact, #next-steps */
 
 /* ── Section Base ───────────────────────────────────── */
 .section {
     padding: var(--sp-xl) 0 var(--sp-lg);
     break-inside: auto;
+}
+/* KIS-1126 / C3 FIX: Prevent near-empty pages by keeping headings with
+   their following content and avoiding orphaned section starts */
+.section h2, .section h3, .section h4 {
+    break-after: avoid;
+}
+.section .glance-box {
+    break-after: avoid;
+}
+/* Phase/roadmap items should not break internally */
+.section-body h3 + p,
+.section-body h3 + ul,
+.section-body h3 + ol,
+.section-body h3 + div {
+    break-before: avoid;
 }
 
 /* ── Level Indicator ────────────────────────────────── */
@@ -245,7 +265,8 @@ tr:last-child td { border-bottom: none; }
 }
 .section-body p + p { margin-top: 6px; }
 .section-body h4 + p { margin-top: 4px; }
-.section-body p, .section-body li { orphans: 3; widows: 3; }
+/* KIS-1126 / C3 FIX: Increased from 3→5 to prevent near-empty pages */
+.section-body p, .section-body li { orphans: 5; widows: 5; }
 .section-body h3 { margin-top: var(--sp-lg); }
 
 /* ── Funding section spacing ──────────────────────────── */
