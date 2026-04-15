@@ -426,6 +426,141 @@ CHECKLIST_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
     ],
 }
 
+# =============================================================================
+# KIS-1132: EXPERT TOOL TEMPLATES (overrides for expert users)
+# =============================================================================
+
+TOOL_TEMPLATES_EXPERT: Dict[str, List[Dict[str, Any]]] = {
+    "solo": [
+        {
+            "name": "LLM-API-Zugang (Anthropic/OpenAI)",
+            "category": "KI-API",
+            "purpose": "Direkte API-Integration für eigene Pipelines",
+            "priority": 1,
+            "estimated_setup_days": 1,
+            "funding_eligible": True,
+        },
+        {
+            "name": "LLM-Monitoring (Langfuse)",
+            "category": "Monitoring / Observability",
+            "purpose": "Prompt-Tracking, Cost-Monitoring, Evaluierung",
+            "priority": 1,
+            "estimated_setup_days": 2,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Prompt-Versionierung (Git/Langfuse)",
+            "category": "DevOps",
+            "purpose": "Versionskontrolle und A/B-Testing für Prompts",
+            "priority": 1,
+            "estimated_setup_days": 1,
+            "funding_eligible": False,
+        },
+        {
+            "name": "Evaluierungs-Framework (Promptfoo)",
+            "category": "Qualitätssicherung",
+            "purpose": "Automatisierte Qualitätsprüfung von LLM-Outputs",
+            "priority": 2,
+            "estimated_setup_days": 3,
+            "funding_eligible": True,
+        },
+    ],
+    "team": [
+        {
+            "name": "LLM-Gateway (LiteLLM/Portkey)",
+            "category": "KI-API",
+            "purpose": "Zentrales API-Management, Multi-Provider-Routing",
+            "priority": 1,
+            "estimated_setup_days": 3,
+            "funding_eligible": True,
+        },
+        {
+            "name": "LLM-Observability (Langfuse/Helicone)",
+            "category": "Monitoring / Observability",
+            "purpose": "Team-weites Monitoring, Cost-Tracking, Evaluierung",
+            "priority": 1,
+            "estimated_setup_days": 2,
+            "funding_eligible": True,
+        },
+        {
+            "name": "KI-Governance-Framework",
+            "category": "Governance",
+            "purpose": "AI Act Compliance, Richtlinien, Dokumentation",
+            "priority": 1,
+            "estimated_setup_days": 5,
+            "funding_eligible": True,
+        },
+        {
+            "name": "CI/CD für Prompts",
+            "category": "DevOps",
+            "purpose": "Automatisierte Tests und Deployment für Prompt-Änderungen",
+            "priority": 2,
+            "estimated_setup_days": 3,
+            "funding_eligible": False,
+        },
+    ],
+    "kmu": [
+        {
+            "name": "LLM-Operations-Plattform",
+            "category": "KI-API",
+            "purpose": "Enterprise-weites LLM-Management mit Governance",
+            "priority": 1,
+            "estimated_setup_days": 7,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Monitoring & Evaluierung",
+            "category": "Monitoring / Observability",
+            "purpose": "Produktionsreife Observability für alle LLM-Aufrufe",
+            "priority": 1,
+            "estimated_setup_days": 5,
+            "funding_eligible": True,
+        },
+        {
+            "name": "KI-Governance & Compliance",
+            "category": "Governance",
+            "purpose": "AI Act Compliance, Risikomanagement, Audit-Trail",
+            "priority": 1,
+            "estimated_setup_days": 7,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Evaluierungs-Pipeline",
+            "category": "Qualitätssicherung",
+            "purpose": "Automatisierte Quality Gates und Regression Testing",
+            "priority": 1,
+            "estimated_setup_days": 5,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Cost-Management & Budgetierung",
+            "category": "FinOps",
+            "purpose": "Budget-Alerts, Cost-per-Output-Tracking, Optimierung",
+            "priority": 2,
+            "estimated_setup_days": 3,
+            "funding_eligible": False,
+        },
+    ],
+}
+
+KIT_DESCRIPTIONS_EXPERT: Dict[str, str] = {
+    "solo": (
+        "Operations-Kit für KI-Profis: Monitoring, Prompt-Versionierung und "
+        "Evaluierung für Ihre bestehenden LLM-Pipelines. Fokus auf Qualität, "
+        "Kosten und Compliance – nicht auf Grundlagen."
+    ),
+    "team": (
+        "Team-Operations-Kit: Zentrales API-Management, Team-weites Monitoring "
+        "und Governance-Framework für produktive LLM-Nutzung. "
+        "Integration: 1-2 Wochen."
+    ),
+    "kmu": (
+        "Enterprise-LLM-Operations: Skalierbare Infrastruktur mit Monitoring, "
+        "Governance und automatisierten Quality Gates für unternehmensweite "
+        "KI-Nutzung. Integration: 2-4 Wochen."
+    ),
+}
+
 # Size-specific kit descriptions
 KIT_DESCRIPTIONS: Dict[str, str] = {
     "solo": (
@@ -479,14 +614,25 @@ def generate_starter_kit(
     branch_group = (ctx.get("branche") or ctx.get("branche_label") or "Allgemein").capitalize()
     maturity = int(ctx.get("maturity_level", 2) or 2)
 
+    # KIS-1132: Use expertise_level if available (injected by gpt_analyze.py)
+    expertise_level = str(ctx.get("expertise_level", "") or "").lower()
+
     maturity_label = "Einsteiger" if maturity <= 2 else "Fortgeschritten" if maturity <= 3 else "Erfahren"
+    # KIS-1132: Override maturity label with expertise label if available
+    if expertise_level == "expert":
+        maturity_label = "KI-Experte"
+    elif expertise_level == "intermediate":
+        maturity_label = "KI-Anwender"
     segment_label = f"{size_label.upper()}/{branch_group}/{maturity_label}"
 
     kit_id = f"{size_label}_{branch_group.lower()[:4]}_{maturity}"
-    kit_name = _generate_kit_name(size_label, branch_group, lang)
+    kit_name = _generate_kit_name(size_label, branch_group, lang, expertise_level=expertise_level)
 
-    # Get templates
-    tool_templates = TOOL_TEMPLATES.get(size_label, TOOL_TEMPLATES["team"])
+    # KIS-1132: Get templates based on expertise level
+    if expertise_level == "expert":
+        tool_templates = TOOL_TEMPLATES_EXPERT.get(size_label, TOOL_TEMPLATES_EXPERT["solo"])
+    else:
+        tool_templates = TOOL_TEMPLATES.get(size_label, TOOL_TEMPLATES["team"])
     funding_templates = FUNDING_TEMPLATES.get(size_label, FUNDING_TEMPLATES["team"])
     checklist_templates = CHECKLIST_TEMPLATES.get(size_label, CHECKLIST_TEMPLATES["team"])
 
@@ -533,7 +679,7 @@ def generate_starter_kit(
         estimated_investment=estimated_investment,
         potential_funding=potential_funding,
         quick_win_count=quick_win_count,
-        description=KIT_DESCRIPTIONS.get(size_label, ""),
+        description=(KIT_DESCRIPTIONS_EXPERT if expertise_level == "expert" else KIT_DESCRIPTIONS).get(size_label, ""),
     )
 
 
@@ -547,13 +693,21 @@ def _normalize_size(size_raw: str) -> str:
     return "kmu"
 
 
-def _generate_kit_name(size_label: str, branch: str, lang: str) -> str:
+def _generate_kit_name(size_label: str, branch: str, lang: str, expertise_level: str = "") -> str:
     """Generate human-readable kit name."""
-    size_names = {
-        "solo": "Solo-Starter",
-        "team": "Team-Boost",
-        "kmu": "KMU-Enterprise",
-    }
+    # KIS-1132: Expertise-aware kit names
+    if expertise_level == "expert":
+        size_names = {
+            "solo": "KI-Operations",
+            "team": "Team-LLM-Ops",
+            "kmu": "Enterprise-LLM-Ops",
+        }
+    else:
+        size_names = {
+            "solo": "Solo-Starter",
+            "team": "Team-Boost",
+            "kmu": "KMU-Enterprise",
+        }
     base_name = size_names.get(size_label, "Starter")
     return f"{base_name} Kit für {branch}"
 
