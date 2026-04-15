@@ -8817,17 +8817,17 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # - sections gets deduped by O2 (42 chars) → html.replace misses 194-char GPT text
     # - html.replace fails on UTF-8 encoded HTML (für ≠ fÃ¼r)
     # Solution: Truncate in briefing ONCE → ALL GPT prompts get short version
-    # KIS-1126 / C2 FIX: Increased from 77→150 chars to prevent mid-word cuts
-    # in German compound descriptions (e.g. "Einführung" was cut to "Einfü")
+    # KIS-1126 / C2 FIX: Increased from 77→150→300 chars to prevent mid-word cuts
+    # in German compound descriptions (e.g. "Einführung" was cut to "Einfü"/"Einführun")
     _hl_source = briefing.get("hauptleistung", "")
-    if isinstance(_hl_source, str) and len(_hl_source) > 160:
-        _hl_truncated = _hl_source[:150].rsplit(' ', 1)[0] + '…'
+    if isinstance(_hl_source, str) and len(_hl_source) > 310:
+        _hl_truncated = _hl_source[:300].rsplit(' ', 1)[0] + '…'
         briefing["hauptleistung"] = _hl_truncated
         log.info("[X1] DEFINITIVE: briefing['hauptleistung'] truncated at source: %d→%d chars", len(_hl_source), len(_hl_truncated))
     # X4: Also truncate uppercase variant
     _hl_upper = briefing.get("HAUPTLEISTUNG", "")
-    if isinstance(_hl_upper, str) and len(_hl_upper) > 160:
-        briefing["HAUPTLEISTUNG"] = _hl_upper[:150].rsplit(' ', 1)[0] + '…'
+    if isinstance(_hl_upper, str) and len(_hl_upper) > 310:
+        briefing["HAUPTLEISTUNG"] = _hl_upper[:300].rsplit(' ', 1)[0] + '…'
         log.info("[X4] briefing['HAUPTLEISTUNG'] truncated: %d→%d chars", len(_hl_upper), len(briefing["HAUPTLEISTUNG"]))
     hauptleistung_raw = briefing.get("hauptleistung", "")
 
