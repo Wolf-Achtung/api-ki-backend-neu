@@ -447,86 +447,74 @@ h1, h2, h3, h4 { break-after: avoid; }
 }
 
 /* ══════════════════════════════════════════════════════
-   CHAPTER SEPARATOR (full-page, premium)
+   CHAPTER BANNER (compact top-banner, replaces full-page divider)
    ══════════════════════════════════════════════════════ */
-/* FIX-VU2: Static background-color for Puppeteer PDF rendering reliability */
-.chapter-separator {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    background-color: #0F1D35;
-    background-image: linear-gradient(135deg, #0F1D35 0%, #1a5276 60%, #162444 100%);
-    color: white;
+/* KIS-1127 / C4: Compact ~80px banner instead of 100vh full-page divider */
+.chapter-banner {
+    padding: 20px 32px 16px;
+    margin: 0 0 24px 0;
     position: relative;
-    overflow: hidden;
+    break-inside: avoid;
+    break-after: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.chapter-banner__number {
+    font-size: 36px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    top: 14px;
+    left: 32px;
+    line-height: 1;
+}
+
+.chapter-banner__accent {
+    width: 32px;
+    height: 2px;
+    background: #c8954c;
+    margin: 4px 0 8px;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
 }
 
-/* Subtle geometric decoration */
-.chapter-separator::before {
-    content: '';
-    position: absolute;
-    top: -20%;
-    right: -10%;
-    width: 400px;
-    height: 400px;
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 50%;
-}
-.chapter-separator::after {
-    content: '';
-    position: absolute;
-    bottom: -15%;
-    left: -8%;
-    width: 300px;
-    height: 300px;
-    border: 1px solid rgba(255,255,255,0.04);
-    border-radius: 50%;
+/* Numbered variant: indent content past the number */
+.chapter-banner--numbered .chapter-banner__content {
+    padding-left: 40px;
 }
 
-.chapter-number {
+/* Unnumbered variant: no indent */
+.chapter-banner--unnumbered .chapter-banner__content {
+    padding-left: 0;
+}
+
+.chapter-banner__category {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 0 0 4px;
+}
+
+.chapter-banner__title {
     font-family: var(--font-heading);
-    font-size: 120pt;
-    font-weight: 700;
-    line-height: 1;
-    color: rgba(255,255,255,0.12);
-    margin-bottom: -20px;
-    position: relative;
-    z-index: 1;
+    font-size: 18px;
+    font-weight: 500;
+    color: #ffffff;
+    margin: 0 0 2px;
 }
 
-.chapter-title {
-    font-family: var(--font-heading);
-    font-size: 28pt;
-    font-weight: 600;
-    color: white;
-    margin-bottom: var(--sp-sm);
-    position: relative;
-    z-index: 1;
-}
-
-.chapter-subtitle {
+.chapter-banner__subtitle {
     font-family: var(--font-body);
-    font-size: 12pt;
-    font-weight: 400;
-    color: var(--gold-100);
-    letter-spacing: 0.02em;
-    position: relative;
-    z-index: 1;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
 }
 
-/* FIX-VU2: Static values for Puppeteer PDF rendering reliability */
-.chapter-accent-line {
-    width: 60px;
-    height: 2px;
-    background: #C5930A;
-    margin: 16px auto;
-    position: relative;
-    z-index: 1;
+/* Strategy report: navy gradient */
+.chapter-banner--strategy {
+    background: linear-gradient(135deg, #1a2744 0%, #2a3d5f 100%);
 }
 
 /* ══════════════════════════════════════════════════════
@@ -971,9 +959,7 @@ sup.src-ref {
     .page-break {
         page-break-before: always;
     }
-    .chapter-separator {
-        page-break-before: always;
-        page-break-after: always;
+    .chapter-banner {
         page-break-inside: avoid;
     }
     .kpi-card, .scenario-card, .comparison-card,
@@ -990,13 +976,16 @@ sup.src-ref {
 </head>
 <body>
 
-    {# ── Macro: Chapter Separator with inline styles for Puppeteer ── #}
-    {% macro chapter_sep(num, title, subtitle) %}
-    <div class="chapter-separator page-break" style="height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background-color:#0F1D35;background-image:linear-gradient(135deg, #0F1D35 0%, #1a5276 60%, #162444 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#ffffff;page-break-before:always;position:relative;overflow:hidden">
-        <div class="chapter-number" style="font-size:72pt;font-weight:300;color:rgba(255,255,255,0.3);line-height:1;position:relative;z-index:1">{{ num }}</div>
-        <div class="chapter-accent-line" style="width:60px;height:3px;background:#C5930A;margin:16px auto;border-radius:2px;position:relative;z-index:1;print-color-adjust:exact;-webkit-print-color-adjust:exact"></div>
-        <div class="chapter-title" style="font-size:24pt;font-weight:700;color:#ffffff;position:relative;z-index:1">{{ title }}</div>
-        <div class="chapter-subtitle" style="font-size:11pt;color:rgba(255,255,255,0.7);margin-top:8px;position:relative;z-index:1">{{ subtitle }}</div>
+    {# ── Macro: Compact Chapter Banner (KIS-1127/C4, replaces full-page dividers) ── #}
+    {% macro chapter_banner(title, subtitle="", num="", category="") %}
+    <div class="chapter-banner chapter-banner--strategy {% if num %}chapter-banner--numbered{% else %}chapter-banner--unnumbered{% endif %} page-break" style="background:linear-gradient(135deg,#1a2744 0%,#2a3d5f 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        {% if num %}<span class="chapter-banner__number" style="font-size:36px;font-weight:500;color:rgba(255,255,255,0.2);position:absolute;top:14px;left:32px;line-height:1;">{{ num }}</span>{% endif %}
+        <div class="chapter-banner__content" style="{% if num %}padding-left:40px;{% endif %}">
+            {% if category %}<p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">{{ category }}</p>{% endif %}
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">{{ title }}</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            {% if subtitle %}<p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">{{ subtitle }}</p>{% endif %}
+        </div>
     </div>
     {% endmacro %}
 
@@ -1102,18 +1091,13 @@ sup.src-ref {
     </div>
 
     <!-- ====== EXECUTIVE SUMMARY ====== -->
-    <div class="exec-summary page-break">
-        <div class="section-header">
-            <span class="section-label" style="color: var(--report-accent);">ZUSAMMENFASSUNG</span>
-            <h2>Executive Summary</h2>
-        </div>
-        <div class="section-body">
-            {{ exec_summary | safe }}
-        </div>
+    {{ chapter_banner("Executive Summary") }}
+    <div class="section-content">
+        {{ exec_summary | safe }}
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 1 ====== -->
-    {{ chapter_sep("1", "Ausgangslage", "Ihr KI-Readiness-Profil") }}
+    {{ chapter_banner("Ausgangslage", "Ihr KI-Readiness-Profil", num="1") }}
 
     <!-- ====== S1: AUSGANGSLAGE ====== -->
     <div class="section-content">
@@ -1121,7 +1105,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 2 ====== -->
-    {{ chapter_sep("2", "Markt &amp; Wettbewerb", "Aktuelle Branchendaten &amp; Benchmarks") }}
+    {{ chapter_banner("Markt &amp; Wettbewerb", "Aktuelle Branchendaten &amp; Benchmarks", num="2") }}
 
     <!-- ====== S2: MARKT & WETTBEWERB ====== -->
     <div class="section-content">
@@ -1129,7 +1113,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 3 ====== -->
-    {{ chapter_sep("3", "Strategische Handlungsfelder", "Priorisiert nach Impact &amp; Machbarkeit") }}
+    {{ chapter_banner("Strategische Handlungsfelder", "Priorisiert nach Impact &amp; Machbarkeit", num="3") }}
 
     <!-- ====== S3: HANDLUNGSFELDER ====== -->
     <div class="section-content">
@@ -1137,7 +1121,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 3b ====== -->
-    {{ chapter_sep("3b", "KI-Umsatzpotenziale", "Neue Erlösquellen durch KI") }}
+    {{ chapter_banner("KI-Umsatzpotenziale", "Neue Erlösquellen durch KI", num="3b") }}
 
     <!-- ====== S3b: KI-UMSATZPOTENZIALE ====== -->
     <div class="section-content">
@@ -1145,7 +1129,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 4 ====== -->
-    {{ chapter_sep("4", "Tool-Landschaft &amp; Empfehlungen", "DSGVO-bewertete Lösungen für Ihr Unternehmen") }}
+    {{ chapter_banner("Tool-Landschaft &amp; Empfehlungen", "DSGVO-bewertete Lösungen für Ihr Unternehmen", num="4") }}
 
     <!-- ====== S4: TOOLS ====== -->
     <div class="section-content">
@@ -1153,7 +1137,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 5 ====== -->
-    {{ chapter_sep("5", "Investitionsplan &amp; ROI", "Szenarien, Break-Even &amp; Budget-Fit") }}
+    {{ chapter_banner("Investitionsplan &amp; ROI", "Szenarien, Break-Even &amp; Budget-Fit", num="5") }}
 
     <!-- ====== S5: INVESTITIONSPLAN ====== -->
     <div class="section-content">
@@ -1170,7 +1154,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 6 ====== -->
-    {{ chapter_sep("6", "Umsetzungs-Roadmap", "Ihr Phasenplan zur produktiven KI-Nutzung") }}
+    {{ chapter_banner("Umsetzungs-Roadmap", "Ihr Phasenplan zur produktiven KI-Nutzung", num="6") }}
 
     <!-- ====== S6: ROADMAP ====== -->
     <div class="section-content">
@@ -1178,7 +1162,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 7 ====== -->
-    {{ chapter_sep("7", "Fördermittel &amp; Finanzierung", "Aktuelle Programme für Ihr Unternehmen") }}
+    {{ chapter_banner("Fördermittel &amp; Finanzierung", "Aktuelle Programme für Ihr Unternehmen", num="7") }}
 
     <!-- ====== S7: FÖRDERMITTEL ====== -->
     <div class="section-content">
@@ -1186,7 +1170,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 8 ====== -->
-    {{ chapter_sep("8", "Risiken &amp; Compliance", "EU AI Act &amp; DSGVO") }}
+    {{ chapter_banner("Risiken &amp; Compliance", "EU AI Act &amp; DSGVO", num="8") }}
 
     <!-- ====== S8: RISIKEN ====== -->
     <div class="section-content">
@@ -1195,7 +1179,7 @@ sup.src-ref {
 
     <!-- ====== S-MOAT: KI-GESTÜTZTER WETTBEWERBSVORTEIL ====== -->
     {% if section_s_moat %}
-    {{ chapter_sep("9", "KI-gestützter Wettbewerbsvorteil", "Nachhaltige Vorteile durch strategischen KI-Einsatz") }}
+    {{ chapter_banner("KI-gestützter Wettbewerbsvorteil", "Nachhaltige Vorteile durch strategischen KI-Einsatz", num="9") }}
 
     <div class="section-content">
         {{ section_s_moat | safe }}
@@ -1203,11 +1187,8 @@ sup.src-ref {
     {% endif %}
 
     <!-- ====== NÄCHSTE SCHRITTE ====== -->
-    <div class="naechste-schritte page-break">
-        <div class="section-header">
-            <span class="section-label">HANDLUNGSEMPFEHLUNG</span>
-            <h2>Ihre nächsten Schritte</h2>
-        </div>
+    {{ chapter_banner("Ihre nächsten Schritte") }}
+    <div class="section-content">
         {{ naechste_schritte | safe }}
     </div>
 
