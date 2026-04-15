@@ -1551,7 +1551,10 @@ def generate_sofort_start_html(
     prompts_list: List[Dict[str, Any]] = cast(List[Dict[str, Any]], branche_data["prompts"])
     for i, prompt_data in enumerate(prompts_list, 1):
         _raw_prompt = _hl_context_prefix + prompt_data["prompt"] if _hl_context_prefix else prompt_data["prompt"]
-        prompt_text = _raw_prompt[:400] + "..." if len(_raw_prompt) > 400 else _raw_prompt
+        # KIS-1126 / C8 FIX: Removed 400-char truncation — prompts must be complete
+        # to be usable as copy-paste content. Box has white-space:pre-wrap and no
+        # max-height, so full text renders correctly.
+        prompt_text = _raw_prompt
         # FIX-B17: Close the avoid-break wrapper after first prompt box
         close_wrapper = "</div>" if i == 1 else ""
         html += f'''
@@ -1576,7 +1579,8 @@ def generate_sofort_start_html(
     lern_prompt: Dict[str, str] | None = cast(Dict[str, str], _lern_raw) if isinstance(_lern_raw, dict) else None
     if lern_prompt:
         _raw_lern = _hl_context_prefix + lern_prompt["prompt"] if _hl_context_prefix else lern_prompt["prompt"]
-        lern_text = _raw_lern[:400] + "..." if len(_raw_lern) > 400 else _raw_lern
+        # KIS-1126 / C8 FIX: Removed 400-char truncation — prompts must be complete
+        lern_text = _raw_lern
         html += f'''
         <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
