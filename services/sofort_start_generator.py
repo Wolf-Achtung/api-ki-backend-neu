@@ -1850,6 +1850,14 @@ CHALLENGE_30_TAGE = {
             {"tag": 26, "aufgabe": "Workflow-Checkliste für wiederkehrende Aufgabe", "dauer": "25 Min", "kategorie": "Optimierung"},
             {"tag": 27, "aufgabe": "Alternative Formulierungen für gleiche Aufgabe testen", "dauer": "20 Min", "kategorie": "Fortgeschritten"},
             {"tag": 28, "aufgabe": "Team-Anwendungsfall identifizieren", "dauer": "25 Min", "kategorie": "Scaling"},
+        ]
+    },
+    # KIS-1126 / C7 FIX: Days 29-30 moved to own section to prevent orphaned
+    # grid cells (9 items in a 7-col grid → 2 isolated items after page break)
+    "abschluss": {
+        "titel": "Abschluss & Ausblick",
+        "ziel": "Ergebnisse sichern und nächste Phase planen",
+        "tage": [
             {"tag": 29, "aufgabe": "ROI der letzten 4 Wochen berechnen", "dauer": "20 Min", "kategorie": "Reflexion"},
             {"tag": 30, "aufgabe": "Nächste 30 Tage planen: Was wird Standard?", "dauer": "30 Min", "kategorie": "Planung"},
         ]
@@ -1890,39 +1898,45 @@ def generate_30_tage_challenge_html(company_size: str = "solo") -> str:
     </div>
     
     <!-- ÜBERSICHT -->
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 24px;">
 '''
-    
+
     # Wochen-Übersicht
-    wochen_farben = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"]
+    # KIS-1126 / C7 FIX: 5 sections (4 weeks + Abschluss) with matching colors
+    wochen_farben = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444"]
+    wochen_labels = ["Woche 1", "Woche 2", "Woche 3", "Woche 4", "Abschluss"]
     for i, (woche_key, woche_data) in enumerate(CHALLENGE_30_TAGE.items()):
         farbe = wochen_farben[i]
+        label = wochen_labels[i]
         html += f'''
-        <div style="background: {farbe}15; border: 2px solid {farbe}; border-radius: 8px; padding: 12px; text-align: center;">
-            <div style="font-size: 12px; font-weight: 600; color: {farbe}; text-transform: uppercase;">Woche {i+1}</div>
-            <div style="font-size: 14px; font-weight: 700; color: #1e293b; margin: 4px 0;">{woche_data["titel"]}</div>
-            <div style="font-size: 11px; color: #64748b;">{woche_data["ziel"]}</div>
+        <div style="background: {farbe}15; border: 2px solid {farbe}; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 11px; font-weight: 600; color: {farbe}; text-transform: uppercase;">{label}</div>
+            <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin: 4px 0;">{woche_data["titel"]}</div>
+            <div style="font-size: 10px; color: #64748b;">{woche_data["ziel"]}</div>
         </div>
 '''
-    
+
     html += '''
     </div>
 '''
-    
+
     # Detaillierte Wochen
     for i, (woche_key, woche_data) in enumerate(CHALLENGE_30_TAGE.items()):
         farbe = wochen_farben[i]
+        label = wochen_labels[i]
+        tage_list: List[Dict[str, Any]] = cast(List[Dict[str, Any]], woche_data["tage"])
+        # KIS-1126 / C7: Adapt grid columns to number of days in section
+        grid_cols = min(len(tage_list), 7)
         html += f'''
-    <!-- WOCHE {i+1} -->
+    <!-- {label.upper()} -->
     <div style="margin-bottom: 20px;">
         <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: {farbe}; display: flex; align-items: center; gap: 8px;">
             <span style="background: {farbe}; color: white; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px;">{i+1}</span>
-            Woche {i+1}: {woche_data["titel"]}
+            {label}: {woche_data["titel"]}
         </h3>
-        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;">
+        <div style="display: grid; grid-template-columns: repeat({grid_cols}, 1fr); gap: 6px;">
 '''
-        
-        tage_list: List[Dict[str, Any]] = cast(List[Dict[str, Any]], woche_data["tage"])
+
         for tag_data in tage_list:
             icon = KATEGORIE_ICONS.get(str(tag_data.get("kategorie", "")), "📌")
             html += f'''
@@ -1935,7 +1949,7 @@ def generate_30_tage_challenge_html(company_size: str = "solo") -> str:
                 <div style="color: #94a3b8; font-size: 9px; margin-top: 4px;">⏱️ {tag_data.get("dauer", "")}</div>
             </div>
 '''
-        
+
         html += '''
         </div>
     </div>
@@ -2083,6 +2097,12 @@ CHALLENGE_LIGHT = {
             {"tag": 26, "aufgabe": "Standard-Workflow definieren", "dauer": "15 Min", "prio": True},
             {"tag": 27, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
             {"tag": 28, "aufgabe": "Pause / Nachholen", "dauer": "-", "prio": False},
+        ]
+    },
+    # KIS-1126 / C7 FIX: Days 29-30 as own section (matches CHALLENGE_30_TAGE structure)
+    "abschluss": {
+        "titel": "Abschluss & Ausblick",
+        "tage": [
             {"tag": 29, "aufgabe": "Gesamt-ROI berechnen", "dauer": "15 Min", "prio": True},
             {"tag": 30, "aufgabe": "Nächste Schritte planen", "dauer": "15 Min", "prio": True},
         ]
@@ -2153,33 +2173,40 @@ def generate_30_tage_challenge_html_v2(
 '''
     
     # Wochen-Übersicht
-    html += '''
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+    # KIS-1126 / C7 FIX: Dynamic grid columns based on number of sections
+    _num_sections = len(challenge_data)
+    html += f'''
+    <div style="display: grid; grid-template-columns: repeat({_num_sections}, 1fr); gap: 10px; margin-bottom: 24px;">
 '''
-    
-    wochen_farben = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6"]
+
+    wochen_farben = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444"]
+    wochen_labels_v2 = ["Woche 1", "Woche 2", "Woche 3", "Woche 4", "Abschluss"]
     for i, (woche_key, woche_data) in enumerate(challenge_data.items()):
-        farbe = wochen_farben[i]
+        farbe = wochen_farben[i % len(wochen_farben)]
+        label = wochen_labels_v2[i] if i < len(wochen_labels_v2) else f"Woche {i+1}"
         html += f'''
-        <div style="background: {farbe}15; border: 2px solid {farbe}; border-radius: 8px; padding: 12px; text-align: center;">
-            <div style="font-size: 12px; font-weight: 600; color: {farbe}; text-transform: uppercase;">Woche {i+1}</div>
-            <div style="font-size: 14px; font-weight: 700; color: #1e293b; margin: 4px 0;">{woche_data["titel"]}</div>
+        <div style="background: {farbe}15; border: 2px solid {farbe}; border-radius: 8px; padding: 10px; text-align: center;">
+            <div style="font-size: 11px; font-weight: 600; color: {farbe}; text-transform: uppercase;">{label}</div>
+            <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin: 4px 0;">{woche_data["titel"]}</div>
         </div>
 '''
-    
+
     html += '''
     </div>
 '''
-    
+
     # Detaillierte Wochen
     for i, (woche_key, woche_data) in enumerate(challenge_data.items()):
-        farbe = wochen_farben[i]
+        farbe = wochen_farben[i % len(wochen_farben)]
+        label = wochen_labels_v2[i] if i < len(wochen_labels_v2) else f"Woche {i+1}"
+        tage_in_section = len(woche_data.get("tage", []))
+        grid_cols = min(tage_in_section, 7)
         html += f'''
     <div style="margin-bottom: 20px;">
         <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: {farbe};">
-            Woche {i+1}: {woche_data["titel"]}
+            {label}: {woche_data["titel"]}
         </h3>
-        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;">
+        <div style="display: grid; grid-template-columns: repeat({grid_cols}, 1fr); gap: 6px;">
 '''
         
         tage_list2: List[Dict[str, Any]] = cast(List[Dict[str, Any]], woche_data["tage"])
