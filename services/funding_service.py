@@ -286,7 +286,8 @@ class FundingService:
                 note_text = f"Diese Programme sind speziell für Ihr Unternehmensprofil in {country_name} vorausgewählt. Weitere regionale Programme können verfügbar sein."
 
         html_parts.append(f'  <p class="small muted" style="margin-top: 6pt;">')
-        html_parts.append(f'    <strong>{note_prefix}:</strong> {note_text} Stand: Q1 2025.')
+        from services.extra_sections import _current_quarter_label
+        html_parts.append(f'    <strong>{note_prefix}:</strong> {note_text} Stand: {_current_quarter_label()}.')
         html_parts.append('  </p>')
         html_parts.append('</div>')
 
