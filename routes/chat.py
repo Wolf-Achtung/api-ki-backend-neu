@@ -3085,6 +3085,7 @@ def _build_session_state(
         pending_field=draft.get("pending_field"),
         pending_value=draft.get("pending_value"),
         dialog_mode=draft.get("dialog_mode", False),
+        edit_mode=bool(draft.get("edit_mode")),  # KIS-1131 FX-5
         conversation_phase=ps["conversation_phase"],
         selected_blocks=ps["selected_blocks"],
         completed_blocks=ps["completed_blocks"],
