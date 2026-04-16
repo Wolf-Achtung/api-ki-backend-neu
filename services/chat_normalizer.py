@@ -74,7 +74,7 @@ FIELD_REGISTRY: dict[str, dict] = {
     "vision_prioritaet":    {"type": "enum",  "required": False, "section": 5, "chat_mode": "QR"},
     "innovationsprozess":   {"type": "enum",  "required": False, "section": 5, "chat_mode": "QR"},
     # --- Section 6: Recht & Datenschutz ---
-    "datenschutz":          {"type": "bool",  "required": True,  "section": 6, "chat_mode": "QR"},
+    "datenschutz":          {"type": "bool",  "required": True,  "section": 6, "chat_mode": "QR", "skip_in_chat": True},
     "datenschutzbeauftragter": {"type": "enum", "required": False, "section": 6, "chat_mode": "QR"},
     "technische_massnahmen": {"type": "enum", "required": False, "section": 6, "chat_mode": "QR"},
     "folgenabschaetzung":   {"type": "enum",  "required": False, "section": 6, "chat_mode": "QR"},
