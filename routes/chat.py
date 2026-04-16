@@ -1908,10 +1908,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 multi_select=True,
                 max_select=4,
             )]
-        elif _final_phase == "summary":
+        elif _final_phase == "summary" and not _is_edit_request and (not _is_in_edit_mode or _edit_applied):
             # KIS-1124-HOTFIX: Summary phase needs action buttons so user can
             # start the report or request edits. Previously was [] → user had
             # to type manually, which is not discoverable.
+            # KIS-1131 FX-2: Suppress during edit-mode (but show again after edit applied).
             quick_replies = [QuickReply(
                 field="__summary_action__",
                 label="Nächster Schritt",
@@ -2041,7 +2042,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _should_send_summary = (
             (all_fields_done and not _has_summary_been_sent(session))
             or _edit_applied
-            or _phase_summary_requested
+            or (_phase_summary_requested and not _is_edit_request)  # KIS-1131 FX-2
         )
         if _should_send_summary:
             from services.chat_conversation import build_summary
