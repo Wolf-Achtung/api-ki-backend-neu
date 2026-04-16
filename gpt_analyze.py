@@ -200,6 +200,7 @@ try:
         get_research_provenance,
         validate_business_case_plausibility,
         apply_ai_act_modifiers_to_business_case,  # G8.1
+        _current_quarter_label,  # KIS-1134-FX-1
     )
 except Exception:
     calc_business_case = None
@@ -210,6 +211,10 @@ except Exception:
     get_research_provenance = None
     validate_business_case_plausibility = None
     apply_ai_act_modifiers_to_business_case = None  # G8.1
+    def _current_quarter_label() -> str:  # KIS-1134-FX-1 fallback
+        from datetime import datetime
+        now = datetime.now()
+        return f"Q{(now.month - 1) // 3 + 1} {now.year}"
 
 # G8.2: Import centralized validation config
 try:
@@ -10674,7 +10679,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Hochrisiko-Anwendungen erfordern zusätzliche Governance-Prozesse.
   </p>
   <p class="small muted">
-    Stand: Q1 2025. Detaillierte Anforderungen entwickeln sich weiter – bei kritischen
+    Stand: {_current_quarter_label()}. Detaillierte Anforderungen entwickeln sich weiter – bei kritischen
     Anwendungen rechtliche Beratung empfohlen.
   </p>
 </div>"""
