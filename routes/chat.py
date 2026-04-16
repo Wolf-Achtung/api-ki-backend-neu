@@ -683,7 +683,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
 
             # --- QR value write (single code path, draft-agnostic) ---
-            if qr_field != "_draft_action":
+            # KIS-1131 FX-3: Skip meta-fields (__*__) — they are control signals,
+            # not data fields, and would produce "Unknown field" warnings in normalize_field.
+            if qr_field != "_draft_action" and not qr_field.startswith("__"):
                 qr_result = normalize_field(qr_field, req.quick_reply_value, collected, report_type=rt)
                 if qr_result.confidence != "low":
                     collected[qr_field] = qr_result.value
