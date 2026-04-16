@@ -3027,7 +3027,9 @@ def _build_session_state(
     all_done = len(missing_req) == 0 and len(missing_opt) == 0
     summary_sent = _has_summary_been_sent(session)
     _in_summary_phase = ps["conversation_phase"] == "summary"
-    completable = summary_sent and (all_done or _in_summary_phase)
+    # KIS-1131 FX-4: Not completable while user is editing fields.
+    _editing = bool(draft.get("edit_mode"))
+    completable = summary_sent and (all_done or _in_summary_phase) and not _editing
 
     # KIS-1124: Unsurveyed note — only in summary phase when blocks were skipped
     unsurveyed_note: str | None = None
