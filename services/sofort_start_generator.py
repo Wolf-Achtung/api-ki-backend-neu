@@ -2644,6 +2644,8 @@ def generate_30_tage_challenge_html_v2(
     zeitbudget: str = "2_5",
     expertise_level: str = "beginner",  # KIS-1132
     hauptleistung: str = "",  # KIS-1132
+    hours_per_week: float = 0.0,  # KIS-1134-FX-2: Prognose-Werte
+    stundensatz: float = 0.0,  # KIS-1134-FX-2: Für €-Berechnung
 ) -> str:
     """
     Generiert die 30-Tage Challenge angepasst ans Zeitbudget und Kompetenz-Level.
@@ -2653,6 +2655,8 @@ def generate_30_tage_challenge_html_v2(
         zeitbudget: unter_2/2_5/5_10/ueber_10
         expertise_level: beginner/intermediate/expert (KIS-1132)
         hauptleistung: Core business description (KIS-1132)
+        hours_per_week: Geschätzte Zeitersparnis pro Woche (KIS-1134-FX-2)
+        stundensatz: Stundensatz in EUR (KIS-1134-FX-2)
     """
 
     # Zeitbudget-Config holen
@@ -2787,6 +2791,13 @@ def generate_30_tage_challenge_html_v2(
     </div>
 '''
     
+    # KIS-1134-FX-2: Prognose-Werte für Erfolgs-Tracking
+    _has_values = hours_per_week > 0 and stundensatz > 0
+    _week_factors = [0.5, 0.75, 1.0, 1.0]
+    _weekly_hours = [round(hours_per_week * f, 1) for f in _week_factors]
+    _total_hours = round(sum(_weekly_hours), 1)
+    _total_savings = round(_total_hours * stundensatz)
+
     # Erfolgs-Tracking
     # L3: Added break-inside:avoid to prevent orphan micro-pages
     html += '''
@@ -2797,18 +2808,19 @@ def generate_30_tage_challenge_html_v2(
         </h3>
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
 '''
-    
+
     for w in range(1, 5):
+        _display = f"~{_weekly_hours[w - 1]:g} h" if _has_values else "_____ h"
         html += f'''
             <div style="text-align: center;">
                 <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">Woche {w}</div>
                 <div style="border: 2px solid #22c55e; border-radius: 8px; padding: 12px; background: white;">
                     <div style="font-size: 10px; color: #64748b;">Gesparte Zeit:</div>
-                    <div style="font-size: 16px; font-weight: 700; color: #166534;">_____ h</div>
+                    <div style="font-size: 16px; font-weight: 700; color: #166534;">{_display}</div>
                 </div>
             </div>
 '''
-    
+
     # v14.18: Tipps für Erfolg
     html += '''
         <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 16px; margin-top: 16px; margin-bottom: 16px;">
@@ -2823,8 +2835,20 @@ def generate_30_tage_challenge_html_v2(
             </div>
         </div>
     '''
-    
-    html += '''
+
+    if _has_values:
+        _savings_str = f"{_total_savings:,}".replace(",", ".")
+        html += f'''
+        </div>
+        <div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #22c55e;">
+            <span style="font-size: 14px; color: #166534; font-weight: 600;">
+                🎯 Prognose nach 30 Tagen: ~{_total_hours:g} Stunden = ~{_savings_str} € gespart
+            </span>
+        </div>
+    </div>
+'''
+    else:
+        html += '''
         </div>
         <div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #22c55e;">
             <span style="font-size: 14px; color: #166534; font-weight: 600;">
@@ -3114,7 +3138,7 @@ def generate_fallstudie_html(branche: str, size_key: str = "solo") -> str:
     
     html = f'''
     <!-- FALLSTUDIE -->
-    <div style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px; margin-top: 24px;">
+    <div class="card-nobreak" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px; margin-top: 24px;">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
             <span style="font-size: 24px;">📊</span>
             <h3 style="font-size: 18px; font-weight: 700; margin: 0; color: #1e293b;">

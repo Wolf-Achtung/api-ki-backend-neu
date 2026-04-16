@@ -200,6 +200,7 @@ try:
         get_research_provenance,
         validate_business_case_plausibility,
         apply_ai_act_modifiers_to_business_case,  # G8.1
+        _current_quarter_label,  # KIS-1134-FX-1
     )
 except Exception:
     calc_business_case = None
@@ -210,6 +211,10 @@ except Exception:
     get_research_provenance = None
     validate_business_case_plausibility = None
     apply_ai_act_modifiers_to_business_case = None  # G8.1
+    def _current_quarter_label() -> str:  # KIS-1134-FX-1 fallback
+        from datetime import datetime
+        now = datetime.now()
+        return f"Q{(now.month - 1) // 3 + 1} {now.year}"
 
 # G8.2: Import centralized validation config
 try:
@@ -10674,7 +10679,7 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     Hochrisiko-Anwendungen erfordern zusätzliche Governance-Prozesse.
   </p>
   <p class="small muted">
-    Stand: Q1 2025. Detaillierte Anforderungen entwickeln sich weiter – bei kritischen
+    Stand: {_current_quarter_label()}. Detaillierte Anforderungen entwickeln sich weiter – bei kritischen
     Anwendungen rechtliche Beratung empfohlen.
   </p>
 </div>"""
@@ -13266,11 +13271,15 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     try:
         sofort_zeitbudget = briefing.get("zeitbudget", "") or "2_5"
         # KIS-1132: Pass expertise level + hauptleistung for competence-aware challenge
+        # KIS-1134-FX-2: Pass hours_per_week + stundensatz for Erfolgs-Tracking prognosis
+        _challenge_hpw = round(_sofort_hours_month / 4.33, 1) if _sofort_hours_month > 0 else 0.0
         sections["CHALLENGE_30_TAGE_HTML"] = generate_30_tage_challenge_html_v2(
             company_size=sofort_size,
             zeitbudget=sofort_zeitbudget,
             expertise_level=_sofort_expertise,
             hauptleistung=sofort_hauptleistung,
+            hours_per_week=_challenge_hpw,
+            stundensatz=float(_sofort_rate) if _sofort_rate else 0.0,
         )
     except Exception as e:
         log.warning("[30-TAGE-CHALLENGE] ⚠️ Failed: %s", e)
