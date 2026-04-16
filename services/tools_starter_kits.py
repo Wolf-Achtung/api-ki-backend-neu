@@ -778,7 +778,7 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
         }.get(t.priority, "")
 
         tools_html += f"""
-        <div style="padding:10px;background:#f9fafb;border-radius:6px;margin-bottom:8px;">
+        <div class="tool-card" style="padding:10px;background:#f9fafb;border-radius:6px;margin-bottom:8px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <strong style="font-size:12px;color:#1f2937;">{t.name}</strong>
                 {priority_badge}

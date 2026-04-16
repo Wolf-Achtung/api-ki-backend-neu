@@ -21,6 +21,15 @@ from typing import Dict, Any, List, Optional
 
 log = logging.getLogger(__name__)
 
+
+def _current_quarter_label() -> str:
+    """Gibt das aktuelle Quartal zurück, z.B. 'Q2 2026'."""
+    from datetime import datetime
+    now = datetime.now()
+    quarter = (now.month - 1) // 3 + 1
+    return f"Q{quarter} {now.year}"
+
+
 # ----------------------------- Score Context -------------------------------
 
 BENCHMARK_SCORES = {
@@ -859,11 +868,13 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
     html_parts.append('    </tbody>')
     html_parts.append('  </table>')
     html_parts.append('  ')
-    html_parts.append('  <p class="small muted" style="margin-top: 6pt;">')
-    html_parts.append('    <strong>Hinweis:</strong> Diese Programme sind speziell für Ihr Unternehmensprofil ')
-    html_parts.append(f'    ({size_label}) vorausgewählt. Weitere regionale und branchenspezifische Programme ')
-    html_parts.append('    können verfügbar sein. Stand: Q1 2025.')
-    html_parts.append('  </p>')
+    html_parts.append('  <div class="card-nobreak">')
+    html_parts.append('    <p class="small muted" style="margin-top: 6pt;">')
+    html_parts.append('      <strong>Hinweis:</strong> Diese Programme sind speziell für Ihr Unternehmensprofil ')
+    html_parts.append(f'      ({size_label}) vorausgewählt. Weitere regionale und branchenspezifische Programme ')
+    html_parts.append(f'      können verfügbar sein. Stand: {_current_quarter_label()}.')
+    html_parts.append('    </p>')
+    html_parts.append('  </div>')
     html_parts.append('</div>')
 
     return '\n'.join(html_parts)
