@@ -3138,7 +3138,7 @@ def generate_fallstudie_html(branche: str, size_key: str = "solo") -> str:
     
     html = f'''
     <!-- FALLSTUDIE -->
-    <div style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px; margin-top: 24px;">
+    <div class="card-nobreak" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px; margin-top: 24px;">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
             <span style="font-size: 24px;">📊</span>
             <h3 style="font-size: 18px; font-weight: 700; margin: 0; color: #1e293b;">
