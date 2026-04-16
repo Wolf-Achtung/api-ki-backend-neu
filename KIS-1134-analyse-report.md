@@ -146,3 +146,103 @@ Zusätzlich Commit `9c974c3` (C3) und `c21ea1a` (C3):
 | 1.4 | Starter-Kit-Karte S.11→12 | **Falsche Regel** | `tools_starter_kits.py` nutzt Inline-Styles statt `.tool-card`-Klasse |
 | 1.5 | Hinweis-Kasten S.16→17 | **Fehlende Regel** | `<p class="small muted">` hat keinen Break-Schutz |
 | 1.6 | AI Act Kompakt S.15 | **Inhaltsproblem** | `minimal`-Risikoklasse = zu wenig Content (~30% Seite) |
+
+---
+
+## Abschnitt B — Förderdaten-Quelle ("Stand: Q1 2025")
+
+### B.1 Fundstellen "Q1 2025" im Code
+
+| # | Datei | Zeile | Kontext |
+|---|-------|-------|---------|
+| B1 | `services/extra_sections.py` | 865 | `können verfügbar sein. Stand: Q1 2025.'` — R1-Fördermatrix-Fußnote |
+| B2 | `services/funding_service.py` | 289 | `{note_text} Stand: Q1 2025.'` — Multi-Country-Funding-Renderer |
+| B3 | `gpt_analyze.py` | 10677 | `Stand: Q1 2025. Detaillierte Anforderungen entwickeln sich weiter` — AI-Act-Fallback-HTML |
+
+**B1** ist die primäre Fundstelle für das gemeldete Problem. B2 ist der parallele Renderer für Multi-Country-Reports (EN/AT/CH). B3 gehört zum AI-Act-Block, nicht zum Förder-Block (betrifft aber ebenfalls den Zeitstempel).
+
+### B.2 Daten-Architektur der Förderprogramme
+
+#### Statische Datenbasis
+
+**Primäre JSON-Datei:** `data/funding_programmes_core_2025.json` (477 Zeilen, 20 KB)
+- Enthält ~20 Programme mit Feldern: `id`, `title`, `region`, `country_code`, `status`, `funding_rate`, `max_amount`, `suitable_for`, `relevance_ki`, `priority`, `deadline`
+- Korrekt gepflegt: `go-digital` hat `"status": "expired"` und wird gefiltert (Zeile 7)
+- Geladen in `extra_sections.py:727`: `data/funding_programmes_core_2025.json`
+
+**Sekundäre Dateien:**
+- `data/funding_programs.json` (3.2 KB) — Legacy/Fallback
+- `data/funding/funding_de.json` (6.6 KB) — Alternative DE-Quelle
+- `config/bafa.py` (3.5 KB) — Single Source of Truth für BAFA-Werte (Förderquote, Max-Zuschuss pro Bundesland)
+
+#### Filterlogik in `build_core_funding_table_html()`
+
+`extra_sections.py:712–869`:
+1. Lädt JSON aus `funding_programmes_core_2025.json` (Zeile 727)
+2. Filtert nach: `size_group` (solo/team/kmu), `country_code`, `status != "expired"` (Zeile ~770–807)
+3. Priorisiert nach regionaler Relevanz (Bundesland-Match)
+4. Rendert Top 6–8 Programme als HTML-Tabelle
+5. **Hängt hardcoded Disclaimer an** (Zeile 862–866):
+   ```python
+   html_parts.append('  <p class="small muted" style="margin-top: 6pt;">')
+   html_parts.append('    <strong>Hinweis:</strong> Diese Programme sind speziell für Ihr Unternehmensprofil ')
+   html_parts.append(f'    ({size_label}) vorausgewählt. Weitere regionale und branchenspezifische Programme ')
+   html_parts.append('    können verfügbar sein. Stand: Q1 2025.')
+   ```
+
+### B.3 Pipeline-Flow R1 vs. Strategy
+
+#### R1-Report (das Problem)
+
+Pipeline in `gpt_analyze.py:15568–15613`:
+
+1. Ruft `build_core_funding_table_html(sections)` auf → statische Tabelle aus JSON
+2. Wenn LLM-generiertes `FOERDERPOTENZIAL_HTML` vorhanden:
+   - Entfernt LLM-halluzinierte `<table>`-Blöcke (Zeile 15594–15599)
+   - Setzt programmatische Tabelle VOR LLM-Prosa (Zeile 15607–15610)
+   - Header: "Kernprogramme für Ihr Profil (2025/2026)"
+3. Wenn kein LLM-Content: Nur programmatische Tabelle (Zeile 15612–15613)
+
+**Ergebnis:** R1 zeigt primär die statische Tabelle aus JSON + "Stand: Q1 2025"
+
+#### Strategy-Report (funktioniert besser)
+
+Pipeline in `services/strategy_pipeline.py:220–430`:
+- S7-Section nutzt LLM-Generierung mit BAFA-Daten aus `config/bafa.py`
+- Injiziert `foerder_matches` aus Research-Pipeline (wenn verfügbar)
+- LLM generiert Fristen dynamisch ("BAFA bis 31.12.2026", "Aktuell prüfen")
+- Kein hardcoded "Stand: Q1 2025" im Strategy-Renderer
+
+#### Kernunterschied
+
+| Aspekt | R1-Report | Strategy-Report |
+|--------|-----------|-----------------|
+| **Primäre Datenquelle** | `funding_programmes_core_2025.json` (statisch) | LLM + BAFA-Config |
+| **Timestamp** | `"Stand: Q1 2025"` hardcoded | Keiner / LLM-generiert |
+| **Halluzinations-Schutz** | Programmatische Tabelle ersetzt LLM-Tabellen | Prompt-Constraints + Content-Enforcer |
+| **Aktualität** | An JSON-Datei gebunden | An Prompt-Wissen + Config gebunden |
+| **Fristen** | Aus JSON (`deadline`-Feld) | LLM generiert ("bis 31.12.2026") |
+
+### B.4 Warum "Q1 2025"?
+
+Der Timestamp ist **dreifach hardcoded im Python-Code**, nicht in der JSON-Datei. Die JSON-Datei selbst enthält kein "Q1 2025" — sie hat individuelle `deadline`-Felder pro Programm. Der Disclaimer-Text wurde vermutlich bei der Erstimplementierung gesetzt und nie aktualisiert.
+
+**Die JSON-Daten selbst sind gepflegt** (go-digital korrekt als "expired" markiert, andere Programme haben aktuelle Fristen). Nur der Zeitstempel-String im Renderer ist veraltet.
+
+### B.5 Empfehlung
+
+**Quick-Fix (empfohlen):** Alle drei "Q1 2025"-Strings durch dynamisches Quartal ersetzen:
+
+```python
+from datetime import datetime
+_now = datetime.now()
+_quartal = f"Q{(_now.month - 1) // 3 + 1} {_now.year}"
+# → "Q2 2026" bei Generierung im April 2026
+```
+
+Betroffene Stellen:
+1. `services/extra_sections.py:865` — `Stand: Q1 2025.` → `Stand: {_quartal}.`
+2. `services/funding_service.py:289` — identisch
+3. `gpt_analyze.py:10677` — AI-Act-Fallback, gleicher Fix
+
+**Langfristig:** Prüfen, ob die JSON-Datei `funding_programmes_core_2025.json` regelmäßig aktualisiert wird, oder ob ein automatischer Expiry-Check (z.B. `deadline < today → status = "expired"`) sinnvoll wäre. Die Daten selbst sind aktuell, nur der Label-String nicht.
