@@ -68,6 +68,9 @@ log = logging.getLogger(__name__)
 # Feature flag: Draft-Pattern (Sprint 1 infra — default off)
 DRAFT_MODE_ENABLED = os.getenv("DRAFT_MODE_ENABLED", "false").lower() == "true"
 
+# KIS-1131: Canonical summary marker — used for both emission and detection.
+SUMMARY_MARKER = "**Zusammenfassung Ihrer Angaben:**"
+
 # ---------------------------------------------------------------------------
 # KIS-1124 Sprint 2: Hybrid Conversation Model — Phase & Block Definitions
 # ---------------------------------------------------------------------------
@@ -3089,14 +3092,18 @@ def _build_session_state(
 
 
 def _has_summary_been_sent(session: ChatSession) -> bool:
-    """Check if the summary message has already been sent in this session."""
+    """Check if the summary message has already been sent in this session.
+
+    KIS-1131 FX-1: Scans ALL assistant messages, not just the last one.
+    Previously, the function broke after the first (most recent) assistant
+    message, so any subsequent Sonnet reply would mask an earlier summary.
+    """
     messages = session.messages or []
-    for msg in reversed(messages):
+    for msg in messages:
         if msg.get("role") == "assistant":
             content = msg.get("content", "")
-            if "Zusammenfassung" in content and ("korrekt?" in content or "korrekt" in content):
+            if SUMMARY_MARKER in content:
                 return True
-            break  # Only check the last assistant message
     return False
 
 
