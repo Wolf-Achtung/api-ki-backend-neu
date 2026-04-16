@@ -246,3 +246,161 @@ Betroffene Stellen:
 3. `gpt_analyze.py:10677` — AI-Act-Fallback, gleicher Fix
 
 **Langfristig:** Prüfen, ob die JSON-Datei `funding_programmes_core_2025.json` regelmäßig aktualisiert wird, oder ob ein automatischer Expiry-Check (z.B. `deadline < today → status = "expired"`) sinnvoll wäre. Die Daten selbst sind aktuell, nur der Label-String nicht.
+
+---
+
+## Abschnitt C — Erfolgs-Tracking-Box (leere Platzhalter)
+
+### C.1 Symptom
+
+Seite 14 im R1-PDF, Box "Ihr Erfolgs-Tracking": Vier Wochen-Kästen zeigen jeweils `Gesparte Zeit: h` (nur Einheit, keine Zahl). Zusammenfassung zeigt `Gesamt nach 30 Tagen: Stunden = € gespart`.
+
+### C.2 Fundstellen im Code
+
+Die Tracking-Box wird an **zwei Stellen** generiert — je nach Codepfad:
+
+| Variante | Datei | Zeilen | Aufgerufen von |
+|----------|-------|--------|----------------|
+| v1 (legacy) | `sofort_start_generator.py` | 2489–2531 | `generate_30_tage_challenge_html()` (Zeile 2411) |
+| **v2 (aktiv)** | `sofort_start_generator.py` | 2790–2835 | `generate_30_tage_challenge_html_v2()` (Zeile 2642) |
+
+**Aktiver Aufruf** in `gpt_analyze.py:13269`:
+```python
+sections["CHALLENGE_30_TAGE_HTML"] = generate_30_tage_challenge_html_v2(
+    company_size=sofort_size,
+    zeitbudget=sofort_zeitbudget,
+    expertise_level=_sofort_expertise,
+    hauptleistung=sofort_hauptleistung,
+)
+```
+
+Die Box ist Teil der `CHALLENGE_30_TAGE_HTML`-Section, gerendert im Template in `pdf_template_v7.html:1642`:
+```html
+<div class="section-body">{{ CHALLENGE_30_TAGE_HTML|safe }}</div>
+```
+
+### C.3 Analyse: Hardcoded leer vs. Template-Variable
+
+**Es gibt keine Template-Variablen.** Die Platzhalter sind rein hardcoded:
+
+```python
+# sofort_start_generator.py:2807 (v2, dynamische Schleife)
+for w in range(1, 5):
+    html += f'''
+        <div style="text-align: center;">
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">Woche {w}</div>
+            <div style="border: 2px solid #22c55e; border-radius: 8px; padding: 12px; background: white;">
+                <div style="font-size: 10px; color: #64748b;">Gesparte Zeit:</div>
+                <div style="font-size: 16px; font-weight: 700; color: #166534;">_____ h</div>
+            </div>
+        </div>'''
+
+# sofort_start_generator.py:2831 (Zusammenfassung)
+html += '''
+    🎯 Gesamt nach 30 Tagen: _______ Stunden = _______ € gespart
+'''
+```
+
+Im Quellcode steht `_____ h` (5 Unterstriche + Leerzeichen + h). Im PDF werden die Unterstriche entweder:
+- als dünne Linie dargestellt (bei grüner Bold-Schrift 16px auf weißem Hintergrund schwer erkennbar), oder
+- von Puppeteer/Chromium als zusammenhängendes Liniensegment gerendert, das optisch verschwindet
+
+**Ergebnis im PDF:** nur `h` sichtbar — das ist das gemeldete Symptom.
+
+### C.4 Fehlende Datenanbindung
+
+Die Zeitersparnis-Daten **werden berechnet**, aber nicht an die Challenge-Funktion übergeben:
+
+| Datenquelle | Datei:Zeile | Wert | Weitergegeben? |
+|-------------|-------------|------|----------------|
+| `hours_per_week` | `sofort_start_generator.py:1742` | z.B. 4 (Solo/Beratung) | Nein — bleibt in `generate_sofort_start_html()` |
+| `stundensatz` | `sofort_start_generator.py:1735` | z.B. 85 €/h (Solo) | Nein |
+| `canon_hours_month` | `sofort_start_generator.py:1754` | z.B. 15 h/Monat | Nein |
+| `savings` | `sofort_start_generator.py:1759` | Dict mit hours/year, €/year | Nein |
+
+**Die Funktion `generate_30_tage_challenge_html_v2()` akzeptiert nur:**
+```python
+def generate_30_tage_challenge_html_v2(
+    company_size: str = "solo",
+    zeitbudget: str = "2_5",
+    expertise_level: str = "beginner",
+    hauptleistung: str = "",
+) -> str:
+```
+
+Kein Parameter für Stunden oder Stundensatz. Die Daten existieren im Aufrufer (`gpt_analyze.py:13269`), werden aber nicht durchgereicht.
+
+### C.5 Intention der Box — Bewertung der Möglichkeiten
+
+| Mögliche Intention | Beweis dafür | Beweis dagegen |
+|--------------------|--------------|----------------|
+| **Interaktiv (PDF-Formular)** | — | Kein `<input>`, kein `<form>`, keine PDF-Formular-Tags im Template |
+| **Print-Vorlage (Handeintragen)** | Unterstriche `_____` als Platzhalter für handschriftliche Eintragung | Unterstriche rendern schlecht im PDF; kein "Bitte ausfüllen"-Hinweis |
+| **Prognose-Werte (vorausgefüllt)** | Zeitersparnis-Daten sind berechnet und verfügbar in der Pipeline | Kein Code übergibt die Werte; kein Parameter in der Funktion |
+| **Bug (unfertig)** | Daten vorhanden aber nicht angebunden; Rendering zeigt nur "h" ohne Zahl | Tests prüfen nur Existenz der Box, nicht Population mit Werten |
+
+**Einschätzung:** Die Box wurde als **Print-Vorlage** konzipiert (Unterstriche = Ausfüll-Felder), aber das Rendering ist mangelhaft. Die Unterstriche sind im PDF praktisch unsichtbar, wodurch es wie ein Bug wirkt. Es gibt keinen Git-Kommentar oder Code-Kommentar, der die ursprüngliche Intention dokumentiert.
+
+### C.6 Git-Historie
+
+```
+Relevante Commits für sofort_start_generator.py:
+
+fee5993  feat(KIS-1132): Kompetenzbasierte Content-Steuerung für R1-Sections
+          → Fügte expertise_level/hauptleistung Parameter hinzu, Tracking-Box unverändert
+
+305709a  audit: 8-Phasen Report-System Audit + 5 Seitenumbruch-/Typografie-Fixes
+          → L3: break-inside:avoid auf Tracking-Box gesetzt (Orphan-Prävention)
+
+4466e89  FIX C7: Tag 29/30 Challenge-Kalender — eigene Abschluss-Sektion statt Overflow
+          → Challenge-Struktur, Tracking-Box Styling
+```
+
+Kein Commit zeigt eine Intention, die Box mit berechneten Werten zu füllen. Die Box war von Anfang an als Leerfeld konzipiert.
+
+### C.7 Test-Abdeckung
+
+`tests/test_finalJ_release_blockers.py:588–615`:
+
+```python
+class TestL3OrphanMicroPageKiller:
+    def test_erfolgs_tracking_has_break_inside_avoid(self):
+        # Prüft nur: "break-inside: avoid" im Quellcode vorhanden
+    def test_gesamt_nach_30_tagen_exists(self):
+        # Prüft nur: "Gesamt nach 30 Tagen" String existiert
+```
+
+Tests prüfen **Struktur-Existenz**, nicht **Werte-Population**. Kein Test verifiziert, dass Zahlenwerte in der Box stehen.
+
+### C.8 Empfehlung
+
+**Option A — Print-Vorlage verbessern (minimal):**
+Unterstriche `_____` durch sichtbare Platzhalter ersetzen:
+```html
+<div style="...">_______ h</div>
+```
+→ Ersetzen durch:
+```html
+<div style="...; border-bottom: 2px solid #22c55e; min-width: 60px; display: inline-block;">&nbsp;</div> h
+```
+Oder Textfeld-Optik: `[____] h`
+
+**Option B — Prognose-Werte einfüllen (empfohlen):**
+`hours_per_week` und `stundensatz` an `generate_30_tage_challenge_html_v2()` übergeben und Wochen-Werte berechnen:
+
+```python
+# Woche 1: ~50% (Einarbeitungsphase)
+# Woche 2: ~75%
+# Woche 3: ~100%
+# Woche 4: ~100%
+week_factors = [0.5, 0.75, 1.0, 1.0]
+weekly_hours = [round(hours_per_week * f, 1) for f in week_factors]
+total_hours = sum(weekly_hours)
+total_savings = round(total_hours * stundensatz)
+```
+
+Zeigt dann z.B.: `Woche 1: ~2h | Woche 2: ~3h | Woche 3: ~4h | Woche 4: ~4h | Gesamt: 13 Stunden = 1.105 € gespart`
+
+**Option C — Hybrid:** Prognose-Werte anzeigen + Hinweis "Tragen Sie Ihre tatsächlichen Werte ein"
+
+**Entscheidung liegt bei Wolf** — siehe Abschnitt D.
