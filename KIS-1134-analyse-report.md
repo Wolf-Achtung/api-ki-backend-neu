@@ -404,3 +404,74 @@ Zeigt dann z.B.: `Woche 1: ~2h | Woche 2: ~3h | Woche 3: ~4h | Woche 4: ~4h | Ge
 **Option C — Hybrid:** Prognose-Werte anzeigen + Hinweis "Tragen Sie Ihre tatsächlichen Werte ein"
 
 **Entscheidung liegt bei Wolf** — siehe Abschnitt D.
+
+---
+
+## Abschnitt D — Offene Fragen an Wolf
+
+### D.1 Pagebreak-Strategie
+
+**Frage 1 — Quick-Wins eigene Seite?**
+Die Quick-Wins-Section (`#quick-wins-section`) fließt derzeit natürlich nach dem Sofort-Start. Das führt zu Orphan-Headern (1.2) und zerrissenen Listen (1.3). Zwei Optionen:
+- **(a)** `#quick-wins-section` in die `break-before: page`-Liste aufnehmen → sauberer Start, aber ggf. Whitespace am Ende der Sofort-Start-Seite
+- **(b)** Nur die fehlenden `break-inside: avoid`-Regeln auf `<li>`-Ebene ergänzen → fließender Übergang, aber weiterhin Bruchrisiko bei langen Items
+
+**→ Welche Variante bevorzugt?**
+
+**Frage 2 — AI Act Kompakt bei `minimal` — Content oder Layout?**
+Bei Risikoklasse `minimal` hat die AI-Act-Section nur ~30% Seiteninhalt (3-Zeilen-Tabelle "Best Practices"). Zwei Optionen:
+- **(a)** Content anreichern: z.B. "Was ‚minimal' für Sie bedeutet"-Absatz, Checkliste, Verweis auf Monitoring
+- **(b)** Layout-Merge: AI Act + Förderprogramme explizit auf eine Seite zusammenziehen (kein Break dazwischen — ist bereits so konfiguriert, Problem ist dass Vendor-Audit davor die Seite füllt)
+- **(c)** Akzeptieren — bei `minimal`-Risiko ist wenig Content inhaltlich korrekt
+
+**→ Soll der Content ausgebaut werden, oder ist "wenig" bei `minimal` gewollt?**
+
+### D.2 Förderdaten-Aktualität
+
+**Frage 3 — Dynamischer Timestamp vs. manuelle Pflege?**
+Der Quick-Fix (dynamisches Quartal per `datetime.now()`) löst das Symptom "Q1 2025". Aber:
+- Die JSON-Datei heißt `funding_programmes_core_2025.json` — der Dateiname suggeriert ein jährliches Update
+- Die Programm-Fristen in der JSON sind individuell gepflegt (`deadline`-Feld)
+- Ein dynamischer Timestamp "Q2 2026" impliziert, dass die Daten tatsächlich in Q2 2026 geprüft wurden
+
+**→ Sind die Programm-Daten in der JSON-Datei aktuell (Stand April 2026)?** Falls nein, sollte der Timestamp den tatsächlichen Pflegestand widerspiegeln, nicht das Report-Generierungsdatum. Falls ja, ist der dynamische Fix korrekt.
+
+**Frage 4 — AI-Act-Fallback ebenfalls fixen?**
+Die dritte "Q1 2025"-Fundstelle (`gpt_analyze.py:10677`) ist im AI-Act-Fallback-HTML. Dieser Text wird angezeigt, wenn der AI-Act-Module keine eigenen Sections liefert. Soll dieser Fallback:
+- **(a)** den gleichen dynamischen Timestamp bekommen
+- **(b)** komplett entfernt werden (da das AI-Act-Module inzwischen stabil liefert)
+
+### D.3 Erfolgs-Tracking-Box
+
+**Frage 5 — Intention: Print-Vorlage oder Prognose?**
+Die Tracking-Box zeigt aktuell unsichtbare Unterstriche + "h". Drei Optionen wurden analysiert:
+- **(A)** Print-Vorlage: Sichtbare Leerfelder zum Handeintragen (`[____] h`)
+- **(B)** Prognose-Werte: Berechnete Stunden pro Woche einfüllen (Daten sind in der Pipeline verfügbar)
+- **(C)** Hybrid: Prognose-Werte + Hinweis "Tragen Sie Ihre tatsächlichen Werte ein"
+
+**→ Welche Variante? Option B (Prognose) würde die Box deutlich wertiger machen und ist ohne neuen LLM-Call umsetzbar — rein deterministische Berechnung aus `hours_per_week` × Wochenfaktor.**
+
+**Frage 6 — Progressive Steigerung?**
+Falls Option B/C: Sollen die Wochen-Werte linear gleich sein (z.B. 4h/4h/4h/4h) oder eine Lernkurve abbilden (z.B. 2h/3h/4h/4h)? Die progressive Variante bildet die Realität besser ab (Woche 1 = Einarbeitung), ist aber eine Annahme.
+
+### D.4 Prioritäten für Fix-Briefing
+
+**Frage 7 — Reihenfolge / Scope?**
+Empfohlene Priorisierung basierend auf Impact und Aufwand:
+
+| Prio | Fix | Aufwand | Impact |
+|------|-----|---------|--------|
+| P0 | "Q1 2025" → dynamisch (3 Strings) | 15 min | Hoch — sichtbar veraltet |
+| P1 | Tracking-Box Prognose-Werte | 30 min | Hoch — Box ist aktuell wertlos |
+| P2 | Fallstudie `break-inside: avoid` (1.1) | 5 min | Mittel — zerrissener Block |
+| P2 | Starter-Kit `class="tool-card"` (1.4) | 5 min | Mittel — zerrissene Karte |
+| P2 | Hinweis-Kasten Break-Schutz (1.5) | 5 min | Mittel — zerrissener Satz |
+| P3 | Quick-Wins `<li>` Break-Schutz (1.3) | 10 min | Niedrig — abhängig von LLM-Output-Länge |
+| P3 | Quick-Wins-Header Orphan (1.2) | 10 min | Niedrig — Layout-Entscheidung nötig (D.1) |
+| P4 | AI Act Content bei `minimal` (1.6) | 30 min | Niedrig — inhaltlich ggf. korrekt |
+
+**→ Soll das Fix-Briefing alle 8 Punkte umfassen, oder nur P0–P2?**
+
+---
+
+*Ende des Analyse-Reports. Auf Basis der Antworten zu D.1–D.7 wird das Fix-Briefing KIS-1134 erstellt.*
