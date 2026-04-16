@@ -74,6 +74,7 @@ class ChatSessionState(BaseModel):
     pending_field: Optional[str] = None
     pending_value: Optional[Any] = None
     dialog_mode: bool = False
+    edit_mode: bool = False  # KIS-1131 FX-5: exposed so frontend can detect edit state
 
     # Phase tracking (hybrid conversation model, KIS-1124 Sprint 2)
     conversation_phase: str = "phase_1"
