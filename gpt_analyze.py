@@ -1298,6 +1298,27 @@ def build_strategic_context_block(answers: dict, lang: str = "de") -> str:
             "Bereich kürzer halten. Empfehlung zur Vertiefung aussprechen."
         )
 
+    # KIS-1136: Signal partially surveyed blocks to LLM
+    partially = answers.get("_chat_partially_surveyed", [])
+    if partially:
+        _block_labels = {
+            "A": "Fördermittel & Budget",
+            "B": "KI-Strategie & Roadmap",
+            "C": "Tools & Automatisierung",
+            "D": "Recht & Datenschutz",
+        }
+        _partial_names = []
+        for ps in partially:
+            label = _block_labels.get(ps["block"], ps["block"])
+            _partial_names.append(f"{label} (fehlend: {', '.join(ps['missing'])})")
+        lines.append(
+            "HINWEIS — Teilweise erfasste Bereiche:\n"
+            f"Die folgenden Bereiche wurden begonnen aber nicht vollständig beantwortet: "
+            f"{'; '.join(_partial_names)}.\n"
+            "Für die fehlenden Felder: Sections kürzer halten, keinen Platzhalter-Content "
+            "generieren. Empfehlung zur Vertiefung aussprechen."
+        )
+
     return "\n\n".join(lines)
 # =========================================================================
 
