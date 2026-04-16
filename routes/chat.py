@@ -68,6 +68,9 @@ log = logging.getLogger(__name__)
 # Feature flag: Draft-Pattern (Sprint 1 infra — default off)
 DRAFT_MODE_ENABLED = os.getenv("DRAFT_MODE_ENABLED", "false").lower() == "true"
 
+# KIS-1131: Canonical summary marker — used for both emission and detection.
+SUMMARY_MARKER = "**Zusammenfassung Ihrer Angaben:**"
+
 # ---------------------------------------------------------------------------
 # KIS-1124 Sprint 2: Hybrid Conversation Model — Phase & Block Definitions
 # ---------------------------------------------------------------------------
@@ -680,7 +683,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
 
             # --- QR value write (single code path, draft-agnostic) ---
-            if qr_field != "_draft_action":
+            # KIS-1131 FX-3: Skip meta-fields (__*__) — they are control signals,
+            # not data fields, and would produce "Unknown field" warnings in normalize_field.
+            if qr_field != "_draft_action" and not qr_field.startswith("__"):
                 qr_result = normalize_field(qr_field, req.quick_reply_value, collected, report_type=rt)
                 if qr_result.confidence != "low":
                     collected[qr_field] = qr_result.value
@@ -1905,10 +1910,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 multi_select=True,
                 max_select=4,
             )]
-        elif _final_phase == "summary":
+        elif _final_phase == "summary" and not _is_edit_request and (not _is_in_edit_mode or _edit_applied):
             # KIS-1124-HOTFIX: Summary phase needs action buttons so user can
             # start the report or request edits. Previously was [] → user had
             # to type manually, which is not discoverable.
+            # KIS-1131 FX-2: Suppress during edit-mode (but show again after edit applied).
             quick_replies = [QuickReply(
                 field="__summary_action__",
                 label="Nächster Schritt",
@@ -2038,7 +2044,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _should_send_summary = (
             (all_fields_done and not _has_summary_been_sent(session))
             or _edit_applied
-            or _phase_summary_requested
+            or (_phase_summary_requested and not _is_edit_request)  # KIS-1131 FX-2
         )
         if _should_send_summary:
             from services.chat_conversation import build_summary
@@ -3021,7 +3027,9 @@ def _build_session_state(
     all_done = len(missing_req) == 0 and len(missing_opt) == 0
     summary_sent = _has_summary_been_sent(session)
     _in_summary_phase = ps["conversation_phase"] == "summary"
-    completable = summary_sent and (all_done or _in_summary_phase)
+    # KIS-1131 FX-4: Not completable while user is editing fields.
+    _editing = bool(draft.get("edit_mode"))
+    completable = summary_sent and (all_done or _in_summary_phase) and not _editing
 
     # KIS-1124: Unsurveyed note — only in summary phase when blocks were skipped
     unsurveyed_note: str | None = None
@@ -3077,6 +3085,7 @@ def _build_session_state(
         pending_field=draft.get("pending_field"),
         pending_value=draft.get("pending_value"),
         dialog_mode=draft.get("dialog_mode", False),
+        edit_mode=bool(draft.get("edit_mode")),  # KIS-1131 FX-5
         conversation_phase=ps["conversation_phase"],
         selected_blocks=ps["selected_blocks"],
         completed_blocks=ps["completed_blocks"],
@@ -3089,14 +3098,18 @@ def _build_session_state(
 
 
 def _has_summary_been_sent(session: ChatSession) -> bool:
-    """Check if the summary message has already been sent in this session."""
+    """Check if the summary message has already been sent in this session.
+
+    KIS-1131 FX-1: Scans ALL assistant messages, not just the last one.
+    Previously, the function broke after the first (most recent) assistant
+    message, so any subsequent Sonnet reply would mask an earlier summary.
+    """
     messages = session.messages or []
-    for msg in reversed(messages):
+    for msg in messages:
         if msg.get("role") == "assistant":
             content = msg.get("content", "")
-            if "Zusammenfassung" in content and ("korrekt?" in content or "korrekt" in content):
+            if SUMMARY_MARKER in content:
                 return True
-            break  # Only check the last assistant message
     return False
 
 
