@@ -2795,6 +2795,46 @@ def _complete_r1(
         answers["_chat_surveyed_blocks"] = surveyed_blocks
         log.info("[CHAT] Complete R1: unsurveyed blocks %s → defaults applied", unsurveyed)
 
+    # KIS-1136 Fix 3: Blocks selected but never entered → treat as unsurveyed
+    completed_blocks = ps.get("completed_blocks", [])
+    selected_not_entered = [b for b in surveyed_blocks if b not in completed_blocks]
+    if selected_not_entered:
+        for block_id in selected_not_entered:
+            defaults = _REPORT_BLOCK_DEFAULTS.get(block_id, {})
+            for field, default_val in defaults.items():
+                if field not in answers and default_val is not None:
+                    answers[field] = default_val
+        unsurveyed = unsurveyed + selected_not_entered
+        surveyed_blocks = [b for b in surveyed_blocks if b not in selected_not_entered]
+        answers["_chat_unsurveyed_blocks"] = unsurveyed
+        answers["_chat_surveyed_blocks"] = surveyed_blocks
+        log.info("[CHAT] Complete R1: selected but never entered blocks %s → treated as unsurveyed", selected_not_entered)
+
+    # KIS-1136 Fix 1: Surveyed (entered) blocks — check for missing required text fields
+    _partially_surveyed = []
+    for block_id in surveyed_blocks:
+        if block_id == "D":
+            branche = answers.get("branche", "")
+            block_fields = _get_datenschutz_block_fields(branche)
+        else:
+            block_fields = BLOCK_FIELDS.get(block_id, [])
+        _missing_in_block = []
+        for field_name in block_fields:
+            field_def = FIELD_REGISTRY.get(field_name, {})
+            is_required = field_def.get("required", False)
+            is_text = field_def.get("type") == "text"
+            skip = field_def.get("skip_in_chat", False)
+            if is_required and is_text and not skip and field_name not in answers:
+                _missing_in_block.append(field_name)
+        if _missing_in_block:
+            _partially_surveyed.append({
+                "block": block_id,
+                "missing": _missing_in_block,
+            })
+    if _partially_surveyed:
+        answers["_chat_partially_surveyed"] = _partially_surveyed
+        log.warning("[CHAT-COMPLETE] Partially surveyed blocks: %s", _partially_surveyed)
+
     # Extract user from JWT — user_id may already be set from /start
     user_id, user_email = _resolve_user(request, db)
     if not user_id:
