@@ -13271,11 +13271,15 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     try:
         sofort_zeitbudget = briefing.get("zeitbudget", "") or "2_5"
         # KIS-1132: Pass expertise level + hauptleistung for competence-aware challenge
+        # KIS-1134-FX-2: Pass hours_per_week + stundensatz for Erfolgs-Tracking prognosis
+        _challenge_hpw = round(_sofort_hours_month / 4.33, 1) if _sofort_hours_month > 0 else 0.0
         sections["CHALLENGE_30_TAGE_HTML"] = generate_30_tage_challenge_html_v2(
             company_size=sofort_size,
             zeitbudget=sofort_zeitbudget,
             expertise_level=_sofort_expertise,
             hauptleistung=sofort_hauptleistung,
+            hours_per_week=_challenge_hpw,
+            stundensatz=float(_sofort_rate) if _sofort_rate else 0.0,
         )
     except Exception as e:
         log.warning("[30-TAGE-CHALLENGE] ⚠️ Failed: %s", e)
