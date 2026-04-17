@@ -2129,15 +2129,32 @@ async def confirm_field(req: ConfirmFieldRequest, db: Session = Depends(get_db))
         raise HTTPException(status_code=400, detail="Session ist nicht aktiv")
 
     pending = dict(getattr(session, 'draft_state', None) or {})
-    if not pending.get("pending_field"):
-        raise HTTPException(status_code=400, detail="Kein offener Entwurf vorhanden")
+    pending_field_db = pending.get("pending_field")
+
+    _recovery = False
+    if not pending_field_db:
+        # Fallback: pending_field wurde zwischen SSE-Emit und Confirm-Click
+        # überschrieben (Race mit weiterem Stream-Turn, der signal="confirm"
+        # setzte). Wenn Client Field+Value mitliefert und Feld noch nicht
+        # in collected_fields ist, akzeptieren wir den Confirm trotzdem.
+        if (req.action == "confirm"
+            and req.field
+            and req.value is not None
+            and req.field not in (session.collected_fields or {})):
+            _recovery = True
+        else:
+            raise HTTPException(status_code=400, detail="Kein offener Entwurf vorhanden")
 
     rt = session.report_type
     now = datetime.now(timezone.utc)
 
     if req.action == "confirm":
-        field = pending["pending_field"]
-        value = req.value if req.value is not None else pending["pending_value"]
+        if _recovery:
+            field = req.field
+            value = req.value
+        else:
+            field = pending["pending_field"]
+            value = req.value if req.value is not None else pending["pending_value"]
 
         collected = dict(session.collected_fields or {})
         collected[field] = value
@@ -2147,7 +2164,7 @@ async def confirm_field(req: ConfirmFieldRequest, db: Session = Depends(get_db))
         field_meta[field] = {
             "confidence": "high",
             "source_turn": session.turn_count,
-            "raw_input": "confirmed_via_endpoint",
+            "raw_input": "confirmed_via_endpoint_recovery" if _recovery else "confirmed_via_endpoint",
             "normalized": True,
             "confirmed": True,
         }
@@ -2163,7 +2180,7 @@ async def confirm_field(req: ConfirmFieldRequest, db: Session = Depends(get_db))
         log.info("[CHAT] Confirm endpoint: %s=%r confirmed", field, value)
 
         return {
-            "status": "confirmed",
+            "status": "confirmed_recovered" if _recovery else "confirmed",
             "field": field,
             "value": value,
             "next_fields": next_fields,
