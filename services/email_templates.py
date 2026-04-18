@@ -195,11 +195,12 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
 </html>"""
 
 
-def render_strategy_email(recipient: str = "user") -> str:
+def render_strategy_email(recipient: str = "user", briefing_id: Optional[int] = None) -> str:
     """Render email HTML for KI-Strategiebericht delivery.
 
     Args:
         recipient: "user" or "admin".
+        briefing_id: Briefing ID — required to render the Coach CTA for user emails.
     """
     if recipient == "admin":
         title = "Kopie: KI-Strategiebericht"
@@ -215,6 +216,11 @@ def render_strategy_email(recipient: str = "user") -> str:
         "90-Tage-Implementierungsplan, ROI-Prognosen und passenden F\u00f6rderprogrammen."
     )
     cta = "Ihr KI-Strategiebericht ist als PDF angeh\u00e4ngt. Bei Fragen stehen wir Ihnen gerne zur Verf\u00fcgung."
+
+    # Coach CTA (user emails only, requires briefing_id)
+    coach_cta = ""
+    if recipient != "admin" and briefing_id is not None:
+        coach_cta = render_coach_cta(briefing_id, "#0F1D35")
 
     return f"""<!doctype html>
 <html lang="de">
@@ -239,6 +245,7 @@ def render_strategy_email(recipient: str = "user") -> str:
         <p>{escape(intro)}</p>
         <p>{escape(body_text)}</p>
         <p>{escape(cta)}</p>
+        {coach_cta}
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
         <p class="muted">Wolf Hohl \u2014 KI\u2011Sicherheit.jetzt</p>
         <p class="muted">Hinweis: Diese E\u2011Mail wurde automatisch erzeugt.</p>
