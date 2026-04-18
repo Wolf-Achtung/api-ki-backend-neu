@@ -239,6 +239,9 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
     # Conversational AI Questionnaire (Chat PoC)
     cfg.append(("routes.chat", "/api", "chat"))
 
+    # Post-Report Coach (Opus 4.6, SSE streaming)
+    cfg.append(("routes.coach", "/api", "coach"))
+
     # KI-Potenzial-Check Appetizer
     cfg.append(("routes.appetizer", "/api/appetizer", "generate"))
 
