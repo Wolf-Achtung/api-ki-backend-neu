@@ -1880,6 +1880,20 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         # Determine qr_next based on conversation phase
         _final_phase = _phase_state.get("conversation_phase") if rt == "r1" else None
 
+        # KIS-1146: Strategy has no phase_state, so the r1 "summary" branch
+        # never fires. Precompute whether the strategy questionnaire is
+        # completable (last section + no next field + all required across
+        # all sections filled). Optional fields are opt-out.
+        _strategy_completion_ready = (
+            rt == "strategy"
+            and _current_section >= len(sections) - 1
+            and not next_fields
+            and not any(
+                get_missing_fields(collected, _si, rt)[0]
+                for _si in range(len(sections))
+            )
+        )
+
         if _checkpoint_triggered or _final_phase == "checkpoint":
             # Checkpoint: show topic selection buttons
             _cp_options = [
@@ -1971,6 +1985,20 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 else:
                     qr_next = _block_remaining[:1]
                 quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
+        elif _strategy_completion_ready and not _is_edit_request and (not _is_in_edit_mode or _edit_applied):
+            # KIS-1146: Strategy completion — emit __summary_action__ QR manually.
+            # Mirrors the r1 summary branch above (line ~1913) since strategy
+            # lacks phase_state. Same guard semantics: not an edit request,
+            # and either not in edit mode or an edit was just applied.
+            quick_replies = [QuickReply(
+                field="__summary_action__",
+                label="Nächster Schritt",
+                options=[
+                    QuickReplyOption(value="__start_report__", label="Auswertung starten", style="primary"),
+                    QuickReplyOption(value="__edit_summary__", label="Angaben korrigieren", style="secondary"),
+                ],
+                multi_select=False,
+            )]
         else:
             # Legacy / Strategy: section-based QR
             if _no_extraction and _asked_field and _asked_field not in collected:
@@ -3086,7 +3114,17 @@ def _build_session_state(
     _in_summary_phase = ps["conversation_phase"] == "summary"
     # KIS-1131 FX-4: Not completable while user is editing fields.
     _editing = bool(draft.get("edit_mode"))
-    completable = summary_sent and (all_done or _in_summary_phase) and not _editing
+    if rt == "strategy":
+        # KIS-1146: Strategy has no phase_state and never writes SUMMARY_MARKER
+        # when optional fields are skipped. Signal completable once the user
+        # reaches the last section with all required fields filled.
+        _strategy_all_req_done = not any(
+            get_missing_fields(collected, _si, rt)[0]
+            for _si in range(len(sections))
+        )
+        completable = last_section and _strategy_all_req_done and not _editing
+    else:
+        completable = summary_sent and (all_done or _in_summary_phase) and not _editing
 
     # KIS-1124: Unsurveyed note — only in summary phase when blocks were skipped
     unsurveyed_note: str | None = None
