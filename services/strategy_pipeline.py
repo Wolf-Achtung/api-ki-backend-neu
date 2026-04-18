@@ -1033,7 +1033,7 @@ def _send_strategy_email(briefing_id: int, pdf_bytes: bytes, db_session: Any) ->
         ok, err = _send_email_via_resend(
             user_email,
             subject,
-            render_strategy_email(recipient="user"),
+            render_strategy_email(recipient="user", briefing_id=briefing_id),
             attachments=[attachment],
         )
         if ok:
