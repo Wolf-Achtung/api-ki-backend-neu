@@ -156,6 +156,11 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
     # KIS-1116: Strategy-Upsell removed from KPA-Email (belongs in R1-Email only)
     strategy_cta_html = ""
 
+    # Coach CTA (user emails only)
+    coach_cta = ""
+    if recipient != "admin" and briefing_id:
+        coach_cta = render_coach_cta(briefing_id, "#0D7377")
+
     return f"""<!doctype html>
 <html lang="de">
   <head>
@@ -180,6 +185,7 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
         <p>{escape(body_text)}</p>
         <p>{escape(cta)}</p>
         {strategy_cta_html}
+        {coach_cta}
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
         <p class="muted">Wolf Hohl — KI‑Sicherheit.jetzt</p>
         <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>
