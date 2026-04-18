@@ -14,6 +14,37 @@ def generate_feedback_link(email: str, briefing_id: int = None) -> str:
         url += f"&briefing_id={briefing_id}"
     return url
 
+
+def render_coach_cta(briefing_id: int, accent_color: str) -> str:
+    """Render the Coach-Gespräch CTA block for user-facing report emails."""
+    coach_url = f"https://make.ki-sicherheit.jetzt/coach/{briefing_id}"
+    return (
+        '<table role="presentation" style="margin: 24px auto; width: 100%; max-width: 600px;">'
+        '<tr>'
+        '<td style="padding: 20px 16px; background: #f8f9fa; border-radius: 12px; text-align: center;">'
+        '<p style="font-size: 16px; color: #1a1a1a; margin: 0 0 8px; font-weight: 600;">'
+        'Fragen zu Ihrem Report?'
+        '</p>'
+        '<p style="font-size: 14px; color: #6b7280; margin: 0 0 18px; line-height: 1.5;">'
+        'Sprechen Sie mit Ihrem pers\u00f6nlichen KI-Coach \u2014 er kennt Ihren Report '
+        'und begleitet Sie bei den n\u00e4chsten Schritten.'
+        '</p>'
+        f'<a href="{escape(coach_url)}" '
+        f'style="display: inline-block; background: {accent_color}; color: #ffffff; '
+        'padding: 13px 28px; border-radius: 8px; text-decoration: none; '
+        'font-weight: 600; font-size: 14px; '
+        "font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;\">"
+        'Coach-Gespr\u00e4ch starten'
+        '</a>'
+        '<p style="font-size: 11px; color: #9ca3af; margin: 14px 0 0;">'
+        'Kostenlos w\u00e4hrend der Testphase \u00b7 Gespr\u00e4che werden nicht gespeichert'
+        '</p>'
+        '</td>'
+        '</tr>'
+        '</table>'
+    )
+
+
 def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_summary_html: Optional[str] = None, user_email: Optional[str] = None, briefing_id: Optional[int] = None) -> str:
     if recipient == "admin":
         title = "Kopie: KI‑Status‑Report (inkl. Briefing)"
@@ -35,6 +66,11 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
         <p class="muted">Nachfolgend die wichtigsten Angaben des Users für Qualitätskontrolle und Nachvollziehbarkeit:</p>
         {briefing_summary_html}
         """
+
+    # Coach CTA (user emails only) — rendered before the Strategy CTA
+    coach_cta = ""
+    if recipient != "admin" and briefing_id:
+        coach_cta = render_coach_cta(briefing_id, "#2B6CB0")
 
     # CTA to Strategy form (user emails only)
     strategy_cta = ""
@@ -88,6 +124,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
         {link_html}
         {briefing_section}
         {'<p class="muted">' + escape(cta_hint) + '</p>' if cta_hint else ''}
+        {coach_cta}
         {strategy_cta}
         {feedback_section}
         <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>
@@ -119,6 +156,11 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
     # KIS-1116: Strategy-Upsell removed from KPA-Email (belongs in R1-Email only)
     strategy_cta_html = ""
 
+    # Coach CTA (user emails only)
+    coach_cta = ""
+    if recipient != "admin" and briefing_id:
+        coach_cta = render_coach_cta(briefing_id, "#0D7377")
+
     return f"""<!doctype html>
 <html lang="de">
   <head>
@@ -143,6 +185,7 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
         <p>{escape(body_text)}</p>
         <p>{escape(cta)}</p>
         {strategy_cta_html}
+        {coach_cta}
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
         <p class="muted">Wolf Hohl — KI‑Sicherheit.jetzt</p>
         <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>
@@ -152,11 +195,12 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
 </html>"""
 
 
-def render_strategy_email(recipient: str = "user") -> str:
+def render_strategy_email(recipient: str = "user", briefing_id: Optional[int] = None) -> str:
     """Render email HTML for KI-Strategiebericht delivery.
 
     Args:
         recipient: "user" or "admin".
+        briefing_id: Briefing ID — required to render the Coach CTA for user emails.
     """
     if recipient == "admin":
         title = "Kopie: KI-Strategiebericht"
@@ -172,6 +216,11 @@ def render_strategy_email(recipient: str = "user") -> str:
         "90-Tage-Implementierungsplan, ROI-Prognosen und passenden F\u00f6rderprogrammen."
     )
     cta = "Ihr KI-Strategiebericht ist als PDF angeh\u00e4ngt. Bei Fragen stehen wir Ihnen gerne zur Verf\u00fcgung."
+
+    # Coach CTA (user emails only, requires briefing_id)
+    coach_cta = ""
+    if recipient != "admin" and briefing_id is not None:
+        coach_cta = render_coach_cta(briefing_id, "#0F1D35")
 
     return f"""<!doctype html>
 <html lang="de">
@@ -196,6 +245,7 @@ def render_strategy_email(recipient: str = "user") -> str:
         <p>{escape(intro)}</p>
         <p>{escape(body_text)}</p>
         <p>{escape(cta)}</p>
+        {coach_cta}
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
         <p class="muted">Wolf Hohl \u2014 KI\u2011Sicherheit.jetzt</p>
         <p class="muted">Hinweis: Diese E\u2011Mail wurde automatisch erzeugt.</p>
