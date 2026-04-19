@@ -29,6 +29,59 @@ class NormResult:
 
 
 # ===========================================================================
+# KIS-1161: Freitext-Quality-Validator
+#
+# Rejects degenerate answers on freetext ("text" / chat_mode="FT") fields so
+# the chat re-asks instead of silently incrementing progress with placeholder
+# content. Does NOT fire on enum / bool / slider / multi — those handle their
+# own canonicalisation, and short tokens like "ja", "nein" or "5" are valid
+# for those types.
+# ===========================================================================
+
+# Case-insensitive substrings that mark a freetext answer as a pointer to an
+# earlier answer rather than substance. Matched after lower-case + stripping
+# trailing punctuation.
+_LOW_QUALITY_TEXT_MARKERS: frozenset[str] = frozenset({
+    "siehe oben",
+    "s.o.",
+    "s. o.",
+    "wie oben",
+    "dito",
+    "idem",
+    "ebenso",
+})
+
+
+def is_low_quality_text(raw: str, min_words: int = 3) -> bool:
+    """Return True if *raw* should be rejected as a substantive freetext answer.
+
+    A value is "low quality" when it either
+      1. matches one of ``_LOW_QUALITY_TEXT_MARKERS`` (case-insensitive,
+         ignoring trailing punctuation), or
+      2. has fewer than ``min_words`` whitespace-separated tokens.
+    """
+    if raw is None:
+        return True
+    cleaned = str(raw).strip()
+    if not cleaned:
+        return True
+
+    # Normalise for marker match: lower + trim trailing punctuation / whitespace.
+    normalised = cleaned.lower().rstrip(" .!?,;:")
+    if normalised in _LOW_QUALITY_TEXT_MARKERS:
+        return True
+    # Some markers also appear as prefixes ("s.o." followed by explanation is
+    # rare, but "siehe oben, Punkt 2" should still be flagged).
+    for marker in _LOW_QUALITY_TEXT_MARKERS:
+        if normalised.startswith(marker):
+            return True
+
+    if len(cleaned.split()) < min_words:
+        return True
+    return False
+
+
+# ===========================================================================
 # Field Registry — PoC Block 1 (Section 0) + full structure for later
 # ===========================================================================
 
@@ -809,6 +862,15 @@ def normalize_field(field_name: str, raw_value: Any, collected: dict, report_typ
         if cleaned.lower() in ("keine_angabe", "keine angabe"):
             return NormResult("", "high", False)
         if len(cleaned) < 3:
+            return NormResult(None, "low", True)
+        # KIS-1161: reject "siehe oben" / "dito" / <3-word stubs so the chat
+        # re-asks instead of silently accepting a non-answer. Only freetext
+        # fields (chat_mode="FT") — enums/bools/sliders are unaffected.
+        if reg.get("chat_mode") == "FT" and is_low_quality_text(cleaned):
+            log.info(
+                "[CHAT-NORM] Low-quality freetext for %s: %r — re-ask",
+                field_name, cleaned,
+            )
             return NormResult(None, "low", True)
         return NormResult(cleaned, "high", False)
 
