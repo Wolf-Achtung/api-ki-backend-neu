@@ -593,6 +593,11 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _no_extraction = False  # True when free-text yielded no field extraction (user asked a question)
         _asked_field = ""  # The field that was being asked when the user sent this message
         _report_start_requested = False  # True when user clicked "Auswertung starten"
+        # KIS-1161 hotfix v2: must be defined for ALL turn paths (QR click, edit
+        # mode, …), not only the free-text branch where the pre-Haiku gate
+        # lives. Reading this flag before the free-text branch runs would
+        # otherwise raise UnboundLocalError on every QR-click turn.
+        _is_low_quality_input = False
 
         _is_qr_click = bool(req.quick_reply_field and req.quick_reply_value)
         _is_help_request = "__HELP_REQUEST__" in req.message
