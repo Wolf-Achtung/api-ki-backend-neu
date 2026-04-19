@@ -262,6 +262,36 @@ class TestLivePathRegressionGuard:
             "Sonnet help_ctx for low-quality input is missing."
         )
 
+    def test_low_quality_input_initialised_before_qr_branch(self):
+        """KIS-1161 hotfix v2: variable must default to False *before* the
+        ``if _is_qr_click`` branch — otherwise a QR-click turn reaches the
+        downstream ``if _is_low_quality_input ...`` read with the name
+        unbound and crashes with UnboundLocalError. Production blocker."""
+        import inspect
+        import routes.chat as chat_module
+        src = inspect.getsource(chat_module)
+
+        init_idx = src.find("_is_low_quality_input = False")
+        qr_branch_idx = src.find("if _is_qr_click:")
+        guard_assign_idx = src.find("_is_low_quality_input = (")
+        helpctx_read_idx = src.find("if _is_low_quality_input and not _help_ctx")
+
+        assert init_idx != -1, (
+            "Default initialisation '_is_low_quality_input = False' missing."
+        )
+        assert qr_branch_idx != -1, "QR-click branch went missing."
+        assert guard_assign_idx != -1, "Pre-Haiku guard assignment went missing."
+        assert helpctx_read_idx != -1, "help_ctx read of the flag went missing."
+
+        assert init_idx < qr_branch_idx, (
+            "Default init must come BEFORE the QR-click branch — without "
+            "it, a QR turn never enters the free-text branch where the "
+            "flag is otherwise assigned, then crashes at the help_ctx read."
+        )
+        assert init_idx < helpctx_read_idx, (
+            "Default init must come BEFORE the help_ctx read."
+        )
+
     def test_pointer_phrase_independent_of_haiku(self):
         # Whatever Haiku might *resolve* the pointer to, the pre-Haiku
         # gate fires on the raw user message — Haiku is bypassed entirely.
