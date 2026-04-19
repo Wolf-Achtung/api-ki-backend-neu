@@ -3243,12 +3243,20 @@ def _build_session_state(
         _blk_total = len(_blk_all) - _skip_count
         _blk_progress = len([f for f in _blk_all if f in collected]) - _skip_count
 
+    # KIS-1162: Single source of truth for the UI section header. In Phase 2
+    # the legacy current_section_name lags behind because sections don't align
+    # with the hybrid thematic blocks. block_label, when present, always names
+    # the currently active block; otherwise we fall back to the legacy label,
+    # which is correct for Phase 1 / checkpoint / summary / strategy flows.
+    display_section_title = _blk_label or section_name
+
     return ChatSessionState(
         session_id=session.id,
         report_type=session.report_type,
         status=session.status,
         current_section=section_idx,
         current_section_name=section_name,
+        display_section_title=display_section_title,
         total_sections=len(sections),
         progress_percent=calculate_progress(collected, rt),
         collected_fields=collected,
