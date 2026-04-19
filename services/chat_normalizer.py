@@ -38,9 +38,10 @@ class NormResult:
 # for those types.
 # ===========================================================================
 
-# Case-insensitive substrings that mark a freetext answer as a pointer to an
-# earlier answer rather than substance. Matched after lower-case + stripping
-# trailing punctuation.
+# Pointer markers — canonical user-typed spellings. Compared after both
+# sides are normalised by ``_normalise_for_marker`` (lower-case, strip
+# whitespace + trailing ASCII punctuation). The pre-computed
+# ``_MARKERS_NORMALISED`` set is what membership checks actually use.
 _LOW_QUALITY_TEXT_MARKERS: frozenset[str] = frozenset({
     "siehe oben",
     "s.o.",
@@ -52,13 +53,50 @@ _LOW_QUALITY_TEXT_MARKERS: frozenset[str] = frozenset({
 })
 
 
+def _normalise_for_marker(text: str) -> str:
+    """Lower-case, strip whitespace, then strip trailing ASCII punctuation.
+
+    Used on both marker definitions and incoming messages so dot-bearing
+    abbreviations like "s.o." compare equal to "S.O." or "s.o" after a
+    user's stray comma.
+    """
+    return text.strip().lower().rstrip(" .!?,;:")
+
+
+_MARKERS_NORMALISED: frozenset[str] = frozenset(
+    _normalise_for_marker(m) for m in _LOW_QUALITY_TEXT_MARKERS
+)
+
+
+def is_pointer_phrase(message: str) -> bool:
+    """True when *message* (lower + trailing punctuation stripped) exactly
+    matches a pointer marker like "siehe oben" / "s.o." / "dito".
+
+    Used as a pre-Haiku guard in routes/chat.py so the extractor never gets a
+    chance to silently resolve the pointer against the conversation context
+    and substitute substantive content from an earlier turn. The normalizer
+    sees the raw value too, so this acts as defense-in-depth — but the
+    normalizer alone cannot stop Haiku from resolving the pointer first.
+    """
+    if not message:
+        return False
+    normalised = _normalise_for_marker(str(message))
+    if not normalised:
+        return False
+    return normalised in _MARKERS_NORMALISED
+
+
 def is_low_quality_text(raw: str, min_words: int = 3) -> bool:
     """Return True if *raw* should be rejected as a substantive freetext answer.
 
     A value is "low quality" when it either
-      1. matches one of ``_LOW_QUALITY_TEXT_MARKERS`` (case-insensitive,
-         ignoring trailing punctuation), or
+      1. exactly matches one of ``_LOW_QUALITY_TEXT_MARKERS`` (case-insensitive,
+         after stripping trailing punctuation/whitespace), or
       2. has fewer than ``min_words`` whitespace-separated tokens.
+
+    Exact-match (no prefix-match) on purpose — sentences that *start* with a
+    pointer phrase but continue substantively (e.g. "Dito wie bei X, plus …")
+    must pass through. The word-count rule still catches stubby variants.
     """
     if raw is None:
         return True
@@ -66,15 +104,9 @@ def is_low_quality_text(raw: str, min_words: int = 3) -> bool:
     if not cleaned:
         return True
 
-    # Normalise for marker match: lower + trim trailing punctuation / whitespace.
-    normalised = cleaned.lower().rstrip(" .!?,;:")
-    if normalised in _LOW_QUALITY_TEXT_MARKERS:
+    normalised = _normalise_for_marker(cleaned)
+    if normalised in _MARKERS_NORMALISED:
         return True
-    # Some markers also appear as prefixes ("s.o." followed by explanation is
-    # rare, but "siehe oben, Punkt 2" should still be flagged).
-    for marker in _LOW_QUALITY_TEXT_MARKERS:
-        if normalised.startswith(marker):
-            return True
 
     if len(cleaned.split()) < min_words:
         return True
