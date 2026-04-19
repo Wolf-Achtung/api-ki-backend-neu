@@ -57,6 +57,7 @@ from services.chat_normalizer import (
     get_registry_for_report,
     get_sections_for_report,
     is_field_visible,
+    is_pointer_phrase,
     is_section_complete,
     normalize_field,
 )
@@ -791,6 +792,25 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 _no_extraction = True
                 log.info("[CHAT] Help request detected for field %s, skipping extraction", cur_field)
 
+            # KIS-1161 Hotfix: Pre-Haiku pointer guard. Catch "siehe oben" /
+            # "s.o." / "wie oben" / "dito" / "idem" / "ebenso" at the raw
+            # message layer. Without this, Haiku resolves the pointer against
+            # the conversation context and returns substantive content from an
+            # earlier turn — bypassing the normalizer-level validator.
+            _is_low_quality_input = (
+                not _is_qr_click
+                and not _is_help_request
+                and not _is_edit_request
+                and not _is_in_edit_mode
+                and is_pointer_phrase(req.message)
+            )
+            if _is_low_quality_input:
+                _no_extraction = True
+                log.info(
+                    "[CHAT] Pre-Haiku reject: pointer phrase %r for field %s — re-ask",
+                    req.message, cur_field,
+                )
+
             # Edit-request: user wants to change a field after summary
             if _is_edit_request:
                 _no_extraction = True
@@ -837,8 +857,8 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             _pf = _draft.get("pending_field") if DRAFT_MODE_ENABLED else None
             _pv = _draft.get("pending_value") if DRAFT_MODE_ENABLED else None
 
-            if _is_help_request:
-                # Help request: skip extraction entirely
+            if _is_help_request or _is_low_quality_input:
+                # Skip extraction entirely (pointer phrase or help request).
                 raw_extracted = {"signal": "question", "fields": {}} if DRAFT_MODE_ENABLED else {}
             elif _in_phase_1b and not _is_in_edit_mode and not _is_edit_request:
                 # --- Phase 1: Multi-field extraction ---
@@ -1663,6 +1683,29 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 f"Der Nutzer möchte eine Angabe ändern, aber die Angabe war nicht eindeutig.\n"
                 f"Aktuelle Felder:\n{field_list}\n\n"
                 f"Fragen Sie den Nutzer, welches Feld geändert werden soll und auf welchen Wert."
+            )
+
+        # KIS-1161 Hotfix: Pointer phrase ("siehe oben", "dito", …) — ask
+        # Sonnet to re-pose the question with a constructive nudge so the
+        # user gives a substantive answer for THIS field. Constructive, not
+        # accusatory; keep the original question intact.
+        if _is_low_quality_input and not _help_ctx and _asked_field:
+            _lq_label = (
+                FIELD_DESCRIPTIONS.get(_asked_field, _asked_field)
+                .split("(")[0].strip()
+            )
+            _help_ctx = (
+                f"\n\nAKTUELLER MODUS: KONKRETISIERUNG GEWÜNSCHT\n"
+                f"Der Nutzer hat mit einem Verweis (z.B. 'siehe oben', 's.o.', "
+                f"'dito') auf eine frühere Antwort verwiesen, statt eine eigene "
+                f"Antwort für \"{_lq_label}\" zu geben. Jede Frage erfasst einen "
+                f"anderen Aspekt, daher brauchen wir hier eine spezifische Angabe.\n"
+                f"REAGIERE SO:\n"
+                f"- Stelle die ursprüngliche Frage erneut, klar und konkret.\n"
+                f"- Ergänze einen kurzen Hinweis, dass eine eigene Formulierung "
+                f"hier hilft (z.B. 'Können Sie das in einem Satz konkretisieren?').\n"
+                f"- Konstruktiv und einladend, NICHT vorwurfsvoll.\n"
+                f"- Maximal 2 Sätze total."
             )
 
         # KIS-1124-S0-BE-2: When user declines a field, tell Sonnet
