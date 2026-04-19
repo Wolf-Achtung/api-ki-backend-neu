@@ -562,11 +562,31 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     "vision_prioritaet": "Wichtigster strategischer Hebel (KI-Services, Kundenservice, Datenprodukte, etc.)",
     "innovationsprozess": "Wie entstehen Innovationen (Team, Mitarbeitende, Kunden, Berater, etc.)",
     # Sektion 6
-    "datenschutzbeauftragter": "Datenschutzbeauftragter vorhanden (Ja / Nein / Teilweise)",
-    "technische_massnahmen": "Technische Schutzmaßnahmen (Alle / Teilweise / Keine)",
-    "folgenabschaetzung": "Datenschutz-Folgenabschätzung durchgeführt (Ja / Nein / In Planung)",
-    "meldewege": "Meldewege bei Sicherheitsvorfällen definiert (Ja / Teilweise / Nein)",
-    "loeschregeln": "Lösch- und Anonymisierungsrichtlinien (Ja / Teilweise / Nein)",
+    # Sektion 6
+    # KIS-1163: DSGVO-spezifische Anker in den Beschreibungen, damit Sonnet
+    # bei Help-Requests und generellen Block-D-Turns nicht auf EU AI Act
+    # abdriftet. Artikelnummern dienen NUR als interner Kontext — die
+    # BLOCK_D_PROMPT-Regel verbietet sie in user-facing Fragen.
+    "datenschutz": "Strategischer Stellenwert von Datenschutz im Unternehmen "
+        "(DSGVO-Konformität, Datenminimierung, Informationspflichten, "
+        "Betroffenenrechte nach Art. 15-22 DSGVO)",
+    "datenschutzbeauftragter": "Datenschutzbeauftragter vorhanden — Benennungspflicht "
+        "nach Art. 37 DSGVO / § 38 BDSG (Ja / Nein / Teilweise)",
+    "technische_massnahmen": "Technische und organisatorische Schutzmaßnahmen (TOMs) "
+        "nach Art. 32 DSGVO — Pseudonymisierung, Verschlüsselung, Zugangs- und "
+        "Zugriffskontrolle, Backup-/Wiederherstellungsstrategien, Rollen- und "
+        "Rechtekonzepte (Alle / Teilweise / Keine)",
+    "folgenabschaetzung": "Datenschutz-Folgenabschätzung (DSFA) nach Art. 35 DSGVO — "
+        "verpflichtend bei Verarbeitungen mit voraussichtlich hohem Risiko für "
+        "Betroffene (Ja / Nein / In Planung)",
+    "meldewege": "Meldewege bei Datenschutzvorfällen nach Art. 33-34 DSGVO — "
+        "interne Eskalation, Meldung an Aufsichtsbehörde binnen 72 Stunden, "
+        "bei hohem Risiko Benachrichtigung betroffener Personen "
+        "(Ja / Teilweise / Nein)",
+    "loeschregeln": "Lösch-, Aufbewahrungs- und Anonymisierungsrichtlinien "
+        "nach Art. 17 DSGVO — dokumentierte Aufbewahrungsfristen pro "
+        "Datenkategorie, Löschkonzepte, Pseudonymisierung bei Erreichen der "
+        "Frist (Ja / Teilweise / Nein)",
     "ai_act_kenntnis": "Kenntnisse zum EU AI Act (Sehr gut / Gut / Gehört / Unbekannt)",
     "regulierte_branche": "Regulierte Branche (Gesundheit, Finanzen, Öffentlich, Recht, etc.)",
     "ki_hemmnisse": "Was bremst aktuell beim KI-Einsatz? "
@@ -1551,12 +1571,24 @@ lange Einleitung.
 - QR-Buttons bei Ja/Nein-Feldern und Auswahl-Feldern.
 - Max 2 Sätze pro Antwort.
 - Bei Beratungsbranche: Nur 1–2 Fragen, dann Block abschließen.
+- KIS-1163 THEMA-TRENNUNG (STRIKT): Dieser Block fragt DSGVO-Themen ab \
+(TOMs, DSB, Meldewege, DSFA, Löschkonzepte). Der EU AI Act ist ein \
+EIGENES Feld ("ai_act_kenntnis") und wird NUR dann erklärt, wenn \
+dieses Feld als aktives NÄCHSTES FELD vorgegeben ist. Bei \
+Rückfragen zu anderen DSGVO-Feldern NIEMALS auf AI Act ausweichen — \
+bleib bei der DSGVO.
+- KIS-1163 ARTIKEL-REGEL (STRIKT): Erwähne DSGVO-Artikelnummern \
+(z.B. "Art. 32 DSGVO", "Art. 35 DSGVO") NIEMALS in user-facing \
+Fragen oder Antworten. Die Artikelnummern in den Feld-Beschreibungen \
+sind NUR dein interner Kontext-Anker. Formuliere User-Fragen immer \
+in klarer Alltagssprache ("Wie sichern Sie Kundendaten technisch \
+ab?" statt "Welche TOMs nach Art. 32 DSGVO haben Sie?").
 
 BEISPIEL-FRAGEN:
-- Beratung: "Haben Sie einen DSB, und wie gut kennen Sie den \
-EU AI Act?"
-- Andere: "Wie ist Ihr Datenschutz aufgestellt — vom DSB bis \
-zu technischen Maßnahmen?"
+- Beratung: "Gibt es einen Datenschutzbeauftragten, und wie sind \
+Mandantendaten abgesichert?"
+- Andere: "Wie ist Ihr Datenschutz aufgestellt — vom DSB bis zu \
+technischen und organisatorischen Maßnahmen (TOMs)?"
 
 NÄCHSTES FELD:
 {next_field_info}
