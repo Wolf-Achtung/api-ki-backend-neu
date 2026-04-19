@@ -432,5 +432,103 @@ Tickets behindern sich nicht.
 
 ---
 
-*Commit 3a von 3 — Entscheidungs-Sheet + Nebenbefunde folgen in
-separaten Commits.*
+---
+
+## 5. Offene Design-Entscheidungen für Mittwoch
+
+Zehn Fragen, jede mit vorgeschlagenen Optionen + meiner Lese-Empfehlung
+in Klammern. Ziel: 30-Min-Runde reicht.
+
+### #1 — Philosophie-Bruch: kopierbare Beispiele ja oder nein?
+
+Der bestehende `HELP_REQUEST_PROMPT` verbietet wörtlich „kopierbare
+Beispiele", fordert nur Reflexionsfragen. KIS-1138 impliziert den
+Gegenteil-Weg. Konsistenz-Frage.
+
+- **(a) Proaktive Chips kopierbar, reaktiver Help-Flow unverändert
+  (Reflexionsfragen)** — Schichten haben unterschiedliche Aufgaben,
+  kein Konflikt. *(Empfehlung.)*
+- (b) Beide Schichten auf kopierbare Beispiele umstellen — Philosophie-
+  Shift, Help-Flow wird konkreter.
+- (c) Beide bleiben auf Reflexion — KIS-1138 wird nur Inspiration-
+  Labels ohne Autofill.
+
+### #2 — Chip-Verhalten bei Klick?
+
+- **(a) Autofill mit Editier-Möglichkeit** (Chip-Text landet in der
+  Textarea, User kann anpassen und dann absenden). *(Empfehlung.)*
+- (b) Direkt-Einsenden (Chip = Submit wie QR-Button).
+- (c) Nur Inspiration, nicht klickbar (reines Anzeigen).
+
+### #3 — Chip-Anzahl pro Feld?
+
+- (a) Konstant 3.
+- **(b) Konstant 4** (genug Variation, bleibt auf Mobile einspaltig lesbar). *(Empfehlung.)*
+- (c) Variabel 2–5 je nach Feld-Redaktion.
+
+### #4 — Chip-Scope: alle FT-Felder oder nur strategische?
+
+- **(a) Alle 7 R1-FT-Felder** (einheitliche UX, User rechnet nicht mit
+  Inkonsistenz). *(Empfehlung.)*
+- (b) Nur strategisch-imaginative (Block B + zeitersparnis_prioritaet)
+  — zielgenauer auf den Schmerz, aber UI-Bruch zwischen Turns.
+- (c) Nur Pflichtfelder.
+
+### #5 — Beispiele branchen-spezifisch oder branchen-agnostisch?
+
+- **(a) Agnostisch in Iteration 1** (1 Liste pro Feld, Aufwand klein,
+  Wartung simpel). *(Empfehlung für KW 17.)*
+- (b) Branchen-spezifisch pro 13 Branchen × 7 Felder = 91 Listen —
+  realistisch nur mit Generator oder LLM-Fallback.
+- (c) Hybrid: agnostisch mit optionalem Branchen-Suffix („… in der
+  Beratung z. B. …").
+
+### #6 — Beispiel-Länge pro Chip?
+
+- (a) Stichwort (1–3 Wörter).
+- **(b) Halbsatz (4–8 Wörter)** — passt in einen Chip, trägt aber
+  genügend Kontext. *(Empfehlung.)*
+- (c) Ganzer Satz — zu viel auf Mobile.
+
+### #7 — Label über den Chips?
+
+- (a) „Beispiele"
+- **(b) „Inspiration"** — weniger präskriptiv, passt zu TÜV-Seriosität. *(Empfehlung.)*
+- (c) „So könnte eine Antwort aussehen"
+- (d) Kein Label, Chips sprechen für sich.
+
+### #8 — Hide-Verhalten sobald User tippt?
+
+- **(a) Chips bleiben, User kann weiter klicken** (hilft bei
+  Kombinationen). *(Empfehlung.)*
+- (b) Chips ausblenden sobald Textarea Fokus + Inhalt hat (weniger
+  Clutter).
+- (c) Chips werden grau/inaktiv aber bleiben sichtbar.
+
+### #9 — Telemetrie (Click-Tracking)?
+
+- (a) Keine — minimal-invasiv, schnell.
+- **(b) Minimal: Chip-Klick-Events via existierendes Event-Log, pro
+  Feld** — liefert Daten für spätere Iteration (welche Beispiele ziehen,
+  welche sind totes Gewicht). *(Empfehlung.)*
+- (c) Vollständig: plus Telemetrie für Help-Button-Klicks
+  (nachträglich) und FT-Abbruch-Rate.
+
+### #10 — Wann und wie das rollout?
+
+- (a) Direkt auf Production sobald Backend + Frontend bereit.
+- **(b) Feature-Flag via ENV + A/B für eine Woche** (~50/50 User-Split,
+  Vergleich Report-Qualität zwischen Chips-an / Chips-aus). *(Empfehlung.)*
+- (c) Soft-Launch auf Staging-Branche-Subset (z. B. nur „beratung"
+  Branche) — schwer zu realisieren ohne Frontend-Gate.
+
+### Entscheidungs-Abhängigkeiten
+
+`#5` beeinflusst den Redaktionsaufwand (a: 2 h Wolf-Schreiben, b: 10+ h).
+`#1` entscheidet, ob die `HELP_REQUEST_PROMPT`-Regel angefasst wird (bei
+(b)/(c) muss der Prompt refactored werden, bei (a) reicht KIS-1138
+autonom).
+
+---
+
+*Commit 3b von 3 — Nebenbefunde folgen separat.*
