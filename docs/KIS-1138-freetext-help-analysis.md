@@ -338,5 +338,99 @@ grauer (CSS-styled) Nachsatz sichtbar sind. Beispiel:
 
 ---
 
-*Commit 2 von 3 — letzter Abschnitt (Empfehlung, offene Fragen,
-Nebenbefunde) folgt separat.*
+---
+
+## 4. Empfehlung
+
+**Empfehlung: Kombination aus C1 (proaktiv) + A (reaktiv, bereits vorhanden).**
+Hardcodierte Beispiele, zwei Schichten, ein Daten-Dict.
+
+### Warum C1 als proaktive Schicht
+
+- **Löst das Kern-Problem:** User sieht Beispiele beim Erscheinen der
+  Frage, muss nicht erst erkennen dass er Hilfe braucht.
+- **Minimal-invasiv im Bestand:** ein neues Dict `FIELD_EXAMPLES` in
+  `services/field_templates.py` (gleiche Datei-Konvention wie bestehende
+  `FIELD_QUESTIONS`), ein neues Response-Feld `field_examples` auf
+  `ChatSessionState`. Weder die Extractor-Pipeline noch die
+  Sonnet-Prompts müssen angefasst werden — Rollback = Feld auf None.
+- **Deterministisch:** kein zusätzlicher LLM-Call, keine Latenz, keine
+  Halluzinationen, keine Kostenänderung.
+- **TÜV-kompatibel:** hardcoded Beispiele wirken wie redaktionelle
+  Formular-Hinweise, nicht wie „Bot-Vorschläge". Passt zu
+  Seriositätsanspruch.
+- **Frontend-Komponente ist klein:** Chips unter Input, Klick =
+  Textarea-Prefill. Kein Extra-Endpoint, kein Loading-State.
+
+### Warum A als reaktive Zweitschicht erhalten bleibt
+
+- KIS-1163 hat den Help-Flow (Button + natürliche Rückfragen) bereits
+  scharfgeschaltet; er funktioniert.
+- Für User, die trotz Chips noch unsicher sind, bleibt der Hilfe-Button
+  als Eskalation. Er liefert ausführlichere Reflexionsfragen
+  (bestehendes Verhalten) — nicht zwingend die gleichen Beispiele wie
+  die Chips, sondern vertiefende Denkanstöße.
+- Keine Code-Änderung nötig — der Flow existiert. Nur der Prompt-Regel
+  „Gib KEINE kopierbaren Beispiele" muss überdacht werden (siehe Abschnitt 5 Frage #1).
+
+### Warum nicht B (LLM-generiert)
+
+- Zusätzliche Sonnet-Calls pro Session kosten Latenz und Geld ohne
+  proportionalen UX-Gewinn gegenüber hardcodierten Beispielen.
+- Halluzinations- und TÜV-Seriositätsrisiko für einen Helper-Use-Case ist zu hoch.
+- Wenn Beispiele jemals dynamisch kontextualisiert werden sollen
+  (Branche + Hauptleistung), kann das als *spätere Iteration* auf die
+  C1-Infrastruktur draufgesetzt werden — das Dict wird zur Funktion
+  `get_examples(field, profile)`. Nicht heute bauen.
+
+### Warum nicht C2 (rotierender Placeholder)
+
+- WCAG-Konflikt (autorotating Text ohne Pause-Option) ist für ein
+  TÜV-zertifiziertes Tool ein Eigentor.
+- Keine Möglichkeit, die Beispiele nach dem ersten Fokus nochmal zu
+  sehen, ohne das Feld zu leeren — das hilft gerade den unsicheren
+  Usern nicht, die länger brauchen.
+
+### Warum nicht C3 (Inline-Graulauf im Sonnet-Text)
+
+- Sonnet folgt Format-Anweisungen nicht zuverlässig genug; der Effekt
+  wird inkonsistent, was den UX-Eindruck verschlechtert („mal sehe ich
+  Beispiele, mal nicht").
+- Parsing-Fragilität im Frontend (Marker verloren → keine Grau-Format).
+- Token-Overhead auf jeder Sonnet-Antwort über alle FT-Felder hinweg.
+
+### Varianten-Scope auf welche Felder?
+
+**Alle 7 R1-Freitextfelder** bekommen Chips — aber mit unterschiedlichem
+Gewicht:
+
+- **Pflicht zuerst** (höchster User-Schmerz, meiste Blocker-Momente):
+  `vision_3_jahre`, `strategische_ziele`, `zeitersparnis_prioritaet`,
+  `hauptleistung`. Erste Iteration.
+- **Optionale FT-Felder** (`ki_projekte`, `geschaeftsmodell_evolution`,
+  `ki_guardrails`): in gleicher Welle mit aufnehmen, weil das Dict eh
+  einmal redaktionell erstellt wird.
+
+### Aufwand Gesamt
+
+Hardcoded-Weg, alle 7 Felder:
+
+| Gewerk | Aufwand | Details |
+|---|---|---|
+| Backend | ~4 h | `FIELD_EXAMPLES` (Wolfs Beispielsätze, 3–4 pro Feld), Response-Feld, Tests (Content-Assertions + inspect-Regression). |
+| Frontend | ~4 h | Chip-Komponente unter Input, Prefill-Logik, Hide-on-type. |
+| Redaktion | ~2 h | Wolf schreibt die Beispielsätze (branchen-agnostisch, 3–4 pro Feld). Kann vor Implementation stehen. |
+| **Summe** | **~10 h** | Über 1–2 Tage machbar, einschließlich Smoke-Test. |
+
+### Zusätzlicher Vorteil — Kompatibilität mit KIS-1159
+
+Falls KIS-1159 (Block-B-Konsolidierung) später das Datenmodell umbaut
+und z. B. `vision_3_jahre` + `strategische_ziele` zu einem Feld vereint,
+wird das entsprechende `FIELD_EXAMPLES`-Entry einfach umgebaut. Die
+Response-Wire + Frontend-Komponente bleiben identisch. Die beiden
+Tickets behindern sich nicht.
+
+---
+
+*Commit 3a von 3 — Entscheidungs-Sheet + Nebenbefunde folgen in
+separaten Commits.*
