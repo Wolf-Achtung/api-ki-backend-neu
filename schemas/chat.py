@@ -55,6 +55,13 @@ class ChatSessionState(BaseModel):
     # Progress
     current_section: int
     current_section_name: str
+    # KIS-1162: Single source of truth for the UI section header. Computed
+    # server-side as ``block_label or current_section_name`` so the header
+    # tracks the active Phase-2 block instead of the legacy 8-section index
+    # (which lags behind in the hybrid conversation model). Always populated;
+    # falls back to current_section_name outside Phase 2. Frontend should
+    # prefer this field over current_section_name for display.
+    display_section_title: str
     total_sections: int = 8
     progress_percent: int
 
