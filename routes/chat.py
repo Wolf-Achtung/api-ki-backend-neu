@@ -112,6 +112,45 @@ def is_skip_word(message: str) -> bool:
     """True when *message* (after strip+lower) is an exact skip word."""
     return message.strip().lower() in SKIP_WORDS
 
+
+# ---------------------------------------------------------------------------
+# Help-Request detection (KIS-1163)
+# ---------------------------------------------------------------------------
+# Natural-language hints that tell us the user is asking for clarification
+# rather than answering. Previously only the explicit "__HELP_REQUEST__"
+# sentinel (injected by the frontend help button) fired this path, so
+# sentences like "welche gibt es denn?" fell through to the generic
+# Haiku-skip path and Sonnet drifted onto the broadest related topic
+# (DSGVO → EU AI Act). When any hint matches, event_stream routes through
+# build_help_context, which pins the currently-asked field in the prompt.
+_HELP_REQUEST_HINTS: frozenset[str] = frozenset({
+    "welche gibt es",
+    "welche möglichkeiten",
+    "was meinst du",
+    "was meinen sie",
+    "wie meinst du das",
+    "wie meinen sie das",
+    "was bedeutet",
+    "was heißt das",
+    "erkläre mir",
+    "erklär mir",
+    "kannst du erklären",
+    "können sie erklären",
+    "gib mir beispiele",
+    "nenne mir beispiele",
+})
+
+
+def is_natural_help_request(message: str) -> bool:
+    """True when *message* reads like a clarification request in natural
+    German — used in addition to the explicit ``__HELP_REQUEST__`` sentinel
+    so free-form rückfragen also trigger the field-specific help flow."""
+    if not message:
+        return False
+    msg_lower = message.strip().lower()
+    return any(h in msg_lower for h in _HELP_REQUEST_HINTS)
+
+
 # ---------------------------------------------------------------------------
 # KIS-1124 Sprint 2: Hybrid Conversation Model — Phase & Block Definitions
 # ---------------------------------------------------------------------------
@@ -600,7 +639,13 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         _is_low_quality_input = False
 
         _is_qr_click = bool(req.quick_reply_field and req.quick_reply_value)
-        _is_help_request = "__HELP_REQUEST__" in req.message
+        # KIS-1163: Sentinel from the frontend help button + natural-language
+        # rückfragen both route through the help-context flow so Sonnet pins
+        # the currently-asked field and cannot drift onto unrelated topics.
+        _is_help_request = (
+            "__HELP_REQUEST__" in req.message
+            or (not _is_qr_click and is_natural_help_request(req.message))
+        )
 
         # Edit-mode detection: check if user wants to change a field after summary
         _is_in_edit_mode = bool(_draft_state_snapshot.get("edit_mode"))

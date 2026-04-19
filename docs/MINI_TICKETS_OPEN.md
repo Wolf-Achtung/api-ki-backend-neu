@@ -30,3 +30,30 @@ before rendering.
    in the frontend — mismatches point to a client-side drop.
 
 **Not a blocker.** Park until after KIS-1163 (Bug 6) ships.
+
+
+## CHAT-EVENT-STREAM-INTEGRATION-TEST — Tier 4 coverage
+
+**Context:** KIS-1161 / KIS-1162 / KIS-1163 regressions were caught by
+unit tests plus ``inspect.getsource`` wire-up checks. That is pragmatic
+but incomplete — Tier 4 would mean an end-to-end test that actually
+drives ``POST /api/chat/message`` through FastAPI ``TestClient`` with a
+mocked ``anthropic.AsyncAnthropic`` client, reads the SSE stream, and
+asserts observable behaviour (state_update, help_ctx inclusion, field
+progression).
+
+**Estimated effort:** ~200 LOC + fixtures. Likely reusable for:
+- KIS-1161 (pointer guard end-to-end)
+- KIS-1162 (display_section_title in a live Phase-2-Block-B session)
+- KIS-1163 (natural help_request → build_help_context wiring)
+- Future chat-flow changes.
+
+**Starting points:**
+- ``tests/test_g17_7_prompt_stability.py`` + ``tests/test_report_workflow.py``
+  already use ``TestClient`` elsewhere in the codebase.
+- SQLite in-memory DB is wired in ``tests/conftest.py``.
+- Mock target: ``services.chat_extractor._get_async_client`` and
+  ``services.chat_conversation._get_async_client`` — swap with stubs
+  that yield deterministic tool-use / text-stream responses.
+
+**Priority:** medium. Non-blocking for shipping. Schedule for KW 17/18.
