@@ -72,6 +72,46 @@ DRAFT_MODE_ENABLED = os.getenv("DRAFT_MODE_ENABLED", "false").lower() == "true"
 SUMMARY_MARKER = "**Zusammenfassung Ihrer Angaben:**"
 
 # ---------------------------------------------------------------------------
+# Skip / Decline detection (module scope so tests can import)
+# ---------------------------------------------------------------------------
+# Exact-match skip words: whole-message equality check after strip+lower.
+SKIP_WORDS: frozenset[str] = frozenset({
+    "weiter", "skip", "überspringen", "nächste", "weiter bitte", "nächste frage",
+})
+
+# Substring patterns that mark a message as a decline. Checked via
+# `any(p in msg_lower for p in _DECLINE_PATTERNS)`; only effective when
+# Haiku produced no extraction this turn.
+_DECLINE_PATTERNS: list[str] = [
+    "weiß nicht", "weiss nicht", "keine ahnung", "kann ich nicht",
+    "überspring", "überspringen", "skip", "egal", "später",
+    "das kann ich jetzt nicht", "schwer zu sagen", "müsste ich nachschauen",
+    "ist mir nicht wichtig", "spielt keine rolle", "unwichtig",
+    "nächste frage", "weiter", "kann ich nicht entscheiden",
+    "kann ich nicht sagen", "keine angabe", "k.a.", "kein kommentar",
+    "keine meinung", "weiß ich nicht", "weiss ich nicht",
+    "kann ich nicht beantworten", "keine idee", "noch keine idee",
+    # KIS-1124 Testrun-Fix Bug 4: additional skip-signal phrases
+    "weiß nicht genau", "weiss nicht genau", "keine vorstellung",
+    "passe", "überspring das", "kein plan", "wüsste ich nicht",
+    "da bin ich überfragt", "keine präferenz", "mir egal",
+    # KIS-1160: plain "nein" / "nö" must register as decline so Sonnet
+    # receives the decline help-context instead of praising earlier answers.
+    "nein", "nö", "nein danke",
+]
+
+
+def is_decline_message(message: str) -> bool:
+    """True when the stripped, lowered *message* contains any decline marker."""
+    msg_lower = message.strip().lower()
+    return any(p in msg_lower for p in _DECLINE_PATTERNS)
+
+
+def is_skip_word(message: str) -> bool:
+    """True when *message* (after strip+lower) is an exact skip word."""
+    return message.strip().lower() in SKIP_WORDS
+
+# ---------------------------------------------------------------------------
 # KIS-1124 Sprint 2: Hybrid Conversation Model — Phase & Block Definitions
 # ---------------------------------------------------------------------------
 
@@ -1087,21 +1127,9 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
 
         # Handle "weiter" / skip for optional fields
         # KIS-1124-S0-BE-2: Extended skip detection with decline phrases
-        skip_words = {"weiter", "skip", "überspringen", "nächste", "weiter bitte", "nächste frage"}
-        _DECLINE_PATTERNS = [
-            "weiß nicht", "weiss nicht", "keine ahnung", "kann ich nicht",
-            "überspring", "überspringen", "skip", "egal", "später",
-            "das kann ich jetzt nicht", "schwer zu sagen", "müsste ich nachschauen",
-            "ist mir nicht wichtig", "spielt keine rolle", "unwichtig",
-            "nächste frage", "weiter", "kann ich nicht entscheiden",
-            "kann ich nicht sagen", "keine angabe", "k.a.", "kein kommentar",
-            "keine meinung", "weiß ich nicht", "weiss ich nicht",
-            "kann ich nicht beantworten", "keine idee", "noch keine idee",
-            # KIS-1124 Testrun-Fix Bug 4: additional skip-signal phrases
-            "weiß nicht genau", "weiss nicht genau", "keine vorstellung",
-            "passe", "überspring das", "kein plan", "wüsste ich nicht",
-            "da bin ich überfragt", "keine präferenz", "mir egal",
-        ]
+        # KIS-1160: "nein" / "nö" recognized as decline so Sonnet gets the
+        # decline help-context instead of drifting onto unrelated praise.
+        skip_words = SKIP_WORDS
         _msg_lower = req.message.strip().lower()
         _is_skip_word = _msg_lower in skip_words
         _is_decline = (not normalized and not _is_qr_click and not _is_help_request

@@ -1309,6 +1309,15 @@ FORBIDDEN_PATTERNS = [
     "Klasse",
     "Super",
     "Toll",
+    # KIS-1160: "Vielversprechend" als Substantiv/Adjektiv-Konstrukt.
+    # "Das klingt vielversprechend" steht bereits oben, die Adjektiv-Konstrukte
+    # wie "Vielversprechende Strategie" rutschten bislang durch.
+    "Vielversprechend",
+    "vielversprechend",
+    "Vielversprechende",
+    "vielversprechende",
+    "eine vielversprechende",
+    "Eine vielversprechende",
 ]
 
 
