@@ -2098,7 +2098,13 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
         if _report_start_requested:
             try:
                 now = datetime.now(timezone.utc)
-                _briefing_id = _complete_r1(session, collected, db, now)
+                # KIS: Dispatch by report_type, matching /api/chat/complete (chat.py:2519-2522).
+                # Without this branch, strategy sessions fall through to _complete_r1 and
+                # create an empty r1 Briefing instead of triggering the strategy pipeline.
+                if rt == "strategy":
+                    _briefing_id = await _complete_strategy(session, collected, db, now)
+                else:
+                    _briefing_id = _complete_r1(session, collected, db, now)
                 _redirect_url = _complete_redirect(rt, _briefing_id)
                 log.info("[CHAT] Report triggered: briefing_id=%s, session=%s", _briefing_id, session.id)
                 yield f"event: report_started\ndata: {json.dumps({'briefing_id': _briefing_id, 'redirect_url': _redirect_url})}\n\n"
