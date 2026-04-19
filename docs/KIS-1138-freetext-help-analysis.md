@@ -531,4 +531,108 @@ autonom).
 
 ---
 
-*Commit 3b von 3 — Nebenbefunde folgen separat.*
+---
+
+## 6. Nebenbefunde
+
+Beobachtungen beim Durchgehen der FT-Felder, die **nicht Teil von
+KIS-1138** sind, aber dokumentiert gehören, damit sie nicht verloren
+gehen. Alle als eigenständige Tickets ablegen, *nicht im Scope*
+nachziehen.
+
+### NB-1 — `ki_guardrails` sollte kein Freitext sein
+
+„No-Gos oder sensible Themen beim KI-Einsatz" als offenes Freitextfeld
+ist ein Nebel-Prompt: User weiß nicht, was „Guardrail" technisch heißt
+und formuliert dann entweder Platituden („Datenschutz ist wichtig") oder
+lässt es leer. Kandidat für **QR-Multi-Select** mit Optionen wie
+„keine Kundendaten in externen LLMs", „keine autonomen Entscheidungen
+ohne Human-in-the-Loop", „keine Generierung von Marketing-Claims ohne
+Freigabe", „keine Nutzung in regulierten Prozessen", „Andere" +
+optionalem Freitext-Rest. **Eigenes Ticket** — nicht in KIS-1138
+mitnehmen.
+
+### NB-2 — `zeitersparnis_prioritaet` ist Pflicht aber vage
+
+„Welche Aufgabe kostet am meisten Zeit oder Nerven?" als Pflicht-
+Freitext zwingt User zu einer Antwort, die sie oft vage geben
+(„Kommunikation", „Reporting"). Bessere UX:
+**QR-Primärauswahl** mit typischen KMU-Zeitfressern
+(Angebote schreiben / Reporting / E-Mail-Triage / Recherche / Fakturierung
+/ Onboarding / Andere) + Freitext-Präzisierung im nächsten Turn. Das
+erhöht die Report-Qualität auf diesem wichtigen Feld drastisch.
+**Eigenes Ticket.**
+
+### NB-3 — Block-B-Freitext-Overlap (bekannt als KIS-1159)
+
+Drei Felder in Block B (`vision_3_jahre`, `strategische_ziele`,
+`geschaeftsmodell_evolution`) stellen semantisch sehr ähnliche Fragen
+in verschiedenen Zeitrahmen. User empfindet sie als Doppelung und
+tippt „siehe oben". **Bereits auf der KW-17-Liste als KIS-1159** —
+siehe separates Diagnose-Export-Ticket. Interaktion mit KIS-1138: selbst
+nach KIS-1159-Konsolidierung bleibt mindestens ein strategisches
+FT-Feld, das Inspiration braucht.
+
+### NB-4 — Kein Backend-Tracking der Help-Button-Nutzung
+
+`__HELP_REQUEST__`-Sentinel und `is_natural_help_request` werden geloggt
+(`log.info("[CHAT] Help request detected for field %s …")`), aber nicht
+aggregiert zu einer Metrik. Ohne Zahlen über „wie viele User nutzen
+den Hilfe-Button überhaupt?" lässt sich der Impact von KIS-1138 nach
+Launch nicht messen. **Eigenes Ticket**: Help-Metrik (Counter pro Feld,
+pro Session) in die Admin-Monitoring-Schicht aufnehmen.
+
+### NB-5 — FIELD_DESCRIPTIONS heute rein Sonnet-intern
+
+Die DSGVO-Anreicherung aus KIS-1163 und die bestehenden Descriptions
+sind aktuell reiner Sonnet-Kontext. Sie landen nicht im Response-Schema,
+also kann das Frontend sie nicht anzeigen. Wenn KIS-1138 C1 kommt, wäre
+eine parallele Überlegung: soll das Frontend die `field_label`-Kurzform
+auch als Tooltip neben der Frage zeigen („Was ist das?" → Description
+in kurzer Form)? Denkbar als Teil derselben Welle, technisch unabhängig.
+**Ticket-Kandidat**.
+
+### NB-6 — `ki_projekte` optional bei „noch nichts"
+
+Optional-Felder werden im R1-Fluss oft korrekt übersprungen, aber
+`ki_projekte` hat eine psychologische Hürde: User, der „noch keine"
+KI-Projekte hat, tippt manchmal verlegene Selbstbezichtigungen
+(„Wir hinken hinterher"). Chips mit Optionen wie „Noch keine — wir
+starten gerade", „Einzelne Tools getestet (ChatGPT, Midjourney)",
+„Erste Pilot-Projekte in Planung" helfen dem User, ohne Scham zu
+antworten. **Im Scope von KIS-1138 miterledigen** (ist einfach ein
+entsprechend redaktioniertes `FIELD_EXAMPLES`-Entry für dieses Feld).
+
+### NB-7 — `HELP_REQUEST_PROMPT`-Regel-Konflikt mit neuer Description-Tiefe
+
+Nach KIS-1163 enthalten die DSGVO-FIELD_DESCRIPTIONS Artikelnummern
+(„Art. 32 DSGVO"). Die `ARTIKEL-REGEL` im `BLOCK_D_PROMPT` verbietet
+User-facing Artikelnummern. `build_help_context` liefert die Description
+aber 1:1 in `HELP_REQUEST_PROMPT` — Sonnet könnte dort versehentlich
+die Artikelnummer ausgeben. Risiko aktuell gering, weil Sonnet die
+Description als „internen Kontext" versteht, aber es ist ein
+**Integration-Test-Kandidat** (Mock-Sonnet-Response zu einem
+DSGVO-Help-Request, Assertion: keine „Art. XX"-Substrings). Passt zum
+Mini-Ticket Tier 4 in `docs/MINI_TICKETS_OPEN.md`.
+
+---
+
+## Anhang — Zusammenfassung für 5-Minuten-Einstieg am Mittwoch
+
+Wer Mittwoch erst fünf Minuten vor dem Meeting das Dokument öffnet,
+soll das Wesentliche in einer Seite greifen können:
+
+> **Problem:** User tippen `"siehe oben"` auf strategischen Freitext-Fragen, weil sie nicht wissen, wie eine gute Antwort aussieht. Reaktive Hilfe (Bug 6) ist gelöst, proaktive Hilfe fehlt.
+>
+> **Empfehlung:** Variante C1 — hardcodierte Beispiel-Chips unterhalb des Input-Felds, bei Klick Autofill. Bestehender Help-Button bleibt als zweite Schicht. Ca. 10 h Arbeit (Backend 4 / Frontend 4 / Redaktion 2).
+>
+> **Zu entscheiden:** zehn konkrete Fragen in Abschnitt 5, davon drei mit echtem Konfliktpotenzial:
+> - #1 Dürfen Beispiele kopierbar sein? (bricht alte Design-Philosophie)
+> - #5 Branchen-agnostisch (1 Liste) oder -spezifisch (91 Listen)?
+> - #10 Direkt rollout oder A/B-Feature-Flag?
+>
+> **Nicht heute:** NB-1 (`ki_guardrails` → QR), NB-2 (`zeitersparnis_prioritaet` → QR), NB-3 (KIS-1159 Block-B-Konsolidierung), NB-4 (Help-Metriken), NB-5 (Description-Tooltips), NB-7 (DSGVO-Artikel-Leak-Test). Jedes ein eigenes Ticket.
+
+---
+
+*Ende der Analyse — Commit 3c von 3.*
