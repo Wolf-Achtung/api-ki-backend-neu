@@ -3233,6 +3233,7 @@ def _build_session_state(
     # KIS-1138: Default-initialize every new local at function top before any
     # conditional branch sets or reads it (KIS-1161 v2 UnboundLocalError guard).
     field_examples: list[str] | None = None
+    field_examples_for: str | None = None
 
     rt = session.report_type
     sections = get_sections_for_report(rt)
@@ -3266,10 +3267,12 @@ def _build_session_state(
         _remaining_block_fields = _get_block_fields(_cur_blk_for_chips, collected)
         if _remaining_block_fields and _remaining_block_fields[0] in FIELD_EXAMPLES:
             field_examples = list(FIELD_EXAMPLES[_remaining_block_fields[0]])
+            field_examples_for = _remaining_block_fields[0]
     if field_examples is None:
         _next_field = next_fields[0] if next_fields else None
         if _next_field and _next_field in FIELD_EXAMPLES:
             field_examples = list(FIELD_EXAMPLES[_next_field])
+            field_examples_for = _next_field
 
     total = len(registry)
     collected_count = len(collected)
@@ -3384,6 +3387,7 @@ def _build_session_state(
         block_progress=_blk_progress,
         block_total=_blk_total,
         field_examples=field_examples,
+        field_examples_for=field_examples_for,
     )
 
 
