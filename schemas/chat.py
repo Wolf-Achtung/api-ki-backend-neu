@@ -98,6 +98,11 @@ class ChatSessionState(BaseModel):
     # Quick Replies
     quick_replies: Optional[list[QuickReply]] = None
 
+    # KIS-1138: Inspiration chips for 4 strategic-imaginative freetext fields
+    # in Block B (geschaeftsmodell_evolution, vision_3_jahre, strategische_ziele,
+    # ki_guardrails). None for all other turns.
+    field_examples: Optional[list[str]] = None
+
 
 # ---------------------------------------------------------------------------
 # POST /api/chat/start
@@ -199,6 +204,13 @@ class ChatFieldsExportResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # GET /api/chat/sessions
 # ---------------------------------------------------------------------------
+
+class InspirationClickRequest(BaseModel):
+    """KIS-1138 telemetry — recorded when a user clicks an inspiration chip."""
+    briefing_id: Optional[int] = None
+    field: str
+    chip_index: int
+
 
 class ChatSessionSummary(BaseModel):
     session_id: UUID

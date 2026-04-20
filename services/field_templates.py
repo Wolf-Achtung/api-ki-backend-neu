@@ -93,6 +93,40 @@ FIELD_QUESTIONS: dict[str, str] = {
 
 
 # ──────────────────────────────────────────────────────────────────────
+# KIS-1138: Inspiration chips for strategic-imaginative freetext fields
+#
+# For 4 Block-B fields where users tend to stall ("I don't know what to
+# write"), we surface 3 short half-sentences as chips the frontend renders
+# beneath the input. Scope is deliberately limited to strategic-imaginative
+# fields; concrete-experiential fields (hauptleistung, ki_projekte,
+# zeitersparnis_prioritaet) get no chips — users have lived experience there.
+# ──────────────────────────────────────────────────────────────────────
+
+FIELD_EXAMPLES: dict[str, list[str]] = {
+    "geschaeftsmodell_evolution": [
+        "Bestehende Leistungen als skalierbares KI-Produkt anbieten",
+        "Neue Zielgruppen durch günstigere digitale Services",
+        "KI als eigenständige Leistung vermarkten",
+    ],
+    "vision_3_jahre": [
+        "KI als fester Teil aller Kernprozesse",
+        "Doppelte Kapazität ohne zusätzliches Personal",
+        "Neue KI-basierte Produkte im Portfolio",
+    ],
+    "strategische_ziele": [
+        "Wiederkehrende Aufgaben automatisieren und Zeit gewinnen",
+        "Reaktionszeiten im Kundenkontakt deutlich verkürzen",
+        "Konsistente Qualität bei skalierendem Volumen sichern",
+    ],
+    "ki_guardrails": [
+        "Keine Kundendaten in externe KI-Tools geben",
+        "Finale Entscheidungen nur durch Menschen treffen",
+        "KI-generierte Inhalte klar kennzeichnen",
+    ],
+}
+
+
+# ──────────────────────────────────────────────────────────────────────
 # KIS-1128B V1-BE-3: Deterministic confirmation sentences
 #
 # Short confirmations prepended to the template question.
