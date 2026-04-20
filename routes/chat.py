@@ -265,6 +265,21 @@ _FIELD_DEFAULTS: dict[str, object] = {
 }
 
 
+# KIS-1136 rest-fix: Strategy free-text fields must NOT receive a force-default.
+# Writing "keine_angabe" (or any sentinel) would bypass the partially-surveyed
+# detection (routes/chat.py ~l.3031) and send a meaningless string into the
+# report pipeline. Skipping the write keeps the field absent from `collected`,
+# so Fix 1 marks the block as _chat_partially_surveyed and the section is
+# shortened cleanly. Matches the omit semantic already established in
+# _REPORT_BLOCK_DEFAULTS["B"] (None entries).
+_FORCE_DEFAULT_SKIP: frozenset[str] = frozenset({
+    "strategische_ziele",
+    "vision_3_jahre",
+    "ki_guardrails",
+    "geschaeftsmodell_evolution",
+})
+
+
 # KIS-1124 Sprint 4 S4-BE-2: Conservative defaults for fields in blocks that
 # the user chose NOT to survey.  These are injected at _complete_r1 time so
 # the report pipeline receives plausible, non-hallucinated values.
@@ -1471,6 +1486,18 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 _force_defaulted = False
                 for _fd_field, _fd_count in list(_field_ask_counts.items()):
                     if _fd_count >= 2 and _fd_field not in collected:
+                        if _fd_field in _FORCE_DEFAULT_SKIP:
+                            # KIS-1136 rest-fix: leave strategy free-text fields
+                            # absent so Fix 1 marks the block as partially
+                            # surveyed and the pipeline omits the section.
+                            log.info(
+                                "[CHAT] Phase 2 field safeguard: %s asked %d× "
+                                "without extraction — skipping force-default "
+                                "(omit via _chat_partially_surveyed)",
+                                _fd_field, _fd_count,
+                            )
+                            _field_ask_counts.pop(_fd_field, None)
+                            continue
                         _default = _FIELD_DEFAULTS.get(_fd_field, "keine_angabe")
                         collected[_fd_field] = _default
                         log.warning(
