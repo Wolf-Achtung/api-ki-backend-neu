@@ -3245,13 +3245,31 @@ def _build_session_state(
     # Always 1 field at a time (Smart Grouping disabled, KIS-1122)
     next_fields = get_next_fields(collected, section_idx, max_fields=1, report_type=rt)
 
+    # Phase tracking (hybrid conversation model, KIS-1124) — hoisted above
+    # the field_examples block so the chip trigger can consult current_block.
+    ps = _get_phase_state(session)
+
     # KIS-1138: Surface inspiration chips for the 4 strategic-imaginative
     # Block-B freetext fields. Defensive copy so callers can't mutate the
     # module-level dict. Concrete-experiential fields are deliberately absent
     # from FIELD_EXAMPLES and therefore always yield None here.
-    _next_field = next_fields[0] if next_fields else None
-    if _next_field and _next_field in FIELD_EXAMPLES:
-        field_examples = list(FIELD_EXAMPLES[_next_field])
+    #
+    # Two cooperating paths:
+    #   1. Block-aware (Phase 2 hybrid): when current_block is set, read the
+    #      first uncollected field of that block. In the real hybrid flow
+    #      section_idx stays pinned (checkpoint) while blocks advance, so the
+    #      section pipeline never surfaces Block-B fields as next_fields[0].
+    #   2. Section-based (fallback): next_fields[0] from the section pipeline.
+    #      Still correct when callers set current_section directly (tests).
+    _cur_blk_for_chips = ps.get("current_block")
+    if _cur_blk_for_chips:
+        _remaining_block_fields = _get_block_fields(_cur_blk_for_chips, collected)
+        if _remaining_block_fields and _remaining_block_fields[0] in FIELD_EXAMPLES:
+            field_examples = list(FIELD_EXAMPLES[_remaining_block_fields[0]])
+    if field_examples is None:
+        _next_field = next_fields[0] if next_fields else None
+        if _next_field and _next_field in FIELD_EXAMPLES:
+            field_examples = list(FIELD_EXAMPLES[_next_field])
 
     total = len(registry)
     collected_count = len(collected)
@@ -3270,9 +3288,6 @@ def _build_session_state(
 
     # Draft-Pattern state (backward-compatible: old sessions without column → {})
     draft = getattr(session, 'draft_state', None) or {}
-
-    # Phase tracking (hybrid conversation model, KIS-1124)
-    ps = _get_phase_state(session)
 
     # is_completable: after summary has been sent.
     # KIS-1124-HOTFIX: In the hybrid Phase 2 model, unsurveyed blocks have
