@@ -102,6 +102,10 @@ class ChatSessionState(BaseModel):
     # in Block B (geschaeftsmodell_evolution, vision_3_jahre, strategische_ziele,
     # ki_guardrails). None for all other turns.
     field_examples: Optional[list[str]] = None
+    # Field name the chips belong to — needed so the frontend can send the
+    # correct `field` value to /api/chat/inspiration-click even when chips
+    # come from the block-aware path (where next_fields[0] points elsewhere).
+    field_examples_for: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
