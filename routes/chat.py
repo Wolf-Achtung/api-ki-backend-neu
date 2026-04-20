@@ -18,7 +18,7 @@ import re
 from datetime import datetime, timezone
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text as _sa_text
@@ -36,6 +36,7 @@ from schemas.chat import (
     ChatStartRequest,
     ChatStartResponse,
     ConfirmFieldRequest,
+    InspirationClickRequest,
     QuickReply,
     QuickReplyOption,
 )
@@ -61,7 +62,13 @@ from services.chat_normalizer import (
     is_section_complete,
     normalize_field,
 )
-from services.field_templates import FIELD_QUESTIONS, get_confirmation, get_template_question, is_template_field
+from services.field_templates import (
+    FIELD_EXAMPLES,
+    FIELD_QUESTIONS,
+    get_confirmation,
+    get_template_question,
+    is_template_field,
+)
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 log = logging.getLogger(__name__)
@@ -2549,6 +2556,31 @@ async def submit_fast_mode(session_id: UUID, data: dict, db: Session = Depends(g
 
 
 # ===========================================================================
+# POST /api/chat/inspiration-click — KIS-1138 chip-click telemetry
+# ===========================================================================
+
+@router.post("/inspiration-click", status_code=204)
+async def chat_inspiration_click(req: InspirationClickRequest) -> Response:
+    """Log an inspiration-chip click.
+
+    KIS-1138: Lightweight telemetry — grep-able log line, no DB write.
+    No auth (mirrors other chat endpoints), no rate-limit (users click at
+    most 3 chips per field). Validation: field must be one of the 4
+    FIELD_EXAMPLES keys, chip_index must be 0..2.
+    """
+    if req.field not in FIELD_EXAMPLES:
+        raise HTTPException(status_code=400, detail="unknown field")
+    if not 0 <= req.chip_index < len(FIELD_EXAMPLES[req.field]):
+        raise HTTPException(status_code=400, detail="chip_index out of range")
+
+    log.info(
+        "[CHAT-INSPIRATION] field=%s chip_index=%d briefing=%s",
+        req.field, req.chip_index, req.briefing_id,
+    )
+    return Response(status_code=204)
+
+
+# ===========================================================================
 # GET /api/chat/sessions — list open sessions for authenticated user
 # ===========================================================================
 
@@ -3198,6 +3230,10 @@ def _build_session_state(
             after db.commit().
         section_override: If provided, use this instead of session.current_section.
     """
+    # KIS-1138: Default-initialize every new local at function top before any
+    # conditional branch sets or reads it (KIS-1161 v2 UnboundLocalError guard).
+    field_examples: list[str] | None = None
+
     rt = session.report_type
     sections = get_sections_for_report(rt)
     registry = get_registry_for_report(rt)
@@ -3208,6 +3244,14 @@ def _build_session_state(
     missing_req, missing_opt = get_missing_fields(collected, section_idx, rt)
     # Always 1 field at a time (Smart Grouping disabled, KIS-1122)
     next_fields = get_next_fields(collected, section_idx, max_fields=1, report_type=rt)
+
+    # KIS-1138: Surface inspiration chips for the 4 strategic-imaginative
+    # Block-B freetext fields. Defensive copy so callers can't mutate the
+    # module-level dict. Concrete-experiential fields are deliberately absent
+    # from FIELD_EXAMPLES and therefore always yield None here.
+    _next_field = next_fields[0] if next_fields else None
+    if _next_field and _next_field in FIELD_EXAMPLES:
+        field_examples = list(FIELD_EXAMPLES[_next_field])
 
     total = len(registry)
     collected_count = len(collected)
@@ -3324,6 +3368,7 @@ def _build_session_state(
         block_label=_blk_label,
         block_progress=_blk_progress,
         block_total=_blk_total,
+        field_examples=field_examples,
     )
 
 
