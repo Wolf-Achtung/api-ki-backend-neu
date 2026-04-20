@@ -221,6 +221,7 @@ class TestBlockAwareProjection:
         )
         state = _build_session_state(session)
         assert state.field_examples == FIELD_EXAMPLES["vision_3_jahre"]
+        assert state.field_examples_for == "vision_3_jahre"
         # Defensive copy — mutating state must not touch module dict.
         state.field_examples.append("MUTATION")
         assert "MUTATION" not in FIELD_EXAMPLES["vision_3_jahre"]
@@ -237,6 +238,7 @@ class TestBlockAwareProjection:
         )
         state = _build_session_state(session)
         assert state.field_examples is None
+        assert state.field_examples_for is None
 
     def test_block_b_yields_none_when_all_example_fields_collected(self):
         # All 4 FIELD_EXAMPLES fields already collected → first remaining
@@ -257,6 +259,7 @@ class TestBlockAwareProjection:
         )
         state = _build_session_state(session)
         assert state.field_examples is None
+        assert state.field_examples_for is None
 
 
 # ---------------------------------------------------------------------------
