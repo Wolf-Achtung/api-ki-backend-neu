@@ -200,6 +200,65 @@ class TestBuildSessionStateProjection:
         assert state.field_examples is None
 
 
+class TestBlockAwareProjection:
+    """Block-aware field_examples path (KIS-1138 block-aware fix).
+
+    In the real hybrid flow section_idx stays pinned at the checkpoint while
+    Phase 2 blocks advance, so the Block-B fields never reach next_fields[0]
+    via the section pipeline. These tests pin current_section=0 (realistic
+    Phase 2 state) and exercise the block-aware branch.
+    """
+
+    def test_block_b_active_surfaces_first_uncollected_block_field(self):
+        # Block B order starts with vision_3_jahre → chips for that field.
+        session = _make_session(
+            current_section=0,
+            phase_state={
+                "conversation_phase": "phase_2",
+                "current_block": "B",
+                "selected_blocks": ["B"],
+            },
+        )
+        state = _build_session_state(session)
+        assert state.field_examples == FIELD_EXAMPLES["vision_3_jahre"]
+        # Defensive copy — mutating state must not touch module dict.
+        state.field_examples.append("MUTATION")
+        assert "MUTATION" not in FIELD_EXAMPLES["vision_3_jahre"]
+
+    def test_block_a_active_yields_none(self):
+        # Block A contains no FIELD_EXAMPLES fields.
+        session = _make_session(
+            current_section=0,
+            phase_state={
+                "conversation_phase": "phase_2",
+                "current_block": "A",
+                "selected_blocks": ["A"],
+            },
+        )
+        state = _build_session_state(session)
+        assert state.field_examples is None
+
+    def test_block_b_yields_none_when_all_example_fields_collected(self):
+        # All 4 FIELD_EXAMPLES fields already collected → first remaining
+        # Block-B field is roadmap_vorhanden (not in FIELD_EXAMPLES).
+        session = _make_session(
+            current_section=0,
+            collected_fields={
+                "vision_3_jahre": "x",
+                "strategische_ziele": "x",
+                "ki_guardrails": "x",
+                "geschaeftsmodell_evolution": "x",
+            },
+            phase_state={
+                "conversation_phase": "phase_2",
+                "current_block": "B",
+                "selected_blocks": ["B"],
+            },
+        )
+        state = _build_session_state(session)
+        assert state.field_examples is None
+
+
 # ---------------------------------------------------------------------------
 # Tier 3 — Wire-up regression via inspect.getsource
 # ---------------------------------------------------------------------------
