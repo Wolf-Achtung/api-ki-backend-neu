@@ -114,6 +114,23 @@ def is_low_quality_text(raw: str, min_words: int = 3) -> bool:
 
 
 # ===========================================================================
+# KIS-1136 rest-fix (Option 6): strategy freetext fields that must be OMITTED
+# (absent from `collected`/`answers`) on skip signals, never written as "".
+# Writing an empty string would bypass the `_chat_partially_surveyed` marker
+# (routes/chat.py `field not in answers` check) and feed a meaningless empty
+# value into the report pipeline. Mirrors the force-default skip in
+# routes/chat.py (_FORCE_DEFAULT_SKIP) so both safeguards stay in sync.
+# ===========================================================================
+
+_FT_OMIT_ON_SKIP: frozenset[str] = frozenset({
+    "vision_3_jahre",
+    "strategische_ziele",
+    "ki_guardrails",
+    "geschaeftsmodell_evolution",
+})
+
+
+# ===========================================================================
 # Field Registry — PoC Block 1 (Section 0) + full structure for later
 # ===========================================================================
 
@@ -892,6 +909,12 @@ def normalize_field(field_name: str, raw_value: Any, collected: dict, report_typ
         cleaned = str(raw_value).strip()
         # "keine_angabe" is a valid skip for optional text fields
         if cleaned.lower() in ("keine_angabe", "keine angabe"):
+            # KIS-1136 rest-fix: for strategy FT fields the skip must OMIT
+            # the field (not write ""), so the partially-surveyed marker in
+            # routes/chat.py sees `field not in answers` and shortens the
+            # report section cleanly.
+            if field_name in _FT_OMIT_ON_SKIP:
+                return NormResult(None, "low", True)
             return NormResult("", "high", False)
         if len(cleaned) < 3:
             return NormResult(None, "low", True)
