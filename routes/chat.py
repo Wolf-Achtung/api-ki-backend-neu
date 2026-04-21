@@ -45,6 +45,7 @@ from services.chat_normalizer import (
     BUNDESLAND_VALUES,
     ENUM_VALUES,
     FIELD_REGISTRY,
+    NormResult,
     SECTIONS,
     STRATEGY_ENUM_VALUES,
     STRATEGY_FIELD_REGISTRY,
@@ -800,6 +801,14 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             # not data fields, and would produce "Unknown field" warnings in normalize_field.
             if qr_field != "_draft_action" and not qr_field.startswith("__"):
                 qr_result = normalize_field(qr_field, req.quick_reply_value, collected, report_type=rt)
+                # FIX: Chip-Klicks aus FREETEXT_SUGGESTIONS sind explizite User-Bestätigungen
+                # und sollen den is_low_quality_text-Check umgehen (sonst Loop bei 1-Wort-Chips
+                # wie "Recherche", "Administration" in zeitersparnis_prioritaet)
+                if qr_result.confidence == "low" and qr_field in FREETEXT_SUGGESTIONS:
+                    _chip_profile = compute_user_profile(collected)
+                    _chip_suggestions = _get_freetext_suggestions(qr_field, collected, _chip_profile)
+                    if req.quick_reply_value in _chip_suggestions:
+                        qr_result = NormResult(req.quick_reply_value, "high", False)
                 if qr_result.confidence != "low":
                     collected[qr_field] = qr_result.value
                     normalized[qr_field] = qr_result.value
