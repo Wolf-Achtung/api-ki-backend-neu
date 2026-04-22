@@ -147,17 +147,15 @@ class TestRecommendToolsBudgetFilter:
 # ---------------------------------------------------------------------------
 
 class TestChallengeWeekFilter:
-    def test_default_config_is_empty_noop(self):
-        # Ship with empty sets so the default behaviour matches today's
-        # rendering. Wolf populates them once he picks the week-arcs.
-        for size, skip in _CHALLENGE_WEEKS_SKIP_BY_SIZE.items():
-            assert skip == set(), (
-                f"_CHALLENGE_WEEKS_SKIP_BY_SIZE[{size!r}] must default to "
-                "an empty set so the hook stays additive until populated."
-            )
+    def test_team_and_kmu_still_empty_noop(self):
+        # Solo is populated since KIS-1142 P6-C-solo-populate; team/kmu stay
+        # empty until Wolf does the systematic segmentation in a separate PR.
+        assert _CHALLENGE_WEEKS_SKIP_BY_SIZE["team"] == set()
+        assert _CHALLENGE_WEEKS_SKIP_BY_SIZE["kmu"] == set()
 
     def test_empty_skip_returns_input_unchanged(self):
-        result = _filter_challenge_weeks_by_size(CHALLENGE_30_TAGE, "solo")
+        # team's skip-set is still empty, so the filter is a no-op.
+        result = _filter_challenge_weeks_by_size(CHALLENGE_30_TAGE, "team")
         assert result == CHALLENGE_30_TAGE
 
     def test_unknown_size_is_noop(self):
