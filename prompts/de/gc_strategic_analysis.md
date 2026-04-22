@@ -34,19 +34,19 @@ Du kennst die Kernthese aus Report 1 (oben), aber dein Text muss:
 
 ## PFLICHTSTRUKTUR (als HTML)
 
-1. **Strategischer Wendepunkt** (2-3 Sätze)
-   - Was sich im Marktumfeld fundamental verändert
+1. **Was sich am Markt verändert** (2-3 Sätze)
+   - Welche konkrete Entwicklung im Marktumfeld passiert
    - Warum das bisherige Vorgehen nicht mehr ausreicht
 
-2. **Die neue Logik** (2-3 Sätze)
-   - Welcher Paradigmenwechsel stattfindet
-   - Was das konkret für {{HAUPTLEISTUNG}} bedeutet
+2. **Was das für Ihr Geschäft heißt** (2-3 Sätze)
+   - Welche Verschiebung bei {{HAUPTLEISTUNG}} konkret ansteht
+   - In welcher Richtung sich die Arbeitsweise verändert
 
 3. **Warum jetzt handeln** (3 Bullets)
    - Drei konkrete, branchenspezifische Gründe
    - Jeder Bullet: 1-2 Sätze, kein Fließtext
 
-4. **Konsequenz bei Nicht-Handeln** (2-3 Sätze)
+4. **Was passiert, wenn nichts passiert** (2-3 Sätze)
    - Realistisches Szenario, keine Panikmache
    - Wettbewerbsnachteile, nicht Untergangsszenarien
 
@@ -86,6 +86,55 @@ KMU: Unternehmensperspektive. "Ihr Unternehmen". Abteilungslogik möglich.
 - Formelle Anrede "Sie"
 - Keine Beratungssprache, keine CTAs, keine Buzzwords
 - Ruhig und fundiert — der Leser soll Vertrauen in die Analyse haben
+
+## SPRACHREGELN FÜR VERSTÄNDLICHKEIT (PFLICHT — KIS-1142 P4)
+Zielgruppe: KMU-Geschäftsführer ohne Beratungs-Hintergrund. Die Analyse
+soll als strategisch gelten, aber von jemandem lesbar sein, der seit 30
+Jahren einen Mittelstandsbetrieb führt und mit KI erst seit Kurzem zu
+tun hat.
+
+**1. Max. 20-25 Wörter pro Satz.** Lange Schachtelsätze splitten.
+- NICHT: "Die Automatisierung repetitiver Aufgaben im Rahmen einer
+  strukturierten Governance-Einführung ermöglicht eine Effizienzsteigerung,
+  die sich mittelfristig im operativen Tagesgeschäft niederschlägt." (28 Wörter)
+- SONDERN: "Wiederkehrende Aufgaben lassen sich automatisieren. Das spart
+  Zeit im Tagesgeschäft — vorausgesetzt, Governance-Regeln sind vorab
+  geklärt." (16 + 11 Wörter)
+
+**2. Konjunktive nur bei echten Prognosen.** "Könnte", "würde", "wäre" nur
+wenn ein Zukunftsszenario wirklich offen ist. Bei Ist-Zustand und
+belegten Fakten: Indikativ.
+- NICHT: "Es wäre zu prüfen, ob eine Einführung sinnvoll sein könnte."
+- SONDERN: "Die Einführung ist zu prüfen."
+
+**3. Fachbegriffe bei Erstnennung kurz in Klammern erklären.** Eine
+Klammer mit drei-vier Wörtern reicht. Ab zweiter Nennung ohne Klammer.
+Beispiele:
+- PII (personenbezogene Daten)
+- Vier-Augen-Prinzip (zwei Personen prüfen eine Ausgabe)
+- Red-Flag-Liste (Liste kritischer Warnsignale)
+- AVV (AV-Vertrag, regelt Auftragsverarbeitung)
+- EU AI Act (KI-Verordnung der EU)
+
+Keine Klammer nötig bei etablierten Begriffen: DSGVO, CRM, ERP, ISO 27001,
+KPI, ROI (letztere sind weit verbreitet und stehen bereits im
+BEGRIFFSKONSISTENZ-Block).
+
+**4. Beispiele statt Abstraktion.** Jede allgemeine Empfehlung muss durch
+ein konkretes Beispiel verankert werden. Das Beispiel kommt direkt
+hinter der Aussage, nicht in einem separaten Absatz.
+- NICHT: "Prozessautomatisierung kann die Produktivität steigern."
+- SONDERN: "Ein automatisierter Eingangs-Check für Kundenanfragen spart
+  etwa drei bis fünf Minuten pro Ticket — bei 50 Tickets pro Tag ein
+  realer Effekt."
+
+**5. Verbots-Liste für leere Jargon-Begriffe.** Ersetze wenn sie auftauchen
+wollen durch konkrete Beschreibungen, was sich wirklich verändert:
+- "fundamental", "exponentiell", "kritische Schwelle" — zu dramatisch
+- "ganzheitlich", "holistisch" — leerer Beraterton
+- "Paradigmenwechsel", "Disruption", "Transformation" (als Buzzword) —
+  stattdessen beschreiben, welcher konkrete Prozess sich verändert
+- "Skalierung", "Roll-out" — stattdessen "ausweiten", "einführen"
 
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
