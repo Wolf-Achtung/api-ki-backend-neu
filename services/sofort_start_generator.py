@@ -2268,7 +2268,15 @@ CHALLENGE_30_TAGE = {
 # solo freelancers). The filter runs AFTER challenge-variant selection
 # (beginner/intermediate/expert), so solo-on-expert can still be trimmed.
 _CHALLENGE_WEEKS_SKIP_BY_SIZE: Dict[str, set] = {
-    "solo": set(),
+    # Solo (Einzelberater): Woche 3 (LLM-Ops-Optimierung: Semantic Caching,
+    # Model-Routing, Prompt-Kompression) und Woche 4 (Skalierung:
+    # Rate-Limiting, Error-Handling, Team-Rollout) sind Enterprise-LLM-
+    # Ops-Niveau — für einen Einzelberater unpassend. Die verbleibenden
+    # Wochen 1+2 (Stack-Audit bzw. Werkzeugkasten + Governance-
+    # Grundregeln) sind der richtige Zuschnitt.
+    "solo": {"woche_3", "woche_4"},
+    # Team/KMU: noch nicht populiert. Eigener PR sobald Wolf die
+    # Segmentierung systematisch macht.
     "team": set(),
     "kmu":  set(),
 }
@@ -2768,7 +2776,14 @@ def generate_30_tage_challenge_html_v2(
     # wird. Das Template-Banner ("beginnt ab Woche 1") zeigt damit
     # denselben Inhalt, den der Report rendert. Läuft NACH dem P6-Filter,
     # so dass beide zusammen wirken können.
-    if expertise_level in ("intermediate", "expert"):
+    #
+    # KIS-1142 P6-C-solo-exempt: Solo bleibt von P3 unberührt. Sonst würde
+    # Solo+Intermediate/Expert nach P6-C's {w3, w4}-Drop auf eine einzige
+    # Governance-Woche degenerieren. P3's "Advanced braucht keine Basics"-
+    # Rationale rechtfertigt sich erst bei Team/KMU-Profil-Tiefe —
+    # Solo-Berater werden stattdessen über den P6-C-Filter zugeschnitten.
+    _company_size_norm = (company_size or "").strip().lower()
+    if expertise_level in ("intermediate", "expert") and _company_size_norm != "solo":
         challenge_data = _drop_first_week_and_renumber(challenge_data)
 
     # KIS-1132: Expertise-aware subtitle
