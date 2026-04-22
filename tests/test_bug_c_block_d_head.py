@@ -142,6 +142,25 @@ class TestBlockDHeadProducesQuickReplies:
 # ---------------------------------------------------------------------------
 
 class TestSessionStartSeedsConsent:
+    @staticmethod
+    def _run_coro(coro):
+        """Run a coroutine without polluting the thread's event-loop binding.
+
+        Deliberately avoids ``asyncio.run()`` because it calls
+        ``asyncio.set_event_loop(None)`` on exit — that breaks legacy
+        tests elsewhere in the suite which rely on
+        ``asyncio.get_event_loop()`` (deprecated but still in use). A
+        locally-scoped fresh loop leaves the thread's current-loop
+        binding untouched.
+        """
+        import asyncio
+
+        loop = asyncio.new_event_loop()
+        try:
+            return loop.run_until_complete(coro)
+        finally:
+            loop.close()
+
     def _run_chat_start(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -152,8 +171,6 @@ class TestSessionStartSeedsConsent:
     ) -> "Any":
         """Invoke ``chat_start`` with enough stubs that we can read back the
         ChatSession that would have been persisted."""
-        import asyncio
-
         from routes import chat as chat_mod
 
         captured: dict[str, Any] = {}
@@ -191,7 +208,7 @@ class TestSessionStartSeedsConsent:
             prefill=prefill,
             briefing_id=briefing_id,
         )
-        asyncio.run(chat_start(req, request, db=_DBMock()))
+        self._run_coro(chat_start(req, request, db=_DBMock()))
         return captured["session"]
 
     def test_r1_seeds_datenschutz_true(self, monkeypatch):
