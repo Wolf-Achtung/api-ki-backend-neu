@@ -2259,6 +2259,38 @@ CHALLENGE_30_TAGE = {
     }
 }
 
+# =============================================================================
+# KIS-1142 Punkt 6 Variante C: Challenge-Wochen-Opt-in per company size
+# =============================================================================
+# Maps company_size → set of week-keys that should NOT be rendered. Empty
+# sets act as no-ops. Populate when Wolf decides which week arcs feel
+# out-of-scale for the target profile (e.g. governance-heavy weeks for
+# solo freelancers). The filter runs AFTER challenge-variant selection
+# (beginner/intermediate/expert), so solo-on-expert can still be trimmed.
+_CHALLENGE_WEEKS_SKIP_BY_SIZE: Dict[str, set] = {
+    "solo": set(),
+    "team": set(),
+    "kmu":  set(),
+}
+
+
+def _filter_challenge_weeks_by_size(
+    challenge_data: Dict[str, Any], company_size: str,
+) -> Dict[str, Any]:
+    """Drop week-keys flagged as out-of-scale for the given company size.
+
+    No-op unless _CHALLENGE_WEEKS_SKIP_BY_SIZE has entries for the size.
+    The challenge-variant selection runs before this filter, so the input
+    is always one of CHALLENGE_30_TAGE / _INTERMEDIATE / _EXPERT / _LIGHT.
+    """
+    skip_keys = _CHALLENGE_WEEKS_SKIP_BY_SIZE.get(
+        (company_size or "").strip().lower(), set(),
+    )
+    if not skip_keys:
+        return challenge_data
+    return {k: v for k, v in challenge_data.items() if k not in skip_keys}
+
+
 KATEGORIE_ICONS = {
     "Setup": "⚙️",
     "Praxis": "💪",
@@ -2673,6 +2705,11 @@ def generate_30_tage_challenge_html_v2(
         show_prio = True
     else:
         challenge_data = CHALLENGE_30_TAGE
+
+    # KIS-1142 Punkt 6 Variante C: trim weeks flagged as out-of-scale for
+    # the user's company size. No-op until _CHALLENGE_WEEKS_SKIP_BY_SIZE
+    # is populated; wired now so the opt-in hook ships with the branch.
+    challenge_data = _filter_challenge_weeks_by_size(challenge_data, company_size)
 
     # KIS-1132: Expertise-aware subtitle
     if expertise_level == "expert":
