@@ -682,7 +682,7 @@ def recommend_tools(
         _before = len(tools)
         tools = [t for t in tools if _fits_budget(t, _budget_band)]
         if _before != len(tools):
-            logger.info(
+            log.info(
                 "[tools_recommender] budget filter (%s): %d → %d tools",
                 _budget_band, _before, len(tools),
             )
