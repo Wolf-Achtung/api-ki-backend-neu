@@ -424,20 +424,14 @@ CONDITIONALS: dict[str, dict] = {
         "show_if": {"country": ["DE", "AT", "CH", "GB"]},
         "hide_action": "delete",
     },
-    # Section 6: Extended compliance fields only for regulated industries
-    "technische_massnahmen": {
-        "show_if": {"branche": ["gesundheit", "finanzen", "verwaltung"]},
-        "hide_action": "skip",
-    },
+    # Section 6: Compliance fields
+    # FIX-KIS-1153: technische_massnahmen, meldewege and loeschregeln apply
+    # to every branche under DSGVO (Art. 32 / 33 / 17) — gating them on
+    # regulated branches left non-regulated users with uncomputed security
+    # scores (KIS-1153 Solo Beratung hit 40/100 because these fields never
+    # reached the scorer). Only the Datenschutz-Folgenabschätzung (Art. 35)
+    # remains regulated-only, as it targets Hoch-Risiko-Verarbeitungen.
     "folgenabschaetzung": {
-        "show_if": {"branche": ["gesundheit", "finanzen", "verwaltung"]},
-        "hide_action": "skip",
-    },
-    "meldewege": {
-        "show_if": {"branche": ["gesundheit", "finanzen", "verwaltung"]},
-        "hide_action": "skip",
-    },
-    "loeschregeln": {
         "show_if": {"branche": ["gesundheit", "finanzen", "verwaltung"]},
         "hide_action": "skip",
     },
