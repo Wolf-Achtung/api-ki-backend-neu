@@ -379,6 +379,9 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         "section_s7": _strip_prompt_leaks(_strip_funding_total(sections.get("S7", ""))),
         "section_s8": _strip_prompt_leaks(sections.get("S8", "")),
         "section_s_moat": _strip_prompt_leaks(sections.get("s_moat", "")),
+        # KIS-1142 Punkt 5: Persönliche Einschätzung (Strategy-Äquivalent zum
+        # R1 advisor_note). Rendered between s_moat and "Nächste Schritte".
+        "section_advisor_note": _strip_prompt_leaks(sections.get("advisor_note", "")),
         "naechste_schritte": naechste_schritte,
     }
 
