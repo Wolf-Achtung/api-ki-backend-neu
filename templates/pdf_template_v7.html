@@ -1459,10 +1459,15 @@ h1, h2, h3, h4 {
 
     {% if SKIP_HINT %}
     <div class="skip-hint"><strong>Bei Ihrem Score ({{ score_int }}/100):</strong> {{ SKIP_HINT }}</div>
-    {% elif score_int >= 80 %}
-    <div class="skip-hint"><strong>Bei Ihrem Score ({{ score_int }}/100):</strong> Grundlagen-Prompts und 30-Tage-Challenge können Sie überspringen. Fokussieren Sie auf: Quick Wins, Vendor-Audit und KI-Potenzial-Analyse.</div>
-    {% elif score_int >= 50 %}
-    <div class="skip-hint"><strong>Bei Ihrem Score ({{ score_int }}/100):</strong> Die 30-Tage-Challenge Woche 1 können Sie überspringen. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
+    {# KIS-1142 P3: Der Hinweis-Text steuert jetzt auf expertise_level,
+       nicht auf den Score — das ist präziser (ein hoher Score aus Budget
+       oder Governance allein macht niemanden zum Workflow-Profi) und
+       spiegelt das Rendering korrekt wider (Woche 1 wird für Intermediate/
+       Expert tatsächlich aus der Challenge entfernt, nicht nur empfohlen). #}
+    {% elif expertise_level == "expert" %}
+    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (fortgeschritten):</strong> Die 30-Tage-Challenge startet direkt mit Stack-Optimierung und Governance — die Einstiegs-Woche entfällt. Fokussieren Sie auf: Quick Wins, Vendor-Audit und KI-Potenzial-Analyse.</div>
+    {% elif expertise_level == "intermediate" %}
+    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (erfahren):</strong> Die 30-Tage-Challenge überspringt die Grundlagen-Woche und startet mit Workflow-Integration. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
     {% endif %}
 </div>
 
