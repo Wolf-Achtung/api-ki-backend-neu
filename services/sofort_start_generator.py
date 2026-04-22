@@ -2291,6 +2291,55 @@ def _filter_challenge_weeks_by_size(
     return {k: v for k, v in challenge_data.items() if k not in skip_keys}
 
 
+# =============================================================================
+# KIS-1142 Punkt 3: Drop-first-week helper for Intermediate/Expert
+# =============================================================================
+#
+# The challenge dicts (CHALLENGE_30_TAGE, _INTERMEDIATE, _EXPERT, _LIGHT) all
+# keep their tage numbered sequentially (1..30) so the beginner rendering
+# reads as a true 30-day journey.  When we drop the first week for
+# intermediate / expert users, the remaining weeks would otherwise start
+# with "Tag 8" — confusing, since the template already bills it as
+# "Challenge-Start".  ``_drop_first_week_and_renumber`` returns a shallow
+# copy with the first ``woche_*`` entry removed and every remaining
+# ``tag_data["tag"]`` renumbered from 1 upwards.  Source dict stays
+# untouched (same defensive pattern as _filter_options_by_profile in
+# routes/chat.py).
+
+
+def _drop_first_week_and_renumber(challenge_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Drop the first ``woche_*`` entry and renumber the remaining days."""
+    if not challenge_data:
+        return challenge_data
+    items = list(challenge_data.items())
+    # Skip every leading entry whose key does not start with ``woche_`` — the
+    # "abschluss" tail is a separator, not a week. If the dict is
+    # abschluss-only (pathological), return as-is.
+    first_week_idx = next(
+        (i for i, (k, _) in enumerate(items) if k.startswith("woche_")),
+        None,
+    )
+    if first_week_idx is None:
+        return challenge_data
+    trimmed = items[:first_week_idx] + items[first_week_idx + 1:]
+    if not trimmed:
+        return challenge_data
+    result: Dict[str, Any] = {}
+    day_counter = 1
+    for key, week in trimmed:
+        week_copy = dict(week)
+        tage = week_copy.get("tage") or []
+        new_tage: List[Dict[str, Any]] = []
+        for tag in tage:
+            tag_copy = dict(tag)
+            tag_copy["tag"] = day_counter
+            new_tage.append(tag_copy)
+            day_counter += 1
+        week_copy["tage"] = new_tage
+        result[key] = week_copy
+    return result
+
+
 KATEGORIE_ICONS = {
     "Setup": "⚙️",
     "Praxis": "💪",
@@ -2711,11 +2760,23 @@ def generate_30_tage_challenge_html_v2(
     # is populated; wired now so the opt-in hook ships with the branch.
     challenge_data = _filter_challenge_weeks_by_size(challenge_data, company_size)
 
+    # KIS-1142 Punkt 3: Woche 1 für Intermediate/Expert weglassen
+    # (Variante B aus Briefing 9). Der bisherige Widerspruch — das Template
+    # empfahl "Woche 1 überspringbar", das Rendering zeigte sie trotzdem —
+    # wird gelöst, indem die Woche hier wirklich aus challenge_data fällt
+    # und die Tages-Nummerierung der restlichen Wochen auf 1 zurückgesetzt
+    # wird. Das Template-Banner ("beginnt ab Woche 1") zeigt damit
+    # denselben Inhalt, den der Report rendert. Läuft NACH dem P6-Filter,
+    # so dass beide zusammen wirken können.
+    if expertise_level in ("intermediate", "expert"):
+        challenge_data = _drop_first_week_and_renumber(challenge_data)
+
     # KIS-1132: Expertise-aware subtitle
+    # KIS-1142 P3: Wochen-Anzahl ist jetzt 3 für Int/Expert (Woche 1 gedroppt).
     if expertise_level == "expert":
-        _subtitle = "Stack-Optimierung und Governance in 4 Wochen"
+        _subtitle = "Stack-Optimierung und Governance in 3 Wochen"
     elif expertise_level == "intermediate":
-        _subtitle = "Vom Anwender zum Workflow-Profi in 4 Wochen"
+        _subtitle = "Vom Anwender zum Workflow-Profi in 3 Wochen"
     else:
         _subtitle = "Von Null auf KI-Profi – angepasst an Ihr Zeitbudget"
 
