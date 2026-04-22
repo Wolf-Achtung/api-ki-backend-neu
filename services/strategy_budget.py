@@ -175,6 +175,29 @@ def _get_segment(briefing_data: Dict[str, Any]) -> str:
         return "KMU"
 
 
+# FIX-KIS-1153: Mirror the customer's stated s1_budget choice verbatim
+# in the report. Previously the _BUDGET_PROFILES bucket key was shown
+# (e.g. "5.000–15.000€"), misrepresenting a "2.000–10.000 €" selection.
+_BUDGET_USER_LABELS = {
+    "unter_2000":  "Unter 2.000 €",
+    "2000_10000":  "2.000 – 10.000 €",
+    "10000_50000": "10.000 – 50.000 €",
+    "ueber_50000": "Über 50.000 €",
+    "unklar":      "Noch unklar",
+}
+
+
+def _user_budget_label(s1_budget: str) -> str:
+    """Return a display label that matches the customer's own budget selection."""
+    if not s1_budget:
+        return "Noch unklar"
+    key = s1_budget.strip().lower()
+    if key in _BUDGET_USER_LABELS:
+        return _BUDGET_USER_LABELS[key]
+    # Legacy path: caller already passed a human label — preserve it
+    return s1_budget
+
+
 def _match_budget_key(s1_budget: str) -> str:
     """Match the s1_budget string to a _BUDGET_PROFILES key (fuzzy)."""
     if not s1_budget:
@@ -368,7 +391,7 @@ def calculate_strategy_budget(
     )
 
     return StrategyBudget(
-        s1_budget_label=budget_key,
+        s1_budget_label=_user_budget_label(s1_budget),
         budget_software_monatlich=software_monatlich,
         budget_software_jaehrlich=software_jaehrlich,
         budget_implementierung=implementierung,

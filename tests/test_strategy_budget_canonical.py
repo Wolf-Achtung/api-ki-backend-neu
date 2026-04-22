@@ -81,6 +81,33 @@ class TestPhaseSplit:
         assert b.budget_phase_3 == 3_600   # 30%
 
 
+class TestUserBudgetLabel:
+    """s1_budget_label must mirror the customer's own selection, not the profile bucket."""
+
+    @pytest.mark.parametrize("band,expected", [
+        ("unter_2000",  "Unter 2.000 €"),
+        ("2000_10000",  "2.000 – 10.000 €"),
+        ("10000_50000", "10.000 – 50.000 €"),
+        ("ueber_50000", "Über 50.000 €"),
+        ("unklar",      "Noch unklar"),
+    ])
+    def test_label_matches_user_choice(self, band, expected):
+        b = _calc("1", s1_budget=band)
+        assert b.to_dict()["s1_budget_label"] == expected
+
+    def test_kis_1153_scenario_no_bucket_leak(self):
+        """KIS-1153: user picked 2.000-10.000€, must not see 5.000-15.000€ in report."""
+        b = _calc("1", s1_budget="2000_10000")
+        label = b.to_dict()["s1_budget_label"]
+        assert "5.000" not in label
+        assert "15.000" not in label
+        assert "2.000" in label and "10.000" in label
+
+    def test_empty_budget_defaults_to_unklar(self):
+        b = _calc("1", s1_budget="")
+        assert b.to_dict()["s1_budget_label"] == "Noch unklar"
+
+
 class TestR1CapexOverride:
     """R1's CANON_CAPEX_EUR, when present, overrides the fallback canonical."""
 
