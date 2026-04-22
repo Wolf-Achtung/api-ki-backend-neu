@@ -2131,8 +2131,12 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
             # KIS-1124 Testrun 3 Bugs 16+17: Show QR buttons for fields that
             # need structured input (digitalisierungsgrad, ki_kompetenz) to
             # prevent Doppelfrage and unclear free text answers.
+            # KIS-1142: ki_ziele added — multi-select with 8 canonical options
+            # in _QR_OPTIONS. Freetext answers still accepted via
+            # _FREETEXT_EXTRACTION_FIELDS (extractor preserves user wording).
             _p1b_qr_fields = [f for f in next_fields
-                              if f in ("digitalisierungsgrad", "ki_kompetenz")]
+                              if f in ("digitalisierungsgrad", "ki_kompetenz",
+                                       "ki_ziele")]
             quick_replies = _build_quick_replies(
                 _p1b_qr_fields, rt, collected, _profile_ctx,
             ) if _p1b_qr_fields else []
