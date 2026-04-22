@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
@@ -67,7 +67,7 @@ async def submit_briefing(
         is_dup, cached = idem_result
         if is_dup:
             if cached is not None:
-                return cached
+                return cast(Dict[str, Any], cached)
             # Erster Call noch in-flight oder fehlgeschlagen → Stub
             return {"status": "duplicate_ignored"}
 
