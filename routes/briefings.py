@@ -61,9 +61,15 @@ async def submit_briefing(
     """
     s = get_settings()
 
-    # Idempotency
-    if _idempotency_box.is_duplicate(request):
-        return {"status": "duplicate_ignored"}
+    # Idempotency — zweiter Call mit gleichem Key liefert die gecachte Response des ersten.
+    idem_result = _idempotency_box.check(request)
+    if idem_result is not None:
+        is_dup, cached = idem_result
+        if is_dup:
+            if cached is not None:
+                return cached
+            # Erster Call noch in-flight oder fehlgeschlagen → Stub
+            return {"status": "duplicate_ignored"}
 
     # Rate-Limit pauschal
     _briefing_rate_limiter.hit(key=request.client.host if request.client else "unknown")
@@ -173,10 +179,14 @@ async def submit_briefing(
         # Service-Principal hinzufügen wenn Service-Token verwendet
         if service_principal:
             response["service_principal"] = service_principal
+        # Response cachen, damit identischer Retry dieselbe Antwort bekommt
+        _idempotency_box.remember(request, response)
         return response
 
     except Exception as e:
         db.rollback()
+        # Key entfernen, damit der Client mit gleichem Key einen sauberen Retry fahren kann
+        _idempotency_box.forget(request)
         log.error("Failed to save briefing: %s", str(e), exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
