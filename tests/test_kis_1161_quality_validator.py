@@ -167,9 +167,19 @@ class TestNormalizeFieldTextFT:
         r = normalize_field("hauptleistung", "Beratung", {}, "r1")
         assert r.confidence == "low"
 
-    def test_keine_angabe_still_passes(self):
-        # KIS-1160 skip path must stay intact.
+    def test_keine_angabe_omits_strategy_ft_field(self):
+        # KIS-1136 rest-fix (Option 6): for the four strategy FT fields
+        # "keine_angabe" must NOT write "" — instead return low confidence
+        # so the caller omits the field from `collected`/`answers` and the
+        # partially-surveyed marker can short-circuit the section.
         r = normalize_field("strategische_ziele", "keine_angabe", {}, "r1")
+        assert r.confidence == "low"
+        assert r.value is None
+
+    def test_keine_angabe_still_passes_for_non_strategy_ft(self):
+        # Generic optional text fields (e.g. hauptleistung) keep the legacy
+        # skip path: "keine_angabe" → empty string with high confidence.
+        r = normalize_field("hauptleistung", "keine_angabe", {}, "r1")
         assert r.confidence == "high"
         assert r.value == ""
 
