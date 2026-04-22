@@ -3326,6 +3326,34 @@ def _build_session_state(
             field_examples = list(FIELD_EXAMPLES[_next_field])
             field_examples_for = _next_field
 
+    # KIS-1139: Drop chips the user has already chosen for this field. On a
+    # clarifying follow-up turn Sonnet re-asks the same field, so field_examples
+    # points at it again — without this filter the user sees their own previous
+    # answer back as an inspiration chip. Sources of "already given":
+    #   - collected[field] after commit
+    #   - draft_state.pending_value mid-draft (the actual bug state; value is
+    #     staged in draft_state but not yet in collected_fields).
+    # When every chip was consumed, return None so the UI renders nothing
+    # instead of an empty chip bar.
+    if field_examples and field_examples_for:
+        _draft_for_filter = getattr(session, "draft_state", None) or {}
+        _used: set[str] = set()
+        _collected_answer = collected.get(field_examples_for)
+        if isinstance(_collected_answer, str) and _collected_answer.strip():
+            _used.add(_collected_answer.strip().casefold())
+        if _draft_for_filter.get("pending_field") == field_examples_for:
+            _pv = _draft_for_filter.get("pending_value")
+            if isinstance(_pv, str) and _pv.strip():
+                _used.add(_pv.strip().casefold())
+        if _used:
+            field_examples = [
+                chip for chip in field_examples
+                if chip.strip().casefold() not in _used
+            ]
+            if not field_examples:
+                field_examples = None
+                field_examples_for = None
+
     total = len(registry)
     collected_count = len(collected)
 
