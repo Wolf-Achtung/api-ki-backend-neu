@@ -233,8 +233,8 @@ class TestReportWorkflow:
 
     @patch("gpt_analyze.run_async")
     def test_05_idempotency(self, mock_run_async, client, auth_headers):
-        """Test 5: Idempotenz verhindert doppelte Requests"""
-        # Mock run_async to prevent actual API calls
+        """Test 5: Idempotenter Retry liefert identische Response (inkl. briefing_id),
+        statt einen zweiten DB-Insert zu triggern."""
         mock_run_async.return_value = None
 
         payload = {
@@ -255,11 +255,77 @@ class TestReportWorkflow:
         # Erster Request
         response1 = client.post("/api/briefings/submit", json=payload, headers=headers)
         assert response1.status_code == 202
+        body1 = response1.json()
+        assert body1["status"] == "queued"
+        assert "briefing_id" in body1
 
-        # Zweiter Request mit gleichem Key
+        # Zweiter Request mit gleichem Key → identische Response
         response2 = client.post("/api/briefings/submit", json=payload, headers=headers)
         assert response2.status_code == 202
-        assert response2.json()["status"] == "duplicate_ignored"
+        body2 = response2.json()
+        assert body2 == body1, "Zweiter Call muss gecachte Response zurückliefern"
+        assert body2["briefing_id"] == body1["briefing_id"]
+
+        # Sanity: DB hat nur einen Briefing-Eintrag mit dieser ID, kein zweiter Insert
+        from models import Briefing
+        from routes._bootstrap import get_db
+        db_gen = client.app.dependency_overrides[get_db]()
+        db = next(db_gen)
+        try:
+            count = db.query(Briefing).count()
+            assert count == 1, f"Erwartete genau 1 Briefing-Zeile, gefunden: {count}"
+        finally:
+            db.close()
+
+    @patch("gpt_analyze.run_async")
+    def test_06_idempotency_ttl_expiry(self, mock_run_async, client, auth_headers):
+        """Test 6: Nach TTL-Ablauf darf gleicher Key wieder verarbeitet werden."""
+        mock_run_async.return_value = None
+
+        payload = {
+            "lang": "de",
+            "answers": {
+                "branche": "IT",
+                "bundesland": "Bayern",
+                "jahresumsatz": "1-5M",
+                "unternehmensgroesse": "10-50",
+                "ki_kompetenz": "Anfänger",
+                "hauptleistung": "Software",
+                "antworten": []
+            }
+        }
+
+        headers = auth_headers | {"Idempotency-Key": "ttl-key-67890"}
+
+        # Erster Request
+        response1 = client.post("/api/briefings/submit", json=payload, headers=headers)
+        assert response1.status_code == 202
+        briefing_id_1 = response1.json()["briefing_id"]
+
+        # Box der Route manuell altern lassen (TTL auf 0 setzen + purge erzwingen)
+        import time
+        from routes import briefings as briefings_route
+        box = briefings_route._idempotency_box
+        original_ttl = box.ttl
+        try:
+            box.ttl = 0
+            # Purge triggern durch eine Pseudo-Abfrage mit time-Versatz
+            with box._lock:
+                box._purge_locked(time.time() + 1)
+
+            # Zweiter Request mit gleichem Key → wird neu verarbeitet
+            response2 = client.post("/api/briefings/submit", json=payload, headers=headers)
+            assert response2.status_code == 202
+            briefing_id_2 = response2.json()["briefing_id"]
+            assert briefing_id_2 != briefing_id_1, "Nach TTL-Ablauf muss neuer Briefing-Eintrag entstehen"
+        finally:
+            box.ttl = original_ttl
+
+    def test_07_idempotency_default_ttl_is_30min(self):
+        """Test 7: Default-TTL der IdempotencyBox ist 1800 Sekunden (30 Min)."""
+        from utils.idempotency import IdempotencyBox
+        box = IdempotencyBox(namespace="ttl-default-check")
+        assert box.ttl == 1800
 
 
 class TestReportGeneration:
