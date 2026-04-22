@@ -1099,16 +1099,19 @@ def _generate_recommendations(
     us_no_dpa = [e for e in entries if e.jurisdiction == "US" and not e.has_dpa]
     if us_no_dpa:
         names = ", ".join([e.name for e in us_no_dpa[:2]])
+        # KIS-1142 P2: "abschliessen" → "prüfen und ggf. nachholen"
+        # (konstatieren statt befehlen).
         recommendations.append(
-            f"DPA (Data Processing Agreement) mit US-Anbietern abschliessen: {names}"
+            f"DPA (Data Processing Agreement) mit US-Anbietern prüfen und ggf. nachholen: {names}"
         )
 
     # Check for red vendors
     red_vendors = [e for e in entries if e.overall_category == "red"]
     if red_vendors:
         names = ", ".join([e.name for e in red_vendors[:2]])
+        # KIS-1142 P2: "sicherstellen" → "prüfen" (konstatieren statt befehlen).
         recommendations.append(
-            f"Hochrisiko-Anbieter prüfen, Risikominimierung durch AVV/DPA sicherstellen: {names}. Hinweis: Für LLM-Anbieter (OpenAI, Anthropic) existieren aktuell keine gleichwertigen EU-Alternativen — Fokus auf vertragliche Absicherung und Datenminimierung."
+            f"Hochrisiko-Anbieter prüfen, Risikominimierung durch AVV/DPA einordnen: {names}. Hinweis: Für LLM-Anbieter (OpenAI, Anthropic) existieren aktuell keine gleichwertigen EU-Alternativen — Fokus auf vertragliche Absicherung und Datenminimierung."
         )
 
     # Check for unknown data locations
@@ -1174,19 +1177,36 @@ def _generate_summary(
     red = sum(1 for e in entries if e.overall_category == "red")
     eu_compliant = sum(1 for e in entries if e.is_eu_compliant)
 
+    # KIS-1142 P2: Tonalität angeglichen an Strategy S8 (konstatieren statt
+    # befehlen). Summary schließt mit einem Kontextualisierungs-Satz ab, der
+    # klarmacht, dass der Audit-Status die Tools bewertet, nicht das
+    # Unternehmen (wörtlich aus strategy_prompts.py L101-108 übernommen).
     if lang == "en":
+        status = (
+            "Review required for high-risk vendors." if red > 0
+            else "No critical findings."
+        )
         return (
             f"Vendor audit completed for {total} tools/vendors. "
             f"Result: {green} green (low risk), {yellow} yellow (medium risk), {red} red (high risk). "
             f"{eu_compliant} vendors are EU-compliant. "
-            f"{'Immediate action required for high-risk vendors.' if red > 0 else 'No critical findings.'}"
+            f"{status} "
+            f"The audit status reflects the compliance posture of the listed "
+            f"tools only, not the overall AI-readiness status of your company."
         )
     else:
+        status = (
+            "Prüfbedarf bei Hochrisiko-Anbietern." if red > 0
+            else "Keine kritischen Befunde."
+        )
         return (
             f"Vendor-Audit für {total} Tools/Anbieter abgeschlossen. "
             f"Ergebnis: {green} grün (niedriges Risiko), {yellow} gelb (mittleres Risiko), {red} rot (hohes Risiko). "
             f"{eu_compliant} Anbieter sind EU-konform. "
-            f"{'Sofortiger Handlungsbedarf bei Hochrisiko-Anbietern.' if red > 0 else 'Keine kritischen Befunde.'}"
+            f"{status} "
+            f"Der Audit-Status bezieht sich auf den Konformitätsstatus der "
+            f"gelisteten Tools, nicht auf den Gesamt-KI-Readiness-Status "
+            f"Ihres Unternehmens."
         )
 
 
