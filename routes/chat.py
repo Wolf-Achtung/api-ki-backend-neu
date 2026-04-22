@@ -64,6 +64,7 @@ from services.chat_normalizer import (
     normalize_field,
 )
 from services.field_templates import (
+    FIELD_DESCRIPTIONS_SHORT,
     FIELD_EXAMPLES,
     FIELD_QUESTIONS,
     get_confirmation,
@@ -4152,6 +4153,7 @@ def _build_quick_replies(
             field=field_name, label=label, options=options,
             multi_select=is_multi, max_select=max_sel,
             optional=is_optional,
+            description=FIELD_DESCRIPTIONS_SHORT.get(field_name),
         ))
 
     return replies
