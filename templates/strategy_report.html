@@ -1186,6 +1186,17 @@ sup.src-ref {
     </div>
     {% endif %}
 
+    <!-- ====== PERSÖNLICHE EINSCHÄTZUNG (KIS-1142 Punkt 5) ====== -->
+    {% if section_advisor_note and section_advisor_note|trim %}
+    <div class="section" id="advisor-note">
+        <div class="advisor-note">
+            <div class="advisor-note-title">Meine Einschätzung für Ihr Unternehmen</div>
+            <div class="advisor-note-text">{{ section_advisor_note | safe }}</div>
+            <div class="advisor-note-sig">Wolf Hohl · TÜV-zertifizierter KI-Manager</div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- ====== NÄCHSTE SCHRITTE ====== -->
     {{ chapter_banner("Ihre nächsten Schritte") }}
     <div class="section-content">

@@ -284,6 +284,12 @@ async def generate_strategy_report(
             "readiness_score": _score,
             "reifegrad": _reifegrad_label,
             "reifegrad_label": _reifegrad_label,
+            # KIS-1142 Punkt 5: R1 dimension scores for advisor_note prompt.
+            # _dim_vals order matches [_r1_scores.governance, .security, .value, .enablement].
+            "r1_score_governance": str(int(_dim_vals[0])) if _dim_vals[0] else "",
+            "r1_score_sicherheit": str(int(_dim_vals[1])) if _dim_vals[1] else "",
+            "r1_score_nutzen":     str(int(_dim_vals[2])) if _dim_vals[2] else "",
+            "r1_score_befaehigung": str(int(_dim_vals[3])) if _dim_vals[3] else "",
             # S31-FIX-C: R1 ROI values for bridge explanation
             "r1_roi_pct": str(_r1_roi_12m),
             "r1_capex": str(_r1_capex),
@@ -492,13 +498,24 @@ async def generate_strategy_report(
             base_context.get("breakeven_optimistisch", "EMPTY"),
         )
 
-        sections["exec_summary"] = await _generate_section("EXEC", base_context, {
+        # KIS-1142 Punkt 5: Executive Summary + advisor_note (Persönliche
+        # Einschätzung) run in parallel — both depend on S3/S5/S7 being
+        # finished but are otherwise independent. advisor_note uses
+        # base_context only (R1 dim scores + Strategy questions are already
+        # populated there).
+        exec_task = _generate_section("EXEC", base_context, {
             "top_handlungsfeld": _extract_top_handlungsfeld(sections["S3"]),
             "anzahl_felder": str(len(handlungsfelder)),
             "quick_win": _extract_quick_win(sections["S3"]),
             "summe_foerder": _extract_foerder_summe(sections["S7"]),
             "s5_investition_summary": _extract_summary(sections["S5"], max_words=150),
         }, use_claude=True)
+        advisor_task = _generate_section("advisor_note", base_context, {},
+                                         use_claude=True)
+
+        sections["exec_summary"], sections["advisor_note"] = await asyncio.gather(
+            exec_task, advisor_task,
+        )
 
         # === FIX-SF1: Strategy Fact Sanitizer ===
         # Snapshot raw LLM outputs before sanitizer (for re-render / sanitizer iteration)
