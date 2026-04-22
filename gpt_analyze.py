@@ -1811,6 +1811,10 @@ def _map_german_to_english_keys(answers: Dict[str, Any]) -> Dict[str, Any]:
     meldewege = answers.get("meldewege", "")
     m["_sec_meldewege_bonus"] = 4 if meldewege == "ja" else (2 if meldewege == "teilweise" else 0)
 
+    # --- loeschregeln → security bonus (FIX-KIS-1153) ---
+    loeschregeln = answers.get("loeschregeln", "")
+    m["_sec_loeschregeln_bonus"] = 3 if loeschregeln == "ja" else (1 if loeschregeln == "teilweise" else 0)
+
     # --- digitalisierungsgrad → enablement indicator ---
     try:
         _digi_raw = int(answers.get("digitalisierungsgrad", 5) or 5)
@@ -1850,6 +1854,7 @@ def _calculate_realistic_score(answers: Dict[str, Any]) -> Dict[str, Any]:
     sec += 6 if m.get("risk_assessment") == "yes" else 0
     sec += 4 if m.get("security_training") in ["regular", "occasional"] else 0
     sec += m.get("_sec_meldewege_bonus", 0)  # FIX-B729-P2: Incident reporting bonus
+    sec += m.get("_sec_loeschregeln_bonus", 0)  # FIX-KIS-1153: Deletion rules bonus
     val += m.get("_value_points_from_uses", 0)
     roi = m.get("roi_expected", "")
     val += 7 if roi in ["high", "medium"] else (3 if roi == "low" else 0)
@@ -2023,11 +2028,17 @@ def _calibrate_scores(scores: Dict[str, int], answers: Dict[str, Any]) -> Dict[s
     # Special handling for security score
     # Security should NEVER be 100% unless extensive measures are documented
     if calibrated.get("security", 0) > 85:
-        # Check for comprehensive security measures
-        has_dsgvo = answers.get("dsgvo_konform") in ["ja", "yes", True]
-        has_security_training = answers.get("sicherheitsschulung") in ["ja", "yes", "regelmaessig", True]
-        has_risk_assessment = answers.get("risikobewertung") in ["ja", "yes", True]
-        has_data_protection = answers.get("datenschutzbeauftragter") in ["ja", "yes", True]
+        # FIX-KIS-1153: Use the same field names as _map_german_to_english_keys
+        # so this reality check actually triggers when briefing answers indicate it.
+        has_dsgvo = (
+            answers.get("datenschutz") is True
+            or answers.get("datenschutzbeauftragter") in ["ja", "yes", True]
+        )
+        has_security_training = bool(answers.get("trainings_interessen"))
+        has_risk_assessment = answers.get("folgenabschaetzung") in ["ja", "yes", True]
+        has_data_protection = answers.get("technische_massnahmen") in [
+            "alle", "teilweise", "comprehensive", "basic", "yes", True,
+        ]
 
         security_measures = sum([has_dsgvo, has_security_training, has_risk_assessment, has_data_protection])
 
