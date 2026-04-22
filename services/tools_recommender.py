@@ -19,6 +19,7 @@ import json
 import logging
 import math
 import os
+import re
 import statistics
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timedelta
@@ -554,6 +555,88 @@ def get_segment_weight(
 
 
 # =============================================================================
+# KIS-1142 Punkt 6 Variante B: Budget-aware tool filter
+# =============================================================================
+
+# investitionsbudget enum → max monthly entry-level cost (€/month) per tool.
+# None = no cap (don't filter). "ueber_50000" and "unklar" also bypass the
+# filter — never penalise enterprise buyers or users with missing data.
+_BUDGET_BAND_MAX_MONTHLY: Dict[str, Optional[int]] = {
+    "unter_2000":     30,
+    "2000_10000":    100,
+    "10000_50000":   500,
+    "ueber_50000":  None,
+    "unklar":       None,
+}
+
+
+def _parse_price_min_monthly(price: str) -> Optional[int]:
+    """Extract the minimum monthly €-amount a user would pay for the tool.
+
+    Returns None when the price string is usage-based or otherwise
+    unparseable — callers should treat None as "unknown, keep the tool"
+    rather than "free, keep the tool".
+
+    Examples:
+        '0–29 €/Monat'         → 0
+        '0–10 €/Monat'         → 0
+        'Free / ab 18 €/Monat' → 0   (free tier available)
+        'Kostenlos'            → 0
+        'ab 9 €/Monat'         → 9
+        'ab ~5 € (Nutzung)'    → 5
+        'Usage-basiert'        → None
+        'Usage'                → None
+    """
+    if not price:
+        return None
+    s = price.strip().lower()
+    if "kostenlos" in s or s.startswith("free"):
+        # "Free / ab 18 …" → users can start at €0.
+        return 0
+    if s.startswith("usage") or "usage" in s and "€" not in s:
+        return None
+    # Ranges like "0–29 €/Monat" or "0-10 €/Monat" — take the low end.
+    range_match = re.match(r"\s*(\d+)\s*[–-]\s*(\d+)", s)
+    if range_match:
+        try:
+            return int(range_match.group(1))
+        except ValueError:
+            pass
+    # Open-ended like "ab 9 €" or "ab ~5 €".
+    ab_match = re.search(r"ab\s*~?\s*(\d+)", s)
+    if ab_match:
+        try:
+            return int(ab_match.group(1))
+        except ValueError:
+            pass
+    # Last resort: first integer anywhere in the string.
+    num_match = re.search(r"(\d+)", s)
+    if num_match:
+        try:
+            return int(num_match.group(1))
+        except ValueError:
+            pass
+    return None
+
+
+def _fits_budget(tool: Dict[str, Any], budget_band: str) -> bool:
+    """True if the tool's minimum monthly entry cost fits the budget band.
+
+    Tools with unparseable ("Usage-basiert") prices are always kept — we'd
+    rather show an unknown-cost tool than drop a potentially critical
+    recommendation because of a price-string edge case.
+    """
+    cap = _BUDGET_BAND_MAX_MONTHLY.get(budget_band)
+    if cap is None:
+        return True
+    price = tool.get("price", "")
+    min_monthly = _parse_price_min_monthly(str(price))
+    if min_monthly is None:
+        return True
+    return min_monthly <= cap
+
+
+# =============================================================================
 # MAIN RECOMMENDATION ENGINE
 # =============================================================================
 
@@ -589,6 +672,20 @@ def recommend_tools(
     groesse = (b.get("unternehmensgroesse") or b.get("groesse") or "").lower()
     hauptleistung = (b.get("hauptleistung") or "").lower()
     ai_act_risk = (b.get("ai_act_risk_level") or b.get("risk_level") or "minimal").lower()
+
+    # KIS-1142 Punkt 6 Variante B: budget-aware pre-filter.
+    # Drops tools whose minimum monthly entry cost exceeds what the user's
+    # budget band can reasonably absorb per tool. Applied before scoring so
+    # segment weighting doesn't silently rank an unaffordable tool to the top.
+    _budget_band = (b.get("investitionsbudget") or "").strip().lower()
+    if _budget_band and _BUDGET_BAND_MAX_MONTHLY.get(_budget_band) is not None:
+        _before = len(tools)
+        tools = [t for t in tools if _fits_budget(t, _budget_band)]
+        if _before != len(tools):
+            log.info(
+                "[tools_recommender] budget filter (%s): %d → %d tools",
+                _budget_band, _before, len(tools),
+            )
 
     # Normalize size
     if "solo" in groesse or "1" in groesse or "freiberuf" in groesse:
