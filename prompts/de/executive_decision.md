@@ -77,20 +77,25 @@ INHALTLICHE VERDICHTUNG (nutze nur vorhandene Konzepte):
 - "Tool-Zoo / Ad-hoc-Prompts ohne Standards" = No-Go
 - Stop-Regel: max. 2 parallele Initiativen; nach 14 Tagen ohne messbaren Effekt = vereinfachen oder stoppen
 
-OUTPUT (HTML ONLY, exakt einhalten):
+OUTPUT-FORMAT (HTML ONLY, exakt einhalten):
 
-Genau ein Outer-Container: div.exec-decision-box
+```html
+<div class="exec-decision-box">
+  <p><strong>Ihre Entscheidung in 3 Punkten</strong></p>
+  <ul>
+    <li><strong>Tun:</strong> Ein konkreter Standard-Workflow, der sofort umsetzbar ist (vollständiger Satz).</li>
+    <li><strong>Lassen:</strong> Was ab sofort nicht mehr getan werden sollte (vollständiger Satz).</li>
+    <li><strong>Risiko &amp; Stop-Signal:</strong> Wann gestoppt und vereinfacht werden muss (vollständiger Satz).</li>
+  </ul>
+</div>
+```
 
-Reihenfolge:
-- p > strong: "Ihre Entscheidung in 3 Punkten"
-- ul mit genau 3 li
-
-Jeder li startet mit strong Label und danach ein vollständiger Satz:
-- "Tun:" — ein konkreter Standard-Workflow, der sofort umsetzbar ist
-- "Lassen:" — was Sie ab sofort nicht mehr tun sollten
-- "Risiko & Stop-Signal:" — wann Sie stoppen und vereinfachen müssen
-
-Keine eckigen Klammern, keine geschweiften Klammern, keine Platzhalter-Wörter.
+VOLLSTÄNDIGKEIT (zwingend):
+- Genau 3 <li>-Elemente mit den Labels "Tun:", "Lassen:", "Risiko & Stop-Signal:" — in dieser Reihenfolge.
+- Jedes <li> enthält einen vollständigen Satz mit Satzende (Punkt).
+- Die Platzhaltertexte im Template sind durch konkrete Inhalte zu ersetzen.
+- Keine eckigen Klammern, keine geschweiften Klammern, keine Platzhalter-Wörter.
+- Fehlt eines der drei Elemente, ist die Ausgabe ungültig.
 
 STIL:
 - Distanziert-professionell, wie ein externer Gutachter
