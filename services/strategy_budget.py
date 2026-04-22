@@ -17,6 +17,8 @@ import math
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
+from services.business_case_engine_v2 import CAPEX_DEFAULTS_BY_SIZE
+
 logger = logging.getLogger(__name__)
 
 
@@ -94,64 +96,22 @@ class StrategyBudget:
 # Phase splits are percentages -> phases ALWAYS sum to total.
 # =============================================================================
 
+# FIX-KIS-1153: Phase split percentages per budget-band.
+# The investment TOTAL comes from canonical CAPEX (CAPEX_DEFAULTS_BY_SIZE);
+# only the phase distribution varies by the customer's stated budget size.
 _BUDGET_PROFILES = {
-    "Unter 5.000€": {
-        "base_total": 4500,
-        "phase1_pct": 30,
-        "phase2_pct": 45,
-        "phase3_pct": 25,
-    },
-    "5.000–15.000€": {
-        "base_total": 12000,
-        "phase1_pct": 25,
-        "phase2_pct": 45,
-        "phase3_pct": 30,
-    },
-    "15.000–50.000€": {
-        "base_total": 35000,
-        "phase1_pct": 20,
-        "phase2_pct": 45,
-        "phase3_pct": 35,
-    },
-    "Über 50.000€": {
-        "base_total": 60000,
-        "phase1_pct": 20,
-        "phase2_pct": 45,
-        "phase3_pct": 35,
-    },
-    "Noch unklar": {
-        "base_total": 10000,
-        "phase1_pct": 25,
-        "phase2_pct": 45,
-        "phase3_pct": 30,
-    },
+    "Unter 5.000€":   {"phase1_pct": 30, "phase2_pct": 45, "phase3_pct": 25},
+    "5.000–15.000€":  {"phase1_pct": 25, "phase2_pct": 45, "phase3_pct": 30},
+    "15.000–50.000€": {"phase1_pct": 20, "phase2_pct": 45, "phase3_pct": 35},
+    "Über 50.000€":   {"phase1_pct": 20, "phase2_pct": 45, "phase3_pct": 35},
+    "Noch unklar":    {"phase1_pct": 25, "phase2_pct": 45, "phase3_pct": 30},
 }
 
-# Segment multiplier: Solo needs less investment than KMU
-_SEGMENT_MULTIPLIER = {
-    "Solo": 0.4,
-    "Team": 1.0,
-    "KMU": 1.8,
-}
-
-# Minimum credible total investment per segment (12-month TCO incl.
-# software, implementation, training, coordination).  Values below these
-# thresholds undermine report credibility — a professional AI strategy
-# cannot realistically be executed for less.
-_SEGMENT_FLOOR = {
-    "Solo": 8_000,
-    "Team": 18_000,
-    "KMU": 35_000,
-}
-
-# Budget upper-bound caps (from questionnaire options).
-# After segment scaling, investment must NOT exceed these limits.
-_BUDGET_CAPS = {
-    "Unter 5.000€": 4_500,
-    "5.000–15.000€": 14_000,
-    "15.000–50.000€": 48_000,
-    "Über 50.000€": None,   # no cap
-    "Noch unklar": None,     # no cap
+# Segment name map: local "Solo/Team/KMU" -> canonical key "solo/team/kmu"
+_SEGMENT_TO_CAPEX_KEY = {
+    "Solo": "solo",
+    "Team": "team",
+    "KMU":  "kmu",
 }
 
 # FIX-KIS-1080: Segment-specific hourly rates and time savings — aligned with canonical.
@@ -272,19 +232,22 @@ def calculate_strategy_budget(
     profile = _BUDGET_PROFILES[budget_key]
     params = _SEGMENT_PARAMS.get(segment, _SEGMENT_PARAMS["KMU"])
 
-    # === INVESTMENT: segment-scaled total, capped at budget upper bound ===
-    seg_mult = _SEGMENT_MULTIPLIER.get(segment, 1.0)
-    gesamt_jahr1 = int(profile["base_total"] * seg_mult)
-    cap = _BUDGET_CAPS.get(budget_key)
-    if cap is not None:
-        gesamt_jahr1 = min(gesamt_jahr1, cap)
-    # Enforce minimum credible investment per segment
-    floor = _SEGMENT_FLOOR.get(segment, 0)
-    if gesamt_jahr1 < floor:
-        logger.info("[Budget] Raising gesamt from %d to segment floor %d (%s)", gesamt_jahr1, floor, segment)
-        gesamt_jahr1 = floor
-    # Round to nearest 500€ for professional appearance
-    gesamt_jahr1 = round(gesamt_jahr1 / 500) * 500
+    # === INVESTMENT: canonical CAPEX (FIX-KIS-1153) ===
+    # Single source of truth shared with R1/KPA (CAPEX_DEFAULTS_BY_SIZE). The
+    # customer's stated budget band is preserved only as a display label; it
+    # never caps, scales, or floors the investment total. This keeps all three
+    # reports (R1, KPA, Strategy) aligned on the same figure for the segment.
+    capex_key = _SEGMENT_TO_CAPEX_KEY.get(segment, "team")
+    _r1_capex = report1_values.get("CANON_CAPEX_EUR") or report1_values.get("capex_eur")
+    if _r1_capex:
+        try:
+            gesamt_jahr1 = int(float(_r1_capex))
+        except (ValueError, TypeError):
+            logger.warning("[Budget] R1 CANON_CAPEX_EUR=%r unparseable; falling back to canonical default",
+                           _r1_capex)
+            gesamt_jahr1 = CAPEX_DEFAULTS_BY_SIZE.get(capex_key, CAPEX_DEFAULTS_BY_SIZE["team"])
+    else:
+        gesamt_jahr1 = CAPEX_DEFAULTS_BY_SIZE.get(capex_key, CAPEX_DEFAULTS_BY_SIZE["team"])
 
     # Phase budgets from percentages -> ALWAYS sum to total
     phase1 = int(gesamt_jahr1 * profile["phase1_pct"] / 100)
@@ -292,8 +255,8 @@ def calculate_strategy_budget(
     phase3 = gesamt_jahr1 - phase1 - phase2   # remainder ensures exact sum
 
     logger.info(
-        "[Budget] segment=%s (mult=%.1f), s1_budget=%r -> profile=%s, gesamt=%d (phase %d+%d+%d=%d)",
-        segment, seg_mult, s1_budget, budget_key, gesamt_jahr1,
+        "[Budget] segment=%s, s1_budget=%r -> profile=%s, gesamt=%d canonical (phase %d+%d+%d=%d)",
+        segment, s1_budget, budget_key, gesamt_jahr1,
         phase1, phase2, phase3, phase1 + phase2 + phase3,
     )
 
