@@ -64,6 +64,7 @@ from services.chat_normalizer import (
     normalize_field,
 )
 from services.field_templates import (
+    FIELD_DESCRIPTIONS_SHORT,
     FIELD_EXAMPLES,
     FIELD_QUESTIONS,
     get_confirmation,
@@ -193,12 +194,19 @@ PHASE_1_EXTRACTABLE_FIELDS: set[str] = {
 
 
 def _get_datenschutz_block_fields(branche: str) -> list[str]:
-    """Return Block D fields based on branche (Beratung → reduced set)."""
+    """Return Block D fields based on branche (Beratung → reduced set).
+
+    ``datenschutz`` is intentionally NOT part of this list: it's a consent
+    field (``skip_in_chat: True``), captured at session start via
+    ``req.consent_report`` and seeded into ``collected_fields`` there.
+    Including it here caused the Block-D head to ask a question with no
+    QR options (see Bug C diagnosis).
+    """
     if branche == "beratung":
-        return ["datenschutz", "datenschutzbeauftragter", "ai_act_kenntnis",
+        return ["datenschutzbeauftragter", "ai_act_kenntnis",
                 "ki_hemmnisse", "governance_richtlinien"]
     return [
-        "datenschutz", "datenschutzbeauftragter", "technische_massnahmen",
+        "datenschutzbeauftragter", "technische_massnahmen",
         "folgenabschaetzung", "meldewege", "loeschregeln",
         "ai_act_kenntnis", "regulierte_branche", "ki_hemmnisse",
         "governance_richtlinien",
@@ -529,12 +537,20 @@ async def chat_start(
     # Initialize phase_state for R1 sessions (hybrid conversation model)
     phase_state = _init_phase_state() if req.report_type == "r1" else {}
 
+    # Seed consent into collected_fields for r1 so Block D never lands on
+    # the ``datenschutz`` consent bool at the block head (Bug C fix).
+    # The prefill dict takes precedence — tests or form→chat handover may
+    # explicitly (un)set the flag.
+    initial_collected = dict(req.prefill or {})
+    if req.report_type == "r1" and "datenschutz" not in initial_collected:
+        initial_collected["datenschutz"] = True
+
     session = ChatSession(
         report_type=req.report_type,
         lang=req.lang,
         consent_report=True,
         consent_at=now,
-        collected_fields=req.prefill or {},
+        collected_fields=initial_collected,
         field_meta={},
         current_section=0,
         status="active",
@@ -4137,6 +4153,7 @@ def _build_quick_replies(
             field=field_name, label=label, options=options,
             multi_select=is_multi, max_select=max_sel,
             optional=is_optional,
+            description=FIELD_DESCRIPTIONS_SHORT.get(field_name),
         ))
 
     return replies

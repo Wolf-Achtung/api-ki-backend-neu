@@ -41,6 +41,12 @@ class QuickReply(BaseModel):
     multi_select: bool = False
     max_select: Optional[int] = None
     optional: bool = False
+    # Bug C H3: User-visible short help text rendered under / beside the
+    # buttons. None when a field has no dedicated short description.
+    # The long, DSGVO-article-laden FIELD_DESCRIPTIONS in
+    # services/chat_conversation.py stay Sonnet-internal — BLOCK_D_PROMPT
+    # forbids article numbers in user-facing strings.
+    description: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------

@@ -127,6 +127,45 @@ FIELD_EXAMPLES: dict[str, list[str]] = {
 
 
 # ──────────────────────────────────────────────────────────────────────
+# Bug C H3: Short, user-visible field descriptions surfaced via
+# QuickReply.description.
+#
+# DO NOT add DSGVO article numbers here — BLOCK_D_PROMPT's ARTIKEL-REGEL
+# forbids them in user-facing strings. The long descriptions with article
+# references live in services/chat_conversation.py:FIELD_DESCRIPTIONS and
+# are Sonnet-prompt-internal only.
+#
+# Texts reviewed and signed off by Wolf 2026-04-22. All entries ≤ ~80
+# chars so they fit under a chat bubble on mobile without clipping.
+# ──────────────────────────────────────────────────────────────────────
+
+FIELD_DESCRIPTIONS_SHORT: dict[str, str] = {
+    "datenschutzbeauftragter": (
+        "Ab 20 Mitarbeitenden mit systematischer Datenverarbeitung meist Pflicht."
+    ),
+    "technische_massnahmen": (
+        "Gemeint sind z. B. Verschlüsselung, Zugriffskontrolle, Backups."
+    ),
+    "folgenabschaetzung": (
+        "Nötig bei Verarbeitung sensibler oder umfangreicher personenbezogener Daten."
+    ),
+    "meldewege": (
+        "Wer informiert wen wie schnell bei Datenpannen oder Sicherheitsvorfällen?"
+    ),
+    "loeschregeln": (
+        "Regeln, wann und wie Daten gelöscht oder anonymisiert werden."
+    ),
+    "ai_act_kenntnis": (
+        "EU-Gesetz zur KI-Regulierung, schrittweise wirksam, "
+        "volle Anwendung ab August 2026."
+    ),
+    "ki_hemmnisse": (
+        "Mehrfachauswahl möglich — welche Hürden bremsen den KI-Einsatz?"
+    ),
+}
+
+
+# ──────────────────────────────────────────────────────────────────────
 # KIS-1128B V1-BE-3: Deterministic confirmation sentences
 #
 # Short confirmations prepended to the template question.
