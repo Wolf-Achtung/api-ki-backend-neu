@@ -547,7 +547,7 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     "zeitersparnis_prioritaet": "Welche Aufgabe kostet im Arbeitsalltag am meisten Zeit oder Nerven? (Freitext)",
     "pilot_bereich": "Bester Bereich für ein Pilotprojekt (Kundenservice, Marketing, Vertrieb, etc.)",
     "geschaeftsmodell_evolution": "Ideen, wie KI das Geschäftsmodell verändern könnte (Freitext)",
-    "vision_3_jahre": "Wie soll das Unternehmen in 2–3 Jahren mit KI arbeiten? (Freitext)",
+    "vision_3_jahre": "Langfrist-Vision: Wo soll das Unternehmen in 2–3 Jahren mit KI stehen? (Freitext)",
     # Sektion 4
     "strategische_ziele": "Was soll KI in 6–12 Monaten konkret verbessern? (Freitext)",
     "ki_guardrails": "No-Gos oder sensible Themen beim KI-Einsatz (Freitext)",
@@ -1491,6 +1491,11 @@ NOCH OFFENE FELDER IN DIESEM BLOCK:
 
 REGELN:
 - Stelle 1–2 offene Fragen zu Vision, Strategie und Governance.
+- FELD-BINDUNG (STRIKT): Deine Frage MUSS sich ausschließlich am \
+NÄCHSTES FELD festmachen. Übernimm KEINEN Zeitrahmen und KEIN Verb \
+aus anderen noch offenen Feldern dieses Blocks. KEIN Mix von \
+Feldsemantiken — auch wenn andere Block-B-Felder thematisch ähnlich \
+klingen, formuliere STRIKT nur zum aktuell gefragten Feld.
 - Bei "weiß nicht" / "kann ich nicht sagen" → Feld SOFORT \
 überspringen. NICHT insistieren, NICHT alternative \
 Formulierung versuchen.
