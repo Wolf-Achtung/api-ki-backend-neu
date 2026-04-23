@@ -109,9 +109,9 @@ FIELD_EXAMPLES: dict[str, list[str]] = {
         "KI als eigenständige Leistung vermarkten",
     ],
     "vision_3_jahre": [
-        "KI als fester Teil aller Kernprozesse",
-        "Doppelte Kapazität ohne zusätzliches Personal",
-        "Neue KI-basierte Produkte im Portfolio",
+        "KI ist fester Teil des Geschäftsmodells",
+        "Neue KI-basierte Angebote etabliert",
+        "Organisation arbeitet KI-nativ",
     ],
     "strategische_ziele": [
         "Wiederkehrende Aufgaben automatisieren und Zeit gewinnen",
