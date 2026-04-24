@@ -111,7 +111,7 @@ FIELD_EXAMPLES: dict[str, list[str]] = {
     "vision_3_jahre": [
         "KI ist fester Teil des Geschäftsmodells",
         "Neue KI-basierte Angebote etabliert",
-        "Organisation arbeitet KI-nativ",
+        "Gesamte Organisation arbeitet KI-nativ",
     ],
     "strategische_ziele": [
         "Wiederkehrende Aufgaben automatisieren und Zeit gewinnen",
