@@ -48,6 +48,12 @@ class TestVision3JahreChipsAreVisionFramed:
         for chip in FIELD_EXAMPLES["vision_3_jahre"]:
             assert "Kernprozesse" not in chip
 
+    def test_all_chips_have_at_least_four_words(self):
+        for chip in FIELD_EXAMPLES["vision_3_jahre"]:
+            assert len(chip.split()) >= 4, (
+                f"Chip '{chip}' violates KIS-1138 4-8 word rule"
+            )
+
 
 class TestBlockBPromptHasFieldBindingRule:
     """BLOCK_B_PROMPT must pin Sonnet strictly to the next_field to
