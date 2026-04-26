@@ -6,7 +6,10 @@
 #
 # Usage:
 #   chmod +x scripts/testrun_team_berlin.sh
-#   ./scripts/testrun_team_berlin.sh
+#   STRATEGY_ADMIN_KEY='<your-admin-key>' ./scripts/testrun_team_berlin.sh
+#
+# Optional:
+#   BASE='https://...'  override target (default: production)
 #
 # Führt Schritt 2–4 aus dem Briefing automatisch durch:
 #   2. Neuer Testrun mit korrektem Override
@@ -16,8 +19,16 @@
 
 set -euo pipefail
 
-BASE="https://api-ki-backend-neu-production.up.railway.app"
-KEY="S5vI07d8c6jP7u%2B2bmZfD3yQ9z1454lX7F6nUw2h45XQbM1A45"
+BASE="${BASE:-https://api-ki-backend-neu-production.up.railway.app}"
+
+if [ -z "${STRATEGY_ADMIN_KEY:-}" ]; then
+    printf '\033[31m❌ STRATEGY_ADMIN_KEY env-var ist nicht gesetzt.\033[0m\n' >&2
+    printf 'Beispiel: STRATEGY_ADMIN_KEY=... ./scripts/testrun_team_berlin.sh\n' >&2
+    exit 2
+fi
+
+# URL-encode the key (handles +, /, =, etc.) so it survives query-string transport
+KEY=$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$STRATEGY_ADMIN_KEY")
 
 green()  { printf '\033[32m✅ %s\033[0m\n' "$1"; }
 yellow() { printf '\033[33m⚠️  %s\033[0m\n' "$1"; }
