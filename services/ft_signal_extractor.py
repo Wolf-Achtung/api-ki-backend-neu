@@ -314,7 +314,8 @@ def _generate_signal_id(signal_type: str, source_section: str, content_hash: str
     """Generate unique signal ID."""
     timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
     hash_suffix = hashlib.md5(
-        f"{signal_type}:{source_section}:{content_hash}:{timestamp}".encode()
+        f"{signal_type}:{source_section}:{content_hash}:{timestamp}".encode(),
+        usedforsecurity=False,
     ).hexdigest()[:8]
     return f"ft_{signal_type}_{hash_suffix}"
 

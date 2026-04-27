@@ -267,7 +267,7 @@ def normalize_text(text: str) -> str:
 def get_content_hash(text: str) -> str:
     """Get hash of normalized text."""
     normalized = normalize_text(text)
-    return hashlib.md5(normalized.encode()).hexdigest()
+    return hashlib.md5(normalized.encode(), usedforsecurity=False).hexdigest()
 
 
 def get_word_set(text: str) -> Set[str]:

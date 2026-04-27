@@ -17,6 +17,7 @@ Endpoints:
 """
 from __future__ import annotations
 
+import hmac
 import logging
 import os
 from datetime import datetime, timedelta, timezone
@@ -561,7 +562,7 @@ async def admin_unlock_strategy(
     expected_key = os.getenv("STRATEGY_ADMIN_KEY", "")
     if not expected_key:
         raise HTTPException(status_code=500, detail="STRATEGY_ADMIN_KEY nicht konfiguriert")
-    if admin_key != expected_key:
+    if not hmac.compare_digest(admin_key, expected_key):
         raise HTTPException(status_code=403, detail="Ungültiger Admin-Key")
 
     # Prüfe ob Briefing existiert
@@ -603,7 +604,7 @@ async def admin_reset_status(
     expected_key = os.getenv("STRATEGY_ADMIN_KEY", "")
     if not expected_key:
         raise HTTPException(status_code=500, detail="STRATEGY_ADMIN_KEY nicht konfiguriert")
-    if admin_key != expected_key:
+    if not hmac.compare_digest(admin_key, expected_key):
         return JSONResponse(
             status_code=401,
             content={"error": "unauthorized", "detail": "Ungültiger Admin-Key"},
@@ -655,7 +656,7 @@ def _verify_admin_key(admin_key: str) -> None:
     expected_key = os.getenv("STRATEGY_ADMIN_KEY", "")
     if not expected_key:
         raise HTTPException(status_code=500, detail="STRATEGY_ADMIN_KEY nicht konfiguriert")
-    if admin_key != expected_key:
+    if not hmac.compare_digest(admin_key, expected_key):
         raise HTTPException(status_code=403, detail="Ungültiger Admin-Key")
 
 
