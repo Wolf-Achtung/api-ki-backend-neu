@@ -39,9 +39,17 @@ except (ImportError, RuntimeError) as exc:  # pragma: no cover
     log.warning("Admin: DB not ready at import: %s", exc)
 
 def get_db():
+    """FastAPI dependency: yield a SQLAlchemy session.
+
+    core.db.get_session is itself a generator (yields the session, closes
+    on cleanup). We MUST ``yield from`` it — returning ``_get_session()``
+    hands FastAPI the bare generator, the endpoint then receives it as
+    ``db``, and ``db.query(...)`` raises AttributeError because generators
+    have no ``query`` attribute.
+    """
     if not DB_READY or _get_session is None:  # pragma: no cover
         raise HTTPException(status_code=503, detail="admin_db_unavailable")
-    return _get_session()
+    yield from _get_session()
 
 def _auth_dep():
     """
