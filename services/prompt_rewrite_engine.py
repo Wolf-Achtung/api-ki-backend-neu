@@ -944,7 +944,7 @@ def _generate_suggestion_for_issue(
 def _generate_suggestion_id(issue_type: str, prompt_file: str, pattern: str) -> str:
     """Generate unique suggestion ID."""
     content = f"{issue_type}:{prompt_file}:{pattern}"
-    hash_str = hashlib.md5(content.encode()).hexdigest()[:8]
+    hash_str = hashlib.md5(content.encode(), usedforsecurity=False).hexdigest()[:8]
     return f"rewrite_{issue_type}_{hash_str}"
 
 

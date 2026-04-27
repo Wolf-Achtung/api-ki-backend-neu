@@ -1,0 +1,69 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+  pull-requests: read
+  security-events: write
+
+jobs:
+  gitleaks:
+    name: Gitleaks (secrets)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  pip-audit:
+    name: pip-audit (Python deps)
+    if: hashFiles('requirements.txt') != '' || hashFiles('pyproject.toml') != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install pip-audit
+        run: pip install --upgrade pip-audit
+      - name: pip-audit (production)
+        run: |
+          if [ -f requirements.txt ]; then
+            pip-audit -r requirements.txt --strict
+          fi
+          if [ -f pyproject.toml ]; then
+            pip-audit --strict
+          fi
+      - name: pip-audit (test deps - warning only)
+        continue-on-error: true
+        run: |
+          if [ -f requirements-test.txt ]; then
+            pip-audit -r requirements-test.txt
+          fi
+          if [ -f requirements-e2e.txt ]; then
+            pip-audit -r requirements-e2e.txt
+          fi
+
+  bandit:
+    name: Bandit (Python SAST)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install bandit
+        run: pip install --upgrade bandit
+      - name: Run bandit (HIGH severity gate)
+        run: bandit -r . -ll --exclude='./venv,./.git,./.audit-temp,./tests,./scripts'
