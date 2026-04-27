@@ -18,42 +18,7 @@ from services.rate_limit import RateLimiter
 from services.redis_utils import RedisBox
 from utils.idempotency import IdempotencyBox
 from core.security import create_access_token, get_current_user, TokenPayload
-
-# Whitelist für erlaubte E-Mail-Adressen (Testphase)
-# Diese Liste muss synchron mit setup_database.py TESTUSERS gehalten werden
-# Alle Emails sind lowercase für case-insensitive Vergleich
-#Jochen, Bernd,Steffi, Wilhelm 020426
-EMAIL_WHITELIST = {email.lower() for email in [
-    "j.hohl@freenet.de",
-    "kerstin.geffert@gmail.com",
-    "daniel.effinger@web.de",
-    "post@zero2.de",
-    "giselapeter@peter-partner.de",
-    "wolf.hohl@web.de",
-    "geffertj@mac.com",
-    "geffertkilian@gmail.com",
-    "berndemhart46@gmail.com",
-    "po@wbs-slg.de",
-    "trailerman01@outlook.de",
-    "hilfe@ki-sicherheit.jetzt",
-    "levent.graef@posteo.de",
-    "birgit.cook@ulitzka-partner.de",
-    "alexander.luckow@icloud.com",
-    "frank.beer@kabelmail.de",
-    "patrick@silk-relations.com",
-    "marc@trailerhaus-onair.de",
-    "norbert@trailerhaus.de",
-    "sonia-souto@mac.com",
-    "christian.ulitzka@ulitzka-partner.de",
-    "srack@gmx.net",
-    "buss@maria-hilft.de",
-    "w.beestermoeller@web.de",
-    "bewertung@ki-sicherheit.jetzt",  # Admin
-    "test@example.com",  # Für CI/CD Tests
-    # v7.0 Production Testing
-    "test-v7-final@ki-sicherheit.jetzt",
-    "test-v7-1@ki-sicherheit.jetzt",
-    "test-v7-400@ki-sicherheit.jetzt",]}
+from core.whitelist import EMAIL_WHITELIST, is_whitelisted
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 log = logging.getLogger(__name__)
@@ -118,9 +83,8 @@ async def request_code(payload: RequestCodeIn, request: Request):
     limiter = RateLimiter(namespace="request_code", limit=s.rate.max_request_code, window_sec=s.rate.window_sec)
     limiter.hit(key=str(payload.email))
 
-    # Whitelist-Prüfung (Testphase)
-    email_lower = str(payload.email).lower()
-    if email_lower not in EMAIL_WHITELIST:
+    # Whitelist-Prüfung (Testphase) — Quelle: core.whitelist
+    if not is_whitelisted(str(payload.email)):
         log.warning("🚫 Login-Code verweigert für nicht-whitelisted E-Mail: %s", payload.email)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

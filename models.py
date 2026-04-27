@@ -85,6 +85,15 @@ class Briefing(Base):
     worker_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     replayed_from: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
 
+    # Hotfix 2026-04-27: Admin-Cancel + Audit
+    cancel_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    cancelled_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    source: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    request_ip: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    request_ua: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
     user = relationship("User", lazy="joined")
 
     def __repr__(self) -> str:  # pragma: no cover
