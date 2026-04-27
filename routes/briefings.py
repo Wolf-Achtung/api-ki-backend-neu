@@ -28,6 +28,30 @@ _briefing_rate_limiter = RateLimiter(namespace="briefings", limit=10, window_sec
 _idempotency_box = IdempotencyBox(namespace="briefing_submit")
 
 
+def _resolve_client_ip(request: Request) -> Optional[str]:
+    """Resolve the originating client IP.
+
+    Railway routes through Fastly; ``request.client.host`` is the CDN IP, not
+    the user. Prefer the first entry of ``X-Forwarded-For`` (the chain's
+    leftmost address is the original client per RFC 7239).
+    """
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        first = xff.split(",")[0].strip()
+        if first:
+            return first
+    if request.client and request.client.host:
+        return request.client.host
+    return None
+
+
+def _truncate(value: Optional[str], limit: int = 500) -> Optional[str]:
+    """Truncate strings for DB columns / log lines."""
+    if not value:
+        return None
+    return value if len(value) <= limit else value[: limit - 1] + "…"
+
+
 class BriefingSubmitIn(BaseModel):
     # Rohdaten durchleiten; Validierung findet in der Analyse statt
     lang: str = "de"
@@ -140,6 +164,18 @@ async def submit_briefing(
         else:
             log.debug("No authentication found - proceeding without authentication")
 
+    # Audit-Felder vor dem INSERT (Hotfix 2026-04-27 Schritt 6).
+    # source ist die Auth-Provenienz, NICHT aus dem Request-Body — User
+    # könnte sonst "service_token:foo" eintragen und Logs verfälschen.
+    if service_principal:
+        audit_source = f"service_token:{service_principal}"
+    elif user_id:
+        audit_source = "jwt"
+    else:
+        audit_source = "anonymous"
+    audit_request_ip = _resolve_client_ip(request)
+    audit_request_ua = _truncate(request.headers.get("user-agent"), limit=500)
+
     # Briefing in Datenbank speichern (DB-Backed Worker: nur speichern, KEIN run_async!)
     try:
         from models import Briefing
@@ -157,6 +193,10 @@ async def submit_briefing(
             # Worker-Queue: Status "accepted" für Worker-Abholung
             status="accepted" if payload.queue_analysis else "skipped",
             accepted_at=now if payload.queue_analysis else None,
+            # Audit-Trail
+            source=audit_source,
+            request_ip=audit_request_ip,
+            request_ua=audit_request_ua,
         )
         db.add(briefing)
         db.commit()
@@ -164,6 +204,16 @@ async def submit_briefing(
 
         log.info("✅ Briefing saved to database: ID=%s, user_id=%s, status=%s, len=%s",
                  briefing.id, user_id, briefing.status, len(json.dumps(payload.answers)))
+
+        # Structured audit log — Wolf kann in Railway-Logs sofort sehen, wer/woher.
+        log.info(
+            "📝 BRIEFING-CREATED id=%d user_email=%s ip=%s ua=%s source=%s",
+            briefing.id,
+            authenticated_user or "(none)",
+            audit_request_ip or "(none)",
+            _truncate(audit_request_ua, limit=80) or "(none)",
+            audit_source,
+        )
 
         # WICHTIG: KEIN gpt_analyze.run_async() mehr hier!
         # Worker-Prozess holt Jobs mit status="accepted" aus der DB.
