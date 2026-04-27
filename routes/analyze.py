@@ -5,6 +5,11 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field
 
+from core.security import (
+    AuthenticatedPrincipal,
+    resolve_pipeline_email,
+    step5_principal,
+)
 from routes._bootstrap import get_db, rate_limiter
 
 router = APIRouter(prefix="/analyze", tags=["analyze"])
@@ -22,22 +27,34 @@ def _get_briefing_model():
         raise HTTPException(status_code=503, detail=f"models_unavailable: {exc}")
 
 @router.post("/run", status_code=status.HTTP_202_ACCEPTED, dependencies=[Depends(rate_limiter("analyze:run", 5, 60))])
-def run(body: RunAnalyze, request: Request, db = Depends(get_db)) -> dict:
+def run(
+    body: RunAnalyze,
+    request: Request,
+    db = Depends(get_db),
+    principal: AuthenticatedPrincipal = Depends(step5_principal),
+) -> dict:
     """
     Manually trigger GPT analysis for a briefing.
 
     Starts the asynchronous analysis process for the specified briefing.
     Supports dry-run mode for CI/smoke tests via x-dry-run header.
 
+    Auth (Wolf E5 Stufe 1, gated by STEP5_JWT_ENFORCEMENT):
+        - JWT-Cookie/Bearer ODER X-Service-Token erforderlich, sonst 401
+        - body.email_override muss == JWT-Email sein (Service-Token darf frei
+          setzen für Golden-Reports-Use-Case)
+
     Args:
         body: Contains briefing_id and optional email_override
         request: FastAPI request for dry-run header check
         db: Database session
+        principal: resolved auth principal (JWT user or service token)
 
     Returns:
         dict: Acceptance status with briefing_id
 
     Raises:
+        HTTPException 401/403: Auth fehlt oder email_override mismatch
         HTTPException 404: Briefing not found
         HTTPException 503: Models or analyzer unavailable
     """
@@ -58,5 +75,6 @@ def run(body: RunAnalyze, request: Request, db = Depends(get_db)) -> dict:
         from gpt_analyze import run_async
     except (ImportError, RuntimeError) as exc:
         raise HTTPException(status_code=503, detail=f"analyzer_unavailable: {exc}")
-    run_async(body.briefing_id, body.email_override)
+    final_email = resolve_pipeline_email(principal, body.email_override)
+    run_async(body.briefing_id, final_email)
     return {"accepted": True, "briefing_id": body.briefing_id}

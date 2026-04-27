@@ -17,6 +17,9 @@ from core.security import (
     ServiceTokenPayload,
     TokenPayload,
     get_settings,
+    AuthenticatedPrincipal,
+    resolve_pipeline_email,
+    step5_principal,
 )
 from models import Briefing, Analysis, Report
 from utils.report_display_id import get_report_display_id
@@ -84,7 +87,10 @@ SoloCompactRequest = ReportVariantRequest
 
 
 @router.post("/solo-compact")
-async def generate_solo_compact(payload: ReportVariantRequest) -> Dict[str, Any]:
+async def generate_solo_compact(
+    payload: ReportVariantRequest,
+    principal: AuthenticatedPrincipal = Depends(step5_principal),
+) -> Dict[str, Any]:
     """
     FIX-529: Generate a report with variant selection and auto-detection.
 
@@ -181,7 +187,10 @@ async def fetch_report(id: int) -> Dict[str, Any]:
 
 
 @router.post("/generate")
-async def generate(payload: Dict[str, Any]) -> Dict[str, Any]:
+async def generate(
+    payload: Dict[str, Any],
+    principal: AuthenticatedPrincipal = Depends(step5_principal),
+) -> Dict[str, Any]:
     """
     Generate a report by triggering GPT analysis.
 
@@ -217,7 +226,10 @@ async def generate(payload: Dict[str, Any]) -> Dict[str, Any]:
     briefing_id = payload.get("briefing_id", 0)
     variant = payload.get("variant", "auto")
     company_size = payload.get("company_size")
-    email = payload.get("email")
+    body_email = payload.get("email")
+    # Step 5: token-email is the source of truth; body email must match
+    # (or empty), unless service-token authenticated.
+    email = resolve_pipeline_email(principal, body_email)
 
     # FIX-529: Auto-detect variant based on company_size
     resolved_variant = determine_report_variant(variant, company_size)
@@ -837,6 +849,7 @@ class GamechangerDeepDiveRequest(BaseModel):
 @router.post("/gamechanger-deep-dive")
 async def generate_gamechanger_deep_dive(
     payload: GamechangerDeepDiveRequest,
+    principal: AuthenticatedPrincipal = Depends(step5_principal),
 ) -> Dict[str, Any]:
     """
     Generate a Gamechanger Deep Dive report (standalone 6-8 page product).
@@ -1037,6 +1050,7 @@ def _send_deep_dive_email(
 @router.post("/gamechanger-deep-dive/pdf/{briefing_id}")
 async def generate_deep_dive_pdf(
     briefing_id: int,
+    principal: AuthenticatedPrincipal = Depends(step5_principal),
 ) -> Response:
     """
     Generate the Gamechanger Deep Dive as PDF.
