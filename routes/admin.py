@@ -43,10 +43,20 @@ def get_db():
         raise HTTPException(status_code=503, detail="admin_db_unavailable")
     return _get_session()
 
-def get_current_user():
+def _auth_dep():
+    """
+    Return the FastAPI auth dependency that decodes the JWT from the
+    httpOnly cookie ``auth_token`` or the ``Authorization: Bearer`` header.
+
+    Replaces the previous resolver that pointed at ``services.auth.get_current_user``
+    — that function isn't a FastAPI dependency (it expects ``email`` as a kwarg),
+    so before this fix the admin endpoints either crashed with 500 or, worse,
+    accepted ``?email=…`` as auth. Endpoints were only invisible to attackers
+    because ``ENABLE_ADMIN_ROUTES=0`` is the default.
+    """
     try:
-        from services.auth import get_current_user as _get_current_user
-        return _get_current_user
+        from core.security import get_current_user as _gcu
+        return _gcu
     except (ImportError, RuntimeError) as exc:  # pragma: no cover
         raise HTTPException(status_code=503, detail=f"auth_unavailable: {exc}")
 
@@ -89,7 +99,7 @@ def _iso(dt) -> str | None:
 @router.get("/overview", response_model=None)
 def overview(
     db = Depends(get_db),
-    user = Depends(get_current_user()),
+    user = Depends(_auth_dep()),
 ):
     _require_admin(user)
     User, Briefing, Analysis, Report = _models()
@@ -126,7 +136,7 @@ def list_briefings(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db = Depends(get_db),
-    user = Depends(get_current_user()),
+    user = Depends(_auth_dep()),
 ):
     _require_admin(user)
     User, Briefing, Analysis, Report = _models()
@@ -156,7 +166,7 @@ def list_briefings(
 def get_briefing(
     briefing_id: int,
     db = Depends(get_db),
-    user = Depends(get_current_user()),
+    user = Depends(_auth_dep()),
 ):
     _require_admin(user)
     User, Briefing, Analysis, Report = _models()
@@ -179,7 +189,7 @@ def get_briefing(
 def latest_analysis_for_briefing(
     briefing_id: int,
     db = Depends(get_db),
-    user = Depends(get_current_user()),
+    user = Depends(_auth_dep()),
 ):
     _require_admin(user)
     User, Briefing, Analysis, Report = _models()
@@ -200,7 +210,7 @@ def list_analyses(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db = Depends(get_db),
-    user = Depends(get_current_user()),
+    user = Depends(_auth_dep()),
 ):
     _require_admin(user)
     User, Briefing, Analysis, Report = _models()
@@ -224,7 +234,7 @@ def list_analyses(
 def get_analysis(
     analysis_id: int,
     db = Depends(get_db),
-    user = Depends(get_current_user()),
+    user = Depends(_auth_dep()),
 ):
     _require_admin(user)
     User, Briefing, Analysis, Report = _models()
@@ -247,7 +257,7 @@ def get_analysis(
 def get_analysis_html(
     analysis_id: int,
     db = Depends(get_db),
-    user = Depends(get_current_user()),
+    user = Depends(_auth_dep()),
 ):
     _require_admin(user)
     User, Briefing, Analysis, Report = _models()
@@ -261,7 +271,7 @@ def list_reports(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db = Depends(get_db),
-    user = Depends(get_current_user()),
+    user = Depends(_auth_dep()),
 ):
     _require_admin(user)
     User, Briefing, Analysis, Report = _models()
@@ -285,7 +295,7 @@ def list_reports(
 def list_reports_for_briefing(
     briefing_id: int,
     db = Depends(get_db),
-    user = Depends(get_current_user()),
+    user = Depends(_auth_dep()),
 ):
     _require_admin(user)
     User, Briefing, Analysis, Report = _models()
@@ -312,7 +322,7 @@ def rerun_generation(
     briefing_id: int,
     background: BackgroundTasks,
     db = Depends(get_db),
-    user = Depends(get_current_user()),
+    user = Depends(_auth_dep()),
 ):
     _require_admin(user)
     # gpt_analyze nur hier importieren (nicht beim Modul-Load)
@@ -339,7 +349,7 @@ def export_briefing_zip(
     briefing_id: int,
     include_pdf: bool = Query(False, description="Wenn vorhanden und intern gespeichert"),
     db = Depends(get_db),
-    user = Depends(get_current_user()),
+    user = Depends(_auth_dep()),
 ):
     _require_admin(user)
     try:
@@ -395,7 +405,7 @@ def _briefing_summary(b: Any) -> Dict[str, Any]:
 @router.get("/briefings/active", response_model=None)
 def list_active_briefings(
     db=Depends(get_db),
-    user=Depends(get_current_user()),
+    user=Depends(_auth_dep()),
 ):
     """
     Alle Briefings, die gerade laufen oder in der Queue stehen.
@@ -418,7 +428,7 @@ def list_active_briefings(
 def list_recent_briefings(
     hours: int = Query(24, ge=1, le=720, description="Zeitfenster in Stunden (1–720, Default 24)"),
     db=Depends(get_db),
-    user=Depends(get_current_user()),
+    user=Depends(_auth_dep()),
 ):
     """
     Briefings der letzten N Stunden — schneller Drüberschau-Endpoint.
@@ -444,7 +454,7 @@ def cancel_briefing(
     briefing_id: int,
     payload: Optional[CancelRequest] = None,
     db=Depends(get_db),
-    user=Depends(get_current_user()),
+    user=Depends(_auth_dep()),
 ):
     """
     Cancelt ein einzelnes Briefing.
@@ -500,7 +510,7 @@ def cancel_briefing(
 @router.post("/briefings/cancel-all-active", response_model=None)
 def cancel_all_active_briefings(
     db=Depends(get_db),
-    user=Depends(get_current_user()),
+    user=Depends(_auth_dep()),
 ):
     """
     EMERGENCY-STOP: Cancelt ALLE aktiven Briefings (accepted/queued/processing/analyzing).
