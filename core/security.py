@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import logging
+import os
 import time
 from typing import Optional, Tuple, Union
 
@@ -210,3 +211,157 @@ def get_service_or_user_auth(
 
     # 2. Fallback: normale User-Auth
     return get_current_user(auth_token, authorization)
+
+
+# ---------------------------------------------------------------------------
+# Step 5 — JWT-Pflicht in Report-Pipeline-Endpoints (Wolf E5 Stufe 1)
+#
+# Umschaltbar via Env STEP5_JWT_ENFORCEMENT={1|true|yes}. Default: off
+# (verhalten unverändert). Wenn aktiv:
+#   - Endpoints lehnen unauthentisierte Requests mit 401 ab
+#   - User-JWT muss in core.whitelist.EMAIL_WHITELIST stehen
+#   - X-Service-Token mit Scope 'briefings:submit' bleibt zweiter Auth-Pfad
+#
+# Endpoints inspizieren ``principal.is_authenticated``/``.email``/``.is_service``
+# um Owner-Checks und email-override-Strict-Equality zu fahren.
+# ---------------------------------------------------------------------------
+
+
+class AuthenticatedPrincipal(BaseModel):
+    """Auth-Resultat für Step-5-Endpoints. Höchstens einer von email
+    / service_principal ist gesetzt. ``is_authenticated`` ist False, wenn
+    der Flag aus ist UND keine Auth-Header gefunden wurden — Endpoints
+    fallen dann auf das Legacy-Verhalten zurück."""
+    email: Optional[str] = None
+    service_principal: Optional[str] = None
+    is_service: bool = False
+    is_authenticated: bool = False
+
+    @property
+    def identity(self) -> str:
+        if self.is_service:
+            return f"service:{self.service_principal}"
+        if self.email:
+            return f"user:{self.email}"
+        return "anonymous"
+
+
+def step5_jwt_enforcement_enabled() -> bool:
+    """Read STEP5_JWT_ENFORCEMENT env on every request — Railway-flippable
+    ohne Re-Deploy."""
+    return (os.getenv("STEP5_JWT_ENFORCEMENT") or "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+
+
+def step5_principal(
+    auth_token: Optional[str] = Cookie(None, alias="auth_token"),
+    authorization: Optional[str] = Header(None),
+    x_service_token: Optional[str] = Header(None, alias="X-Service-Token"),
+) -> AuthenticatedPrincipal:
+    """Auth-Dependency für Schritt 5.
+
+    Mit STEP5_JWT_ENFORCEMENT=on:
+      - Service-Token vorhanden → muss valide sein, sonst 401/403
+      - User-JWT vorhanden → muss valide UND whitelisted sein, sonst 401/403
+      - Weder noch → 401
+
+    Ohne Flag (Default):
+      - Token wird best-effort ausgewertet, bei Fehler kommen wir mit
+        is_authenticated=False zurück → Endpoints behalten das Legacy-
+        Verhalten (kein Disruptions-Risiko).
+    """
+    enforced = step5_jwt_enforcement_enabled()
+    s = get_settings()
+
+    # Pfad 1: Service-Token
+    if x_service_token and s.security.service_token_enabled:
+        try:
+            service_payload = verify_service_token(
+                x_service_token, required_scope="briefings:submit"
+            )
+            return AuthenticatedPrincipal(
+                service_principal=service_payload.principal,
+                is_service=True,
+                is_authenticated=True,
+            )
+        except HTTPException:
+            if enforced:
+                raise
+            # Flag off: schlucken, weiter mit User-Pfad
+
+    # Pfad 2: User-JWT (Cookie ODER Bearer)
+    token = auth_token
+    if not token and authorization:
+        scheme, _, header_token = authorization.partition(" ")
+        if scheme.lower() == "bearer" and header_token:
+            token = header_token
+
+    if token:
+        try:
+            user_payload = verify_access_token(token)
+        except HTTPException:
+            if enforced:
+                raise
+            return AuthenticatedPrincipal(is_authenticated=False)
+
+        # Whitelist-Check (nur wenn enforced — sonst best-effort durchlassen)
+        if enforced:
+            try:
+                from core.whitelist import is_whitelisted
+            except ImportError:  # pragma: no cover
+                is_whitelisted = lambda _e: True  # type: ignore[assignment]
+            if not is_whitelisted(user_payload.email):
+                log.warning(
+                    "🚫 Step5: JWT for non-whitelisted email rejected: %s",
+                    user_payload.email,
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Email not whitelisted for the test phase.",
+                )
+
+        return AuthenticatedPrincipal(
+            email=user_payload.email,
+            is_authenticated=True,
+        )
+
+    # Pfad 3: keine Auth
+    if enforced:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=(
+                "Authentication required (JWT cookie/bearer or X-Service-Token)."
+            ),
+        )
+    return AuthenticatedPrincipal(is_authenticated=False)
+
+
+def resolve_pipeline_email(
+    principal: AuthenticatedPrincipal,
+    body_email: Optional[str],
+) -> Optional[str]:
+    """
+    Welche E-Mail soll die Pipeline als Empfänger nutzen?
+
+    Regeln:
+      - Service-Token (Golden Reports, CI): body_email zählt — Service darf
+        die Empfänger-Email frei setzen.
+      - User-JWT: body_email muss case-insensitive == principal.email sein,
+        wenn gesetzt; sonst 403. Returns principal.email (single source of
+        truth, body wird ignoriert).
+      - Unauthenticated (Flag aus): body_email durchreichen (Legacy).
+
+    Raises HTTPException 403 bei mismatch.
+    """
+    if principal.is_service:
+        return body_email
+    if principal.is_authenticated and principal.email:
+        if body_email and body_email.strip().lower() != principal.email.strip().lower():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="email/email_override must match the token email.",
+            )
+        return principal.email
+    # Legacy passthrough
+    return body_email
