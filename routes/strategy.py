@@ -29,7 +29,43 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from routes._bootstrap import get_db
+from core.security import AuthenticatedPrincipal, step5_principal
+from core.whitelist import is_admin
 from models import Briefing, Analysis, StrategyQuestion, StrategyReport
+
+
+def _enforce_strategy_owner(
+    principal: AuthenticatedPrincipal, briefing: Briefing
+) -> None:
+    """Owner-Check für Strategy-Endpoints (Wolf E5 Frage 1: A).
+
+    Service-Tokens und Admin-Emails dürfen jedes Briefing strategisieren.
+    Nicht-authentifizierte Aufrufer (Flag aus + kein Token) dürfen
+    durchlaufen — Legacy-Verhalten. Sobald ein User-JWT vorliegt, MUSS
+    seine Email == briefing.user.email sein.
+    """
+    if principal.is_service:
+        return
+    if not principal.is_authenticated:
+        return  # Flag aus, Legacy passthrough
+    if is_admin(principal.email):
+        return
+    owner_email = (
+        getattr(briefing.user, "email", None) if briefing.user is not None else None
+    )
+    if not owner_email:
+        # Briefing ohne user_id (anonyme Submits). Wenn Schritt 5 aktiv,
+        # ist der Caller authentisiert; ohne Owner können wir nicht
+        # zuordnen — verweigern.
+        raise HTTPException(
+            status_code=403,
+            detail="Briefing has no owner — strategy generation requires admin or service token.",
+        )
+    if owner_email.strip().lower() != (principal.email or "").strip().lower():
+        raise HTTPException(
+            status_code=403,
+            detail="You can only run strategy on your own briefing.",
+        )
 
 log = logging.getLogger(__name__)
 
@@ -192,15 +228,18 @@ async def save_strategy_questions(
     briefing_id: int,
     questions: StrategyQuestionsCreate,
     db: Session = Depends(get_db),
+    principal: AuthenticatedPrincipal = Depends(step5_principal),
 ):
     """
     Speichert die Zusatzfragen für Report 3.
     Voraussetzung: briefing_id existiert und Report 1 ist abgeschlossen.
+    Auth (Step 5): JWT erforderlich, Owner-Check (eigenes Briefing oder Admin/Service).
     """
     # 1. Prüfe ob Briefing existiert
     briefing = db.query(Briefing).filter(Briefing.id == briefing_id).first()
     if not briefing:
         raise HTTPException(status_code=404, detail="Briefing nicht gefunden")
+    _enforce_strategy_owner(principal, briefing)
 
     # 2. Prüfe ob Report 1 abgeschlossen ist (briefing status = 'done')
     if briefing.status != "done":
@@ -321,10 +360,14 @@ async def generate_strategy_report_endpoint(
     briefing_id: int,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
+    principal: AuthenticatedPrincipal = Depends(step5_principal),
 ):
     """
     Startet die Generierung des Strategieberichts.
     Läuft als Background-Task.
+
+    Auth (Step 5): JWT erforderlich, Owner-Check (eigenes Briefing oder Admin/Service).
+    Begründung Owner-Check: Strategy-Pipeline kostet 5-10 € LLM pro Run.
 
     Voraussetzungen:
     - Briefing existiert
@@ -336,6 +379,7 @@ async def generate_strategy_report_endpoint(
     briefing = db.query(Briefing).filter(Briefing.id == briefing_id).first()
     if not briefing:
         raise HTTPException(status_code=404, detail="Briefing nicht gefunden")
+    _enforce_strategy_owner(principal, briefing)
 
     # 2. Report 1 abgeschlossen?
     if briefing.status != "done":
