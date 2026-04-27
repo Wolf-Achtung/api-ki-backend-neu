@@ -23,6 +23,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text as _sa_text
 
+from core.security import AuthenticatedPrincipal, step5_principal
 from models import Briefing, ChatSession, User
 from routes._bootstrap import get_db
 from schemas.chat import (
@@ -2689,8 +2690,19 @@ async def chat_complete(
     req: ChatCompleteRequest,
     request: Request,
     db: Session = Depends(get_db),
+    principal: AuthenticatedPrincipal = Depends(step5_principal),
 ):
-    """Finalize chat session and submit collected data to report pipeline."""
+    """Finalize chat session and submit collected data to report pipeline.
+
+    Auth (Wolf E5 Frage 2: C):
+        /chat/start bleibt offen — anonyme Sessions sind erlaubt (Lead-Funnel).
+        /chat/complete erfordert JWT (oder X-Service-Token), wenn
+        STEP5_JWT_ENFORCEMENT=on: das schließt die anonyme Briefing-Erzeugung
+        am Ende des Chats. Frontend muss vor der Auswertung Login einbauen.
+    """
+    # principal wird aktuell nur für Auth-Gating verwendet; user_id-Auflösung
+    # läuft weiterhin über _resolve_user (Cookie/Header → DB-User).
+    _ = principal
     session = db.query(ChatSession).filter(ChatSession.id == req.session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session nicht gefunden")
