@@ -30,7 +30,7 @@ anthropic>=0.25,<1.0
 tavily-python>=0.3,<0.4
 beautifulsoup4>=4.11,<5.0
 markdownify>=0.11,<1.0
-feedparser>=6.0,<7.0
+feedparser>=6.0.12,<7.0
 
 # --- PDF generation (if you render HTML->PDF locally) ---
 # weasyprint>=61.0
