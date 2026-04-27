@@ -162,6 +162,202 @@ def list_briefings(
         )
     return {"ok": True, "total": total, "rows": payload}
 
+# ============================================================
+# Cancel + Audit Endpoints (Hotfix 2026-04-27)
+#
+# WICHTIG: Diese vier Endpoints stehen BEWUSST vor allen
+# /briefings/{briefing_id}-Routen. Grund: FastAPI matched Routen in
+# Deklarationsreihenfolge; ein int-typed Path-Param (briefing_id: int)
+# würde sonst „active", „recent", „cancel-all-active" als Briefing-ID
+# interpretieren wollen und 422 (int_parsing) zurückgeben, statt zu den
+# statischen Routen unten weiterzuleiten. Reihenfolge intern: alle
+# statischen Pfade zuerst, dann der param-Pfad /{briefing_id}/cancel.
+# Falls hier weitere Endpoints angehängt werden: dieselbe Regel beachten.
+# ============================================================
+
+class CancelRequest(BaseModel):
+    reason: Optional[str] = Field(
+        default="admin_manual_cancel",
+        max_length=200,
+        description="Frei wählbarer Grund (wird in briefings.cancel_reason persistiert)",
+    )
+
+
+def _briefing_summary(b: Any) -> Dict[str, Any]:
+    """Serialise a Briefing row for admin listings (joined user.email)."""
+    answers = getattr(b, "answers", None) or {}
+    user_email = None
+    if getattr(b, "user", None) is not None:
+        user_email = getattr(b.user, "email", None)
+    return {
+        "id": b.id,
+        "user_email": user_email,
+        "status": b.status,
+        "lang": getattr(b, "lang", "de"),
+        "branche": answers.get("branche") if isinstance(answers, dict) else None,
+        "unternehmensgroesse": (
+            answers.get("unternehmensgroesse") if isinstance(answers, dict) else None
+        ),
+        "created_at": _iso(getattr(b, "created_at", None)),
+        "accepted_at": _iso(getattr(b, "accepted_at", None)),
+        "processing_at": _iso(getattr(b, "processing_at", None)),
+        "worker_id": getattr(b, "worker_id", None),
+        "source": getattr(b, "source", None),
+        "request_ip": getattr(b, "request_ip", None),
+    }
+
+
+@router.get("/briefings/active", response_model=None)
+def list_active_briefings(
+    db=Depends(get_db),
+    user=Depends(_auth_dep()),
+):
+    """
+    Alle Briefings, die gerade laufen oder in der Queue stehen.
+    Aktive Status: accepted | queued | processing | analyzing.
+    Sortierung: created_at DESC (jüngste zuerst).
+    """
+    _require_admin(user)
+    log.info("👤 Admin %s requested active briefings", getattr(user, "email", "?"))
+    _, Briefing, _, _ = _models()
+    rows = (
+        db.query(Briefing)
+        .filter(Briefing.status.in_(ACTIVE_STATUSES))
+        .order_by(Briefing.created_at.desc())
+        .all()
+    )
+    return {"ok": True, "count": len(rows), "rows": [_briefing_summary(b) for b in rows]}
+
+
+@router.get("/briefings/recent", response_model=None)
+def list_recent_briefings(
+    hours: int = Query(24, ge=1, le=720, description="Zeitfenster in Stunden (1–720, Default 24)"),
+    db=Depends(get_db),
+    user=Depends(_auth_dep()),
+):
+    """
+    Briefings der letzten N Stunden — schneller Drüberschau-Endpoint.
+    """
+    _require_admin(user)
+    log.info(
+        "👤 Admin %s requested briefings from last %dh",
+        getattr(user, "email", "?"), hours,
+    )
+    _, Briefing, _, _ = _models()
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    rows = (
+        db.query(Briefing)
+        .filter(Briefing.created_at >= cutoff)
+        .order_by(Briefing.created_at.desc())
+        .all()
+    )
+    return {"ok": True, "count": len(rows), "hours": hours, "rows": [_briefing_summary(b) for b in rows]}
+
+
+@router.post("/briefings/cancel-all-active", response_model=None)
+def cancel_all_active_briefings(
+    db=Depends(get_db),
+    user=Depends(_auth_dep()),
+):
+    """
+    EMERGENCY-STOP: Cancelt ALLE aktiven Briefings (accepted/queued/processing/analyzing).
+    Nur für Notfälle (Worker-Loop, Missbrauch, runaway costs).
+    """
+    _require_admin(user)
+    admin_email = getattr(user, "email", "?")
+    log.warning("🚨 EMERGENCY-STOP triggered by %s", admin_email)
+
+    _, Briefing, _, _ = _models()
+    rows = (
+        db.query(Briefing)
+        .filter(Briefing.status.in_(ACTIVE_STATUSES))
+        .all()
+    )
+    now = datetime.now(timezone.utc)
+    cancelled: List[Dict[str, Any]] = []
+    for b in rows:
+        cancelled.append({
+            "id": b.id,
+            "previous_status": b.status,
+            "user_email": getattr(b.user, "email", None) if b.user else None,
+        })
+        b.status = "cancelled"
+        b.worker_id = None
+        b.cancel_reason = "emergency_stop"
+        b.cancelled_at = now
+    if cancelled:
+        db.commit()
+
+    log.warning(
+        "🚨 Emergency-Stop cancelled %d briefings: ids=%s",
+        len(cancelled), [c["id"] for c in cancelled],
+    )
+    return {
+        "ok": True,
+        "cancelled_count": len(cancelled),
+        "cancelled": cancelled,
+        "triggered_by": admin_email,
+    }
+
+
+@router.post("/briefings/{briefing_id}/cancel", response_model=None)
+def cancel_briefing(
+    briefing_id: int,
+    payload: Optional[CancelRequest] = None,
+    db=Depends(get_db),
+    user=Depends(_auth_dep()),
+):
+    """
+    Cancelt ein einzelnes Briefing.
+
+    Setzt status='cancelled', leert worker_id, schreibt cancel_reason +
+    cancelled_at. Wirkt nur "weich": ein bereits laufender Worker-Job läuft
+    durch (siehe Wolf-OK E6); der Cancel verhindert nur, dass der Worker das
+    Briefing erneut aufnimmt, und blockt anstehende /report/generate-Aufrufe
+    aus dem Frontend.
+    """
+    _require_admin(user)
+    reason = (payload.reason if payload else None) or "admin_manual_cancel"
+    log.warning(
+        "🛑 Admin %s cancels briefing %d (reason: %s)",
+        getattr(user, "email", "?"), briefing_id, reason,
+    )
+
+    _, Briefing, _, _ = _models()
+    b = db.get(Briefing, briefing_id)
+    if not b:
+        raise HTTPException(status_code=404, detail="briefing_not_found")
+
+    if b.status not in ACTIVE_STATUSES:
+        return {
+            "ok": False,
+            "briefing_id": briefing_id,
+            "current_status": b.status,
+            "message": "briefing_not_active",
+        }
+
+    previous_status = b.status
+    user_email = getattr(b.user, "email", None) if b.user else None
+
+    b.status = "cancelled"
+    b.worker_id = None
+    b.cancel_reason = reason
+    b.cancelled_at = datetime.now(timezone.utc)
+    db.commit()
+
+    log.warning(
+        "🛑 Briefing %d cancelled (was: %s, user_email=%s)",
+        briefing_id, previous_status, user_email,
+    )
+    return {
+        "ok": True,
+        "briefing_id": briefing_id,
+        "previous_status": previous_status,
+        "user_email": user_email,
+        "cancel_reason": reason,
+    }
+
+
 @router.get("/briefings/{briefing_id}", response_model=None)
 def get_briefing(
     briefing_id: int,
@@ -364,190 +560,3 @@ def export_briefing_zip(
         media_type="application/zip",
         headers={"Content-Disposition": f'attachment; filename="briefing-{briefing_id}.zip"'}
     )
-
-
-# ============================================================
-# Cancel + Audit Endpoints (Hotfix 2026-04-27)
-# ============================================================
-
-class CancelRequest(BaseModel):
-    reason: Optional[str] = Field(
-        default="admin_manual_cancel",
-        max_length=200,
-        description="Frei wählbarer Grund (wird in briefings.cancel_reason persistiert)",
-    )
-
-
-def _briefing_summary(b: Any) -> Dict[str, Any]:
-    """Serialise a Briefing row for admin listings (joined user.email)."""
-    answers = getattr(b, "answers", None) or {}
-    user_email = None
-    if getattr(b, "user", None) is not None:
-        user_email = getattr(b.user, "email", None)
-    return {
-        "id": b.id,
-        "user_email": user_email,
-        "status": b.status,
-        "lang": getattr(b, "lang", "de"),
-        "branche": answers.get("branche") if isinstance(answers, dict) else None,
-        "unternehmensgroesse": (
-            answers.get("unternehmensgroesse") if isinstance(answers, dict) else None
-        ),
-        "created_at": _iso(getattr(b, "created_at", None)),
-        "accepted_at": _iso(getattr(b, "accepted_at", None)),
-        "processing_at": _iso(getattr(b, "processing_at", None)),
-        "worker_id": getattr(b, "worker_id", None),
-        "source": getattr(b, "source", None),
-        "request_ip": getattr(b, "request_ip", None),
-    }
-
-
-@router.get("/briefings/active", response_model=None)
-def list_active_briefings(
-    db=Depends(get_db),
-    user=Depends(_auth_dep()),
-):
-    """
-    Alle Briefings, die gerade laufen oder in der Queue stehen.
-    Aktive Status: accepted | queued | processing | analyzing.
-    Sortierung: created_at DESC (jüngste zuerst).
-    """
-    _require_admin(user)
-    log.info("👤 Admin %s requested active briefings", getattr(user, "email", "?"))
-    _, Briefing, _, _ = _models()
-    rows = (
-        db.query(Briefing)
-        .filter(Briefing.status.in_(ACTIVE_STATUSES))
-        .order_by(Briefing.created_at.desc())
-        .all()
-    )
-    return {"ok": True, "count": len(rows), "rows": [_briefing_summary(b) for b in rows]}
-
-
-@router.get("/briefings/recent", response_model=None)
-def list_recent_briefings(
-    hours: int = Query(24, ge=1, le=720, description="Zeitfenster in Stunden (1–720, Default 24)"),
-    db=Depends(get_db),
-    user=Depends(_auth_dep()),
-):
-    """
-    Briefings der letzten N Stunden — schneller Drüberschau-Endpoint.
-    """
-    _require_admin(user)
-    log.info(
-        "👤 Admin %s requested briefings from last %dh",
-        getattr(user, "email", "?"), hours,
-    )
-    _, Briefing, _, _ = _models()
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
-    rows = (
-        db.query(Briefing)
-        .filter(Briefing.created_at >= cutoff)
-        .order_by(Briefing.created_at.desc())
-        .all()
-    )
-    return {"ok": True, "count": len(rows), "hours": hours, "rows": [_briefing_summary(b) for b in rows]}
-
-
-@router.post("/briefings/{briefing_id}/cancel", response_model=None)
-def cancel_briefing(
-    briefing_id: int,
-    payload: Optional[CancelRequest] = None,
-    db=Depends(get_db),
-    user=Depends(_auth_dep()),
-):
-    """
-    Cancelt ein einzelnes Briefing.
-
-    Setzt status='cancelled', leert worker_id, schreibt cancel_reason +
-    cancelled_at. Wirkt nur "weich": ein bereits laufender Worker-Job läuft
-    durch (siehe Wolf-OK E6); der Cancel verhindert nur, dass der Worker das
-    Briefing erneut aufnimmt, und blockt anstehende /report/generate-Aufrufe
-    aus dem Frontend.
-    """
-    _require_admin(user)
-    reason = (payload.reason if payload else None) or "admin_manual_cancel"
-    log.warning(
-        "🛑 Admin %s cancels briefing %d (reason: %s)",
-        getattr(user, "email", "?"), briefing_id, reason,
-    )
-
-    _, Briefing, _, _ = _models()
-    b = db.get(Briefing, briefing_id)
-    if not b:
-        raise HTTPException(status_code=404, detail="briefing_not_found")
-
-    if b.status not in ACTIVE_STATUSES:
-        return {
-            "ok": False,
-            "briefing_id": briefing_id,
-            "current_status": b.status,
-            "message": "briefing_not_active",
-        }
-
-    previous_status = b.status
-    user_email = getattr(b.user, "email", None) if b.user else None
-
-    b.status = "cancelled"
-    b.worker_id = None
-    b.cancel_reason = reason
-    b.cancelled_at = datetime.now(timezone.utc)
-    db.commit()
-
-    log.warning(
-        "🛑 Briefing %d cancelled (was: %s, user_email=%s)",
-        briefing_id, previous_status, user_email,
-    )
-    return {
-        "ok": True,
-        "briefing_id": briefing_id,
-        "previous_status": previous_status,
-        "user_email": user_email,
-        "cancel_reason": reason,
-    }
-
-
-@router.post("/briefings/cancel-all-active", response_model=None)
-def cancel_all_active_briefings(
-    db=Depends(get_db),
-    user=Depends(_auth_dep()),
-):
-    """
-    EMERGENCY-STOP: Cancelt ALLE aktiven Briefings (accepted/queued/processing/analyzing).
-    Nur für Notfälle (Worker-Loop, Missbrauch, runaway costs).
-    """
-    _require_admin(user)
-    admin_email = getattr(user, "email", "?")
-    log.warning("🚨 EMERGENCY-STOP triggered by %s", admin_email)
-
-    _, Briefing, _, _ = _models()
-    rows = (
-        db.query(Briefing)
-        .filter(Briefing.status.in_(ACTIVE_STATUSES))
-        .all()
-    )
-    now = datetime.now(timezone.utc)
-    cancelled: List[Dict[str, Any]] = []
-    for b in rows:
-        cancelled.append({
-            "id": b.id,
-            "previous_status": b.status,
-            "user_email": getattr(b.user, "email", None) if b.user else None,
-        })
-        b.status = "cancelled"
-        b.worker_id = None
-        b.cancel_reason = "emergency_stop"
-        b.cancelled_at = now
-    if cancelled:
-        db.commit()
-
-    log.warning(
-        "🚨 Emergency-Stop cancelled %d briefings: ids=%s",
-        len(cancelled), [c["id"] for c in cancelled],
-    )
-    return {
-        "ok": True,
-        "cancelled_count": len(cancelled),
-        "cancelled": cancelled,
-        "triggered_by": admin_email,
-    }
