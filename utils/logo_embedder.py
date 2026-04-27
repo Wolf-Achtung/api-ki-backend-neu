@@ -455,7 +455,7 @@ def convert_webp_paths_to_png_base64(html: str, base_dir: str = None) -> str:
             max_h = 200
             if img.size[1] > max_h:
                 ratio = max_h / img.size[1]
-                img = img.resize((int(img.size[0] * ratio), max_h), Image.LANCZOS)
+                img = img.resize((int(img.size[0] * ratio), max_h), Image.Resampling.LANCZOS)
 
             buf = io.BytesIO()
             img.save(buf, format="PNG", optimize=True)

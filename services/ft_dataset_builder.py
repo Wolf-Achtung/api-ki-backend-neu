@@ -329,7 +329,7 @@ def _compute_input_hash(signal: FTSignal) -> str:
     normalized_input = signal.prompt_input.lower().strip()
     # Include signal type in hash to separate by type
     hash_input = f"{signal.signal_type}:{normalized_input}"
-    return hashlib.md5(hash_input.encode()).hexdigest()[:12]
+    return hashlib.md5(hash_input.encode(), usedforsecurity=False).hexdigest()[:12]
 
 
 def identify_conflicts(signals: List[FTSignal]) -> List[ConflictGroup]:

@@ -639,7 +639,7 @@ class CacheAwarePromptBuilder:
     def _get_cache_key(self, *args, **kwargs) -> str:
         """Generate cache key from arguments."""
         key_data = str(args) + str(sorted(kwargs.items()))
-        return hashlib.md5(key_data.encode()).hexdigest()
+        return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
 
     def get_cached(self, key: str) -> Optional[Any]:
         """Get cached value."""

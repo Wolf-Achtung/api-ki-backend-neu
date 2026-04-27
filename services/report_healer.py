@@ -2256,7 +2256,7 @@ def reduce_redundancy(
                 continue
 
             fingerprint = _normalize_for_fingerprint(content)
-            fp_hash = hashlib.md5(fingerprint.encode()).hexdigest()[:16]
+            fp_hash = hashlib.md5(fingerprint.encode(), usedforsecurity=False).hexdigest()[:16]
 
             if fp_hash in seen_fingerprints:
                 first_section = seen_fingerprints[fp_hash]
@@ -2299,7 +2299,7 @@ def reduce_redundancy(
                 continue
 
             fingerprint = _normalize_for_fingerprint(content)
-            fp_hash = hashlib.md5(fingerprint.encode()).hexdigest()[:16]
+            fp_hash = hashlib.md5(fingerprint.encode(), usedforsecurity=False).hexdigest()[:16]
 
             if fp_hash in section_fps:
                 # Intra-section duplicate

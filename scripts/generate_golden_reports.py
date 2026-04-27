@@ -30,6 +30,7 @@ Version: 2.2.0 (Golden Artifacts + Summary Gate + Retry/Timeout Resilience)
 """
 
 import argparse
+import ast
 import hashlib
 import json
 import os
@@ -399,9 +400,8 @@ def parse_summary_text(summary_text: str) -> Dict[str, Any]:
             # Try to parse as list (Python repr format)
             elif value.startswith("[") and value.endswith("]"):
                 try:
-                    # Handle Python list repr like ['a', 'b'] or []
-                    parsed[key] = eval(value)  # Safe for our controlled format
-                except Exception:
+                    parsed[key] = ast.literal_eval(value)
+                except (ValueError, SyntaxError):
                     parsed[key] = value
             else:
                 parsed[key] = value

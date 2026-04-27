@@ -57,7 +57,7 @@ def load_profile(path: str) -> Dict[str, Any]:
 
 def submit_briefing(api_base: str, profile: dict) -> str:
     url = f"{api_base}/briefings/submit"
-    r = requests.post(url, json=profile)
+    r = requests.post(url, json=profile, timeout=60)
     r.raise_for_status()
     data = r.json()
     briefing_id: str = data.get("briefing_id", "")
@@ -65,7 +65,7 @@ def submit_briefing(api_base: str, profile: dict) -> str:
 
 def run_analysis(api_base: str, briefing_id: str) -> Dict[str, Any]:
     url = f"{api_base}/analyze/run"
-    r = requests.post(url, json={"briefing_id": briefing_id})
+    r = requests.post(url, json={"briefing_id": briefing_id}, timeout=300)
     r.raise_for_status()
     result: Dict[str, Any] = r.json()
     return result
