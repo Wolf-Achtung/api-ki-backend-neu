@@ -277,11 +277,11 @@ def step5_principal(
     # Pfad 1: Service-Token
     if x_service_token and s.security.service_token_enabled:
         try:
-            payload = verify_service_token(
+            service_payload = verify_service_token(
                 x_service_token, required_scope="briefings:submit"
             )
             return AuthenticatedPrincipal(
-                service_principal=payload.principal,
+                service_principal=service_payload.principal,
                 is_service=True,
                 is_authenticated=True,
             )
@@ -299,7 +299,7 @@ def step5_principal(
 
     if token:
         try:
-            payload = verify_access_token(token)
+            user_payload = verify_access_token(token)
         except HTTPException:
             if enforced:
                 raise
@@ -311,10 +311,10 @@ def step5_principal(
                 from core.whitelist import is_whitelisted
             except ImportError:  # pragma: no cover
                 is_whitelisted = lambda _e: True  # type: ignore[assignment]
-            if not is_whitelisted(payload.email):
+            if not is_whitelisted(user_payload.email):
                 log.warning(
                     "🚫 Step5: JWT for non-whitelisted email rejected: %s",
-                    payload.email,
+                    user_payload.email,
                 )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -322,7 +322,7 @@ def step5_principal(
                 )
 
         return AuthenticatedPrincipal(
-            email=payload.email,
+            email=user_payload.email,
             is_authenticated=True,
         )
 
