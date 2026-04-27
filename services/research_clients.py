@@ -89,7 +89,7 @@ def _cache_set(key: str, val: Any) -> None:
     _save_cache(cache)
 
 def _cache_key(prefix: str, url: str) -> str:
-    return prefix + "_" + hashlib.sha1(url.encode("utf-8")).hexdigest()[:12]
+    return prefix + "_" + hashlib.sha1(url.encode("utf-8"), usedforsecurity=False).hexdigest()[:12]
 
 # --- HTTP helpers ---
 

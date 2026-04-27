@@ -1,0 +1,12 @@
+# gitleaks false positives — verified harmless
+# Format: <commit>:<file>:<rule>:<line>  OR  fingerprint
+# https://github.com/gitleaks/gitleaks/blob/master/README.md#gitleaksignore
+
+# .env.example: TAVILY_API_KEY= placeholder; entropy check on neighbouring "TAVILY_MAX_RESULTS=10"
+.env.example:generic-api-key:59
+
+# services/consistency_engine.py: matches Python identifier "distribution.roi_p50" (code, not a key)
+services/consistency_engine.py:generic-api-key:4009
+
+# tests/test_report_workflow.py: hard-coded test fixture "unique-key-12345" used for idempotency-key header
+tests/test_report_workflow.py:generic-api-key:253

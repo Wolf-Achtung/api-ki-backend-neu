@@ -33,9 +33,17 @@ ENV/
 *.swo
 *~
 
-# Environment variables
+# Environment variables / secrets
 .env
-.env.local
+.env.*
+!.env.example
+.envrc
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials/
 
 # Database
 *.db
@@ -89,3 +97,8 @@ __pycache__/
 *.pyc
 *.bak622
 CLAUDE-*.txt
+
+# Audit / scan output (never commit)
+.audit-temp/
+.semgrep_logs/
+gitleaks-report.json

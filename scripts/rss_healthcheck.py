@@ -1,14 +1,17 @@
 # scripts/rss_healthcheck.py
 from __future__ import annotations
 import sys, time, json, argparse
+from urllib.parse import urlparse
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
 
 def check_feed(url: str, timeout: int = 10) -> dict:
+    if urlparse(url).scheme not in ("http", "https"):
+        return {"url": url, "status": 0, "ok": False, "error": "unsupported_scheme"}
     req = Request(url, headers={"User-Agent": "KI-Status-Report/1.0 (+rss-health)"})
     t0 = time.time()
     try:
-        with urlopen(req, timeout=timeout) as r:
+        with urlopen(req, timeout=timeout) as r:  # noqa: S310 - scheme validated above
             content_type = r.headers.get("Content-Type", "")
             data = r.read(4096)
             ok = r.status == 200 and (b"<rss" in data or b"<feed" in data or b"<rdf" in data)

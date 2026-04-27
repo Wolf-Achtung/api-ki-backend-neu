@@ -719,7 +719,7 @@ class PDFNavigationAnchorGenerator:
         """Generate unique anchor ID for PDF."""
         # Create deterministic hash from section ID
         hash_input = f"{section.id}_{section.title}"
-        hash_val = hashlib.md5(hash_input.encode()).hexdigest()[:8]
+        hash_val = hashlib.md5(hash_input.encode(), usedforsecurity=False).hexdigest()[:8]
         return f"nav_{hash_val}"
 
     def _format_bookmark_title(self, section: Section) -> str:
