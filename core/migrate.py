@@ -163,6 +163,13 @@ DDL = [
     text("CREATE INDEX IF NOT EXISTS idx_chat_sessions_status ON chat_sessions(status)"),
     text("CREATE INDEX IF NOT EXISTS idx_chat_sessions_user ON chat_sessions(user_id)"),
     text("CREATE INDEX IF NOT EXISTS idx_chat_sessions_activity ON chat_sessions(last_activity_at)"),
+    # Hotfix 2026-04-27: Admin-Cancel + Audit (briefings)
+    text("ALTER TABLE briefings ADD COLUMN IF NOT EXISTS cancel_reason TEXT"),
+    text("ALTER TABLE briefings ADD COLUMN IF NOT EXISTS cancelled_at  TIMESTAMPTZ"),
+    text("ALTER TABLE briefings ADD COLUMN IF NOT EXISTS source        TEXT"),
+    text("ALTER TABLE briefings ADD COLUMN IF NOT EXISTS request_ip    TEXT"),
+    text("ALTER TABLE briefings ADD COLUMN IF NOT EXISTS request_ua    TEXT"),
+    text("CREATE INDEX IF NOT EXISTS ix_briefings_cancelled_at ON briefings (cancelled_at)"),
 ]
 
 def migrate_all(engine: Engine) -> None:
