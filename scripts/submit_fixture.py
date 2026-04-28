@@ -346,6 +346,41 @@ def download_pdf(
         return None
 
 
+def download_html(
+    client: httpx.Client,
+    briefing_id: int,
+    output_dir: str,
+    fixture_id: str,
+) -> Optional[str]:
+    """
+    Download the rendered HTML for a briefing.
+
+    Returns:
+        Path to downloaded HTML or None if failed
+    """
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    html_filename = f"{fixture_id}_{briefing_id}.html"
+    html_path = output_path / html_filename
+
+    log.info("Downloading HTML to %s...", html_path)
+
+    try:
+        response = client.get(f"/api/report/html/{briefing_id}")
+        response.raise_for_status()
+
+        with open(html_path, "wb") as f:
+            f.write(response.content)
+
+        log.info("HTML saved: %s (%d bytes)", html_path, len(response.content))
+        return str(html_path)
+
+    except Exception as e:
+        log.error("Failed to download HTML: %s", e)
+        return None
+
+
 def get_report_url(briefing_id: int, base_url: str) -> str:
     """Generate the report URL for a briefing."""
     return f"{base_url}/api/report/html/{briefing_id}"
@@ -409,6 +444,12 @@ Environment Variables (with fallback):
         metavar="DIR",
         default=None,
         help="Download PDF to specified directory",
+    )
+    parser.add_argument(
+        "--download-html",
+        metavar="DIR",
+        default=None,
+        help="Download rendered HTML to specified directory",
     )
     parser.add_argument(
         "--output-json",
@@ -501,6 +542,14 @@ Environment Variables (with fallback):
                         if pdf_path:
                             result["pdf_local_path"] = pdf_path
 
+                    # Download HTML if requested
+                    if args.download_html:
+                        html_path = download_html(
+                            client, briefing_id, args.download_html, fixture_id
+                        )
+                        if html_path:
+                            result["html_local_path"] = html_path
+
                     # Get validation summary if available
                     validation = get_validation_summary(client, briefing_id)
                     if validation:
@@ -535,6 +584,8 @@ Environment Variables (with fallback):
                 print(f"PDF URL: {result['pdf_url']}")
             if result.get("pdf_local_path"):
                 print(f"PDF Local: {result['pdf_local_path']}")
+            if result.get("html_local_path"):
+                print(f"HTML Local: {result['html_local_path']}")
             print(f"{'='*50}\n")
 
         return EXIT_SUCCESS

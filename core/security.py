@@ -169,7 +169,7 @@ def verify_service_token(token: str, required_scope: str = "briefings:submit") -
     # Scope-Mapping pro Principal
     principal_scopes = {
         "golden_reports": ["briefings:submit", "reports:read"],
-        "ci_runner": ["briefings:submit"],
+        "ci_runner": ["briefings:submit", "reports:read"],
         "test_runner": ["briefings:submit", "reports:read"],
     }
 

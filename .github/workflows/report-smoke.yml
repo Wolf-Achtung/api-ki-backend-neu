@@ -126,7 +126,7 @@ jobs:
           # Note: Do NOT use 2>&1 - keep streams separate for clean JSON
           # Timeout 900s: KMU pipeline >600s observed; Solo/Team ~570s headroom.
           python scripts/submit_fixture.py fixtures/solo_freelancer.json \
-            --poll --timeout 900 --download-pdf ${{ env.ARTIFACTS_DIR }} --output-json \
+            --poll --timeout 900 --download-html ${{ env.ARTIFACTS_DIR }} --output-json \
             > ${{ env.ARTIFACTS_DIR }}/solo_result.json && EXIT_CODE=0 || EXIT_CODE=$?
 
           echo "Exit code: $EXIT_CODE"
@@ -148,7 +148,7 @@ jobs:
           # Wait 10s between reports to let backend stabilize
           sleep 10
           python scripts/submit_fixture.py fixtures/team_startup.json \
-            --poll --timeout 900 --download-pdf ${{ env.ARTIFACTS_DIR }} --output-json \
+            --poll --timeout 900 --download-html ${{ env.ARTIFACTS_DIR }} --output-json \
             > ${{ env.ARTIFACTS_DIR }}/team_result.json && EXIT_CODE=0 || EXIT_CODE=$?
 
           echo "Exit code: $EXIT_CODE"
@@ -167,7 +167,7 @@ jobs:
           echo "::group::Generating KMU Report"
           sleep 10
           python scripts/submit_fixture.py fixtures/kmu_mittelstand.json \
-            --poll --timeout 900 --download-pdf ${{ env.ARTIFACTS_DIR }} --output-json \
+            --poll --timeout 900 --download-html ${{ env.ARTIFACTS_DIR }} --output-json \
             > ${{ env.ARTIFACTS_DIR }}/kmu_result.json && EXIT_CODE=0 || EXIT_CODE=$?
 
           echo "Exit code: $EXIT_CODE"
