@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from core.security import bearer_token, verify_access_token, verify_service_token, ServiceTokenPayload
-from core.audit import _resolve_client_ip, anonymize_ip
+from core.audit import _resolve_client_ip, anonymize_ip, _truncate
 from settings import get_settings
 from services.rate_limit import RateLimiter
 from utils.idempotency import IdempotencyBox
@@ -27,13 +27,6 @@ log = logging.getLogger(__name__)
 # Rate limiter and idempotency box as module-level variables to persist state across requests
 _briefing_rate_limiter = RateLimiter(namespace="briefings", limit=10, window_sec=300)
 _idempotency_box = IdempotencyBox(namespace="briefing_submit")
-
-
-def _truncate(value: Optional[str], limit: int = 500) -> Optional[str]:
-    """Truncate strings for DB columns / log lines."""
-    if not value:
-        return None
-    return value if len(value) <= limit else value[: limit - 1] + "…"
 
 
 class BriefingSubmitIn(BaseModel):

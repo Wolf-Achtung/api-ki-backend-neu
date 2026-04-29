@@ -23,6 +23,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text as _sa_text
 
+from core.audit import _resolve_client_ip, _truncate, anonymize_ip
 from core.security import AuthenticatedPrincipal, step5_principal
 from models import Briefing, ChatSession, User
 from routes._bootstrap import get_db
@@ -601,7 +602,11 @@ async def chat_start(
 # ===========================================================================
 
 @router.post("/message")
-async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
+async def chat_message(
+    req: ChatMessageRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
     """Process user message, extract fields, stream AI response via SSE."""
     session = db.query(ChatSession).filter(ChatSession.id == req.session_id).first()
     if not session:
@@ -2289,7 +2294,7 @@ async def chat_message(req: ChatMessageRequest, db: Session = Depends(get_db)):
                 if rt == "strategy":
                     _briefing_id = await _complete_strategy(session, collected, db, now)
                 else:
-                    _briefing_id = _complete_r1(session, collected, db, now)
+                    _briefing_id = _complete_r1(session, collected, db, now, request)
                 _redirect_url = _complete_redirect(rt, _briefing_id)
                 log.info("[CHAT] Report triggered: briefing_id=%s, session=%s", _briefing_id, session.id)
                 yield f"event: report_started\ndata: {json.dumps({'briefing_id': _briefing_id, 'redirect_url': _redirect_url})}\n\n"
@@ -3115,12 +3120,20 @@ def _complete_r1(
         answers["email"] = user_email
     log.info("[CHAT] Complete R1: user_email=%s, user_id=%s", user_email, user_id)
 
+    audit_request_ip = anonymize_ip(_resolve_client_ip(request)) if request else None
+    audit_request_ua = (
+        _truncate(request.headers.get("user-agent"), limit=500) if request else None
+    )
+
     briefing = Briefing(
         user_id=user_id,
         lang=session.lang,
         answers=answers,
         status="accepted",
         accepted_at=now,
+        source="chat",
+        request_ip=audit_request_ip,
+        request_ua=audit_request_ua,
     )
     db.add(briefing)
     db.flush()
@@ -3130,6 +3143,13 @@ def _complete_r1(
     session.briefing_id = briefing.id
     session.updated_at = now
     db.commit()
+    log.info(
+        "📝 BRIEFING-CREATED id=%d user_email=%s ip=%s ua=%s source=chat",
+        briefing.id,
+        user_email or "(none)",
+        audit_request_ip or "(none)",
+        _truncate(audit_request_ua, limit=80) or "(none)",
+    )
     return briefing.id
 
 

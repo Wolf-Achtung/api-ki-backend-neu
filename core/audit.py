@@ -53,3 +53,10 @@ def anonymize_ip(ip: Optional[str]) -> Optional[str]:
             return str(net.network_address)
     except ValueError:
         return ip  # leave malformed IPs untouched
+
+
+def _truncate(value: Optional[str], limit: int = 500) -> Optional[str]:
+    """Truncate strings for DB columns / log lines."""
+    if not value:
+        return None
+    return value if len(value) <= limit else value[: limit - 1] + "…"
