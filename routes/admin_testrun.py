@@ -16,10 +16,11 @@ import os
 import time
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from core.audit import _resolve_client_ip, _truncate, anonymize_ip
 from routes._bootstrap import get_db
 
 router = APIRouter(prefix="/admin/testrun", tags=["admin-testrun"])
@@ -61,6 +62,7 @@ _REPLAY_DEDUP_WINDOW_MINUTES = 30
 @router.post("/replay/{briefing_id}")
 def replay_testrun(
     briefing_id: int,
+    request: Request,
     admin_key: str = Query(..., description="Admin API Key"),
     force: bool = Query(False, description="Bypass duplicate guard"),
     body: Optional[ReplayRequest] = None,
@@ -181,6 +183,9 @@ def replay_testrun(
     cleaned_answers = clean_briefing_data(answers)
     now = datetime.now(timezone.utc)
 
+    audit_request_ip = anonymize_ip(_resolve_client_ip(request))
+    audit_request_ua = _truncate(request.headers.get("user-agent"), limit=500)
+
     new_briefing = Briefing(
         user_id=source.user_id,
         lang=source.lang,
@@ -188,6 +193,9 @@ def replay_testrun(
         status="accepted",
         accepted_at=now,
         replayed_from=briefing_id,
+        source="admin_replay",
+        request_ip=audit_request_ip,
+        request_ua=audit_request_ua,
     )
     db.add(new_briefing)
     db.commit()
