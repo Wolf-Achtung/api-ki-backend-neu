@@ -1481,7 +1481,7 @@ h1, h2, h3, h4 {
         <strong>Auf einen Blick:</strong> Drei klare Leitplanken für Ihre KI-Strategie – ausdruckbar als Vorlage für die Geschäftsführung.
     </div>
 
-    {% if EXECUTIVE_DECISION_HTML and EXECUTIVE_DECISION_HTML|trim and '<' in EXECUTIVE_DECISION_HTML %}
+    {% if EXECUTIVE_DECISION_HTML and EXECUTIVE_DECISION_HTML|trim %}
     {{ EXECUTIVE_DECISION_HTML|safe }}
     {% elif FINAL_CHECK_DECISIONS %}
     {% for decision in FINAL_CHECK_DECISIONS %}
@@ -1529,7 +1529,7 @@ h1, h2, h3, h4 {
 {% endif %}
 
 <!-- ═══════ QUICK WINS ═══════ -->
-{% if QUICK_WINS_HTML and QUICK_WINS_HTML|trim and '<' in QUICK_WINS_HTML %}
+{% if QUICK_WINS_HTML and QUICK_WINS_HTML|trim %}
 <section class="section" id="quick-wins-section" data-category="action">
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <div class="section-header">
@@ -1554,7 +1554,7 @@ h1, h2, h3, h4 {
 {% endif %}
 
 <!-- ═══════ 90-TAGE-ROADMAP ═══════ -->
-{% if ROADMAP_90D_DECISION_HTML and ROADMAP_90D_DECISION_HTML|trim and '<' in ROADMAP_90D_DECISION_HTML %}
+{% if ROADMAP_90D_DECISION_HTML and ROADMAP_90D_DECISION_HTML|trim %}
 <section class="section" id="roadmap-90d" data-category="action">
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <div class="section-header">
@@ -1596,7 +1596,7 @@ h1, h2, h3, h4 {
 {% endif %}
 
 <!-- ═══════ TOOLS & STARTER-KIT ═══════ -->
-{% if KI_STACK_SUMMARY_HTML and KI_STACK_SUMMARY_HTML|trim and '<' in KI_STACK_SUMMARY_HTML %}
+{% if KI_STACK_SUMMARY_HTML and KI_STACK_SUMMARY_HTML|trim %}
 <section class="section" id="tools-section" data-category="action">
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <div class="section-header">
@@ -1763,7 +1763,7 @@ h1, h2, h3, h4 {
             <div class="funding-card-next">→ {{ FUNDING_PATH_2.next_step }}</div>
         </div>
         {% endif %}
-        {% if not FUNDING_PATH_1 and FOERDERPOTENZIAL_HTML and FOERDERPOTENZIAL_HTML|trim and '<' in FOERDERPOTENZIAL_HTML %}
+        {% if not FUNDING_PATH_1 and FOERDERPOTENZIAL_HTML and FOERDERPOTENZIAL_HTML|trim %}
         {{ FOERDERPOTENZIAL_HTML|safe }}
         {% endif %}
     </div>
@@ -1772,7 +1772,7 @@ h1, h2, h3, h4 {
 {% endif %}
 
 <!-- ═══════ 12-MONATS-AUSBLICK ═══════ -->
-{% if ROADMAP_12M_HTML and ROADMAP_12M_HTML|trim and '<' in ROADMAP_12M_HTML %}
+{% if ROADMAP_12M_HTML and ROADMAP_12M_HTML|trim %}
 <section class="section" id="outlook-section" data-category="strategy">
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <div class="section-header">
@@ -1792,7 +1792,7 @@ h1, h2, h3, h4 {
 {% endif %}
 
 <!-- ═══════ GAMECHANGER ═══════ -->
-{% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim and '<' in GAMECHANGER_DECISION_HTML %}
+{% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim %}
 <section class="section {% if 'gamechanger' in skip_pages %}section-optional{% endif %}" id="gamechanger-section" data-category="strategy">
     <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <div class="chapter-banner__content">
@@ -1919,7 +1919,7 @@ h1, h2, h3, h4 {
 {% endif %}
 
 <!-- A4: Handlungsempfehlungen (Detail) -->
-{% if RECOMMENDATIONS_ENGINE_HTML and RECOMMENDATIONS_ENGINE_HTML|trim and '<' in RECOMMENDATIONS_ENGINE_HTML %}
+{% if RECOMMENDATIONS_ENGINE_HTML and RECOMMENDATIONS_ENGINE_HTML|trim %}
 <section class="appendix-section" id="appendix-a4" data-category="deep">
     <div class="appendix-header">Anhang A4 · Handlungsempfehlungen (Detail)</div>
     <div class="section-body">{{ RECOMMENDATIONS_ENGINE_HTML|safe }}</div>
@@ -1951,7 +1951,7 @@ h1, h2, h3, h4 {
 {% endif %}
 
 <!-- A7: KI-Skill-Fahrplan -->
-{% if KI_SKILLPLAN_HTML and KI_SKILLPLAN_HTML|trim and '<' in KI_SKILLPLAN_HTML %}
+{% if KI_SKILLPLAN_HTML and KI_SKILLPLAN_HTML|trim %}
 <section class="appendix-section" id="appendix-a7" data-category="deep">
     <div class="appendix-header">Anhang A7 · KI-Skill-Fahrplan 2026</div>
     <div class="section-body">{{ KI_SKILLPLAN_HTML|safe }}</div>
@@ -1959,7 +1959,7 @@ h1, h2, h3, h4 {
 {% endif %}
 
 <!-- A8: Monetarisierung -->
-{% if MONETARISIERUNG_HTML and MONETARISIERUNG_HTML|trim and '<' in MONETARISIERUNG_HTML %}
+{% if MONETARISIERUNG_HTML and MONETARISIERUNG_HTML|trim %}
 <section class="appendix-section" id="appendix-a8" data-category="deep">
     <div class="appendix-header">Anhang A8 · Monetarisierung &amp; Angebotslogik</div>
     <div class="section-body">{{ MONETARISIERUNG_HTML|safe }}</div>
@@ -1995,7 +1995,7 @@ h1, h2, h3, h4 {
 {% endif %}
 
 <!-- A12: Förderpotenzial (Detail) -->
-{% if FOERDERPOTENZIAL_HTML and FOERDERPOTENZIAL_HTML|trim and '<' in FOERDERPOTENZIAL_HTML %}
+{% if FOERDERPOTENZIAL_HTML and FOERDERPOTENZIAL_HTML|trim %}
 <section class="appendix-section" id="appendix-a12" data-category="deep">
     <div class="appendix-header">Anhang A12 · Förderpotenzial (Detail)</div>
     <div class="section-body">
