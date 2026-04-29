@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from core.security import bearer_token, verify_access_token, verify_service_token, ServiceTokenPayload
+from core.audit import _resolve_client_ip
 from settings import get_settings
 from services.rate_limit import RateLimiter
 from utils.idempotency import IdempotencyBox
@@ -26,23 +27,6 @@ log = logging.getLogger(__name__)
 # Rate limiter and idempotency box as module-level variables to persist state across requests
 _briefing_rate_limiter = RateLimiter(namespace="briefings", limit=10, window_sec=300)
 _idempotency_box = IdempotencyBox(namespace="briefing_submit")
-
-
-def _resolve_client_ip(request: Request) -> Optional[str]:
-    """Resolve the originating client IP.
-
-    Railway routes through Fastly; ``request.client.host`` is the CDN IP, not
-    the user. Prefer the first entry of ``X-Forwarded-For`` (the chain's
-    leftmost address is the original client per RFC 7239).
-    """
-    xff = request.headers.get("x-forwarded-for")
-    if xff:
-        first = xff.split(",")[0].strip()
-        if first:
-            return first
-    if request.client and request.client.host:
-        return request.client.host
-    return None
 
 
 def _truncate(value: Optional[str], limit: int = 500) -> Optional[str]:
