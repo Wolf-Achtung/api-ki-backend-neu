@@ -531,8 +531,10 @@ h1, h2, h3, h4 { break-after: avoid; }
 /* KIS-1126 / C5 FIX: Increased paragraph spacing from 6px→10px for visual breathing room */
 .section-content p + p { margin-top: 10px; }
 .section-content h4 + p { margin-top: 6px; }
-/* KIS-1126 / C5 FIX: Increased orphans/widows from 3→5 */
-.section-content p, .section-content li { orphans: 5; widows: 5; }
+/* KIS-1128 audit M8: orphans/widows 5/5 → 3/3 to align with R1+KPA family
+   standard. Higher values were a reaction to specific page-break artifacts
+   that are now mitigated upstream by Sprint A (banner break-after removal). */
+.section-content p, .section-content li { orphans: 3; widows: 3; }
 .section-content h3 { margin-top: var(--sp-lg); break-after: avoid; }
 .section-content h4 { break-after: avoid; }
 

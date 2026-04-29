@@ -121,8 +121,8 @@ templates/
 | # | Datei | Zeile | Referenz-Typ | Bewertung |
 |---|-------|-------|-------------|-----------|
 | 51 | `gpt_analyze.py` | 8754,17513 | Kommentar | KEIN HANDLUNGSBEDARF |
-| 52 | `gpt_analyze.py.pre-b726` | 8356 | Kommentar (Backup) | KEIN HANDLUNGSBEDARF |
-| 53 | `gpt_analyze.py.bak-b725` | 8356 | Kommentar (Backup) | KEIN HANDLUNGSBEDARF |
+| ~~52~~ | ~~`gpt_analyze.py.pre-b726`~~ | — | entfernt (KIS-1128 Sprint C1) | — |
+| ~~53~~ | ~~`gpt_analyze.py.bak-b725`~~ | — | entfernt (KIS-1128 Sprint C1) | — |
 
 ---
 
@@ -151,7 +151,7 @@ templates/
 | Kategorie | Dateien | Beschreibung |
 |-----------|---------|-------------|
 | Dokumentation | ~16 .md-Dateien | Historische Referenzen |
-| Backup-Dateien | 2 `.bak`/`.pre` | Alte Backups |
+| ~~Backup-Dateien~~ | — | entfernt (KIS-1128 Sprint C1, recoverable via `git log --all`) |
 | Tools | 1 (env_sanity_checker) | Prüft nur Env-Var-Name, nicht Wert |
 | i18n | 1 (ui_labels.json) | Nur Kommentar |
 | Patch-Scripts | 1 (apply_i_serie.py) | Historische Patches |

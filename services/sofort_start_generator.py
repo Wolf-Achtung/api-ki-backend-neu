@@ -1884,7 +1884,7 @@ def generate_sofort_start_html(
                     {prompt_data["zeitersparnis"]}
                 </span>
             </div>
-            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 10px; line-height: 1.4; white-space: pre-wrap; color: #334155;">
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 9pt; line-height: 1.5; white-space: pre-wrap; color: #334155;">
 {_prompt_text}
             </div>
         </div>
@@ -1914,7 +1914,7 @@ def generate_sofort_start_html(
                     ⏱️ {prompt_data["zeitersparnis"]}
                 </span>
             </div>
-            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 10px; line-height: 1.4; white-space: pre-wrap; color: #334155;">
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 9pt; line-height: 1.5; white-space: pre-wrap; color: #334155;">
 {_prompt_text}
             </div>
         </div>
@@ -1945,7 +1945,7 @@ def generate_sofort_start_html(
                     ⏱️ {prompt_data["zeitersparnis"]}
                 </span>
             </div>
-            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 10px; line-height: 1.4; white-space: pre-wrap; color: #334155;">
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 9pt; line-height: 1.5; white-space: pre-wrap; color: #334155;">
 {prompt_text}
             </div>
         </div>
@@ -1967,7 +1967,7 @@ def generate_sofort_start_html(
                     ⏱️ {lern_prompt["zeitersparnis"]}
                 </span>
             </div>
-            <div style="background: white; border: 1px solid #fde68a; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 10px; line-height: 1.4; white-space: pre-wrap; color: #334155;">
+            <div style="background: white; border: 1px solid #fde68a; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 9pt; line-height: 1.5; white-space: pre-wrap; color: #334155;">
 {lern_text}
             </div>
         </div>
