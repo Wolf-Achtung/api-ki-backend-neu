@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from core.security import bearer_token, verify_access_token, verify_service_token, ServiceTokenPayload
-from core.audit import _resolve_client_ip
+from core.audit import _resolve_client_ip, anonymize_ip
 from settings import get_settings
 from services.rate_limit import RateLimiter
 from utils.idempotency import IdempotencyBox
@@ -157,7 +157,7 @@ async def submit_briefing(
         audit_source = "jwt"
     else:
         audit_source = "anonymous"
-    audit_request_ip = _resolve_client_ip(request)
+    audit_request_ip = anonymize_ip(_resolve_client_ip(request))
     audit_request_ua = _truncate(request.headers.get("user-agent"), limit=500)
 
     # Briefing in Datenbank speichern (DB-Backed Worker: nur speichern, KEIN run_async!)
