@@ -449,13 +449,15 @@ h1, h2, h3, h4 { break-after: avoid; }
 /* ══════════════════════════════════════════════════════
    CHAPTER BANNER (compact top-banner, replaces full-page divider)
    ══════════════════════════════════════════════════════ */
-/* KIS-1127 / C4: Compact ~80px banner instead of 100vh full-page divider */
+/* KIS-1127/C4 + KIS-1128 audit M1: Compact ~80px banner.
+   break-after: avoid removed for family consistency with R1+KPA. Each strategy
+   banner already forces page-break via the `page-break` class on the macro,
+   so break-after was redundant and a regression risk. */
 .chapter-banner {
     padding: 20px 32px 16px;
     margin: 0 0 24px 0;
     position: relative;
     break-inside: avoid;
-    break-after: avoid;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }

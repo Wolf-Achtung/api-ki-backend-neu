@@ -131,13 +131,15 @@ td.negative { color: var(--c-danger); font-weight: 600; }
     break-inside: auto;
 }
 
-/* ── Chapter Banner (KIS-1127/C4) ─────────────────────── */
+/* ── Chapter Banner (KIS-1127/C4, KIS-1128 audit M1) ──────
+   break-after: avoid removed for family consistency with R1.
+   KPA layout was OK because each section forces break-before:page;
+   removal is risk-neutral but keeps the family aligned. */
 .chapter-banner {
     padding: 20px 32px 16px;
     margin: 0 0 20px 0;
     position: relative;
     break-inside: avoid;
-    break-after: avoid;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }

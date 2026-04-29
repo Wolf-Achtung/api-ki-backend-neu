@@ -147,12 +147,10 @@ tr:last-child td { border-bottom: none; }
     padding: var(--sp-xl) 0 var(--sp-lg);
     break-inside: auto;
 }
-/* KIS-1126 / C3 FIX: Prevent near-empty pages by keeping headings with
-   their following content and avoiding orphaned section starts */
+/* KIS-1126 / C3 FIX: Headings stay with following content (browser default
+   reinforced). KIS-1128 audit M2: glance-box break-after removed — caused
+   cascade banner→glance→h3→content that pushed half-empty pages forward. */
 .section h2, .section h3, .section h4 {
-    break-after: avoid;
-}
-.section .glance-box {
     break-after: avoid;
 }
 /* Phase/roadmap items should not break internally */
@@ -269,13 +267,15 @@ tr:last-child td { border-bottom: none; }
 .section-body p, .section-body li { orphans: 3; widows: 3; }
 .section-body h3 { margin-top: var(--sp-lg); }
 
-/* ── Chapter Banner (KIS-1127/C4) ─────────────────────── */
+/* ── Chapter Banner (KIS-1127/C4, KIS-1128 audit M1) ──────
+   break-after: avoid removed — banners on sections without
+   forced page-break (vendor, funding) caused 70% whitespace
+   on the preceding page when banner+content didn't fit. */
 .chapter-banner {
     padding: 20px 32px 16px;
     margin: 0 0 20px 0;
     position: relative;
     break-inside: avoid;
-    break-after: avoid;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
@@ -1101,8 +1101,8 @@ h1, h2, h3, h4 {
     .scenarios-section, .business-case-engine-v2 { break-inside: auto; }
     /* Small cards stay together */
     .tool-card, .vendor-card, .scenario-card { break-inside: avoid; }
-    /* KIS-1127/C4: Chapter banners */
-    .chapter-banner { break-inside: avoid; break-after: avoid; }
+    /* KIS-1127/C4 + KIS-1128 audit M1: break-after removed (cascade fix) */
+    .chapter-banner { break-inside: avoid; }
 }
     </style>
 </head>
