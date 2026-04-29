@@ -1848,8 +1848,11 @@ def generate_sofort_start_html(
     </div>
     
     <!-- PROMPTS SECTION – KIS-1132: expertise-aware -->
+    <!-- KIS-1128 audit M3: outer page-break-inside:avoid wrapper removed —
+         it kept H3 + intro + first prompt-box together, which on S.5/S.6
+         pushed the whole block forward and left ~40% whitespace on S.5.
+         Each prompt-box still has its own page-break-inside:avoid below. -->
     <div style="margin-bottom: 24px;">
-        <div style="page-break-inside: avoid; break-inside: avoid;">
 '''
 
     # KIS-1132: Select prompts based on expertise level
@@ -1871,7 +1874,6 @@ def generate_sofort_start_html(
         _expert_prompts = EXPERT_PROMPT_PATTERNS
         for i, prompt_data in enumerate(_expert_prompts, 1):
             _prompt_text = prompt_data["prompt"].replace("{hauptleistung}", _hl_clean or str(branche_data["name"]))
-            close_wrapper = "</div>" if i == 1 else ""
             html += f'''
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -1886,7 +1888,6 @@ def generate_sofort_start_html(
 {_prompt_text}
             </div>
         </div>
-        {close_wrapper}
 '''
 
     elif expertise_level == "intermediate":
@@ -1903,7 +1904,6 @@ def generate_sofort_start_html(
         _inter_prompts = INTERMEDIATE_PROMPTS
         for i, prompt_data in enumerate(_inter_prompts, 1):
             _prompt_text = prompt_data["prompt"].replace("{hauptleistung}", _hl_clean or str(branche_data["name"]))
-            close_wrapper = "</div>" if i == 1 else ""
             html += f'''
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -1918,7 +1918,6 @@ def generate_sofort_start_html(
 {_prompt_text}
             </div>
         </div>
-        {close_wrapper}
 '''
 
     else:
@@ -1936,7 +1935,6 @@ def generate_sofort_start_html(
         for i, prompt_data in enumerate(prompts_list, 1):
             _raw_prompt = _hl_context_prefix + prompt_data["prompt"] if _hl_context_prefix else prompt_data["prompt"]
             prompt_text = _raw_prompt
-            close_wrapper = "</div>" if i == 1 else ""
             html += f'''
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -1951,7 +1949,6 @@ def generate_sofort_start_html(
 {prompt_text}
             </div>
         </div>
-        {close_wrapper}
 '''
         # Lern-Prompt (beginner only)
         _lern_raw = branche_data.get("lern_prompt")
