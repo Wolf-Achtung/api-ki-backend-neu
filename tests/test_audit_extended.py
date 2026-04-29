@@ -21,7 +21,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-os.environ.setdefault("STRATEGY_ADMIN_KEY", "test-admin-key-6b")
+os.environ.setdefault("STRATEGY_ADMIN_KEY", "test-admin-key-123")
 
 from models import Base, Briefing, ChatSession  # noqa: E402
 from routes._bootstrap import get_db  # noqa: E402
@@ -157,7 +157,7 @@ def test_admin_replay_persists_audit_trail(
 
     response = client.post(
         f"/api/admin/testrun/replay/{source_id}",
-        params={"admin_key": "test-admin-key-6b"},
+        params={"admin_key": os.environ["STRATEGY_ADMIN_KEY"]},
         headers={
             "X-Forwarded-For": "203.0.113.99, 10.0.0.1",
             "User-Agent": "replay-test-agent",
