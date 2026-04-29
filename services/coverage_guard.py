@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
-from typing import Dict, Any
+from typing import Dict, Any, Iterable, List
 import html
+import logging
+
+log = logging.getLogger(__name__)
 
 """
 coverage_guard
@@ -125,6 +128,94 @@ def analyze_coverage(answers: Dict[str, Any]) -> Dict[str, Any]:
         "coverage_pct": coverage,
         "present_count": len(present),
     }
+
+
+# ---------------------------------------------------------------------------
+# KIS-1128 audit M11: Render-Context Coverage
+#
+# Detects silent content loss at template render time. If a generator returns
+# an empty / whitespace-only string for a required key, the corresponding
+# section is suppressed by the template's {% if X and X|trim %} guard. Without
+# logging, these losses are invisible in production. This audit emits a
+# WARNING per missing/empty required key — output is unchanged.
+# ---------------------------------------------------------------------------
+
+# Minimum required top-level context keys per report. Each key lists field names
+# that — if missing or empty — likely represent a silent content loss. Cover
+# only Pflicht-keys (LLM-generated narrative blocks, deterministic engines).
+# Score / metadata keys are excluded (they have their own validators).
+RENDER_REQUIRED_KEYS: Dict[str, List[str]] = {
+    "r1": [
+        "SOFORT_START_HTML",
+        "QUICK_WINS_HTML",
+        "ROADMAP_90D_DECISION_HTML",
+        "BUSINESS_CASE_ENGINE_HTML",
+        "KI_STACK_SUMMARY_HTML",
+        "PROMPT_VORLAGEN_HTML",
+        "CHALLENGE_30_TAGE_HTML",
+        "VENDOR_AUDIT_HTML",
+        "RISK_ENGINE_HTML",
+        "ROADMAP_12M_HTML",
+        "GAMECHANGER_DECISION_HTML",
+        "ADVISOR_NOTE_HTML",
+    ],
+    "strategy": [
+        "exec_summary",
+        "section_s1",
+        "section_s2",
+        "section_s3",
+        "section_s4",
+        "section_s5",
+        "section_s6",
+        "section_s7",
+        "naechste_schritte",
+    ],
+    "kpa": [
+        "GC_BRUCHPUNKT_HTML",
+        "GC_IMPL_PLAN_HTML",
+        "BC_DEEP_DIVE_HTML",
+        "GC_RISK_HTML",
+        "GC_NEXT_STEPS_HTML",
+    ],
+}
+
+
+def audit_render_context(
+    report_type: str,
+    context: Dict[str, Any],
+    *,
+    extra_required: Iterable[str] = (),
+    report_id: str | None = None,
+) -> List[str]:
+    """
+    Audit a Jinja render context for empty required keys.
+
+    Emits one WARNING per missing/empty key. Returns the list of missing keys
+    (caller may forward to telemetry). Output of the renderer is NOT modified.
+
+    Args:
+        report_type: "r1" | "strategy" | "kpa" — selects the required-key list.
+        context: the dict passed to template.render(**context).
+        extra_required: optional caller-specific keys to also check.
+        report_id: optional id to include in log messages for traceability.
+    """
+    base = RENDER_REQUIRED_KEYS.get(report_type, [])
+    required = list(base) + [k for k in extra_required if k not in base]
+    missing: List[str] = [k for k in required if not _is_filled(context.get(k))]
+
+    if missing:
+        prefix = f"[{report_type}"
+        if report_id:
+            prefix += f"/{report_id}"
+        prefix += "]"
+        log.warning(
+            "%s render-context audit: %d/%d required keys empty: %s",
+            prefix,
+            len(missing),
+            len(required),
+            ", ".join(missing),
+        )
+    return missing
 
 
 def build_html_report(result: Dict[str, Any]) -> str:

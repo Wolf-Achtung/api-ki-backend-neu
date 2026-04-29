@@ -385,6 +385,14 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         "naechste_schritte": naechste_schritte,
     }
 
+    # KIS-1128 audit M11: warn on empty required keys (silent-loss detector).
+    try:
+        from services.coverage_guard import audit_render_context
+        audit_render_context("strategy", context, report_id=str(context.get("report_id") or ""))
+    except Exception as _e:
+        import logging as _logging
+        _logging.getLogger(__name__).debug("audit_render_context failed: %s", _e)
+
     html = str(template.render(**context))
 
     # Post-process LLM HTML to use CSS design classes (KPI cards, timelines, etc.)

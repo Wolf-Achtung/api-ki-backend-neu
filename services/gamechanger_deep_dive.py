@@ -886,6 +886,13 @@ def render_deep_dive_html(sections: Dict[str, str],
         _bid = context.get('briefing_id', 0)
         template_vars['REPORT_DISPLAY_ID'] = get_report_display_id(int(_bid)) if _bid else ''
 
+        # KIS-1128 audit M11: warn on empty required keys (silent-loss detector).
+        try:
+            from services.coverage_guard import audit_render_context
+            audit_render_context("kpa", template_vars, report_id=str(template_vars.get("REPORT_DISPLAY_ID") or _bid or ""))
+        except Exception as _e:
+            log.debug("audit_render_context failed: %s", _e)
+
         return str(template.render(**template_vars))
 
     except Exception as exc:

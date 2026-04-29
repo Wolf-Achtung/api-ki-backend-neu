@@ -1032,6 +1032,14 @@ def render(briefing_obj: Any,
             ctx['FINAL_CHECK_INTRO'] = _fci_new
             log.info("[FIX-FCI-GAP] Fixed empty hauptleistung gap in FINAL_CHECK_INTRO")
 
+    # KIS-1128 audit M11: warn on empty required keys (silent-loss detector).
+    # Output is unchanged; warnings surface in logs / Railway only.
+    try:
+        from services.coverage_guard import audit_render_context
+        audit_render_context("r1", ctx, report_id=str(ctx.get("report_id") or ""))
+    except Exception as _e:  # never break rendering on audit failure
+        log.debug("audit_render_context failed: %s", _e)
+
     html = env.get_template(tpl_name).render(**ctx)
 
     # Q3: Fix Kl→KI globally in final HTML (common OCR/input error)
