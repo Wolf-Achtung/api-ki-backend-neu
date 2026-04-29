@@ -250,8 +250,10 @@ td.negative { color: var(--c-danger); font-weight: 600; }
 .glance-deep     { border-left-color: var(--c-cat-deep); }
 
 /* ── Section Body ───────────────────────────────────── */
+/* KIS-1128 audit M5: 10pt → 11pt for family consistency with R1+Strategy
+   and improved readability. KPA had the smallest body font of the family. */
 .section-body {
-    font-size: 10pt;
+    font-size: 11pt;
     line-height: 1.65;
 }
 .section-body p + p { margin-top: 6px; }
