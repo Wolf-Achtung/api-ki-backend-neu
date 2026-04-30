@@ -61,10 +61,10 @@
       "required": false,
       "output": "html",
       "tokens": {
-        "base": 400,
-        "solo": 350,
-        "team": 400,
-        "kmu": 450
+        "base": 850,
+        "solo": 700,
+        "team": 850,
+        "kmu": 1000
       },
       "persona_rules": {
         "solo": {
@@ -882,9 +882,15 @@
       "title": "KI-Stack Übersicht",
       "path": "ki_stack_summary.md",
       "purpose": "KI-Stack Summary Card",
-      "size_aware": false,
+      "size_aware": true,
       "required": false,
-      "output": "html"
+      "output": "html",
+      "tokens": {
+        "base": 2500,
+        "solo": 2000,
+        "team": 2500,
+        "kmu": 2900
+      }
     },
     "branch_deep_dive": {
       "title": "Branch Deep-Dive",
@@ -997,10 +1003,10 @@
       "required": false,
       "output": "html",
       "tokens": {
-        "base": 400,
-        "solo": 350,
-        "team": 400,
-        "kmu": 450
+        "base": 850,
+        "solo": 700,
+        "team": 850,
+        "kmu": 1000
       },
       "persona_rules": {
         "solo": {
@@ -1848,9 +1854,15 @@
       "title": "AI Stack Overview",
       "path": "ki_stack_summary.md",
       "purpose": "AI stack summary card",
-      "size_aware": false,
+      "size_aware": true,
       "required": false,
-      "output": "html"
+      "output": "html",
+      "tokens": {
+        "base": 2500,
+        "solo": 2000,
+        "team": 2500,
+        "kmu": 2900
+      }
     },
     "branch_deep_dive": {
       "title": "Branch Deep-Dive",

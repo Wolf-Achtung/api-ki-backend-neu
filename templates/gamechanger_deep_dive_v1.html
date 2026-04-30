@@ -576,6 +576,15 @@ h1, h2, h3, h4 {
             {% if branche %}{{ branche }}{% endif %}
             {% if size_label %}{% if branche %}<span class="muted"> · </span>{% endif %}{{ size_label }}{% endif %}
         </p>
+        {# KIS-1183 Befund 4: Family-consistency hook to R1 score.
+           Conservative styling (muted .cover-meta variant), no layout grid
+           change — the KPA cover keeps its Lupen-Icon as primary identifier
+           while adding a brücke back to the R1 score for context. #}
+        {% if score_gesamt %}
+        <p class="cover-meta muted" style="font-size: 9.5pt; margin-top: 4px;">
+            Reifegrad-Score <strong>{{ score_gesamt }}/100</strong> · siehe KI-Status-Report
+        </p>
+        {% endif %}
     </div>
 
     <!-- KPI Summary -->

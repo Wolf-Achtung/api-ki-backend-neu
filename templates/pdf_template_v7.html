@@ -138,9 +138,18 @@ tr:last-child td { border-bottom: none; }
 #decision {
     break-before: page;
 }
+/* KIS-1183 Befund 3: #aiact-compact starts on its own page.
+   Surgical fix — vendor-section regularly ends near bottom of preceding
+   page, leaving only the H2 header to fit. The glance-box+risk-banner
+   block then wandered to the next page, leaving the section-header
+   visually orphaned. NOT applied to vendor/funding (those would create
+   their own whitespace pattern; M1 already removed banner break-after). */
+#aiact-compact {
+    break-before: page;
+}
 /* Sub-sections flow naturally (no forced break):
    #quick-wins-section, #roadmap-90d, #tools-section,
-   #prompts-section, #vendor-section, #aiact-compact, #funding-section, #next-steps */
+   #prompts-section, #vendor-section, #funding-section, #next-steps */
 
 /* ── Section Base ───────────────────────────────────── */
 .section {
