@@ -61,10 +61,10 @@
       "required": false,
       "output": "html",
       "tokens": {
-        "base": 400,
-        "solo": 350,
-        "team": 400,
-        "kmu": 450
+        "base": 850,
+        "solo": 700,
+        "team": 850,
+        "kmu": 1000
       },
       "persona_rules": {
         "solo": {
@@ -997,10 +997,10 @@
       "required": false,
       "output": "html",
       "tokens": {
-        "base": 400,
-        "solo": 350,
-        "team": 400,
-        "kmu": 450
+        "base": 850,
+        "solo": 700,
+        "team": 850,
+        "kmu": 1000
       },
       "persona_rules": {
         "solo": {
