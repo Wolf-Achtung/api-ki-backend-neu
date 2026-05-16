@@ -759,16 +759,22 @@ async def _call_openai(prompt: str, system_prompt: str, section: str, max_tokens
 
         client = openai.OpenAI(api_key=api_key, timeout=180.0)
 
+        create_kwargs: Dict[str, Any] = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.3,
+            "max_completion_tokens": max_tokens,
+        }
+        _m = model.lower()
+        if any(_m.startswith(p) for p in ("gpt-5", "o1", "o3", "o4")):
+            from services.llm_client import get_reasoning_effort
+            create_kwargs["reasoning_effort"] = get_reasoning_effort()
+
         def _openai_call() -> Any:
-            return client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.3,
-                max_completion_tokens=max_tokens,
-            )
+            return client.chat.completions.create(**create_kwargs)
 
         response = await asyncio.to_thread(_openai_call)
 

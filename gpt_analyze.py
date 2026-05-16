@@ -2257,6 +2257,15 @@ def _final_score_sweep(sections: dict, final_score: int, pre_quality_score: int)
 
 
 # -------------------- OpenAI client ----------------
+_OPENAI_REASONING_MODEL_PREFIXES = ("gpt-5", "o1", "o3", "o4")
+
+
+def _openai_supports_reasoning_effort(model: str) -> bool:
+    """Reasoning_effort is accepted only by reasoning models (gpt-5.x, o1, o3, o4)."""
+    m = (model or "").lower()
+    return any(m.startswith(p) for p in _OPENAI_REASONING_MODEL_PREFIXES)
+
+
 def _call_openai(
     prompt: str,
     system_prompt: str = "Du bist ein KI-Berater.",
@@ -2309,6 +2318,12 @@ def _call_openai(
             payload["max_completion_tokens"] = int(max_tokens)
         else:
             payload["max_tokens"] = int(max_tokens)
+
+        # OPENAI_REASONING_EFFORT: only valid on reasoning-capable models.
+        # Sending it to gpt-4* returns 400 "unknown parameter".
+        if _openai_supports_reasoning_effort(model):
+            from services.llm_client import get_reasoning_effort
+            payload["reasoning_effort"] = get_reasoning_effort()
 
         # NOTE: stop parameter removed for OpenAI models (gpt-4o-mini, gpt-4.1, etc.)
         # as it's no longer supported. Stop sequences are still used for Anthropic models
