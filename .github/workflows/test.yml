@@ -52,6 +52,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           if [ -f requirements-test.txt ]; then pip install -r requirements-test.txt; fi
+      - name: Show resolved SDK versions (anthropic, openai)
+        run: |
+          pip show anthropic | grep -E '^(Name|Version):'
+          pip show openai    | grep -E '^(Name|Version):'
       - name: Run unit tests (ignore E2E file)
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-secret-not-for-production' }}
