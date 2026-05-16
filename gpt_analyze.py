@@ -21435,19 +21435,69 @@ def _auto_trigger_potenzialanalyse(briefing_id: int, run_id: str) -> None:
 
     Generates the Deep Dive HTML, renders PDF, and sends via email.
     Runs in a background thread so Report 1 pipeline is never blocked.
+
+    Observability: emits [KPA-{id}] START / SUCCESS / FAIL log markers and,
+    on FAIL, dispatches an admin-mail notice via the existing Resend helper.
+    No segment gate, no retry. Strategy-Mail is sent before this trigger and
+    remains unaffected by any KPA failure.
     """
     import threading
 
-    def _run(bid: int, rid: str) -> None:
-        _tag = f"AUTO-POTENZIALANALYSE-{bid}"
+    def _send_kpa_fail_admin_notice(bid: int, reason: str) -> None:
+        # Best-effort admin notification. Must never raise.
         try:
-            log.info("[%s] Triggering for briefing_id=%d run=%s", _tag, bid, rid)
+            if os.getenv("DISABLE_EMAILS", "").lower() in ("1", "true", "yes", "on"):
+                return
+            if os.getenv("ENABLE_ADMIN_NOTIFY", "1") not in ("1", "true", "TRUE", "yes", "YES"):
+                return
+            segment = "unknown"
+            try:
+                _db = core_db.SessionLocal()
+                try:
+                    _br = _db.get(Briefing, bid)
+                    if _br is not None:
+                        _answers = getattr(_br, "answers", {}) or {}
+                        segment = str(_answers.get("unternehmensgroesse") or "unknown")
+                finally:
+                    _db.close()
+            except Exception:
+                pass
+            subject = f"KPA-Generierung fehlgeschlagen – Briefing #{bid}"
+            body = (
+                "<p><strong>KI-Potenzial-Analyse konnte nicht erzeugt werden.</strong></p>"
+                f"<ul><li>briefing_id: {bid}</li>"
+                f"<li>segment: {segment}</li>"
+                f"<li>reason: {reason}</li></ul>"
+                "<p>Der KI-Status-Report (Strategy-Mail) wurde regulär versendet."
+                " Es wurde KEIN zweiter User-Mail-Versand ausgelöst.</p>"
+            )
+            for addr in _admin_recipients():
+                try:
+                    time.sleep(0.6)  # Resend Rate Limit: max 2 req/sec
+                    _send_email_via_resend(addr, subject, body, attachments=None)
+                except Exception:
+                    continue
+        except Exception:
+            return
 
+    def _run(bid: int, rid: str) -> None:
+        _tag = f"KPA-{bid}"
+        log.info("[%s] START briefing_id=%d run=%s", _tag, bid, rid)
+        try:
             from services.gamechanger_deep_dive import generate_gamechanger_report
-            result = generate_gamechanger_report(bid)
-            html = result.get("html", "")
+            try:
+                result = generate_gamechanger_report(bid)
+            except Exception as gen_exc:
+                reason = f"generate_exception:{type(gen_exc).__name__}:{str(gen_exc)[:200]}"
+                log.error("[%s] FAIL reason=%s", _tag, reason, exc_info=True)
+                _send_kpa_fail_admin_notice(bid, reason)
+                return
+
+            html = (result or {}).get("html", "")
             if not html:
-                log.warning("[%s] Empty HTML, skipping PDF+email", _tag)
+                reason = "empty_html"
+                log.error("[%s] FAIL reason=%s", _tag, reason)
+                _send_kpa_fail_admin_notice(bid, reason)
                 return
 
             from services.pdf_client import render_pdf_from_html
@@ -21463,20 +21513,33 @@ def _auto_trigger_potenzialanalyse(briefing_id: int, run_id: str) -> None:
                 pdf_options=pdf_options,
             )
 
-            pdf_bytes = pdf_result.get("pdf_bytes")
+            pdf_bytes = (pdf_result or {}).get("pdf_bytes")
             if not pdf_bytes:
-                log.warning("[%s] PDF render failed: %s", _tag, pdf_result.get("error"))
+                err = (pdf_result or {}).get("error", "unknown")
+                reason = f"pdf_render_failed:{str(err)[:200]}"
+                log.error("[%s] FAIL reason=%s", _tag, reason)
+                _send_kpa_fail_admin_notice(bid, reason)
                 return
 
             log.info("[%s] PDF generated: %d bytes", _tag, len(pdf_bytes))
 
-            # Send email using existing helper from routes/report.py
             from routes.report import _send_deep_dive_email
-            _send_deep_dive_email(bid, pdf_bytes)
+            try:
+                _send_deep_dive_email(bid, pdf_bytes)
+            except Exception as mail_exc:
+                reason = f"send_mail_exception:{type(mail_exc).__name__}:{str(mail_exc)[:200]}"
+                log.error("[%s] FAIL reason=%s", _tag, reason, exc_info=True)
+                _send_kpa_fail_admin_notice(bid, reason)
+                return
 
-            log.info("[%s] ✅ Complete for briefing_id=%d", _tag, bid)
+            log.info("[%s] SUCCESS pdf_bytes=%d email_sent=true", _tag, len(pdf_bytes))
         except Exception as exc:
-            log.error("[%s] ❌ Failed: %s", _tag, exc, exc_info=True)
+            reason = f"unexpected_exception:{type(exc).__name__}:{str(exc)[:200]}"
+            log.error("[%s] FAIL reason=%s", _tag, reason, exc_info=True)
+            try:
+                _send_kpa_fail_admin_notice(bid, reason)
+            except Exception:
+                pass
             # Never propagate — Report 1 must not be affected
 
     thread = threading.Thread(target=_run, args=(briefing_id, run_id), daemon=True)
