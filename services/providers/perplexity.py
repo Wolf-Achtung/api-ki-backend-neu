@@ -5,6 +5,7 @@ import requests
 from typing import List, Dict, Any
 
 PPLX_API_KEY = os.getenv("PPLX_API_KEY", "")
+PPLX_MODEL = os.getenv("PERPLEXITY_MODEL") or os.getenv("PPLX_MODEL") or "sonar-pro"
 
 def perplexity_search(queries: List[str], max_items: int = 8) -> List[Dict[str, Any]]:
     if not PPLX_API_KEY:
@@ -13,7 +14,7 @@ def perplexity_search(queries: List[str], max_items: int = 8) -> List[Dict[str, 
     results: List[Dict[str, Any]] = []
     for q in queries:
         payload = {
-            "model": "sonar-small-online",
+            "model": PPLX_MODEL,
             "messages": [{"role": "system", "content": "Return 5 concise links with single-sentence summaries."},
                          {"role": "user", "content": q}],
             "return_images": False,

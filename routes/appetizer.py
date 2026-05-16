@@ -99,8 +99,13 @@ class AppetizerRequest(BaseModel):
 def call_claude_sonnet(system_prompt: str, user_prompt: str) -> str:
     """Call Claude Sonnet and return the raw text response."""
     client = anthropic.Anthropic()  # uses ANTHROPIC_API_KEY env var
+    model = (
+        os.getenv("ANTHROPIC_MODEL_APPETIZER")
+        or os.getenv("ANTHROPIC_MODEL")
+        or "claude-sonnet-4-6"
+    )
     message = client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model=model,
         max_tokens=2048,
         system=system_prompt,
         messages=[{"role": "user", "content": user_prompt}],
