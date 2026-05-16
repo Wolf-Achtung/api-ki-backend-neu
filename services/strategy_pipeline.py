@@ -759,14 +759,15 @@ async def _call_openai(prompt: str, system_prompt: str, section: str, max_tokens
 
         client = openai.OpenAI(api_key=api_key, timeout=180.0)
 
+        from services.llm_client import maybe_openai_temperature
         create_kwargs: Dict[str, Any] = {
             "model": model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt},
             ],
-            "temperature": 0.3,
             "max_completion_tokens": max_tokens,
+            **maybe_openai_temperature(model, 0.3),
         }
         _m = model.lower()
         if any(_m.startswith(p) for p in ("gpt-5", "o1", "o3", "o4")):

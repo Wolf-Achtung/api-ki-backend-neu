@@ -2302,13 +2302,16 @@ def _call_openai(
         log.debug("OpenAI request headers: %s", safe_headers)
 
         # Payload base: model, messages, temperature
+        # Reasoning models (gpt-5.x, o1/o3/o4) reject the temperature parameter
+        # with HTTP 400; only ship it for models that accept it.
+        from services.llm_client import maybe_openai_temperature
         payload = {
             "model": model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt},
             ],
-            "temperature": float(temperature),
+            **maybe_openai_temperature(model, temperature),
         }
 
         # v14.35.22: Set correct token limit parameter based on model
