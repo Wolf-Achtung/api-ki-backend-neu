@@ -614,13 +614,14 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
     timeout_read = float(os.environ.get("OPENAI_TIMEOUT_READ", "120"))
     model = os.environ.get("OPENAI_MODEL", "gpt-4o")
 
-    # gpt-5.* and reasoning models (o1/o3) require max_completion_tokens
-    # and don't support temperature. Mirrors logic from gpt_analyze.py:2233.
+    # gpt-5.* and reasoning models (o1/o3/o4) require max_completion_tokens
+    # and don't support temperature. They DO support reasoning_effort.
     _model_lower = model.lower()
     _is_new_model = (
         _model_lower.startswith("gpt-5")
         or _model_lower.startswith("o1")
         or _model_lower.startswith("o3")
+        or _model_lower.startswith("o4")
     )
 
     oai_client = openai.OpenAI(
@@ -636,7 +637,9 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
     }
     if _is_new_model:
         create_params['max_completion_tokens'] = 4000
-        # Reasoning models don't support temperature
+        # Reasoning models don't support temperature, but DO support reasoning_effort
+        from services.llm_client import get_reasoning_effort
+        create_params['reasoning_effort'] = get_reasoning_effort()
     else:
         create_params['max_tokens'] = 4000
         create_params['temperature'] = 0.4

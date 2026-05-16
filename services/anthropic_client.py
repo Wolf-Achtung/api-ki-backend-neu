@@ -33,6 +33,47 @@ DEFAULT_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929").strip
 DEFAULT_MAX_TOKENS = int(os.getenv("ANTHROPIC_MAX_TOKENS", "5000"))  # J11: raised from 3000
 DEFAULT_TEMPERATURE = float(os.getenv("ANTHROPIC_TEMPERATURE", "0.2"))
 
+# Effort routing — applied as output_config={"effort": ...} on the messages.create call.
+# Supported models: Opus 4.6, Opus 4.7, Sonnet 4.6. Haiku 4.5 left untouched per audit.
+ANTHROPIC_EFFORT_DEFAULT = "high"
+_EFFORT_MODEL_MARKERS = ("opus-4-6", "opus-4-7", "sonnet-4-6")
+
+
+def get_anthropic_effort() -> str:
+    """Read ANTHROPIC_EFFORT from env (low|medium|high|xhigh|max), default 'high'."""
+    return (os.getenv("ANTHROPIC_EFFORT", ANTHROPIC_EFFORT_DEFAULT).strip().lower()
+            or ANTHROPIC_EFFORT_DEFAULT)
+
+
+def _model_supports_effort(model: str) -> bool:
+    m = (model or "").lower()
+    return any(marker in m for marker in _EFFORT_MODEL_MARKERS)
+
+
+def build_anthropic_create_kwargs(
+    *,
+    model: str,
+    max_tokens: int,
+    temperature: float,
+    system: str,
+    messages: List[Any],
+    stop_sequences: Optional[List[str]] = None,
+) -> dict:
+    """Assemble kwargs for client.messages.create(), including conditional
+    output_config={"effort": ...} for models that support it."""
+    kwargs: dict = {
+        "model": model,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "system": system,
+        "messages": messages,
+    }
+    if stop_sequences:
+        kwargs["stop_sequences"] = stop_sequences
+    if _model_supports_effort(model):
+        kwargs["output_config"] = {"effort": get_anthropic_effort()}
+    return kwargs
+
 # --- RUN-622 P2: Opus Routing ------------------------------------------------
 OPUS_MODEL = os.getenv("ANTHROPIC_MODEL_OPUS", "claude-opus-4-6").strip()  # FIX-629 + FIX-STRIP
 _OPUS_SECTIONS_RAW = os.getenv("OPUS_SECTIONS", "")
@@ -475,23 +516,14 @@ def call_anthropic(
 
     # Versuch 1: Mit aufgelöstem Modell
     try:
-        if stop_seqs:
-            message = client.messages.create(
-                model=model_name,
-                max_tokens=max_tok,
-                temperature=temp,
-                system=sys,
-                messages=messages,
-                stop_sequences=stop_seqs,
-            )
-        else:
-            message = client.messages.create(
-                model=model_name,
-                max_tokens=max_tok,
-                temperature=temp,
-                system=sys,
-                messages=messages,
-            )
+        message = client.messages.create(**build_anthropic_create_kwargs(
+            model=model_name,
+            max_tokens=max_tok,
+            temperature=temp,
+            system=sys,
+            messages=messages,
+            stop_sequences=stop_seqs,
+        ))
     except anthropic.BadRequestError as exc:
         # FIX-J7 Layer 3: Catch 400 errors (empty content, invalid params)
         log.warning(
@@ -514,23 +546,14 @@ def call_anthropic(
 
         # Retry mit Fallback
         try:
-            if stop_seqs:
-                message = client.messages.create(
-                    model=fallback_model,
-                    max_tokens=max_tok,
-                    temperature=temp,
-                    system=sys,
-                    messages=messages,
-                    stop_sequences=stop_seqs,
-                )
-            else:
-                message = client.messages.create(
-                    model=fallback_model,
-                    max_tokens=max_tok,
-                    temperature=temp,
-                    system=sys,
-                    messages=messages,
-                )
+            message = client.messages.create(**build_anthropic_create_kwargs(
+                model=fallback_model,
+                max_tokens=max_tok,
+                temperature=temp,
+                system=sys,
+                messages=messages,
+                stop_sequences=stop_seqs,
+            ))
             log.info(
                 "✅ Fallback auf Modell '%s' erfolgreich (Abschnitt '%s')",
                 fallback_model,
