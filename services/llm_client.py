@@ -292,6 +292,24 @@ def get_reasoning_effort() -> str:
         return os.getenv("OPENAI_REASONING_EFFORT", "high")
 
 
+_OPENAI_REASONING_MODEL_PREFIXES = ("gpt-5", "o1", "o3", "o4")
+
+
+def is_openai_reasoning_model(model: str) -> bool:
+    """gpt-5.x and o-series models only accept the default temperature (1)
+    and reject any explicit temperature value with 400."""
+    m = (model or "").lower()
+    return any(m.startswith(p) for p in _OPENAI_REASONING_MODEL_PREFIXES)
+
+
+def maybe_openai_temperature(model: str, value: float) -> dict:
+    """Return ``{"temperature": value}`` only when the model accepts it.
+    Reasoning models (gpt-5.x, o1/o3/o4) reject the parameter outright."""
+    if is_openai_reasoning_model(model):
+        return {}
+    return {"temperature": float(value)}
+
+
 # =============================================================================
 # STABILITY PATCH v1: OpenAI Call Wrapper with Retry & Semaphore
 # =============================================================================

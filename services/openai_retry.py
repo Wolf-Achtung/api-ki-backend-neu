@@ -519,13 +519,15 @@ def openai_request_simple(
 
     base = api_base or os.getenv("OPENAI_API_BASE", "https://api.openai.com")
 
+    # Reasoning models (gpt-5.x, o-series) reject temperature with 400.
+    from services.llm_client import maybe_openai_temperature
     payload = {
         "model": model,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
         ],
-        "temperature": temperature,
+        **maybe_openai_temperature(model, temperature),
     }
 
     # Set token parameter based on model

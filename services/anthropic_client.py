@@ -60,11 +60,15 @@ def build_anthropic_create_kwargs(
     stop_sequences: Optional[List[str]] = None,
 ) -> dict:
     """Assemble kwargs for client.messages.create(), including conditional
-    output_config={"effort": ...} for models that support it."""
+    output_config={"effort": ...} for models that support it.
+
+    Effort-capable models (Opus 4.6/4.7, Sonnet 4.6) reject ``temperature``
+    with 400 ("temperature is deprecated for this model") — for those we
+    omit the parameter and let the provider use its default.
+    """
     kwargs: dict = {
         "model": model,
         "max_tokens": max_tokens,
-        "temperature": temperature,
         "system": system,
         "messages": messages,
     }
@@ -72,6 +76,8 @@ def build_anthropic_create_kwargs(
         kwargs["stop_sequences"] = stop_sequences
     if _model_supports_effort(model):
         kwargs["output_config"] = {"effort": get_anthropic_effort()}
+    else:
+        kwargs["temperature"] = temperature
     return kwargs
 
 # --- RUN-622 P2: Opus Routing ------------------------------------------------
