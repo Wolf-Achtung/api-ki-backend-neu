@@ -993,6 +993,18 @@ async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
             except Exception as mail_exc:
                 logger.error("[Strategy %d] Email sending failed: %s", briefing_id, mail_exc, exc_info=True)
 
+            # Sprint B Coach-CTA-Dramaturgie: 4. Mail — Coach-Reminder.
+            # Wird nur ausgelöst wenn Strategy-Mail (email_sent=True) committet ist.
+            # Fire-and-forget: Failure rollt Strategy-Pipeline-Erfolg NICHT zurück.
+            if getattr(sr, "email_sent", False):
+                try:
+                    _send_coach_reminder_email(briefing_id, db_session)
+                except Exception as cr_exc:
+                    logger.warning(
+                        "[COACH-REMINDER-MAIL-FAILED] briefing_id=%d err=%s",
+                        briefing_id, cr_exc,
+                    )
+
             # Fire-and-forget: Admin briefing email with questionnaire data
             try:
                 _send_admin_briefing_email(briefing_id, db_session)
@@ -1083,6 +1095,76 @@ def _send_strategy_email(briefing_id: int, pdf_bytes: bytes, db_session: Any) ->
                 logger.info("[%s] Admin email sent to %s", run_tag, _mask_email(addr))
             else:
                 logger.warning("[%s] Admin email failed for %s: %s", run_tag, _mask_email(addr), err)
+
+
+# =============================================================================
+# COACH REMINDER EMAIL (Sprint B Coach-CTA-Dramaturgie)
+# =============================================================================
+
+def _send_coach_reminder_email(briefing_id: int, db_session: Any) -> None:
+    """Send the 4th mail — Coach-Reminder — after all three reports have shipped.
+
+    Sprint B Coach-CTA-Dramaturgie: User soll alle drei Reports in Ruhe
+    lesen können, bevor er den Coach öffnet. Diese Mail kommt direkt
+    nach erfolgreich versandter Strategy-Mail und ist die einzige
+    Stelle im Delivery-Vertrag mit Coach-CTA.
+
+    Fire-and-forget: kein Re-raise, schlägt nie auf den Pipeline-Erfolg
+    durch — Strategy-Mail wurde bereits zugestellt, der User hat seine
+    Reports. Failure wird nur als WARNING geloggt.
+    """
+    import os
+    import time as _time
+
+    run_tag = f"COACH-REMINDER-{briefing_id}"
+    logger.info("[%s] _send_coach_reminder_email called", run_tag)
+
+    if os.getenv("DISABLE_EMAILS", "").lower() in ("1", "true", "yes", "on"):
+        logger.info("[%s] Emails disabled via DISABLE_EMAILS. Skipping.", run_tag)
+        return
+
+    try:
+        from gpt_analyze import (
+            _send_email_via_resend,
+            _determine_user_email,
+            _mask_email,
+        )
+        from services.email_templates import render_coach_reminder_email
+        from models import Briefing
+    except ImportError as exc:
+        logger.warning("[%s] Import failed, skipping coach reminder: %s", run_tag, exc)
+        return
+
+    briefing = db_session.query(Briefing).filter(Briefing.id == briefing_id).first()
+    if not briefing:
+        logger.warning("[%s] Briefing not found, skipping coach reminder.", run_tag)
+        return
+
+    user_email = _determine_user_email(db_session, briefing, None)
+    if not user_email:
+        logger.warning("[%s] No user email found, skipping coach reminder.", run_tag)
+        return
+
+    _time.sleep(0.6)  # Resend rate limit: max 2 req/sec
+    subject = "Sie haben Fragen zu Ihren Reports? Ihr persönlicher KI-Coach steht bereit"
+    ok, err = _send_email_via_resend(
+        user_email,
+        subject,
+        render_coach_reminder_email(briefing_id=briefing_id),
+    )
+    if ok:
+        # Resend-ID landet bereits in `[Resend Email ID]`-Log direkt vor diesem
+        # Marker (gpt_analyze._send_email_via_resend) — Korrelation via Timestamp
+        # + briefing_id reicht für Production-Debugging.
+        logger.info(
+            "[COACH-REMINDER-MAIL] briefing_id=%d email=%s status=sent",
+            briefing_id, _mask_email(user_email),
+        )
+    else:
+        logger.warning(
+            "[COACH-REMINDER-MAIL-FAILED] briefing_id=%d email=%s err=%s",
+            briefing_id, _mask_email(user_email), err,
+        )
 
 
 # =============================================================================
