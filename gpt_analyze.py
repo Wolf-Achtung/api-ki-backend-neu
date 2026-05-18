@@ -15279,6 +15279,20 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     sections["expertise_label"] = _expertise_label
     log.info("[%s] [KIS-1132] Expertise level: %s (%s)", run_id, _expertise_level, _expertise_label)
 
+    # [FIX-CHALLENGE-EXPERTISE] expose normalized segment so the 30-day-challenge
+    # steering hint can branch on solo vs team/kmu — solo keeps week 1 (P6-C
+    # exemption in sofort_start_generator), so the "Einstiegs-Woche entfällt"
+    # phrasing must not be shown to solo users.
+    try:
+        from services.company_size_normalizer import get_segment as _get_segment
+        sections["company_size"] = _get_segment(str(answers.get("unternehmensgroesse", "") or ""))
+    except Exception:
+        sections["company_size"] = "team"
+    log.info(
+        "[%s] [FIX-CHALLENGE-EXPERTISE] company_size=%s expertise_level=%s",
+        run_id, sections["company_size"], _expertise_level,
+    )
+
     # === PAGE 4 CONTEXT CARDS - User Input Variables for Template ===
     # These variables are needed for the Page 4 emoji-cards and Guardrails box
     # Template uses lowercase keys with {% if variable %} conditionals

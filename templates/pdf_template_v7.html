@@ -1473,8 +1473,16 @@ h1, h2, h3, h4 {
        oder Governance allein macht niemanden zum Workflow-Profi) und
        spiegelt das Rendering korrekt wider (Woche 1 wird für Intermediate/
        Expert tatsächlich aus der Challenge entfernt, nicht nur empfohlen). #}
+    {# [FIX-CHALLENGE-EXPERTISE] Solo bleibt von P3 (Woche-1-Drop) unberührt:
+       Solo+Intermediate/Expert verlieren nach P6-C ({woche_3, woche_4}-Drop)
+       so viele Wochen, dass Woche 1 erhalten bleiben muss. Der Hinweis muss
+       das widerspiegeln, sonst widerspricht er dem gerenderten Inhalt. #}
+    {% elif expertise_level == "expert" and company_size == "solo" %}
+    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (fortgeschritten):</strong> Die 30-Tage-Challenge ist auf Solo-Berater zugeschnitten und fokussiert auf Werkzeugkasten-Optimierung und Spielregeln in 3 Wochen. Fokussieren Sie auf: Quick Wins, Vendor-Audit und KI-Potenzial-Analyse.</div>
     {% elif expertise_level == "expert" %}
     <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (fortgeschritten):</strong> Die 30-Tage-Challenge startet direkt mit Stack-Optimierung und Governance — die Einstiegs-Woche entfällt. Fokussieren Sie auf: Quick Wins, Vendor-Audit und KI-Potenzial-Analyse.</div>
+    {% elif expertise_level == "intermediate" and company_size == "solo" %}
+    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (erfahren):</strong> Die 30-Tage-Challenge ist auf Solo-Berater zugeschnitten und kombiniert Workflow-Analyse mit Automatisierung in 3 Wochen. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
     {% elif expertise_level == "intermediate" %}
     <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (erfahren):</strong> Die 30-Tage-Challenge überspringt die Grundlagen-Woche und startet mit Workflow-Integration. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
     {% endif %}
