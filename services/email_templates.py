@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 """E‑Mail‑Templates (HTML) für den Report-Versand (UTF‑8, mobil‑tauglich)."""
+import logging
 from html import escape
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import quote
+
+logger = logging.getLogger(__name__)
 
 
 def generate_feedback_link(email: str, briefing_id: int = None) -> str:
@@ -67,10 +70,13 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
         {briefing_summary_html}
         """
 
-    # Coach CTA (user emails only) — rendered before the Strategy CTA
+    # [COACH-CTA-REMOVED] Sprint B Dramaturgie: Coach-CTA wird nicht mehr in
+    # R1/KPA/Strategy Mails gerendert. User soll alle drei Reports in Ruhe
+    # lesen, der Coach-CTA kommt jetzt erst in der dedizierten 4. Mail
+    # (`_send_coach_reminder_email`) nach Strategy-Mail.
     coach_cta = ""
     if recipient != "admin" and briefing_id:
-        coach_cta = render_coach_cta(briefing_id, "#2B6CB0")
+        logger.info("[COACH-CTA-REMOVED] template=report_ready briefing_id=%d", briefing_id)
 
     # CTA to Strategy form (user emails only)
     strategy_cta = ""
@@ -156,10 +162,10 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
     # KIS-1116: Strategy-Upsell removed from KPA-Email (belongs in R1-Email only)
     strategy_cta_html = ""
 
-    # Coach CTA (user emails only)
+    # [COACH-CTA-REMOVED] Sprint B Dramaturgie — siehe render_report_ready_email.
     coach_cta = ""
     if recipient != "admin" and briefing_id:
-        coach_cta = render_coach_cta(briefing_id, "#0D7377")
+        logger.info("[COACH-CTA-REMOVED] template=deep_dive briefing_id=%d", briefing_id)
 
     return f"""<!doctype html>
 <html lang="de">
@@ -217,10 +223,10 @@ def render_strategy_email(recipient: str = "user", briefing_id: Optional[int] = 
     )
     cta = "Ihr KI-Strategiebericht ist als PDF angeh\u00e4ngt. Bei Fragen stehen wir Ihnen gerne zur Verf\u00fcgung."
 
-    # Coach CTA (user emails only, requires briefing_id)
+    # [COACH-CTA-REMOVED] Sprint B Dramaturgie — siehe render_report_ready_email.
     coach_cta = ""
     if recipient != "admin" and briefing_id is not None:
-        coach_cta = render_coach_cta(briefing_id, "#0F1D35")
+        logger.info("[COACH-CTA-REMOVED] template=strategy briefing_id=%d", briefing_id)
 
     return f"""<!doctype html>
 <html lang="de">
@@ -249,6 +255,66 @@ def render_strategy_email(recipient: str = "user", briefing_id: Optional[int] = 
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
         <p class="muted">Wolf Hohl \u2014 KI\u2011Sicherheit.jetzt</p>
         <p class="muted">Hinweis: Diese E\u2011Mail wurde automatisch erzeugt.</p>
+      </div>
+    </div>
+  </body>
+</html>"""
+
+
+def render_coach_reminder_email(briefing_id: int) -> str:
+    """4. Mail im Delivery-Vertrag: Coach-Reminder nach Strategy-Mail.
+
+    Sprint B Coach-CTA-Dramaturgie: User erhält nach Versand aller drei
+    Reports (R1, KPA, Strategy) eine separate Mail mit prominentem
+    Coach-CTA. Ziel: fundierte Coach-Gespräche statt oberflächlicher
+    Klicks unmittelbar nach R1. Die drei Report-Mails enthalten daher
+    KEINEN Coach-CTA mehr (siehe [COACH-CTA-REMOVED] Marker oben).
+    """
+    title = "Ihr KI-Coach steht bereit"
+    cta = render_coach_cta(briefing_id, "#2B6CB0")
+    return f"""<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{escape(title)}</title>
+    <style>
+      body{{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;line-height:1.5;margin:0;padding:0;background:#f6f9ff}}
+      .wrap{{max-width:640px;margin:0 auto;padding:24px}}
+      .card{{background:#fff;border:1px solid #e6edf3;border-radius:12px;padding:18px;box-shadow:0 6px 30px #18324a16;border-top:4px solid #2B6CB0}}
+      h1{{color:#2B6CB0;font-size:20px;margin:0 0 8px}}
+      p{{margin:8px 0;font-size:14px}}
+      .muted{{color:#64748b}}
+      ul{{padding-left:22px;margin:8px 0;font-size:14px}}
+      li{{margin:4px 0}}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>{escape(title)}</h1>
+        <p>Guten Tag,</p>
+        <p>Sie haben jetzt alle drei Reports erhalten — den
+        <strong>KI‑Status‑Report</strong>, die
+        <strong>KI‑Potenzial‑Analyse</strong> und den
+        <strong>KI‑Strategiebericht</strong>.</p>
+        <p>Nehmen Sie sich Zeit, die Reports in Ruhe durchzuarbeiten.
+        Die Inhalte ergänzen sich — zusammen ergeben sie ein vollständiges
+        Bild Ihrer KI‑Ausgangslage und Ihres Implementierungspfads.</p>
+        <p>Sobald Fragen auftauchen, steht Ihnen Ihr persönlicher
+        <strong>KI‑Coach</strong> unter folgendem Link für konkrete,
+        individuelle und sichere Antworten zur Verfügung:</p>
+        {cta}
+        <p style="margin-top:16px">Der Coach kennt Ihre Reports und unterstützt Sie typischerweise bei:</p>
+        <ul>
+          <li>Konkreten Umsetzungsfragen aus den Quick Wins und der 90‑Tage‑Roadmap</li>
+          <li>Risikodiskussion und Stop‑Signal‑Setzung</li>
+          <li>Tool‑Auswahl und Anbietervergleich</li>
+          <li>Förderstrategie und Programm‑Eignung</li>
+        </ul>
+        <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
+        <p class="muted">Wolf Hohl — KI‑Sicherheit.jetzt</p>
+        <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>
       </div>
     </div>
   </body>
