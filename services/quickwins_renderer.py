@@ -792,7 +792,7 @@ def enrich_quickwins_premium(html: str) -> str:
 # Renders FIX-506 JSON format (title, icon, problem, wirkung, umsetzung, hinweis)
 # to rich HTML cards that meet >=30 word requirements.
 
-def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL") -> Optional[str]:
+def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL", run_id: str = "") -> Optional[str]:
     """
     FIX-510 CHANGE 2: Premium renderer for FIX-506 QuickWins JSON format.
 
@@ -802,6 +802,7 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL") ->
     Args:
         raw_json: JSON string with QuickWins array
         template_mode: "LEFT_ONLY", "FULL", etc.
+        run_id: Optional briefing/run identifier for diagnostic logs.
 
     Returns:
         Rich HTML string or None if parsing fails
@@ -809,7 +810,17 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL") ->
     import json
     import html as html_module
 
+    # [QW-JSON-DEBUG] Strukturierter Marker für Diagnose des Premium-Pfades.
+    # Loggt ausschließlich Metriken (keine Roh-JSON-Inhalte), damit nach Merge
+    # in Production sichtbar wird, warum der Premium-Renderer für ein konkretes
+    # Briefing nach None fällt und der Legacy-Pfad greift.
+    raw_chars = len(raw_json or "")
+
     if not raw_json or not raw_json.strip():
+        log.info(
+            "[QW-JSON-DEBUG] run_id=%s renderer=premium status=fail "
+            "reason=empty_input json_raw_chars=%d", run_id, raw_chars,
+        )
         return None
 
     try:
@@ -833,10 +844,34 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL") ->
         data = json.loads(cleaned)
 
         if not isinstance(data, list) or len(data) == 0:
+            log.info(
+                "[QW-JSON-DEBUG] run_id=%s renderer=premium status=fail "
+                "reason=%s json_raw_chars=%d item_count=%d",
+                run_id,
+                "not_a_list" if not isinstance(data, list) else "empty_array",
+                raw_chars,
+                len(data) if isinstance(data, list) else 0,
+            )
             return None
 
         # TASK 1 (P0 FINAL): DUMP POINT 1 - Raw JSON after parsing
         dump_raw_json(data, context="render_quickwins_premium_json")
+
+        # [QW-JSON-DEBUG] Pro Quick-Win: welche der vom Prompt geforderten
+        # Felder (title/icon/problem/wirkung/umsetzung/hinweis) fehlen oder
+        # sind leer? Aufschluss darüber, ob das LLM den Output-Vertrag
+        # einhält oder bestimmte Felder systematisch leer lässt. Ausgeführt
+        # VOR enforce_quickwins_complete, damit die Roh-Daten gemessen werden.
+        _required = ("title", "icon", "problem", "wirkung", "umsetzung", "hinweis")
+        _missing_per_qw = [
+            [f for f in _required if not (isinstance(qw, dict) and str(qw.get(f, "")).strip())]
+            for qw in data
+        ]
+        log.info(
+            "[QW-JSON-DEBUG] run_id=%s renderer=premium status=parsed "
+            "json_raw_chars=%d item_count=%d fields_missing_per_qw=%s",
+            run_id, raw_chars, len(data), _missing_per_qw,
+        )
 
         # TASK B (P0): Apply completeness gate - fill empty fields with deterministic fallbacks
         data = enforce_quickwins_complete(data)
@@ -902,6 +937,11 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL") ->
             cards_html.append(card_html)
 
         if not cards_html:
+            log.info(
+                "[QW-JSON-DEBUG] run_id=%s renderer=premium status=fail "
+                "reason=no_valid_cards json_raw_chars=%d item_count=%d",
+                run_id, raw_chars, len(data),
+            )
             return None
 
         # FIX-517C: WeasyPrint-safe layout (table instead of CSS Grid)
@@ -936,13 +976,29 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL") ->
         # TASK 1 (P0 FINAL): DUMP POINT 2 - Renderer output HTML
         dump_renderer_output(html_out, renderer_name="render_quickwins_premium_json")
 
+        log.info(
+            "[QW-JSON-DEBUG] run_id=%s renderer=premium status=ok "
+            "json_raw_chars=%d item_count=%d total_words=%d mode=%s",
+            run_id, raw_chars, len(cards_html), total_words, template_mode,
+        )
+
         return html_out
 
     except json.JSONDecodeError as e:
         log.debug("[FIX-510-QW] JSON parse failed: %s", e)
+        log.info(
+            "[QW-JSON-DEBUG] run_id=%s renderer=premium status=fail "
+            "reason=json_decode_error json_raw_chars=%d err=%.80s",
+            run_id, raw_chars, str(e),
+        )
         return None
     except Exception as e:
         log.warning("[FIX-510-QW] Premium render failed: %s", e)
+        log.info(
+            "[QW-JSON-DEBUG] run_id=%s renderer=premium status=fail "
+            "reason=exception json_raw_chars=%d err_type=%s err=%.80s",
+            run_id, raw_chars, type(e).__name__, str(e),
+        )
         return None
 
 
