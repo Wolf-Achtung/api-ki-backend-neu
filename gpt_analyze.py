@@ -4280,19 +4280,38 @@ def _parse_quick_wins_json(raw_response: str) -> Optional[List[Dict[str, Any]]]:
             return None
 
         # Validiere jedes Quick Win
-        required_fields = ['title', 'icon', 'time', 'engpass', 'description', 'mit_ki', 'steps', 'zeitersparnis']
+        # [QW-SCHEMA-FIX] Schema angeglichen an prompts/de/quick_wins.md
+        # Output-Vertrag (title, icon, problem, wirkung, umsetzung, hinweis).
+        # Vorher: Legacy-Felder (time, engpass, description, mit_ki, steps,
+        # zeitersparnis) — die wurden vom Prompt nie geliefert, deshalb
+        # markierte der Parser jedes Quick Win als unvollständig und füllte
+        # mit "" bzw. dem Hardcoded "Schritt 1/2/3"-Default, was im PDF
+        # als leere Engpass-Box, leeres "Aktuell:", leeres "Mit KI:" und
+        # generische Schritte sichtbar wurde (Briefing 1068, R1 S.7-8).
+        required_fields = ['title', 'icon', 'problem', 'wirkung', 'umsetzung', 'hinweis']
+        missing_per_qw: List[List[str]] = []
         for i, qw in enumerate(quick_wins):
-            missing = [f for f in required_fields if f not in qw]
+            missing = [f for f in required_fields if not qw.get(f)]
+            missing_per_qw.append(missing)
             if missing:
                 log.warning(f"Quick Win {i+1} fehlt Felder: {missing}")
-                # Setze Defaults für fehlende Felder
+                # Sinnvolle Defaults: leere Strings (Renderer skipt leere
+                # Blöcke). 'icon' bekommt einen Marker-Default, 'hinweis'
+                # bekommt den Standard-Verweis aus dem Output-Vertrag.
                 for field in missing:
-                    if field == 'steps':
-                        qw[field] = ["Schritt 1", "Schritt 2", "Schritt 3"]
-                    elif field == 'icon':
+                    if field == 'icon':
                         qw[field] = "◎"
+                    elif field == 'hinweis':
+                        qw[field] = "siehe Business Case"
                     else:
                         qw[field] = ""
+
+        # [QW-JSON-DEBUG] Marker für Folge-Sprint: zeigt pro Briefing wie
+        # vollständig die LLM-JSON tatsächlich ist. Bewusst KEIN Roh-JSON.
+        log.info(
+            "[QW-JSON-DEBUG] parser=legacy qw_count=%d json_raw_chars=%d fields_missing_per_qw=%s",
+            len(quick_wins), len(cleaned), missing_per_qw,
+        )
 
         log.info(f"✅ Quick Wins JSON erfolgreich geparst: {len(quick_wins)} Items")
         return cast(List[Dict[str, Any]], quick_wins)
@@ -4359,37 +4378,58 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
 """
 
     # Quick Win Cards - JEDE als eigene Struktur mit Tabellen-Header
+    # [QW-SCHEMA-FIX] Render-Felder umgestellt auf prompts/de/quick_wins.md
+    # Output-Vertrag: problem (Engpass), wirkung (Effekt mit KI),
+    # umsetzung (Schritte), hinweis (Verweis auf Business Case).
+    # Legacy-Felder time/engpass/description/mit_ki/steps/zeitersparnis
+    # wurden vom Prompt nie geliefert → leerer Render im PDF (Briefing 1068).
+    # Hardcoded P0.7-Zeitersparnis-Anzeige entfällt: das neue Schema
+    # verbietet Zahlen/Zeitangaben in Quick Wins (Prompt Z.26: „Keine
+    # Ziffern, keine Euro-Beträge"), Business-Case-Verweis übernimmt das.
     for i, qw in enumerate(quick_wins, 1):
-        # Escape HTML
         title = html_module.escape(str(qw.get('title', 'Ohne Titel')))
         # Fix-Batch G: Aggressively clean Icon: artifacts from icon field
         raw_icon = str(qw.get('icon', '◎'))
-        # Remove "Icon:" prefix and any similar patterns
         icon = re.sub(r'^Icon:\s*', '', raw_icon, flags=re.IGNORECASE).strip()
         icon = re.sub(r'^Symbol:\s*', '', icon, flags=re.IGNORECASE).strip()
         icon = re.sub(r'^Emoji:\s*', '', icon, flags=re.IGNORECASE).strip()
-        # If icon is now empty or still contains "Icon", use default
         if not icon or 'icon' in icon.lower() or len(icon) > 5:
             icon = '◎'
-        time = html_module.escape(str(qw.get('time', 'Unbekannt')))
-        engpass = html_module.escape(str(qw.get('engpass', '')))
-        description = html_module.escape(str(qw.get('description', '')))
-        mit_ki = html_module.escape(str(qw.get('mit_ki', '')))
-        steps = qw.get('steps', [])
-        raw_zeitersparnis = str(qw.get('zeitersparnis', ''))
+        problem = html_module.escape(str(qw.get('problem', '')).strip())
+        wirkung = html_module.escape(str(qw.get('wirkung', '')).strip())
+        umsetzung = html_module.escape(str(qw.get('umsetzung', '')).strip())
+        hinweis = html_module.escape(str(qw.get('hinweis', 'siehe Business Case')).strip())
 
-        # P0.7: Calculate € values from hours using canonical rate
-        zeitersparnis_display = _calculate_quickwin_savings_display(
-            raw_zeitersparnis, canonical_rate
+        # Conditional Blocks: leere Felder werden komplett übersprungen,
+        # nicht als leere Boxen gerendert (analog Premium-Renderer).
+        problem_block = (
+            f'''
+        <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 14px; margin-bottom: 16px; border-radius: 6px;">
+            <div style="font-weight: bold; color: #92400e; font-size: 13px; margin-bottom: 4px;"><span class="icon">◎</span> ENGPASS / PROBLEM:</div>
+            <div style="color: #78350f; font-size: 14px;">{problem}</div>
+        </div>''' if problem else ""
         )
-
-        # Fix-Batch G: Sanitize steps to prevent truncated sentences
-        steps_html = '<ol style="margin: 12px 0 12px 20px; padding: 0; color: #065f46;">'
-        for step in steps:
-            step_clean = _sanitize_quickwin_step(str(step))
-            if step_clean:  # Only add non-empty steps
-                steps_html += f'<li style="margin-bottom: 8px; line-height: 1.6;">{html_module.escape(step_clean)}</li>'
-        steps_html += '</ol>'
+        wirkung_block = (
+            f'''
+        <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 14px; margin-bottom: 16px; border-radius: 6px;">
+            <p style="margin: 0; color: #065f46; line-height: 1.6; font-size: 14px;">
+                <strong style="color: #047857;"><span class="icon icon--success">✓</span> Wirkung mit KI:</strong> {wirkung}
+            </p>
+        </div>''' if wirkung else ""
+        )
+        umsetzung_block = (
+            f'''
+        <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px; margin-bottom: 14px; border-radius: 6px;">
+            <div style="font-weight: bold; color: #1e40af; font-size: 14px; margin-bottom: 6px;"><span class="icon icon--accent">▸</span> Umsetzung:</div>
+            <p style="margin: 0; color: #1e3a8a; line-height: 1.6; font-size: 14px;">{umsetzung}</p>
+        </div>''' if umsetzung else ""
+        )
+        hinweis_block = (
+            f'''
+        <div style="text-align: left; padding-top: 12px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; font-style: italic;">
+            💡 {hinweis}
+        </div>''' if hinweis else ""
+        )
 
         html += f"""
 <div class="quick-win quick-win-card" data-qw-json-rendered="true" style="border: 2px solid #3b82f6; border-radius: 12px; padding: 0; margin-bottom: 30px; page-break-inside: avoid; background: white;">
@@ -4401,50 +4441,13 @@ def _build_quick_wins_html(quick_wins: list, branche: str = "Unbekannt", groesse
                 <div style="font-size: 36px; line-height: 1;">{icon}</div>
             </td>
             <td style="padding: 16px; color: white;">
-                <div style="font-size: 18px; font-weight: bold; margin-bottom: 6px;">{title}</div>
-                <span style="background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600;">
-                    ⏱️ {time}
-                </span>
+                <div style="font-size: 18px; font-weight: bold;">{title}</div>
             </td>
         </tr>
     </table>
 
     <!-- Content Area -->
-    <div style="padding: 20px;">
-
-        <!-- Engpass Box -->
-        <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 14px; margin-bottom: 16px; border-radius: 6px;">
-            <div style="font-weight: bold; color: #92400e; font-size: 13px; margin-bottom: 4px;"><span class="icon">◎</span> IHR ENGPASS:</div>
-            <div style="color: #78350f; font-size: 14px;">"{engpass}"</div>
-        </div>
-
-        <!-- Aktuell -->
-        <div style="margin-bottom: 14px;">
-            <p style="margin: 0; color: #374151; line-height: 1.6; font-size: 14px;">
-                <strong style="color: #1f2937;">Aktuell:</strong> {description}
-            </p>
-        </div>
-
-        <!-- Mit KI Box -->
-        <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 14px; margin-bottom: 16px; border-radius: 6px;">
-            <p style="margin: 0; color: #065f46; line-height: 1.6; font-size: 14px;">
-                <strong style="color: #047857;"><span class="icon icon--success">✓</span> Mit KI:</strong> {mit_ki}
-            </p>
-        </div>
-
-        <!-- Steps -->
-        <div style="background: #f0fdf4; padding: 16px; border-radius: 6px; margin-bottom: 14px;">
-            <div style="font-weight: bold; color: #047857; font-size: 14px; margin-bottom: 8px;"><span class="icon icon--accent">▸</span> Umsetzungsschritte:</div>
-            {steps_html}
-        </div>
-
-        <!-- Zeitersparnis Footer (P0.7: Calculated from canonical rate) -->
-        <div style="text-align: right; padding-top: 12px; border-top: 2px solid #e5e7eb;">
-            <span style="background: #d1fae5; color: #065f46; font-weight: bold; font-size: 14px; padding: 6px 14px; border-radius: 12px;">
-                <span class="icon icon--success">◆</span> {zeitersparnis_display}
-            </span>
-        </div>
-
+    <div style="padding: 20px;">{problem_block}{wirkung_block}{umsetzung_block}{hinweis_block}
     </div>
 </div>
 """
@@ -4752,8 +4755,14 @@ def _enforce_quickwins_no_raw_json(qw_html: str, branche: str, groesse: str) -> 
         titles = list(dict.fromkeys(titles))[:5]  # Deduplicate, limit to 5
 
         if len(titles) >= 3:
-            # Build minimal Quick Wins from extracted titles
-            minimal_qw = [{"title": t, "icon": "🎯", "engpass": "", "zeitersparnis": "2-4 Stunden/Woche", "steps": []} for t in titles[:5]]
+            # Build minimal Quick Wins from extracted titles.
+            # [QW-SCHEMA-FIX] Felder umgestellt auf Prompt-Schema; alte
+            # Zeitersparnis-Pauschale entfällt, Hinweis verweist auf den
+            # Business Case wie im Prompt-Output-Vertrag definiert.
+            minimal_qw = [
+                {"title": t, "icon": "🎯", "problem": "", "wirkung": "", "umsetzung": "", "hinweis": "siehe Business Case"}
+                for t in titles[:5]
+            ]
             log.info("[QW-JSON-RENDER] ✅ Built %d Quick Wins from extracted titles", len(minimal_qw))
             return _build_quick_wins_html(minimal_qw, branche=branche, groesse=groesse)
 

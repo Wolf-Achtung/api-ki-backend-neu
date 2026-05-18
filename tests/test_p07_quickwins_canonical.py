@@ -129,53 +129,52 @@ class TestQuickWinsCardRendering:
     """Test that Quick Wins render as structured cards."""
 
     def test_quick_wins_render_as_cards(self):
-        """Test that Quick Wins output contains card structure."""
+        """Test that Quick Wins output contains card structure.
+
+        [QW-SCHEMA-FIX] Migrated from legacy schema (engpass/description/
+        mit_ki/steps/zeitersparnis) to current prompt schema (problem/
+        wirkung/umsetzung/hinweis). Cf. prompts/de/quick_wins.md v8.3.
+        """
         from gpt_analyze import _build_quick_wins_html
 
         quick_wins = [{
             'title': 'Card Test',
             'icon': '📋',
-            'time': '1 Woche',
-            'engpass': 'Bottleneck',
-            'description': 'Description text',
-            'mit_ki': 'AI solution',
-            'steps': ['First step', 'Second step'],
-            'zeitersparnis': '8-12 h/Monat',
+            'problem': 'Bottleneck text',
+            'wirkung': 'Effect with AI',
+            'umsetzung': 'How to implement',
+            'hinweis': 'siehe Business Case',
         }]
 
         html = _build_quick_wins_html(quick_wins, branche="Marketing", groesse="kmu")
 
-        # Should contain card CSS class
         assert 'quick-win-card' in html, "Missing quick-win-card class"
-
-        # Should contain all sections
         assert 'Card Test' in html, "Missing title"
         assert '📋' in html, "Missing icon"
-        assert 'ENGPASS' in html.upper(), "Missing engpass section"
-        assert 'Mit KI' in html, "Missing 'Mit KI' section"
-        assert 'Umsetzungsschritte' in html, "Missing steps section"
+        assert 'PROBLEM' in html.upper(), "Missing problem/engpass section"
+        assert 'Wirkung' in html, "Missing wirkung section"
+        assert 'Umsetzung' in html, "Missing umsetzung section"
 
-    def test_quick_wins_contain_calculated_eur(self):
-        """Test that rendered cards contain calculated € values."""
+    def test_quick_wins_skips_empty_blocks(self):
+        """[QW-SCHEMA-FIX] Empty fields produce no rendered block (analog
+        services/quickwins_renderer.py:render_quickwins_premium_json)."""
         from gpt_analyze import _build_quick_wins_html
 
         quick_wins = [{
-            'title': 'EUR Test',
-            'icon': '💰',
-            'time': '2 Tage',
-            'engpass': 'Test',
-            'description': 'Test',
-            'mit_ki': 'Test',
-            'steps': ['Step'],
-            'zeitersparnis': '10-15 h/Monat',
+            'title': 'Sparse Test',
+            'icon': '💡',
+            'problem': 'Only problem set',
+            'wirkung': '',
+            'umsetzung': '',
+            'hinweis': 'siehe Business Case',
         }]
 
-        # Solo rate = 80€/h
         html = _build_quick_wins_html(quick_wins, branche="IT", groesse="Einzelunternehmer")
 
-        # Should contain calculated € values (10*80=800, 15*80=1200)
-        assert '800' in html, f"Missing calculated €800"
-        assert '1.200' in html or '1200' in html, f"Missing calculated €1.200"
+        assert 'Sparse Test' in html
+        assert 'Only problem set' in html
+        assert 'Wirkung mit KI' not in html, "Empty wirkung block should be skipped"
+        assert 'Umsetzung:' not in html, "Empty umsetzung block should be skipped"
 
     def test_quick_wins_context_banner(self):
         """Test that context banner shows branche and groesse."""
