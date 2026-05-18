@@ -3469,11 +3469,40 @@ class PlatinValidator:
         'THEME_CSS_VARS',
     }
 
+    # [FIX-EXEC-DECISION-CLEAN] Decision sections share the prompt contract
+    # "exactly 3 <li> bullets, each a complete sentence" (cf.
+    # prompts/de/executive_decision.md). The section-level last-char check
+    # below misses truncations INSIDE a single <li> when later bullets end
+    # cleanly with "." - KIS-1186 / R1 page 4 surfaced this on briefing
+    # 1069 as "...den Ablauf Input" inside the "Tun" bullet while the
+    # "Risiko" bullet's terminal "." satisfied the section-level check.
+    DECISION_SECTIONS_PER_LI_CHECK = {
+        "executive_decision", "EXECUTIVE_DECISION_HTML",
+        "roadmap_90d_decision", "ROADMAP_90D_DECISION_HTML",
+        "gamechanger_decision", "GAMECHANGER_DECISION_HTML",
+    }
+    _DECISION_TERMINAL_CHARS = '.!?:)"»”*'
+
     def _check_sentence_completeness(self) -> None:
         """No truncated sentences. FIX-B24-P3: Improved false-positive filtering."""
         for section_key, html in self.sections.items():
             if not isinstance(html, str) or section_key.startswith("_"):
                 continue
+
+            # [FIX-EXEC-DECISION-CLEAN] Per-<li> check for the three decision
+            # sections. Runs BEFORE the section-level safe-sections skip so
+            # the warning surfaces even when the section's terminal char
+            # looks clean (the common failure mode for these sections).
+            if section_key in self.DECISION_SECTIONS_PER_LI_CHECK:
+                for _li_match in re.finditer(r'<li\b[^>]*>(.*?)</li>', html, re.DOTALL | re.IGNORECASE):
+                    _li_text = re.sub(r'<[^>]+>', '', _li_match.group(1)).strip()
+                    if len(_li_text) < 25:
+                        continue
+                    if _li_text[-1] not in self._DECISION_TERMINAL_CHARS:
+                        self.warnings.append(
+                            f"TRUNCATED_LI: {section_key} bullet ends with '...{_li_text[-30:]}'"
+                        )
+
             # FIX-B24-P3: Skip sections that commonly end without punctuation
             if section_key in self.TRUNCATED_SAFE_SECTIONS:
                 continue

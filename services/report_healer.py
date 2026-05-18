@@ -3498,6 +3498,68 @@ def apply_segment_budget(
             _b39_applied, _b39_skipped
         )
 
+    # =========================================================================
+    # [FIX-EXEC-DECISION-CLEAN] Per-<li> mid-sentence detection for the three
+    # decision sections (executive_decision, roadmap_90d_decision,
+    # gamechanger_decision). FIX-B38a/B39 only inspect the section's terminal
+    # character — when a single <li> is truncated mid-sentence ("...den Ablauf
+    # Input") but later <li> elements end cleanly with "." the section-level
+    # check is satisfied and the broken bullet slips through (KIS-1186 / R1
+    # page 4 customer-facing). Root cause is most likely H1 (LLM emits more
+    # than max_tokens and the response is cut), tracked separately as
+    # potential sprint C2.2. This pass is the deterministic last-line of
+    # defense: detect the broken bullet, drop it, replace with a neutral
+    # status marker that respects the prompt-required 3-bullet shape.
+    # =========================================================================
+    _DECISION_SECTION_KEYS = {
+        "executive_decision", "EXECUTIVE_DECISION_HTML",
+        "roadmap_90d_decision", "ROADMAP_90D_DECISION_HTML",
+        "gamechanger_decision", "GAMECHANGER_DECISION_HTML",
+    }
+    _EXEC_TERMINAL_CHARS = {'.', '!', '?', ':', ')', '"', '»', '”', '*'}
+    _EXEC_BULLET_FALLBACK = (
+        '<li><em>Weitere Punkte siehe Business Case und Roadmap.</em></li>'
+    )
+    _li_pattern = re.compile(r'<li\b[^>]*>(.*?)</li>', re.DOTALL | re.IGNORECASE)
+
+    for _exec_key in list(result.keys()):
+        if _exec_key not in _DECISION_SECTION_KEYS:
+            continue
+        _exec_content = result[_exec_key]
+        if not isinstance(_exec_content, str) or len(_exec_content) < 50:
+            continue
+
+        _exec_bullets_total = 0
+        _exec_bullets_truncated = 0
+        _exec_bullets_dropped = 0
+
+        def _exec_replace(match: 're.Match[str]') -> str:
+            nonlocal _exec_bullets_total, _exec_bullets_truncated, _exec_bullets_dropped
+            _exec_bullets_total += 1
+            _inner = match.group(1)
+            _bullet_text = re.sub(r'</?\w+[^>]*>', '', _inner).strip()
+            if len(_bullet_text) < 25:
+                return match.group(0)
+            if _bullet_text[-1] in _EXEC_TERMINAL_CHARS:
+                return match.group(0)
+            _exec_bullets_truncated += 1
+            _exec_bullets_dropped += 1
+            return _EXEC_BULLET_FALLBACK
+
+        _exec_new = _li_pattern.sub(_exec_replace, _exec_content)
+
+        if _exec_bullets_truncated > 0:
+            result[_exec_key] = _exec_new
+            log.warning(
+                "[FIX-EXEC-DECISION-CLEAN] section=%s total=%d truncated=%d dropped=%d",
+                _exec_key, _exec_bullets_total, _exec_bullets_truncated, _exec_bullets_dropped,
+            )
+        else:
+            log.debug(
+                "[FIX-EXEC-DECISION-CLEAN] section=%s total=%d truncated=0",
+                _exec_key, _exec_bullets_total,
+            )
+
     return result, sections_trimmed
 
 
