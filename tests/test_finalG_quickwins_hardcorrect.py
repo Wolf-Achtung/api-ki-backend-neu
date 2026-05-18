@@ -276,29 +276,31 @@ class TestBatchGIntegration:
             assert "Symbol:" not in result, f"Symbol: found for input: {test_icon}"
             assert "Emoji:" not in result, f"Emoji: found for input: {test_icon}"
 
-    def test_full_pipeline_correct_eur_values(self):
-        """Test full pipeline produces correct EUR values."""
+    def test_full_pipeline_renders_prompt_schema_fields(self):
+        """[QW-SCHEMA-FIX] Builder uses prompt schema (problem/wirkung/
+        umsetzung/hinweis). Prompt v8.3 Z.26 forbids digits/EUR values in
+        Quick Wins, so the builder no longer renders EUR via
+        _calculate_quickwin_savings_display. The helper itself remains
+        unit-tested at TestQuickWinsEURCalculation in this file.
+        """
         from gpt_analyze import _build_quick_wins_html
 
         quick_wins = [{
             "title": "Test",
             "icon": "📧",
-            "time": "2h",
-            "engpass": "X",
-            "description": "Y",
-            "mit_ki": "Z",
-            "steps": ["A"],
-            "zeitersparnis": "20 h/Monat",
+            "problem": "Bottleneck",
+            "wirkung": "Effect with AI",
+            "umsetzung": "Steps to implement",
+            "hinweis": "siehe Business Case",
         }]
 
         result = _build_quick_wins_html(quick_wins, "IT", "team")
 
-        # Should contain calculated EUR values with € symbol
-        # Rate depends on company size (team → ~95€/h)
-        # 20h creates range 16-24h, so values should be in 1000-2500 range
-        assert "€" in result
-        # Check that calculated values are present (not LLM-generated wrong values)
-        assert re.search(r'\d+[–-]\d+ h/Monat = [\d.]+[–-][\d.]+ €', result)
+        # Prompt-schema fields are rendered
+        assert "Bottleneck" in result
+        assert "Effect with AI" in result
+        assert "Steps to implement" in result
+        assert "siehe Business Case" in result
 
     def test_fix_batch_g_comment_exists(self):
         """Test that Fix-Batch G comment block exists."""
