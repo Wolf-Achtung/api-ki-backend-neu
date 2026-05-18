@@ -3489,19 +3489,62 @@ class PlatinValidator:
             if not isinstance(html, str) or section_key.startswith("_"):
                 continue
 
-            # [FIX-EXEC-DECISION-CLEAN] Per-<li> check for the three decision
-            # sections. Runs BEFORE the section-level safe-sections skip so
-            # the warning surfaces even when the section's terminal char
-            # looks clean (the common failure mode for these sections).
+            # [FIX-EXEC-DECISION-CLEAN] Per-bullet check for the three decision
+            # sections. Sprint 1026.1 (KIS-1187): also detects <p>-bullets
+            # (Scenario C, prompt-contract violation) and <li> tag-salat
+            # (Scenario E, mismatched closing tags) — same failure modes the
+            # healer now repairs.
             if section_key in self.DECISION_SECTIONS_PER_LI_CHECK:
-                for _li_match in re.finditer(r'<li\b[^>]*>(.*?)</li>', html, re.DOTALL | re.IGNORECASE):
-                    _li_text = re.sub(r'<[^>]+>', '', _li_match.group(1)).strip()
-                    if len(_li_text) < 25:
-                        continue
-                    if _li_text[-1] not in self._DECISION_TERMINAL_CHARS:
-                        self.warnings.append(
-                            f"TRUNCATED_LI: {section_key} bullet ends with '...{_li_text[-30:]}'"
-                        )
+                _open_count = len(re.findall(r'<li\b', html, re.IGNORECASE))
+                _close_count = len(re.findall(r'</li>', html, re.IGNORECASE))
+
+                if _open_count == 0:
+                    # <p>-fallback path
+                    _bullet_prefix = re.compile(
+                        r'<strong\b[^>]*>\s*(?:Tun|Lassen|Risiko|Stop)',
+                        re.IGNORECASE,
+                    )
+                    for _p_match in re.finditer(
+                        r'<p\b[^>]*>(.*?)</p>', html, re.DOTALL | re.IGNORECASE,
+                    ):
+                        _body = _p_match.group(1)
+                        if not _bullet_prefix.search(_body):
+                            continue
+                        _text = re.sub(r'<[^>]+>', '', _body).strip()
+                        if len(_text) < 25:
+                            continue
+                        if _text[-1] not in self._DECISION_TERMINAL_CHARS:
+                            self.warnings.append(
+                                f"TRUNCATED_LI: {section_key} <p>-bullet ends with '...{_text[-30:]}'"
+                            )
+                elif _open_count != _close_count:
+                    # Tag-salat path — split on <li> openings
+                    _opens = list(re.finditer(r'<li\b[^>]*>', html, re.IGNORECASE))
+                    _list_close = re.search(r'</(?:ul|ol)>', html[_opens[-1].end():], re.IGNORECASE)
+                    _end = (_opens[-1].end() + _list_close.start()) if _list_close else len(html)
+                    for _i, _o in enumerate(_opens):
+                        _bs = _o.end()
+                        _be = _opens[_i + 1].start() if _i + 1 < len(_opens) else _end
+                        _body = re.sub(r'</li>\s*$', '', html[_bs:_be], flags=re.IGNORECASE)
+                        _text = re.sub(r'<[^>]+>', '', _body).strip()
+                        if len(_text) < 25:
+                            continue
+                        if _text[-1] not in self._DECISION_TERMINAL_CHARS:
+                            self.warnings.append(
+                                f"TRUNCATED_LI: {section_key} bullet ends with '...{_text[-30:]}'"
+                            )
+                else:
+                    # Well-formed <li>...</li> — original logic
+                    for _li_match in re.finditer(
+                        r'<li\b[^>]*>(.*?)</li>', html, re.DOTALL | re.IGNORECASE,
+                    ):
+                        _li_text = re.sub(r'<[^>]+>', '', _li_match.group(1)).strip()
+                        if len(_li_text) < 25:
+                            continue
+                        if _li_text[-1] not in self._DECISION_TERMINAL_CHARS:
+                            self.warnings.append(
+                                f"TRUNCATED_LI: {section_key} bullet ends with '...{_li_text[-30:]}'"
+                            )
 
             # FIX-B24-P3: Skip sections that commonly end without punctuation
             if section_key in self.TRUNCATED_SAFE_SECTIONS:

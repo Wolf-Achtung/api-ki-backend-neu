@@ -3499,17 +3499,33 @@ def apply_segment_budget(
         )
 
     # =========================================================================
-    # [FIX-EXEC-DECISION-CLEAN] Per-<li> mid-sentence detection for the three
+    # [FIX-EXEC-DECISION-CLEAN] Per-bullet mid-sentence detection for the three
     # decision sections (executive_decision, roadmap_90d_decision,
     # gamechanger_decision). FIX-B38a/B39 only inspect the section's terminal
-    # character — when a single <li> is truncated mid-sentence ("...den Ablauf
-    # Input") but later <li> elements end cleanly with "." the section-level
-    # check is satisfied and the broken bullet slips through (KIS-1186 / R1
-    # page 4 customer-facing). Root cause is most likely H1 (LLM emits more
-    # than max_tokens and the response is cut), tracked separately as
-    # potential sprint C2.2. This pass is the deterministic last-line of
-    # defense: detect the broken bullet, drop it, replace with a neutral
-    # status marker that respects the prompt-required 3-bullet shape.
+    # character — when a single bullet is truncated mid-sentence ("...den Ablauf
+    # Input") but later bullets end cleanly with "." the section-level check
+    # is satisfied and the broken bullet slips through.
+    #
+    # Sprint 1026.1 (KIS-1187): The strict `<li>...</li>` regex from PR #1026
+    # missed two LLM-output-quality failure modes:
+    #
+    #   - Scenario C: LLM emitted `<p>` instead of `<li>` (prompt-contract
+    #     violation). The strict regex matched zero bullets and skipped the
+    #     section entirely.
+    #   - Scenario E: Tag-salat — LLM emitted `<li>...<li>` without `</li>`,
+    #     or closed `<li>` with `</p>`. The greedy `(.*?)</li>` then captured
+    #     multiple bullets as one; the last sibling's terminal "." satisfied
+    #     the check and the broken bullet slipped through.
+    #
+    # Detection now runs three passes:
+    #   1. Strict `<li>...</li>` (unchanged, well-formed LLM output)
+    #   2. Tag-salat: open/close `<li>` count mismatch → split on `<li>`
+    #      boundaries and treat each segment as one bullet
+    #   3. `<p>`-fallback: no `<li>` at all → look for `<p>` blocks whose
+    #      content starts with `<strong>Tun:|Lassen:|Risiko|Stop` and treat
+    #      each as a bullet
+    #
+    # Out of scope (per sprint briefing): H1 re-gen, queue C2.2 separately.
     # =========================================================================
     _DECISION_SECTION_KEYS = {
         "executive_decision", "EXECUTIVE_DECISION_HTML",
@@ -3517,10 +3533,100 @@ def apply_segment_budget(
         "gamechanger_decision", "GAMECHANGER_DECISION_HTML",
     }
     _EXEC_TERMINAL_CHARS = {'.', '!', '?', ':', ')', '"', '»', '”', '*'}
-    _EXEC_BULLET_FALLBACK = (
+    _LI_BULLET_FALLBACK = (
         '<li><em>Weitere Punkte siehe Business Case und Roadmap.</em></li>'
     )
-    _li_pattern = re.compile(r'<li\b[^>]*>(.*?)</li>', re.DOTALL | re.IGNORECASE)
+    _P_BULLET_FALLBACK = (
+        '<p><em>Weitere Punkte siehe Business Case und Roadmap.</em></p>'
+    )
+    _li_strict_pattern = re.compile(r'<li\b[^>]*>(.*?)</li>', re.DOTALL | re.IGNORECASE)
+    _li_open_pattern = re.compile(r'<li\b[^>]*>', re.IGNORECASE)
+    _li_close_pattern = re.compile(r'</li>', re.IGNORECASE)
+    _list_close_pattern = re.compile(r'</(?:ul|ol)>', re.IGNORECASE)
+    _p_pattern = re.compile(r'<p\b[^>]*>(.*?)</p>', re.DOTALL | re.IGNORECASE)
+    _bullet_prefix_re = re.compile(
+        r'<strong\b[^>]*>\s*(?:Tun|Lassen|Risiko|Stop)', re.IGNORECASE,
+    )
+
+    def _exec_text_truncated(_text: str) -> bool:
+        """True iff bullet text is long enough to evaluate AND ends mid-sentence."""
+        if not _text or len(_text) < 25:
+            return False
+        return _text[-1] not in _EXEC_TERMINAL_CHARS
+
+    def _exec_heal_strict_li(_content: str) -> Tuple[str, int, int]:
+        """Pass 1: well-formed `<li>...</li>` (existing PR #1026 logic)."""
+        _total = 0
+        _truncated = 0
+
+        def _li_replace(match: 're.Match[str]') -> str:
+            nonlocal _total, _truncated
+            _total += 1
+            _text = re.sub(r'</?\w+[^>]*>', '', match.group(1)).strip()
+            if _exec_text_truncated(_text):
+                _truncated += 1
+                return _LI_BULLET_FALLBACK
+            return match.group(0)
+
+        _new = _li_strict_pattern.sub(_li_replace, _content)
+        return _new, _total, _truncated
+
+    def _exec_heal_tag_salad(_content: str) -> Tuple[str, int, int]:
+        """Pass 2: `<li>` open/close count mismatch.
+
+        Splits at each `<li>` opening regardless of `</li>` presence. Each
+        bullet spans from one `<li>` opening to the next `<li>` opening or
+        to the closing `</ul>`/`</ol>` (or end-of-content).
+        """
+        _opens = list(_li_open_pattern.finditer(_content))
+        if not _opens:
+            return _content, 0, 0
+
+        # Locate the list-closing tag after the last <li>
+        _list_close_match = _list_close_pattern.search(_content, _opens[-1].end())
+        _list_close_at = _list_close_match.start() if _list_close_match else len(_content)
+
+        _parts = [_content[: _opens[0].start()]]
+        _total = 0
+        _truncated = 0
+
+        for _idx, _open_match in enumerate(_opens):
+            _total += 1
+            _body_start = _open_match.end()
+            _body_end = _opens[_idx + 1].start() if _idx + 1 < len(_opens) else _list_close_at
+            _body = _content[_body_start:_body_end]
+            # Strip any trailing </li> the LLM produced
+            _body_clean = re.sub(r'</li>\s*$', '', _body, flags=re.IGNORECASE).rstrip()
+            _text = re.sub(r'<[^>]+>', '', _body_clean).strip()
+            if _exec_text_truncated(_text):
+                _truncated += 1
+                _parts.append(_LI_BULLET_FALLBACK)
+            else:
+                # Re-emit a well-formed <li>...</li> using the original opening tag
+                _parts.append(f'{_open_match.group(0)}{_body_clean}</li>')
+
+        _parts.append(_content[_list_close_at:])
+        return ''.join(_parts), _total, _truncated
+
+    def _exec_heal_p_bullets(_content: str) -> Tuple[str, int, int]:
+        """Pass 3: no `<li>` at all — `<p><strong>Tun:|Lassen:|Risiko:` bullets."""
+        _total = 0
+        _truncated = 0
+
+        def _p_replace(match: 're.Match[str]') -> str:
+            nonlocal _total, _truncated
+            _body = match.group(1)
+            if not _bullet_prefix_re.search(_body):
+                return match.group(0)  # not a decision bullet, leave it
+            _total += 1
+            _text = re.sub(r'<[^>]+>', '', _body).strip()
+            if _exec_text_truncated(_text):
+                _truncated += 1
+                return _P_BULLET_FALLBACK
+            return match.group(0)
+
+        _new = _p_pattern.sub(_p_replace, _content)
+        return _new, _total, _truncated
 
     for _exec_key in list(result.keys()):
         if _exec_key not in _DECISION_SECTION_KEYS:
@@ -3529,35 +3635,30 @@ def apply_segment_budget(
         if not isinstance(_exec_content, str) or len(_exec_content) < 50:
             continue
 
-        _exec_bullets_total = 0
-        _exec_bullets_truncated = 0
-        _exec_bullets_dropped = 0
+        _open_count = len(_li_open_pattern.findall(_exec_content))
+        _close_count = len(_li_close_pattern.findall(_exec_content))
 
-        def _exec_replace(match: 're.Match[str]') -> str:
-            nonlocal _exec_bullets_total, _exec_bullets_truncated, _exec_bullets_dropped
-            _exec_bullets_total += 1
-            _inner = match.group(1)
-            _bullet_text = re.sub(r'</?\w+[^>]*>', '', _inner).strip()
-            if len(_bullet_text) < 25:
-                return match.group(0)
-            if _bullet_text[-1] in _EXEC_TERMINAL_CHARS:
-                return match.group(0)
-            _exec_bullets_truncated += 1
-            _exec_bullets_dropped += 1
-            return _EXEC_BULLET_FALLBACK
+        if _open_count == 0:
+            _new_content, _total, _truncated = _exec_heal_p_bullets(_exec_content)
+            _bullet_tag = "p"
+        elif _open_count == _close_count:
+            _new_content, _total, _truncated = _exec_heal_strict_li(_exec_content)
+            _bullet_tag = "li"
+        else:
+            _new_content, _total, _truncated = _exec_heal_tag_salad(_exec_content)
+            _bullet_tag = "li-salad"
 
-        _exec_new = _li_pattern.sub(_exec_replace, _exec_content)
-
-        if _exec_bullets_truncated > 0:
-            result[_exec_key] = _exec_new
+        if _truncated > 0:
+            result[_exec_key] = _new_content
             log.warning(
-                "[FIX-EXEC-DECISION-CLEAN] section=%s total=%d truncated=%d dropped=%d",
-                _exec_key, _exec_bullets_total, _exec_bullets_truncated, _exec_bullets_dropped,
+                "[FIX-EXEC-DECISION-CLEAN] section=%s bullet_tag=%s "
+                "total=%d truncated=%d dropped=%d",
+                _exec_key, _bullet_tag, _total, _truncated, _truncated,
             )
         else:
             log.debug(
-                "[FIX-EXEC-DECISION-CLEAN] section=%s total=%d truncated=0",
-                _exec_key, _exec_bullets_total,
+                "[FIX-EXEC-DECISION-CLEAN] section=%s bullet_tag=%s total=%d truncated=0",
+                _exec_key, _bullet_tag, _total,
             )
 
     return result, sections_trimmed
