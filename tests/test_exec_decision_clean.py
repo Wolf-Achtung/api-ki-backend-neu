@@ -93,6 +93,113 @@ class TestHealerExecDecisionClean:
             assert "Weitere Punkte siehe Business Case" in out[key], f"{key} missing fallback"
 
 
+class TestHealerExecDecisionClean10261:
+    """Sprint 1026.1 — coverage for LLM-output-quality scenarios that PR #1026
+    missed (KIS-1187 reproduction)."""
+
+    def _heal(self, sections):
+        from services.report_healer import apply_segment_budget
+        result, _ = apply_segment_budget(sections, "solo")
+        return result
+
+    def test_kis1187_p_bullets_scenario_c(self):
+        """KIS-1187 root cause: LLM emitted <p> bullets instead of <li>. The
+        strict regex from PR #1026 saw zero <li> and the broken bullet slipped
+        through. Pass 3 (<p>-fallback) must now catch it."""
+        sections = {
+            "executive_decision": (
+                '<div class="exec-decision-box">'
+                '<p><strong>Ihre Entscheidung in 3 Punkten</strong></p>'
+                '<p><strong>Tun:</strong> Einen verbindlichen Standard einführen, '
+                'bei dem jedes Objekt dem Schema Input</p>'
+                '<p><strong>Lassen:</strong> Tool-Zoo ohne Standards.</p>'
+                '<p><strong>Risiko:</strong> Nach 14 Tagen ohne Effekt stoppen.</p>'
+                '</div>'
+            ),
+        }
+        out = self._heal(sections)
+        assert "dem Schema Input" not in out["executive_decision"]
+        assert "Weitere Punkte siehe Business Case und Roadmap" in out["executive_decision"]
+        # Sibling p-bullets preserved
+        assert "Lassen:" in out["executive_decision"]
+        assert "Risiko:" in out["executive_decision"]
+        # Non-bullet <p> (header) preserved
+        assert "Ihre Entscheidung in 3 Punkten" in out["executive_decision"]
+
+    def test_tag_salad_scenario_e(self):
+        """LLM emitted <li>...<li> (no </li>) or closed <li> with </p>. PR #1026
+        regex greedy-matched across bullets and accepted the last sibling's "."
+        as terminal. Pass 2 (tag-salat) splits on <li>-boundaries."""
+        sections = {
+            "executive_decision": (
+                '<ul>'
+                '<li><strong>Tun:</strong> Einen verbindlichen Standard einführen, '
+                'bei dem jedes Objekt dem Schema Input</p>'
+                '<li><strong>Lassen:</strong> Tool-Zoo ohne Standards.</li>'
+                '<li><strong>Risiko:</strong> Nach 14 Tagen stoppen.</li>'
+                '</ul>'
+            ),
+        }
+        out = self._heal(sections)
+        assert "dem Schema Input" not in out["executive_decision"]
+        assert "Weitere Punkte siehe Business Case und Roadmap" in out["executive_decision"]
+        # Siblings preserved with proper <li>...</li>
+        assert "Tool-Zoo ohne Standards." in out["executive_decision"]
+        assert "Nach 14 Tagen stoppen." in out["executive_decision"]
+
+    def test_non_decision_p_bullets_not_repaired(self):
+        """Non-decision sections with similar <p><strong>Tun:</strong> patterns
+        must NOT be touched — Pass 3 is gated on section key."""
+        html = (
+            '<p><strong>Tun:</strong> Eine längere Aussage die mitten endet bei Input</p>'
+        )
+        out = self._heal({"executive_summary": html})
+        # executive_summary is NOT a decision section
+        assert "bei Input" in out["executive_summary"]
+        assert "Weitere Punkte siehe Business Case" not in out["executive_summary"]
+
+    def test_p_bullets_all_clean_no_repair(self):
+        """When all <p>-bullets end cleanly, nothing changes."""
+        clean = (
+            '<p><strong>Tun:</strong> Standardisierung einführen.</p>'
+            '<p><strong>Lassen:</strong> Tool-Zoo vermeiden.</p>'
+            '<p><strong>Risiko:</strong> Nach 14 Tagen stoppen.</p>'
+        )
+        out = self._heal({"executive_decision": clean})
+        assert "Weitere Punkte siehe Business Case" not in out["executive_decision"]
+        assert "Standardisierung einführen" in out["executive_decision"]
+
+    def test_p_bullets_only_non_bullet_p_unchanged(self):
+        """<p> blocks without the Tun:/Lassen:/Risiko prefix must not trigger
+        Pass 3 (prevents false-positives in headers, intro text, etc.)."""
+        html = (
+            '<p>Diese Sektion enthält einen längeren Einleitungstext der mitten endet bei Input</p>'
+        )
+        # Decision-section key but non-bullet <p> with no prefix — must NOT touch
+        out = self._heal({"executive_decision": html})
+        assert "bei Input" in out["executive_decision"]
+        assert "Weitere Punkte siehe Business Case" not in out["executive_decision"]
+
+    def test_tag_salad_all_clean_no_repair(self):
+        """Tag-salat with all bullets ending cleanly: split heuristic must not
+        flag anything and must produce well-formed <li>...</li> output."""
+        sections = {
+            "executive_decision": (
+                '<ul>'
+                '<li><strong>Tun:</strong> Standardisierung einführen mit klarem Owner.'
+                '<li><strong>Lassen:</strong> Tool-Zoo vermeiden, keine Parallelinitiativen.'
+                '<li><strong>Risiko:</strong> Nach 14 Tagen ohne Effekt stoppen.'
+                '</ul>'
+            ),
+        }
+        out = self._heal(sections)
+        assert "Weitere Punkte siehe Business Case" not in out["executive_decision"]
+        # All three sibling texts present
+        assert "Standardisierung einführen" in out["executive_decision"]
+        assert "Tool-Zoo vermeiden" in out["executive_decision"]
+        assert "Nach 14 Tagen ohne Effekt stoppen" in out["executive_decision"]
+
+
 class TestValidatorExecDecisionClean:
     def _validate(self, sections):
         from services.report_validator import PlatinValidator
@@ -136,4 +243,61 @@ class TestValidatorExecDecisionClean:
             '</ul>'
         )
         warnings = self._validate({"executive_summary": html})
+        assert not any("TRUNCATED_LI" in w for w in warnings), f"False positive: {warnings}"
+
+
+class TestValidatorExecDecisionClean10261:
+    """Sprint 1026.1 validator parity for scenarios C and E."""
+
+    def _validate(self, sections):
+        from services.report_validator import PlatinValidator
+        v = PlatinValidator(sections=sections)
+        v._check_sentence_completeness()
+        return v.warnings
+
+    def test_p_bullet_truncation_emits_warning(self):
+        """Scenario C: <p>-only decision section with truncated Tun bullet."""
+        html = (
+            '<p><strong>Ihre Entscheidung in 3 Punkten</strong></p>'
+            '<p><strong>Tun:</strong> Einen Standard einführen, bei dem jedes Objekt dem Schema Input</p>'
+            '<p><strong>Lassen:</strong> Tool-Zoo ohne Standards.</p>'
+            '<p><strong>Risiko:</strong> Nach 14 Tagen stoppen.</p>'
+        )
+        warnings = self._validate({"executive_decision": html})
+        assert any(
+            "TRUNCATED_LI" in w and "executive_decision" in w and "dem Schema Input" in w
+            for w in warnings
+        ), f"Expected TRUNCATED_LI warning for <p>-bullet, got: {warnings}"
+
+    def test_tag_salad_truncation_emits_warning(self):
+        """Scenario E: <li>...<li> tag-salat with truncated Tun bullet."""
+        html = (
+            '<ul>'
+            '<li><strong>Tun:</strong> Einen Standard einführen, bei dem jedes Objekt dem Schema Input</p>'
+            '<li><strong>Lassen:</strong> Tool-Zoo ohne Standards.</li>'
+            '<li><strong>Risiko:</strong> Nach 14 Tagen stoppen.</li>'
+            '</ul>'
+        )
+        warnings = self._validate({"executive_decision": html})
+        assert any(
+            "TRUNCATED_LI" in w and "executive_decision" in w and "dem Schema Input" in w
+            for w in warnings
+        ), f"Expected TRUNCATED_LI warning for tag-salat, got: {warnings}"
+
+    def test_p_bullet_clean_section_no_warning(self):
+        html = (
+            '<p><strong>Tun:</strong> Standardisierung einführen.</p>'
+            '<p><strong>Lassen:</strong> Tool-Zoo vermeiden.</p>'
+            '<p><strong>Risiko:</strong> Nach 14 Tagen stoppen.</p>'
+        )
+        warnings = self._validate({"executive_decision": html})
+        assert not any("TRUNCATED_LI" in w for w in warnings), f"False positive: {warnings}"
+
+    def test_non_bullet_p_in_decision_section_not_flagged(self):
+        """Non-bullet <p> (no Tun:/Lassen:/Risiko prefix) must not flag,
+        prevents false positives on intro text inside decision sections."""
+        html = (
+            '<p>Diese Sektion enthält Einleitungstext der mitten endet bei Input</p>'
+        )
+        warnings = self._validate({"executive_decision": html})
         assert not any("TRUNCATED_LI" in w for w in warnings), f"False positive: {warnings}"
