@@ -417,14 +417,28 @@ async def stream_coach_response(
     buffer = ""
     inside_thinking = False
 
+    # FIX-COACH-TEMP: Effort-capable Anthropic models (Opus 4.6/4.7, Sonnet 4.6)
+    # reject temperature with 400 ("temperature is deprecated for this model").
+    # Route streaming kwargs through the same helper used for messages.create
+    # (PR #1018/#1020) so the gating is identical and reasoning_effort is wired.
+    from services.anthropic_client import build_anthropic_create_kwargs
+    stream_kwargs = build_anthropic_create_kwargs(
+        model=COACH_MODEL,
+        max_tokens=COACH_MAX_TOKENS,
+        temperature=COACH_TEMPERATURE,
+        system=system_prompt,
+        messages=messages,
+    )
+    log.info(
+        "[FIX-COACH-TEMP] model=%s max_tokens=%d temperature=%s output_config=%s",
+        COACH_MODEL,
+        COACH_MAX_TOKENS,
+        stream_kwargs.get("temperature", "<dropped>"),
+        stream_kwargs.get("output_config", "<none>"),
+    )
+
     try:
-        async with client.messages.stream(
-            model=COACH_MODEL,
-            max_tokens=COACH_MAX_TOKENS,
-            temperature=COACH_TEMPERATURE,
-            system=system_prompt,
-            messages=messages,
-        ) as stream:
+        async with client.messages.stream(**stream_kwargs) as stream:
             async for text in stream.text_stream:
                 buffer += text
 
