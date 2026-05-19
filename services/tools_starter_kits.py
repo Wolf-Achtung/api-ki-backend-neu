@@ -915,7 +915,35 @@ def generate_starter_kit_compact_html(kit: StarterKit, lang: str = "de") -> str:
     title = "Starter-Kit" if lang == "de" else "Starter Kit"
 
     tools_list = ", ".join(t.name for t in kit.tools[:3])
-    funding_list = ", ".join(f.name for f in kit.funding[:2])
+
+    # FIX-KIS-1188-ITEM5: When kit.funding is reduced to the cross-reference
+    # placeholder (program_id "crossref_foerderprogramme"), the bare name
+    # "→ siehe Kapitel Fördermittel" appears kontextlos in the compact block.
+    # Render a full-sentence cross-reference and drop the misleading
+    # "1 Förderprogramme" count for the crossref-only case.
+    _is_crossref_only = (
+        bool(kit.funding)
+        and all(
+            getattr(f, "program_id", "").startswith("crossref_")
+            for f in kit.funding
+        )
+    )
+    if _is_crossref_only:
+        funding_line_html = (
+            '<strong>Förderung:</strong> '
+            'Detaillierte Förderprogramme finden Sie im Kapitel '
+            '„Fördermittel &amp; Finanzierung".'
+        )
+        funding_count_html = (
+            f"{len(kit.tools)} Tools | ~{kit.estimated_total_days} Tage Einführung"
+        )
+    else:
+        funding_list = ", ".join(f.name for f in kit.funding[:2])
+        funding_line_html = f"<strong>Förderung:</strong> {funding_list}"
+        funding_count_html = (
+            f"{len(kit.tools)} Tools | {len(kit.funding)} Förderprogramme | "
+            f"~{kit.estimated_total_days} Tage"
+        )
 
     return f"""
     <div class="starter-kit-compact" style="margin:16px 0;padding:16px;background:#ecfdf5;border-radius:8px;border:1px solid #a7f3d0;">
@@ -923,14 +951,14 @@ def generate_starter_kit_compact_html(kit: StarterKit, lang: str = "de") -> str:
             <div>
                 <strong style="font-size:13px;color:#065f46;">🚀 {title}: {kit.kit_name}</strong>
                 <p style="margin:4px 0 0 0;font-size:11px;color:#6b7280;">
-                    {len(kit.tools)} Tools | {len(kit.funding)} Förderprogramme | ~{kit.estimated_total_days} Tage
+                    {funding_count_html}
                 </p>
             </div>
             {f'<div style="font-size:12px;font-weight:600;color:#059669;">{kit.potential_funding}</div>' if kit.potential_funding else ''}
         </div>
         <div style="margin-top:8px;font-size:10px;color:#495057;">
             <strong>Tools:</strong> {tools_list}<br>
-            <strong>Förderung:</strong> {funding_list}
+            {funding_line_html}
         </div>
     </div>
     """

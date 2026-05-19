@@ -516,9 +516,8 @@ Gesamtinvestition Jahr 1: {budget_gesamt_jahr1} €
   - Phase 2 (Kernimplementierung, Monat 4-8): {budget_phase_2} €
   - Phase 3 (Skalierung, Monat 9-12): {budget_phase_3} €
 
-Kostenaufschlüsselung:
-- Software monatlich: {budget_software_monatlich} €
-- Software jährlich: {budget_software_jaehrlich} €
+Kostenaufschlüsselung (alle Werte JAHRESBASIS; Summe = Gesamtinvestition Jahr 1):
+- Software-Lizenzen (Jahresbedarf, entspricht {budget_software_monatlich} €/Monat × 12): {budget_software_jaehrlich} €
 - Implementierung (einmalig): {budget_implementierung} €
 - Schulung (einmalig): {budget_schulung_einmalig} €
 - Schulung (laufend/Jahr): {budget_schulung_laufend} €
@@ -544,11 +543,16 @@ CROSS-SECTION-ZAHLEN IN DIESER SECTION (VERBINDLICH):
 - Berechne KEINE abgeleiteten Werte wie „Gesamtersparnis über 3 Jahre" oder „ROI nach Förderung".
 - Fördersummen, Förderquoten, Eigenkapital-Reduktionen gehören NICHT in diese Section.
 
-KOSTENTABELLE (VERBINDLICH):
-- Die Zeile "Software jährlich" MUSS exakt den Wert {budget_software_jaehrlich} € zeigen — das ist der 12-fache Wert der monatlichen Softwarekosten ({budget_software_monatlich} €).
-- Setze NIE die Gesamtinvestition ({budget_gesamt_jahr1} €) als Software-Jahreskosten ein. Das sind VERSCHIEDENE Werte.
-- Jede Zeile der Kostenaufschlüsselung MUSS exakt den oben genannten Wert der jeweiligen Variable verwenden.
-- Die Summe aller Kostenblöcke in der Tabelle muss die Gesamtinvestition ({budget_gesamt_jahr1} €) ergeben.
+KOSTENTABELLE (VERBINDLICH — FIX-KIS-1188-ITEM1):
+- Die Tabelle hat GENAU 5 Kostenzeilen (keine zusätzlichen, keine doppelten):
+  1. „Software-Lizenzen (Jahresbedarf)" = {budget_software_jaehrlich} €  ← NICHT {budget_gesamt_jahr1} €!
+  2. „Implementierung (einmalig)"         = {budget_implementierung} €
+  3. „Schulung (einmalig)"                = {budget_schulung_einmalig} €
+  4. „Schulung (laufend/Jahr)"            = {budget_schulung_laufend} €
+  5. „Personal/Koordination"              = {budget_personal} €
+- Die Summe dieser 5 Zeilen ergibt EXAKT die Gesamtinvestition Jahr 1 ({budget_gesamt_jahr1} €).
+- KEINE separate Zeile „Software monatlich" oder „Software jährlich" zusätzlich zu den 5 Zeilen — der Monatswert ({budget_software_monatlich} €/Monat) gehört in den Beschreibungstext der Software-Zeile, nicht als eigene Zeile in der Summen-Tabelle.
+- Setze NIE die Gesamtinvestition ({budget_gesamt_jahr1} €) als Software-Jahreskosten ein. Software-Lizenzen sind EIN Posten der Gesamtinvestition, nicht die Gesamtinvestition selbst.
 
 AUFGABE:
 1. Stelle den 3-Phasen-Investitionsplan als übersichtliche Tabelle dar.

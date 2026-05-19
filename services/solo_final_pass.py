@@ -66,6 +66,20 @@ ENTERPRISE_TERM_REPLACEMENTS: List[Tuple[str, str, str]] = [
 
     # --- Stack ---
     (r"Tech[-\s]?Stack", "Werkzeugkasten", "Tech-Stack → Werkzeugkasten"),
+    # FIX-KIS-1188-ITEM4: Article/adjective inflection BEFORE the generic rule.
+    # "KI-Stack" is maskulin sing. ("der Stack"); "KI-Werkzeuge" is neutr. plur.
+    # Without these specifics, "Ihren bestehenden KI-Stack" would become the
+    # ungrammatical "Ihren bestehenden KI-Werkzeuge".
+    (r"\bIhren\s+bestehenden\s+KI[-\s]?Stack\b", "Ihre bestehenden KI-Werkzeuge", "Ihren bestehenden KI-Stack → Ihre bestehenden KI-Werkzeuge"),
+    (r"\bIhrem\s+bestehenden\s+KI[-\s]?Stack\b", "Ihren bestehenden KI-Werkzeugen", "Ihrem bestehenden KI-Stack → Ihren bestehenden KI-Werkzeugen"),
+    (r"\bIhren\s+KI[-\s]?Stack\b", "Ihre KI-Werkzeuge", "Ihren KI-Stack → Ihre KI-Werkzeuge"),
+    (r"\bIhrem\s+KI[-\s]?Stack\b", "Ihren KI-Werkzeugen", "Ihrem KI-Stack → Ihren KI-Werkzeugen"),
+    (r"\bIhr\s+KI[-\s]?Stack\b", "Ihre KI-Werkzeuge", "Ihr KI-Stack → Ihre KI-Werkzeuge"),
+    (r"\bden\s+bestehenden\s+KI[-\s]?Stack\b", "die bestehenden KI-Werkzeuge", "den bestehenden KI-Stack → die bestehenden KI-Werkzeuge"),
+    (r"\bdem\s+bestehenden\s+KI[-\s]?Stack\b", "den bestehenden KI-Werkzeugen", "dem bestehenden KI-Stack → den bestehenden KI-Werkzeugen"),
+    (r"\bden\s+KI[-\s]?Stack\b", "die KI-Werkzeuge", "den KI-Stack → die KI-Werkzeuge"),
+    (r"\bdem\s+KI[-\s]?Stack\b", "den KI-Werkzeugen", "dem KI-Stack → den KI-Werkzeugen"),
+    (r"\bder\s+KI[-\s]?Stack\b", "die KI-Werkzeuge", "der KI-Stack → die KI-Werkzeuge"),
     (r"KI[-\s]?Stack", "KI-Werkzeuge", "KI-Stack → KI-Werkzeuge"),
     # Catch "Stack" standalone (not inside other words, not after "KI-" handled above)
     (r"(?<![-\w])Stack(?:s)?(?![-\w])", "Werkzeugkasten", "Stack → Werkzeugkasten"),
