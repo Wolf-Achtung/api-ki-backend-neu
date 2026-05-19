@@ -2226,6 +2226,20 @@ def reduce_redundancy(
         "ROADMAP_90D_HTML",  # FIX-B22-P2: FIX-C strips too many blocks → 29 words
     }
 
+    # Sprint 1026.2 (KIS-1188): executive_decision wird in apply_segment_budget
+    # durch [FIX-EXEC-DECISION-CLEAN] (PR #1028) gehealt. Wenn FIX-C die
+    # kaputten Blöcke vorher entfernt (Production-Log: "removed 4 blocks,
+    # -831 chars"), greift die nachgelagerte Detection ins Leere — sie sieht
+    # nur noch das geheilte Stumpf-HTML ohne Truncation-Signatur. Skip ist
+    # die deterministische Lösung: Detection darf ihre eigene Repair-Logik
+    # über die ungekürzten Bullets laufen lassen.
+    # Andere Decision-Sections (roadmap_90d_decision, gamechanger_decision)
+    # zeigten bisher keine sichtbaren Cutoffs in Production; sie bleiben
+    # weiter unter FIX-C — Scope-Erweiterung erfordert Datenpunkt.
+    _DECISION_DETECTION_OWNED_KEYS = {
+        "executive_decision", "EXECUTIVE_DECISION_HTML",
+    }
+
     # Process sections in order (earlier sections have priority)
     for section_name, html in sections.items():
         if not html:
@@ -2238,6 +2252,16 @@ def reduce_redundancy(
             log.debug(
                 "[FIX-C] PROTECTED: Skipping dedup for %s (NEVER EMPTY guarantee)",
                 section_name
+            )
+            continue
+
+        # Sprint 1026.2: Sections whose truncation healing belongs to
+        # [FIX-EXEC-DECISION-CLEAN] downstream.
+        if section_name in _DECISION_DETECTION_OWNED_KEYS:
+            result[section_name] = html
+            log.info(
+                "[FIX-C-SKIP] section=%s reason=decision_detection_owns_this",
+                section_name,
             )
             continue
 
