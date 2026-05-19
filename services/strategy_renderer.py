@@ -69,6 +69,36 @@ def _strip_funding_total(s7_html: str) -> str:
     return cleaned
 
 
+def inject_opex_bridge(s5_html: str, software_monatlich: str) -> str:
+    """FIX-KIS-1188-ITEM2: Append the OPEX-methodology bridge to Strategy S5.
+
+    Strategy includes Software + Tool-Lizenzen + anteilige Betriebskosten;
+    R1/KPA report only Software-Grundkosten (120 €/Mo). Customers with high
+    AI literacy spot the gap without an explicit bridge.
+
+    Returns the S5 HTML with the bridge appended. If either input is empty
+    the original HTML is returned unchanged.
+    """
+    if not s5_html or not software_monatlich:
+        return s5_html
+    bridge = (
+        '\n<div class="methodik-hinweis methodik-hinweis--opex" '
+        'style="margin-top:16px;padding:10px 14px;'
+        'background:#f0f4f8;border-left:3px solid #3b82f6;'
+        'font-size:0.85em;color:#475569;">'
+        '<strong>ℹ️ OPEX-Methodik:</strong> '
+        f'Die in diesem Strategiebericht ausgewiesenen {software_monatlich} €/Monat '
+        'umfassen Software-Lizenzen, Tool-Abos und anteilige Betriebskosten '
+        '(Wartung, Support, Backup). '
+        'Der KI-Status-Report kalkuliert demgegenüber mit reinen '
+        'Software-Grundkosten von 120 €/Monat. '
+        'Beide Werte sind methodisch korrekt; sie beschreiben unterschiedliche '
+        'Kostenumfänge derselben Investition.'
+        '</div>'
+    )
+    return s5_html + bridge
+
+
 def render_strategy_html(sr: Any, db_session: Any) -> str:
     """
     Render strategy report HTML from Jinja2 template.
@@ -329,19 +359,24 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
             def _fmt_eur(v: int) -> str:
                 return f"{v:,}".replace(",", ".")
 
+            # FIX-KIS-1188-ITEM3: explain the 70%-plausibility cap and reference
+            # concrete programmes so the 8.400 \u20ac-style number isn't perceived
+            # as arbitrary.
             _foerder_note = (
                 f'\n<div style="margin-top:12px;padding:12px 16px;'
                 f'background:linear-gradient(135deg,#ecfdf5,#d1fae5);'
                 f'border-left:4px solid #10b981;border-radius:6px;'
                 f'font-size:0.95em;color:#065f46;">'
                 f'<strong>Mit F\u00f6rderung:</strong> '
-                f'Unter Ber\u00fccksichtigung des maximalen F\u00f6rderpotenzials von '
-                f'{_fmt_eur(_foerder_capped)}\u00a0\u20ac reduziert sich Ihre Nettoinvestition '
-                f'auf {_fmt_eur(_netto_invest)}\u00a0\u20ac \u2014 '
-                f'mit einem Netto-ROI von {_netto_roi}\u00a0% '
+                f'Unter Ber\u00fccksichtigung eines F\u00f6rderpotenzials von bis zu 70\u00a0% '
+                f'der Gesamtinvestition (max. {_fmt_eur(_foerder_capped)}\u00a0\u20ac) '
+                f'reduziert sich Ihre Nettoinvestition auf {_fmt_eur(_netto_invest)}\u00a0\u20ac '
+                f'\u2014 mit einem Netto-ROI von {_netto_roi}\u00a0% '
                 f'und Break-Even bereits in Monat\u00a0{_netto_be}. '
                 f'<span style="font-size:0.85em;color:#047857;">'
-                f'(bei vollst\u00e4ndiger Bewilligung \u2014 Details in Kapitel\u00a07)</span>'
+                f'Konkrete Programme finden Sie in Kapitel\u00a07 (F\u00f6rdermittel & Finanzierung); '
+                f'typischerweise BAFA, KOMPASS oder regionale Digitalpr\u00e4mien.'
+                f'</span>'
                 f'</div>'
             )
             _exec_body += _foerder_note
@@ -352,6 +387,12 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
             )
     except Exception as _e:
         logger.warning("[KIS-1110-P3] Failed to inject net-ROI: %s", _e)
+
+    # FIX-KIS-1188-ITEM2: OPEX-bridge appended to S5 (helper is unit-tested).
+    sections["S5"] = inject_opex_bridge(
+        sections.get("S5", ""),
+        calculated_values.get("budget_software_monatlich", ""),
+    )
 
     context = {
         # Cover metadata

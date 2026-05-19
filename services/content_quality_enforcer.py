@@ -53,6 +53,19 @@ SOLO_TERM_REPLACEMENTS = [
     # Stack/Technical terms
     (r'\bTech-Stack\b', 'Technikpaket', 'Tech-Stack→Technikpaket'),
     (r'\bTech\s+Stack\b', 'Technikpaket', 'Tech Stack→Technikpaket'),
+    # FIX-KIS-1188-ITEM4: Inflected article+adjective forms BEFORE generic KI-Stack.
+    # "KI-Stack" is maskulin sing.; "KI-Werkzeuge" is neutr. plur. The naive
+    # substitution otherwise produces "Ihren bestehenden KI-Werkzeuge" (Genus-Bruch).
+    (r'\bIhren\s+bestehenden\s+KI[-\s]?Stack\b', 'Ihre bestehenden KI-Werkzeuge', 'Ihren bestehenden KI-Stack → Ihre bestehenden KI-Werkzeuge'),
+    (r'\bIhrem\s+bestehenden\s+KI[-\s]?Stack\b', 'Ihren bestehenden KI-Werkzeugen', 'Ihrem bestehenden KI-Stack → Ihren bestehenden KI-Werkzeugen'),
+    (r'\bIhren\s+KI[-\s]?Stack\b', 'Ihre KI-Werkzeuge', 'Ihren KI-Stack → Ihre KI-Werkzeuge'),
+    (r'\bIhrem\s+KI[-\s]?Stack\b', 'Ihren KI-Werkzeugen', 'Ihrem KI-Stack → Ihren KI-Werkzeugen'),
+    (r'\bIhr\s+KI[-\s]?Stack\b', 'Ihre KI-Werkzeuge', 'Ihr KI-Stack → Ihre KI-Werkzeuge'),
+    (r'\bden\s+bestehenden\s+KI[-\s]?Stack\b', 'die bestehenden KI-Werkzeuge', 'den bestehenden KI-Stack → die bestehenden KI-Werkzeuge'),
+    (r'\bdem\s+bestehenden\s+KI[-\s]?Stack\b', 'den bestehenden KI-Werkzeugen', 'dem bestehenden KI-Stack → den bestehenden KI-Werkzeugen'),
+    (r'\bden\s+KI[-\s]?Stack\b', 'die KI-Werkzeuge', 'den KI-Stack → die KI-Werkzeuge'),
+    (r'\bdem\s+KI[-\s]?Stack\b', 'den KI-Werkzeugen', 'dem KI-Stack → den KI-Werkzeugen'),
+    (r'\bder\s+KI[-\s]?Stack\b', 'die KI-Werkzeuge', 'der KI-Stack → die KI-Werkzeuge'),
     (r'\bKI-Stack\b', 'KI-Werkzeuge', 'KI-Stack→KI-Werkzeuge'),
     (r'\bKI\s+Stack\b', 'KI-Werkzeuge', 'KI Stack→KI-Werkzeuge'),
     (r'\bTool-Stack\b', 'Werkzeugpaket', 'Tool-Stack→Werkzeugpaket'),
