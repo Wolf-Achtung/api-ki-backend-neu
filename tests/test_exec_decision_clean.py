@@ -301,3 +301,69 @@ class TestValidatorExecDecisionClean10261:
         )
         warnings = self._validate({"executive_decision": html})
         assert not any("TRUNCATED_LI" in w for w in warnings), f"False positive: {warnings}"
+
+
+class TestExecDecisionDiagMarker:
+    """Sprint 1026.5a — always-on [FIX-EXEC-DECISION-DIAG] marker emits for
+    every decision-section pass through apply_segment_budget regardless of
+    detection outcome. Pure observability, no behavior change."""
+
+    def _heal_with_logs(self, sections, caplog):
+        from services.report_healer import apply_segment_budget
+        import logging
+        caplog.set_level(logging.INFO, logger="services.report_healer")
+        result, _ = apply_segment_budget(sections, "solo")
+        return result, caplog.records
+
+    def test_diag_marker_emitted_on_truncated_section(self, caplog):
+        """KIS-1186-style truncated <li> must trigger both the existing
+        [FIX-EXEC-DECISION-CLEAN] warning AND the new diagnostic marker
+        with the expected fields."""
+        sections = {
+            "executive_decision": (
+                '<div class="exec-decision-box">'
+                '<p><strong>Ihre Entscheidung in 3 Punkten</strong></p>'
+                '<ul>'
+                '<li><strong>Tun:</strong> Einen verbindlichen Standard-Arbeitsablauf '
+                'einführen, bei dem jede Beratungsleistung den Ablauf Input</li>'
+                '<li><strong>Lassen:</strong> Tool-Zoo und Ad-hoc-Prompts ohne Standards.</li>'
+                '<li><strong>Risiko:</strong> Nach 14 Tagen ohne Effekt stoppen.</li>'
+                '</ul></div>'
+            ),
+        }
+        _, records = self._heal_with_logs(sections, caplog)
+        diag = [r for r in records if "[FIX-EXEC-DECISION-DIAG]" in r.getMessage()]
+        assert diag, "DIAG marker must emit even when detection repairs the section"
+        msg = diag[0].getMessage()
+        assert "section=executive_decision" in msg
+        assert "open_li=3" in msg
+        assert "close_li=3" in msg
+        assert "p_total=" in msg
+        assert "p_strong_prefix=" in msg
+        assert "last_chars=" in msg
+        assert "tags=" in msg
+
+    def test_diag_marker_emitted_on_clean_section(self, caplog):
+        """When the LLM honors the contract and no bullet is truncated, the
+        [FIX-EXEC-DECISION-CLEAN] line is DEBUG-only and effectively silent at
+        production log levels. The DIAG marker must still appear so production
+        runs always show the section's tag inventory."""
+        clean = (
+            '<div class="exec-decision-box">'
+            '<p><strong>Ihre Entscheidung in 3 Punkten</strong></p>'
+            '<ul>'
+            '<li><strong>Tun:</strong> Standardisierung einführen mit klarem Owner.</li>'
+            '<li><strong>Lassen:</strong> Tool-Zoo vermeiden, keine parallelen Initiativen.</li>'
+            '<li><strong>Risiko:</strong> Nach 14 Tagen ohne Effekt stoppen.</li>'
+            '</ul></div>'
+        )
+        _, records = self._heal_with_logs({"executive_decision": clean}, caplog)
+        diag = [r for r in records if "[FIX-EXEC-DECISION-DIAG]" in r.getMessage()]
+        assert diag, "DIAG marker must emit on clean sections too"
+        msg = diag[0].getMessage()
+        assert "section=executive_decision" in msg
+        assert "open_li=3" in msg
+        assert "close_li=3" in msg
+        # Tail must end on the Risiko bullet's terminal punctuation
+        assert "last_chars=" in msg
+        assert msg.rstrip().endswith("}") or "tags={" in msg
