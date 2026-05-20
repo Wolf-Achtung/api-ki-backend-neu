@@ -3662,6 +3662,39 @@ def apply_segment_budget(
         _open_count = len(_li_open_pattern.findall(_exec_content))
         _close_count = len(_li_close_pattern.findall(_exec_content))
 
+        # Sprint 1026.5a: Always-on diagnostic marker. Inventory the section's
+        # tag distribution and tail before the detection branches so we can
+        # tell from production logs whether [FIX-EXEC-DECISION-CLEAN]'s silence
+        # means "ran with truncated=0" or "section shape doesn't match any
+        # detection pass at all". No behavior change.
+        try:
+            from collections import Counter as _Counter
+
+            _diag_p_blocks = _p_pattern.findall(_exec_content)
+            _diag_p_total = len(_diag_p_blocks)
+            _diag_p_strong = sum(
+                1 for _body in _diag_p_blocks if _bullet_prefix_re.search(_body)
+            )
+            _diag_tags = dict(_Counter(re.findall(r'<(\w+)\b', _exec_content)))
+            try:
+                from bs4 import BeautifulSoup as _BS
+                _diag_text = _BS(_exec_content, "html.parser").get_text(" ", strip=True)
+            except Exception:
+                _diag_text = re.sub(r'<[^>]+>', ' ', _exec_content)
+                _diag_text = re.sub(r'\s+', ' ', _diag_text).strip()
+            _diag_last_chars = _diag_text[-30:].replace('\n', ' ').replace('\r', ' ')
+            log.info(
+                "[FIX-EXEC-DECISION-DIAG] section=%s len=%d open_li=%d close_li=%d "
+                "p_total=%d p_strong_prefix=%d last_chars=%r tags=%s",
+                _exec_key, len(_exec_content), _open_count, _close_count,
+                _diag_p_total, _diag_p_strong, _diag_last_chars, _diag_tags,
+            )
+        except Exception as _diag_err:
+            log.info(
+                "[FIX-EXEC-DECISION-DIAG] section=%s diag_error=%r",
+                _exec_key, _diag_err,
+            )
+
         if _open_count == 0:
             _new_content, _total, _truncated = _exec_heal_p_bullets(_exec_content)
             _bullet_tag = "p"
