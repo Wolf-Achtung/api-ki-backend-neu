@@ -675,6 +675,30 @@ tr:last-child td { border-bottom: none; }
     line-height: 1.6;
 }
 
+/* FIX-KIS-1192-ITEM-F: Decision-Section Page-Break-Härtung.
+   EXECUTIVE_DECISION_HTML enthält LLM-generiertes <ul>/<li> ohne
+   Container-Klasse. Bei längerem Content (KIS-1189) kann Chromium
+   mid-sentence schneiden. Innere Block-Container hart schützen,
+   plus orphans/widows für Prosa-Fluss.
+   .decision-card hat bereits page-break-inside:avoid (Z.658) —
+   hier ergänzen wir die LLM-Direkt-HTML-Pfade. */
+#decision ul,
+#decision ol,
+#decision li,
+#decision p,
+#decision .executive-decision-fallback,
+#decision .decision-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    orphans: 3;
+    widows: 3;
+}
+#decision > div,
+#decision .section-body > div {
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
 /* ══════════════════════════════════════════════════════
    CONFIDENCE CARD (Decision Confidence Layer)
    ══════════════════════════════════════════════════════ */
