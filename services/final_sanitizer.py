@@ -118,11 +118,36 @@ def final_sanitize(sections: dict) -> dict:
     except Exception:
         jahresersparnis_fmt = '41.040'
 
+    # KIS-1190 Sprint-1027.1 Item A: Schutz für Fallstudie-Block. Regionen
+    # zwischen <!--NO-SANITIZE-FALLSTUDIE--> Markern werden extrahiert,
+    # F4/F4b laufen drüberhin, dann werden Originale wieder eingesetzt.
+    _NO_SANITIZE_RE = re.compile(
+        r'<!--NO-SANITIZE-FALLSTUDIE-->.*?<!--/NO-SANITIZE-FALLSTUDIE-->',
+        re.DOTALL | re.IGNORECASE,
+    )
+
+    def _shield(val: str):
+        protected = _NO_SANITIZE_RE.findall(val)
+        if not protected:
+            return val, []
+        stripped = _NO_SANITIZE_RE.sub('\x00NOSAN_BLOCK\x00', val)
+        return stripped, protected
+
+    def _unshield(val: str, protected: list) -> str:
+        if not protected:
+            return val
+        out = val
+        for block in protected:
+            out = out.replace('\x00NOSAN_BLOCK\x00', block, 1)
+        return out
+
     for key in list(sections.keys()):
         val = sections.get(key)
         if not isinstance(val, str) or len(val) < 50:
             continue
         original = val
+        # Schutz: Fallstudie-Region rausnehmen, später re-inject
+        val, _protected = _shield(val)
         # "9 Stunden/Woche" oder "X Stunden pro Woche" → Canonical
         val = re.sub(
             r'(?:ca\.?\s*)?\d+\s*Stunden?\s*/\s*Woche',
@@ -140,6 +165,7 @@ def final_sanitize(sections: dict) -> dict:
             f'{jahresersparnis_fmt} € \\2',
             val
         )
+        val = _unshield(val, _protected)
         if val != original:
             sections[key] = val
             fixes_applied.append(f"F4:hours-fix-in-{key[:30]}")
@@ -160,6 +186,8 @@ def final_sanitize(sections: dict) -> dict:
         if not isinstance(val, str) or len(val) < 50:
             continue
         original = val
+        # KIS-1190 Sprint-1027.1 Item A: Fallstudie-Region schützen
+        val, _protected = _shield(val)
         for _pat, _repl in _f4b_patterns:
             def _f4b_replace(m, repl=_repl, canon=_canon_h_str):
                 # Extract the number from the match
@@ -168,6 +196,7 @@ def final_sanitize(sections: dict) -> dict:
                     return repl
                 return m.group(0)  # no change if already correct or out of range
             val = re.sub(_pat, _f4b_replace, val)
+        val = _unshield(val, _protected)
         if val != original:
             sections[key] = val
             fixes_applied.append(f"F4b:hours-prose-fix-{key[:30]}")
