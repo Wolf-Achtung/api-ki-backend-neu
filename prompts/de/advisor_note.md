@@ -27,6 +27,18 @@ Schreibe eine persönliche Einschätzung in exakt 4-6 Sätzen als Fließtext.
 - NICHT "Ich empfehle" — stattdessen direkt formulieren
 - Antworte NUR mit dem Fließtext, sonst nichts
 
+## Grammatik-Checkliste (KIS-1192 Item I)
+- Nach "in" + Plural-Substantiv steht Dativ-Plural-Endung "-n":
+  KORREKT: "in OpenAI- und Anthropic-Abläufen"
+  FALSCH:  "in OpenAI- und Anthropic-Abläufe"
+- Bei Vergleich "als jede/jeden" Genus + Kasus mit dem Bezugswort prüfen:
+  KORREKT: "härter treffen als jede größere Firma" (Firma = feminin, Akk.)
+  FALSCH:  "härter treffen als jeden größere Firma"
+- Adjektiv-Flexion muss zum Substantiv-Genus passen:
+  feminin (die Firma): "jede größere Firma", "eine konkrete Maßnahme"
+  maskulin (der Schritt): "jeden konkreten Schritt", "einen klaren Plan"
+- Vor dem Abschicken: Lies den Text laut. Stolperst Du beim Genus? Korrigiere.
+
 BRANCHENBEZEICHNUNG-REGEL:
 "{{BRANCHE_LABEL}}" maximal 1x verwenden. Danach: "Ihr Unternehmen".
 

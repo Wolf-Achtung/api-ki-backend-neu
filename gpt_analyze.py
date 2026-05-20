@@ -13067,6 +13067,49 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                     sections[_slot] = _cv_new
                     log.info("[v7.1.2] Stripped literal key name from %s", _slot)
 
+    # FIX-KIS-1192-ITEM-I: Grammar sanitizer for advisor_note LLM output.
+    # KIS-1192 zeigte zwei wiederkehrende LLM-Halluzinationen:
+    # 1) "in *-Abläufe (Verb)" → "in *-Abläufen (Verb)" (Dativ-Plural)
+    # 2) "als jeden (Adj) (Subst)" wo Subst feminin → "als jede (Adj) (Subst)"
+    # Konservative Regex-Patterns, nur auf advisor_note angewandt.
+    _ADVISOR_GRAMMAR_PATTERNS = [
+        # Pattern 1: "in <Wort>-Abläufe <wird|kann|sollte|...>" → "Abläufen"
+        # Vermeidet false-positives in Akkusativ-Kontext ("die Abläufe optimieren").
+        (
+            re.compile(
+                r'(\bin\s+(?:[A-Za-zÄÖÜäöüß-]+\s+(?:und|sowie)\s+)?'
+                r'[A-Za-zÄÖÜäöüß-]+-Abläufe)(\s+(?:wird|kann|sollte|muss|darf|ist|war))',
+                re.IGNORECASE,
+            ),
+            lambda m: m.group(1)[:-1] + 'en' + m.group(2),
+        ),
+        # Pattern 2: "als jeden <Adj-Endung-e> <Femininum>" → "als jede"
+        # Ausgelöst durch typisch feminine Bezugswörter (Firma, Maßnahme, Lösung, ...).
+        (
+            re.compile(
+                r'\bals\s+jeden(\s+\w+e\s+'
+                r'(?:Firma|Firm|Lösung|Maßnahme|Branche|Praxis|Kanzlei|'
+                r'Beratung|Größe|Investition|Entscheidung|Strategie|Marke|Initiative|Idee))\b',
+                re.IGNORECASE,
+            ),
+            r'als jede\1',
+        ),
+    ]
+    for _slot in ("ADVISOR_NOTE_HTML", "advisor_note"):
+        _av = sections.get(_slot, "")
+        if not isinstance(_av, str) or not _av:
+            continue
+        _av_orig = _av
+        _fixes = 0
+        for _pat, _repl in _ADVISOR_GRAMMAR_PATTERNS:
+            _av_new, _n = _pat.subn(_repl, _av)
+            if _n:
+                _av = _av_new
+                _fixes += _n
+        if _av != _av_orig:
+            sections[_slot] = _av
+            log.info("[FIX-KIS-1192-ITEM-I] advisor_note grammar fixes applied: %d in %s", _fixes, _slot)
+
     # Executive Summary Placeholder-Fix
     sections["EXECUTIVE_SUMMARY_HTML"] = _fix_exec_placeholders(
         sections.get("EXECUTIVE_SUMMARY_HTML", ""),
