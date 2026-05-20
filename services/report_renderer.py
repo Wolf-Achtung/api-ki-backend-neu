@@ -1062,23 +1062,22 @@ def render(briefing_obj: Any,
         log.info("[S2] Persona-leak fix applied for size=%s", _company_size)
 
     # V4 (was U6): Förder-Alignment-Tabelle — leere Tabellen durch Hinweis ersetzen
-    # Improved: Match ANY table, then check if it has only header rows
+    # KIS-1190 Sprint-1027.1 Item B: Killer prüft jetzt <td>-Body-Content statt
+    # Row-Count. Layout-Tabellen (z.B. quickwins-fullwidth-table, SWOT 2×2)
+    # haben volle <td>-Zellen aber wenige <tr>-Rows und wurden mis-klassifiziert.
     def _fix_empty_tables_v4(html_text):
         def _check_table(match):
             t = match.group(0)
-            # FIX-B732-VENDOR: Preserve vendor audit tables from empty-table killer
+            # FIX-B732-VENDOR: Preserve tables explicitly marked
             if "data-preserve" in t:
                 return t
-            all_rows = re.findall(r'<tr[^>]*>(.*?)</tr>', t, re.DOTALL | re.IGNORECASE)
-            if len(all_rows) <= 1:
-                # Only 0 or 1 row (header only) → empty
-                return '<div style="padding:12px;color:#64748b;font-style:italic;">Keine Daten für diese Darstellung verfügbar.</div>'
-            # Check if rows after first have any <td> with actual text content
-            data_rows = all_rows[1:]  # skip header
+            # Extract <td> cells (data cells only; <th> are headers and don't
+            # count as content). Substantive text in any <td> means the table
+            # is a real data/layout table, not a placeholder.
+            td_cells = re.findall(r'<td[^>]*>(.*?)</td>', t, re.DOTALL | re.IGNORECASE)
             has_content = False
-            for row in data_rows:
-                # Strip tags, check for non-whitespace
-                text = re.sub(r'<[^>]+>', '', row).strip()
+            for cell in td_cells:
+                text = re.sub(r'<[^>]+>', '', cell).strip()
                 if len(text) > 5:
                     has_content = True
                     break
