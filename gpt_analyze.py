@@ -20614,6 +20614,8 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             " feen,": " fest,", " feen ": " fest ", " feen.": " fest.",
             "vorraussichtlich": "voraussichtlich",
             "Vorraussichtlich": "Voraussichtlich",
+            # KIS-1190 Sprint-1027.1 Item C: "hempt" → "hemmt" (LLM glitch)
+            "hempt": "hemmt", "Hempt": "Hemmt",
         }
         _pr_canon = str(sections.get("CANON_RATE_EUR", "") or "")
         _pr_rate_int = int(_pr_canon.strip()) if _pr_canon.strip().isdigit() else 0

@@ -3246,16 +3246,23 @@ def generate_fallstudie_html(branche: str, size_key: str = "solo") -> str:
     if size_key in size_overrides:
         fallstudie = {**fallstudie, "unternehmen": size_overrides[size_key]}
     
-    html = f'''
+    # KIS-1190 Sprint-1027.1 Item A: Fallstudie wird als externes Branchen-
+    # Beispiel gekennzeichnet und gegen final_sanitizer F4 (Stunden/Woche →
+    # Stunden/Monat) per NO-SANITIZE-FALLSTUDIE-Marker geschützt. Werte sind
+    # fiktive Beispieldaten und müssen NICHT der User-canonical ROI matchen.
+    html = f'''<!--NO-SANITIZE-FALLSTUDIE-->
     <!-- FALLSTUDIE -->
-    <div class="card-nobreak" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px; margin-top: 24px;">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+    <div class="card-nobreak" data-no-sanitize="true" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px; margin-top: 24px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
             <span style="font-size: 24px;">📊</span>
             <h3 style="font-size: 18px; font-weight: 700; margin: 0; color: #1e293b;">
                 Fallstudie: {fallstudie["titel"]}
             </h3>
         </div>
-        
+        <div style="font-size: 11px; color: #64748b; font-style: italic; margin-bottom: 16px; padding: 4px 8px; background: #fff; border-left: 3px solid #94a3b8; border-radius: 0 4px 4px 0;">
+            Branchen-Beispiel · fiktive Beispieldaten zur Veranschaulichung · weicht von Ihrem persönlichen ROI bewusst ab
+        </div>
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div>
                 <div style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Unternehmen</div>
@@ -3300,6 +3307,7 @@ def generate_fallstudie_html(branche: str, size_key: str = "solo") -> str:
             </div>
         </div>
     </div>
+<!--/NO-SANITIZE-FALLSTUDIE-->
 '''
-    
+
     return html

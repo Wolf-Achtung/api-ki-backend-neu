@@ -935,7 +935,9 @@ SOLO_TERM_REPLACEMENTS: Dict[str, str] = {
     "enterprise-grade": "professionell",
     # Team/Org terms
     "Team-Meeting": "Besprechung",
-    "Briefing": "Einweisung",
+    # KIS-1190 Sprint-1027.1 Item D: "Briefing" entfernt — bleibt Beratungs-
+    # Standardterm; "Einweisung" klang im Beratungskontext unbeholfen
+    # ("aus einer kurzen Einweisung-Eingabe" auf R1 S.7+8).
     "Onboarding": "Einarbeitung",
     "Change Management": "Veränderungsprozess",
 }
