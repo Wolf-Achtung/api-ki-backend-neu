@@ -13072,40 +13072,33 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     # 1) "in *-Abläufe (Verb)" → "in *-Abläufen (Verb)" (Dativ-Plural)
     # 2) "als jeden (Adj) (Subst)" wo Subst feminin → "als jede (Adj) (Subst)"
     # Konservative Regex-Patterns, nur auf advisor_note angewandt.
-    _ADVISOR_GRAMMAR_PATTERNS = [
-        # Pattern 1: "in <Wort>-Abläufe <wird|kann|sollte|...>" → "Abläufen"
-        # Vermeidet false-positives in Akkusativ-Kontext ("die Abläufe optimieren").
-        (
-            re.compile(
-                r'(\bin\s+(?:[A-Za-zÄÖÜäöüß-]+\s+(?:und|sowie)\s+)?'
-                r'[A-Za-zÄÖÜäöüß-]+-Abläufe)(\s+(?:wird|kann|sollte|muss|darf|ist|war))',
-                re.IGNORECASE,
-            ),
-            lambda m: m.group(1)[:-1] + 'en' + m.group(2),
-        ),
-        # Pattern 2: "als jeden <Adj-Endung-e> <Femininum>" → "als jede"
-        # Ausgelöst durch typisch feminine Bezugswörter (Firma, Maßnahme, Lösung, ...).
-        (
-            re.compile(
-                r'\bals\s+jeden(\s+\w+e\s+'
-                r'(?:Firma|Firm|Lösung|Maßnahme|Branche|Praxis|Kanzlei|'
-                r'Beratung|Größe|Investition|Entscheidung|Strategie|Marke|Initiative|Idee))\b',
-                re.IGNORECASE,
-            ),
-            r'als jede\1',
-        ),
-    ]
+    _ADVISOR_PAT_DATIV = re.compile(
+        r'(\bin\s+(?:[A-Za-zÄÖÜäöüß-]+\s+(?:und|sowie)\s+)?'
+        r'[A-Za-zÄÖÜäöüß-]+-Abläufe)(\s+(?:wird|kann|sollte|muss|darf|ist|war))',
+        re.IGNORECASE,
+    )
+    _ADVISOR_PAT_AKK_FEM = re.compile(
+        r'\bals\s+jeden(\s+\w+e\s+'
+        r'(?:Firma|Firm|Lösung|Maßnahme|Branche|Praxis|Kanzlei|'
+        r'Beratung|Größe|Investition|Entscheidung|Strategie|Marke|Initiative|Idee))\b',
+        re.IGNORECASE,
+    )
+
+    def _advisor_dativ_repl(m: "re.Match[str]") -> str:
+        # "...Abläufe" → "...Abläufen" + Verb-Gruppe unverändert.
+        return m.group(1)[:-1] + 'en' + m.group(2)
+
     for _slot in ("ADVISOR_NOTE_HTML", "advisor_note"):
-        _av = sections.get(_slot, "")
-        if not isinstance(_av, str) or not _av:
+        _av_raw = sections.get(_slot, "")
+        if not isinstance(_av_raw, str) or not _av_raw:
             continue
+        _av: str = _av_raw
         _av_orig = _av
         _fixes = 0
-        for _pat, _repl in _ADVISOR_GRAMMAR_PATTERNS:
-            _av_new, _n = _pat.subn(_repl, _av)
-            if _n:
-                _av = _av_new
-                _fixes += _n
+        _av, _n1 = _ADVISOR_PAT_DATIV.subn(_advisor_dativ_repl, _av)
+        _fixes += _n1
+        _av, _n2 = _ADVISOR_PAT_AKK_FEM.subn(r'als jede\1', _av)
+        _fixes += _n2
         if _av != _av_orig:
             sections[_slot] = _av
             log.info("[FIX-KIS-1192-ITEM-I] advisor_note grammar fixes applied: %d in %s", _fixes, _slot)
