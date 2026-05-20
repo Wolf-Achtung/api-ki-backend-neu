@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from services.live_research import execute_research
-from services.strategy_budget import calculate_strategy_budget
+from services.strategy_budget import _user_budget_label, calculate_strategy_budget
 
 logger = logging.getLogger(__name__)
 
@@ -299,7 +299,11 @@ async def generate_strategy_report(
             "vendor_audit_green_count": _vendor_audit_green,
             "vendor_audit_status": _vendor_audit_status,
             # Strategy questions
-            "s1_budget": strategy_questions.get("s1_budget", ""),
+            # FIX-KIS-1192-ITEM-K: s1_budget wird vor LLM-Prompt-Übergabe
+            # formatiert (sonst leaked Raw-Token "2000_10000" in Strategy
+            # S.2/S.3). _user_budget_label() liefert "2.000 – 10.000 €".
+            # Raw-Key bleibt über strategy_questions/briefing_data abrufbar.
+            "s1_budget": _user_budget_label(strategy_questions.get("s1_budget", "")),
             "s2_zeitrahmen": strategy_questions.get("s2_zeitrahmen", ""),
             "s3_prioritaeten": ", ".join(strategy_questions.get("s3_prioritaeten", [])),
             "s4_engpass": strategy_questions.get("s4_engpass", ""),
