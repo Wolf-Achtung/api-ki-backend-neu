@@ -1760,8 +1760,15 @@ def generate_sofort_start_html(
 
     # FIX-S25-HOURS: Override yearly hours with canonical value (month × 12)
     # to avoid weekly→yearly rounding drift (3h/wk × 48 = 144 ≠ 15h/mo × 12 = 180)
+    # FIX-KIS-1192-ITEM-G: Auch hours_per_month auf Canonical syncen, sodass
+    # Sofort-Start Hero-Box (R1 S.5) auf monatlicher Basis konsistent ist
+    # (Display "15h pro Monat" / "180h pro Jahr" / "12.960€ Netto").
     if canon_hours_month > 0:
+        canon_monthly = int(canon_hours_month)
         canon_yearly = int(canon_hours_month * 12)
+        if savings["hours_per_month"] != canon_monthly:
+            savings["hours_per_month"] = canon_monthly
+            savings["savings_per_month"] = canon_monthly * savings["hourly_rate"]
         if savings["hours_per_year"] != canon_yearly:
             savings["hours_per_year"] = canon_yearly
             savings["savings_per_year"] = canon_yearly * savings["hourly_rate"]
@@ -1823,6 +1830,11 @@ def generate_sofort_start_html(
     </div>
     
     <!-- ZEITERSPARNIS-RECHNUNG (Idee #3 + #6) -->
+    <!-- FIX-KIS-1192-ITEM-G: Hero-Box auf monatliche Basis umgestellt.
+         Vorher zeigte Wochen-Wert round(canon_hours_month/4.33) (z.B. 3h),
+         aber Jahres-Wert canon_hours_month*12 (180h) — Mathematik stimmte
+         nicht (3h*52=156h ≠ 180h). Monatlich bindet Sofort-Start visuell
+         an Business Case S.9 (15h/Mo = Canonical). -->
     <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
         <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #166534; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 20px;">💰</span>
@@ -1830,8 +1842,8 @@ def generate_sofort_start_html(
         </h3>
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
             <div style="background: white; border-radius: 6px; padding: 12px;">
-                <div style="font-size: 24px; font-weight: 700; color: #166534;">{savings['hours_per_week']}h</div>
-                <div style="font-size: 11px; color: #64748b;">pro Woche</div>
+                <div style="font-size: 24px; font-weight: 700; color: #166534;">{savings['hours_per_month']}h</div>
+                <div style="font-size: 11px; color: #64748b;">pro Monat</div>
             </div>
             <div style="background: white; border-radius: 6px; padding: 12px;">
                 <div style="font-size: 24px; font-weight: 700; color: #166534;">{savings['hours_per_year']}h</div>
