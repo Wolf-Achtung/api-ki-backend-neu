@@ -402,6 +402,12 @@ def apply_solo_language_normalizer(sections: dict, company_size: str) -> dict:
         "OPEN_INPUTS_HTML", "ROI_HTML", "ROI_TRACKING_HTML",
         "STARTER_KITS_HTML", "TOOLS_BRANCH_ALIGNMENT_HTML",
         "TOOLS_FUNDING_ALIGNMENT_HTML", "TOOLS_SECTION_HTML",
+        # KIS-1191 Sprint-1027.1.1: Include pristine QW snapshot in SOLO-LANGUAGE
+        # pass. Snapshot is taken before enforcer passes to preserve PROBLEM/
+        # WIRKUNG/UMSETZUNG block structure, but pure term substitutions are
+        # safe and required — otherwise validator catches blacklist terms
+        # ("Governance", "Stakeholder", …) on the un-normalized snapshot.
+        "_QUICK_WINS_PRISTINE",
     ]
 
     # Team-specific replacements
