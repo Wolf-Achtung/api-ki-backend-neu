@@ -2276,36 +2276,95 @@ CHALLENGE_30_TAGE = {
 # out-of-scale for the target profile (e.g. governance-heavy weeks for
 # solo freelancers). The filter runs AFTER challenge-variant selection
 # (beginner/intermediate/expert), so solo-on-expert can still be trimmed.
+#
+# FIX-KIS-1192-ITEM-H: Solo woche_3/4-Skip wurde aufgehoben und durch
+# Override (siehe _CHALLENGE_SOLO_WEEK_OVERRIDES) ersetzt. Vorher entstand
+# auf R1 S.12 eine sichtbare Lücke (Tag 1-14 + Tag 29-30, nichts dazwischen)
+# weil Abschluss-Block unverändert auf Tag 29/30 hängt.
 _CHALLENGE_WEEKS_SKIP_BY_SIZE: Dict[str, set] = {
-    # Solo (Einzelberater): Woche 3 (LLM-Ops-Optimierung: Semantic Caching,
-    # Model-Routing, Prompt-Kompression) und Woche 4 (Skalierung:
-    # Rate-Limiting, Error-Handling, Team-Rollout) sind Enterprise-LLM-
-    # Ops-Niveau — für einen Einzelberater unpassend. Die verbleibenden
-    # Wochen 1+2 (Stack-Audit bzw. Werkzeugkasten + Governance-
-    # Grundregeln) sind der richtige Zuschnitt.
-    "solo": {"woche_3", "woche_4"},
-    # Team/KMU: noch nicht populiert. Eigener PR sobald Wolf die
-    # Segmentierung systematisch macht.
+    "solo": set(),  # Solo-Override siehe _CHALLENGE_SOLO_WEEK_OVERRIDES
     "team": set(),
     "kmu":  set(),
+}
+
+
+# FIX-KIS-1192-ITEM-H: Solo-spezifische Woche 3+4 Inhalte für Intermediate/
+# Expert-Solo-Berater. Ersetzt die ursprünglichen Enterprise-LLM-Ops-Wochen
+# durch Vorlagen-Pflege, Mandanten-Automatisierung und Self-Marketing —
+# realistischer Zuschnitt für einen Einzel-Berater. Wird in
+# _filter_challenge_weeks_by_size() als Override angewandt.
+_CHALLENGE_SOLO_WEEK_OVERRIDES: Dict[str, Dict[str, Any]] = {
+    "woche_3": {
+        "titel": "Vorlagen & Wiederverwendung",
+        "ziel": "Eigene Prompt-Bibliothek und Mandanten-Templates aufbauen",
+        "tage": [
+            {"tag": 15, "aufgabe": "Top-10-Wiederkehrende Aufgaben aus Woche 1+2 dokumentieren", "dauer": "30 Min", "kategorie": "Reflexion"},
+            {"tag": 16, "aufgabe": "Aus jeder Aufgabe einen wiederverwendbaren Prompt machen", "dauer": "45 Min", "kategorie": "Optimierung"},
+            {"tag": 17, "aufgabe": "Prompt-Bibliothek in Notion/Obsidian/Markdown anlegen", "dauer": "30 Min", "kategorie": "Setup"},
+            {"tag": 18, "aufgabe": "Mandanten-spezifische Templates (Angebot, Protokoll, Follow-up)", "dauer": "45 Min", "kategorie": "Praxis"},
+            {"tag": 19, "aufgabe": "Versionierung der Templates etablieren (Git oder Cloud-Versionen)", "dauer": "30 Min", "kategorie": "Setup"},
+            {"tag": 20, "aufgabe": "Test: Wie viel Zeit spart die Bibliothek pro Auftrag?", "dauer": "30 Min", "kategorie": "Reflexion"},
+            {"tag": 21, "aufgabe": "Woche 3 Review: Top-3 Bibliotheks-Bausteine markieren", "dauer": "20 Min", "kategorie": "Reflexion"},
+        ],
+    },
+    "woche_4": {
+        "titel": "Mandanten-Onboarding & Self-Marketing",
+        "ziel": "Kunden-Workflows automatisieren und Sichtbarkeit aufbauen",
+        "tage": [
+            {"tag": 22, "aufgabe": "Standard-Onboarding-Brief für neue Mandanten erstellen", "dauer": "45 Min", "kategorie": "Praxis"},
+            {"tag": 23, "aufgabe": "KI-gestützte FAQ-Antworten für Stammkunden anlegen", "dauer": "30 Min", "kategorie": "Praxis"},
+            {"tag": 24, "aufgabe": "LinkedIn/Newsletter-Posting-Bausteine vorbereiten", "dauer": "45 Min", "kategorie": "Sharing"},
+            {"tag": 25, "aufgabe": "Case-Study aus eigenem Projekt mit KI-Hilfe ausformulieren", "dauer": "45 Min", "kategorie": "Praxis"},
+            {"tag": 26, "aufgabe": "Backup-Strategie: Was tun, wenn KI-Dienst ausfällt?", "dauer": "30 Min", "kategorie": "Strategie"},
+            {"tag": 27, "aufgabe": "Eigene KI-Honorar-Position formulieren (Beratungs-Angebot)", "dauer": "30 Min", "kategorie": "Strategie"},
+            {"tag": 28, "aufgabe": "Q2-Ziel definieren: Was soll bis Sommer KI-gestützt laufen?", "dauer": "30 Min", "kategorie": "Planung"},
+        ],
+    },
 }
 
 
 def _filter_challenge_weeks_by_size(
     challenge_data: Dict[str, Any], company_size: str,
 ) -> Dict[str, Any]:
-    """Drop week-keys flagged as out-of-scale for the given company size.
+    """Drop week-keys flagged as out-of-scale; apply solo-specific overrides.
 
-    No-op unless _CHALLENGE_WEEKS_SKIP_BY_SIZE has entries for the size.
-    The challenge-variant selection runs before this filter, so the input
-    is always one of CHALLENGE_30_TAGE / _INTERMEDIATE / _EXPERT / _LIGHT.
+    Filter runs AFTER variant selection (beginner/intermediate/expert).
+    For solo+intermediate/expert, woche_3/4 get overridden with
+    solo-realistic content (Vorlagen-Bibliothek + Mandanten-Onboarding)
+    instead of Enterprise-LLM-Ops (KIS-1192 Item H).
     """
-    skip_keys = _CHALLENGE_WEEKS_SKIP_BY_SIZE.get(
-        (company_size or "").strip().lower(), set(),
-    )
-    if not skip_keys:
-        return challenge_data
-    return {k: v for k, v in challenge_data.items() if k not in skip_keys}
+    size_norm = (company_size or "").strip().lower()
+    skip_keys = _CHALLENGE_WEEKS_SKIP_BY_SIZE.get(size_norm, set())
+
+    # Apply skip first
+    if skip_keys:
+        challenge_data = {k: v for k, v in challenge_data.items() if k not in skip_keys}
+
+    # Solo override for Intermediate/Expert (where week 3/4 are Enterprise-LLM-Ops)
+    # Only triggers if the challenge variant actually has woche_3/woche_4 keys
+    # (CHALLENGE_30_TAGE_EXPERT and _INTERMEDIATE do, CHALLENGE_30_TAGE/_LIGHT do not).
+    if size_norm == "solo":
+        has_expert_week_3 = "woche_3" in challenge_data and any(
+            kw in (challenge_data["woche_3"].get("titel") or "").lower()
+            for kw in ("optimierung", "ops", "skalierung")
+        )
+        has_expert_week_4 = "woche_4" in challenge_data and any(
+            kw in (challenge_data["woche_4"].get("titel") or "").lower()
+            for kw in ("optimierung", "ops", "skalierung")
+        )
+        if has_expert_week_3 or has_expert_week_4:
+            result: Dict[str, Any] = {}
+            for k, v in challenge_data.items():
+                if k in _CHALLENGE_SOLO_WEEK_OVERRIDES and (
+                    (k == "woche_3" and has_expert_week_3)
+                    or (k == "woche_4" and has_expert_week_4)
+                ):
+                    result[k] = _CHALLENGE_SOLO_WEEK_OVERRIDES[k]
+                else:
+                    result[k] = v
+            return result
+
+    return challenge_data
 
 
 # =============================================================================
