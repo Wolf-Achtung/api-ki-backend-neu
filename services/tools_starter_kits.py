@@ -919,8 +919,9 @@ def generate_starter_kit_compact_html(kit: StarterKit, lang: str = "de") -> str:
     # FIX-KIS-1188-ITEM5: When kit.funding is reduced to the cross-reference
     # placeholder (program_id "crossref_foerderprogramme"), the bare name
     # "→ siehe Kapitel Fördermittel" appears kontextlos in the compact block.
-    # Render a full-sentence cross-reference and drop the misleading
-    # "1 Förderprogramme" count for the crossref-only case.
+    # FIX-KIS-1192-ITEM-E: Crossref wandert in eigenen Absatz UNTERHALB der
+    # Starter-Kit-Tabelle, damit er nicht als Tool-Listeneintrag missgelesen
+    # wird (R1 S.11).
     _is_crossref_only = (
         bool(kit.funding)
         and all(
@@ -928,14 +929,19 @@ def generate_starter_kit_compact_html(kit: StarterKit, lang: str = "de") -> str:
             for f in kit.funding
         )
     )
+    crossref_block_html = ""
     if _is_crossref_only:
-        funding_line_html = (
-            '<strong>Förderung:</strong> '
-            'Detaillierte Förderprogramme finden Sie im Kapitel '
-            '„Fördermittel &amp; Finanzierung".'
-        )
+        funding_line_html = ""
         funding_count_html = (
             f"{len(kit.tools)} Tools | ~{kit.estimated_total_days} Tage Einführung"
+        )
+        crossref_block_html = (
+            '<p style="margin:8px 0 16px 0;font-size:11px;color:#475569;'
+            'font-style:italic;line-height:1.5;">'
+            '<strong>Förderung:</strong> '
+            'Detaillierte Förderprogramme (inkl. regionaler Programme) '
+            'finden Sie im Hauptkapitel „Fördermittel &amp; Finanzierung".'
+            '</p>'
         )
     else:
         funding_list = ", ".join(f.name for f in kit.funding[:2])
@@ -957,10 +963,10 @@ def generate_starter_kit_compact_html(kit: StarterKit, lang: str = "de") -> str:
             {f'<div style="font-size:12px;font-weight:600;color:#059669;">{kit.potential_funding}</div>' if kit.potential_funding else ''}
         </div>
         <div style="margin-top:8px;font-size:10px;color:#495057;">
-            <strong>Tools:</strong> {tools_list}<br>
-            {funding_line_html}
+            <strong>Tools:</strong> {tools_list}{f'<br>{funding_line_html}' if funding_line_html else ''}
         </div>
     </div>
+    {crossref_block_html}
     """
 
 
