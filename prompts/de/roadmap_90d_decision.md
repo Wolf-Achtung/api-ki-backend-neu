@@ -69,7 +69,7 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>, <header>
 -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->
-<!-- TOKEN-BUDGET: 600 -->
+<!-- TOKEN-BUDGET: 900 -->
 <!-- WORD_MINIMUM: 200 -->
 <!-- WORD_MAXIMUM: 300 -->
 
@@ -88,7 +88,7 @@ Titel: p > strong "90-Tage-Fahrplan – Entscheidungsfassung"
 Dann 3 Phasen-Blöcke:
 - Phase 1 (0–30 Tage): Fundament
 - Phase 2 (31–60 Tage): Pilotierung
-- Phase 3 (61–90 Tage): Entscheidung
+- Phase 3 (61–90 Tage): Verstetigung
 
 Pro Phase:
 - p > strong mit Phasenname
