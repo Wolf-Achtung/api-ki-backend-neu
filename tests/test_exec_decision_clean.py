@@ -17,6 +17,8 @@ Test contract:
   TRUNCATED_LI warning for the offending bullet even when the section
   ends cleanly.
 """
+import re
+
 import pytest
 
 
@@ -342,6 +344,8 @@ class TestExecDecisionDiagMarker:
         assert "p_strong_prefix=" in msg
         assert "last_chars=" in msg
         assert "tags=" in msg
+        # Hotfix-1027.2.1-F1: content_hash für Persistence-vs-Render-Korrelation
+        assert "content_hash=" in msg
 
     def test_diag_marker_emitted_on_clean_section(self, caplog):
         """When the LLM honors the contract and no bullet is truncated, the
@@ -366,4 +370,7 @@ class TestExecDecisionDiagMarker:
         assert "close_li=3" in msg
         # Tail must end on the Risiko bullet's terminal punctuation
         assert "last_chars=" in msg
-        assert msg.rstrip().endswith("}") or "tags={" in msg
+        # Hotfix-1027.2.1-F1: content_hash gehört in jede DIAG-Zeile
+        assert "content_hash=" in msg
+        # Trailing position-Invariant: nach dem Hash steht nichts mehr
+        assert re.search(r"content_hash=[0-9a-f]{12}\s*$", msg), msg

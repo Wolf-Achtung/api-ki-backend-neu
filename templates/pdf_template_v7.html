@@ -698,6 +698,36 @@ tr:last-child td { border-bottom: none; }
     break-inside: avoid;
     page-break-inside: avoid;
 }
+/* Hotfix-1027.2.1-F1: Container-Level-Härtung für .exec-decision-box.
+   DIAG für Briefing 1076 (KIS-1193) zeigte: LLM-Output sauber
+   (open_li=close_li=3, len≈820, terminal-Punkt), Persistence == Render
+   identisch — Truncation erst beim Chromium-PDF-Render. Sprint 1027.2
+   Item F deckte ul/li/p ab; der äußere Container <div class="exec-decision-box">
+   wurde aber nur über das generische `#decision > div` mitgenommen, was
+   Chromium bei Content > ½ Seitenhöhe ignoriert. Container-Level-Selector
+   plus widows:4/orphans:4 auf die innere ul plus min-height-Floor erzwingen
+   atomare Behandlung. */
+.exec-decision-box {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    break-before: auto;
+    page-break-before: auto;
+    break-after: auto;
+    page-break-after: auto;
+    min-height: 12em;
+}
+.exec-decision-box ul {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    orphans: 4;
+    widows: 4;
+}
+.exec-decision-box li {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    orphans: 3;
+    widows: 3;
+}
 
 /* ══════════════════════════════════════════════════════
    CONFIDENCE CARD (Decision Confidence Layer)
