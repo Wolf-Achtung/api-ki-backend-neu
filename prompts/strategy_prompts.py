@@ -707,7 +707,7 @@ CONFIDENCE-HINWEIS (BEI BEDARF): Wo Datenlage oder Marktvergleich erkennbar unsi
 AUFGABE:
 1. Beschreibe die 3-5 relevantesten Förderprogramme aus der VERIFIZIERTEN LISTE oben für {firmenname}.
 2. Für jedes Programm:
-   a) Name und Träger (EXAKT wie in der verifizierten Liste)
+   a) Name (Programmtitel) und Träger (EXAKT wie in der verifizierten Liste)
    b) Förderhöhe (EXAKT wie in der verifizierten Liste)
    c) Förderquote (EXAKT wie in der verifizierten Liste)
    d) Antragsfrist (falls bekannt)
@@ -716,6 +716,13 @@ AUFGABE:
 3. Zeige die Einzelprogramme mit jeweiligem Förderbetrag. Berechne KEINE programmübergreifende Gesamtsumme — Programme sind nicht kumulierbar und eine addierte Summe wäre irreführend.
 4. Gib eine Handlungsempfehlung: Welches Programm zuerst beantragen?
 5. Berücksichtige das Land ({country_name}) und die Region ({bundesland}).
+
+DATENINTEGRITÄT (KRITISCH, VERBINDLICH):
+- Übernimm Programmtitel und Träger für jedes Förderprogramm wörtlich aus der bereitgestellten Datenquelle (VERIFIZIERTE FÖRDERPROGRAMME / AUS REPORT 1).
+- Die Spalte „Programm" (bzw. Tabellen-Header für den Programmtitel) MUSS für jedes gelistete Programm den vollständigen Titel enthalten — niemals nur den Träger.
+- Lasse keine Tabellenzelle leer. Falls eine Information nicht in der Datenquelle steht: schreibe „Auf Anfrage" oder „Aktuell prüfen", aber NIEMALS eine leere Zelle.
+- Paraphrasiere Titel und Träger NICHT. Kein „Bayerisches Förderprogramm" statt „Digitalbonus Bayern".
+- Selbst-Prüfung vor Ausgabe: Jede Tabellenzeile auf vollständige Spaltenbefüllung kontrollieren (insbesondere Titel-Spalte).
 
 LÄNDER-REGEL (KRITISCH):
 - Land des Unternehmens: {country_name} ({country})
