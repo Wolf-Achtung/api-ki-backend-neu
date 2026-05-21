@@ -698,6 +698,36 @@ tr:last-child td { border-bottom: none; }
     break-inside: avoid;
     page-break-inside: avoid;
 }
+/* Hotfix-1027.2.1-F1: Container-Level-Härtung für .exec-decision-box.
+   DIAG für Briefing 1076 (KIS-1193) zeigte: LLM-Output sauber
+   (open_li=close_li=3, len≈820, terminal-Punkt), Persistence == Render
+   identisch — Truncation erst beim Chromium-PDF-Render. Sprint 1027.2
+   Item F deckte ul/li/p ab; der äußere Container <div class="exec-decision-box">
+   wurde aber nur über das generische `#decision > div` mitgenommen, was
+   Chromium bei Content > ½ Seitenhöhe ignoriert. Container-Level-Selector
+   plus widows:4/orphans:4 auf die innere ul plus min-height-Floor erzwingen
+   atomare Behandlung. */
+.exec-decision-box {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    break-before: auto;
+    page-break-before: auto;
+    break-after: auto;
+    page-break-after: auto;
+    min-height: 12em;
+}
+.exec-decision-box ul {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    orphans: 4;
+    widows: 4;
+}
+.exec-decision-box li {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    orphans: 3;
+    widows: 3;
+}
 
 /* ══════════════════════════════════════════════════════
    CONFIDENCE CARD (Decision Confidence Layer)
@@ -1502,11 +1532,11 @@ h1, h2, h3, h4 {
        so viele Wochen, dass Woche 1 erhalten bleiben muss. Der Hinweis muss
        das widerspiegeln, sonst widerspricht er dem gerenderten Inhalt. #}
     {% elif expertise_level == "expert" and company_size == "solo" %}
-    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (fortgeschritten):</strong> Die 30-Tage-Challenge ist auf Solo-Berater zugeschnitten und fokussiert auf Werkzeugkasten-Optimierung und Spielregeln in 3 Wochen. Fokussieren Sie auf: Quick Wins, Vendor-Audit und KI-Potenzial-Analyse.</div>
+    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (fortgeschritten):</strong> Die 30-Tage-Challenge ist auf Solo-Berater zugeschnitten und fokussiert auf Werkzeugkasten-Optimierung und Spielregeln in 4 Wochen. Fokussieren Sie auf: Quick Wins, Vendor-Audit und KI-Potenzial-Analyse.</div>
     {% elif expertise_level == "expert" %}
     <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (fortgeschritten):</strong> Die 30-Tage-Challenge startet direkt mit Stack-Optimierung und Governance — die Einstiegs-Woche entfällt. Fokussieren Sie auf: Quick Wins, Vendor-Audit und KI-Potenzial-Analyse.</div>
     {% elif expertise_level == "intermediate" and company_size == "solo" %}
-    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (erfahren):</strong> Die 30-Tage-Challenge ist auf Solo-Berater zugeschnitten und kombiniert Workflow-Analyse mit Automatisierung in 3 Wochen. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
+    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (erfahren):</strong> Die 30-Tage-Challenge ist auf Solo-Berater zugeschnitten und kombiniert Workflow-Analyse mit Automatisierung in 4 Wochen. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
     {% elif expertise_level == "intermediate" %}
     <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (erfahren):</strong> Die 30-Tage-Challenge überspringt die Grundlagen-Woche und startet mit Workflow-Integration. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
     {% endif %}

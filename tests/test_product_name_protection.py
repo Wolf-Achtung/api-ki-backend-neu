@@ -76,6 +76,59 @@ class TestProductNameProtection:
                 f"'MS Kapazitäten' found in output!\nInput: {input_text}\nOutput: {result}"
 
 
+class TestStandaloneTeamsInToolContext:
+    """Hotfix 1027.2.1 F4: Standalone 'Teams' als Tool-Name (im Cluster mit
+    Zoom/Meet/Webex/Slack/Otter etc.) darf NICHT von SOLO_GOVERNANCE_REPLACEMENTS
+    erfasst werden. Sonst kette: Teams->Kapazitaeten->Zeitbudget -> 'Zoom oder
+    Zeitbudget' in S.8 Quick Win Meeting-Nachbereitung (KIS-1193)."""
+
+    def test_zoom_oder_teams_protected(self) -> None:
+        from services.prompt_enhancer import apply_solo_persona_filter
+        result = apply_solo_persona_filter(
+            "Nutzen Sie Otter zur automatischen Transkription Ihrer "
+            "Kundengespräche in Zoom oder Teams."
+        )
+        assert "Zoom oder Teams" in result, f"Teams wurde faelschlich ersetzt: {result}"
+        assert "Zeitbudget" not in result, f"Zoom->Zeitbudget-Bug: {result}"
+        assert "Kapazitäten" not in result, f"Teams->Kapazitaeten-Replace: {result}"
+
+    def test_teams_oder_zoom_protected(self) -> None:
+        from services.prompt_enhancer import apply_solo_persona_filter
+        result = apply_solo_persona_filter("Wählen Sie Teams oder Zoom.")
+        assert "Teams oder Zoom" in result, result
+
+    def test_zoom_comma_teams_protected(self) -> None:
+        from services.prompt_enhancer import apply_solo_persona_filter
+        result = apply_solo_persona_filter("Tools wie Zoom, Teams und Webex.")
+        assert "Teams" in result, result
+        assert "Kapazitäten" not in result, result
+
+    def test_slash_separator_protected(self) -> None:
+        from services.prompt_enhancer import apply_solo_persona_filter
+        result = apply_solo_persona_filter("Tools: Zoom / Teams")
+        assert "Teams" in result, result
+        assert "Kapazitäten" not in result, result
+
+    def test_otter_teams_protected(self) -> None:
+        from services.prompt_enhancer import apply_solo_persona_filter
+        result = apply_solo_persona_filter("Otter und Teams kombinieren.")
+        assert "Otter und Teams" in result, result
+
+    def test_google_meet_teams_protected(self) -> None:
+        from services.prompt_enhancer import apply_solo_persona_filter
+        result = apply_solo_persona_filter("Google Meet oder Teams einsetzen.")
+        assert "Teams" in result, result
+        assert "Kapazitäten" not in result, result
+
+    def test_standalone_teams_without_tool_context_still_replaced(self) -> None:
+        """Negative Kontrolle: ohne Tool-Cluster greift weiter die Solo-Ersetzung."""
+        from services.prompt_enhancer import apply_solo_persona_filter
+        result = apply_solo_persona_filter("Sie organisieren mehrere Teams im Unternehmen.")
+        assert "Teams" not in result or "Microsoft" in result, (
+            f"Standalone Teams ohne Tool-Kontext muss weiter ersetzt werden: {result}"
+        )
+
+
 class TestSafetyNetSeatbelt:
     """Tests für Safety Net (seatbelt) im content_quality_enforcer."""
 

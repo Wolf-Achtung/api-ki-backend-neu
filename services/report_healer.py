@@ -3685,11 +3685,19 @@ def apply_segment_budget(
                 _diag_text = re.sub(r'<[^>]+>', ' ', _exec_content)
                 _diag_text = re.sub(r'\s+', ' ', _diag_text).strip()
             _diag_last_chars = _diag_text[-30:].replace('\n', ' ').replace('\r', ' ')
+            # Hotfix-1027.2.1-F1: content_hash für Korrelation Persistence vs.
+            # Render. KIS-1193 DIAG zeigte sauberen Generator-Output; Render-PDF
+            # war trotzdem truncated → Render-Pfad-Issue. Hash macht das ohne
+            # Volltext-Diff sofort verifizierbar.
+            _diag_content_hash = hashlib.md5(
+                _exec_content.encode('utf-8'), usedforsecurity=False
+            ).hexdigest()[:12]
             log.info(
                 "[FIX-EXEC-DECISION-DIAG] section=%s len=%d open_li=%d close_li=%d "
-                "p_total=%d p_strong_prefix=%d last_chars=%r tags=%s",
+                "p_total=%d p_strong_prefix=%d last_chars=%r tags=%s content_hash=%s",
                 _exec_key, len(_exec_content), _open_count, _close_count,
                 _diag_p_total, _diag_p_strong, _diag_last_chars, _diag_tags,
+                _diag_content_hash,
             )
         except Exception as _diag_err:
             log.info(

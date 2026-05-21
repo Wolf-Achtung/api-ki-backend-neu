@@ -1383,6 +1383,10 @@ _SECTION_MAX_TOKENS = {
     "ai_act_summary": 4000,
     "reifegrad_sowhat": 4000,
     "quick_wins": 5000,
+    # Hotfix 1027.2.1 F2: Phase 3 (Verstetigung) verschwand bei tightem Budget.
+    # Naming-Konflikt mit executive_decision ist via Prompt-Rename gelöst;
+    # explizites Token-Budget verhindert Regression bei globalen Default-Änderungen.
+    "roadmap_90d_decision": 4000,
     "branch_deep_dive": 8000,  # FIX-B718: was 5000, LLM hits max_tokens → truncation
     # ── EFFIZIENT ──
     "transparency_box": 3000,
