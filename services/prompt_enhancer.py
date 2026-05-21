@@ -917,6 +917,27 @@ PROTECTED_PRODUCT_NAMES: List[str] = [
     "MS Teams",
 ]
 
+# Hotfix 1027.2.1 F4: Standalone "Teams" als Tool-Name (z.B. „Zoom oder Teams")
+# wurde von der Kette SOLO_GOVERNANCE_REPLACEMENTS (teams→Kapazitäten) und
+# content_quality_enforcer (Kapazitäten→Zeitbudget) als „Kapazitäten" missdeutet
+# → Output: „Zoom oder Zeitbudget". PROTECTED_PRODUCT_NAMES nutzt re.escape
+# und kann nur Literale; für kontextuelle Erkennung („Teams" als Tool im
+# Meeting-Tool-Cluster) brauchen wir Regex-Patterns. Match-Text wird durch
+# Placeholder vor der Filter-Pipeline ersetzt und nach den Replacements
+# 1:1 rekonstruiert (siehe apply_solo_persona_filter Z.998+).
+#
+# Heuristik: „Teams" gilt als Tool-Name, wenn es in einer Liste mit anderen
+# bekannten Meeting-/Collaboration-Tools (Zoom, Google Meet, Webex, Slack,
+# Otter, Loom, Jitsi) steht (durch /,/und/oder/„or"/„and" verbunden). In
+# allen anderen Kontexten greift die bisherige Solo-Lexicon-Ersetzung.
+_TOOL_NEIGHBORS = r"(?:Zoom|Google\s+Meet|Webex|Slack|Otter|Loom|Jitsi|GoToMeeting|BlueJeans|Skype)"
+PROTECTED_PRODUCT_PATTERNS: List[str] = [
+    # „Zoom oder Teams" / „Zoom, Teams" / „Zoom und Teams"
+    rf"\b{_TOOL_NEIGHBORS}\s*(?:,|/|\s+oder\s+|\s+und\s+|\s+or\s+|\s+and\s+)\s*Teams\b",
+    # „Teams oder Zoom" / „Teams, Zoom" / „Teams und Zoom"
+    rf"\bTeams\s*(?:,|/|\s+oder\s+|\s+und\s+|\s+or\s+|\s+and\s+)\s*{_TOOL_NEIGHBORS}\b",
+]
+
 SOLO_FORBIDDEN_TERMS: List[str] = [
     # Team-specific terms (German)
     "team",
@@ -989,6 +1010,19 @@ def apply_solo_persona_filter(text: str) -> str:
                 original = match.group(0)
                 protected_map[placeholder] = original
                 result = pattern.sub(placeholder, result)
+
+    # Hotfix 1027.2.1 F4: Kontextuelle Regex-Patterns für „Teams" als Tool-Name
+    # im Meeting-Tool-Cluster. Jedes Match wird per Index-Placeholder maskiert,
+    # damit Mehrfachvorkommen mit unterschiedlicher Schreibweise erhalten bleiben.
+    for i, regex_pattern in enumerate(PROTECTED_PRODUCT_PATTERNS):
+        compiled = re.compile(regex_pattern, re.IGNORECASE)
+        # Use callback to capture each match's actual text individually
+        def _replace(match: 're.Match[str]', start_idx=i) -> str:
+            idx = len(protected_map)
+            placeholder = f"__PROTECTED_PATTERN_{start_idx}_{idx}__"
+            protected_map[placeholder] = match.group(0)
+            return placeholder
+        result = compiled.sub(_replace, result)
 
     # 1) Apply phrase replacements FIRST (multi-word patterns)
     for phrase, replacement in SOLO_PHRASE_REPLACEMENTS.items():
