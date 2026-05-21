@@ -126,26 +126,43 @@ class TestRendererDropsWocheOneForIntExpert:
         # Beginner must still see the original Woche 1 "Erste Schritte".
         assert CHALLENGE_30_TAGE["woche_1"]["titel"] in html
 
-    def test_subtitle_announces_three_weeks_for_advanced(self):
+    def test_subtitle_announces_three_weeks_for_team_advanced(self):
+        # Team/KMU + intermediate/expert dropt Woche 1 → 3 Wochen Subtitle.
         expert_html = generate_30_tage_challenge_html_v2(
-            expertise_level="expert", zeitbudget="2_5",
+            company_size="team", expertise_level="expert", zeitbudget="2_5",
         )
         inter_html = generate_30_tage_challenge_html_v2(
-            expertise_level="intermediate", zeitbudget="2_5",
+            company_size="team", expertise_level="intermediate", zeitbudget="2_5",
         )
-        # The advanced subtitles previously claimed "in 4 Wochen" — now 3.
         assert "in 3 Wochen" in expert_html
         assert "in 3 Wochen" in inter_html
         assert "in 4 Wochen" not in expert_html
         assert "in 4 Wochen" not in inter_html
+
+    def test_subtitle_announces_four_weeks_for_solo_advanced(self):
+        # Hotfix 1027.2.1 F3: Solo + intermediate/expert behält nach Item H
+        # alle 4 Wochen (Woche 3+4 Overrides) — Subtitle muss das spiegeln,
+        # sonst widerspricht S.3 Management Summary dem S.13-14 Inhalt.
+        expert_html = generate_30_tage_challenge_html_v2(
+            company_size="solo", expertise_level="expert", zeitbudget="2_5",
+        )
+        inter_html = generate_30_tage_challenge_html_v2(
+            company_size="solo", expertise_level="intermediate", zeitbudget="2_5",
+        )
+        assert "in 4 Wochen" in expert_html
+        assert "in 4 Wochen" in inter_html
+        assert "in 3 Wochen" not in expert_html
+        assert "in 3 Wochen" not in inter_html
 
     def test_day_1_appears_only_once_in_advanced(self):
         # After renumber, the first visible day is Tag 1. Before the fix,
         # expert saw Tag 1 in (dropped) Woche 1 and again nowhere — but
         # after the drop + renumber, Tag 1 must be present exactly once
         # per HTML (no stale "Tag 8" rendering).
+        # Hotfix 1027.2.1 F3: company_size="team" damit Woche 1 wirklich
+        # gedroppt wird (Solo behält nach Item H alle Wochen).
         html = generate_30_tage_challenge_html_v2(
-            expertise_level="expert", zeitbudget="2_5",
+            company_size="team", expertise_level="expert", zeitbudget="2_5",
         )
         # Count discrete "Tag 1<" occurrences (< terminates the number so
         # we don't count "Tag 10", "Tag 15" etc).

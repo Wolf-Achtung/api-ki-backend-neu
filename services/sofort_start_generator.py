@@ -2855,11 +2855,15 @@ def generate_30_tage_challenge_html_v2(
         challenge_data = _drop_first_week_and_renumber(challenge_data)
 
     # KIS-1132: Expertise-aware subtitle
-    # KIS-1142 P3: Wochen-Anzahl ist jetzt 3 für Int/Expert (Woche 1 gedroppt).
+    # KIS-1142 P3: Wochen-Anzahl ist 3 für Team/KMU Int/Expert (Woche 1 gedroppt).
+    # Hotfix 1027.2.1 F3: Solo behält nach Item H alle 4 Wochen — Subtitle muss
+    # company_size-aware sein, sonst widerspricht S.3 Management Summary dem
+    # gerenderten Inhalt auf S.13-14.
+    _wochen_label = "4 Wochen" if _company_size_norm == "solo" else "3 Wochen"
     if expertise_level == "expert":
-        _subtitle = "Stack-Optimierung und Governance in 3 Wochen"
+        _subtitle = f"Stack-Optimierung und Governance in {_wochen_label}"
     elif expertise_level == "intermediate":
-        _subtitle = "Vom Anwender zum Workflow-Profi in 3 Wochen"
+        _subtitle = f"Vom Anwender zum Workflow-Profi in {_wochen_label}"
     else:
         _subtitle = "Von Null auf KI-Profi – angepasst an Ihr Zeitbudget"
 
