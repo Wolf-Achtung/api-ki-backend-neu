@@ -349,7 +349,7 @@ class ROIExplanation:
                     </div>{roi_conclusion}
                 </div>
                 <div style="margin-top:8px;padding:6px 8px;background:#f0f4f8;border-radius:4px;font-size:10px;color:#64748b;line-height:1.4;">
-                    <strong>Methodik-Hinweis:</strong> Diese ROI-Berechnung basiert auf der einmaligen Startinvestition (CAPEX). Der KI-Strategiebericht kalkuliert mit einer Gesamtinvestition über 12 Monate (inkl. Schulung, Koordination) — abweichende ROI-Werte sind methodisch bedingt, nicht widersprüchlich.
+                    <strong>Methodik-Hinweis:</strong> Diese ROI-Berechnung basiert auf der einmaligen Startinvestition (CAPEX) und ist konservativ bei 200% gedeckelt. Die KI-Potenzial-Analyse zeigt zusätzlich den ungedeckelten ROI für höhere Sensitivitätsszenarien. Der KI-Strategiebericht kalkuliert mit einer Gesamtinvestition über 12 Monate (inkl. Schulung, Koordination) — abweichende ROI-Werte sind methodisch bedingt, nicht widersprüchlich.
                 </div>
             </div>
         </div>
