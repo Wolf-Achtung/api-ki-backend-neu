@@ -687,27 +687,30 @@ tr:last-child td { border-bottom: none; }
 #decision li,
 #decision p,
 #decision .executive-decision-fallback,
-#decision .decision-card {
+#decision .decision-card,
+#decision figure {
     break-inside: avoid;
     page-break-inside: avoid;
     orphans: 3;
     widows: 3;
 }
 #decision > div,
-#decision .section-body > div {
+#decision .section-body > div,
+#decision > figure,
+#decision .section-body > figure {
     break-inside: avoid;
     page-break-inside: avoid;
 }
-/* Hotfix-1027.2.1-F1: Container-Level-Härtung für .exec-decision-box.
-   DIAG für Briefing 1076 (KIS-1193) zeigte: LLM-Output sauber
-   (open_li=close_li=3, len≈820, terminal-Punkt), Persistence == Render
-   identisch — Truncation erst beim Chromium-PDF-Render. Sprint 1027.2
-   Item F deckte ul/li/p ab; der äußere Container <div class="exec-decision-box">
-   wurde aber nur über das generische `#decision > div` mitgenommen, was
-   Chromium bei Content > ½ Seitenhöhe ignoriert. Container-Level-Selector
-   plus widows:4/orphans:4 auf die innere ul plus min-height-Floor erzwingen
-   atomare Behandlung. */
-.exec-decision-box {
+/* Hotfix-1027.2.1-F1 / 1027.2.2-A: Container-Level-Härtung.
+   Eskalation in 1027.2.2: KIS-1194 zeigte trotz break-inside:avoid +
+   min-height:12em auf .exec-decision-box den gleichen Cutoff
+   (content_hash f8ef847f255a == saubere Persistence). Chromium ignoriert
+   break-inside auf generischen divs zuverlässig erst bei <figure>-
+   Wrappern. Backup-Plan aus 1027.2.1-Daily-Report aktiviert.
+   .exec-decision-figure trägt die Härtung primär; .exec-decision-box
+   bleibt als Defense-in-Depth-Layer. */
+.exec-decision-figure {
+    margin: 0;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     break-before: auto;
@@ -715,18 +718,29 @@ tr:last-child td { border-bottom: none; }
     break-after: auto;
     page-break-after: auto;
     min-height: 12em;
+    display: block;
 }
+.exec-decision-figure ul,
 .exec-decision-box ul {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     orphans: 4;
     widows: 4;
 }
+.exec-decision-figure li,
 .exec-decision-box li {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     orphans: 3;
     widows: 3;
+}
+.exec-decision-box {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    break-before: auto;
+    page-break-before: auto;
+    break-after: auto;
+    page-break-after: auto;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1553,7 +1567,15 @@ h1, h2, h3, h4 {
     </div>
 
     {% if EXECUTIVE_DECISION_HTML and EXECUTIVE_DECISION_HTML|trim %}
-    {{ EXECUTIVE_DECISION_HTML|safe }}
+    {# Hotfix-1027.2.2-A: <figure>-Wrapper für Chromium-Atomic-Layout.
+       1027.2.1 setzte break-inside:avoid + min-height:12em auf
+       .exec-decision-box; KIS-1194 zeigte trotzdem Cutoff (DIAG
+       content_hash f8ef847f255a beweist sauberen Generator-Output).
+       Chromium honoriert break-inside auf generischen divs unzuverlässig,
+       behandelt <figure> aber als atomare Layout-Einheit. Wrapper trägt
+       die Härtungs-Regeln, .exec-decision-box selbst bleibt aus
+       Defense-in-Depth-Gründen erhalten. #}
+    <figure class="exec-decision-figure">{{ EXECUTIVE_DECISION_HTML|safe }}</figure>
     {% elif FINAL_CHECK_DECISIONS %}
     {% for decision in FINAL_CHECK_DECISIONS %}
     <div class="decision-card">
