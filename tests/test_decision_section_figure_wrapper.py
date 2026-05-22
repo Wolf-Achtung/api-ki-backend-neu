@@ -1,16 +1,25 @@
-"""Hotfix 1027.2.2-A: Source-level guard für den figure-Wrapper-Backup
-um EXECUTIVE_DECISION_HTML in templates/pdf_template_v7.html.
+"""Sprint 1027.2.3: Source-level guard für den Pre-figure-Zustand der
+Decision-Section in templates/pdf_template_v7.html.
 
-KIS-1193 (1027.2.1) + KIS-1194 (1027.2.2) zeigten: Chromium honoriert
-break-inside:avoid auf generischen <div>-Containern unzuverlässig, wenn
-der Box-Content > halbe Seitenhöhe ist. Wrapping in <figure> behebt das
-laut Chromium-Verhalten (atomare Layout-Einheit), aber nur wenn beide
-Teile zusammen ankommen — der Wrapper im Template UND die CSS-Regeln,
-die die Härtung tatsächlich tragen.
+Hintergrund: Sprint 1027.2.2-A (Commit 3bfbf36e) hatte einen
+<figure class="exec-decision-figure">-Wrapper mit min-height:12em um
+EXECUTIVE_DECISION_HTML gelegt. KIS-1195 (analysis_id=1053, DB-Diag:
+Backend liefert 3 vollständige Bullets, Restplatz 765-784px, Figure-
+Bedarf ~280px, Headroom +485-504px) zeigte trotzdem Cutoff nach
+"…Standard-Arbeitsablauf (Input". Ursache: figure(min-height:12em) +
+nested .exec-decision-box(break-inside:avoid) triggerte Chromium-
+Layout-Pass-Bug — figure fixiert auf min-height (176px), Content
+~280px wurde geclippt obwohl reichlich Restplatz vorhanden war.
 
-Statt eine vollständige Jinja-Rendering-Umgebung mit Asset-Pipeline
-aufzusetzen, prüfen die Tests die Template-Quelle direkt — analog zu
-TestTemplateSkipHintUsesExpertiseLevel in test_kis_1142_p3_woche_1_skip.py.
+Fix 1027.2.3: figure-Wrapper komplett zurückgenommen. .exec-decision-box
+trägt jetzt wieder allein die Atomarität (Pre-1027.2.2-A-Zustand,
+äquivalent zu 1027.2.1-F1). Zusätzlich .exec-decision-box li explizit
+auf break-inside:avoid + page-break-inside:avoid — verhindert Mid-
+Sentence-Cuts innerhalb eines Bullets, ohne den Block als Ganzes mit
+unnötig hartem Layout-Floor zu belasten.
+
+Tests prüfen die Template-Quelle direkt (analog
+TestTemplateSkipHintUsesExpertiseLevel in test_kis_1142_p3_woche_1_skip.py).
 """
 from __future__ import annotations
 
@@ -29,93 +38,154 @@ def _read_template() -> str:
         return f.read()
 
 
-class TestFigureWrapperPresent:
-    def test_executive_decision_html_wrapped_in_figure(self) -> None:
-        """EXECUTIVE_DECISION_HTML muss in <figure class="exec-decision-figure">
-        gewrappt sein — der Wrapper ist der Hebel für Chromium-Atomic-Layout."""
+class TestDecisionDirectRender:
+    def test_executive_decision_html_renders_directly(self) -> None:
+        """EXECUTIVE_DECISION_HTML wird DIREKT in #decision gerendert, nicht
+        in einen Wrapper geschachtelt. Pre-1027.2.2-A-Zustand."""
         tpl = _read_template()
-        # Suche das exakte Markup im decision-Block
-        pattern = re.compile(
-            r'<figure\s+class="exec-decision-figure"\s*>'
-            r'\s*\{\{\s*EXECUTIVE_DECISION_HTML\s*\|\s*safe\s*\}\}\s*'
-            r'</figure>',
-        )
-        assert pattern.search(tpl), (
-            "EXECUTIVE_DECISION_HTML ist nicht in <figure class='exec-decision-figure'> "
-            "gewrappt — 1027.2.2-A-Wrapper fehlt."
-        )
-
-    def test_figure_wrapper_only_in_decision_section(self) -> None:
-        """Der figure-Wrapper darf nicht in eine andere Section gewandert sein
-        (Smoke-Test gegen Copy-Paste-Fehler)."""
-        tpl = _read_template()
-        # Section-Header steht direkt vor dem Wrapper
-        match = re.search(
-            r'<div class="section" id="decision"[^>]*>'
-            r'(.*?)<figure\s+class="exec-decision-figure"',
+        # Innerhalb der #decision-Section: EXECUTIVE_DECISION_HTML steht
+        # als nackter {{ … |safe }}-Output ohne umschließendes Element.
+        decision_block = re.search(
+            r'<div class="section" id="decision"[^>]*>(.*?)<!-- ',
             tpl,
             re.DOTALL,
         )
-        assert match, (
-            "figure-Wrapper steht nicht innerhalb der #decision-Section — "
-            "1027.2.2-A im falschen Block?"
+        assert decision_block, "#decision-Section nicht gefunden"
+        body = decision_block.group(1)
+        direct_render = re.search(
+            r'\{\{\s*EXECUTIVE_DECISION_HTML\s*\|\s*safe\s*\}\}',
+            body,
         )
-        # Keine zweite <figure class="exec-decision-figure"> außerhalb #decision
-        all_figures = re.findall(r'<figure\s+class="exec-decision-figure"', tpl)
-        assert len(all_figures) == 1, (
-            f"Erwarte genau einen exec-decision-figure-Wrapper, gefunden: {len(all_figures)}"
+        assert direct_render, (
+            "EXECUTIVE_DECISION_HTML wird nicht direkt im #decision-Block "
+            "gerendert."
+        )
+        # Direkt davor darf KEIN öffnender Wrapper-Tag stehen (figure / span /
+        # zusätzlicher div mit Klasse für diese Variable).
+        prefix = body[: direct_render.start()].rstrip()
+        assert not prefix.endswith("<figure class=\"exec-decision-figure\">"), (
+            "EXECUTIVE_DECISION_HTML ist in <figure class='exec-decision-figure'> "
+            "gewrappt — 1027.2.2-A-Wrapper wurde nicht entfernt."
+        )
+
+    def test_no_exec_decision_figure_wrapper_in_template(self) -> None:
+        """Kein <figure class="exec-decision-figure"> mehr im Template — der
+        Wrapper aus 1027.2.2-A ist vollständig entfernt."""
+        tpl = _read_template()
+        figures = re.findall(r'<figure[^>]*class="[^"]*exec-decision-figure', tpl)
+        assert figures == [], (
+            f"Erwarte 0 <figure class='exec-decision-figure'>-Wrapper, "
+            f"gefunden: {len(figures)}"
+        )
+
+    def test_no_exec_decision_figure_css_rule(self) -> None:
+        """Die CSS-Regel .exec-decision-figure { … } ist vollständig entfernt —
+        kein toter Code, kein Layout-Hebel ohne korrespondierendes Markup."""
+        tpl = _read_template()
+        rule = re.search(r'\.exec-decision-figure\s*[,{]', tpl)
+        assert rule is None, (
+            ".exec-decision-figure CSS-Regel/Selektor existiert noch — "
+            "1027.2.3 hat den figure-Layer nicht vollständig entfernt."
         )
 
 
-class TestCssHardeningOnFigure:
-    def test_exec_decision_figure_has_break_inside_avoid(self) -> None:
-        """CSS-Regel .exec-decision-figure muss break-inside:avoid (mit !important)
-        UND page-break-inside:avoid setzen — beide Properties, weil
-        Chromium-Versionen unterschiedlich strikt sind."""
+class TestDecisionBoxAtomicity:
+    def test_exec_decision_box_break_inside_avoid_important(self) -> None:
+        """.exec-decision-box trägt die Atomarität allein —
+        break-inside:avoid !important + page-break-inside:avoid !important."""
         tpl = _read_template()
         rule_match = re.search(
-            r'\.exec-decision-figure\s*\{([^}]*)\}',
+            r'\.exec-decision-box\s*\{([^}]*)\}',
             tpl,
             re.DOTALL,
         )
-        assert rule_match, ".exec-decision-figure CSS-Regel fehlt"
+        assert rule_match, ".exec-decision-box CSS-Regel fehlt"
         body = rule_match.group(1)
         assert re.search(r'break-inside\s*:\s*avoid\s*!important', body), (
-            f".exec-decision-figure fehlt break-inside:avoid !important: {body!r}"
+            f".exec-decision-box fehlt break-inside:avoid !important: {body!r}"
         )
         assert re.search(r'page-break-inside\s*:\s*avoid\s*!important', body), (
-            f".exec-decision-figure fehlt page-break-inside:avoid !important: {body!r}"
+            f".exec-decision-box fehlt page-break-inside:avoid !important: "
+            f"{body!r}"
         )
 
-    def test_exec_decision_figure_has_min_height(self) -> None:
-        """Wolf-Anweisung 1027.2.2: min-height aus 1027.2.1 von .exec-decision-box
-        auf .exec-decision-figure verschieben (Floor zwingt Chromium zur
-        Atomic-Behandlung)."""
+    def test_exec_decision_box_li_break_inside_avoid(self) -> None:
+        """Pro-Bullet-Atomarität: .exec-decision-box li trägt
+        break-inside:avoid + page-break-inside:avoid — verhindert Mid-Sentence-
+        Cuts innerhalb eines einzelnen Bullets."""
         tpl = _read_template()
         rule_match = re.search(
-            r'\.exec-decision-figure\s*\{([^}]*)\}',
+            r'\.exec-decision-box\s+li\s*\{([^}]*)\}',
             tpl,
             re.DOTALL,
         )
-        assert rule_match, ".exec-decision-figure CSS-Regel fehlt"
+        assert rule_match, (
+            ".exec-decision-box li CSS-Regel fehlt — Bullet-Atomarität "
+            "1027.2.3 nicht gesetzt."
+        )
         body = rule_match.group(1)
-        assert re.search(r'min-height\s*:\s*\d+(?:\.\d+)?(?:em|rem|px|%)', body), (
-            f".exec-decision-figure fehlt min-height-Floor: {body!r}"
+        assert re.search(r'break-inside\s*:\s*avoid', body), (
+            f".exec-decision-box li fehlt break-inside:avoid: {body!r}"
+        )
+        assert re.search(r'page-break-inside\s*:\s*avoid', body), (
+            f".exec-decision-box li fehlt page-break-inside:avoid: {body!r}"
         )
 
-    def test_decision_section_selector_covers_figure(self) -> None:
-        """Section-Level-Regel #decision … figure muss im selben Selector-
-        Block stehen wie ul/li/p — sonst greift die Härtung nicht für den
-        äußeren Container."""
+    def test_exec_decision_box_has_no_min_height(self) -> None:
+        """Kein min-height auf .exec-decision-box — der Floor war Teil der
+        1027.2.2-A-Hypothese und wurde mit dem figure-Wrapper entfernt.
+        Content soll seine natürliche Höhe behalten."""
         tpl = _read_template()
-        # Multi-Selector-Block mit #decision-Prefix
+        rule_match = re.search(
+            r'\.exec-decision-box\s*\{([^}]*)\}',
+            tpl,
+            re.DOTALL,
+        )
+        assert rule_match, ".exec-decision-box CSS-Regel fehlt"
+        body = rule_match.group(1)
+        assert not re.search(r'min-height\s*:', body), (
+            f".exec-decision-box hat min-height — 1027.2.3 sollte keinen "
+            f"Floor mehr setzen: {body!r}"
+        )
+
+
+class TestDecisionSectionLevelSelector:
+    def test_section_level_rule_no_longer_targets_figure(self) -> None:
+        """Section-Level-Regel #decision ul/ol/li/p/… darf nicht mehr
+        '#decision figure' enthalten — der Selektor wurde mit dem
+        figure-Wrapper aus 1027.2.2-A entfernt."""
+        tpl = _read_template()
+        # Block, der #decision ul / ol / li / p / … gemeinsam härtet.
         block_match = re.search(
-            r'(#decision\s+ul,[^{]*?#decision\s+figure[^{]*)\{',
+            r'(#decision\s+ul,[^{]*?)\{',
             tpl,
             re.DOTALL,
         )
         assert block_match, (
-            "Section-Level-Regel deckt '#decision figure' nicht ab — "
-            "1027.2.2-A-Wrapper bekommt nur Eigen-Regel, nicht den "
-            "kombinierten Section-Schutz."
+            "Section-Level-Härtungs-Block (#decision ul, …) nicht gefunden"
+        )
+        selector_list = block_match.group(1)
+        assert "figure" not in selector_list, (
+            f"Section-Level-Selektor enthält noch 'figure' — 1027.2.3 hat "
+            f"den figure-Selektor nicht entfernt: {selector_list!r}"
+        )
+
+    def test_decision_direct_children_no_longer_target_figure(self) -> None:
+        """#decision > figure / #decision .section-body > figure sind
+        entfernt — kein Section-Level-Schutz für ein nicht mehr existierendes
+        Element."""
+        tpl = _read_template()
+        block_match = re.search(
+            r'(#decision\s*>\s*div,[^{]*?)\{',
+            tpl,
+            re.DOTALL,
+        )
+        assert block_match, (
+            "#decision > div Härtungs-Block nicht gefunden"
+        )
+        selector_list = block_match.group(1)
+        assert "figure" not in selector_list, (
+            f"#decision direct-child Selektor enthält noch 'figure' — "
+            f"1027.2.3 hat den figure-Selektor nicht entfernt: "
+            f"{selector_list!r}"
         )
