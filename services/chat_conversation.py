@@ -931,7 +931,16 @@ AKTUELLER STAND:
 ALS NÄCHSTES ERFRAGEN:
 {next_fields_with_descriptions}
 
-ABSCHLUSS:
+{abschluss_block}
+"""
+
+# Hotfix 1027.2.2-B: ABSCHLUSS-Block ist conditional, damit der LLM die
+# "Strategiebericht wird jetzt erstellt"-Phrasen NUR an einem einzigen
+# wohldefinierten Punkt äußern darf — am Ende der letzten Sektion mit
+# global vollständigem Datenstand. KIS-1194 zeigte sonst Section-0-Hallu
+# (Turn 8: "Danke! Ihr individueller KI-Strategiebericht wird jetzt
+# erstellt…" obwohl Fragebogen weiterläuft).
+STRATEGY_ABSCHLUSS_BLOCK_LAST_SECTION = """ABSCHLUSS:
 Wenn alle Felder erfasst sind:
 - Schreiben Sie einen KURZEN Übergangssatz (max. 1 Satz), z.B.: \
 "Gut, ich habe alle Informationen für Ihren Strategiebericht."
@@ -941,8 +950,28 @@ Wenn alle Felder erfasst sind:
 WENN DER USER EINE ZUSAMMENFASSUNG BESTÄTIGT (z.B. "ja", "stimmt", "passt"):
 - Gehen Sie SOFORT zum nächsten Feld weiter.
 - Wiederholen Sie die Zusammenfassung NIEMALS.
-- Fragen Sie NICHT erneut ob die Angaben korrekt sind.
-"""
+- Fragen Sie NICHT erneut ob die Angaben korrekt sind."""
+
+# Für alle Nicht-Letzten Sektionen: KEIN ABSCHLUSS-Wording erlaubt.
+# Stattdessen expliziter Hinweis auf den Sektions-Übergang.
+STRATEGY_ABSCHLUSS_BLOCK_INTERIM_SECTION = """SEKTIONSÜBERGANG:
+Diese Sektion ist NICHT die letzte des Fragebogens. Auch wenn alle Felder \
+dieser Sektion erfasst sind, ist der Fragebogen NOCH NICHT abgeschlossen.
+- Schreiben Sie KEINEN Abschlusssatz à la "ich habe alle Informationen".
+- VERBOTEN: "Strategiebericht wird jetzt erstellt", \
+"wird jetzt erstellt", "Bericht wird generiert", \
+"Sie erhalten eine umfassende Analyse", \
+"Soll ich Ihren Strategiebericht jetzt erstellen?" \
+oder sinngleiche Formulierungen.
+- Stattdessen: KURZER Übergangssatz zur nächsten Sektion (max. 1 Satz), \
+z.B. "Gut. Weiter mit Erfahrung & Marktposition." oder "Notiert. \
+Letzte Themengruppe: Ihre Marktposition."
+- Dann die nächste Frage stellen.
+
+WENN DER USER EINE ZUSAMMENFASSUNG BESTÄTIGT (z.B. "ja", "stimmt", "passt"):
+- Gehen Sie SOFORT zum nächsten Feld weiter.
+- Wiederholen Sie die Zusammenfassung NIEMALS.
+- Fragen Sie NICHT erneut ob die Angaben korrekt sind."""
 
 STRATEGY_SECTION_HINTS: dict[int, str] = {
     0: "LOGOS+ETHOS: Budget und Zeitrahmen sind oft die schwierigsten Fragen. 'Unklar' ist valide — normalisieren (ETHOS). Bei Prioritäten (S3) konkret helfen (LOGOS): 'Kosten senken = z.B. Prozesse automatisieren. Compliance = z.B. DSGVO und EU AI Act.' Bei Engpass (S4) Verständnis zeigen: 'Die meisten KMU nennen Know-how oder fehlende Use Cases.'",
@@ -1705,6 +1734,7 @@ async def generate_response(
     current_block: str | None = None,
     remaining_block_fields: list[str] | None = None,
     used_confirmations: list[str] | None = None,
+    is_last_section: bool = False,
 ) -> AsyncGenerator[str, None]:
     """
     Generate streaming AI response.
@@ -1751,6 +1781,18 @@ async def generate_response(
         sections = get_sections_for_report(report_type)
         section_index: int = section["index"]
         prompt_template = _get_system_prompt(report_type)
+
+        # Hotfix 1027.2.2-B: ABSCHLUSS-Block conditional setzen. is_last_section
+        # ist vom Aufrufer in routes/chat.py über ALLE Sections iterativ
+        # berechnet — die lokale `missing_in_section`-Variable taugt nicht als
+        # Trigger, weil sie nach Sektion 0 leer sein kann während global
+        # noch Sektion 1 offen ist (das war genau der KIS-1194-Bug).
+        _abschluss_block = (
+            STRATEGY_ABSCHLUSS_BLOCK_LAST_SECTION
+            if is_last_section
+            else STRATEGY_ABSCHLUSS_BLOCK_INTERIM_SECTION
+        )
+
         system_prompt = prompt_template.format(
             section_name=section["name"],
             section_number=section_index + 1,
@@ -1758,6 +1800,7 @@ async def generate_response(
             collected_fields_summary=_format_collected_summary(collected_fields),
             missing_in_section=", ".join(missing_fields) if missing_fields else "alle erfasst",
             next_fields_with_descriptions=_format_next_fields(next_fields, report_type),
+            abschluss_block=_abschluss_block,
         )
 
         # Inject section-specific hint

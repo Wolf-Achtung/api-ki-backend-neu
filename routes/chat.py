@@ -1654,7 +1654,28 @@ async def chat_message(
 
         current_section = sections[min(_current_section, len(sections) - 1)]
 
-        log.info("[CHAT] Turn %d: normalized=%s, next=%s, no_extraction=%s", turn, list(normalized.keys()), next_fields, _no_extraction)
+        # Hotfix 1027.2.2-B: is_last_section korrekt über ALLE Sections
+        # berechnen — nicht nur über die aktuelle. KIS-1194 zeigte, dass das
+        # LLM-System-Prompt sonst nach Sektion 0 fälschlich den ABSCHLUSS-Block
+        # (mit "Strategiebericht wird jetzt erstellt"-Cue) bekommt. Die
+        # Bedingung ist binär und kombiniert: aktuelle Sektion IST die letzte
+        # UND es gibt global keine offenen Felder (required oder optional) mehr.
+        _is_last_section_complete = False
+        if _current_section >= len(sections) - 1:
+            _all_sections_complete = True
+            for _si in range(len(sections)):
+                _mr, _mo = get_missing_fields(collected, _si, rt)
+                if _mr or _mo:
+                    _all_sections_complete = False
+                    break
+            if _all_sections_complete and not next_fields:
+                _is_last_section_complete = True
+
+        log.info(
+            "[CHAT] Turn %d: normalized=%s, next=%s, no_extraction=%s, is_last_section=%s",
+            turn, list(normalized.keys()), next_fields, _no_extraction,
+            _is_last_section_complete,
+        )
 
         # Pre-compute next-field QR context so Sonnet can create
         # coherent transitions (KIS-1123 Fix 1).
@@ -1981,6 +2002,7 @@ async def chat_message(
                     current_block=_sonnet_block_id,
                     remaining_block_fields=_sonnet_block_remaining,
                     used_confirmations=_used_confirmations,
+                    is_last_section=_is_last_section_complete,
                 ):
                     await queue.put(token)
             except Exception as exc:
