@@ -20332,6 +20332,23 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             log.warning(f"[{run_id}] [SIZE-PASS] Section-level pass failed: {e}")
 
     # =========================================================================
+    # Sprint 1027.3 / Item H: Pre-Healer-Section-Snapshot für Diagnose.
+    # Filter: nur String-Values (HTML), keine _-prefixed Internal-Reports.
+    # Speicherung erfolgt nach analysis-Row-INSERT (siehe Hook unten).
+    # =========================================================================
+    _raw_pre_healer_sections: Optional[Dict[str, str]] = None
+    _raw_post_healer_sections: Optional[Dict[str, str]] = None
+    try:
+        import copy as _copy_rs
+        _raw_pre_healer_sections = {
+            k: v for k, v in sections.items()
+            if isinstance(v, str) and not k.startswith("_")
+        }
+        _raw_pre_healer_sections = _copy_rs.deepcopy(_raw_pre_healer_sections)
+    except Exception as _rs_err:
+        log.debug(f"[{run_id}] [RAW-SECTIONS] pre-healer snapshot failed: {_rs_err}")
+
+    # =========================================================================
     # FIX-A-G: REPORT HEALER - Sanitize and heal sections before rendering
     # Runs AFTER all LLM content generation, BEFORE template rendering
     # Fixes: A=template phrases, B=persona language, C=redundancy, D=ROI rules,
@@ -20366,6 +20383,18 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
 
         # Replace sections with healed version
         sections = healing_result.sections
+
+        # Sprint 1027.3 / Item H: Post-Healer-Section-Snapshot.
+        # Vor _healer_stats-Injection, damit der Snapshot reine
+        # Healed-Sections enthält und nicht das Stats-Meta-Key.
+        try:
+            _raw_post_healer_sections = {
+                k: v for k, v in sections.items()
+                if isinstance(v, str) and not k.startswith("_")
+            }
+            _raw_post_healer_sections = _copy_rs.deepcopy(_raw_post_healer_sections)
+        except Exception as _rs_err:
+            log.debug(f"[{run_id}] [RAW-SECTIONS] post-healer snapshot failed: {_rs_err}")
 
         # Log healing stats
         log.info(
@@ -21133,7 +21162,28 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     db.add(an)
     db.commit()
     db.refresh(an)
-    
+
+    # Sprint 1027.3 / Item H: Persist Pre-/Post-Healer-Snapshots.
+    # Nicht-blockierend: bei Schreibfehler nur warnen, Pipeline läuft durch.
+    try:
+        if _raw_pre_healer_sections is not None or _raw_post_healer_sections is not None:
+            an.raw_sections = {
+                "pre_healer": _raw_pre_healer_sections or {},
+                "post_healer": _raw_post_healer_sections or {},
+            }
+            db.commit()
+            log.info(
+                "[%s] [RAW-SECTIONS] persisted analysis=%s pre=%d keys post=%d keys",
+                run_id, an.id,
+                len(_raw_pre_healer_sections or {}),
+                len(_raw_post_healer_sections or {}),
+            )
+    except Exception as _rs_err:
+        log.warning(
+            "[%s] [RAW-SECTIONS] persistence failed for analysis=%s: %r",
+            run_id, an.id, _rs_err,
+        )
+
     log.info("[%s] ✅ Analysis created (v5.4.3-PLATIN+++): id=%s", run_id, an.id)
     # Return 4 values: debug_attachments contains bytes for email (NOT stored in DB)
     return an.id, result["html"], result.get("meta", {}), result.get("debug_attachments")

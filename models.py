@@ -112,6 +112,10 @@ class Analysis(Base):
     )
     html: Mapped[str] = mapped_column(Text, nullable=False)
     meta: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
+    # Sprint 1027.3 / Item H: Pre-/Post-Healer-Section-Snapshots für
+    # Diagnose-Queries. Struktur: {"pre_healer": {...}, "post_healer": {...}}.
+    # NULL für vor-1027.3 Rows; Schreibhook in gpt_analyze.analyze_briefing.
+    raw_sections: Mapped[Optional[dict]] = mapped_column(JSONType, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
