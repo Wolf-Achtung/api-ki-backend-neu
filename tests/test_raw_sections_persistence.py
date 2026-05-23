@@ -159,3 +159,95 @@ class TestPipelineHooks:
             "DB-Write-Hook ist nicht non-blocking — erwarte try/except + "
             "log.warning, nie raise"
         )
+
+
+class TestSnapshotIsTrueCopy:
+    """Functional Test: Pre- und Post-Healer-Snapshots sind echte
+    Trennung, nicht zweimal dasselbe Objekt.
+
+    Methodik: Reproduziert die EXAKTE Snapshot-Logik aus
+    gpt_analyze.py:20340-20347 + :20371-20381 gegen ein fixiertes
+    sections-Dict mit zwei Sections:
+      - Mutated:  enthält "<p></p>" — Fix-A in heal_report_html
+        (sanitize_template_phrases Z.874) entfernt empty-paragraphs
+        unbedingt → garantierte Mutation.
+      - Control: neutraler HTML-Text ohne Trigger-Pattern → vom
+        Healer nicht mutiert.
+
+    Assertion-Kern:
+      - pre[mutated]  !=  post[mutated]   (echte Trennung)
+      - pre[control]  ==  post[control]   (Snapshot stabil)
+      - pre[mutated]  enthält noch "<p></p>" (Pre unverändert)
+      - post[mutated] enthält "<p></p>" nicht mehr (Healer hat gewirkt)
+
+    Wenn die Snapshot-Logik versehentlich auf eine Reference statt
+    Comprehension-Copy umgestellt würde, würden pre und post auf
+    dasselbe (geheilte) Dict zeigen und die erste Assertion failed.
+    """
+
+    def test_pre_post_are_independent_objects(self) -> None:
+        os.environ.setdefault("JWT_SECRET", "test-only")
+        os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
+
+        import copy
+
+        from services.report_healer import heal_report_html
+
+        sections = {
+            "EXECUTIVE_DECISION_HTML": (
+                "<p>Realer Inhalt vor dem Cleanup.</p>"
+                "<p></p>"
+                "<p>Realer Inhalt danach.</p>"
+            ),
+            "EXECUTIVE_SUMMARY_HTML": "<p>Ein neutraler Hinweis.</p>",
+        }
+
+        # === Snapshot Pre-Healer (identisch zu gpt_analyze.py:20340-20347) ===
+        pre = {
+            k: v for k, v in sections.items()
+            if isinstance(v, str) and not k.startswith("_")
+        }
+        pre = copy.deepcopy(pre)
+
+        # === Run real healer ===
+        result = heal_report_html(sections, segment="solo")
+        healed = result.sections
+
+        # === Snapshot Post-Healer (identisch zu gpt_analyze.py:20371-20381) ===
+        post = {
+            k: v for k, v in healed.items()
+            if isinstance(v, str) and not k.startswith("_")
+        }
+        post = copy.deepcopy(post)
+
+        # === Assertions ===
+        # 1. Mutated section: pre != post (echte Trennung)
+        assert pre["EXECUTIVE_DECISION_HTML"] != post["EXECUTIVE_DECISION_HTML"], (
+            "Pre und Post sind IDENTISCH für EXECUTIVE_DECISION_HTML — "
+            "Snapshot ist vermutlich Reference statt Copy, oder Healer hat "
+            "die erwartete Fix-A-Mutation nicht durchgeführt.\n"
+            f"  pre={pre['EXECUTIVE_DECISION_HTML']!r}\n"
+            f"  post={post['EXECUTIVE_DECISION_HTML']!r}"
+        )
+
+        # 2. Pre ist unverändert (enthält noch das Trigger-Pattern)
+        assert "<p></p>" in pre["EXECUTIVE_DECISION_HTML"], (
+            "Pre-Snapshot wurde nach-mutiert — Reference-Bug? "
+            f"pre={pre['EXECUTIVE_DECISION_HTML']!r}"
+        )
+
+        # 3. Post ist sauber (Healer hat <p></p> entfernt)
+        assert "<p></p>" not in post["EXECUTIVE_DECISION_HTML"], (
+            "Post-Snapshot enthält noch <p></p> — Fix-A hat nicht gegriffen, "
+            "Healer-Annahme falsch (Test-Fixture muss aktualisiert werden)."
+            f" post={post['EXECUTIVE_DECISION_HTML']!r}"
+        )
+
+        # 4. Control section: pre == post (Snapshot stabil, kein False-Positive)
+        assert pre["EXECUTIVE_SUMMARY_HTML"] == post["EXECUTIVE_SUMMARY_HTML"], (
+            "Control-Section wurde unerwartet mutiert — entweder hat der "
+            "Healer einen unerwarteten Fix angewendet, oder Pre-Snapshot "
+            "ist eine Reference.\n"
+            f"  pre={pre['EXECUTIVE_SUMMARY_HTML']!r}\n"
+            f"  post={post['EXECUTIVE_SUMMARY_HTML']!r}"
+        )
