@@ -28,6 +28,28 @@ from typing import Any, Dict, List, Optional
 log = logging.getLogger(__name__)
 
 
+# FIX-KIS-1027.4-3B: KPA-Template (gamechanger_deep_dive_v1.html) zeigt vor
+# jeder Section bereits eine statische <div class="glance-box"> mit
+# "Auf einen Blick: …"-Header. Die GC-LLM-Prompts (prompts/de/gc_*.md)
+# instruieren das Modell jedoch, jede Section ebenfalls mit
+# "<p><strong>Auf einen Blick:</strong> ...</p>" zu beginnen. Resultat: KPA
+# zeigt auf S.2 zwei "Auf einen Blick"-Zeilen direkt untereinander.
+# Wir strippen den führenden LLM-emittierten Block; die statische Template-
+# Box bleibt als visueller Anker erhalten.
+_LEADING_GLANCE_BOX_RE = re.compile(
+    r'^\s*<p>\s*<strong>\s*Auf\s+einen\s+Blick:?\s*</strong>\s*.*?</p>\s*',
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _strip_leading_glance_box(html: str) -> str:
+    """Entfernt einen voranstehenden 'Auf einen Blick:'-Absatz aus LLM-Output."""
+    if not html:
+        return html
+    return _LEADING_GLANCE_BOX_RE.sub('', html, count=1)
+
+
+
 # =============================================================================
 # 1. CONTEXT BUILDER
 # =============================================================================
@@ -516,7 +538,7 @@ def generate_deep_dive_sections(context: Dict[str, Any]) -> Dict[str, str]:
     for old, new in _SECTION1_RENAMES:
         section1_raw = section1_raw.replace(old, new)
 
-    sections['GC_BRUCHPUNKT_HTML'] = section1_raw
+    sections['GC_BRUCHPUNKT_HTML'] = _strip_leading_glance_box(section1_raw)
 
     # Section 3: Deterministic BC Deep Dive
     bc_data = calculate_bc_deep_dive(context.get('canonical_bc', {}))
@@ -532,7 +554,7 @@ def generate_deep_dive_sections(context: Dict[str, Any]) -> Dict[str, str]:
     for html_key, prompt_name in llm_sections:
         try:
             html = _generate_gc_section(prompt_name, context)
-            sections[html_key] = html
+            sections[html_key] = _strip_leading_glance_box(html)
         except Exception as exc:
             log.error(
                 "[GC-DEEP-DIVE] Failed to generate %s: %s\n%s",
