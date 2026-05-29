@@ -350,20 +350,29 @@ def calculate_bc_deep_dive(canonical_bc: Dict[str, float]) -> Dict[str, Any]:
             'cumulative_net': round(cumulative_net),
         })
 
-    # Break-even month — use R1 payback for consistency (FIX-E)
+    # Break-even month — use R1 payback for consistency (FIX-E).
+    # FIX-KIS-1027.4-2B/2C: expose BOTH the precise month value (matches the
+    # sensitivity-table "Amortisation"-Spalte) and the integer "Monat X"-Label
+    # (für narrative Konsistenz). Vorher gab math.ceil(11.1) = 12 — die
+    # Sensitivitätstabelle zeigte "11,1", der Narrative-Absatz "Monat 12" und
+    # KIS-1195/1196 lasen das als internen Widerspruch.
     if r1_payback > 0:
+        break_even_precise = round(r1_payback, 1)
         break_even_month = math.ceil(r1_payback)
     else:
         net_monthly = (base_hours * rate) - opex_month
         if net_monthly > 0:
-            break_even_month = math.ceil(round(capex / net_monthly, 1))
+            break_even_precise = round(capex / net_monthly, 1)
+            break_even_month = math.ceil(break_even_precise)
         else:
+            break_even_precise = None
             break_even_month = None
 
     return {
         'sensitivity': sensitivity,
         'projection': projection,
         'break_even_month': break_even_month,
+        'break_even_precise': break_even_precise,
         'base': {
             'hours': base_hours,
             'rate': rate,
@@ -395,6 +404,7 @@ def render_bc_deep_dive_html(bc_data: Dict[str, Any]) -> str:
     projection = bc_data.get('projection', [])
     base = bc_data.get('base', {})
     break_even = bc_data.get('break_even_month')
+    break_even_precise = bc_data.get('break_even_precise')
 
     # Build sensitivity table
     sens_rows = []
@@ -429,18 +439,42 @@ def render_bc_deep_dive_html(bc_data: Dict[str, Any]) -> str:
             f'</tr>'
         )
 
-    break_even_text = (
-        f'<p><strong>Break-Even:</strong> Monat {break_even} '
-        f'(bei Basis-Szenario mit {_fmt(base.get("hours", 0))} h/Mon. Einsparung)</p>'
-    ) if break_even else (
-        '<p><strong>Break-Even:</strong> Nicht innerhalb von 12 Monaten erreichbar '
-        'bei aktuellem Szenario.</p>'
-    )
+    # FIX-KIS-1027.4-2B/2C: Wenn der präzise Wert (z.B. 11,1) sichtbar in der
+    # Sensitivitätstabelle steht, MUSS der Narrative-Absatz beide Lesarten
+    # explizit zusammenführen, sonst wirkt "Monat X" widersprüchlich zur
+    # Tabelle. Format: "im Laufe von Monat 12 (genau: 11,1 Monate)".
+    if break_even:
+        if break_even_precise and abs(break_even_precise - break_even) > 0.05:
+            _precise_de = f"{break_even_precise:.1f}".replace(".", ",")
+            break_even_text = (
+                f'<p><strong>Break-Even:</strong> im Laufe von Monat {break_even} '
+                f'(rechnerisch nach {_precise_de} Monaten, '
+                f'bei Basis-Szenario mit {_fmt(base.get("hours", 0))} h/Mon. Einsparung)</p>'
+            )
+        else:
+            break_even_text = (
+                f'<p><strong>Break-Even:</strong> Monat {break_even} '
+                f'(bei Basis-Szenario mit {_fmt(base.get("hours", 0))} h/Mon. Einsparung)</p>'
+            )
+    else:
+        break_even_text = (
+            '<p><strong>Break-Even:</strong> Nicht innerhalb von 12 Monaten erreichbar '
+            'bei aktuellem Szenario.</p>'
+        )
 
     html = f"""
 <p><strong>Sensitivitätsanalyse</strong></p>
 <p>Was passiert, wenn die tatsächliche Zeitersparnis vom Basisszenario abweicht?
 Die folgende Tabelle zeigt die Auswirkungen auf ROI und Amortisation.</p>
+<!-- FIX-KIS-1027.4-2C: Methodik-Transparenz fuer Cross-Report-Konsistenz -->
+<p style="font-size:0.85em;color:#475569;margin-top:-6px;">
+<strong>Methodik:</strong> Diese Sensitivitätsanalyse variiert ausschließlich die
+<em>Zeitersparnis</em> (−20 % bis +20 %) und hält Investition und OPEX konstant.
+Der KI-Readiness Report (Report 1) variiert zusätzlich Investition und OPEX
+proportional, der KI-Strategiebericht rechnet mit 12-Monats-Gesamtkosten.
+Abweichende Szenario-Werte zwischen den drei Berichten sind methodisch bedingt
+und kein Widerspruch.
+</p>
 
 <table class="table">
 <thead>
