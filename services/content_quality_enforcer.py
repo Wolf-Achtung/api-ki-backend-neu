@@ -73,6 +73,14 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bFull-Stack\b', 'Gesamtlösung', 'Full-Stack→Gesamtlösung'),
     (r'\bFull\s+Stack\b', 'Gesamtlösung', 'Full Stack→Gesamtlösung'),
     (r'\bStacks\b', 'Technikpakete', 'Stacks→Technikpakete (Plural)'),
+    # FIX-KIS-1027.4-3F: Genus-Fix für generisches Stack (m.) → Technikpaket (n.).
+    # MUST run before the generic Stack→Technikpaket below, sonst entstehen
+    # "für Ihren Technikpaket" / "den Technikpaket" (Genus-Bruch).
+    (r'\bIhren\s+Stack\b(?!-Komponente)', 'Ihr Technikpaket', 'Ihren Stack → Ihr Technikpaket (Akk. neutr.)'),
+    (r'\bden\s+Stack\b(?!-Komponente)', 'das Technikpaket', 'den Stack → das Technikpaket (Akk. neutr.)'),
+    (r'\bder\s+Stack\b(?!-Komponente)', 'das Technikpaket', 'der Stack → das Technikpaket (Nom. neutr.)'),
+    (r'\beinen\s+Stack\b(?!-Komponente)', 'ein Technikpaket', 'einen Stack → ein Technikpaket (Akk. neutr.)'),
+    (r'\beines\s+Stacks\b', 'eines Technikpakets', 'eines Stacks → eines Technikpakets'),
     # FIX-S13A: Sync with solo_leak_scanner — exclude KI-Stack and Stack-Komponente
     (r'\b(?<!KI-)Stack\b(?!-Komponente)', 'Technikpaket', 'Stack→Technikpaket'),
     (r'\bLayers\b', 'Ebenen', 'Layers→Ebenen (Plural)'),
@@ -1820,6 +1828,11 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\(z\.\s*B\.\s*$', ''),  # Häufig: "(z. B." am Ende
     (r'\bsparst du\b', 'sparen Sie'),  # v14.35.3: "sparst du" → "sparen Sie"
     (r'\b([a-z]+)st du\b', r'\1en Sie'),  # Allgemein: "Xst du" → "Xen Sie"
+
+    # FIX-KIS-1027.4-3F: LLM-Artefakt "übersichtliche Übersichts" (truncated Übersichtstabelle/-matrix).
+    # Tritt im R1 S.10 auf; immer Adjektiv+Substantiv-Bruch.
+    (r'\bübersichtliche\s+Übersichts\b', 'übersichtliche Übersicht'),
+    (r'\bÜbersichtliche\s+Übersichts\b', 'Übersichtliche Übersicht'),
     
     # v14.32: Verbkonjugation nach "Sie" korrigieren (Sie + -st → Sie + -en)
     (r'\bSie ([\w]+)st\b', r'Sie \1en'),  # Allgemeines Pattern

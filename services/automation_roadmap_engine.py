@@ -1306,7 +1306,7 @@ def automation_roadmap_to_html(
         labels = {
             "title": "Automations-Roadmap",
             "subtitle": "Prozessanalyse & Transformationspfade",
-            "overview": "Uebersicht",
+            "overview": "Übersicht",
             "processes": "Prozesskandidaten",
             "paths": "Automationspfade",
             "matrix": "Impact × Machbarkeit Matrix",

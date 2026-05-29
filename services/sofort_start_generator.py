@@ -1877,7 +1877,7 @@ def generate_sofort_start_html(
         html += f'''
         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 24px;">🧠</span>
-            Prompt-Engineering-Patterns für Ihren Stack
+            Prompt-Engineering-Patterns für Ihr Technikpaket
         </h3>
         <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">
             Wiederverwendbare Patterns für konsistente, hochwertige LLM-Outputs:
