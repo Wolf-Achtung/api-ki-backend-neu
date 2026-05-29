@@ -32,7 +32,7 @@ Erstelle eine umfassende Automations-Roadmap mit:
 2. **Impact × Machbarkeit Analyse**: Bewerte jeden Prozess
 3. **Automationsketten**: Zeige Abhaengigkeiten (wenn A → dann B wird moeglich)
 4. **Phasenzuordnung**: Ordne Use Cases den drei Strategy-Phasen zu
-5. **Tool- und Foerder-Fit**: Verknuepfe mit G25/G26 Empfehlungen
+5. **Tool- und Förder-Fit**: Verknüpfe mit G25/G26 Empfehlungen
 6. **Risiko-Relation**: Bewerte basierend auf G29/G33 Risiken
 
 ## Bewertungskriterien
@@ -99,7 +99,7 @@ Erstelle eine umfassende Automations-Roadmap mit:
 - `analytics_reporting`: Analytics, Dashboards, Reports
 - `workflow_automation`: Prozessautomatisierung, Integration
 - `quality_assurance`: Qualitaetssicherung, Reviews
-- `translation_localization`: Uebersetzung, Lokalisierung
+- `translation_localization`: Übersetzung, Lokalisierung
 - `scheduling_planning`: Terminplanung, Meetings
 - `research_analysis`: Recherche, Marktanalyse
 - `internal_communication`: Interne Kommunikation, Wissensmanagement

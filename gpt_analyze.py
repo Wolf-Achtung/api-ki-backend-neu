@@ -19531,11 +19531,20 @@ STRENGE REGELN (Pflicht):
 - Sprache: Sie-Form, für Einzelunternehmer geeignet
 - VERBOTEN: Fragen, Chat-Floskeln, "Hier ist...", Code-Blöcke, Markdown
 
+DSGVO-VORBEHALT (PFLICHT — FIX-KIS-1027.4.1-H3):
+Bei JEDER Nennung eines US-Cloud-LLM/SaaS-Anbieters
+(ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Notion AI, Gemini/Google,
+GitHub Copilot u. ä.) MUSS direkt im Anschluss der Hinweis
+"(DSGVO-Vorbehalt — siehe Vendor-Prüfung)" als Suffix stehen.
+EU-Anbieter (Mistral, Aleph Alpha, IONOS, DeepL) erhalten KEINEN Suffix.
+Microsoft Copilot (EU Data Boundary) erhält KEINEN Suffix, wohl aber
+Microsoft Copilot Pro / 365 Copilot ohne EU-Zusatz.
+
 FORMAT (exakt):
 <div class="ki-stack-summary">
 <h3>Empfohlener KI-Stack – Übersicht</h3>
 <ul>
-<li><strong>Textverarbeitung:</strong> [Konkrete Empfehlung]</li>
+<li><strong>Textverarbeitung:</strong> [Konkrete Empfehlung, US-Tools mit (DSGVO-Vorbehalt — siehe Vendor-Prüfung)]</li>
 <li><strong>Dokumentenanalyse:</strong> [Konkrete Empfehlung]</li>
 <li><strong>Prozessautomatisierung:</strong> [Konkrete Empfehlung]</li>
 <li><strong>Datenvisualisierung:</strong> [Konkrete Empfehlung]</li>
@@ -20086,13 +20095,18 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
 </div>'''
 
     def _fallback_ki_stack_summary_html(context: Dict[str, Any]) -> str:
-        """Generate deterministic fallback for KI_STACK_SUMMARY_HTML."""
+        """Generate deterministic fallback for KI_STACK_SUMMARY_HTML.
+
+        FIX-KIS-1027.4.1-H3: US-Cloud-LLM-Nennungen (ChatGPT, Claude) tragen
+        durchgängig den DSGVO-Vorbehalt-Suffix analog Sprint-1027.4-Item-2A
+        (Quick Wins). Microsoft Copilot mit EU Data Boundary bleibt ohne Suffix.
+        """
         return '''<div class="ki-stack-fallback">
   <h3>Empfohlener KI-Stack – Übersicht</h3>
   <ul>
-    <li><strong>Textverarbeitung:</strong> ChatGPT/Claude für Entwürfe, Zusammenfassungen, E-Mail-Vorlagen</li>
-    <li><strong>Dokumentenanalyse:</strong> KI-gestützte Extraktion und Strukturierung von Informationen</li>
-    <li><strong>Prozessautomatisierung:</strong> Workflow-Tools mit KI-Integration für repetitive Aufgaben</li>
+    <li><strong>Textverarbeitung:</strong> ChatGPT (DSGVO-Vorbehalt — siehe Vendor-Prüfung) oder Claude (DSGVO-Vorbehalt — siehe Vendor-Prüfung) für Entwürfe, Zusammenfassungen, E-Mail-Vorlagen; Microsoft Copilot als EU-Boundary-Alternative bei vorhandenem M365</li>
+    <li><strong>Dokumentenanalyse:</strong> KI-gestützte Extraktion und Strukturierung von Informationen, z. B. via Claude (DSGVO-Vorbehalt — siehe Vendor-Prüfung) mit Datei-Upload oder lokale Modelle (Mistral, Aleph Alpha)</li>
+    <li><strong>Prozessautomatisierung:</strong> Workflow-Tools mit KI-Integration für repetitive Aufgaben (Make, n8n self-hosted)</li>
     <li><strong>Datenvisualisierung:</strong> KI-gestützte Dashboards für Geschäftskennzahlen</li>
     <li><strong>Qualitätssicherung:</strong> Automatisierte Prüfung und Validierung von Outputs</li>
     <li><strong>Wissensmanagement:</strong> RAG-basierte Systeme für unternehmensspezifisches Wissen</li>
@@ -21302,7 +21316,7 @@ def build_admin_report_card(br: Briefing, rep: Report, user_email: str) -> str:
       <tr><td style="padding: 4px 8px; color: #64748b;">Standort</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('bundesland'))}, {_e(answers.get('country', 'DE'))}</td></tr>
       <tr style="background: #f8fafc;"><td style="padding: 4px 8px; color: #64748b;">Umsatz</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('jahresumsatz'))}</td></tr>
       <tr><td style="padding: 4px 8px; color: #64748b;">Budget</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('investitionsbudget'))}</td></tr>
-      <tr style="background: #f8fafc;"><td style="padding: 4px 8px; color: #64748b;">Foerderinteresse</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('interesse_foerderung'))}</td></tr>
+      <tr style="background: #f8fafc;"><td style="padding: 4px 8px; color: #64748b;">Förderinteresse</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('interesse_foerderung'))}</td></tr>
     </table>
 
     <!-- Score -->

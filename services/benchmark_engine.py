@@ -2039,7 +2039,7 @@ def _generate_positions_table_html(positions: List[BenchmarkPosition], lang: str
             position_text = "Top" if lang == "en" else "Top"
         elif pos.is_above_median:
             position_icon = "&#9650;"  # Up triangle
-            position_text = "Above" if lang == "en" else "Ueber"
+            position_text = "Above" if lang == "en" else "Über"
         else:
             position_icon = "&#9660;"  # Down triangle
             position_text = "Below" if lang == "en" else "Unter"
