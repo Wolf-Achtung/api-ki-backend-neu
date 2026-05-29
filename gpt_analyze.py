@@ -20123,6 +20123,24 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         ("GAMECHANGER_DECISION_HTML", _fallback_gamechanger_decision_html),
     ]
 
+    # FIX-KIS-1027.4-2F: lowercase-Aliases parallel halten.
+    # ROADMAP_90D_DECISION_HTML / KI_STACK_SUMMARY_HTML / GAMECHANGER_DECISION_HTML
+    # haben jeweils einen logischen lowercase-Key (Validator-Konsum). Wird hier
+    # bei Regeneration/Fallback nur der uppercase-Key beschrieben, driftet der
+    # lowercase-Wert auf den (alten) zu-kurz-Stand zurück und wirkt im Diff
+    # wie ein eigener Generator-Fehler.
+    _DECISION_LOWER_ALIAS = {
+        "ROADMAP_90D_DECISION_HTML": "roadmap_90d_decision",
+        "KI_STACK_SUMMARY_HTML": "ki_stack_summary",
+        "GAMECHANGER_DECISION_HTML": "gamechanger_decision",
+    }
+
+    def _set_section_dual(_key: str, _value: str) -> None:
+        sections[_key] = _value
+        _alias = _DECISION_LOWER_ALIAS.get(_key)
+        if _alias:
+            sections[_alias] = _value
+
     guard_context = {
         "BRANCHE_LABEL": sections.get("BRANCHE_LABEL", answers.get("branche", "Ihrem Unternehmen")),
     }
@@ -20142,7 +20160,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                 regen_result = _regenerate_roadmap_90d_strict(guard_context, answers, max_attempts=3)  # FIX-B6: was 2
 
                 if regen_result and len(regen_result.strip()) >= 300:
-                    sections[section_key] = regen_result
+                    _set_section_dual(section_key, regen_result)
                     log.info(f"[{run_id}] [FIX-499] ✅ ROADMAP_90D_DECISION_HTML regenerated successfully (len={len(regen_result)})")
                     continue  # Skip fallback, regeneration succeeded
                 else:
@@ -20163,7 +20181,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                 regen_result = _regenerate_ki_stack_strict(guard_context, answers, max_attempts=2)
 
                 if regen_result and len(regen_result.strip()) >= 600:
-                    sections[section_key] = regen_result
+                    _set_section_dual(section_key, regen_result)
                     log.info(f"[{run_id}] [FIX-511][SG-REGEN] ✅ KI_STACK_SUMMARY_HTML regenerated successfully (len={len(regen_result)})")
                     continue  # Skip fallback, regeneration succeeded
                 else:
@@ -20184,7 +20202,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                 regen_result = _regenerate_gamechanger_strict(guard_context, answers, max_attempts=2)
 
                 if regen_result and len(regen_result.strip()) >= 600:
-                    sections[section_key] = regen_result
+                    _set_section_dual(section_key, regen_result)
                     log.info(f"[{run_id}] [FIX-511][SG-REGEN] ✅ GAMECHANGER_DECISION_HTML regenerated successfully (len={len(regen_result)})")
                     continue  # Skip fallback, regeneration succeeded
                 else:
@@ -20200,7 +20218,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
 
             # Default fallback behavior for other sections (or after regen failure in non-strict mode)
             fallback_html = fallback_fn(guard_context)
-            sections[section_key] = fallback_html
+            _set_section_dual(section_key, fallback_html)
             # FIX-498 WP6: Track fallback usage for metrics truth
             error_gate.increment_fallback()
             log.warning(f"[{run_id}] [P0.2-SECTION-GUARD] Fallback used section={section_key} reason={reason} original_len={len(html_content or '')} fallback_count={error_gate.fallback_count}")
