@@ -130,6 +130,14 @@ TOOL-ENTSCHEIDUNGSHILFE (PFLICHT):
 (c) WARNUNG VOR OVER-ENGINEERING: Ergänze im Abschnitt „Einführung in Etappen" einen Satz: „Führen Sie maximal 1–2 Tools gleichzeitig ein. Mehr parallele Einführungen erhöhen Schulungsaufwand und Fehlerrisiko überproportional."
 (d) ENTSCHEIDUNGSLOGIK NACH VORHANDENEM STACK: Falls der Kunde bereits Software nutzt, soll der Text darauf eingehen: „Sie nutzen bereits [vorhandene Software] — deshalb empfehlen wir als Einstieg [Tool/Kategorie], weil es sich direkt integrieren lässt." Nutze {{hauptleistung}} als Kontext.
 CONSTRAINT: Vendor-Audit-Daten (Risk Engine) unverändert. Keine konkreten Preise im Prompt. Bestehende Wortlimits einhalten.
+
+DSGVO-VORBEHALT (PFLICHT — FIX-KIS-1027.4-2A):
+Falls in diesem Abschnitt konkrete Tool-Markennamen mit US-Cloud-Datenfluss
+auftauchen (ChatGPT/OpenAI, Claude/Anthropic, Perplexity, GitHub Copilot u. ä.),
+MUSS direkt im Anschluss der Hinweis „(DSGVO-Vorbehalt — siehe Vendor-Audit)"
+als Suffix stehen — kein eigener Absatz, kein Fußnoten-Verweis. Wenn der
+Abschnitt produktneutral bleibt (Toolklassen statt Markennamen), entfällt
+der Suffix.
 <!-- /SPRINT 2 -->
 
 <section class="section tools">
