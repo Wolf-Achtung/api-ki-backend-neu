@@ -3237,6 +3237,19 @@ async def _complete_strategy(
     db.commit()
     db.refresh(sq)
 
+    # FIX-KIS-1027.4-3A: Admin-Briefing-Mail (Fb1+Fb2) am Chat-Abschluss,
+    # NICHT erst am Strategy-Pipeline-Ende. Vorher wurde diese Mail erst nach
+    # Strategy-Generierung verschickt, und der frühere R1-report_ready-Mail-Pfad
+    # rendert nur Fb1 — Fb2 fehlte über mehrere Minuten in jeder Admin-Übersicht.
+    try:
+        from services.strategy_pipeline import _send_admin_briefing_email
+        _send_admin_briefing_email(briefing_id, db)
+    except Exception as admin_exc:
+        log.warning(
+            "[CHAT] Admin briefing email failed (Fb1+Fb2) for briefing_id=%d: %s",
+            briefing_id, admin_exc,
+        )
+
     # Trigger strategy pipeline in background (same as POST /api/strategy/generate)
     analysis = db.query(Analysis).filter(
         Analysis.briefing_id == briefing_id
