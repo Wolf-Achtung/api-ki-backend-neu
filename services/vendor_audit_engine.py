@@ -917,10 +917,19 @@ def _extract_vendors_from_briefing(briefing: dict) -> list:
     """FIX-C5: Extract vendor info from questionnaire answers as fallback."""
     vendors: list = []
     seen: set = set()
-    # FIX-KMU-VENDOR: Check more source fields to cover all segment variants
+    # FIX-KMU-VENDOR: Check more source fields to cover all segment variants.
+    # FIX-KIS-1027.4-2D: Auch strategy s5_software ("Bestehende Software" aus
+    # Fragebogen 2) einbeziehen, falls die Vendor-Audit-Re-Generation mit
+    # gemergedem Briefing+Strategy-Kontext läuft (z.B. R1-Re-Render nach
+    # Chat-Abschluss). Bei initialer R1-Generation ist s5_software nicht
+    # vorhanden — dann no-op.
+    # Hinweis: "github" / "gitlab" werden bewusst NICHT als KI-Tool-Aliase
+    # in _KNOWN_VENDOR_META geführt (Wolf-Decision 1027.4-2D — reine Dev-
+    # Tools, nur explizit genanntes "Copilot" wird auditiert).
     source_keys = [
         "VORHANDENE_TOOLS_LABELS", "vorhandene_tools",
         "ki_projekte", "ki_einsatz", "KI_PROJEKTE",
+        "s5_software", "S5_SOFTWARE", "bestehende_software",
     ]
     for src_key in source_keys:
         source = briefing.get(src_key, "")
