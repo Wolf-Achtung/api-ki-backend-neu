@@ -204,11 +204,12 @@ Verwende diese Begriffe einheitlich im gesamten Report:
 - „DSGVO" = nie ausschreiben. „Tool" = Software. „Werkzeug" = nur in Metaphern. Nicht im selben Absatz wechseln.
 
 SZENARIO-EINORDNUNG (VERBINDLICH — OPT-A5):
-Wenn du die drei Szenarien (konservativ/realistisch/optimistisch) darstellst, ergänze bei jedem Szenario eine kurze Einordnung der Annahmen (1–2 Sätze):
+Wenn du die drei Szenarien (konservativ/realistisch/optimistisch) darstellst, ergänze bei jedem Szenario eine kurze fachliche Einordnung (1–2 Sätze):
 - Konservativ: Unter welchen realistischen Bedingungen tritt dieses Szenario ein? (etwa: langsamere Einführung, mehr Nacharbeit, Schulung verzögert)
 - Realistisch: Was muss gegeben sein, damit dieser Pfad eintritt? (etwa: Quick Wins greifen, Team arbeitet mit, KI-Richtlinie ist verbindlich)
 - Optimistisch: Welche Voraussetzungen müssten erfüllt sein? (etwa: schnelle Akzeptanz, wenig Reibung, straffe Koordination)
-Formuliere die Einordnung praxisnah für den Unternehmenskontext, nicht generisch. Nutze „Annahme:" als Einleitung.
+Formuliere die Einordnung praxisnah für den Unternehmenskontext, nicht generisch.
+WICHTIG (FIX-KIS-1027.4-3C): Setze KEIN zusätzliches Label vor den Einordnungssatz. Schreibe den Satz direkt unter den jeweiligen Szenario-Header. KEINE Präfixe wie „Annahme:" oder „Einordnung der Annahmen:" verwenden — das Szenario-Label (Konservativ/Realistisch/Optimistisch) ist bereits eindeutig.
 Die Szenario-ZAHLEN (ROI %, Break-Even Monate) kommen deterministisch aus dem Calculator — NICHT ändern. Nur die sprachliche Einordnung ergänzen.
 
 ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section, vor dem Quellenblock (falls vorhanden), genau einen kurzen Absatz ein: <p><strong>Annahmen:</strong> [1-3 zentrale fachliche Annahmen, auf denen die Einordnung dieser Section beruht]</p> Regeln: - Nur fachliche Annahmen, keine Meta-Hinweise zu Quellen, Prompting oder Datenlage. - Maximal 2-3 Sätze. - Beispiel: "Annahmen: Stabiles Marktumfeld in den nächsten 12 Monaten; aktuelle Teamgröße bleibt bestehen; keine regulatorischen Verschärfungen über den EU AI Act hinaus."

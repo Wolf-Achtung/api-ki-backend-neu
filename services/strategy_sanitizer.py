@@ -257,6 +257,28 @@ def sanitize_strategy_sections(
             patches_applied += len(plw)
             all_warnings.extend(plw)
 
+        # Pass 5: FIX-KIS-1027.4-3C — Doppel-Annahme in Szenario-Boxen entfernen.
+        # LLM emittiert trotz Prompt-Anweisung manchmal "Einordnung der Annahmen:
+        # Annahme: …" oder "Annahme: Annahme: …". Belt+Suspenders zum Prompt-Fix.
+        import re as _re
+        annahme_patches = 0
+        before = html
+        # Doppelpräfix "Annahme: Annahme:" -> "Annahme:"
+        html = _re.sub(r'(?i)\bAnnahme:\s*Annahme:\s*', 'Annahme: ', html)
+        # "Einordnung der Annahmen: Annahme:" -> "Annahme:"
+        html = _re.sub(
+            r'(?i)<strong>\s*Einordnung\s+der\s+Annahmen:\s*</strong>\s*<strong>\s*Annahme:\s*</strong>\s*',
+            '<strong>Annahme:</strong> ', html,
+        )
+        html = _re.sub(
+            r'(?i)Einordnung\s+der\s+Annahmen:\s*Annahme:\s*', 'Annahme: ', html,
+        )
+        if html != before:
+            sections[key] = html
+            annahme_patches = 1
+            patches_applied += 1
+            all_warnings.append(f"{key}: Szenario-Box Doppel-Annahme bereinigt (1027.4-3C)")
+
     report = {
         'warnings': all_warnings,
         'patches_applied': patches_applied,
