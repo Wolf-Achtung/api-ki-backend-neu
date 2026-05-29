@@ -2211,6 +2211,43 @@ def reduce_redundancy(
     # FIX-620: Store normalized text per hash for near-duplicate Jaccard comparison
     seen_fp_texts: Dict[str, str] = {}  # fp_hash -> normalized text
 
+    # FIX-KIS-1027.4.1-H1: Dual-Key-Aliase (uppercase _HTML <-> lowercase).
+    # Beide Varianten tragen identischen Content (Sprint 1027.4 Item 2F syncs
+    # alle Schreibpfade). Wenn FIX-C die uppercase-Variante zuerst sieht,
+    # registriert sie alle Block-Fingerprints unter dem uppercase-Key.
+    # Die lowercase-Variante kommt danach und ALLE Blöcke werden als
+    # "Cross-Section-Duplikat" geflaggt und entfernt -> Asymmetrie
+    # (KIS-1198: upper_post=1899, lower_post=772, Diff -67% statt der
+    # erwarteten -19%). Fix: behandle Alias-Paare wie dieselbe Section
+    # in der Cross-Section-Dedup. Innerhalb derselben Section bleibt der
+    # Intra-Section-Dedup unverändert aktiv.
+    _DUAL_ALIASES: Dict[str, str] = {
+        "EXECUTIVE_SUMMARY_HTML": "executive_summary",
+        "EXECUTIVE_DECISION_HTML": "executive_decision",
+        "ROADMAP_90D_DECISION_HTML": "roadmap_90d_decision",
+        "GAMECHANGER_DECISION_HTML": "gamechanger_decision",
+        "KI_STACK_SUMMARY_HTML": "ki_stack_summary",
+        "BRANCH_DEEP_DIVE_HTML": "branch_deep_dive",
+        "ROADMAP_SPRINT_HTML": "roadmap_sprint",
+        "QUICK_WINS_HTML": "quick_wins",
+        "BUSINESSCASE_HTML": "businesscase",
+        "GAMECHANGER_HTML": "gamechanger",
+        "RISIKEN_CHANCEN_HTML": "risiken_chancen",
+        "PROZESSCHECK_HTML": "prozesscheck",
+        "DATENSTRATEGIE_HTML": "datenstrategie",
+        "MITARBEITER_ENABLEMENT_HTML": "mitarbeiter_enablement",
+        "RESPONSIBLE_AI_HTML": "responsible_ai",
+    }
+
+    def _alias_of(name: str) -> Optional[str]:
+        if name in _DUAL_ALIASES:
+            return _DUAL_ALIASES[name]
+        # reverse lookup (lowercase -> uppercase)
+        for upper, lower in _DUAL_ALIASES.items():
+            if lower == name:
+                return upper
+        return None
+
     # TASK 2 (P0 FINAL): Sections protected from deduplication (NEVER EMPTY guarantee)
     # FIX-B15: Align with BUDGET_EXEMPT_SECTIONS — engine-generated sections
     # must NOT be deduplicated (FIX-C was removing 28K+ chars from these)
@@ -2286,7 +2323,9 @@ def reduce_redundancy(
 
             if fp_hash in seen_fingerprints:
                 first_section = seen_fingerprints[fp_hash]
-                if first_section != section_name:
+                # FIX-KIS-1027.4.1-H1: alias pairs share content by design.
+                # Treat them as the same logical section for cross-section dedup.
+                if first_section != section_name and _alias_of(section_name) != first_section:
                     # Cross-section exact duplicate
                     removals.append((start, end, f"duplicate from {first_section}"))
                     log.debug(
@@ -2298,9 +2337,13 @@ def reduce_redundancy(
                 # Only for blocks with enough words to make comparison meaningful
                 near_dup_found = False
                 if len(fingerprint.split()) >= 15:
+                    _alias = _alias_of(section_name)
                     for prev_hash, prev_text in seen_fp_texts.items():
                         prev_section = seen_fingerprints[prev_hash]
                         if prev_section == section_name:
+                            continue
+                        # FIX-KIS-1027.4.1-H1: skip Jaccard against alias too.
+                        if _alias is not None and prev_section == _alias:
                             continue
                         if len(prev_text.split()) < 15:
                             continue
