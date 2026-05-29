@@ -3029,6 +3029,10 @@ def generate_30_tage_challenge_html_v2(
             <span style="font-size: 14px; color: #166534; font-weight: 600;">
                 🎯 Prognose nach 30 Tagen: ~{_total_hours:g} Stunden = ~{_savings_str} € gespart
             </span>
+            <div style="font-size: 11px; color: #475569; margin-top: 6px; line-height: 1.5;">
+                Diese Tracking-Prognose ist konservativ (Ramp-up: 50&nbsp;%/75&nbsp;%/100&nbsp;%/100&nbsp;% der Wochenleistung).
+                Die volle Ziel-Zeitersparnis aus dem Business Case wird typischerweise ab Monat&nbsp;2 erreicht.
+            </div>
         </div>
     </div>
 '''
