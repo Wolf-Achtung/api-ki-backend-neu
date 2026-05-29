@@ -1529,7 +1529,7 @@ Format: Strukturierte Tabelle mit Faktor | Bewertung | Empfehlung | Priorität""
     },
     {
         "titel": "Few-Shot Pattern für konsistente Bewertungen",
-        "prompt": """Du bewertest [OBJEKT] nach folgenden Kriterien. Hier sind 2 Beispiele:
+        "prompt": """Sie bewerten [OBJEKT] nach folgenden Kriterien. Hier sind 2 Beispiele:
 
 ### Beispiel 1 (Bewertung: GUT)
 Input: [BEISPIEL-INPUT-1]
@@ -1544,7 +1544,7 @@ Begründung: [BEGRÜNDUNG-2]
 ### Jetzt bewerten:
 Input: [NEUER INPUT]
 
-Bewerte exakt im gleichen Format wie die Beispiele.""",
+Bewerten Sie exakt im gleichen Format wie die Beispiele.""",
         "zeitersparnis": "Konsistente Ergebnisse"
     },
 ]
