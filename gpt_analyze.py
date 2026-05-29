@@ -21302,7 +21302,7 @@ def build_admin_report_card(br: Briefing, rep: Report, user_email: str) -> str:
       <tr><td style="padding: 4px 8px; color: #64748b;">Standort</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('bundesland'))}, {_e(answers.get('country', 'DE'))}</td></tr>
       <tr style="background: #f8fafc;"><td style="padding: 4px 8px; color: #64748b;">Umsatz</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('jahresumsatz'))}</td></tr>
       <tr><td style="padding: 4px 8px; color: #64748b;">Budget</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('investitionsbudget'))}</td></tr>
-      <tr style="background: #f8fafc;"><td style="padding: 4px 8px; color: #64748b;">Foerderinteresse</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('interesse_foerderung'))}</td></tr>
+      <tr style="background: #f8fafc;"><td style="padding: 4px 8px; color: #64748b;">Förderinteresse</td><td style="padding: 4px 8px; font-weight: 600;">{_e(answers.get('interesse_foerderung'))}</td></tr>
     </table>
 
     <!-- Score -->

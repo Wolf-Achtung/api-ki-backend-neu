@@ -34,7 +34,7 @@ Erstelle eine umfassende Benchmark-Analyse mit:
 1. **KPI-Benchmarking**: ROI P50/P80/P90 im Branchenvergleich
 2. **Risk-Benchmarking**: Risiko-Score vs. branchenuebliches Risiko
 3. **Tools-Benchmarking**: Tool-Fit, Vendor-Risk-Verteilung
-4. **Funding-Benchmarking**: Foerderquote/Summe vs. Branchenniveau
+4. **Funding-Benchmarking**: Förderquote/Summe vs. Branchenniveau
 5. **Automation-Benchmarking**: Prozesse, Impact x Machbarkeit
 6. **Strategy-Benchmarking**: Phasen-Fortschritt im Branchenvergleich
 
@@ -42,7 +42,7 @@ Erstelle eine umfassende Benchmark-Analyse mit:
 
 ### score_percentile (0-100)
 - **75-100**: Top-Quartil der Branche
-- **50-75**: Ueber Branchenmedian
+- **50-75**: Über Branchenmedian
 - **25-50**: Unter Branchenmedian
 - **0-25**: Unteres Quartil
 
@@ -81,26 +81,26 @@ Branchentypische Referenzwerte basierend auf:
 1. **BENCH_001**: score_percentile muss zwischen 0 und 100 liegen
 2. **BENCH_002**: company_value darf nicht > 10x industry_median sein (Outlier-Schutz)
 3. **BENCH_003**: Bei hohem RiskScore darf risk_percentile nicht im Top-Quartil sein
-4. **BENCH_004**: Radar scores muessen der Berechnung entsprechen (Normalization Check)
+4. **BENCH_004**: Radar scores müssen der Berechnung entsprechen (Normalization Check)
 5. **BENCH_005**: Strengths duerfen nicht im Widerspruch zu RiskReport stehen
 6. **BENCH_006**: Weaknesses duerfen nicht "none" sein - immer Verbesserungspotenzial identifizieren
-7. **BENCH_007**: Opportunities muessen mit Funding Engine uebereinstimmen
+7. **BENCH_007**: Opportunities müssen mit Funding Engine übereinstimmen
 8. **BENCH_008**: Summary muss die BenchmarkPositionen korrekt widerspiegeln
 
 ## SWOT-Perspektive
 
 ### Strengths (Staerken)
 - Bereiche mit score_percentile >= 65
-- Wettbewerbsvorteile gegenueber Branche
+- Wettbewerbsvorteile gegenüber Branche
 - Positive Abweichungen vom Median
 
 ### Weaknesses (Schwaechen)
 - Bereiche mit score_percentile <= 35
-- Rueckstand gegenueber Branche
+- Rückstand gegenüber Branche
 - Verbesserungspotenziale
 
 ### Opportunities (Chancen)
-- Ungenutzte Foerderprogramme
+- Ungenutzte Förderprogramme
 - Automationspotenziale
 - Marktchancen durch KI
 
@@ -128,7 +128,7 @@ Branchentypische Referenzwerte basierend auf:
       "industry_median": 0.5,
       "industry_top_quartile": 0.75,
       "score_percentile": 68,
-      "narrative": "Tool-Reife ueber Branchenmedian."
+      "narrative": "Tool-Reife über Branchenmedian."
     },
     {
       "domain": "risk",
@@ -144,7 +144,7 @@ Branchentypische Referenzwerte basierend auf:
       "industry_median": 0.4,
       "industry_top_quartile": 0.65,
       "score_percentile": 65,
-      "narrative": "Automationsgrad ueber Median."
+      "narrative": "Automationsgrad über Median."
     },
     {
       "domain": "funding",
@@ -152,7 +152,7 @@ Branchentypische Referenzwerte basierend auf:
       "industry_median": 0.3,
       "industry_top_quartile": 0.55,
       "score_percentile": 58,
-      "narrative": "Foerder-Ausschoepfung leicht ueber Durchschnitt."
+      "narrative": "Förder-Ausschöpfung leicht über Durchschnitt."
     },
     {
       "domain": "strategy",
@@ -164,21 +164,21 @@ Branchentypische Referenzwerte basierend auf:
     }
   ],
   "radar": {
-    "categories": ["ROI", "Risiko", "Tools", "Automation", "Foerderung", "Strategie"],
+    "categories": ["ROI", "Risiko", "Tools", "Automation", "Förderung", "Strategie"],
     "scores": [0.75, 0.72, 0.68, 0.65, 0.58, 0.62]
   },
-  "summary": "Ihre KI-Wettbewerbsposition ist gut (Note B). Mit einem Reifegrad von 67% liegen Sie in 5 von 6 Benchmark-Kategorien ueber dem Branchenmedian. Als Team in der Technologie-Branche haben Sie eine gute Ausgangsposition fuer weitere KI-Transformation.",
+  "summary": "Ihre KI-Wettbewerbsposition ist gut (Note B). Mit einem Reifegrad von 67% liegen Sie in 5 von 6 Benchmark-Kategorien über dem Branchenmedian. Als Team in der Technologie-Branche haben Sie eine gute Ausgangsposition für weitere KI-Transformation.",
   "strengths": [
     "Starke ROI-Kennzahlen im Branchenvergleich",
     "Solides Risikomanagement",
     "Fortschrittlicher Tool-Stack"
   ],
   "weaknesses": [
-    "Foerder-Ausschoepfung ausbaufaehig",
+    "Förder-Ausschöpfung ausbaufähig",
     "Strategische Planung noch nicht voll ausgereift"
   ],
   "opportunities": [
-    "Weitere Foerderprogramme nutzen",
+    "Weitere Förderprogramme nutzen",
     "Automationspotenzial skalieren",
     "Strategische Positionierung als KI-Leader"
   ],
