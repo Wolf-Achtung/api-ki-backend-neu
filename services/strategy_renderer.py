@@ -362,6 +362,12 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
             # FIX-KIS-1188-ITEM3: explain the 70%-plausibility cap and reference
             # concrete programmes so the 8.400 \u20ac-style number isn't perceived
             # as arbitrary.
+            # FIX-KIS-1027.4-3D: Wolf-Decision "Annahme transparent machen".
+            # Headline beh\u00e4lt Wirkung, bekommt aber explizite Zusatz-Zeile,
+            # dass die 70\u00a0% nur bei Programm-Kombination erreichbar sind
+            # (z.\u00a0B. BAFA + KOMPASS oder zus. regionale Digitalpr\u00e4mien).
+            # Verhindert, dass Leser den Headline-ROI als Einzelprogramm-
+            # Standardfall interpretieren.
             _foerder_note = (
                 f'\n<div style="margin-top:12px;padding:12px 16px;'
                 f'background:linear-gradient(135deg,#ecfdf5,#d1fae5);'
@@ -373,9 +379,16 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
                 f'reduziert sich Ihre Nettoinvestition auf {_fmt_eur(_netto_invest)}\u00a0\u20ac '
                 f'\u2014 mit einem Netto-ROI von {_netto_roi}\u00a0% '
                 f'und Break-Even bereits in Monat\u00a0{_netto_be}. '
+                f'<br>'
                 f'<span style="font-size:0.85em;color:#047857;">'
-                f'Konkrete Programme finden Sie in Kapitel\u00a07 (F\u00f6rdermittel & Finanzierung); '
-                f'typischerweise BAFA, KOMPASS oder regionale Digitalpr\u00e4mien.'
+                f'<strong>Hinweis zur Annahme:</strong> '
+                f'Die 70\u00a0%-Quote ist ein <em>Plausibilit\u00e4ts-Cap</em> bei '
+                f'vollst\u00e4ndiger Aussch\u00f6pfung der in Kapitel\u00a07 '
+                f'(F\u00f6rdermittel &amp; Finanzierung) beschriebenen Programme \u2014 '
+                f'typischerweise BAFA <em>plus</em> KOMPASS oder zus\u00e4tzlich '
+                f'regionale Digitalpr\u00e4mien. Ein einzelnes F\u00f6rderprogramm '
+                f'erreicht meist 50\u201360\u00a0%. Pr\u00fcfen Sie die Kombinations'
+                f'm\u00f6glichkeiten f\u00fcr Ihre Region.'
                 f'</span>'
                 f'</div>'
             )

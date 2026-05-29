@@ -1009,11 +1009,10 @@ async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
                         briefing_id, cr_exc,
                     )
 
-            # Fire-and-forget: Admin briefing email with questionnaire data
-            try:
-                _send_admin_briefing_email(briefing_id, db_session)
-            except Exception as admin_exc:
-                logger.error("[Strategy %d] Admin briefing email failed: %s", briefing_id, admin_exc, exc_info=True)
+            # FIX-KIS-1027.4-3A: Admin-Briefing-Mail mit Fb1+Fb2 wird jetzt
+            # bereits am Chat-Abschluss (routes/chat.py:_finalize_strategy_chat)
+            # versendet. Hier nicht mehr ausgelöst — sonst würde der Admin
+            # zwei identische Briefing-Mails erhalten.
         else:
             logger.warning("[Strategy %d] PDF service returned no bytes", briefing_id)
 

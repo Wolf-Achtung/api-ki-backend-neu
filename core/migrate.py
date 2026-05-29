@@ -4,12 +4,24 @@ from __future__ import annotations
 - nutzt Engine.begin() Kontext für atomare Transaktionen
 - kompatibel zu psycopg v3
 - Idempotenz: CREATE TABLE IF NOT EXISTS + CREATE INDEX IF NOT EXISTS
+- iteriert zusätzlich migrations/*.sql (Sprint 1027.4 Item 1A)
 """
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
+import glob
 import logging
+import os
 
 log = logging.getLogger("core.migrate")
+
+# Verzeichnis mit chronologisch sortierbaren Migrations-Files (ISO-Datum-Präfix).
+# Dialekt-Konvention:
+#   *_sqlite.sql  -> nur auf SQLite anwenden
+#   alle anderen  -> auf Postgres anwenden (Default-Dialekt der Production)
+MIGRATIONS_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "migrations",
+)
 
 DDL = [
     # users
@@ -172,9 +184,73 @@ DDL = [
     text("CREATE INDEX IF NOT EXISTS ix_briefings_cancelled_at ON briefings (cancelled_at)"),
 ]
 
+def _select_migration_files(dialect: str, migrations_dir: str | None = None) -> list[str]:
+    """Listet relevante migrations/*.sql Files chronologisch (Filename-sortiert) auf.
+
+    Konvention:
+      - *_sqlite.sql   -> nur SQLite
+      - alle anderen   -> Postgres (Default, Production)
+    """
+    if migrations_dir is None:
+        migrations_dir = MIGRATIONS_DIR
+    if not os.path.isdir(migrations_dir):
+        return []
+    all_files = sorted(glob.glob(os.path.join(migrations_dir, "*.sql")))
+    selected: list[str] = []
+    for path in all_files:
+        name = os.path.basename(path)
+        is_sqlite_file = name.endswith("_sqlite.sql")
+        if dialect == "sqlite":
+            if is_sqlite_file:
+                selected.append(path)
+        else:
+            if not is_sqlite_file:
+                selected.append(path)
+    return selected
+
+
+def _apply_sql_file(conn, path: str, dialect: str) -> None:
+    """Wendet ein SQL-File an. Postgres-Files dürfen mehrere Statements per
+    `;` enthalten und werden als ein `text(...)`-Block ausgeführt (psycopg/SQLAlchemy
+    parsen das). SQLite-Files werden statement-weise gesplittet, weil SQLite
+    weder mehrere Statements pro `execute()` noch `ADD COLUMN IF NOT EXISTS`
+    kennt — fehlende Idempotenz fangen wir per try/except pro Statement ab.
+    """
+    with open(path, "r", encoding="utf-8") as fh:
+        sql = fh.read()
+    if dialect == "sqlite":
+        for raw in sql.split(";"):
+            stmt = raw.strip()
+            if not stmt or stmt.startswith("--"):
+                continue
+            try:
+                conn.exec_driver_sql(stmt)
+            except Exception as e:
+                msg = str(e).lower()
+                if "duplicate column" in msg or "already exists" in msg:
+                    continue
+                raise
+    else:
+        conn.execute(text(sql))
+
+
 def migrate_all(engine: Engine) -> None:
     log.info("Starting DB migrations (sync/psycopg3)...")
+    dialect = engine.dialect.name
     with engine.begin() as conn:
         for stmt in DDL:
             conn.execute(stmt)
+    # Sprint 1027.4 Item 1A: zusätzlich migrations/*.sql iterieren
+    # (Belt+Suspenders — DDL-Liste oben bleibt; SQL-Files sind idempotent).
+    files = _select_migration_files(dialect)
+    if files:
+        log.info("Applying %d SQL migration file(s) (dialect=%s)", len(files), dialect)
+        with engine.begin() as conn:
+            for path in files:
+                try:
+                    _apply_sql_file(conn, path, dialect)
+                    log.info("  ✓ %s", os.path.basename(path))
+                except Exception:
+                    log.exception("  ✗ %s — Migration-File failed", os.path.basename(path))
+                    raise
     log.info("✓ Migrations completed.")

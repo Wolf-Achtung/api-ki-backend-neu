@@ -119,20 +119,31 @@ Der Nutzer ist KI-EINSTEIGER. Einfache, sofort umsetzbare Empfehlungen.
 - Sonst: Icons 🔧 ⚡ 📋 für Tool-Set-Optimierung, Automatisierung, Templates, Qualitätsprüfungen.
 
 ## TOOL-HINWEISE (ohne Preise)
+
+DSGVO-VORBEHALT (PFLICHT — FIX-KIS-1027.4-2A):
+Tools mit US-Cloud-Datenfluss (ChatGPT/OpenAI, Claude/Anthropic, Perplexity,
+GitHub Copilot u. ä.) werden im Vendor-Audit (Kapitel 14/15 dieses Reports)
+als RED/Hochrisiko klassifiziert. Bei JEDER Nennung eines solchen Tools
+in den Quick Wins MUSS direkt im Anschluss der Hinweis
+„(DSGVO-Vorbehalt — siehe Vendor-Audit)" als Suffix stehen. Beispiel:
+„Text/Struktur/Review: ChatGPT (DSGVO-Vorbehalt — siehe Vendor-Audit),
+Claude (DSGVO-Vorbehalt — siehe Vendor-Audit)." Der Suffix ist NICHT
+optional und entfällt nur für nachweislich EU-konforme Alternativen.
+
 {% if expertise_level == "expert" %}
-- LLM-APIs: Anthropic Claude API, OpenAI API, Gemini API
+- LLM-APIs: Anthropic Claude API (DSGVO-Vorbehalt — siehe Vendor-Audit), OpenAI API (DSGVO-Vorbehalt — siehe Vendor-Audit), Gemini API (DSGVO-Vorbehalt — siehe Vendor-Audit)
 - Monitoring/Observability: Langfuse, Helicone, Weights & Biases
 - Prompt-Management: Langfuse, Promptfoo, Braintrust
 - API-Gateway: LiteLLM, Portkey
 - Evaluierung: Promptfoo, Ragas, DeepEval
 {% elif expertise_level == "intermediate" %}
-- KI-Assistenten: Claude Pro, ChatGPT Plus, Perplexity Pro
+- KI-Assistenten: Claude Pro (DSGVO-Vorbehalt — siehe Vendor-Audit), ChatGPT Plus (DSGVO-Vorbehalt — siehe Vendor-Audit), Perplexity Pro (DSGVO-Vorbehalt — siehe Vendor-Audit)
 - Automatisierung: Make, n8n, Zapier
 - Wissensbasis: Notion AI, Obsidian
 - Spezialisiert: Branchenspezifische KI-Tools empfehlen
 {% else %}
-- Recherche/Einordnung: Perplexity
-- Text/Struktur/Review: ChatGPT, Claude
+- Recherche/Einordnung: Perplexity (DSGVO-Vorbehalt — siehe Vendor-Audit)
+- Text/Struktur/Review: ChatGPT (DSGVO-Vorbehalt — siehe Vendor-Audit), Claude (DSGVO-Vorbehalt — siehe Vendor-Audit)
 - Wissensbasis/Notizen: Notion, Obsidian
 - Meeting/Audio-Notizen: Otter (oder ähnliche)
 {% endif %}

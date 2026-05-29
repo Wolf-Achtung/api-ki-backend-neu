@@ -1,14 +1,18 @@
-# Architektur-Übersicht — api-ki-backend-neu
+# Architektur-Referenz — api-ki-backend-neu
 
 Onboarding- und Diagnose-Referenz für die Wolf-Achtung-KI-Sicherheit-Pipeline.
 Beantwortet die Fragen, die bei jeder neuen Session / jedem neuen Sprint
 zuerst geklärt werden müssen: welche ID wo, welcher Repo macht was, welche
 ENV-Defaults gelten, wo querye ich was.
 
-> Komplementär: `docs/ARCHITECTURE.md` (uppercase) beschreibt die
+> Komplementär: [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) (uppercase) beschreibt die
 > PLATIN++-v5.3-Komponenten-Pipeline (Prompt-Loader, Guardrails, Healer,
 > Validator). Dieses Doku-File fokussiert auf Infrastruktur, IDs und
 > Deploy-Topologie.
+>
+> Umbenannt aus `docs/architecture.md` in Sprint 1027.4 (Item 1B), um den
+> Case-Konflikt mit `docs/ARCHITECTURE.md` auf case-insensitive Filesystems
+> (macOS, Windows) zu vermeiden.
 
 ---
 
@@ -186,13 +190,24 @@ psql "$DATABASE_PUBLIC_URL"
 
 ### Migration-Apply-Workflow
 
-**Wichtig: `migrations/*.sql` werden NICHT automatisch appliziert.**
+**Stand seit Sprint 1027.4 (Item 1A): `migrations/*.sql` werden beim Startup automatisch appliziert.**
 
-`core/migrate.py:migrate_all` (aufgerufen beim FastAPI-Startup in `main.py:81-86`) führt **nur eine hardcoded DDL-Liste** in `core/migrate.py:DDL` aus. Es gibt **keinen** File-Iterator über `migrations/*.sql`, kein Alembic, keinen Versions-Tracker. Die SQL-Files im Verzeichnis sind Dokumentations-Artefakte und müssen **manuell** gegen die Production-DB ausgeführt werden — sonst existieren die neu definierten Spalten/Tabellen nicht, und Backend-Code-Pfade, die darauf zugreifen, werfen `UndefinedColumn`/`UndefinedTable`-Errors (im besten Fall in try/except gefangen und nur als Warning geloggt; im schlimmsten Fall ungefangen).
+`core/migrate.py:migrate_all` (aufgerufen beim FastAPI-Startup in `main.py:81-86`) führt:
 
-**Nach jedem Merge mit neuer `migrations/*.sql`-Datei: manueller Apply nötig.**
+1. die hardcoded DDL-Liste in `core/migrate.py:DDL` aus (Belt+Suspenders, bleibt vorerst);
+2. anschließend alle Files in `migrations/*.sql` chronologisch (Filename-sortiert).
 
-Beispiel-Befehle (Substituiere den File-Namen für andere Migrationen):
+Dialekt-Filter (`engine.dialect.name`):
+
+- `*_sqlite.sql` → nur auf SQLite (lokale Dev/Test)
+- alle anderen Files → auf Postgres (Production)
+
+Postgres-Migrations laufen als ein `text(...)`-Block; SQLite-Migrations werden
+statement-weise gesplittet, weil SQLite `ADD COLUMN IF NOT EXISTS` nicht kennt —
+fehlende Idempotenz fängt `_apply_sql_file` per try/except auf
+`duplicate column` / `already exists` ab.
+
+Manueller Apply nur noch für Out-of-Band-Reparaturen / Hotfixes. Beispiel-Befehle:
 
 ```bash
 # Variante 1 — File-Apply von lokaler Repo-Kopie:
@@ -217,9 +232,7 @@ psql "$DATABASE_PUBLIC_URL" -c "\d+ analyses" | grep raw_sections
 # erwartet: raw_sections | jsonb | | |
 ```
 
-**Konvention:** alle Migrations sind idempotent (`IF NOT EXISTS`-Klauseln), wiederholtes Anwenden ist gefahrlos. Bei zweistufiger Migration (Postgres + SQLite) gelten beide Files je nach Ziel-Engine — Production nutzt nur die `_postgres.sql`-Variante, lokale Dev-/Test-SQLite nutzt die `_sqlite.sql`-Variante.
-
-**Backlog-Item für Sprint 1027.4:** `core/migrate.py:migrate_all` soll `migrations/*.sql` per glob iterieren statt die hardcoded DDL-Liste exklusiv zu fahren. Betrifft auch die Alt-Migration `2026-03-15_add_raw_sections_strategy.sql`, die ebenfalls nie im Auto-Runner war.
+**Konvention:** alle Postgres-Migrations sind idempotent (`IF NOT EXISTS`-Klauseln), wiederholtes Anwenden ist gefahrlos. Bei zweistufiger Migration (Postgres + SQLite) gelten beide Files je nach Ziel-Engine — Production nutzt nur die `_postgres.sql`-Variante, lokale Dev-/Test-SQLite nutzt die `_sqlite.sql`-Variante.
 
 ### Gerendertes R1-HTML (faktischer Render-Input)
 

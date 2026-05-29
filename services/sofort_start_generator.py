@@ -1529,7 +1529,7 @@ Format: Strukturierte Tabelle mit Faktor | Bewertung | Empfehlung | Priorität""
     },
     {
         "titel": "Few-Shot Pattern für konsistente Bewertungen",
-        "prompt": """Du bewertest [OBJEKT] nach folgenden Kriterien. Hier sind 2 Beispiele:
+        "prompt": """Sie bewerten [OBJEKT] nach folgenden Kriterien. Hier sind 2 Beispiele:
 
 ### Beispiel 1 (Bewertung: GUT)
 Input: [BEISPIEL-INPUT-1]
@@ -1544,7 +1544,7 @@ Begründung: [BEGRÜNDUNG-2]
 ### Jetzt bewerten:
 Input: [NEUER INPUT]
 
-Bewerte exakt im gleichen Format wie die Beispiele.""",
+Bewerten Sie exakt im gleichen Format wie die Beispiele.""",
         "zeitersparnis": "Konsistente Ergebnisse"
     },
 ]
@@ -1877,7 +1877,7 @@ def generate_sofort_start_html(
         html += f'''
         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 24px;">🧠</span>
-            Prompt-Engineering-Patterns für Ihren Stack
+            Prompt-Engineering-Patterns für Ihr Technikpaket
         </h3>
         <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">
             Wiederverwendbare Patterns für konsistente, hochwertige LLM-Outputs:
@@ -3029,6 +3029,10 @@ def generate_30_tage_challenge_html_v2(
             <span style="font-size: 14px; color: #166534; font-weight: 600;">
                 🎯 Prognose nach 30 Tagen: ~{_total_hours:g} Stunden = ~{_savings_str} € gespart
             </span>
+            <div style="font-size: 11px; color: #475569; margin-top: 6px; line-height: 1.5;">
+                Diese Tracking-Prognose ist konservativ (Ramp-up: 50&nbsp;%/75&nbsp;%/100&nbsp;%/100&nbsp;% der Wochenleistung).
+                Die volle Ziel-Zeitersparnis aus dem Business Case wird typischerweise ab Monat&nbsp;2 erreicht.
+            </div>
         </div>
     </div>
 '''

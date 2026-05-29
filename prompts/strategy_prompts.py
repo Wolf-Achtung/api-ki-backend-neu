@@ -564,11 +564,12 @@ AUFGABE:
 WICHTIG: Alle Zahlen EXAKT aus den Vorgaben übernehmen. NICHT selbst rechnen!
 
 SZENARIO-EINORDNUNG (VERBINDLICH — OPT-A5):
-Wenn du die drei Szenarien (konservativ/realistisch/optimistisch) darstellst, ergänze bei jedem Szenario eine kurze Einordnung der Annahmen (1–2 Sätze):
+Wenn du die drei Szenarien (konservativ/realistisch/optimistisch) darstellst, ergänze bei jedem Szenario eine kurze fachliche Einordnung (1–2 Sätze):
 - Konservativ: Unter welchen realistischen Bedingungen tritt dieses Szenario ein? (etwa: langsamere Einführung, mehr Nacharbeit, Schulung verzögert)
 - Realistisch: Was muss gegeben sein, damit dieser Pfad eintritt? (etwa: Quick Wins greifen, Team arbeitet mit, KI-Richtlinie ist verbindlich)
 - Optimistisch: Welche Voraussetzungen müssten erfüllt sein? (etwa: schnelle Akzeptanz, wenig Reibung, straffe Koordination)
-Formuliere die Einordnung praxisnah für den Unternehmenskontext, nicht generisch. Nutze „Annahme:" als Einleitung.
+Formuliere die Einordnung praxisnah für den Unternehmenskontext, nicht generisch.
+WICHTIG (FIX-KIS-1027.4-3C): Setze KEIN zusätzliches Label vor den Einordnungssatz. Schreibe den Satz direkt unter den jeweiligen Szenario-Header. KEINE Präfixe wie „Annahme:" oder „Einordnung der Annahmen:" verwenden — das Szenario-Label (Konservativ/Realistisch/Optimistisch) ist bereits eindeutig.
 Die Szenario-ZAHLEN (ROI %, Break-Even Monate) sind berechnet — NICHT ändern. Nur die sprachliche Einordnung ergänzen.
 
 ROI-BRÜCKE ZU REPORT 1 (PFLICHT — VOR der ersten ROI-Nennung einbauen):
