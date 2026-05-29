@@ -371,7 +371,7 @@ Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
         "prompts": [
             {
                 "titel": "Kundenbrief formulieren",
-                "prompt": """Formuliere einen professionellen Kundenbrief:
+                "prompt": """Formulieren Sie einen professionellen Kundenbrief:
 
 Anlass: [z.B. Vertragsänderung, Beitragsanpassung]
 Kernbotschaft: [WAS soll kommuniziert werden]
@@ -386,13 +386,13 @@ Der Brief soll:
             },
             {
                 "titel": "Risikoanalyse strukturieren",
-                "prompt": """Strukturiere diese Risikoinformationen für einen Kunden:
+                "prompt": """Strukturieren Sie diese Risikoinformationen für einen Kunden:
 
 Kunde: [PROFIL]
 Produkt/Anlage: [BESCHREIBUNG]
 Marktdaten: [RELEVANTE INFOS]
 
-Erstelle:
+Erstellen Sie:
 1. Risikozusammenfassung (3 Sätze)
 2. Chancen vs. Risiken (Tabelle)
 3. Empfehlung mit Begründung
@@ -548,7 +548,7 @@ Bitte mit:
             },
             {
                 "titel": "Feedback formulieren",
-                "prompt": """Formuliere konstruktives Feedback:
+                "prompt": """Formulieren Sie konstruktives Feedback:
 
 Leistung: [BESCHREIBUNG der Arbeit]
 Stärken: [WAS war gut?]
@@ -677,13 +677,13 @@ Die Info soll:
             },
             {
                 "titel": "Übergabe strukturieren",
-                "prompt": """Strukturiere diese Übergabe-Informationen:
+                "prompt": """Strukturieren Sie diese Übergabe-Informationen:
 
 Patient: [ANONYMISIERT - NUR ALTER/RELEVANTES]
 Aktuelle Situation: [STICHPUNKTE]
 Maßnahmen: [WAS WURDE GEMACHT]
 
-Erstelle:
+Erstellen Sie:
 - SBAR-Format (Situation, Background, Assessment, Recommendation)
 - Prioritäten klar markiert
 - Offene Aufgaben""",
@@ -750,7 +750,7 @@ Struktur:
             },
             {
                 "titel": "Leistungsverzeichnis-Position",
-                "prompt": """Formuliere eine LV-Position:
+                "prompt": """Formulieren Sie eine LV-Position:
 
 Gewerk: [z.B. Mauerwerk, Elektro]
 Leistung: [BESCHREIBUNG]
@@ -764,7 +764,7 @@ Die Position soll:
             },
             {
                 "titel": "Bauherren-Schreiben",
-                "prompt": """Formuliere ein Schreiben an den Bauherrn:
+                "prompt": """Formulieren Sie ein Schreiben an den Bauherrn:
 
 Anlass: [z.B. Nachtrag, Terminverzug, Änderung]
 Kernbotschaft: [WAS soll kommuniziert werden]
@@ -959,7 +959,7 @@ Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
         "prompts": [
             {
                 "titel": "Lieferverzögerung kommunizieren",
-                "prompt": """Formuliere eine Kundeninfo zu Lieferverzögerung:
+                "prompt": """Formulieren Sie eine Kundeninfo zu Lieferverzögerung:
 
 Kunde: [TYP]
 Ursprünglicher Termin: [DATUM]
@@ -991,7 +991,7 @@ Checkliste:
             },
             {
                 "titel": "Reklamationsantwort formulieren",
-                "prompt": """Formuliere eine Antwort auf diese Reklamation:
+                "prompt": """Formulieren Sie eine Antwort auf diese Reklamation:
 
 Beschwerde: [TEXT]
 Sendungsdaten: [FALLS RELEVANT]
@@ -1032,7 +1032,7 @@ Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
         "prompts": [
             {
                 "titel": "Speisekarten-Text aufwerten",
-                "prompt": """Formuliere diese Gerichtbeschreibung appetitlich um:
+                "prompt": """Formulieren Sie diese Gerichtbeschreibung appetitlich um:
 
 Gericht: [NAME]
 Zutaten: [LISTE]
@@ -1179,7 +1179,7 @@ Zusätzlich: Gib mir 3 häufige Missverständnisse zu diesem Thema.""",
         "prompts": [
             {
                 "titel": "E-Mail professionell formulieren",
-                "prompt": """Formuliere diese E-Mail professionell und klar:
+                "prompt": """Formulieren Sie diese E-Mail professionell und klar:
 
 Empfänger: [Rolle/Beziehung]
 Anlass: [WARUM schreibe ich?]
@@ -1514,15 +1514,15 @@ Antworte NUR im definierten Format. Keine Einleitungen, keine Meta-Kommentare.""
     },
     {
         "titel": "Chain-of-Thought für komplexe Analysen",
-        "prompt": """Analysiere folgendes Problem Schritt für Schritt:
+        "prompt": """Analysieren Sie folgendes Problem Schritt für Schritt:
 
 Problem: [BESCHREIBUNG]
 Kontext: {hauptleistung}
 
-Schritt 1: Identifiziere die 3 wichtigsten Einflussfaktoren.
-Schritt 2: Bewerte jeden Faktor auf einer Skala 1-5 (Impact × Wahrscheinlichkeit).
-Schritt 3: Leite konkrete Handlungsempfehlungen ab.
-Schritt 4: Priorisiere nach Aufwand/Wirkung-Verhältnis.
+Schritt 1: Identifizieren Sie die 3 wichtigsten Einflussfaktoren.
+Schritt 2: Bewerten Sie jeden Faktor auf einer Skala 1-5 (Impact × Wahrscheinlichkeit).
+Schritt 3: Leiten Sie konkrete Handlungsempfehlungen ab.
+Schritt 4: Priorisieren Sie nach Aufwand/Wirkung-Verhältnis.
 
 Format: Strukturierte Tabelle mit Faktor | Bewertung | Empfehlung | Priorität""",
         "zeitersparnis": "Bessere Analyse-Qualität"
