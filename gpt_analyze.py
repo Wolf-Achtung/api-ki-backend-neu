@@ -21531,13 +21531,12 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
     # Send to admins
     try:
         if os.getenv("ENABLE_ADMIN_NOTIFY", "1") in ("1","true","TRUE","yes","YES"):
-            # Generate briefing summary HTML for admin emails
+            # FIX-KIS-1027.5-B: Briefing-Summary wird NICHT mehr in der
+            # R1-Admin-Mail eingebettet. Die [KIS-Admin]-Mail aus
+            # routes/chat.py:_finalize_strategy_chat versendet das vollstaendige
+            # Briefing-PDF (inkl. Fb2) als Anhang. Vorher: 4 Mails mit
+            # doppelter Briefing-Information.
             briefing_summary_html = None
-            try:
-                briefing_summary_html = _build_briefing_summary_html(br, rep, user_email or "unknown")
-                log.info("[%s] 📋 Generated briefing summary HTML for admin email", run_id)
-            except Exception as e:
-                log.warning("[%s] ⚠️ Could not generate briefing summary HTML: %s", run_id, str(e))
 
             for addr in _admin_recipients():
                 time.sleep(0.6)  # Resend Rate Limit: max 2 req/sec

@@ -50,7 +50,10 @@ def render_coach_cta(briefing_id: int, accent_color: str) -> str:
 
 def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_summary_html: Optional[str] = None, user_email: Optional[str] = None, briefing_id: Optional[int] = None) -> str:
     if recipient == "admin":
-        title = "Kopie: KI‑Status‑Report (inkl. Briefing)"
+        # FIX-KIS-1027.5-B: "(inkl. Briefing)" aus Title entfernt — diese Mail
+        # enthaelt KEIN Briefing mehr. Briefing-Daten + PDF kommen separat
+        # ueber die [KIS-Admin]-Mail (routes/chat.py:_finalize_strategy_chat).
+        title = "Kopie: KI‑Status‑Report"
         intro = "dies ist die Admin‑Kopie des automatisch generierten KI‑Status‑Reports."
         cta_hint = "Tipp: Für Audit‑Ready‑Kunden kann optional das EU‑AI‑Act‑Add‑on (Tabellen‑Kit/Compliance‑Kit/Audit‑Ready) ergänzt werden."
     else:
@@ -60,15 +63,11 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
 
     link_html = f'<p>Sie können den Report <a href="{escape(pdf_url)}">hier als PDF abrufen</a>.</p>' if pdf_url else ""
 
-    # Add briefing summary for admin emails
+    # FIX-KIS-1027.5-B: Briefing-Section deaktiviert. Selbst wenn ein Caller
+    # versehentlich briefing_summary_html durchreicht, wird sie nicht mehr
+    # gerendert — Single-Source-of-Truth fuer Admin-Briefing-Daten ist
+    # die [KIS-Admin]-Mail aus dem Chat-Abschluss-Hook.
     briefing_section = ""
-    if recipient == "admin" and briefing_summary_html:
-        briefing_section = f"""
-        <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
-        <h2 style="color:#2B6CB0;font-size:18px;margin:16px 0 8px">📋 Briefing-Details</h2>
-        <p class="muted">Nachfolgend die wichtigsten Angaben des Users für Qualitätskontrolle und Nachvollziehbarkeit:</p>
-        {briefing_summary_html}
-        """
 
     # [COACH-CTA-REMOVED] Sprint B Dramaturgie: Coach-CTA wird nicht mehr in
     # R1/KPA/Strategy Mails gerendert. User soll alle drei Reports in Ruhe
