@@ -3176,7 +3176,8 @@ def _complete_r1(
         audit_request_ip or "(none)",
         _truncate(audit_request_ua, limit=80) or "(none)",
     )
-    return briefing.id
+    # mypy: SQLAlchemy Column.id is inferred as Any → cast für signature compliance
+    return int(briefing.id)
 
 
 async def _complete_strategy(
@@ -3268,7 +3269,8 @@ async def _complete_strategy(
     ))
     log.info("[CHAT] Strategy pipeline triggered for briefing_id=%d", briefing_id)
 
-    return briefing_id
+    # mypy: session.briefing_id ist Optional[int] / Any → cast für signature
+    return int(briefing_id)
 
 
 async def _run_strategy_pipeline_bg(

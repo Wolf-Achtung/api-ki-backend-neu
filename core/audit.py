@@ -24,9 +24,9 @@ def _resolve_client_ip(request: Request) -> Optional[str]:
     if xff:
         first = xff.split(",")[0].strip()
         if first:
-            return first
+            return str(first)
     if request.client and request.client.host:
-        return request.client.host
+        return str(request.client.host)
     return None
 
 
