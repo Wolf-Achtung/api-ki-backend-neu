@@ -312,6 +312,11 @@ def render_pdf_from_html(
         "X-Request-Id": rid,
         "X-Client-Version": "ki-backend/1 pdf-client G14",
         "User-Agent": "ki-backend/1 pdf-client",
+        # SPRINT-1027.5.2-TRIGGER: temporaerer Debug-Header. Triggert im
+        # make-ki-pdfservice das HTML-Stage-Dump (vier Snapshots: raw_in,
+        # post_strip_at_rules, post_consolidate_styles, final_to_chromium).
+        # Rueckbau: Wegwerf-Branch claude/pdf-debug-trigger, NICHT in main mergen.
+        "X-PDF-Debug-Dump": "1",
     }
 
     # SPRINT G14-D: Track retry metrics
