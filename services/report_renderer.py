@@ -812,7 +812,10 @@ def render(briefing_obj: Any,
                     # Konservativ deckeln auf 200 % wie R1-ROI (vermeidet Show-Effekte)
                     _roi_gesamt_capped = min(200.0, max(-100.0, _roi_gesamt))
                     sections["ROI_12M_GESAMT_DISPLAY_DE"] = Markup(f"{int(round(_roi_gesamt_capped))} %")
-                    sections["ROI_12M_GESAMT_RAW"] = round(_roi_gesamt_capped, 1)
+                    # FIX-KIS-1027.5-ci: kein "_RAW"-Float-Key mehr in sections —
+                    # safe_sections wurde von mypy als Dict[str, Markup] inferiert
+                    # (ab Z. 780). Falls künftig ein Raw-Konsumer dazukommt, in
+                    # eigenem typisiertem Container halten, nicht in sections.
                     log.info(
                         "[FIX-KIS-1027.5-A] Set ROI_12M_GESAMT_DISPLAY_DE=%s "
                         "(capex=%.0f, opex_m=%.0f, saving_m=%.0f -> gesamt_invest=%.0f, roi=%.1f%%)",
