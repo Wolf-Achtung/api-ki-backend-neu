@@ -297,6 +297,118 @@ def render_pdf_from_html(
             "TRACE-ERROR=%s",
             rid, _trace_err,
         )
+
+    # [TRACE-1027.5.3] Struktur-Analyse fuer Decision- + 90-Tage-Roadmap-Block
+    # unmittelbar vor pdfservice-Boundary. Hypothese (Sprint 1027.5.3 Schritt 1b):
+    # Cutoff sitzt in #decision ul/ol break-inside:avoid (pdf_template_v7.html
+    # Z.685-694). 1027.5-H1 hat .exec-decision-box entfreezt, aber die
+    # <ul>-Ebene darunter blieb atomar. Diese Trace prueft die LLM-Content-
+    # Struktur (UL-Wrapper vs. flache <li>-Liste vs. .exec-decision-box-Klasse).
+    # Additiv, kein Template/CSS-Change. Wegwerf-Trace wie 1027.5.1-A.
+    # Self-contained: eigener re-Import + eigener Decision-Match (Checkpoint 7
+    # liegt im separaten try-Block; dessen Variablen sind nicht garantiert da).
+    try:
+        import json as _json
+        import re as _t2_re
+
+        def _t2_analyze_block(target: str, role: str) -> Dict[str, Any]:
+            if not target:
+                return {"role": role, "found": False}
+            has_ul = bool(_t2_re.search(r'<ul\b[^>]*>', target, _t2_re.IGNORECASE))
+            has_ol = bool(_t2_re.search(r'<ol\b[^>]*>', target, _t2_re.IGNORECASE))
+            li_matches = _t2_re.findall(
+                r'<li\b[^>]*>(.*?)</li>',
+                target,
+                _t2_re.DOTALL | _t2_re.IGNORECASE,
+            )
+            li_text = [
+                _t2_re.sub(r'\s+', ' ', _t2_re.sub(r'<[^>]+>', '', li)).strip()
+                for li in li_matches
+            ]
+            return {
+                "role": role,
+                "found": True,
+                "block_len": len(target),
+                "has_ul_wrapper": has_ul,
+                "has_ol_wrapper": has_ol,
+                "li_count": len(li_matches),
+                "li_lengths": [len(t) for t in li_text],
+                "first_chars_per_li": [t[:60] for t in li_text],
+            }
+
+        # Decision-Block — Selektor identisch zu Checkpoint 7
+        _t2_dec_re = _t2_re.compile(
+            r'<div\b[^>]*\bid="decision"[^>]*>.*?(?=<!--|<div\b[^>]*\bclass="section\b)',
+            _t2_re.DOTALL | _t2_re.IGNORECASE,
+        )
+        _t2_dec_match = _t2_dec_re.search(html or "")
+        if _t2_dec_match:
+            _dec_raw = _t2_dec_match.group(0)
+            _dec_struct = _t2_analyze_block(_dec_raw, "decision")
+            _dec_struct["has_exec_decision_box_class"] = (
+                "exec-decision-box" in _dec_raw
+            )
+            _dec_struct["has_decision_card_class"] = (
+                "decision-card" in _dec_raw
+            )
+            log.info(
+                "[TRACE-1027.5.3] decision_struct=%s run_id=%s",
+                _json.dumps(_dec_struct, ensure_ascii=False),
+                rid,
+            )
+        else:
+            log.info(
+                "[TRACE-1027.5.3] decision_struct={\"found\":false} run_id=%s",
+                rid,
+            )
+
+        # 90-Tage-Roadmap-Block — <section id="roadmap-90d">...</section>.
+        # Lazy-match; Annahme: LLM-Content im Wrapper enthaelt keine
+        # genesteten </section>-Tags. Falls doch, faengt der except-Branch.
+        _t2_rm_re = _t2_re.compile(
+            r'<section\b[^>]*\bid="roadmap-90d"[^>]*>.*?</section>',
+            _t2_re.DOTALL | _t2_re.IGNORECASE,
+        )
+        _t2_rm_match = _t2_rm_re.search(html or "")
+        if _t2_rm_match:
+            _rm_raw = _t2_rm_match.group(0)
+            _rm_struct = _t2_analyze_block(_rm_raw, "roadmap_90d")
+            _rm_struct["has_roadmap_phase_card_class"] = (
+                "roadmap-phase-card" in _rm_raw
+            )
+            _phases = _t2_re.findall(
+                r'Phase\s*\d+',
+                _rm_raw,
+                _t2_re.IGNORECASE,
+            )
+            _phases_norm = sorted({p.lower().replace(" ", "") for p in _phases})
+            _rm_struct["phase_count"] = len(_phases_norm)
+            # Erste 60 Zeichen je Phase-Marker (auf entgetagter Variante)
+            _rm_text = _t2_re.sub(r'<[^>]+>', ' ', _rm_raw)
+            _phase_snippets = _t2_re.findall(
+                r'Phase\s*\d+[^\n]{0,80}',
+                _rm_text,
+                _t2_re.IGNORECASE,
+            )
+            _rm_struct["first_chars_per_phase"] = [
+                _t2_re.sub(r'\s+', ' ', p).strip()[:60]
+                for p in _phase_snippets[:6]
+            ]
+            log.info(
+                "[TRACE-1027.5.3] roadmap_struct=%s run_id=%s",
+                _json.dumps(_rm_struct, ensure_ascii=False),
+                rid,
+            )
+        else:
+            log.info(
+                "[TRACE-1027.5.3] roadmap_struct={\"found\":false} run_id=%s",
+                rid,
+            )
+    except Exception as _t2_err:
+        log.warning(
+            "[TRACE-1027.5.3] STRUCT-TRACE-ERROR=%s run_id=%s",
+            _t2_err, rid,
+        )
     url = f"{PDF_SERVICE_URL}/generate-pdf"
 
     # Build payload with optional PDF options
