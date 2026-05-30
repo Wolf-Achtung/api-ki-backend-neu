@@ -897,6 +897,37 @@ async def admin_r1_re_render(
     if not sections:
         raise HTTPException(status_code=400, detail="Keine Sections in Analysis.meta")
 
+    # FIX-KIS-1027.5.1-A: Decision-Cutoff-Trace Checkpoint 0/N (post DB-Read).
+    # Erste Stelle nach dem analyses.meta-Read. Wenn EXECUTIVE_DECISION_HTML
+    # hier 3 <li> hat aber im finalen PDF nur 1, liegt der Cutoff irgendwo
+    # in der Pipeline render() -> pdf_client -> Chromium.
+    try:
+        import hashlib as _hashlib
+        import re as _re_dt
+        _dec_db = sections.get("EXECUTIVE_DECISION_HTML") or ""
+        if isinstance(_dec_db, str) and _dec_db:
+            _li_db = len(_re_dt.findall(r'<li\b', _dec_db, _re_dt.IGNORECASE))
+            _sha_db = _hashlib.sha256(
+                _dec_db.encode("utf-8", errors="replace"), usedforsecurity=False,
+            ).hexdigest()[:16]
+            log.info(
+                "[DECISION-CUTOFF-TRACE] stage=0_db_read_admin_re_render "
+                "run_id=re-render-%s briefing_id=%s len=%d li=%d sha=%s mode=section",
+                briefing_id, briefing_id, len(_dec_db), _li_db, _sha_db,
+            )
+        else:
+            log.info(
+                "[DECISION-CUTOFF-TRACE] stage=0_db_read_admin_re_render "
+                "run_id=re-render-%s briefing_id=%s NOT-FOUND-OR-EMPTY mode=section",
+                briefing_id, briefing_id,
+            )
+    except Exception as _trace_err:
+        log.warning(
+            "[DECISION-CUTOFF-TRACE] stage=0_db_read_admin_re_render "
+            "briefing_id=%s TRACE-ERROR=%s",
+            briefing_id, _trace_err,
+        )
+
     briefing = db.query(Briefing).filter(Briefing.id == briefing_id).first()
     if not briefing:
         raise HTTPException(status_code=404, detail="Briefing nicht gefunden")
