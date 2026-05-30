@@ -1279,8 +1279,15 @@ def build_strategic_context_block(answers: dict, lang: str = "de") -> str:
         high_conf_count = sum(1 for h in hits if h.is_high_confidence)
         log.info("🛡️ Guardrails v5: %d auto-detected (high_conf=%d, no explicit)", len(hits), high_conf_count)
 
-    # KIS-1124 Sprint 4 S4-BE-2: Signal unsurveyed areas to LLM
-    unsurveyed = answers.get("_chat_unsurveyed_blocks", [])
+    # KIS-1124 Sprint 4 S4-BE-2: Signal unsurveyed areas to LLM.
+    # FIX-KIS-1027.5-C: Field renamed from _chat_unsurveyed_blocks to
+    # _chat_blocks_skipped (clearer semantics: "user opted out / never entered").
+    # Backward-compat read covers existing DB rows with the old key.
+    unsurveyed = (
+        answers.get("_chat_blocks_skipped")
+        or answers.get("_chat_unsurveyed_blocks")
+        or []
+    )
     if unsurveyed:
         _block_labels = {
             "A": "Fördermittel & Budget",

@@ -644,10 +644,15 @@ def render_admin_briefing_email(
     )
 
     # --- R1 table ---
+    # FIX-KIS-1027.5-C: Underscore-prefixed keys sind interne Pipeline-Metadaten
+    # (z.B. "_chat_unsurveyed_blocks") und gehoeren nicht in die Admin-Briefing-
+    # Tabelle. Sonst erscheint "A, B, C, D" als Debug-Falle.
     r1_rows: List[Tuple[str, str]] = []
     for key, val in r1_answers.items():
         if key in _CONDITIONAL_R1_KEYS and key not in r1_answers:
             continue  # conditional field not present
+        if key.startswith("_"):
+            continue
         label = _R1_LABELS.get(key, key)
         r1_rows.append((label, _format_value(val)))
 
@@ -728,12 +733,18 @@ def _render_pdf_questionnaire_tables(
         r1_rows.append(f"  <tr><td>{escape(label)}</td><td>{display}</td></tr>")
 
     # Also include any answer keys not in _R1_LABELS (catch-all)
+    # FIX-KIS-1027.5-C: Underscore-prefixed keys ("_chat_*", "_meta_*", etc.)
+    # sind interne Pipeline-Metadaten und gehoeren nicht ins Briefing-PDF.
+    # Vorher tauchte z.B. "_chat_unsurveyed_blocks: A, B, C, D" als
+    # Debug-Falle auf (Wolf-Briefing 1027.5-C).
     for key, val in answers.items():
         if key in _skip_r1 or key in _R1_LABELS:
             continue
         if val is None or val == "" or val == []:
             continue
         if key in ("id", "briefing_id", "created_at", "updated_at", "email", "user_id"):
+            continue
+        if key.startswith("_"):
             continue
         display = escape(", ".join(str(v) for v in val)) if isinstance(val, list) else escape(str(val))
         r1_rows.append(f"  <tr><td>{escape(key)}</td><td>{display}</td></tr>")
