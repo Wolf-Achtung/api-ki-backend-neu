@@ -1,0 +1,15 @@
+# Repo-controlled mise configuration.
+# FIX-KIS-1027.5-D: pinnt Tool-Versionen + deaktiviert
+# python_github_attestations, das in mise >= 2026.5.16 Default-aktiviert
+# ist und Railway-Builds bricht (Python 3.11.9 hat keine GitHub-
+# Artifact-Attestations).
+#
+# Vorher lebte das nur als MISE_PYTHON_GITHUB_ATTESTATIONS=false im
+# Railway-Dashboard — wuerde bei naechstem mise-Default-Wechsel oder
+# Migration auf neuen Service wieder brechen.
+
+[tools]
+python = "3.11.9"
+
+[settings]
+python_github_attestations = false
