@@ -262,6 +262,41 @@ def render_pdf_from_html(
     meta = meta or {}
     rid = meta.get("request_id") or meta.get("run_id") or meta.get("analysis_id") or uuid4().hex
     rid = _as_str(rid)
+
+    # FIX-KIS-1027.5.1-A: Decision-Cutoff-Trace Checkpoint 7/N
+    # (HTTP-payload boundary to make-ki-pdfservice — letzte Backend-Stelle
+    # vor Chromium-Render). Wenn der Decision-Block hier noch 3 <li> hat,
+    # liegt der Cutoff in Chromium/Puppeteer; wenn schon kuerzer, ist
+    # er backend-seitig.
+    try:
+        import hashlib
+        import re as _re
+        _dec_re = _re.compile(
+            r'<div\b[^>]*\bid="decision"[^>]*>.*?(?=<!--|<div\b[^>]*\bclass="section\b)',
+            _re.DOTALL | _re.IGNORECASE,
+        )
+        _match = _dec_re.search(html or "")
+        if _match:
+            _target = _match.group(0)
+            _li = len(_re.findall(r'<li\b', _target, _re.IGNORECASE))
+            _sha = hashlib.sha256(_target.encode("utf-8", errors="replace"), usedforsecurity=False).hexdigest()[:16]
+            log.info(
+                "[DECISION-CUTOFF-TRACE] stage=7_pdf_client_http_send run_id=%s "
+                "len=%d li=%d sha=%s mode=html",
+                rid, len(_target), _li, _sha,
+            )
+        else:
+            log.info(
+                "[DECISION-CUTOFF-TRACE] stage=7_pdf_client_http_send run_id=%s "
+                "NOT-FOUND mode=html",
+                rid,
+            )
+    except Exception as _trace_err:
+        log.warning(
+            "[DECISION-CUTOFF-TRACE] stage=7_pdf_client_http_send run_id=%s "
+            "TRACE-ERROR=%s",
+            rid, _trace_err,
+        )
     url = f"{PDF_SERVICE_URL}/generate-pdf"
 
     # Build payload with optional PDF options

@@ -70,6 +70,75 @@ def _strip_emojis(text: str) -> str:
     return _EMOJI_RE.sub("", text)
 
 
+# =========================================================================
+# FIX-KIS-1027.5.1-A: Render-Pipeline-Instrumentierung fuer
+# EXECUTIVE_DECISION_HTML-Cutoff-Diagnose.
+#
+# KIS-1200 zeigte 675-char / 3-li post_healer-Inhalt in DB, aber gerendertes
+# PDF zeigt nur 1 mid-sentence-abgeschnittenen Bullet (~162 chars / 1 li).
+# 513 chars + 2 <li> gehen zwischen DB-Read und PDF verloren — 3 CSS-
+# basierte Iterationen (1027.2.3, 1027.4, 1027.5) haben den Bug nicht
+# behoben. Hypothese "Container-Atomaritaet via CSS" wird verworfen.
+#
+# Diese Instrumentierung gibt KEINEN Code-Fix, sondern lokalisiert die
+# Verlust-Stufe per [DECISION-CUTOFF-TRACE]-Log-Marker mit length,
+# li_count, sha256 an mehreren Checkpoints zwischen DB-Read und
+# pdf_client-Aufruf.
+# =========================================================================
+_DECISION_HTML_RE = re.compile(
+    r'<div\b[^>]*\bid="decision"[^>]*>.*?(?=<!--|<div\b[^>]*\bclass="section\b)',
+    re.DOTALL | re.IGNORECASE,
+)
+_DECISION_LI_RE = re.compile(r'<li\b', re.IGNORECASE)
+
+
+def _trace_decision_cutoff(
+    stage: str,
+    run_id: Any,
+    content: Any,
+    mode: str = "section",
+) -> None:
+    """Log a [DECISION-CUTOFF-TRACE] entry for EXECUTIVE_DECISION_HTML.
+
+    Args:
+        stage: stage name (e.g. "render_entry", "pre_jinja", "post_jinja")
+        run_id: run identifier for correlation
+        content: either the section string (mode="section") or full HTML
+                 (mode="html" — extracts the #decision-section first)
+        mode: "section" or "html"
+    """
+    try:
+        import hashlib
+        if content is None:
+            target = ""
+        elif mode == "html":
+            text = str(content) if not isinstance(content, str) else content
+            match = _DECISION_HTML_RE.search(text)
+            target = match.group(0) if match else ""
+        else:
+            target = str(content) if not isinstance(content, str) else content
+
+        if not target:
+            log.info(
+                "[DECISION-CUTOFF-TRACE] stage=%s run_id=%s NOT-FOUND mode=%s",
+                stage, run_id, mode,
+            )
+            return
+
+        encoded = target.encode("utf-8", errors="replace")
+        li_count = len(_DECISION_LI_RE.findall(target))
+        sha = hashlib.sha256(encoded, usedforsecurity=False).hexdigest()[:16]
+        log.info(
+            "[DECISION-CUTOFF-TRACE] stage=%s run_id=%s len=%d li=%d sha=%s mode=%s",
+            stage, run_id, len(target), li_count, sha, mode,
+        )
+    except Exception as _trace_err:  # never break rendering on trace failure
+        log.warning(
+            "[DECISION-CUTOFF-TRACE] stage=%s run_id=%s TRACE-ERROR=%s",
+            stage, run_id, _trace_err,
+        )
+
+
 def _strip_emojis_from_context(context: dict) -> dict:
     """Strip emojis from all *_HTML template variables in the render context."""
     for key in list(context.keys()):
@@ -612,6 +681,11 @@ def render(briefing_obj: Any,
     # Context
     sections = dict(generated_sections or {})
 
+    # FIX-KIS-1027.5.1-A: Decision-Cutoff-Trace Checkpoint 1/N (render entry)
+    _trace_decision_cutoff(
+        "1_render_entry", run_id, sections.get("EXECUTIVE_DECISION_HTML"), mode="section",
+    )
+
     # Alias FUNDING if necessary
     if not sections.get("FUNDING_HTML") and sections.get("FOERDERPROGRAMME_HTML"):
         sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
@@ -1070,7 +1144,15 @@ def render(briefing_obj: Any,
     except Exception as _e:  # never break rendering on audit failure
         log.debug("audit_render_context failed: %s", _e)
 
+    # FIX-KIS-1027.5.1-A: Decision-Cutoff-Trace Checkpoint 2/N (pre-Jinja)
+    _trace_decision_cutoff(
+        "2_pre_jinja", run_id, ctx.get("EXECUTIVE_DECISION_HTML"), mode="section",
+    )
+
     html = env.get_template(tpl_name).render(**ctx)
+
+    # FIX-KIS-1027.5.1-A: Decision-Cutoff-Trace Checkpoint 3/N (post-Jinja, full HTML mode)
+    _trace_decision_cutoff("3_post_jinja", run_id, html, mode="html")
 
     # Q3: Fix Kl→KI globally in final HTML (common OCR/input error)
     html = re.sub(r'\bKl-Readiness', 'KI-Readiness', html)
@@ -1491,9 +1573,13 @@ def render(briefing_obj: Any,
     # =========================================================================
     # P0.4: Pagebreak cleanup - prevent empty/low-value pages
     # =========================================================================
+    # FIX-KIS-1027.5.1-A: Decision-Cutoff-Trace Checkpoint 4/N (pre-pagebreak)
+    _trace_decision_cutoff("4_pre_pagebreak_cleanup", run_id, html, mode="html")
     html, pagebreak_removed = cleanup_pagebreaks(html, run_id=run_id)
     if pagebreak_removed > 0:
         log.info(f"[P0.4] Pagebreak cleanup: removed {pagebreak_removed} artifacts for run={run_id}")
+    # FIX-KIS-1027.5.1-A: Decision-Cutoff-Trace Checkpoint 5/N (post-pagebreak)
+    _trace_decision_cutoff("5_post_pagebreak_cleanup", run_id, html, mode="html")
 
     # =========================================================================
     # FIX-BATCH-497: Code fence removal (hard requirement for premium PDF)
@@ -2091,4 +2177,6 @@ def render(briefing_obj: Any,
 
             log.info(f"[DEBUG-503D] Collected {len(debug_attachments)} debug artifacts for admin email")
 
+    # FIX-KIS-1027.5.1-A: Decision-Cutoff-Trace Checkpoint 6/N (render exit)
+    _trace_decision_cutoff("6_render_exit", run_id, html, mode="html")
     return {"html": html, "meta": meta or {}, "debug_attachments": debug_attachments_for_email}
