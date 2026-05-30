@@ -90,9 +90,12 @@ class TestDecisionDirectRender:
 
 
 class TestDecisionBoxAtomicity:
-    def test_exec_decision_box_break_inside_avoid_important(self) -> None:
-        """.exec-decision-box trägt die Atomarität allein —
-        break-inside:avoid !important + page-break-inside:avoid !important."""
+    def test_exec_decision_box_no_container_atomicity(self) -> None:
+        """FIX-KIS-1027.5-H1: .exec-decision-box darf KEIN break-inside:avoid
+        mehr tragen. Sprint 1027.5-H1 hat die Container-Atomarität entfernt,
+        weil sie bei 3-Bullet-Inhalt >1 Seite denselben Chromium-Clipping-Bug
+        triggerte wie der 1027.2.2-A-figure-Wrapper. Atomarität bleibt auf
+        <li>-Ebene (siehe test_exec_decision_box_li_break_inside_avoid)."""
         tpl = _read_template()
         rule_match = re.search(
             r'\.exec-decision-box\s*\{([^}]*)\}',
@@ -101,13 +104,19 @@ class TestDecisionBoxAtomicity:
         )
         assert rule_match, ".exec-decision-box CSS-Regel fehlt"
         body = rule_match.group(1)
-        assert re.search(r'break-inside\s*:\s*avoid\s*!important', body), (
-            f".exec-decision-box fehlt break-inside:avoid !important: {body!r}"
-        )
-        assert re.search(r'page-break-inside\s*:\s*avoid\s*!important', body), (
-            f".exec-decision-box fehlt page-break-inside:avoid !important: "
-            f"{body!r}"
-        )
+        # Aktive (nicht-auskommentierte) break-inside / page-break-inside
+        # mit "avoid" darf NICHT vorkommen.
+        for line in body.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("/*") or stripped.startswith("*"):
+                continue
+            assert not re.search(
+                r'^\s*(break-inside|page-break-inside)\s*:\s*avoid',
+                line,
+            ), (
+                f".exec-decision-box hat noch aktive Container-Atomarität: "
+                f"{line!r}. 1027.5-H1 hat sie entfernt — Regression."
+            )
 
     def test_exec_decision_box_li_break_inside_avoid(self) -> None:
         """Pro-Bullet-Atomarität: .exec-decision-box li trägt
@@ -170,22 +179,25 @@ class TestDecisionSectionLevelSelector:
             f"den figure-Selektor nicht entfernt: {selector_list!r}"
         )
 
-    def test_decision_direct_children_no_longer_target_figure(self) -> None:
-        """#decision > figure / #decision .section-body > figure sind
-        entfernt — kein Section-Level-Schutz für ein nicht mehr existierendes
-        Element."""
+    def test_decision_div_atomicity_rule_removed(self) -> None:
+        """FIX-KIS-1027.5-H1: Der generische "#decision > div /
+        #decision .section-body > div { break-inside: avoid }"-Block ist
+        komplett entfernt. Diese Regel war spezifischer als
+        .exec-decision-box und re-introduzierte die Container-Atomarität,
+        die den Clipping-Bug auslöste. Schutz auf <li>-Ebene ist
+        ausreichend; generische div-Wrapper duerfen jetzt umbrechen.
+        (Pre-1027.5-H1-Variante prüfte zusaetzlich, dass kein 'figure'
+        mehr im Selektor steht — beides obsolet durch Entfernung des
+        gesamten Blocks.)"""
         tpl = _read_template()
-        block_match = re.search(
-            r'(#decision\s*>\s*div,[^{]*?)\{',
+        # Aktive (nicht-kommentar) Regel mit "#decision > div" als
+        # Selektor und avoid-Konstraint im Body darf nicht existieren.
+        rule = re.search(
+            r'^\s*#decision\s*>\s*div[^{]*\{[^}]*break-inside\s*:\s*avoid',
             tpl,
-            re.DOTALL,
+            re.MULTILINE | re.DOTALL,
         )
-        assert block_match, (
-            "#decision > div Härtungs-Block nicht gefunden"
-        )
-        selector_list = block_match.group(1)
-        assert "figure" not in selector_list, (
-            f"#decision direct-child Selektor enthält noch 'figure' — "
-            f"1027.2.3 hat den figure-Selektor nicht entfernt: "
-            f"{selector_list!r}"
+        assert rule is None, (
+            "Aktive '#decision > div { break-inside: avoid }'-Regel gefunden — "
+            "1027.5-H1 hat sie entfernt, Regression."
         )

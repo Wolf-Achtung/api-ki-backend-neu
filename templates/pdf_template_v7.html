@@ -693,20 +693,24 @@ tr:last-child td { border-bottom: none; }
     orphans: 3;
     widows: 3;
 }
-#decision > div,
-#decision .section-body > div {
-    break-inside: avoid;
-    page-break-inside: avoid;
-}
+/* FIX-KIS-1027.5-H1: KEIN break-inside:avoid auf generischen div-Kindern
+   von #decision. Sprint 1027.2.3 hat figure-Wrapper entfernt, weil
+   Container-Atomaritaet bei >1-Seite-Inhalt zum Clipping fuehrte. Die
+   generische "#decision > div { break-inside: avoid }"-Regel re-introdu-
+   zierte denselben Bug (KIS-1199 R1 S.4: nur 1 von 3 Bullets sichtbar,
+   Tun-Bullet mid-sentence abgeschnitten). Schutz auf li-Ebene (oben) plus
+   .decision-card-Spezialfall ist ausreichend. Container darf jetzt
+   ueber Seitengrenze hinweg flieЯen, einzelne <li> bleiben atomar. */
 /* 1027.2.3: .exec-decision-figure-Wrapper aus 1027.2.2-A entfernt.
    Chromium-Layout-Bug bei figure(min-height) + nested
    .exec-decision-box(break-inside:avoid) clipte den Inhalt auf
-   min-height (176px). .exec-decision-box ist jetzt wieder der
-   einzige Atomarität-Layer. Bullet-Atomarität (li) bleibt als
-   Schutz gegen Mid-Sentence-Cuts erhalten. */
+   min-height (176px). FIX-KIS-1027.5-H1 entfernt analog die
+   Container-Atomaritaet auf .exec-decision-box selbst, weil sie bei
+   3-Bullet-Inhalt jetzt dasselbe Clipping-Symptom triggert.
+   Atomaritaet bleibt auf <li>-Ebene (siehe oben + unten). */
 .exec-decision-box {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
+    /* break-inside: avoid !important; -- FIX-KIS-1027.5-H1: entfernt */
+    /* page-break-inside: avoid !important; -- FIX-KIS-1027.5-H1: entfernt */
     break-before: auto;
     page-break-before: auto;
     break-after: auto;
