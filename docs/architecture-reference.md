@@ -113,6 +113,30 @@ Wenn der `make-ki-pdfservice`-Repo aus einer Session zugreifbar ist (eigene MCP-
 
 ---
 
+## Build-Tooling
+
+### mise (repo-controlled)
+
+Sprint 1027.5-D: `mise.toml` im Repo-Root pinnt Python-Version (3.11.9) und
+deaktiviert `python_github_attestations`. Letzteres ist seit `mise >= 2026.5.16`
+Default-aktiviert und bricht Railway-Builds, weil Python 3.11.9 keine
+GitHub-Artifact-Attestations hat. Die Setting lebt jetzt im Repo statt als
+`MISE_PYTHON_GITHUB_ATTESTATIONS=false`-ENV-Var im Railway-Dashboard — robust
+gegen Service-Migration und Dashboard-Reset.
+
+```toml
+[tools]
+python = "3.11.9"
+
+[settings]
+python_github_attestations = false
+```
+
+Sobald die Dashboard-ENV-Var nicht mehr nötig ist (verifizierbar durch
+einen Build nach Entfernen), kann sie aus beiden Services entfernt werden.
+
+---
+
 ## Tech-Stack-Anker
 
 ### LLM-Modelle

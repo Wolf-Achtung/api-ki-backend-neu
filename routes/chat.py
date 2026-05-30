@@ -3088,11 +3088,14 @@ def _complete_r1(
         for field, default_val in defaults.items():
             if field not in answers and default_val is not None:
                 answers[field] = default_val
-    # Pass metadata so the report pipeline knows which areas were surveyed
+    # Pass metadata so the report pipeline knows which areas were surveyed.
+    # FIX-KIS-1027.5-C: Field renamed from _chat_unsurveyed_blocks to
+    # _chat_blocks_skipped — semantically klar: "user opted out / never entered".
+    # Vermeidet Debug-Falle ("nicht erfragt" wirkte wie "Chat nicht durchlaufen").
     if unsurveyed:
-        answers["_chat_unsurveyed_blocks"] = unsurveyed
+        answers["_chat_blocks_skipped"] = unsurveyed
         answers["_chat_surveyed_blocks"] = surveyed_blocks
-        log.info("[CHAT] Complete R1: unsurveyed blocks %s → defaults applied", unsurveyed)
+        log.info("[CHAT] Complete R1: skipped blocks %s → defaults applied", unsurveyed)
 
     # KIS-1136 Fix 3: Blocks selected but never entered → treat as unsurveyed
     completed_blocks = ps.get("completed_blocks", [])
@@ -3105,7 +3108,8 @@ def _complete_r1(
                     answers[field] = default_val
         unsurveyed = unsurveyed + selected_not_entered
         surveyed_blocks = [b for b in surveyed_blocks if b not in selected_not_entered]
-        answers["_chat_unsurveyed_blocks"] = unsurveyed
+        # FIX-KIS-1027.5-C: renamed to _chat_blocks_skipped (s.o.)
+        answers["_chat_blocks_skipped"] = unsurveyed
         answers["_chat_surveyed_blocks"] = surveyed_blocks
         log.info("[CHAT] Complete R1: selected but never entered blocks %s → treated as unsurveyed", selected_not_entered)
 
@@ -3172,7 +3176,8 @@ def _complete_r1(
         audit_request_ip or "(none)",
         _truncate(audit_request_ua, limit=80) or "(none)",
     )
-    return briefing.id
+    # mypy: SQLAlchemy Column.id is inferred as Any → cast für signature compliance
+    return int(briefing.id)
 
 
 async def _complete_strategy(
@@ -3264,7 +3269,8 @@ async def _complete_strategy(
     ))
     log.info("[CHAT] Strategy pipeline triggered for briefing_id=%d", briefing_id)
 
-    return briefing_id
+    # mypy: session.briefing_id ist Optional[int] / Any → cast für signature
+    return int(briefing_id)
 
 
 async def _run_strategy_pipeline_bg(

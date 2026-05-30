@@ -693,20 +693,24 @@ tr:last-child td { border-bottom: none; }
     orphans: 3;
     widows: 3;
 }
-#decision > div,
-#decision .section-body > div {
-    break-inside: avoid;
-    page-break-inside: avoid;
-}
+/* FIX-KIS-1027.5-H1: KEIN break-inside:avoid auf generischen div-Kindern
+   von #decision. Sprint 1027.2.3 hat figure-Wrapper entfernt, weil
+   Container-Atomaritaet bei >1-Seite-Inhalt zum Clipping fuehrte. Die
+   generische "#decision > div { break-inside: avoid }"-Regel re-introdu-
+   zierte denselben Bug (KIS-1199 R1 S.4: nur 1 von 3 Bullets sichtbar,
+   Tun-Bullet mid-sentence abgeschnitten). Schutz auf li-Ebene (oben) plus
+   .decision-card-Spezialfall ist ausreichend. Container darf jetzt
+   ueber Seitengrenze hinweg flieЯen, einzelne <li> bleiben atomar. */
 /* 1027.2.3: .exec-decision-figure-Wrapper aus 1027.2.2-A entfernt.
    Chromium-Layout-Bug bei figure(min-height) + nested
    .exec-decision-box(break-inside:avoid) clipte den Inhalt auf
-   min-height (176px). .exec-decision-box ist jetzt wieder der
-   einzige Atomarität-Layer. Bullet-Atomarität (li) bleibt als
-   Schutz gegen Mid-Sentence-Cuts erhalten. */
+   min-height (176px). FIX-KIS-1027.5-H1 entfernt analog die
+   Container-Atomaritaet auf .exec-decision-box selbst, weil sie bei
+   3-Bullet-Inhalt jetzt dasselbe Clipping-Symptom triggert.
+   Atomaritaet bleibt auf <li>-Ebene (siehe oben + unten). */
 .exec-decision-box {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
+    /* break-inside: avoid !important; -- FIX-KIS-1027.5-H1: entfernt */
+    /* page-break-inside: avoid !important; -- FIX-KIS-1027.5-H1: entfernt */
     break-before: auto;
     page-break-before: auto;
     break-after: auto;
@@ -1656,6 +1660,40 @@ h1, h2, h3, h4 {
         Amortisation in {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS|round(1) }}{% endif %} Monaten.
         Investition ist auch ohne Fördermittel wirtschaftlich tragfähig.
     </div>
+    {# FIX-KIS-1027.5-A: Zwei ROI-Sichten transparent nebeneinander.
+       Spread zwischen CAPEX-basiertem R1-ROI und 12-Mo-Gesamt-ROI
+       (analog Strategy-Methodik) war für GF verwirrend; jetzt explizit. #}
+    {% if ROI_12M_GESAMT_DISPLAY_DE %}
+    <div class="roi-views-table" style="margin: 12px 0; padding: 12px 14px; background: #f0f4f8; border-left: 3px solid #3b82f6; border-radius: 6px; font-size: 0.92em;">
+        <strong>Zwei ROI-Sichten — methodisch erklärt:</strong>
+        <table style="width: 100%; margin-top: 8px; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid #cbd5e1; text-align: left;">
+                    <th style="padding: 6px 8px; font-size: 0.85em; color: #475569;">Sicht</th>
+                    <th style="padding: 6px 8px; font-size: 0.85em; color: #475569;">ROI (12 Monate)</th>
+                    <th style="padding: 6px 8px; font-size: 0.85em; color: #475569;">Investitionsbasis</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 6px 8px;"><strong>CAPEX-Sicht</strong> (R1-Standard)</td>
+                    <td style="padding: 6px 8px; font-weight: 600; color: #1e40af;">{% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% endif %}</td>
+                    <td style="padding: 6px 8px; color: #475569;">Einmalige Startinvestition</td>
+                </tr>
+                <tr style="background: #fff;">
+                    <td style="padding: 6px 8px;"><strong>Gesamt-Sicht</strong> (12-Mo-TCO)</td>
+                    <td style="padding: 6px 8px; font-weight: 600; color: #1e40af;">{{ ROI_12M_GESAMT_DISPLAY_DE }}</td>
+                    <td style="padding: 6px 8px; color: #475569;">Startinvestition + 12 Monate Software-OPEX</td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="margin: 8px 0 0 0; font-size: 0.85em; color: #475569; line-height: 1.5;">
+            Beide Werte sind korrekt — sie unterscheiden sich nur in der Investitionsbasis.
+            Der KI-Strategiebericht (sofern beauftragt) nutzt die Gesamt-Sicht; daher
+            erscheinen die beiden ROI-Zahlen dort konsistent zur Gesamt-Sicht hier.
+        </p>
+    </div>
+    {% endif %}
     <div class="section-body">{{ BUSINESS_CASE_ENGINE_HTML|safe }}</div>
     {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detaillierte ROI-Simulation & Monte-Carlo-Analyse → Anhang A5</div>{% endif %}
 </section>

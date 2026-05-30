@@ -794,6 +794,36 @@ def render(briefing_obj: Any,
             except (ValueError, TypeError):
                 pass
 
+    # FIX-KIS-1027.5-A (Wolf-Decision Option B): R1 zeigt zusätzlich zur
+    # CAPEX-basierten ROI_12M auch eine 12-Monats-Gesamt-ROI-Sicht, die der
+    # Strategy-Methodik entspricht (CAPEX + OPEX × 12). So ist der Spread
+    # zwischen R1 und Strategy transparent statt verwirrend.
+    # Formel: Gesamt-ROI = (Jahresersparnis - (CAPEX + OPEX*12)) / (CAPEX + OPEX*12) * 100
+    if not sections.get("ROI_12M_GESAMT_DISPLAY_DE"):
+        try:
+            _capex = float(sections.get("CAPEX_REALISTISCH_EUR") or sections.get("CANON_CAPEX_EUR") or 0)
+            _opex_m = float(sections.get("OPEX_REALISTISCH_EUR") or 0)
+            _saving_m = float(sections.get("EINSPARUNG_MONAT_EUR") or 0)
+            if _capex > 0 and _saving_m > 0:
+                _annual_saving = _saving_m * 12.0
+                _gesamt_invest = _capex + (_opex_m * 12.0)
+                if _gesamt_invest > 0:
+                    _roi_gesamt = (_annual_saving - _gesamt_invest) / _gesamt_invest * 100.0
+                    # Konservativ deckeln auf 200 % wie R1-ROI (vermeidet Show-Effekte)
+                    _roi_gesamt_capped = min(200.0, max(-100.0, _roi_gesamt))
+                    sections["ROI_12M_GESAMT_DISPLAY_DE"] = Markup(f"{int(round(_roi_gesamt_capped))} %")
+                    # FIX-KIS-1027.5-ci: kein "_RAW"-Float-Key mehr in sections —
+                    # safe_sections wurde von mypy als Dict[str, Markup] inferiert
+                    # (ab Z. 780). Falls künftig ein Raw-Konsumer dazukommt, in
+                    # eigenem typisiertem Container halten, nicht in sections.
+                    log.info(
+                        "[FIX-KIS-1027.5-A] Set ROI_12M_GESAMT_DISPLAY_DE=%s "
+                        "(capex=%.0f, opex_m=%.0f, saving_m=%.0f -> gesamt_invest=%.0f, roi=%.1f%%)",
+                        sections["ROI_12M_GESAMT_DISPLAY_DE"], _capex, _opex_m, _saving_m, _gesamt_invest, _roi_gesamt_capped,
+                    )
+        except (ValueError, TypeError) as _e:
+            log.warning("[FIX-KIS-1027.5-A] ROI_12M_GESAMT compute failed: %s", _e)
+
     # FIX-v720-F5: Ensure CAPEX_DISPLAY_DE is set for Management Summary
     # Template shows "—" when CAPEX_DISPLAY_DE and TOTAL_CAPEX are both missing.
     if not sections.get("CAPEX_DISPLAY_DE"):

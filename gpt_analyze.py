@@ -1279,8 +1279,15 @@ def build_strategic_context_block(answers: dict, lang: str = "de") -> str:
         high_conf_count = sum(1 for h in hits if h.is_high_confidence)
         log.info("🛡️ Guardrails v5: %d auto-detected (high_conf=%d, no explicit)", len(hits), high_conf_count)
 
-    # KIS-1124 Sprint 4 S4-BE-2: Signal unsurveyed areas to LLM
-    unsurveyed = answers.get("_chat_unsurveyed_blocks", [])
+    # KIS-1124 Sprint 4 S4-BE-2: Signal unsurveyed areas to LLM.
+    # FIX-KIS-1027.5-C: Field renamed from _chat_unsurveyed_blocks to
+    # _chat_blocks_skipped (clearer semantics: "user opted out / never entered").
+    # Backward-compat read covers existing DB rows with the old key.
+    unsurveyed = (
+        answers.get("_chat_blocks_skipped")
+        or answers.get("_chat_unsurveyed_blocks")
+        or []
+    )
     if unsurveyed:
         _block_labels = {
             "A": "Fördermittel & Budget",
@@ -21531,13 +21538,12 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
     # Send to admins
     try:
         if os.getenv("ENABLE_ADMIN_NOTIFY", "1") in ("1","true","TRUE","yes","YES"):
-            # Generate briefing summary HTML for admin emails
+            # FIX-KIS-1027.5-B: Briefing-Summary wird NICHT mehr in der
+            # R1-Admin-Mail eingebettet. Die [KIS-Admin]-Mail aus
+            # routes/chat.py:_finalize_strategy_chat versendet das vollstaendige
+            # Briefing-PDF (inkl. Fb2) als Anhang. Vorher: 4 Mails mit
+            # doppelter Briefing-Information.
             briefing_summary_html = None
-            try:
-                briefing_summary_html = _build_briefing_summary_html(br, rep, user_email or "unknown")
-                log.info("[%s] 📋 Generated briefing summary HTML for admin email", run_id)
-            except Exception as e:
-                log.warning("[%s] ⚠️ Could not generate briefing summary HTML: %s", run_id, str(e))
 
             for addr in _admin_recipients():
                 time.sleep(0.6)  # Resend Rate Limit: max 2 req/sec

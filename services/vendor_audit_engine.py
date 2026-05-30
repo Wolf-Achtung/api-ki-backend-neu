@@ -913,8 +913,18 @@ _KNOWN_VENDOR_META = {
 }
 
 
-def _extract_vendors_from_briefing(briefing: dict) -> list:
-    """FIX-C5: Extract vendor info from questionnaire answers as fallback."""
+def _extract_vendors_from_briefing(
+    briefing: dict,
+    strategy_answers: Optional[dict] = None,
+) -> list:
+    """FIX-C5: Extract vendor info from questionnaire answers as fallback.
+
+    FIX-KIS-1027.5-H2 (Wolf-Decision: Audit-Pfad strategy_answers durchreichen):
+    Optionales strategy_answers-Dict wird vor der Extraktion in eine Kopie der
+    Briefing-Daten gemerged. So sind s5_software & andere Strategy-Felder
+    auditierbar, sobald ein Caller sie explizit übergibt — auch wenn die
+    Briefing-Tabelle selbst noch keine Strategy-Daten enthält.
+    """
     vendors: list = []
     seen: set = set()
     # FIX-KMU-VENDOR: Check more source fields to cover all segment variants.
@@ -926,6 +936,14 @@ def _extract_vendors_from_briefing(briefing: dict) -> list:
     # Hinweis: "github" / "gitlab" werden bewusst NICHT als KI-Tool-Aliase
     # in _KNOWN_VENDOR_META geführt (Wolf-Decision 1027.4-2D — reine Dev-
     # Tools, nur explizit genanntes "Copilot" wird auditiert).
+    if strategy_answers:
+        # Merge without mutating caller's dict; strategy values take precedence
+        # only where briefing doesn't already have a non-empty value.
+        merged = dict(briefing or {})
+        for k, v in strategy_answers.items():
+            if not merged.get(k) and v:
+                merged[k] = v
+        briefing = merged
     source_keys = [
         "VORHANDENE_TOOLS_LABELS", "vorhandene_tools",
         "ki_projekte", "ki_einsatz", "KI_PROJEKTE",
@@ -1231,6 +1249,7 @@ def generate_vendor_audit_report(
     briefing: Optional[Dict[str, Any]] = None,
     llm_response: Optional[Dict[str, Any]] = None,
     sections: Optional[Dict[str, Any]] = None,
+    strategy_answers: Optional[Dict[str, Any]] = None,
 ) -> VendorAuditReport:
     """
     Generate comprehensive Vendor Audit Report.
@@ -1271,11 +1290,16 @@ def generate_vendor_audit_report(
     # Extract vendors from tools data
     vendors = _extract_vendors_from_tools(tools_data)
 
-    # FIX-C5: Fallback from questionnaire
+    # FIX-C5: Fallback from questionnaire.
+    # FIX-KIS-1027.5-H2: pass strategy_answers through for callers that
+    # have merged Briefing+Strategy context available (e.g. post-chat re-renders).
     if not vendors and briefing:
-        vendors = _extract_vendors_from_briefing(briefing)
+        vendors = _extract_vendors_from_briefing(briefing, strategy_answers=strategy_answers)
         if vendors:
-            log.info("[G35][FIX-C5] Extracted %d vendors from questionnaire", len(vendors))
+            log.info(
+                "[G35][FIX-C5] Extracted %d vendors from questionnaire (strategy_answers=%s)",
+                len(vendors), "yes" if strategy_answers else "no",
+            )
 
     # FIX-KMU-VENDOR: Fallback from LLM-generated HTML sections
     if not vendors and sections:
