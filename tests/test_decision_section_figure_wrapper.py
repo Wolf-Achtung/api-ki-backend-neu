@@ -160,13 +160,15 @@ class TestDecisionBoxAtomicity:
 
 class TestDecisionSectionLevelSelector:
     def test_section_level_rule_no_longer_targets_figure(self) -> None:
-        """Section-Level-Regel #decision ul/ol/li/p/… darf nicht mehr
-        '#decision figure' enthalten — der Selektor wurde mit dem
-        figure-Wrapper aus 1027.2.2-A entfernt."""
+        """Section-Level-Haertungs-Block (#decision li/p/…) darf kein
+        '#decision figure' enthalten — figure-Wrapper aus 1027.2.2-A
+        bleibt entfernt. Anker seit FIX-1027.5.3 auf 'li,' (ul/ol wurden
+        aus dem break-inside:avoid-Block entfernt, damit die <ul>-Klammer
+        ueber die Seitengrenze fliessen darf; <li> bleiben atomar)."""
         tpl = _read_template()
         # Block, der #decision ul / ol / li / p / … gemeinsam härtet.
         block_match = re.search(
-            r'(#decision\s+ul,[^{]*?)\{',
+            r'(#decision\s+li,[^{]*?)\{',
             tpl,
             re.DOTALL,
         )
