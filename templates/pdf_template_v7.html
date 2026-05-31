@@ -682,8 +682,12 @@ tr:last-child td { border-bottom: none; }
    plus orphans/widows für Prosa-Fluss.
    .decision-card hat bereits page-break-inside:avoid (Z.658) —
    hier ergänzen wir die LLM-Direkt-HTML-Pfade. */
-#decision ul,
-#decision ol,
+/* FIX-1027.5.3: #decision ul/ol RAUS — atomare Liste > Seitenhoehe clippt in
+   Chromium (R1 S.4, analysis.id=1064 und 1065: Tun-Bullet mid-sentence
+   abgeschnitten, Lassen + 3. Leitplanke verloren). Atomaritaet bleibt auf
+   <li>-Ebene (.exec-decision-box li, weiter unten unveraendert). Belegt via
+   DB: decision-span vollstaendig (1065: 21.737 Zeichen), Cutoff erst beim
+   PDF-Render. */
 #decision li,
 #decision p,
 #decision .executive-decision-fallback,
