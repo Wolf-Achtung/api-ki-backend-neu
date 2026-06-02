@@ -56,12 +56,31 @@ def test_exec_decision_box_container_allows_pagebreak():
         )
 
 
-def test_decision_li_atomicity_preserved():
-    """<li>-Bullets bleiben atomar — gegen Mid-Sentence-Cuts."""
+def _strip_css_comments(body: str) -> str:
+    """Entfernt /* ... */-Kommentare, damit auskommentierte Properties nicht
+    als aktive Regeln zaehlen."""
+    return re.sub(r'/\*.*?\*/', '', body, flags=re.DOTALL)
+
+
+def test_decision_li_atomicity_removed():
+    """KIS-1027.5.3-B: li-Atomaritaet (break-inside:avoid) auf BEIDEN
+    Decision-li-Pfaden entfernt — Vertrag gegenueber der Vorgaenger-Version
+    (test_decision_li_atomicity_preserved) umgekehrt.
+
+    In der Kette figure (1027.2.3) -> container (1027.5-H1) -> li war die
+    <li>-Ebene die letzte verbliebene Clipping-Quelle: break-inside:avoid
+    clippte R1 S.4 mid-sentence trotz #decision { break-before: page }
+    (KIS-1210/1211; DB-belegt 1064/1065, decision-span vollstaendig). Sowohl
+    '#decision li' als auch '.exec-decision-box li' trugen avoid und clippten.
+
+    Dieser Test schuetzt davor, dass avoid auf einem der beiden li-Pfade
+    zurueckkehrt (Regression-Guard, vgl. KIS-1199)."""
     tpl = _read_template()
-    # Beide Pfade pruefen: #decision-Section-Level und .exec-decision-box-spezifisch
+    # Robuste Regex: matcht auch simples "#decision li { ... }" (ohne
+    # vorangestellte Selektor-Liste). [^{}]* ueberspringt eine evtl.
+    # Komma-Selektor-Liste, ohne in andere Bloecke zu laufen.
     section_rule = re.search(
-        r'#decision\s+(?:[^{]*,\s*)*#decision\s+li[^{]*\{([^}]*)\}',
+        r'#decision\s+li\b[^{}]*\{([^}]*)\}',
         tpl,
         re.DOTALL,
     )
@@ -70,16 +89,21 @@ def test_decision_li_atomicity_preserved():
         tpl,
         re.DOTALL,
     )
-    # Mindestens einer der beiden Pfade muss li-Atomaritaet sichern
-    li_protected = False
-    for match in (section_rule, box_li_rule):
-        if match and re.search(r'break-inside\s*:\s*avoid', match.group(1)):
-            li_protected = True
-            break
-    assert li_protected, (
-        "Weder '#decision li' noch '.exec-decision-box li' "
-        "haben break-inside:avoid — Bullet-Schutz fehlt komplett."
-    )
+    assert section_rule, "'#decision li'-Regel nicht gefunden"
+    assert box_li_rule, "'.exec-decision-box li'-Regel nicht gefunden"
+
+    # avoid muss auf BEIDEN li-Pfaden WEG sein (Kommentare vorher strippen).
+    for name, match in (
+        ("#decision li", section_rule),
+        (".exec-decision-box li", box_li_rule),
+    ):
+        active_body = _strip_css_comments(match.group(1))
+        for prop in ("break-inside", "page-break-inside"):
+            assert not re.search(rf'{re.escape(prop)}\s*:\s*avoid', active_body), (
+                f"'{name}' hat noch aktives {prop}:avoid — KIS-1027.5.3-B "
+                f"hat es entfernt (clippte S.4), avoid darf nicht "
+                f"zurueckkehren: {active_body!r}"
+            )
 
 
 def test_no_generic_div_atomicity_in_decision_section():
