@@ -3026,6 +3026,9 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "unternehmensprofil_markt": 5000,
         "roadmap": 5000,
         "roadmap_90d": 3000,
+        # FIX-1027.5.3: roadmap_90d_decision fehlte in SEGMENT_BUDGETS, Phase 3 wurde getrimmt (analog FIX-B43)
+        "roadmap_90d_decision": 4000,
+        "ROADMAP_90D_DECISION_HTML": 4000,
         "data_readiness": 2500,
         "ki_stack_summary": 2500,
         "pilot_plan": 2000,
@@ -3138,6 +3141,9 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "unternehmensprofil_markt": 7000,
         "roadmap": 7000,
         "roadmap_90d": 5000,  # FIX-B43: was 4000 — Phase 3 wurde abgeschnitten
+        # FIX-1027.5.3: roadmap_90d_decision fehlte in SEGMENT_BUDGETS, Phase 3 wurde getrimmt (analog FIX-B43)
+        "roadmap_90d_decision": 4500,
+        "ROADMAP_90D_DECISION_HTML": 4500,
         "data_readiness": 3500,
         "ki_stack_summary": 3500,
         "pilot_plan": 3000,
@@ -3260,6 +3266,9 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "unternehmensprofil_markt": 10000,
         "roadmap": 10000,
         "roadmap_90d": 6000,
+        # FIX-1027.5.3: roadmap_90d_decision fehlte in SEGMENT_BUDGETS, Phase 3 wurde getrimmt (analog FIX-B43)
+        "roadmap_90d_decision": 5000,
+        "ROADMAP_90D_DECISION_HTML": 5000,
         "data_readiness": 5000,
         "ki_stack_summary": 5000,
         "pilot_plan": 4000,
