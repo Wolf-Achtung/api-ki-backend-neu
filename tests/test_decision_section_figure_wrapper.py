@@ -95,7 +95,7 @@ class TestDecisionBoxAtomicity:
         mehr tragen. Sprint 1027.5-H1 hat die Container-Atomarität entfernt,
         weil sie bei 3-Bullet-Inhalt >1 Seite denselben Chromium-Clipping-Bug
         triggerte wie der 1027.2.2-A-figure-Wrapper. Atomarität bleibt auf
-        <li>-Ebene (siehe test_exec_decision_box_li_break_inside_avoid)."""
+        <li>-Ebene (siehe test_exec_decision_box_li_break_inside_auto)."""
         tpl = _read_template()
         rule_match = re.search(
             r'\.exec-decision-box\s*\{([^}]*)\}',
@@ -118,10 +118,12 @@ class TestDecisionBoxAtomicity:
                 f"{line!r}. 1027.5-H1 hat sie entfernt — Regression."
             )
 
-    def test_exec_decision_box_li_break_inside_avoid(self) -> None:
-        """Pro-Bullet-Atomarität: .exec-decision-box li trägt
-        break-inside:avoid + page-break-inside:avoid — verhindert Mid-Sentence-
-        Cuts innerhalb eines einzelnen Bullets."""
+    def test_exec_decision_box_li_break_inside_auto(self) -> None:
+        """KIS-1027.5.3-B: li-Atomaritaet (break-inside:avoid) war die letzte
+        verbliebene Clipping-Ebene (Kette figure 1027.2.3 → container H1 → li).
+        avoid clippte S.4 mid-sentence trotz #decision break-before:page.
+        Dieser Test schuetzt jetzt davor, dass avoid wieder eingefuehrt wird
+        (Regression-Guard, vgl. KIS-1199)."""
         tpl = _read_template()
         rule_match = re.search(
             r'\.exec-decision-box\s+li\s*\{([^}]*)\}',
@@ -129,15 +131,20 @@ class TestDecisionBoxAtomicity:
             re.DOTALL,
         )
         assert rule_match, (
-            ".exec-decision-box li CSS-Regel fehlt — Bullet-Atomarität "
-            "1027.2.3 nicht gesetzt."
+            ".exec-decision-box li CSS-Regel fehlt — Bullet-Break-Regel "
+            "1027.5.3-B nicht gesetzt."
         )
         body = rule_match.group(1)
-        assert re.search(r'break-inside\s*:\s*avoid', body), (
-            f".exec-decision-box li fehlt break-inside:avoid: {body!r}"
+        assert re.search(r'break-inside\s*:\s*auto', body), (
+            f".exec-decision-box li fehlt break-inside:auto: {body!r}"
         )
-        assert re.search(r'page-break-inside\s*:\s*avoid', body), (
-            f".exec-decision-box li fehlt page-break-inside:avoid: {body!r}"
+        assert re.search(r'page-break-inside\s*:\s*auto', body), (
+            f".exec-decision-box li fehlt page-break-inside:auto: {body!r}"
+        )
+        # Regression-Guard: avoid darf NICHT zurueckkehren (KIS-1199 / 1064/1065).
+        assert not re.search(r'(break-inside|page-break-inside)\s*:\s*avoid', body), (
+            f".exec-decision-box li hat wieder Atomaritaet (avoid) — "
+            f"Regression KIS-1027.5.3-B: {body!r}"
         )
 
     def test_exec_decision_box_has_no_min_height(self) -> None:
