@@ -416,6 +416,7 @@ tr:last-child td { border-bottom: none; }
     overflow: hidden;
     max-width: 200px;
     max-height: 200px;
+    line-height: 0;
 }
 .score-ring-wrap svg {
     max-width: 100%;
@@ -427,6 +428,8 @@ tr:last-child td { border-bottom: none; }
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
+    line-height: 1.1;
+    width: 100%;
 }
 .score-number {
     font-size: 36pt;
@@ -684,10 +687,14 @@ tr:last-child td { border-bottom: none; }
    hier ergänzen wir die LLM-Direkt-HTML-Pfade. */
 /* FIX-1027.5.3: #decision ul/ol RAUS — atomare Liste > Seitenhoehe clippt in
    Chromium (R1 S.4, analysis.id=1064 und 1065: Tun-Bullet mid-sentence
-   abgeschnitten, Lassen + 3. Leitplanke verloren). Atomaritaet bleibt auf
-   <li>-Ebene (.exec-decision-box li, weiter unten unveraendert). Belegt via
-   DB: decision-span vollstaendig (1065: 21.737 Zeichen), Cutoff erst beim
-   PDF-Render. */
+   abgeschnitten, Lassen + 3. Leitplanke verloren).
+   KIS-1027.5.3-B (aecc08a): Atomaritaet auch auf <li>-Ebene ENTFERNT —
+   break-inside:avoid auf '#decision li' UND '.exec-decision-box li' war die
+   letzte Clipping-Quelle (Kette figure->container->li) und clippte S.4 trotz
+   #decision { break-before: page } (KIS-1210/1211). Beide li-Pfade jetzt auf
+   auto; keine atomare Ebene mehr in der Decision-Kette. Belegt via DB:
+   decision-span vollstaendig (1065: 21.737 Zeichen), Cutoff war reiner
+   PDF-Render-Effekt. */
 #decision li,
 #decision p,
 #decision .executive-decision-fallback,
