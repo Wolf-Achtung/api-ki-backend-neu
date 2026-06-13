@@ -722,8 +722,8 @@ tr:last-child td { border-bottom: none; }
 .exec-decision-box {
     /* break-inside: avoid !important; -- FIX-KIS-1027.5-H1: entfernt */
     /* page-break-inside: avoid !important; -- FIX-KIS-1027.5-H1: entfernt */
-    break-before: auto;
-    page-break-before: auto;
+    break-before: page;
+    page-break-before: always;   /* FIX-1027.5.6 — volle Seitenhöhe für 3 Leitplanken */
     break-after: auto;
     page-break-after: auto;
     break-inside: auto;
