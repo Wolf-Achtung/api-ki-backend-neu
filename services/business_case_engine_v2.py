@@ -2322,15 +2322,15 @@ def business_case_report_to_html(
     # KPI Targets Section
     if report.kpi_targets_6m or report.kpi_targets_12m:
         html_parts.append(f'''
-        <div class="kpi-targets-section" style="margin-bottom:24px;">
+        <div class="kpi-targets-section" style="margin-bottom:24px;page-break-inside:avoid;break-inside:avoid;">
             <p style="margin:0 0 12px 0;font-weight:600;color:#1e293b;">{labels["kpi_title"]}</p>
-            <div style="display:flex;gap:16px;">
+            <div style="display:flex;gap:16px;page-break-inside:avoid;break-inside:avoid;">
         ''')
 
         # 6-month targets
         if report.kpi_targets_6m:
             html_parts.append(f'''
-                <div style="flex:1;padding:12px;background:#f0f9ff;border-radius:8px;">
+                <div style="flex:1;padding:12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;page-break-inside:avoid;break-inside:avoid;">
                     <p style="margin:0 0 8px 0;font-weight:600;color:#0284c7;font-size:10pt;">{labels["kpi_6m"]}</p>
             ''')
             for key, value in list(report.kpi_targets_6m.items())[:4]:
@@ -2349,7 +2349,7 @@ def business_case_report_to_html(
         # 12-month targets
         if report.kpi_targets_12m:
             html_parts.append(f'''
-                <div style="flex:1;padding:12px;background:#f0fdf4;border-radius:8px;">
+                <div style="flex:1;padding:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;page-break-inside:avoid;break-inside:avoid;">
                     <p style="margin:0 0 8px 0;font-weight:600;color:#16a34a;font-size:10pt;">{labels["kpi_12m"]}</p>
             ''')
             for key, value in list(report.kpi_targets_12m.items())[:4]:
