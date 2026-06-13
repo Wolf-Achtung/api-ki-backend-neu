@@ -8,7 +8,7 @@
 --   SELECT raw_sections->'pre_healer'->>'EXECUTIVE_DECISION_HTML'
 --        = raw_sections->'post_healer'->>'EXECUTIVE_DECISION_HTML'
 --          AS healer_unchanged
---   FROM analyses WHERE id = :analysis_id;
+--   FROM analyses WHERE id = <analysis_id>;
 --
 -- GIN-Index begründet: Diagnose-Queries der Form
 --   WHERE raw_sections @> '{...}' / raw_sections ? 'key' / @?
