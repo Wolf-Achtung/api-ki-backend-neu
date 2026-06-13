@@ -57,8 +57,13 @@ Create a compact, C‑level‑appropriate **AI‑Stack Summary Card** as an HTML
 
 5. **Branch badge + risk indicator**
    - **Branch label**: {{BRANCH_SHORT_LABEL}}.
-   - **AI‑Act risk level** (low / medium / elevated) based on industry, use cases and data situation.
-   - 1–2 sentences explaining what this risk level means in concrete terms.
+   - **AI‑Act risk class**: use the canonical value {{AI_ACT_RISK_LEVEL}} EXACTLY
+     (exactly one of: minimal / limited / high-risk). Do NOT guess and do NOT
+     translate it into a custom low/medium/high scale — the value MUST match the
+     cover and the AI‑Act compact section.
+   - Badge class matching the value: minimal → risk-low, limited → risk-medium,
+     high-risk → risk-high.
+   - 1–2 sentences explaining what this risk class means in concrete terms.
 
 ### Size‑aware logic
 
@@ -163,7 +168,7 @@ Create a compact, C‑level‑appropriate **AI‑Stack Summary Card** as an HTML
       </div>
       <div class="badge-block-item risk-low">
         <span class="badge-block-label">AI Act risk</span>
-        <span class="badge-block-value">Low</span>
+        <span class="badge-block-value">minimal</span>
       </div>
     </div>
     <p>Explanation of the risk level …</p>

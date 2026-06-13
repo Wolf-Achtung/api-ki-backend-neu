@@ -87,8 +87,13 @@ INHALTLICHE STRUKTUR (5 feste Bausteine)
 
 5) Branch Badge + Risikoindikator
    - Branch-Label: {{BRANCH_SHORT_LABEL}}.
-   - AI-Act Risk Level (niedrig / mittel / erhöht) basierend auf Branche, Use Cases und Datenlage.
-   - 1–2 Sätze, was dieses Risikoniveau konkret bedeutet.
+   - AI-Act Risikoklasse: übernimm EXAKT den kanonischen Wert {{AI_ACT_RISK_LEVEL}}
+     (genau einer von: minimal / limited / high-risk). NICHT frei schätzen und NICHT
+     auf eine eigene niedrig/mittel/hoch-Skala übersetzen — der Wert MUSS mit Cover
+     und AI-Act-Kompakt übereinstimmen.
+   - Badge-Klasse passend zum Wert: minimal → risk-low, limited → risk-medium,
+     high-risk → risk-high.
+   - 1–2 Sätze, was diese Risikoklasse konkret bedeutet.
 
 SIZE-AWARE LOGIK
 
@@ -200,7 +205,7 @@ HTML-ANFORDERUNGEN & DESIGN (G21 PLATIN++)
       </div>
       <div class="badge-block-item risk-low">
         <span class="badge-block-label">AI Act Risiko</span>
-        <span class="badge-block-value">Niedrig</span>
+        <span class="badge-block-value">minimal</span>
       </div>
     </div>
     <p>Erklärung zum Risikoniveau...</p>
