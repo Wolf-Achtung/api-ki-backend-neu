@@ -34,18 +34,17 @@ _CODE_TO_NAME = {
     "th": "Thüringen",
 }
 
-# Berlin Sonderstatus: 60% (übliche Praxis)
-BERLIN_NAMES = frozenset({"Berlin", "be"})
+# Berlin hat KEINEN BAFA-Sonderstatus: Es fällt unter die Standard-Regel der
+# alten Bundesländer (50% / max 1.750 €). Der frühere 60%-Sonderzweig war
+# sachlich falsch und wurde entfernt (FIX-1027.6.1).
 
 # Förderquoten
 FOERDERQUOTE_NEUE_BL = 80   # %
 FOERDERQUOTE_ALTE_BL = 50   # %
-FOERDERQUOTE_BERLIN = 60    # % (Sonderstatus)
 
 # Abgeleitete Maximalbeträge
 BAFA_MAX_NEUE_BL = int(BAFA_MAX_BERATUNGSKOSTEN * FOERDERQUOTE_NEUE_BL / 100)   # 2.800 €
 BAFA_MAX_ALTE_BL = int(BAFA_MAX_BERATUNGSKOSTEN * FOERDERQUOTE_ALTE_BL / 100)    # 1.750 €
-BAFA_MAX_BERLIN = int(BAFA_MAX_BERATUNGSKOSTEN * FOERDERQUOTE_BERLIN / 100)      # 2.100 €
 
 
 def _normalize_bundesland(bundesland: str) -> str:
@@ -69,20 +68,10 @@ def is_neue_bundeslaender(bundesland: str) -> bool:
     return _normalize_bundesland(bundesland) in NEUE_BUNDESLAENDER
 
 
-def is_berlin(bundesland: str) -> bool:
-    """Check if Bundesland is Berlin (Sonderstatus 60%)."""
-    if not bundesland:
-        return False
-    bl = bundesland.strip().lower()
-    return bl in ("berlin", "be")
-
-
 def get_bafa_foerderquote(bundesland: str) -> int:
     """Return the BAFA Förderquote (%) for a given Bundesland."""
     if is_neue_bundeslaender(bundesland):
         return FOERDERQUOTE_NEUE_BL
-    if is_berlin(bundesland):
-        return FOERDERQUOTE_BERLIN
     return FOERDERQUOTE_ALTE_BL
 
 
@@ -90,8 +79,6 @@ def get_bafa_max_foerderung(bundesland: str) -> int:
     """Return the max BAFA funding amount (€) for a given Bundesland."""
     if is_neue_bundeslaender(bundesland):
         return BAFA_MAX_NEUE_BL
-    if is_berlin(bundesland):
-        return BAFA_MAX_BERLIN
     return BAFA_MAX_ALTE_BL
 
 
