@@ -134,9 +134,18 @@ tr:last-child td { border-bottom: none; }
     break-before: page;
 }
 /* KIS-1126 / C6 FIX: #decision gets its own page so the GF-Entscheidungsvorlage
-   is standalone-printable (was on same page as Management Summary) */
+   is standalone-printable (was on same page as Management Summary).
+   KIS-1217 / 1027.7: page-break-before:always (Legacy-Alias) ergaenzt, damit der
+   erzwungene Umbruch unter Puppeteer/Chromium zuverlaessig auf dem GEMEINSAMEN
+   Wrapper (Header + glance-box + .exec-decision-box) greift. Der Break gehoert
+   auf diesen Container, NICHT auf die Box: deren break-before wurde in 367c969
+   entfernt (gab Cutoff nach Bullet 1, weil die Box mitten auf der Seite begann
+   und der Seitenrest < Boxhoehe war). break-inside:avoid bleibt verboten
+   (Clipping-Historie KIS-1199: Box hoeher als Seitenrest). Header + Box starten
+   so gemeinsam oben auf neuer Seite, die Box hat die volle Seite zur Verfuegung. */
 #decision {
     break-before: page;
+    page-break-before: always;
 }
 /* KIS-1183 Befund 3: #aiact-compact starts on its own page.
    Surgical fix — vendor-section regularly ends near bottom of preceding
