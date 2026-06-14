@@ -134,9 +134,18 @@ tr:last-child td { border-bottom: none; }
     break-before: page;
 }
 /* KIS-1126 / C6 FIX: #decision gets its own page so the GF-Entscheidungsvorlage
-   is standalone-printable (was on same page as Management Summary) */
+   is standalone-printable (was on same page as Management Summary).
+   KIS-1217 / 1027.7: page-break-before:always (Legacy-Alias) ergaenzt, damit der
+   erzwungene Umbruch unter Puppeteer/Chromium zuverlaessig auf dem GEMEINSAMEN
+   Wrapper (Header + glance-box + .exec-decision-box) greift. Der Break gehoert
+   auf diesen Container, NICHT auf die Box: deren break-before wurde in 367c969
+   entfernt (gab Cutoff nach Bullet 1, weil die Box mitten auf der Seite begann
+   und der Seitenrest < Boxhoehe war). break-inside:avoid bleibt verboten
+   (Clipping-Historie KIS-1199: Box hoeher als Seitenrest). Header + Box starten
+   so gemeinsam oben auf neuer Seite, die Box hat die volle Seite zur Verfuegung. */
 #decision {
     break-before: page;
+    page-break-before: always;
 }
 /* KIS-1183 Befund 3: #aiact-compact starts on its own page.
    Surgical fix — vendor-section regularly ends near bottom of preceding
@@ -181,6 +190,9 @@ tr:last-child td { border-bottom: none; }
     text-transform: uppercase;
     color: var(--c-text-3);
     margin-bottom: var(--sp-md);
+    /* KIS-1216: Header-Badge nie allein am Seitenfuss — bleibt bei Header+Inhalt. */
+    break-after: avoid;
+    page-break-after: avoid;
 }
 .level-dot {
     width: 8px;
@@ -199,6 +211,9 @@ tr:last-child td { border-bottom: none; }
     align-items: flex-start;
     gap: var(--sp-md);
     margin-bottom: var(--sp-md);
+    /* KIS-1216: Section-Header nie allein am Seitenfuss. */
+    break-after: avoid;
+    page-break-after: avoid;
 }
 .section-kicker {
     display: block;
@@ -276,15 +291,25 @@ tr:last-child td { border-bottom: none; }
 .section-body p, .section-body li { orphans: 3; widows: 3; }
 .section-body h3 { margin-top: var(--sp-lg); }
 
-/* ── Chapter Banner (KIS-1127/C4, KIS-1128 audit M1) ──────
-   break-after: avoid removed — banners on sections without
-   forced page-break (vendor, funding) caused 70% whitespace
-   on the preceding page when banner+content didn't fit. */
+/* ── Chapter Banner (KIS-1127/C4, KIS-1128 audit M1, KIS-1216) ──────
+   KIS-1128 hatte break-after:avoid entfernt, weil Banner auf Sektionen
+   ohne forced page-break (vendor, funding) 70% Whitespace auf der Vorseite
+   erzeugten, wenn Banner+Inhalt nicht zusammen passten.
+   KIS-1216 fuehrt break-after:avoid wieder ein, weil der gegenteilige Bug
+   (verwaister Banner-Header allein am Seitenfuss, Inhalt erst auf Folge-
+   seite) auf S.13/S.19 aufgetreten ist. Die damalige Whitespace-Ursache
+   ist durch C3/M2 entschaerft: grosse Folge-Container (scenarios-section,
+   business-case-engine-v2, roadmap-phase-card, …) sind inzwischen
+   break-inside:auto und fliessen, statt als Block mitzuspringen.
+   GEGENPROBE PFLICHT: nach Render pruefen, dass kein neuer leerer-Seiten-
+   Fall entsteht (Seitenzahl vorher 23). */
 .chapter-banner {
     padding: 20px 32px 16px;
     margin: 0 0 20px 0;
     position: relative;
     break-inside: avoid;
+    break-after: avoid;
+    page-break-after: avoid;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
@@ -722,8 +747,13 @@ tr:last-child td { border-bottom: none; }
 .exec-decision-box {
     /* break-inside: avoid !important; -- FIX-KIS-1027.5-H1: entfernt */
     /* page-break-inside: avoid !important; -- FIX-KIS-1027.5-H1: entfernt */
-    break-before: page;
-    page-break-before: always;   /* FIX-1027.5.6 — volle Seitenhöhe für 3 Leitplanken */
+    /* KIS-1216: break-before:page / page-break-before:always ENTFERNT.
+       Der erzwungene Umbruch liess den Section-Header allein auf der
+       Vorseite zurueck (R1 S.4 fast leer + verwaister Divider). Die Box
+       ist fuer break-inside:avoid zu lang (3 Leitplanken > Seitenhoehe,
+       siehe FIX-KIS-1027.5-H1/KIS-1199 Clipping-Historie), daher KEIN
+       Atomaritaets-Ersatz: Die Box fliesst frei, der Header bleibt via
+       break-after:avoid auf den Header-Typen bei seinem Inhalt. */
     break-after: auto;
     page-break-after: auto;
     break-inside: auto;
@@ -881,6 +911,9 @@ tr:last-child td { border-bottom: none; }
     padding-bottom: var(--sp-sm);
     border-bottom: 2px solid var(--c-cat-deep);
     margin-bottom: var(--sp-lg);
+    /* KIS-1216: Anhang-Header nie allein am Seitenfuss. */
+    break-after: avoid;
+    page-break-after: avoid;
 }
 .appendix-section {
     page-break-before: always;
@@ -968,6 +1001,7 @@ tr:last-child td { border-bottom: none; }
 /* Headings must stay with following content */
 h1, h2, h3, h4 {
     break-after: avoid;
+    page-break-after: avoid;   /* KIS-1216: Legacy-Alias fuer Puppeteer/Chromium */
 }
 
 /* Score displays and KPI rows */
