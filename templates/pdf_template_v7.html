@@ -433,44 +433,17 @@ tr:last-child td { border-bottom: none; }
     opacity: 0.85;
 }
 
-/* Score Ring — FIX-VU1: overflow hidden + max dimensions for PDF safety */
+/* Score Ring — KIS-Gauge-S1: score number lives inside the SVG (<text>),
+   so ring and number share one viewBox coordinate system. */
 .score-ring-wrap {
     margin: var(--sp-xl) auto;
-    position: relative;
     display: inline-block;
-    overflow: hidden;
     max-width: 200px;
     max-height: 200px;
-    line-height: 0;
 }
 .score-ring-wrap svg {
     max-width: 100%;
     height: auto;
-}
-.score-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    line-height: 1.1;
-    width: 100%;
-}
-.score-number {
-    font-size: 36pt;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--c-text);
-}
-.score-max {
-    font-size: 12pt;
-    color: var(--c-text-3);
-    margin-top: -2px;
-}
-.score-label-text {
-    font-size: 9pt;
-    color: var(--c-text-2);
-    margin-top: 2px;
 }
 
 /* Dimension Bars */
@@ -1267,16 +1240,19 @@ h1, h2, h3, h4 {
 
     <!-- Score Ring -->
     <div class="score-ring-wrap">
-        <svg viewBox="0 0 100 100" width="180" height="180" style="transform: rotate(-90deg);">
-            <circle cx="50" cy="50" r="40" fill="none" stroke="#E5E7EB" stroke-width="12"/>
-            <circle cx="50" cy="50" r="40" fill="none" stroke="{{ score_color }}" stroke-width="12"
-                    stroke-linecap="round" stroke-dasharray="{{ (score_int / 100) * 251.2 }} 251.2"/>
+        <svg viewBox="0 0 100 100" width="180" height="180">
+            <g transform="rotate(-90 50 50)">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#E5E7EB" stroke-width="12"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="{{ score_color }}" stroke-width="12"
+                        stroke-linecap="round" stroke-dasharray="{{ (score_int / 100) * 251.2 }} 251.2"/>
+            </g>
+            <text x="50" y="52" text-anchor="middle" dominant-baseline="central"
+                  style="font-size:26px;font-weight:700;fill:var(--c-text);">{{ score_int }}</text>
+            <text x="50" y="66" text-anchor="middle"
+                  style="font-size:9px;fill:var(--c-text-3);">/100</text>
+            <text x="50" y="77" text-anchor="middle"
+                  style="font-size:6.5px;fill:var(--c-text-2);">{{ score_rating }}</text>
         </svg>
-        <div class="score-content">
-            <div class="score-number">{{ score_int }}</div>
-            <div class="score-max">/100</div>
-            <div class="score-label-text">{{ score_rating }}</div>
-        </div>
     </div>
     <div style="font-size: 10pt; color: var(--c-text-2); margin-top: var(--sp-sm);">
         Reifegrad: {{ size_label }}
