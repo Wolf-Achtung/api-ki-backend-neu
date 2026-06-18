@@ -229,11 +229,12 @@ async def generate_strategy_report(
         _bl_label = _bundesland_label(briefing_data.get("bundesland", ""), country=_country_code)
         try:
             from config.bafa import get_bafa_foerderquote, get_bafa_foerderung_max_display
-            _bafa_quote = get_bafa_foerderquote(_bl_label)
-            _bafa_max = get_bafa_foerderung_max_display(_bl_label)
+            # FIX-KIS-BAFA-Country: BAFA only for country=DE (0 / "" otherwise)
+            _bafa_quote = get_bafa_foerderquote(_bl_label, _country_code)
+            _bafa_max = get_bafa_foerderung_max_display(_bl_label, _country_code)
         except ImportError:
-            _bafa_quote = 50
-            _bafa_max = "1.750 €"
+            _bafa_quote = 50 if _country_code == "DE" else 0
+            _bafa_max = "1.750 €" if _country_code == "DE" else ""
 
         # S31-FIX-A: Extract hauptleistung for industry-specific context
         _hauptleistung = (briefing_data.get("hauptleistung", "") or "").strip()
@@ -423,7 +424,8 @@ async def generate_strategy_report(
         # KIS-1097: Fallback — if get_filtered_funding_programs returned nothing
         # (e.g. import error, JSON load failure), ensure S7 at least gets BAFA data
         # from the base_context that was already computed deterministically.
-        if not _funding_data_block.strip():
+        # FIX-KIS-BAFA-Country: only inject the German BAFA baseline for country=DE.
+        if not _funding_data_block.strip() and _country_code == "DE":
             _funding_data_block = (
                 f"- BAFA – Förderung von Unternehmensberatungen für KMU (Träger: BAFA)\n"
                 f"  Förderquote: {_bafa_quote}%\n"
