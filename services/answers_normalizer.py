@@ -370,6 +370,18 @@ def normalize_answers(answers: Dict[str, Any]) -> Dict[str, Any]:
     else:
         out["bundesland"] = ""
 
+    # FIX #3 (interesse_foerderung EN→DE): The funding-alignment skip in
+    # services/funding_recommender.py:2334 matches hard on the German values
+    # ("nein"/"kein bedarf"). An EN form sends "no", which never equals "nein",
+    # so the skip never fires and EN "no interest" still gets full alignment.
+    # We normalize ONLY "no" → "nein" here, because that is the only value the
+    # skip-logic reacts to. "yes"/"unklar" trigger no skip and are left as-is
+    # (the exact EN token for "unklar" is also unverified in this repo, so we
+    # deliberately do not guess). Missing/empty values stay untouched.
+    _if_raw = out.get("interesse_foerderung")
+    if isinstance(_if_raw, str) and _if_raw.strip().lower() == "no":
+        out["interesse_foerderung"] = "nein"
+
     for k in ("research_days", "tools_days", "funding_days"):
         if k in out:
             out[k] = _parse_int(out[k], 30)
