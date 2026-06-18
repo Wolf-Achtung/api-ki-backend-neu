@@ -15492,6 +15492,13 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     for key in direct_copy_keys:
         sections[key] = answers.get(key, "")
 
+    # FIX-KIS-BAFA-Country: propagate country into sections so the core funding
+    # table (build_core_funding_table_html → extra_sections.py) sees the real
+    # country. Without this, country defaults to "DE" and the allowed_countries
+    # filter + BAFA gate (PR #1059) run as if every report were German.
+    sections["country"] = (answers.get("country") or "DE").upper()
+    sections["COUNTRY"] = sections["country"]
+
     # === STRATEGIC CONTEXT FIELDS (lowercase for template compatibility) ===
     # These are the user's freetext strategic inputs, mapped to lowercase template keys
     strategic_field_mappings = [
