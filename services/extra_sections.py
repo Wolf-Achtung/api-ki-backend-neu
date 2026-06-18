@@ -837,11 +837,12 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
     html_parts.append('    <tbody>')
 
     # BAFA override: show region-specific rate and max subsidy
+    # FIX-KIS-BAFA-Country: BAFA only for country=DE (override disabled otherwise)
     try:
         from config.bafa import get_bafa_foerderquote, get_bafa_max_foerderung
-        _bafa_quote = get_bafa_foerderquote(bundesland)
-        _bafa_max = get_bafa_max_foerderung(bundesland)
-        _bafa_override = True
+        _bafa_quote = get_bafa_foerderquote(bundesland, country)
+        _bafa_max = get_bafa_max_foerderung(bundesland, country)
+        _bafa_override = country == "DE"
     except ImportError:
         _bafa_override = False
 

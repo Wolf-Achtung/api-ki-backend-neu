@@ -2108,14 +2108,19 @@ def apply_grammar_fixer(sections: dict) -> dict:
 # Uses config/bafa.py as single source of truth for regional values.
 # =============================================================================
 
-def apply_bafa_amount_enforcer(sections: dict, bundesland: str) -> dict:
+def apply_bafa_amount_enforcer(sections: dict, bundesland: str, country: str = "DE") -> dict:
     """
     Replace incorrect BAFA max funding amounts in foerderpotenzial section
     with the correct regional value from config/bafa.py.
 
     The LLM prompt already contains deterministic BAFA data, but LLMs can
     hallucinate wrong amounts. This post-processor is a safety net.
+
+    FIX-KIS-BAFA-Country: BAFA is a German programme. For non-DE countries the
+    enforcer must NOT write German BAFA amounts back into funding sections.
     """
+    if (country or "DE").strip().upper() != "DE":
+        return sections
     if not bundesland:
         return sections
 
@@ -3087,7 +3092,7 @@ def _fix_segment_labels(sections: dict, company_size: str) -> dict:
     return sections
 
 
-def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesland: str = "", company_size: str = "") -> dict:
+def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesland: str = "", company_size: str = "", country: str = "DE") -> dict:
 
     """
     Wendet alle Quality Enforcer in der richtigen Reihenfolge an.
@@ -3139,8 +3144,9 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 5. Location-Validator
 
     # 5.5 NEU-1 (Session 28): BAFA Amount Enforcer — fix hallucinated BAFA max amounts
+    # FIX-KIS-BAFA-Country: enforcer is country-gated (DE only) internally.
     if bundesland:
-        sections = apply_bafa_amount_enforcer(sections, bundesland)
+        sections = apply_bafa_amount_enforcer(sections, bundesland, country)
 
     # 6. Grammar-Fixer
 

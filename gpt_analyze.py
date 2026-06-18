@@ -8369,7 +8369,8 @@ def _generate_gamechanger_compact_from_html(
 def _generate_funding_compact_from_html(
     raw_html: str,
     bundesland: str = "",
-    company_size: str = "1"
+    company_size: str = "1",
+    country: str = "DE"
 ) -> str:
     """Wrapper: Generiert kompakte Förderübersicht mit kanonischen BAFA-Werten.
 
@@ -8381,11 +8382,12 @@ def _generate_funding_compact_from_html(
     # FIX-A3b: Canonical BAFA values from config (single source of truth)
     try:
         from config.bafa import get_bafa_foerderung_max_display, get_bafa_foerderquote
-        _bafa_amount = get_bafa_foerderung_max_display(bundesland)
-        _bafa_quote = get_bafa_foerderquote(bundesland)  # e.g. 80 for Sachsen
+        # FIX-KIS-BAFA-Country: BAFA only for country=DE (0 / "" otherwise)
+        _bafa_amount = get_bafa_foerderung_max_display(bundesland, country)
+        _bafa_quote = get_bafa_foerderquote(bundesland, country)  # e.g. 80 for Sachsen
     except ImportError:
-        _bafa_amount = "1.750 €"
-        _bafa_quote = 50
+        _bafa_amount = "1.750 €" if (country or "DE").upper() == "DE" else ""
+        _bafa_quote = 50 if (country or "DE").upper() == "DE" else 0
 
     # FIX-A3b: Förderquote from config/bafa.py (region-aware), not hardcoded
     foerderquote = f"{_bafa_quote}%"
@@ -9057,13 +9059,16 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     try:
         from config.bafa import get_bafa_foerderquote, get_bafa_foerderung_max_display, get_bafa_foerderung_display
         _bl_for_bafa = base_vars.get("BUNDESLAND_LABEL", "") or base_vars.get("bundesland", "")
-        base_vars["BAFA_FOERDERQUOTE"] = str(get_bafa_foerderquote(_bl_for_bafa))
-        base_vars["BAFA_MAX_FOERDERUNG"] = get_bafa_foerderung_max_display(_bl_for_bafa)
-        base_vars["BAFA_FOERDERUNG_DISPLAY"] = get_bafa_foerderung_display(_bl_for_bafa)
+        # FIX-KIS-BAFA-Country: BAFA only for country=DE (0 / "" otherwise)
+        _bafa_country = (briefing.get("country") or "DE").upper()
+        base_vars["BAFA_FOERDERQUOTE"] = str(get_bafa_foerderquote(_bl_for_bafa, _bafa_country))
+        base_vars["BAFA_MAX_FOERDERUNG"] = get_bafa_foerderung_max_display(_bl_for_bafa, _bafa_country)
+        base_vars["BAFA_FOERDERUNG_DISPLAY"] = get_bafa_foerderung_display(_bl_for_bafa, _bafa_country)
     except ImportError:
-        base_vars["BAFA_FOERDERQUOTE"] = "50"
-        base_vars["BAFA_MAX_FOERDERUNG"] = "1.750 €"
-        base_vars["BAFA_FOERDERUNG_DISPLAY"] = "bis 1.750 € (50%)"
+        _bafa_country = (briefing.get("country") or "DE").upper()
+        base_vars["BAFA_FOERDERQUOTE"] = "50" if _bafa_country == "DE" else "0"
+        base_vars["BAFA_MAX_FOERDERUNG"] = "1.750 €" if _bafa_country == "DE" else ""
+        base_vars["BAFA_FOERDERUNG_DISPLAY"] = "bis 1.750 € (50%)" if _bafa_country == "DE" else ""
 
     # FIX-KIS-1098-R1-FUNDING: Inject filtered funding program list into prompt context
     # so the LLM knows exactly which programs to discuss (prevents AT/CH hallucinations).
@@ -9486,13 +9491,16 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     # FIX-A3b: Canonical BAFA values for fallback content (single source of truth)
     try:
         from config.bafa import get_bafa_foerderquote, get_bafa_foerderung_max_display, get_bafa_foerderung_display
-        _fb_bafa_quote: int = get_bafa_foerderquote(_bl_raw or bundesland)
-        _fb_bafa_max: str = get_bafa_foerderung_max_display(_bl_raw or bundesland)
-        _fb_bafa_display: str = get_bafa_foerderung_display(_bl_raw or bundesland)
+        # FIX-KIS-BAFA-Country: BAFA only for country=DE (0 / "" otherwise)
+        _fb_country: str = (briefing.get("country") or "DE").upper()
+        _fb_bafa_quote: int = get_bafa_foerderquote(_bl_raw or bundesland, _fb_country)
+        _fb_bafa_max: str = get_bafa_foerderung_max_display(_bl_raw or bundesland, _fb_country)
+        _fb_bafa_display: str = get_bafa_foerderung_display(_bl_raw or bundesland, _fb_country)
     except ImportError:
-        _fb_bafa_quote = 50
-        _fb_bafa_max = "1.750 €"
-        _fb_bafa_display = "bis 1.750 € (50%)"
+        _fb_country = (briefing.get("country") or "DE").upper()
+        _fb_bafa_quote = 50 if _fb_country == "DE" else 0
+        _fb_bafa_max = "1.750 €" if _fb_country == "DE" else ""
+        _fb_bafa_display = "bis 1.750 € (50%)" if _fb_country == "DE" else ""
     # BC-Werte mit sinnvollen Defaults (werden von calc_business_case vorher gesetzt)
     capex: int = int(briefing.get("CAPEX_REALISTISCH_EUR") or 5000)
     opex: int = int(briefing.get("OPEX_REALISTISCH_EUR") or 150)
@@ -14564,7 +14572,8 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                 foerderpotenzial_html = _generate_funding_compact_from_html(
                     raw_html=foerderpotenzial_html,
                     bundesland=_bl_for_funding,
-                    company_size=briefing.get("unternehmensgroesse", "1")
+                    company_size=briefing.get("unternehmensgroesse", "1"),
+                    country=(briefing.get("country") or "DE").upper(),
                 )
                 # FIX-620: Post-compact word count check - revert if below min_words
                 _fp_text_after = re.sub(r"<[^>]+>", "", foerderpotenzial_html).strip()
@@ -14804,7 +14813,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                 company_size_qe = "team"
             else:
                 company_size_qe = "kmu"
-        sections = apply_all_quality_enforcers(sections, hauptleistung_value, bundesland_value, company_size_qe)
+        sections = apply_all_quality_enforcers(sections, hauptleistung_value, bundesland_value, company_size_qe, country=(briefing.get("country") or "DE").upper())
         log.info(f"[QUALITY-ENFORCER] Applied all quality fixes for hauptleistung={hauptleistung_value[:30] if hauptleistung_value else 'N/A'}, company_size={company_size_qe}")
 
         # ── FIX-B724-HAUPTLEISTUNG ────────────────────────────────────────
@@ -14988,7 +14997,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                 company_size_final = "team"
             else:
                 company_size_final = "kmu"
-        sections = apply_all_quality_enforcers(sections, hauptleistung_final, bundesland_final, company_size_final)
+        sections = apply_all_quality_enforcers(sections, hauptleistung_final, bundesland_final, company_size_final, country=(briefing.get("country") or "DE").upper())
         log.info(f"[QUALITY-ENFORCER-FINAL] Applied FINAL quality fixes, company_size={company_size_final}")
     except Exception as e:
         log.warning(f"[QUALITY-ENFORCER-FINAL] Failed: {e}")
@@ -15482,6 +15491,13 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     ]
     for key in direct_copy_keys:
         sections[key] = answers.get(key, "")
+
+    # FIX-KIS-BAFA-Country: propagate country into sections so the core funding
+    # table (build_core_funding_table_html → extra_sections.py) sees the real
+    # country. Without this, country defaults to "DE" and the allowed_countries
+    # filter + BAFA gate (PR #1059) run as if every report were German.
+    sections["country"] = (answers.get("country") or "DE").upper()
+    sections["COUNTRY"] = sections["country"]
 
     # === STRATEGIC CONTEXT FIELDS (lowercase for template compatibility) ===
     # These are the user's freetext strategic inputs, mapped to lowercase template keys
@@ -18934,7 +18950,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 company_size_render = "team"
             else:
                 company_size_render = "kmu"
-        sections = apply_all_quality_enforcers(sections, hauptleistung_render, bundesland_render, company_size_render)
+        sections = apply_all_quality_enforcers(sections, hauptleistung_render, bundesland_render, company_size_render, country=(answers.get("country") or "DE").upper())
         log.info(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Applied FINAL quality fixes before render, company_size={company_size_render}")
     except Exception as e:
         log.warning(f"[{run_id}] [QUALITY-ENFORCER-RENDER] Failed: {e}")

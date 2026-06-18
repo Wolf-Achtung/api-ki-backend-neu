@@ -68,28 +68,58 @@ def is_neue_bundeslaender(bundesland: str) -> bool:
     return _normalize_bundesland(bundesland) in NEUE_BUNDESLAENDER
 
 
-def get_bafa_foerderquote(bundesland: str) -> int:
-    """Return the BAFA Förderquote (%) for a given Bundesland."""
+def _is_germany(country: str) -> bool:
+    """BAFA is a German programme: only country=DE qualifies.
+
+    FIX-KIS-BAFA-Country: BAFA-Förderquoten gelten ausschließlich für
+    Deutschland. AT/CH/GB/EU dürfen KEINE deutschen BAFA-Werte erhalten.
+    Empty/None defaults to DE to preserve legacy callers without a country.
+    """
+    return (country or "DE").strip().upper() == "DE"
+
+
+def get_bafa_foerderquote(bundesland: str, country: str = "DE") -> int:
+    """Return the BAFA Förderquote (%) for a given Bundesland.
+
+    Returns 0 for non-DE countries (BAFA is a German programme).
+    """
+    if not _is_germany(country):
+        return 0
     if is_neue_bundeslaender(bundesland):
         return FOERDERQUOTE_NEUE_BL
     return FOERDERQUOTE_ALTE_BL
 
 
-def get_bafa_max_foerderung(bundesland: str) -> int:
-    """Return the max BAFA funding amount (€) for a given Bundesland."""
+def get_bafa_max_foerderung(bundesland: str, country: str = "DE") -> int:
+    """Return the max BAFA funding amount (€) for a given Bundesland.
+
+    Returns 0 for non-DE countries (BAFA is a German programme).
+    """
+    if not _is_germany(country):
+        return 0
     if is_neue_bundeslaender(bundesland):
         return BAFA_MAX_NEUE_BL
     return BAFA_MAX_ALTE_BL
 
 
-def get_bafa_foerderung_display(bundesland: str) -> str:
-    """Return display string like 'bis 2.800 € (80%)' for a Bundesland."""
-    quote = get_bafa_foerderquote(bundesland)
-    max_amount = get_bafa_max_foerderung(bundesland)
+def get_bafa_foerderung_display(bundesland: str, country: str = "DE") -> str:
+    """Return display string like 'bis 2.800 € (80%)' for a Bundesland.
+
+    Returns "" for non-DE countries (BAFA is a German programme).
+    """
+    if not _is_germany(country):
+        return ""
+    quote = get_bafa_foerderquote(bundesland, country)
+    max_amount = get_bafa_max_foerderung(bundesland, country)
     return f"bis {max_amount:,.0f} € ({quote}%)".replace(",", ".")
 
 
-def get_bafa_foerderung_max_display(bundesland: str) -> str:
-    """Return just the max amount like '2.800 €'."""
-    max_amount = get_bafa_max_foerderung(bundesland)
+def get_bafa_foerderung_max_display(bundesland: str, country: str = "DE") -> str:
+    """Return just the max amount like '2.800 €'.
+
+    Returns "" for non-DE countries (BAFA is a German programme).
+    """
+    if not _is_germany(country):
+        return ""
+    max_amount = get_bafa_max_foerderung(bundesland, country)
     return f"{max_amount:,.0f} €".replace(",", ".")
