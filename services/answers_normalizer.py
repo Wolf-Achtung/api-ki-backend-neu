@@ -360,15 +360,14 @@ def normalize_answers(answers: Dict[str, Any]) -> Dict[str, Any]:
         or out.get("unternehmensgroesse", "")
     )
 
+    # FIX (Label, country-aware): Die frühere 2-Zeichen-Truncation (bl_raw[:2])
+    # war eine DE-only-Annahme — für DE ein No-Op (alle 16 DE-Codes sind
+    # 2-stellig), aber sie verstümmelte längere CH/AT/GB-Codes und erzeugte
+    # falsche DE-Kollisionen (be_ch->be->"Berlin", stm->st, nir->ni). Der Code
+    # wird jetzt ungekürzt (nur lowercased) durchgereicht; die Klartext-Auflösung
+    # erfolgt country-aware über get_region_label() (siehe BUNDESLAND_LABEL unten).
     bl_raw = str(out.get("bundesland", "")).strip()
-    if bl_raw:
-        if len(bl_raw) > 2:
-            bl_key = bl_raw[:2].lower()
-        else:
-            bl_key = bl_raw.lower()
-        out["bundesland"] = bl_key
-    else:
-        out["bundesland"] = ""
+    out["bundesland"] = bl_raw.lower() if bl_raw else ""
 
     # FIX #3 (interesse_foerderung EN→DE): The funding-alignment skip in
     # services/funding_recommender.py:2334 matches hard on the German values
@@ -400,10 +399,14 @@ def normalize_answers(answers: Dict[str, Any]) -> Dict[str, Any]:
         out.get("unternehmensgroesse", ""),
         out.get("unternehmensgroesse", "") or "—",
     )
-    out["BUNDESLAND_LABEL"] = BUNDESLAENDER_LABELS.get(
-        out.get("bundesland", ""),
-        out.get("bundesland", "").upper() or "—",
-    )
+    # FIX (Label, country-aware): get_region_label() (Z.156) wählt anhand des
+    # Landes die richtige Tabelle (DE/CH/AT/GB) — statt der bisherigen DE-only-Map.
+    # Fallback wie gehabt: wird der Code nicht aufgelöst (Resolver gibt den Code
+    # selbst zurück), Code uppercased bzw. "—".
+    _bl_code = out.get("bundesland", "")
+    _bl_country = out.get("country") or out.get("land") or "DE"
+    _bl_label = get_region_label(_bl_code, _bl_country)
+    out["BUNDESLAND_LABEL"] = _bl_label if (_bl_label and _bl_label != _bl_code) else (_bl_code.upper() or "—")
     rev = str(out.get("jahresumsatz", "") or "").strip().lower()
     out["JAHRESUMSATZ_LABEL"] = UMSATZ_LABELS.get(
         rev, out.get("jahresumsatz", "") or "—"
