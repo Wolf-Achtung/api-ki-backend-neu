@@ -2093,7 +2093,15 @@ FREITEXT_SCORE_MAP: Dict[str, Dict[str, Any]] = {
                      'zugangskontrollen', 'backup', 'incident', 'meldepflicht'],
             # +1 Punkt für awareness-Keywords
             'medium': ['sicherheit', 'schutz', 'risiko', 'vertraulich', 'sensibel',
-                       'no-go', 'keine halluzinationen', 'kein tracking']
+                       'no-go', 'keine halluzinationen', 'kein tracking'],
+            # FIX #5b (Weg Y): EN-Pendants bewusst in getrennten *_en-Listen,
+            # damit die DE-Listen byte-identisch bleiben (DE-Nullregression).
+            'high_en': ['gdpr', 'data protection', 'privacy', 'deletion concept',
+                        'data retention', 'anonymization', 'encryption',
+                        'access control', 'reporting obligation', 'iso 27001',
+                        'penetration test'],
+            'medium_en': ['security', 'protection', 'confidential', 'sensitive',
+                          'no hallucinations', 'no tracking']
         },
         'max_bonus': 5  # Absolutes Maximum aus Freitext
     },
@@ -2102,7 +2110,11 @@ FREITEXT_SCORE_MAP: Dict[str, Dict[str, Any]] = {
         'keywords': {
             'high': ['governance', 'richtlinie', 'policy', 'verantwortlich', 'freigabe',
                      'ethik', 'leitplanken', 'ai act', 'regulierung'],
-            'medium': ['transparenz', 'kontrolle', 'audit', 'dokumentation', 'nachvollziehbar']
+            'medium': ['transparenz', 'kontrolle', 'audit', 'dokumentation', 'nachvollziehbar'],
+            # FIX #5b (Weg Y): EN-Pendants (DE-Listen unverändert)
+            'high_en': ['guideline', 'accountable', 'responsible', 'approval',
+                        'sign-off', 'ethics', 'guardrails', 'regulation', 'ai act'],
+            'medium_en': ['transparency', 'documentation', 'traceable', 'auditable']
         },
         'max_bonus': 4
     },
@@ -2111,7 +2123,11 @@ FREITEXT_SCORE_MAP: Dict[str, Dict[str, Any]] = {
         'keywords': {
             'high': ['roi', 'umsatz', 'einsparung', 'automatisierung', 'skalierung',
                      'neue produkte', 'monetarisierung', 'geschäftsmodell'],
-            'medium': ['effizienz', 'zeit sparen', 'produktivität', 'schneller', 'kosten senken']
+            'medium': ['effizienz', 'zeit sparen', 'produktivität', 'schneller', 'kosten senken'],
+            # FIX #5b (Weg Y): EN-Pendants (DE-Listen unverändert)
+            'high_en': ['revenue', 'cost savings', 'automation', 'scaling',
+                        'monetization', 'business model', 'new products'],
+            'medium_en': ['efficiency', 'productivity', 'save time', 'cut costs']
         },
         'max_bonus': 3  # Weniger, da schon 92
     },
@@ -2120,7 +2136,10 @@ FREITEXT_SCORE_MAP: Dict[str, Dict[str, Any]] = {
         'keywords': {
             'high': ['team', 'training', 'schulung', 'kompetenz', 'pilotprojekt',
                      'chatgpt', 'claude', 'midjourney', 'copilot'],
-            'medium': ['lernen', 'ausprobiert', 'erfahrung', 'experiment', 'test']
+            'medium': ['lernen', 'ausprobiert', 'erfahrung', 'experiment', 'test'],
+            # FIX #5b (Weg Y): EN-Pendants (DE-Listen unverändert)
+            'high_en': ['competence', 'skills', 'pilot project'],
+            'medium_en': ['learning', 'experience']
         },
         'max_bonus': 3
     }
@@ -2141,12 +2160,16 @@ def calc_freitext_bonus(answers: dict, current_scores: dict) -> dict:
             if not text or len(text) < 5:
                 continue
 
-            for kw in config['keywords']['high']:
+            # FIX #5b (Weg Y): DE + EN keywords share the SAME seen_*-dedup,
+            # the SAME bonus counter and the SAME max_bonus cap below — so EN
+            # support never raises the cap (DE-Nullregression). high_en/medium_en
+            # are read defensively so dimensions without EN lists don't crash.
+            for kw in config['keywords']['high'] + config['keywords'].get('high_en', []):
                 if kw in text and kw not in seen_high:
                     seen_high.add(kw)
                     bonus += 2
 
-            for kw in config['keywords']['medium']:
+            for kw in config['keywords']['medium'] + config['keywords'].get('medium_en', []):
                 if kw in text and kw not in seen_medium:
                     seen_medium.add(kw)
                     bonus += 1
