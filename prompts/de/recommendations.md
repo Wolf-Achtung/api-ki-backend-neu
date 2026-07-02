@@ -14,8 +14,10 @@ NUR 3 MUSS-Maßnahmen (je max. 40 Wörter) + 3 kurze Optionen (je max. 20 Wörte
 {% endif %}
 JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN — der Report endet dann mitten im Satz!
 
-## ROI-Regel (vor allem anderen beachten)
-Prozentwerte (ROI, Rendite, Effizienz) NIEMALS über 200% angeben. Bei höheren Werten "200% (gedeckelt)" schreiben. Alle Zahlen KONSERVATIV.
+## ROI-Regel (eine Regel, keine Ausnahmen)
+KEINE ROI-/Rendite-/Payback-Zahlen in dieser Sektion — Owner ist der Business
+Case (dort zentral berechnet). Erlaubt ist nur der qualitative Verweis
+„Details zum ROI → siehe Business Case". Details unten (ROI PROHIBITION).
 <!-- SIZE-AWARE: solo/team/kmu -->
 <!-- INPUT: {{BRANCH_CORE_LABEL}}, {{BRANCH_CONTEXT_LABEL}}, {{OFFERING_LABEL}}, COMPANY_SIZE -->
 
@@ -248,25 +250,12 @@ ANTI-TEXTWÜSTEN REGELN v2.0 (AGGRESSIV - PFLICHT!)
 PROBLEM: Empfehlungs-Abschnitte werden zu langen Textwänden.
 LÖSUNG: KOMPAKTE Struktur mit harten Wortlimits.
 
-HARTE LIMITS PRO EMPFEHLUNG:
-┌─────────────────────────────────────────────────────────┐
-│ Feld                  │ Max Wörter │ Max Sätze        │
-├─────────────────────────────────────────────────────────┤
-│ Empfehlungs-Titel     │ 8 Wörter   │ -                │
-│ Schwerpunkt           │ 20 Wörter  │ 1 Satz           │
-│ Maßnahme              │ 20 Wörter  │ 1 Satz           │
-│ Nutzen & Wirkung      │ 15 Wörter  │ 1 Satz           │
-│ Aufwand & Budget      │ 12 Wörter  │ 1 Satz           │
-│ Förderchance          │ 15 Wörter  │ 1 Satz           │
-└─────────────────────────────────────────────────────────┘
-
-FORMAT PRO EMPFEHLUNG (PFLICHT):
-<strong>N. Empfehlung: [Titel max 8 Wörter]</strong>
-<strong>Schwerpunkt:</strong> [1 Satz, max 20 Wörter]
-<strong>Maßnahme:</strong> [1 Satz, max 20 Wörter]
-<strong>Nutzen:</strong> [1 Satz, max 15 Wörter]
-<strong>Aufwand:</strong> [Kategorie] – [kurze Beschreibung max 12 Wörter]
-<strong>Förderchance:</strong> [1 Satz, max 15 Wörter]
+HARTE LIMITS PRO MUSS-MASSNAHME (passend zum HTML-Skelett unten):
+- Titel (<strong>): max. 8 Wörter
+- Warum-Halbsatz nach dem Titel: max. 12 Wörter
+- Umsetzungs-Detail (<p class="muss-detail">): 1 Satz, max. 20 Wörter
+(KEIN eigenes Förderchance-Feld — Förderinformationen gehören in die
+Sektion Förderpotenzial, siehe THEMEN-OWNERSHIP.)
 
 VERBOTEN (STRIKT!):
 ❌ Mehr als 5 Empfehlungen
