@@ -7,8 +7,6 @@ render truncation like '...nach dem Schema Input' with no closing punctuation).
 It is a warning by default and escalates to critical when
 HTML_CONTRACT_TRUNCATION_CRITICAL=1.
 """
-import importlib
-
 import pytest
 
 from services.html_contract import (
@@ -81,20 +79,17 @@ class TestSeverity:
         assert trunc, "expected a truncation violation"
         assert all(not v.critical for v in trunc), "should be a warning by default"
 
-    def test_env_flag_escalates_to_critical(self, monkeypatch):
-        monkeypatch.setenv("HTML_CONTRACT_TRUNCATION_CRITICAL", "1")
+    def test_flag_escalates_to_critical(self, monkeypatch):
+        # Flip the module-level flag directly (the check reads it at call time).
+        # Avoids importlib.reload, which would pollute module state for other tests.
         import services.html_contract as hc
-        importlib.reload(hc)
-        try:
-            html = (
-                '<section id="entscheidungsvorlage"><p>Ein klarer Rahmen, bei dem '
-                'jede KI-Readiness-Analyse nach dem Schema Input</p></section>'
-            )
-            violations = hc._check_truncated_sentences(html)
-            assert violations and all(v.critical for v in violations)
-        finally:
-            monkeypatch.delenv("HTML_CONTRACT_TRUNCATION_CRITICAL", raising=False)
-            importlib.reload(hc)
+        monkeypatch.setattr(hc, "TRUNCATION_CRITICAL", True)
+        html = (
+            '<section id="entscheidungsvorlage"><p>Ein klarer Rahmen, bei dem '
+            'jede KI-Readiness-Analyse nach dem Schema Input</p></section>'
+        )
+        violations = hc._check_truncated_sentences(html)
+        assert violations and all(v.critical for v in violations)
 
 
 class TestHelper:
