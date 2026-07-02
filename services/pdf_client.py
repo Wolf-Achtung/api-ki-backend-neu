@@ -24,6 +24,9 @@ PDF_AUTHOR = os.getenv("PDF_AUTHOR", "KI-Sicherheit.jetzt")
 PDF_PRODUCER = os.getenv("PDF_PRODUCER", "KI-Sicherheit.jetzt")
 
 PDF_SERVICE_URL = (os.getenv("PDF_SERVICE_URL") or "").rstrip("/")
+# Optional shared secret for the PDF service. When set, it is sent as the
+# X-PDF-Secret header so the service can authenticate the backend.
+PDF_SHARED_SECRET = os.getenv("PDF_SHARED_SECRET", "")
 PDF_TIMEOUT = int(os.getenv("PDF_TIMEOUT_MS", "90000")) / 1000.0  # Sekunden
 MAX_RETRIES = int(os.getenv("PDF_MAX_RETRIES", "3"))
 
@@ -425,6 +428,8 @@ def render_pdf_from_html(
         "X-Client-Version": "ki-backend/1 pdf-client G14",
         "User-Agent": "ki-backend/1 pdf-client",
     }
+    if PDF_SHARED_SECRET:
+        headers["X-PDF-Secret"] = PDF_SHARED_SECRET
 
     # SPRINT G14-D: Track retry metrics
     retry_count = 0
