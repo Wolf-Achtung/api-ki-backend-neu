@@ -143,7 +143,7 @@ Statt generischer "15-25% Zeitersparnis" → Bezug zu {{ZEITERSPARNIS_PRIORITAET
 
 BEISPIEL:
 ❌ "Zeitersparnis: 15-25% bei wiederkehrenden Aufgaben"
-✅ "Zeitersparnis: 40-60% bei Umsetzung/Programmierung durch Template-Wiederverwendung"
+✅ "Zeitersparnis: Spürbare Entlastung bei Umsetzung/Programmierung durch Template-Wiederverwendung — im Pilot gemessen statt geschätzt"
 =============================================================================
 -->
 <!--
@@ -375,7 +375,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li>Prompt-Bibliothek auf 5–10 funktionierende Vorlagen erweitern</li>
     <li>Tägliche Routine: Eine Aufgabe mit KI-Unterstützung</li>
   </ul>
-  <p><strong>Meilenstein:</strong> 3–5 Stunden pro Monat bei {{ZEITERSPARNIS_PRIORITAET}} eingespart.</p>
+  <p><strong>Meilenstein:</strong> Ersparnis bei {{ZEITERSPARNIS_PRIORITAET}} erstmals gemessen und dokumentiert — der eigene Richtwert ersetzt Schätzungen.</p>
 
   <h3>Phase 2: Workflow (Woche 6–10)</h3>
   <p><strong>Ziel:</strong> Stabile Workflows für Ihr Kerngeschäft im Alltag.</p>
@@ -386,7 +386,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li>Prompt-Vorlagen verfeinern und dokumentieren</li>
     <li>Erste Automatisierung für wiederkehrende Aufgaben prüfen</li>
   </ul>
-  <p><strong>Meilenstein:</strong> 70%+ der Entwürfe direkt nutzbar.</p>
+  <p><strong>Meilenstein:</strong> Der Großteil der Entwürfe ist ohne größere Nacharbeit nutzbar (eigenen Zielwert im Pilot festlegen).</p>
 
   <!-- P3b: Feste Überschrift statt rohem {{VISION_3_JAHRE}} — die Variable ist
        Freitext und erzeugte unlesbar lange Überschriften; die Vision bleibt in
@@ -404,7 +404,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
 
   <h3>Erwartete Effekte nach 90 Tagen</h3>
   <ul>
-    <li><strong>Zeitersparnis:</strong> 40-60% bei {{ZEITERSPARNIS_PRIORITAET}} durch Template-Wiederverwendung</li>
+    <li><strong>Zeitersparnis:</strong> Spürbare, gemessene Entlastung bei {{ZEITERSPARNIS_PRIORITAET}} durch Template-Wiederverwendung</li>
     <li><strong>Qualität:</strong> Konsistentere Outputs durch standardisierte Vorlagen</li>
     <li><strong>Compliance:</strong> {{KI_GUARDRAILS}} systematisch geprüft in jedem Output</li>
     <li><strong>Routine:</strong> KI ist Teil des Arbeitsalltags, keine Sonderaktion mehr</li>
@@ -419,12 +419,12 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   <ul>
     <li><strong>Zeitersparnis pro Woche:</strong> Notieren Sie für jede KI-gestützte Aufgabe die
     eingesparte Zeit im Vergleich zur manuellen Bearbeitung. Eine einfache Strichliste oder
-    Tabelle genügt – Ziel: 3–5 Stunden Ersparnis pro Monat.</li>
+    Tabelle genügt – den eigenen Zielwert nach den ersten vier Wochen festlegen.</li>
     <li><strong>Output-Menge:</strong> Wie viele Texte, E-Mails, Konzepte oder andere Deliverables
     haben Sie mit KI-Unterstützung erstellt? Tracken Sie die Produktivitätssteigerung
     quantitativ (z. B. „12 LinkedIn-Posts statt 4 ohne KI").</li>
     <li><strong>Qualitätsbewertung:</strong> Bewerten Sie Ihre KI-Outputs auf einer Skala von
-    1–5 Sternen. Wie oft konnten Sie einen Entwurf direkt verwenden? Ziel: 70%+ Erstqualität.</li>
+    1–5 Sternen. Wie oft konnten Sie einen Entwurf direkt verwenden? Ziel: ein über die Wochen steigender Anteil direkt nutzbarer Entwürfe.</li>
   </ul>
   <p>
     <strong>Mini-Dashboard einrichten:</strong> Nutzen Sie ein einfaches Tool wie Notion, Excel
@@ -494,7 +494,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
 
   <h3>Erwartete Effekte nach 90 Tagen</h3>
   <ul>
-    <li><strong>Zeitersparnis:</strong> 30–50% bei {{ZEITERSPARNIS_PRIORITAET}} im Team</li>
+    <li><strong>Zeitersparnis:</strong> Deutliche, gemessene Entlastung bei {{ZEITERSPARNIS_PRIORITAET}} im Team</li>
     <li><strong>Qualität:</strong> Einheitliche Ergebnisse durch gemeinsame Standards</li>
     <li><strong>Compliance:</strong> {{KI_GUARDRAILS}} systematisch in Team-Reviews geprüft</li>
     <li><strong>Zusammenarbeit:</strong> Etablierte Review-Routinen</li>
@@ -610,7 +610,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
 
   <h3>Erwartete Effekte nach 90 Tagen</h3>
   <ul>
-    <li><strong>Zeitersparnis:</strong> 30–50% bei {{ZEITERSPARNIS_PRIORITAET}} im Pilotbereich</li>
+    <li><strong>Zeitersparnis:</strong> Deutliche, gemessene Entlastung bei {{ZEITERSPARNIS_PRIORITAET}} im Pilotbereich</li>
     <li><strong>Qualität:</strong> Standardisierte Prozesse, dokumentierte Qualitätskriterien</li>
     <li><strong>Governance:</strong> {{KI_GUARDRAILS}} als klare Regeln, Verantwortlichkeiten dokumentiert</li>
     <li><strong>Übertragbarkeit:</strong> Erprobte SOPs für Ausweitung Richtung {{VISION_3_JAHRE}}</li>
