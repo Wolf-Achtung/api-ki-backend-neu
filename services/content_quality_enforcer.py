@@ -3255,6 +3255,15 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # any earlier pipeline step (truncation-repair, solo-normalization, etc.)
     sections = apply_grammar_fixer(sections)
 
+    # 22.6 KIS-STYLE: Stil-Lint — sichere Auto-Fixes (Währungs-Abstand,
+    # Marken-Schreibweise, Disclaimer-Dedup) + nicht-mutierender Konsistenz-Check.
+    try:
+        from services.style_lint import apply_style_lint, lint_style
+        sections = apply_style_lint(sections)
+        lint_style(sections)  # nur Logging/Warnungen, kein Blocker
+    except Exception as _style_exc:  # pragma: no cover - defensiv
+        log.warning("[STYLE-LINT] skipped (%s)", _style_exc)
+
     # =========================================================================
     # FIX-527: Report Facts Integration
     # =========================================================================
