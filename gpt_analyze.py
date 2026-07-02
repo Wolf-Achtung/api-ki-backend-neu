@@ -117,6 +117,7 @@ import core.db as core_db
 from field_registry import fields  # added by Patch03
 from models import Analysis, Briefing, Report, User
 from services.report_renderer import render
+from services.report_system_prompt import build_report_system_prompt
 from services.text_healing import heal_all_text_blocks, heal_text_block
 from services.report_healer import heal_report_html, heal_final_html, format_payback_de, final_solo_terminology_cleanup  # FIX-A-G: Report healing pipeline
 from services.pdf_client import render_pdf_from_html, build_footer_template
@@ -7508,7 +7509,7 @@ Verwende NIEMALS:
     result = _call_llm_for_section(
         section_key=section_name,
         prompt=enhanced_prompt,
-        system_prompt="Du bist ein Senior-KI-Berater. Antworte nur mit validem HTML. KEINE Assistenten-Sprache.",
+        system_prompt=build_report_system_prompt(),
         temperature=max(0.0, llm["temperature"] - 0.1),  # Reduce temperature for stricter output
         max_tokens=llm["max_tokens"],
         model=llm["model"],
@@ -12052,7 +12053,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             result = _call_llm_for_section(
                 section_key=section_name,
                 prompt=prompt_text,
-                system_prompt="Du bist ein Senior-KI-Berater. Antworte nur mit validem HTML.",
+                system_prompt=build_report_system_prompt(),
                 temperature=llm["temperature"],
                 max_tokens=llm["max_tokens"],
                 model=llm["model"],
@@ -12252,7 +12253,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
                 expanded = _call_llm_for_section(
                     section_key=f"{section_name}_expand",
                     prompt=expand_prompt,
-                    system_prompt="Du bist ein Senior-KI-Berater. Erweitere den Inhalt mit mehr Details. Nur valides HTML.",
+                    system_prompt=build_report_system_prompt(mode="expand"),
                     temperature=llm["temperature"],
                     max_tokens=llm["max_tokens"] + 500,  # Allow more tokens for expansion
                     model=llm["model"],
@@ -12571,7 +12572,7 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
     out = _call_llm_for_section(
         section_key=section_name,
         prompt=prompts.get(section_name, ""),
-        system_prompt="Du bist ein Senior-KI-Berater. Antworte nur mit validem HTML.",
+        system_prompt=build_report_system_prompt(),
         temperature=llm["temperature"],
         max_tokens=llm["max_tokens"],
         model=llm["model"],
@@ -12961,7 +12962,7 @@ ERWEITERTER INHALT:"""
         response = _call_llm_for_section(
             section_key=section_key,
             prompt=expand_prompt,
-            system_prompt="Du bist ein professioneller Report-Generator. Erweitere den Text substanziell.",
+            system_prompt=build_report_system_prompt(mode="expand"),
             temperature=0.4,
             max_tokens=4000,
         )
@@ -14139,7 +14140,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                     _heal_expanded = _call_llm_for_section(
                         section_key=f"{_heal_logical}_post_trim_heal_{_heal_iter}",
                         prompt=_heal_expand_prompt,
-                        system_prompt="Du bist ein Senior-KI-Berater. Erweitere den Inhalt mit mehr Details. Nur valides HTML.",
+                        system_prompt=build_report_system_prompt(mode="expand"),
                         temperature=_heal_llm["temperature"],
                         max_tokens=_heal_llm["max_tokens"] + 500,
                         model=_heal_llm["model"],
