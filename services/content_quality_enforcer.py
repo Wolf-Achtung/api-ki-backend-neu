@@ -89,6 +89,12 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bPipeline\b', 'Ablauf', 'Pipeline→Ablauf'),
     (r'\bWorkflow\b', 'Arbeitsablauf', 'Workflow→Arbeitsablauf'),
     (r'\bWorkflows\b', 'Arbeitsabläufe', 'Workflows→Arbeitsabläufe'),
+    # Genus-Korrektur: die obigen Ersetzungen ("die Pipeline" → "die Ablauf")
+    # hinterlassen feminine Artikel. "Ablauf" und alle -ablauf-Komposita sind
+    # maskulin Singular, daher "die/eine" davor auf "der/ein" korrigieren.
+    # (Plural "Abläufe" und Komposita wie "Ablaufplanung" bleiben unberührt.)
+    (r'\b([Dd])ie(\s+(?:[a-zäöüß]+e\s+){0,2})([A-Za-zäöüß]*[Aa]blauf)\b', r'\1er\2\3', 'Genus: die→der vor Ablauf'),
+    (r'\b([Ee])ine(\s+(?:[a-zäöüß]+e\s+){0,2})([A-Za-zäöüß]*[Aa]blauf)\b', r'\1in\2\3', 'Genus: eine→ein vor Ablauf'),
 
     # Deployment/Rollout terms
     (r'\bDeployment\b', 'Einrichtung', 'Deployment→Einrichtung'),

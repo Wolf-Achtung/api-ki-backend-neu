@@ -970,10 +970,12 @@ async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
 
         logger.info("[Strategy %d] Rendering PDF (%d chars HTML)", briefing_id, len(html_content))
 
+        from utils.report_display_id import get_report_display_id
+        _kis = get_report_display_id(briefing_id)
         result = await asyncio.to_thread(
             render_pdf_from_html,
             html_content,
-            {"report_type": "strategy", "briefing_id": briefing_id},
+            {"report_type": "strategy", "briefing_id": briefing_id, "report_id": _kis},
         )
 
         if "error" in result:
