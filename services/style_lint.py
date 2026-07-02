@@ -216,40 +216,47 @@ def lint_style(sections_or_html) -> Dict[str, object]:
     else:
         html = sections_or_html or ""
 
-    findings: Dict[str, object] = {
-        "currency_no_space": len(_CURRENCY_NOSPACE_RE.findall(html)),
-        "decimal_comma": len(_DECIMAL_COMMA_RE.findall(html)),
-        "decimal_point_suspect": len(_DECIMAL_POINT_RE.findall(html)),
-        "pct_no_space": len(_PCT_NOSPACE_RE.findall(html)),
-        "pct_with_space": len(_PCT_SPACE_RE.findall(html)),
-        "brand_variants": sorted({m.group(0) for m in _BRAND_ANY_RE.finditer(html)}),
-        "disclaimer_repeats": _count_disclaimer_repeats(html),
-    }
+    currency_no_space = len(_CURRENCY_NOSPACE_RE.findall(html))
+    decimal_comma = len(_DECIMAL_COMMA_RE.findall(html))
+    decimal_point_suspect = len(_DECIMAL_POINT_RE.findall(html))
+    pct_no_space = len(_PCT_NOSPACE_RE.findall(html))
+    pct_with_space = len(_PCT_SPACE_RE.findall(html))
+    brand_variants: List[str] = sorted({m.group(0) for m in _BRAND_ANY_RE.finditer(html)})
+    disclaimer_repeats = _count_disclaimer_repeats(html)
 
     warnings: List[str] = []
-    if findings["currency_no_space"]:
-        warnings.append(f"{findings['currency_no_space']}x Betrag ohne Leerzeichen vor € (soll '<n> €')")
-    if findings["decimal_comma"] and findings["decimal_point_suspect"]:
+    if currency_no_space:
+        warnings.append(f"{currency_no_space}x Betrag ohne Leerzeichen vor € (soll '<n> €')")
+    if decimal_comma and decimal_point_suspect:
         warnings.append(
-            f"gemischte Dezimaltrennzeichen: {findings['decimal_comma']}x Komma, "
-            f"{findings['decimal_point_suspect']}x Punkt-Verdacht (deutsch = Komma)"
+            f"gemischte Dezimaltrennzeichen: {decimal_comma}x Komma, "
+            f"{decimal_point_suspect}x Punkt-Verdacht (deutsch = Komma)"
         )
-    if findings["pct_no_space"] and findings["pct_with_space"]:
+    if pct_no_space and pct_with_space:
         warnings.append(
-            f"uneinheitlicher %-Abstand: {findings['pct_no_space']}x '<n>%', "
-            f"{findings['pct_with_space']}x '<n> %'"
+            f"uneinheitlicher %-Abstand: {pct_no_space}x '<n>%', "
+            f"{pct_with_space}x '<n> %'"
         )
     # Marken-Varianten (ohne reine URL-Kleinschreibung / Kanon) melden.
     brand_bad = [
-        b for b in findings["brand_variants"]  # type: ignore[union-attr]
+        b for b in brand_variants
         if b != CANONICAL_BRAND and b != _LOWER_BRAND and b.lower() != "ki-sicherheit"
     ]
     if brand_bad:
         warnings.append(f"uneinheitliche Marken-Schreibweise: {brand_bad}")
-    if findings["disclaimer_repeats"]:
-        warnings.append(f"{findings['disclaimer_repeats']}x wortgleicher Disclaimer mehrfach")
+    if disclaimer_repeats:
+        warnings.append(f"{disclaimer_repeats}x wortgleicher Disclaimer mehrfach")
 
-    findings["warnings"] = warnings
+    findings: Dict[str, object] = {
+        "currency_no_space": currency_no_space,
+        "decimal_comma": decimal_comma,
+        "decimal_point_suspect": decimal_point_suspect,
+        "pct_no_space": pct_no_space,
+        "pct_with_space": pct_with_space,
+        "brand_variants": brand_variants,
+        "disclaimer_repeats": disclaimer_repeats,
+        "warnings": warnings,
+    }
     if warnings:
         log.warning("[STYLE-LINT] %d Konsistenz-Hinweis(e): %s", len(warnings), " | ".join(warnings))
     else:
