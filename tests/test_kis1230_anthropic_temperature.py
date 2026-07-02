@@ -28,11 +28,13 @@ def test_claude_5_family_gets_no_temperature():
         assert "temperature" not in _kwargs(model), model
 
 
-def test_opus_4_8_keeps_temperature():
-    # opus-4-8 akzeptiert temperature in Produktion (KIS-1229/1230 belegt) —
-    # Verhalten unverändert lassen.
+def test_opus_4_8_gets_no_temperature():
+    # KIS-1231: Der KMU-Lauf 1114 belegte, dass opus-4-8 temperature
+    # inzwischen ebenfalls mit 400 ablehnt (jede Opus-Sektion lief über
+    # den reaktiven Retry) — jetzt proaktiv weglassen.
     kw = _kwargs("claude-opus-4-8")
-    assert kw.get("temperature") == 0.3
+    assert "temperature" not in kw
+    assert "output_config" not in kw
 
 
 def test_effort_models_get_output_config_not_temperature():

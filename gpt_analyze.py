@@ -4251,6 +4251,78 @@ def _quick_wins_simple_json_to_html(raw: str) -> Optional[str]:
 
 # -------------------- Quick Wins JSON-basierte Generierung (v8.0) ----------------
 
+def _salvage_truncated_json_array(raw: str) -> Optional[str]:
+    """
+    KIS-1231: Rettet ein am Token-Limit abgeschnittenes JSON-Array.
+
+    KMU-Lauf 1114: quick_wins endete mit stop_reason=max_tokens, das JSON
+    brach mitten in einem String ab ("Unterminated string ... char 4551")
+    und FIX-499-QW warf im STRICT-Modus einen RuntimeError, der den
+    GESAMTEN Report abbrach. Statt abzubrechen: auf das letzte vollständig
+    geschlossene Top-Level-Objekt zurückschneiden und das Array schließen.
+
+    Returns:
+        Reparierter, per json.loads validierter Array-String — oder None,
+        wenn kein vollständiges Objekt gerettet werden kann.
+    """
+    import json
+
+    if not raw:
+        return None
+    s = raw.strip()
+    start = s.find("[")
+    if start == -1:
+        return None
+
+    depth = 0
+    in_str = False
+    esc = False
+    last_complete = -1  # Index NACH der schließenden '}' des letzten vollständigen Objekts
+
+    for i in range(start, len(s)):
+        ch = s[i]
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+        elif ch in "{[":
+            depth += 1
+        elif ch in "}]":
+            depth -= 1
+            if depth == 1 and ch == "}":
+                last_complete = i + 1
+            elif depth == 0 and ch == "]":
+                # Array ist vollständig — nichts zu retten, Kandidat direkt prüfen
+                candidate = s[start : i + 1]
+                try:
+                    json.loads(candidate)
+                    return candidate
+                except (json.JSONDecodeError, ValueError):
+                    return None
+
+    if last_complete <= start:
+        return None
+
+    candidate = s[start:last_complete].rstrip().rstrip(",") + "]"
+    try:
+        parsed = json.loads(candidate)
+    except (json.JSONDecodeError, ValueError):
+        return None
+    if not isinstance(parsed, list) or not parsed:
+        return None
+    log.warning(
+        "[KIS-1231-QW] Truncated-JSON-Salvage erfolgreich: %d→%d chars, %d vollständige Objekte gerettet",
+        len(s), len(candidate), len(parsed),
+    )
+    return candidate
+
+
 def _parse_quick_wins_json(raw_response: str) -> Optional[List[Dict[str, Any]]]:
     """
     Extrahiert und parst JSON aus OpenAI Response.
@@ -9475,6 +9547,40 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     base_vars.setdefault("labels", base_vars.get("DATENQUELLEN_LABELS", _FIX520_DEFAULT))
     base_vars.setdefault("data_sources", base_vars.get("DATENQUELLEN_LABELS", _FIX520_DEFAULT))
 
+    # ===== KIS-1231: AI_ACT_RISK_LEVEL für Prompt-Templates =====
+    # ki_stack_summary.md referenziert {{AI_ACT_RISK_LEVEL}}. Der kanonische
+    # Wert wird bisher erst NACH der Content-Generierung berechnet
+    # (build_ai_act_sections_optimized) — der PROMPT-CONTRACT-Check warf
+    # deshalb "Unresolved placeholders" und ki_stack_summary fiel auf den
+    # Legacy-Pfad (leerer Prompt → FIX-J7-Skip, KMU-Lauf 1114). Die
+    # Klassifikation ist deterministisch und braucht nur das Briefing —
+    # hier mit identischer Ableitung vorziehen.
+    try:
+        from services.ai_act_module import determine_risk_level as _aa_determine_risk_level
+        _aa_usecases: List[str] = []
+        _aa_uc_raw = briefing.get("ki_einsatzbereiche")
+        if isinstance(_aa_uc_raw, list):
+            _aa_usecases = [str(x) for x in _aa_uc_raw]
+        elif isinstance(_aa_uc_raw, str):
+            _aa_usecases = [x.strip() for x in _aa_uc_raw.split(",") if x.strip()]
+        if not _aa_usecases and briefing.get("hauptleistung"):
+            _aa_usecases = [str(briefing["hauptleistung"])]
+        _aa_auto: Any = briefing.get("automatisierungsgrad", 0)
+        if isinstance(_aa_auto, str):
+            try:
+                _aa_auto = int(_aa_auto.replace("%", ""))
+            except ValueError:
+                _aa_auto = 0
+        base_vars.setdefault("AI_ACT_RISK_LEVEL", _aa_determine_risk_level(
+            str(briefing.get("BRANCHE_LABEL") or briefing.get("branche") or "Allgemein"),
+            str(briefing.get("UNTERNEHMENSGROESSE_LABEL") or briefing.get("unternehmensgroesse") or ""),
+            _aa_usecases,
+            int(_aa_auto) if isinstance(_aa_auto, (int, float)) else 0,
+        ))
+    except Exception as _aa_exc:
+        log.warning("[KIS-1231] AI_ACT_RISK_LEVEL für Prompt-Vars nicht bestimmbar: %s — Default 'minimal'", _aa_exc)
+        base_vars.setdefault("AI_ACT_RISK_LEVEL", "minimal")
+
     return base_vars
 # -------------------- 🎯 NEW: Better fallbacks when GPT fails ----------------
 def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
@@ -11907,6 +12013,11 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         "roadmap_90d_decision": "roadmap_90d_decision",
         "gamechanger_decision": "gamechanger_decision",
         "ki_stack_summary": "ki_stack_summary",
+        # KIS-1231: fehlte im Mapping → Legacy-Pfad ohne Prompt → leerer
+        # LLM-Call ([FIX-J7]-Skip im KMU-Lauf 1114). Die LLM-Version ist das
+        # Sicherheitsnetz, falls die Recommendations-Engine (G32) später
+        # keine Top-3 liefert — die Engine überschreibt bei Erfolg.
+        "top_3_massnahmen": "top_3_massnahmen",
         # v7.1.1: Score Interpretation + Advisor Note
         "score_interpretation": "score_interpretation",
         "advisor_note": "advisor_note",
@@ -13235,6 +13346,20 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
     is_json_response = qw_raw_stripped.startswith('[') or qw_raw_stripped.startswith('{')
 
+    def _render_qw_from_json(_raw_json: str, _mode: str) -> Optional[str]:
+        """KIS-1231: Renderer-Kette Premium → Simple → Complex für den
+        Salvage-Pfad (gleiche Reihenfolge wie der Hauptpfad unten)."""
+        _html = render_quickwins_premium_json(_raw_json, _mode)
+        if _html:
+            return _html
+        _html = _quick_wins_simple_json_to_html(_raw_json)
+        if _html:
+            return _html
+        _list = _parse_quick_wins_json(_raw_json)
+        if _list:
+            return _build_quick_wins_html(_list, branche=qw_branche, groesse=qw_groesse)
+        return None
+
     if is_json_response:
         log.info("[FIX-499-QW] JSON response detected (starts with '[' or '{')")
 
@@ -13282,19 +13407,33 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                     len(quick_wins_list), len(qw_html), has_marker, has_rendered
                 )
             else:
-                # FIX-499: JSON was detected but couldn't be parsed - this is an error, not a fallback situation
-                log.error("[FIX-499-QW] ❌ JSON detected but parsing failed")
-                if qw_release_strict:
-                    # FIX-499 FIX 2C: In strict mode, JSON parse failure = RuntimeError (no fallback)
-                    error_msg = f"[FIX-499-QW] Quick Wins JSON detected but unparseable in STRICT MODE - blocking"
-                    log.error(error_msg)
-                    raise RuntimeError(error_msg)
-                else:
-                    # Non-strict: try to extract minimal content from JSON
-                    log.warning("[FIX-499-QW] ⚠️ Attempting JSON title extraction for non-strict fallback")
-                    qw_html = _generate_quickwins_compact_fallback(qw_raw, qw_branche, qw_groesse)
-                    if qw_html:
-                        qw_json_valid = True  # Mark as valid to prevent further fallback
+                # KIS-1231: Bevor der STRICT-Modus den ganzen Report abbricht —
+                # abgeschnittenes JSON (max_tokens-Truncation) reparieren und
+                # die Renderer-Kette erneut versuchen.
+                _qw_salvaged = _salvage_truncated_json_array(qw_raw)
+                if _qw_salvaged:
+                    salvaged_html = _render_qw_from_json(_qw_salvaged, qw_template_mode)
+                    if salvaged_html:
+                        qw_html = salvaged_html
+                        qw_json_valid = True
+                        log.warning(
+                            "[KIS-1231-QW] ✅ Quick Wins aus repariertem (truncated) JSON gerendert: len=%d",
+                            len(qw_html),
+                        )
+                if not qw_html:
+                    # FIX-499: JSON was detected but couldn't be parsed - this is an error, not a fallback situation
+                    log.error("[FIX-499-QW] ❌ JSON detected but parsing failed")
+                    if qw_release_strict:
+                        # FIX-499 FIX 2C: In strict mode, JSON parse failure = RuntimeError (no fallback)
+                        error_msg = f"[FIX-499-QW] Quick Wins JSON detected but unparseable in STRICT MODE - blocking"
+                        log.error(error_msg)
+                        raise RuntimeError(error_msg)
+                    else:
+                        # Non-strict: try to extract minimal content from JSON
+                        log.warning("[FIX-499-QW] ⚠️ Attempting JSON title extraction for non-strict fallback")
+                        qw_html = _generate_quickwins_compact_fallback(qw_raw, qw_branche, qw_groesse)
+                        if qw_html:
+                            qw_json_valid = True  # Mark as valid to prevent further fallback
 
     else:
         # Not JSON - try HTML processing
@@ -13320,9 +13459,21 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                     qw_json_valid = True
                     log.info("[FIX-502] ✅ Re-routed JSON rendered: %d cards", len(quick_wins_list))
                 else:
-                    log.error("[FIX-502] ❌ Re-routed JSON parse failed")
-                    if qw_release_strict:
-                        raise RuntimeError("[FIX-502] JSON detected in HTML path but unparseable - blocking in strict mode")
+                    # KIS-1231: auch im Re-Route-Pfad Salvage vor STRICT-Abbruch
+                    _qw_salvaged = _salvage_truncated_json_array(qw_raw)
+                    if _qw_salvaged:
+                        salvaged_html = _render_qw_from_json(_qw_salvaged, qw_template_mode_reroute)
+                        if salvaged_html:
+                            qw_html = salvaged_html
+                            qw_json_valid = True
+                            log.warning(
+                                "[KIS-1231-QW] ✅ Re-Route: Quick Wins aus repariertem JSON gerendert: len=%d",
+                                len(qw_html),
+                            )
+                    if not qw_html:
+                        log.error("[FIX-502] ❌ Re-routed JSON parse failed")
+                        if qw_release_strict:
+                            raise RuntimeError("[FIX-502] JSON detected in HTML path but unparseable - blocking in strict mode")
         elif qw_raw and "<" in qw_raw:
             # Content looks like HTML (not JSON), process directly
             if _needs_repair(qw_raw):
