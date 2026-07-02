@@ -19200,12 +19200,33 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             _fp_prose = _re_kis1104.sub(
                 r'<table[^>]*>.*?</table>', '', _fp_html, flags=_re_kis1104.DOTALL,
             )
-            # Strip orphaned funding headings left over from table removal
+            # KIS-1233: Reste der FRÜHEREN Kern-Matrix-Injektion vollständig
+            # entfernen — vorher blieb nach dem Tabellen-Strip der
+            # funding-matrix-Wrapper samt Hinweis-Card als Waise zurück und
+            # erzeugte die doppelte "Kernprogramme…"-Überschrift direkt nach
+            # der Tabelle (Status-Report S. 22, Läufe 1232 + 1233).
             _fp_prose = _re_kis1104.sub(
-                r'<h3[^>]*>[^<]*(?:Kernprogramme|Förder(?:programm|mittel)|Programmüberblick)[^<]*</h3>\s*',
-                '', _fp_prose, flags=_re_kis1104.IGNORECASE,
+                r'<div class="card-nobreak">\s*<p class="small muted"[^>]*>\s*<strong>Hinweis:</strong>.*?</p>\s*</div>',
+                '', _fp_prose, flags=_re_kis1104.DOTALL,
+            )
+            _fp_prose = _re_kis1104.sub(
+                r'<div class="funding-matrix">\s*</div>', '', _fp_prose,
+            )
+            # Strip orphaned funding headings left over from table removal
+            # (KIS-1233: nested-Tag-tolerant — "<h3><strong>Förder…" entging
+            # der alten [^<]*-Variante)
+            _fp_prose = _re_kis1104.sub(
+                r'<h3[^>]*>(?:(?!</h3>).)*?(?:Kernprogramme|Förder(?:programm|mittel)|Programmüberblick)(?:(?!</h3>).)*?</h3>\s*',
+                '', _fp_prose, flags=_re_kis1104.IGNORECASE | _re_kis1104.DOTALL,
             )
             _fp_prose = _fp_prose.strip()
+            # KIS-1233: Diagnose — der 1233-Lauf zeigte einen verstümmelten
+            # Prose-Anfang ("plante API-Integration…"); Kopf loggen, um den
+            # Verursacher im nächsten Lauf zu identifizieren.
+            log.info(
+                "[FIX-KIS-1104][DIAG] fp_prose head: %.160s",
+                _re_kis1104.sub(r'<[^>]+>', ' ', _fp_prose[:400]).strip(),
+            )
             _heading = '<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n'
             if _fp_prose:
                 sections["FOERDERPOTENZIAL_HTML"] = (
@@ -19213,6 +19234,16 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 )
             else:
                 sections["FOERDERPOTENZIAL_HTML"] = f"{_heading}{_core_html}"
+            # KIS-1233: Falls trotzdem noch ein Duplikat der Überschrift im
+            # Bestand steckt: alle weiteren Vorkommen nach dem ersten tilgen.
+            _first = sections["FOERDERPOTENZIAL_HTML"].find(_heading.strip())
+            if _first != -1:
+                _head_pat = _re_kis1104.escape(_heading.strip())
+                _rest = sections["FOERDERPOTENZIAL_HTML"][_first + len(_heading.strip()):]
+                _rest = _re_kis1104.sub(_head_pat + r'\s*', '', _rest)
+                sections["FOERDERPOTENZIAL_HTML"] = (
+                    sections["FOERDERPOTENZIAL_HTML"][:_first + len(_heading.strip())] + _rest
+                )
             # --- FOERDERPROGRAMME_HTML + FUNDING_HTML ---
             sections["FOERDERPROGRAMME_HTML"] = (
                 f"<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"

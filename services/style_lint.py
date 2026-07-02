@@ -124,14 +124,23 @@ _PUNCT_ONLY_NODE_RE = re.compile(
     r"<(p|li)\b[^>]*>\s*(?:&nbsp;|\s|[.·,;:–—-])+\s*</\1>",
     re.IGNORECASE,
 )
+# KIS-1233: derselbe Waisen-Punkt kann auch als NACKTER Textknoten zwischen
+# Block-Elementen stehen ("</ul> . <h4>", AI-Act-Kapitel S. 20) — der
+# <p>-Fall aus KIS-1232 deckte das nicht ab.
+_PUNCT_ONLY_TEXTNODE_RE = re.compile(
+    r"(</(?:ul|ol|table|div|p)>)\s*[.·]\s*(?=<)",
+    re.IGNORECASE,
+)
 
 
 def remove_punctuation_only_nodes(html: str) -> Tuple[str, int]:
-    """Löscht <p>/<li>, deren Inhalt nur aus Satzzeichen/Whitespace besteht."""
+    """Löscht <p>/<li>, deren Inhalt nur aus Satzzeichen/Whitespace besteht,
+    sowie nackte Einzel-Satzzeichen zwischen Block-Elementen."""
     if not html:
         return html, 0
     result, count = _PUNCT_ONLY_NODE_RE.subn("", html)
-    return result, count
+    result, count2 = _PUNCT_ONLY_TEXTNODE_RE.subn(r"\1", result)
+    return result, count + count2
 
 
 # --------------------------------------------------------------------------- #
