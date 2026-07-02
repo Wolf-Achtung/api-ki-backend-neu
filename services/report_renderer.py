@@ -1756,9 +1756,12 @@ def render(briefing_obj: Any,
             # The value PRECEDES the label (not after), and uses Python :, format (commas)
             # Match: any €-amount in a div immediately before "Netto-Ersparnis"
             _netto_ersparnis_comma = f"{int(_netto_ersparnis):,}".replace(",", ".")  # German thousands separator
+            # KIS-1233: geschütztes Leerzeichen vor € beibehalten — dieser
+            # Rewrite lief NACH der Currency-Normalisierung und schrieb
+            # "58.800€" ohne Abstand zurück (Status-Report S. 6).
             html = re.sub(
                 r'(<div[^>]*>)\s*([\d.,]+)\s*€\s*(</div>\s*<div[^>]*>\s*Netto-Ersparnis)',
-                rf'\g<1>{_netto_ersparnis_comma}€\3',
+                rf'\g<1>{_netto_ersparnis_comma} €\3',
                 html
             )
 

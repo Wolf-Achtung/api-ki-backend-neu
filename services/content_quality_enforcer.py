@@ -3225,6 +3225,11 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # NOTE: A final pass runs at the very end to catch any terms introduced by later steps
     if company_size:
         sections = apply_solo_language_normalizer(sections, company_size)
+        # KIS-1233: Zweiter Grammar-Pass NACH dem Lexikon — die
+        # Stack→Systemlandschaft-Ersetzung erzeugt Genus-Brüche
+        # ("Ihren bestehenden KI-Systemlandschaft", Sofort-Start S. 6),
+        # die der erste Pass (Schritt 6, VOR dem Lexikon) nie sieht.
+        sections = apply_grammar_fixer(sections)
 
     # 12. Text Glitch Fixer (Fix-Batch F) - Fix known word corruptions and zero displays
     sections = apply_text_glitch_fixer(sections)

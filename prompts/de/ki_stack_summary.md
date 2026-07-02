@@ -64,8 +64,13 @@ INHALTLICHE STRUKTUR (5 feste Bausteine)
 
 2) Top-2 Förderprogramme (aus Funding Alignment)
    - Zwei Programme, die für das vorliegende Profil (Größe + Branche + Vorhaben) besonders passend sind.
-   - Pro Programm:
-     - Name
+   - NUR Programme verwenden, die im bereitgestellten Kontext (Funding-Analyse)
+     tatsächlich vorkommen — KEINE Programme aus eigenem Wissen ergänzen und
+     keine ausländischen Programme für deutsche Unternehmen. Fehlen Programme
+     im Kontext: diesen Baustein weglassen.
+   - Pro Programm ZWINGEND:
+     - Name (die pair-card-name-Zeile MUSS gefüllt sein — niemals eine Karte
+       ohne Programmnamen ausgeben)
      - geschätzte Förderquote ODER klarer Relevanzindikator
      - Kurzsatz zum Mehrwert im Kontext der geplanten KI-Einführung.
 

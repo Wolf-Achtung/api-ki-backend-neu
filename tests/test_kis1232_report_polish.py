@@ -288,3 +288,65 @@ class TestTemplateContract:
 
     def test_ai_act_display_uses_german_label(self, template_html):
         assert "AI_ACT_RISK_LEVEL_DE" in template_html
+
+
+# =========================================================================
+# 10. KIS-1233: Nachzügler aus dem Validierungslauf
+# =========================================================================
+
+class TestKis1233Followups:
+
+    def test_bare_dot_after_list_removed(self):
+        """Der Waisen-Punkt stand als nackter Textknoten nach </ul>
+        (AI-Act-Kapitel S. 20) — nicht als <p>.</p>."""
+        out, n = remove_punctuation_only_nodes("<ul><li>Lücke</li></ul>\n.\n<h4>Nächste Schritte</h4>")
+        assert n == 1
+        assert ">\n<h4>" in out or "</ul><h4>" in out.replace("\n", "")
+        assert "." not in out.split("</ul>")[1].split("<h4>")[0]
+
+    def test_sentence_period_before_tag_survives(self):
+        html = "<p>Ein echter Satz endet hier.</p><h4>Weiter</h4>"
+        out, n = remove_punctuation_only_nodes(html)
+        assert out == html
+
+    def test_grammar_pass_after_lexicon(self):
+        """Das Lexikon (Stack→Systemlandschaft) läuft NACH dem ersten
+        Grammar-Pass — der zweite Pass muss den Genus-Bruch fangen."""
+        from services.content_quality_enforcer import apply_all_quality_enforcers
+        sections = {"SOFORT_START_HTML": "<p>Analysieren Sie Ihren bestehenden KI-Stack auf den größten Engpass.</p>"}
+        out = apply_all_quality_enforcers(dict(sections), company_size="kmu")
+        text = out["SOFORT_START_HTML"]
+        assert "Ihren bestehenden KI-Systemlandschaft" not in text
+        # entweder blieb Stack (kein Lexikon-Hit) oder Genus wurde repariert
+        if "Systemlandschaft" in text:
+            assert "Ihre bestehende KI-Systemlandschaft" in text
+
+    def test_funding_reinject_is_idempotent(self):
+        """Zweifache Anwendung der 1104-Strips darf keine Waisen-Wrapper,
+        Doppel-Hinweise oder Doppel-Überschriften hinterlassen."""
+        import re as _re
+        from services.extra_sections import build_core_funding_table_html
+        core = build_core_funding_table_html({
+            "BRANCHE_LABEL": "Bildung",
+            "BUNDESLAND_LABEL": "Bayern",
+            "UNTERNEHMENSGROESSE_LABEL": "11–100 (kmu)",
+        })
+        heading = '<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n'
+        prose = "<h4>Einordnung</h4><p>Die geplante API-Integration trägt sich auch ohne Zuschüsse:</p><ul><li>A</li></ul>"
+        assembled = f"{heading}{core}\n\n{prose}"
+        # Simuliere die (neuen) 1104-Strips auf dem BEREITS assemblierten HTML
+        fp = _re.sub(r'<table[^>]*>.*?</table>', '', assembled, flags=_re.DOTALL)
+        fp = _re.sub(
+            r'<div class="card-nobreak">\s*<p class="small muted"[^>]*>\s*<strong>Hinweis:</strong>.*?</p>\s*</div>',
+            '', fp, flags=_re.DOTALL,
+        )
+        fp = _re.sub(r'<div class="funding-matrix">\s*</div>', '', fp)
+        fp = _re.sub(
+            r'<h3[^>]*>(?:(?!</h3>).)*?(?:Kernprogramme|Förder(?:programm|mittel)|Programmüberblick)(?:(?!</h3>).)*?</h3>\s*',
+            '', fp, flags=_re.IGNORECASE | _re.DOTALL,
+        )
+        fp = fp.strip()
+        rebuilt = f"{heading}{core}\n\n{fp}"
+        assert rebuilt.count("Kernprogramme für Ihr Profil") == 1
+        assert rebuilt.count("<strong>Hinweis:</strong>") == 1
+        assert "Die geplante API-Integration" in rebuilt
