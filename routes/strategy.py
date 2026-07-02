@@ -527,9 +527,11 @@ async def get_strategy_pdf(
 
     # Render PDF via Puppeteer service
     from services.pdf_client import render_pdf_from_html
+    from utils.report_display_id import get_report_display_id
     result = render_pdf_from_html(
         html=html_content,
-        meta={"report_type": "strategy", "briefing_id": briefing_id},
+        meta={"report_type": "strategy", "briefing_id": briefing_id,
+              "report_id": get_report_display_id(briefing_id)},
     )
 
     if "error" in result:

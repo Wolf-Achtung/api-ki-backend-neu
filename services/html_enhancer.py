@@ -30,7 +30,7 @@ _S_TIMELINE = "position:relative;padding-left:32px;margin:24px 0"
 _S_TIMELINE_ITEM = "position:relative;padding:12px 0 20px;border-left:2px solid #3b82f6;padding-left:24px;margin-left:8px"
 _S_TIMELINE_PHASE = "font-size:8pt;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#3b82f6"
 _S_TIMELINE_TITLE = "font-size:13pt;font-weight:700;color:#1E3A5F;margin:4px 0"
-_S_TIMELINE_DESC = "font-size:9.5pt;color:#374151;line-height:1.6"
+_S_TIMELINE_DESC = "font-size:10.5pt;color:#374151;line-height:1.6"
 
 _S_SCENARIO_GRID = "display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:24px 0"
 _SCENARIO_COLORS = {
@@ -39,8 +39,8 @@ _SCENARIO_COLORS = {
     "Optimistisch": ("#22c55e", "#f0fdf4"),  # green
 }
 
-_S_TABLE = "width:100%;border-collapse:collapse;border-radius:8px;overflow:hidden;margin:16px 0;font-size:9pt"
-_S_TH = "background:#1E3A5F;color:#fff;padding:10px 12px;font-size:8pt;text-transform:uppercase;letter-spacing:0.05em;text-align:left"
+_S_TABLE = "width:100%;border-collapse:collapse;border-radius:8px;overflow:hidden;margin:16px 0;font-size:10pt"
+_S_TH = "background:#1E3A5F;color:#fff;padding:10px 12px;font-size:9pt;text-transform:uppercase;letter-spacing:0.05em;text-align:left"
 _S_TD = "padding:8px 12px;border-bottom:1px solid #E5E7EB;vertical-align:top"
 
 _S_SOURCES = "font-size:8pt;color:#9CA3AF;border-top:1px solid #E5E7EB;padding-top:12px;margin-top:24px"
@@ -238,7 +238,7 @@ def _scenario_card_html(label: str, main_value: str, desc: str) -> str:
         f'<div class="{cls}" style="{style}">'
         f'<div class="scenario-label" style="font-size:9pt;font-weight:600;text-transform:uppercase;color:{color};letter-spacing:0.05em">{label}</div>'
         f'<div class="scenario-value" style="font-size:22pt;font-weight:700;color:{color};margin:8px 0">{main_value}</div>'
-        + (f'<div class="scenario-desc" style="font-size:9pt;color:#6B7280;line-height:1.5;text-align:left;margin-top:8px">{desc}</div>' if desc else '')
+        + (f'<div class="scenario-desc" style="font-size:10pt;color:#6B7280;line-height:1.5;text-align:left;margin-top:8px">{desc}</div>' if desc else '')
         + '</div>'
     )
 

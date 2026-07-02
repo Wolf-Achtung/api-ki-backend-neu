@@ -21703,8 +21703,9 @@ def _auto_trigger_potenzialanalyse(briefing_id: int, run_id: str) -> None:
             pdf_options = {
                 "format": "A4",
                 "printBackground": True,
-                "displayHeaderFooter": False,
-                "margin": {"top": "12mm", "right": "12mm", "bottom": "12mm", "left": "12mm"},
+                # displayHeaderFooter left unset -> render_pdf_from_html adds a
+                # default page-number footer (KPA had none before).
+                "margin": {"top": "12mm", "right": "12mm", "bottom": "20mm", "left": "12mm"},
             }
             pdf_result = render_pdf_from_html(
                 html=html,
