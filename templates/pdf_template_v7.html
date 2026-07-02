@@ -380,11 +380,13 @@ tr:last-child td { border-bottom: none; }
     justify-content: center;
     align-items: center;
     text-align: center;
-    height: 100vh;
+    /* min-height statt fixed height + kein overflow:hidden: bei minimalem
+       Mehr-Inhalt wurde sonst durch justify-content:center oben (Score-Ring)
+       UND unten (Trust-Badges) abgeschnitten. min-height lässt das Cover
+       mitwachsen, TOC startet weiterhin auf der Folgeseite (keine Geist-Seite,
+       da kein forcierter page-break). */
+    min-height: 100vh;
     padding: var(--sp-2xl) var(--sp-xl);
-    overflow: hidden;
-    /* v7.1: page-break-after entfernt — 100vh füllt Seite 1 komplett,
-       TOC startet natürlich auf Seite 2 ohne Geist-Seite */
 }
 .cover-accent {
     width: 60px;
