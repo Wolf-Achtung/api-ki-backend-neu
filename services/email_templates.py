@@ -2,11 +2,50 @@
 from __future__ import annotations
 """E‑Mail‑Templates (HTML) für den Report-Versand (UTF‑8, mobil‑tauglich)."""
 import logging
+import re
 from html import escape
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
+
+
+# Values that are enum tokens rather than free text get turned into readable
+# German for the briefing dossier (e.g. "2000_10000" -> "2.000–10.000",
+# "ueber_10" -> "über 10", "keine_angabe" -> "keine Angabe"). Free text (with
+# spaces, capitals or punctuation) is returned unchanged.
+_ENUM_VALUE_OVERRIDES = {
+    "keine_angabe": "keine Angabe",
+    "sehr_hoch": "sehr hoch",
+    "eher_hoch": "eher hoch",
+    "eher_niedrig": "eher niedrig",
+    "sehr_niedrig": "sehr niedrig",
+    "ja": "Ja",
+    "nein": "Nein",
+}
+
+
+def _prettify_enum_value(val: Any) -> str:
+    """Turn an enum-looking token into readable German; leave free text as-is."""
+    s = str(val).strip()
+    # Only touch pure enum tokens: lowercase, no spaces, [a-z0-9_] only.
+    if not s or s != s.lower() or not re.fullmatch(r"[a-z0-9_]+", s):
+        return str(val)
+    if s in _ENUM_VALUE_OVERRIDES:
+        return _ENUM_VALUE_OVERRIDES[s]
+    # Numeric range like "2000_10000" -> "2.000–10.000".
+    m = re.fullmatch(r"(\d+)_(\d+)", s)
+    if m:
+        a = f"{int(m.group(1)):,}".replace(",", ".")
+        b = f"{int(m.group(2)):,}".replace(",", ".")
+        return f"{a}–{b}"
+    parts = ["über" if p == "ueber" else p for p in s.split("_")]
+    return " ".join(parts)
+
+
+def _prettify_key_label(key: str) -> str:
+    """Turn a raw snake_case answer key into a readable label."""
+    return key.replace("_", " ").strip().capitalize()
 
 
 def generate_feedback_link(email: str, briefing_id: int = None) -> str:
@@ -729,7 +768,8 @@ def _render_pdf_questionnaire_tables(
         val = answers.get(key)
         if val is None or val == "" or val == []:
             continue
-        display = escape(", ".join(str(v) for v in val)) if isinstance(val, list) else escape(str(val))
+        display = (escape(", ".join(_prettify_enum_value(v) for v in val)) if isinstance(val, list)
+                   else escape(_prettify_enum_value(val)))
         r1_rows.append(f"  <tr><td>{escape(label)}</td><td>{display}</td></tr>")
 
     # Also include any answer keys not in _R1_LABELS (catch-all)
@@ -746,8 +786,9 @@ def _render_pdf_questionnaire_tables(
             continue
         if key.startswith("_"):
             continue
-        display = escape(", ".join(str(v) for v in val)) if isinstance(val, list) else escape(str(val))
-        r1_rows.append(f"  <tr><td>{escape(key)}</td><td>{display}</td></tr>")
+        display = (escape(", ".join(_prettify_enum_value(v) for v in val)) if isinstance(val, list)
+                   else escape(_prettify_enum_value(val)))
+        r1_rows.append(f"  <tr><td>{escape(_prettify_key_label(key))}</td><td>{display}</td></tr>")
 
     if r1_rows:
         html_parts.append('<h2 style="page-break-before:always">Fragebogen 1 \u2014 KI-Readiness</h2>\n')
@@ -770,7 +811,8 @@ def _render_pdf_questionnaire_tables(
             if val is None or val == "" or val == []:
                 continue
             label = _STRATEGY_LABELS.get(key, key)
-            display = escape(", ".join(str(v) for v in val)) if isinstance(val, list) else escape(str(val))
+            display = (escape(", ".join(_prettify_enum_value(v) for v in val)) if isinstance(val, list)
+                   else escape(_prettify_enum_value(val)))
             s_rows.append(f"  <tr><td>{escape(label)}</td><td>{display}</td></tr>")
         # Catch-all for extra strategy keys
         for key, val in strategy_answers.items():
@@ -779,7 +821,8 @@ def _render_pdf_questionnaire_tables(
             if val is None or val == "" or val == []:
                 continue
             label = _STRATEGY_LABELS.get(key, key)
-            display = escape(", ".join(str(v) for v in val)) if isinstance(val, list) else escape(str(val))
+            display = (escape(", ".join(_prettify_enum_value(v) for v in val)) if isinstance(val, list)
+                   else escape(_prettify_enum_value(val)))
             s_rows.append(f"  <tr><td>{escape(label)}</td><td>{display}</td></tr>")
 
         if s_rows:
@@ -821,9 +864,17 @@ def render_briefing_pdf_html(
             return str(val) if val else _dash
 
     # --- Extract data ---
-    branche = answers.get("branche", "") or ""
-    segment = answers.get("unternehmensgroesse", "") or ""
-    bundesland = answers.get("bundesland", "") or ""
+    # Resolve enum codes (branche/size/region) to readable labels via the central
+    # normalizer. Done on a local copy so the raw `answers` still flow into the
+    # questionnaire dump below (avoids duplicate *_LABEL rows there).
+    try:
+        from services.answers_normalizer import normalize_answers
+        _norm = normalize_answers(answers)
+    except Exception:  # pragma: no cover - defensive: never break the briefing
+        _norm = answers
+    branche = _norm.get("BRANCHE_LABEL") or answers.get("branche", "") or ""
+    segment = _norm.get("UNTERNEHMENSGROESSE_LABEL") or answers.get("unternehmensgroesse", "") or ""
+    bundesland = _norm.get("BUNDESLAND_LABEL") or answers.get("bundesland", "") or ""
     country = answers.get("country", "DE") or "DE"
     firmenname = answers.get("unternehmen_name", "") or ""
 

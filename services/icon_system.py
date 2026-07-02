@@ -3,6 +3,8 @@ KI-Sicherheit.jetzt Custom Icon System
 Inline-SVG Icons für PDF-Reports - Puppeteer-optimiert
 """
 
+import re
+
 # Brand Color Palette
 COLORS = {
     "blue-dark": "#1e3a5f",
@@ -350,6 +352,19 @@ def replace_emojis_with_icons(text: str, size: int = 18) -> str:
     """
     if not text:
         return text
+
+    # Decode numeric HTML entities in the emoji/symbol code ranges first, so a
+    # template that wrote e.g. "&#x1F4CB;" instead of the literal "📋" still gets
+    # replaced by an SVG icon (otherwise Chromium has no emoji font -> tofu box).
+    # Only symbol/emoji codepoints are decoded; ASCII/latin entities are untouched.
+    def _decode_emoji_entity(m):
+        raw = m.group(1)
+        cp = int(raw[1:], 16) if raw[0] in ("x", "X") else int(raw)
+        if cp >= 0x1F000 or 0x2190 <= cp <= 0x2BFF:
+            return chr(cp)
+        return m.group(0)
+
+    text = re.sub(r'&#(x[0-9A-Fa-f]+|\d+);', _decode_emoji_entity, text)
 
     for emoji, icon_name in EMOJI_MAP.items():
         if emoji in text:

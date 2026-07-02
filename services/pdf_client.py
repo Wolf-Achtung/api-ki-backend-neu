@@ -417,7 +417,30 @@ def render_pdf_from_html(
     # Build payload with optional PDF options
     payload: Dict[str, Any] = {"html": html, "meta": meta}
 
-    # Add PDF options if provided (for Puppeteer page.pdf() settings)
+    # Default pagination: unless the caller explicitly configured the header/footer,
+    # add a page-number footer so ALL report types (status report, strategy report,
+    # potential analysis, briefing) are consistently paginated. Callers that set
+    # displayHeaderFooter themselves (e.g. the status report with its own footer)
+    # are left untouched.
+    pdf_options = dict(pdf_options) if pdf_options else {}
+    if "displayHeaderFooter" not in pdf_options:
+        pdf_options["displayHeaderFooter"] = True
+        pdf_options.setdefault("headerTemplate", "<div></div>")
+        pdf_options.setdefault(
+            "footerTemplate",
+            build_footer_template(
+                report_id=meta.get("report_id", "") or meta.get("display_id", ""),
+                report_date=meta.get("report_date", ""),
+            ),
+        )
+        _margin = dict(pdf_options.get("margin") or {})
+        _margin.setdefault("top", "12mm")
+        _margin.setdefault("right", "12mm")
+        _margin.setdefault("bottom", "20mm")  # room for the footer
+        _margin.setdefault("left", "12mm")
+        pdf_options["margin"] = _margin
+
+    # Add PDF options (for Puppeteer page.pdf() settings)
     if pdf_options:
         payload["pdf_options"] = pdf_options
         log.debug("[PDF] Using custom PDF options: %s", list(pdf_options.keys()))

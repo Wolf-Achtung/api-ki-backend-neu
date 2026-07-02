@@ -49,6 +49,11 @@ RELEASE_STRICT_MODE = os.getenv("RELEASE_STRICT_MODE", "0") in ("1", "true", "Tr
 # Maximum repair attempts before giving up
 MAX_REPAIR_ATTEMPTS = int(os.getenv("HTML_CONTRACT_MAX_REPAIRS", "1"))
 
+# Escalate the truncated-sentence check from warning to critical (blocks output
+# in STRICT_MODE). Default: warning only, to avoid false positives blocking
+# legitimate reports until the heuristic is tuned against the live corpus.
+TRUNCATION_CRITICAL = os.getenv("HTML_CONTRACT_TRUNCATION_CRITICAL", "0") in ("1", "true", "True")
+
 # Required sections that must not be empty
 REQUIRED_SECTIONS: Set[str] = {
     "executive_summary",
@@ -81,6 +86,7 @@ class ViolationType(Enum):
     QUICKWINS_NO_MARKER = "quickwins_no_marker"
     QUICKWINS_EMPTY = "quick_wins_empty"  # FIX-513: Non-Empty Guard
     CHAT_ARTIFACT = "chat_artifact"  # FIX-517C: Questionnaire/chat leaks
+    TRUNCATED_SENTENCE = "truncated_sentence"  # Section ends mid-sentence
 
 
 @dataclass
@@ -424,6 +430,70 @@ def _check_empty_sections(html: str, sections: Optional[List[str]] = None) -> Li
     return violations
 
 
+_TAG_STRIP_PATTERN = re.compile(r'<[^>]+>')
+_ENTITY_PATTERN = re.compile(r'&[a-zA-Z#0-9]+;')
+_SENTENCE_TAIL_SPLIT = re.compile(r'[.!?…]\s')
+# Characters that legitimately end a section's visible text (no truncation).
+_SENTENCE_ENDERS = set('.!?…:;)]}»"\'”’*%€$0123456789')
+
+
+def _visible_text(html_fragment: str) -> str:
+    """Return the collapsed, tag-free visible text of an HTML fragment."""
+    txt = re.sub(r'<!--.*?-->', '', html_fragment, flags=re.DOTALL)
+    txt = re.sub(r'<(script|style)\b.*?</\1>', ' ', txt, flags=re.DOTALL | re.IGNORECASE)
+    txt = _TAG_STRIP_PATTERN.sub(' ', txt)
+    txt = _ENTITY_PATTERN.sub(' ', txt)
+    return re.sub(r'\s+', ' ', txt).strip()
+
+
+def _looks_truncated(text: str) -> bool:
+    """
+    Heuristic: does the visible text end mid-sentence? Conservative to avoid
+    false positives on headings, labels or list markers.
+    """
+    if not text:
+        return False
+    if text[-1] in _SENTENCE_ENDERS:
+        return False
+    # The trailing fragment after the last sentence break.
+    tail = _SENTENCE_TAIL_SPLIT.split(text)[-1].strip()
+    # Short tails are labels/headings, not truncated sentences.
+    if len(tail) < 25:
+        return False
+    # A single word without spaces is a label, not a sentence.
+    if ' ' not in tail:
+        return False
+    return True
+
+
+def _check_truncated_sentences(html: str, sections: Optional[List[str]] = None) -> List[Violation]:
+    """
+    Detect sections whose visible text ends mid-sentence (e.g. an LLM/render
+    truncation like '...nach dem Schema Input' with no closing punctuation).
+    Warning by default; critical when HTML_CONTRACT_TRUNCATION_CRITICAL=1.
+    """
+    violations: List[Violation] = []
+    for match in _SECTION_PATTERN.finditer(html):
+        section_id = match.group(1)
+        content = match.group(2)
+        text = _visible_text(content)
+        # Very short sections are covered by the empty-section check.
+        if len(text) < 40:
+            continue
+        if _looks_truncated(text):
+            violations.append(Violation(
+                type=ViolationType.TRUNCATED_SENTENCE,
+                message=(
+                    f"Section '{section_id}' appears to end mid-sentence: "
+                    f"'...{text[-60:]}'"
+                ),
+                section=section_id,
+                context=content[-200:],
+                critical=TRUNCATION_CRITICAL,
+            ))
+    return violations
+
+
 def _check_html_sanity(html: str) -> List[Violation]:
     """Basic HTML sanity checks."""
     violations = []
@@ -677,6 +747,7 @@ def html_contract_validate(
     all_violations.extend(_check_code_fences(html))
     all_violations.extend(_check_quickwins_markers(html))
     all_violations.extend(_check_empty_sections(html, sections))
+    all_violations.extend(_check_truncated_sentences(html, sections))
     all_violations.extend(_check_html_sanity(html))
     all_violations.extend(_check_raw_json_artifacts(html))
     all_violations.extend(_check_chat_artifacts(html))  # FIX-517C
