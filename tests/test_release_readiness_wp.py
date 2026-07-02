@@ -324,9 +324,9 @@ class TestWP4CompactPayloadGuard:
         """Different company sizes should have different page limits."""
         from services.solo_compact_engine import MAX_PAGES_BY_SIZE
 
-        assert MAX_PAGES_BY_SIZE["solo"] == 16
-        assert MAX_PAGES_BY_SIZE["team"] == 70   # FIX-WP4: raised from 55
-        assert MAX_PAGES_BY_SIZE["kmu"] == 45    # B7: raised to 35 to preserve Monetarisierung + Skillplan
+        assert MAX_PAGES_BY_SIZE["solo"] == 50   # KIS-B: aligned to allow longer, less-trimmed reports
+        assert MAX_PAGES_BY_SIZE["team"] == 75   # KIS-B: raised from 70 for consistency
+        assert MAX_PAGES_BY_SIZE["kmu"] == 60    # KIS-B: raised from 45 for consistency
 
     def test_estimate_page_count(self):
         """Page count estimation should be reasonable."""

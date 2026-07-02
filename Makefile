@@ -113,10 +113,10 @@ ci\:reports: $(ARTIFACTS_DIR)
 		cat "$$f" | python -c "import sys,json; d=json.load(sys.stdin); print(f\"  Status: {d.get('final_status','?')}\"); print(f\"  Briefing: {d.get('briefing_id','?')}\")"; \
 	done
 
-# Validate Solo report page count (must be 12-16)
+# Validate Solo report page count (must be 12-50)
 validate\:solo:
 	@echo "Validating Solo-Compact report constraints..."
-	@python -c "from services.solo_compact_engine import SoloCompactConfig; c=SoloCompactConfig(); print(f'Solo pages: {c.min_pages}-{c.max_pages}'); assert c.min_pages==12 and c.max_pages==16, 'Page count mismatch'"
+	@python -c "from services.solo_compact_engine import SoloCompactConfig; c=SoloCompactConfig(); print(f'Solo pages: {c.min_pages}-{c.max_pages}'); assert c.min_pages==12 and c.max_pages==50, 'Page count mismatch'"
 	@echo "Validation: OK"
 
 # Clean artifacts

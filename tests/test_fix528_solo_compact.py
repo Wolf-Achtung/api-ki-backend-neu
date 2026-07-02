@@ -35,7 +35,7 @@ class TestSoloCompactConfig:
 
         assert config.report_type == ReportType.SOLO_COMPACT
         assert config.min_pages == 12
-        assert config.max_pages == 16
+        assert config.max_pages == 50  # KIS-B: was 16 — aligned with MAX_PAGES_BY_SIZE["solo"]
         assert config.strict_page_gate is True
         assert config.validator_min_grade == "B"
 
@@ -184,7 +184,7 @@ class TestPageCountValidation:
         assert hasattr(result, 'passed')
         assert hasattr(result, 'estimated_pages')
         assert result.min_pages == 12
-        assert result.max_pages == 16
+        assert result.max_pages == 50  # KIS-B: was 16
 
     def test_validate_page_count_too_low(self):
         """Test validation fails for too few pages."""
@@ -303,5 +303,5 @@ class TestProcessForSoloCompact:
         processed, config = process_for_solo_compact(sections)
 
         assert config.min_pages == 12
-        assert config.max_pages == 16
+        assert config.max_pages == 50  # KIS-B: was 16
         assert config.report_type == ReportType.SOLO_COMPACT

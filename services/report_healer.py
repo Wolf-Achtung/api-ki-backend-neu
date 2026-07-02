@@ -3038,7 +3038,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "business_case": 4000,
         "foerderpotenzial": 5000,
 
-        "_default": 1500,  # FIX-B36a: was 1000
+        "_default": 4000,  # KIS-B: was 1500 — less aggressive trimming (fewer cut sentences)
     },
     "team": {
         # FIX-B36a: Proportional budget update (75% of KMU, floor 2500)
@@ -3153,7 +3153,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "business_case": 5500,
         "foerderpotenzial": 7000,
 
-        "_default": 2000,  # FIX-B36a: was 1500
+        "_default": 5000,  # KIS-B: was 2000 — less aggressive trimming (fewer cut sentences)
     },
     "kmu": {
         # FIX-B36a: Budget increases based on B35g Railway log analysis
@@ -3278,7 +3278,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "business_case": 8000,
         "foerderpotenzial": 16000,  # FIX-A: was 10000, matches FOERDERPOTENZIAL_HTML
 
-        "_default": 3000,  # FIX-B36a: was 2000, safer default for unmapped sections
+        "_default": 6000,  # KIS-B: was 3000 — less aggressive trimming (fewer cut sentences)
     },
 }
 

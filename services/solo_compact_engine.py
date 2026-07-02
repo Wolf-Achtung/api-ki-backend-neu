@@ -258,7 +258,7 @@ class SoloCompactConfig:
 
     report_type: ReportType = ReportType.SOLO_COMPACT
     min_pages: int = 12
-    max_pages: int = 16
+    max_pages: int = 50  # KIS-B: was 16 — aligned with MAX_PAGES_BY_SIZE["solo"]
     sections: List[str] = field(default_factory=lambda: SOLO_COMPACT_SECTIONS.copy())
     excluded_sections: List[str] = field(default_factory=lambda: SOLO_COMPACT_EXCLUDED.copy())
     word_limits: Dict[str, int] = field(default_factory=lambda: SOLO_COMPACT_WORD_LIMITS.copy())
@@ -650,9 +650,15 @@ def process_for_solo_compact(
 # FIX-WP4: Raised team from 55→70 — with all sections, team reports
 # genuinely need 60-70 pages. Previous value caused 8+ sections to be dropped.
 MAX_PAGES_BY_SIZE: Dict[str, int] = {
-    "solo": 16,
-    "team": 70,
-    "kmu": 45,  # B11: Was 35, raised — page estimation now more accurate
+    # KIS-B: "längere Reports erlauben" — Budgets waren zwischen WP4,
+    # size_profiles und SoloCompactConfig widersprüchlich (solo 16 vs 25,
+    # team 70 vs 35) und zwangen v.a. Solo in ein 16-Seiten-Korsett, das
+    # danach hart getrimmt wurde (abgeschnittene Sätze/halbleere Seiten).
+    # Jetzt größenübergreifend angeglichen, mit Spielraum über die
+    # natürliche Länge (Solo läuft real ~43 Seiten).
+    "solo": 50,
+    "team": 75,
+    "kmu": 60,
 }
 
 # HTML size thresholds (KB) for auto-compact
