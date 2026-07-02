@@ -198,6 +198,28 @@ def _user_budget_label(s1_budget: str) -> str:
     return s1_budget
 
 
+# KIS-1230: Chip-Labels des Zeitrahmens in Prosa-sichere Form bringen.
+# Das rohe Label führte zu "der innerhalb von Sofort (1-3 Monate) getestet
+# wird" im Executive Summary des Strategieberichts.
+_ZEITRAHMEN_PROSE = {
+    "sofort (1-3 monate)":        "1–3 Monaten (sofortiger Start)",
+    "sofort (1–3 monate)":        "1–3 Monaten (sofortiger Start)",
+    "kurzfristig (3-6 monate)":   "3–6 Monaten (kurzfristig)",
+    "kurzfristig (3–6 monate)":   "3–6 Monaten (kurzfristig)",
+    "mittelfristig (6-12 monate)":  "6–12 Monaten (mittelfristig)",
+    "mittelfristig (6–12 monate)":  "6–12 Monaten (mittelfristig)",
+    "langfristig (12-18 monate)": "12–18 Monaten (langfristig)",
+    "langfristig (12–18 monate)": "12–18 Monaten (langfristig)",
+}
+
+
+def _zeitrahmen_prose(s2_zeitrahmen: str) -> str:
+    """Prosa-sichere Form des Zeitrahmen-Labels ('innerhalb von …'-tauglich)."""
+    if not s2_zeitrahmen:
+        return ""
+    return _ZEITRAHMEN_PROSE.get(s2_zeitrahmen.strip().lower(), s2_zeitrahmen)
+
+
 def _match_budget_key(s1_budget: str) -> str:
     """Match the s1_budget string to a _BUDGET_PROFILES key (fuzzy)."""
     if not s1_budget:

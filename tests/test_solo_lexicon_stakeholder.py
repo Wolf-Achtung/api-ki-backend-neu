@@ -136,9 +136,12 @@ class TestNoBackwardsRegression:
         )
 
     def test_solo_lexicon_total_rule_count(self):
-        """Sanity: solo lexicon has 76 rules after sprint 1026.4."""
+        """Sanity: solo lexicon has 80 rules (76 nach Sprint 1026.4 + 4
+        KIS-1230-Kompositum-Regeln: Governance-Rahmen/-Runde/-Struktur/-Regeln,
+        damit die generische Governance→Steuerung-Regel keine Komposita mehr
+        zu 'Steuerung-Rahmen' zerbricht)."""
         lex = load_lexicon("solo")
-        assert lex.rule_count == 76
+        assert lex.rule_count == 80
 
 
 class TestTeamPersonaUnchanged:

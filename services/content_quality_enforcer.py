@@ -1957,6 +1957,10 @@ def apply_extended_siezen_guard(sections: dict) -> dict:
 # =============================================================================
 
 GRAMMAR_FIX_PATTERNS = [
+    # KIS-1230: Genus nach Stack→Systemlandschaft-Ersetzung reparieren
+    # ('Ihr KI-Systemlandschaft' im Tools-Kapitel — Systemlandschaft ist feminin)
+    (r'\bIhr (KI-)?Systemlandschaft\b', r'Ihre \1Systemlandschaft'),
+
     # "Einzelunternehmer in der Branche beratung" → korrekte Großschreibung
     (r'in der Branche ([a-zäöü]+)', lambda m: f'in der Branche {m.group(1).title()}'),
     

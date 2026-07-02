@@ -1160,6 +1160,18 @@ def render(briefing_obj: Any,
     html = re.sub(r'Automatisierte Kl-', 'Automatisierte KI-', html)
     log.info("[Q3] Kl→KI fix applied on final HTML")
 
+    # KIS-1230: Währungs-Abstand auch auf dem FINAL-HTML normalisieren
+    # ("12.000€" → "12.000 €"). Der Stil-Lint (style_lint) läuft nur über die
+    # LLM-Sections — deterministische Blöcke (KPI-Boxen, Business-Case-
+    # Rechenweg) entstehen später und hatten im KIS-1230-Report 17 Treffer.
+    try:
+        from services.style_lint import normalize_currency_spacing
+        html, _cur_fixes = normalize_currency_spacing(html)
+        if _cur_fixes:
+            log.info("[KIS-1230][CURRENCY] normalized %d '<n>€' occurrences on final HTML", _cur_fixes)
+    except Exception as _cur_exc:  # pragma: no cover
+        log.warning("[KIS-1230][CURRENCY] skipped: %s", _cur_exc)
+
     # S2: Fix persona leaks for team/kmu size (Einzelperson → Team)
     _company_size = ctx.get("COMPANY_SIZE", "") or ctx.get("size_label", "") or ""
     if _company_size and "solo" not in str(_company_size).lower():

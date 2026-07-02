@@ -38,6 +38,16 @@ DEFAULT_TEMPERATURE = float(os.getenv("ANTHROPIC_TEMPERATURE", "0.2"))
 ANTHROPIC_EFFORT_DEFAULT = "high"
 _EFFORT_MODEL_MARKERS = ("opus-4-6", "opus-4-7", "sonnet-4-6")
 
+# KIS-1230-HOTFIX: Modelle, die `temperature` mit 400 ablehnen
+# ("temperature is deprecated for this model"), aber NICHT über die
+# Effort-Marker laufen. Die Claude-5-Familie (claude-sonnet-5, ...) gehört
+# dazu — der KIS-1230-Lauf verlor dadurch ALLE Sonnet-Sektionen an die
+# Fallback-Kette (Decision-Boxen wurden Boilerplate). Für diese Modelle wird
+# temperature weggelassen; effort senden wir bewusst nicht (Support unklar).
+_NO_TEMPERATURE_MODEL_MARKERS = _EFFORT_MODEL_MARKERS + (
+    "sonnet-5", "opus-5", "haiku-5", "fable-5", "mythos-5",
+)
+
 
 def get_anthropic_effort() -> str:
     """Read ANTHROPIC_EFFORT from env (low|medium|high|xhigh|max), default 'high'."""
@@ -48,6 +58,11 @@ def get_anthropic_effort() -> str:
 def _model_supports_effort(model: str) -> bool:
     m = (model or "").lower()
     return any(marker in m for marker in _EFFORT_MODEL_MARKERS)
+
+
+def _model_rejects_temperature(model: str) -> bool:
+    m = (model or "").lower()
+    return any(marker in m for marker in _NO_TEMPERATURE_MODEL_MARKERS)
 
 
 def build_anthropic_create_kwargs(
@@ -76,8 +91,10 @@ def build_anthropic_create_kwargs(
         kwargs["stop_sequences"] = stop_sequences
     if _model_supports_effort(model):
         kwargs["output_config"] = {"effort": get_anthropic_effort()}
-    else:
+    elif not _model_rejects_temperature(model):
         kwargs["temperature"] = temperature
+    # KIS-1230-HOTFIX: Claude-5-Familie bekommt weder temperature (400)
+    # noch output_config (Support unklar) — Provider-Defaults.
     return kwargs
 
 # --- RUN-622 P2: Opus Routing ------------------------------------------------
@@ -531,12 +548,42 @@ def call_anthropic(
             stop_sequences=stop_seqs,
         ))
     except anthropic.BadRequestError as exc:
-        # FIX-J7 Layer 3: Catch 400 errors (empty content, invalid params)
-        log.warning(
-            "⚠️ Anthropic BadRequestError für Abschnitt '%s': %s — returning empty",
-            section, str(exc)[:200]
-        )
-        return ""
+        # KIS-1230-HOTFIX: Reaktives Sicherheitsnetz — lehnt ein (neues)
+        # Modell einen Sampling-Parameter ab ("`temperature` is deprecated"),
+        # einmal OHNE den Parameter wiederholen statt leer zurückzugeben.
+        # Genau dieser Pfad hat im KIS-1230-Lauf alle claude-sonnet-5-
+        # Sektionen (u.a. die Decision-Boxen) in die Fallback-Kette geschickt.
+        _msg = str(exc)
+        if "temperature" in _msg and "deprecated" in _msg:
+            log.warning(
+                "⚠️ Anthropic lehnt temperature für Modell '%s' ab (Abschnitt '%s') "
+                "— Retry ohne temperature",
+                model_name, section,
+            )
+            try:
+                _retry_kwargs = build_anthropic_create_kwargs(
+                    model=model_name,
+                    max_tokens=max_tok,
+                    temperature=temp,
+                    system=sys,
+                    messages=messages,
+                    stop_sequences=stop_seqs,
+                )
+                _retry_kwargs.pop("temperature", None)
+                message = client.messages.create(**_retry_kwargs)
+            except Exception as retry_exc:
+                log.warning(
+                    "⚠️ Retry ohne temperature gescheitert für Abschnitt '%s': %s — returning empty",
+                    section, str(retry_exc)[:200]
+                )
+                return ""
+        else:
+            # FIX-J7 Layer 3: Catch 400 errors (empty content, invalid params)
+            log.warning(
+                "⚠️ Anthropic BadRequestError für Abschnitt '%s': %s — returning empty",
+                section, str(exc)[:200]
+            )
+            return ""
 
     except anthropic.NotFoundError as exc:
         # Modell nicht gefunden -> Fallback-Versuch
