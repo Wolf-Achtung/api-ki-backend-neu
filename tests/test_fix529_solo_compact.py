@@ -217,7 +217,7 @@ class TestPageCountValidation:
         # Should pass or be close to passing
         assert isinstance(result.passed, bool)
         assert result.min_pages == 12
-        assert result.max_pages == 16
+        assert result.max_pages == 50  # KIS-B: was 16
 
 
 class TestTocGeneration:

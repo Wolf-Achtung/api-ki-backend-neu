@@ -897,10 +897,13 @@ class ReportValidator:
 
     # Problem #6 FIX: Maximum report pages by company size
     # Solo reports should be shorter and more focused
+    # KIS-B: aligned with MAX_PAGES_BY_SIZE (solo_compact_engine) so all
+    # page-budget tables agree. Values raised to allow longer, less-trimmed
+    # reports and stop mid-section hard-trimming artifacts.
     MAX_REPORT_PAGES_BY_SIZE = {
-        "solo": 25,   # Focused, practical report
-        "team": 35,   # Moderate depth
-        "kmu": 45,    # Full strategic depth
+        "solo": 50,   # Focused, practical report
+        "team": 75,   # Moderate depth
+        "kmu": 60,    # Full strategic depth
     }
 
     # Estimated words per page (for validation)

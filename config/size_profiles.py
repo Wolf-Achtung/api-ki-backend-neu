@@ -114,7 +114,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "technologie_prozesse": 150,
         },
 
-        "max_pages": 25,
+        "max_pages": 50,  # KIS-B: was 25 — aligned with MAX_PAGES_BY_SIZE["solo"]
         "enable_kpi_replacement": True,
         "enable_enterprise_elimination": True,
         "enable_duz_conversion": True,
@@ -205,7 +205,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "technologie_prozesse": 200,
         },
 
-        "max_pages": 35,
+        "max_pages": 75,  # KIS-B: was 35 — aligned with MAX_PAGES_BY_SIZE["team"]
         "enable_kpi_replacement": False,
         "enable_enterprise_elimination": True,
         "enable_duz_conversion": True,
@@ -284,7 +284,7 @@ SIZE_PROFILES: Dict[str, Dict[str, Any]] = {
             "technologie_prozesse": 200,
         },
 
-        "max_pages": 45,
+        "max_pages": 60,  # KIS-B: was 45 — aligned with MAX_PAGES_BY_SIZE["kmu"]
         "enable_kpi_replacement": False,
         "enable_enterprise_elimination": False,
         "enable_duz_conversion": True,

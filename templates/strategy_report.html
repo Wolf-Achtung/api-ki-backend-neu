@@ -21,12 +21,11 @@
 @page {
     size: A4;
     margin: 20mm 20mm 25mm 23mm; /* links 3mm extra für Akzentlinie */
-    @bottom-center {
-        content: "Seite " counter(page) " von " counter(pages) "  ·  {% if REPORT_DISPLAY_ID %}{{ REPORT_DISPLAY_ID }}{% else %}{{ report_id }}{% endif %}  ·  {{ datum }}";
-        font-size: 7pt;
-        color: #9CA3AF;
-        font-family: 'Inter', system-ui, sans-serif;
-    }
+    /* KIS-FOOTER: @bottom-center-Seitenzahl ENTFERNT — dupliziert die
+       Puppeteer-footerTemplate (Seite X / Y · Report-ID · Datum) und war in
+       prod-Chromium toter Code; auf neuerem Chromium doppelte Fussnote.
+       @bottom-right (Live-Marktdaten-Datum) BLEIBT: additive Info, keine
+       Seitenzahl-Dublette. */
     @bottom-right {
         content: "Basierend auf Live-Marktdaten vom {{ research_date }}";
         font-size: 6.5pt;

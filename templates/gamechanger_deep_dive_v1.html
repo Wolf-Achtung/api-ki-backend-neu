@@ -20,12 +20,10 @@
 @page {
     size: A4;
     margin: 12mm 12mm 15mm 12mm;
-    @bottom-right {
-        content: "Seite " counter(page) " von " counter(pages);
-        font-size: 7.5pt;
-        color: #9CA3AF;
-        font-family: 'Inter', system-ui, sans-serif;
-    }
+    /* KIS-FOOTER: @bottom-right-Seitenzahl ENTFERNT (siehe pdf_template_v7.html).
+       Toter Code in prod-Chromium, dupliziert die Puppeteer-footerTemplate und
+       ergaebe auf neuerem Chromium eine doppelte Fussnote. Paginierung laeuft
+       ausschliesslich ueber die footerTemplate (KPA-Default in render_pdf_from_html). */
 }
 
 /* ── Design Tokens ──────────────────────────────────── */
