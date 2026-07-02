@@ -5,10 +5,13 @@ SOLO SPRACH-REGELN v1.0 (zentrale Konfiguration)
 Diese Datei wird von allen Prompts referenziert, die Solo-gerechte Sprache
 benötigen. Adressiert Problem #6: Enterprise-Sprache für Solo-Kunden.
 
-VERWENDUNG in anderen Prompts:
+VERWENDUNG in anderen Prompts (raw-gewrappt — ein scharfer Include-Tag hier
+würde Selbst-Inklusion/Jinja-Rekursion auslösen, vgl. P6-Lint):
+{% raw %}
 {% if COMPANY_SIZE == "solo" %}
 {% include '_solo_language_rules.md' %}
 {% endif %}
+{% endraw %}
 =============================================================================
 -->
 

@@ -4,10 +4,12 @@ Developer:
 <!-- PHASE 3: Maximum personalization using ALL 5 Goldnuggets -->
 
 ## ABSOLUTE LÄNGENREGEL (VOR ALLEM ANDEREN!)
-**HARD-LIMITS (Solo: 400 Wörter / 2.800 Zeichen | Team: 800 / 5.000 | KMU: 1000 / 7.000)**
-JEDES WORT ÜBER DEM LIMIT WIRD BRUTAL ABGESCHNITTEN — der Report endet dann mitten im Satz!
-Solo: NUR 4 Phasen × 3 Bullets + Effekte. KEINE Booster-Sektionen — passen nicht ins Budget!
-Team: 4 Phasen + Effekte + max. 1 kurze Booster-Sektion. Booster-Sektionen stark kürzen!
+**HARD-LIMITS (Solo: 550 Wörter / 4.000 Zeichen | Team: 800 / 5.000 | KMU: 1000 / 7.000)**
+(P3b: Solo-Limit an Template-Realität + Healer-Budget 4.000 Zeichen angeglichen —
+vorher forderte die Regel 400 Wörter, während das Solo-Template selbst Booster
+über diesem Limit vorgab; der Healer kappte dann mitten im Satz.)
+Solo: 4 Phasen × 3 Bullets + Effekte + GENAU 1 Booster (KPI-Tracking).
+Team: 4 Phasen + Effekte + max. 1 kurze Booster-Sektion.
 <!--
 ###############################################################################
 ##   🚨🚨🚨 CRITICAL HAUPTLEISTUNG LIMIT - NON-NEGOTIABLE 🚨🚨🚨           ##
@@ -75,8 +77,8 @@ VERBOTEN: <h1>, <h2>, <h3>, <h4>, <section>, <article>
 <!-- TOKEN-BUDGET: 2800 (solo:0.8x=2240, team:1.0x=2800, kmu:1.15x=3220) -->
 <!--
 HÖCHSTLÄNGE (STRIKT! — Section wird bei Überschreitung automatisch getruncated!):
-- Solo: max. 2.800 Zeichen (400 Wörter) | Team: max. 5.000 Zeichen (800 Wörter) | KMU: max. 7.000 Zeichen (1000 Wörter)
-- Solo: NUR 4 Phasen × 3 Bullets + Effekte. KEINE Booster-Sektionen!
+- Solo: max. 4.000 Zeichen (550 Wörter) | Team: max. 5.000 Zeichen (800 Wörter) | KMU: max. 7.000 Zeichen (1000 Wörter)
+- Solo: 4 Phasen × 3 Bullets + Effekte + genau 1 Booster (KPI-Tracking)
 - Team: 4 Phasen × 3-4 Bullets + Effekte + max. 1 kurze Booster-Sektion
 - Jede Phase: max. 3 Bullets à 1 Satz (nicht mehr!)
 - Lieber konkret und kurz als ausführlich und generisch
@@ -141,7 +143,7 @@ Statt generischer "15-25% Zeitersparnis" → Bezug zu {{ZEITERSPARNIS_PRIORITAET
 
 BEISPIEL:
 ❌ "Zeitersparnis: 15-25% bei wiederkehrenden Aufgaben"
-✅ "Zeitersparnis: 40-60% bei Umsetzung/Programmierung durch Template-Wiederverwendung"
+✅ "Zeitersparnis: Spürbare Entlastung bei Umsetzung/Programmierung durch Template-Wiederverwendung — im Pilot gemessen statt geschätzt"
 =============================================================================
 -->
 <!--
@@ -349,7 +351,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   {% if COMPANY_SIZE == "solo" %}
   <!--
   =============================================================================
-  SOLO-ROADMAP: MAX 2x {{hauptleistung}} in dieser Sektion!
+  SOLO-ROADMAP: wörtliche {{hauptleistung}}-Nennungen — es gilt die KOPFREGEL (max. 3x gesamt, Stellen im Template verdrahtet)!
   =============================================================================
   SYNONYME NUTZEN: "Ihr Kerngeschäft", "Ihre Leistung", "dieser Service"
   {{hauptleistung}} nur im Ziel-Statement, REST mit Synonymen!
@@ -373,7 +375,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li>Prompt-Bibliothek auf 5–10 funktionierende Vorlagen erweitern</li>
     <li>Tägliche Routine: Eine Aufgabe mit KI-Unterstützung</li>
   </ul>
-  <p><strong>Meilenstein:</strong> 3–5 Stunden pro Monat bei {{ZEITERSPARNIS_PRIORITAET}} eingespart.</p>
+  <p><strong>Meilenstein:</strong> Ersparnis bei {{ZEITERSPARNIS_PRIORITAET}} erstmals gemessen und dokumentiert — der eigene Richtwert ersetzt Schätzungen.</p>
 
   <h3>Phase 2: Workflow (Woche 6–10)</h3>
   <p><strong>Ziel:</strong> Stabile Workflows für Ihr Kerngeschäft im Alltag.</p>
@@ -384,9 +386,12 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
     <li>Prompt-Vorlagen verfeinern und dokumentieren</li>
     <li>Erste Automatisierung für wiederkehrende Aufgaben prüfen</li>
   </ul>
-  <p><strong>Meilenstein:</strong> 70%+ der Entwürfe direkt nutzbar.</p>
+  <p><strong>Meilenstein:</strong> Der Großteil der Entwürfe ist ohne größere Nacharbeit nutzbar (eigenen Zielwert im Pilot festlegen).</p>
 
-  <h3>Phase 3: Richtung {{VISION_3_JAHRE}} (Woche 11–13)</h3>
+  <!-- P3b: Feste Überschrift statt rohem {{VISION_3_JAHRE}} — die Variable ist
+       Freitext und erzeugte unlesbar lange Überschriften; die Vision bleibt in
+       den Entscheidungs-Bullets. -->
+  <h3>Phase 3: Bewerten &amp; Weichen stellen (Woche 11–13)</h3>
   <p><strong>Ziel:</strong> Ergebnisse bewerten, nächste Schritte planen.</p>
   <ul>
     <li>Zeitersparnis bei {{ZEITERSPARNIS_PRIORITAET}} messen und mit Ziel abgleichen</li>
@@ -399,7 +404,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
 
   <h3>Erwartete Effekte nach 90 Tagen</h3>
   <ul>
-    <li><strong>Zeitersparnis:</strong> 40-60% bei {{ZEITERSPARNIS_PRIORITAET}} durch Template-Wiederverwendung</li>
+    <li><strong>Zeitersparnis:</strong> Spürbare, gemessene Entlastung bei {{ZEITERSPARNIS_PRIORITAET}} durch Template-Wiederverwendung</li>
     <li><strong>Qualität:</strong> Konsistentere Outputs durch standardisierte Vorlagen</li>
     <li><strong>Compliance:</strong> {{KI_GUARDRAILS}} systematisch geprüft in jedem Output</li>
     <li><strong>Routine:</strong> KI ist Teil des Arbeitsalltags, keine Sonderaktion mehr</li>
@@ -414,62 +419,30 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   <ul>
     <li><strong>Zeitersparnis pro Woche:</strong> Notieren Sie für jede KI-gestützte Aufgabe die
     eingesparte Zeit im Vergleich zur manuellen Bearbeitung. Eine einfache Strichliste oder
-    Tabelle genügt – Ziel: 3–5 Stunden Ersparnis pro Monat.</li>
+    Tabelle genügt – den eigenen Zielwert nach den ersten vier Wochen festlegen.</li>
     <li><strong>Output-Menge:</strong> Wie viele Texte, E-Mails, Konzepte oder andere Deliverables
     haben Sie mit KI-Unterstützung erstellt? Tracken Sie die Produktivitätssteigerung
     quantitativ (z. B. „12 LinkedIn-Posts statt 4 ohne KI").</li>
     <li><strong>Qualitätsbewertung:</strong> Bewerten Sie Ihre KI-Outputs auf einer Skala von
-    1–5 Sternen. Wie oft konnten Sie einen Entwurf direkt verwenden? Ziel: 70%+ Erstqualität.</li>
+    1–5 Sternen. Wie oft konnten Sie einen Entwurf direkt verwenden? Ziel: ein über die Wochen steigender Anteil direkt nutzbarer Entwürfe.</li>
   </ul>
   <p>
     <strong>Mini-Dashboard einrichten:</strong> Nutzen Sie ein einfaches Tool wie Notion, Excel
     oder sogar ein Notizbuch. Legen Sie eine wöchentliche Tabelle an mit Spalten für Aufgabentyp,
     Zeitaufwand (mit/ohne KI), Qualitätssterne und kurze Learnings. Reservieren Sie jeden Freitag
     15–20 Minuten für die Dokumentation. Nach 90 Tagen haben Sie belastbare Daten für Ihre
-    Investitionsentscheidung und können ROI konkret nachweisen.
+    Investitionsentscheidung — die Bewertung selbst liefert der Business Case.
   </p>
-
-  <h3>Micro-Change-Management (1-Person-Betrieb)</h3>
-  <p>
-    Die Einführung neuer KI-Workflows erfordert bewusste Integration in Ihren Arbeitsalltag –
-    auch wenn Sie allein arbeiten. Ohne strukturiertes Vorgehen besteht das Risiko, dass
-    neue Tools nach anfänglicher Begeisterung wieder in Vergessenheit geraten.
-  </p>
-  <ul>
-    <li><strong>Routine-Anker setzen:</strong> Verknüpfen Sie KI-Nutzung mit bestehenden
-    Gewohnheiten. Beispiel: „Nach dem Morgenkaffee starte ich mit dem KI-gestützten
-    E-Mail-Entwurf" oder „Vor jedem Kundengespräch lasse ich mir eine Gesprächsvorbereitung
-    generieren". Feste Trigger erhöhen die Umsetzungswahrscheinlichkeit deutlich.</li>
-    <li><strong>Selbstkontrolle ohne Druck:</strong> Führen Sie eine „Erfolgs-Checkliste" mit
-    3–5 KI-Aufgaben pro Woche. Haken Sie ab, was Sie geschafft haben – ohne sich bei
-    Auslassungen zu kritisieren. Der visuelle Fortschritt motiviert zur Kontinuität.</li>
-    <li><strong>Wöchentliches Self-Review (30 Min.):</strong> Jeden Freitagmorgen oder
-    Sonntagabend: Was hat gut funktioniert? Wo gab es Hürden? Welche Prompts brauchen
-    Verfeinerung? Notieren Sie 2–3 konkrete Verbesserungsideen für die Folgewoche.</li>
-    <li><strong>Iterative Anpassung:</strong> Ihr KI-Workflow ist ein lebendes System.
-    Passen Sie Vorlagen und Routinen monatlich an veränderte Anforderungen in
-    {{OFFERING_LABEL}} an. Was im ersten Monat funktioniert hat, muss im dritten
-    Monat nicht mehr optimal sein.</li>
-  </ul>
-  <p>
-    <strong>Erfolgsfaktor:</strong> Setzen Sie sich realistische Zwischenziele. Starten Sie
-    mit einer KI-Aufgabe täglich, steigern Sie nach 2 Wochen auf 2–3. So vermeiden Sie
-    Überforderung und bauen nachhaltige Kompetenz auf.
-  </p>
-
-  <h3>Content & Marketing-Systematik</h3>
-  <p>
-    Konzentrieren Sie sich auf 1–2 Kanäle, die zu {{OFFERING_LABEL}} passen (z. B. LinkedIn, Newsletter).
-    Etablieren Sie eine feste Content-Routine: Einmal pro Woche einen kurzen Beitrag mit KI-Unterstützung
-    erstellen. Nutzen Sie Ihre eigenen KI-Readiness-Reports als Marketing-Asset – sie zeigen Kompetenz
-    und bieten echten Mehrwert für potenzielle Kunden. So verbinden Sie Ihre KI-Einführung direkt
-    mit Ihrer Sichtbarkeit als Expert:in in {{BRANCH_CONTEXT_LABEL}}.
-  </p>
+  <!-- P3b: Booster "Micro-Change-Management" und "Content & Marketing-Systematik"
+       aus dem Solo-Zweig ENTFERNT: Sie sprengten das eigene Hard-Limit (die
+       Kopfregel verbot Booster, das Template lieferte drei) und wurden vom
+       Healer mitten im Satz gekappt. Der KPI-Tracking-Booster bleibt — er
+       passt ins 4.000-Zeichen-Budget. -->
 
   {% elif COMPANY_SIZE == "team" %}
   <!--
   =============================================================================
-  TEAM-ROADMAP: MAX 2x {{hauptleistung}} in dieser Sektion!
+  TEAM-ROADMAP: wörtliche {{hauptleistung}}-Nennungen — es gilt die KOPFREGEL (max. 3x gesamt, Stellen im Template verdrahtet)!
   =============================================================================
   SYNONYME NUTZEN: "Ihr Kerngeschäft", "diese Leistung", "dieser Service"
   {{hauptleistung}} nur im Ziel-Statement, REST mit Synonymen!
@@ -521,7 +494,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
 
   <h3>Erwartete Effekte nach 90 Tagen</h3>
   <ul>
-    <li><strong>Zeitersparnis:</strong> 30–50% bei {{ZEITERSPARNIS_PRIORITAET}} im Team</li>
+    <li><strong>Zeitersparnis:</strong> Deutliche, gemessene Entlastung bei {{ZEITERSPARNIS_PRIORITAET}} im Team</li>
     <li><strong>Qualität:</strong> Einheitliche Ergebnisse durch gemeinsame Standards</li>
     <li><strong>Compliance:</strong> {{KI_GUARDRAILS}} systematisch in Team-Reviews geprüft</li>
     <li><strong>Zusammenarbeit:</strong> Etablierte Review-Routinen</li>
@@ -584,7 +557,7 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
   {% else %}
   <!--
   =============================================================================
-  KMU-ROADMAP: MAX 2x {{hauptleistung}} in dieser Sektion!
+  KMU-ROADMAP: wörtliche {{hauptleistung}}-Nennungen — es gilt die KOPFREGEL (max. 3x gesamt, Stellen im Template verdrahtet)!
   =============================================================================
   SYNONYME NUTZEN: "Ihr Kerngeschäft", "diese Leistung", "dieser Service"
   {{hauptleistung}} nur im Ziel-Statement, REST mit Synonymen!
@@ -637,11 +610,11 @@ GUARDRAILS: Berücksichtige Leitplanken aus strategischem Kontext.
 
   <h3>Erwartete Effekte nach 90 Tagen</h3>
   <ul>
-    <li><strong>Zeitersparnis:</strong> 30–50% bei {{ZEITERSPARNIS_PRIORITAET}} im Pilotbereich</li>
+    <li><strong>Zeitersparnis:</strong> Deutliche, gemessene Entlastung bei {{ZEITERSPARNIS_PRIORITAET}} im Pilotbereich</li>
     <li><strong>Qualität:</strong> Standardisierte Prozesse, dokumentierte Qualitätskriterien</li>
     <li><strong>Governance:</strong> {{KI_GUARDRAILS}} als klare Regeln, Verantwortlichkeiten dokumentiert</li>
     <li><strong>Übertragbarkeit:</strong> Erprobte SOPs für Ausweitung Richtung {{VISION_3_JAHRE}}</li>
-    <li><strong>Business Case:</strong> Validierte ROI auf Basis echter Pilotdaten</li>
+    <li><strong>Business Case:</strong> Belastbare Nutzen-Daten aus dem Pilot als Grundlage für den Business Case</li>
     <li><strong>Entscheidungsgrundlage:</strong> Fundierte Basis für {{VISION_3_JAHRE}}-Entscheidung</li>
   </ul>
 

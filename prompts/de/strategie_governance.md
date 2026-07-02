@@ -141,8 +141,10 @@ CONSTRAINT: Bestehende Wortlimits einhalten. Max. 3-4 Zusatzsätze im Steuerungs
     <li>
       <strong>Richtlinien &amp; Policy:</strong>
       Die vorhandenen Regeln werden derzeit als {{GOVERNANCE_RICHTLINIEN_LABEL}} beschrieben.
-      Sie bilden einen ersten Rahmen, müssen aber – je nach Größe – weiter präzisiert,
-      vereinfacht oder erweitert werden.
+      [P4: Bewerte AUF BASIS dieses Label-Werts als Stärke ODER Schwäche —
+      bei gutem Status: worauf sich aufbauen lässt und was beibehalten wird;
+      bei schwachem Status: was konkret fehlt und was das ohne Handlung kostet.
+      KEIN pauschales „muss weiter präzisiert werden".]
     </li>
     <li>
       <strong>Change-Management &amp; Kommunikation:</strong>
@@ -157,8 +159,9 @@ CONSTRAINT: Bestehende Wortlimits einhalten. Max. 3-4 Zusatzsätze im Steuerungs
     <li>
       <strong>Datenschutz &amp; Löschregeln:</strong>
       Die Angaben zu Datenschutz ({{DATENSCHUTZ_LABEL}}) und Löschregeln
-      ({{LOESCHREGELN_LABEL}}) zeigen, dass Grundstrukturen vorhanden sind,
-      jedoch noch stärker formalisiert werden sollten.
+      ({{LOESCHREGELN_LABEL}}).
+      [P4: Einordnung aus den Label-Werten ableiten — Stärke benennen, wenn
+      der Status gut ist; nur bei tatsächlicher Lücke Formalisierung fordern.]
     </li>
     <li>
       <strong>Verantwortlichkeiten &amp; Kompetenzen:</strong>
@@ -195,24 +198,24 @@ CONSTRAINT: Bestehende Wortlimits einhalten. Max. 3-4 Zusatzsätze im Steuerungs
     </li>
     <li>
       <strong>Monetarisierungspotenziale evaluieren (optional):</strong>
-      KI-gestützte Prozesse können neue Erlösquellen erschließen – wie durch
-      digitale Produkte, erweiterbare Service-Formate oder automatisierte Analysen.
-      Eine strategische Bewertung lohnt sich insbesondere bei stabilen Kern-Workflows.
+      [P4: KEINE generische Erlösquellen-Aufzählung. Benenne EINE zur
+      Hauptleistung passende Monetarisierungs-Option mit So-what (warum
+      gerade diese, worauf sie aufsetzt) und einem Kill-Kriterium, wann sie
+      NICHT weiterverfolgt wird — z. B. solange der Kern-Workflow nicht
+      stabil läuft oder die Nachfrage im Bestand nicht validiert ist.]
     </li>
   </ol>
 
   <h3>Verantwortung &amp; Steuerung</h3>
-  <p>
-    Die Steuerung sollte zur Organisationsstruktur passen:
-  </p>
-  <ul>
-    <li><strong>Solo:</strong> Owner-Rolle + feste Routinen</li>
-    <li><strong>Team:</strong> Kompakter Kreis aus Teamlead + Anwender:innen</li>
-    <li><strong>KMU:</strong> Abgestimmte Verantwortlichkeiten zwischen Fachbereichen und IT</li>
-  </ul>
-  <p>
-    Transparenz und kurze Entscheidungswege sind für alle Größen zentral.
-  </p>
+  <!-- P4: Slots für OPT-B5 — vorher forderte der B5-Block Steuerungskreis/
+       Eskalationspfad/Entscheidungsmatrix, das Template hatte aber keinen
+       Platz dafür; das Modell musste Zusatzsätze „hineinschmuggeln". -->
+  <p>[STEUERUNGSKREIS gemäß OPT-B5(a): wer steuert KI-Themen in dieser
+     Unternehmensgröße, in welchem Rhythmus — 1–2 Sätze, segment-gerecht.]</p>
+  <p>[ESKALATIONSPFAD gemäß OPT-B5(b): Vorfall erkannt → Meldung an konkrete
+     Rolle innerhalb konkretem Zeitrahmen → Bewertung → Maßnahme. 1–2 Sätze.]</p>
+  <p>[ENTSCHEIDUNGSMATRIX gemäß OPT-B5(c): wer gibt neue Tools frei, wer
+     ändert die KI-Richtlinie, wer stoppt einen KI-Prozess — 2–3 Sätze.]</p>
 
   <h3>KI-Kultur &amp; Akzeptanz</h3>
   <p>

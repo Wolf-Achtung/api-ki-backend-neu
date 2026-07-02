@@ -119,7 +119,8 @@ BISHERIGE FÖRDERMITTEL ({{BISHERIGE_FOERDERMITTEL}}):
 {% if BISHERIGE_FOERDERMITTEL == "ja" %}
   → Im Abschnitt "Nächste Schritte" einen DE-MINIMIS-HINWEIS einbauen:
   → "<li><strong>De-minimis-Prüfung:</strong> Da bereits Fördermittel bezogen wurden:
-     De-minimis-Grenze beachten (300.000 € innerhalb von 3 Kalenderjahren).
+     De-minimis-Grenze beachten (300.000 € innerhalb von 3 Jahren gemäß
+     De-minimis-VO (EU) 2023/2831 — Stand 2026, vor Antragstellung prüfen).
      Alle erhaltenen Beihilfen der letzten 3 Jahre zusammenstellen.
      Kumulierungsverbot: Nicht dieselben Kosten doppelt fördern lassen.</li>"
 {% endif %}
@@ -271,7 +272,8 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
   <h3>2. Wie Fördermittel den Business Case verbessern können</h3>
   <p>
     Programme in {{BUNDESLAND_LABEL}} und auf Bundesebene bezuschussen förderfähige Investitionskosten.
-    Zuschussquoten liegen in der Regel bei <strong>30–50&nbsp;%</strong> der anerkannten Kosten.
+    Die Zuschussquote unterscheidet sich je Programm und Bundesland erheblich —
+    maßgeblich sind die Quoten in der Programmübersicht dieses Reports.
   </p>
   <ul>
     <li><strong>Kürzere Amortisation:</strong> Durch geringeren Eigenanteil verkürzt sich die Amortisationsdauer.</li>
@@ -299,7 +301,7 @@ Formulierungen ohne Team-/Abteilungsbegriff verwenden!
     <li><strong>Projektbeschreibung:</strong> Ziele, Maßnahmen, Zeitplan und Kosten kompakt dokumentieren.</li>
     <li><strong>Kumulierungsprüfung:</strong> Kombinierbarkeit von Landes- und Bundesprogrammen klären.</li>
     <li><strong>Beratung einholen:</strong> Optional Rücksprache mit Förderberatungen oder Kammern.</li>
-    <li><strong>Zeitplanung:</strong> Förderanträge benötigen 4–8 Wochen Vorlauf.</li>
+    <li><strong>Zeitplanung:</strong> Förderanträge benötigen mehrere Wochen Vorlauf — programmabhängig, früh mit der Bewilligungsstelle klären.</li>
   </ol>
 
   <p class="small muted">

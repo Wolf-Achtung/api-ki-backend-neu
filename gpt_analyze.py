@@ -117,6 +117,7 @@ import core.db as core_db
 from field_registry import fields  # added by Patch03
 from models import Analysis, Briefing, Report, User
 from services.report_renderer import render
+from services.report_system_prompt import build_report_system_prompt
 from services.text_healing import heal_all_text_blocks, heal_text_block
 from services.report_healer import heal_report_html, heal_final_html, format_payback_de, final_solo_terminology_cleanup  # FIX-A-G: Report healing pipeline
 from services.pdf_client import render_pdf_from_html, build_footer_template
@@ -1625,6 +1626,10 @@ ENABLE_REPAIR_HTML = (os.getenv("ENABLE_REPAIR_HTML", "1") in ("1", "true", "TRU
 USE_INTERNAL_RESEARCH = (os.getenv("RESEARCH_PROVIDER", "hybrid") != "disabled")
 ENABLE_AI_ACT_SECTION = (os.getenv("ENABLE_AI_ACT_SECTION", "1") in ("1", "true", "TRUE", "yes", "YES"))
 USE_PROMPT_SYSTEM = (os.getenv("USE_PROMPT_SYSTEM", "1") in ("1", "true", "TRUE", "yes", "YES"))
+# KIS-PROMPT P1: Research-Grounding-Blöcke (section_name -> Kontextblock).
+# Wird pro Report-Lauf in _generate_content_sections VOR dem Parallel-Pool
+# gefüllt und in _generate_content_section nur gelesen.
+_RESEARCH_GROUNDING: Dict[str, str] = {}
 # STATE-AUDIT-517A: Debug trace for prompt section propagation
 DEBUG_PROMPT_TRACE = (os.getenv("DEBUG_PROMPT_TRACE", "0") in ("1", "true", "TRUE"))
 # STATE-AUDIT-517A: Thread-safe collector for prompt trace data (per-run)
@@ -7508,7 +7513,7 @@ Verwende NIEMALS:
     result = _call_llm_for_section(
         section_key=section_name,
         prompt=enhanced_prompt,
-        system_prompt="Du bist ein Senior-KI-Berater. Antworte nur mit validem HTML. KEINE Assistenten-Sprache.",
+        system_prompt=build_report_system_prompt(),
         temperature=max(0.0, llm["temperature"] - 0.1),  # Reduce temperature for stricter output
         max_tokens=llm["max_tokens"],
         model=llm["model"],
@@ -11971,6 +11976,17 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 )
             prompt_text = _interpolate(enhanced_prompt, vars_dict, lang=prompt_lang, section=prompt_key)
 
+            # KIS-PROMPT P1: Live-Recherche-Kontext für research-relevante
+            # Sektionen anhängen (tools/foerder/markt/wettbewerb). Leerer
+            # Dict-Eintrag = kein Grounding verfügbar → unverändert weiter.
+            _grounding_block = _RESEARCH_GROUNDING.get(section_name)
+            if _grounding_block:
+                prompt_text = prompt_text + _grounding_block
+                log.info(
+                    "[RESEARCH-GROUNDING] injected %d chars into section=%s",
+                    len(_grounding_block), section_name,
+                )
+
             # STATE-AUDIT-517A: Record prompt trace after interpolation
             if DEBUG_PROMPT_TRACE:
                 _has_jinja_post = "{%" in (enhanced_prompt if isinstance(enhanced_prompt, str) else "")
@@ -12052,7 +12068,7 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
             result = _call_llm_for_section(
                 section_key=section_name,
                 prompt=prompt_text,
-                system_prompt="Du bist ein Senior-KI-Berater. Antworte nur mit validem HTML.",
+                system_prompt=build_report_system_prompt(),
                 temperature=llm["temperature"],
                 max_tokens=llm["max_tokens"],
                 model=llm["model"],
@@ -12252,7 +12268,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
                 expanded = _call_llm_for_section(
                     section_key=f"{section_name}_expand",
                     prompt=expand_prompt,
-                    system_prompt="Du bist ein Senior-KI-Berater. Erweitere den Inhalt mit mehr Details. Nur valides HTML.",
+                    system_prompt=build_report_system_prompt(mode="expand"),
                     temperature=llm["temperature"],
                     max_tokens=llm["max_tokens"] + 500,  # Allow more tokens for expansion
                     model=llm["model"],
@@ -12571,7 +12587,7 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
     out = _call_llm_for_section(
         section_key=section_name,
         prompt=prompts.get(section_name, ""),
-        system_prompt="Du bist ein Senior-KI-Berater. Antworte nur mit validem HTML.",
+        system_prompt=build_report_system_prompt(),
         temperature=llm["temperature"],
         max_tokens=llm["max_tokens"],
         model=llm["model"],
@@ -12961,7 +12977,7 @@ ERWEITERTER INHALT:"""
         response = _call_llm_for_section(
             section_key=section_key,
             prompt=expand_prompt,
-            system_prompt="Du bist ein professioneller Report-Generator. Erweitere den Text substanziell.",
+            system_prompt=build_report_system_prompt(mode="expand"),
             temperature=0.4,
             max_tokens=4000,
         )
@@ -13061,6 +13077,19 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     ]
 
     max_workers = int(os.getenv("GPT_PARALLEL_WORKERS", "10"))
+
+    # KIS-PROMPT P1: Research-Grounding EINMAL vor der parallelen Generierung
+    # holen (fail-open). Die Blöcke werden in _generate_content_section an die
+    # Prompts der research-relevanten Sektionen angehängt — vorher entstand
+    # deren Inhalt komplett aus Trainingswissen, der Live-Research wurde nur
+    # als Quellen-Box angehängt.
+    global _RESEARCH_GROUNDING
+    _RESEARCH_GROUNDING = {}
+    try:
+        from services.research_grounding import build_research_grounding
+        _RESEARCH_GROUNDING = build_research_grounding(briefing) or {}
+    except Exception as _rg_exc:
+        log.warning("[RESEARCH-GROUNDING] skipped: %s", _rg_exc)
 
     log.info(
         "🚀 Generating %d sections in PARALLEL (max_workers=%d)...",
@@ -14139,7 +14168,7 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                     _heal_expanded = _call_llm_for_section(
                         section_key=f"{_heal_logical}_post_trim_heal_{_heal_iter}",
                         prompt=_heal_expand_prompt,
-                        system_prompt="Du bist ein Senior-KI-Berater. Erweitere den Inhalt mit mehr Details. Nur valides HTML.",
+                        system_prompt=build_report_system_prompt(mode="expand"),
                         temperature=_heal_llm["temperature"],
                         max_tokens=_heal_llm["max_tokens"] + 500,
                         model=_heal_llm["model"],

@@ -165,14 +165,14 @@ Aufbauend auf den ersten 90 Tagen – Fokus auf nachhaltige Integration und Erwe
 - 2–3 weitere Use Cases aus {{BRANCH_CONTEXT_LABEL}} testen
 - Persönliche Prompt-Bibliothek auf 20+ Vorlagen erweitern
 
-**🎯 Meilenstein Q1:** 10+ h/Monat stabile Zeitersparnis.
+**🎯 Meilenstein Q1:** Stabile, dokumentierte Zeitersparnis pro Monat — Zielwert aus dem 90-Tage-Pilot übernommen.
 
 ### Q2 (Monate 4–6): Qualität steigern
 - Qualitäts-Checkliste für alle KI-Outputs anwenden
 - Erste Datenquellen systematisch einbinden (CRM, Notizen, Dokumente)
 - Workflow-Dokumentation für Vertretung/Erweiterung erstellen
 
-**🎯 Meilenstein Q2:** 90%+ Ersttrefferquote bei Standard-Aufgaben.
+**🎯 Meilenstein Q2:** Hohe Ersttrefferquote bei Standard-Aufgaben — gegen den im Pilot kalibrierten Zielwert gemessen.
 
 ### Q3–Q4 (Monate 7–12): Ausweiten & Optimieren
 - Neue Anwendungsfelder erschließen (Marketing, Kundenkommunikation, Reporting)
@@ -196,7 +196,7 @@ Aufbauend auf den ersten 90 Tagen – Fokus auf Erweiterung im Team.
 - Team-Styleguide für konsistente KI-Outputs erstellen
 - Erste Datenintegration (gemeinsame Dokumente, CRM)
 
-**🎯 Meilenstein Q2:** Einheitliche Qualität, Fehlerquote < 10%.
+**🎯 Meilenstein Q2:** Einheitliche Qualität — die im QS-Prozess definierte Fehlerquoten-Obergrenze wird eingehalten.
 
 ### Q3–Q4 (Monate 7–12): Erweiterung & ROI
 - Neue Use Cases aus benachbarten Bereichen erschließen
