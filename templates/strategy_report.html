@@ -968,12 +968,58 @@ sup.src-ref {
     .kpi-card, .scenario-card, .comparison-card,
     .highlight-box, .tip-box, .warning-box,
     .score-widget, .tuev-badge, .cta-box,
-    .impressum-block, .naechste-schritte li {
+    .impressum-block, .naechste-schritte li,
+    .advisor-note {
         break-inside: avoid;
     }
     .section-content {
         break-inside: auto;
     }
+}
+
+/* ── KIS-1232: Persönliche Einschätzung als gestylte Box ──────────
+   Der Block existierte im Markup (#advisor-note), hatte aber keinerlei
+   CSS — im KIS-1232-Strategiebericht erschien die Einschätzung als
+   nackter Fließtext hinter den Quellen (S. 24). */
+.advisor-note {
+    background: var(--navy-50);
+    border: 1px solid var(--navy-100);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 28px 0;
+    page-break-inside: avoid;
+    position: relative;
+}
+.advisor-note::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--navy-700), var(--gold-600));
+    border-radius: 8px 8px 0 0;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.advisor-note-title {
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--navy-700);
+    margin-bottom: 8px;
+}
+.advisor-note-text {
+    font-size: 10.5pt;
+    line-height: 1.7;
+    font-style: italic;
+}
+.advisor-note-sig {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--navy-100);
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--navy-700);
 }
     </style>
 </head>

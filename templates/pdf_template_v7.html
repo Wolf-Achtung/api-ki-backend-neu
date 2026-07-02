@@ -1172,12 +1172,100 @@ h1, h2, h3, h4 {
     margin-bottom: 4px;
 }
 
+/* ── KIS-1232: G21 KI-Stack Summary Card ────────────────
+   Der ki_stack_summary-Prompt (G21 PLATIN++) verspricht dem LLM diese
+   Klassen (.pair-card, .step-cards, .kpi-triple, .badge-block) — sie
+   fehlten im Template komplett, wodurch die Sektion als unformatierter
+   Text kollabierte (KIS-1232-Lauf, S. 12–14). */
+.ki-stack-summary { margin-top: var(--sp-sm); }
+.ki-stack-summary .stack-section { margin-bottom: var(--sp-md); }
+.ki-stack-summary .stack-section-title {
+    font-size: 10.5pt; font-weight: 700; color: var(--c-text);
+    margin-bottom: var(--sp-sm);
+}
+.pair-card {
+    display: flex; align-items: flex-start; gap: 10px;
+    border: 1px solid var(--c-border); border-radius: var(--r-md);
+    background: var(--c-white); padding: 10px 12px;
+    margin-bottom: var(--sp-sm); break-inside: avoid;
+}
+.pair-card-icon {
+    flex: 0 0 auto; width: 26px; height: 26px; padding: 5px;
+    border-radius: var(--r-sm); background: var(--report-bg-panel);
+    color: var(--c-primary);
+}
+.pair-card-icon svg { width: 16px; height: 16px; display: block; }
+.pair-card-content { flex: 1 1 auto; min-width: 0; }
+.pair-card-name { font-weight: 700; font-size: 10pt; margin: 0 0 2px; }
+.pair-card-category {
+    display: inline-block; font-size: 7.5pt; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--c-primary); background: var(--report-bg-highlight);
+    border-radius: 999px; padding: 1px 8px; margin-bottom: 3px;
+}
+.pair-card-description { font-size: 9.5pt; color: var(--c-text-2); margin: 0; }
+.step-cards {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-sm); break-inside: avoid;
+}
+.step-card {
+    border: 1px solid var(--c-border); border-radius: var(--r-md);
+    background: var(--c-bg); padding: 10px 12px; break-inside: avoid;
+}
+.step-card-number {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--c-primary); color: var(--c-white);
+    font-size: 9pt; font-weight: 700; line-height: 20px;
+    text-align: center; margin-bottom: 6px;
+}
+.step-card-title { font-weight: 700; font-size: 9.5pt; margin: 0 0 3px; }
+.step-card-body { font-size: 9pt; color: var(--c-text-2); }
+.kpi-triple {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-sm); break-inside: avoid;
+}
+.kpi-triple .kpi {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; border: 1px solid var(--c-border);
+    border-radius: var(--r-md); background: var(--c-white);
+    padding: 10px 8px; break-inside: avoid;
+}
+.kpi-triple .kpi-label {
+    font-size: 8pt; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--c-text-3); margin-bottom: 2px;
+}
+.kpi-triple .kpi-value {
+    font-size: 16pt; font-weight: 800; color: var(--c-primary);
+    line-height: 1.2;
+}
+.kpi-triple .kpi-sub { font-size: 8.5pt; color: var(--c-text-2); }
+.badge-block {
+    display: flex; gap: var(--sp-sm); flex-wrap: wrap; break-inside: avoid;
+}
+.badge-block-item {
+    display: flex; align-items: baseline; gap: 6px;
+    border: 1px solid var(--c-border); border-radius: var(--r-md);
+    background: var(--c-bg); padding: 6px 12px;
+}
+.badge-block-label {
+    font-size: 8pt; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--c-text-3);
+}
+.badge-block-value { font-size: 10pt; font-weight: 700; }
+.badge-block-value.risk-low, .ki-stack-summary .risk-low { color: var(--c-success); }
+.badge-block-value.risk-medium, .ki-stack-summary .risk-medium { color: var(--c-warning); }
+.badge-block-value.risk-high, .ki-stack-summary .risk-high { color: var(--c-danger); }
+
 /* ── Print enhancements ─────────────────────────────── */
 @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .section { break-inside: auto; }
     .mgmt-card, .decision-card, .funding-card, .kpi-card,
     .glance-box, .contact-box, .card-nobreak { break-inside: avoid; }
+    /* KIS-1232: G21-Stack-Karten und Empfehlungs-Boxen nicht über
+       Seitengrenzen brechen (Vendor-Empfehlungen brachen leer um) */
+    .pair-card, .step-card, .kpi-triple, .badge-block,
+    .vendor-recommendations-section { break-inside: avoid; }
     /* KIS-1127/C3 + M2-FIX: Large containers flow across pages */
     .roadmap-phase-card, .starter-kit, .starter-kit__tools,
     .vendor-audit-engine, .vendor-details-section,
@@ -1294,7 +1382,7 @@ h1, h2, h3, h4 {
             <div class="kpi-label">{% if ROI_12M and ROI_12M|int >= 200 %}ROI (gedeckelt){% else %}{{ ui("kpi_roi", "ROI-Projektion") }}{% endif %}</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-value" style="color: var(--c-primary);">{{ AI_ACT_RISK_LEVEL|default('limited') }}</div>
+            <div class="kpi-value" style="color: var(--c-primary);">{{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('begrenzt') }}</div>
             <div class="kpi-label">AI Act Risikoklasse</div>
         </div>
     </div>
@@ -1833,15 +1921,15 @@ h1, h2, h3, h4 {
         </div>
         <span class="section-pill">
             <span class="pill-dot {% if AI_ACT_RISK_LEVEL == 'high-risk' %}pill-danger{% elif AI_ACT_RISK_LEVEL == 'limited' %}pill-warning{% else %}pill-success{% endif %}"></span>
-            {{ AI_ACT_RISK_LEVEL|default('limited') }}
+            {{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('begrenzt') }}
         </span>
     </div>
     <div class="glance-box glance-risk">
-        <strong>Auf einen Blick:</strong> Risikoklasse: {{ AI_ACT_RISK_LEVEL|default('limited') }}. {% if AI_ACT_RISK_LEVEL == 'limited' %}Primär Transparenzpflichten.{% elif AI_ACT_RISK_LEVEL == 'high-risk' %}Umfangreiche Dokumentations- und Compliance-Pflichten.{% else %}Minimale regulatorische Anforderungen.{% endif %}
+        <strong>Auf einen Blick:</strong> Risikoklasse: {{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('begrenzt') }}. {% if AI_ACT_RISK_LEVEL == 'limited' %}Primär Transparenzpflichten.{% elif AI_ACT_RISK_LEVEL == 'high-risk' %}Umfangreiche Dokumentations- und Compliance-Pflichten.{% else %}Minimale regulatorische Anforderungen.{% endif %}
     </div>
     <div class="section-body">
         <div class="risk-banner {% if AI_ACT_RISK_LEVEL == 'high-risk' %}risk-banner-high{% elif AI_ACT_RISK_LEVEL == 'limited' %}risk-banner-limited{% else %}risk-banner-low{% endif %}">
-            <strong>Risikoklasse: {{ AI_ACT_RISK_LEVEL|default('limited') }}</strong>
+            <strong>Risikoklasse: {{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('begrenzt') }}{% if AI_ACT_RISK_LEVEL_DE and AI_ACT_RISK_LEVEL and AI_ACT_RISK_LEVEL_DE != AI_ACT_RISK_LEVEL %} (EU AI Act: {{ AI_ACT_RISK_LEVEL }}){% endif %}</strong>
             {% if AI_ACT_RISK_SUMMARY %}<p style="margin: 6px 0 0;">{{ AI_ACT_RISK_SUMMARY }}</p>{% endif %}
         </div>
         {% if AI_ACT_DUTY_MATRIX_HTML %}

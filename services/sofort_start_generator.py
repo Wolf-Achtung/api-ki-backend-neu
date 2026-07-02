@@ -29,6 +29,7 @@ Unterstützte Branchen (13):
 """
 
 import logging
+import re
 from typing import Any, Dict, List, Optional, cast
 
 log = logging.getLogger(__name__)
@@ -1492,7 +1493,7 @@ CHECKLISTE_START_EXPERT = [
 EXPERT_PROMPT_PATTERNS = [
     {
         "titel": "System-Prompt für konsistente Outputs",
-        "prompt": """Sie sind ein erfahrener {hauptleistung}-Experte. Ihre Aufgabe ist es, [AUFGABE] auszuführen.
+        "prompt": """Sie sind ein erfahrener Experte für {fachgebiet}. Ihre Aufgabe ist es, [AUFGABE] auszuführen.
 
 ## Kontext
 - Zielgruppe: [ZIELGRUPPE]
@@ -1850,12 +1851,12 @@ def generate_sofort_start_html(
                 <div style="font-size: 11px; color: #64748b;">pro Jahr</div>
             </div>
             <div style="background: white; border-radius: 6px; padding: 12px;">
-                <div style="font-size: 24px; font-weight: 700; color: #166534;">{f"{savings['net_savings']:,}".replace(",", ".")}€</div>
+                <div style="font-size: 24px; font-weight: 700; color: #166534;">{f"{savings['net_savings']:,}".replace(",", ".")}&nbsp;€</div>
                 <div style="font-size: 11px; color: #64748b;">Netto-Ersparnis*</div>
             </div>
         </div>
         <p style="font-size: 10px; color: #64748b; margin: 8px 0 0 0; text-align: right;">
-            *Bei {savings['hourly_rate']}€/h, abzgl. ~{savings['tool_costs']}€ Tool-Kosten/Jahr
+            *Bei {savings['hourly_rate']}&nbsp;€/h, abzgl. ~{f"{savings['tool_costs']:,}".replace(",", ".")}&nbsp;€ Tool-Kosten/Jahr
         </p>
     </div>
     
@@ -1884,8 +1885,19 @@ def generate_sofort_start_html(
         </p>
 '''
         _expert_prompts = EXPERT_PROMPT_PATTERNS
+        # KIS-1232: Kurzes Fachgebiet für den Experten-Slot — vorher wurde die
+        # KOMPLETTE Hauptleistung (mehrere Sätze) in "…{X}-Experte" injiziert
+        # und erzeugte kaputte Sätze wie "erfahrener Finanzberatung für
+        # KMU.Das Unternehmen bietet …an.-Experte" (Status-Report S. 7).
+        _fachgebiet = re.split(r'(?<=[a-zäöüß])[.!?]', _hl_clean, maxsplit=1)[0].strip() if _hl_clean else ""
+        if not _fachgebiet or len(_fachgebiet) > 80:
+            _fachgebiet = (_fachgebiet[:77].rsplit(" ", 1)[0] + "…") if len(_fachgebiet) > 80 else str(branche_data["name"])
         for i, prompt_data in enumerate(_expert_prompts, 1):
-            _prompt_text = prompt_data["prompt"].replace("{hauptleistung}", _hl_clean or str(branche_data["name"]))
+            _prompt_text = (
+                prompt_data["prompt"]
+                .replace("{fachgebiet}", _fachgebiet)
+                .replace("{hauptleistung}", _hl_clean or str(branche_data["name"]))
+            )
             html += f'''
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -2994,8 +3006,12 @@ def generate_30_tage_challenge_html_v2(
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
 '''
 
+    # KIS-1232: Wochenwerte deutsch formatieren (5,8 h statt 5.8 h)
+    def _de_hours(v: float) -> str:
+        return f"{v:g}".replace(".", ",")
+
     for w in range(1, 5):
-        _display = f"~{_weekly_hours[w - 1]:g} h" if _has_values else "_____ h"
+        _display = f"~{_de_hours(_weekly_hours[w - 1])} h" if _has_values else "_____ h"
         html += f'''
             <div style="text-align: center;">
                 <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">Woche {w}</div>
@@ -3004,6 +3020,13 @@ def generate_30_tage_challenge_html_v2(
                     <div style="font-size: 16px; font-weight: 700; color: #166534;">{_display}</div>
                 </div>
             </div>
+'''
+
+    # KIS-1232: Grid HIER schließen — die Tipps-Box stand vorher als fünftes
+    # Grid-Item im 4-Spalten-Raster und wurde auf 1/4-Breite gequetscht
+    # (Status-Report S. 16, schmale umgebrochene Box).
+    html += '''
+        </div>
 '''
 
     # v14.18: Tipps für Erfolg
@@ -3024,10 +3047,9 @@ def generate_30_tage_challenge_html_v2(
     if _has_values:
         _savings_str = f"{_total_savings:,}".replace(",", ".")
         html += f'''
-        </div>
         <div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #22c55e;">
             <span style="font-size: 14px; color: #166534; font-weight: 600;">
-                🎯 Prognose nach 30 Tagen: ~{_total_hours:g} Stunden = ~{_savings_str} € gespart
+                🎯 Prognose nach 30 Tagen: ~{_de_hours(_total_hours)} Stunden = ~{_savings_str} € gespart
             </span>
             <div style="font-size: 11px; color: #475569; margin-top: 6px; line-height: 1.5;">
                 Diese Tracking-Prognose ist konservativ (Ramp-up: 50&nbsp;%/75&nbsp;%/100&nbsp;%/100&nbsp;% der Wochenleistung).
@@ -3038,7 +3060,6 @@ def generate_30_tage_challenge_html_v2(
 '''
     else:
         html += '''
-        </div>
         <div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #22c55e;">
             <span style="font-size: 14px; color: #166534; font-weight: 600;">
                 🎯 Gesamt nach 30 Tagen: _______ Stunden = _______ € gespart

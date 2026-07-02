@@ -355,6 +355,10 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
             _netto_invest = _gesamt - _foerder_capped
             _netto_roi = round((_ersparnis - _netto_invest) / _netto_invest * 100)
             _netto_be = _math.ceil(_netto_invest / _monat_spar)
+            # KIS-1232: Anzeige-Cap analog zur 200-%-Philosophie des
+            # KI-Readiness-Reports \u2014 "267 %" wirkte neben dem
+            # realistischen 38-%-Szenario unglaubw\u00fcrdig aggressiv.
+            _netto_roi_display = "\u00fcber 200" if _netto_roi > 200 else str(_netto_roi)
 
             def _fmt_eur(v: int) -> str:
                 return f"{v:,}".replace(",", ".")
@@ -377,7 +381,7 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
                 f'Unter Ber\u00fccksichtigung eines F\u00f6rderpotenzials von bis zu 70\u00a0% '
                 f'der Gesamtinvestition (max. {_fmt_eur(_foerder_capped)}\u00a0\u20ac) '
                 f'reduziert sich Ihre Nettoinvestition auf {_fmt_eur(_netto_invest)}\u00a0\u20ac '
-                f'\u2014 mit einem Netto-ROI von {_netto_roi}\u00a0% '
+                f'\u2014 mit einem Netto-ROI von {_netto_roi_display}\u00a0% '
                 f'und Break-Even bereits in Monat\u00a0{_netto_be}. '
                 f'<br>'
                 f'<span style="font-size:0.85em;color:#047857;">'

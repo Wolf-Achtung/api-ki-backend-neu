@@ -640,9 +640,19 @@ def _transform_content_boxes(html: str) -> str:
     )
 
     # 2F: "Quick Win" → blue inline badge
+    # KIS-1232: nachfolgenden Doppelpunkt mitkonsumieren — "Quick Win:" wurde
+    # zu "«Chip» :" mit hässlichem Freiraum vor dem Doppelpunkt (KPA S. 3).
+    _QW_BADGE = (
+        '<span style="display:inline-block;background:#dbeafe;color:#1e40af;'
+        'padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Quick Win</span>'
+    )
+
+    def _qw_badge_repl(m: "re.Match[str]") -> str:
+        return _QW_BADGE + (' ' if ':' in (m.group(1) or '') else '')
+
     html = re.sub(
-        r'(?<!["\w-])Quick Win(?!["\w-])',
-        '<span style="display:inline-block;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Quick Win</span>',
+        r'(?<!["\w-])Quick Win(\s*:\s*|(?!["\w-]))',
+        _qw_badge_repl,
         html,
     )
 
