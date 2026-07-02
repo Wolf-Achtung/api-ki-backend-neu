@@ -149,7 +149,7 @@ def summarize_news(raw_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         section="news_summarizer",
         prompt=results_text,
         system_prompt=system_prompt,
-        model="gpt-4o",
+        model=os.getenv("OPENAI_MODEL", "gpt-4o"),
         temperature=0.3,
         max_tokens=2000,
     )

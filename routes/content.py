@@ -8,6 +8,7 @@ to the admin for editorial review.
 """
 from __future__ import annotations
 
+import hmac
 import logging
 import os
 
@@ -31,7 +32,7 @@ async def research_news_endpoint(
     Aufruf: Manuell oder via Cron-Job (Railway Cron oder externe Cron).
     Auth: X-Cron-Secret Header muss CRON_SECRET matchen.
     """
-    if not CRON_SECRET or x_cron_secret != CRON_SECRET:
+    if not CRON_SECRET or not hmac.compare_digest(x_cron_secret or "", CRON_SECRET):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     try:

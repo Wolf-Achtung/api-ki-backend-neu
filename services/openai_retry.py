@@ -486,7 +486,7 @@ def openai_request_simple(
     section: str,
     prompt: str,
     system_prompt: str = "Du bist ein KI-Berater.",
-    model: str = "gpt-4o",
+    model: str = os.getenv("OPENAI_MODEL", "gpt-4o"),
     temperature: float = 0.2,
     max_tokens: int = 3000,
     api_key: Optional[str] = None,

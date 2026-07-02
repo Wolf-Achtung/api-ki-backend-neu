@@ -176,6 +176,23 @@ else:
 
 
 # ---------------------------------------------------------------------------
+# Security headers
+# ---------------------------------------------------------------------------
+# Applied to every response. Kept intentionally minimal so it does not break
+# the Swagger UI at /docs (which needs its own script/style sources): only a
+# frame-ancestors CSP plus the standard hardening headers. Notably protects the
+# report HTML served at /api/strategy/html/{id} from clickjacking/MIME-sniffing.
+@app.middleware("http")
+async def _security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Content-Security-Policy", "frame-ancestors 'none'")
+    return response
+
+
+# ---------------------------------------------------------------------------
 # Router Mounting (mit ENV-Guards für Admin)
 # ---------------------------------------------------------------------------
 def mount_router(module_path: str, prefix: str, name: str) -> bool:

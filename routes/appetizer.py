@@ -11,11 +11,12 @@ from enum import Enum
 from typing import Optional
 
 import anthropic
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import text
 
 from core.db import SessionLocal
+from routes._bootstrap import rate_limiter
 from prompts.appetizer_prompts import APPETIZER_SYSTEM_PROMPT, build_user_prompt
 from services.appetizer_score import calculate_appetizer_score, enforce_zeitersparnis_caps
 from services.email_templates import render_appetizer_result_email
@@ -268,7 +269,18 @@ def _send_appetizer_emails(email: str, request_data: dict, result: dict):
 # Endpoint (sync — FastAPI runs it in threadpool automatically)
 # ---------------------------------------------------------------------------
 
-@router.post("/generate")
+@router.post(
+    "/generate",
+    dependencies=[
+        Depends(
+            rate_limiter(
+                "appetizer:generate",
+                int(os.getenv("APPETIZER_RATE_LIMIT", "15")),
+                int(os.getenv("APPETIZER_RATE_WINDOW", "60")),
+            )
+        )
+    ],
+)
 def generate_appetizer(request: AppetizerRequest, background: BackgroundTasks):
     # 1. Score berechnen (deterministic, no LLM)
     score = calculate_appetizer_score(
