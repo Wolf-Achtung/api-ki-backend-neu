@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from services.live_research import execute_research
-from services.strategy_budget import _user_budget_label, calculate_strategy_budget
+from services.strategy_budget import _user_budget_label, _zeitrahmen_prose, calculate_strategy_budget
 
 logger = logging.getLogger(__name__)
 
@@ -305,7 +305,10 @@ async def generate_strategy_report(
             # S.2/S.3). _user_budget_label() liefert "2.000 – 10.000 €".
             # Raw-Key bleibt über strategy_questions/briefing_data abrufbar.
             "s1_budget": _user_budget_label(strategy_questions.get("s1_budget", "")),
-            "s2_zeitrahmen": strategy_questions.get("s2_zeitrahmen", ""),
+            # KIS-1230: Zeitrahmen-Label in Prosa-sichere Form bringen — das
+            # rohe Chip-Label führte zu "innerhalb von Sofort (1-3 Monate)"
+            # im Executive Summary.
+            "s2_zeitrahmen": _zeitrahmen_prose(strategy_questions.get("s2_zeitrahmen", "")),
             "s3_prioritaeten": ", ".join(strategy_questions.get("s3_prioritaeten", [])),
             "s4_engpass": strategy_questions.get("s4_engpass", ""),
             # s5_software: comma-separated string, merged in Frontend (strategy.html ~L1179-1184)
@@ -975,7 +978,13 @@ async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
         result = await asyncio.to_thread(
             render_pdf_from_html,
             html_content,
-            {"report_type": "strategy", "briefing_id": briefing_id, "report_id": _kis},
+            {
+                "report_type": "strategy",
+                "briefing_id": briefing_id,
+                "report_id": _kis,
+                # KIS-1230: Fußzeile zeigte 'KIS-#### • –' — Datum fehlte im meta.
+                "report_date": datetime.now(timezone.utc).strftime("%d.%m.%Y"),
+            },
         )
 
         if "error" in result:

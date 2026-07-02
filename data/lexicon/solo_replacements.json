@@ -6,81 +6,405 @@
     "target_persona": "solo"
   },
   "replacements": [
-    {"pattern": "\\bModulen\\b", "replacement": "Bausteinen", "description": "Modul->Baustein (Dativ Plural)"},
-    {"pattern": "\\bModule\\b", "replacement": "Bausteine", "description": "Modul->Baustein (Plural)"},
-    {"pattern": "\\bModul\\b", "replacement": "Baustein", "description": "Modul->Baustein"},
-    {"pattern": "\\bKomponenten\\b", "replacement": "Teile", "description": "Komponenten->Teile"},
-    {"pattern": "\\bKomponente\\b", "replacement": "Teil", "description": "Komponente->Teil"},
-    {"pattern": "\\bCloud-Plattform\\b", "replacement": "Cloud-Umgebung", "description": "Cloud-Plattform->Cloud-Umgebung"},
-    {"pattern": "\\bKI-Plattform\\b", "replacement": "KI-Umgebung", "description": "KI-Plattform->KI-Umgebung"},
-    {"pattern": "\\bPlattformen\\b", "replacement": "Arbeitsumgebungen", "description": "Plattformen->Arbeitsumgebungen"},
-    {"pattern": "\\bPlattform\\b", "replacement": "Arbeitsumgebung", "description": "Plattform->Arbeitsumgebung"},
-    {"pattern": "\\bArchitekturen\\b", "replacement": "Strukturen", "description": "Architekturen->Strukturen"},
-    {"pattern": "\\bArchitektur\\b", "replacement": "Struktur", "description": "Architektur->Struktur"},
-    {"pattern": "\\bInfrastruktur\\b", "replacement": "Grundausstattung", "description": "Infrastruktur->Grundausstattung"},
-    {"pattern": "\\bTech-Stack\\b", "replacement": "Technikpaket", "description": "Tech-Stack->Technikpaket"},
-    {"pattern": "\\bKI-Stack\\b", "replacement": "KI-Werkzeuge", "description": "KI-Stack->KI-Werkzeuge"},
-    {"pattern": "\\bStacks\\b", "replacement": "Technikpakete", "description": "Stacks->Technikpakete"},
-    {"pattern": "\\bStack\\b", "replacement": "Technikpaket", "description": "Stack->Technikpaket"},
-    {"pattern": "\\bLayers\\b", "replacement": "Ebenen", "description": "Layers->Ebenen"},
-    {"pattern": "\\bLayer\\b", "replacement": "Ebene", "description": "Layer->Ebene"},
-    {"pattern": "\\bPipelines\\b", "replacement": "Abläufe", "description": "Pipelines->Abläufe"},
-    {"pattern": "\\bPipeline\\b", "replacement": "Ablauf", "description": "Pipeline->Ablauf"},
-    {"pattern": "\\bWorkflows\\b", "replacement": "Arbeitsabläufe", "description": "Workflows->Arbeitsabläufe"},
-    {"pattern": "\\bWorkflow\\b", "replacement": "Arbeitsablauf", "description": "Workflow->Arbeitsablauf"},
-    {"pattern": "\\bDeployment\\b", "replacement": "Einrichtung", "description": "Deployment->Einrichtung"},
-    {"pattern": "\\bRollout\\b", "replacement": "", "description": "Rollout->ENTFERNEN"},
-    {"pattern": "\\bRoll-out\\b", "replacement": "", "description": "Roll-out->ENTFERNEN"},
-    {"pattern": "\\bImplementierung\\b", "replacement": "Umsetzung", "description": "Implementierung->Umsetzung"},
-    {"pattern": "\\bIntegration\\b", "replacement": "Einbindung", "description": "Integration->Einbindung"},
-    {"pattern": "\\bSkalierung\\b", "replacement": "Ausbau", "description": "Skalierung->Ausbau"},
-    {"pattern": "\\bskalieren\\b", "replacement": "ausbauen", "description": "skalieren->ausbauen"},
-    {"pattern": "\\bSkalierbarkeit\\b", "replacement": "Erweiterbarkeit", "description": "Skalierbarkeit->Erweiterbarkeit"},
-    {"pattern": "\\bskalierbar\\b", "replacement": "erweiterbar", "description": "skalierbar->erweiterbar"},
-    {"pattern": "\\bStakeholder-Analyse\\b", "replacement": "Beteiligten-Analyse", "description": "FIX-KIS-1188-S4: Stakeholder-Analyse->Beteiligten-Analyse (compound)"},
-    {"pattern": "\\bStakeholder-Alignment\\b", "replacement": "Abstimmung der Beteiligten", "description": "FIX-KIS-1188-S4: Stakeholder-Alignment->Abstimmung der Beteiligten (compound)"},
-    {"pattern": "\\bStakeholder-Feedback\\b", "replacement": "Rückmeldung der Beteiligten", "description": "FIX-KIS-1188-S4: Stakeholder-Feedback->Rückmeldung der Beteiligten (compound)"},
-    {"pattern": "\\bStakeholder-Management\\b", "replacement": "Beteiligten-Management", "description": "FIX-KIS-1188-S4: Stakeholder-Management->Beteiligten-Management (compound)"},
-    {"pattern": "\\bStakeholder-Kommunikation\\b", "replacement": "Kommunikation mit Beteiligten", "description": "FIX-KIS-1188-S4: Stakeholder-Kommunikation->Kommunikation mit Beteiligten (compound)"},
-    {"pattern": "\\bStakeholder-Mapping\\b", "replacement": "Beteiligten-Übersicht", "description": "FIX-KIS-1188-S4: Stakeholder-Mapping->Beteiligten-Übersicht (compound)"},
-    {"pattern": "\\bStakeholder-Engagement\\b", "replacement": "Einbindung der Beteiligten", "description": "FIX-KIS-1188-S4: Stakeholder-Engagement->Einbindung der Beteiligten (compound)"},
-    {"pattern": "\\bStakeholder-[A-Za-zäöüÄÖÜß]+\\b", "replacement": "Beteiligten-Abstimmung", "description": "FIX-KIS-1188-S4: Stakeholder-Compound fallback (Mapping, Liste, Kreis, ...)"},
-    {"pattern": "(?i)\\bStakeholdern\\b", "replacement": "Beteiligten", "description": "FIX-KIS-1188-S4: Stakeholdern->Beteiligten (Dativ, case-insensitive)"},
-    {"pattern": "(?i)\\bStakeholders\\b", "replacement": "Beteiligte", "description": "FIX-KIS-1188-S4: Stakeholders (EN-Plural)->Beteiligte (case-insensitive)"},
-    {"pattern": "(?i)\\bStakeholder\\b", "replacement": "Beteiligte", "description": "FIX-KIS-1188-S4: Stakeholder->Beteiligte (case-insensitive — covers lowercase + ALLCAPS)"},
-    {"pattern": "\\bAudit-Trail\\b", "replacement": "Prüfpfad", "description": "Audit-Trail->Prüfpfad"},
-    {"pattern": "\\bEngines\\b(?!ering)", "replacement": "Bausteine", "description": "Engines->Bausteine"},
-    {"pattern": "\\bEngine\\b(?!ering)", "replacement": "Baustein", "description": "Engine->Baustein"},
-    {"pattern": "\\bGovernance\\b", "replacement": "Steuerung", "description": "Governance->Steuerung"},
-    {"pattern": "\\bCompliance\\b", "replacement": "Regelkonformität", "description": "Compliance->Regelkonformität"},
-    {"pattern": "\\bFramework\\b", "replacement": "Rahmenwerk", "description": "Framework->Rahmenwerk"},
-    {"pattern": "\\bKPI-Dashboard\\b", "replacement": "Kennzahlen-Übersicht", "description": "KPI-Dashboard->Kennzahlen-Übersicht"},
-    {"pattern": "\\bDashboard\\b", "replacement": "Übersicht", "description": "Dashboard->Uebersicht"},
-    {"pattern": "\\bKPIs\\b", "replacement": "Kennzahlen", "description": "KPIs->Kennzahlen"},
-    {"pattern": "\\bKPI\\b", "replacement": "Kennzahl", "description": "KPI->Kennzahl"},
-    {"pattern": "\\bMetriken\\b", "replacement": "Kennwerte", "description": "Metriken->Kennwerte"},
-    {"pattern": "\\bMetrik\\b", "replacement": "Kennwert", "description": "Metrik->Kennwert"},
-    {"pattern": "\\bProzesse\\b", "replacement": "Abläufe", "description": "Prozesse->Abläufe"},
-    {"pattern": "\\bProzess\\b", "replacement": "Ablauf", "description": "Prozess->Ablauf"},
-    {"pattern": "\\bMeilensteine\\b", "replacement": "Etappen", "description": "Meilensteine->Etappen"},
-    {"pattern": "\\bMeilenstein\\b", "replacement": "Etappe", "description": "Meilenstein->Etappe"},
-    {"pattern": "\\bRoadmap\\b", "replacement": "Fahrplan", "description": "Roadmap->Fahrplan"},
-    {"pattern": "\\bTimeline\\b", "replacement": "Zeitplan", "description": "Timeline->Zeitplan"},
-    {"pattern": "\\bRessourcen\\b", "replacement": "Mittel", "description": "Ressourcen->Mittel"},
-    {"pattern": "\\bRessource\\b", "replacement": "Mittel", "description": "Ressource->Mittel"},
-    {"pattern": "\\bTeam-Kapazitaet\\b", "replacement": "Ihre Zeit", "description": "Team-Kapazitaet->Ihre Zeit"},
-    {"pattern": "\\bKapazitaeten\\b", "replacement": "Zeitbudget", "description": "Kapazitaeten->Zeitbudget"},
-    {"pattern": "\\bKapazitaet\\b", "replacement": "Zeitbudget", "description": "Kapazitaet->Zeitbudget"},
-    {"pattern": "\\bKollegen\\b", "replacement": "Partner", "description": "Kollegen->Partner"},
-    {"pattern": "\\bTeammitglieder\\b", "replacement": "Partner", "description": "Teammitglieder->Partner"},
-    {"pattern": "\\bAbteilung\\b", "replacement": "Bereich", "description": "Abteilung->Bereich"},
-    {"pattern": "\\bProzesslandschaften\\b", "replacement": "Arbeitsabläufe", "description": "Prozesslandschaften->Arbeitsabläufe"},
-    {"pattern": "\\bProzesslandschaft\\b", "replacement": "Arbeitsabläufe", "description": "Prozesslandschaft->Arbeitsabläufe"},
-    {"pattern": "\\bKPI-Forecasts?\\b", "replacement": "Kennzahlen-Prognosen", "description": "KPI-Forecast(s)->Kennzahlen-Prognosen"},
-    {"pattern": "starke[rns]? Governance", "replacement": "klare Spielregeln", "description": "starke(r) Governance->klare Spielregeln"},
-    {"pattern": "klare[rns]? Governance", "replacement": "klare Spielregeln", "description": "klare(r) Governance->klare Spielregeln"},
-    {"pattern": "gute[rns]? Governance", "replacement": "gute Spielregeln", "description": "gute(r) Governance->gute Spielregeln"},
-    {"pattern": "\\bGovernance-Board\\b", "replacement": "Ihre Steuerung", "description": "Governance-Board->Ihre Steuerung"},
-    {"pattern": "\\bGovernance-Modell\\b", "replacement": "Regelwerk", "description": "Governance-Modell->Regelwerk"}
+    {
+      "pattern": "\\bModulen\\b",
+      "replacement": "Bausteinen",
+      "description": "Modul->Baustein (Dativ Plural)"
+    },
+    {
+      "pattern": "\\bModule\\b",
+      "replacement": "Bausteine",
+      "description": "Modul->Baustein (Plural)"
+    },
+    {
+      "pattern": "\\bModul\\b",
+      "replacement": "Baustein",
+      "description": "Modul->Baustein"
+    },
+    {
+      "pattern": "\\bKomponenten\\b",
+      "replacement": "Teile",
+      "description": "Komponenten->Teile"
+    },
+    {
+      "pattern": "\\bKomponente\\b",
+      "replacement": "Teil",
+      "description": "Komponente->Teil"
+    },
+    {
+      "pattern": "\\bCloud-Plattform\\b",
+      "replacement": "Cloud-Umgebung",
+      "description": "Cloud-Plattform->Cloud-Umgebung"
+    },
+    {
+      "pattern": "\\bKI-Plattform\\b",
+      "replacement": "KI-Umgebung",
+      "description": "KI-Plattform->KI-Umgebung"
+    },
+    {
+      "pattern": "\\bPlattformen\\b",
+      "replacement": "Arbeitsumgebungen",
+      "description": "Plattformen->Arbeitsumgebungen"
+    },
+    {
+      "pattern": "\\bPlattform\\b",
+      "replacement": "Arbeitsumgebung",
+      "description": "Plattform->Arbeitsumgebung"
+    },
+    {
+      "pattern": "\\bArchitekturen\\b",
+      "replacement": "Strukturen",
+      "description": "Architekturen->Strukturen"
+    },
+    {
+      "pattern": "\\bArchitektur\\b",
+      "replacement": "Struktur",
+      "description": "Architektur->Struktur"
+    },
+    {
+      "pattern": "\\bInfrastruktur\\b",
+      "replacement": "Grundausstattung",
+      "description": "Infrastruktur->Grundausstattung"
+    },
+    {
+      "pattern": "\\bTech-Stack\\b",
+      "replacement": "Technikpaket",
+      "description": "Tech-Stack->Technikpaket"
+    },
+    {
+      "pattern": "\\bKI-Stack\\b",
+      "replacement": "KI-Werkzeuge",
+      "description": "KI-Stack->KI-Werkzeuge"
+    },
+    {
+      "pattern": "\\bStacks\\b",
+      "replacement": "Technikpakete",
+      "description": "Stacks->Technikpakete"
+    },
+    {
+      "pattern": "\\bStack\\b",
+      "replacement": "Technikpaket",
+      "description": "Stack->Technikpaket"
+    },
+    {
+      "pattern": "\\bLayers\\b",
+      "replacement": "Ebenen",
+      "description": "Layers->Ebenen"
+    },
+    {
+      "pattern": "\\bLayer\\b",
+      "replacement": "Ebene",
+      "description": "Layer->Ebene"
+    },
+    {
+      "pattern": "\\bPipelines\\b",
+      "replacement": "Abläufe",
+      "description": "Pipelines->Abläufe"
+    },
+    {
+      "pattern": "\\bPipeline\\b",
+      "replacement": "Ablauf",
+      "description": "Pipeline->Ablauf"
+    },
+    {
+      "pattern": "\\bWorkflows\\b",
+      "replacement": "Arbeitsabläufe",
+      "description": "Workflows->Arbeitsabläufe"
+    },
+    {
+      "pattern": "\\bWorkflow\\b",
+      "replacement": "Arbeitsablauf",
+      "description": "Workflow->Arbeitsablauf"
+    },
+    {
+      "pattern": "\\bDeployment\\b",
+      "replacement": "Einrichtung",
+      "description": "Deployment->Einrichtung"
+    },
+    {
+      "pattern": "\\bRollout\\b",
+      "replacement": "",
+      "description": "Rollout->ENTFERNEN"
+    },
+    {
+      "pattern": "\\bRoll-out\\b",
+      "replacement": "",
+      "description": "Roll-out->ENTFERNEN"
+    },
+    {
+      "pattern": "\\bImplementierung\\b",
+      "replacement": "Umsetzung",
+      "description": "Implementierung->Umsetzung"
+    },
+    {
+      "pattern": "\\bIntegration\\b",
+      "replacement": "Einbindung",
+      "description": "Integration->Einbindung"
+    },
+    {
+      "pattern": "\\bSkalierung\\b",
+      "replacement": "Ausbau",
+      "description": "Skalierung->Ausbau"
+    },
+    {
+      "pattern": "\\bskalieren\\b",
+      "replacement": "ausbauen",
+      "description": "skalieren->ausbauen"
+    },
+    {
+      "pattern": "\\bSkalierbarkeit\\b",
+      "replacement": "Erweiterbarkeit",
+      "description": "Skalierbarkeit->Erweiterbarkeit"
+    },
+    {
+      "pattern": "\\bskalierbar\\b",
+      "replacement": "erweiterbar",
+      "description": "skalierbar->erweiterbar"
+    },
+    {
+      "pattern": "\\bStakeholder-Analyse\\b",
+      "replacement": "Beteiligten-Analyse",
+      "description": "FIX-KIS-1188-S4: Stakeholder-Analyse->Beteiligten-Analyse (compound)"
+    },
+    {
+      "pattern": "\\bStakeholder-Alignment\\b",
+      "replacement": "Abstimmung der Beteiligten",
+      "description": "FIX-KIS-1188-S4: Stakeholder-Alignment->Abstimmung der Beteiligten (compound)"
+    },
+    {
+      "pattern": "\\bStakeholder-Feedback\\b",
+      "replacement": "Rückmeldung der Beteiligten",
+      "description": "FIX-KIS-1188-S4: Stakeholder-Feedback->Rückmeldung der Beteiligten (compound)"
+    },
+    {
+      "pattern": "\\bStakeholder-Management\\b",
+      "replacement": "Beteiligten-Management",
+      "description": "FIX-KIS-1188-S4: Stakeholder-Management->Beteiligten-Management (compound)"
+    },
+    {
+      "pattern": "\\bStakeholder-Kommunikation\\b",
+      "replacement": "Kommunikation mit Beteiligten",
+      "description": "FIX-KIS-1188-S4: Stakeholder-Kommunikation->Kommunikation mit Beteiligten (compound)"
+    },
+    {
+      "pattern": "\\bStakeholder-Mapping\\b",
+      "replacement": "Beteiligten-Übersicht",
+      "description": "FIX-KIS-1188-S4: Stakeholder-Mapping->Beteiligten-Übersicht (compound)"
+    },
+    {
+      "pattern": "\\bStakeholder-Engagement\\b",
+      "replacement": "Einbindung der Beteiligten",
+      "description": "FIX-KIS-1188-S4: Stakeholder-Engagement->Einbindung der Beteiligten (compound)"
+    },
+    {
+      "pattern": "\\bStakeholder-[A-Za-zäöüÄÖÜß]+\\b",
+      "replacement": "Beteiligten-Abstimmung",
+      "description": "FIX-KIS-1188-S4: Stakeholder-Compound fallback (Mapping, Liste, Kreis, ...)"
+    },
+    {
+      "pattern": "(?i)\\bStakeholdern\\b",
+      "replacement": "Beteiligten",
+      "description": "FIX-KIS-1188-S4: Stakeholdern->Beteiligten (Dativ, case-insensitive)"
+    },
+    {
+      "pattern": "(?i)\\bStakeholders\\b",
+      "replacement": "Beteiligte",
+      "description": "FIX-KIS-1188-S4: Stakeholders (EN-Plural)->Beteiligte (case-insensitive)"
+    },
+    {
+      "pattern": "(?i)\\bStakeholder\\b",
+      "replacement": "Beteiligte",
+      "description": "FIX-KIS-1188-S4: Stakeholder->Beteiligte (case-insensitive — covers lowercase + ALLCAPS)"
+    },
+    {
+      "pattern": "\\bAudit-Trail\\b",
+      "replacement": "Prüfpfad",
+      "description": "Audit-Trail->Prüfpfad"
+    },
+    {
+      "pattern": "\\bEngines\\b(?!ering)",
+      "replacement": "Bausteine",
+      "description": "Engines->Bausteine"
+    },
+    {
+      "pattern": "\\bEngine\\b(?!ering)",
+      "replacement": "Baustein",
+      "description": "Engine->Baustein"
+    },
+    {
+      "pattern": "\\bGovernance-Rahmen\\b",
+      "replacement": "Steuerungsrahmen",
+      "description": "KIS-1230: Governance-Rahmen->Steuerungsrahmen (Kompositum, nicht 'Steuerung-Rahmen')"
+    },
+    {
+      "pattern": "\\bGovernance-Runde\\b",
+      "replacement": "Steuerungsrunde",
+      "description": "KIS-1230: Governance-Runde->Steuerungsrunde (Kompositum)"
+    },
+    {
+      "pattern": "\\bGovernance-Struktur(en)?\\b",
+      "replacement": "Steuerungsstruktur",
+      "description": "KIS-1230: Governance-Struktur->Steuerungsstruktur (Kompositum)"
+    },
+    {
+      "pattern": "\\bGovernance-Regeln\\b",
+      "replacement": "Spielregeln",
+      "description": "KIS-1230: Governance-Regeln->Spielregeln (Kompositum)"
+    },
+    {
+      "pattern": "\\bGovernance\\b(?!-)",
+      "replacement": "Steuerung",
+      "description": "Governance->Steuerung (KIS-1230: nicht vor Bindestrich — Komposita haben eigene Regeln)"
+    },
+    {
+      "pattern": "\\bCompliance\\b",
+      "replacement": "Regelkonformität",
+      "description": "Compliance->Regelkonformität"
+    },
+    {
+      "pattern": "\\bFramework\\b",
+      "replacement": "Rahmenwerk",
+      "description": "Framework->Rahmenwerk"
+    },
+    {
+      "pattern": "\\bKPI-Dashboard\\b",
+      "replacement": "Kennzahlen-Übersicht",
+      "description": "KPI-Dashboard->Kennzahlen-Übersicht"
+    },
+    {
+      "pattern": "\\bDashboard\\b",
+      "replacement": "Übersicht",
+      "description": "Dashboard->Uebersicht"
+    },
+    {
+      "pattern": "\\bKPIs\\b",
+      "replacement": "Kennzahlen",
+      "description": "KPIs->Kennzahlen"
+    },
+    {
+      "pattern": "\\bKPI\\b",
+      "replacement": "Kennzahl",
+      "description": "KPI->Kennzahl"
+    },
+    {
+      "pattern": "\\bMetriken\\b",
+      "replacement": "Kennwerte",
+      "description": "Metriken->Kennwerte"
+    },
+    {
+      "pattern": "\\bMetrik\\b",
+      "replacement": "Kennwert",
+      "description": "Metrik->Kennwert"
+    },
+    {
+      "pattern": "\\bProzesse\\b",
+      "replacement": "Abläufe",
+      "description": "Prozesse->Abläufe"
+    },
+    {
+      "pattern": "\\bProzess\\b",
+      "replacement": "Ablauf",
+      "description": "Prozess->Ablauf"
+    },
+    {
+      "pattern": "\\bMeilensteine\\b",
+      "replacement": "Etappen",
+      "description": "Meilensteine->Etappen"
+    },
+    {
+      "pattern": "\\bMeilenstein\\b",
+      "replacement": "Etappe",
+      "description": "Meilenstein->Etappe"
+    },
+    {
+      "pattern": "\\bRoadmap\\b",
+      "replacement": "Fahrplan",
+      "description": "Roadmap->Fahrplan"
+    },
+    {
+      "pattern": "\\bTimeline\\b",
+      "replacement": "Zeitplan",
+      "description": "Timeline->Zeitplan"
+    },
+    {
+      "pattern": "\\bRessourcen\\b",
+      "replacement": "Mittel",
+      "description": "Ressourcen->Mittel"
+    },
+    {
+      "pattern": "\\bRessource\\b",
+      "replacement": "Mittel",
+      "description": "Ressource->Mittel"
+    },
+    {
+      "pattern": "\\bTeam-Kapazitaet\\b",
+      "replacement": "Ihre Zeit",
+      "description": "Team-Kapazitaet->Ihre Zeit"
+    },
+    {
+      "pattern": "\\bKapazitaeten\\b",
+      "replacement": "Zeitbudget",
+      "description": "Kapazitaeten->Zeitbudget"
+    },
+    {
+      "pattern": "\\bKapazitaet\\b",
+      "replacement": "Zeitbudget",
+      "description": "Kapazitaet->Zeitbudget"
+    },
+    {
+      "pattern": "\\bKollegen\\b",
+      "replacement": "Partner",
+      "description": "Kollegen->Partner"
+    },
+    {
+      "pattern": "\\bTeammitglieder\\b",
+      "replacement": "Partner",
+      "description": "Teammitglieder->Partner"
+    },
+    {
+      "pattern": "\\bAbteilung\\b",
+      "replacement": "Bereich",
+      "description": "Abteilung->Bereich"
+    },
+    {
+      "pattern": "\\bProzesslandschaften\\b",
+      "replacement": "Arbeitsabläufe",
+      "description": "Prozesslandschaften->Arbeitsabläufe"
+    },
+    {
+      "pattern": "\\bProzesslandschaft\\b",
+      "replacement": "Arbeitsabläufe",
+      "description": "Prozesslandschaft->Arbeitsabläufe"
+    },
+    {
+      "pattern": "\\bKPI-Forecasts?\\b",
+      "replacement": "Kennzahlen-Prognosen",
+      "description": "KPI-Forecast(s)->Kennzahlen-Prognosen"
+    },
+    {
+      "pattern": "starke[rns]? Governance",
+      "replacement": "klare Spielregeln",
+      "description": "starke(r) Governance->klare Spielregeln"
+    },
+    {
+      "pattern": "klare[rns]? Governance",
+      "replacement": "klare Spielregeln",
+      "description": "klare(r) Governance->klare Spielregeln"
+    },
+    {
+      "pattern": "gute[rns]? Governance",
+      "replacement": "gute Spielregeln",
+      "description": "gute(r) Governance->gute Spielregeln"
+    },
+    {
+      "pattern": "\\bGovernance-Board\\b",
+      "replacement": "Steuerungsrunde",
+      "description": "KIS-1230: Governance-Board->Steuerungsrunde (artikel-sicher; vorher \"Ihre Steuerung\" → \"Das Ihre Steuerung\")"
+    },
+    {
+      "pattern": "\\bGovernance-Modell\\b",
+      "replacement": "Regelwerk",
+      "description": "Governance-Modell->Regelwerk"
+    }
   ]
 }

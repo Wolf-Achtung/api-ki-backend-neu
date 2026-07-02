@@ -208,7 +208,7 @@ BENCHMARK-TABELLE (VERBINDLICH — FIX-KIS-1082):
 - Verwechsle NIE Marktdaten-Prozente (z.B. „20% der Mittelständler nutzen KI") mit Finanz-Prozenten (z.B. „280% ROI").
 - Wenn du unsicher bist, ob ein Wert ein Marktdatum oder ein Finanzwert ist: NICHT in die Tabelle setzen.
 - HARD LIMIT: Kein Benchmark-Prozentwert darf über 100% liegen. Werte über 100% sind IMMER Finanz-Kennzahlen (ROI, Rendite), NIEMALS Marktdaten. Wenn ein Wert >100% in deinem Output steht, ENTFERNE ihn sofort.
-- LEAK-SCHUTZ: Die Zahlen aus dem Budget-Block ({budget_roi_12m}, {budget_total_12m} etc.) gehören NICHT in die Benchmark-Tabelle. Sie gehören in S5 (Budget & ROI).
+- LEAK-SCHUTZ: Die Zahlen aus dem Budget-Block (ROI, Gesamtinvestition etc.) gehören NICHT in die Benchmark-Tabelle. Sie gehören in S5 (Budget & ROI).
 
 AUFGABE:
 1. Analysiere den aktuellen Stand der KI-Adoption in der Branche {branche}.

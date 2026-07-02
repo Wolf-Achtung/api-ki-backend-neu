@@ -21113,6 +21113,14 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             (r'\btech-stack\b', 'Technologie-Basis'),
             (r'\bKernstack\b', 'Kernsysteme'),
             (r'\bkernstack\b', 'Kernsysteme'),
+            # KIS-1230: Genus-sichere Varianten VOR der generischen Regel —
+            # 'Stack' (m.) → 'Systemlandschaft' (f.) zerbrach Artikel/Possessiv
+            # ('Ihr KI-Systemlandschaft' im Tools-Kapitel).
+            (r'\bIhr (KI-)?Stack\b', r'Ihre \1Systemlandschaft'),
+            (r'\bihr (KI-)?Stack\b', r'ihre \1Systemlandschaft'),
+            (r'\bder (KI-)?Stack\b', r'die \1Systemlandschaft'),
+            (r'\bDer (KI-)?Stack\b', r'Die \1Systemlandschaft'),
+            (r'\bein (KI-)?Stack\b', r'eine \1Systemlandschaft'),
             (r'\bStack\b', 'Systemlandschaft'),
             (r'\bstack\b', 'Systemlandschaft'),
             # === v14.35.15c: Grammatik-Fix + Toolset ===
@@ -21736,9 +21744,21 @@ def _auto_trigger_potenzialanalyse(briefing_id: int, run_id: str) -> None:
                 # default page-number footer (KPA had none before).
                 "margin": {"top": "12mm", "right": "12mm", "bottom": "20mm", "left": "12mm"},
             }
+            # KIS-1230: report_id/report_date für die Default-Fußzeile mitgeben —
+            # vorher zeigte die KPA 'Report-ID: – • –'.
+            try:
+                from utils.report_display_id import get_report_display_id as _kpa_display_id
+                _kpa_rid = _kpa_display_id(bid)
+            except Exception:
+                _kpa_rid = f"KPA-{bid}"
             pdf_result = render_pdf_from_html(
                 html=html,
-                meta={"briefing_id": bid, "report_type": "gamechanger_deep_dive"},
+                meta={
+                    "briefing_id": bid,
+                    "report_type": "gamechanger_deep_dive",
+                    "report_id": _kpa_rid,
+                    "report_date": datetime.now().strftime("%d.%m.%Y"),
+                },
                 pdf_options=pdf_options,
             )
 
