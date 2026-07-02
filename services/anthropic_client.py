@@ -46,6 +46,10 @@ _EFFORT_MODEL_MARKERS = ("opus-4-6", "opus-4-7", "sonnet-4-6")
 # temperature weggelassen; effort senden wir bewusst nicht (Support unklar).
 _NO_TEMPERATURE_MODEL_MARKERS = _EFFORT_MODEL_MARKERS + (
     "sonnet-5", "opus-5", "haiku-5", "fable-5", "mythos-5",
+    # KIS-1231: opus-4-8 lehnt temperature ebenfalls ab (KMU-Lauf 1114:
+    # jede Opus-Sektion lief über den reaktiven 400-Retry — ein verlorener
+    # API-Roundtrip pro Sektion). Proaktiv weglassen.
+    "opus-4-8",
 )
 
 
@@ -96,6 +100,46 @@ def build_anthropic_create_kwargs(
     # KIS-1230-HOTFIX: Claude-5-Familie bekommt weder temperature (400)
     # noch output_config (Support unklar) — Provider-Defaults.
     return kwargs
+
+
+# --- KIS-1231: Truncation-Retry ---------------------------------------------
+# Der KMU-Lauf 1114 zeigte: claude-sonnet-5 schreibt deutlich länger als die
+# per ENV kalibrierten Budgets (OPENAI_MAX_TOKENS_*). 7+ Sektionen endeten mit
+# stop_reason=max_tokens; quick_wins lieferte dadurch abgeschnittenes JSON und
+# FIX-499-QW brach im STRICT-Modus den GESAMTEN Report ab. Statt jedes Budget
+# einzeln nachzuziehen: bei max_tokens einmal mit erhöhtem Budget neu
+# generieren. Kostet für die betroffene Sektion einen zweiten Call — die
+# Alternative (PLATIN-Fallback + 2-Pass-Expand) kostet mehr und liefert
+# schlechteren Text.
+
+def _truncation_retry_enabled() -> bool:
+    return os.getenv("ANTHROPIC_TRUNCATION_RETRY", "1").strip().lower() not in (
+        "0", "false", "no", "off",
+    )
+
+
+def _truncation_retry_max_tokens(current: int) -> int:
+    """Erhöhtes Budget für den Retry: current × Faktor (Default 2.0),
+    gedeckelt (Default 16000). Liefert current zurück, wenn keine Erhöhung
+    möglich ist (dann lohnt kein Retry)."""
+    try:
+        factor = float(os.getenv("ANTHROPIC_TRUNCATION_RETRY_FACTOR", "2.0"))
+    except ValueError:
+        factor = 2.0
+    try:
+        cap = int(os.getenv("ANTHROPIC_TRUNCATION_RETRY_CAP", "16000"))
+    except ValueError:
+        cap = 16000
+    return max(current, min(cap, int(current * factor)))
+
+
+def _extract_message_text(message: Any) -> str:
+    """Sammelt alle Text-Blöcke einer Anthropic-Message ein."""
+    parts = []
+    for block in getattr(message, "content", []) or []:
+        if getattr(block, "type", None) == "text":
+            parts.append(getattr(block, "text", "") or "")
+    return "".join(parts).strip()
 
 # --- RUN-622 P2: Opus Routing ------------------------------------------------
 OPUS_MODEL = os.getenv("ANTHROPIC_MODEL_OPUS", "claude-opus-4-6").strip()  # FIX-629 + FIX-STRIP
@@ -626,11 +670,7 @@ def call_anthropic(
 
     # Response auslesen mit PLATIN+ Diagnostik
     try:
-        parts = []
-        for block in getattr(message, "content", []) or []:
-            if getattr(block, "type", None) == "text":
-                parts.append(getattr(block, "text", "") or "")
-        text = "".join(parts).strip()
+        text = _extract_message_text(message)
 
         # PLATIN+ Diagnostik: Einheitliches Log-Format (wie OpenAI) für Railway
         stop_reason = getattr(message, "stop_reason", "unknown")
@@ -644,6 +684,51 @@ def call_anthropic(
                 section_label,
                 max_tok,
             )
+            # KIS-1231: Einmaliger Retry mit erhöhtem Budget statt
+            # abgeschnittenen Text weiterzureichen (truncated JSON in
+            # quick_wins brach im STRICT-Modus den ganzen Report ab).
+            retry_max = _truncation_retry_max_tokens(max_tok)
+            if _truncation_retry_enabled() and retry_max > max_tok:
+                try:
+                    _trunc_kwargs = build_anthropic_create_kwargs(
+                        model=model_name,
+                        max_tokens=retry_max,
+                        temperature=temp,
+                        system=sys,
+                        messages=messages,
+                        stop_sequences=stop_seqs,
+                    )
+                    try:
+                        retry_message = client.messages.create(**_trunc_kwargs)
+                    except anthropic.BadRequestError as _trunc_exc:
+                        # gleiches reaktives Netz wie beim Erst-Call
+                        if "temperature" in str(_trunc_exc) and "deprecated" in str(_trunc_exc):
+                            _trunc_kwargs.pop("temperature", None)
+                            retry_message = client.messages.create(**_trunc_kwargs)
+                        else:
+                            raise
+                    retry_text = _extract_message_text(retry_message)
+                    retry_stop = getattr(retry_message, "stop_reason", "unknown")
+                    retry_usage = getattr(retry_message, "usage", None)
+                    retry_tokens = getattr(retry_usage, "output_tokens", 0) if retry_usage else 0
+                    if retry_text and (retry_stop != "max_tokens" or len(retry_text) > len(text)):
+                        log.info(
+                            "✅ [KIS-1231] Truncation-Retry section=%s erfolgreich: "
+                            "reason=%s tokens=%d (Budget %d→%d)",
+                            section_label, retry_stop, retry_tokens, max_tok, retry_max,
+                        )
+                        return retry_text
+                    log.warning(
+                        "⚠️ [KIS-1231] Truncation-Retry section=%s brachte keine Verbesserung "
+                        "(reason=%s, len %d vs. %d) — behalte Erst-Antwort",
+                        section_label, retry_stop, len(retry_text or ""), len(text),
+                    )
+                except Exception as trunc_retry_exc:
+                    log.warning(
+                        "⚠️ [KIS-1231] Truncation-Retry section=%s gescheitert: %s — "
+                        "behalte (möglicherweise abgeschnittene) Erst-Antwort",
+                        section_label, str(trunc_retry_exc)[:200],
+                    )
         else:
             log.info(
                 "✅ LLM section=%s finished with reason=%s (tokens=%d, max=%d)",
