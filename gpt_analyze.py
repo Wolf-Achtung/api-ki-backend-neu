@@ -1626,6 +1626,10 @@ ENABLE_REPAIR_HTML = (os.getenv("ENABLE_REPAIR_HTML", "1") in ("1", "true", "TRU
 USE_INTERNAL_RESEARCH = (os.getenv("RESEARCH_PROVIDER", "hybrid") != "disabled")
 ENABLE_AI_ACT_SECTION = (os.getenv("ENABLE_AI_ACT_SECTION", "1") in ("1", "true", "TRUE", "yes", "YES"))
 USE_PROMPT_SYSTEM = (os.getenv("USE_PROMPT_SYSTEM", "1") in ("1", "true", "TRUE", "yes", "YES"))
+# KIS-PROMPT P1: Research-Grounding-Blöcke (section_name -> Kontextblock).
+# Wird pro Report-Lauf in _generate_content_sections VOR dem Parallel-Pool
+# gefüllt und in _generate_content_section nur gelesen.
+_RESEARCH_GROUNDING: Dict[str, str] = {}
 # STATE-AUDIT-517A: Debug trace for prompt section propagation
 DEBUG_PROMPT_TRACE = (os.getenv("DEBUG_PROMPT_TRACE", "0") in ("1", "true", "TRUE"))
 # STATE-AUDIT-517A: Thread-safe collector for prompt trace data (per-run)
@@ -11972,6 +11976,17 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 )
             prompt_text = _interpolate(enhanced_prompt, vars_dict, lang=prompt_lang, section=prompt_key)
 
+            # KIS-PROMPT P1: Live-Recherche-Kontext für research-relevante
+            # Sektionen anhängen (tools/foerder/markt/wettbewerb). Leerer
+            # Dict-Eintrag = kein Grounding verfügbar → unverändert weiter.
+            _grounding_block = _RESEARCH_GROUNDING.get(section_name)
+            if _grounding_block:
+                prompt_text = prompt_text + _grounding_block
+                log.info(
+                    "[RESEARCH-GROUNDING] injected %d chars into section=%s",
+                    len(_grounding_block), section_name,
+                )
+
             # STATE-AUDIT-517A: Record prompt trace after interpolation
             if DEBUG_PROMPT_TRACE:
                 _has_jinja_post = "{%" in (enhanced_prompt if isinstance(enhanced_prompt, str) else "")
@@ -13062,6 +13077,19 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     ]
 
     max_workers = int(os.getenv("GPT_PARALLEL_WORKERS", "10"))
+
+    # KIS-PROMPT P1: Research-Grounding EINMAL vor der parallelen Generierung
+    # holen (fail-open). Die Blöcke werden in _generate_content_section an die
+    # Prompts der research-relevanten Sektionen angehängt — vorher entstand
+    # deren Inhalt komplett aus Trainingswissen, der Live-Research wurde nur
+    # als Quellen-Box angehängt.
+    global _RESEARCH_GROUNDING
+    _RESEARCH_GROUNDING = {}
+    try:
+        from services.research_grounding import build_research_grounding
+        _RESEARCH_GROUNDING = build_research_grounding(briefing) or {}
+    except Exception as _rg_exc:
+        log.warning("[RESEARCH-GROUNDING] skipped: %s", _rg_exc)
 
     log.info(
         "🚀 Generating %d sections in PARALLEL (max_workers=%d)...",
