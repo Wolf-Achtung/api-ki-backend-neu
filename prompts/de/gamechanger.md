@@ -147,35 +147,41 @@ HARTE LIMITS (ÜBERSCHREITUNG = UNGÜLTIG):
 ┌─────────────────────────────────────────────────────────┐
 │ Element               │ Max Wörter │ Max Sätze        │
 ├─────────────────────────────────────────────────────────┤
-│ Absatz (<p>)          │ 50 Wörter  │ 2 Sätze          │
-│ Bullet (<li>)         │ 30 Wörter  │ 1-2 Sätze        │
-│ Sektion gesamt        │ 150 Wörter │ -                │
+│ Absatz (<p>)          │ 60 Wörter  │ 2-3 Sätze        │
+│ Bullet (<li>)         │ 35 Wörter  │ 1-2 Sätze        │
+│ Sektion gesamt        │ 170 Wörter │ -                │
 └─────────────────────────────────────────────────────────┘
 
+<!-- P4: Die frühere „keine Nebensätze / kein wobei-während-indem"-Regel ist
+GESTRICHEN. Sie erzwang Aphorismen statt Argumente: Eine Transformations-
+These braucht die Kausalkette („X wird obsolet, WEIL Y, WODURCH Z zum Hebel
+wird") — genau die war grammatisch verboten. Kompaktheit wird über die
+Wortlimits gesichert, nicht über Satzbau-Verbote. -->
+
 ABSATZ-REGELN (PFLICHT):
-- Maximal 2 Sätze pro Absatz (NICHT 3!)
-- KEINE Absätze über 50 Wörter
-- Jede Sektion beginnt mit 1 Satz Einleitung
+- Maximal 3 Sätze pro Absatz, jede Sektion beginnt mit 1 Satz Einleitung.
+- Kausalketten sind ERWÜNSCHT, wenn sie die Wertschöpfungslogik tragen —
+  ein „weil/wodurch"-Satz mit klarer Folge schlägt zwei zusammenhanglose
+  Kurzsätze.
 
 BULLET-REGELN (PFLICHT):
-- Maximal 30 Wörter pro Bullet
-- Format: <strong>Stichwort:</strong> Ein kurzer Satz.
-- KEINE Nebensätze in Bullets
-- KEINE verschachtelten Aufzählungen
+- Maximal 35 Wörter pro Bullet, Format: <strong>Stichwort:</strong> Aussage.
+- Maximal EIN Nebensatz pro Bullet; keine verschachtelten Aufzählungen.
+- Jeder Bullet trägt eine Konsequenz („das heißt konkret …"), nicht nur
+  eine Behauptung.
 
 STRUKTUR PRO SEKTION (PFLICHT):
 <p><strong>[Kernaussage in MAX 15 Wörtern]</strong></p>
 <ul>
-  <li><strong>Bisher:</strong> [Problem in 1 Satz, max 25 Wörter]</li>
-  <li><strong>Neu:</strong> [Lösung in 1 Satz, max 25 Wörter]</li>
-  <li><strong>Nutzen:</strong> [Wirkung in 1 Satz, max 25 Wörter]</li>
+  <li><strong>Bisher:</strong> [Problem + warum es die Wertschöpfung begrenzt, max 35 Wörter]</li>
+  <li><strong>Neu:</strong> [Neue Logik + wodurch sie den Hebel schafft, max 35 Wörter]</li>
+  <li><strong>Nutzen:</strong> [Wirkung mit konkreter Konsequenz, max 35 Wörter]</li>
 </ul>
 
 VERBOTEN (STRIKT!):
-❌ Absätze mit mehr als 2 Sätzen
-❌ Bullets mit mehr als 30 Wörtern
-❌ Sektionen über 150 Wörter
-❌ Schachtelsätze (Sätze mit "wobei", "während", "indem")
+❌ Absätze mit mehr als 3 Sätzen
+❌ Bullets mit mehr als 35 Wörtern
+❌ Sektionen über 170 Wörter
 ❌ Fließtext ohne Bullet-Listen
 ❌ Einleitungen länger als 1 Satz
 
