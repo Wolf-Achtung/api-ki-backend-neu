@@ -3877,17 +3877,24 @@ def _apply_pdf_inline_styles(html: str) -> str:
     result = thead_pattern.sub(add_thead_style, result)
 
     # Fix 2: Add inline color to <th> elements within table-modern
-    # Ensure white text on gradient backgrounds
+    # Ensure white text on a guaranteed dark background. NOTE: Fix 1 only sets a
+    # dark gradient on <thead>; tables that use <th> without a <thead> wrapper
+    # would otherwise get white text on the light template default (#F9FAFB) ->
+    # unreadable. So we set a dark background on the <th> itself as well, which
+    # keeps contrast regardless of whether a <thead> is present.
     th_pattern = re.compile(r'<th(\s+[^>]*)?>', re.IGNORECASE)
-    th_style = 'style="color: white; font-weight: 600; padding: 14px 18px;"'
+    th_style = ('style="background: #1e40af; color: white; font-weight: 600; '
+                'padding: 14px 18px; -webkit-print-color-adjust: exact; '
+                'print-color-adjust: exact;"')
 
     def add_th_style(match):
         attrs = match.group(1) or ''
         if 'style=' in attrs.lower():
-            # Already has style, prepend our color
+            # Already has style, prepend our background+color so contrast holds.
             return re.sub(
                 r'style="([^"]*)"',
-                r'style="color: white; font-weight: 600; \1"',
+                r'style="background: #1e40af; color: white; font-weight: 600; '
+                r'-webkit-print-color-adjust: exact; \1"',
                 match.group(0),
                 flags=re.IGNORECASE
             )
