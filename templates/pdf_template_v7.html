@@ -22,12 +22,12 @@
 @page {
     size: A4;
     margin: 12mm 12mm 15mm 12mm;
-    @bottom-right {
-        content: "Seite " counter(page) " von " counter(pages);
-        font-size: 7.5pt;
-        color: #9CA3AF;
-        font-family: 'Inter', system-ui, sans-serif;
-    }
+    /* KIS-FOOTER: @bottom-right-Seitenzahl ENTFERNT. Sie war in prod-Chromium
+       (Puppeteer 22.10 / ~M125) toter Code (rendert @page-Margin-Boxen nicht),
+       dupliziert aber die Puppeteer-footerTemplate (build_footer_template:
+       "Seite X / Y · Report-ID · Datum") und ergaebe auf neuerem Chromium eine
+       doppelte Fussnote. Paginierung laeuft ausschliesslich ueber die
+       footerTemplate. */
 }
 
 /* ── Design Tokens ──────────────────────────────────── */
