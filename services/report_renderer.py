@@ -1172,6 +1172,26 @@ def render(briefing_obj: Any,
     except Exception as _cur_exc:  # pragma: no cover
         log.warning("[KIS-1230][CURRENCY] skipped: %s", _cur_exc)
 
+    # KIS-1232: Deutsche Textmechanik auf dem FINAL-HTML — fehlende
+    # Leerzeichen nach Satzzeichen ("KMU.Das"), Dezimalpunkt vor
+    # Zeiteinheiten ("5.8 h" → "5,8 h") und Satzzeichen-Waisen-Absätze.
+    try:
+        from services.style_lint import (
+            fix_missing_sentence_space,
+            fix_decimal_comma_units,
+            remove_punctuation_only_nodes,
+        )
+        html, _sp_fixes = fix_missing_sentence_space(html)
+        html, _dc_fixes = fix_decimal_comma_units(html)
+        html, _po_fixes = remove_punctuation_only_nodes(html)
+        if _sp_fixes or _dc_fixes or _po_fixes:
+            log.info(
+                "[KIS-1232][TEXTMECHANIK] sentence_spaces=%d decimal_commas=%d punct_only_nodes=%d",
+                _sp_fixes, _dc_fixes, _po_fixes,
+            )
+    except Exception as _tm_exc:  # pragma: no cover
+        log.warning("[KIS-1232][TEXTMECHANIK] skipped: %s", _tm_exc)
+
     # S2: Fix persona leaks for team/kmu size (Einzelperson → Team)
     _company_size = ctx.get("COMPANY_SIZE", "") or ctx.get("size_label", "") or ""
     if _company_size and "solo" not in str(_company_size).lower():

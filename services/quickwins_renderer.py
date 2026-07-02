@@ -11,6 +11,7 @@ Key features:
 - German number formatting
 """
 
+import os
 import re
 import logging
 from typing import Tuple, Optional
@@ -875,6 +876,19 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL", ru
 
         # TASK B (P0): Apply completeness gate - fill empty fields with deterministic fallbacks
         data = enforce_quickwins_complete(data)
+
+        # KIS-1232: Überschrift/TOC versprechen "Quick Wins: Top 3" — der
+        # KMU-Lauf lieferte 4 Karten. Auf die Top-N kappen (ENV-Override).
+        try:
+            _qw_max = int(os.getenv("QUICK_WINS_MAX_CARDS", "3"))
+        except ValueError:
+            _qw_max = 3
+        if _qw_max > 0 and len(data) > _qw_max:
+            log.info(
+                "[KIS-1232-QW] Kappe Quick Wins von %d auf %d Karten (QUICK_WINS_MAX_CARDS)",
+                len(data), _qw_max,
+            )
+            data = data[:_qw_max]
 
         # Build premium cards
         cards_html = []

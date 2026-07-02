@@ -1960,15 +1960,27 @@ GRAMMAR_FIX_PATTERNS = [
     # KIS-1230: Genus nach Stack→Systemlandschaft-Ersetzung reparieren
     # ('Ihr KI-Systemlandschaft' im Tools-Kapitel — Systemlandschaft ist feminin)
     (r'\bIhr (KI-)?Systemlandschaft\b', r'Ihre \1Systemlandschaft'),
+    # KIS-1232: dito für Akkusativ (maskulin) + Adjektiv — der KMU-Lauf
+    # produzierte "Ihren bestehenden KI-Systemlandschaft" (Sofort-Start S. 6).
+    # Adjektiv-Endung -en → -e (feminin Akkusativ), Artikel anpassen.
+    (r'\bIhren\s+(\w+)en\s+(KI-)?Systemlandschaft\b', r'Ihre \1e \2Systemlandschaft'),
+    (r'\bIhren\s+(KI-)?Systemlandschaft\b', r'Ihre \1Systemlandschaft'),
+    (r'\beinen\s+(\w+)en\s+(KI-)?Systemlandschaft\b', r'eine \1e \2Systemlandschaft'),
+    (r'\bden\s+(\w+)en\s+(KI-)?Systemlandschaft\b', r'die \1e \2Systemlandschaft'),
+    (r'\bden\s+(KI-)?Systemlandschaft\b', r'die \1Systemlandschaft'),
 
     # "Einzelunternehmer in der Branche beratung" → korrekte Großschreibung
     (r'in der Branche ([a-zäöü]+)', lambda m: f'in der Branche {m.group(1).title()}'),
-    
+
     # "Für Ihr Einzelunternehmer" → "Für Ihren Einzelbetrieb" oder "Für Sie als Einzelunternehmer"
     (r'Für Ihr Einzelunternehmer', 'Für Sie als Einzelunternehmer'),
-    
+
     # v14.18: Zusammengeklebte Header trennen
-    (r'([A-ZÄÖÜ]{5,})([A-Z][a-zäöü])', r'\1 - \2'),
+    # KIS-1232: Akronym+Wort-Komposita ausnehmen — die Regel zerlegte
+    # "DIGITALisierte Verwaltung" zu "DIGITA - Lisierte Verwaltung"
+    # (Fördertabelle, Status-Report S. 21). Komposita auf -isiert/-isierung
+    # sind reguläre Wörter, keine zusammengeklebten Header.
+    (r'([A-ZÄÖÜ]{5,})([A-Z](?!isiert|isierung)[a-zäöü])', r'\1 - \2'),
     # Doppelte Leerzeichen
     (r'  +', ' '),
     
@@ -2897,7 +2909,10 @@ def strip_trailing_sentence_fragments(sections: dict) -> dict:
         # Match: complete sentence followed by short fragment
         def fix_trailing(m):
             full_content = m.group(0)
-            tag_name = m.group(1)
+            # KIS-1232: group(2) ist der Tag — group(1) war der CONTENT und
+            # erzeugte kaputte Closing-Tags wie "</Diese Programme…>"
+            # (Duplikat-Text im gerenderten HTML, Browser schluckt den Bogus-Tag).
+            tag_name = m.group(2)
 
             # Find the last proper sentence ending
             sentences = regex_module.split(r'([.!?])\s+', full_content)
@@ -2908,7 +2923,17 @@ def strip_trailing_sentence_fragments(sections: dict) -> dict:
 
                 if len(trailing_text) < 30 and not regex_module.search(r'[.!?]$', trailing_text):
                     # Remove trailing fragment, keep sentence ending
-                    proper_end = ''.join(sentences[:-1])
+                    # KIS-1232: Beim Wieder-Zusammensetzen die Leerzeichen
+                    # ZWISCHEN den Sätzen wiederherstellen — ''.join() fraß
+                    # sie ("vorausgewählt.Weitere", "Wochenleistung).Die").
+                    _parts = sentences[:-1]
+                    _rebuilt: list = []
+                    for _i, _part in enumerate(_parts):
+                        _rebuilt.append(_part)
+                        if (regex_module.fullmatch(r'[.!?]', _part or '')
+                                and _i < len(_parts) - 1):
+                            _rebuilt.append(' ')
+                    proper_end = ''.join(_rebuilt)
                     if proper_end and not proper_end.rstrip().endswith(('.', '!', '?')):
                         proper_end = proper_end.rstrip() + '.'
                     return proper_end + f'</{tag_name}>'
@@ -2931,9 +2956,24 @@ def strip_trailing_sentence_fragments(sections: dict) -> dict:
         )
 
         # Pattern 3: Remove trailing colons/commas before close tag
+        # KIS-1232: Kurze Label-Absätze ("Risikofaktoren:") ausnehmen — der
+        # Doppelpunkt dort ist Absicht (Listen-Einleitung); vorher wurde er
+        # zu "Risikofaktoren." umgeschrieben (Status-Report S. 17).
+        def _fix_trailing_punct(m: "regex_module.Match[str]") -> str:
+            _full = m.group(0)
+            _tag = m.group(1)
+            # Doppelpunkt ist Absicht, wenn direkt danach eine Liste/Tabelle
+            # folgt (Listen-Einleitung wie "Risikofaktoren:"). Nur ein
+            # Doppelpunkt am ECHTEN Ende (nichts Strukturelles danach) ist
+            # ein hängendes Fragment.
+            if _full.lstrip().startswith(':'):
+                _rest = html[m.end():].lstrip()
+                if regex_module.match(r'<(ul|ol|table|dl)\b', _rest, regex_module.IGNORECASE):
+                    return _full
+            return f'.</{_tag}>'
         html = regex_module.sub(
             r'\s*[,:]\s*</([pP]|div|[lL][iI])>',
-            r'.</\1>',
+            _fix_trailing_punct,
             html
         )
 

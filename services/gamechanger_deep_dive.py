@@ -413,7 +413,11 @@ def render_bc_deep_dive_html(bc_data: Dict[str, Any]) -> str:
         # The 200% cap is applied in the main business case display, but in the
         # sensitivity comparison all values were identical ("200% (gedeckelt)").
         roi_display = f"{int(s['roi_raw'])}%"
-        payback_display = f"{s['payback_months']} Mon." if s['payback_months'] != '—' else '—'
+        # KIS-1232: deutsches Dezimalkomma ("12,6 Mon." statt "12.6 Mon.")
+        payback_display = (
+            f"{float(s['payback_months']):.1f}".replace(".", ",") + " Mon."
+            if s['payback_months'] != '—' else '—'
+        )
         row_class = ' class="highlight"' if s['label'] == 'Basis' else ''
         sens_rows.append(
             f'<tr{row_class}>'

@@ -59,6 +59,82 @@ def normalize_currency_spacing(html: str) -> Tuple[str, int]:
 
 
 # --------------------------------------------------------------------------- #
+# A1b) KIS-1232: Fehlende Leerzeichen nach Satzzeichen reparieren             #
+# --------------------------------------------------------------------------- #
+# Der KMU-Lauf zeigte zusammengeklebte Sätze aus drei Quellen: Nutzereingaben
+# ("KMU.Das Unternehmen…"), LLM-Output ("Governance?Definieren…") und
+# Enforcer-Joins ("vorausgewählt.Weitere"). Repariert wird NUR in Textknoten
+# (Tags/Attribute bleiben unberührt, damit URLs mit "?Query" heil bleiben).
+# Abkürzungen wie "z.B." sind sicher: nach dem Punkt muss Großbuchstabe +
+# Kleinbuchstabe folgen ("B." scheitert am zweiten Zeichen).
+_SENTENCE_SPACE_RE = re.compile(
+    r"(?<=[A-Za-zÄÖÜäöüß)])([.!?])(?=[A-ZÄÖÜ][a-zäöüß])"
+)
+
+
+def fix_missing_sentence_space(html: str) -> Tuple[str, int]:
+    """Fügt das fehlende Leerzeichen nach Satzende ein ("KMU.Das" → "KMU. Das")."""
+    if not html:
+        return html, 0
+    parts = _TAG_SPLIT_RE.split(html)
+    count = 0
+    for i, part in enumerate(parts):
+        if not part or part.startswith("<"):
+            continue
+        new_part, n = _SENTENCE_SPACE_RE.subn(r"\1 ", part)
+        if n:
+            parts[i] = new_part
+            count += n
+    return "".join(parts), count
+
+
+# --------------------------------------------------------------------------- #
+# A1c) KIS-1232: Dezimalpunkt → Dezimalkomma vor deutschen Einheiten          #
+# --------------------------------------------------------------------------- #
+# "5.8 h", "37.4 Stunden", "12.6 Mon." → deutsche Schreibweise mit Komma.
+# Bewusst NUR mit Einheiten-Lookahead, damit Tausenderpunkte ("10.000 €")
+# unangetastet bleiben.
+_DECIMAL_UNIT_RE = re.compile(
+    r"\b(\d{1,3})\.(\d)(?=\s*(?:h\b|Std\.?|Stunden|Monate?n?\b|Mon\.))"
+)
+
+
+def fix_decimal_comma_units(html: str) -> Tuple[str, int]:
+    """Dezimalpunkt vor Zeiteinheiten in deutsches Dezimalkomma wandeln."""
+    if not html:
+        return html, 0
+    parts = _TAG_SPLIT_RE.split(html)
+    count = 0
+    for i, part in enumerate(parts):
+        if not part or part.startswith("<"):
+            continue
+        new_part, n = _DECIMAL_UNIT_RE.subn(r"\1,\2", part)
+        if n:
+            parts[i] = new_part
+            count += n
+    return "".join(parts), count
+
+
+# --------------------------------------------------------------------------- #
+# A1d) KIS-1232: Absätze/Listenpunkte entfernen, die nur Satzzeichen enthalten #
+# --------------------------------------------------------------------------- #
+# Enforcer-Kaskaden hinterließen im AI-Act-Kapitel einen einsamen "."-Absatz
+# (Status-Report S. 20).
+_PUNCT_ONLY_NODE_RE = re.compile(
+    r"<(p|li)\b[^>]*>\s*(?:&nbsp;|\s|[.·,;:–—-])+\s*</\1>",
+    re.IGNORECASE,
+)
+
+
+def remove_punctuation_only_nodes(html: str) -> Tuple[str, int]:
+    """Löscht <p>/<li>, deren Inhalt nur aus Satzzeichen/Whitespace besteht."""
+    if not html:
+        return html, 0
+    result, count = _PUNCT_ONLY_NODE_RE.subn("", html)
+    return result, count
+
+
+# --------------------------------------------------------------------------- #
 # A2) Marken-Schreibweise im Fließtext vereinheitlichen                       #
 # --------------------------------------------------------------------------- #
 _TAG_SPLIT_RE = re.compile(r"(<[^>]+>)")

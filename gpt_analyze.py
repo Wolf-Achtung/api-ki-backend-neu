@@ -15083,6 +15083,21 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
         # Add AI Act variables to sections
         sections.update(ai_act_data)
 
+        # KIS-1232: Deutsches Anzeige-Label für die Risikoklasse.
+        # Der KMU-Lauf zeigte gemischte Terminologie (Cover „limited",
+        # Summary „begrenzt", AI-Act-Kapitel „limited"). Vergleiche im
+        # Template laufen weiter über den kanonischen EN-Rohwert.
+        if report_lang == "de":
+            _risk_de_map = {
+                "none": "kein KI-Einsatz",
+                "minimal": "minimal",
+                "limited": "begrenzt",
+                "high-risk": "hoch",
+            }
+            _risk_raw = str(ai_act_data.get("AI_ACT_RISK_LEVEL", "")).lower()
+            if _risk_raw in _risk_de_map:
+                sections["AI_ACT_RISK_LEVEL_DE"] = _risk_de_map[_risk_raw]
+
         # Generate HTML for alerts and gaps (convert lists to HTML)
         alerts_list = ai_act_data.get("AI_ACT_NONCOMPLIANCE_ALERTS", [])
         if alerts_list:
@@ -16080,11 +16095,11 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             hauptleistung = hauptleistung[:max_len].rsplit(" ", 1)[0] + "..."
         sections["hauptleistung"] = hauptleistung
     # REPORT_SUBTITLE: use clean BRANCHE_LABEL (not free-text hauptleistung)
-    branche_label = sections.get("BRANCHE_LABEL", "")
-    kundencode_val = sections.get("kundencode", "")
-    if branche_label and kundencode_val:
-        sections["REPORT_SUBTITLE"] = f"KI-Readiness Assessment · {branche_label}"
-    elif branche_label:
+    # KIS-1232: Punkt am Label-Ende abstreifen — das Template hängt an einer
+    # Stelle selbst einen Satzpunkt an ("{{ REPORT_SUBTITLE }}."), wodurch im
+    # KMU-Lauf "Finanzen & Versicherungen.." entstand.
+    branche_label = str(sections.get("BRANCHE_LABEL", "")).strip().rstrip(".")
+    if branche_label:
         sections["REPORT_SUBTITLE"] = f"KI-Readiness Assessment · {branche_label}"
     else:
         sections["REPORT_SUBTITLE"] = "KI-Readiness Assessment"

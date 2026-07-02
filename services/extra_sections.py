@@ -15,6 +15,7 @@ eine sinnvolle Fallback-Ausgabe (keine Exceptions im Produktionsbetrieb).
 from __future__ import annotations
 
 import os
+import re
 import json
 import logging
 from typing import Dict, Any, List, Optional
@@ -869,10 +870,18 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
     html_parts.append('    </tbody>')
     html_parts.append('  </table>')
     html_parts.append('  ')
+    # KIS-1232: Anzeige-Label ohne Persona-Enum — vorher stand im PDF
+    # "(11–100 (kmu))" (rohes Segment-Kürzel in Doppelklammern).
+    _size_display = re.sub(
+        r'\s*\((?:solo|team|kmu)\)\s*$', '',
+        str(briefing.get("UNTERNEHMENSGROESSE_LABEL") or size_label or "").strip(),
+        flags=re.IGNORECASE,
+    ).strip()
+    _profil_display = f' ({_size_display} Mitarbeitende)' if _size_display else ''
     html_parts.append('  <div class="card-nobreak">')
     html_parts.append('    <p class="small muted" style="margin-top: 6pt;">')
-    html_parts.append('      <strong>Hinweis:</strong> Diese Programme sind speziell für Ihr Unternehmensprofil ')
-    html_parts.append(f'      ({size_label}) vorausgewählt. Weitere regionale und branchenspezifische Programme ')
+    html_parts.append('      <strong>Hinweis:</strong> Diese Programme sind speziell für Ihr Unternehmensprofil')
+    html_parts.append(f'      {_profil_display} vorausgewählt. Weitere regionale und branchenspezifische Programme ')
     html_parts.append(f'      können verfügbar sein. Stand: {_current_quarter_label()}.')
     html_parts.append('    </p>')
     html_parts.append('  </div>')
