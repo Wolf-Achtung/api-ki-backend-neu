@@ -4,7 +4,9 @@ Ersetzt die bisher in 4-6 Prompts wortgleich kopierten Blöcke (OPT-A7
 Begriffskonsistenz → jetzt im System-Prompt; ROI-/Zahlen-Disziplin →
 System-Prompt; hier stehen nur die USER-Prompt-Ebene-Regeln, die das
 Ausgabeformat und die Kontext-Nutzung betreffen).
-Einbindung: {% include '_report_grundregeln.md' %}
+Einbindung in Sektions-Prompts via Jinja-Include-Tag mit Dateiname
+'_report_grundregeln.md' (Tag hier nicht wörtlich notiert — würde
+Selbst-Inklusion/Rekursion auslösen).
 -->
 
 AUSGABEFORMAT (verbindlich)
