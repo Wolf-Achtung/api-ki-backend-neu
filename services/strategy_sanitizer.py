@@ -229,8 +229,24 @@ def sanitize_strategy_sections(
 
     strategy_keys = [k for k in sections if isinstance(sections[k], str) and len(sections[k]) > 100]
 
+    # KIS-1234: Ampel-Emojis rendern im PDF-Service als leere Kästchen
+    # (Emoji-Font fehlt in Puppeteer). Der Prompt fordert jetzt CSS-Spans;
+    # dieses Netz fängt Läufe ab, in denen das LLM trotzdem Emojis liefert.
+    _AMPEL_EMOJI_MAP = [
+        ("\U0001F7E2", '<span class="ampel-green">\u25cf</span>'),
+        ("\U0001F7E1", '<span class="ampel-yellow">\u25cf</span>'),
+        ("\U0001F534", '<span class="ampel-red">\u25cf</span>'),
+    ]
+
     for key in strategy_keys:
         html = sections[key]
+
+        # Pass 0 (KIS-1234): Ampel-Emojis -> CSS-Spans
+        for _emoji, _span in _AMPEL_EMOJI_MAP:
+            if _emoji in html:
+                html = html.replace(_emoji, _span)
+                sections[key] = html
+                patches_applied += 1
 
         # Pass 1: Prozent-Plausibilität
         html, pw = _check_percent_plausibility(html, key)

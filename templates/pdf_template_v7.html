@@ -1224,21 +1224,21 @@ h1, h2, h3, h4 {
     display: grid; grid-template-columns: repeat(3, 1fr);
     gap: var(--sp-sm); break-inside: avoid;
 }
-.kpi-triple .kpi {
+.kpi-triple .kpi, .ki-stack-summary .kpi {
     display: flex; flex-direction: column; align-items: center;
     text-align: center; border: 1px solid var(--c-border);
     border-radius: var(--r-md); background: var(--c-white);
     padding: 10px 8px; break-inside: avoid;
 }
-.kpi-triple .kpi-label {
+.kpi-triple .kpi-label, .ki-stack-summary .kpi-label {
     font-size: 8pt; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.05em; color: var(--c-text-3); margin-bottom: 2px;
 }
-.kpi-triple .kpi-value {
+.kpi-triple .kpi-value, .ki-stack-summary .kpi-value {
     font-size: 16pt; font-weight: 800; color: var(--c-primary);
     line-height: 1.2;
 }
-.kpi-triple .kpi-sub { font-size: 8.5pt; color: var(--c-text-2); }
+.kpi-triple .kpi-sub, .ki-stack-summary .kpi-sub { font-size: 8.5pt; color: var(--c-text-2); }
 .badge-block {
     display: flex; gap: var(--sp-sm); flex-wrap: wrap; break-inside: avoid;
 }
@@ -1775,7 +1775,11 @@ h1, h2, h3, h4 {
         <strong>Auf einen Blick:</strong>
         ROI {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% endif %},
         Amortisation in {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS|round(1) }}{% endif %} Monaten.
-        Investition ist auch ohne Fördermittel wirtschaftlich tragfähig.
+        {# KIS-1234: Tragfähigkeits-Aussage ROI-abhängig — der Pauschalsatz
+           "auch ohne Fördermittel wirtschaftlich tragfähig" stand im Lauf 1234
+           neben ROI 8 % und einem Budget UNTER der Investition. #}
+        {% set _roi_num = (ROI_12M | default(0)) | round(0) | int %}
+        {% if _roi_num >= 25 %}Investition ist auch ohne Fördermittel wirtschaftlich tragfähig.{% elif _roi_num >= 10 %}Investition ist tragfähig; Fördermittel verkürzen die Amortisation spürbar.{% else %}Wirtschaftlichkeit ist knapp bemessen — Fördermittel und ein gestufter Einstieg sind hier entscheidend.{% endif %}
     </div>
     {# FIX-KIS-1027.5-A: Zwei ROI-Sichten transparent nebeneinander.
        Spread zwischen CAPEX-basiertem R1-ROI und 12-Mo-Gesamt-ROI
@@ -1967,7 +1971,9 @@ h1, h2, h3, h4 {
         </div>
     </div>
     <div class="glance-box glance-finance">
-        <strong>Auf einen Blick:</strong> Ausgewählte Förderprogramme mit höchster Eignung für Ihr Profil. Business Case ist auch ohne Förderung tragfähig.
+        <strong>Auf einen Blick:</strong> Ausgewählte Förderprogramme mit höchster Eignung für Ihr Profil.
+        {% set _roi_num_f = (ROI_12M | default(0)) | round(0) | int %}
+        {% if _roi_num_f >= 25 %}Business Case ist auch ohne Förderung tragfähig.{% elif _roi_num_f >= 10 %}Förderung verkürzt die Amortisation des Business Case deutlich.{% else %}Förderung ist für die Wirtschaftlichkeit dieses Business Case ein wesentlicher Hebel.{% endif %}
     </div>
     <div class="section-body">
         {% if FUNDING_PATH_1 %}

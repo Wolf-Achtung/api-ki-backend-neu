@@ -1953,6 +1953,47 @@ def apply_extended_siezen_guard(sections: dict) -> dict:
     return sections
 
 # =============================================================================
+# 5b. MODEL-MODERNIZER (KIS-1234): Veraltete LLM-Modellnamen neutralisieren
+# =============================================================================
+# Der KIS-1234-Lauf empfahl "OpenAI GPT-4 API" als Top-Tool — GPT-4 ist ein
+# Legacy-Modell und für einen KI-Beratungsreport das gefährlichste
+# Glaubwürdigkeitsleck. Quelle: LLM-Trainingswissen in ki_stack_summary/
+# tools-Sektionen. Strategie: Versionsnummern aus Trainingswissen werden auf
+# versionslose Anbieter-/Produktnamen normalisiert (wartungsarm — eine harte
+# Ersetzung "GPT-4→GPT-5.5" veraltet selbst wieder). Reihenfolge wichtig:
+# spezifische Muster vor generischen.
+OUTDATED_MODEL_PATTERNS: list = [
+    (r'\bOpenAI[\s-]+GPT-4(?:o|\.5)?(?:[\s-]+Turbo)?[\s-]+API\b', 'OpenAI-API'),
+    (r'\bGPT-4(?:o|\.5)?(?:[\s-]+Turbo)?[\s-]+API\b', 'OpenAI-API'),
+    (r'\bGPT-4(?:o|\.5)?(?:[\s-]+Turbo)?\b', 'GPT (aktuelle Generation)'),
+    (r'\bGPT-3(?:\.5)?(?:[\s-]+Turbo)?\b', 'GPT (aktuelle Generation)'),
+    (r'\bClaude[\s-]+3(?:\.[57])?\s*(?:Opus|Sonnet|Haiku)?\b', 'Claude (aktuelle Generation)'),
+    (r'\bClaude[\s-]+2(?:\.\d)?\b', 'Claude (aktuelle Generation)'),
+    (r'\bClaude[\s-]+Instant\b', 'Claude (aktuelle Generation)'),
+    (r'\bGemini[\s-]+1\.\d(?:[\s-]+(?:Pro|Flash))?\b', 'Gemini (aktuelle Generation)'),
+    (r'\btext-davinci-\d+\b', 'OpenAI-API'),
+]
+
+
+def apply_model_modernizer(sections: dict) -> dict:
+    """Ersetzt veraltete Modellversionsnamen in allen String-Sektionen."""
+    compiled = [(re.compile(p, re.IGNORECASE), r) for p, r in OUTDATED_MODEL_PATTERNS]
+    total = 0
+    for key, value in list(sections.items()):
+        if not isinstance(value, str) or not value.strip() or key.startswith('_'):
+            continue
+        new_value = value
+        for pat, repl in compiled:
+            new_value, n = pat.subn(repl, new_value)
+            total += n
+        if new_value != value:
+            sections[key] = new_value
+    if total:
+        log.info("[KIS-1234][MODEL-MODERNIZER] %d veraltete Modellnamen ersetzt", total)
+    return sections
+
+
+# =============================================================================
 # 6. GRAMMAR-FIXER: Korrigiert typische Grammatik-/Formatierungsfehler
 # =============================================================================
 
@@ -3203,6 +3244,8 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
     # 7. AI-Act Konsistenz (v14.19)
     sections = apply_ai_act_consistency(sections)
     sections = apply_grammar_fixer(sections)
+    # KIS-1234: veraltete LLM-Modellnamen neutralisieren ("GPT-4" u. Ä.)
+    sections = apply_model_modernizer(sections)
     if bundesland:
         sections = apply_location_validator(sections, bundesland)
 

@@ -9563,6 +9563,13 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
             _aa_usecases = [str(x) for x in _aa_uc_raw]
         elif isinstance(_aa_uc_raw, str):
             _aa_usecases = [x.strip() for x in _aa_uc_raw.split(",") if x.strip()]
+        # KIS-1234: anwendungsfaelle einbeziehen — identisch zur Ableitung in
+        # ai_act_module, damit Prompt-Variable und Kapitel dieselbe Klasse zeigen.
+        _aa_af = briefing.get("anwendungsfaelle") or briefing.get("ANWENDUNGSFAELLE_LABELS")
+        if _aa_af:
+            if isinstance(_aa_af, str):
+                _aa_af = [x.strip() for x in _aa_af.split(",") if x.strip()]
+            _aa_usecases = list(_aa_usecases) + [str(x) for x in _aa_af]
         if not _aa_usecases and briefing.get("hauptleistung"):
             _aa_usecases = [str(briefing["hauptleistung"])]
         _aa_auto: Any = briefing.get("automatisierungsgrad", 0)
@@ -16296,6 +16303,19 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             vendor_audit_report_to_html,
         )
 
+        # KIS-1234: FB2-Antworten (s5_software = "Genutzte Software/Tools")
+        # liegen in der StrategyQuestion-Tabelle, nicht im Briefing — ohne
+        # sie auditierte der Vendor-Audit nur die in ki_projekte genannten
+        # Anbieter (Lauf 1234: 2 von 5 genutzten Tools geprüft).
+        _vendor_strategy_answers = None
+        try:
+            from models import StrategyQuestion as _SQ
+            _sq_row = db.query(_SQ).filter(_SQ.briefing_id == briefing_id).first()
+            if _sq_row is not None:
+                _vendor_strategy_answers = _sq_row.to_dict()
+        except Exception as _sq_exc:
+            log.debug("[%s] StrategyQuestion für Vendor-Audit nicht ladbar: %s", run_id, _sq_exc)
+
         vendor_audit_report = generate_vendor_audit_report(
             context=None,
             tools_data=sections.get("_tools_data"),
@@ -16304,6 +16324,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             briefing=answers,
             llm_response=None,
             sections=sections,
+            strategy_answers=_vendor_strategy_answers,
         )
 
         sections["VENDOR_AUDIT_HTML"] = vendor_audit_report_to_html(vendor_audit_report, lang=report_lang)
@@ -18742,6 +18763,26 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             else:
                 log.info('[FIX-C1] KI_STACK_SUMMARY_HTML kpi-value spans already match canonical values (or pattern not found)')
 
+            # =============================================================
+            # KIS-1234: kpi-triple-Wrapper reparieren. Der Lauf 1234 zeigte
+            # KPI-Spans OHNE den .kpi-triple-Container — die G21-CSS-
+            # Selektoren (.kpi-triple .kpi-value …) griffen nicht und der
+            # Block kollabierte zu "ROI8%nach 12 Monaten"-Fließtext.
+            # =============================================================
+            _ki_stack_wrap = sections.get('KI_STACK_SUMMARY_HTML', '')
+            if (_ki_stack_wrap and '<div class="kpi"' in _ki_stack_wrap
+                    and 'kpi-triple' not in _ki_stack_wrap):
+                _wrap_pattern = _re_c1.compile(
+                    r'((?:<div class="kpi"[^>]*>[\s\S]*?</div>\s*){2,})'
+                )
+                _ki_stack_wrapped = _wrap_pattern.sub(
+                    r'<div class="kpi-triple">\1</div>', _ki_stack_wrap, count=1,
+                )
+                if _ki_stack_wrapped != _ki_stack_wrap:
+                    sections['KI_STACK_SUMMARY_HTML'] = _ki_stack_wrapped
+                    sections['ki_stack_summary'] = _ki_stack_wrapped
+                    log.info('[KIS-1234][KPI-WRAP] kpi-triple-Wrapper um verwaiste KPI-Spans ergänzt')
+
         # =================================================================
         # [FIX-S13C] Enforce canonical KPIs in text-based HTML sections.
         # FIX-C1 above handles kpi-value spans in KI_STACK_SUMMARY_HTML.
@@ -19244,6 +19285,17 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 sections["FOERDERPOTENZIAL_HTML"] = (
                     sections["FOERDERPOTENZIAL_HTML"][:_first + len(_heading.strip())] + _rest
                 )
+            # KIS-1234: Verbleib der Hinweis-Card nachvollziehbar machen —
+            # in den Läufen 1233/1234 fehlte sie im gerenderten PDF, obwohl
+            # das frische _core_html sie enthält. Tail-Log zeigt beim
+            # nächsten Lauf, ob sie diese Stelle noch lebend verlässt.
+            _fp_final = sections["FOERDERPOTENZIAL_HTML"]
+            log.info(
+                "[FIX-KIS-1104][DIAG] final len=%d hinweis_card=%s tail=%.160s",
+                len(_fp_final),
+                "ja" if "<strong>Hinweis:</strong>" in _fp_final else "FEHLT",
+                _re_kis1104.sub(r'<[^>]+>', ' ', _fp_final[-400:]).strip(),
+            )
             # --- FOERDERPROGRAMME_HTML + FUNDING_HTML ---
             sections["FOERDERPROGRAMME_HTML"] = (
                 f"<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"

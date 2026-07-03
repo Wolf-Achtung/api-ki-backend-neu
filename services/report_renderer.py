@@ -2212,6 +2212,30 @@ def render(briefing_obj: Any,
 
             log.info(f"[DEBUG-503D] Collected {len(debug_attachments)} debug artifacts for admin email")
 
+    # KIS-1234: Finaler Textmechanik-Pass als ALLERLETZTE Transformation.
+    # Der frühe Pass (nach Jinja) lief VOR den nachgelagerten Regex-Patches
+    # (FIX-v7110-MATH, Persona-Fixes, GF-Vorlage) — deren Rewrites konnten
+    # neue Waisen-Punkte/fehlende Leerzeichen einführen (Lauf 1234: einsamer
+    # Punkt nach der Fördertabelle). Die Funktionen sind idempotent.
+    try:
+        from services.style_lint import (
+            fix_missing_sentence_space as _final_fss,
+            fix_decimal_comma_units as _final_fdc,
+            remove_punctuation_only_nodes as _final_rpn,
+            normalize_currency_spacing as _final_ncs,
+        )
+        html, _f1 = _final_fss(html)
+        html, _f2 = _final_fdc(html)
+        html, _f3 = _final_rpn(html)
+        html, _f4 = _final_ncs(html)
+        if _f1 or _f2 or _f3 or _f4:
+            log.info(
+                "[KIS-1234][TEXTMECHANIK-FINAL] spaces=%d decimals=%d punct_nodes=%d currency=%d",
+                _f1, _f2, _f3, _f4,
+            )
+    except Exception as _tmf_exc:  # pragma: no cover
+        log.warning("[KIS-1234][TEXTMECHANIK-FINAL] skipped: %s", _tmf_exc)
+
     # FIX-KIS-1027.5.1-A: Decision-Cutoff-Trace Checkpoint 6/N (render exit)
     _trace_decision_cutoff("6_render_exit", run_id, html, mode="html")
     return {"html": html, "meta": meta or {}, "debug_attachments": debug_attachments_for_email}
