@@ -69,6 +69,11 @@ Der Nutzer ist KI-EINSTEIGER. Einfache, sofort umsetzbare Empfehlungen.
 1) **ZEITERSPARNIS_PRIORITAET** (größter Zeitfresser):
    "{{ZEITERSPARNIS_PRIORITAET_SAFE or ZEITERSPARNIS_PRIORITAET}}"
    → Quick Win #1 MUSS dieses Thema lösen (ohne Zahlen/Zeiten zu wiederholen).
+   {% if top_zeitfresser %}KONKRETE TOP-ZEITFRESSER (KIS-1235-P3, vom Nutzer benannt):
+   "{{top_zeitfresser}}"
+   → Diese Aufgaben sind die PRIMÄREN Anker: Mindestens zwei Quick Wins
+   müssen je einen dieser Zeitfresser direkt adressieren — konkret am
+   benannten Arbeitsschritt, nicht als generische Automatisierung.{% endif %}
 
 2) **KI_PROJEKTE** (bereits geplant):
    {% if ki_projekte %}"{{KI_PROJEKTE_SAFE or ki_projekte}}"{% else %}Keine geplanten Projekte{% endif %}

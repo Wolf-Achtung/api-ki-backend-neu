@@ -143,6 +143,9 @@ FIELD_REGISTRY: dict[str, dict] = {
     "bundesland":           {"type": "enum",  "required": True,  "section": 0, "chat_mode": "QR"},
     "hauptleistung":        {"type": "text",  "required": True,  "section": 0, "chat_mode": "FT"},
     "jahresumsatz":         {"type": "enum",  "required": False, "section": 0, "chat_mode": "QR"},
+    # KIS-1235-P3: Wirtschafts-Kontext für präzisere Business Cases
+    "projekte_pro_monat":   {"type": "enum",  "required": False, "section": 0, "chat_mode": "QR"},
+    "durchschnittshonorar": {"type": "enum",  "required": False, "section": 0, "chat_mode": "QR"},
     # --- Section 1: Organisation & Datenlage ---
     "zielgruppen":          {"type": "multi", "required": False, "section": 1, "chat_mode": "QR"},
     "it_infrastruktur":     {"type": "enum",  "required": False, "section": 1, "chat_mode": "QR"},
@@ -160,6 +163,8 @@ FIELD_REGISTRY: dict[str, dict] = {
     "ki_projekte":          {"type": "text",  "required": False, "section": 3, "chat_mode": "FT"},
     "pilot_bereich":        {"type": "enum",  "required": False, "section": 3, "chat_mode": "QR"},
     "zeitersparnis_prioritaet": {"type": "text", "required": True, "section": 3, "chat_mode": "FT"},
+    # KIS-1235-P3: konkrete Zeitfresser als Quick-Win-Anker
+    "top_zeitfresser":      {"type": "text",  "required": False, "section": 3, "chat_mode": "FT"},
     "geschaeftsmodell_evolution": {"type": "text", "required": False, "section": 3, "chat_mode": "FT"},
     # --- Section 4: Strategie & Governance ---
     "vision_3_jahre":       {"type": "text",  "required": True,  "section": 4, "chat_mode": "FT"},
@@ -205,7 +210,8 @@ SECTIONS = [
         "index": 0,
         "name": "Ihr Unternehmen",
         "fields": ["branche", "unternehmensgroesse", "selbststaendig",
-                    "country", "bundesland", "hauptleistung", "jahresumsatz"],
+                    "country", "bundesland", "hauptleistung", "jahresumsatz",
+                    "projekte_pro_monat", "durchschnittshonorar"],
         "intro": "Lassen Sie uns mit den Grundlagen beginnen — erzählen Sie mir von Ihrem Unternehmen.",
     },
     {
@@ -225,7 +231,8 @@ SECTIONS = [
         "index": 3,
         "name": "Ziele & Use Cases",
         "fields": ["ki_ziele", "anwendungsfaelle", "ki_projekte", "pilot_bereich",
-                    "zeitersparnis_prioritaet", "geschaeftsmodell_evolution"],
+                    "zeitersparnis_prioritaet", "top_zeitfresser",
+                    "geschaeftsmodell_evolution"],
         "intro": "Was erhoffen Sie sich konkret vom KI-Einsatz?",
     },
     {

@@ -20,6 +20,7 @@ SONNET_REQUIRED_FIELDS: frozenset[str] = frozenset({
     "hauptleistung",
     "ki_projekte",
     "zeitersparnis_prioritaet",
+    "top_zeitfresser",  # KIS-1235-P3: Freitext mit Inspiration-Chips
     "geschaeftsmodell_evolution",
     "vision_3_jahre",
     "strategische_ziele",
@@ -72,6 +73,9 @@ FIELD_QUESTIONS: dict[str, str] = {
     "anwendungsfaelle": "Welche KI-Anwendungsfälle sind für Sie besonders interessant?",
     "pilot_bereich": "In welchem Bereich würden Sie am ehesten ein KI-Pilotprojekt starten?",
     "vorhandene_tools": "Welche klassischen Business-Systeme (CRM, ERP, Projektmanagement, Buchhaltung) nutzen Sie aktuell? KI-Tools fragen wir separat ab.",
+    "projekte_pro_monat": "Wie viele Projekte oder Aufträge bearbeiten Sie üblicherweise pro Monat?",
+    "durchschnittshonorar": "In welcher Größenordnung liegt Ihr durchschnittliches Honorar bzw. Ihr Auftragswert pro Projekt?",
+    "top_zeitfresser": "Welche zwei, drei Aufgaben kosten Sie im Arbeitsalltag am meisten Zeit?",
     "trainings_interessen": "Welche KI-Trainingsthemen interessieren Sie?",
     "zeitbudget": "Wie viel Zeit pro Woche können Sie für KI-Projekte aufbringen?",
     "prozesse_papierlos": "Wie hoch ist der Anteil papierloser Prozesse bei Ihnen?",
@@ -122,6 +126,12 @@ FIELD_EXAMPLES: dict[str, list[str]] = {
         "Keine Kundendaten in externe KI-Tools geben",
         "Finale Entscheidungen nur durch Menschen treffen",
         "KI-generierte Inhalte klar kennzeichnen",
+    ],
+    # KIS-1235-P3: Zeitfresser als Quick-Win-Anker
+    "top_zeitfresser": [
+        "Angebote und Proposals schreiben",
+        "E-Mail-Korrespondenz und laufende Terminabstimmung",
+        "Dokumentation und Berichte nach Projektabschluss",
     ],
 }
 

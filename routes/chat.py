@@ -223,6 +223,9 @@ BLOCK_FIELDS: dict[str, list[str]] = {
         "bisherige_foerdermittel", "interesse_foerderung",
         "erfahrung_beratung", "marktposition",
         "benchmark_wettbewerb", "risikofreude", "jahresumsatz",
+        # KIS-1235-P3: Wirtschafts-Kontext (Projekte × Honorar) für den
+        # Business Case — gehört thematisch zu Budget & Wirtschaftlichkeit.
+        "projekte_pro_monat", "durchschnittshonorar",
     ],
     "B": [
         "vision_3_jahre", "strategische_ziele", "ki_guardrails",
@@ -234,6 +237,7 @@ BLOCK_FIELDS: dict[str, list[str]] = {
     "C": [
         "automatisierungsgrad", "ki_einsatz", "anwendungsfaelle",
         "ki_projekte", "pilot_bereich", "zeitersparnis_prioritaet",
+        "top_zeitfresser",  # KIS-1235-P3: Quick-Win-Anker
         "vorhandene_tools", "trainings_interessen", "zeitbudget",
         "prozesse_papierlos",
         "it_infrastruktur",     # S3-BE-1: was orphan (Section 1)
@@ -2267,6 +2271,35 @@ async def chat_message(
                     turn, next_fields[:1] if next_fields else None,
                 )
                 full_response = _fallback
+
+        # ------------------------------------------------------------------
+        # KIS-1235-P3: Live-Widerspruchs-Check. Direkt nach einer gespeicherten
+        # Antwort werden die gesammelten Angaben auf bekannte Spannungen
+        # geprüft (regelbasiert, kein LLM-Call). Jede Spannung wird genau
+        # EINMAL pro Session kurz angesprochen — der Nutzer kann antworten
+        # oder einfach weitermachen. Flag: CHAT_LIVE_CONTRADICTION_CHECK.
+        # ------------------------------------------------------------------
+        if (normalized and full_response.strip()
+                and not _report_start_requested
+                and not _checkpoint_triggered
+                and _final_phase != "summary"
+                and os.getenv("CHAT_LIVE_CONTRADICTION_CHECK", "1").strip().lower()
+                not in ("0", "false", "no", "off")):
+            try:
+                from services.briefing_contradictions import detect_contradictions_chat
+                _live_findings = detect_contradictions_chat(collected)
+                _acks = list((session.draft_state or {}).get("contradiction_acks", []))
+                _fresh = [(k, t) for k, t in _live_findings if k not in _acks]
+                if _fresh:
+                    _lc_key, _lc_text = _fresh[0]
+                    full_response = f"{full_response}\n\n{_lc_text}"
+                    session.draft_state = {
+                        **(session.draft_state or {}),
+                        "contradiction_acks": _acks + [_lc_key],
+                    }
+                    log.info("[CHAT][KIS-1235-P3] Live-Abgleich gestellt: %s", _lc_key)
+            except Exception as _lc_exc:
+                log.debug("[CHAT][KIS-1235-P3] Live-Abgleich übersprungen: %s", _lc_exc)
 
         # Send cleaned text as replacement so frontend can swap out streamed version
         yield f"event: text_replace\ndata: {json.dumps({'text': full_response})}\n\n"

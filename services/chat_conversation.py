@@ -558,6 +558,9 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     # Sektion 5
     "zeitbudget": "Zeit pro Woche für KI-Projekte (Unter 2h / 2–5h / 5–10h / Über 10h)",
     "vorhandene_tools": "Bereits genutzte Systeme (CRM, ERP, Projektmanagement, etc.)",
+    "projekte_pro_monat": "Typische Anzahl Projekte/Aufträge pro Monat (Wirtschafts-Kontext für den Business Case)",
+    "durchschnittshonorar": "Durchschnittliches Honorar bzw. Auftragswert pro Projekt",
+    "top_zeitfresser": "Die 2-3 Aufgaben, die im Alltag am meisten Zeit kosten (Freitext — Basis für Quick Wins)",
     "trainings_interessen": "Interessante KI-Trainingsthemen (Prompt Engineering, LLM-Basics, etc.)",
     "vision_prioritaet": "Wichtigster strategischer Hebel (KI-Services, Kundenservice, Datenprodukte, etc.)",
     "innovationsprozess": "Wie entstehen Innovationen (Team, Mitarbeitende, Kunden, Berater, etc.)",
@@ -2100,6 +2103,16 @@ _ENUM_DISPLAY: dict[str, dict[str, str]] = {
         "unter_100k": "Bis 100.000 €", "100k_500k": "100.000–500.000 €",
         "500k_2m": "500.000–2 Mio. €", "2m_10m": "2–10 Mio. €",
         "ueber_10m": "Über 10 Mio. €", "keine_angabe": "Keine Angabe",
+    },
+    # KIS-1235-P3: Wirtschafts-Kontext für den Business Case
+    "projekte_pro_monat": {
+        "unter_2": "Unter 2", "2_5": "2–5", "6_10": "6–10",
+        "ueber_10": "Über 10", "keine_angabe": "Schwankt stark / keine Angabe",
+    },
+    "durchschnittshonorar": {
+        "unter_1k": "Unter 1.000 €", "1k_5k": "1.000–5.000 €",
+        "5k_20k": "5.000–20.000 €", "ueber_20k": "Über 20.000 €",
+        "keine_angabe": "Keine Angabe",
     },
     "it_infrastruktur": {
         "cloud": "Cloud-basiert", "on_premise": "On-Premises",

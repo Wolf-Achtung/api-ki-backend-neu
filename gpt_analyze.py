@@ -9318,6 +9318,14 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "KI_PROJEKTE": ki_projekte,
         "ki_projekte": ki_projekte,  # lowercase alias
 
+        # KIS-1235-P3: neue Wirtschafts-/Zeitfresser-Felder für Prompts
+        "TOP_ZEITFRESSER": str(briefing.get("top_zeitfresser", "") or ""),
+        "top_zeitfresser": str(briefing.get("top_zeitfresser", "") or ""),
+        "PROJEKTE_PRO_MONAT": str(briefing.get("projekte_pro_monat", "") or ""),
+        "projekte_pro_monat": str(briefing.get("projekte_pro_monat", "") or ""),
+        "DURCHSCHNITTSHONORAR": str(briefing.get("durchschnittshonorar", "") or ""),
+        "durchschnittshonorar": str(briefing.get("durchschnittshonorar", "") or ""),
+
         # Ensure HAUPTLEISTUNG is available in both cases
         "hauptleistung": hauptleistung,  # lowercase for Jinja2
     })
