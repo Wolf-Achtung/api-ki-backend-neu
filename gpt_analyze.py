@@ -19471,6 +19471,19 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.warning(f"[{run_id}] [FIX-KIS-1104] Failed to re-inject funding table: {e}")
 
     # =========================================================================
+    # KIS-1235 P2b: Advisor-Kohärenz-Pass — prüft advisor_note + executive
+    # summary NACH allen Enforcern gegen die deterministischen Fakten
+    # (Vendor-Audit, Canon-Zahlen, AI-Act, Förderung) und wendet chirurgische
+    # Korrekturen an. Beweisfall Lauf 1235: Badge "AVV vorhanden" vs.
+    # Einschätzung "ohne AV-Vertrag". Fail-open, Flag ADVISOR_COHERENCE_PASS.
+    # =========================================================================
+    try:
+        from services.coherence_pass import run_advisor_coherence_pass
+        sections = run_advisor_coherence_pass(sections)
+    except Exception as _cp_exc:
+        log.warning(f"[{run_id}] [KIS-1235][COHERENCE] Pass übersprungen: {_cp_exc}")
+
+    # =========================================================================
     # FIX-R3-5B: QUICK-WINS RECONCILIATION (replaces R2-3)
     # QUICK_WINS_HTML may have been shortened by enforcer passes, losing the
     # premium-rendered PROBLEM/WIRKUNG/UMSETZUNG blocks.  _QUICK_WINS_PRISTINE
