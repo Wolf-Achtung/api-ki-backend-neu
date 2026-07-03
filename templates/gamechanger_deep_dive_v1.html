@@ -129,6 +129,13 @@ td.negative { color: var(--c-danger); font-weight: 600; }
     break-inside: auto;
 }
 
+/* KIS-1235: Witwen/Waisen — verhindert Einzelsatz-Seiten (Lauf 1235, S. 7)
+   und zerrissene Tabellen ohne wiederholten Kopf (Risiko-Matrix S. 8/9). */
+p { orphans: 3; widows: 3; }
+tr { break-inside: avoid; }
+thead { display: table-header-group; }
+h3, h4 { break-after: avoid; }
+
 /* ── Chapter Banner (KIS-1127/C4, KIS-1128 audit M1) ──────
    break-after: avoid removed for family consistency with R1.
    KPA layout was OK because each section forces break-before:page;

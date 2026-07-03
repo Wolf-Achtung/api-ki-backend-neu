@@ -18871,24 +18871,54 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 log.info('[FIX-C1] KI_STACK_SUMMARY_HTML kpi-value spans already match canonical values (or pattern not found)')
 
             # =============================================================
-            # KIS-1234: kpi-triple-Wrapper reparieren. Der Lauf 1234 zeigte
-            # KPI-Spans OHNE den .kpi-triple-Container — die G21-CSS-
-            # Selektoren (.kpi-triple .kpi-value …) griffen nicht und der
-            # Block kollabierte zu "ROI8%nach 12 Monaten"-Fließtext.
+            # KIS-1235: KPI-Block DETERMINISTISCH neu aufbauen. Zwei Läufe
+            # in Folge lieferte das LLM strukturell kaputtes KPI-Markup
+            # (1234: divs ohne .kpi-triple-Wrapper; 1235: nackte Spans ohne
+            # .kpi-Container) → "ROI8 %nach 12 Monaten"-Fließtext. Statt
+            # LLM-HTML zu reparieren, werden alle KPI-Fragmente entfernt
+            # und durch einen kanonischen Block ersetzt — Werte kommen
+            # ohnehin aus dem Single-Source-of-Truth-Business-Case.
             # =============================================================
             _ki_stack_wrap = sections.get('KI_STACK_SUMMARY_HTML', '')
-            if (_ki_stack_wrap and '<div class="kpi"' in _ki_stack_wrap
-                    and 'kpi-triple' not in _ki_stack_wrap):
-                _wrap_pattern = _re_c1.compile(
-                    r'((?:<div class="kpi"[^>]*>[\s\S]*?</div>\s*){2,})'
+            if (_ki_stack_wrap and 'kpi-label' in _ki_stack_wrap
+                    and _c1_roi_int and _c1_pb_fmt and _c1_hours):
+                _kpi_unit = _re_c1.compile(
+                    r'<div[^>]*class=["\']kpi["\'][^>]*>[\s\S]*?</div>'
+                    r'|<span[^>]*class=["\']kpi-label["\'][^>]*>[^<]*</span>\s*'
+                    r'<span[^>]*class=["\']kpi-value["\'][^>]*>[^<]*</span>\s*'
+                    r'(?:<span[^>]*class=["\']kpi-sub["\'][^>]*>[^<]*</span>)?'
                 )
-                _ki_stack_wrapped = _wrap_pattern.sub(
-                    r'<div class="kpi-triple">\1</div>', _ki_stack_wrap, count=1,
+                _canonical_block = (
+                    '<div class="kpi-triple">'
+                    f'<div class="kpi"><span class="kpi-label">ROI</span>'
+                    f'<span class="kpi-value">{_c1_roi_int}%</span>'
+                    f'<span class="kpi-sub">nach 12 Monaten</span></div>'
+                    f'<div class="kpi"><span class="kpi-label">Break-Even</span>'
+                    f'<span class="kpi-value">{_c1_pb_fmt} Monate</span>'
+                    f'<span class="kpi-sub">Amortisation der Einführungskosten</span></div>'
+                    f'<div class="kpi"><span class="kpi-label">Zeitersparnis</span>'
+                    f'<span class="kpi-value">{_c1_hours} Std./Monat</span>'
+                    f'<span class="kpi-sub">kanonischer Business Case</span></div>'
+                    '</div>'
                 )
-                if _ki_stack_wrapped != _ki_stack_wrap:
-                    sections['KI_STACK_SUMMARY_HTML'] = _ki_stack_wrapped
-                    sections['ki_stack_summary'] = _ki_stack_wrapped
-                    log.info('[KIS-1234][KPI-WRAP] kpi-triple-Wrapper um verwaiste KPI-Spans ergänzt')
+                _kpi_seen = [0]
+
+                def _kpi_rebuild(_m):
+                    _kpi_seen[0] += 1
+                    return _canonical_block if _kpi_seen[0] == 1 else ''
+
+                _ki_stack_rebuilt = _kpi_unit.sub(_kpi_rebuild, _ki_stack_wrap)
+                # Leere Wrapper-Hüllen entsorgen, die nach dem Entfernen
+                # der Einzel-KPIs übrig bleiben können (der kanonische
+                # Block selbst ist nie leer und matcht daher nicht).
+                _ki_stack_rebuilt = _re_c1.sub(
+                    r'<div[^>]*class=["\']kpi-triple["\'][^>]*>\s*</div>',
+                    '', _ki_stack_rebuilt,
+                )
+                if _kpi_seen[0] and _ki_stack_rebuilt != _ki_stack_wrap:
+                    sections['KI_STACK_SUMMARY_HTML'] = _ki_stack_rebuilt
+                    sections['ki_stack_summary'] = _ki_stack_rebuilt
+                    log.info('[KIS-1235][KPI-REBUILD] %d KPI-Fragment(e) durch kanonischen kpi-triple-Block ersetzt', _kpi_seen[0])
 
         # =================================================================
         # [FIX-S13C] Enforce canonical KPIs in text-based HTML sections.

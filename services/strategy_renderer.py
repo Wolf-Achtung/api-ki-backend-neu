@@ -461,6 +461,32 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     if calculated_values:
         html = _enforce_budget_values(html, calculated_values, sr.briefing_id)
 
+    # KIS-1235: Finaler Textmechanik-Pass (analog report_renderer) — v. a.
+    # Soft-Hyphens für die 6-7-spaltigen Tabellen (Prioritätsmatrix,
+    # Tool-/Fördertabellen), die Headless-Chromium sonst ohne Trennstrich
+    # mitten im Wort umbricht ("HANDLUN GSFELD", Lauf 1235).
+    try:
+        from services.style_lint import (
+            fix_missing_sentence_space as _sf_fss,
+            remove_punctuation_only_nodes as _sf_rpn,
+            soften_table_long_words as _sf_shy,
+            fix_double_periods as _sf_fdp,
+            fix_misc_typography as _sf_fmt,
+        )
+        html, _s1 = _sf_fss(html)
+        html, _s2 = _sf_rpn(html)
+        html, _s3 = _sf_shy(html)
+        html, _s4 = _sf_fdp(html)
+        html, _s5 = _sf_fmt(html)
+        if _s1 or _s2 or _s3 or _s4 or _s5:
+            import logging as _lg
+            _lg.getLogger(__name__).info(
+                "[KIS-1235][STRATEGY-TEXTMECHANIK] spaces=%d punct_nodes=%d shy_words=%d periods=%d typo=%d",
+                _s1, _s2, _s3, _s4, _s5,
+            )
+    except Exception:  # pragma: no cover
+        pass
+
     return html
 
 

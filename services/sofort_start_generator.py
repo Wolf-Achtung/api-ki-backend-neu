@@ -1514,7 +1514,10 @@ Antworte NUR im definierten Format. Keine Einleitungen, keine Meta-Kommentare.""
         "zeitersparnis": "Basis für alle Prompts"
     },
     {
-        "titel": "Chain-of-Thought für komplexe Analysen",
+        # KIS-1235: Lauf 1235 zeigte den Titel als "2. für komplexe Analysen" —
+        # ein nachgelagerter Filter entfernte "Chain-of-Thought". Deutscher
+        # Titel ist filterfest und für die Zielgruppe ohnehin verständlicher.
+        "titel": "Schritt-für-Schritt-Denkanweisung für komplexe Analysen",
         "prompt": """Analysieren Sie folgendes Problem Schritt für Schritt:
 
 Problem: [BESCHREIBUNG]
@@ -2329,7 +2332,10 @@ _CHALLENGE_SOLO_WEEK_OVERRIDES: Dict[str, Dict[str, Any]] = {
             {"tag": 25, "aufgabe": "Case-Study aus eigenem Projekt mit KI-Hilfe ausformulieren", "dauer": "45 Min", "kategorie": "Praxis"},
             {"tag": 26, "aufgabe": "Backup-Strategie: Was tun, wenn KI-Dienst ausfällt?", "dauer": "30 Min", "kategorie": "Strategie"},
             {"tag": 27, "aufgabe": "Eigene KI-Honorar-Position formulieren (Beratungs-Angebot)", "dauer": "30 Min", "kategorie": "Strategie"},
-            {"tag": 28, "aufgabe": "Q2-Ziel definieren: Was soll bis Sommer KI-gestützt laufen?", "dauer": "30 Min", "kategorie": "Planung"},
+            # KIS-1235: Quartals-/Saisonbezug dynamisch — "Q2-Ziel … bis Sommer"
+            # stand im Juli-Report (Lauf 1235). Platzhalter wird beim Rendern
+            # über _resolve_quarter_goal() ersetzt.
+            {"tag": 28, "aufgabe": "__QUARTAL_ZIEL__", "dauer": "30 Min", "kategorie": "Planung"},
         ],
     },
 }
@@ -2712,7 +2718,10 @@ def generate_30_tage_challenge_html(company_size: str = "solo") -> str:
         </div>
     </div>
 '''
-    
+
+    # KIS-1235: dynamischer Quartalsbezug (falls Platzhalter im Datensatz)
+    html = html.replace("__QUARTAL_ZIEL__", _resolve_quarter_goal())
+
     return html
 
 
@@ -2893,6 +2902,8 @@ def generate_30_tage_challenge_html_v2(
     </div>
     
     <!-- ZEITBUDGET-INFO -->
+    <!--NO-SANITIZE-ZEITBUDGET--><!-- KIS-1235: verfügbare Zeit, KEINE Ersparnis —
+         F4 (final_sanitizer) darf "Stunden/Woche" hier nicht umschreiben -->
     <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 12px; padding: 16px; margin-bottom: 24px; color: white;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
@@ -2905,6 +2916,7 @@ def generate_30_tage_challenge_html_v2(
             </div>
         </div>
     </div>
+    <!--/NO-SANITIZE-ZEITBUDGET-->
 '''
     
     # Wenn Light-Version: Hinweis auf Prio-Tasks
@@ -3067,8 +3079,32 @@ def generate_30_tage_challenge_html_v2(
         </div>
     </div>
 '''
-    
+
+    # KIS-1235: Quartals-/Saisonbezug dynamisch auflösen (statt hartem
+    # "Q2-Ziel … bis Sommer", das im Juli-Report veraltet war).
+    html = html.replace("__QUARTAL_ZIEL__", _resolve_quarter_goal())
+
     return html
+
+
+def _resolve_quarter_goal(today: "Optional[Any]" = None) -> str:
+    """Tag-28-Aufgabe mit aktuellem Quartals-/Saisonbezug.
+
+    Ziel-Quartal ist das aktuelle, solange mindestens ~1 Monat davon übrig
+    ist (Tag 28 der Challenge liegt ~4 Wochen nach Report-Erstellung),
+    sonst das Folgequartal.
+    """
+    from datetime import date as _date
+    d = today or _date.today()
+    quarter = (d.month - 1) // 3 + 1
+    year_q = quarter
+    # Letzter Monat des Quartals bereits angebrochen → Folgequartal anpeilen
+    if d.month % 3 == 0:
+        year_q = quarter + 1
+    if year_q > 4:
+        year_q = 1
+    season = {1: "zum Frühjahr", 2: "zum Sommer", 3: "zum Herbst", 4: "zum Jahresende"}[year_q]
+    return f"Q{year_q}-Ziel definieren: Was soll bis {season} KI-gestützt laufen?"
 
 
 # =============================================================================
