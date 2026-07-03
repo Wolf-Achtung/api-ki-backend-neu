@@ -519,6 +519,126 @@ def should_use_anthropic(section: Optional[str] = None) -> bool:
 # --- Öffentliche LLM-Funktion ----------------------------------------------
 
 
+# --- KIS-1234-P2: Prompt-Caching, Structured Output, Extended Thinking ------
+
+def _prompt_caching_enabled() -> bool:
+    return os.getenv("ANTHROPIC_PROMPT_CACHING", "1").strip().lower() not in (
+        "0", "false", "no", "off",
+    )
+
+
+def _build_user_content(prompt: str, context_prefix: Optional[str]) -> List[Any]:
+    """User-Content-Blöcke: optionaler gemeinsamer Kontext-Prefix (mit
+    cache_control) vor dem sektionsspezifischen Prompt.
+
+    Der Prefix ist je Report-Lauf für ALLE Sektionen identisch — der
+    Anthropic-Prompt-Cache (5-Min-TTL) trifft damit ab dem zweiten
+    Sektions-Call und spart den Großteil der Input-Kosten des Laufs.
+    """
+    if context_prefix and _prompt_caching_enabled():
+        return [
+            {
+                "type": "text",
+                "text": context_prefix,
+                "cache_control": {"type": "ephemeral"},
+            },
+            {"type": "text", "text": prompt},
+        ]
+    if context_prefix:
+        return [{"type": "text", "text": f"{context_prefix}\n\n{prompt}"}]
+    return [{"type": "text", "text": prompt}]
+
+
+def _maybe_add_thinking(kwargs: dict, section: Optional[str], max_tok: int) -> dict:
+    """Extended Thinking für ausgewählte Sektionen (Default: aus).
+
+    ANTHROPIC_THINKING_BUDGET=<tokens> + ANTHROPIC_THINKING_SECTIONS=a,b,c
+    aktivieren thinking für die genannten Sektionen. max_tokens wird auf
+    Budget+2000 angehoben (API-Anforderung: max_tokens > budget_tokens);
+    temperature/output_config sind mit thinking unvereinbar und entfallen.
+    """
+    try:
+        _budget = int(os.getenv("ANTHROPIC_THINKING_BUDGET", "0"))
+    except ValueError:
+        _budget = 0
+    if _budget <= 0 or not section:
+        return kwargs
+    _sections = {
+        s.strip().lower()
+        for s in os.getenv("ANTHROPIC_THINKING_SECTIONS", "").split(",")
+        if s.strip()
+    }
+    if section.strip().lower() not in _sections:
+        return kwargs
+    kwargs["thinking"] = {"type": "enabled", "budget_tokens": _budget}
+    kwargs.pop("temperature", None)
+    kwargs.pop("output_config", None)
+    kwargs["max_tokens"] = max(max_tok, _budget + 2000)
+    log.info("🧠 [KIS-1234-P2] Extended Thinking für section=%s (budget=%d)", section, _budget)
+    return kwargs
+
+
+def call_anthropic_structured(
+    prompt: str,
+    *,
+    section: str,
+    schema: dict,
+    tool_name: str = "emit_result",
+    system_prompt: Optional[str] = None,
+    max_tokens: Optional[int] = None,
+    context_prefix: Optional[str] = None,
+) -> Optional[dict]:
+    """Erzwingt strukturierten JSON-Output über Tool-Use (KIS-1234-P2).
+
+    Eliminiert die FIX-499-Fehlerklasse (unparseables/truncated JSON aus
+    Freitext) architektonisch: Die API validiert gegen das Schema, wir
+    lesen den tool_use-Input als fertiges Dict.
+    """
+    client = get_anthropic_client()
+    if client is None or not prompt or not prompt.strip():
+        return None
+    model_name = _resolve_anthropic_model(section, None)
+    max_tok = max_tokens if max_tokens is not None else _get_max_tokens_for_section(section)
+    kwargs = build_anthropic_create_kwargs(
+        model=model_name,
+        max_tokens=max_tok,
+        temperature=_get_temperature_for_section(section),
+        system=system_prompt or "Du bist ein hilfreicher, präziser KI-Berater.",
+        messages=[{"role": "user", "content": _build_user_content(prompt, context_prefix)}],
+    )
+    kwargs["tools"] = [{
+        "name": tool_name,
+        "description": "Gibt das Ergebnis strikt im geforderten Schema zurück.",
+        "input_schema": schema,
+    }]
+    kwargs["tool_choice"] = {"type": "tool", "name": tool_name}
+    try:
+        message = client.messages.create(**kwargs)
+    except anthropic.BadRequestError as exc:
+        if "temperature" in str(exc) and "deprecated" in str(exc):
+            kwargs.pop("temperature", None)
+            try:
+                message = client.messages.create(**kwargs)
+            except Exception as retry_exc:
+                log.warning("⚠️ [STRUCTURED] Retry gescheitert (%s): %s", section, str(retry_exc)[:200])
+                return None
+        else:
+            log.warning("⚠️ [STRUCTURED] BadRequest (%s): %s", section, str(exc)[:200])
+            return None
+    except Exception as exc:
+        log.warning("⚠️ [STRUCTURED] API-Fehler (%s): %s", section, str(exc)[:200])
+        return None
+    for block in getattr(message, "content", []) or []:
+        if getattr(block, "type", None) == "tool_use" and getattr(block, "name", "") == tool_name:
+            _input = getattr(block, "input", None)
+            if isinstance(_input, dict):
+                log.info("✅ [STRUCTURED] section=%s via tool_use (stop=%s)",
+                         section, getattr(message, "stop_reason", "?"))
+                return _input
+    log.warning("⚠️ [STRUCTURED] Kein tool_use-Block in Antwort (%s)", section)
+    return None
+
+
 def call_anthropic(
     prompt: str,
     *,
@@ -527,6 +647,7 @@ def call_anthropic(
     temperature: Optional[float] = None,
     max_tokens: Optional[int] = None,
     model: Optional[str] = None,
+    context_prefix: Optional[str] = None,
 ) -> Optional[str]:
     """
     Spricht die Anthropic Messages API an und gibt den Text-Content zurück.
@@ -568,29 +689,27 @@ def call_anthropic(
         )
         return ""
 
-    # Build messages list
+    # Build messages list — KIS-1234-P2: optionaler gemeinsamer
+    # Kontext-Prefix mit cache_control (Prompt-Caching über den Lauf).
     messages: List[Any] = [
         {
             "role": "user",
-            "content": [
-                {
-                    "type": "text",
-                    "text": prompt,
-                }
-            ],
+            "content": _build_user_content(prompt, context_prefix),
         }
     ]
 
     # Versuch 1: Mit aufgelöstem Modell
+    _first_kwargs = build_anthropic_create_kwargs(
+        model=model_name,
+        max_tokens=max_tok,
+        temperature=temp,
+        system=sys,
+        messages=messages,
+        stop_sequences=stop_seqs,
+    )
+    _first_kwargs = _maybe_add_thinking(_first_kwargs, section, max_tok)
     try:
-        message = client.messages.create(**build_anthropic_create_kwargs(
-            model=model_name,
-            max_tokens=max_tok,
-            temperature=temp,
-            system=sys,
-            messages=messages,
-            stop_sequences=stop_seqs,
-        ))
+        message = client.messages.create(**_first_kwargs)
     except anthropic.BadRequestError as exc:
         # KIS-1230-HOTFIX: Reaktives Sicherheitsnetz — lehnt ein (neues)
         # Modell einen Sampling-Parameter ab ("`temperature` is deprecated"),
