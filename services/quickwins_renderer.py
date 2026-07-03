@@ -842,7 +842,18 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL", ru
         if match:
             cleaned = match.group(1)
 
-        data = json.loads(cleaned)
+        # KIS-1236: literale Steuerzeichen (Newlines) in JSON-Strings mit
+        # strict=False heilen statt in den Legacy-/STRICT-Pfad zu fallen.
+        try:
+            data = json.loads(cleaned)
+        except json.JSONDecodeError as _strict_err:
+            if "control character" not in str(_strict_err).lower():
+                raise
+            data = json.loads(cleaned, strict=False)
+            log.info(
+                "[QW-JSON-DEBUG] run_id=%s renderer=premium strict_false_heal "
+                "pos=%d", run_id, _strict_err.pos or 0,
+            )
 
         if not isinstance(data, list) or len(data) == 0:
             log.info(

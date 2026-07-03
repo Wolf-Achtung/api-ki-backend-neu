@@ -304,10 +304,12 @@ class TestStructuredQuickWinsBranch:
         monkeypatch.setattr(gpt_analyze, "call_anthropic", lambda *a, **k: "OK")
         assert gpt_analyze._call_llm_for_section("quick_wins", "Prompt") == "OK"
 
-    def test_schema_pins_exactly_three_items(self):
+    def test_schema_allows_three_to_five_items(self):
+        # KIS-1236: Der KMU-Prompt fordert 4–5 Quick Wins — ein auf exakt 3
+        # gepinntes Schema kollidierte damit (Lauf 1119, leerer tool_use).
         import gpt_analyze
         qw = gpt_analyze._QUICK_WINS_TOOL_SCHEMA["properties"]["quick_wins"]
-        assert qw["minItems"] == 3 and qw["maxItems"] == 3
+        assert qw["minItems"] == 3 and qw["maxItems"] == 5
         assert set(qw["items"]["required"]) == {
             "title", "icon", "problem", "wirkung", "umsetzung", "hinweis",
         }
