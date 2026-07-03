@@ -2245,6 +2245,29 @@ async def chat_message(
             for qr in quick_replies:
                 _qr_labels.extend(opt.label for opt in (qr.options or []))
         full_response = _post_process_response(full_response, _qr_labels or None)
+
+        # KIS-1235: Leere Antwort abfangen — im Testlauf blieb nach dem
+        # Blockwechsel ("Weiter: KI-Strategie & Roadmap") die Frage komplett
+        # aus (Chips ohne Frage-Bubble). Ohne Text rendert das Frontend
+        # keine Assistant-Bubble; hier deterministisch die nächste Frage
+        # als Fallback einsetzen.
+        if not full_response.strip() and not _report_start_requested:
+            _fallback = None
+            if next_fields:
+                _fallback = get_template_question(next_fields[0])
+                if not _fallback:
+                    _fb_label = get_field_label(next_fields[0], rt)
+                    if _fb_label:
+                        _fallback = f"Dann weiter: {_fb_label} — wie sieht das bei Ihnen aus?"
+            if not _fallback and quick_replies:
+                _fallback = "Wie möchten Sie fortfahren?"
+            if _fallback:
+                log.warning(
+                    "[CHAT][KIS-1235] Leere Antwort nach Post-Processing (turn %s, next=%s) — Fallback-Frage eingesetzt",
+                    turn, next_fields[:1] if next_fields else None,
+                )
+                full_response = _fallback
+
         # Send cleaned text as replacement so frontend can swap out streamed version
         yield f"event: text_replace\ndata: {json.dumps({'text': full_response})}\n\n"
 
@@ -3000,6 +3023,18 @@ def _post_process_response(
     text = re.sub(r'  +', ' ', text)
     text = re.sub(r'\n{3,}', '\n\n', text)
     result = text.strip()
+
+    # KIS-1235: Satzgrenzen-Trim — endet der Text mitten im Wort/Satz
+    # (Testlauf: "… verpflichtet. Bei K"), das Fragment nach dem letzten
+    # Satzende entfernen. Ursachen: max_tokens-Abbruch im Stream oder
+    # Filter oben. Nur trimmen, wenn ein früheres Satzende existiert und
+    # der Verlust klein bleibt (<40 %), damit nie eine ganze Antwort kippt.
+    if result and result[-1] not in '.!?…:)»"\'':
+        _last_end = max(result.rfind('.'), result.rfind('!'), result.rfind('?'))
+        if _last_end > 0 and _last_end >= len(result) * 0.6:
+            _dropped = result[_last_end + 1:].strip()
+            log.warning("[POST-PROCESS] Satzfragment am Ende entfernt: %r", _dropped[:80])
+            result = result[:_last_end + 1].strip()
 
     log.info("[POST-PROCESS] Output (first 120 chars): %s", result[:120].replace('\n', '\\n'))
     return result

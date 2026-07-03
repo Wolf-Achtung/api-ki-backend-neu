@@ -1901,12 +1901,25 @@ async def generate_response(
         try:
             async with client.messages.stream(
                 model=CONVERSATION_MODEL,
-                max_tokens=800,
+                # KIS-1235: 800 → 1200. Bei 800 endete die Antwort im Testlauf
+                # mitten im Wort ("… Bei K"); das Post-Processing entfernt
+                # ohnehin überschüssige Listen/Preambles, daher ist mehr
+                # Budget hier billiger als ein abgehackter Satz.
+                max_tokens=1200,
                 system=system_prompt,
                 messages=messages,
             ) as stream:
                 async for text in stream.text_stream:
                     yield text
+                # KIS-1235: max_tokens-Abbruch sichtbar machen — der Text
+                # endet dann mitten im Satz/Wort. Der Satzgrenzen-Trim im
+                # Post-Processing (routes/chat.py) räumt das Fragment weg.
+                try:
+                    _final = await stream.get_final_message()
+                    if getattr(_final, "stop_reason", None) == "max_tokens":
+                        log.warning("[CHAT-CONV] Antwort bei max_tokens abgeschnitten (Turn-Text endet mitten im Satz)")
+                except Exception:
+                    pass
             return  # Success — exit generator
         except Exception as exc:
             if _attempt == 0 and await _is_retryable(exc):
