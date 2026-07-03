@@ -145,6 +145,9 @@ SOLO_TERM_REPLACEMENTS = [
     (r'\bGovernance-Struktur\b', 'Ordnungsrahmen', 'Governance-Struktur→Ordnungsrahmen'),
     (r'\bGovernance\b', 'Steuerung', 'Governance→Steuerung'),
     (r'\bCompliance-Framework\b', 'Regelwerk', 'Compliance-Framework→Regelwerk'),
+    # KIS-1235: Komposita brauchen das Fugen-s — die generische Regel machte
+    # aus "Compliance-Score" das falsche "Regelkonformität-Score" (Lauf 1235).
+    (r'\bCompliance-(?=[A-ZÄÖÜ])', 'Regelkonformitäts-', 'Compliance-X→Regelkonformitäts-X'),
     (r'\bCompliance\b', 'Regelkonformität', 'Compliance→Regelkonformität'),
     (r'\bFramework\b', 'Rahmenwerk', 'Framework→Rahmenwerk'),
 

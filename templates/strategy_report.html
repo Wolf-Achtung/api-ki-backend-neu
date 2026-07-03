@@ -180,15 +180,19 @@ th, td {
     word-break: normal;
     hyphens: auto;
 }
+/* KIS-1235: Zeilen zusammenhalten, Tabellenkopf bei Umbruch wiederholen. */
+tr { break-inside: avoid; }
+thead { display: table-header-group; }
 th {
     background: var(--navy-50);
     font-weight: 600;
     text-align: left;
-    padding: 10px 12px;
+    /* KIS-1235: kompakter, damit 7-Spalten-Köpfe seltener umbrechen. */
+    padding: 10px 8px;
     border-bottom: 2px solid var(--navy-100);
     font-size: 8.5pt;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
     color: var(--navy-700);
 }
 td {

@@ -127,11 +127,17 @@ class TestAmpelBadgesInTd:
 class TestQuickWinBadge:
     """2F: 'Quick Win' → blue inline badge."""
 
-    def test_standalone(self):
+    def test_prose_mention_stays_plain(self):
+        # KIS-1235: Badge mitten im Satz war semantisch schief ("Der [Quick
+        # Win] liegt darin…") — Fließtext-Erwähnungen bleiben jetzt Text.
         html = '<p>Dies ist ein Quick Win für Ihr Unternehmen.</p>'
         result = _transform_content_boxes(html)
+        assert result == html
+
+    def test_element_initial_gets_badge(self):
+        html = '<td>Quick Win</td>'
+        result = _transform_content_boxes(html)
         assert 'background:#dbeafe' in result
-        assert 'color:#1e40af' in result
         assert '>Quick Win</span>' in result
 
     def test_not_in_class_attr(self):

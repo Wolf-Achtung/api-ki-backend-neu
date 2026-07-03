@@ -144,6 +144,143 @@ def remove_punctuation_only_nodes(html: str) -> Tuple[str, int]:
 
 
 # --------------------------------------------------------------------------- #
+# A1e) KIS-1235: Soft-Hyphens für lange Wörter in Tabellenzellen              #
+# --------------------------------------------------------------------------- #
+# Headless-Chromium im PDF-Service hat keine deutschen Trennwörterbücher —
+# `hyphens: auto` bleibt wirkungslos und `overflow-wrap: break-word` bricht
+# ohne Trennstrich mitten im Wort ("HANDLUN GSFELD", "Formularerstell ung",
+# Lauf 1235). Deterministische &shy;-Injektion an sinnvollen Grenzen:
+# bevorzugt nach Fugen-s (handlungs·feld), sonst an Vokal-Konsonant-Vokal-
+# Grenzen (komple·xität). Nur in <td>/<th>-Textknoten, nie in URLs/E-Mails.
+_SHY = "­"
+_TABLE_CELL_RE = re.compile(r"(<t[dh]\b[^>]*>)([\s\S]*?)(</t[dh]>)", re.IGNORECASE)
+_LONG_WORD_RE = re.compile(r"[A-Za-zÄÖÜäöüß]{12,}")
+_VOWELS = set("aeiouäöüy")
+
+
+# Konsonantenpaare, in die nie getrennt wird (ch, sch via c-Ausschluss, ck …)
+_NO_SPLIT_PAIRS = {"ch", "ck", "th", "ph", "qu", "ß"}
+
+
+def _hyphenation_points(word: str) -> List[Tuple[int, int]]:
+    """Kandidaten (Priorität, Einfügeposition) für weiche Trennstellen.
+
+    Priorität 2 = Fugen-s (handlungs·feld), 1 = Konsonantencluster vor Vokal
+    (ausfuhr·kontrolle, stel·lung), 0 = Vokal-Konsonant-Vokal (komple·xität).
+    """
+    lw = word.lower()
+    n = len(lw)
+    points: List[Tuple[int, int]] = []
+    for i in range(3, n - 3):
+        prev_c, cur, nxt = lw[i - 1], lw[i], lw[i + 1]
+        if (cur == "s" and prev_c not in _VOWELS and nxt not in _VOWELS
+                and not (nxt == "c" and i + 2 < n and lw[i + 2] == "h")):
+            # Fugen-s: Konsonant + s + Konsonant → Trennung nach dem s
+            # (nie vor "ch" — sonst zerreißt es "sch": Ver·schlüsselung)
+            points.append((2, i + 1))
+        elif (cur not in _VOWELS and prev_c not in _VOWELS and nxt in _VOWELS
+                and prev_c + cur not in _NO_SPLIT_PAIRS and prev_c != "c"):
+            # Cluster: …Konsonant | Konsonant+Vokal (letzter Konsonant wandert)
+            points.append((1, i))
+        elif prev_c in _VOWELS and cur not in _VOWELS and nxt in _VOWELS:
+            points.append((0, i))
+    return points
+
+
+def _soften_word(word: str, max_run: int = 11) -> str:
+    """Fügt Soft-Hyphens so ein, dass kein Segment länger als max_run bleibt."""
+    if _SHY in word:
+        return word
+    points = _hyphenation_points(word)
+    if not points:
+        return word
+    out: List[str] = []
+    start = 0
+    while len(word) - start > max_run:
+        window = [(prio, p) for prio, p in points if start + 4 <= p <= start + max_run]
+        if not window:
+            nxt = sorted(p for _, p in points if p > start + 4)
+            if not nxt:
+                break
+            window = [(0, nxt[0])]
+        # Beste Regel gewinnt; bei Gleichstand die späteste Trennstelle.
+        cut = max(window)[1]
+        out.append(word[start:cut])
+        start = cut
+    out.append(word[start:])
+    return _SHY.join(out)
+
+
+_DOUBLE_PERIOD_RE = re.compile(r"(?<=[0-9A-Za-zÄÖÜäöüß])\.\.(?!\.)")
+# KIS-1235: Ampel-Punkt klebte am Wort ("●hoch") und Binnenmajuskel-Komposita
+# ("UmsetzungsKomplexität") aus LLM-Output.
+_AMPEL_NOSPACE_RE = re.compile(r"●(?=[0-9A-Za-zÄÖÜäöüß])")
+_CAMEL_COMPOUND_RE = re.compile(r"(?<=[a-zäöüß])K(?=omplexität)")
+
+
+def fix_misc_typography(html: str) -> Tuple[str, int]:
+    """KIS-1235: '●hoch' → '● hoch'; 'UmsetzungsKomplexität' → '…komplexität'."""
+    if not html:
+        return html, 0
+    parts = _TAG_SPLIT_RE.split(html)
+    count = 0
+    for i, part in enumerate(parts):
+        if not part or part.startswith("<"):
+            continue
+        new_part, n1 = _AMPEL_NOSPACE_RE.subn("● ", part)
+        new_part, n2 = _CAMEL_COMPOUND_RE.subn("k", new_part)
+        if n1 or n2:
+            parts[i] = new_part
+            count += n1 + n2
+    return "".join(parts), count
+
+
+def fix_double_periods(html: str) -> Tuple[str, int]:
+    """KIS-1235: '…Dienstleistungen..' → ein Punkt (Ellipsen '…'/'...' bleiben)."""
+    if not html or ".." not in html:
+        return html, 0
+    parts = _TAG_SPLIT_RE.split(html)
+    count = 0
+    for i, part in enumerate(parts):
+        if not part or part.startswith("<"):
+            continue
+        new_part, n = _DOUBLE_PERIOD_RE.subn(".", part)
+        if n:
+            parts[i] = new_part
+            count += n
+    return "".join(parts), count
+
+
+def soften_table_long_words(html: str) -> Tuple[str, int]:
+    """Injiziert &shy; in lange Wörter innerhalb von Tabellenzellen."""
+    if not html or "<t" not in html.lower():
+        return html, 0
+    count = 0
+
+    def _cell(m: "re.Match[str]") -> str:
+        nonlocal count
+        inner_parts = _TAG_SPLIT_RE.split(m.group(2))
+        for i, part in enumerate(inner_parts):
+            if not part or part.startswith("<"):
+                continue
+            if "http" in part or "@" in part or "www." in part:
+                continue
+
+            def _word(wm: "re.Match[str]") -> str:
+                nonlocal count
+                softened = _soften_word(wm.group(0))
+                if softened != wm.group(0):
+                    count += 1
+                return softened
+
+            inner_parts[i] = _LONG_WORD_RE.sub(_word, part)
+        return m.group(1) + "".join(inner_parts) + m.group(3)
+
+    result = _TABLE_CELL_RE.sub(_cell, html)
+    return result, count
+
+
+# --------------------------------------------------------------------------- #
 # A2) Marken-Schreibweise im Fließtext vereinheitlichen                       #
 # --------------------------------------------------------------------------- #
 _TAG_SPLIT_RE = re.compile(r"(<[^>]+>)")

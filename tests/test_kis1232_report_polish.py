@@ -240,9 +240,12 @@ class TestQuickWinBadge:
         assert "</span> :" not in out and "</span>:" not in out
 
     def test_badge_not_double_wrapped(self):
+        # KIS-1235: Fließtext bleibt Text (0 Badges); elementinitial genau 1.
         from services.html_enhancer import _transform_content_boxes
         out = _transform_content_boxes("<p>Als Quick Win empfiehlt sich der Einstieg.</p>")
-        assert out.count("Quick Win</span>") == 1
+        assert out.count("Quick Win</span>") == 0
+        out2 = _transform_content_boxes("<td>Quick Win: Fragebogen-Auswertung</td>")
+        assert out2.count("Quick Win</span>") == 1
 
 
 # =========================================================================

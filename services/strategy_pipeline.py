@@ -261,6 +261,11 @@ async def generate_strategy_report(
         _vendor_audit_red = str(_r1_sections.get("VENDOR_AUDIT_RED", 0) or 0)
         _vendor_audit_green = str(_r1_sections.get("VENDOR_AUDIT_GREEN", 0) or 0)
         _vendor_audit_status = str(_r1_sections.get("VENDOR_AUDIT_STATUS", "") or "")
+        # KIS-1235: Englischer Status ("fail") landete wörtlich im deutschen
+        # Fließtext ("Der Vendor-Audit-Status … lautet fail.") — eindeutschen.
+        _vendor_audit_status = {
+            "pass": "bestanden", "warn": "mit Auflagen", "fail": "nicht bestanden",
+        }.get(_vendor_audit_status.strip().lower(), _vendor_audit_status)
 
         _COUNTRY_NAME_MAP = {
             "DE": "Deutschland",

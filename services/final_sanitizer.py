@@ -118,16 +118,19 @@ def final_sanitize(sections: dict) -> dict:
     except Exception:
         jahresersparnis_fmt = '41.040'
 
-    # KIS-1190 Sprint-1027.1 Item A: Schutz für Fallstudie-Block. Regionen
-    # zwischen <!--NO-SANITIZE-FALLSTUDIE--> Markern werden extrahiert,
-    # F4/F4b laufen drüberhin, dann werden Originale wieder eingesetzt.
+    # KIS-1190 Sprint-1027.1 Item A: Schutz für markierte Blöcke. Regionen
+    # zwischen <!--NO-SANITIZE-*--> Markern werden extrahiert, F4/F4b laufen
+    # drüberhin, dann werden Originale wieder eingesetzt.
+    # KIS-1235: Marker generalisiert (vorher nur FALLSTUDIE) — F4 machte aus
+    # dem ZEITBUDGET des Nutzers ("Über 10 Stunden/Woche" verfügbare Zeit)
+    # eine Ersparnis-Angabe ("Über 15 Stunden/Monat ≈ 90 Minuten pro Tag").
     _NO_SANITIZE_RE = re.compile(
-        r'<!--NO-SANITIZE-FALLSTUDIE-->.*?<!--/NO-SANITIZE-FALLSTUDIE-->',
+        r'<!--NO-SANITIZE-([A-Z0-9-]+)-->.*?<!--/NO-SANITIZE-\1-->',
         re.DOTALL | re.IGNORECASE,
     )
 
     def _shield(val: str):
-        protected = _NO_SANITIZE_RE.findall(val)
+        protected = [m.group(0) for m in _NO_SANITIZE_RE.finditer(val)]
         if not protected:
             return val, []
         stripped = _NO_SANITIZE_RE.sub('\x00NOSAN_BLOCK\x00', val)

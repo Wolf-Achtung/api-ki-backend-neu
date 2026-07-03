@@ -289,6 +289,9 @@ tr:last-child td { border-bottom: none; }
 .section-body h4 + p { margin-top: 4px; }
 /* M6-FIX: Reduced from 5→3 (KPA uses 3/3 successfully — lower values give Chromium more flexibility) */
 .section-body p, .section-body li { orphans: 3; widows: 3; }
+/* KIS-1235: Tabellenzeilen zusammenhalten, Kopf bei Umbruch wiederholen. */
+tr { break-inside: avoid; }
+thead { display: table-header-group; }
 .section-body h3 { margin-top: var(--sp-lg); }
 
 /* ── Chapter Banner (KIS-1127/C4, KIS-1128 audit M1, KIS-1216) ──────
@@ -1371,7 +1374,8 @@ h1, h2, h3, h4 {
     <div class="kpi-row">
         <div class="kpi-card">
             <div class="kpi-value" style="color: var(--c-accent);">
-                {% if ZEITERSPARNIS_DISPLAY %}{{ ZEITERSPARNIS_DISPLAY }}{% elif TIME_SAVINGS_MONTH_HOURS_FMT %}{{ TIME_SAVINGS_MONTH_HOURS_FMT }}{% elif CANON_HOURS_MONTH and CANON_HOURS_MONTH|int > 0 %}{{ CANON_HOURS_MONTH|int }}h{% elif EINSPARUNG_STUNDEN_MONAT and EINSPARUNG_STUNDEN_MONAT|int > 0 %}{{ EINSPARUNG_STUNDEN_MONAT|int }}h{% elif zeitersparnis_h_monat %}{{ zeitersparnis_h_monat|round(0)|int }}h{% else %}—{% endif %}
+                {# KIS-1235: Einheit "h" erzwingen — Display-Variablen kamen teils nackt ("15") an #}
+                {% if ZEITERSPARNIS_DISPLAY %}{{ ZEITERSPARNIS_DISPLAY }}{% if 'h' not in ZEITERSPARNIS_DISPLAY|string and 'Std' not in ZEITERSPARNIS_DISPLAY|string %}h{% endif %}{% elif TIME_SAVINGS_MONTH_HOURS_FMT %}{{ TIME_SAVINGS_MONTH_HOURS_FMT }}{% if 'h' not in TIME_SAVINGS_MONTH_HOURS_FMT|string and 'Std' not in TIME_SAVINGS_MONTH_HOURS_FMT|string %}h{% endif %}{% elif CANON_HOURS_MONTH and CANON_HOURS_MONTH|int > 0 %}{{ CANON_HOURS_MONTH|int }}h{% elif EINSPARUNG_STUNDEN_MONAT and EINSPARUNG_STUNDEN_MONAT|int > 0 %}{{ EINSPARUNG_STUNDEN_MONAT|int }}h{% elif zeitersparnis_h_monat %}{{ zeitersparnis_h_monat|round(0)|int }}h{% else %}—{% endif %}
             </div>
             <div class="kpi-label">{{ ui("kpi_time_savings", "Zeitersparnis/Monat") }}</div>
         </div>
@@ -1610,7 +1614,8 @@ h1, h2, h3, h4 {
                 </div>
                 <div>
                     <span style="font-size: 14pt; font-weight: 700; color: var(--c-primary);">
-                        {% if TIME_SAVINGS_MONTH_HOURS_FMT %}{{ TIME_SAVINGS_MONTH_HOURS_FMT }}{% elif CANON_HOURS_MONTH and CANON_HOURS_MONTH|int > 0 %}{{ CANON_HOURS_MONTH|int }}h{% elif EINSPARUNG_STUNDEN_MONAT and EINSPARUNG_STUNDEN_MONAT|int > 0 %}{{ EINSPARUNG_STUNDEN_MONAT|int }}h{% elif zeitersparnis_h_monat %}{{ zeitersparnis_h_monat|round(0)|int }}h{% else %}—{% endif %}
+                        {# KIS-1235: Einheit "h" erzwingen #}
+                        {% if TIME_SAVINGS_MONTH_HOURS_FMT %}{{ TIME_SAVINGS_MONTH_HOURS_FMT }}{% if 'h' not in TIME_SAVINGS_MONTH_HOURS_FMT|string and 'Std' not in TIME_SAVINGS_MONTH_HOURS_FMT|string %}h{% endif %}{% elif CANON_HOURS_MONTH and CANON_HOURS_MONTH|int > 0 %}{{ CANON_HOURS_MONTH|int }}h{% elif EINSPARUNG_STUNDEN_MONAT and EINSPARUNG_STUNDEN_MONAT|int > 0 %}{{ EINSPARUNG_STUNDEN_MONAT|int }}h{% elif zeitersparnis_h_monat %}{{ zeitersparnis_h_monat|round(0)|int }}h{% else %}—{% endif %}
                     </span><br/>
                     <span style="font-size: 8pt; color: var(--c-text-2);">Zeitersparnis/Mo</span>
                 </div>

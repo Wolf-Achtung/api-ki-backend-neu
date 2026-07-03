@@ -2223,18 +2223,50 @@ def render(briefing_obj: Any,
             fix_decimal_comma_units as _final_fdc,
             remove_punctuation_only_nodes as _final_rpn,
             normalize_currency_spacing as _final_ncs,
+            soften_table_long_words as _final_shy,
+            fix_double_periods as _final_fdp,
+            fix_misc_typography as _final_fmt,
         )
         html, _f1 = _final_fss(html)
         html, _f2 = _final_fdc(html)
         html, _f3 = _final_rpn(html)
         html, _f4 = _final_ncs(html)
-        if _f1 or _f2 or _f3 or _f4:
+        html, _f6 = _final_fdp(html)
+        html, _f7 = _final_fmt(html)
+        # KIS-1235: Headless-Chromium trennt ohne Wörterbuch mitten im Wort
+        # ("HANDLUN GSFELD") — Soft-Hyphens geben den Tabellen echte
+        # Trennstellen.
+        html, _f5 = _final_shy(html)
+        if _f1 or _f2 or _f3 or _f4 or _f5 or _f6 or _f7:
             log.info(
-                "[KIS-1234][TEXTMECHANIK-FINAL] spaces=%d decimals=%d punct_nodes=%d currency=%d",
-                _f1, _f2, _f3, _f4,
+                "[KIS-1234][TEXTMECHANIK-FINAL] spaces=%d decimals=%d punct_nodes=%d currency=%d shy_words=%d periods=%d typo=%d",
+                _f1, _f2, _f3, _f4, _f5, _f6, _f7,
             )
     except Exception as _tmf_exc:  # pragma: no cover
         log.warning("[KIS-1234][TEXTMECHANIK-FINAL] skipped: %s", _tmf_exc)
+
+    # KIS-1235: Hinweis-Card-Garantie nach der Fördertabelle. In den Läufen
+    # 1233–1235 fehlte die Card im PDF, obwohl gpt_analyze sie injiziert —
+    # irgendeine spätere Stufe entfernt sie. Hier, NACH der allerletzten
+    # Transformation, wird sie deterministisch sichergestellt.
+    try:
+        _fund_idx = html.find("Kernprogramme für Ihr Profil")
+        if _fund_idx != -1:
+            _tbl_end = html.find("</table>", _fund_idx)
+            if _tbl_end != -1:
+                _window = html[_tbl_end:_tbl_end + 1500]
+                if "<strong>Hinweis:</strong>" not in _window:
+                    _card = (
+                        '\n<div class="card-nobreak"><p class="small muted" style="margin-top:6pt;">'
+                        '<strong>Hinweis:</strong> Diese Programme sind für Ihr Unternehmensprofil '
+                        'vorausgewählt. Konditionen und Fristen ändern sich laufend — bitte vor '
+                        'Antragstellung auf der jeweiligen Programmseite prüfen.</p></div>'
+                    )
+                    _ins = _tbl_end + len("</table>")
+                    html = html[:_ins] + _card + html[_ins:]
+                    log.info("[KIS-1235][FOERDER-CARD] Hinweis-Card nach Fördertabelle nachinjiziert")
+    except Exception as _fc_exc:  # pragma: no cover
+        log.warning("[KIS-1235][FOERDER-CARD] skipped: %s", _fc_exc)
 
     # FIX-KIS-1027.5.1-A: Decision-Cutoff-Trace Checkpoint 6/N (render exit)
     _trace_decision_cutoff("6_render_exit", run_id, html, mode="html")

@@ -1290,15 +1290,21 @@ def generate_vendor_audit_report(
     # Extract vendors from tools data
     vendors = _extract_vendors_from_tools(tools_data)
 
-    # FIX-C5: Fallback from questionnaire.
-    # FIX-KIS-1027.5-H2: pass strategy_answers through for callers that
-    # have merged Briefing+Strategy context available (e.g. post-chat re-renders).
-    if not vendors and briefing:
-        vendors = _extract_vendors_from_briefing(briefing, strategy_answers=strategy_answers)
-        if vendors:
+    # FIX-C5 / KIS-1235: Fragebogen-Extraktion ADDITIV statt nur als
+    # Fallback. Lauf 1235: Die Tools-Engine lieferte OpenAI+Anthropic
+    # (aus ki_projekte), daher lief der s5_software-Pfad nie und
+    # Perplexity fehlte im Audit — obwohl Quick Win 3 darauf verwies.
+    # Die Dedup-Stufe unten fängt Überschneidungen ab.
+    if briefing:
+        _qn_vendors = _extract_vendors_from_briefing(briefing, strategy_answers=strategy_answers)
+        _known = {(v.get("name") or "").strip().lower() for v in vendors}
+        _added = [v for v in _qn_vendors if (v.get("name") or "").strip().lower() not in _known]
+        if _added:
+            vendors.extend(_added)
             log.info(
-                "[G35][FIX-C5] Extracted %d vendors from questionnaire (strategy_answers=%s)",
-                len(vendors), "yes" if strategy_answers else "no",
+                "[G35][FIX-C5][KIS-1235] %d Vendor(s) aus Fragebogen ergänzt (strategy_answers=%s): %s",
+                len(_added), "yes" if strategy_answers else "no",
+                ", ".join(v.get("name", "?") for v in _added),
             )
 
     # FIX-KMU-VENDOR: Fallback from LLM-generated HTML sections
@@ -1439,8 +1445,11 @@ def vendor_audit_report_to_html(
             "audit_flags": "Audit-Hinweise",
             "recommendations": "Empfehlungen",
             "no_flags": "Keine Auffälligkeiten",
-            "dpa_yes": "AVV vorhanden",
-            "dpa_no": "Kein AVV",
+            # KIS-1235: "vorhanden" las sich wie "abgeschlossen" und widersprach
+            # der Einschätzung ("ohne AV-Vertrag"). Gemeint ist: Anbieter BIETET
+            # einen AVV an — abschließen muss ihn der Nutzer selbst.
+            "dpa_yes": "AVV verfügbar — Abschluss prüfen",
+            "dpa_no": "Kein AVV verfügbar",
             "notes": "Hinweise",
             "ai_act": "AI Act Relevanz",
             "dsgvo_risk": "DSGVO-Risiko",

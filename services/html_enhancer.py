@@ -623,19 +623,22 @@ def _transform_content_boxes(html: str) -> str:
     )
 
     # 2E: Ampel keywords in <td> → colored badges
+    # KIS-1235: nur wenn das Wort die GANZE Zelle ist — bei Wertebereichen
+    # ("Mittel bis hoch") wurde sonst nur das erste Wort eingefärbt und der
+    # Rest hing als Fließtext daneben (Lauf 1235, Matrix S. 13 + Risiko S. 34).
     html = re.sub(
-        r'(<td[^>]*>)\s*(?:<strong>)?(hoch|Hoch)(?:</strong>)?(\s)',
-        r'\1<span style="display:inline-block;background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Hoch</span>\3',
+        r'(<td[^>]*>)\s*(?:<strong>)?(hoch|Hoch)(?:</strong>)?\s*(?=</td>)',
+        r'\1<span style="display:inline-block;background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Hoch</span>',
         html,
     )
     html = re.sub(
-        r'(<td[^>]*>)\s*(?:<strong>)?(mittel|Mittel)(?:</strong>)?(\s)',
-        r'\1<span style="display:inline-block;background:#fffbeb;color:#b45309;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Mittel</span>\3',
+        r'(<td[^>]*>)\s*(?:<strong>)?(mittel|Mittel)(?:</strong>)?\s*(?=</td>)',
+        r'\1<span style="display:inline-block;background:#fffbeb;color:#b45309;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Mittel</span>',
         html,
     )
     html = re.sub(
-        r'(<td[^>]*>)\s*(?:<strong>)?(niedrig|Niedrig)(?:</strong>)?(\s)',
-        r'\1<span style="display:inline-block;background:#fef2f2;color:#b91c1c;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Niedrig</span>\3',
+        r'(<td[^>]*>)\s*(?:<strong>)?(niedrig|Niedrig)(?:</strong>)?\s*(?=</td>)',
+        r'\1<span style="display:inline-block;background:#fef2f2;color:#b91c1c;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Niedrig</span>',
         html,
     )
 
@@ -647,11 +650,15 @@ def _transform_content_boxes(html: str) -> str:
         'padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Quick Win</span>'
     )
 
+    # KIS-1235: Badge nur an STRUKTUR-Positionen (direkt nach einem Tag,
+    # z. B. Zellen-/Listen-/Label-Anfang). Im Fließtext ("Der Quick Win
+    # liegt darin…", "Zeitrahmen: Quick Win.") ersetzte der Badge vorher
+    # das Wort mitten im Satz — semantisch schief und typografisch hässlich.
     def _qw_badge_repl(m: "re.Match[str]") -> str:
-        return _QW_BADGE + (' ' if ':' in (m.group(1) or '') else '')
+        return m.group(1) + _QW_BADGE + (' ' if ':' in (m.group(2) or '') else '')
 
     html = re.sub(
-        r'(?<!["\w-])Quick Win(\s*:\s*|(?!["\w-]))',
+        r'(>\s*)Quick Win(\s*:\s*|(?=\s*</))',
         _qw_badge_repl,
         html,
     )

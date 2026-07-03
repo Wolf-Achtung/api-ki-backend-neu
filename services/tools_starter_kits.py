@@ -847,7 +847,12 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
 
         {f'<p style="margin:0 0 16px 0;font-size:12px;color:#374151;line-height:1.5;">{kit.description}</p>' if kit.description else ''}
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+        <!-- KIS-1235: align-items:start — sonst streckt sich die kürzere
+             Förder-Spalte auf Zeilenhöhe und läuft bei Seitenumbruch als
+             große LEERE weiße Box auf der Folgeseite weiter (Lauf 1235,
+             Status S. 14/15). break-inside:avoid hält die kompakte
+             Förder-Spalte zusammen. -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start;">
             <!-- Tools Column -->
             <div style="background:#fff;padding:16px;border-radius:12px;">
                 <h4 style="margin:0 0 12px 0;font-size:13px;color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:8px;">
@@ -857,7 +862,7 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
             </div>
 
             <!-- Funding Column -->
-            <div style="background:#fff;padding:16px;border-radius:12px;">
+            <div style="background:#fff;padding:16px;border-radius:12px;break-inside:avoid;page-break-inside:avoid;">
                 <h4 style="margin:0 0 12px 0;font-size:13px;color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:8px;">
                     💰 {funding_label}
                 </h4>
