@@ -944,7 +944,7 @@ def generate_starter_kit_compact_html(kit: StarterKit, lang: str = "de") -> str:
             '<p style="margin:8px 0 16px 0;font-size:11px;color:#475569;'
             'font-style:italic;line-height:1.5;">'
             '<strong>Förderung:</strong> '
-            'Detaillierte Förderprogramme (inkl. regionaler Programme) '
+            'Detaillierte Förderprogramme '
             'finden Sie im Hauptkapitel „Fördermittel &amp; Finanzierung".'
             '</p>'
         )
@@ -1018,7 +1018,7 @@ def inject_starter_kit_into_sections(
                     name="\u2192 siehe Kapitel F\u00f6rdermittel",
                     provider="",
                     max_amount="",
-                    fit_reason="Detaillierte F\u00f6rderprogramme (inkl. regionaler Programme) finden Sie im Hauptkapitel F\u00f6rdermittel & Finanzierung.",
+                    fit_reason="Detaillierte F\u00f6rderprogramme finden Sie im Hauptkapitel F\u00f6rdermittel & Finanzierung.",
                     application_complexity="low",
                 ),
             ]

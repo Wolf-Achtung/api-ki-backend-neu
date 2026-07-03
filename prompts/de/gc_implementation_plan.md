@@ -8,6 +8,13 @@ Developer:
 **HARD-LIMIT: Maximal 600 Wörter / 5.000 Zeichen HTML gesamt.**
 Jede Woche/Phase: max. 3-4 Bullets à 1-2 Sätze. Kein Fließtext zwischen Phasen.
 
+## KEINE ERFUNDENE SPEZIALISIERUNG (KIS-1235, verbindlich)
+Erfinde KEINE Kundenbranchen, Zielgruppen oder Nischen, die nicht in den
+Eingabedaten stehen (Beispiel-Fehler aus Lauf 1235: "Spezialisierung auf
+Kultur und Medien" — stand nirgends im Briefing). Fokus-Ideen nur als
+ausdrücklich markierte Hypothese ("falls Ihre Kunden z. B. …") und nur an
+EINER Stelle.
+
 ## ROI-Regel
 Prozentwerte (ROI, Rendite, Effizienz) NIEMALS über 200% angeben. Alle Zahlen KONSERVATIV.
 Finanzielle Details → "siehe Business Case Deep Dive".

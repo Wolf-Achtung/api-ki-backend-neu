@@ -46,6 +46,14 @@ Nenne konkrete Anwendungsfälle aus dem Arbeitsalltag des Kunden.
 Wenn die Hauptleistung z.B. "Trailer-Produktion" ist, beziehe dich auf
 Videoschnitt, Post-Production, Streaming, Entertainment — nicht auf "Online-Marketing".
 
+KEINE ERFUNDENE SPEZIALISIERUNG (VERBINDLICH, KIS-1235):
+- Erfinde KEINE Kundenbranchen, Zielgruppen oder Nischen, die nicht in den
+  Eingabedaten stehen (Lauf 1235: "Spezialisierung auf Kultur und Medien"
+  zog sich als Fakt durch den ganzen Bericht — stand nirgends im Briefing).
+- Eine Fokus-IDEE ist erlaubt, aber nur ausdrücklich als Hypothese markiert
+  ("Falls Ihre Kunden z. B. aus …, wäre eine Spezialisierung denkbar") und
+  maximal an EINER Stelle — nicht als durchgängige Annahme.
+
 SPRACHREGELN FÜR VERSTÄNDLICHKEIT (PFLICHT):
 Zielgruppe: KMU-Geschäftsführer ohne Beratungs-Hintergrund.
 - Schreibe klar, direkt, konkret. Maximal 25 Wörter pro Satz.
@@ -97,6 +105,11 @@ und Koordination). Das erklärt die unterschiedlichen Zahlen — beide sind korr
 nur die Berechnungsbasis ist anders.
 Baue diese Erklärung VOR der ersten ROI-Nennung im Strategiebericht ein,
 NICHT als Fußnote danach. Verwende eine verständliche, nicht-technische Sprache.
+KIS-1235 — VERTEILUNG: Die VOLLSTÄNDIGE Methodik-Erklärung gehört NUR in S5
+(Kapitel 5). In der EXEC genügt EIN kurzer Halbsatz bei der ROI-Nennung
+("…, gerechnet auf die Gesamtinvestition über 12 Monate — Methodik in
+Kapitel 5"). KEINE eigene Methodik-Box in der EXEC — im Lauf 1235 stand
+nahezu derselbe Absatz doppelt auf S. 3 und S. 26.
 
 VENDOR-KONSISTENZ (PFLICHT bei Tool-Empfehlungen in S4 und S8):
 Der KI-Readiness Report hat {vendor_audit_red_count} Tools als nicht EU-konform
@@ -806,7 +819,18 @@ AUFGABE:
 4. EU AI Act Compliance:
    - Welche der empfohlenen Tools fallen unter den AI Act?
    - Welche Risikoklasse? Welche Pflichten?
+   - FRISTEN (PFLICHT, KIS-1235): Nenne die Transparenzpflichten aus
+     Art. 50 EU AI Act EXPLIZIT mit dem Stichtag 02.08.2026 (Kennzeichnung
+     von KI-Chatbots und KI-generierten Inhalten). Wenn das Reportdatum vor
+     diesem Stichtag liegt, mache die verbleibende Zeit als Handlungsdruck
+     sichtbar (z. B. "in wenigen Wochen"). Keine weiteren Fristen erfinden.
 5. Datenschutz-Checkliste für die KI-Implementierung (basierend auf dem Datenschutzregime von {country_name} — siehe DATENSCHUTZ-KONTEXT oben).
+
+DSGVO-HINWEIS-DISZIPLIN (PFLICHT, KIS-1235): Der Warnhinweis zu US-Tools
+("Nutzen Sie solche Systeme nicht als Hauptsystem für Kundendaten …")
+gehört GENAU EINMAL in diese Section. Er darf in keiner Formulierungs-
+variante wiederholt werden — bei Bedarf reicht ein Querverweis
+("siehe Datenschutz-Hinweis oben").
 
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 
@@ -905,7 +929,7 @@ Formuliere verständlich für einen GF ohne KI-Vorwissen. Kein Berater-Jargon. �
 WICHTIG: Nenne im „nächster Schritt"-Block KEINE spezifischen Tool- oder Produktnamen (z.B. NICHT „Neuroflash", „Jasper", „Notion AI" o.ä.). Formuliere den Schritt als konkrete Handlung (z.B. „KI-Richtlinie erstellen", „Pilotprojekt definieren", „ersten Prozess automatisieren"). Tool-Empfehlungen gehören ausschließlich in Kapitel 4.
 CONSTRAINT: Summary darf NICHT länger werden. Anreicherung ERSETZT generische Formulierungen. Max. 300 Wörter.
 
-FÖRDERMITTEL IN DER EXECUTIVE SUMMARY (VERBINDLICH): - Nenne NIE eine konkrete Fördersumme in der Executive Summary. - Nenne NIE einen konkreten reduzierten Eigenkapitalbetrag. - Stattdessen formuliere: „Durch Förderprogramme (Details in Kapitel 7) lässt sich ein Teil der Investition abfedern." - Verweise IMMER auf das Fördermittel-Kapitel für Details. - Grund: Förderhöhen hängen von Programm, Zeitpunkt und Antragserfolg ab. Konkrete Zahlen in der Zusammenfassung erwecken falsche Sicherheit.
+FÖRDERMITTEL IN DER EXECUTIVE SUMMARY (VERBINDLICH): - Nenne NIE eine konkrete Fördersumme in der Executive Summary. - Nenne NIE einen konkreten reduzierten Eigenkapitalbetrag. - Nenne NIE eine Förderquote in Prozent ("bis zu 70 % der Gesamtinvestition") und KEINE förderbereinigten Kennzahlen ("Netto-ROI nach Förderung", "Break-Even in Monat 3 dank Förderung"). - Versprich KEINE regionalen Programme ("Digitalprämie", "Landesprogramm"), die nicht in den Programmdaten von Kapitel 7 stehen. - Stattdessen formuliere: „Durch Förderprogramme (Details in Kapitel 7) lässt sich ein Teil der Investition abfedern." - Verweise IMMER auf das Fördermittel-Kapitel für Details. - Grund: Förderhöhen hängen von Programm, Zeitpunkt und Antragserfolg ab. Konkrete Zahlen in der Zusammenfassung erwecken falsche Sicherheit.
 
 CROSS-SECTION-ZAHLEN IN DIESER SECTION (VERBINDLICH):
 - Nenne NIE eine konkrete Zahl, die du nicht direkt aus den dir übergebenen VERBINDLICHEN KENNZAHLEN ablesen kannst.

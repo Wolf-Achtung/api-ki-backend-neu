@@ -99,6 +99,25 @@ def inject_opex_bridge(s5_html: str, software_monatlich: str) -> str:
     return s5_html + bridge
 
 
+def _append_contradictions_box(s1_html: str, briefing_data: dict) -> str:
+    """KIS-1235: Deterministische Spannungs-Box ans Ende von Kapitel 1.
+
+    Lauf 1235: Der Prompt-Block (P2) führte nur zu 1 von 4 thematisierten
+    Angaben-Spannungen — die Box rendert alle erkannten Spannungen als
+    beratende Einordnung, unabhängig vom LLM.
+    """
+    if not s1_html or "Was Ihre Angaben zeigen" in s1_html:
+        return s1_html
+    try:
+        from services.briefing_contradictions import build_contradictions_box_html
+        box = build_contradictions_box_html(briefing_data or {})
+        if box:
+            return s1_html + "\n" + box
+    except Exception:
+        pass
+    return s1_html
+
+
 def render_strategy_html(sr: Any, db_session: Any) -> str:
     """
     Render strategy report HTML from Jinja2 template.
@@ -115,6 +134,15 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
 
     briefing = db_session.query(Briefing).filter(Briefing.id == sr.briefing_id).first()
     briefing_data = (briefing.answers if briefing else {}) or {}
+    # KIS-1235: FB2-Antworten für die Spannungs-Box mitladen (Tools-,
+    # Engpass- und Datenreife-Regeln lesen s5_software/s4_engpass etc.).
+    try:
+        from models import StrategyQuestion as _SQ1235
+        _sq_row = db_session.query(_SQ1235).filter(_SQ1235.briefing_id == sr.briefing_id).first()
+        if _sq_row is not None and "_strategy_answers" not in briefing_data:
+            briefing_data = {**briefing_data, "_strategy_answers": _sq_row.to_dict()}
+    except Exception:
+        pass
 
     # Load Report 1 data for scores and metadata
     analysis = db_session.query(Analysis).filter(
@@ -427,7 +455,9 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         "REPORT_DISPLAY_ID": _get_display_id(sr.briefing_id),
         # Sections
         "exec_summary": _exec_body,
-        "section_s1": _strip_prompt_leaks(sections.get("S1", "")),
+        "section_s1": _append_contradictions_box(
+            _strip_prompt_leaks(sections.get("S1", "")), briefing_data,
+        ),
         "section_s2": _strip_prompt_leaks(sections.get("S2", "")),
         "section_s3": _strip_prompt_leaks(sections.get("S3", "")),
         "section_s3b": _strip_prompt_leaks(sections.get("S3b", "")),

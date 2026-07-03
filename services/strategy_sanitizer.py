@@ -208,6 +208,39 @@ def _apply_plain_language(html: str, section_key: str) -> tuple:
 
 # ── Hauptfunktion ────────────────────────────────────────────────────
 
+_EXEC_FUNDING_NEUTRAL = (
+    "Durch Förderprogramme lässt sich ein Teil der Investition abfedern "
+    "(Details in Kapitel 7)."
+)
+# Sätze mit konkreten Förderquoten/-summen oder förderbereinigten
+# Kennzahlen in der Executive Summary (KIS-1235).
+_EXEC_FUNDING_CLAIM_RES = [
+    re.compile(r"[^.!?<>]*Förder(?:potenzial|quote|summe)[^.!?<>]*\d+\s*(?:%|€)[^.!?<>]*[.!?]"),
+    re.compile(r"[^.!?<>]*\d+\s*%[^.!?<>]*(?:der\s+Gesamtinvestition|Förderquote)[^.!?<>]*[.!?]"),
+    re.compile(r"[^.!?<>]*(?:max\.|maximal)\s*[\d.]+\s*€[^.!?<>]*Förder[^.!?<>]*[.!?]"),
+    re.compile(r"[^.!?<>]*Netto-ROI[^.!?<>]*(?:Förder|über\s*\d{3,}\s*%)[^.!?<>]*[.!?]"),
+    re.compile(r"[^.!?<>]*Break-Even[^.!?<>]*(?:nach|dank|durch)[^.!?<>]*Förder[^.!?<>]*[.!?]"),
+]
+
+
+def _neutralize_exec_funding_claims(html: str) -> tuple:
+    """Ersetzt den ersten konkreten Förder-Claim durch die neutrale
+    Formulierung, entfernt weitere. Liefert (html, warnings)."""
+    warnings = []
+    replaced_once = False
+    for rx in _EXEC_FUNDING_CLAIM_RES:
+        while True:
+            m = rx.search(html)
+            if not m:
+                break
+            claim = m.group(0).strip()
+            replacement = "" if replaced_once else " " + _EXEC_FUNDING_NEUTRAL
+            html = html[:m.start()] + replacement + html[m.end():]
+            replaced_once = True
+            warnings.append(f"EXEC-Förder-Claim neutralisiert: {claim[:90]}")
+    return html, warnings
+
+
 def sanitize_strategy_sections(
     sections: dict,
     research_context: dict = None,
@@ -247,6 +280,18 @@ def sanitize_strategy_sections(
                 html = html.replace(_emoji, _span)
                 sections[key] = html
                 patches_applied += 1
+
+        # Pass 0b (KIS-1235): Konkrete Fördersummen/-quoten in der Executive
+        # Summary neutralisieren. Die Prompt-Regel ("Nenne NIE eine konkrete
+        # Fördersumme in der ES") wurde im Lauf 1235 verletzt ("bis zu 70 %
+        # der Gesamtinvestition (max. 8.400 €) … Netto-ROI von über 200 %");
+        # die gelisteten Programme trugen das rechnerisch nicht.
+        if key.lower() in ("exec", "exec_summary", "executive_summary"):
+            html, _fw = _neutralize_exec_funding_claims(html)
+            if _fw:
+                sections[key] = html
+                patches_applied += len(_fw)
+                all_warnings.extend(_fw)
 
         # Pass 1: Prozent-Plausibilität
         html, pw = _check_percent_plausibility(html, key)
