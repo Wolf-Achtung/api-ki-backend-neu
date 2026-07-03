@@ -90,6 +90,79 @@ def detect_contradictions(
     return findings
 
 
+def detect_contradictions_chat(
+    collected: Dict[str, Any],
+) -> List[tuple]:
+    """KIS-1235-P3: Kurzformen für den Live-Abgleich im Chat.
+
+    Liefert (stabiler_key, kurze_rückfrage) für jede aktuell erkennbare
+    Spannung in den gesammelten Antworten. Der Chat stellt die Rückfrage
+    genau EINMAL (Ack wird in der Session gespeichert) — der Nutzer kann
+    kurz antworten oder einfach weitermachen.
+    """
+    b = collected or {}
+    out: List[tuple] = []
+
+    def _answered_negative(*keys: str) -> bool:
+        """True nur, wenn eines der Felder EXPLIZIT mit einem Negativ-Wert
+        beantwortet wurde. Ein noch nicht gestelltes Feld (fehlend/leer)
+        darf im Live-Check nichts auslösen — sonst käme die Rückfrage,
+        bevor die Frage überhaupt dran war."""
+        for k in keys:
+            raw = b.get(k)
+            if raw is None or str(raw).strip() == "":
+                continue
+            if _norm(raw) in _NEGATIVES:
+                return True
+        return False
+
+    tools_fb1 = _norm(b.get("vorhandene_tools"))
+    tools_real = _norm(b.get("s5_software")) or (
+        _norm(b.get("ki_projekte")) if "api" in _norm(b.get("ki_projekte")) else ""
+    )
+    if _answered_negative("vorhandene_tools") and tools_real:
+        out.append((
+            "tools",
+            "Kurzer Abgleich: Bei den Business-Systemen stand \u201ekeine\u201c \u2014 "
+            "gleichzeitig nutzen Sie aber KI-Werkzeuge. Ich werte das als "
+            "\u201ekeine klassischen Systeme wie CRM/ERP, aber KI-Tools im "
+            "Einsatz\u201c. Passt das?",
+        ))
+
+    kompetenz = _norm(b.get("ki_kompetenz"))
+    if _answered_negative("interne_ki_kompetenzen") and kompetenz in _HIGH:
+        out.append((
+            "kompetenz",
+            "Kurzer Abgleich: \u201eInternes KI-Know-how: Nein\u201c steht neben "
+            "Ihrer als hoch eingestuften KI-Kompetenz \u2014 ich werte Ihre "
+            "pers\u00f6nliche Kompetenz als das interne Know-how. Einverstanden?",
+        ))
+
+    try:
+        digi = float(str(b.get("digitalisierungsgrad", "0")).replace(",", "."))
+    except (ValueError, TypeError):
+        digi = 0.0
+    if _answered_negative("datenreife") and digi >= 7:
+        out.append((
+            "datenreife",
+            f"Kurzer Abgleich: Digitalisierungsgrad {digi:g}/10, aber "
+            "\u201eDatenreife: keine\u201c \u2014 gemeint ist vermutlich: digital "
+            "ja, aber noch ohne strukturierte, KI-nutzbare Datenbasis. Richtig?",
+        ))
+
+    engpass = _norm(b.get("s4_engpass") or b.get("groesster_engpass"))
+    budget = _norm(b.get("s1_budget") or b.get("investitionsbudget") or b.get("budget"))
+    if "budget" in engpass and budget not in _NEGATIVES and any(ch.isdigit() for ch in budget):
+        out.append((
+            "budget",
+            "Kurzer Abgleich: Als Engpass nennen Sie \u201eKein Budget\u201c, "
+            "gleichzeitig ist ein Investitionsrahmen angegeben \u2014 ich lese das "
+            "als Priorisierungsfrage, nicht als hartes Null-Budget. Passt das?",
+        ))
+
+    return out
+
+
 def build_contradictions_box_html(
     briefing: Dict[str, Any],
     strategy_answers: Optional[Dict[str, Any]] = None,

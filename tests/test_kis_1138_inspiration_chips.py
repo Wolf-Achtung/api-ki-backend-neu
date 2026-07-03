@@ -66,6 +66,8 @@ STRATEGIC_IMAGINATIVE_FIELDS = {
     "vision_3_jahre",
     "strategische_ziele",
     "ki_guardrails",
+    # KIS-1235-P3: Zeitfresser-Freitext bekommt ebenfalls Inspiration-Chips
+    "top_zeitfresser",
 }
 
 CONCRETE_EXPERIENTIAL_FIELDS = {
@@ -80,8 +82,8 @@ class TestFieldExamplesShape:
 
     def test_has_exactly_four_keys(self):
         assert set(FIELD_EXAMPLES.keys()) == STRATEGIC_IMAGINATIVE_FIELDS, (
-            "FIELD_EXAMPLES must cover exactly the 4 strategic-imaginative "
-            "Block-B fields — no more, no less."
+            "FIELD_EXAMPLES must cover exactly the registered "
+            "inspiration-chip fields — no more, no less."
         )
 
     @pytest.mark.parametrize("field_name", sorted(STRATEGIC_IMAGINATIVE_FIELDS))
