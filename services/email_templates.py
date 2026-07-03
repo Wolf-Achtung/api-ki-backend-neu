@@ -25,12 +25,22 @@ _ENUM_VALUE_OVERRIDES = {
 }
 
 
-def _prettify_enum_value(val: Any) -> str:
+def _prettify_enum_value(val: Any, field: str = "") -> str:
     """Turn an enum-looking token into readable German; leave free text as-is."""
     s = str(val).strip()
     # Only touch pure enum tokens: lowercase, no spaces, [a-z0-9_] only.
     if not s or s != s.lower() or not re.fullmatch(r"[a-z0-9_]+", s):
         return str(val)
+    # KIS-1235: Erst die Fragebogen-Antwortlabels probieren — das Briefing
+    # zeigte rohe Codes ("freiberufler", "marktfuehrerschaft", "kunden").
+    if field:
+        try:
+            from services.chat_conversation import _ENUM_DISPLAY
+            label = (_ENUM_DISPLAY.get(field) or {}).get(s)
+            if label:
+                return label
+        except Exception:
+            pass
     if s in _ENUM_VALUE_OVERRIDES:
         return _ENUM_VALUE_OVERRIDES[s]
     # Numeric range like "2000_10000" -> "2.000–10.000".
@@ -768,8 +778,8 @@ def _render_pdf_questionnaire_tables(
         val = answers.get(key)
         if val is None or val == "" or val == []:
             continue
-        display = (escape(", ".join(_prettify_enum_value(v) for v in val)) if isinstance(val, list)
-                   else escape(_prettify_enum_value(val)))
+        display = (escape(", ".join(_prettify_enum_value(v, key) for v in val)) if isinstance(val, list)
+                   else escape(_prettify_enum_value(val, key)))
         r1_rows.append(f"  <tr><td>{escape(label)}</td><td>{display}</td></tr>")
 
     # Also include any answer keys not in _R1_LABELS (catch-all)
@@ -786,8 +796,8 @@ def _render_pdf_questionnaire_tables(
             continue
         if key.startswith("_"):
             continue
-        display = (escape(", ".join(_prettify_enum_value(v) for v in val)) if isinstance(val, list)
-                   else escape(_prettify_enum_value(val)))
+        display = (escape(", ".join(_prettify_enum_value(v, key) for v in val)) if isinstance(val, list)
+                   else escape(_prettify_enum_value(val, key)))
         r1_rows.append(f"  <tr><td>{escape(_prettify_key_label(key))}</td><td>{display}</td></tr>")
 
     if r1_rows:
@@ -905,7 +915,11 @@ def render_briefing_pdf_html(
     consistency_grade = sections.get("CONSISTENCY_GRADE", _dash)
 
     # Free text (truncated)
-    hauptleistung = escape(str(answers.get("hauptleistung", ""))[:200])
+    # KIS-1235: harte [:200]-Kappung schnitt mitten im Wort ("KI-API-basie")
+    _hl_raw = str(answers.get("hauptleistung", ""))
+    if len(_hl_raw) > 300:
+        _hl_raw = _hl_raw[:300].rsplit(" ", 1)[0].rstrip(" ,;.") + " …"
+    hauptleistung = escape(_hl_raw)
     ziele = escape(str(answers.get("strategische_ziele", ""))[:300])
 
     today_str = _date.today().strftime("%d.%m.%Y")

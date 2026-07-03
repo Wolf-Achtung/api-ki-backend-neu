@@ -532,7 +532,7 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     # Sektion 1
     "zielgruppen": "Zielgruppen (Mehrfachauswahl: B2B, B2C, KMU, Großunternehmen, Öffentliche Hand, etc.)",
     "it_infrastruktur": "IT-Infrastruktur (Cloud / On-Premise / Hybrid / Unklar)",
-    "interne_ki_kompetenzen": "Internes KI-/Digitalisierungsteam vorhanden (Ja / Nein / In Planung)",
+    "interne_ki_kompetenzen": "Systematisch aufgebautes KI-Know-how — bei Solo-Selbstständigen zählt die eigene Kompetenz (Ja / Nein / In Planung)",
     "datenquellen": "Verfügbare Datentypen für KI (Kundendaten, Verkaufsdaten, Produktionsdaten, etc.)",
     # Sektion 2
     "digitalisierungsgrad": "Digitalisierungsgrad der internen Prozesse (Skala 1–10)",
@@ -2168,10 +2168,13 @@ _ENUM_DISPLAY: dict[str, dict[str, str]] = {
         "5_10": "5–10 Stunden", "ueber_10": "Über 10 Stunden",
     },
     "vorhandene_tools": {
+        # KIS-1235: "Keine / andere" wurde als "keine" gespeichert und las sich
+        # im Briefing wie "nutzt gar keine Tools" — obwohl FB2 vier KI-Tools
+        # listete. Label präzisiert auf klassische Business-Systeme.
         "crm": "CRM-Systeme (HubSpot, Salesforce)", "erp": "ERP-Systeme (SAP, Odoo)",
         "projektmanagement": "Projektmanagement (Asana, Trello)",
         "marketing_automation": "Marketing Automation",
-        "buchhaltung": "Buchhaltungssoftware", "keine": "Keine / andere",
+        "buchhaltung": "Buchhaltungssoftware", "keine": "Keine klassischen Systeme / andere",
     },
     "regulierte_branche": {
         "gesundheit": "Gesundheit & Medizin", "finanzen": "Finanzen & Versicherungen",
