@@ -1630,6 +1630,43 @@ USE_PROMPT_SYSTEM = (os.getenv("USE_PROMPT_SYSTEM", "1") in ("1", "true", "TRUE"
 # Wird pro Report-Lauf in _generate_content_sections VOR dem Parallel-Pool
 # gefüllt und in _generate_content_section nur gelesen.
 _RESEARCH_GROUNDING: Dict[str, str] = {}
+
+# KIS-1234-P2: Gemeinsamer Kontext-Prefix (identisch für alle Sektions-Calls
+# eines Laufs) — wird als cache_control-Block vorangestellt, damit der
+# Anthropic-Prompt-Cache ab dem zweiten Call greift. Plus deterministisch
+# erkannte Briefing-Widersprüche für ausgewählte Sektionen.
+_SHARED_CONTEXT_PREFIX: Optional[str] = None
+_CONTRADICTIONS_BLOCK: str = ""
+_CONTRADICTION_TARGET_SECTIONS = {
+    "executive_summary", "advisor_note", "strategie_governance",
+    "gamechanger", "unternehmensprofil_markt", "score_interpretation",
+}
+
+# Tool-Schema für strukturierte Quick Wins (KIS-1234-P2): eliminiert die
+# FIX-499-Fehlerklasse (unparseables JSON aus Freitext) architektonisch.
+_QUICK_WINS_TOOL_SCHEMA: Dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "quick_wins": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "Prägnanter Maßnahmen-Titel"},
+                    "icon": {"type": "string", "description": "Ein passendes Emoji"},
+                    "problem": {"type": "string", "description": "Konkretes Problem heute (2-3 Sätze)"},
+                    "wirkung": {"type": "string", "description": "Erwartete Wirkung (2-3 Sätze)"},
+                    "umsetzung": {"type": "string", "description": "Konkrete Umsetzungsschritte (3-4 Sätze)"},
+                    "hinweis": {"type": "string", "description": "Querverweis, z. B. 'siehe Business Case'"},
+                },
+                "required": ["title", "icon", "problem", "wirkung", "umsetzung", "hinweis"],
+            },
+        },
+    },
+    "required": ["quick_wins"],
+}
 # STATE-AUDIT-517A: Debug trace for prompt section propagation
 DEBUG_PROMPT_TRACE = (os.getenv("DEBUG_PROMPT_TRACE", "0") in ("1", "true", "TRUE"))
 # STATE-AUDIT-517A: Thread-safe collector for prompt trace data (per-run)
@@ -2510,6 +2547,30 @@ def _call_llm_for_section(
         Der generierte Text oder None bei Fehler
     """
     if should_use_anthropic(section_key):
+        # KIS-1234-P2: Quick Wins strukturiert über Tool-Use erzwingen —
+        # die API validiert gegen das Schema, truncated/unparseables JSON
+        # (FIX-499-Klasse) kann architektonisch nicht mehr entstehen.
+        if (section_key == "quick_wins"
+                and os.getenv("QUICK_WINS_STRUCTURED", "1").strip().lower()
+                not in ("0", "false", "no", "off")):
+            try:
+                from services.anthropic_client import call_anthropic_structured
+                _qw_data = call_anthropic_structured(
+                    prompt,
+                    section="quick_wins",
+                    schema=_QUICK_WINS_TOOL_SCHEMA,
+                    tool_name="emit_quick_wins",
+                    system_prompt=system_prompt,
+                    max_tokens=max_tokens,
+                    context_prefix=_SHARED_CONTEXT_PREFIX,
+                )
+                if (_qw_data and isinstance(_qw_data.get("quick_wins"), list)
+                        and _qw_data["quick_wins"]):
+                    return json.dumps(_qw_data["quick_wins"], ensure_ascii=False)
+                log.warning("[KIS-1234-P2] Structured quick_wins leer — Fallback auf Freitext-Pfad")
+            except Exception as _sq_exc:
+                log.warning("[KIS-1234-P2] Structured quick_wins fehlgeschlagen (%s) — Fallback", _sq_exc)
+
         # FIX-625-1: Pass model=None so _resolve_anthropic_model() runs full
         # chain including Opus routing (Step 1b). The 'model' param here is
         # typically an OpenAI model name from _llm_params_for() which is
@@ -2521,6 +2582,7 @@ def _call_llm_for_section(
             temperature=temperature,
             max_tokens=max_tokens,
             model=None,
+            context_prefix=_SHARED_CONTEXT_PREFIX,
         )
 
     # Fallback: OpenAI wie bisher (mit section für besseres Logging)
@@ -12105,6 +12167,11 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                     len(_grounding_block), section_name,
                 )
 
+            # KIS-1234-P2: erkannte Briefing-Spannungen in die Analyse-
+            # Sektionen injizieren (thematisieren statt glätten).
+            if _CONTRADICTIONS_BLOCK and section_name in _CONTRADICTION_TARGET_SECTIONS:
+                prompt_text = prompt_text + _CONTRADICTIONS_BLOCK
+
             # STATE-AUDIT-517A: Record prompt trace after interpolation
             if DEBUG_PROMPT_TRACE:
                 _has_jinja_post = "{%" in (enhanced_prompt if isinstance(enhanced_prompt, str) else "")
@@ -13208,6 +13275,34 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         _RESEARCH_GROUNDING = build_research_grounding(briefing) or {}
     except Exception as _rg_exc:
         log.warning("[RESEARCH-GROUNDING] skipped: %s", _rg_exc)
+
+    # KIS-1234-P2: Gemeinsamen Kontext-Prefix EINMAL vor den Threads bauen —
+    # muss für alle Sektions-Calls byte-identisch sein (Cache-Key ist der
+    # exakte Prefix; _build_prompt_vars mutiert briefing währenddessen).
+    global _SHARED_CONTEXT_PREFIX, _CONTRADICTIONS_BLOCK
+    _SHARED_CONTEXT_PREFIX = None
+    _CONTRADICTIONS_BLOCK = ""
+    if os.getenv("ANTHROPIC_PROMPT_CACHING", "1").strip().lower() not in ("0", "false", "no", "off"):
+        try:
+            _ctx_answers = {k: v for k, v in briefing.items() if not str(k).startswith("_")}
+            _SHARED_CONTEXT_PREFIX = (
+                "REFERENZKONTEXT (identisch für alle Abschnitte dieses Reports — "
+                "dient nur als Hintergrund, die eigentliche Aufgabe folgt danach):\n"
+                f"BRIEFING (JSON):\n{json.dumps(_ctx_answers, ensure_ascii=False, sort_keys=True)[:6000]}\n"
+                f"SCORES (JSON): {json.dumps(scores, ensure_ascii=False, sort_keys=True)}"
+            )
+        except Exception as _ctx_exc:
+            log.warning("[KIS-1234-P2] Shared-Context-Prefix skipped: %s", _ctx_exc)
+    try:
+        from services.briefing_contradictions import build_contradictions_block
+        _CONTRADICTIONS_BLOCK = build_contradictions_block(briefing)
+        if _CONTRADICTIONS_BLOCK:
+            log.info(
+                "[KIS-1234-P2][CONTRADICTIONS] %d Spannungen erkannt → Injektion in %d Sektionen",
+                _CONTRADICTIONS_BLOCK.count("\n- "), len(_CONTRADICTION_TARGET_SECTIONS),
+            )
+    except Exception as _bc_exc:
+        log.warning("[KIS-1234-P2][CONTRADICTIONS] skipped: %s", _bc_exc)
 
     log.info(
         "🚀 Generating %d sections in PARALLEL (max_workers=%d)...",
@@ -15480,6 +15575,18 @@ def analyze_briefing(
                  bc.get("qw_hours_total", "N/A"))
 
     log.info("[%s] 🎨 Generating content sections with %s...", run_id, "PROMPT SYSTEM" if USE_PROMPT_SYSTEM else "legacy prompts")
+    # KIS-1234-P2: FB2-Antworten (StrategyQuestion) einmal laden und als
+    # Underscore-Key beilegen — Widerspruchs-Erkennung und Vendor-Audit
+    # brauchen s5_software/s4_engpass etc.; Underscore-Keys werden von den
+    # Enforcern und der Sektions-Persistenz übersprungen.
+    try:
+        from models import StrategyQuestion as _SQEarly
+        _sq_early = db.query(_SQEarly).filter(_SQEarly.briefing_id == briefing_id).first()
+        if _sq_early is not None:
+            answers["_strategy_answers"] = _sq_early.to_dict()
+    except Exception as _sq_early_exc:
+        log.debug("[%s] StrategyQuestion früh nicht ladbar: %s", run_id, _sq_early_exc)
+
     sections = _generate_content_sections(briefing=answers, scores=scores)
 
     # === FIX-B23-P0: Store pre-bonus scores in sections for tracking ===
