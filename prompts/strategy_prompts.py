@@ -275,9 +275,17 @@ AUFGABE:
    b) Erwarteter Impact (hoch/mittel/niedrig)
    c) Umsetzungskomplexität (hoch/mittel/niedrig)
    d) Zeitrahmen (Quick Win / kurzfristig / mittelfristig)
-   e) Ampel-Bewertung: 🟢 Quick Win, 🟡 Standard, 🔴 Komplex
+   e) Ampel-Bewertung als HTML-Span (KEINE Emojis — sie rendern im PDF als
+      leere Kästchen): <span class="ampel-green">●&nbsp;Quick Win</span>,
+      <span class="ampel-yellow">●&nbsp;Standard</span>,
+      <span class="ampel-red">●&nbsp;Komplex</span>
 3. Erstelle eine Prioritätsmatrix (Impact × Komplexität).
-4. Markiere den Quick Win (🟢) besonders hervor.
+   PRIORITÄTSMATRIX-FORMAT (PFLICHT): maximal 7 Spalten — Priorität |
+   Handlungsfeld | Typ | Impact | Komplexität | Ampel/Pfad | Zielkonflikt.
+   Die Kurzbeschreibung gehört in den Fließtext, NICHT als Tabellenspalte,
+   und der Zeitrahmen wird in die Ampel-Spalte integriert (z. B.
+   "● Quick Win · 1-3 Mon."). Mehr Spalten werden im PDF abgeschnitten.
+4. Markiere den Quick Win (ampel-green) besonders hervor.
 
 UNSICHERHEITSREGEL (VERBINDLICH): Wenn eine Aussage nicht direkt aus den Eingabedaten ableitbar ist, formuliere sie vorsichtig und kenntlich. Erlaubte Marker im Fließtext: „voraussichtlich", „nach heutigem Stand", „wahrscheinlich", „erfahrungsgemäß", „sofern die Annahmen zutreffen". NICHT als Meta-Hinweis über Datenlage schreiben, sondern in die fachliche Aussage integrieren. VERBOTEN: erfundene Gewissheit, absolute Aussagen ohne belastbare Grundlage.
 

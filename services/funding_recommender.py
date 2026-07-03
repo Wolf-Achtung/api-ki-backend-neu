@@ -497,9 +497,15 @@ def calculate_relevance_score(
         score *= 1.5
     elif program_country == "GB" and user_country == "GB":
         score *= 1.5
-    elif user_bundesland and user_bundesland not in program_regions and len(program_regions) > 1:
-        # Regional program but NOT for user's Bundesland → penalize
-        score *= 0.4
+    elif (program_country == "DE" and user_bundesland
+          and len(program_regions) > 1
+          and user_bundesland not in program_regions):
+        # KIS-1234: Landesprogramm eines FREMDEN Bundeslands → ausschließen
+        # statt nur abwerten (regions = ["DE", "<Landescode>"]; bundesweite
+        # Programme haben genau ["DE"]). Die alte 0.4-Abwertung ließ für
+        # einen Berliner fünf Programme aus Bayern/Niedersachsen/Hessen/
+        # Hamburg in die Fördertabelle rutschen (Lauf KIS-1234, Kapitel 7).
+        return -1.0
     else:
         score *= 1.2  # DE program, no specific Bundesland
 

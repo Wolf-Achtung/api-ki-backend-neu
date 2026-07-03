@@ -385,7 +385,25 @@ class TestAIActRegression:
         assert sections["AI_ACT_RISK_LEVEL"] == "limited"
 
     def test_minimal_risk_general(self):
-        """Test minimal risk classification for general business."""
+        """Test minimal risk classification for general business.
+
+        KIS-1234: "Content-Erstellung" ist seit der Art.-50-Regel bewusst
+        "limited" (Kennzeichnungspflicht für KI-generierte Inhalte ab
+        02.08.2026) — der Minimal-Fall braucht einen Usecase OHNE
+        Kundeninteraktion/Content-Generierung.
+        """
+        briefing = {
+            "branche": "Allgemeine Beratung",
+            "unternehmensgroesse": "Solo-Freiberufler",
+            "ki_einsatzbereiche": ["Datenanalyse intern"],
+            "lang": "de",
+        }
+        sections = build_ai_act_sections_optimized(briefing, lang="de")
+
+        assert sections["AI_ACT_RISK_LEVEL"] == "minimal"
+
+    def test_content_creation_is_limited_art50(self):
+        """KIS-1234: KI-generierte Inhalte → Art. 50 Transparenzpflichten."""
         briefing = {
             "branche": "Allgemeine Beratung",
             "unternehmensgroesse": "Solo-Freiberufler",
@@ -394,7 +412,7 @@ class TestAIActRegression:
         }
         sections = build_ai_act_sections_optimized(briefing, lang="de")
 
-        assert sections["AI_ACT_RISK_LEVEL"] == "minimal"
+        assert sections["AI_ACT_RISK_LEVEL"] == "limited"
 
 
 class TestAIActHarmonization:

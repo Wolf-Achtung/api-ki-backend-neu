@@ -169,6 +169,16 @@ table {
     border-collapse: collapse;
     font-size: 9.5pt;
     margin: var(--sp-md) 0;
+    /* KIS-1234: LLM-Tabellen mit vielen Spalten (Prioritätsmatrix) liefen
+       über den Satzspiegel hinaus — die letzte Spalte wurde im PDF
+       abgeschnitten (Lauf 1234, Strategie S. 8). fixed + Umbruch statt
+       Überlauf. */
+    table-layout: fixed;
+}
+th, td {
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: auto;
 }
 th {
     background: var(--navy-50);

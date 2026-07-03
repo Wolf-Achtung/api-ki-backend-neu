@@ -43,9 +43,14 @@ HIGH_RISK_USECASES_KEYWORDS = {
 }
 
 # Use case keywords that indicate limited risk
+# KIS-1234: um Art.-50-relevante Anwendungsfälle erweitert (Chatbots,
+# personalisierte KI-Interaktion, KI-generierte Inhalte) — Transparenz-
+# pflichten ab 02.08.2026 gelten unabhängig von der Betriebsgröße.
 LIMITED_RISK_USECASES_KEYWORDS = {
-    "chatbot", "kundenservice", "customer service", "kommunikation",
-    "content", "marketing", "empfehlung", "recommendation"
+    "chatbot", "chatbots", "kundenservice", "customer service", "kommunikation",
+    "content", "marketing", "empfehlung", "recommendation",
+    "personalisierung", "personalization", "generierung", "generation",
+    "assistent", "assistant", "avatar",
 }
 
 # Solo-forbidden terms (for persona clean checks)
@@ -98,6 +103,15 @@ def determine_risk_level(
     if any(b in branche_lower for b in ["hr", "personal", "human resources", "recruiting"]):
         if any(kw in usecases_text for kw in ["auswahl", "selection", "screening", "bewertung"]):
             return "high-risk"
+        return "limited"
+
+    # Rule 4b (KIS-1234): Kundeninteraktion / KI-generierte Inhalte → limited.
+    # Art. 50 EU AI Act (Transparenzpflichten ab 02.08.2026) greift bei
+    # Chatbots, Personalisierung und KI-generierten Inhalten UNABHÄNGIG von
+    # der Betriebsgröße. Die Pauschal-Regel "Solo → minimal" stufte einen
+    # Anbieter mit Kunden-Chatbots als "minimal" ein (Lauf KIS-1234) — der
+    # eigene Strategiebericht widersprach dem korrekt mit "begrenzt".
+    if any(kw in usecases_text for kw in LIMITED_RISK_USECASES_KEYWORDS):
         return "limited"
 
     # Rule 5: Solo with low automation → minimal
@@ -981,6 +995,16 @@ def build_ai_act_sections(
         elif isinstance(briefing["ki_einsatzbereiche"], str):
             usecases = [x.strip() for x in briefing["ki_einsatzbereiche"].split(",")]
 
+    # KIS-1234: "anwendungsfaelle" (Fragebogen-Feld: chatbots, content
+    # generation, personalisierung, ...) floss bisher NICHT in die
+    # Risikoklassifikation ein — die Einstufung lief dann nur über die
+    # Hauptleistung und übersah Art.-50-relevante Anwendungsfälle.
+    _af = briefing.get("anwendungsfaelle") or briefing.get("ANWENDUNGSFAELLE_LABELS")
+    if _af:
+        if isinstance(_af, str):
+            _af = [x.strip() for x in _af.split(",") if x.strip()]
+        usecases = list(usecases) + [str(x) for x in _af]
+
     if not usecases and briefing.get("hauptleistung"):
         usecases = [briefing["hauptleistung"]]
 
@@ -1814,6 +1838,16 @@ def build_ai_act_sections_optimized(
             usecases = briefing["ki_einsatzbereiche"]
         elif isinstance(briefing["ki_einsatzbereiche"], str):
             usecases = [x.strip() for x in briefing["ki_einsatzbereiche"].split(",")]
+
+    # KIS-1234: "anwendungsfaelle" (Fragebogen-Feld: chatbots, content
+    # generation, personalisierung, ...) floss bisher NICHT in die
+    # Risikoklassifikation ein — die Einstufung lief dann nur über die
+    # Hauptleistung und übersah Art.-50-relevante Anwendungsfälle.
+    _af = briefing.get("anwendungsfaelle") or briefing.get("ANWENDUNGSFAELLE_LABELS")
+    if _af:
+        if isinstance(_af, str):
+            _af = [x.strip() for x in _af.split(",") if x.strip()]
+        usecases = list(usecases) + [str(x) for x in _af]
 
     if not usecases and briefing.get("hauptleistung"):
         usecases = [briefing["hauptleistung"]]

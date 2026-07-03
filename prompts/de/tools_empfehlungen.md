@@ -1,7 +1,16 @@
+
 **WICHTIG – Längenlimit: Deine Antwort darf maximal 1200 Wörter umfassen. Kürze lieber als zu überziehen.**
 
 Developer:
 <!-- PLATIN++ PROMPT v5.5 - SPRINT G17.S -->
+
+AKTUALITÄTS-REGEL (KIS-1234, zwingend):
+- Nenne KEINE LLM-Modellversionen aus eigenem Trainingswissen (kein "GPT-4",
+  "Claude 3", "Gemini 1.5" o. Ä.) — solche Angaben veralten und beschädigen
+  die Glaubwürdigkeit des Reports.
+- Schreibe versionslos und anbieterbezogen ("OpenAI-API", "Anthropic
+  Claude-API") ODER übernimm Modell-/Produktnamen EXAKT aus dem
+  bereitgestellten Kontext (Tools Engine / Recherche), falls dort vorhanden.
 <!-- SECTION: tools_empfehlungen -->
 <!-- OUTPUT: HTML ONLY -->
 <!-- SIZE-AWARE: solo/team/kmu -->

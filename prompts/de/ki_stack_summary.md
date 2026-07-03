@@ -36,6 +36,14 @@ WICHTIG: Verwenden Sie keine Anrede, keine Fragen, keine Assistenz- oder Chat-Fo
 
 <!-- G20 – KI-Stack Summary Card (DE) -->
 
+AKTUALITÄTS-REGEL (KIS-1234, zwingend):
+- Nenne KEINE LLM-Modellversionen aus eigenem Trainingswissen (kein "GPT-4",
+  "Claude 3", "Gemini 1.5" o. Ä.) — solche Angaben veralten und beschädigen
+  die Glaubwürdigkeit des Reports.
+- Schreibe versionslos und anbieterbezogen ("OpenAI-API", "Anthropic
+  Claude-API") ODER übernimm Modell-/Produktnamen EXAKT aus dem
+  bereitgestellten Kontext (Tools Engine / Recherche), falls dort vorhanden.
+
 AUFGABE
 Erzeuge eine kompakte, C-Level-taugliche „KI-Stack Summary Card" als HTML-Block ohne <h1> oder <h2>.
 Der Block wird direkt nach dem Executive Summary in einem PDF-Report eingesetzt.
