@@ -933,6 +933,25 @@ def render_deep_dive_html(sections: Dict[str, str],
 
         # Merge sections and context for template
         template_vars = {**sections, **context}
+        # KIS-1235: Doppelte Methodik-Rechtfertigung entfernen — das Template
+        # bringt bereits die "Methodik-Hinweis ROI"-Box; der LLM-Absatz
+        # ("… methodisch bedingt und kein Widerspruch") direkt darunter
+        # wirkte defensiv-doppelt (Lauf 1235, KPA S. 6).
+        try:
+            import re as _re_m
+            _bc = template_vars.get('BC_DEEP_DIVE_HTML', '')
+            if isinstance(_bc, str) and _bc:
+                _bc_new = _re_m.sub(
+                    r'<p>\s*(?:<strong>\s*)?Methodik:?(?:\s*</strong>)?'
+                    r'(?:(?!</p>).)*?(?:methodisch bedingt|kein Widerspruch|Beide Werte sind korrekt)'
+                    r'(?:(?!</p>).)*?</p>',
+                    '', _bc, flags=_re_m.DOTALL | _re_m.IGNORECASE,
+                )
+                if _bc_new != _bc:
+                    template_vars['BC_DEEP_DIVE_HTML'] = _bc_new
+                    log.info("[KIS-1235][KPA] doppelten Methodik-Absatz entfernt")
+        except Exception:
+            pass
         template_vars['report_type'] = 'gamechanger_deep_dive'
         # Set report_date for "Generiert am" display (same pattern as Report 1)
         from datetime import datetime

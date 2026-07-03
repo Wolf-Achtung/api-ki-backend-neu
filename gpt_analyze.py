@@ -13394,6 +13394,23 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             sections[_slot] = _av
             log.info("[FIX-KIS-1192-ITEM-I] advisor_note grammar fixes applied: %d in %s", _fixes, _slot)
 
+    # =========================================================================
+    # KIS-1235: Deterministische Spannungs-Box "Was Ihre Angaben zeigen" ans
+    # Ende des Unternehmensprofils. Der P2-Prompt-Block überließ die
+    # Thematisierung dem LLM — Lauf 1235 griff nur 1 von 4 Spannungen auf.
+    # =========================================================================
+    try:
+        from services.briefing_contradictions import build_contradictions_box_html
+        _sp_box = build_contradictions_box_html(briefing)
+        if _sp_box:
+            for _sp_slot in ("UNTERNEHMENSPROFIL_MARKT_HTML", "unternehmensprofil_markt"):
+                _sp_html = sections.get(_sp_slot, "")
+                if isinstance(_sp_html, str) and _sp_html and "Was Ihre Angaben zeigen" not in _sp_html:
+                    sections[_sp_slot] = _sp_html + "\n" + _sp_box
+            log.info("[KIS-1235][SPANNUNGS-BOX] deterministische Einordnung ins Unternehmensprofil injiziert")
+    except Exception as _sp_exc:
+        log.debug("[KIS-1235][SPANNUNGS-BOX] übersprungen: %s", _sp_exc)
+
     # Executive Summary Placeholder-Fix
     sections["EXECUTIVE_SUMMARY_HTML"] = _fix_exec_placeholders(
         sections.get("EXECUTIVE_SUMMARY_HTML", ""),
@@ -16224,6 +16241,16 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     # AI Act blocks
     ai_act_blocks = _build_ai_act_blocks()
     sections.update(ai_act_blocks)
+    # KIS-1235: Fristen-Box mit dem nächsten AI-Act-Stichtag an den Anfang
+    # von "AI Act Kompakt" — der 1235-Lauf nannte keine einzige Frist,
+    # obwohl Art. 50 nur 4 Wochen entfernt war.
+    try:
+        from services.ai_act_module import build_ai_act_deadline_box
+        _deadline_box = build_ai_act_deadline_box(str(sections.get("AI_ACT_RISK_LEVEL", "")))
+        if _deadline_box and sections.get("AI_ACT_SUMMARY_HTML"):
+            sections["AI_ACT_SUMMARY_HTML"] = _deadline_box + sections["AI_ACT_SUMMARY_HTML"]
+    except Exception as _dl_exc:
+        log.debug("[KIS-1235] AI-Act-Fristen-Box übersprungen: %s", _dl_exc)
     # News/Änderungen box (AI Act phase + research timestamp)
     sections["NEWS_BOX_HTML"] = (
         "<div class='callout'><strong>EU AI Act – Phase:</strong> "

@@ -90,6 +90,33 @@ def detect_contradictions(
     return findings
 
 
+def build_contradictions_box_html(
+    briefing: Dict[str, Any],
+    strategy_answers: Optional[Dict[str, Any]] = None,
+) -> str:
+    """KIS-1235: Sichtbare Beratungs-Box "Was Ihre Angaben zeigen".
+
+    Der P2-Prompt-Block überließ die Thematisierung dem LLM — im Lauf 1235
+    wurde nur 1 von 4 Spannungen aufgegriffen. Diese Box rendert die
+    erkannten Spannungen DETERMINISTISCH als beratende Einordnung; sie
+    entfällt komplett, wenn keine Spannungen erkannt wurden.
+    """
+    findings = detect_contradictions(briefing, strategy_answers)
+    if not findings:
+        return ""
+    items = "".join(f"<li>{f}</li>" for f in findings)
+    return (
+        '<div class="callout card-nobreak" style="border-left:4px solid #2563eb;'
+        'background:#eff6ff;padding:14px 18px;margin:16px 0;break-inside:avoid;">'
+        '<p style="margin:0 0 6px 0;"><strong>Was Ihre Angaben zeigen:</strong> '
+        'Einige Antworten stehen in einem produktiven Spannungsverhältnis — '
+        'kein Fehler, sondern ein Hinweis, wo die Begriffe im Alltag anders '
+        'belegt sind als im Fragebogen:</p>'
+        f'<ul style="margin:0;padding-left:18px;">{items}</ul>'
+        '</div>'
+    )
+
+
 def build_contradictions_block(
     briefing: Dict[str, Any],
     strategy_answers: Optional[Dict[str, Any]] = None,

@@ -67,6 +67,55 @@ TEAM_KMU_TERMS_FOR_SOLO = [
 
 
 # =============================================================================
+# KIS-1235: AI-Act-Fristen-Box (deterministisch, datumsabhängig)
+# =============================================================================
+# Der 1235-Lauf zeigte: Das Kapitel "AI Act Kompakt" nannte KEINE einzige
+# Frist, obwohl Art. 50 (Transparenzpflichten) zum Reportdatum nur 4 Wochen
+# entfernt war. Diese Box macht den nächsten Stichtag zum Handlungsanker.
+
+AI_ACT_DEADLINES = [
+    ("2025-02-02", "Verbotene Praktiken & KI-Kompetenzpflicht (Art. 4, 5)"),
+    ("2025-08-02", "Pflichten für GPAI-Modelle (Kap. V)"),
+    ("2026-08-02", "Transparenzpflichten (Art. 50) & Hochrisiko-Pflichten Anhang III"),
+    ("2027-08-02", "Hochrisiko-KI in regulierten Produkten (Anhang I)"),
+]
+
+
+def build_ai_act_deadline_box(risk_level: str = "", today: Optional[Any] = None) -> str:
+    """Countdown-Box mit dem nächsten AI-Act-Stichtag (HTML)."""
+    from datetime import date as _date
+    d = today or _date.today()
+    upcoming = []
+    for iso, label in AI_ACT_DEADLINES:
+        y, m, dd = (int(x) for x in iso.split("-"))
+        deadline = _date(y, m, dd)
+        if deadline >= d:
+            upcoming.append((deadline, label))
+    if not upcoming:
+        return ""
+    next_deadline, next_label = upcoming[0]
+    days = (next_deadline - d).days
+    date_fmt = next_deadline.strftime("%d.%m.%Y")
+    urgency = ""
+    if days <= 90:
+        urgency = f" — <strong>in {days} Tagen</strong>"
+    relevance = ""
+    if (risk_level or "").strip().lower() in ("limited", "begrenzt") and "Art. 50" in next_label:
+        relevance = (
+            " Für Ihre Einstufung (begrenztes Risiko) ist genau dieser Stichtag "
+            "maßgeblich: KI-Chatbots müssen sich als KI zu erkennen geben, "
+            "KI-generierte Inhalte müssen gekennzeichnet sein."
+        )
+    return (
+        '<div class="callout" style="border-left:4px solid #b45309;background:#fffbeb;'
+        'padding:12px 16px;margin:12px 0;break-inside:avoid;">'
+        f'<strong>Nächster Stichtag: {date_fmt}</strong>{urgency} · {next_label}.'
+        f'{relevance}'
+        '</div>'
+    )
+
+
+# =============================================================================
 # RISK LEVEL DETERMINATION
 # =============================================================================
 

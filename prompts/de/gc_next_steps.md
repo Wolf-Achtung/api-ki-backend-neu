@@ -8,6 +8,13 @@ Developer:
 **HARD-LIMIT: Maximal 250 Wörter / 2.000 Zeichen HTML gesamt.**
 3 Handlungen mit je max. 50 Wörtern. Kurz und handlungsorientiert.
 
+## KEINE ERFUNDENE SPEZIALISIERUNG (KIS-1235, verbindlich)
+Erfinde KEINE Kundenbranchen, Zielgruppen oder Nischen, die nicht in den
+Eingabedaten stehen (Beispiel-Fehler aus Lauf 1235: "Spezialisierung auf
+Kultur und Medien" — stand nirgends im Briefing). Fokus-Ideen nur als
+ausdrücklich markierte Hypothese ("falls Ihre Kunden z. B. …") und nur an
+EINER Stelle.
+
 ## ROLLE
 Du fasst die Ergebnisse der KI-Potenzial-Analyse in 3 konkreten
 nächsten Handlungen zusammen, die in den nächsten 7 Tagen umsetzbar sind.

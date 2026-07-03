@@ -721,6 +721,15 @@ h1, h2, h3, h4 {
         ROI auf Basis verschiedener Szenarien. Der KI-Status-Report (R1) verwendet eine konservative,
         bei 200% gedeckelte ROI-Methodik. Beide Werte sind korrekt — sie beantworten unterschiedliche Fragen.
     </div>
+    {# KIS-1235: Budget-Stufen-Logik explizit machen — Lauf 1235 stand
+       "Budget bleibt unter 3.000 €" (Pilot) unaufgelöst neben
+       "Einmalinvestition 12.000 €" (Business Case, Vollausbau). #}
+    <div class="callout" style="font-size:9pt; margin-bottom:var(--sp-md); padding:8px 12px; background:#F0F9FF; border-left:3px solid #2563EB;">
+        <strong>Budget-Stufen:</strong> Der Business Case rechnet bewusst den <em>Vollausbau</em>
+        (Einmalinvestition inkl. aller Ausbaustufen). Der 90-Tage-Pilot aus Kapitel&nbsp;2 kommt mit
+        einem Bruchteil davon aus und bleibt im genannten Budgetrahmen — erst nach erfolgreichem
+        Pilot entscheiden Sie &uuml;ber den Vollausbau.
+    </div>
 
     <div class="section-body">
         {{ BC_DEEP_DIVE_HTML|safe }}
@@ -806,7 +815,10 @@ h1, h2, h3, h4 {
         </div>
         <div class="impressum-block">
             <h4>Hinweis zum EU AI Act</h4>
-            <p>Dieses Dokument informiert &uuml;ber Pflichten, Risiken und F&ouml;rderm&ouml;glichkeiten beim Einsatz von KI. Es ersetzt keine Rechtsberatung. Beachten Sie: Die Transparenzpflichten zur Kennzeichnung KI-generierter Inhalte (Art. 50 EU AI Act) gelten ab dem 2. August 2026.</p>
+            {# KIS-1235: "Fördermöglichkeiten" aus dem Disclaimer gestrichen —
+               die KPA enthält bewusst keine Förderprogramme (die stehen im
+               KI-Status-Report); das Versprechen war faktisch falsch. #}
+            <p>Dieses Dokument informiert &uuml;ber Potenziale, Pflichten und Risiken beim Einsatz von KI. F&ouml;rderprogramme finden Sie im Kapitel &bdquo;F&ouml;rdermittel&ldquo; des KI-Status-Reports. Es ersetzt keine Rechtsberatung. Beachten Sie: Die Transparenzpflichten zur Kennzeichnung KI-generierter Inhalte (Art. 50 EU AI Act) gelten ab dem 2. August 2026.</p>
         </div>
     </div>
     <div class="impressum-divider"></div>

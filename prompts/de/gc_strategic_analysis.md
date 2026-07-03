@@ -8,6 +8,13 @@ Developer:
 **HARD-LIMIT: Maximal 500 Wörter / 4.500 Zeichen HTML gesamt.**
 Kompakt und substanziell – jeder Satz muss Mehrwert liefern.
 
+## KEINE ERFUNDENE SPEZIALISIERUNG (KIS-1235, verbindlich)
+Erfinde KEINE Kundenbranchen, Zielgruppen oder Nischen, die nicht in den
+Eingabedaten stehen (Beispiel-Fehler aus Lauf 1235: "Spezialisierung auf
+Kultur und Medien" — stand nirgends im Briefing). Fokus-Ideen nur als
+ausdrücklich markierte Hypothese ("falls Ihre Kunden z. B. …") und nur an
+EINER Stelle.
+
 ## ROI-Regel
 Prozentwerte (ROI, Rendite, Effizienz) NIEMALS über 200% angeben. Alle Zahlen KONSERVATIV.
 Finanzielle Details → "siehe Business Case Deep Dive".
