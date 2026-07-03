@@ -439,9 +439,30 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         calculated_values.get("budget_software_monatlich", ""),
     )
 
+    # KIS-1235: Der Firmenname wird aus Datenschutzgründen bewusst nie
+    # erhoben — statt des Platzhalters "Ihr Unternehmen · Beratung &
+    # Dienstleistungen" zeigt das Deckblatt ein sprechendes Profil
+    # ("Solo-Beratung · Berlin").
+    _firmenname = str(briefing_data.get("unternehmen_name") or "").strip()
+    if not _firmenname:
+        _seg = (segment_label or "").strip()
+        _bl = str(briefing_data.get("bundesland") or "").strip()
+        if _bl:
+            try:
+                from services.chat_normalizer import BUNDESLAND_LABELS
+                _bl = BUNDESLAND_LABELS.get(_bl, _bl.title() if _bl == _bl.lower() else _bl)
+            except Exception:
+                pass
+        if _seg and _bl:
+            _firmenname = f"{_seg} · {_bl}"
+        elif _seg:
+            _firmenname = _seg
+        else:
+            _firmenname = "Ihr Unternehmen"
+
     context = {
         # Cover metadata
-        "firmenname": briefing_data.get("unternehmen_name", "Ihr Unternehmen"),
+        "firmenname": _firmenname,
         "branche": branche_label,
         "datum": datetime.now().strftime("%d.%m.%Y"),
         "segment": segment_label,

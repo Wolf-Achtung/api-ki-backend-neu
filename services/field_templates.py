@@ -71,12 +71,12 @@ FIELD_QUESTIONS: dict[str, str] = {
     "ki_einsatz": "In welchen Bereichen setzen Sie bereits KI ein?",
     "anwendungsfaelle": "Welche KI-Anwendungsfälle sind für Sie besonders interessant?",
     "pilot_bereich": "In welchem Bereich würden Sie am ehesten ein KI-Pilotprojekt starten?",
-    "vorhandene_tools": "Welche Software-Systeme nutzen Sie aktuell?",
+    "vorhandene_tools": "Welche klassischen Business-Systeme (CRM, ERP, Projektmanagement, Buchhaltung) nutzen Sie aktuell? KI-Tools fragen wir separat ab.",
     "trainings_interessen": "Welche KI-Trainingsthemen interessieren Sie?",
     "zeitbudget": "Wie viel Zeit pro Woche können Sie für KI-Projekte aufbringen?",
     "prozesse_papierlos": "Wie hoch ist der Anteil papierloser Prozesse bei Ihnen?",
     "it_infrastruktur": "Wie ist Ihre IT-Infrastruktur aufgestellt?",
-    "interne_ki_kompetenzen": "Gibt es in Ihrem Unternehmen internes KI-Know-how?",
+    "interne_ki_kompetenzen": "Gibt es bei Ihnen systematisch aufgebautes KI-Know-how? Bei Solo-Selbstständigen zählt Ihre eigene Kompetenz.",
     "datenquellen": "Welche Datenquellen stehen Ihnen für KI-Anwendungen zur Verfügung?",
 
     # ── Block D: Recht & Datenschutz ──
