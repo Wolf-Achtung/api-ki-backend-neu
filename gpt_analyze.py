@@ -1644,13 +1644,15 @@ _CONTRADICTION_TARGET_SECTIONS = {
 
 # Tool-Schema für strukturierte Quick Wins (KIS-1234-P2): eliminiert die
 # FIX-499-Fehlerklasse (unparseables JSON aus Freitext) architektonisch.
+# KIS-1236: 3–5 statt exakt 3 — der KMU-Prompt fordert 4–5 Quick Wins;
+# das Pinnen auf 3 kollidierte damit im Lauf 1119 (leerer tool_use-Input).
 _QUICK_WINS_TOOL_SCHEMA: Dict[str, Any] = {
     "type": "object",
     "properties": {
         "quick_wins": {
             "type": "array",
             "minItems": 3,
-            "maxItems": 3,
+            "maxItems": 5,
             "items": {
                 "type": "object",
                 "properties": {
@@ -2567,7 +2569,16 @@ def _call_llm_for_section(
                 if (_qw_data and isinstance(_qw_data.get("quick_wins"), list)
                         and _qw_data["quick_wins"]):
                     return json.dumps(_qw_data["quick_wins"], ensure_ascii=False)
-                log.warning("[KIS-1234-P2] Structured quick_wins leer — Fallback auf Freitext-Pfad")
+                # KIS-1236: Diagnose statt Blindflug — WAS kam zurück, als
+                # das Ergebnis leer war? (Lauf 1119: tool_use ok, aber leer.)
+                _qw_val = (_qw_data or {}).get("quick_wins")
+                log.warning(
+                    "[KIS-1234-P2] Structured quick_wins leer — Fallback auf Freitext-Pfad "
+                    "(keys=%s quick_wins_type=%s len=%s)",
+                    sorted((_qw_data or {}).keys()),
+                    type(_qw_val).__name__,
+                    len(_qw_val) if isinstance(_qw_val, (list, dict, str)) else "n/a",
+                )
             except Exception as _sq_exc:
                 log.warning("[KIS-1234-P2] Structured quick_wins fehlgeschlagen (%s) — Fallback", _sq_exc)
 
@@ -4444,7 +4455,21 @@ def _parse_quick_wins_json(raw_response: str) -> Optional[List[Dict[str, Any]]]:
         )
 
         # Parse JSON
-        quick_wins = json.loads(cleaned)
+        # KIS-1236: LLMs liefern gelegentlich literale Steuerzeichen
+        # (Newlines) INNERHALB von JSON-Strings — strict=True lehnt das ab
+        # ("Invalid control character", Lauf 1119). strict=False erlaubt
+        # exakt diese Klasse und ändert sonst nichts an der Semantik.
+        try:
+            quick_wins = json.loads(cleaned)
+        except json.JSONDecodeError as _strict_err:
+            if "control character" not in str(_strict_err).lower():
+                raise
+            quick_wins = json.loads(cleaned, strict=False)
+            log.info(
+                "[KIS-1236] quick_wins JSON mit strict=False geheilt "
+                "(literales Steuerzeichen bei pos=%d)",
+                _strict_err.pos or 0,
+            )
 
         # Validierung: Muss Array sein
         if not isinstance(quick_wins, list):
