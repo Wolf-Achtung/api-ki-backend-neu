@@ -74,7 +74,6 @@ FIELD_QUESTIONS: dict[str, str] = {
     "pilot_bereich": "In welchem Bereich würden Sie am ehesten ein KI-Pilotprojekt starten?",
     "vorhandene_tools": "Welche klassischen Business-Systeme (CRM, ERP, Projektmanagement, Buchhaltung) nutzen Sie aktuell? KI-Tools fragen wir separat ab.",
     "projekte_pro_monat": "Wie viele Projekte oder Aufträge bearbeiten Sie üblicherweise pro Monat?",
-    "durchschnittshonorar": "In welcher Größenordnung liegt Ihr durchschnittliches Honorar bzw. Ihr Auftragswert pro Projekt?",
     "top_zeitfresser": "Welche zwei, drei Aufgaben kosten Sie im Arbeitsalltag am meisten Zeit?",
     "trainings_interessen": "Welche KI-Trainingsthemen interessieren Sie?",
     "zeitbudget": "Wie viel Zeit pro Woche können Sie für KI-Projekte aufbringen?",

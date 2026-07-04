@@ -239,9 +239,11 @@ BLOCK_FIELDS: dict[str, list[str]] = {
         "bisherige_foerdermittel", "interesse_foerderung",
         "erfahrung_beratung", "marktposition",
         "benchmark_wettbewerb", "risikofreude", "jahresumsatz",
-        # KIS-1235-P3: Wirtschafts-Kontext (Projekte × Honorar) für den
-        # Business Case — gehört thematisch zu Budget & Wirtschaftlichkeit.
-        "projekte_pro_monat", "durchschnittshonorar",
+        # KIS-1235-P3: Wirtschafts-Kontext für den Business Case.
+        # KIS-1240: durchschnittshonorar entfernt — die Frage wirkte
+        # übergriffig (Nutzer-Feedback 04.07.); der Wert wird jetzt aus
+        # Jahresumsatz × Projekte/Monat abgeleitet (gpt_analyze).
+        "projekte_pro_monat",
     ],
     "B": [
         "vision_3_jahre", "strategische_ziele", "ki_guardrails",
@@ -1922,12 +1924,17 @@ async def chat_message(
         # Checkpoint: inject checkpoint text instead of streaming Sonnet
         _checkpoint_text = None
         if _checkpoint_triggered:
+            # KIS-1240: Empfehlungs-Framing statt offener Auswahl — Nutzer
+            # können nicht einschätzen, was sie in den vier Bereichen erwartet
+            # (Feedback 04.07.: „Alle Bereiche vertiefen" ging unter).
             _checkpoint_text = (
                 "Ich habe jetzt ein gutes Bild von Ihrem Unternehmen. "
                 "Damit kann ich bereits einen soliden KI-Report erstellen.\n\n"
-                "Am Ende können Sie alle Angaben nochmal prüfen und bei Bedarf korrigieren.\n\n"
-                "Sie können die Analyse aber gezielt vertiefen — "
-                "welche Bereiche interessieren Sie besonders?"
+                "Meine Empfehlung: Vertiefen Sie alle vier Bereiche — das sind "
+                "noch etwa 10 Minuten und macht Business Case, Roadmap und "
+                "Compliance-Teil des Reports deutlich konkreter. Wenn es "
+                "schnell gehen soll, erstellen Sie den Report direkt.\n\n"
+                "Am Ende prüfen Sie alle Angaben nochmal und können korrigieren."
             )
 
         # Block completion: inject inter-block transition text
@@ -2129,13 +2136,16 @@ async def chat_message(
 
         if _checkpoint_triggered or _final_phase == "checkpoint":
             # Checkpoint: show topic selection buttons
+            # KIS-1240: Die beiden Haupt-Wege zuerst und hervorgehoben —
+            # vorher standen ALL/REPORT zwischen den vier Themen-Chips und
+            # gingen unter. Einzelne Bereiche bleiben als Sekundär-Option.
             _cp_options = [
-                QuickReplyOption(value="A", label="Fördermittel & Budget"),
-                QuickReplyOption(value="B", label="KI-Strategie & Roadmap"),
-                QuickReplyOption(value="C", label="Tools & Automatisierung"),
-                QuickReplyOption(value="D", label="Recht & Datenschutz"),
-                QuickReplyOption(value="ALL", label="Alle Bereiche vertiefen"),
+                QuickReplyOption(value="ALL", label="Alle Bereiche vertiefen (empfohlen)", style="primary"),
                 QuickReplyOption(value="REPORT", label="Report jetzt erstellen"),
+                QuickReplyOption(value="A", label="Nur: Fördermittel & Budget", style="secondary"),
+                QuickReplyOption(value="B", label="Nur: KI-Strategie & Roadmap", style="secondary"),
+                QuickReplyOption(value="C", label="Nur: Tools & Automatisierung", style="secondary"),
+                QuickReplyOption(value="D", label="Nur: Recht & Datenschutz", style="secondary"),
             ]
             # KIS-1128C V9-BE-1: Schnellmodus for expert users
             _cp_ki = collected.get("ki_kompetenz", "")
@@ -2292,6 +2302,30 @@ async def chat_message(
                     turn, next_fields[:1] if next_fields else None,
                 )
                 full_response = _fallback
+
+        # ------------------------------------------------------------------
+        # KIS-1240: Frage-Garantie. Solange Felder offen sind, MUSS die
+        # Antwort eine Frage enthalten. Abgebrochener Testlauf 04.07.:
+        # Sonnet meldete bei 8/9 "damit vollständig", stellte keine Frage,
+        # keine Chips — der Nutzer saß in einer Sackgasse. Hier wird die
+        # Template-Frage fürs nächste Feld deterministisch angehängt.
+        # ------------------------------------------------------------------
+        if (next_fields and full_response.strip()
+                and "?" not in full_response
+                and not _report_start_requested
+                and not _checkpoint_triggered
+                and _final_phase not in ("summary", "checkpoint")):
+            _ng_q = get_template_question(next_fields[0])
+            if not _ng_q:
+                _ng_label = get_field_label(next_fields[0], rt)
+                _ng_q = (f"Dann weiter: {_ng_label} — wie sieht das bei Ihnen aus?"
+                         if _ng_label else "")
+            if _ng_q and _ng_q not in full_response:
+                full_response = f"{full_response}\n\n{_ng_q}"
+                log.info(
+                    "[CHAT][KIS-1240] Frage-Garantie: Template-Frage für %s angehängt (turn %s)",
+                    next_fields[0], turn,
+                )
 
         # ------------------------------------------------------------------
         # KIS-1235-P3: Live-Widerspruchs-Check. Direkt nach einer gespeicherten
@@ -3767,6 +3801,15 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "2m_10m", "label": "2–10 Mio. €"},
         {"value": "ueber_10m", "label": "Über 10 Mio. €"},
         {"value": "keine_angabe", "label": "Keine Angabe"},
+    ],
+    # KIS-1240: fehlte — das Enum-Feld wurde ohne Chips gestellt, Nutzer
+    # tippten Freitext ("1-2") und die Extraktion wurde zum Glücksspiel.
+    "projekte_pro_monat": [
+        {"value": "unter_2", "label": "Unter 2"},
+        {"value": "2_5", "label": "2–5"},
+        {"value": "6_10", "label": "6–10"},
+        {"value": "ueber_10", "label": "Über 10"},
+        {"value": "keine_angabe", "label": "Schwankt stark / keine Angabe"},
     ],
     # --- Sektion 1 ---
     "zielgruppen": [
