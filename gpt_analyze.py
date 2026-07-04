@@ -922,17 +922,42 @@ def hard_stop_if_invalid(
                     break
 
     # 3. Check for null/empty/error sections
-    critical_sections = [
-        "EXECUTIVE_SUMMARY_HTML", "executive_summary",
-        "ROADMAP_12M_HTML", "roadmap_12m",
-        "RECOMMENDATIONS_HTML", "recommendations",
+    # KIS-1247: Paarweise pruefen mit Selbstheilung. Der lowercase-Schatten-
+    # Key kann nach Fallback-/Heal-Pfaden leer sein, waehrend der kanonische
+    # *_HTML-Key vollen Inhalt traegt (Lauf 1121: executive_summary leer,
+    # EXECUTIVE_SUMMARY_HTML 9.852 Zeichen -> fertiger Report starb am
+    # Hard-Stop). Leerer Partner wird aus dem vollen re-synchronisiert;
+    # Hard-Stop nur noch, wenn BEIDE Varianten leer/fehlerhaft sind.
+    critical_pairs = [
+        ("EXECUTIVE_SUMMARY_HTML", "executive_summary"),
+        ("ROADMAP_12M_HTML", "roadmap_12m"),
+        ("RECOMMENDATIONS_HTML", "recommendations"),
     ]
-    for key in critical_sections:
-        value = sections.get(key)
-        if value is None or value == "":
-            gate.add_section_failure(key, "Empty or null content")
-        elif isinstance(value, str) and "[Error:" in value:
-            gate.add_section_failure(key, "Contains error marker")
+    for canon_key, shadow_key in critical_pairs:
+        canon_val = sections.get(canon_key)
+        shadow_val = sections.get(shadow_key)
+        canon_ok = isinstance(canon_val, str) and canon_val.strip() and "[Error:" not in canon_val
+        shadow_ok = isinstance(shadow_val, str) and shadow_val.strip() and "[Error:" not in shadow_val
+        if canon_ok and not shadow_ok:
+            sections[shadow_key] = canon_val
+            log.warning(
+                "[%s] [KIS-1247][PAIR-HEAL] '%s' war leer/fehlerhaft — aus '%s' re-synchronisiert (%d Zeichen)",
+                run_id, shadow_key, canon_key, len(canon_val),
+            )
+            continue
+        if shadow_ok and not canon_ok:
+            sections[canon_key] = shadow_val
+            log.warning(
+                "[%s] [KIS-1247][PAIR-HEAL] '%s' war leer/fehlerhaft — aus '%s' re-synchronisiert (%d Zeichen)",
+                run_id, canon_key, shadow_key, len(shadow_val),
+            )
+            continue
+        if not canon_ok and not shadow_ok:
+            for key, value in ((canon_key, canon_val), (shadow_key, shadow_val)):
+                if value is None or value == "":
+                    gate.add_section_failure(key, "Empty or null content")
+                elif isinstance(value, str) and "[Error:" in value:
+                    gate.add_section_failure(key, "Contains error marker")
 
     # 4. Check all string sections for placeholders
     for key, value in sections.items():
