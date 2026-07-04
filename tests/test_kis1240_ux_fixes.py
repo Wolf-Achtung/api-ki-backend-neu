@@ -102,17 +102,28 @@ class TestHonorarDerivation:
 # =========================================================================
 
 class TestCheckpointOptions:
+    # KIS-1241 (2. Abbruch): genau ZWEI Ein-Klick-Optionen, Single-Select —
+    # kein Bestätigen-Schritt, keine Einzelbereichs-Chips, kein Schnellmodus.
 
-    def test_all_first_and_primary(self):
+    def test_exactly_two_single_select_options(self):
         src = open("routes/chat.py", encoding="utf-8").read()
-        idx = src.find('value="ALL"')
+        idx = src.find('field="__checkpoint__"')
         assert idx != -1
-        block = src[idx - 400:idx + 700]
-        assert 'label="Alle Bereiche vertiefen (empfohlen)"' in block
-        assert 'style="primary"' in block
-        # ALL steht VOR den Einzelbereichen
-        assert src.find('value="ALL"') < src.find('label="Nur: Fördermittel & Budget"')
+        block = src[idx - 1200:idx + 400]
+        assert 'label="Vollständiger Report (empfohlen) · ~10 Min"' in block
+        assert 'label="Schnell-Report jetzt erstellen"' in block
+        assert "multi_select=False" in block
+        assert "max_select" not in block
+        # Einzelbereiche und Schnellmodus sind aus dem Checkpoint raus
+        assert 'label="Nur:' not in src
+        assert "Schnellmodus (alle Fragen auf einmal)" not in src
 
     def test_checkpoint_text_recommends(self):
         src = open("routes/chat.py", encoding="utf-8").read()
-        assert "Meine Empfehlung: Vertiefen Sie alle vier Bereiche" in src
+        assert "Meine Empfehlung: der vollständige Report" in src
+        assert "Schnell-Report" in src
+
+    def test_handler_accepts_single_values(self):
+        src = open("routes/chat.py", encoding="utf-8").read()
+        assert '_cp_value == "REPORT"' in src
+        assert '_cp_value == "ALL"' in src

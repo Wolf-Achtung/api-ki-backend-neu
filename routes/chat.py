@@ -1924,16 +1924,18 @@ async def chat_message(
         # Checkpoint: inject checkpoint text instead of streaming Sonnet
         _checkpoint_text = None
         if _checkpoint_triggered:
-            # KIS-1240: Empfehlungs-Framing statt offener Auswahl — Nutzer
-            # können nicht einschätzen, was sie in den vier Bereichen erwartet
-            # (Feedback 04.07.: „Alle Bereiche vertiefen" ging unter).
+            # KIS-1241: Genau ZWEI Wege, ein Klick, keine Bestätigung.
+            # 2. Abbruch am 04.07.: Die Bereichs-Chips + Schnellmodus +
+            # Bestätigen-Schritt überforderten; der Selected-State des
+            # empfohlenen Buttons war unsichtbar (blau auf blau).
             _checkpoint_text = (
-                "Ich habe jetzt ein gutes Bild von Ihrem Unternehmen. "
-                "Damit kann ich bereits einen soliden KI-Report erstellen.\n\n"
-                "Meine Empfehlung: Vertiefen Sie alle vier Bereiche — das sind "
-                "noch etwa 10 Minuten und macht Business Case, Roadmap und "
-                "Compliance-Teil des Reports deutlich konkreter. Wenn es "
-                "schnell gehen soll, erstellen Sie den Report direkt.\n\n"
+                "Ich habe jetzt ein gutes Bild von Ihrem Unternehmen — "
+                "damit kann ich bereits einen soliden KI-Report erstellen.\n\n"
+                "Sie haben zwei Möglichkeiten: den Schnell-Report aus den "
+                "bisherigen Angaben — oder Sie beantworten noch einige "
+                "vertiefende Fragen (ca. 10 Minuten), dann werden Business "
+                "Case, Roadmap und Compliance-Teil deutlich konkreter. "
+                "Meine Empfehlung: der vollständige Report.\n\n"
                 "Am Ende prüfen Sie alle Angaben nochmal und können korrigieren."
             )
 
@@ -2136,36 +2138,28 @@ async def chat_message(
 
         if _checkpoint_triggered or _final_phase == "checkpoint":
             # Checkpoint: show topic selection buttons
-            # KIS-1240: Die beiden Haupt-Wege zuerst und hervorgehoben —
-            # vorher standen ALL/REPORT zwischen den vier Themen-Chips und
-            # gingen unter. Einzelne Bereiche bleiben als Sekundär-Option.
+            # KIS-1241: Genau ZWEI Ein-Klick-Optionen, Single-Select — kein
+            # „1 ausgewählt — Bestätigen"-Zwischenschritt mehr. Die
+            # Einzelbereichs-Chips (A–D) und der Schnellmodus sind bewusst
+            # entfernt: Nutzer können nicht einschätzen, was sie in den
+            # Bereichen erwartet (2. Testlauf-Abbruch 04.07.). Das Backend
+            # versteht A–D-Werte weiterhin (Legacy-Sessions).
             _cp_options = [
-                QuickReplyOption(value="ALL", label="Alle Bereiche vertiefen (empfohlen)", style="primary"),
-                QuickReplyOption(value="REPORT", label="Report jetzt erstellen"),
-                QuickReplyOption(value="A", label="Nur: Fördermittel & Budget", style="secondary"),
-                QuickReplyOption(value="B", label="Nur: KI-Strategie & Roadmap", style="secondary"),
-                QuickReplyOption(value="C", label="Nur: Tools & Automatisierung", style="secondary"),
-                QuickReplyOption(value="D", label="Nur: Recht & Datenschutz", style="secondary"),
+                QuickReplyOption(
+                    value="ALL",
+                    label="Vollständiger Report (empfohlen) · ~10 Min",
+                    style="primary",
+                ),
+                QuickReplyOption(
+                    value="REPORT",
+                    label="Schnell-Report jetzt erstellen",
+                ),
             ]
-            # KIS-1128C V9-BE-1: Schnellmodus for expert users
-            _cp_ki = collected.get("ki_kompetenz", "")
-            _cp_digi = 0
-            try:
-                _cp_digi = int(collected.get("digitalisierungsgrad", 0))
-            except (ValueError, TypeError):
-                pass
-            if _cp_ki == "hoch" and _cp_digi >= 7:
-                _cp_options.append(QuickReplyOption(
-                    value="__fast_mode__",
-                    label="Schnellmodus (alle Fragen auf einmal)",
-                    style="secondary",
-                ))
             quick_replies = [QuickReply(
                 field="__checkpoint__",
-                label="Bereiche vertiefen",
+                label="Wie geht es weiter?",
                 options=_cp_options,
-                multi_select=True,
-                max_select=4,
+                multi_select=False,
             )]
         elif _final_phase == "summary" and not _is_edit_request and (not _is_in_edit_mode or _edit_applied):
             # KIS-1124-HOTFIX: Summary phase needs action buttons so user can
