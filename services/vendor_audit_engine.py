@@ -1552,6 +1552,24 @@ def vendor_audit_report_to_html(
         </div>
     ''')
 
+    # KIS-1244 (4): Lesart der Ampel klarstellen. Lauf 4 wirkte
+    # widersprüchlich: "ROT — hohes Risiko / 0 % regelkonform" stand direkt
+    # neben der Empfehlung, dieselben Tools sofort einzuführen. Die Ampel
+    # bewertet den ROHZUSTAND ohne Maßnahmen — genau das sagt diese Box.
+    if lang != "en":
+        html_parts.append(
+            '<div class="vendor-audit-einordnung" style="margin:-8px 0 20px 0;'
+            'padding:12px 16px;background:#f0f9ff;border-left:4px solid #0ea5e9;'
+            'border-radius:6px;font-size:10pt;color:#0c4a6e;">'
+            '<strong>Wichtig zur Lesart:</strong> Die Ampel bewertet die Anbieter '
+            'im Rohzustand \u2014 ohne Auftragsverarbeitungsvertrag (AVV) und ohne '
+            'Schutzma\u00dfnahmen. Mit abgeschlossenem AVV, Pseudonymisierung und den '
+            'in diesem Report empfohlenen Leitplanken sind dieselben Tools '
+            'regelkonform einsetzbar. \u201eRot\u201c bedeutet also nicht '
+            '\u201enicht nutzen\u201c, sondern \u201enur mit diesen Ma\u00dfnahmen nutzen\u201c.'
+            '</div>'
+        )
+
     # Vendor Details Section
     if report.entries:
         html_parts.append(f'''

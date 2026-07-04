@@ -1,4 +1,4 @@
-<!-- KI-Strategiebericht Template v1.0 "Strategy Blue" — 2026-03-10 -->
+<!-- KI-Strategiebericht Template v1.0 — 2026-03-10 -->
 <!-- Engine: Puppeteer/Chromium · Backend: FastAPI/Jinja2 · Design: Premium Strategy -->
 <!-- Fork of pdf_template_v7.html "Clean Corporate Plus", visually upgraded -->
 <!DOCTYPE html>
@@ -11,7 +11,7 @@
 /* ═══════════════════════════════════════════════════════
    v1.0 STRATEGY BLUE — Premium Design System
    Typography: Inter + Playfair Display
-   Colors: Navy + Gold + Strategy Blue
+   Colors: Navy + Gold + Blau
    Layout: CSS Grid + Flexbox
    Target: Puppeteer/Chromium A4 PDF
    ═══════════════════════════════════════════════════════ */
@@ -52,7 +52,7 @@
     /* Gold Accent */
     --gold-600: #C5930A;
     --gold-100: #faf4dc;
-    /* Strategy Blue */
+    /* Blau-Palette */
     --strategy-accent: #1a5276;
     --strategy-highlight: #2563EB;
     --strategy-light: #EFF6FF;
@@ -178,11 +178,18 @@ table {
 th, td {
     overflow-wrap: break-word;
     word-break: normal;
-    hyphens: auto;
+    /* KIS-1244: hyphens:auto trennte falsch ("Selbs-tbetrieb", "KONTAK T");
+       style_lint setzt &shy; an sprachlich korrekten Stellen. */
+    hyphens: manual;
 }
+th { hyphens: none; }
 /* KIS-1235: Zeilen zusammenhalten, Tabellenkopf bei Umbruch wiederholen. */
 tr { break-inside: avoid; }
 thead { display: table-header-group; break-after: avoid; page-break-after: avoid; }
+/* KIS-1244: Kopf + erste Datenzeile unzertrennlich (Lauf 4, S. 16/17). */
+tbody tr:first-child { break-before: avoid-page; page-break-before: avoid; }
+/* KIS-1244: Absatz-Waisen vermeiden (Kapitelende allein auf Folgeseite). */
+p, li { orphans: 3; widows: 3; }
 /* KIS-1238: Kopfzeile nie allein am Seitenende (Lauf 1119: verwaiste
    Header S. 4/9 der Potenzialanalyse, Zeilen folgten headerlos). */
 th {
@@ -473,6 +480,7 @@ h1, h2, h3, h4 { break-after: avoid; }
     margin: 0 0 24px 0;
     position: relative;
     break-inside: avoid;
+    break-after: avoid; /* KIS-1244: Banner nie allein am Seitenende */
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
@@ -1321,7 +1329,7 @@ sup.src-ref {
         </div>
 
         <p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">
-            KI-Strategiebericht v1.0 · Template: Strategy Blue · Generiert am {{ datum }} · {% if REPORT_DISPLAY_ID %}{{ REPORT_DISPLAY_ID }}{% else %}{{ report_id }}{% endif %}
+            KI-Strategiebericht · Generiert am {{ datum }} · {% if REPORT_DISPLAY_ID %}{{ REPORT_DISPLAY_ID }}{% else %}{{ report_id }}{% endif %}
             {% if build_id %} · Build: {{ build_id }}{% endif %}
         </p>
     </div>

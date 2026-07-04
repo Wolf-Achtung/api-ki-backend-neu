@@ -1321,6 +1321,11 @@ def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
         )
         _pdf_result = render_pdf_from_html(
             _briefing_html,
+            # KIS-1245: Ohne meta rendert der Default-Footer "Report-ID: – • –".
+            meta={
+                "report_id": kis_number,
+                "report_date": (_datum or "").split(" ")[0],
+            },
             pdf_options={"format": "A4", "margin": {"top": "15mm", "bottom": "15mm", "left": "10mm", "right": "10mm"}},
         )
         _pdf_bytes = _pdf_result.get("pdf_bytes")

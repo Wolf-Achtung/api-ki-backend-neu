@@ -25,8 +25,46 @@ _ENUM_VALUE_OVERRIDES = {
 }
 
 
+# KIS-1245: Klarnamen für Tool-Slugs aus dem Chat-Extraktor —
+# "claude, github, netlify, railway" stand roh im Briefing-PDF (Lauf 4).
+_TOOL_SLUG_LABELS: Dict[str, str] = {
+    "claude": "Claude (Anthropic)",
+    "anthropic": "Anthropic",
+    "chatgpt": "ChatGPT (OpenAI)",
+    "openai": "OpenAI",
+    "gemini": "Gemini (Google)",
+    "copilot": "GitHub Copilot",
+    "github": "GitHub",
+    "gitlab": "GitLab",
+    "netlify": "Netlify",
+    "railway": "Railway",
+    "notion": "Notion",
+    "perplexity": "Perplexity",
+    "midjourney": "Midjourney",
+    "canva": "Canva",
+    "slack": "Slack",
+    "zapier": "Zapier",
+    "airtable": "Airtable",
+    "hubspot": "HubSpot",
+    "salesforce": "Salesforce",
+    "datev": "DATEV",
+    "sap": "SAP",
+}
+
+# KIS-1245: Einheiten für reine Zahlbereichs-Enums je Feld —
+# "2.000–10.000" ohne € und "81–100" ohne % im Briefing-PDF (Lauf 4).
+_RANGE_UNIT_SUFFIX: Dict[str, str] = {
+    "s1_budget": " €",
+    "investitionsbudget": " €",
+    "prozesse_papierlos": " %",
+}
+
+
 def _prettify_enum_value(val: Any, field: str = "") -> str:
     """Turn an enum-looking token into readable German; leave free text as-is."""
+    # KIS-1245: Booleans kamen roh als "True" ins PDF ("Datenschutz: True").
+    if isinstance(val, bool):
+        return "Ja" if val else "Nein"
     s = str(val).strip()
     # Only touch pure enum tokens: lowercase, no spaces, [a-z0-9_] only.
     if not s or s != s.lower() or not re.fullmatch(r"[a-z0-9_]+", s):
@@ -36,21 +74,32 @@ def _prettify_enum_value(val: Any, field: str = "") -> str:
     if field:
         try:
             from services.chat_conversation import _ENUM_DISPLAY
-            label = (_ENUM_DISPLAY.get(field) or {}).get(s)
+            _display = _ENUM_DISPLAY.get(field) or {}
+            # KIS-1245: Einige Maps führen Bindestrich-Keys ("81-100": "81–100 %"),
+            # gespeichert wird aber "81_100" — beide Varianten probieren.
+            label = _display.get(s) or _display.get(s.replace("_", "-"))
             if label:
                 return label
         except Exception:
             pass
+    if s in _TOOL_SLUG_LABELS:
+        return _TOOL_SLUG_LABELS[s]
     if s in _ENUM_VALUE_OVERRIDES:
         return _ENUM_VALUE_OVERRIDES[s]
-    # Numeric range like "2000_10000" -> "2.000–10.000".
+    # Numeric range like "2000_10000" -> "2.000–10.000" (+ Einheit je Feld).
     m = re.fullmatch(r"(\d+)_(\d+)", s)
     if m:
         a = f"{int(m.group(1)):,}".replace(",", ".")
         b = f"{int(m.group(2)):,}".replace(",", ".")
-        return f"{a}–{b}"
+        return f"{a}–{b}{_RANGE_UNIT_SUFFIX.get(field, '')}"
     parts = ["über" if p == "ueber" else p for p in s.split("_")]
-    return " ".join(parts)
+    out = " ".join(parts)
+    # KIS-1245: Alleinstehende Kleinbuchstaben-Tokens ("viele", "gemischt",
+    # "keine") als Zellwert groß beginnen; Mehrwort-Enums behalten ihre
+    # gewachsene Schreibweise ("sehr hoch", "über 10").
+    if "_" not in s and out:
+        return out[:1].upper() + out[1:]
+    return out
 
 
 def _prettify_key_label(key: str) -> str:
@@ -964,6 +1013,10 @@ def render_briefing_pdf_html(
         "  h2 { font-size: 14px; color: #2B6CB0; margin: 20px 0 8px; border-bottom: 2px solid #2B6CB0; padding-bottom: 4px; }\n"
         "  .meta { font-size: 12px; color: #64748b; margin: 0 0 16px; }\n"
         "  table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }\n"
+        # KIS-1245: Zeilen nicht mitten durchbrechen, Überschrift klebt an
+        # ihrer Tabelle (eine Briefing-Seite trug nur ein einzelnes Feld).
+        "  tr { page-break-inside: avoid; }\n"
+        "  h2 { page-break-after: avoid; }\n"
         "  td { padding: 5px 8px; font-size: 13px; border-bottom: 1px solid #e2e8f0; }\n"
         "  td:first-child { color: #64748b; width: 40%; }\n"
         "  td:last-child { font-weight: 600; }\n"
@@ -981,8 +1034,10 @@ def render_briefing_pdf_html(
         "\n"
         "<h2>Unternehmen</h2>\n"
         "<table>\n"
-        f"  <tr><td>Firma</td><td>{_e(firmenname)}</td></tr>\n"
-        f"  <tr><td>Branche</td><td>{_e(branche)}</td></tr>\n"
+        # KIS-1245: Firma wird aus Sicherheitsgründen nie erhoben — die leere
+        # „Firma —"-Zeile entfällt; falls Alt-Daten einen Namen tragen, bleibt er.
+        + (f"  <tr><td>Firma</td><td>{_e(firmenname)}</td></tr>\n" if str(firmenname).strip() else "")
+        + f"  <tr><td>Branche</td><td>{_e(branche)}</td></tr>\n"
         f"  <tr><td>Segment</td><td>{_e(segment)}</td></tr>\n"
         f"  <tr><td>Region</td><td>{_e(bundesland)}, {_e(country)}</td></tr>\n"
         "</table>\n"
@@ -999,7 +1054,7 @@ def render_briefing_pdf_html(
         "  </div>\n"
         "</div>\n"
         "\n"
-        "<h2>Financials (Canonical)</h2>\n"
+        "<h2>Kennzahlen (kanonisch)</h2>\n"
         "<table>\n"
         f"  <tr><td>Zeitersparnis</td><td>{_e(hours)}{_nbsp}h/Monat</td></tr>\n"
         f"  <tr><td>Stundensatz</td><td>{_e(rate)}{_nbsp}{_eur}</td></tr>\n"
@@ -1012,8 +1067,8 @@ def render_briefing_pdf_html(
         "\n"
         "<h2>Qualit\u00e4t</h2>\n"
         "<table>\n"
-        f"  <tr><td>Pipeline Grade</td><td>{_e(pipeline_grade)}</td></tr>\n"
-        f"  <tr><td>Consistency Grade</td><td>{_e(consistency_grade)}</td></tr>\n"
+        f"  <tr><td>Pipeline-Qualität</td><td>{_e(pipeline_grade)}</td></tr>\n"
+        f"  <tr><td>Konsistenz-Bewertung</td><td>{_e(consistency_grade)}</td></tr>\n"
         "</table>\n"
         "\n"
         "<h2>Profil</h2>\n"

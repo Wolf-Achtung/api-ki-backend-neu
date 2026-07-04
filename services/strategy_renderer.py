@@ -344,14 +344,18 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     _strat_budget = calculated_values.get("budget_gesamt_jahr1", "")
     _r1_capex = report1_sections.get("capex", report1_sections.get("bc_capex", report1_meta.get("capex", "")))
     if _exec_body and _strat_budget:
-        _r1_label = f" ({_r1_capex} € CAPEX)" if _r1_capex else ""
+        _r1_label = f" (Startinvestition dort ebenfalls {_r1_capex} €)" if _r1_capex else ""
         _exec_body += (
             '\n<div class="methodik-hinweis" style="margin-top:16px;padding:10px 14px;'
             'background:#f0f4f8;border-left:3px solid #3b82f6;font-size:0.85em;color:#475569;">'
             '<strong>\u2139\uFE0F ROI-Methodik:</strong> '
             f'Dieser Strategiebericht kalkuliert mit der Gesamtinvestition \u00fcber 12 Monate '
-            f'({_strat_budget} \u20ac, inkl. Software, Implementierung, Schulung, Koordination). '
-            f'Der KI-Readiness Report rechnet mit einer einmaligen Startinvestition{_r1_label}. '
+            f'({_strat_budget} \u20ac, inkl. Software, Implementierung, Schulung, Koordination) '
+            'und weist den Brutto-ROI aus. '
+            # KIS-1244: Die Differenz zum R1-ROI entsteht durch den OPEX-Abzug,
+            # NICHT durch unterschiedliche Investitionssummen (Lauf 4, S. 3).
+            'Der KI-Readiness Report zieht zus\u00e4tzlich die laufenden Tool-Kosten (OPEX) '
+            f'vom Jahresnutzen ab{_r1_label} und weist damit die konservativere Netto-Rendite aus. '
             'Abweichende ROI- und Break-Even-Werte sind methodisch bedingt, nicht widerspr\u00fcchlich.'
             '</div>'
         )
@@ -561,7 +565,131 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     except Exception:  # pragma: no cover
         pass
 
+    # KIS-1244 (8): Ampelfarben an die Spaltensemantik anpassen
+    # (Risiko hoch = rot, Komplexität niedrig = grün — Lauf 4, S. 9/23/24).
+    try:
+        html = _fix_ampel_semantics(html)
+    except Exception:  # pragma: no cover
+        pass
+
+    # KIS-1244: Wiederholungs-Dedup. Das LLM erklärt Pflicht-Formeln in
+    # jedem Kapitel neu — Lauf 4: "EU AI Act (KI-Verordnung der EU)" 6×,
+    # der Vendor-Hinweis "… nicht als Hauptsystem für Kundendaten" 4×.
+    # Regel: Erstnennung bleibt, Folgenennungen werden gekürzt/entfernt.
+    try:
+        import re as _re_dd
+        _aia_pat = _re_dd.compile(r'EU AI Act\s*\((?:KI-Verordnung der EU|EU-KI-Verordnung)\)')
+        _aia_matches = list(_aia_pat.finditer(html))
+        if len(_aia_matches) > 1:
+            for _m in reversed(_aia_matches[1:]):
+                html = html[:_m.start()] + 'EU AI Act' + html[_m.end():]
+        _vh_pat = _re_dd.compile(
+            r'\s*[^<>.!?]{0,200}nicht als Hauptsystem f\u00fcr Kundendaten[^<>.!?]{0,160}[.!?]',
+        )
+        _vh_matches = list(_vh_pat.finditer(html))
+        if len(_vh_matches) > 1:
+            for _m in reversed(_vh_matches[1:]):
+                html = html[:_m.start()] + html[_m.end():]
+        if len(_aia_matches) > 1 or len(_vh_matches) > 1:
+            import logging as _lg3
+            _lg3.getLogger(__name__).info(
+                "[KIS-1244][DEDUP] EU-AI-Act-Erklaerungen: %d->1, Vendor-Hauptsystem-Saetze: %d->1",
+                max(len(_aia_matches), 1), max(len(_vh_matches), 1),
+            )
+    except Exception:  # pragma: no cover
+        pass
+
     return html
+
+
+# =============================================================================
+# KIS-1244 (8): Ampel-Semantik je Spaltentyp
+#
+# Lauf 4: In der Chancen-Tabelle war "Komplexität: Niedrig" ROT und "Hoch"
+# GRÜN; in der Risiko-Matrix waren "Eintritt/Auswirkung: Hoch" GRÜN. Die
+# Farben stammen aus LLM-Emojis (🟢/🔴), die der Sanitizer 1:1 in Klassen
+# übersetzt — ohne Spaltensemantik. Dieser Pass korrigiert die Klasse
+# anhand des Spaltenkopfs: Risiko-/Aufwands-Spalten (hoch=schlecht=rot)
+# vs. Nutzen-Spalten (hoch=gut=grün). Zellen ohne Ampel-Klasse bleiben
+# unangetastet.
+# =============================================================================
+
+_AMPEL_RISK_HDR = re.compile(
+    r"risiko|eintritt|auswirkung|wahrscheinlichkeit|komplexit|aufwand|schwierigkeit",
+    re.IGNORECASE,
+)
+_AMPEL_BENEFIT_HDR = re.compile(
+    r"impact|chance|potenzial|relevanz|nutzen|hebel", re.IGNORECASE,
+)
+_AMPEL_LEVEL = re.compile(r"\b(sehr hoch|hoch|mittel|niedrig|sehr niedrig)\b", re.IGNORECASE)
+_AMPEL_CLASS = re.compile(r"ampel-(?:green|yellow|red)")
+_TR_SPLIT = re.compile(r"(<tr[^>]*>[\s\S]*?</tr>)")
+_CELL_SPLIT = re.compile(r"(<t[dh][^>]*>)([\s\S]*?)(</t[dh]>)")
+_TAG_STRIP = re.compile(r"<[^>]+>")
+
+
+def _ampel_target_class(level: str, semantic: str) -> str:
+    _lv = level.lower()
+    if _lv in ("sehr hoch", "hoch"):
+        return "ampel-red" if semantic == "risk" else "ampel-green"
+    if _lv == "mittel":
+        return "ampel-yellow"
+    return "ampel-green" if semantic == "risk" else "ampel-red"
+
+
+def _fix_ampel_semantics(html: str) -> str:
+    """Korrigiert ampel-*-Klassen in Tabellenzellen anhand der Spaltenköpfe."""
+
+    def _fix_table(tm: "re.Match[str]") -> str:
+        table = tm.group(0)
+        rows = _TR_SPLIT.split(table)
+        header_html = next((r for r in rows if r.startswith("<tr")), None)
+        if not header_html:
+            return table
+        headers = [_TAG_STRIP.sub(" ", c[1]) for c in _CELL_SPLIT.findall(header_html)]
+        semantics = []
+        for h in headers:
+            if _AMPEL_RISK_HDR.search(h):
+                semantics.append("risk")
+            elif _AMPEL_BENEFIT_HDR.search(h):
+                semantics.append("benefit")
+            else:
+                semantics.append(None)
+        if not any(semantics):
+            return table
+        out = []
+        seen_header = False
+        for part in rows:
+            if not part.startswith("<tr"):
+                out.append(part)
+                continue
+            if not seen_header:
+                seen_header = True
+                out.append(part)
+                continue
+            cells = _CELL_SPLIT.findall(part)
+            if not cells:
+                out.append(part)
+                continue
+            rebuilt = part
+            for idx, (open_t, body, close_t) in enumerate(cells):
+                sem = semantics[idx] if idx < len(semantics) else None
+                if not sem or not _AMPEL_CLASS.search(body):
+                    continue
+                lvl = _AMPEL_LEVEL.search(_TAG_STRIP.sub(" ", body))
+                if not lvl:
+                    continue
+                target = _ampel_target_class(lvl.group(1), sem)
+                new_body = _AMPEL_CLASS.sub(target, body)
+                if new_body != body:
+                    rebuilt = rebuilt.replace(open_t + body + close_t, open_t + new_body + close_t, 1)
+            out.append(rebuilt)
+        return "".join(out)
+
+    try:
+        return re.sub(r"<table[^>]*>[\s\S]*?</table>", _fix_table, html)
+    except Exception:  # pragma: no cover
+        return html
 
 
 # =============================================================================
