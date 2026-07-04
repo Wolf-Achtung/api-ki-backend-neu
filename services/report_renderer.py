@@ -2268,6 +2268,31 @@ def render(briefing_obj: Any,
     except Exception as _fc_exc:  # pragma: no cover
         log.warning("[KIS-1235][FOERDER-CARD] skipped: %s", _fc_exc)
 
+    # KIS-1237: Verwaiste Zweit-Überschrift "Kernprogramme für Ihr Profil"
+    # tilgen. Lauf 1119 (S. 25): Die Überschrift erschien nach der
+    # Hinweis-Card ein zweites Mal OHNE Inhalt — mehrere Zulieferer
+    # (FOERDERPOTENZIAL / FUNDING_BRANCH_ALIGNMENT) können sie tragen.
+    # Regel: Nur die erste Überschrift mit nachfolgender Tabelle ist legitim;
+    # jede weitere ohne <table> in den nächsten 800 Zeichen ist ein Artefakt.
+    try:
+        import re as _re_kp
+        _kp_pat = _re_kp.compile(
+            r'<h3[^>]*>(?:(?!</h3>).)*?Kernprogramme\s+für\s+Ihr\s+Profil(?:(?!</h3>).)*?</h3>\s*',
+            _re_kp.DOTALL,
+        )
+        _kp_matches = list(_kp_pat.finditer(html))
+        if len(_kp_matches) > 1:
+            _removed = 0
+            for _m in reversed(_kp_matches[1:]):
+                _lookahead = html[_m.end():_m.end() + 800]
+                if "<table" not in _lookahead:
+                    html = html[:_m.start()] + html[_m.end():]
+                    _removed += 1
+            if _removed:
+                log.info("[KIS-1237][FOERDER-HEADING] %d verwaiste Kernprogramme-Überschrift(en) entfernt", _removed)
+    except Exception as _kp_exc:  # pragma: no cover
+        log.warning("[KIS-1237][FOERDER-HEADING] skipped: %s", _kp_exc)
+
     # FIX-KIS-1027.5.1-A: Decision-Cutoff-Trace Checkpoint 6/N (render exit)
     _trace_decision_cutoff("6_render_exit", run_id, html, mode="html")
     return {"html": html, "meta": meta or {}, "debug_attachments": debug_attachments_for_email}

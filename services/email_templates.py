@@ -620,6 +620,11 @@ _STRATEGY_LABELS: Dict[str, str] = {
     "s8_erfahrung": "KI-Erfahrung",
     "s9_ansatz": "Infrastruktur-Ansatz",
     "s10_datenschutz": "Datenschutz-Priorität",
+    # KIS-1237: S-Moat-Felder — standen im Briefing-PDF (Lauf 1119) als
+    # rohe Feldnamen ("wettbewerber_anzahl") in der Fragebogen-2-Tabelle.
+    "wettbewerber_anzahl": "Wettbewerber (Anzahl)",
+    "kundenbindung_typ": "Kundenbindung",
+    "datenreife": "Datenreife",
 }
 
 # Conditional R1 fields – only shown if present in the record
@@ -634,7 +639,14 @@ def _format_value(val: Any) -> str:
         return ", ".join(str(v) for v in val) if val else '<span style="color:#94a3b8">\u2014</span>'
     if isinstance(val, bool):
         return "Ja" if val else "Nein"
-    return escape(str(val))
+    s = str(val)
+    # KIS-1237: String-Booleans ("True") und fehlende Leerzeichen nach
+    # Kommas ("ChatGPT / OpenAI,Claude / Anthropic") lesbar machen \u2014
+    # beides stand so im Briefing-PDF von Lauf 1119.
+    if s.strip().lower() in ("true", "false"):
+        return "Ja" if s.strip().lower() == "true" else "Nein"
+    s = re.sub(r",(?=\S)", ", ", s)
+    return escape(s)
 
 
 def _render_table(title: str, rows: List[Tuple[str, str]], color: str = "#2B6CB0") -> str:
@@ -901,15 +913,27 @@ def render_briefing_pdf_html(
     from services.extra_sections import get_score_label
     score_label = get_score_label(score_overall, lang="de").capitalize()
 
-    hours = sections.get("CANON_HOURS_MONTH") or sections.get("qw_hours_total") or sections.get("monatsersparnis_stunden") or _dash
+    def _de_num(v: Any) -> Any:
+        """KIS-1237: '50.0' → '50', '22.5' → '22,5' (deutsches Format —
+        das Briefing-PDF zeigte '50.0h/Monat' und '22.5%')."""
+        try:
+            f = float(v)
+        except (ValueError, TypeError):
+            return v
+        if f == int(f):
+            return str(int(f))
+        return f"{f:g}".replace(".", ",")
+
+    _hours_raw = sections.get("CANON_HOURS_MONTH") or sections.get("qw_hours_total") or sections.get("monatsersparnis_stunden") or _dash
+    hours = _de_num(_hours_raw)
     rate = sections.get("CANON_RATE_EUR") or sections.get("stundensatz_eur") or _dash
     capex = sections.get("CANON_CAPEX_EUR") or sections.get("CAPEX_REALISTISCH_EUR") or _dash
     opex = sections.get("CANON_OPEX_MONTH_EUR") or sections.get("OPEX_REALISTISCH_EUR") or _dash
-    roi = sections.get("ROI_12M") or sections.get("ROI_12M_CAPPED") or _dash
+    roi = _de_num(sections.get("ROI_12M") or sections.get("ROI_12M_CAPPED") or _dash)
     payback = sections.get("PAYBACK_MONTHS") or _dash
 
     try:
-        brutto_jahr = float(hours) * float(rate) * 12
+        brutto_jahr = float(_hours_raw) * float(rate) * 12
         brutto_jahr_str = _fmt_eur(brutto_jahr)
     except (ValueError, TypeError):
         brutto_jahr_str = _dash
@@ -977,7 +1001,7 @@ def render_briefing_pdf_html(
         "\n"
         "<h2>Financials (Canonical)</h2>\n"
         "<table>\n"
-        f"  <tr><td>Zeitersparnis</td><td>{_e(hours)}h/Monat</td></tr>\n"
+        f"  <tr><td>Zeitersparnis</td><td>{_e(hours)}{_nbsp}h/Monat</td></tr>\n"
         f"  <tr><td>Stundensatz</td><td>{_e(rate)}{_nbsp}{_eur}</td></tr>\n"
         f"  <tr><td>CAPEX</td><td>{_fmt_eur(capex)}{_nbsp}{_eur}</td></tr>\n"
         f"  <tr><td>OPEX</td><td>{_fmt_eur(opex)}{_nbsp}{_eur}/Monat</td></tr>\n"

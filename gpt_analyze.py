@@ -13436,11 +13436,24 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         from services.briefing_contradictions import build_contradictions_box_html
         _sp_box = build_contradictions_box_html(briefing)
         if _sp_box:
-            for _sp_slot in ("UNTERNEHMENSPROFIL_MARKT_HTML", "unternehmensprofil_markt"):
+            # KIS-1237: SCORE_INTERPRETATION_HTML zuerst — das ist der einzige
+            # dieser Slots, den pdf_template_v7 tatsächlich rendert. Die
+            # KIS-1235-Injektion ins Unternehmensprofil lief ins Leere (Lauf
+            # 1119: Log meldete Erfolg, Box fehlte im PDF, weil das Template
+            # UNTERNEHMENSPROFIL_MARKT_HTML gar nicht ausgibt).
+            _sp_done = False
+            for _sp_slot in ("SCORE_INTERPRETATION_HTML",
+                             "UNTERNEHMENSPROFIL_MARKT_HTML", "unternehmensprofil_markt"):
                 _sp_html = sections.get(_sp_slot, "")
-                if isinstance(_sp_html, str) and _sp_html and "Was Ihre Angaben zeigen" not in _sp_html:
+                if not isinstance(_sp_html, str) or not _sp_html:
+                    continue
+                if "Was Ihre Angaben zeigen" not in _sp_html:
                     sections[_sp_slot] = _sp_html + "\n" + _sp_box
-            log.info("[KIS-1235][SPANNUNGS-BOX] deterministische Einordnung ins Unternehmensprofil injiziert")
+                    log.info("[KIS-1235][SPANNUNGS-BOX] injiziert in %s", _sp_slot)
+                _sp_done = True
+                break
+            if not _sp_done:
+                log.warning("[KIS-1235][SPANNUNGS-BOX] kein renderbarer Slot gefunden")
     except Exception as _sp_exc:
         log.debug("[KIS-1235][SPANNUNGS-BOX] übersprungen: %s", _sp_exc)
 
@@ -16280,8 +16293,18 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     try:
         from services.ai_act_module import build_ai_act_deadline_box
         _deadline_box = build_ai_act_deadline_box(str(sections.get("AI_ACT_RISK_LEVEL", "")))
-        if _deadline_box and sections.get("AI_ACT_SUMMARY_HTML"):
-            sections["AI_ACT_SUMMARY_HTML"] = _deadline_box + sections["AI_ACT_SUMMARY_HTML"]
+        if _deadline_box:
+            # KIS-1237: AI_ACT_DUTY_MATRIX_HTML ist der Slot, den
+            # pdf_template_v7 im Kapitel "AI Act Kompakt" wirklich rendert —
+            # AI_ACT_SUMMARY_HTML taucht im Template nicht auf, deshalb
+            # fehlte die Box im 1119-PDF trotz erfolgreicher Injektion.
+            if sections.get("AI_ACT_DUTY_MATRIX_HTML"):
+                sections["AI_ACT_DUTY_MATRIX_HTML"] = (
+                    _deadline_box + sections["AI_ACT_DUTY_MATRIX_HTML"]
+                )
+                log.info("[KIS-1235] AI-Act-Fristen-Box in AI_ACT_DUTY_MATRIX_HTML injiziert")
+            elif sections.get("AI_ACT_SUMMARY_HTML"):
+                sections["AI_ACT_SUMMARY_HTML"] = _deadline_box + sections["AI_ACT_SUMMARY_HTML"]
     except Exception as _dl_exc:
         log.debug("[KIS-1235] AI-Act-Fristen-Box übersprungen: %s", _dl_exc)
     # News/Änderungen box (AI Act phase + research timestamp)
@@ -16481,7 +16504,22 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
             if _sq_row is not None:
                 _vendor_strategy_answers = _sq_row.to_dict()
         except Exception as _sq_exc:
-            log.debug("[%s] StrategyQuestion für Vendor-Audit nicht ladbar: %s", run_id, _sq_exc)
+            # KIS-1237: WARNING statt debug — Lauf 1119 auditierte nur 2 von
+            # 4 genutzten Tools, weil s5_software hier still verloren ging.
+            log.warning("[%s] StrategyQuestion für Vendor-Audit nicht ladbar: %s", run_id, _sq_exc)
+        if _vendor_strategy_answers is None:
+            # Fallback: manche Flows tragen die FB2-Antworten bereits im
+            # Briefing-Dict (_strategy_answers, s. strategy_renderer).
+            _sa_inline = answers.get("_strategy_answers")
+            if isinstance(_sa_inline, dict) and _sa_inline:
+                _vendor_strategy_answers = _sa_inline
+        if _vendor_strategy_answers is None:
+            log.warning(
+                "[%s] [KIS-1237] Vendor-Audit läuft OHNE FB2-Antworten "
+                "(StrategyQuestion fehlt für briefing %s) — genannte Tools "
+                "aus 'Genutzte Software/Tools' fehlen im Audit",
+                run_id, briefing_id,
+            )
 
         vendor_audit_report = generate_vendor_audit_report(
             context=None,
