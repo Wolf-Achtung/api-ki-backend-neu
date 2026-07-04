@@ -56,7 +56,9 @@ class TestNewFieldRegistration:
         assert "durchschnittshonorar" not in FIELD_QUESTIONS
         assert "Zeit" in FIELD_QUESTIONS["top_zeitfresser"]
         assert len(FIELD_EXAMPLES["top_zeitfresser"]) == 3
-        assert "top_zeitfresser" in SONNET_REQUIRED_FIELDS
+        # KIS-1243: top_zeitfresser ist jetzt Template-Feld — die Frage
+        # muss deterministisch mit den Inspiration-Chips gekoppelt sein.
+        assert "top_zeitfresser" not in SONNET_REQUIRED_FIELDS
 
     def test_briefing_labels(self):
         from services.email_templates import _R1_LABELS

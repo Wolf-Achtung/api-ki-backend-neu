@@ -19,8 +19,12 @@ from __future__ import annotations
 SONNET_REQUIRED_FIELDS: frozenset[str] = frozenset({
     "hauptleistung",
     "ki_projekte",
-    "zeitersparnis_prioritaet",
-    "top_zeitfresser",  # KIS-1235-P3: Freitext mit Inspiration-Chips
+    # KIS-1243: zeitersparnis_prioritaet und top_zeitfresser sind jetzt
+    # Template-Felder. Beide tragen deterministische Chips — die Frage muss
+    # daher ebenfalls deterministisch sein, sonst laufen Sonnet-Frage und
+    # Chips auseinander (Tools-Block Anlauf 4: Zeitfresser-Chips unter der
+    # Tools-Frage). Die Template-Texte grenzen die beiden Felder außerdem
+    # sprachlich sauber ab (Bereich vs. konkrete Aufgaben).
     "geschaeftsmodell_evolution",
     "vision_3_jahre",
     "strategische_ziele",
@@ -74,7 +78,11 @@ FIELD_QUESTIONS: dict[str, str] = {
     "pilot_bereich": "In welchem Bereich würden Sie am ehesten ein KI-Pilotprojekt starten?",
     "vorhandene_tools": "Welche klassischen Business-Systeme (CRM, ERP, Projektmanagement, Buchhaltung) nutzen Sie aktuell? KI-Tools fragen wir separat ab.",
     "projekte_pro_monat": "Wie viele Projekte oder Aufträge bearbeiten Sie üblicherweise pro Monat?",
-    "top_zeitfresser": "Welche zwei, drei Aufgaben kosten Sie im Arbeitsalltag am meisten Zeit?",
+    # KIS-1243: Bereichs-Frage vs. Aufgaben-Frage — bewusst unterschiedlich
+    # formuliert, damit die beiden Zeitfresser-Felder nicht wie eine
+    # Doppel-Frage wirken (Anlauf 4, Tools-Block).
+    "zeitersparnis_prioritaet": "In welchem Bereich Ihrer Arbeit soll KI Sie zuerst entlasten — wo wäre gewonnene Zeit am wertvollsten?",
+    "top_zeitfresser": "Und ganz konkret: Welche zwei, drei Einzelaufgaben kosten Sie im Arbeitsalltag die meiste Zeit?",
     "trainings_interessen": "Welche KI-Trainingsthemen interessieren Sie?",
     "zeitbudget": "Wie viel Zeit pro Woche können Sie für KI-Projekte aufbringen?",
     "prozesse_papierlos": "Wie hoch ist der Anteil papierloser Prozesse bei Ihnen?",
@@ -101,8 +109,9 @@ FIELD_QUESTIONS: dict[str, str] = {
 # For 4 Block-B fields where users tend to stall ("I don't know what to
 # write"), we surface 3 short half-sentences as chips the frontend renders
 # beneath the input. Scope is deliberately limited to strategic-imaginative
-# fields; concrete-experiential fields (hauptleistung, ki_projekte,
-# zeitersparnis_prioritaet) get no chips — users have lived experience there.
+# fields; concrete-experiential fields (hauptleistung, ki_projekte) get no
+# chips here — users have lived experience there. zeitersparnis_prioritaet
+# bekommt branchenspezifische Chips über FREETEXT_SUGGESTIONS (routes/chat).
 # ──────────────────────────────────────────────────────────────────────
 
 FIELD_EXAMPLES: dict[str, list[str]] = {
