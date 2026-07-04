@@ -4439,6 +4439,44 @@ def _salvage_truncated_json_array(raw: str) -> Optional[str]:
     return candidate
 
 
+# KIS-1240: Bandbreiten-Mittelwerte für die Honorar-Ableitung. Die direkte
+# Frage nach dem Honorar wurde entfernt (Nutzer-Feedback: übergriffig) —
+# stattdessen wird der typische Auftragswert aus Jahresumsatz und
+# Projektvolumen geschätzt und im Prompt klar als Schätzung markiert.
+_UMSATZ_MID_EUR: Dict[str, int] = {
+    "unter_100k": 60_000, "100k_500k": 300_000, "500k_2m": 1_250_000,
+    "2m_10m": 6_000_000, "ueber_10m": 15_000_000,
+}
+_PROJEKTE_MID: Dict[str, float] = {
+    "unter_2": 1.5, "2_5": 3.5, "6_10": 8.0, "ueber_10": 12.0,
+}
+_HONORAR_LABELS: Dict[str, str] = {
+    "unter_1k": "unter 1.000 €", "1k_5k": "1.000–5.000 €",
+    "5k_20k": "5.000–20.000 €", "ueber_20k": "über 20.000 €",
+}
+
+
+def _resolve_avg_project_value(briefing: Dict[str, Any]) -> str:
+    """Durchschnittlicher Auftragswert: expliziter Alt-Wert > Ableitung > ''."""
+    _raw = str(briefing.get("durchschnittshonorar", "") or "").strip()
+    if _raw and _raw != "keine_angabe":
+        return _HONORAR_LABELS.get(_raw, _raw)
+    umsatz = _UMSATZ_MID_EUR.get(str(briefing.get("jahresumsatz", "") or "").strip())
+    projekte = _PROJEKTE_MID.get(str(briefing.get("projekte_pro_monat", "") or "").strip())
+    if not umsatz or not projekte:
+        return ""
+    value = umsatz / (projekte * 12)
+    # Auf sinnvolle Stufen runden (keine Scheingenauigkeit)
+    if value >= 10_000:
+        rounded = round(value / 5_000) * 5_000
+    elif value >= 1_000:
+        rounded = round(value / 500) * 500
+    else:
+        rounded = round(value / 100) * 100
+    return (f"ca. {int(rounded):,} €".replace(",", ".")
+            + " pro Projekt (geschätzt aus Jahresumsatz und Projektvolumen)")
+
+
 def _b41_dot_append(val: str) -> str:
     """KIS-1238: Abschluss-Punkt INS letzte Textsegment setzen.
 
@@ -9417,8 +9455,11 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "top_zeitfresser": str(briefing.get("top_zeitfresser", "") or ""),
         "PROJEKTE_PRO_MONAT": str(briefing.get("projekte_pro_monat", "") or ""),
         "projekte_pro_monat": str(briefing.get("projekte_pro_monat", "") or ""),
-        "DURCHSCHNITTSHONORAR": str(briefing.get("durchschnittshonorar", "") or ""),
-        "durchschnittshonorar": str(briefing.get("durchschnittshonorar", "") or ""),
+        # KIS-1240: Die Honorar-Frage wurde entfernt (wirkte übergriffig) —
+        # der Wert wird aus Jahresumsatz × Projekte/Monat abgeleitet.
+        # Alt-Daten mit explizitem Enum-Wert haben weiter Vorrang.
+        "DURCHSCHNITTSHONORAR": _resolve_avg_project_value(briefing),
+        "durchschnittshonorar": _resolve_avg_project_value(briefing),
 
         # Ensure HAUPTLEISTUNG is available in both cases
         "hauptleistung": hauptleistung,  # lowercase for Jinja2

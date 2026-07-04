@@ -30,13 +30,16 @@ class TestNewFieldRegistration:
     def test_sections_contain_new_fields(self):
         from services.chat_normalizer import SECTIONS
         s0 = SECTIONS[0]["fields"]
-        assert "projekte_pro_monat" in s0 and "durchschnittshonorar" in s0
+        assert "projekte_pro_monat" in s0
+        # KIS-1240: Honorar wird nicht mehr gefragt (abgeleitet statt erhoben)
+        assert "durchschnittshonorar" not in s0
         assert "top_zeitfresser" in SECTIONS[3]["fields"]
 
     def test_block_assignment(self):
         from routes.chat import BLOCK_FIELDS
         assert "projekte_pro_monat" in BLOCK_FIELDS["A"]
-        assert "durchschnittshonorar" in BLOCK_FIELDS["A"]
+        # KIS-1240: Honorar-Frage entfernt
+        assert "durchschnittshonorar" not in BLOCK_FIELDS["A"]
         assert "top_zeitfresser" in BLOCK_FIELDS["C"]
 
     def test_enum_options_and_labels(self):
@@ -49,7 +52,8 @@ class TestNewFieldRegistration:
             FIELD_QUESTIONS, FIELD_EXAMPLES, SONNET_REQUIRED_FIELDS,
         )
         assert "Projekte" in FIELD_QUESTIONS["projekte_pro_monat"]
-        assert "Honorar" in FIELD_QUESTIONS["durchschnittshonorar"]
+        # KIS-1240: Honorar-Frage entfernt — darf nie wieder gestellt werden
+        assert "durchschnittshonorar" not in FIELD_QUESTIONS
         assert "Zeit" in FIELD_QUESTIONS["top_zeitfresser"]
         assert len(FIELD_EXAMPLES["top_zeitfresser"]) == 3
         assert "top_zeitfresser" in SONNET_REQUIRED_FIELDS
@@ -70,6 +74,8 @@ class TestNewFieldRegistration:
         )
         assert vars_["top_zeitfresser"] == "Angebote schreiben; E-Mails"
         assert vars_["PROJEKTE_PRO_MONAT"] == "2_5"
+        # KIS-1240: expliziter Alt-Wert wird als Label durchgereicht
+        assert vars_["DURCHSCHNITTSHONORAR"] == "5.000\u201320.000 \u20ac"
 
     def test_quick_wins_prompt_anchors_on_zeitfresser(self):
         with open("prompts/de/quick_wins.md", encoding="utf-8") as f:

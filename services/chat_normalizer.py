@@ -211,7 +211,10 @@ SECTIONS = [
         "name": "Ihr Unternehmen",
         "fields": ["branche", "unternehmensgroesse", "selbststaendig",
                     "country", "bundesland", "hauptleistung", "jahresumsatz",
-                    "projekte_pro_monat", "durchschnittshonorar"],
+                    # KIS-1240: durchschnittshonorar wird nicht mehr GEFRAGT
+                    # (Registry-Eintrag bleibt für Alt-Daten) — Ableitung aus
+                    # Jahresumsatz × Projekte/Monat in gpt_analyze.
+                    "projekte_pro_monat"],
         "intro": "Lassen Sie uns mit den Grundlagen beginnen — erzählen Sie mir von Ihrem Unternehmen.",
     },
     {

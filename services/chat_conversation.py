@@ -559,7 +559,6 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     "zeitbudget": "Zeit pro Woche für KI-Projekte (Unter 2h / 2–5h / 5–10h / Über 10h)",
     "vorhandene_tools": "Bereits genutzte Systeme (CRM, ERP, Projektmanagement, etc.)",
     "projekte_pro_monat": "Typische Anzahl Projekte/Aufträge pro Monat (Wirtschafts-Kontext für den Business Case)",
-    "durchschnittshonorar": "Durchschnittliches Honorar bzw. Auftragswert pro Projekt",
     "top_zeitfresser": "Die 2-3 Aufgaben, die im Alltag am meisten Zeit kosten (Freitext — Basis für Quick Wins)",
     "trainings_interessen": "Interessante KI-Trainingsthemen (Prompt Engineering, LLM-Basics, etc.)",
     "vision_prioritaet": "Wichtigster strategischer Hebel (KI-Services, Kundenservice, Datenprodukte, etc.)",
