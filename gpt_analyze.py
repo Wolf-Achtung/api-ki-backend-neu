@@ -19192,6 +19192,39 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             log.warning('[KIS-1244][DECISION-INVEST] \u00fcbersprungen: %s', _dec_exc)
 
         # =================================================================
+        # KIS-1250: Anker-Box — die wörtlichen Nutzer-Angaben (größter
+        # Zeitfresser + Zeitspar-Priorität) stehen sichtbar vor den Quick
+        # Wins. Lauf 1238: Der genannte Top-Zeitfresser ("Angebote und
+        # Proposals schreiben") kam im ganzen Report nicht vor —
+        # Personalisierung muss beweisbar sein, nicht gefühlt.
+        # =================================================================
+        try:
+            from html import escape as _esc_1250
+            _ank_tz = str(answers.get('top_zeitfresser') or '').strip()[:160]
+            _ank_zp = str(answers.get('zeitersparnis_prioritaet') or '').strip()[:160]
+            _qw_html = sections.get('QUICK_WINS_HTML') or ''
+            if (_ank_tz or _ank_zp) and _qw_html and 'anker-box' not in _qw_html:
+                _ank_parts = []
+                if _ank_tz:
+                    _ank_parts.append(f'Ihr gr\u00f6\u00dfter Zeitfresser: \u201e{_esc_1250(_ank_tz)}\u201c')
+                if _ank_zp:
+                    _ank_parts.append(f'Priorit\u00e4t f\u00fcr Zeitersparnis: \u201e{_esc_1250(_ank_zp)}\u201c')
+                _ank_box = (
+                    '<div class="hinweis-box anker-box" style="margin:0 0 14px 0;'
+                    'padding:12px 16px;background:#f0f9ff;border-left:4px solid #0ea5e9;'
+                    'border-radius:6px;">'
+                    '<strong>Ihre Angaben als Anker:</strong> '
+                    + ' \u00b7 '.join(_ank_parts) +
+                    '. Die folgenden Quick Wins setzen dort an \u2014 was hier noch '
+                    'nicht abgedeckt ist, greifen Roadmap und Tool-Empfehlungen auf.'
+                    '</div>'
+                )
+                sections['QUICK_WINS_HTML'] = _ank_box + _qw_html
+                log.info('[KIS-1250][ANKER-BOX] Nutzer-Zitate vor Quick Wins injiziert')
+        except Exception as _ank_exc:  # pragma: no cover
+            log.warning('[KIS-1250][ANKER-BOX] übersprungen: %s', _ank_exc)
+
+        # =================================================================
         # KIS-1244 (1): Budget-Gate — kalkulierte Investition vs. im
         # Briefing angegebenes Investitionsbudget. Lauf 4: 12.000 € Plan
         # bei 2.000–10.000 € Budget, ohne ein Wort dazu.
@@ -22664,6 +22697,16 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
         pdf_url = pdf_info.get("pdf_url")
         pdf_bytes = pdf_info.get("pdf_bytes")
         pdf_error = pdf_info.get("error")
+
+        # KIS-1250 / Platin+++ Stufe 2: Seitenfüllgrad am GERENDERTEN PDF —
+        # macht die Pagination messbar (Lauf 1238: 11 dünne Seiten, die nur
+        # manuelle Reviews fanden). Nicht blockierend.
+        if pdf_bytes:
+            try:
+                from services.platin_qa import scan_pdf_pages
+                scan_pdf_pages(pdf_bytes, run_id=run_id, label="R1")
+            except Exception as _tp_exc:  # pragma: no cover
+                log.warning("[%s] [PLATIN-QA] thin_page-Hook übersprungen: %s", run_id, _tp_exc)
         if DBG_PDF:
             log.debug("[%s] 📄 pdf_render done url=%s bytes=%s error=%s", run_id, bool(pdf_url), len(pdf_bytes or b""), pdf_error)
 

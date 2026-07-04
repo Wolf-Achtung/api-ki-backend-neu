@@ -910,6 +910,18 @@ _KNOWN_VENDOR_META = {
     "deepl": {"name": "DeepL", "category": "Translation", "host": "DE", "gdpr": "Full DSGVO", "vendor_risk": 1, "eu_hosting": True},
     "notion": {"name": "Notion AI", "category": "Productivity", "host": "US", "gdpr": "DPA available", "vendor_risk": 3, "eu_hosting": False},
     "huggingface": {"name": "Hugging Face", "category": "ML Platform", "host": "US/EU", "gdpr": "Self-hosted option", "vendor_risk": 2, "eu_hosting": True},
+    # KIS-1250: Lauf 1238 empfahl ~8 Tools, auditierte aber nur 1 — jede im
+    # Report empfohlene Tool-Klasse muss im Katalog stehen (Kernversprechen).
+    "otter": {"name": "Otter.ai", "category": "Transkription", "host": "US", "gdpr": "Limited", "vendor_risk": 4, "eu_hosting": False},
+    "n8n": {"name": "n8n", "category": "Automatisierung", "host": "DE (self-host möglich)", "gdpr": "Full DSGVO", "vendor_risk": 2, "eu_hosting": True},
+    "make.com": {"name": "Make", "category": "Automatisierung", "host": "EU (CZ)", "gdpr": "DPA available", "vendor_risk": 2, "eu_hosting": True},
+    "zapier": {"name": "Zapier", "category": "Automatisierung", "host": "US", "gdpr": "DPA available", "vendor_risk": 3, "eu_hosting": False},
+    "autodesk": {"name": "Autodesk Construction Cloud", "category": "CAD/BIM", "host": "US/EU", "gdpr": "DPA available", "vendor_risk": 3, "eu_hosting": False},
+    "obsidian": {"name": "Obsidian", "category": "Notizen (lokal)", "host": "lokal", "gdpr": "Lokal — keine Cloud-Pflicht", "vendor_risk": 1, "eu_hosting": True},
+    "mistral": {"name": "Mistral AI", "category": "LLM", "host": "FR/EU", "gdpr": "Full DSGVO", "vendor_risk": 1, "eu_hosting": True},
+    "aleph alpha": {"name": "Aleph Alpha", "category": "LLM", "host": "DE", "gdpr": "Full DSGVO", "vendor_risk": 1, "eu_hosting": True},
+    "azure openai": {"name": "Azure OpenAI (Microsoft)", "category": "LLM API", "host": "EU available", "gdpr": "DPA + EU Data Boundary", "vendor_risk": 2, "eu_hosting": True},
+    "langfuse": {"name": "Langfuse", "category": "LLM-Observability", "host": "DE (self-host möglich)", "gdpr": "Full DSGVO", "vendor_risk": 2, "eu_hosting": True},
 }
 
 
@@ -970,9 +982,13 @@ def _extract_vendors_from_sections(sections: dict) -> list:
     vendors: list = []
     seen: set = set()
     # Check HTML sections that commonly mention tool/vendor names
+    # KIS-1250: mehr Quell-Sektionen — Empfehlungen stehen auch im
+    # Starter-Kit, Sofort-Start und in der Roadmap.
     html_keys = [
         "TOOLS_EMPFEHLUNGEN_HTML", "KI_STACK_SUMMARY_HTML",
         "QUICK_WINS_HTML", "tools_empfehlungen",
+        "STARTER_KIT_HTML", "SOFORT_START_HTML", "TOOLS_HTML",
+        "PILOT_PLAN_HTML", "ROADMAP_12M_HTML",
     ]
     for html_key in html_keys:
         html_val = sections.get(html_key, "")
@@ -981,7 +997,11 @@ def _extract_vendors_from_sections(sections: dict) -> list:
         # Strip HTML tags for matching
         text = re.sub(r"<[^>]+>", " ", html_val).lower()
         for key, meta in _KNOWN_VENDOR_META.items():
-            if key in text and meta["name"] not in seen:
+            # KIS-1250: Wortgrenzen statt Substring — "otter" darf nicht
+            # in "Rotterdam" feuern, "make.com" braucht den Punkt.
+            if meta["name"] in seen:
+                continue
+            if re.search(r"(?<![a-z0-9])" + re.escape(key) + r"(?![a-z0-9])", text):
                 vendors.append(dict(meta))
                 seen.add(meta["name"])
     return vendors

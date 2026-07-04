@@ -451,6 +451,33 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         logger.warning("[KIS-1110-P3] Failed to inject net-ROI: %s", _e)
 
     # FIX-KIS-1188-ITEM2: OPEX-bridge appended to S5 (helper is unit-tested).
+    # KIS-1250: "Meine Einschätzung" zitierte Dimensions-Scores (Lauf 1238:
+    # 87/71), die im Strategiebericht nirgends ausgewiesen waren. Eine
+    # deterministische Datenbasis-Zeile macht jede genannte Zahl belegbar.
+    try:
+        _adv_html = sections.get("advisor_note", "") or sections.get("section_advisor_note", "")
+        _adv_key = "advisor_note" if sections.get("advisor_note") else ("section_advisor_note" if sections.get("section_advisor_note") else "")
+        if _adv_key and _adv_html and "Datenbasis:" not in _adv_html:
+            _sc = report1_meta.get("scores", {}) or {}
+            _sc_parts = []
+            for _lbl, _k in (("Wertsch\u00f6pfung", "value"), ("Sicherheit", "security"),
+                             ("Governance", "governance"), ("Bef\u00e4higung", "enablement")):
+                _v = _sc.get(_k)
+                if _v:
+                    _sc_parts.append(f"{_lbl} {int(float(_v))}")
+            _sc_overall = _sc.get("overall")
+            if _sc_parts and _sc_overall:
+                _sc_join = " \u00b7 ".join(_sc_parts)
+                sections[_adv_key] = _adv_html + (
+                    '<p class="small muted" style="margin-top:10px;font-size:0.8em;color:#64748b;">'
+                    f'Datenbasis: KI-Readiness-Score {int(float(_sc_overall))}/100 '
+                    f'({_sc_join}) aus dem KI-Readiness Report.'
+                    '</p>'
+                )
+                logger.info("[KIS-1250][ADVISOR-DATENBASIS] Score-Zeile ergänzt")
+    except Exception as _adv_exc:  # pragma: no cover
+        logger.warning("[KIS-1250][ADVISOR-DATENBASIS] übersprungen: %s", _adv_exc)
+
     _r1_opex_for_bridge = str(
         report1_sections.get("CANON_OPEX_MONTH_EUR")
         or report1_sections.get("opex")
