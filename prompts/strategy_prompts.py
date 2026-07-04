@@ -116,6 +116,14 @@ KIS-1235 — VERTEILUNG: Die VOLLSTÄNDIGE Methodik-Erklärung gehört NUR in S5
 Kapitel 5"). KEINE eigene Methodik-Box in der EXEC — im Lauf 1235 stand
 nahezu derselbe Absatz doppelt auf S. 3 und S. 26.
 
+ZEITBUDGET vs. ZEITERSPARNIS (VERBINDLICH, KIS-1239):
+Die kalkulierte ZeitERSPARNIS (z. B. 50 Stunden/Monat aus dem Business Case)
+ist NICHT das Zeitbudget, das der Nutzer für KI-Themen eingeplant hat —
+das sind zwei verschiedene Größen. Schreibe NIE "Zeitbudget von X Stunden,
+das Sie eingeplant haben", wenn X die Ersparnis-Kennzahl ist (Lauf 1119
+verwechselte beide auf S. 27). Wenn du das eingeplante Zeitbudget nicht
+kennst, nenne keins.
+
 VENDOR-KONSISTENZ (PFLICHT bei Tool-Empfehlungen in S4 und S8):
 Der KI-Readiness Report hat {vendor_audit_red_count} Tools als nicht EU-konform
 (RED) bewertet und {vendor_audit_green_count} als konform (GREEN).

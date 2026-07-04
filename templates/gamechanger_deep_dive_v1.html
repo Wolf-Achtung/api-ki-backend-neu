@@ -115,12 +115,16 @@ td.negative { color: var(--c-danger); font-weight: 600; }
 /* ── Page Structure ─────────────────────────────────── */
 .page { max-width: 210mm; margin: 0 auto; }
 
-/* ══ PAGE BREAK RULES ═══════════════════════════════ */
+/* ══ PAGE BREAK RULES ═══════════════════════════════
+   KIS-1239: erzwungene Kapitel-Umbrüche entfernt — bei 12 Seiten
+   erzeugten sie 3 fast leere Seiten (Lauf 1119: S. 3/6/8 zu 75–85 %
+   leer, nur der Überhang der Vorseite). Kapitel fließen jetzt;
+   die Banner kleben per break-after:avoid am Folgeinhalt. */
 #dd-implementation,
 #dd-business-case,
 #dd-risk-assessment,
 #dd-next-steps {
-    break-before: page;
+    break-before: auto;
 }
 
 /* ── Section Base ───────────────────────────────────── */
@@ -147,6 +151,8 @@ h3, h4 { break-after: avoid; }
     margin: 0 0 20px 0;
     position: relative;
     break-inside: avoid;
+    break-after: avoid;       /* KIS-1239: Banner nie allein am Seitenende */
+    page-break-after: avoid;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
