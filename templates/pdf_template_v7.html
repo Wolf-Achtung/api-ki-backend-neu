@@ -291,6 +291,8 @@ tr:last-child td { border-bottom: none; }
 .section-body p, .section-body li { orphans: 3; widows: 3; }
 /* KIS-1235: Tabellenzeilen zusammenhalten, Kopf bei Umbruch wiederholen. */
 tr { break-inside: avoid; }
+p, li { orphans: 3; widows: 3; } /* KIS-1244: keine Absatz-Waisen */
+tbody tr:first-child { break-before: avoid-page; page-break-before: avoid; } /* KIS-1244 */
 thead { display: table-header-group; break-after: avoid; page-break-after: avoid; }
 /* KIS-1238: Kopfzeile nie allein am Seitenende (Lauf 1119: verwaiste
    Header S. 4/9 der Potenzialanalyse, Zeilen folgten headerlos). */
@@ -1329,7 +1331,7 @@ h1, h2, h3, h4 {
                company names for privacy reasons, so the internal kundencode (e.g. "KND")
                was leaking to the cover, damaging customer trust. #}
             <strong>{{ BRANCHE_LABEL }}</strong>
-            <span class="muted"> · </span>{{ UNTERNEHMENSGROESSE_LABEL }}
+            <span class="muted"> · </span>{{ UNTERNEHMENSGROESSE_LABEL }}{% if BUNDESLAND_LABEL %}<span class="muted"> · </span>{{ BUNDESLAND_LABEL }}{% endif %}
         </p>
     </div>
 

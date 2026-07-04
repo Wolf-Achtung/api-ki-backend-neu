@@ -16228,7 +16228,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         if sections.get("FOERDERPROGRAMME_HTML"):
             # Kern-Matrix + Research-Ergebnisse kombinieren
             sections["FOERDERPROGRAMME_HTML"] = (
-                f"<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"
+                f"<h3>Kernprogramme für Ihr Profil</h3>\n"
                 f"{core_funding_html}\n\n"
                 f"<h3 style='margin-top: 16pt;'>Aktuell recherchierte Programme</h3>\n"
                 f"{sections['FOERDERPROGRAMME_HTML']}"
@@ -16262,7 +16262,7 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
                 flags=_re_tbl.IGNORECASE,
             )
             sections["FOERDERPOTENZIAL_HTML"] = (
-                f"<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"
+                f"<h3>Kernprogramme für Ihr Profil</h3>\n"
                 f"{core_funding_html}\n\n"
                 f"{_llm_html.strip()}"
             )
@@ -19088,13 +19088,22 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             # ohnehin aus dem Single-Source-of-Truth-Business-Case.
             # =============================================================
             _ki_stack_wrap = sections.get('KI_STACK_SUMMARY_HTML', '')
-            if (_ki_stack_wrap and 'kpi-label' in _ki_stack_wrap
+            # KIS-1244: Lauf 4 lieferte die Kennzahlen als NACKTE Textzeilen
+            # ohne jede kpi-Klasse ("<p>ROI8 %nach 12 Monaten</p>") — der
+            # 'kpi-label'-Trigger griff nicht, der Fließtext blieb stehen.
+            _kpi_plainline = _re_c1.compile(
+                r'<(?:p|div)[^>]*>\s*(?:ROI|Break-Even|Zeitersparnis)[\d][^<]{0,90}</(?:p|div)>'
+            )
+            if (_ki_stack_wrap
+                    and ('kpi-label' in _ki_stack_wrap or _kpi_plainline.search(_ki_stack_wrap))
                     and _c1_roi_int and _c1_pb_fmt and _c1_hours):
                 _kpi_unit = _re_c1.compile(
                     r'<div[^>]*class=["\']kpi["\'][^>]*>[\s\S]*?</div>'
                     r'|<span[^>]*class=["\']kpi-label["\'][^>]*>[^<]*</span>\s*'
                     r'<span[^>]*class=["\']kpi-value["\'][^>]*>[^<]*</span>\s*'
                     r'(?:<span[^>]*class=["\']kpi-sub["\'][^>]*>[^<]*</span>)?'
+                    # KIS-1244: nackte Kennzahlen-Textzeilen ebenfalls ersetzen
+                    r'|<(?:p|div)[^>]*>\s*(?:ROI|Break-Even|Zeitersparnis)[\d][^<]{0,90}</(?:p|div)>'
                 )
                 _canonical_block = (
                     '<div class="kpi-triple">'
@@ -19127,6 +19136,109 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     sections['KI_STACK_SUMMARY_HTML'] = _ki_stack_rebuilt
                     sections['ki_stack_summary'] = _ki_stack_rebuilt
                     log.info('[KIS-1235][KPI-REBUILD] %d KPI-Fragment(e) durch kanonischen kpi-triple-Block ersetzt', _kpi_seen[0])
+
+        # =================================================================
+        # KIS-1244 (3): Entscheidungsvorlage ohne Finanzzahl ist als
+        # Beschlussvorlage unbrauchbar (Lauf 4, S. 6) — deterministisch
+        # eine Investitions-Zeile ergänzen, wenn das LLM keine liefert.
+        # =================================================================
+        try:
+            _dec_html = sections.get('EXECUTIVE_DECISION_HTML', '') or ''
+            if _dec_html and 'Startinvestition' not in _dec_html:
+                _dec_capex = int(float(sections.get('CANON_CAPEX_EUR') or sections.get('CAPEX_REALISTISCH_EUR') or 0))
+                _dec_opex = int(float(sections.get('CANON_OPEX_MONTH_EUR') or sections.get('OPEX_REALISTISCH_EUR') or 0))
+                if _dec_capex > 0:
+                    def _dec_fmt(n):
+                        return f"{n:,}".replace(",", ".")
+                    _invest_li = (
+                        '<li><strong>Investition:</strong> Startinvestition ca. '
+                        f'{_dec_fmt(_dec_capex)} \u20ac (einmalig, \u00fcber 12 Monate verteilt)'
+                        + (f', dazu ca. {_dec_fmt(_dec_opex)} \u20ac/Monat laufende Tool-Kosten' if _dec_opex > 0 else '')
+                        + ' \u2014 Details im Business Case.</li>'
+                    )
+                    if '</ul>' in _dec_html:
+                        _dec_html = _dec_html.replace('</ul>', _invest_li + '</ul>', 1)
+                    else:
+                        _dec_html += _invest_li.replace('<li>', '<p>').replace('</li>', '</p>')
+                    sections['EXECUTIVE_DECISION_HTML'] = _dec_html
+                    sections['executive_decision'] = _dec_html
+                    log.info('[KIS-1244][DECISION-INVEST] Investitions-Zeile erg\u00e4nzt (CAPEX=%s, OPEX=%s)', _dec_capex, _dec_opex)
+        except Exception as _dec_exc:  # pragma: no cover
+            log.warning('[KIS-1244][DECISION-INVEST] \u00fcbersprungen: %s', _dec_exc)
+
+        # =================================================================
+        # KIS-1244 (1): Budget-Gate — kalkulierte Investition vs. im
+        # Briefing angegebenes Investitionsbudget. Lauf 4: 12.000 € Plan
+        # bei 2.000–10.000 € Budget, ohne ein Wort dazu.
+        # =================================================================
+        try:
+            _bg_raw = str(answers.get('investitionsbudget', '') or '').strip().lower()
+            _bg_capex = int(float(sections.get('CANON_CAPEX_EUR') or sections.get('CAPEX_REALISTISCH_EUR') or 0))
+            _bg_max = 0
+            _bg_label = ''
+            def _bg_fmt(n):
+                return f"{int(n):,}".replace(",", ".")
+            _bg_m = re.fullmatch(r'(\d+)_(\d+)', _bg_raw)
+            if _bg_m:
+                _bg_max = int(_bg_m.group(2))
+                _bg_label = f"{_bg_fmt(_bg_m.group(1))}\u2013{_bg_fmt(_bg_m.group(2))} \u20ac"
+            elif _bg_raw.startswith('unter_'):
+                _bg_tail = _bg_raw.split('_', 1)[1].replace('k', '000')
+                if _bg_tail.isdigit():
+                    _bg_max = int(_bg_tail)
+                    _bg_label = f"unter {_bg_fmt(_bg_max)} \u20ac"
+            if _bg_max and _bg_capex > _bg_max:
+                _bg_box = (
+                    '<div class="hinweis-box budget-gate" style="margin-top:14px;padding:12px 16px;'
+                    'background:#fffbeb;border-left:4px solid #f59e0b;border-radius:6px;">'
+                    '<strong>Budget-Einordnung:</strong> '
+                    f'Ihr angegebenes Investitionsbudget liegt bei {_bg_label}. '
+                    f'Die hier kalkulierte Gesamtinvestition von {_bg_fmt(_bg_capex)} \u20ac '
+                    '\u00fcbersteigt diesen Rahmen. Empfehlung: gestufter Einstieg \u2014 '
+                    'Quick Wins und Phase 1 bleiben innerhalb Ihres Budgets; der Vollausbau '
+                    'folgt erst nach messbarem Pilot-Erfolg und l\u00e4sst sich \u00fcber die im '
+                    'F\u00f6rderkapitel genannten Programme gegenfinanzieren.'
+                    '</div>'
+                )
+                _bg_sec = sections.get('BUSINESS_CASE_HTML') or ''
+                if _bg_sec and 'Budget-Einordnung' not in _bg_sec:
+                    sections['BUSINESS_CASE_HTML'] = _bg_sec + _bg_box
+                    sections['business_case'] = sections['BUSINESS_CASE_HTML']
+                    log.info('[KIS-1244][BUDGET-GATE] CAPEX %s > Budget-Band %s \u2014 Einordnungs-Box injiziert', _bg_capex, _bg_max)
+        except Exception as _bg_exc:  # pragma: no cover
+            log.warning('[KIS-1244][BUDGET-GATE] \u00fcbersprungen: %s', _bg_exc)
+
+        # =================================================================
+        # KIS-1244 (7): DSGVO-Vorbehalt-Cap auch im R1 (Lauf 4: 3\u00d7, davon
+        # 2\u00d7 im selben Satz). Gleiches Muster wie im Strategie-Renderer:
+        # die ersten 2 Vorkommen im Gesamtreport bleiben, Rest entfällt.
+        # =================================================================
+        try:
+            _dv_pat_r1 = re.compile(r'\s*(?:<em>\s*)?\((?:DSGVO|Datenschutz)-Vorbehalt[^)<]{0,80}\)(?:\s*</em>)?')
+            _dv_keep_left = 2
+            _dv_removed_r1 = 0
+            _dv_order = ['EXECUTIVE_SUMMARY_HTML', 'EXECUTIVE_DECISION_HTML', 'QUICK_WINS_HTML',
+                         'KI_STACK_SUMMARY_HTML', 'STARTER_KIT_HTML', 'BUSINESS_CASE_HTML',
+                         'ROI_HTML', 'PILOT_PLAN_HTML', 'ROADMAP_12M_HTML', 'RECOMMENDATIONS_HTML']
+            _dv_keys = _dv_order + sorted(k for k in sections if k not in _dv_order)
+            for _dv_k in _dv_keys:
+                _dv_v = sections.get(_dv_k)
+                if not isinstance(_dv_v, str) or '-Vorbehalt' not in _dv_v:
+                    continue
+                _dv_ms = list(_dv_pat_r1.finditer(_dv_v))
+                if not _dv_ms:
+                    continue
+                _dv_kept = min(len(_dv_ms), max(0, _dv_keep_left))
+                for _m in reversed(_dv_ms[_dv_kept:]):
+                    _dv_v = _dv_v[:_m.start()] + _dv_v[_m.end():]
+                    _dv_removed_r1 += 1
+                if _dv_kept < len(_dv_ms):
+                    sections[_dv_k] = _dv_v
+                _dv_keep_left -= _dv_kept
+            if _dv_removed_r1:
+                log.info('[KIS-1244][DSGVO-VORBEHALT-R1] %d Einschub/Einsch\u00fcbe entfernt (Cap: 2)', _dv_removed_r1)
+        except Exception:  # pragma: no cover
+            pass
 
         # =================================================================
         # [FIX-S13C] Enforce canonical KPIs in text-based HTML sections.
@@ -19613,7 +19725,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 "[FIX-KIS-1104][DIAG] fp_prose head: %.160s",
                 _re_kis1104.sub(r'<[^>]+>', ' ', _fp_prose[:400]).strip(),
             )
-            _heading = '<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n'
+            _heading = '<h3>Kernprogramme für Ihr Profil</h3>\n'
             if _fp_prose:
                 sections["FOERDERPOTENZIAL_HTML"] = (
                     f"{_heading}{_core_html}\n\n{_fp_prose}"
@@ -19643,7 +19755,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             )
             # --- FOERDERPROGRAMME_HTML + FUNDING_HTML ---
             sections["FOERDERPROGRAMME_HTML"] = (
-                f"<h3>Kernprogramme für Ihr Profil (2025/2026)</h3>\n"
+                f"<h3>Kernprogramme für Ihr Profil</h3>\n"
                 f"{_core_html}"
             )
             sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
@@ -22171,6 +22283,11 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
         from services.pdf_client import render_pdf_from_html
         _briefing_pdf_result = render_pdf_from_html(
             _briefing_html,
+            # KIS-1245: Ohne meta rendert der Default-Footer "Report-ID: – • –".
+            meta={
+                "report_id": _briefing_display_id,
+                "report_date": (_briefing_datum or "").split(" ")[0],
+            },
             pdf_options={"format": "A4", "margin": {"top": "15mm", "bottom": "15mm", "left": "10mm", "right": "10mm"}},
         )
         _briefing_pdf_bytes = _briefing_pdf_result.get("pdf_bytes")
