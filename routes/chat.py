@@ -853,6 +853,22 @@ async def chat_message(
                     _chip_suggestions = _get_freetext_suggestions(qr_field, collected, _chip_profile)
                     if req.quick_reply_value in _chip_suggestions:
                         qr_result = NormResult(req.quick_reply_value, "high", False)
+                # KIS-1242: QR-Klick = Wahrheit. Wenn der geklickte Wert einer
+                # der VON UNS ANGEBOTENEN Chips ist, wird er IMMER persistiert —
+                # auch wenn der Normalizer ihn nicht kennt. 3. Testlauf-Abbruch
+                # 04.07.: projekte_pro_monat fehlte in ENUM_VALUES, der Klick
+                # "unter_2" wurde als low confidence verworfen und dieselbe
+                # Frage kam endlos wieder (7/8-Schleife).
+                if qr_result.confidence == "low":
+                    _offered = {o["value"] for o in (_QR_OPTIONS.get(qr_field) or [])}
+                    if req.quick_reply_value in _offered:
+                        qr_result = NormResult(req.quick_reply_value, "high", False)
+                        log.warning(
+                            "[CHAT][KIS-1242] Normalizer kennt %s=%r nicht — Wert stammt "
+                            "aus eigenen QR-Optionen, wird verbatim übernommen "
+                            "(Registry-Lücke prüfen!)",
+                            qr_field, req.quick_reply_value,
+                        )
                 if qr_result.confidence != "low":
                     collected[qr_field] = qr_result.value
                     normalized[qr_field] = qr_result.value
@@ -4163,6 +4179,7 @@ _QR_LABELS: dict[str, str] = {
     "selbststaendig": "Unternehmensform", "country": "Land",
     "bundesland": "Bundesland / Region", "hauptleistung": "Hauptleistung",
     "jahresumsatz": "Jahresumsatz",
+    "projekte_pro_monat": "Projekte pro Monat",
     # Sektion 1
     "zielgruppen": "Zielgruppen", "it_infrastruktur": "IT-Infrastruktur",
     "interne_ki_kompetenzen": "Internes KI-Team", "datenquellen": "Verfügbare Daten",

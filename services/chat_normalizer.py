@@ -482,6 +482,11 @@ ENUM_VALUES: dict[str, list[str]] = {
         "logistik", "gastronomie",
     ],
     "unternehmensgroesse": ["1", "2–10", "11–100"],
+    # KIS-1242: fehlte — Chip-Klicks wurden als low confidence verworfen,
+    # die Frage wiederholte sich endlos (3. Testlauf-Abbruch 04.07.).
+    "projekte_pro_monat": ["unter_2", "2_5", "6_10", "ueber_10", "keine_angabe"],
+    # Nur für Alt-Daten-Normalisierung — die Frage wird nicht mehr gestellt.
+    "durchschnittshonorar": ["unter_1k", "1k_5k", "5k_20k", "ueber_20k", "keine_angabe"],
     "selbststaendig": [
         "freiberufler", "kapitalgesellschaft", "einzelunternehmer", "sonstiges",
     ],
@@ -1140,6 +1145,10 @@ _FIELD_LABELS: dict[str, str] = {
     "bundesland": "Bundesland",
     "hauptleistung": "Hauptdienstleistung",
     "jahresumsatz": "Jahresumsatz",
+    "projekte_pro_monat": "Projekte pro Monat",
+    # KIS-1242: vom Registry-Kontrakt-Test gefundene Label-Lücken
+    "top_zeitfresser": "Top-Zeitfresser",
+    "datenschutz": "Datenschutz-Einwilligung",
     "zielgruppen": "Zielgruppen",
     "it_infrastruktur": "IT-Infrastruktur",
     "interne_ki_kompetenzen": "KI-Kompetenzen",
