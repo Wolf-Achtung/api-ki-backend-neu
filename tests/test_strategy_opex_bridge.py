@@ -28,9 +28,19 @@ class TestOPEXBridge:
         assert "OPEX-Methodik" in out
 
     def test_bridge_mentions_both_numbers(self):
-        out = inject_opex_bridge(S5_BODY, "300")
+        # KIS-1248: R1-OPEX kommt vom Aufrufer statt hartkodiert (Lauf 1238:
+        # "120 €/Monat" stand neben kanonischen 600 €/Monat).
+        out = inject_opex_bridge(S5_BODY, "300", r1_opex_monatlich="600")
         assert "300 €/Monat" in out  # Strategy figure
-        assert "120 €/Monat" in out  # R1/KPA figure
+        assert "600 €/Monat" in out  # kanonischer R1-Wert
+        assert "120" not in out
+        assert "KI-Readiness Report" in out
+        assert "KI-Status-Report" not in out
+
+    def test_bridge_without_r1_value_stays_numberless(self):
+        out = inject_opex_bridge(S5_BODY, "300")
+        assert "reinen" in out and "Software-Grundkosten" in out
+        assert "120" not in out
 
     def test_bridge_explains_strategy_scope(self):
         out = inject_opex_bridge(S5_BODY, "450")

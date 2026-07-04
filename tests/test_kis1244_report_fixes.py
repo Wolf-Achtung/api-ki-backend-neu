@@ -177,7 +177,7 @@ class TestTemplateFixes:
     def test_hyphens_manual_in_strategy_tables(self):
         src = _read("templates/strategy_report.html")
         assert "hyphens: manual" in src
-        assert "th { hyphens: none; }" in src
+        assert "th { hyphens: none; overflow-wrap: normal; word-break: keep-all; }" in src
         assert "hyphens: auto" not in src
 
     def test_thead_keeps_first_row(self):

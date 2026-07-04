@@ -156,7 +156,7 @@ _SHY = "­"
 _TABLE_CELL_RE = re.compile(r"(<t[dh]\b[^>]*>)([\s\S]*?)(</t[dh]>)", re.IGNORECASE)
 # KIS-1238: 12 → 10 — "KOMPLEXITÄT"/"INTEGRATION" (11 Zeichen) fielen durch
 # und wurden in schmalen Spalten hart ohne Trennstrich umbrochen.
-_LONG_WORD_RE = re.compile(r"[A-Za-zÄÖÜäöüß]{10,}")
+_LONG_WORD_RE = re.compile(r"[A-Za-zÄÖÜäöüß]{14,}")
 _VOWELS = set("aeiouäöüy")
 
 

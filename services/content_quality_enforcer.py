@@ -309,6 +309,45 @@ ZERO_LEAK_PHRASE_REPLACEMENTS = [
 ]
 
 
+# KIS-1248: Englische Badges/Kategorien und interne Profil-Slugs, die in
+# Lauf 1238 sichtbar durchsickerten ("AI-ACT RISIKO limited", "Komplexität:
+# low", "ESSENTIAL", "ANALYSIS", "KMU/Bau/KI-Anwender"). Bewusst
+# CASE-SENSITIV, damit Eigennamen ("DeepL Limited") unberührt bleiben.
+_BADGE_LOCALIZATION_RULES = [
+    (r"\bESSENTIAL\b", "UNVERZICHTBAR"),
+    (r"\bRECOMMENDED\b", "EMPFOHLEN"),
+    (r"\bANALYSIS\b", "ANALYSE"),
+    (r"\bCOLLABORATION\b", "KOLLABORATION"),
+    (r"\bAUTOMATION\b", "AUTOMATISIERUNG"),
+    (r"\bPRODUCTIVITY\b", "PRODUKTIVITÄT"),
+    (r"(RISIKO\s+)limited\b", r"\1begrenzt"),
+    (r"(Komplexit\u00e4t:\s*)low\b", r"\1niedrig"),
+    (r"(Komplexit\u00e4t:\s*)medium\b", r"\1mittel"),
+    (r"(Komplexit\u00e4t:\s*)high\b", r"\1hoch"),
+    (r"\blimited\b", "begrenzt"),
+    # Interner Profil-Slug -> lesbares Profil
+    (r"\b(Solo|Team|KMU)/([A-Za-z\u00c4\u00d6\u00dc\u00e4\u00f6\u00fc\u00df]+)/KI-(Experte|Anwender|Einsteiger)\b",
+     "\\1 · \\2 · KI-\\3"),
+]
+
+
+def apply_badge_localization(sections: dict) -> dict:
+    """KIS-1248: Deterministische Eindeutschung von Badge-/Slug-Resten."""
+    total = 0
+    for key, content in list(sections.items()):
+        if not isinstance(content, str) or not content:
+            continue
+        changed = content
+        for pattern, replacement in _BADGE_LOCALIZATION_RULES:
+            changed = re.sub(pattern, replacement, changed)
+        if changed != content:
+            sections[key] = changed
+            total += 1
+    if total:
+        log.info("[KIS-1248][BADGE-L10N] %d Sektion(en) eingedeutscht", total)
+    return sections
+
+
 def apply_zero_leak_phrase_cleanup(sections: dict) -> dict:
     """
     FIX-509-B: Global pre-clean step to eliminate phrases that trigger
@@ -3214,6 +3253,9 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
 
     # 0. FIX-517C: Universal Template Phrase Scrub (ALL personas, BEFORE validation)
     sections = scrub_template_phrases_all_sections(sections)
+
+    # 0.1 KIS-1248: Englische Badge-/Kategorie-Reste + interne Profil-Slugs
+    sections = apply_badge_localization(sections)
 
     # 0.5 P0.1: Stray Prefix Remover (leading "?" and artifacts)
     sections = apply_stray_prefix_remover(sections)

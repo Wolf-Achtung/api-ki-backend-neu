@@ -66,9 +66,21 @@ def _prettify_enum_value(val: Any, field: str = "") -> str:
     if isinstance(val, bool):
         return "Ja" if val else "Nein"
     s = str(val).strip()
+    # KIS-1248: Bindestrich-Bereichswerte ("51-80") fielen durch das
+    # Enum-Gate und blieben ohne Einheit — nur für Felder mit bekannter
+    # Einheit anfassen (Datums-/Freitextwerte bleiben unberührt).
+    if field in _RANGE_UNIT_SUFFIX:
+        _hy = re.fullmatch(r"(\d+)\s*-\s*(\d+)", s)
+        if _hy:
+            return f"{_hy.group(1)}\u2013{_hy.group(2)}{_RANGE_UNIT_SUFFIX[field]}"
     # Only touch pure enum tokens: lowercase, no spaces, [a-z0-9_] only.
     if not s or s != s.lower() or not re.fullmatch(r"[a-z0-9_]+", s):
-        return str(val)
+        # KIS-1248: Komma-gejointe Listen ohne Leerzeichen lesbar machen
+        # ("ChatGPT / OpenAI,Claude / Anthropic" — Lauf 1238).
+        _out = str(val)
+        if "," in _out and not s.startswith("{"):
+            _out = re.sub(r",(?=\S)", ", ", _out)
+        return _out
     # KIS-1235: Erst die Fragebogen-Antwortlabels probieren — das Briefing
     # zeigte rohe Codes ("freiberufler", "marktfuehrerschaft", "kunden").
     if field:
@@ -885,8 +897,9 @@ def _render_pdf_questionnaire_tables(
             if val is None or val == "" or val == []:
                 continue
             label = _STRATEGY_LABELS.get(key, key)
-            display = (escape(", ".join(_prettify_enum_value(v) for v in val)) if isinstance(val, list)
-                   else escape(_prettify_enum_value(val)))
+            # KIS-1248: field durchreichen — sonst bekommt s1_budget kein €
+            display = (escape(", ".join(_prettify_enum_value(v, key) for v in val)) if isinstance(val, list)
+                   else escape(_prettify_enum_value(val, key)))
             s_rows.append(f"  <tr><td>{escape(label)}</td><td>{display}</td></tr>")
         # Catch-all for extra strategy keys
         for key, val in strategy_answers.items():
@@ -895,8 +908,8 @@ def _render_pdf_questionnaire_tables(
             if val is None or val == "" or val == []:
                 continue
             label = _STRATEGY_LABELS.get(key, key)
-            display = (escape(", ".join(_prettify_enum_value(v) for v in val)) if isinstance(val, list)
-                   else escape(_prettify_enum_value(val)))
+            display = (escape(", ".join(_prettify_enum_value(v, key) for v in val)) if isinstance(val, list)
+                   else escape(_prettify_enum_value(val, key)))
             s_rows.append(f"  <tr><td>{escape(label)}</td><td>{display}</td></tr>")
 
         if s_rows:

@@ -19396,6 +19396,16 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.warning("[%s] [FIX-TYPO-GUARD] Failed: %s", run_id, _ty_err)
 
     # Execute hard stop validation
+    # KIS-1249 / Platin+++ Stufe 1: maschinelles QA-Gate über dem fertigen
+    # Report — findet die Befund-Klassen der manuellen PDF-Reviews
+    # (Namens-Leak, kollabierte KPIs, Roh-Booleans, englische Badges,
+    # snake_case, Satzabbrüche, DSGVO-Cap). Nicht blockierend.
+    try:
+        from services.platin_qa import run_platin_qa
+        run_platin_qa(sections, answers, run_id=run_id)
+    except Exception as _qa_exc:  # pragma: no cover
+        log.warning("[%s] [PLATIN-QA] Hook übersprungen: %s", run_id, _qa_exc)
+
     hard_stop_if_invalid(sections, error_gate, persona=persona, run_id=run_id)
 
     # === FIX-497 + FIX-503B: Store unified quality metrics in sections ===
@@ -22293,6 +22303,17 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
         if _briefing_analysis:
             _briefing_meta = getattr(_briefing_analysis, "meta", None) or {}
             _briefing_sections = _briefing_meta.get("sections", {}) if isinstance(_briefing_meta, dict) else {}
+
+        # KIS-1248: Das Briefing-Dossier zeigte den Pre-Bonus-Score (78),
+        # der Report den finalen Score (80) — Lauf 1238. Der kanonische
+        # Gesamtscore aus den Sektionen gewinnt, damit beide Dokumente
+        # dieselbe Zahl tragen.
+        try:
+            _canon_overall = _briefing_sections.get("CANONICAL_OVERALL")
+            if isinstance(_canon_overall, (int, float)) and _canon_overall:
+                _briefing_scores["overall"] = int(_canon_overall)
+        except Exception:  # pragma: no cover - defensiv
+            pass
 
         _briefing_created = getattr(br, "created_at", None)
         _briefing_datum = _briefing_created.strftime("%d.%m.%Y %H:%M") if _briefing_created else ""

@@ -182,7 +182,9 @@ th, td {
        style_lint setzt &shy; an sprachlich korrekten Stellen. */
     hyphens: manual;
 }
-th { hyphens: none; }
+/* KIS-1248: Spaltenköpfe brachen strichlos mitten im Wort
+   ("HANDLUN GSFELD", "LINK/KONT AKT") — Umbruch nur an Leerzeichen. */
+th { hyphens: none; overflow-wrap: normal; word-break: keep-all; }
 /* KIS-1235: Zeilen zusammenhalten, Tabellenkopf bei Umbruch wiederholen. */
 tr { break-inside: avoid; }
 thead { display: table-header-group; break-after: avoid; page-break-after: avoid; }
