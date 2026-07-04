@@ -397,7 +397,7 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
             # FIX-KIS-1027.4-3D: Wolf-Decision "Annahme transparent machen".
             # Headline beh\u00e4lt Wirkung, bekommt aber explizite Zusatz-Zeile,
             # dass die 70\u00a0% nur bei Programm-Kombination erreichbar sind
-            # (z.\u00a0B. BAFA + KOMPASS oder zus. regionale Digitalpr\u00e4mien).
+            # (z.\u00a0B. Bundes- plus Landesf\u00f6rderung). KIS-1237: Solo-Programm aus dem\n            # Beispieltext entfernt \u2014 das Programm richtet sich an Solo-\n            # Selbstst\u00e4ndige und stand in Kapitel 7 des KMU-Laufs 1119 nie drin\n            # (Exec Summary verwies damit auf ein unbelegtes Programm).
             # Verhindert, dass Leser den Headline-ROI als Einzelprogramm-
             # Standardfall interpretieren.
             _foerder_note = (
@@ -417,8 +417,9 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
                 f'Die 70\u00a0%-Quote ist ein <em>Plausibilit\u00e4ts-Cap</em> bei '
                 f'vollst\u00e4ndiger Aussch\u00f6pfung der in Kapitel\u00a07 '
                 f'(F\u00f6rdermittel &amp; Finanzierung) beschriebenen Programme \u2014 '
-                f'typischerweise BAFA <em>plus</em> KOMPASS oder zus\u00e4tzlich '
-                f'regionale Digitalpr\u00e4mien. Ein einzelnes F\u00f6rderprogramm '
+                f'typischerweise durch Kombination einer Bundes- mit einer '
+                f'Landesf\u00f6rderung (etwa BAFA plus regionale Digitalpr\u00e4mien). '
+                f'Ein einzelnes F\u00f6rderprogramm '
                 f'erreicht meist 50\u201360\u00a0%. Pr\u00fcfen Sie die Kombinations'
                 f'm\u00f6glichkeiten f\u00fcr Ihre Region.'
                 f'</span>'

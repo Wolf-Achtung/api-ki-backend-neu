@@ -1455,6 +1455,22 @@ def vendor_audit_report_to_html(
             "dsgvo_risk": "DSGVO-Risiko",
         }
 
+    # KIS-1237: Rohe englische Statuswerte in den Vendor-Karten übersetzen.
+    # Lauf 1119 zeigte Badges "US", "RED", "Medium", "AI Act Relevanz: high"
+    # im ansonsten deutschen Report.
+    _category_label = {
+        "red": "ROT — hohes Risiko", "yellow": "GELB — mittleres Risiko",
+        "green": "GRÜN — niedriges Risiko",
+    } if lang == "de" else {}
+    _security_label = {
+        "strong": "Stark", "medium": "Mittel", "weak": "Schwach",
+        "unknown": "Unbekannt",
+    } if lang == "de" else {}
+    _relevance_label = {
+        "none": "keine", "low": "niedrig", "medium": "mittel", "high": "hoch",
+    } if lang == "de" else {}
+    _jurisdiction_label = {"US": "USA", "Unknown": "Unbekannt"} if lang == "de" else {}
+
     # FIX-B15: German translations for audit flags
     _flag_translations_de = {
         "US vendor without DPA": "US-Anbieter ohne AVV",
@@ -1567,8 +1583,8 @@ def vendor_audit_report_to_html(
                             <span style="font-size:9px;color:#64748b;">{entry.category}</span>
                         </div>
                         <div style="display:block;margin-top:4px;">
-                            <span style="font-size:9px;padding:2px 8px;background:{juris_color}22;color:{juris_color};border-radius:4px;border:1px solid {juris_color}44;">{entry.jurisdiction}</span>
-                            <span style="font-size:9px;padding:2px 8px;background:{cat_bg};color:{cat_color};border-radius:4px;border:1px solid {cat_border};font-weight:600;">{entry.overall_category.upper()}</span>
+                            <span style="font-size:9px;padding:2px 8px;background:{juris_color}22;color:{juris_color};border-radius:4px;border:1px solid {juris_color}44;">{_jurisdiction_label.get(entry.jurisdiction, entry.jurisdiction)}</span>
+                            <span style="font-size:9px;padding:2px 8px;background:{cat_bg};color:{cat_color};border-radius:4px;border:1px solid {cat_border};font-weight:600;">{_category_label.get(entry.overall_category, entry.overall_category.upper())}</span>
                         </div>
                         <div style="clear:both;"></div>
                     </div>
@@ -1576,8 +1592,8 @@ def vendor_audit_report_to_html(
                     <div style="margin-bottom:8px;word-break:normal;overflow-wrap:break-word;hyphens:none;-webkit-hyphens:none;">
                         <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">📍 {entry.data_location}</span>
                         <span style="font-size:8px;padding:2px 6px;background:{"#dcfce7" if entry.has_dpa else "#fef2f2"};color:{"#166534" if entry.has_dpa else "#991b1b"};border-radius:3px;border:1px solid {"#86efac" if entry.has_dpa else "#fca5a5"};display:inline-block;margin:2px;">📄 {labels["dpa_yes"] if entry.has_dpa else labels["dpa_no"]}</span>
-                        <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">🔒 {entry.security_posture.title()}</span>
-                        <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">⚖️ {labels["ai_act"]}: {entry.ai_act_relevance}</span>
+                        <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">🔒 {_security_label.get(entry.security_posture.lower(), entry.security_posture.title())}</span>
+                        <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">⚖️ {labels["ai_act"]}: {_relevance_label.get(entry.ai_act_relevance, entry.ai_act_relevance)}</span>
                     </div>
             ''')
 

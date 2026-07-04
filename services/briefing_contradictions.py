@@ -14,12 +14,35 @@ Einschätzung schärfer.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, Dict, List, Optional
 
 log = logging.getLogger(__name__)
 
 _NEGATIVES = {"nein", "keine", "kein", "no", "none", "false", ""}
 _HIGH = {"hoch", "sehr hoch", "fortgeschritten", "experte", "expert", "high"}
+
+
+def _tsd(n: str) -> str:
+    """1000er-Punkt: '10000' \u2192 '10.000'."""
+    return f"{int(n):,}".replace(",", ".")
+
+
+def _fmt_budget(value: str) -> str:
+    """KIS-1237: Budget-Enums lesbar machen, bevor sie in Report-Text
+    eingebettet werden. Lauf 1119 zeigte 'Investitionsrahmen (2000_10000)'
+    im Strategiebericht \u2014 der Rohwert aus dem Fragebogen."""
+    v = value.strip()
+    m = re.fullmatch(r"(\d+)_(\d+)", v)
+    if m:
+        return f"{_tsd(m.group(1))}\u2013{_tsd(m.group(2))} \u20ac"
+    m = re.fullmatch(r"(unter|bis)_(\d+)", v)
+    if m:
+        return f"unter {_tsd(m.group(2))} \u20ac"
+    m = re.fullmatch(r"(ueber|ab)_(\d+)", v)
+    if m:
+        return f"\u00fcber {_tsd(m.group(2))} \u20ac"
+    return value
 
 
 def _norm(value: Any) -> str:
@@ -83,7 +106,7 @@ def detect_contradictions(
     if "budget" in engpass and budget not in _NEGATIVES and any(ch.isdigit() for ch in budget):
         findings.append(
             f"Der genannte Engpass 'Kein Budget' steht neben einem konkreten "
-            f"Investitionsrahmen ({budget}). Vermutlich ist nicht das Budget das "
+            f"Investitionsrahmen ({_fmt_budget(budget)}). Vermutlich ist nicht das Budget das "
             "Problem, sondern unklare Priorisierung innerhalb des Rahmens."
         )
 

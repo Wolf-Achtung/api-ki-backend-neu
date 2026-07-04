@@ -80,6 +80,22 @@ log = logging.getLogger(__name__)
 # Feature flag: Draft-Pattern (Sprint 1 infra — default off)
 DRAFT_MODE_ENABLED = os.getenv("DRAFT_MODE_ENABLED", "false").lower() == "true"
 
+
+def _cleared_draft(prev: dict | None) -> dict:
+    """KIS-1237: Pending-Draft zurücksetzen, OHNE persistente Marker zu verlieren.
+
+    draft_state trägt neben dem transienten Pending-Zustand auch
+    ``contradiction_acks`` (KIS-1235-P3: welche Live-Abgleich-Fragen schon
+    gestellt wurden). Die alten Reset-Literale ``{"pending_field": None, ...}``
+    haben die Acks bei jedem QR-Klick mitgelöscht — dieselbe Rückfrage
+    („Kurzer Abgleich: …") wurde dadurch an JEDE Antwort erneut angehängt.
+    """
+    out: dict = {"pending_field": None, "pending_value": None, "dialog_mode": False}
+    acks = (prev or {}).get("contradiction_acks")
+    if acks:
+        out["contradiction_acks"] = acks
+    return out
+
 # KIS-1131: Canonical summary marker — used for both emission and detection.
 SUMMARY_MARKER = "**Zusammenfassung Ihrer Angaben:**"
 
@@ -820,7 +836,7 @@ async def chat_message(
                     _draft_confirmed_value = _cv
                     log.info("[CHAT] Draft auto-confirm (QR click on %s): %s=%r", qr_field, _cf, _cv)
                 # Always clear draft state after any QR click
-                session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
+                session.draft_state = _cleared_draft(session.draft_state)
 
             # --- QR value write (single code path, draft-agnostic) ---
             # KIS-1131 FX-3: Skip meta-fields (__*__) — they are control signals,
@@ -1187,7 +1203,7 @@ async def chat_message(
                             "normalized": True,
                             "confirmed": True,
                         }
-                        draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
+                        draft_state = _cleared_draft(draft_state)
                         _draft_confirmed_field = _cf
                         _draft_confirmed_value = _cv
                         log.info("[CHAT] Draft: confirmed %s=%r", _cf, _cv)
@@ -1280,7 +1296,7 @@ async def chat_message(
                         "normalized": True,
                         "confirmed": True,
                     }
-                    session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
+                    session.draft_state = _cleared_draft(draft_state)
                     _draft_confirmed_field = _cf
                     _draft_confirmed_value = _cv
                     _skip_confirmed_draft = True
@@ -1336,12 +1352,17 @@ async def chat_message(
         # draft_state MUST be included here — ORM assignments to
         # session.draft_state are not reliably flushed after raw SQL commits.
         now = datetime.now(timezone.utc)
-        _draft_for_sql = None
+        # KIS-1237: Auch ohne Draft-Mode NIE blind {} schreiben — draft_state
+        # trägt persistente Marker (contradiction_acks), die den Turn
+        # überleben müssen. Basis ist immer der aktuelle Session-Zustand
+        # (ORM-Wert dieses Turns, sonst der Snapshot vom Turn-Anfang).
+        _draft_current = (
+            getattr(session, 'draft_state', None) or _draft_state_snapshot or None
+        )
         if DRAFT_MODE_ENABLED or _is_edit_request or _is_in_edit_mode:
-            _draft_for_sql = json.dumps(
-                getattr(session, 'draft_state', None)
-                or {"pending_field": None, "pending_value": None, "dialog_mode": False}
-            )
+            _draft_for_sql = json.dumps(_draft_current or _cleared_draft(None))
+        else:
+            _draft_for_sql = json.dumps(_cleared_draft(_draft_current))
 
         db.execute(
             _sa_text("""
@@ -1357,7 +1378,7 @@ async def chat_message(
                 "sid": str(session.id),
                 "cf": json.dumps(collected),
                 "fm": json.dumps(field_meta),
-                "ds": _draft_for_sql or json.dumps({}),
+                "ds": _draft_for_sql,
                 "ps": json.dumps(_phase_state),
                 "ts": now,
             }
@@ -2471,7 +2492,7 @@ async def confirm_field(req: ConfirmFieldRequest, db: Session = Depends(get_db))
             "confirmed": True,
         }
         session.field_meta = field_meta
-        session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
+        session.draft_state = _cleared_draft(session.draft_state)
         session.updated_at = now
 
         # Section transition check (raw SQL inside, commits internally)
@@ -2491,7 +2512,7 @@ async def confirm_field(req: ConfirmFieldRequest, db: Session = Depends(get_db))
 
     elif req.action == "edit":
         cleared_field = pending["pending_field"]
-        session.draft_state = {"pending_field": None, "pending_value": None, "dialog_mode": False}
+        session.draft_state = _cleared_draft(session.draft_state)
         session.updated_at = now
         db.commit()
 

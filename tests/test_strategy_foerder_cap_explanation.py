@@ -44,10 +44,15 @@ def test_cap_box_references_kapitel_7():
 
 
 def test_cap_box_mentions_concrete_programmes():
+    # KIS-1237: KOMPASS entfernt — richtet sich an Solo-Selbstständige und
+    # stand im KMU-Lauf 1119 nie in Kapitel 7; die Exec Summary verwies
+    # damit auf ein unbelegtes Programm. Jetzt segmentneutral
+    # (Bundes- plus Landesförderung).
     src = _decoded_source()
     assert "BAFA" in src
-    assert "KOMPASS" in src
+    assert "KOMPASS" not in src
     assert "Digitalprämien" in src
+    assert "Bundes- mit einer" in src
 
 
 def test_cap_box_marker_present():
