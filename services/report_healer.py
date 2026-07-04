@@ -109,6 +109,33 @@ _BC_EMPTY_VALUE_PATTERNS: List[Tuple[str, str]] = [
 ]
 
 
+# KIS-1239: Abkürzungen, an denen der FIX-G-Sentence-Trim NICHT schneiden
+# darf. Lauf 1119: '. '-Suche traf "…(max. 500 Wörter…" und hinterließ
+# "Format: Executive Summary (max." im PDF (S. 8).
+_TRIM_ABBREVS = {
+    "max", "min", "ca", "inkl", "bzw", "ggf", "vs", "std", "nr", "abs",
+    "art", "evtl", "etc", "vgl", "b", "h", "u", "a", "d", "z", "sog",
+}
+
+
+def _rfind_sentence_boundary(text: str, end_marker: str, search_end: int) -> int:
+    """rfind für Satzenden, das Abkürzungen ("max. ", "z. B. ", "Nr. 5")
+    und Aufzählungsziffern ("1. ") überspringt statt dort zu schneiden."""
+    while True:
+        pos = text.rfind(end_marker, 0, search_end)
+        if pos <= 0:
+            return pos
+        if not end_marker.startswith("."):
+            return pos
+        head = text[max(0, pos - 12):pos]
+        m = re.search(r"([A-Za-zÄÖÜäöüß0-9]+)$", head)
+        word = m.group(1).lower() if m else ""
+        if word in _TRIM_ABBREVS or word.isdigit():
+            search_end = pos  # Abkürzung/Ziffer — weiter vorne suchen
+            continue
+        return pos
+
+
 def sanitize_business_case_empty_values(html: str) -> Tuple[str, int]:
     """
     WP1: Remove empty currency/percentage artifacts from business case HTML.
@@ -3392,7 +3419,7 @@ def apply_segment_budget(
             # Find last complete sentence before budget limit
             text_budget = budget
             for end_marker in ['. </p>', '.</p>', '.</li>', '. ', '! ', '? ']:
-                pos = processed.rfind(end_marker, 0, text_budget)
+                pos = _rfind_sentence_boundary(processed, end_marker, text_budget)
                 if pos > text_budget * 0.80:  # FIX-B13: Keep at least 80% of budget (was 50%, caused 8016 for 14000 budget)
                     processed = processed[:pos + len(end_marker)]
                     # Close any open tags

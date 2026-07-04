@@ -151,7 +151,9 @@ RENDER_REQUIRED_KEYS: Dict[str, List[str]] = {
         "ROADMAP_90D_DECISION_HTML",
         "BUSINESS_CASE_ENGINE_HTML",
         "KI_STACK_SUMMARY_HTML",
-        "PROMPT_VORLAGEN_HTML",
+        # KIS-1239: PROMPT_VORLAGEN_HTML entfernt — kein Builder in der
+        # Pipeline erzeugt diesen Key (Copy-Paste-Prompts stecken im
+        # Sofort-Start-Kapitel); die Warnung feuerte in jedem Lauf.
         "CHALLENGE_30_TAGE_HTML",
         "VENDOR_AUDIT_HTML",
         "RISK_ENGINE_HTML",
