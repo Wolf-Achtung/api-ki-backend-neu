@@ -1,0 +1,120 @@
+# -*- coding: utf-8 -*-
+"""KIS-1249 / Platin+++ Stufe 1: Maschinelles QA-Gate über dem fertigen Report.
+
+Prüft nach Abschluss aller Heiler/Enforcer genau die Befund-Klassen, die
+bisher nur manuelle PDF-Reviews fanden (Läufe 1119–1238). Nicht blockierend:
+Befunde werden als WARNING geloggt und unter sections['_PLATIN_QA_FINDINGS']
+abgelegt (→ Meta/Admin-Sichtbarkeit). Blockierend bleibt allein der
+bestehende Hard-Stop.
+
+Befund-Klassen:
+  name_leak          Kundenname im Report (Sicherheits-Constraint)
+  collapsed_kpi      Kennzahlen als kollabierter Fließtext ("ROI8 %nach…")
+  truncated_text     Sektion endet mitten im Satz/Wort ("… (max.")
+  raw_boolean        ": True"/": False" sichtbar
+  english_badge      englische Badge-/Enum-Reste (ESSENTIAL, limited, …)
+  visible_snake_case snake_case-Token im sichtbaren Text
+  dsgvo_cap          mehr als 2 "(DSGVO-Vorbehalt …)"-Einschübe
+"""
+from __future__ import annotations
+
+import logging
+import re
+from typing import Any, Dict, List
+
+log = logging.getLogger(__name__)
+
+_TAG_RE = re.compile(r"<[^>]+>")
+
+_COLLAPSED_KPI_RE = re.compile(
+    r"(?:ROI|Break-Even|Zeitersparnis)\d[\d.,]*\s*(?:%|Monate|Std)"
+)
+_RAW_BOOL_RE = re.compile(r":\s*(?:True|False)\b")
+_ENGLISH_BADGE_RE = re.compile(
+    r"\b(?:ESSENTIAL|RECOMMENDED|ANALYSIS|COLLABORATION|AUTOMATION|PRODUCTIVITY)\b"
+    r"|(?:RISIKO\s+limited)\b|(?:Komplexität:\s*(?:low|medium|high))\b"
+)
+# snake_case im sichtbaren Text — Whitelist für legitime technische Begriffe
+_SNAKE_RE = re.compile(r"\b[a-z]{3,}_[a-z_]{3,}\b")
+_SNAKE_WHITELIST = frozenset({
+    "gpt_analyze", "run_id", "api_key", "max_tokens", "top_p",
+})
+_TRUNCATED_TAIL_RE = re.compile(
+    r"\((?:max|ca|inkl|zzgl|bzw|z\.\s?B)\.\s*$"
+)
+_DSGVO_RE = re.compile(r"\((?:DSGVO|Datenschutz)-Vorbehalt[^)<]{0,80}\)")
+
+# Nur sichtbare Kunden-Sektionen scannen — interne Keys (_-Präfix,
+# Konfiguration, Meta) erzeugen sonst Fehlalarme.
+_SKIP_KEY_PREFIXES = ("_", "LOGO_", "FOOTER_", "THEME_", "BUILD_")
+
+
+def _visible_text(html: str) -> str:
+    return _TAG_RE.sub(" ", html)
+
+
+def scan_sections(sections: Dict[str, Any], answers: Dict[str, Any] | None = None) -> List[Dict[str, str]]:
+    """Scannt alle sichtbaren String-Sektionen und liefert Befunde."""
+    findings: List[Dict[str, str]] = []
+    answers = answers or {}
+
+    _name = str(answers.get("unternehmen_name") or "").strip()
+    _dsgvo_total = 0
+
+    for key, value in sections.items():
+        if not isinstance(value, str) or len(value) < 20:
+            continue
+        if any(key.startswith(p) for p in _SKIP_KEY_PREFIXES):
+            continue
+        text = _visible_text(value)
+
+        if _name and len(_name) > 3 and _name in text:
+            findings.append({"type": "name_leak", "section": key,
+                             "detail": f"Kundenname '{_name[:20]}…' sichtbar"})
+
+        for m in _COLLAPSED_KPI_RE.finditer(text):
+            findings.append({"type": "collapsed_kpi", "section": key,
+                             "detail": m.group(0)[:60]})
+
+        if _RAW_BOOL_RE.search(text):
+            findings.append({"type": "raw_boolean", "section": key,
+                             "detail": _RAW_BOOL_RE.search(text).group(0)})
+
+        for m in _ENGLISH_BADGE_RE.finditer(text):
+            findings.append({"type": "english_badge", "section": key,
+                             "detail": m.group(0)})
+
+        for m in _SNAKE_RE.finditer(text):
+            if m.group(0) not in _SNAKE_WHITELIST:
+                findings.append({"type": "visible_snake_case", "section": key,
+                                 "detail": m.group(0)})
+                break  # ein Beleg pro Sektion reicht
+
+        if _TRUNCATED_TAIL_RE.search(text.strip()[-80:]):
+            findings.append({"type": "truncated_text", "section": key,
+                             "detail": text.strip()[-60:]})
+
+        _dsgvo_total += len(_DSGVO_RE.findall(text))
+
+    if _dsgvo_total > 2:
+        findings.append({"type": "dsgvo_cap", "section": "*",
+                         "detail": f"{_dsgvo_total} Vorkommen (Cap: 2)"})
+
+    return findings
+
+
+def run_platin_qa(sections: Dict[str, Any], answers: Dict[str, Any] | None = None,
+                  run_id: str = "") -> List[Dict[str, str]]:
+    """Führt den Scan aus, loggt Befunde und legt sie in den Sektionen ab."""
+    try:
+        findings = scan_sections(sections, answers)
+    except Exception as exc:  # pragma: no cover - QA darf nie den Report killen
+        log.warning("[%s] [PLATIN-QA] Scan übersprungen: %s", run_id, exc)
+        return []
+    for f in findings[:40]:
+        log.warning("[%s] [PLATIN-QA][%s] %s: %s",
+                    run_id, f["type"], f["section"], f["detail"])
+    if not findings:
+        log.info("[%s] [PLATIN-QA] ✅ 0 Befunde — Platin+++-Gate sauber", run_id)
+    sections["_PLATIN_QA_FINDINGS"] = findings
+    return findings

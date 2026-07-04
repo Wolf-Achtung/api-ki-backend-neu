@@ -69,18 +69,31 @@ def _strip_funding_total(s7_html: str) -> str:
     return cleaned
 
 
-def inject_opex_bridge(s5_html: str, software_monatlich: str) -> str:
+def inject_opex_bridge(s5_html: str, software_monatlich: str, r1_opex_monatlich: str = "") -> str:
     """FIX-KIS-1188-ITEM2: Append the OPEX-methodology bridge to Strategy S5.
 
     Strategy includes Software + Tool-Lizenzen + anteilige Betriebskosten;
-    R1/KPA report only Software-Grundkosten (120 €/Mo). Customers with high
-    AI literacy spot the gap without an explicit bridge.
+    R1/KPA report only Software-Grundkosten. Customers with high AI
+    literacy spot the gap without an explicit bridge.
+
+    KIS-1248: Der R1-Wert war hartkodiert (Solo-Betrag) und stand im
+    KMU-Lauf 1238 neben kanonischen 600 EUR/Monat — Faktor 5 daneben, dazu
+    ein falscher Produktname. Der R1-OPEX kommt jetzt vom Aufrufer; ohne
+    Wert bleibt die Aussage zahlenfrei.
 
     Returns the S5 HTML with the bridge appended. If either input is empty
     the original HTML is returned unchanged.
     """
     if not s5_html or not software_monatlich:
         return s5_html
+    _r1 = str(r1_opex_monatlich or "").strip()
+    _r1_sentence = (
+        f'Der KI-Readiness Report kalkuliert demgegenüber mit reinen '
+        f'Software-Grundkosten von {_r1} €/Monat. '
+        if _r1 else
+        'Der KI-Readiness Report kalkuliert demgegenüber nur mit den reinen '
+        'Software-Grundkosten. '
+    )
     bridge = (
         '\n<div class="methodik-hinweis methodik-hinweis--opex" '
         'style="margin-top:16px;padding:10px 14px;'
@@ -90,8 +103,7 @@ def inject_opex_bridge(s5_html: str, software_monatlich: str) -> str:
         f'Die in diesem Strategiebericht ausgewiesenen {software_monatlich} €/Monat '
         'umfassen Software-Lizenzen, Tool-Abos und anteilige Betriebskosten '
         '(Wartung, Support, Backup). '
-        'Der KI-Status-Report kalkuliert demgegenüber mit reinen '
-        'Software-Grundkosten von 120 €/Monat. '
+        + _r1_sentence +
         'Beide Werte sind methodisch korrekt; sie beschreiben unterschiedliche '
         'Kostenumfänge derselben Investition.'
         '</div>'
@@ -439,9 +451,19 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         logger.warning("[KIS-1110-P3] Failed to inject net-ROI: %s", _e)
 
     # FIX-KIS-1188-ITEM2: OPEX-bridge appended to S5 (helper is unit-tested).
+    _r1_opex_for_bridge = str(
+        report1_sections.get("CANON_OPEX_MONTH_EUR")
+        or report1_sections.get("opex")
+        or report1_sections.get("bc_opex")
+        or report1_meta.get("opex", "")
+        or ""
+    ).strip()
+    if _r1_opex_for_bridge.endswith(".0"):
+        _r1_opex_for_bridge = _r1_opex_for_bridge[:-2]
     sections["S5"] = inject_opex_bridge(
         sections.get("S5", ""),
         calculated_values.get("budget_software_monatlich", ""),
+        r1_opex_monatlich=_r1_opex_for_bridge,
     )
 
     # KIS-1235: Der Firmenname wird aus Datenschutzgründen bewusst nie
@@ -583,12 +605,32 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         if len(_aia_matches) > 1:
             for _m in reversed(_aia_matches[1:]):
                 html = html[:_m.start()] + 'EU AI Act' + html[_m.end():]
+        # KIS-1248: Lauf 1238 formulierte den Satz variantenreich
+        # ("... f\u00fcr Kundendaten", "... f\u00fcr personenbezogene Daten") —
+        # das Objekt wird nicht mehr fixiert.
         _vh_pat = _re_dd.compile(
-            r'\s*[^<>.!?]{0,200}nicht als Hauptsystem f\u00fcr Kundendaten[^<>.!?]{0,160}[.!?]',
+            r'\s*[^<>.!?]{0,200}nicht als Hauptsystem[^<>.!?]{0,200}[.!?]',
         )
         _vh_matches = list(_vh_pat.finditer(html))
         if len(_vh_matches) > 1:
             for _m in reversed(_vh_matches[1:]):
+                html = html[:_m.start()] + html[_m.end():]
+        # KIS-1248: Weitere Wiederholungs-Klassen aus Lauf 1238 —
+        # "KI (k\u00fcnstliche Intelligenz)" wurde 2x erkl\u00e4rt, der
+        # Vendor-Audit-Disclaimer ("Vendor-Audit-Status ... nicht
+        # bestanden") stand 6x im Bericht. Cap: Erkl\u00e4rung 1x,
+        # Disclaimer-Satz max. 2x.
+        _ki_pat = _re_dd.compile(r'KI\s*\(k\u00fcnstliche Intelligenz\)')
+        _ki_matches = list(_ki_pat.finditer(html))
+        if len(_ki_matches) > 1:
+            for _m in reversed(_ki_matches[1:]):
+                html = html[:_m.start()] + 'KI' + html[_m.end():]
+        _va_pat = _re_dd.compile(
+            r'\s*[^<>.!?]{0,200}Vendor-Audit-Status[^<>.!?]{0,200}nicht bestanden[^<>.!?]{0,160}[.!?]',
+        )
+        _va_matches = list(_va_pat.finditer(html))
+        if len(_va_matches) > 2:
+            for _m in reversed(_va_matches[2:]):
                 html = html[:_m.start()] + html[_m.end():]
         if len(_aia_matches) > 1 or len(_vh_matches) > 1:
             import logging as _lg3
