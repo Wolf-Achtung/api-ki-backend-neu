@@ -27,6 +27,8 @@ Du bist ein erfahrener Implementierungsberater und erstellst einen detaillierten
 - **Unternehmensgröße:** {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
 - **Branche:** {{BRANCHE_LABEL}}
 - **Hauptleistung:** {{HAUPTLEISTUNG}}
+- **Benannte Top-Zeitfresser:** {{TOP_ZEITFRESSER}}
+- **Zeitersparnis-Priorität:** {{ZEITERSPARNIS_PRIORITAET}}
 - **Strategische KI-Potenzial-Entscheidung:** {{gamechanger_decision}}
 - **KI-Potenzial-Inhalt:** {{GAMECHANGER_HTML}}
 - **Roadmap aus Report 1:** {{roadmap_90d}}
@@ -108,3 +110,5 @@ Verwende diese Begriffe einheitlich im gesamten Report:
 - „KI-Ausgabe" = allgemein für KI-Ergebnisse. „KI-Entwurf" = Text, der noch geprüft werden muss. NICHT „KI-Output".
 - „Prüfschritt" = allgemein. „Freigabe" = formaler Akt. „Vier-Augen-Prinzip" = zwei Personen prüfen. NICHT „Review".
 - „DSGVO" = nie ausschreiben. „Tool" = Software. „Werkzeug" = nur in Metaphern. Nicht im selben Absatz wechseln.
+
+ZEITFRESSER-ANKER (PFLICHT, KIS-1238): Wenn oben Top-Zeitfresser oder eine Zeitersparnis-Priorität benannt sind, muss mindestens eine Empfehlung/Phase diese Aufgaben DIREKT adressieren (beim Namen nennen). Der 1119-Lauf drehte sich ausschließlich um ein einziges Thema und ließ den benannten Zeitfresser unbearbeitet. Sind beide Felder leer, gilt diese Regel nicht.

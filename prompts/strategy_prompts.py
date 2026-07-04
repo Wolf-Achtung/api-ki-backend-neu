@@ -99,10 +99,15 @@ Verwende diese Begriffe einheitlich im gesamten Report:
 
 ROI-KONTEXT (PFLICHT bei Erstnennung des Strategy-ROI in S5 und EXEC):
 Der KI-Readiness Report (Report 1) zeigt einen ROI von {r1_roi_pct}% auf die
-Startinvestition von {r1_capex} €. Dieser Strategiebericht rechnet mit der
-Gesamtinvestition über 12 Monate (inklusive Software, Schulung, Implementierung
-und Koordination). Das erklärt die unterschiedlichen Zahlen — beide sind korrekt,
-nur die Berechnungsbasis ist anders.
+Startinvestition von {r1_capex} € — dort werden zusätzlich die laufenden
+Tool-Kosten (OPEX) vom Jahresnutzen abgezogen. Dieser Strategiebericht setzt
+die Brutto-Jahresersparnis gegen die Gesamtinvestition über 12 Monate
+(inklusive Software, Schulung, Implementierung und Koordination). Das erklärt
+die unterschiedlichen Zahlen — beide sind korrekt, sie beantworten nur
+verschiedene Fragen (Netto-Rendite vs. Investitionshebel). WICHTIG (KIS-1238):
+Behaupte NIE, die Differenz käme allein aus einer anderen Investitionssumme —
+bei KMU sind Startinvestition und Gesamtinvestition oft identisch; der
+Unterschied liegt im OPEX-Abzug.
 Baue diese Erklärung VOR der ersten ROI-Nennung im Strategiebericht ein,
 NICHT als Fußnote danach. Verwende eine verständliche, nicht-technische Sprache.
 KIS-1235 — VERTEILUNG: Die VOLLSTÄNDIGE Methodik-Erklärung gehört NUR in S5
@@ -115,7 +120,7 @@ VENDOR-KONSISTENZ (PFLICHT bei Tool-Empfehlungen in S4 und S8):
 Der KI-Readiness Report hat {vendor_audit_red_count} Tools als nicht EU-konform
 (RED) bewertet und {vendor_audit_green_count} als konform (GREEN).
 Vendor-Audit Compliance-Status (genutzter KI-Tools): {vendor_audit_status}.
-WICHTIG: Der Wert '{vendor_audit_status}' bezieht sich ausschließlich auf den Vendor-Audit-Compliance-Status der genutzten KI-Tools (z.B. 0 von N Tools EU-konform), NICHT auf den Gesamt-KI-Readiness-Score des Unternehmens. Formuliere dies IMMER als 'Vendor-Audit-Status', 'Tool-Compliance-Status' oder 'Konformitätsstatus der genutzten Tools'. Verwende NIEMALS 'Gesamtstatus' in Verbindung mit 'fail' — der KI-Readiness-Score des Unternehmens kann gleichzeitig hoch sein (z.B. 89/100), obwohl der Vendor-Audit-Status 'fail' ist.
+WICHTIG: Der Wert '{vendor_audit_status}' bezieht sich ausschließlich auf den Vendor-Audit-Compliance-Status der genutzten KI-Tools (z.B. 0 von N Tools EU-konform), NICHT auf den Gesamt-KI-Readiness-Score des Unternehmens. Formuliere dies IMMER als 'Vendor-Audit-Status', 'Tool-Compliance-Status' oder 'Konformitätsstatus der genutzten Tools'. Übernimm den Status wörtlich als '{vendor_audit_status}' — verwende NIE englische Rohwerte wie fail/pass/warn im deutschen Text (KIS-1238: 'ist fail' stand wörtlich im Bericht). Der KI-Readiness-Score des Unternehmens kann gleichzeitig hoch sein (z.B. 89/100), obwohl der Tool-Compliance-Status '{vendor_audit_status}' ist.
 Wenn ein Tool im Report 1 als RED bewertet wurde (z.B. ChatGPT),
 weise bei Erwähnung auf die DSGVO-Einschränkung hin und priorisiere
 EU-konforme Alternativen. Empfehle kein RED-bewertetes Tool als Hauptempfehlung."""
@@ -500,9 +505,9 @@ DIVERSITÄTS-REGELN:
 VENDOR-AUDIT AUS REPORT 1 (PFLICHT bei Tool-Empfehlungen):
 Der KI-Readiness Report hat {vendor_audit_red_count} Tools als nicht EU-konform bewertet
 und {vendor_audit_green_count} als konform. Vendor-Audit Compliance-Status (genutzter KI-Tools): {vendor_audit_status}.
-WICHTIG: '{vendor_audit_status}' bezieht sich NUR auf die EU-Konformität der genutzten KI-Tools, NICHT auf den Gesamt-KI-Readiness-Score. Schreibe NIEMALS 'Gesamtstatus fail' — formuliere stattdessen 'Vendor-Audit-Status: fail' oder 'Tool-Compliance-Status: fail'.
+WICHTIG: '{vendor_audit_status}' bezieht sich NUR auf die EU-Konformität der genutzten KI-Tools, NICHT auf den Gesamt-KI-Readiness-Score. Schreibe NIEMALS 'Gesamtstatus' — formuliere 'Vendor-Audit-Status: {vendor_audit_status}' oder 'Tool-Compliance-Status: {vendor_audit_status}'. Verwende NIE englische Rohwerte wie fail/pass/warn im deutschen Text.
 Wenn ein Tool (z.B. ChatGPT) im Report 1 als RED/nicht konform bewertet wurde:
-- Erwähne bei jeder Nennung den DSGVO-Vorbehalt.
+- Erwähne den DSGVO-Vorbehalt bei der ERSTEN Nennung im Kapitel — nicht bei jeder weiteren (KIS-1238: der Einschub stand 7× im Bericht).
 - Empfehle es NICHT als Hauptempfehlung.
 - Priorisiere EU-konforme Alternativen (z.B. Claude, Aleph Alpha, DeepL).
 
@@ -595,11 +600,14 @@ Die Szenario-ZAHLEN (ROI %, Break-Even Monate) sind berechnet — NICHT ändern.
 
 ROI-BRÜCKE ZU REPORT 1 (PFLICHT — VOR der ersten ROI-Nennung einbauen):
 Der KI-Readiness Report zeigt einen ROI von {r1_roi_pct}% bezogen auf die
-Startinvestition von {r1_capex} €. Der vorliegende Strategiebericht rechnet mit
-der Gesamtinvestition über 12 Monate ({budget_gesamt_jahr1} €, inklusive Software,
-Schulung, Implementierung und Koordination). Erklären Sie dem Leser verständlich,
-warum die ROI-Zahlen unterschiedlich sind — beide sind korrekt, nur die
-Berechnungsbasis ist anders.
+Startinvestition von {r1_capex} € — dort werden zusätzlich die laufenden
+Tool-Kosten (OPEX) vom Jahresnutzen abgezogen. Der vorliegende Strategiebericht
+setzt die Brutto-Jahresersparnis gegen die Gesamtinvestition über 12 Monate
+({budget_gesamt_jahr1} €, inklusive Software, Schulung, Implementierung und
+Koordination). Erklären Sie dem Leser verständlich, warum die ROI-Zahlen
+unterschiedlich sind — beide sind korrekt. KIS-1238: Führe die Differenz NICHT
+allein auf unterschiedliche Investitionssummen zurück (die können identisch
+sein); der entscheidende Unterschied ist der OPEX-Abzug in Report 1.
 
 FAKTEN- UND ANNAHMEN-TRENNUNG (VERBINDLICH):
 - Harte Eingabedaten, Scores, deterministische Zahlen und explizite Nutzerangaben als Tatsachen behandeln.

@@ -1060,6 +1060,40 @@ def ksj_fix_placeholders_in_sections(sections: dict, answers: dict, scores: dict
             pass
     return sections
 # ========================================================================
+_FLAT_OPTION_LABELS: Dict[str, str] = {}
+
+
+def _flat_option_label(value: Any) -> Optional[str]:
+    """KIS-1238: Feldübergreifender Wert→Label-Fallback.
+
+    field_registry.fields ist strukturell verschachtelt (alle Optionslisten
+    hängen unter 'branche'), daher schlug der Per-Feld-Lookup für
+    anwendungsfaelle/ki_ziele/… fehl und Rohwerte wie 'content_generation'
+    leakten in Prompts und Reports (Lauf 1119, S. 40/41). Die Options-Slugs
+    sind global eindeutig — ein flacher Lookup über ALLE Optionen plus die
+    Chat-Anzeige-Map löst das, ohne die Registry-Struktur anzufassen.
+    """
+    if not _FLAT_OPTION_LABELS:
+        try:
+            for _spec in fields.values():
+                if not isinstance(_spec, dict):
+                    continue
+                for _o in (_spec.get("options") or []):
+                    _v = str(_o.get("value") or "")
+                    if _v and _o.get("label") and _v not in _FLAT_OPTION_LABELS:
+                        _FLAT_OPTION_LABELS[_v] = _o["label"]
+        except Exception:
+            pass
+        try:
+            from services.chat_conversation import _ENUM_DISPLAY
+            for _fmap in _ENUM_DISPLAY.values():
+                for _v, _lbl in _fmap.items():
+                    _FLAT_OPTION_LABELS.setdefault(str(_v), _lbl)
+        except Exception:
+            pass
+    return _FLAT_OPTION_LABELS.get(str(value))
+
+
 def _label_for(field_key, value):
     try:
         opts = fields.get(field_key, {}).get("options") or []
@@ -1068,9 +1102,18 @@ def _label_for(field_key, value):
                 return o.get("label") or value
     except Exception as e:
         log.debug("Failed to get label for field %s: %s", field_key, str(e)[:100])
+    _flat = _flat_option_label(value)
+    if _flat:
+        return _flat
     return value
 
 def _labels_for_list(field_key, values):
+    # KIS-1238: Der Chat speichert Multi-Choice-Felder als komma-joined
+    # String — der Options-Lookup lief dann auf den Gesamtstring und der
+    # Rohwert leakte in Prompts und Reports ("content_generation",
+    # "wettbewerbsfaehigkeit"; Lauf 1119). Erst splitten, dann mappen.
+    if isinstance(values, str) and "," in values:
+        values = [v.strip() for v in values.split(",") if v.strip()]
     if not isinstance(values, (list, tuple)):
         return _label_for(field_key, values)
     out = []
@@ -4394,6 +4437,32 @@ def _salvage_truncated_json_array(raw: str) -> Optional[str]:
         len(s), len(candidate), len(parsed),
     )
     return candidate
+
+
+def _b41_dot_append(val: str) -> str:
+    """KIS-1238: Abschluss-Punkt INS letzte Textsegment setzen.
+
+    FIX-B41/B42 hängten den Punkt hinter die schließenden HTML-Tags an —
+    im PDF stand dadurch der Whitespace aus dem Markup VOR dem Punkt
+    ("…CAPEX    .", Lauf 1119). Hier wird das letzte Textsegment
+    getrimmt und der Punkt direkt angefügt; nachfolgende schließende
+    Tags bleiben unangetastet.
+    """
+    val = val.rstrip()
+    if not val:
+        return val
+    m = re.search(r'((?:\s*</[a-zA-Z][a-zA-Z0-9]*>)+)$', val)
+    if m:
+        head = val[:m.start()].rstrip()
+        tail = m.group(1).lstrip()
+        if not head:
+            return val
+        if head[-1] in '.!?:':
+            return head + tail
+        return head + '.' + tail
+    if val[-1] in '.!?:':
+        return val
+    return val + '.'
 
 
 def _parse_quick_wins_json(raw_response: str) -> Optional[List[Dict[str, Any]]]:
@@ -21131,8 +21200,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                     _b40_post_text = _re_b40.sub(r'</?\w+[^>]*>', '', _b40_val).rstrip()
                     if _b40_post_text and _b40_post_text[-1] not in _b40_terminal_chars:
                         # Trim didn't help (e.g. dot was in HTML attribute) → dot-append
-                        _b40_val = _b40_val.rstrip()
-                        _b40_val += '.'
+                        _b40_val = _b41_dot_append(_b40_val)
                         log.info(
                             "[FIX-B42] Section '%s' dot-appended after trim: still non-terminal, ends with '%s'",
                             _b40_key, _re_b40.sub(r'</?\w+[^>]*>', '', _b40_val).rstrip()[-30:]
@@ -21153,7 +21221,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                     _b40_open_parens = _b40_val.count('(') - _b40_val.count(')')
                     for _ in range(max(0, _b40_open_parens)):
                         _b40_val += ')'
-                    _b40_val += '.'
+                    _b40_val = _b41_dot_append(_b40_val)
                     sections[_b40_key] = _b40_val
                     _b40_applied += 1
                     log.info(
@@ -21167,7 +21235,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                 _b40_open_parens = _b40_val.count('(') - _b40_val.count(')')
                 for _ in range(max(0, _b40_open_parens)):
                     _b40_val += ')'
-                _b40_val += '.'
+                _b40_val = _b41_dot_append(_b40_val)
                 sections[_b40_key] = _b40_val
                 _b40_applied += 1
                 log.info(
@@ -21748,12 +21816,14 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             if _gf_hours <= 0:
                 _gf_hours = {"team": 25, "kmu": 50}.get(_gf_size, 25)
             _gf_opex = int(float(sections.get("CANON_OPEX_MONTH_EUR") or sections.get("OPEX_REALISTISCH_EUR") or 0))
+            _gf_capex = int(float(sections.get("CANON_CAPEX_EUR") or sections.get("CAPEX_REALISTISCH_EUR") or 0))
             _gf_hauptleistung = sections.get("HAUPTLEISTUNG", "") or sections.get("hauptleistung", "") or ""
             _gf_template = build_gf_vorlage_html(
                 hours=int(_gf_hours),
                 rate=int(_gf_rate),
                 opex_month=_gf_opex,
                 hauptleistung=_gf_hauptleistung,
+                capex=_gf_capex,
             )
             # Anchor: inject before <section ... id="sofort-start">
             _anchor_idx = _gf_html.find('id="sofort-start"')

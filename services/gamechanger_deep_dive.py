@@ -141,6 +141,19 @@ def build_gamechanger_context(report1_sections: Dict[str, Any],
             or briefing.get('kundencode', '')
             or briefing.get('unternehmen_name', '')
         ),
+        # KIS-1238: Vom Nutzer benannte Zeitfresser + Zeitersparnis-Priorität
+        # als Anker für die KPA-Empfehlungen — der 1119-Lauf drehte sich nur
+        # um Evaluationen und ignorierte den benannten Top-Zeitfresser
+        # (Dokumentation/Berichte nach Projektabschluss).
+        'TOP_ZEITFRESSER': (
+            briefing.get('top_zeitfresser', '')
+            or report1_sections.get('top_zeitfresser', '')
+        ),
+        'ZEITERSPARNIS_PRIORITAET': (
+            report1_sections.get('ZEITERSPARNIS_PRIORITAET_LABEL')
+            or report1_sections.get('ZEITERSPARNIS_PRIORITAET')
+            or briefing.get('zeitersparnis_prioritaet', '')
+        ),
     }
 
     # Gamechanger content from Report 1

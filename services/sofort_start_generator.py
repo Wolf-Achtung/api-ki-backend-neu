@@ -2152,14 +2152,26 @@ def build_gf_vorlage_html(
     rate: int,
     opex_month: int,
     hauptleistung: str,
+    capex: int = 0,
 ) -> str:
     """Deterministic template for GF-Entscheidungsvorlage.
 
     KIS-1093-A: Built from canonical values AFTER the full rendering pipeline.
     No LLM, no regex, no broken HTML possible.
+    KIS-1238: capex erg\u00e4nzt \u2014 die Vorlage nannte nur Tool-Kosten
+    (600 \u20ac/Monat), w\u00e4hrend der Business Case mit der vollen
+    Startinvestition rechnet. Eine GF h\u00e4tte auf dieser Basis etwas
+    anderes genehmigt als der Report kalkuliert (Lauf 1119, S. 6).
     """
     brutto = hours * rate * 12
     brutto_fmt = f"{brutto:,}".replace(",", ".")
+    capex_li = ""
+    if capex > 0:
+        capex_fmt = f"{int(capex):,}".replace(",", ".")
+        capex_li = (
+            f"<li>Startinvestition (einmalig, \u00fcber 12 Monate verteilt): "
+            f"ca. {capex_fmt}\u00a0\u20ac \u2014 Details im Business Case</li>\n                "
+        )
 
     return f'''
     <div style="background: white; border: 2px solid #1e40af; border-radius: 8px; padding: 20px; margin-top: 24px;">
@@ -2188,7 +2200,7 @@ def build_gf_vorlage_html(
 
             <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Investition:</h4>
             <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
-                <li>Tool-Kosten: ca. {opex_month}\u00a0\u20ac/Monat (Organisation gesamt)</li>
+                {capex_li}<li>Laufende Tool-Kosten: ca. {opex_month}\u00a0\u20ac/Monat (Organisation gesamt)</li>
                 <li>Einarbeitung: ca. 2-4 Stunden</li>
             </ul>
 

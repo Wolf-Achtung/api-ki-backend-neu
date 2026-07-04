@@ -154,12 +154,19 @@ def remove_punctuation_only_nodes(html: str) -> Tuple[str, int]:
 # Grenzen (komple·xität). Nur in <td>/<th>-Textknoten, nie in URLs/E-Mails.
 _SHY = "­"
 _TABLE_CELL_RE = re.compile(r"(<t[dh]\b[^>]*>)([\s\S]*?)(</t[dh]>)", re.IGNORECASE)
-_LONG_WORD_RE = re.compile(r"[A-Za-zÄÖÜäöüß]{12,}")
+# KIS-1238: 12 → 10 — "KOMPLEXITÄT"/"INTEGRATION" (11 Zeichen) fielen durch
+# und wurden in schmalen Spalten hart ohne Trennstrich umbrochen.
+_LONG_WORD_RE = re.compile(r"[A-Za-zÄÖÜäöüß]{10,}")
 _VOWELS = set("aeiouäöüy")
 
 
 # Konsonantenpaare, in die nie getrennt wird (ch, sch via c-Ausschluss, ck …)
 _NO_SPLIT_PAIRS = {"ch", "ck", "th", "ph", "qu", "ß"}
+
+# KIS-1238: Konsonanten-Paare, die als Silben-Onset zusammenbleiben —
+# der Bruch erfolgt VOR dem Paar, nicht mittendrin.
+_ONSET_PAIRS = {"bl", "br", "dr", "fl", "fr", "gl", "gr", "kl", "kr",
+                "pl", "pr", "tr", "kn", "gn", "zw"}
 
 
 def _hyphenation_points(word: str) -> List[Tuple[int, int]]:
@@ -180,8 +187,14 @@ def _hyphenation_points(word: str) -> List[Tuple[int, int]]:
             points.append((2, i + 1))
         elif (cur not in _VOWELS and prev_c not in _VOWELS and nxt in _VOWELS
                 and prev_c + cur not in _NO_SPLIT_PAIRS and prev_c != "c"):
-            # Cluster: …Konsonant | Konsonant+Vokal (letzter Konsonant wandert)
-            points.append((1, i))
+            # Cluster: …Konsonant | Konsonant+Vokal (letzter Konsonant wandert).
+            # KIS-1238: Onset-Cluster (pl, tr, …) bleiben zusammen —
+            # "Kom·plexität" statt "Komp·lexität".
+            if (prev_c + cur in _ONSET_PAIRS and i >= 2
+                    and lw[i - 2] not in _VOWELS):
+                points.append((1, i - 1))
+            else:
+                points.append((1, i))
         elif prev_c in _VOWELS and cur not in _VOWELS and nxt in _VOWELS:
             points.append((0, i))
     return points
@@ -268,7 +281,9 @@ def soften_table_long_words(html: str) -> Tuple[str, int]:
 
             def _word(wm: "re.Match[str]") -> str:
                 nonlocal count
-                softened = _soften_word(wm.group(0))
+                # KIS-1238: max_run 11 → 8 für Tabellenzellen — die schmalen
+                # Spalten (Lauf 1119: "HANDLUN GSFELD") brauchen kürzere Segmente.
+                softened = _soften_word(wm.group(0), max_run=8)
                 if softened != wm.group(0):
                     count += 1
                 return softened
