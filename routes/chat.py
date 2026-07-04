@@ -1986,8 +1986,20 @@ async def chat_message(
         # When user clicked a QR button AND the next field has a deterministic
         # template, serve the response without calling Sonnet (~200ms vs ~3300ms).
         _template_text = None
+        # KIS-1243: Kopplungs-Garantie — hat das nächste Feld deterministische
+        # Chips (FIELD_EXAMPLES / FREETEXT_SUGGESTIONS), muss auch die Frage
+        # deterministisch sein, sonst laufen Sonnet-Frage und Chips
+        # auseinander (Tools-Block Anlauf 4: Zeitfresser-Chips unter der
+        # Tools-Frage). Template-Mode greift daher auch nach Freitext-Turns —
+        # aber nur, wenn der Turn sauber committed hat (mindestens ein Feld
+        # normalisiert, kein neuer Draft, keine Rückfrage).
+        _nf_for_tpl = next_fields[0] if next_fields else None
+        _nf_has_deterministic_chips = bool(_nf_for_tpl) and (
+            _nf_for_tpl in FIELD_EXAMPLES or _nf_for_tpl in FREETEXT_SUGGESTIONS
+        )
+        _clean_commit_turn = bool(normalized) and not _draft_new_field
         if (
-            _is_qr_click
+            (_is_qr_click or (_nf_has_deterministic_chips and _clean_commit_turn))
             and next_fields
             and is_template_field(next_fields[0])
             and not _checkpoint_triggered
@@ -4190,7 +4202,7 @@ _QR_LABELS: dict[str, str] = {
     # Sektion 3
     "ki_ziele": "KI-Ziele", "anwendungsfaelle": "Anwendungsfälle",
     "ki_projekte": "Bestehende KI-Projekte", "pilot_bereich": "Pilotbereich",
-    "zeitersparnis_prioritaet": "Zeitfresser", "geschaeftsmodell_evolution": "Geschäftsmodell-Ideen",
+    "zeitersparnis_prioritaet": "Entlastungs-Bereiche", "geschaeftsmodell_evolution": "Geschäftsmodell-Ideen",
     "vision_3_jahre": "3-Jahres-Vision",
     # Sektion 4
     "strategische_ziele": "Strategische Ziele", "ki_guardrails": "KI-Leitplanken",

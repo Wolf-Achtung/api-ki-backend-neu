@@ -544,7 +544,9 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     "ki_ziele": "Ziele mit KI in den nächsten 3–6 Monaten (Mehrfachauswahl)",
     "ki_projekte": "Bestehende KI-Tests, Tools oder Projekte — auch informell (Freitext)",
     "anwendungsfaelle": "Interessante KI-Anwendungsfälle (Mehrfachauswahl)",
-    "zeitersparnis_prioritaet": "Welche Aufgabe kostet im Arbeitsalltag am meisten Zeit oder Nerven? (Freitext)",
+    # KIS-1243: Bereichs-/Prioritätsframing — die konkreten Einzelaufgaben
+    # erfasst top_zeitfresser separat (sonst wirken beide wie eine Doppel-Frage).
+    "zeitersparnis_prioritaet": "Bereich, in dem KI zuerst Zeit sparen soll — Priorität der Entlastung, KEINE Einzelaufgaben (die erfasst top_zeitfresser) (Freitext)",
     "pilot_bereich": "Bester Bereich für ein Pilotprojekt (Kundenservice, Marketing, Vertrieb, etc.)",
     "geschaeftsmodell_evolution": "Ideen, wie KI das Geschäftsmodell verändern könnte (Freitext)",
     "vision_3_jahre": "Langfrist-Vision: Wo soll das Unternehmen in 2–3 Jahren mit KI stehen? (Freitext)",
@@ -559,7 +561,7 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     "zeitbudget": "Zeit pro Woche für KI-Projekte (Unter 2h / 2–5h / 5–10h / Über 10h)",
     "vorhandene_tools": "Bereits genutzte Systeme (CRM, ERP, Projektmanagement, etc.)",
     "projekte_pro_monat": "Typische Anzahl Projekte/Aufträge pro Monat (Wirtschafts-Kontext für den Business Case)",
-    "top_zeitfresser": "Die 2-3 Aufgaben, die im Alltag am meisten Zeit kosten (Freitext — Basis für Quick Wins)",
+    "top_zeitfresser": "Die 2-3 konkreten Einzelaufgaben, die im Alltag am meisten Zeit kosten (Freitext — Basis für Quick Wins; NICHT der Bereich, den erfasst zeitersparnis_prioritaet)",
     "trainings_interessen": "Interessante KI-Trainingsthemen (Prompt Engineering, LLM-Basics, etc.)",
     "vision_prioritaet": "Wichtigster strategischer Hebel (KI-Services, Kundenservice, Datenprodukte, etc.)",
     "innovationsprozess": "Wie entstehen Innovationen (Team, Mitarbeitende, Kunden, Berater, etc.)",
@@ -1566,6 +1568,10 @@ NOCH OFFENE FELDER IN DIESEM BLOCK:
 REGELN:
 - Stelle 1–2 Fragen zu Tools, Automatisierung und konkreten \
 Use Cases.
+- FELD-BINDUNG (STRIKT): Deine Frage MUSS sich ausschließlich am \
+NÄCHSTES FELD festmachen. KEIN Mix von Feldsemantiken — auch wenn \
+andere Block-C-Felder thematisch ähnlich klingen (z. B. Tools vs. \
+Zeitfresser), formuliere STRIKT nur zum aktuell gefragten Feld.
 - QR-Buttons bei Feldern mit vordefinierten Listen \
 (ki_einsatz, anwendungsfaelle, vorhandene_tools).
 - Freitext bei offenen Feldern (ki_projekte, pilot_bereich, \
@@ -1573,7 +1579,7 @@ zeitersparnis_prioritaet).
 - Max 2 Sätze pro Antwort.
 
 BEISPIEL-FRAGEN:
-- "Welche Tools nutzen Sie aktuell und wo liegt der größte Zeitfresser?"
+- "Welche Tools nutzen Sie aktuell im Arbeitsalltag?"
 - "Welche KI-Anwendungen interessieren Sie am meisten?"
 
 NÄCHSTES FELD:
