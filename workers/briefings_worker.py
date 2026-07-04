@@ -27,6 +27,7 @@ import logging
 import os
 import signal
 import sys
+import threading
 import time
 import uuid
 from datetime import datetime, timezone
@@ -55,8 +56,14 @@ POLL_INTERVAL = float(os.getenv("WORKER_POLL_INTERVAL", "2"))
 WORKER_ID = os.getenv("WORKER_ID", f"worker-{uuid.uuid4().hex[:8]}")
 
 # Stale briefing recovery: briefings stuck in "processing" for longer than this are reset
-# Default: 10 minutes (600 seconds)
+# Default: 10 minutes (600 seconds).
+# KIS-1247: Lange Reports (KMU: 11-15 Min) sind KEIN Stale-Fall mehr — der
+# Worker sendet waehrend der Verarbeitung einen processing_at-Heartbeat
+# (alle HEARTBEAT_INTERVAL_SECONDS). Stale heisst jetzt: 10 Min OHNE
+# Heartbeat = Worker wirklich tot (Lauf 1121: lebender Worker wurde fuer
+# tot erklaert, Briefing doppelt verarbeitet, Status-Race -> "failed").
 STALE_BRIEFING_TIMEOUT_SECONDS = int(os.getenv("STALE_BRIEFING_TIMEOUT", "600"))
+HEARTBEAT_INTERVAL_SECONDS = int(os.getenv("WORKER_HEARTBEAT_INTERVAL", "60"))
 # How often to check for stale briefings (in poll cycles)
 STALE_CHECK_INTERVAL_CYCLES = 15  # Every ~30 seconds at default poll interval
 
@@ -254,6 +261,32 @@ def _send_admin_error_alert(briefing: Briefing, error_msg: str, run_id: str) -> 
             log.warning("[%s] Admin error alert failed for %s: %s", run_id, _mask_email(addr), err)
 
 
+def _start_processing_heartbeat(briefing_id: int) -> threading.Event:
+    """KIS-1247: Haelt processing_at frisch, solange dieser Worker am Briefing
+    arbeitet. Ohne Heartbeat erklaerte recover_stale_briefings einen lebenden
+    Worker nach STALE_BRIEFING_TIMEOUT fuer tot und gab das Briefing erneut
+    frei (Doppel-Verarbeitung + Status-Race, Lauf 1121)."""
+    stop = threading.Event()
+
+    def _beat() -> None:
+        while not stop.wait(HEARTBEAT_INTERVAL_SECONDS):
+            try:
+                with SessionLocal() as hb_db:
+                    hb_db.execute(
+                        text(
+                            "UPDATE briefings SET processing_at = :now "
+                            "WHERE id = :bid AND status = 'processing'"
+                        ),
+                        {"now": datetime.now(timezone.utc), "bid": briefing_id},
+                    )
+                    hb_db.commit()
+            except Exception as hb_err:  # pragma: no cover - defensiv
+                log.warning("Heartbeat fuer Briefing %s fehlgeschlagen: %s", briefing_id, hb_err)
+
+    threading.Thread(target=_beat, daemon=True, name=f"hb-briefing-{briefing_id}").start()
+    return stop
+
+
 def process_briefing(db: Session, briefing: Briefing) -> bool:
     """
     Process a single briefing through the full analysis pipeline.
@@ -268,6 +301,7 @@ def process_briefing(db: Session, briefing: Briefing) -> bool:
     run_id = f"{WORKER_ID}-{briefing.id}-{uuid.uuid4().hex[:4]}"
     log.info("[%s] Processing briefing %s...", run_id, briefing.id)
 
+    _hb_stop = _start_processing_heartbeat(briefing.id)
     try:
         # Import here to avoid circular imports and ensure fresh module state
         from gpt_analyze import run_briefing_pipeline
@@ -294,6 +328,19 @@ def process_briefing(db: Session, briefing: Briefing) -> bool:
 
         # Update briefing status to failed
         try:
+            # KIS-1247: Race-Guard — hat ein anderer (oder frueherer) Lauf das
+            # Briefing bereits fertiggestellt, darf "failed" das "done" nicht
+            # ueberschreiben. Der Kunde haette sonst einen Report per Mail,
+            # aber eine Fehlerseite im Browser.
+            db.rollback()
+            db.refresh(briefing)
+            if briefing.status == "done":
+                log.warning(
+                    "[%s] Briefing %s ist bereits 'done' — Fehler dieses Laufs "
+                    "wird NICHT als failed gespeichert (Doppel-Lauf-Race).",
+                    run_id, briefing.id,
+                )
+                return False
             briefing.status = "failed"
             briefing.done_at = datetime.now(timezone.utc)
             briefing.error = str(e)[:8000]  # Truncate error message
@@ -309,6 +356,9 @@ def process_briefing(db: Session, briefing: Briefing) -> bool:
             log.warning("[%s] Admin error alert failed: %s", run_id, alert_err)
 
         return False
+
+    finally:
+        _hb_stop.set()
 
 
 def run_worker_loop():
