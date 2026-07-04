@@ -182,7 +182,9 @@ th, td {
 }
 /* KIS-1235: Zeilen zusammenhalten, Tabellenkopf bei Umbruch wiederholen. */
 tr { break-inside: avoid; }
-thead { display: table-header-group; }
+thead { display: table-header-group; break-after: avoid; page-break-after: avoid; }
+/* KIS-1238: Kopfzeile nie allein am Seitenende (Lauf 1119: verwaiste
+   Header S. 4/9 der Potenzialanalyse, Zeilen folgten headerlos). */
 th {
     background: var(--navy-50);
     font-weight: 600;
@@ -1215,7 +1217,7 @@ sup.src-ref {
                 <span style="font-size: 14pt; flex-shrink: 0;">ℹ️</span>
                 <div>
                     <strong style="font-size: 9.5pt;">Hinweis zur ROI-Methodik — Abweichung zum KI-Readiness Report</strong>
-                    <p style="margin: 6px 0 0 0; line-height: 1.5;">Dieser Strategiebericht kalkuliert mit einer <strong>Gesamtinvestition über 12&nbsp;Monate</strong> (inkl. Software, Implementierung, Schulung und Koordination). Der KI-Readiness Report rechnet mit einer <strong>einmaligen Startinvestition (CAPEX)</strong>. Die abweichenden ROI- und Break-Even-Werte sind methodisch bedingt, nicht widersprüchlich — beide Berechnungsansätze sind branchenüblich.</p>
+                    <p style="margin: 6px 0 0 0; line-height: 1.5;">Dieser Strategiebericht setzt die <strong>Brutto-Jahresersparnis</strong> gegen die Gesamtinvestition über 12&nbsp;Monate (inkl. Software, Implementierung, Schulung und Koordination). Der KI-Readiness Report zieht zusätzlich die <strong>laufenden Tool-Kosten (OPEX)</strong> vom Jahresnutzen ab und weist damit die konservativere Netto-Rendite aus. Die abweichenden ROI- und Break-Even-Werte sind methodisch bedingt, nicht widersprüchlich — beide Berechnungsansätze sind branchenüblich.</p>
                 </div>
             </div>
         </div>

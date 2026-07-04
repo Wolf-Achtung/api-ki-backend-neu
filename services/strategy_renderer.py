@@ -539,6 +539,28 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     except Exception:  # pragma: no cover
         pass
 
+    # KIS-1238: DSGVO-Vorbehalt-Einschub deckeln. Der Prompt fordert den
+    # Hinweis nur bei der Erstnennung, das LLM wiederholte ihn im Lauf 1119
+    # aber 7-mal ("(DSGVO-Vorbehalt laut Report 1)", S. 14-37). Regel: die
+    # ersten 2 Vorkommen bleiben (Tools-Kapitel + DSGVO-Kapitel), der Rest
+    # wird entfernt.
+    try:
+        import re as _re_dv
+        _dv_pat = _re_dv.compile(
+            r'\s*(?:<em>\s*)?\((?:DSGVO|Datenschutz)-Vorbehalt[^)<]{0,80}\)(?:\s*</em>)?',
+        )
+        _dv_matches = list(_dv_pat.finditer(html))
+        if len(_dv_matches) > 2:
+            for _m in reversed(_dv_matches[2:]):
+                html = html[:_m.start()] + html[_m.end():]
+            import logging as _lg2
+            _lg2.getLogger(__name__).info(
+                "[KIS-1238][DSGVO-VORBEHALT] %d von %d Einsch\u00fcben entfernt (Cap: 2)",
+                len(_dv_matches) - 2, len(_dv_matches),
+            )
+    except Exception:  # pragma: no cover
+        pass
+
     return html
 
 

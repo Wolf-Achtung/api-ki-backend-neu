@@ -133,7 +133,9 @@ td.negative { color: var(--c-danger); font-weight: 600; }
    und zerrissene Tabellen ohne wiederholten Kopf (Risiko-Matrix S. 8/9). */
 p { orphans: 3; widows: 3; }
 tr { break-inside: avoid; }
-thead { display: table-header-group; }
+thead { display: table-header-group; break-after: avoid; page-break-after: avoid; }
+/* KIS-1238: Kopfzeile nie allein am Seitenende (Lauf 1119: verwaiste
+   Header S. 4/9 der Potenzialanalyse, Zeilen folgten headerlos). */
 h3, h4 { break-after: avoid; }
 
 /* ── Chapter Banner (KIS-1127/C4, KIS-1128 audit M1) ──────

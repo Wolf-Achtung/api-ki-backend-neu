@@ -291,7 +291,9 @@ tr:last-child td { border-bottom: none; }
 .section-body p, .section-body li { orphans: 3; widows: 3; }
 /* KIS-1235: Tabellenzeilen zusammenhalten, Kopf bei Umbruch wiederholen. */
 tr { break-inside: avoid; }
-thead { display: table-header-group; }
+thead { display: table-header-group; break-after: avoid; page-break-after: avoid; }
+/* KIS-1238: Kopfzeile nie allein am Seitenende (Lauf 1119: verwaiste
+   Header S. 4/9 der Potenzialanalyse, Zeilen folgten headerlos). */
 .section-body h3 { margin-top: var(--sp-lg); }
 
 /* ── Chapter Banner (KIS-1127/C4, KIS-1128 audit M1, KIS-1216) ──────

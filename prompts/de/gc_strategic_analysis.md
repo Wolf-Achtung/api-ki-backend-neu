@@ -28,6 +28,8 @@ zu einer eigenständigen, vertieften Analyse.
 - **Unternehmensgröße:** {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
 - **Branche:** {{BRANCHE_LABEL}}
 - **Hauptleistung:** {{HAUPTLEISTUNG}}
+- **Benannte Top-Zeitfresser:** {{TOP_ZEITFRESSER}}
+- **Zeitersparnis-Priorität:** {{ZEITERSPARNIS_PRIORITAET}}
 - **Strategische KI-Potenzial-Entscheidung (aus Report 1):** {{gamechanger_decision}}
 - **KI-Potenzial-Inhalt (aus Report 1):** {{GAMECHANGER_HTML}}
 
@@ -179,3 +181,5 @@ Verwende folgende Marker in deinem HTML-Output, wo sie inhaltlich passen:
 Nutze "Auf einen Blick:" maximal 1× (am Anfang). Andere Marker nur wo inhaltlich passend.
 
 WICHTIG: Antworte NUR mit dem HTML-Inhalt. Keine Chat-Floskeln, keine Fragen, keine Einleitungen.
+
+ZEITFRESSER-ANKER (PFLICHT, KIS-1238): Wenn oben Top-Zeitfresser oder eine Zeitersparnis-Priorität benannt sind, muss mindestens eine Empfehlung/Phase diese Aufgaben DIREKT adressieren (beim Namen nennen). Der 1119-Lauf drehte sich ausschließlich um ein einziges Thema und ließ den benannten Zeitfresser unbearbeitet. Sind beide Felder leer, gilt diese Regel nicht.
