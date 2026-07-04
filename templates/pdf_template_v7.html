@@ -123,15 +123,29 @@ tr:last-child td { border-bottom: none; }
 
 /* Major chapter starts — new page */
 /* M3-FIX: #funding-section removed — flows after AI Act to avoid 70% whitespace on preceding page */
+/* KIS-1250: Kapitelfluss nach KPA-Muster. Lauf 1238 hatte 11 Seiten unter
+   ~45 % Füllgrad — Ursache waren erzwungene Umbrüche vor kurzen Kapiteln.
+   Nur die Anker-Kapitel behalten eine eigene Seite (Management Summary,
+   Sofort-Start, Entscheidungsvorlage, AI-Act, persönliche Einschätzung,
+   Impressum); Business Case, Challenge, Risiken, Ausblick und Gamechanger
+   fließen — beim KPA hat genau dieses Muster die Leerseiten eliminiert. */
 #mgmt-summary,
 #sofort-start,
+#advisor-note {
+    break-before: page;
+}
 #business-case-compact,
 #challenge-section,
 #risks-compact,
 #outlook-section,
-#gamechanger-section,
-#advisor-note {
-    break-before: page;
+#gamechanger-section {
+    break-before: auto;
+}
+/* KIS-1250: Kapitel-Überschriften kleben am Folgeinhalt — verwaiste
+   Header am Seitenende (Lauf 1238, S. 10/15) entstehen nicht mehr. */
+.section > h2, .section-header {
+    break-after: avoid;
+    page-break-after: avoid;
 }
 /* KIS-1126 / C6 FIX: #decision gets its own page so the GF-Entscheidungsvorlage
    is standalone-printable (was on same page as Management Summary).

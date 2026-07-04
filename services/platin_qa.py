@@ -118,3 +118,45 @@ def run_platin_qa(sections: Dict[str, Any], answers: Dict[str, Any] | None = Non
         log.info("[%s] [PLATIN-QA] ✅ 0 Befunde — Platin+++-Gate sauber", run_id)
     sections["_PLATIN_QA_FINDINGS"] = findings
     return findings
+
+
+# =========================================================================
+# KIS-1250 / Stufe 2: Seitenfüllgrad am gerenderten PDF
+# =========================================================================
+
+# Deckblatt (Seite 1) und die letzte Seite (Impressum) dürfen luftig sein;
+# alle anderen Seiten mit weniger extrahiertem Text gelten als "dünn" —
+# exakt die Befund-Klasse der manuellen Reviews (Lauf 1238: 11 Seiten
+# unter ~45 % Füllgrad).
+THIN_PAGE_MIN_CHARS = 350
+
+
+def scan_pdf_pages(pdf_bytes: bytes, run_id: str = "", label: str = "") -> List[Dict[str, str]]:
+    """Extrahiert Text je Seite und meldet dünne Seiten (nicht blockierend)."""
+    findings: List[Dict[str, str]] = []
+    try:
+        import io as _io
+        from pypdf import PdfReader
+        reader = PdfReader(_io.BytesIO(pdf_bytes))
+        total = len(reader.pages)
+        for idx, page in enumerate(reader.pages, start=1):
+            if idx == 1 or idx == total:
+                continue
+            try:
+                chars = len((page.extract_text() or "").strip())
+            except Exception:
+                continue
+            if chars < THIN_PAGE_MIN_CHARS:
+                findings.append({
+                    "type": "thin_page", "section": f"{label or 'pdf'}:S.{idx}",
+                    "detail": f"nur {chars} Zeichen extrahiert (Schwelle {THIN_PAGE_MIN_CHARS})",
+                })
+        for f in findings[:20]:
+            log.warning("[%s] [PLATIN-QA][thin_page] %s: %s", run_id, f["section"], f["detail"])
+        if not findings:
+            log.info("[%s] [PLATIN-QA] ✅ %s: keine dünnen Seiten (%d Seiten)", run_id, label or "pdf", total)
+    except ImportError:
+        log.info("[%s] [PLATIN-QA] pypdf nicht installiert — Seiten-Scan übersprungen", run_id)
+    except Exception as exc:  # pragma: no cover - QA darf nie den Versand killen
+        log.warning("[%s] [PLATIN-QA] Seiten-Scan übersprungen: %s", run_id, exc)
+    return findings
