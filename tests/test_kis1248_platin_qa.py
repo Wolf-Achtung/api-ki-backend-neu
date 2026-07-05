@@ -169,8 +169,17 @@ class TestPlatinQaGate:
         assert s["_PLATIN_QA_FINDINGS"] == findings
         assert findings and findings[0]["type"] == "raw_boolean"
 
-    def test_gate_hooked_before_hard_stop(self):
+    def test_gate_hooked_at_pipeline_end(self):
+        # KIS-1251: Der Scan lief anfangs VOR hard_stop/Quality-Enforcer und
+        # meldete Timing-Artefakte (english_badge, die Badge-L10N später
+        # heilte). Er misst jetzt den Auslieferungszustand: NACH dem
+        # Hard-Stop und dem finalen Quality-Enforcer, direkt vor render().
         src = _read("gpt_analyze.py")
         idx_qa = src.find("run_platin_qa(sections, answers, run_id=run_id)")
         idx_hs = src.find("hard_stop_if_invalid(sections, error_gate, persona=persona, run_id=run_id)")
-        assert idx_qa != -1 and idx_hs != -1 and idx_qa < idx_hs
+        idx_qe = src.find("[QUALITY-ENFORCER-RENDER] Applied FINAL quality fixes")
+        idx_render = src.find("result = render(")
+        assert idx_qa != -1 and idx_hs != -1 and idx_qe != -1 and idx_render != -1
+        assert idx_hs < idx_qa, "QA-Scan muss NACH dem Hard-Stop laufen"
+        assert idx_qe < idx_qa, "QA-Scan muss NACH dem finalen Quality-Enforcer laufen"
+        assert idx_qa < idx_render, "QA-Scan muss VOR render() laufen"

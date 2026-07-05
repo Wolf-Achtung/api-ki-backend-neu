@@ -3603,6 +3603,40 @@ def apply_segment_budget(
             _b39_applied, _b39_skipped
         )
 
+    # === KIS-1251: Offene Abkürzungs-Klammer am Sektionsende ("… (z.B.") ===
+    # FIX-B39 hält solche Enden für sauber, weil sie auf '.' enden — die
+    # geöffnete Klammer ohne Inhalt ist aber ein sichtbarer Satzabbruch
+    # (Platin-QA-Klasse truncated_text, Lauf 1122). Das Fragment wird
+    # entfernt, schließende Tags bleiben erhalten, fehlender Schlusspunkt
+    # wird ergänzt.
+    _paren_tail_re = re.compile(
+        r'[\s,;:–—-]*\((?:max|ca|inkl|zzgl|bzw|u\.\s?a|z\.\s?B)\.?\s*'
+        r'((?:</\w+>|\s)*)$',
+        re.IGNORECASE,
+    )
+    _pt_fixed = 0
+    for _pt_key in list(result.keys()):
+        _pt_val = result[_pt_key]
+        if not isinstance(_pt_val, str) or len(_pt_val) < 50 or _pt_key.startswith("_"):
+            continue
+        _pt_m = _paren_tail_re.search(_pt_val)
+        if not _pt_m:
+            continue
+        _pt_tags = _pt_m.group(1) or ""
+        _pt_head = _pt_val[:_pt_m.start()].rstrip()
+        if not _pt_head:
+            continue
+        if _pt_head[-1] not in {'.', '!', '?', ':', ')'}:
+            _pt_head += "."
+        result[_pt_key] = _pt_head + _pt_tags
+        _pt_fixed += 1
+        log.info(
+            "[KIS-1251][PAREN-TAIL] Section '%s': offene Abkürzungs-Klammer am Ende entfernt",
+            _pt_key,
+        )
+    if _pt_fixed:
+        log.info("[KIS-1251][PAREN-TAIL] %d Sektion(en) geheilt", _pt_fixed)
+
     # =========================================================================
     # [FIX-EXEC-DECISION-CLEAN] Per-bullet mid-sentence detection for the three
     # decision sections (executive_decision, roadmap_90d_decision,
