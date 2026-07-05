@@ -19269,6 +19269,16 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     sections['BUSINESS_CASE_HTML'] = _bg_sec + _bg_box
                     sections['business_case'] = sections['BUSINESS_CASE_HTML']
                     log.info('[KIS-1244][BUDGET-GATE] CAPEX %s > Budget-Band %s \u2014 Einordnungs-Box injiziert', _bg_capex, _bg_max)
+                # KIS-1262: pdf_template_v7 rendert das Business-Case-Kapitel
+                # aus BUSINESS_CASE_ENGINE_HTML — BUSINESS_CASE_HTML speist nur
+                # Digest/Judge. Lauf KIS-1241: Judge sah die Box (gruen), im
+                # gerenderten PDF fehlte sie. Deshalb auch in die tatsaechlich
+                # gerenderte Sektion injizieren (FIX-C-geschuetzt).
+                _bg_eng = sections.get('BUSINESS_CASE_ENGINE_HTML') or ''
+                if _bg_eng and 'Budget-Einordnung' not in _bg_eng:
+                    sections['BUSINESS_CASE_ENGINE_HTML'] = _bg_eng + _bg_box
+                    log.info('[KIS-1262][BUDGET-BOX-ENGINE] Einordnungs-Box auch in BUSINESS_CASE_ENGINE_HTML injiziert')
+
             elif _bg_max and _bg_capex >= 0.8 * _bg_max:
                 # KIS-1260: Grenzn\u00e4he-Fall \u2014 Lauf run-38da98cc: 48.000 \u20ac bei
                 # Band 10.000\u201350.000 \u20ac lag INNERHALB des Budgets, aber am
@@ -19293,6 +19303,16 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     sections['BUSINESS_CASE_HTML'] = _bg_sec + _bg_box
                     sections['business_case'] = sections['BUSINESS_CASE_HTML']
                     log.info('[KIS-1260][BUDGET-GRENZNAEHE] CAPEX %s \u2265 80%% von Budget-Max %s \u2014 Einordnungs-Box injiziert', _bg_capex, _bg_max)
+                # KIS-1262: pdf_template_v7 rendert das Business-Case-Kapitel
+                # aus BUSINESS_CASE_ENGINE_HTML — BUSINESS_CASE_HTML speist nur
+                # Digest/Judge. Lauf KIS-1241: Judge sah die Box (gruen), im
+                # gerenderten PDF fehlte sie. Deshalb auch in die tatsaechlich
+                # gerenderte Sektion injizieren (FIX-C-geschuetzt).
+                _bg_eng = sections.get('BUSINESS_CASE_ENGINE_HTML') or ''
+                if _bg_eng and 'Budget-Einordnung' not in _bg_eng:
+                    sections['BUSINESS_CASE_ENGINE_HTML'] = _bg_eng + _bg_box
+                    log.info('[KIS-1262][BUDGET-BOX-ENGINE] Einordnungs-Box auch in BUSINESS_CASE_ENGINE_HTML injiziert')
+
         except Exception as _bg_exc:  # pragma: no cover
             log.warning('[KIS-1244][BUDGET-GATE] \u00fcbersprungen: %s', _bg_exc)
 

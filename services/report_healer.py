@@ -2345,6 +2345,15 @@ def reduce_redundancy(
             if len(content) < min_chars:
                 continue
 
+            # KIS-1262: Deterministisch injizierte Hinweis-Boxen (Budget-Gate,
+            # ROI-Einordnung, Anker-Box) sind KURATIERTE Pflichtinhalte, keine
+            # LLM-Redundanz. Lauf KIS-1241: FIX-C entfernte die
+            # Budget-Einordnungs-Box als "Cross-Section-Duplikat".
+            _block_html = processed[start:end]
+            if ('hinweis-box' in _block_html or 'budget-gate' in _block_html
+                    or 'roi-einordnung' in _block_html or 'anker-box' in _block_html):
+                continue
+
             fingerprint = _normalize_for_fingerprint(content)
             fp_hash = hashlib.md5(fingerprint.encode(), usedforsecurity=False).hexdigest()[:16]
 
@@ -2392,6 +2401,15 @@ def reduce_redundancy(
         section_fps: Dict[str, int] = {}
         for tag, content, start, end in blocks:
             if len(content) < min_chars:
+                continue
+
+            # KIS-1262: Deterministisch injizierte Hinweis-Boxen (Budget-Gate,
+            # ROI-Einordnung, Anker-Box) sind KURATIERTE Pflichtinhalte, keine
+            # LLM-Redundanz. Lauf KIS-1241: FIX-C entfernte die
+            # Budget-Einordnungs-Box als "Cross-Section-Duplikat".
+            _block_html = processed[start:end]
+            if ('hinweis-box' in _block_html or 'budget-gate' in _block_html
+                    or 'roi-einordnung' in _block_html or 'anker-box' in _block_html):
                 continue
 
             fingerprint = _normalize_for_fingerprint(content)

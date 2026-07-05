@@ -1453,6 +1453,11 @@ h1, h2, h3, h4 {
             Alle Einträge sind im PDF verlinkt.
             <span class="badge" style="background: {{ variant_color }}15; color: {{ variant_color }};">{{ variant_label }} ({{ score_int }}/100)</span>
         </p>
+        <!-- KIS-1262: Legende nach OBEN — als letztes Element kippte sie
+             allein auf eine fast leere Folgeseite (Lauf KIS-1241, S. 3). -->
+        <div class="toc-legend" style="margin-top: 4px; padding-top: 4px;">
+            GF = Geschäftsführung · IT = IT/Projektleitung · CO = Compliance/Datenschutz · FI = Controlling/Finanzen
+        </div>
     </div>
 
     <!-- EXECUTIVE VIEW -->
@@ -1546,9 +1551,6 @@ h1, h2, h3, h4 {
     {% endfor %}
     {% endif %}
 
-    <div class="toc-legend">
-        GF = Geschäftsführung · IT = IT/Projektleitung · CO = Compliance/Datenschutz · FI = Controlling/Finanzen
-    </div>
 </div>
 
 <!-- ═══════ MANAGEMENT SUMMARY ═══════ -->
