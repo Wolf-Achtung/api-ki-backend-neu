@@ -566,8 +566,8 @@ thead { display: table-header-group; break-after: avoid; page-break-after: avoid
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    padding: 5px 0 3px;
-    margin-top: var(--sp-sm);
+    padding: 3px 0 2px; /* KIS-1265: 5/3 → 3/2 */
+    margin-top: 4px;    /* KIS-1265: sp-sm → 4px */
     border-bottom: 2px solid var(--c-border);
 }
 .toc-level-title {
@@ -589,9 +589,9 @@ thead { display: table-header-group; break-after: avoid; page-break-after: avoid
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 3px 0; /* KIS-1257: 6px → 4px; KIS-1264: 4px → 3px —
-                       Lauf 1125 trug noch genau EINE übergelaufene
-                       TOC-Zeile auf S. 3 */
+    padding: 2px 0; /* KIS-1257: 6px → 4px; KIS-1264: 4px → 3px;
+                       KIS-1265: 3px → 2px — auch Lauf 1126 trug noch genau
+                       EINE übergelaufene TOC-Zeile auf S. 3 (97 Zeichen) */
     border-bottom: 1px solid #F3F4F6;
     text-decoration: none;
     color: var(--c-text);
@@ -2320,7 +2320,7 @@ h1, h2, h3, h4 {
         </div>
         <div class="impressum-block">
             <h4>Haftungsausschluss</h4>
-            <p>Dieses Projekt dient ausschließlich der Information. Trotz sorgfältiger Prüfung übernehme ich keine Haftung für Inhalte externer Links.</p>
+            <p>Dieser Report dient ausschließlich der Information. Trotz sorgfältiger Prüfung übernehme ich keine Haftung für Inhalte externer Links.</p>
             <h4>Urheberrecht</h4>
             <p>Alle Inhalte dieses Reports unterliegen dem deutschen Urheberrecht, alle Bilder wurden mit Hilfe von KI erzeugt.</p>
         </div>
