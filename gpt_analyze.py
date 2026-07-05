@@ -22702,6 +22702,77 @@ def _auto_trigger_potenzialanalyse(briefing_id: int, run_id: str) -> None:
     log.info("[AUTO-POTENZIALANALYSE] Background thread started for briefing_id=%d run=%s", briefing_id, run_id)
 
 
+def _auto_trigger_strategy_replay(briefing_id: int, run_id: str) -> None:
+    """KIS-1256: Bei Admin-Replays (source='admin_replay') mit kopierten
+    FB2-Antworten wird der Strategiebericht nach dem R1 automatisch
+    erzeugt \u2014 im Normal-Flow uebernimmt das der FB2-Chat-Abschluss,
+    der beim Replay nicht stattfindet. Fire-and-forget, fail-open."""
+    from core.db import SessionLocal
+    _db = SessionLocal()
+    try:
+        from models import Briefing, StrategyQuestion, StrategyReport, Analysis
+        br = _db.get(Briefing, briefing_id)
+        if not br or getattr(br, "source", "") != "admin_replay":
+            return
+        sq = (_db.query(StrategyQuestion)
+              .filter(StrategyQuestion.briefing_id == briefing_id).first())
+        if not sq:
+            return
+        analysis = (_db.query(Analysis)
+                    .filter(Analysis.briefing_id == briefing_id)
+                    .order_by(Analysis.id.desc()).first())
+        sr = (_db.query(StrategyReport)
+              .filter(StrategyReport.briefing_id == briefing_id).first())
+        if not sr:
+            sr = StrategyReport(briefing_id=briefing_id, status="pending")
+            _db.add(sr)
+        elif sr.status == "generating":
+            log.info("[REPLAY-STRATEGY] Briefing %d: Strategie laeuft bereits", briefing_id)
+            return
+        sr.status = "generating"
+        sr.updated_at = datetime.now(timezone.utc)
+        _db.commit()
+        _briefing_data = dict(br.answers or {})
+        _sq_dict = sq.to_dict()
+        _r1_meta = (analysis.meta if analysis else {}) or {}
+
+        def _run() -> None:
+            import asyncio as _aio
+            from core.db import SessionLocal as _SL
+            _tdb = _SL()
+            try:
+                from services.strategy_pipeline import generate_strategy_report
+                _aio.run(generate_strategy_report(
+                    briefing_id=briefing_id,
+                    briefing_data=_briefing_data,
+                    strategy_questions=_sq_dict,
+                    report1_data=_r1_meta,
+                    report2_data={},
+                    db_session=_tdb,
+                ))
+                log.info("[REPLAY-STRATEGY] Strategiebericht fuer Replay-Briefing %d abgeschlossen", briefing_id)
+            except Exception as exc:
+                log.error("[REPLAY-STRATEGY] Strategie fuer Briefing %d fehlgeschlagen: %s",
+                          briefing_id, exc, exc_info=True)
+                try:
+                    _sr2 = (_tdb.query(StrategyReport)
+                            .filter(StrategyReport.briefing_id == briefing_id).first())
+                    if _sr2:
+                        _sr2.status = "failed"
+                        _tdb.commit()
+                except Exception:
+                    pass
+            finally:
+                _tdb.close()
+
+        threading.Thread(target=_run, daemon=True).start()
+        log.info("[REPLAY-STRATEGY] Auto-Trigger gestartet fuer Replay-Briefing %d (FB2 vorhanden)", briefing_id)
+    except Exception as exc:  # pragma: no cover - fail-open
+        log.warning("[REPLAY-STRATEGY] Trigger-Pruefung fehlgeschlagen: %s", exc)
+    finally:
+        _db.close()
+
+
 def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = None, run_id: Optional[str] = None) -> None:
     """
     Execute the full briefing analysis pipeline (LLM + PDF + Email).
@@ -22848,6 +22919,12 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
         except Exception as e:
             log.error("[%s] Auto-Potenzialanalyse trigger failed to start: %s", run_id, e)
 
+        # === KIS-1256: AUTO-TRIGGER Strategiebericht bei Admin-Replay ===
+        try:
+            _auto_trigger_strategy_replay(briefing_id, run_id)
+        except Exception as e:
+            log.error("[%s] Replay-Strategie-Trigger failed to start: %s", run_id, e)
+
         log.info("[%s] ✅ Pipeline complete for briefing_id=%s", run_id, briefing_id)
 
     except Exception as exc:
@@ -22983,6 +23060,12 @@ def run_async(
             _auto_trigger_potenzialanalyse(briefing_id, run_id)
         except Exception as e:
             log.error("[%s] Auto-Potenzialanalyse trigger failed to start: %s", run_id, e)
+
+        # === KIS-1256: AUTO-TRIGGER Strategiebericht bei Admin-Replay ===
+        try:
+            _auto_trigger_strategy_replay(briefing_id, run_id)
+        except Exception as e:
+            log.error("[%s] Replay-Strategie-Trigger failed to start: %s", run_id, e)
 
     except Exception as exc:
         log.error("[%s] ❌ Analysis failed: %s", run_id, exc, exc_info=True)

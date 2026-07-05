@@ -43,7 +43,7 @@ _S_TABLE = "width:100%;border-collapse:collapse;border-radius:8px;overflow:hidde
 _S_TH = "background:#1E3A5F;color:#fff;padding:10px 12px;font-size:9pt;text-transform:uppercase;letter-spacing:0.05em;text-align:left"
 _S_TD = "padding:8px 12px;border-bottom:1px solid #E5E7EB;vertical-align:top"
 
-_S_SOURCES = "font-size:8pt;color:#9CA3AF;border-top:1px solid #E5E7EB;padding-top:12px;margin-top:24px"
+_S_SOURCES = "font-size:8pt;color:#9CA3AF;border-top:1px solid #E5E7EB;padding-top:12px;margin-top:24px;break-inside:avoid;page-break-inside:avoid"
 _S_HIGHLIGHT = "background:#eff6ff;border-left:4px solid #3b82f6;padding:16px 20px;border-radius:0 8px 8px 0;margin:16px 0"
 
 _AMPEL_STYLES = {
@@ -455,6 +455,41 @@ _RE_QUELLEN_DIV = re.compile(
 )
 
 
+_RE_QUELLEN_LIST = re.compile(
+    r'(?:<p>\s*(?:<strong>)?\s*Quellen?:?\s*(?:</strong>)?\s*</p>|'
+    r'<h[3-6][^>]*>\s*Quellen?:?\s*</h[3-6]>)\s*<ul[^>]*>([\s\S]*?)</ul>',
+    re.IGNORECASE,
+)
+
+
+def _compact_source_lists(html: str) -> str:
+    """KIS-1256: Quellen-Bullet-Listen am Kapitelende zu einem kompakten
+    Inline-Block zusammenfassen. Die Listen (6-8 Zeilen) liefen regelmaessig
+    auf eine fast leere Folgeseite (Strategie S. 14/22/34/40, Lauf 1123);
+    als einzeiliger Kleindruck-Absatz mit break-inside:avoid passen sie in
+    den meisten Faellen noch auf die Kapitelseite."""
+    compacted = 0
+
+    def _join(m: re.Match) -> str:  # type: ignore[type-arg, unused-ignore]
+        nonlocal compacted
+        items = re.findall(r"<li[^>]*>([\s\S]*?)</li>", m.group(1))
+        clean = [re.sub(r"<[^>]+>", "", i).strip().rstrip(".;") for i in items]
+        clean = [c for c in clean if c]
+        if not clean:
+            return str(m.group(0))
+        compacted += 1
+        return (
+            '<div class="sources-footer" style="' + _S_SOURCES + '">'
+            '<p style="margin:0;"><strong>Quellen:</strong> '
+            + " \u00b7 ".join(clean) + ".</p></div>"
+        )
+
+    html = _RE_QUELLEN_LIST.sub(_join, html)
+    if compacted:
+        log.info("[KIS-1256][QUELLEN-KOMPAKT] %d Quellen-Liste(n) zusammengefasst", compacted)
+    return html
+
+
 def _transform_sources(html: str) -> str:
     """Wrap Quellen paragraphs and <div class="sources"> in sources-footer."""
     if 'sources-footer' in html:
@@ -781,6 +816,9 @@ def enhance_strategy_html(html: str) -> str:
     # 3. Sources footer (Rule 4)
     html = _transform_sources(html)
 
+    # 3.5 KIS-1256: Quellen-Bullet-Listen kompaktieren (fast leere Folgeseiten)
+    html = _compact_source_lists(html)
+
     # 4. Highlight boxes (Rule 5)
     html = _transform_highlight_boxes(html)
 
@@ -812,6 +850,9 @@ def enhance_kpa_html(html: str) -> str:
 
     # 2. Sources footer
     html = _transform_sources(html)
+
+    # 2.5 KIS-1256: Quellen-Bullet-Listen kompaktieren
+    html = _compact_source_lists(html)
 
     # 3. Ampel badges
     html = _transform_ampel_badges(html)
