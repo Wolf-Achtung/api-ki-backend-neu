@@ -126,7 +126,9 @@ def validate_edit(edit: Dict[str, Any], sections: Dict[str, Any],
         return None, f"find zu kurz ({len(find)} < {MIN_FIND_LEN})"
     if replace == find:
         return None, "replace identisch mit find"
-    if len(replace) > 2.5 * len(find) + 120:
+    # KIS-1260: 2.5×+120 → 3×+240 — der Brückensatz-Edit für den
+    # budget-Befund (Lauf run-38da98cc) wurde sonst verworfen.
+    if len(replace) > 3.0 * len(find) + 240:
         return None, "replace unverhältnismäßig lang"
     new_nums = _numbers(replace) - _numbers(find) - canon_nums
     if new_nums:

@@ -44,9 +44,12 @@ _CHECK_QUESTIONS = {
     ),
     "budget": (
         "Wird das vom Kunden angegebene Investitionsbudget respektiert? "
-        "(Eine kalkulierte Investition über dem Budget ist zulässig, wenn der "
-        "Report die Überschreitung explizit einordnet — z. B. gestufter "
-        "Einstieg oder Förder-Pfad. Unkommentierte Überschreitung = rot.)"
+        "(KIS-1260-Kalibrierung: Eine Investition INNERHALB des Budgetbands "
+        "ist gruen — auch am oberen Rand, sofern der Report die Grenznähe "
+        "irgendwo einordnet (z. B. 'Budget-Einordnung', gestufter Einstieg, "
+        "Förder-Pfad). Nur eine Investition am oberen Rand OHNE jede "
+        "Einordnung = gelb. Rot AUSSCHLIESSLICH bei unkommentierter "
+        "ÜBERSCHREITUNG des Bands.)"
     ),
     "zahlen": (
         "Ist jede zentrale Kennzahl in den erzählenden Sektionen aus den "
@@ -57,13 +60,21 @@ _CHECK_QUESTIONS = {
     "spiegelung": (
         "Werden die wörtlichen Kundenangaben (größter Zeitfresser, "
         "Zeitspar-Priorität, Hauptleistung) inhaltlich im Report aufgegriffen? "
-        "(Mindestens erkennbar adressiert = gruen; nur teilweise = gelb; "
-        "gar nicht = rot.)"
+        "(KIS-1260-Kalibrierung: gruen, wenn die Angabe irgendwo erkennbar "
+        "adressiert wird UND der Report-Fokus daran anschließt — auch wenn er "
+        "den Begriff fachlich PRÄZISIERT, z. B. 'Dokumentation und Berichte' "
+        "→ 'Buchhaltungsbelege', solange die Verbindung sichtbar ist. Gelb "
+        "nur, wenn eine Angabe komplett unverbunden bleibt; rot, wenn keine "
+        "der Angaben vorkommt.)"
     ),
     "dubletten": (
-        "Gibt es inhaltliche Doppel-Aussagen — dieselbe Kernaussage nahezu "
-        "wortgleich in mehreren Sektionen? (Bewusste Wiederaufnahme mit "
-        "neuem Kontext ist KEINE Dublette.)"
+        "Gibt es inhaltliche Doppel-Aussagen — derselbe Satz NAHEZU "
+        "WORTGLEICH (im Wesentlichen identische Formulierung) in mehreren "
+        "Sektionen? (KIS-1260-Kalibrierung: Dieselbe Kernbotschaft in "
+        "UNTERSCHIEDLICHER Formulierung ist ein zulässiger roter Faden = "
+        "gruen. Eine Fokus-/Übersichtsliste und ihr ausführlicher Abschnitt "
+        "INNERHALB DERSELBEN Sektion zählen nicht als Dublette. Gelb erst "
+        "ab drei nahezu wortgleichen Vorkommen ÜBER Sektionsgrenzen hinweg.)"
     ),
 }
 
