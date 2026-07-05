@@ -559,12 +559,15 @@ thead { display: table-header-group; break-after: avoid; page-break-after: avoid
 /* ══════════════════════════════════════════════════════
    TABLE OF CONTENTS
    ══════════════════════════════════════════════════════ */
+/* KIS-1257: TOC kompakter — 3 Einträge + Legende liefen auf eine fast
+   leere Folgeseite (Lauf KIS-1240, Status S. 3). Padding/Fontgröße so
+   reduziert, dass alle ~17 Einträge auf eine Seite passen. */
 .toc-level-header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    padding: 8px 0 4px;
-    margin-top: var(--sp-md);
+    padding: 5px 0 3px;
+    margin-top: var(--sp-sm);
     border-bottom: 2px solid var(--c-border);
 }
 .toc-level-title {
@@ -586,11 +589,11 @@ thead { display: table-header-group; break-after: avoid; page-break-after: avoid
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 6px 0;
+    padding: 4px 0; /* KIS-1257: 6px → 4px */
     border-bottom: 1px solid #F3F4F6;
     text-decoration: none;
     color: var(--c-text);
-    font-size: 9.5pt;
+    font-size: 9pt; /* KIS-1257: 9.5pt → 9pt */
 }
 .toc-entry:hover { background: var(--c-bg); }
 .toc-entry-cat { flex-shrink: 0; min-width: 65px; }
@@ -622,7 +625,7 @@ thead { display: table-header-group; break-after: avoid; page-break-after: avoid
 .toc-legend {
     font-size: 8pt;
     color: var(--c-text-3);
-    margin-top: var(--sp-md);
+    margin-top: var(--sp-sm); /* KIS-1257: md → sm */
     padding-top: var(--sp-sm);
     border-top: 1px solid var(--c-border);
 }

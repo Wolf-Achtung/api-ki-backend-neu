@@ -39,6 +39,10 @@ _SNAKE_RE = re.compile(r"\b[a-z]{3,}_[a-z_]{3,}\b")
 _SNAKE_WHITELIST = frozenset({
     "gpt_analyze", "run_id", "api_key", "max_tokens", "top_p",
 })
+# KIS-1257: URLs vor dem snake_case-Scan strippen — Quellen-Links wie
+# bafa.de/…/unternehmensberatung_node.html sind legitimer Inhalt,
+# kein Feld-Leak (False Positive, Lauf KIS-1240 Strategie S. 35).
+_URL_RE = re.compile(r"(?:https?://|www\.)\S+")
 _TRUNCATED_TAIL_RE = re.compile(
     r"\((?:max|ca|inkl|zzgl|bzw|z\.\s?B)\.\s*$"
 )
@@ -84,7 +88,7 @@ def scan_sections(sections: Dict[str, Any], answers: Dict[str, Any] | None = Non
             findings.append({"type": "english_badge", "section": key,
                              "detail": m.group(0)})
 
-        for m in _SNAKE_RE.finditer(text):
+        for m in _SNAKE_RE.finditer(_URL_RE.sub(" ", text)):
             if m.group(0) not in _SNAKE_WHITELIST:
                 findings.append({"type": "visible_snake_case", "section": key,
                                  "detail": m.group(0)})
