@@ -589,7 +589,9 @@ thead { display: table-header-group; break-after: avoid; page-break-after: avoid
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 4px 0; /* KIS-1257: 6px → 4px */
+    padding: 3px 0; /* KIS-1257: 6px → 4px; KIS-1264: 4px → 3px —
+                       Lauf 1125 trug noch genau EINE übergelaufene
+                       TOC-Zeile auf S. 3 */
     border-bottom: 1px solid #F3F4F6;
     text-decoration: none;
     color: var(--c-text);
@@ -1652,6 +1654,9 @@ h1, h2, h3, h4 {
         </div>
     </div>
 
+    {# KIS-1264: Score-Interpretation + Kompetenz-Hinweis unteilbar — der
+       Hinweis kippte sonst als 196-Zeichen-Waise allein auf S. 5 (Lauf 1125) #}
+    <div style="break-inside: avoid; page-break-inside: avoid;">
     {# v7.1: Score-Interpretation — Was bedeutet dieser Score? #}
     {% if SCORE_INTERPRETATION_HTML and SCORE_INTERPRETATION_HTML|trim %}
     <div class="score-interpretation">
@@ -1679,6 +1684,7 @@ h1, h2, h3, h4 {
     {% elif expertise_level == "intermediate" %}
     <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (erfahren):</strong> Die 30-Tage-Challenge überspringt die Grundlagen-Woche und startet mit Workflow-Integration. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
     {% endif %}
+    </div>{# /KIS-1264 unteilbar #}
 </div>
 
 <!-- ═══════ ENTSCHEIDUNGSVORLAGE ═══════ -->
@@ -2094,7 +2100,10 @@ h1, h2, h3, h4 {
 {% endif %}
 
 <!-- ═══════ NÄCHSTE SCHRITTE & KONTAKT ═══════ -->
-<section class="section" id="next-steps" data-category="strategy">
+{# KIS-1264: Kapitel unteilbar — die contact-box kippte sonst als
+   88-Zeichen-Waise allein auf S. 31 (Lauf 1125). Das Kapitel ist kurz
+   (Glance + 3 Entscheidungen + Kontakt) und passt immer auf eine Seite. #}
+<section class="section" id="next-steps" data-category="strategy" style="break-inside: avoid; page-break-inside: avoid;">
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <span class="badge badge-strategy">Strategie</span>
     <h2>Nächste Schritte &amp; Kontakt</h2>

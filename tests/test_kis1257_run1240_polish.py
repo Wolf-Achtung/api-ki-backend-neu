@@ -176,7 +176,7 @@ class TestTocCompact:
         src = _read("templates/pdf_template_v7.html")
         idx = src.find(".toc-entry {")
         block = src[idx:idx + 400]
-        assert "padding: 4px 0" in block
+        assert "padding: 3px 0" in block  # KIS-1264: 4px -> 3px
         assert "font-size: 9pt" in block
 
     def test_toc_header_and_legend_compacted(self):

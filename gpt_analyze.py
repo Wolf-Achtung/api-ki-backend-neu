@@ -19335,10 +19335,9 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 _re_jahr = _re_hours * _re_rate * 12 - _re_opex_m * 12
                 _re_net3 = _re_jahr * 3 - _re_capex
                 _re_roi3 = round(_re_net3 / _re_capex * 100)
-                _re_sec = sections.get('BUSINESS_CASE_HTML') or ''
                 def _re_fmt(n):
                     return f"{int(n):,}".replace(",", ".")
-                if _re_net3 > 0 and _re_sec and 'ROI-Einordnung' not in _re_sec:
+                if _re_net3 > 0:
                     _re_roi_disp = str(int(round(_re_roi)))
                     _re_box = (
                         '<div class="hinweis-box roi-einordnung" style="margin-top:14px;'
@@ -19355,9 +19354,20 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                         'und verk\u00fcrzen die Amortisation entsprechend.'
                         '</div>'
                     )
-                    sections['BUSINESS_CASE_HTML'] = _re_sec + _re_box
-                    sections['business_case'] = sections['BUSINESS_CASE_HTML']
-                    log.info('[KIS-1251][ROI-EINORDNUNG] ROI %.1f%% < 10%% \u2014 3-Jahres-Einordnung injiziert (Netto3=%s)', _re_roi, int(_re_net3))
+                    _re_sec = sections.get('BUSINESS_CASE_HTML') or ''
+                    if _re_sec and 'ROI-Einordnung' not in _re_sec:
+                        sections['BUSINESS_CASE_HTML'] = _re_sec + _re_box
+                        sections['business_case'] = sections['BUSINESS_CASE_HTML']
+                        log.info('[KIS-1251][ROI-EINORDNUNG] ROI %.1f%% < 10%% \u2014 3-Jahres-Einordnung injiziert (Netto3=%s)', _re_roi, int(_re_net3))
+                    # KIS-1264: pdf_template_v7 rendert das Business-Case-Kapitel
+                    # aus BUSINESS_CASE_ENGINE_HTML (siehe KIS-1262, Budget-Box).
+                    # Lauf 1125: ROI 1 % < 10 %, Box wurde injiziert \u2014 aber nur in
+                    # BUSINESS_CASE_HTML, im gerenderten PDF fehlte sie. Gleiches
+                    # Doppel-Injektions-Muster wie beim Budget-Gate (FIX-C-geschuetzt).
+                    _re_eng = sections.get('BUSINESS_CASE_ENGINE_HTML') or ''
+                    if _re_eng and 'ROI-Einordnung' not in _re_eng:
+                        sections['BUSINESS_CASE_ENGINE_HTML'] = _re_eng + _re_box
+                        log.info('[KIS-1264][ROI-BOX-ENGINE] ROI-Einordnung auch in BUSINESS_CASE_ENGINE_HTML injiziert')
         except Exception as _re_exc:  # pragma: no cover
             log.warning('[KIS-1251][ROI-EINORDNUNG] \u00fcbersprungen: %s', _re_exc)
 
