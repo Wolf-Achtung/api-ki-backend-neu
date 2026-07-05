@@ -48,3 +48,28 @@ class TestDisclaimerWording:
                 in _read("templates/strategy_report.html"))
         assert ("Dieses Dokument dient ausschlie"
                 in _read("templates/gamechanger_deep_dive_v1.html"))
+
+
+class TestScoreLabelThreshold:
+    """KIS-1266: 'exzellent' erst ab 85 — Entscheidung Wolf 2026-07-05.
+
+    Lauf 1126: Qualitäts-Bonus hob 78 auf 80 und flippte das Label
+    gut→exzellent, während der Branchen-Benchmark Grade C zeigte."""
+
+    def test_80_is_gut_not_exzellent(self):
+        from services.extra_sections import get_score_label
+        assert get_score_label(80, "de") == "gut"
+        assert get_score_label(80, "en") == "good"
+        assert get_score_label(84, "de") == "gut"
+
+    def test_85_is_exzellent(self):
+        from services.extra_sections import get_score_label
+        assert get_score_label(85, "de") == "exzellent"
+        assert get_score_label(85, "en") == "excellent"
+
+    def test_lower_bands_unchanged(self):
+        from services.extra_sections import get_score_label
+        assert get_score_label(65, "de") == "gut"
+        assert get_score_label(50, "de") == "solide"
+        assert get_score_label(35, "de") == "ausbaufähig"
+        assert get_score_label(0, "de") == "kritisch"

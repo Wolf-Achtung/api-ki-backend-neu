@@ -53,11 +53,16 @@ def get_score_label(overall_score: int, lang: str = "de") -> str:
         0-34   → kritisch / critical
         35-49  → ausbaufähig / developing
         50-64  → solide / solid
-        65-79  → gut / good
-        80-100 → exzellent / excellent
+        65-84  → gut / good
+        85-100 → exzellent / excellent
+
+    KIS-1266: "exzellent" erst ab 85 (vorher 80) — Lauf 1126 zeigte einen
+    Score von 80 (Grade C im Branchen-Benchmark) mit Label "exzellent";
+    der Qualitäts-Bonus (+2) darf einen 78er-Report nicht über die
+    Exzellenz-Schwelle heben. Entscheidung Wolf 2026-07-05.
     """
     if lang == "en":
-        if overall_score >= 80:
+        if overall_score >= 85:
             return "excellent"
         elif overall_score >= 65:
             return "good"
@@ -68,7 +73,7 @@ def get_score_label(overall_score: int, lang: str = "de") -> str:
         else:
             return "critical"
     else:
-        if overall_score >= 80:
+        if overall_score >= 85:
             return "exzellent"
         elif overall_score >= 65:
             return "gut"
