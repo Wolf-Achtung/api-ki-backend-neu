@@ -331,15 +331,82 @@ _BADGE_LOCALIZATION_RULES = [
 ]
 
 
+# KIS-1251: snake_case-Enum-Werte, die in Lauf 1122 sichtbar durchsickerten
+# (AI_ACT_RISK_REASONING, AI_ACT_RELATED_USECASES_HTML, GUARDRAILS_HITS,
+# AUTOMATION_ROADMAP_HTML, starter_stacks_html) — plus die Geschwister-Werte
+# derselben Enum-Familien (Usecases, Guardrail-Gründe, Automation-Blocker,
+# Prozess-Kategorien), damit andere Profile nicht dieselbe Befund-Klasse
+# reproduzieren. Ersetzt wird NUR im sichtbaren Text (nicht in HTML-Tags).
+_SNAKE_ENUM_LABELS = {
+    # Usecase-Enums (Fragebogen / Chat-Extraktion)
+    "content_generation": "Content-Generierung",
+    "prozess_automation": "Prozess-Automatisierung",
+    # Guardrail-Gründe (services/guardrails.py)
+    "sensitive_area": "Sensibler Bereich",
+    "explicit_keyword": "Explizites Schlüsselwort",
+    "negation_action": "Negations-Kontext",
+    # Automation-Roadmap: Blocker-Typen
+    "regulatory_compliance": "Regulatorische Anforderungen",
+    "data_quality": "Datenqualität",
+    "data_availability": "Datenverfügbarkeit",
+    "resource_constraint": "Ressourcen-Engpass",
+    "skill_gap": "Kompetenzlücke",
+    "budget_limitation": "Budget-Begrenzung",
+    "technical_integration": "Technische Integration",
+    "vendor_dependency": "Anbieter-Abhängigkeit",
+    "change_management": "Change-Management",
+    "security_requirements": "Sicherheitsanforderungen",
+    # Automation-Roadmap: Prozess-Kategorien
+    "customer_service": "Kundenservice",
+    "content_creation": "Content-Erstellung",
+    "data_processing": "Datenverarbeitung",
+    "document_management": "Dokumentenmanagement",
+    "email_automation": "E-Mail-Automatisierung",
+    "analytics_reporting": "Analysen & Reporting",
+    "workflow_automation": "Workflow-Automatisierung",
+    "quality_assurance": "Qualitätssicherung",
+    "translation_localization": "Übersetzung & Lokalisierung",
+    "scheduling_planning": "Termin- & Einsatzplanung",
+    "research_analysis": "Recherche & Analyse",
+    "internal_communication": "Interne Kommunikation",
+    # KPI-Kategorien / Sonstiges
+    "time_reduction": "Zeitersparnis",
+    "starter_stacks": "Starter-Stacks",
+}
+
+_SNAKE_ENUM_RE = re.compile(
+    r"\b(" + "|".join(sorted(_SNAKE_ENUM_LABELS, key=len, reverse=True)) + r")\b"
+)
+_HTML_TAG_SPLIT_RE = re.compile(r"(<[^>]*>)")
+
+
+def _localize_snake_tokens(content: str) -> str:
+    """Ersetzt bekannte snake_case-Enums nur im Text zwischen HTML-Tags —
+    Attribute, IDs und CSS-Klassen bleiben unangetastet."""
+    if "_" not in content:
+        return content
+    parts = _HTML_TAG_SPLIT_RE.split(content)
+    for i, part in enumerate(parts):
+        if part.startswith("<"):
+            continue
+        if "_" in part:
+            parts[i] = _SNAKE_ENUM_RE.sub(
+                lambda m: _SNAKE_ENUM_LABELS[m.group(1)], part)
+    return "".join(parts)
+
+
 def apply_badge_localization(sections: dict) -> dict:
     """KIS-1248: Deterministische Eindeutschung von Badge-/Slug-Resten."""
     total = 0
     for key, content in list(sections.items()):
         if not isinstance(content, str) or not content:
             continue
+        if key.startswith("_"):
+            continue  # KIS-1251: interne Keys nicht anfassen
         changed = content
         for pattern, replacement in _BADGE_LOCALIZATION_RULES:
             changed = re.sub(pattern, replacement, changed)
+        changed = _localize_snake_tokens(changed)
         if changed != content:
             sections[key] = changed
             total += 1

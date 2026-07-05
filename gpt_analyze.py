@@ -18793,14 +18793,20 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             else:
                 log.info(f"[{run_id}] [FIX-B731-ROI-CAP] ROI_P50 not set, skipping")
 
-            # FIX-B17: Cap P80/P90 too for display consistency
-            for _pkey in ["ROI_P80", "ROI_P90"]:
+            # KIS-1251: [FIX-B17-ROI-CAP] war semantisch invertiert — er kappte
+            # P80/P90 auf den P50-/Realistic-Wert. P80/P90 sind Upside-
+            # Perzentile der Monte-Carlo-Simulation und liegen KORREKT über
+            # P50 (Lauf 1122: 17 %/29 % wurden auf 1 % gekappt, die gesamte
+            # Spannbreite kollabierte). Gekappt werden nur noch absurde
+            # Ausreißer oberhalb fester Obergrenzen.
+            _b17_outlier_caps = {"ROI_P80": 200.0, "ROI_P90": 300.0}
+            for _pkey, _pcap in _b17_outlier_caps.items():
                 _pval_raw = sections.get(_pkey)
                 if _pval_raw is not None:
                     _pval = float(_pval_raw)
-                    if _pval > _b731_roi_cap:
-                        sections[_pkey] = _b731_roi_cap
-                        log.info(f"[{run_id}] [FIX-B17-ROI-CAP] {_pkey} capped: {_pval:.0f}% → {_b731_roi_cap}%")
+                    if _pval > _pcap:
+                        sections[_pkey] = int(_pcap)
+                        log.info(f"[{run_id}] [FIX-B17-ROI-CAP] {_pkey} Ausreißer gekappt: {_pval:.0f}% → {_pcap:.0f}%")
 
             # Payback: P50 ebenfalls auf canonical setzen
             _b731_pb_canon = sections.get("PAYBACK_MONTHS_FMT_DE", "1,6")  # FIX-B732-PAYBACK-F1: correct default
@@ -19267,6 +19273,51 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             log.warning('[KIS-1244][BUDGET-GATE] \u00fcbersprungen: %s', _bg_exc)
 
         # =================================================================
+        # KIS-1251: ROI-Ehrlichkeits-Einordnung \u2014 Lauf 1122 (Team) wies
+        # 1,2 % Jahres-ROI aus, kommentarlos neben 296 % Netto-ROI im
+        # Strategie-Dokument. Bei ROI < 10 % wird deterministisch
+        # eingeordnet statt sch\u00f6ngerechnet: Jahr-1-ROI tr\u00e4gt die volle
+        # Startinvestition; die 3-Jahres-Sicht und der F\u00f6rder-Pfad machen
+        # die tats\u00e4chliche Wirtschaftlichkeit sichtbar. Alle Zahlen aus
+        # der Kanonik, nichts erfunden.
+        # =================================================================
+        try:
+            _re_roi = float(str(sections.get('ROI_12M') or 0).replace(',', '.').replace('%', '').strip() or 0)
+            _re_hours = float(sections.get('CANON_HOURS_MONTH') or 0)
+            _re_rate = float(sections.get('CANON_RATE_EUR') or 0)
+            _re_capex = int(float(sections.get('CANON_CAPEX_EUR') or sections.get('CAPEX_REALISTISCH_EUR') or 0))
+            _re_opex_m = int(float(sections.get('CANON_OPEX_MONTH_EUR') or sections.get('OPEX_REALISTISCH_EUR') or 0))
+            if _re_roi < 10 and _re_capex > 0 and _re_hours > 0 and _re_rate > 0:
+                _re_jahr = _re_hours * _re_rate * 12 - _re_opex_m * 12
+                _re_net3 = _re_jahr * 3 - _re_capex
+                _re_roi3 = round(_re_net3 / _re_capex * 100)
+                _re_sec = sections.get('BUSINESS_CASE_HTML') or ''
+                def _re_fmt(n):
+                    return f"{int(n):,}".replace(",", ".")
+                if _re_net3 > 0 and _re_sec and 'ROI-Einordnung' not in _re_sec:
+                    _re_roi_disp = str(int(round(_re_roi)))
+                    _re_box = (
+                        '<div class="hinweis-box roi-einordnung" style="margin-top:14px;'
+                        'padding:12px 16px;background:#f0fdf4;border-left:4px solid #22c55e;'
+                        'border-radius:6px;">'
+                        '<strong>ROI-Einordnung:</strong> '
+                        f'Der ausgewiesene ROI von {_re_roi_disp}\u00a0% im ersten Jahr ist bewusst '
+                        'konservativ gerechnet: Die gesamte Startinvestition von '
+                        f'{_re_fmt(_re_capex)}\u00a0\u20ac wird vollst\u00e4ndig gegen das erste Jahr gestellt. '
+                        'Ab Jahr\u00a02 entf\u00e4llt sie \u2014 bei gleichbleibender Zeitersparnis liegt der '
+                        f'kumulierte Netto-Nutzen \u00fcber 3\u00a0Jahre bei ca. {_re_fmt(_re_net3)}\u00a0\u20ac '
+                        f'(ca. {_re_roi3}\u00a0% auf die Startinvestition). Die im F\u00f6rderkapitel '
+                        'genannten Programme senken die effektive Startinvestition zus\u00e4tzlich '
+                        'und verk\u00fcrzen die Amortisation entsprechend.'
+                        '</div>'
+                    )
+                    sections['BUSINESS_CASE_HTML'] = _re_sec + _re_box
+                    sections['business_case'] = sections['BUSINESS_CASE_HTML']
+                    log.info('[KIS-1251][ROI-EINORDNUNG] ROI %.1f%% < 10%% \u2014 3-Jahres-Einordnung injiziert (Netto3=%s)', _re_roi, int(_re_net3))
+        except Exception as _re_exc:  # pragma: no cover
+            log.warning('[KIS-1251][ROI-EINORDNUNG] \u00fcbersprungen: %s', _re_exc)
+
+        # =================================================================
         # KIS-1244 (7): DSGVO-Vorbehalt-Cap auch im R1 (Lauf 4: 3\u00d7, davon
         # 2\u00d7 im selben Satz). Gleiches Muster wie im Strategie-Renderer:
         # die ersten 2 Vorkommen im Gesamtreport bleiben, Rest entfällt.
@@ -19429,16 +19480,11 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         log.warning("[%s] [FIX-TYPO-GUARD] Failed: %s", run_id, _ty_err)
 
     # Execute hard stop validation
-    # KIS-1249 / Platin+++ Stufe 1: maschinelles QA-Gate über dem fertigen
-    # Report — findet die Befund-Klassen der manuellen PDF-Reviews
-    # (Namens-Leak, kollabierte KPIs, Roh-Booleans, englische Badges,
-    # snake_case, Satzabbrüche, DSGVO-Cap). Nicht blockierend.
-    try:
-        from services.platin_qa import run_platin_qa
-        run_platin_qa(sections, answers, run_id=run_id)
-    except Exception as _qa_exc:  # pragma: no cover
-        log.warning("[%s] [PLATIN-QA] Hook übersprungen: %s", run_id, _qa_exc)
-
+    # KIS-1251: Der Platin-QA-Scan (run_platin_qa) lief früher HIER — also
+    # VOR Quality-Enforcer, Badge-Eindeutschung und Healern — und meldete
+    # dadurch Timing-Artefakte (Lauf 1122: english_badge-Warnungen, die
+    # apply_badge_localization später ohnehin heilte). Er läuft jetzt am
+    # Pipeline-Ende direkt vor render() und misst den Auslieferungszustand.
     hard_stop_if_invalid(sections, error_gate, persona=persona, run_id=run_id)
 
     # === FIX-497 + FIX-503B: Store unified quality metrics in sections ===
@@ -21639,6 +21685,28 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
 
     # KIS-1094: L2 defense layer removed — GF-Vorlage is injected via bypass
     # in the post-render step (before sofort-start section).
+
+    # KIS-1249/1251 / Platin+++ Stufe 1: maschinelles QA-Gate über dem
+    # AUSLIEFERUNGSZUSTAND — nach Quality-Enforcer, Badge-Eindeutschung,
+    # Healern und Prerender-Fixes, unmittelbar vor render(). Findet die
+    # Befund-Klassen der manuellen PDF-Reviews (Namens-Leak, kollabierte
+    # KPIs, Roh-Booleans, englische Badges, snake_case, Satzabbrüche,
+    # DSGVO-Cap). Nicht blockierend.
+    try:
+        from services.platin_qa import run_platin_qa
+        run_platin_qa(sections, answers, run_id=run_id)
+    except Exception as _qa_exc:  # pragma: no cover
+        log.warning("[%s] [PLATIN-QA] Hook übersprungen: %s", run_id, _qa_exc)
+
+    # KIS-1252 / Platin++++: Kohärenz-Judge — 5 feste Fragen (Vendor-Ampel,
+    # Budget-Respekt, Zahlen-Herleitbarkeit, Kunden-Spiegelung, Dubletten)
+    # per LLM über dem Auslieferungszustand. Ampel in Log + Meta, nicht
+    # blockierend, fail-open.
+    try:
+        from services.coherence_judge import run_coherence_judge
+        run_coherence_judge(sections, answers, run_id=run_id)
+    except Exception as _cj_exc:  # pragma: no cover
+        log.warning("[%s] [PLATIN-JUDGE] Hook übersprungen: %s", run_id, _cj_exc)
 
     result = render(
         br,
