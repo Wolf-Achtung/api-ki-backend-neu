@@ -2214,7 +2214,7 @@ def business_case_report_to_html(
         }
         kpi_key_labels = {
             "roi": "ROI",
-            "payback_progress": "Amortisierung",
+            "payback_progress": "Amortisation erreicht",
             "time_savings_hours": "Zeitersparnis",
             "monthly_savings": "Monatl. Ersparnis",
             "automation_rate": "Automatisierungsgrad",

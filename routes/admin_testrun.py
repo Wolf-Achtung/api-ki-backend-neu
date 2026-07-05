@@ -207,6 +207,38 @@ def replay_testrun(
         new_id, briefing_id, force, new_email, overrides_applied, trigger_kpa, trigger_strategy,
     )
 
+    # KIS-1256: FB2-Antworten (StrategyQuestion) mitkopieren. Ohne sie kann
+    # beim Replay kein Strategiebericht entstehen — im Normal-Flow entstehen
+    # sie erst im FB2-Chat NACH dem R1. Der Auto-Trigger nach R1-Abschluss
+    # sitzt in gpt_analyze._auto_trigger_strategy_replay (nur source=admin_replay).
+    fb2_copied = False
+    if trigger_strategy:
+        from models import StrategyQuestion
+        _src_sq = (
+            db.query(StrategyQuestion)
+            .filter(StrategyQuestion.briefing_id == briefing_id)
+            .first()
+        )
+        if _src_sq:
+            _fb2_fields = [
+                "s1_budget", "s2_zeitrahmen", "s3_prioritaeten", "s4_engpass",
+                "s5_software", "s6_foerderinteresse", "s7_entscheidung",
+                "s8_erfahrung", "s9_ansatz", "s10_datenschutz",
+                "wettbewerber_anzahl", "kundenbindung_typ", "datenreife",
+            ]
+            db.add(StrategyQuestion(
+                briefing_id=new_id,
+                **{f: getattr(_src_sq, f, None) for f in _fb2_fields},
+            ))
+            db.commit()
+            fb2_copied = True
+            log.info("[REPLAY] FB2 (StrategyQuestion) von Briefing %d nach %d kopiert", briefing_id, new_id)
+        else:
+            warnings.append(
+                "Quell-Briefing hat keine FB2-Antworten (StrategyQuestion) — "
+                "es werden nur Status-Report und Potenzialanalyse erzeugt."
+            )
+
     # 6. Return immediately — worker picks up the new briefing
     result: Dict[str, Any] = {
         "source_briefing_id": briefing_id,
@@ -216,6 +248,7 @@ def replay_testrun(
         "status": "queued",
         "trigger_kpa": trigger_kpa,
         "trigger_strategy": trigger_strategy,
+        "fb2_copied": fb2_copied,
         "source_fields": source_diag,
     }
     if overrides_applied:
