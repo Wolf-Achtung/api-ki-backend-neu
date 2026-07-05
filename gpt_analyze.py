@@ -19269,6 +19269,30 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     sections['BUSINESS_CASE_HTML'] = _bg_sec + _bg_box
                     sections['business_case'] = sections['BUSINESS_CASE_HTML']
                     log.info('[KIS-1244][BUDGET-GATE] CAPEX %s > Budget-Band %s \u2014 Einordnungs-Box injiziert', _bg_capex, _bg_max)
+            elif _bg_max and _bg_capex >= 0.8 * _bg_max:
+                # KIS-1260: Grenzn\u00e4he-Fall \u2014 Lauf run-38da98cc: 48.000 \u20ac bei
+                # Band 10.000\u201350.000 \u20ac lag INNERHALB des Budgets, aber am
+                # oberen Rand, und der Judge wertete die fehlende Einordnung
+                # als ROT ("thematisiert diese N\u00e4he zur Budgetgrenze
+                # nirgends"). Deterministische Einordnung statt Heal-Edit.
+                _bg_box = (
+                    '<div class="hinweis-box budget-gate" style="margin-top:14px;padding:12px 16px;'
+                    'background:#f0fdf4;border-left:4px solid #22c55e;border-radius:6px;">'
+                    '<strong>Budget-Einordnung:</strong> '
+                    f'Die kalkulierte Gesamtinvestition von {_bg_fmt(_bg_capex)}\u00a0\u20ac liegt '
+                    f'innerhalb Ihres angegebenen Rahmens ({_bg_label}), nutzt ihn aber '
+                    'weitgehend aus. Zwei Stellhebel halten Sie flexibel: Die Investition '
+                    'verteilt sich \u00fcber 12 Monate und ist nach jeder Phase stoppbar \u2014 '
+                    'Quick Wins und Phase\u00a01 binden nur einen Teil des Rahmens. Zus\u00e4tzlich '
+                    'senken die im F\u00f6rderkapitel genannten Programme den effektiven '
+                    'Eigenanteil sp\u00fcrbar unter die Budgetgrenze.'
+                    '</div>'
+                )
+                _bg_sec = sections.get('BUSINESS_CASE_HTML') or ''
+                if _bg_sec and 'Budget-Einordnung' not in _bg_sec:
+                    sections['BUSINESS_CASE_HTML'] = _bg_sec + _bg_box
+                    sections['business_case'] = sections['BUSINESS_CASE_HTML']
+                    log.info('[KIS-1260][BUDGET-GRENZNAEHE] CAPEX %s \u2265 80%% von Budget-Max %s \u2014 Einordnungs-Box injiziert', _bg_capex, _bg_max)
         except Exception as _bg_exc:  # pragma: no cover
             log.warning('[KIS-1244][BUDGET-GATE] \u00fcbersprungen: %s', _bg_exc)
 
