@@ -395,6 +395,17 @@ def _localize_snake_tokens(content: str) -> str:
     return "".join(parts)
 
 
+# KIS-1253: Kanonische Machine-Felder, die exakte Enum-Werte tragen und von
+# der Eindeutschung NIEMALS berührt werden dürfen. Lauf 1123 starb hart, weil
+# AI_ACT_RISK_LEVEL='limited' zu 'begrenzt' übersetzt wurde und der
+# Report-Validator das Enum ablehnte.
+_L10N_SKIP_KEYS = frozenset({
+    "AI_ACT_RISK_LEVEL", "RISK_AI_ACT_CLASS", "COMPLIANCE_STATUS",
+    "VENDOR_AUDIT_STATUS", "DPIA_REQUIRED", "expertise_level",
+    "company_size", "COMPANY_SIZE", "LANG", "country", "COUNTRY",
+})
+
+
 def apply_badge_localization(sections: dict) -> dict:
     """KIS-1248: Deterministische Eindeutschung von Badge-/Slug-Resten."""
     total = 0
@@ -403,6 +414,12 @@ def apply_badge_localization(sections: dict) -> dict:
             continue
         if key.startswith("_"):
             continue  # KIS-1251: interne Keys nicht anfassen
+        # KIS-1253: Machine-Enum-Felder und Kurzwerte überspringen — kurze
+        # Strings sind kanonische Einzelwerte ('limited', 'high-risk',
+        # 'beginner', …), die downstream exakt gematcht werden. Schwelle 12:
+        # Cover-Slugs wie 'KMU/Bau/KI-Anwender' (19) bleiben lokalisierbar.
+        if key in _L10N_SKIP_KEYS or len(content) < 12:
+            continue
         changed = content
         for pattern, replacement in _BADGE_LOCALIZATION_RULES:
             changed = re.sub(pattern, replacement, changed)
