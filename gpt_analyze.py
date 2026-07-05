@@ -21738,7 +21738,14 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     # blockierend, fail-open.
     try:
         from services.coherence_judge import run_coherence_judge
-        run_coherence_judge(sections, answers, run_id=run_id)
+        _judge_result = run_coherence_judge(sections, answers, run_id=run_id)
+        # KIS-1258 / Platin++++: Heal-Schleife — urteilt der Judge GELB/ROT,
+        # repariert ein chirurgischer Edit-Pass die geflaggten Sektionen
+        # (exakte find/replace-Edits, zahlen- und tag-geschützt), danach
+        # GENAU EIN Re-Judge. Kein Loop, fail-open.
+        if _judge_result and _judge_result.get("ampel") != "gruen":
+            from services.judge_heal import run_judge_heal
+            run_judge_heal(sections, answers, _judge_result, run_id=run_id)
     except Exception as _cj_exc:  # pragma: no cover
         log.warning("[%s] [PLATIN-JUDGE] Hook übersprungen: %s", run_id, _cj_exc)
 

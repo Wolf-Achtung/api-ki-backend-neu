@@ -174,34 +174,39 @@ KPI_EXTRACTION_PATTERNS: Dict[str, Dict[str, Any]] = {
 }
 
 # Branch benchmark ranges
+# KIS-1258: ROI-Untergrenzen von 50–100 auf 10 gesenkt. Der kanonische
+# Business Case rechnet seit der Ehrlichkeits-Umstellung (KIS-1251) mit
+# konservativen Jahr-1-ROIs um 20–25 % — die alten Untergrenzen stammten
+# aus der 190-%-Ära und erzeugten in jedem Lauf zwei Medium-Warnungen
+# ("ROI 22.5% outside benchmark range (80, 300)", Lauf KIS-1240).
 BRANCH_BENCHMARKS: Dict[str, Dict[str, Tuple[float, float]]] = {
     "consulting": {
-        "roi": (80, 300),
+        "roi": (10, 300),
         "payback": (3, 18),
         "time_savings_percent": (15, 50),
     },
     "healthcare": {
-        "roi": (50, 200),
+        "roi": (10, 200),
         "payback": (6, 24),
         "time_savings_percent": (10, 40),
     },
     "finance": {
-        "roi": (100, 400),
+        "roi": (10, 400),
         "payback": (3, 12),
         "time_savings_percent": (20, 60),
     },
     "manufacturing": {
-        "roi": (80, 250),
+        "roi": (10, 250),
         "payback": (6, 24),
         "time_savings_percent": (15, 45),
     },
     "retail": {
-        "roi": (60, 200),
+        "roi": (10, 200),
         "payback": (6, 18),
         "time_savings_percent": (10, 35),
     },
     "it": {
-        "roi": (100, 350),
+        "roi": (10, 350),
         "payback": (3, 15),
         "time_savings_percent": (20, 55),
     },
@@ -637,7 +642,7 @@ class NumericalIntegrityEngineV4:
 
         # Check ROI plausibility against branch benchmarks
         benchmarks = BRANCH_BENCHMARKS.get(self.branch, BRANCH_BENCHMARKS["consulting"])
-        roi_range = benchmarks.get("roi", (50, 400))
+        roi_range = benchmarks.get("roi", (10, 400))  # KIS-1258: Untergrenze 50 → 10
 
         for metric in roi_metrics:
             if metric.value < roi_range[0] or metric.value > roi_range[1]:
