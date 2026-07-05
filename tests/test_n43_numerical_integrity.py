@@ -58,7 +58,10 @@ def inconsistent_sections() -> Dict[str, Any]:
     return {
         "executive_summary": "ROI of 150%",
         "business_case": "ROI of 300%",  # Inconsistent
-        "financial": "ROI: 75%",  # Also inconsistent
+        # KIS-1258: 75% -> 900% — die ROI-Untergrenzen wurden auf 10 gesenkt
+        # (ehrlicher kanonischer ROI ~22%), ein Ausreisser muss jetzt OBERHALB
+        # der Benchmark-Spanne liegen, um als Befund erkannt zu werden.
+        "financial": "ROI: 900%",  # Also inconsistent (above every upper bound)
     }
 
 
