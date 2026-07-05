@@ -1910,6 +1910,23 @@ class ReportValidator:
         """
         # Check risk level validity
         risk_level = self.sections.get("AI_ACT_RISK_LEVEL", "")
+        # KIS-1253: Eindeutschungs-/Alias-Reste zurücknormalisieren statt hart
+        # zu failen. Lauf 1123 starb am Gate, weil die Badge-Lokalisierung das
+        # Machine-Feld 'limited' → 'begrenzt' übersetzt hatte. Der Report darf
+        # an einem heilbaren Anzeige-Artefakt nicht scheitern.
+        _RISK_LEVEL_ALIASES = {
+            "begrenzt": "limited", "hoch": "high-risk", "hochrisiko": "high-risk",
+            "high": "high-risk", "high_risk": "high-risk",
+            "kein": "none", "keine": "none", "keins": "none",
+        }
+        if isinstance(risk_level, str):
+            _rl_norm = risk_level.strip().lower()
+            if _rl_norm in _RISK_LEVEL_ALIASES:
+                _rl_healed = _RISK_LEVEL_ALIASES[_rl_norm]
+                self.sections["AI_ACT_RISK_LEVEL"] = _rl_healed
+                log.info("[KIS-1253][AI-ACT-HEAL] Risk-Level '%s' → '%s' normalisiert",
+                         risk_level, _rl_healed)
+                risk_level = _rl_healed
         if risk_level and risk_level not in self.VALID_AI_ACT_RISK_LEVELS:
             self.errors.append(
                 ValidationError(
