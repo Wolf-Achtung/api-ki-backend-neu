@@ -1145,7 +1145,7 @@ _FIELD_LABELS: dict[str, str] = {
     "bundesland": "Bundesland",
     "hauptleistung": "Hauptdienstleistung",
     "jahresumsatz": "Jahresumsatz",
-    "projekte_pro_monat": "Projekte pro Monat",
+    "projekte_pro_monat": "Aufträge/Projekte pro Monat",
     # KIS-1242: vom Registry-Kontrakt-Test gefundene Label-Lücken
     "top_zeitfresser": "Top-Zeitfresser",
     "datenschutz": "Datenschutz-Einwilligung",

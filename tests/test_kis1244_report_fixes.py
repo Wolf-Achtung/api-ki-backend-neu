@@ -177,7 +177,8 @@ class TestTemplateFixes:
     def test_hyphens_manual_in_strategy_tables(self):
         src = _read("templates/strategy_report.html")
         assert "hyphens: manual" in src
-        assert "th { hyphens: none; overflow-wrap: normal; word-break: keep-all; }" in src
+        # KIS-1254: none -> manual, damit die &shy;-Trennstellen im Kopf greifen
+        assert "th { hyphens: manual; overflow-wrap: normal; word-break: keep-all; }" in src
         assert "hyphens: auto" not in src
 
     def test_thead_keeps_first_row(self):

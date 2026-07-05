@@ -1535,7 +1535,7 @@ def vendor_audit_report_to_html(
     # Summary Block
     status_color = status_colors.get(report.overall_audit_status, "#f59e0b")
     html_parts.append(f'''
-        <div class="vendor-audit-summary" style="padding:16px;background:linear-gradient(135deg,#f8fafc 0%,#fff 100%);border-radius:12px;border:2px solid {status_color};margin-bottom:20px;">
+        <div class="vendor-audit-summary" style="padding:16px;background:linear-gradient(135deg,#f8fafc 0%,#fff 100%);border-radius:12px;border:2px solid {status_color};margin-bottom:20px;break-inside:avoid;page-break-inside:avoid;">
             <p style="margin:0 0 12px 0;color:#64748b;font-size:10pt;">{report.summary}</p>
 
             <div style="margin-bottom:12px;">

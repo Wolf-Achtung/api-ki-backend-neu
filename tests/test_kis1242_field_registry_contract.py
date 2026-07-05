@@ -88,7 +88,7 @@ def test_projekte_pro_monat_fully_registered():
     assert ENUM_VALUES["projekte_pro_monat"] == [
         "unter_2", "2_5", "6_10", "ueber_10", "keine_angabe",
     ]
-    assert _QR_LABELS["projekte_pro_monat"] == "Projekte pro Monat"
+    assert _QR_LABELS["projekte_pro_monat"] == "Aufträge/Projekte pro Monat"
     from services.chat_normalizer import normalize_field
     res = normalize_field("projekte_pro_monat", "unter_2", {}, report_type="r1")
     assert res.confidence == "high" and res.value == "unter_2"

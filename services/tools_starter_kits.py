@@ -796,6 +796,12 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
         complexity_color = {"low": "#22c55e", "medium": "#f59e0b", "high": "#ef4444"}.get(
             f.application_complexity, "#6b7280"
         )
+        # KIS-1254: Wert eingedeutscht rendern — der englische Rohwert stand
+        # in einem eigenen <span>, sodass die Badge-Lokalisierung ihn über
+        # die Tag-Grenze nicht fand (Platin-QA english_badge, Lauf 1123).
+        complexity_label = {"low": "niedrig", "medium": "mittel", "high": "hoch"}.get(
+            f.application_complexity, f.application_complexity
+        )
         funding_html += f"""
         <div style="padding:10px;background:#f0f7ff;border-radius:6px;margin-bottom:8px;border-left:3px solid #3b82f6;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -804,7 +810,7 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
             </div>
             <p style="margin:4px 0 0 0;font-size:11px;color:#495057;">{f.fit_reason}</p>
             <div style="margin-top:4px;font-size:10px;color:#9ca3af;">
-                {f.provider} | Komplexität: <span style="color:{complexity_color};">{f.application_complexity}</span>
+                {f.provider} | Komplexität: <span style="color:{complexity_color};">{complexity_label}</span>
             </div>
         </div>
         """

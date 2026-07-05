@@ -1817,6 +1817,25 @@ async def generate_response(
         if hint:
             system_prompt += f"\n\nHINWEIS FÜR DIESEN ABSCHNITT:\n{hint}"
 
+    # KIS-1255: Branchengerechte Sprache — nicht jede Branche arbeitet in
+    # „Projekten" (Lauf 1123: eine Restaurant-Kette bekam durchgehend
+    # Projekt-Fragen). Gilt für ALLE Prompt-Varianten (Phase 1a/1b/2,
+    # Legacy, Strategie).
+    _branche_ctx = str(collected_fields.get("branche") or "").strip()
+    system_prompt += (
+        "\n\nBRANCHENGERECHTE SPRACHE:\n"
+        "Nicht jede Branche arbeitet in „Projekten“. Passen Sie "
+        "Arbeitsbegriffe und Beispiele an die Branche an"
+        + (f" (Branche: {_branche_ctx})" if _branche_ctx else "")
+        + ": Gastronomie/Handel → Bestellungen oder Aufträge, "
+        "Gesundheit/Pflege → Behandlungen oder Fälle, Verwaltung → "
+        "Vorgänge, Industrie/Logistik → Aufträge oder Chargen. Von "
+        "„Projekten“ sprechen Sie nur bei projektbasiert arbeitenden "
+        "Branchen (Beratung, Agentur, IT, Bau, Medien). Formulieren Sie "
+        "Mengen- und Ablauf-Fragen entsprechend um, ohne die Bedeutung "
+        "der Frage zu verändern."
+    )
+
     # Draft-mode context injection (also used in legacy mode for dialog_mode)
     if draft_mode or dialog_mode:
         _current_field = next_fields[0] if next_fields else None

@@ -77,7 +77,11 @@ FIELD_QUESTIONS: dict[str, str] = {
     "anwendungsfaelle": "Welche KI-Anwendungsfälle sind für Sie besonders interessant?",
     "pilot_bereich": "In welchem Bereich würden Sie am ehesten ein KI-Pilotprojekt starten?",
     "vorhandene_tools": "Welche klassischen Business-Systeme (CRM, ERP, Projektmanagement, Buchhaltung) nutzen Sie aktuell? KI-Tools fragen wir separat ab.",
-    "projekte_pro_monat": "Wie viele Projekte oder Aufträge bearbeiten Sie üblicherweise pro Monat?",
+    # KIS-1255: branchenneutral — nicht jede Branche arbeitet in "Projekten"
+    # (Lauf 1123: Restaurant-Kette). Die Klammer nennt Beispiele statt den
+    # Begriff vorauszusetzen; der Chat-LLM passt die Formulierung zusätzlich
+    # an die bekannte Branche an (BRANCHENGERECHTE SPRACHE).
+    "projekte_pro_monat": "Wie viele Aufträge oder Vorgänge (z. B. Projekte, Bestellungen, Fälle) bearbeiten Sie üblicherweise pro Monat?",
     # KIS-1243: Bereichs-Frage vs. Aufgaben-Frage — bewusst unterschiedlich
     # formuliert, damit die beiden Zeitfresser-Felder nicht wie eine
     # Doppel-Frage wirken (Anlauf 4, Tools-Block).
@@ -136,10 +140,11 @@ FIELD_EXAMPLES: dict[str, list[str]] = {
         "KI-generierte Inhalte klar kennzeichnen",
     ],
     # KIS-1235-P3: Zeitfresser als Quick-Win-Anker
+    # KIS-1255: "nach Projektabschluss" → "im Nachgang" (branchenneutral)
     "top_zeitfresser": [
         "Angebote und Proposals schreiben",
         "E-Mail-Korrespondenz und laufende Terminabstimmung",
-        "Dokumentation und Berichte nach Projektabschluss",
+        "Dokumentation und Berichte im Nachgang",
     ],
 }
 

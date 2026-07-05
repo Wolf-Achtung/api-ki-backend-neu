@@ -19910,6 +19910,40 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         sections["QUICK_WINS_HTML_LEFT"] = _qw_pristine
         sections["quick_wins"] = _qw_pristine
 
+        # KIS-1254: Der Pristine-Restore bringt die Original-DSGVO-Vorbehalte
+        # zurück, NACHDEM der KIS-1244-Cap gelaufen ist (Lauf 1123: 4 statt 2
+        # Vorkommen im Auslieferungszustand). Cap hier erneut anwenden —
+        # gleiche Lesereihenfolge, idempotent.
+        try:
+            _dv2_pat = re.compile(r'\s*(?:<em>\s*)?\((?:DSGVO|Datenschutz)-Vorbehalt[^)<]{0,80}\)(?:\s*</em>)?')
+            _dv2_keep_left = 2
+            _dv2_removed = 0
+            _dv2_order = ['EXECUTIVE_SUMMARY_HTML', 'EXECUTIVE_DECISION_HTML', 'QUICK_WINS_HTML',
+                          'KI_STACK_SUMMARY_HTML', 'STARTER_KIT_HTML', 'BUSINESS_CASE_HTML',
+                          'ROI_HTML', 'PILOT_PLAN_HTML', 'ROADMAP_12M_HTML', 'RECOMMENDATIONS_HTML']
+            _dv2_keys = _dv2_order + sorted(k for k in sections if k not in _dv2_order)
+            for _dv2_k in _dv2_keys:
+                _dv2_v = sections.get(_dv2_k)
+                if not isinstance(_dv2_v, str) or '-Vorbehalt' not in _dv2_v:
+                    continue
+                _dv2_ms = list(_dv2_pat.finditer(_dv2_v))
+                if not _dv2_ms:
+                    continue
+                _dv2_kept = min(len(_dv2_ms), max(0, _dv2_keep_left))
+                for _m2 in reversed(_dv2_ms[_dv2_kept:]):
+                    _dv2_v = _dv2_v[:_m2.start()] + _dv2_v[_m2.end():]
+                    _dv2_removed += 1
+                if _dv2_kept < len(_dv2_ms):
+                    sections[_dv2_k] = _dv2_v
+                    if _dv2_k == 'QUICK_WINS_HTML':
+                        sections['QUICK_WINS_HTML_LEFT'] = _dv2_v
+                        sections['quick_wins'] = _dv2_v
+                _dv2_keep_left -= _dv2_kept
+            if _dv2_removed:
+                log.info('[KIS-1254][DSGVO-VORBEHALT-R2] %d Einschub/Einschübe nach QW-Restore entfernt (Cap: 2)', _dv2_removed)
+        except Exception:  # pragma: no cover
+            pass
+
     # =========================================================================
     # FIX-R3-4B: FINAL hauptleistung limiter + concat repair
     # Static template blocks (Final-Check, Sofort-Start, BC-Prose, Hero) are
