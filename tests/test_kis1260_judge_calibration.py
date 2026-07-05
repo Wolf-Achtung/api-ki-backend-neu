@@ -37,7 +37,8 @@ class TestBudgetGrenznaehe:
         idx_near = src.find("[KIS-1260][BUDGET-GRENZNAEHE]")
         assert idx_gate != -1 and idx_near != -1
         # Grenznähe-Zweig hängt am selben Gate (elif), direkt dahinter
-        assert 0 < idx_near - idx_gate < 2500
+        # (KIS-1262 schob die Engine-Injektion dazwischen: 2500 → 4000)
+        assert 0 < idx_near - idx_gate < 4000
         block = src[idx_gate:idx_near]
         assert "elif _bg_max and _bg_capex >= 0.8 * _bg_max" in block
         # Grüner Ton (innerhalb des Budgets), nicht die Warn-Box
