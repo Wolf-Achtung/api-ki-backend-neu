@@ -705,6 +705,30 @@ def _enhance_data_tables(html: str) -> str:
     return html
 
 
+def _ensure_thead(html: str) -> str:
+    """KIS-1254: LLM-Tabellen kommen oft ohne <thead> — die erste <th>-Zeile
+    wird eingewickelt, damit sie als table-header-group auf Folgeseiten
+    wiederholt wird und nicht verwaist am Seitenende steht (Strategie
+    S. 35, Lauf 1123)."""
+    fixed = 0
+
+    def _wrap(m: re.Match) -> str:  # type: ignore[type-arg, unused-ignore]
+        nonlocal fixed
+        t = m.group(0)
+        if "<thead" in t.lower():
+            return str(t)
+        fm = re.search(r"<tr[^>]*>\s*<th[\s\S]*?</tr>", t, re.IGNORECASE)
+        if not fm:
+            return str(t)
+        fixed += 1
+        return str(t[:fm.start()]) + "<thead>" + str(fm.group(0)) + "</thead>" + str(t[fm.end():])
+
+    html = _RE_TABLE.sub(_wrap, html)
+    if fixed:
+        log.info("[KIS-1254][THEAD] %d Tabellenkopf/-k\u00f6pfe in <thead> gewickelt", fixed)
+    return html
+
+
 def _enhance_action_cards(html: str) -> str:
     """FIX-VU3: Wrap action items after 'Nächste Schritte'/'Handlungsempfehlung' headings.
 
@@ -769,6 +793,9 @@ def enhance_strategy_html(html: str) -> str:
     # 7. FIX-VU3: Reclassify data-heavy tables
     html = _enhance_data_tables(html)
 
+    # 8. KIS-1254: Tabellenk\u00f6pfe in <thead> (Header-Wiederholung, kein Orphan)
+    html = _ensure_thead(html)
+
     log.info("[HTML-ENHANCE] Strategy: %d \u2192 %d chars", original_len, len(html))
     return html
 
@@ -795,6 +822,9 @@ def enhance_kpa_html(html: str) -> str:
     # 5. FIX-VU3: Reclassify data-heavy tables + action cards
     html = _enhance_data_tables(html)
     html = _enhance_action_cards(html)
+
+    # 6. KIS-1254: Tabellenk\u00f6pfe in <thead> (Header-Wiederholung, kein Orphan)
+    html = _ensure_thead(html)
 
     log.info("[HTML-ENHANCE] KPA: %d \u2192 %d chars", original_len, len(html))
     return html

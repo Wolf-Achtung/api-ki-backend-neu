@@ -321,9 +321,11 @@ _BADGE_LOCALIZATION_RULES = [
     (r"\bAUTOMATION\b", "AUTOMATISIERUNG"),
     (r"\bPRODUCTIVITY\b", "PRODUKTIVITÄT"),
     (r"(RISIKO\s+)limited\b", r"\1begrenzt"),
-    (r"(Komplexit\u00e4t:\s*)low\b", r"\1niedrig"),
-    (r"(Komplexit\u00e4t:\s*)medium\b", r"\1mittel"),
-    (r"(Komplexit\u00e4t:\s*)high\b", r"\1hoch"),
+    # KIS-1254: tag-tolerant \u2014 der Wert steht teils in einem eigenen <span>
+    # hinter dem Label ("Komplexit\u00e4t: <span \u2026>low</span>", Lauf 1123).
+    (r"(Komplexit\u00e4t:\s*(?:<[^>]*>\s*)*)low\b", r"\1niedrig"),
+    (r"(Komplexit\u00e4t:\s*(?:<[^>]*>\s*)*)medium\b", r"\1mittel"),
+    (r"(Komplexit\u00e4t:\s*(?:<[^>]*>\s*)*)high\b", r"\1hoch"),
     (r"\blimited\b", "begrenzt"),
     # Interner Profil-Slug -> lesbares Profil
     (r"\b(Solo|Team|KMU)/([A-Za-z\u00c4\u00d6\u00dc\u00e4\u00f6\u00fc\u00df]+)/KI-(Experte|Anwender|Einsteiger)\b",
@@ -429,6 +431,63 @@ def apply_badge_localization(sections: dict) -> dict:
             total += 1
     if total:
         log.info("[KIS-1248][BADGE-L10N] %d Sektion(en) eingedeutscht", total)
+    return sections
+
+
+# KIS-1254: Satz-Dubletten über Sektionsgrenzen. Der Kohärenz-Judge (Lauf
+# 1123) fand dieselbe Kernaussage nahezu wortgleich in Empfehlungen,
+# Persönlicher Einschätzung und Tool-Empfehlungen. Konservativ: Nur lange
+# Sätze (≥ 90 Zeichen), die als ZUSAMMENHÄNGENDER Textknoten im HTML stehen
+# (keine Tags im Satz) — ab dem 3. Vorkommen wird entfernt. Shadow-Aliase
+# (kleingeschriebene Zwillinge wie 'executive_summary') werden übersprungen,
+# damit Alias-Paare nicht als Dubletten zählen.
+_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
+_SENTENCE_CAP_MIN_LEN = 90
+_SENTENCE_CAP_KEEP = 2
+_SENTENCE_CAP_ORDER = [
+    "EXECUTIVE_SUMMARY_HTML", "EXECUTIVE_DECISION_HTML", "QUICK_WINS_HTML",
+    "KI_STACK_SUMMARY_HTML", "BUSINESS_CASE_HTML", "ROADMAP_90D_HTML",
+    "TOOLS_EMPFEHLUNGEN_HTML", "STARTER_KIT_HTML", "RECOMMENDATIONS_HTML",
+    "ROADMAP_12M_HTML", "ADVISOR_NOTE_HTML",
+]
+
+
+def _is_shadow_alias(key: str, sections: dict) -> bool:
+    if key != key.lower():
+        return False
+    up = key.upper()
+    return up in sections or (up + "_HTML") in sections
+
+
+def cap_repeated_sentences(sections: dict) -> dict:
+    """KIS-1254: kappt sektionsübergreifend wiederholte Sätze auf 2 Vorkommen."""
+    keys = [k for k in _SENTENCE_CAP_ORDER if k in sections]
+    keys += sorted(k for k in sections if k not in _SENTENCE_CAP_ORDER)
+    seen: dict = {}
+    removed = 0
+    for key in keys:
+        val = sections.get(key)
+        if (not isinstance(val, str) or len(val) < 200 or key.startswith("_")
+                or "PROMPT" in key or _is_shadow_alias(key, sections)):
+            continue
+        changed = val
+        for part in _HTML_TAG_SPLIT_RE.split(val):
+            if part.startswith("<") or len(part.strip()) < _SENTENCE_CAP_MIN_LEN:
+                continue
+            for sent in _SENTENCE_SPLIT_RE.split(part):
+                s = sent.strip()
+                if len(s) < _SENTENCE_CAP_MIN_LEN:
+                    continue
+                norm = re.sub(r"\s+", " ", s.lower()).rstrip(".!?")
+                seen[norm] = seen.get(norm, 0) + 1
+                if seen[norm] > _SENTENCE_CAP_KEEP and s in changed:
+                    changed = changed.replace(s, "", 1)
+                    removed += 1
+        if changed != val:
+            sections[key] = re.sub(r"(<p[^>]*>)\s*(</p>)", "", changed)
+    if removed:
+        log.info("[KIS-1254][SENTENCE-CAP] %d wiederholte Sätze entfernt (Cap: %d)",
+                 removed, _SENTENCE_CAP_KEEP)
     return sections
 
 
@@ -945,8 +1004,15 @@ def remove_roi_from_section(html: str, section_name: str) -> tuple[str, int]:
     for pattern in ROI_PATTERNS:
         matches = list(re.finditer(pattern, result, re.IGNORECASE))
         for match in reversed(matches):  # Reverse um Indizes stabil zu halten
-            # Ersetze mit Verweis auf Business Case
-            replacement = "→ siehe Business Case"
+            # KIS-1254: Der alte Ersatz "→ siehe Business Case" zerriss den
+            # Satz, wenn der Treffer mitten in einer Konstruktion stand
+            # (Lauf 1123, S. 24: "Der ausgewiesene → siehe Business Case
+            # nach 12 Monaten basiert …"). Der Ersatz trägt jetzt das
+            # Substantiv weiter, damit der Satz grammatisch bleibt.
+            if "rendite" in match.group().lower():
+                replacement = "Rendite (siehe Business Case)"
+            else:
+                replacement = "ROI (siehe Business Case)"
             result = result[:match.start()] + replacement + result[match.end():]
             removal_count += 1
             log.info(f"[ROI-FILTER] {section_name}: Removed '{match.group()}' → '{replacement}'")
@@ -3504,6 +3570,13 @@ def apply_all_quality_enforcers(sections: dict, hauptleistung: str = "", bundesl
             log.warning("[FIX-527] Platzhalter text found: %s", platzhalter_violations)
     except ImportError:
         log.debug("[FIX-527] report_facts module not available, skipping")
+
+    # 25. KIS-1254: Sektionsübergreifende Satz-Dubletten kappen (Judge-Befund
+    # Lauf 1123: dieselbe Kernaussage 3× nahezu wortgleich).
+    try:
+        sections = cap_repeated_sentences(sections)
+    except Exception as _cap_exc:  # pragma: no cover - defensiv
+        log.warning("[KIS-1254][SENTENCE-CAP] skipped (%s)", _cap_exc)
 
     log.info("[QUALITY-ENFORCER] Pipeline complete (FIX-52x final polish applied)")
     return sections

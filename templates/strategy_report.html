@@ -184,7 +184,11 @@ th, td {
 }
 /* KIS-1248: Spaltenköpfe brachen strichlos mitten im Wort
    ("HANDLUN GSFELD", "LINK/KONT AKT") — Umbruch nur an Leerzeichen. */
-th { hyphens: none; overflow-wrap: normal; word-break: keep-all; }
+/* KIS-1254: hyphens:none ignorierte die &shy;-Trennstellen aus dem
+   Stil-Lint — lange Kopf-Woerter (MITIGATIONSSTRATEGIE) liefen in die
+   Nachbarspalte (Lauf 1123, S. 13/31/35). manual erlaubt NUR die
+   gesetzten Soft-Hyphens, weiterhin keine wilden Umbrueche. */
+th { hyphens: manual; overflow-wrap: normal; word-break: keep-all; }
 /* KIS-1235: Zeilen zusammenhalten, Tabellenkopf bei Umbruch wiederholen. */
 tr { break-inside: avoid; }
 thead { display: table-header-group; break-after: avoid; page-break-after: avoid; }

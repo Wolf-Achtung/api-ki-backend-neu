@@ -106,8 +106,13 @@ class TestRemainingFixes:
         assert "CANONICAL_OVERALL" in src[idx:idx + 700]
 
     def test_th_no_mid_word_break(self):
+        # KIS-1254: hyphens none → manual. Weiterhin keine wilden Umbrüche
+        # (keep-all, overflow-wrap normal), aber die &shy;-Trennstellen des
+        # Stil-Lints greifen jetzt — hyphens:none ignorierte sie und lange
+        # Kopf-Wörter liefen in die Nachbarspalte (Lauf 1123).
         src = _read("templates/strategy_report.html")
-        assert "th { hyphens: none; overflow-wrap: normal; word-break: keep-all; }" in src
+        assert "th { hyphens: manual; overflow-wrap: normal; word-break: keep-all; }" in src
+        assert "th { hyphens: none" not in src
 
     def test_soft_hyphen_threshold_raised(self):
         # "Selbstbetrieb"/"Dienstleister" (13) bekamen falsche Trennstellen —

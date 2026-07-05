@@ -220,13 +220,27 @@ def audit_render_context(
     return missing
 
 
+def _field_label(key: str) -> str:
+    """KIS-1254: Feldnamen als deutsches Label statt snake_case anzeigen —
+    'vision_prioritaet' stand roh im Leistungsnachweis (Platin-QA
+    visible_snake_case, Lauf 1123). Fallback: Unterstriche → Leerzeichen."""
+    try:
+        from services.email_templates import _R1_LABELS
+        label = _R1_LABELS.get(key)
+        if label:
+            return label
+    except Exception:
+        pass
+    return str(key).replace("_", " ").capitalize()
+
+
 def build_html_report(result: Dict[str, Any]) -> str:
     """Erzeugt ein kleines HTML-Snippet für die Feedback-Box im Report."""
     if not result:
         return ""
     missing = result.get("missing", [])
     rows = "".join(
-        f"<li><code>{html.escape(str(k))}</code></li>" for k in missing
+        f"<li>{html.escape(_field_label(str(k)))}</li>" for k in missing
     ) or "<li>—</li>"
 
     return (

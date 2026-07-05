@@ -619,7 +619,7 @@ _R1_LABELS: Dict[str, str] = {
     "selbststaendig": "Selbstständig",
     "hauptleistung": "Hauptleistung",
     "jahresumsatz": "Jahresumsatz",
-    "projekte_pro_monat": "Projekte pro Monat",
+    "projekte_pro_monat": "Aufträge/Projekte pro Monat",
     "durchschnittshonorar": "Durchschnittshonorar/Projekt",
     "top_zeitfresser": "Top-Zeitfresser",
     "zielgruppen": "Zielgruppen",

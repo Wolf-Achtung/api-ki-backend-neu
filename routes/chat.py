@@ -2164,6 +2164,13 @@ async def chat_message(
             )
         )
 
+        # KIS-1255: Nach „Auswertung starten“ dürfen die Summary-Zweige
+        # unten KEINE Quick-Replies mehr senden. Vorher kamen
+        # ['Auswertung starten', 'Angaben korrigieren'] ein zweites Mal mit
+        # der Bestätigung „Ihre Auswertung wird jetzt erstellt“ — das
+        # Frontend renderte den Start-Button doppelt (Status- UND
+        # Strategie-Fragebogen, Läufe 1121/1123). Guard steckt als
+        # `not _report_start_requested` in beiden Summary-Bedingungen.
         if _checkpoint_triggered or _final_phase == "checkpoint":
             # Checkpoint: show topic selection buttons
             # KIS-1241: Genau ZWEI Ein-Klick-Optionen, Single-Select — kein
@@ -2189,7 +2196,7 @@ async def chat_message(
                 options=_cp_options,
                 multi_select=False,
             )]
-        elif _final_phase == "summary" and not _is_edit_request and (not _is_in_edit_mode or _edit_applied):
+        elif _final_phase == "summary" and not _report_start_requested and not _is_edit_request and (not _is_in_edit_mode or _edit_applied):
             # KIS-1124-HOTFIX: Summary phase needs action buttons so user can
             # start the report or request edits. Previously was [] → user had
             # to type manually, which is not discoverable.
@@ -2254,7 +2261,7 @@ async def chat_message(
                 else:
                     qr_next = _block_remaining[:1]
                 quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
-        elif _strategy_completion_ready and not _is_edit_request and (not _is_in_edit_mode or _edit_applied):
+        elif _strategy_completion_ready and not _report_start_requested and not _is_edit_request and (not _is_in_edit_mode or _edit_applied):
             # KIS-1146: Strategy completion — emit __summary_action__ QR manually.
             # Mirrors the r1 summary branch above (line ~1913) since strategy
             # lacks phase_state. Same guard semantics: not an edit request,
@@ -4191,7 +4198,7 @@ _QR_LABELS: dict[str, str] = {
     "selbststaendig": "Unternehmensform", "country": "Land",
     "bundesland": "Bundesland / Region", "hauptleistung": "Hauptleistung",
     "jahresumsatz": "Jahresumsatz",
-    "projekte_pro_monat": "Projekte pro Monat",
+    "projekte_pro_monat": "Aufträge/Projekte pro Monat",
     # Sektion 1
     "zielgruppen": "Zielgruppen", "it_infrastruktur": "IT-Infrastruktur",
     "interne_ki_kompetenzen": "Internes KI-Team", "datenquellen": "Verfügbare Daten",

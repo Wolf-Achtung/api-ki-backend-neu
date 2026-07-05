@@ -121,12 +121,18 @@ class TestHyphenationImprovements:
     def test_everyday_words_no_longer_softened(self):
         # KIS-1248: Schwelle 10→14 — Lauf 1238 zeigte falsche Trennstellen
         # in Alltagswörtern ("Selbs-tbetrieb", "Diens-tleister"). 11–13
-        # Zeichen bleiben jetzt unangetastet.
+        # Zeichen bleiben in NORMALEN Zellen (td) unangetastet.
+        # KIS-1254: Kopfzellen (th) haben Schwelle 10 — "KOMPLEXITÄT" (11)
+        # lief in schmalen Spalten in die Nachbarspalte (Lauf 1123) und
+        # bekommt jetzt silbengerechte Soft-Hyphens.
         from services.style_lint import soften_table_long_words
         html = "<table><tr><th>KOMPLEXITÄT</th><td>Dienstleister</td></tr></table>"
         out, n = soften_table_long_words(html)
-        assert n == 0
-        assert "\u00ad" not in out
+        import re as _re
+        td = _re.search(r"<td>(.*?)</td>", out).group(1)
+        assert "\u00ad" not in td  # td bleibt unangetastet
+        th = _re.search(r"<th>(.*?)</th>", out).group(1)
+        assert "\u00ad" in th  # th wird weich getrennt
 
     def test_max_run_8_in_cells(self):
         from services.style_lint import soften_table_long_words

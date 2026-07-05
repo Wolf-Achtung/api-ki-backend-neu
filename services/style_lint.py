@@ -157,6 +157,9 @@ _TABLE_CELL_RE = re.compile(r"(<t[dh]\b[^>]*>)([\s\S]*?)(</t[dh]>)", re.IGNORECA
 # KIS-1238: 12 → 10 — "KOMPLEXITÄT"/"INTEGRATION" (11 Zeichen) fielen durch
 # und wurden in schmalen Spalten hart ohne Trennstrich umbrochen.
 _LONG_WORD_RE = re.compile(r"[A-Za-zÄÖÜäöüß]{14,}")
+# KIS-1254: Kopfzellen-Schwelle — th-Spalten sind schmaler als Fließtext,
+# dort brauchen schon 10+-Zeichen-Wörter Trennstellen (ZIELKONFLIKT = 12).
+_TH_LONG_WORD_RE = re.compile(r"[A-Za-zÄÖÜäöüß]{10,}")
 _VOWELS = set("aeiouäöüy")
 
 
@@ -272,6 +275,13 @@ def soften_table_long_words(html: str) -> Tuple[str, int]:
 
     def _cell(m: "re.Match[str]") -> str:
         nonlocal count
+        # KIS-1254: Kopfzellen (th) brauchen eine niedrigere Schwelle und
+        # kürzere Segmente — "ZIELKONFLIKT" (12) und "HANDLUNGSFELD" (13)
+        # fielen durch die 14er-Schwelle und liefen in die Nachbarspalte
+        # (Lauf 1123, Strategie S. 13/31/35).
+        _is_th = m.group(1).lower().startswith("<th")
+        _word_re = _TH_LONG_WORD_RE if _is_th else _LONG_WORD_RE
+        _max_run = 6 if _is_th else 8
         inner_parts = _TAG_SPLIT_RE.split(m.group(2))
         for i, part in enumerate(inner_parts):
             if not part or part.startswith("<"):
@@ -283,12 +293,12 @@ def soften_table_long_words(html: str) -> Tuple[str, int]:
                 nonlocal count
                 # KIS-1238: max_run 11 → 8 für Tabellenzellen — die schmalen
                 # Spalten (Lauf 1119: "HANDLUN GSFELD") brauchen kürzere Segmente.
-                softened = _soften_word(wm.group(0), max_run=8)
+                softened = _soften_word(wm.group(0), max_run=_max_run)
                 if softened != wm.group(0):
                     count += 1
                 return softened
 
-            inner_parts[i] = _LONG_WORD_RE.sub(_word, part)
+            inner_parts[i] = _word_re.sub(_word, part)
         return m.group(1) + "".join(inner_parts) + m.group(3)
 
     result = _TABLE_CELL_RE.sub(_cell, html)

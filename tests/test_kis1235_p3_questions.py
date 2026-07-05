@@ -62,7 +62,7 @@ class TestNewFieldRegistration:
 
     def test_briefing_labels(self):
         from services.email_templates import _R1_LABELS
-        assert _R1_LABELS["projekte_pro_monat"] == "Projekte pro Monat"
+        assert _R1_LABELS["projekte_pro_monat"] == "Aufträge/Projekte pro Monat"
         assert _R1_LABELS["top_zeitfresser"] == "Top-Zeitfresser"
 
     def test_prompt_vars_expose_new_fields(self):
