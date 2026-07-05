@@ -764,6 +764,92 @@ def _ensure_thead(html: str) -> str:
     return html
 
 
+_RE_TR = re.compile(r"<tr[^>]*>([\s\S]*?)</tr>", re.IGNORECASE)
+_RE_CELL = re.compile(r"<t[dh]\b[^>]*>([\s\S]*?)</t[dh]>", re.IGNORECASE)
+_RE_TABLE_OPEN = re.compile(r"<table\b[^>]*>", re.IGNORECASE)
+_RE_STRIP_TAGS = re.compile(r"<[^>]+>")
+
+
+def _balance_column_widths(html: str) -> str:
+    """KIS-1257: Breite Tabellen (>= 4 Spalten) bekommen ein <colgroup> mit
+    inhaltsproportionalen Breiten + table-layout:fixed. Ohne das quetschte
+    Chromium die textreichste Spalte ("MITIGATIONSSTRATEGIE") auf 3 Wörter
+    pro Zeile, während EINTRITT/AUSWIRKUNG halb leer blieben — die
+    Risiko-Tabelle brauchte 1 Seite PRO ZEILE (Lauf KIS-1240, S. 36-38)."""
+    balanced = 0
+
+    def _balance(m: re.Match) -> str:  # type: ignore[type-arg, unused-ignore]
+        nonlocal balanced
+        t = m.group(0)
+        low = t.lower()
+        # Bereits dimensioniert oder strukturell riskant → nicht anfassen.
+        if "<colgroup" in low or "colspan" in low or "rowspan" in low:
+            return str(t)
+        rows = [_RE_CELL.findall(r) for r in _RE_TR.findall(t)]
+        rows = [r for r in rows if r]
+        if len(rows) < 2:
+            return str(t)
+        ncols = len(rows[0])
+        if ncols < 4 or any(len(r) != ncols for r in rows):
+            return str(t)
+        avg = [
+            sum(len(_RE_STRIP_TAGS.sub(" ", r[c]).strip()) for r in rows) / len(rows)
+            for c in range(ncols)
+        ]
+        # Nur bei echter Schieflage eingreifen — ausgewogene Tabellen
+        # verteilt Chromium selbst gut genug.
+        if max(avg) < 3 * max(min(avg), 1.0):
+            return str(t)
+        weights = [min(max(a, 12.0), 220.0) for a in avg]
+        pct = [w / sum(weights) * 100.0 for w in weights]
+        pct = [min(max(p, 8.0), 34.0) for p in pct]
+        pct = [p / sum(pct) * 100.0 for p in pct]
+        cols = [int(round(p)) for p in pct]
+        cols[-1] += 100 - sum(cols)
+        colgroup = "<colgroup>" + "".join(
+            f'<col style="width:{c}%">' for c in cols) + "</colgroup>"
+        open_tag = _RE_TABLE_OPEN.match(t)
+        if not open_tag:
+            return str(t)
+        tag = open_tag.group(0)
+        if 'style="' in tag:
+            new_tag = tag.replace('style="', 'style="width:100%;table-layout:fixed;', 1)
+        else:
+            new_tag = tag[:-1] + ' style="width:100%;table-layout:fixed;">'
+        balanced += 1
+        return new_tag + colgroup + str(t[open_tag.end():])
+
+    html = _RE_TABLE.sub(_balance, html)
+    if balanced:
+        log.info("[KIS-1257][COL-BALANCE] %d Tabelle(n) mit colgroup ausbalanciert", balanced)
+    return html
+
+
+_RE_SOURCES_BEFORE_ANNAHMEN = re.compile(
+    r'(<div class="sources-footer"[\s\S]*?</div>)\s*'
+    r'(<p>(?:\s*<strong>)?\s*Annahmen:[\s\S]*?</p>)',
+    re.IGNORECASE,
+)
+
+
+def _sources_last_in_chapter(html: str) -> str:
+    """KIS-1257: Wenn der Quellen-Block VOR dem Annahmen-Absatz steht, landet
+    "Annahmen:" als Waise auf einer fast leeren Folgeseite (Lauf KIS-1240,
+    Strategie S. 17). Die Reihenfolge wird getauscht — Quellen bilden immer
+    den Kapitelabschluss (wie auf S. 13 desselben Laufs)."""
+    swapped = 0
+
+    def _swap(m: re.Match) -> str:  # type: ignore[type-arg, unused-ignore]
+        nonlocal swapped
+        swapped += 1
+        return str(m.group(2)) + "\n" + str(m.group(1))
+
+    html = _RE_SOURCES_BEFORE_ANNAHMEN.sub(_swap, html)
+    if swapped:
+        log.info("[KIS-1257][QUELLEN-LAST] %d Annahmen/Quellen-Block(paare) getauscht", swapped)
+    return html
+
+
 def _enhance_action_cards(html: str) -> str:
     """FIX-VU3: Wrap action items after 'Nächste Schritte'/'Handlungsempfehlung' headings.
 
@@ -819,6 +905,9 @@ def enhance_strategy_html(html: str) -> str:
     # 3.5 KIS-1256: Quellen-Bullet-Listen kompaktieren (fast leere Folgeseiten)
     html = _compact_source_lists(html)
 
+    # 3.6 KIS-1257: Quellen ans Kapitelende (Annahmen-Waise, Lauf KIS-1240 S. 17)
+    html = _sources_last_in_chapter(html)
+
     # 4. Highlight boxes (Rule 5)
     html = _transform_highlight_boxes(html)
 
@@ -833,6 +922,9 @@ def enhance_strategy_html(html: str) -> str:
 
     # 8. KIS-1254: Tabellenk\u00f6pfe in <thead> (Header-Wiederholung, kein Orphan)
     html = _ensure_thead(html)
+
+    # 9. KIS-1257: Spaltenbreiten inhaltsproportional ausbalancieren
+    html = _balance_column_widths(html)
 
     log.info("[HTML-ENHANCE] Strategy: %d \u2192 %d chars", original_len, len(html))
     return html
@@ -854,6 +946,9 @@ def enhance_kpa_html(html: str) -> str:
     # 2.5 KIS-1256: Quellen-Bullet-Listen kompaktieren
     html = _compact_source_lists(html)
 
+    # 2.6 KIS-1257: Quellen ans Kapitelende (Annahmen-Waise)
+    html = _sources_last_in_chapter(html)
+
     # 3. Ampel badges
     html = _transform_ampel_badges(html)
 
@@ -866,6 +961,9 @@ def enhance_kpa_html(html: str) -> str:
 
     # 6. KIS-1254: Tabellenk\u00f6pfe in <thead> (Header-Wiederholung, kein Orphan)
     html = _ensure_thead(html)
+
+    # 7. KIS-1257: Spaltenbreiten inhaltsproportional ausbalancieren
+    html = _balance_column_widths(html)
 
     log.info("[HTML-ENHANCE] KPA: %d \u2192 %d chars", original_len, len(html))
     return html

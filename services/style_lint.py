@@ -184,9 +184,13 @@ def _hyphenation_points(word: str) -> List[Tuple[int, int]]:
     for i in range(3, n - 3):
         prev_c, cur, nxt = lw[i - 1], lw[i], lw[i + 1]
         if (cur == "s" and prev_c not in _VOWELS and nxt not in _VOWELS
+                and prev_c != "s"
                 and not (nxt == "c" and i + 2 < n and lw[i + 2] == "h")):
             # Fugen-s: Konsonant + s + Konsonant → Trennung nach dem s
-            # (nie vor "ch" — sonst zerreißt es "sch": Ver·schlüsselung)
+            # (nie vor "ch" — sonst zerreißt es "sch": Ver·schlüsselung).
+            # KIS-1257: nie nach dem ZWEITEN s eines "ss"-Clusters — sonst
+            # "Mitigationss·trategie" statt "Mitigations·strategie"
+            # (Lauf KIS-1240, Risiko-Tabelle S. 36-38).
             points.append((2, i + 1))
         elif (cur not in _VOWELS and prev_c not in _VOWELS and nxt in _VOWELS
                 and prev_c + cur not in _NO_SPLIT_PAIRS and prev_c != "c"):
