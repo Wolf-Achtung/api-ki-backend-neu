@@ -231,7 +231,7 @@ class TestThinPageFixes:
         src = _read("templates/pdf_template_v7.html")
         idx = src.find(".toc-entry {")
         block = src[idx:idx + 400]
-        assert "padding: 3px 0;" in block
+        assert "padding: 2px 0;" in block  # KIS-1265: Stufe 2 (Lauf 1126)
 
     def test_skip_hint_kept_with_score_interpretation(self):
         src = _read("templates/pdf_template_v7.html")

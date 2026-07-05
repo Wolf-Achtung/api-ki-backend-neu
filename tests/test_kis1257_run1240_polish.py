@@ -176,12 +176,13 @@ class TestTocCompact:
         src = _read("templates/pdf_template_v7.html")
         idx = src.find(".toc-entry {")
         block = src[idx:idx + 400]
-        assert "padding: 3px 0" in block  # KIS-1264: 4px -> 3px
+        assert "padding: 2px 0" in block  # KIS-1264: 4->3px; KIS-1265: 3->2px
         assert "font-size: 9pt" in block
 
     def test_toc_header_and_legend_compacted(self):
         src = _read("templates/pdf_template_v7.html")
         idx = src.find(".toc-level-header {")
-        assert "margin-top: var(--sp-sm)" in src[idx:idx + 400]
+        # KIS-1265: Stufe 2 — Header noch enger als sp-sm
+        assert "margin-top: 4px" in src[idx:idx + 400]
         idx = src.find(".toc-legend {")
         assert "margin-top: var(--sp-sm)" in src[idx:idx + 400]
