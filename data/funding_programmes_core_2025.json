@@ -9,14 +9,19 @@
     "funding_rate": "bis 50%",
     "max_amount": "16.500 €",
     "focus": "Digitalisierung, IT-Sicherheit, KI-Einführung",
-    "suitable_for": ["solo", "team", "kmu"],
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
     "notes": "Programm ausgelaufen seit Dezember 2024. Steht auf der Blacklist.",
     "relevance_ki": "Sehr hoch – explizit für KI-Einführung und Digitalisierung",
     "priority": 1,
     "url": "https://www.bmwk.de/Redaktion/DE/Artikel/Digitale-Welt/foerderprogramm-go-digital.html",
     "provider": "BMWi (jetzt BMWE)",
     "deadline": "ABGELAUFEN",
-    "deadline_notes": "Programm ist ausgelaufen. Steht auf der Blacklist — wird korrekt aus Reports entfernt."
+    "deadline_notes": "Programm ist ausgelaufen. Steht auf der Blacklist — wird korrekt aus Reports entfernt.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "digital_verwaltung_itsec",
@@ -28,14 +33,18 @@
     "funding_rate": "30–70%",
     "max_amount": "10.000–200.000 €",
     "focus": "Verwaltungsdigitalisierung, IT-Sicherheit, Prozessautomatisierung",
-    "suitable_for": ["team", "kmu"],
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
     "notes": "Je nach Bundesland unterschiedliche Fördersätze und Schwerpunkte",
     "relevance_ki": "Mittel bis hoch – KI oft Teil von Digitalisierungsprojekten",
     "priority": 2,
     "url": "https://www.foerderdatenbank.de",
     "provider": "Diverse Landesförderbanken",
     "deadline": null,
-    "deadline_notes": "Sammelkategorie für Länderprogramme. Variiert je nach Bundesland."
+    "deadline_notes": "Sammelkategorie für Länderprogramme. Variiert je nach Bundesland.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "eic_accelerator",
@@ -47,14 +56,17 @@
     "funding_rate": "bis 100%",
     "max_amount": "bis 2,5 Mio € (Zuschuss)",
     "focus": "Deep Tech, KI-Innovation, disruptive Technologien",
-    "suitable_for": ["kmu"],
+    "suitable_for": [
+      "kmu"
+    ],
     "notes": "Hochkompetitiv, für innovative Scale-ups mit internationalem Potenzial",
     "relevance_ki": "Sehr hoch – expliziter Fokus auf KI und Deep Tech",
     "priority": 3,
     "url": "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator_en",
     "provider": "European Innovation Council (EIC)",
     "deadline": null,
-    "deadline_notes": "Mehrere Cut-off-Termine pro Jahr. Hochkompetitiv. Für innovative Scale-ups."
+    "deadline_notes": "Mehrere Cut-off-Termine pro Jahr. Hochkompetitiv. Für innovative Scale-ups.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "digital_europe",
@@ -66,14 +78,17 @@
     "funding_rate": "50–100%",
     "max_amount": "variabel, projektabhängig",
     "focus": "Digitale Transformation, KI-Kapazitäten, Cybersecurity",
-    "suitable_for": ["kmu"],
+    "suitable_for": [
+      "kmu"
+    ],
     "notes": "Konsortial-Projekte, erfordert Partner aus mehreren EU-Ländern",
     "relevance_ki": "Sehr hoch – zentrales EU-Programm für digitale Kompetenzen",
     "priority": 3,
     "url": "https://digital-strategy.ec.europa.eu/en/activities/digital-programme",
     "provider": "Europäische Kommission (DG CONNECT)",
     "deadline": null,
-    "deadline_notes": "Calls variieren. Aktuelle Calls auf ec.europa.eu/info/funding-tenders prüfen. Konsortial-Projekte erforderlich."
+    "deadline_notes": "Calls variieren. Aktuelle Calls auf ec.europa.eu/info/funding-tenders prüfen. Konsortial-Projekte erforderlich.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "aws_digi_invest",
@@ -85,14 +100,19 @@
     "funding_rate": "30–50%",
     "max_amount": "variabel",
     "focus": "KI, Cloud, Automation, digitale Geschäftsmodelle",
-    "suitable_for": ["solo", "team", "kmu"],
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
     "notes": "Österreichische Wirtschaftsservice (aws), Schwerpunkt auf KMU-Digitalisierung",
     "relevance_ki": "Sehr hoch – explizit KI und Automation gefördert",
     "priority": 1,
     "url": "https://www.aws.at/digitalisierung/",
     "provider": "aws (Austria Wirtschaftsservice)",
     "deadline": null,
-    "deadline_notes": "Laufend verfügbar für österreichische KMU."
+    "deadline_notes": "Laufend verfügbar für österreichische KMU.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "forschungspraemie_at",
@@ -104,14 +124,19 @@
     "funding_rate": "14% der F&E-Kosten",
     "max_amount": "unbegrenzt",
     "focus": "Forschung & Entwicklung, auch KI-Projekte",
-    "suitable_for": ["solo", "team", "kmu"],
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
     "notes": "Keine Vorabgenehmigung nötig, nachträgliche Geltendmachung bei Steuererklärung",
     "relevance_ki": "Mittel – wenn KI-Projekt F&E-Charakter hat",
     "priority": 2,
     "url": "https://www.ffg.at/forschungspraemie",
     "provider": "FFG (Österreichische Forschungsförderungsgesellschaft)",
     "deadline": null,
-    "deadline_notes": "Jährliche Beantragung über Finanzamt. 14% Prämie auf FuE-Ausgaben."
+    "deadline_notes": "Jährliche Beantragung über Finanzamt. 14% Prämie auf FuE-Ausgaben.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "digi4kmu_at",
@@ -123,14 +148,19 @@
     "funding_rate": "30–50%",
     "max_amount": "variabel, regional unterschiedlich",
     "focus": "KMU-Digitalisierung, Prozessoptimierung, KI-Tools",
-    "suitable_for": ["solo", "team", "kmu"],
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
     "notes": "Regional unterschiedliche Schwerpunkte (Wien, Niederösterreich, Steiermark etc.)",
     "relevance_ki": "Hoch – KI als Kernbestandteil der Digitalisierung",
     "priority": 2,
     "url": "https://www.bmdw.gv.at/Digitalisierung/KMUDigital.html",
     "provider": "BMDW / WKO (Österreich)",
     "deadline": null,
-    "deadline_notes": "Regionale Programme, variieren nach Bundesland."
+    "deadline_notes": "Regionale Programme, variieren nach Bundesland.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "kfw_digital_innovation",
@@ -142,14 +172,18 @@
     "funding_rate": "variabel, zinsvergünstigt",
     "max_amount": "bis 25 Mio €",
     "focus": "Digitalisierung, Innovation, Wachstumsfinanzierung",
-    "suitable_for": ["team", "kmu"],
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
     "notes": "Über Hausbank, langfristige Finanzierung für Digitalisierungsprojekte",
     "relevance_ki": "Mittel – KI als Teil von Digitalisierungsinvestitionen förderfähig",
     "priority": 2,
     "url": "https://www.kfw.de/inlandsfoerderung/Unternehmen/Digitalisierung-Innovation/",
     "provider": "KfW Bankengruppe",
     "deadline": null,
-    "deadline_notes": "Laufend verfügbar. ERP-Digitalisierungs- und Innovationskredit. Zinsgünstige Darlehen, kein Zuschuss."
+    "deadline_notes": "Laufend verfügbar. ERP-Digitalisierungs- und Innovationskredit. Zinsgünstige Darlehen, kein Zuschuss.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "eu_kmu_ip_fonds",
@@ -161,14 +195,19 @@
     "funding_rate": "bis 75%",
     "max_amount": "1.500 € (Marke), 1.125 € (Design)",
     "focus": "Markenschutz, IP-Rechte (EUIPO)",
-    "suitable_for": ["solo", "team", "kmu"],
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
     "notes": "Für EU-Markenanmeldungen über EUIPO, einfach zu beantragen",
     "relevance_ki": "Gering – indirekt, wenn KI-Produkt geschützt werden soll",
     "priority": 4,
     "url": "https://www.euipo.europa.eu/de/discover-ip/sme-fund",
     "provider": "EUIPO (Amt der EU für geistiges Eigentum)",
     "deadline": null,
-    "deadline_notes": "Jährliche Calls (üblicherweise Januar-Dezember). Voucher für Marken-/Patentanmeldung."
+    "deadline_notes": "Jährliche Calls (üblicherweise Januar-Dezember). Voucher für Marken-/Patentanmeldung.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "horizon_europe_cluster4",
@@ -180,33 +219,41 @@
     "funding_rate": "70–100%",
     "max_amount": "variabel, projektabhängig (oft > 1 Mio €)",
     "focus": "KI, Robotik, Industrie 4.0, digitale Technologien",
-    "suitable_for": ["kmu"],
+    "suitable_for": [
+      "kmu"
+    ],
     "notes": "Forschungs- und Innovationsprojekte, oft Konsortien erforderlich",
     "relevance_ki": "Sehr hoch – KI und digitale Technologien im Fokus",
     "priority": 3,
     "url": "https://research-and-innovation.ec.europa.eu/funding/funding-opportunities/funding-programmes-and-open-calls/horizon-europe/cluster-4-digital-industry-and-space_en",
     "provider": "Europäische Kommission (DG RTD)",
     "deadline": null,
-    "deadline_notes": "Work Programme 2025-2027. Calls auf Funding & Tenders Portal prüfen. Konsortium erforderlich."
+    "deadline_notes": "Work Programme 2025-2027. Calls auf Funding & Tenders Portal prüfen. Konsortium erforderlich.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "digitalbonus_bayern",
     "title": "Digitalbonus Bayern",
     "region": "Deutschland (Bayern)",
     "country_code": "DE",
-    "status": "active",
+    "status": "expired",
     "funding_type": "Zuschuss",
     "funding_rate": "bis 50%",
     "max_amount": "Standard: bis 10.000 € / Plus: bis 50.000 €",
     "focus": "Digitalisierung, IT-Sicherheit, KI-Einführung, Hard-/Software",
-    "suitable_for": ["solo", "team", "kmu"],
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
     "notes": "Länderprogramm Bayern, für Unternehmen mit Standort in Bayern. Fördert Hard-/Software und Maßnahmen zur Digitalisierung & IT-Sicherheit",
     "relevance_ki": "Sehr hoch – explizit für Digitalisierung und KI-Einführung",
     "priority": 1,
     "url": "https://www.stmwi.bayern.de/digitalisierung/digitalbonus/",
     "provider": "Bayerisches Staatsministerium für Wirtschaft",
     "deadline": null,
-    "deadline_notes": "Laufend verfügbar. Standard: bis 10.000€ (50%), Plus: bis 50.000€ (50%). Antrag über Bezirksregierung."
+    "deadline_notes": "Laufend verfügbar. Standard: bis 10.000€ (50%), Plus: bis 50.000€ (50%). Antrag über Bezirksregierung. [KIS-1263] Laut Runtime-Blacklist (b25_enforcer, FIX-B26) ausgelaufen — bei Neuauflage status=active setzen.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "invest_bw_digital_ki",
@@ -218,14 +265,18 @@
     "funding_rate": "30–50%",
     "max_amount": "bis 200.000 €",
     "focus": "Digitalisierung, KI-Einführung, Prozessoptimierung",
-    "suitable_for": ["team", "kmu"],
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
     "notes": "Länderprogramm BW, für Unternehmen mit Standort in Baden-Württemberg",
     "relevance_ki": "Sehr hoch – expliziter KI-Fokus",
     "priority": 1,
     "url": "https://www.baden-wuerttemberg.de/de/service/foerderprogramme/invest-bw",
     "provider": "Ministerium für Wirtschaft BaWü",
     "deadline": null,
-    "deadline_notes": "Programmverfügbarkeit prüfen — wird in Wellen ausgeschrieben."
+    "deadline_notes": "Programmverfügbarkeit prüfen — wird in Wellen ausgeschrieben.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "profit_berlin",
@@ -237,14 +288,18 @@
     "funding_rate": "bis 80% (Zuschuss), Rest Darlehen",
     "max_amount": "variabel, projektabhängig",
     "focus": "F&E, Innovation, Digitalisierung, KI-Projekte",
-    "suitable_for": ["team", "kmu"],
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
     "notes": "Berlin-spezifisch, für innovative F&E-Projekte mit Technologie-Schwerpunkt",
     "relevance_ki": "Sehr hoch – KI-Projekte explizit förderfähig",
     "priority": 1,
     "url": "https://www.ibb.de/de/foerderprogramme/profit.html",
     "provider": "IBB (Investitionsbank Berlin)",
     "deadline": null,
-    "deadline_notes": "Laufend verfügbar für Berliner Unternehmen. Zuschüsse und zinsgünstige Darlehen für FuE und Innovation."
+    "deadline_notes": "Laufend verfügbar für Berliner Unternehmen. Zuschüsse und zinsgünstige Darlehen für FuE und Innovation.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "bafa_beratung",
@@ -256,14 +311,19 @@
     "funding_rate": "80% (neue BL) / 50% (alte BL)",
     "max_amount": "bis 2.800 € (neue BL) / bis 1.750 € (alte BL)",
     "focus": "Unternehmensberatung, KI-Strategie, Digitalisierung",
-    "suitable_for": ["solo", "team", "kmu"],
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
     "notes": "Max. 5 Beratungen pro Unternehmen, max. 2 pro Jahr. Laufzeit bis 31.12.2026.",
     "relevance_ki": "Hoch – ideal für initiale KI-Strategieberatung",
     "priority": 1,
     "url": "https://www.bafa.de/DE/Wirtschaft/Beratung_Finanzierung/Unternehmensberatung/unternehmensberatung_node.html",
     "provider": "BAFA (Bundesamt für Wirtschaft und Ausfuhrkontrolle)",
     "deadline": "31.12.2026",
-    "deadline_notes": "Max 5 Beratungen pro Unternehmen, max 2 pro Jahr. Förderquote: 80% Ost (neue BL) / 50% West (alte BL). Max Zuschuss: 2.800 € (neue BL) / 1.750 € (alte BL)."
+    "deadline_notes": "Max 5 Beratungen pro Unternehmen, max 2 pro Jahr. Förderquote: 80% Ost (neue BL) / 50% West (alte BL). Max Zuschuss: 2.800 € (neue BL) / 1.750 € (alte BL).",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "zim",
@@ -275,14 +335,18 @@
     "funding_rate": "bis 45-60%",
     "max_amount": "bis 310.500 € (Einzelprojekte)",
     "focus": "Innovative Entwicklungsprojekte, KI-Anwendungen, FuE",
-    "suitable_for": ["team", "kmu"],
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
     "notes": "2026 neu: 35% Personalkosten für externe KI-Experten förderfähig",
     "relevance_ki": "Sehr hoch – explizit für innovative KI-Projekte",
     "priority": 1,
     "url": "https://www.zim.de",
     "provider": "BMWE (Bundesministerium für Wirtschaft und Energie)",
     "deadline": "30.06.2027",
-    "deadline_notes": "Laufende Antragstellung, kein fester Stichtag. Neue Richtlinie seit 01.01.2025 mit verbesserten Konditionen."
+    "deadline_notes": "Laufende Antragstellung, kein fester Stichtag. Neue Richtlinie seit 01.01.2025 mit verbesserten Konditionen.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "kompass",
@@ -294,14 +358,18 @@
     "funding_rate": "bis 90%",
     "max_amount": "variabel (Kursgebühren)",
     "focus": "Weiterbildung, digitale Kompetenzen, KI-Qualifizierung",
-    "suitable_for": ["solo", "team"],
+    "suitable_for": [
+      "solo",
+      "team"
+    ],
     "notes": "Zuschüsse bis 90% der Kursgebühren für zertifizierte Schulungen",
     "relevance_ki": "Hoch – KI-Grundlagen, Prompt Engineering, Datenanalyse",
     "priority": 2,
     "url": "https://www.bmas.de/DE/Arbeit/Aus-und-Weiterbildung/Weiterbildungsrepublik/KOMPASS/kompass.html",
     "provider": "BMAS (Bundesministerium für Arbeit und Soziales)",
     "deadline": null,
-    "deadline_notes": "Laufend verfügbar. Zuschüsse bis 90% der Kursgebühren für zertifizierte Weiterbildungen."
+    "deadline_notes": "Laufend verfügbar. Zuschüsse bis 90% der Kursgebühren für zertifizierte Weiterbildungen.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "qualifizierungschancengesetz",
@@ -313,14 +381,18 @@
     "funding_rate": "bis 100% (<50 MA)",
     "max_amount": "variabel (Weiterbildungskosten + Lohnzuschuss)",
     "focus": "Weiterbildung im Bereich Digitalisierung und KI",
-    "suitable_for": ["team", "kmu"],
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
     "notes": "Bis 100% der Weiterbildungskosten für <50 MA. Schulungen müssen mind. 120 Stunden umfassen.",
     "relevance_ki": "Hoch – KI-Schulungsprogramme für Teams",
     "priority": 2,
     "url": "https://www.arbeitsagentur.de/unternehmen/finanziell/foerderung-von-weiterbildung",
     "provider": "Agentur für Arbeit",
     "deadline": null,
-    "deadline_notes": "Dauerhaftes Gesetz, kein Programm mit Fristende."
+    "deadline_notes": "Dauerhaftes Gesetz, kein Programm mit Fristende.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "lfa_bayern",
@@ -332,14 +404,19 @@
     "funding_rate": "variabel",
     "max_amount": "variabel (projektabhängig)",
     "focus": "Digitalisierung, Innovation, Gründung in Bayern",
-    "suitable_for": ["solo", "team", "kmu"],
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
     "notes": "Ansprechpartner für Digitalbonus Bayern und weitere bayerische Förderprogramme",
     "relevance_ki": "Mittel – eher Infrastruktur-/Kreditförderung als KI-spezifisch",
     "priority": 2,
     "url": "https://lfa.de/website/de/foerderangebote/index.php",
     "provider": "LfA Förderbank Bayern",
     "deadline": null,
-    "deadline_notes": "Laufend verfügbar. Ansprechpartner für Digitalbonus Bayern und weitere bayerische Programme."
+    "deadline_notes": "Laufend verfügbar. Ansprechpartner für Digitalbonus Bayern und weitere bayerische Programme.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "innosuisse_ch",
@@ -351,14 +428,19 @@
     "funding_rate": "bis 50%",
     "max_amount": "variabel (projektabhängig)",
     "focus": "Innovation, FuE-Kooperationen mit Hochschulen, KI-Projekte",
-    "suitable_for": ["solo", "team", "kmu"],
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
     "notes": "Äquivalent zu ZIM. Antragstellung über Innosuisse-Portal. Kooperation mit Forschungseinrichtung erforderlich.",
     "relevance_ki": "Hoch",
     "priority": 1,
     "url": "https://www.innosuisse.ch",
     "provider": "Innosuisse",
     "deadline": null,
-    "deadline_notes": "Laufende Antragstellung, mehrere Calls pro Jahr."
+    "deadline_notes": "Laufende Antragstellung, mehrere Calls pro Jahr.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "innovate_uk",
@@ -370,14 +452,18 @@
     "funding_rate": "bis 70% (KMU)",
     "max_amount": "bis £2 Mio.",
     "focus": "Innovation, Technologie, KI-Anwendungen, Digitalisierung",
-    "suitable_for": ["team", "kmu"],
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
     "notes": "Post-Brexit: UK nimmt NICHT mehr an EU-Programmen teil. Smart Grants sind die Hauptförderung für innovative KMU.",
     "relevance_ki": "Hoch",
     "priority": 1,
     "url": "https://www.ukri.org/councils/innovate-uk/",
     "provider": "UK Research and Innovation (UKRI)",
     "deadline": null,
-    "deadline_notes": "Mehrere Runden pro Jahr, Fristen variieren."
+    "deadline_notes": "Mehrere Runden pro Jahr, Fristen variieren.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "mid_nrw",
@@ -389,14 +475,18 @@
     "funding_rate": "bis 50%",
     "max_amount": "bis 25.000 € (Standard)",
     "focus": "Digitalisierung, KI-Einführung, IT-Sicherheit für KMU",
-    "suitable_for": ["team", "kmu"],
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
     "notes": "Antrag über EFRE-Portal NRW. Digitalstrategie als Voraussetzung.",
     "relevance_ki": "Hoch",
     "priority": 1,
     "url": "https://www.mittelstand-innovativ-digital.nrw",
     "provider": "MWIDE NRW / NRW.BANK",
     "deadline": null,
-    "deadline_notes": "Programmverfügbarkeit und aktuelle Calls auf dem Portal prüfen."
+    "deadline_notes": "Programmverfügbarkeit und aktuelle Calls auf dem Portal prüfen.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "digitalisierungspraemie_ni",
@@ -408,14 +498,19 @@
     "funding_rate": "bis 50%",
     "max_amount": "bis 10.000 €",
     "focus": "Digitalisierung, IT-Sicherheit, digitale Geschäftsprozesse",
-    "suitable_for": ["solo", "team", "kmu"],
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
     "notes": "Antrag über NBank. Förderfähig: Software, Cloud, Beratung.",
     "relevance_ki": "Mittel",
     "priority": 2,
     "url": "https://www.nbank.de",
     "provider": "NBank (Investitions- und Förderbank Niedersachsen)",
     "deadline": null,
-    "deadline_notes": "Verfügbarkeit aktuell prüfen — wird in Wellen ausgeschrieben."
+    "deadline_notes": "Verfügbarkeit aktuell prüfen — wird in Wellen ausgeschrieben.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "digizuschuss_hessen",
@@ -427,14 +522,19 @@
     "funding_rate": "bis 50%",
     "max_amount": "bis 10.000 €",
     "focus": "Digitalisierung, E-Commerce, Cloud-Lösungen, KI-Tools",
-    "suitable_for": ["solo", "team", "kmu"],
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
     "notes": "Antrag über WIBank. Schwerpunkt auf KMU-Digitalisierung.",
     "relevance_ki": "Mittel",
     "priority": 2,
     "url": "https://www.wibank.de",
     "provider": "WIBank (Wirtschafts- und Infrastrukturbank Hessen)",
     "deadline": null,
-    "deadline_notes": "Verfügbarkeit prüfen — Programm kann bei Budgeterschöpfung pausieren."
+    "deadline_notes": "Verfügbarkeit prüfen — Programm kann bei Budgeterschöpfung pausieren.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "ebusiness_sachsen",
@@ -446,14 +546,18 @@
     "funding_rate": "bis 50%",
     "max_amount": "bis 50.000 €",
     "focus": "E-Business, Digitalisierung, KI-Anwendungen, IT-Sicherheit",
-    "suitable_for": ["team", "kmu"],
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
     "notes": "Antrag über SAB (Sächsische Aufbaubank). Neue Bundesländer = höhere Förderquoten bei BAFA.",
     "relevance_ki": "Hoch",
     "priority": 1,
     "url": "https://www.sab.sachsen.de",
     "provider": "SAB (Sächsische Aufbaubank)",
     "deadline": null,
-    "deadline_notes": "Laufend verfügbar, Antrag vor Projektbeginn erforderlich."
+    "deadline_notes": "Laufend verfügbar, Antrag vor Projektbeginn erforderlich.",
+    "verified_at": "2026-07-05"
   },
   {
     "id": "hamburg_digital",
@@ -465,13 +569,18 @@
     "funding_rate": "bis 50%",
     "max_amount": "bis 17.000 €",
     "focus": "Digitalisierung, IT-Sicherheit, Prozessautomatisierung",
-    "suitable_for": ["solo", "team", "kmu"],
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
     "notes": "Antrag über IFB Hamburg. Besonders geeignet für kleine Betriebe.",
     "relevance_ki": "Mittel",
     "priority": 2,
     "url": "https://www.ifbhh.de",
     "provider": "IFB Hamburg (Hamburgische Investitions- und Förderbank)",
     "deadline": null,
-    "deadline_notes": "Verfügbarkeit aktuell prüfen."
+    "deadline_notes": "Verfügbarkeit aktuell prüfen.",
+    "verified_at": "2026-07-05"
   }
 ]

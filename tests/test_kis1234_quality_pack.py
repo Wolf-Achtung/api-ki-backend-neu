@@ -166,7 +166,9 @@ class TestFundingRegionFilter:
         )
         names = " | ".join(p["name"] for p in programs)
         assert "BAFA" in names  # bundesweit bleibt
-        assert "Digitalbonus" in names  # eigenes Land bleibt
+        # KIS-1263: Digitalbonus ist archiviert (Runtime-Blacklist FIX-B26
+        # scrubbte ihn ohnehin aus jedem Report) — Landes-Beispiel jetzt LfA.
+        assert "LfA" in names or "Bayern" in names  # eigenes Land bleibt
 
 
 # =========================================================================

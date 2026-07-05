@@ -1,0 +1,55 @@
+# KIS-1263: Förder-Radar — wöchentliche, automatisierte Pflege-Überwachung
+# der kuratierten Förderprogramm-Daten. Die Quoten selbst bleiben kuratiert
+# (richtliniensicher, Mensch entscheidet); der Radar stellt sicher, dass die
+# Pflege nie vergessen wird: tote Links, abgelaufene Fristen, Blacklist-
+# Treffer und veraltete verified_at-Stempel erzeugen automatisch ein Issue.
+name: Funding Radar
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # montags 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  funding-radar:
+    name: Förder-Radar
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip requests
+
+      - name: Run Förder-Radar (inkl. URL-Checks)
+        id: radar
+        run: |
+          python scripts/funding_radar.py --check-urls --report radar_report.md
+          count=$(grep -oP '(?<=\*\*)\d+(?= Befund)' radar_report.md || echo 0)
+          echo "findings=${count}" >> "$GITHUB_OUTPUT"
+          cat radar_report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Issue erstellen/aktualisieren bei Befunden
+        if: steps.radar.outputs.findings != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="🔎 Förder-Radar: ${{ steps.radar.outputs.findings }} Programm-Befund(e) zur Prüfung"
+          existing=$(gh issue list --state open --search "Förder-Radar in:title" --json number --jq '.[0].number' || true)
+          if [ -n "$existing" ] && [ "$existing" != "null" ]; then
+            gh issue comment "$existing" --body-file radar_report.md
+            gh issue edit "$existing" --title "$title"
+          else
+            gh issue create --title "$title" --body-file radar_report.md --label "datenpflege" || \
+            gh issue create --title "$title" --body-file radar_report.md
+          fi
