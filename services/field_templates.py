@@ -119,10 +119,16 @@ FIELD_QUESTIONS: dict[str, str] = {
 # ──────────────────────────────────────────────────────────────────────
 
 FIELD_EXAMPLES: dict[str, list[str]] = {
+    # KIS-1264: User-Feedback (Screenshot Lauf 1125) — die alten drei Chips
+    # waren drei Beratersprech-Varianten von "Ja" (Chip 1 ≈ Chip 3) ohne
+    # Nein-Pfad, obwohl die Frage als Ja/Nein-Frage gestellt wird ("Könnte
+    # KI Ihr Geschäftsmodell selbst verändern?"). Neu: Klartext, drei
+    # DISTINKTE Richtungen inkl. ehrlichem Nein — auch "KI nur intern" ist
+    # eine vollwertige, report-relevante Antwort.
     "geschaeftsmodell_evolution": [
-        "Bestehende Leistungen als skalierbares KI-Produkt anbieten",
-        "Neue Zielgruppen durch günstigere digitale Services",
-        "KI als eigenständige Leistung vermarkten",
+        "Ja, neue digitale Produkte oder Services denkbar",
+        "Ja, neue Kundengruppen oder Vertriebswege erschließen",
+        "Eher nein, KI soll vor allem intern entlasten",
     ],
     "vision_3_jahre": [
         "KI ist fester Teil des Geschäftsmodells",

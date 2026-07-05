@@ -44,12 +44,14 @@ _CHECK_QUESTIONS = {
     ),
     "budget": (
         "Wird das vom Kunden angegebene Investitionsbudget respektiert? "
-        "(KIS-1260-Kalibrierung: Eine Investition INNERHALB des Budgetbands "
-        "ist gruen — auch am oberen Rand, sofern der Report die Grenznähe "
-        "irgendwo einordnet (z. B. 'Budget-Einordnung', gestufter Einstieg, "
-        "Förder-Pfad). Nur eine Investition am oberen Rand OHNE jede "
-        "Einordnung = gelb. Rot AUSSCHLIESSLICH bei unkommentierter "
-        "ÜBERSCHREITUNG des Bands.)"
+        "(KIS-1260/1264-Kalibrierung: Eine Investition INNERHALB des "
+        "Budgetbands und unterhalb von ca. 80 % der Obergrenze ist IMMER "
+        "gruen — dafür braucht es KEINE explizite Einordnung im Text "
+        "(Lauf 1125: 24.000 € bei Band 10.000–50.000 € sind Mittelfeld, "
+        "keine Grenznähe). Erst am oberen Rand (ab ca. 80 % der Obergrenze) "
+        "gilt: MIT Einordnung (z. B. 'Budget-Einordnung', gestufter "
+        "Einstieg, Förder-Pfad) gruen, OHNE jede Einordnung gelb. Rot "
+        "AUSSCHLIESSLICH bei unkommentierter ÜBERSCHREITUNG des Bands.)"
     ),
     "zahlen": (
         "Ist jede zentrale Kennzahl in den erzählenden Sektionen aus den "
@@ -160,21 +162,47 @@ def build_judge_digest(sections: Dict[str, Any], answers: Dict[str, Any]) -> str
     if kunde:
         parts.append("KUNDENANGABEN:\n" + "\n".join(kunde))
 
-    for title, keys, limit in (
+    _digest_specs: tuple = (
         ("EXECUTIVE SUMMARY", ("EXECUTIVE_SUMMARY_HTML", "executive_summary"), 2400),
-        ("BUSINESS CASE", ("BUSINESS_CASE_HTML", "business_case"), 2400),
+        # KIS-1264: pdf_template_v7 rendert das Business-Case-Kapitel aus
+        # BUSINESS_CASE_ENGINE_HTML (KIS-1262) — der Judge muss über dem
+        # urteilen, was der Leser tatsächlich sieht, sonst heilt der
+        # Heal-Pass am PDF vorbei (Lauf 1125).
+        ("BUSINESS CASE", ("BUSINESS_CASE_ENGINE_HTML", "BUSINESS_CASE_HTML",
+                           "business_case"), 2400),
         ("QUICK WINS", ("QUICK_WINS_HTML",), 1800),
         ("EMPFEHLUNGEN", ("RECOMMENDATIONS_HTML", "recommendations"), 1800),
         ("TOOL-EMPFEHLUNGEN", ("TOOLS_EMPFEHLUNGEN_HTML", "STARTER_KIT_HTML"), 1800),
         ("VENDOR-AUDIT (Auszug)", ("VENDOR_AUDIT_HTML",), 1400),
         ("PERSÖNLICHE EINSCHÄTZUNG", ("ADVISOR_NOTE_HTML", "advisor_note"), 1600),
         ("ROADMAP (Auszug)", ("ROADMAP_12M_HTML", "roadmap_12m"), 1400),
-    ):
+    )
+    for title, keys, limit in _digest_specs:
         for k in keys:
             t = _txt(sections.get(k), limit)
             if len(t) > 40:
                 parts.append(f"### {title}:\n{t}")
                 break
+
+    # KIS-1264: Deterministische Einordnungs-Boxen (Budget-Gate KIS-1244/1260,
+    # ROI-Einordnung KIS-1251) hängen am ENDE der Business-Case-Sektion und
+    # fallen dort dem 2400-Zeichen-Limit zum Opfer — der Judge flaggte dann
+    # "keine Budget-Einordnung", obwohl sie im Report steht. Sie werden hier
+    # garantiert und vollständig in den Digest gehoben.
+    boxes: List[str] = []
+    seen_box: set = set()
+    for k in ("BUSINESS_CASE_ENGINE_HTML", "BUSINESS_CASE_HTML", "business_case"):
+        for m in re.finditer(
+            r'<div class="hinweis-box[^"]*"[^>]*>(.*?)</div>',
+            str(sections.get(k) or ""), re.S,
+        ):
+            t = _txt(m.group(1), 600)
+            if t and t not in seen_box:
+                seen_box.add(t)
+                boxes.append(t)
+    if boxes:
+        parts.append("### EINORDNUNGS-BOXEN IM BUSINESS CASE (vollständig):\n"
+                     + "\n".join(f"- {b}" for b in boxes))
 
     return "\n\n".join(parts)
 

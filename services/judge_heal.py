@@ -37,7 +37,11 @@ MIN_FIND_LEN = 30
 # Digest des Judge, damit Edits genau dort landen, wo der Befund entstand.
 _HEAL_SECTION_KEYS: Tuple[Tuple[str, ...], ...] = (
     ("EXECUTIVE_SUMMARY_HTML", "executive_summary"),
-    ("BUSINESS_CASE_HTML", "business_case"),
+    # KIS-1264: pdf_template_v7 rendert das Business-Case-Kapitel aus
+    # BUSINESS_CASE_ENGINE_HTML (KIS-1262) — Heal-Edits muessen dort
+    # ankommen koennen, sonst heilt der Heal nur den Judge-Digest,
+    # nicht das PDF (Lauf 1125: Budget-Edit fuer den Leser unsichtbar).
+    ("BUSINESS_CASE_ENGINE_HTML", "BUSINESS_CASE_HTML", "business_case"),
     ("QUICK_WINS_HTML",),
     ("RECOMMENDATIONS_HTML", "recommendations"),
     ("TOOLS_EMPFEHLUNGEN_HTML", "tools_empfehlungen"),
@@ -106,6 +110,26 @@ def _canon_numbers(sections: Dict[str, Any]) -> set:
     return nums
 
 
+def _answer_numbers(answers: Dict[str, Any] | None) -> set:
+    """KIS-1264: Ziffernfolgen aus den KUNDENANGABEN.
+
+    Lauf 1125: Der Heal wollte das Budget-Band des Kunden zitieren
+    ("10.000–50.000 €") und wurde verworfen ("neue Zahl(en) erfunden:
+    ['10.000', '50.000']") — die Zahlen stammten aus
+    answers['investitionsbudget'] = '10000_50000'. Kundenangaben sind
+    keine erfundenen Zahlen; der Heal-Prompt reicht sie sogar wörtlich
+    als Kontext hinein."""
+    nums: set = set()
+    for v in (answers or {}).values():
+        nums |= _numbers(str(v or ""))
+    return nums
+
+
+def _norm_num(token: str) -> str:
+    """Tausender-/Dezimal-Separatoren entfernen: '10.000' ≙ '10000'."""
+    return token.replace(".", "").replace(",", "")
+
+
 def _resolve_heal_keys(sections: Dict[str, Any]) -> List[str]:
     """Alle vorhandenen Kandidaten-Keys (inkl. Shadow-Zwillinge) mit Inhalt."""
     keys: List[str] = []
@@ -130,7 +154,12 @@ def validate_edit(edit: Dict[str, Any], sections: Dict[str, Any],
     # budget-Befund (Lauf run-38da98cc) wurde sonst verworfen.
     if len(replace) > 3.0 * len(find) + 240:
         return None, "replace unverhältnismäßig lang"
-    new_nums = _numbers(replace) - _numbers(find) - canon_nums
+    # KIS-1264: Vergleich zusätzlich separator-normalisiert — '10.000' im
+    # replace ist zulässig, wenn '10000' in den erlaubten Quellen steht.
+    allowed = _numbers(find) | canon_nums
+    allowed_norm = {_norm_num(n) for n in allowed}
+    new_nums = {n for n in _numbers(replace)
+                if n not in allowed and _norm_num(n) not in allowed_norm}
     if new_nums:
         return None, f"neue Zahl(en) erfunden: {sorted(new_nums)[:3]}"
     new_tags = _tag_names(replace) - _tag_names(find)
@@ -152,10 +181,10 @@ def validate_edit(edit: Dict[str, Any], sections: Dict[str, Any],
 
 
 def apply_edits(edits: List[Dict[str, Any]], sections: Dict[str, Any],
-                run_id: str = "") -> int:
+                run_id: str = "", answers: Dict[str, Any] | None = None) -> int:
     """Wendet validierte Edits an (auch auf den Shadow-Zwilling). Gibt die
     Zahl der angewendeten Edits zurück."""
-    canon_nums = _canon_numbers(sections)
+    canon_nums = _canon_numbers(sections) | _answer_numbers(answers)
     applied = 0
     for edit in edits[:MAX_EDITS]:
         key, reason = validate_edit(edit, sections, canon_nums)
@@ -174,6 +203,57 @@ def apply_edits(edits: List[Dict[str, Any]], sections: Dict[str, Any],
         log.info("[%s] [PLATIN-HEAL] Edit angewendet in '%s' (%s): %.80s…",
                  run_id, key, str(edit.get("grund") or "")[:60], find)
     return applied
+
+
+_VERDICT_RANK = {"gruen": 0, "gelb": 1, "rot": 2}
+
+
+def apply_rejudge_ratchet(pre: Dict[str, Any], post: Dict[str, Any],
+                          sections: Dict[str, Any], run_id: str = "") -> bool:
+    """KIS-1264: Der Re-Judge VERIFIZIERT den Heal — er eröffnet keine
+    neuen Befunde.
+
+    Lauf 1125: budget wurde geheilt (🟡→🟢), aber dubletten flippte im
+    Re-Judge durch Judge-Varianz 🟢→🟡 (nahezu identischer Input, der
+    erste Judge sah dieselben Sektionen als gruen) — Gesamt-Ampel blieb
+    GELB und der Heal-Loop kann so nie konvergieren. Regel: Checks, die
+    im Vorher-Urteil GRUEN waren, behalten im Re-Judge mindestens ihr
+    Vorher-Verdict. Geflaggte Checks (gelb/rot) bleiben ungeschönt —
+    dort muss der Re-Judge ehrlich urteilen, ob der Heal gewirkt hat.
+
+    Rückgabe: True, wenn mindestens ein Verdict zurückgesetzt wurde."""
+    pre_map = {str(c.get("id")): str(c.get("verdict"))
+               for c in (pre.get("checks") or [])}
+    changed = False
+    for check in (post.get("checks") or []):
+        cid = str(check.get("id"))
+        pre_v = pre_map.get(cid)
+        post_v = str(check.get("verdict"))
+        if pre_v != "gruen":
+            continue
+        if _VERDICT_RANK.get(post_v, 1) > _VERDICT_RANK.get(pre_v, 1):
+            log.info(
+                "[%s] [PLATIN-HEAL][RATCHET] %s: Re-Judge %s → Vorher-Urteil "
+                "gruen beibehalten (Judge-Varianz — der Re-Judge verifiziert "
+                "den Heal, er eröffnet keine neuen Befunde)",
+                run_id, cid, post_v,
+            )
+            check["verdict"] = "gruen"
+            check["begruendung"] = ("[Ratchet: Vorher-Urteil gruen beibehalten] "
+                                    + str(check.get("begruendung") or ""))
+            changed = True
+    if changed:
+        from services.coherence_judge import _overall
+        post["ampel"] = _overall(post.get("checks") or [])
+        sections["_COHERENCE_JUDGE"] = post
+        sections["_COHERENCE_JUDGE_AMPEL"] = post["ampel"]
+        if post["ampel"] == "gruen":
+            log.info("[%s] [PLATIN-JUDGE] ✅ Gesamt-Ampel GRÜN — "
+                     "Platin++++-Kohärenz bestätigt (nach Ratchet)", run_id)
+        else:
+            log.warning("[%s] [PLATIN-JUDGE] Gesamt-Ampel nach Ratchet: %s",
+                        run_id, post["ampel"].upper())
+    return changed
 
 
 def run_judge_heal(sections: Dict[str, Any], answers: Dict[str, Any] | None,
@@ -247,7 +327,7 @@ def run_judge_heal(sections: Dict[str, Any], answers: Dict[str, Any] | None,
             log.info("[%s] [PLATIN-HEAL] keine Edits vorgeschlagen — übersprungen", run_id)
             return None
 
-        applied = apply_edits(edits, sections, run_id=run_id)
+        applied = apply_edits(edits, sections, run_id=run_id, answers=answers)
         flagged_ids = [str(c.get("id")) for c in flagged]
         heal_report: Dict[str, Any] = {"proposed": len(edits), "applied": applied,
                                        "flagged": flagged_ids}
@@ -259,7 +339,10 @@ def run_judge_heal(sections: Dict[str, Any], answers: Dict[str, Any] | None,
             # Vorher-Urteil sichern, dann GENAU EIN Re-Judge (kein Loop).
             sections["_COHERENCE_JUDGE_PRE_HEAL"] = judge_result
             from services.coherence_judge import run_coherence_judge
-            run_coherence_judge(sections, answers, run_id=run_id)
+            re_result = run_coherence_judge(sections, answers, run_id=run_id)
+            if re_result:
+                apply_rejudge_ratchet(judge_result, re_result, sections,
+                                      run_id=run_id)
         return heal_report
     except Exception as exc:  # pragma: no cover - Heal darf nie den Report killen
         log.warning("[%s] [PLATIN-HEAL] übersprungen: %s", run_id, exc)
