@@ -1,23 +1,7 @@
 {
   "country_code": "DE",
-  "last_updated": "2025-01",
+  "last_updated": "2026-07-06",
   "programmes": [
-    {
-      "id": "go_digital",
-      "title": "go-digital",
-      "region": "DE",
-      "region_label": "Deutschland (bundesweit)",
-      "funding_type": "Zuschuss",
-      "funding_rate": "bis 50%",
-      "max_amount": 16500,
-      "max_amount_display": "16.500 €",
-      "focus": "Digitalisierung, IT-Sicherheit, KI-Einführung",
-      "suitable_for": ["solo", "team", "kmu"],
-      "notes": "Besonders relevant für kleine Unternehmen <100 MA, autorisierte Beratungsunternehmen erforderlich",
-      "relevance_ki": "high",
-      "priority": 1,
-      "url": "https://www.bmwk.de/go-digital"
-    },
     {
       "id": "kfw_digital_innovation",
       "title": "KfW-Förderkredite Digitalisierung & Innovation",
@@ -28,27 +12,14 @@
       "max_amount": 25000000,
       "max_amount_display": "bis 25 Mio €",
       "focus": "Digitalisierung, Innovation, Wachstumsfinanzierung",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes": "Über Hausbank, langfristige Finanzierung für Digitalisierungsprojekte",
       "relevance_ki": "medium",
       "priority": 2,
       "url": "https://www.kfw.de"
-    },
-    {
-      "id": "digitalbonus_bayern",
-      "title": "Digitalbonus Bayern (Standard/Plus)",
-      "region": "BY",
-      "region_label": "Bayern",
-      "funding_type": "Zuschuss",
-      "funding_rate": "bis 50%",
-      "max_amount": 50000,
-      "max_amount_display": "Standard: bis 10.000 € / Plus: bis 50.000 €",
-      "focus": "Digitalisierung & IT-Sicherheit",
-      "suitable_for": ["solo", "team", "kmu"],
-      "notes": "Fördert Hard-/Software und Maßnahmen zur Digitalisierung & IT-Sicherheit",
-      "relevance_ki": "high",
-      "priority": 1,
-      "url": "https://www.digitalbonus.bayern"
     },
     {
       "id": "invest_bw",
@@ -60,7 +31,10 @@
       "max_amount": 200000,
       "max_amount_display": "bis 200.000 €",
       "focus": "Digitalisierung, KI-Einführung, Prozessoptimierung",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes": "Länderprogramm BW, für Unternehmen mit Standort in Baden-Württemberg",
       "relevance_ki": "high",
       "priority": 1,
@@ -76,7 +50,10 @@
       "max_amount": 500000,
       "max_amount_display": "variabel, projektabhängig",
       "focus": "F&E, Innovation, Digitalisierung, KI-Projekte",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes": "Berlin-spezifisch, für innovative F&E-Projekte mit Technologie-Schwerpunkt",
       "relevance_ki": "high",
       "priority": 1,
@@ -92,7 +69,11 @@
       "max_amount": 4000,
       "max_amount_display": "bis ~4.000 €",
       "focus": "Beratung/Coaching für KMU & Solo-Selbständige",
-      "suitable_for": ["solo", "team", "kmu"],
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
       "notes": "Fördert externes Coaching zu Strategie, Digitalisierung, Markteintritt",
       "relevance_ki": "medium",
       "priority": 2,
@@ -108,7 +89,10 @@
       "max_amount": 45000,
       "max_amount_display": "bis 45.000 €",
       "focus": "Kooperation mit Forschungseinrichtungen",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes": "Fördert Technologietransfer; auch KI-Vorhaben mit Forschungspartnern",
       "relevance_ki": "high",
       "priority": 2,
@@ -124,7 +108,10 @@
       "max_amount": 30000,
       "max_amount_display": "bis 30.000 €",
       "focus": "Externe Entwicklungs-/Dienstleistungen (z.B. Prototyping, Studien)",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes": "Fördert externe F&E-Leistungen; geeignet für KMU und Handwerk",
       "relevance_ki": "medium",
       "priority": 2,
@@ -140,7 +127,10 @@
       "max_amount": 550000,
       "max_amount_display": "bis 550.000 €",
       "focus": "F&E-Projekte, Kooperationsprojekte, Innovationsnetzwerke",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes": "Für innovative KMU mit Forschungs- und Entwicklungsvorhaben",
       "relevance_ki": "high",
       "priority": 1,
@@ -156,7 +146,10 @@
       "max_amount": 150000,
       "max_amount_display": "bis 150.000 € (1 Jahr)",
       "focus": "Hochschul-/Wissenschafts-Ausgründungen",
-      "suitable_for": ["solo", "team"],
+      "suitable_for": [
+        "solo",
+        "team"
+      ],
       "notes": "Für technologieorientierte und wissensbasierte Gründungen",
       "relevance_ki": "high",
       "priority": 2,
@@ -172,7 +165,10 @@
       "max_amount": 200000,
       "max_amount_display": "10.000–200.000 €",
       "focus": "Verwaltungsdigitalisierung, IT-Sicherheit, Prozessautomatisierung",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes": "Je nach Bundesland unterschiedliche Fördersätze und Schwerpunkte",
       "relevance_ki": "medium",
       "priority": 2,

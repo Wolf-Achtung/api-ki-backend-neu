@@ -28,12 +28,12 @@ Aus Tools Engine 4.0 (G25):
 ### Block 3: Top 3 Förderprogramme
 Aus Funding Matrix (G26):
 - Programmname
-- Jahr (2025/2026/2027)
+- Jahr (aktuelles Jahr und die zwei Folgejahre)
 - Ebene (EU/Bund/Land)
 - Förderquote
 - Match-Score
-- ⚡ Flag bei zeitkritischen Programmen (2025)
-- 🔮 Flag bei provisorischen Programmen (2027)
+- ⚡ Flag bei zeitkritischen Programmen (Frist < 6 Monate ab {{report_date}})
+- 🔮 Flag bei provisorischen Programmen (übernächstes Jahr)
 
 ### Block 4: Branche + Risiko-Badge
 - Branchenkürzel
@@ -56,7 +56,7 @@ Konkrete, sofort umsetzbare Maßnahmen:
 2. **Workflow** – Prozesse automatisieren
 3. **Optimierung** – Skalieren & ROI maximieren
 
-### Block 8: Förder-Timeline 2025–2027
+### Block 8: Förder-Timeline (aktuelles Jahr + 2 Folgejahre)
 Visuelle Darstellung:
 - Deadlines
 - Öffnungsfenster

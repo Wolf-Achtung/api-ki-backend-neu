@@ -18228,6 +18228,14 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 )
 
                 sections["RECOMMENDATIONS_HTML"] = reco_html + "\n" + kpi_boost
+                # KIS-1268: pdf_template_v7 rendert das Empfehlungs-Kapitel aus
+                # RECOMMENDATIONS_ENGINE_HTML (gleiche Klasse wie KIS-1262/1264) —
+                # ohne Doppel-Injektion erreicht der "sichtbare Kontext" nur den
+                # Validator, nie den Leser.
+                _kb_eng = sections.get("RECOMMENDATIONS_ENGINE_HTML") or ""
+                if _kb_eng and "kpi-context" not in _kb_eng:
+                    sections["RECOMMENDATIONS_ENGINE_HTML"] = _kb_eng + "\n" + kpi_boost
+                    log.info("[KIS-1268][KPI-BOOST-ENGINE] KPI-Kontext auch in RECOMMENDATIONS_ENGINE_HTML injiziert")
                 new_mentions = sum(1 for kw in kpi_keywords
                                    if kw in sections["RECOMMENDATIONS_HTML"].lower())
                 log.info(f"[FIX-B35d-N39002] KPI boost: {kpi_mentions} -> {new_mentions} "

@@ -353,6 +353,11 @@ class StrategyQuestion(Base):
     kundenbindung_typ: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     datenreife: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
+    # KIS-1268: Persönliche KI-Vision (Freitext) — das Formular sendete das
+    # Feld seit jeher, aber Schema/Modell kannten es nicht: Pydantic verwarf
+    # die Eingabe still und {s5_vision} im Strategie-Prompt blieb leer.
+    s5_vision: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
     # Metadaten
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -382,6 +387,7 @@ class StrategyQuestion(Base):
             "wettbewerber_anzahl": self.wettbewerber_anzahl,
             "kundenbindung_typ": self.kundenbindung_typ,
             "datenreife": self.datenreife,
+            "s5_vision": self.s5_vision,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 

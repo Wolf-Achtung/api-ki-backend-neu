@@ -1,29 +1,9 @@
 {
   "country_code": "DE",
   "language": "en",
-  "last_updated": "2025-01",
+  "last_updated": "2026-07-06",
   "description": "German funding programmes with English translations for international users based in Germany",
   "programmes": [
-    {
-      "id": "go_digital",
-      "name_de": "go-digital",
-      "name_en": "go-digital (Federal Digitalization Consulting Grant)",
-      "region": "DE",
-      "region_de": "Deutschland (bundesweit)",
-      "region_en": "Germany (nationwide)",
-      "regions_en": ["Germany"],
-      "funding_type_en": "Grant",
-      "funding_rate_en": "up to 50%",
-      "max_amount": 16500,
-      "max_amount_en": "€16,500",
-      "focus_en": "Digitalization, IT security, AI implementation",
-      "summary_en": "Federal grant for small businesses seeking consulting support for digitalization, IT security, and AI implementation. Requires working with an authorized consulting company.",
-      "suitable_for": ["solo", "team", "kmu"],
-      "notes_en": "Particularly relevant for small businesses <100 employees, authorized consulting company required",
-      "relevance_ki": "high",
-      "priority": 1,
-      "url": "https://www.bmwk.de/go-digital"
-    },
     {
       "id": "kfw_digital_innovation",
       "name_de": "KfW-Förderkredite Digitalisierung & Innovation",
@@ -31,38 +11,23 @@
       "region": "DE",
       "region_de": "Deutschland (bundesweit)",
       "region_en": "Germany (nationwide)",
-      "regions_en": ["Germany"],
+      "regions_en": [
+        "Germany"
+      ],
       "funding_type_en": "Subsidized Loan",
       "funding_rate_en": "reduced interest rates",
       "max_amount": 25000000,
       "max_amount_en": "up to €25 million",
       "focus_en": "Digitalization, innovation, growth financing",
       "summary_en": "Long-term financing through Germany's development bank for digitalization and innovation projects, offered via commercial banks at reduced interest rates.",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes_en": "Via commercial bank, long-term financing for digitalization projects",
       "relevance_ki": "medium",
       "priority": 2,
       "url": "https://www.kfw.de"
-    },
-    {
-      "id": "digitalbonus_bayern",
-      "name_de": "Digitalbonus Bayern (Standard/Plus)",
-      "name_en": "Digital Bonus Bavaria (Regional Digitalization Grant)",
-      "region": "BY",
-      "region_de": "Bayern",
-      "region_en": "Bavaria",
-      "regions_en": ["Bavaria"],
-      "funding_type_en": "Grant",
-      "funding_rate_en": "up to 50%",
-      "max_amount": 50000,
-      "max_amount_en": "Standard: up to €10,000 / Plus: up to €50,000",
-      "focus_en": "Digitalization & IT security",
-      "summary_en": "Bavarian state grant for hardware, software, and measures supporting digitalization and IT security for businesses located in Bavaria.",
-      "suitable_for": ["solo", "team", "kmu"],
-      "notes_en": "Supports hardware/software and digitalization & IT security measures",
-      "relevance_ki": "high",
-      "priority": 1,
-      "url": "https://www.digitalbonus.bayern"
     },
     {
       "id": "invest_bw",
@@ -71,14 +36,19 @@
       "region": "BW",
       "region_de": "Baden-Württemberg",
       "region_en": "Baden-Württemberg",
-      "regions_en": ["Baden-Württemberg"],
+      "regions_en": [
+        "Baden-Württemberg"
+      ],
       "funding_type_en": "Grant",
       "funding_rate_en": "30–50%",
       "max_amount": 200000,
       "max_amount_en": "up to €200,000",
       "focus_en": "Digitalization, AI implementation, process optimization",
       "summary_en": "Baden-Württemberg state grant for digitalization, AI implementation, and process optimization projects for companies located in the state.",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes_en": "State program, for companies located in Baden-Württemberg",
       "relevance_ki": "high",
       "priority": 1,
@@ -91,14 +61,19 @@
       "region": "BE",
       "region_de": "Berlin",
       "region_en": "Berlin",
-      "regions_en": ["Berlin"],
+      "regions_en": [
+        "Berlin"
+      ],
       "funding_type_en": "Grant + Loan",
       "funding_rate_en": "up to 80%",
       "max_amount": 500000,
       "max_amount_en": "variable, project-dependent",
       "focus_en": "R&D, innovation, digitalization, AI projects",
       "summary_en": "Berlin's primary R&D and innovation funding program for technology-focused projects including AI and digitalization initiatives.",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes_en": "Berlin-specific, for innovative R&D projects with technology focus",
       "relevance_ki": "high",
       "priority": 1,
@@ -111,14 +86,20 @@
       "region": "BE",
       "region_de": "Berlin",
       "region_en": "Berlin",
-      "regions_en": ["Berlin"],
+      "regions_en": [
+        "Berlin"
+      ],
       "funding_type_en": "Grant",
       "funding_rate_en": "up to 50%",
       "max_amount": 4000,
       "max_amount_en": "up to ~€4,000",
       "focus_en": "Consulting/coaching for SMEs & freelancers",
       "summary_en": "Berlin grant supporting external business coaching for strategy, digitalization, and market entry for SMEs and freelancers.",
-      "suitable_for": ["solo", "team", "kmu"],
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
       "notes_en": "Supports external coaching for strategy, digitalization, market entry",
       "relevance_ki": "medium",
       "priority": 2,
@@ -131,14 +112,19 @@
       "region": "BE",
       "region_de": "Berlin",
       "region_en": "Berlin",
-      "regions_en": ["Berlin"],
+      "regions_en": [
+        "Berlin"
+      ],
       "funding_type_en": "Grant",
       "funding_rate_en": "up to 70%",
       "max_amount": 45000,
       "max_amount_en": "up to €45,000",
       "focus_en": "Collaboration with research institutions",
       "summary_en": "Berlin grant for technology transfer and collaborative projects with research institutions, including AI initiatives.",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes_en": "Supports technology transfer; including AI projects with research partners",
       "relevance_ki": "high",
       "priority": 2,
@@ -151,14 +137,19 @@
       "region": "BY",
       "region_de": "Bayern",
       "region_en": "Bavaria",
-      "regions_en": ["Bavaria"],
+      "regions_en": [
+        "Bavaria"
+      ],
       "funding_type_en": "Voucher",
       "funding_rate_en": "up to 50%",
       "max_amount": 30000,
       "max_amount_en": "up to €30,000",
       "focus_en": "External development services (e.g., prototyping, feasibility studies)",
       "summary_en": "Bavarian voucher program supporting external R&D services such as prototyping and feasibility studies for SMEs and craftsmen.",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes_en": "Supports external R&D services; suitable for SMEs and craftsmen",
       "relevance_ki": "medium",
       "priority": 2,
@@ -171,14 +162,19 @@
       "region": "DE",
       "region_de": "Deutschland (bundesweit)",
       "region_en": "Germany (nationwide)",
-      "regions_en": ["Germany"],
+      "regions_en": [
+        "Germany"
+      ],
       "funding_type_en": "Grant",
       "funding_rate_en": "25–60%",
       "max_amount": 550000,
       "max_amount_en": "up to €550,000",
       "focus_en": "R&D projects, cooperation projects, innovation networks",
       "summary_en": "Federal innovation program for SMEs with R&D projects, cooperation initiatives, and innovation networks. High relevance for AI projects.",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes_en": "For innovative SMEs with research and development projects",
       "relevance_ki": "high",
       "priority": 1,
@@ -191,14 +187,19 @@
       "region": "DE",
       "region_de": "Deutschland (bundesweit)",
       "region_en": "Germany (nationwide)",
-      "regions_en": ["Germany"],
+      "regions_en": [
+        "Germany"
+      ],
       "funding_type_en": "Scholarship/Grant",
       "funding_rate_en": "100%",
       "max_amount": 150000,
       "max_amount_en": "up to €150,000 (1 year)",
       "focus_en": "University/research institution spin-offs",
       "summary_en": "Federal startup grant for technology-oriented and knowledge-based spin-offs from universities and research institutions.",
-      "suitable_for": ["solo", "team"],
+      "suitable_for": [
+        "solo",
+        "team"
+      ],
       "notes_en": "For technology-oriented and knowledge-based startups",
       "relevance_ki": "high",
       "priority": 2,
@@ -211,14 +212,19 @@
       "region": "DE",
       "region_de": "Deutschland (Länderprogramme)",
       "region_en": "Germany (State Programs)",
-      "regions_en": ["Germany"],
+      "regions_en": [
+        "Germany"
+      ],
       "funding_type_en": "Grant",
       "funding_rate_en": "30–70%",
       "max_amount": 200000,
       "max_amount_en": "€10,000–€200,000",
       "focus_en": "Administrative digitalization, IT security, process automation",
       "summary_en": "Various state-level programs for digitalization and IT security, with funding rates and focus areas varying by federal state.",
-      "suitable_for": ["team", "kmu"],
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
       "notes_en": "Funding rates and focus areas vary by federal state",
       "relevance_ki": "medium",
       "priority": 2,

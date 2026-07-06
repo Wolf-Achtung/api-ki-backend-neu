@@ -52,6 +52,12 @@ except ImportError:
 TESTUSERS: List[str] = [
     "j.hohl@freenet.de",
     "kerstin.geffert@gmail.com",
+    # KIS-1268: Sync mit core/whitelist.py (Audit fand 5 fehlende Adressen)
+    "daniel.effinger@web.de",
+    "berndemhart46@gmail.com",
+    "po@wbs-slg.de",
+    "trailerman01@outlook.de",
+    "hilfe@ki-sicherheit.jetzt",
     "post@zero2.de",
     "giselapeter@peter-partner.de",
     "wolf.hohl@web.de",

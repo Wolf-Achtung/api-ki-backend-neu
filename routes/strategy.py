@@ -95,6 +95,9 @@ class StrategyQuestionsCreate(BaseModel):
     wettbewerber_anzahl: Optional[str] = None
     kundenbindung_typ: Optional[str] = None
     datenreife: Optional[str] = None
+    # KIS-1268: Persönliche KI-Vision — wurde vom Formular gesendet, aber
+    # hier nicht deklariert und darum still verworfen (Datenverlust).
+    s5_vision: Optional[str] = Field(None, max_length=2000, description="Persönliche KI-Vision (Freitext)")
 
 
 class StrategyQuestionsResponse(BaseModel):
@@ -273,6 +276,7 @@ async def save_strategy_questions(
         existing.wettbewerber_anzahl = questions.wettbewerber_anzahl
         existing.kundenbindung_typ = questions.kundenbindung_typ
         existing.datenreife = questions.datenreife
+        existing.s5_vision = questions.s5_vision
         log.info("[Strategy] Updated questions for briefing_id=%d", briefing_id)
     else:
         # Insert
@@ -291,6 +295,7 @@ async def save_strategy_questions(
             wettbewerber_anzahl=questions.wettbewerber_anzahl,
             kundenbindung_typ=questions.kundenbindung_typ,
             datenreife=questions.datenreife,
+            s5_vision=questions.s5_vision,
         )
         db.add(sq)
         log.info("[Strategy] Saved new questions for briefing_id=%d", briefing_id)

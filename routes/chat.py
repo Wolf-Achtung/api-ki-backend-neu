@@ -3296,7 +3296,8 @@ def _complete_r1(
         user_id = session.user_id  # fallback to session's user_id
     if user_email:
         answers["email"] = user_email
-    log.info("[CHAT] Complete R1: user_email=%s, user_id=%s", user_email, user_id)
+    from core.pii import mask_email as _kis1268_mask
+    log.info("[CHAT] Complete R1: user_email=%s, user_id=%s", _kis1268_mask(user_email), user_id)
 
     audit_request_ip = anonymize_ip(_resolve_client_ip(request)) if request else None
     audit_request_ua = (
@@ -3324,7 +3325,7 @@ def _complete_r1(
     log.info(
         "📝 BRIEFING-CREATED id=%d user_email=%s ip=%s ua=%s source=chat",
         briefing.id,
-        user_email or "(none)",
+        _kis1268_mask(user_email),
         audit_request_ip or "(none)",
         _truncate(audit_request_ua, limit=80) or "(none)",
     )
