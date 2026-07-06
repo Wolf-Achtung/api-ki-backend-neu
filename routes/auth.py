@@ -19,6 +19,7 @@ from services.redis_utils import RedisBox
 from utils.idempotency import IdempotencyBox
 from core.security import create_access_token, get_current_user, TokenPayload
 from core.whitelist import EMAIL_WHITELIST, is_whitelisted
+from core.pii import mask_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 log = logging.getLogger(__name__)
@@ -85,7 +86,7 @@ async def request_code(payload: RequestCodeIn, request: Request):
 
     # Whitelist-Prüfung (Testphase) — Quelle: core.whitelist
     if not is_whitelisted(str(payload.email)):
-        log.warning("🚫 Login-Code verweigert für nicht-whitelisted E-Mail: %s", payload.email)
+        log.warning("🚫 Login-Code verweigert für nicht-whitelisted E-Mail: %s", mask_email(str(payload.email)))
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Diese E-Mail-Adresse ist nicht für die Testphase freigeschaltet."
@@ -128,7 +129,7 @@ async def request_code(payload: RequestCodeIn, request: Request):
             html=None,
         )
     except Exception as e:
-        log.error("Failed to send login code email to %s: %s", payload.email, str(e))
+        log.error("Failed to send login code email to %s: %s", mask_email(str(payload.email)), str(e))
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Failed to send email. Please try again later."
@@ -169,12 +170,12 @@ async def login(payload: LoginIn, request: Request, response: Response) -> dict:
 
     stored = _read_code(str(payload.email))
     if not stored or stored != payload.code:
-        log.warning("❌ Login failed for %s: invalid or expired code", payload.email)
+        log.warning("❌ Login failed for %s: invalid or expired code", mask_email(str(payload.email)))
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired code")
 
-    log.info("Creating access token for user: %s", payload.email)
+    log.info("Creating access token for user: %s", mask_email(str(payload.email)))
     token = create_access_token(email=str(payload.email))
-    log.debug("Token created successfully for user: %s", payload.email)
+    log.debug("Token created successfully for user: %s", mask_email(str(payload.email)))
 
     # Phase 1: Set httpOnly cookie (hybrid mode)
     # Cookie specs: name=auth_token, httpOnly, Secure, SameSite=None, max_age=3600
@@ -187,7 +188,7 @@ async def login(payload: LoginIn, request: Request, response: Response) -> dict:
         max_age=3600,  # 1 hour in seconds
         path="/",  # Cookie available for entire domain
     )
-    log.info("🍪 Set httpOnly cookie for user: %s", payload.email)
+    log.info("🍪 Set httpOnly cookie for user: %s", mask_email(str(payload.email)))
 
     # Phase 1: Also return token in response body for backward compatibility
     return {"access_token": token, "token_type": "bearer"}

@@ -548,7 +548,16 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     # erfasst top_zeitfresser separat (sonst wirken beide wie eine Doppel-Frage).
     "zeitersparnis_prioritaet": "Bereich, in dem KI zuerst Zeit sparen soll — Priorität der Entlastung, KEINE Einzelaufgaben (die erfasst top_zeitfresser) (Freitext)",
     "pilot_bereich": "Bester Bereich für ein Pilotprojekt (Kundenservice, Marketing, Vertrieb, etc.)",
-    "geschaeftsmodell_evolution": "Ideen, wie KI das Geschäftsmodell verändern könnte (Freitext)",
+    # KIS-1268: Frage-Chips-Kopplung — die Quick-Reply-Chips zu diesem Feld
+    # sind Ja/Nein-geformt ("Ja, neue digitale Produkte …" / "Eher nein, …",
+    # KIS-1264). Die Sonnet-Frage muss daher als Konnte-KI-Frage gestellt
+    # werden, sonst laufen Frage und Chips semantisch auseinander.
+    "geschaeftsmodell_evolution": (
+        "Könnte KI das Geschäftsmodell selbst verändern — etwa neue Produkte, "
+        "Kundengruppen oder Vertriebswege? WICHTIG: als Ja/Nein-Frage mit "
+        "diesen Richtungsbeispielen stellen, NICHT als offene Ideen-Frage — "
+        "die Antwort-Chips beginnen mit 'Ja, …' / 'Eher nein, …' (Freitext)"
+    ),
     "vision_3_jahre": "Langfrist-Vision: Wo soll das Unternehmen in 2–3 Jahren mit KI stehen? (Freitext)",
     # Sektion 4
     "strategische_ziele": "Was soll KI in 6–12 Monaten konkret verbessern? (Freitext)",

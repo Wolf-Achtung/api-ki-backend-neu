@@ -496,6 +496,8 @@ h1, h2, h3, h4 {
 /* ── Contact Box ─────────────────────────────────────── */
 .contact-box {
     text-align: center;
+    break-inside: avoid;        /* KIS-1268: keine Waisen-Seite (Klasse KIS-1264) */
+    page-break-inside: avoid;
     padding: 20px;
     background: var(--report-bg-panel);
     border-radius: var(--r-lg);
@@ -544,7 +546,7 @@ h1, h2, h3, h4 {
 @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .section { break-inside: auto; }
-    .glance-box, .kpi-card, .action-card, .card-nobreak { break-inside: avoid; }
+    .glance-box, .kpi-card, .action-card, .card-nobreak, .contact-box { break-inside: avoid; } /* KIS-1268: contact-box ergänzt */
 }
     </style>
 </head>

@@ -797,7 +797,10 @@ class BenchmarkReport:
             self.maturity_score = weighted_sum / total_weight
 
         # Determine grade
-        if self.maturity_score >= 80:
+        # KIS-1268: A erst ab 85 — synchron mit get_score_label ("exzellent"
+        # ab 85, Entscheidung Wolf 2026-07-05). 80-84 ist B/"gut"; sonst sagt
+        # der Benchmark "exzellent (Note A)", waehrend der Score-Label "gut" sagt.
+        if self.maturity_score >= 85:
             self.competitiveness_grade = "A"
         elif self.maturity_score >= 65:
             self.competitiveness_grade = "B"
@@ -1469,7 +1472,7 @@ def _generate_summary(
 
 def _get_position_phrase_de(maturity: float) -> str:
     """Get German position phrase based on maturity."""
-    if maturity >= 80:
+    if maturity >= 85:  # KIS-1268: synchron mit get_score_label (85)
         return "hervorragende"
     elif maturity >= 65:
         return "gute"
@@ -1483,7 +1486,7 @@ def _get_position_phrase_de(maturity: float) -> str:
 
 def _get_position_phrase_en(maturity: float) -> str:
     """Get English position phrase based on maturity."""
-    if maturity >= 80:
+    if maturity >= 85:  # KIS-1268: synchron mit get_score_label (85)
         return "excellent"
     elif maturity >= 65:
         return "good"
