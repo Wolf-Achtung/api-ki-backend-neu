@@ -530,3 +530,23 @@ class ChatSession(Base):
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<ChatSession id={self.id} status={self.status!r} turn={self.turn_count}>"
+
+
+class MetricsEvent(Base):
+    """KIS-1269: Anonymes Zähl-Event der cookiefreien Reichweitenmessung.
+
+    Bewusst KEINE IP, KEINE User-Referenz, KEIN Free-Text — nur Event aus
+    der Allowlist (routes/metrics.py), Seite, Sprache, Referrer-Host."""
+    __tablename__ = "metrics_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    event: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    page: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    lang: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    ref: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        index=True,
+    )

@@ -271,6 +271,9 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
     # Admin: Testrun Replay (admin_key auth)
     cfg.append(("routes.admin_testrun", "/api", "admin-testrun"))
 
+    # KIS-1269: Cookiefreie First-Party-Reichweitenmessung (Beacon + Admin-Summary)
+    cfg.append(("routes.metrics", "/api", "metrics"))
+
     return cfg
 
 
