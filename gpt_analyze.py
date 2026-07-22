@@ -9856,6 +9856,38 @@ def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Di
     # TEIL 3.1.1: Get lang first for language-aware fallbacks
     briefing_lang: str = str(briefing.get("lang", "de") if isinstance(briefing, dict) else "de")
 
+    # FIX-TESTRUN-1244: Kuratierter Fallback für das Medien-Rechte-Kapitel —
+    # liefert auch ohne LLM belastbaren Grundinhalt statt leerer Sektion.
+    if section_key == "ki_rechte_kennzeichnung":
+        return (
+            '<section class="section ki-rechte-kennzeichnung">'
+            '<h2>KI-Rechte &amp; Kennzeichnung in der Produktion</h2>'
+            '<p>Für den KI-Einsatz in Produktion und Verwertung gelten drei Leitplanken: '
+            'Erstens die <strong>Rechtekette</strong> — dokumentieren Sie pro Projekt, welches Asset '
+            'mit welchem Tool und unter welcher Lizenz entstanden ist; die Schutzfähigkeit reiner '
+            'KI-Outputs ist rechtlich ungeklärt, was Buyouts und Lizenzverwertung betrifft. Laden Sie '
+            'kein Kundenmaterial und kein ungeklärtes Fremdmaterial in öffentliche KI-Tools.</p>'
+            '<h3>Stimme, Gesicht, Persönlichkeitsrechte</h3>'
+            '<p>Stimm- und Gesichtsklone sowie Digital Doubles nur mit ausdrücklicher, dokumentierter '
+            'Einwilligung — Umfang (Projekte, Laufzeit, Medien) vertraglich festlegen. Bestandsverträge '
+            'decken KI-Nutzung in der Regel nicht ab; rüsten Sie Klauseln nach.</p>'
+            '<h3>Kennzeichnung synthetischer Inhalte (EU AI Act Art.&nbsp;50)</h3>'
+            '<p>KI-generierte bzw. synthetische Inhalte sind gegenüber dem Publikum transparent zu '
+            'kennzeichnen (Deepfake-Regel). Praxisprozess in drei Schritten: KI-Anteile pro Projekt '
+            '<em>erfassen</em>, Kennzeichnungspflicht <em>entscheiden</em> (eine benannte Person), '
+            'Kennzeichnung <em>umsetzen und dokumentieren</em>.</p>'
+            '<h3>Checkliste: Vor jeder Auslieferung</h3>'
+            '<ul>'
+            '<li>Rechtekette aller KI-Assets dokumentiert (Tool, Lizenz, Quelle)?</li>'
+            '<li>Einwilligungen für Stimmen/Gesichter schriftlich vorhanden?</li>'
+            '<li>Kennzeichnungspflicht nach Art.&nbsp;50 geprüft und umgesetzt?</li>'
+            '<li>Kein Kundenmaterial in öffentliche Tools gelangt?</li>'
+            '<li>Musik-/Archivlizenzen decken die KI-Bearbeitung ab?</li>'
+            '</ul>'
+            '<p><em>Hinweis: keine Rechtsberatung — für Vertragsfragen Fachanwalt einbinden.</em></p>'
+            '</section>'
+        )
+
     # Language-aware fallbacks
     default_company: str = "Your Company" if briefing_lang == "en" else "Ihr Unternehmen"
     branche: str = str(briefing.get("BRANCHE_LABEL") or briefing.get("branche", default_company) or "")
@@ -12213,6 +12245,36 @@ STATIC_SECTIONS = {
     "ai_act_summary",
 }
 
+_META_REFUSAL_PATTERNS = (
+    "bitte stellen sie",
+    "bitte geben sie mir",
+    "benötige ich mindestens",
+    "benötige ich folgende",
+    "please provide",
+    "i need the following",
+    "als ki-modell",
+    "als sprachmodell",
+    "gerne erstelle ich",
+    "um eine belastbare",
+)
+
+
+def _looks_like_meta_refusal(html: str) -> bool:
+    """FIX-TESTRUN-1244: Erkennt Assistenten-Rückfragen statt Report-Inhalt.
+
+    Kurze Outputs, deren Anfang wie eine Kontext-Rückfrage oder Meta-Antwort
+    klingt, dürfen nie ins PDF (Lauf KIS-1244: leeres Rechte-Kapitel mit
+    "Bitte stellen Sie den Unternehmenskontext ... bereit").
+    """
+    if not isinstance(html, str) or not html.strip():
+        return False
+    text = html.strip().lower()
+    if len(text) > 1200:
+        return False  # lange Sektionen sind nie reine Rückfragen
+    head = text[:400]
+    return any(p in head for p in _META_REFUSAL_PATTERNS)
+
+
 def _generate_content_section(section_name: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     """🎯 UPDATED: Uses prompt_loader system mit Variable-Interpolation und Förder-Kontext."""
     # Get error gate from thread-local storage (set by parent analyze_briefing)
@@ -12437,6 +12499,18 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                         len(_unique_placeholders), section_name
                     )
 
+            # FIX-TESTRUN-1244 (P0): Leerer/zu kurzer User-Prompt darf nie ans
+            # LLM gehen — das Modell antwortet dann mit einer Kontext-Rückfrage,
+            # die ungefiltert im PDF landete (Kapitel "KI-Rechte & Kennzeichnung",
+            # Lauf KIS-1244). Stattdessen Fallback und lauter Log.
+            if len(prompt_text.strip()) < 300:
+                log.error(
+                    "[FIX-TESTRUN-1244] Prompt für section=%s nur %d Zeichen — "
+                    "LLM-Call übersprungen, nutze Fallback",
+                    section_name, len(prompt_text.strip()),
+                )
+                return _get_fallback_content(section_name, briefing, scores)
+
             # 4. LLM-Aufruf mit bereits definierten Parametern (llm defined before try block)
             result = _call_llm_for_section(
                 section_key=section_name,
@@ -12446,6 +12520,17 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 max_tokens=llm["max_tokens"],
                 model=llm["model"],
             ) or ""
+
+            # FIX-TESTRUN-1244 (P0): Assistenten-Rückfragen/Meta-Antworten
+            # abfangen ("Bitte stellen Sie ... bereit", "benötige ich ...").
+            # Solche Outputs sind nie gültiger Report-Inhalt.
+            if _looks_like_meta_refusal(result):
+                log.error(
+                    "[FIX-TESTRUN-1244] Meta-/Rückfrage-Output in section=%s "
+                    "erkannt (%r...) — verwerfe und nutze Fallback",
+                    section_name, result[:120],
+                )
+                return _get_fallback_content(section_name, briefing, scores)
 
             # v7.0 DEBUG: Log GPT response for quick_wins
             # FIX-529: Changed from WARNING to DEBUG for logging hygiene

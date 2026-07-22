@@ -2150,6 +2150,7 @@ Nutze den Strategischen Kontext wie folgt:
             "ki_aktivitaeten_ziele",    # RUN-625: KI-Aktivitäten nach Erfahrung
             "transparency_box",         # RUN-625: Transparenz-Box
             "branch_deep_dive",         # RUN-625: Branch Deep Dive
+            "ki_rechte_kennzeichnung",  # FIX-TESTRUN-1244: Medien-Rechte-Kapitel braucht Branchen-/Größenkontext
         }
 
         try:

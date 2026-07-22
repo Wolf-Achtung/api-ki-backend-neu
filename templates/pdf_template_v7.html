@@ -1371,7 +1371,8 @@ h1, h2, h3, h4 {
         </svg>
     </div>
     <div style="font-size: 10pt; color: var(--c-text-2); margin-top: var(--sp-sm);">
-        Reifegrad: {{ size_label }}
+        {# FIX-TESTRUN-1244: Cover zeigte die Unternehmensgröße im Reifegrad-Slot #}
+        Reifegrad: {{ variant_label|default(size_label) }}
         {% if top10_score_for_size and (top10_score_for_size|int > score_int) %}
         <span class="muted"> · </span>Top 10% ab {{ top10_score_for_size }}
         {% endif %}
@@ -1402,12 +1403,26 @@ h1, h2, h3, h4 {
             </div>
             <div class="kpi-label">{{ ui("kpi_time_savings", "Zeitersparnis/Monat") }}</div>
         </div>
+        {# FIX-TESTRUN-1244: KPI-Sanity-Gate — ein Jahr-1-ROI nahe null (CAPEX
+           voll verrechnet) ist mathematisch korrekt, aber als Cover-Headline
+           kommunikationsschädlich ("1% ROI"). Unter 20% zeigt die Karte
+           stattdessen die Amortisationszeit. #}
+        {% set _roi_cover = ROI_12M|round(0)|int if ROI_12M is not none and ROI_12M != '' else -1 %}
+        {% if _roi_cover >= 0 and _roi_cover < 20 and PAYBACK_MONTHS %}
+        <div class="kpi-card">
+            <div class="kpi-value" style="color: #c2410c;">
+                {{ PAYBACK_MONTHS_FMT_DE|default(PAYBACK_MONTHS|round(1)) }} Mon.
+            </div>
+            <div class="kpi-label">Amortisation</div>
+        </div>
+        {% else %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: #c2410c;">
                 {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% elif ROI_P50 and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% else %}—{% endif %}
             </div>
             <div class="kpi-label">{% if ROI_12M and ROI_12M|int >= 200 %}ROI (gedeckelt){% else %}{{ ui("kpi_roi", "ROI-Projektion") }}{% endif %}</div>
         </div>
+        {% endif %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: var(--c-primary);">{{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('begrenzt') }}</div>
             <div class="kpi-label">AI Act Risikoklasse</div>
@@ -1507,6 +1522,9 @@ h1, h2, h3, h4 {
     {% endif %}
     {% if AI_ACT_RISK_LEVEL %}
         {% set _ = toc_action_entries.append(("aiact-compact", "risk", "AI Act Kompakt", "aiact")) %}
+    {% endif %}
+    {% if KI_RECHTE_KENNZEICHNUNG_HTML and KI_RECHTE_KENNZEICHNUNG_HTML|trim %}
+        {% set _ = toc_action_entries.append(("ki-rechte-kennzeichnung", "risk", "KI-Rechte & Kennzeichnung", "aiact")) %}
     {% endif %}
     {% if FOERDERPOTENZIAL_HTML or FUNDING_PATH_1 %}
         {% set _ = toc_action_entries.append(("funding-section", "finance", "Förderprogramme", "funding")) %}
