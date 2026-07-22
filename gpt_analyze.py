@@ -8455,9 +8455,19 @@ def _generate_hero_page(
     roi = kpi_values.get('roi', '—')
     payback = kpi_values.get('payback', '—')
 
+    # FIX-TESTRUN-1244: KPI-Sanity-Gate auch auf der Hero-Seite — ein Jahr-1-ROI
+    # nahe null (CAPEX voll verrechnet) erscheint sonst als "1% ROI"-Headline.
+    # Bei gesetztem net3y (von _generate_hero_page_from_context nur bei ROI <20%
+    # befüllt) zeigt die mittlere Karte den 3-Jahres-Nettonutzen.
+    net3y = kpi_values.get('net3y', '')
+    if net3y:
+        roi_card = _generate_kpi_card(str(net3y), "Nettonutzen (3 Jahre)", "", "success")
+    else:
+        roi_card = _generate_kpi_card(str(roi) + "%", "ROI (12 Monate)", "", "success")
+
     kpi_cards = f'''
     {_generate_kpi_card(str(zeitersparnis), "Zeitersparnis", "pro Monat", "highlight")}
-    {_generate_kpi_card(str(roi) + "%", "ROI (12 Monate)", "", "success")}
+    {roi_card}
     {_generate_kpi_card(str(payback) + " Mo.", "Payback-Zeit", "", "")}
     '''
 
@@ -8784,6 +8794,25 @@ def _generate_hero_page_from_context(
 
         'payback': _hero_payback_fmt,
     }
+
+    # FIX-TESTRUN-1244: ROI <20% → 3-Jahres-Nettonutzen als Hero-KPI (analog
+    # KPI-Gate im Cover-Template und Deep-Dive). Nur befüllt, wenn der
+    # Nettonutzen positiv berechenbar ist — sonst bleibt die ROI-Karte stehen.
+    try:
+        _hero_roi_val = float(str(briefing.get("ROI_12M", "") or sections.get("ROI_12M", "") or "").replace(",", ".") or -1)
+    except (ValueError, TypeError):
+        _hero_roi_val = -1.0
+    if 0 <= _hero_roi_val < 20:
+        try:
+            _n3_hours = float(str(briefing.get("ZEITERSPARNIS_H", 0) or 0).replace(",", "."))
+            _n3_rate = float(str(briefing.get("stundensatz_eur") or os.getenv("DEFAULT_STUNDENSATZ_EUR", "60") or 60).replace(",", "."))
+            _n3_capex = float(str(briefing.get("CAPEX_REALISTISCH_EUR", 0) or 0).replace(",", "."))
+            _n3_opex = float(str(briefing.get("OPEX_REALISTISCH_EUR", 0) or 0).replace(",", "."))
+            _net3y = _n3_hours * _n3_rate * 36 - _n3_capex - _n3_opex * 36
+            if _net3y > 0:
+                kpi_values['net3y'] = "+" + f"{int(_net3y):,}".replace(",", ".") + " €"
+        except (ValueError, TypeError):
+            pass
 
     # Reifegrad und Potenzial
     if score >= 70:
