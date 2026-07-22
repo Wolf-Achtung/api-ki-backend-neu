@@ -988,6 +988,10 @@ def render_deep_dive_html(sections: Dict[str, str],
         except Exception as _e:
             log.debug("audit_render_context failed: %s", _e)
 
+        # Phase 0 Multi-Projekt: zentrales Branding für Templates bereitstellen
+        from services.brand_config import get_brand
+        template_vars.setdefault("brand", get_brand())
+
         return str(template.render(**template_vars))
 
     except Exception as exc:

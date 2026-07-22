@@ -63,7 +63,7 @@ BRANCH_MAPPING: Dict[str, str] = {
     "verwaltung": "verwaltung",
     "gesundheit": "gesundheit",
     "bau": "bauwesen_architektur",
-    "medien": "marketing",  # Medien & Kreativwirtschaft → marketing profile
+    "medien": "medien",
     "industrie": "industrie",
     "logistik": "transport_logistik",
     "gastronomie": "handel",  # FIX-BRANCH-13: Gastronomie → handel (B2C/Operations-similar)
@@ -77,7 +77,7 @@ BRANCH_MAPPING: Dict[str, str] = {
     "handel_ecommerce": "handel",
     "gesundheit_pflege": "gesundheit",
     "bauwesen_architektur": "bauwesen_architektur",
-    "medien_kreativwirtschaft": "marketing",
+    "medien_kreativwirtschaft": "medien",
     "industrie_produktion": "industrie",
     "transport_logistik": "transport_logistik",
 }
@@ -163,6 +163,22 @@ BRANCH_SYNONYMS: Dict[str, str] = {
     "media": "medien",
     "creative": "medien",
     "kreativ": "medien",
+    "kreativwirtschaft": "medien",
+    "film": "medien",
+    "film & tv": "medien",
+    "film und tv": "medien",
+    "tv": "medien",
+    "fernsehen": "medien",
+    "entertainment": "medien",
+    "unterhaltung": "medien",
+    "musik": "medien",
+    "music": "medien",
+    "games": "medien",
+    "gaming": "medien",
+    "verlag": "medien",
+    "publishing": "medien",
+    "postproduktion": "medien",
+    "vfx": "medien",
     # =========================================================================
     # Legacy/alternate formats (map to canonical 13 values)
     # =========================================================================

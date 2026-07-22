@@ -7,6 +7,8 @@ from html import escape
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import quote
 
+from services.brand_config import get_brand as _brand
+
 logger = logging.getLogger(__name__)
 
 
@@ -122,7 +124,7 @@ def _prettify_key_label(key: str) -> str:
 def generate_feedback_link(email: str, briefing_id: int = None) -> str:
     """Generiert den Feedback-Link mit der E-Mail als URL-Parameter."""
     encoded_email = quote(email)
-    url = f"https://make.ki-sicherheit.jetzt/feedback/feedback.html?email={encoded_email}"
+    url = f"{_brand()['feedback_url']}?email={encoded_email}"
     if briefing_id:
         url += f"&briefing_id={briefing_id}"
     return url
@@ -130,7 +132,7 @@ def generate_feedback_link(email: str, briefing_id: int = None) -> str:
 
 def render_coach_cta(briefing_id: int, accent_color: str) -> str:
     """Render the Coach-Gespräch CTA block for user-facing report emails."""
-    coach_url = f"https://make.ki-sicherheit.jetzt/coach/{briefing_id}"
+    coach_url = f"{_brand()['app_url']}/coach/{briefing_id}"
     return (
         '<table role="presentation" style="margin: 24px auto; width: 100%; max-width: 600px;">'
         '<tr>'
@@ -190,7 +192,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
     # CTA to Strategy form (user emails only)
     strategy_cta = ""
     if recipient != "admin" and briefing_id:
-        _strategy_url = f"https://make.ki-sicherheit.jetzt/strategy.html?briefing_id={briefing_id}"
+        _strategy_url = f"{_brand()['app_url']}/strategy.html?briefing_id={briefing_id}"
         strategy_cta = (
             '<hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">'
             '<p style="font-size:15px;margin:0 0 8px"><strong>N\u00e4chster Schritt:</strong></p>'
@@ -302,7 +304,7 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
         {strategy_cta_html}
         {coach_cta}
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
-        <p class="muted">Wolf Hohl — KI‑Sicherheit.jetzt</p>
+        <p class="muted">{_brand()['advisor_name']} — {_brand()['brand_name']}</p>
         <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>
       </div>
     </div>
@@ -362,7 +364,7 @@ def render_strategy_email(recipient: str = "user", briefing_id: Optional[int] = 
         <p>{escape(cta)}</p>
         {coach_cta}
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
-        <p class="muted">Wolf Hohl \u2014 KI\u2011Sicherheit.jetzt</p>
+        <p class="muted">{_brand()['advisor_name']} — {_brand()['brand_name']}</p>
         <p class="muted">Hinweis: Diese E\u2011Mail wurde automatisch erzeugt.</p>
       </div>
     </div>
@@ -422,7 +424,7 @@ def render_coach_reminder_email(briefing_id: int) -> str:
           <li>Förderstrategie und Programm‑Eignung</li>
         </ul>
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
-        <p class="muted">Wolf Hohl — KI‑Sicherheit.jetzt</p>
+        <p class="muted">{_brand()['advisor_name']} — {_brand()['brand_name']}</p>
         <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>
       </div>
     </div>
@@ -541,14 +543,14 @@ def render_appetizer_result_email(
 
         <hr style="border:none;border-top:1px solid #e6edf3;margin:20px 0">
         <p style="text-align:center">
-          <a href="https://make.ki-sicherheit.jetzt" style="display:inline-block;background:#2B6CB0;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600">
+          <a href="{_brand()['app_url']}" style="display:inline-block;background:#2B6CB0;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600">
             {cta_headline} \u2192
           </a>
         </p>
         <p class="muted" style="text-align:center;font-size:13px">{escape(cta.get("subline", ""))}</p>
 
         <hr style="border:none;border-top:1px solid #e6edf3;margin:20px 0">
-        <p class="muted">Wolf Hohl \u2014 KI\u2011Sicherheit.jetzt</p>
+        <p class="muted">{_brand()['advisor_name']} — {_brand()['brand_name']}</p>
         <p class="muted">Hinweis: Diese E\u2011Mail wurde automatisch erzeugt.</p>
       </div>
     </div>
@@ -1012,6 +1014,7 @@ def render_briefing_pdf_html(
     ziele = escape(str(answers.get("strategische_ziele", ""))[:300])
 
     today_str = _date.today().strftime("%d.%m.%Y")
+    _brand_name = _brand()["brand_name"]
 
     return (
         "<!doctype html>\n"
@@ -1043,7 +1046,7 @@ def render_briefing_pdf_html(
         "<body>\n"
         "\n"
         f"<h1>KUNDEN-BRIEFING {_dash} {_e(display_id)}</h1>\n"
-        f'<p class="meta">{_e(datum)} &middot; Erstellt: {today_str} &middot; ki-sicherheit.jetzt</p>\n'
+        f'<p class="meta">{_e(datum)} &middot; Erstellt: {today_str} &middot; {_brand_name}</p>\n'
         "\n"
         "<h2>Unternehmen</h2>\n"
         "<table>\n"

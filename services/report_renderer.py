@@ -1149,6 +1149,10 @@ def render(briefing_obj: Any,
         "2_pre_jinja", run_id, ctx.get("EXECUTIVE_DECISION_HTML"), mode="section",
     )
 
+    # Phase 0 Multi-Projekt: zentrales Branding für Templates bereitstellen
+    from services.brand_config import get_brand
+    ctx.setdefault("brand", get_brand())
+
     html = env.get_template(tpl_name).render(**ctx)
 
     # FIX-KIS-1027.5.1-A: Decision-Cutoff-Trace Checkpoint 3/N (post-Jinja, full HTML mode)

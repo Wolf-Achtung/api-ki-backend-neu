@@ -811,6 +811,99 @@ BRANCH_MATURITY_DATA: Dict[str, Dict[str, Any]] = {
             ("Measurability", "Attribution of AI impact difficult"),
         ],
     },
+    "medien": {
+        "maturity_score": 70,
+        "digitalization_level": "high",
+        "ai_adoption_rate": "mainstream",
+        "competitive_density": "high",
+        "drivers_de": [
+            ("Produktionskosten-Druck", "Budgets sinken bei steigender Output-Erwartung - KI senkt Kosten in Entwicklung und Postproduktion"),
+            ("Generative Produktion", "Text, Bild, Video und Audio aus dem Prompt verändern die gesamte Produktionskette"),
+            ("Rechte & Lizenzen", "Verwertbarkeit von KI-Output und Training auf geschütztem Material werden zum Vertragsthema"),
+            ("Format-Fragmentierung", "Mehr Kanäle und Formate erfordern mehr Versionen desselben Contents - Versionierung und Lokalisierung skalieren nur mit KI"),
+            ("Publikumsdaten", "Empfehlung und Personalisierung entscheiden über Reichweite und Erlöse"),
+        ],
+        "drivers_en": [
+            ("Production Cost Pressure", "Shrinking budgets meet rising output expectations - AI cuts costs in development and post-production"),
+            ("Generative Production", "Text, image, video and audio from a prompt reshape the entire production chain"),
+            ("Rights & Licensing", "Usability of AI output and training on protected material become contract issues"),
+            ("Format Fragmentation", "More channels and formats require more versions of the same content - versioning and localization only scale with AI"),
+            ("Audience Data", "Recommendation and personalization decide reach and revenue"),
+        ],
+        "trends_de": [
+            ("Generative Video-/Bildmodelle", "Text-to-Video und Bildgenerierung für Pre-Viz, Storyboards und VFX-Elemente", "very_high"),
+            ("KI-Postproduktion", "Schnitt-Assistenz, Transkription, Rotoskopie, Upscaling und Farbkorrektur", "high"),
+            ("Synthetische Stimmen & Dubbing", "Mehrsprachige Verwertung durch Voice-Cloning und KI-Synchronisation", "high"),
+            ("Virtual Production", "LED-Volumes und Echtzeit-Engines kombiniert mit KI-Assets", "medium"),
+            ("KI-Lokalisierung", "Automatische Untertitelung und Versionierung für internationale Auswertung", "medium"),
+        ],
+        "trends_en": [
+            ("Generative Video/Image Models", "Text-to-video and image generation for pre-viz, storyboards and VFX elements", "very_high"),
+            ("AI Post-Production", "Edit assistance, transcription, rotoscoping, upscaling and color grading", "high"),
+            ("Synthetic Voices & Dubbing", "Multilingual exploitation via voice cloning and AI dubbing", "high"),
+            ("Virtual Production", "LED volumes and real-time engines combined with AI assets", "medium"),
+            ("AI Localization", "Automatic subtitling and versioning for international distribution", "medium"),
+        ],
+        "regulatory_de": [
+            ("EU AI Act Art. 50", "Transparenz- und Kennzeichnungspflichten für synthetische bzw. KI-generierte Inhalte (Deepfake-Regelung)", "high"),
+            ("Urheberrecht & Training", "Rechtekette bei KI-Output klären; TDM-Vorbehalte und Lizenzlage beim Training beachten", "high"),
+            ("Persönlichkeitsrechte", "Stimme und Gesicht (Klone/Digital Doubles) nur mit ausdrücklicher Einwilligung nutzen", "high"),
+            ("DSGVO", "Publikums- und Nutzerdaten bei Personalisierung und Reichweitenmessung schützen", "medium"),
+        ],
+        "regulatory_en": [
+            ("EU AI Act Art. 50", "Transparency and labeling obligations for synthetic/AI-generated content (deepfake rule)", "high"),
+            ("Copyright & Training", "Clarify chain of rights for AI output; observe TDM opt-outs and licensing for training", "high"),
+            ("Personality Rights", "Use voice and likeness (clones/digital doubles) only with explicit consent", "high"),
+            ("GDPR", "Protect audience and user data in personalization and reach measurement", "medium"),
+        ],
+        "use_cases_de": [
+            ("Stoffentwicklung", "Exposés, Treatments und Coverage mit KI beschleunigen", "low", "high", 1),
+            ("Pre-Viz & Storyboards", "Bild-/Videogenerierung für Pitch-Material und Look-Development", "low", "medium", 1),
+            ("Post-Automatisierung", "Rough Cuts, Transkription, Untertitel und Metadaten automatisch erstellen", "medium", "high", 2),
+            ("Lokalisierung & Dubbing", "KI-gestützte Synchronisation und Untertitelung für neue Märkte", "medium", "high", 3),
+            ("Archiv-Verschlagwortung", "KI-Metadaten machen Footage-Bestände durchsuchbar und lizenzierbar", "medium", "high", 3),
+        ],
+        "use_cases_en": [
+            ("Story Development", "Accelerate outlines, treatments and coverage with AI", "low", "high", 1),
+            ("Pre-Viz & Storyboards", "Image/video generation for pitch material and look development", "low", "medium", 1),
+            ("Post Automation", "Automatically create rough cuts, transcripts, subtitles and metadata", "medium", "high", 2),
+            ("Localization & Dubbing", "AI-assisted dubbing and subtitling for new markets", "medium", "high", 3),
+            ("Archive Tagging", "AI metadata makes footage libraries searchable and licensable", "medium", "high", 3),
+        ],
+        "kpis": ["Produktionskosten pro Minute", "Time-to-Publish", "Verwertungserlöse pro Asset", "Lokalisierungsquote", "Archiv-Nutzungsrate"],
+        "opportunities_de": [
+            ("Schnellere Entwicklung", "Pitch-Material und Pre-Viz in Stunden statt Wochen"),
+            ("Mehrfachverwertung", "Automatisierte Versionierung und Lokalisierung öffnen neue Märkte"),
+            ("Archiv-Monetarisierung", "KI-Metadaten machen Bestände auffindbar und lizenzierbar"),
+        ],
+        "opportunities_en": [
+            ("Faster Development", "Pitch material and pre-viz in hours instead of weeks"),
+            ("Multi-Exploitation", "Automated versioning and localization open new markets"),
+            ("Archive Monetization", "AI metadata makes libraries discoverable and licensable"),
+        ],
+        "risks_de": [
+            ("Rechteunsicherheit", "KI-Output ohne saubere Rechtekette gefährdet die Verwertung"),
+            ("Kennzeichnungspflicht", "Fehlende Transparenz bei synthetischen Inhalten verletzt AI-Act-Vorgaben"),
+            ("Kreative Akzeptanz", "Gewerke und Kreative fürchten Ersetzung - Einbindung statt Verordnung nötig"),
+            ("Authentizität", "Generischer KI-Look beschädigt Marke und Publikumsbindung"),
+        ],
+        "risks_en": [
+            ("Rights Uncertainty", "AI output without a clean chain of rights endangers exploitation"),
+            ("Labeling Obligation", "Missing transparency for synthetic content violates AI Act requirements"),
+            ("Creative Acceptance", "Crafts and creatives fear replacement - involve rather than impose"),
+            ("Authenticity", "A generic AI look damages brand and audience loyalty"),
+        ],
+        "bottlenecks_de": [
+            ("Rechteklärung", "Bestehende Verträge decken KI-Nutzung von Material und Stimmen oft nicht ab"),
+            ("Asset-Chaos", "Footage und Assets ohne Metadaten-Standards bremsen jede KI-Automatisierung"),
+            ("Tool-Flut", "Schnelllebige KI-Tool-Landschaft ohne Evaluations- und Freigabeprozess"),
+        ],
+        "bottlenecks_en": [
+            ("Rights Clearance", "Existing contracts often do not cover AI use of material and voices"),
+            ("Asset Chaos", "Footage and assets without metadata standards stall any AI automation"),
+            ("Tool Flood", "Fast-moving AI tool landscape without evaluation and approval processes"),
+        ],
+    },
     # =========================================================================
     # G19.1: NEW BRANCH PROFILES
     # =========================================================================
@@ -1184,7 +1277,7 @@ BRANCH_ALIASES: Dict[str, str] = {
     "finanzen_versicherungen": "finanzen",
     "handel_ecommerce": "handel",
     "gesundheit_pflege": "gesundheit",
-    "medien_kreativwirtschaft": "marketing",  # maps to marketing profile
+    "medien_kreativwirtschaft": "medien",
     "industrie_produktion": "industrie",
     # German variations
     "beratung": "beratung",
@@ -1224,10 +1317,10 @@ BRANCH_ALIASES: Dict[str, str] = {
     "hochschule": "bildung",
     "marketing": "marketing",
     "werbung": "marketing",
-    "medien": "marketing",
+    "medien": "medien",
     "agentur": "marketing",
-    "kreativ": "marketing",
-    "kreativwirtschaft": "marketing",
+    "kreativ": "medien",
+    "kreativwirtschaft": "medien",
     # G19.1: New branch aliases
     "bauwesen_architektur": "bauwesen_architektur",
     "bauwesen": "bauwesen_architektur",

@@ -35,7 +35,7 @@ def frontend_dropdown_values() -> List[Tuple[str, str]]:
         ("verwaltung", "verwaltung"),
         ("gesundheit_pflege", "gesundheit"),
         ("bauwesen_architektur", "bauwesen_architektur"),
-        ("medien_kreativwirtschaft", "marketing"),  # maps to marketing profile
+        ("medien_kreativwirtschaft", "medien"),
         ("industrie_produktion", "industrie"),
         ("transport_logistik", "transport_logistik"),
     ]
@@ -58,7 +58,7 @@ def german_labels() -> List[Tuple[str, str]]:
         ("Verwaltung", "verwaltung"),
         ("Gesundheit & Pflege", "gesundheit"),
         ("Bauwesen & Architektur", "bauwesen_architektur"),
-        ("Medien & Kreativwirtschaft", "marketing"),
+        ("Medien & Kreativwirtschaft", "medien"),
         ("Industrie & Produktion", "industrie"),
         ("Transport & Logistik", "transport_logistik"),
     ]
@@ -299,11 +299,11 @@ class TestHelperFunctions:
         # Should return unique values
         assert len(branches) == len(set(branches)), "Branches should be unique"
 
-        # Should include the 11 engine keys
+        # Should include the 12 engine keys
         expected = {
             "marketing", "beratung", "it", "finanzen", "handel",
             "bildung", "verwaltung", "gesundheit", "bauwesen_architektur",
-            "industrie", "transport_logistik"
+            "industrie", "transport_logistik", "medien"
         }
         assert set(branches) == expected, \
             f"Expected {expected}, got {set(branches)}"

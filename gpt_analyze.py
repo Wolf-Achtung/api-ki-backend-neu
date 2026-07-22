@@ -9199,6 +9199,22 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "next_year": next_year,
         "next_year_short": next_year_short,
     }
+
+    # Phase 0 Multi-Projekt: Branding-Variablen für Prompts (advisor_note,
+    # transparency_box u. a.) aus zentraler Brand-Config statt hardcodiert.
+    try:
+        from services.brand_config import get_brand
+        _brand = get_brand()
+        base_vars.update({
+            "ADVISOR_NAME": _brand["advisor_name"],
+            "ADVISOR_TITLE": _brand["advisor_title"],
+            "ADVISOR_BIO": _brand["advisor_bio"],
+            "BRAND_NAME": _brand["brand_name"],
+            "BRAND_CONTACT_EMAIL": _brand["contact_email"],
+            "BRAND_SITE_URL": _brand["site_url"],
+        })
+    except Exception:
+        pass
     
     # ===== BLOCK 2: Company Basics =====
     # Core company information needed across all prompts
@@ -13238,6 +13254,21 @@ def _regenerate_section_strict(
             "SCORES": str(scores),
             "LANG": briefing.get("lang", "de"),
         }
+
+        # Phase 0 Multi-Projekt: Brand-Variablen auch im Regen-Pfad bereitstellen
+        try:
+            from services.brand_config import get_brand
+            _brand = get_brand()
+            prompt_vars.update({
+                "ADVISOR_NAME": _brand["advisor_name"],
+                "ADVISOR_TITLE": _brand["advisor_title"],
+                "ADVISOR_BIO": _brand["advisor_bio"],
+                "BRAND_NAME": _brand["brand_name"],
+                "BRAND_CONTACT_EMAIL": _brand["contact_email"],
+                "BRAND_SITE_URL": _brand["site_url"],
+            })
+        except Exception:
+            pass
 
         # Load the prompt with interpolation
         prompt = load_prompt(section_name, lang=briefing.get("lang", "de"), vars_dict=prompt_vars)

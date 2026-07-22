@@ -34,7 +34,8 @@
       "beratung",
       "dienstleistungen",
       "handel",
-      "it"
+      "it",
+      "medien"
     ]
   },
   {
@@ -71,7 +72,8 @@
     "best_for_industries": [
       "beratung",
       "dienstleistungen",
-      "marketing"
+      "marketing",
+      "medien"
     ]
   },
   {
@@ -109,7 +111,8 @@
       "it",
       "dienstleistungen",
       "beratung",
-      "marketing"
+      "marketing",
+      "medien"
     ]
   },
   {
@@ -128,7 +131,8 @@
     "best_for_industries": [
       "it",
       "dienstleistungen",
-      "beratung"
+      "beratung",
+      "medien"
     ]
   },
   {
@@ -147,7 +151,8 @@
       "beratung",
       "dienstleistungen",
       "marketing",
-      "it"
+      "it",
+      "medien"
     ]
   },
   {
@@ -184,6 +189,92 @@
     ],
     "best_for_industries": [
       "alle"
+    ]
+  },
+  {
+    "name": "Runway",
+    "url": "https://runwayml.com",
+    "trust_url": "https://runwayml.com/privacy-policy",
+    "category": "Generative Video / Bild",
+    "price": "0-76 €/Monat",
+    "gdpr": "US (AVV prüfen)",
+    "host": "US",
+    "best_for_size": [
+      "solo",
+      "kmu"
+    ],
+    "best_for_industries": [
+      "medien",
+      "marketing"
+    ]
+  },
+  {
+    "name": "ElevenLabs",
+    "url": "https://elevenlabs.io",
+    "trust_url": "https://elevenlabs.io/privacy-policy",
+    "category": "Synthetische Stimmen / Dubbing",
+    "price": "0-99 €/Monat",
+    "gdpr": "US (AVV prüfen)",
+    "host": "US",
+    "best_for_size": [
+      "solo",
+      "kmu"
+    ],
+    "best_for_industries": [
+      "medien",
+      "marketing"
+    ]
+  },
+  {
+    "name": "Descript",
+    "url": "https://www.descript.com",
+    "trust_url": "https://www.descript.com/privacy",
+    "category": "Video-/Podcast-Editing & Transkription",
+    "price": "0-24 $/Monat",
+    "gdpr": "US (AVV prüfen)",
+    "host": "US",
+    "best_for_size": [
+      "solo",
+      "kmu"
+    ],
+    "best_for_industries": [
+      "medien",
+      "marketing",
+      "bildung"
+    ]
+  },
+  {
+    "name": "Adobe Firefly",
+    "url": "https://www.adobe.com/de/products/firefly.html",
+    "trust_url": "https://www.adobe.com/de/privacy.html",
+    "category": "Bildgenerierung (kommerziell abgesichert)",
+    "price": "in Creative Cloud / ab ~5 €/Monat",
+    "gdpr": "US (AVV vorhanden)",
+    "host": "US",
+    "best_for_size": [
+      "solo",
+      "kmu",
+      "enterprise"
+    ],
+    "best_for_industries": [
+      "medien",
+      "marketing"
+    ]
+  },
+  {
+    "name": "Topaz Video AI",
+    "url": "https://www.topazlabs.com/topaz-video-ai",
+    "trust_url": "https://www.topazlabs.com/privacy",
+    "category": "Upscaling / Restaurierung",
+    "price": "Einmalkauf ~299 $",
+    "gdpr": "lokal (Desktop-App)",
+    "host": "lokal",
+    "best_for_size": [
+      "solo",
+      "kmu"
+    ],
+    "best_for_industries": [
+      "medien"
     ]
   }
 ]
