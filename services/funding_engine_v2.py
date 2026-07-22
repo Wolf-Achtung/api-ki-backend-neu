@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 FundingLevel = Literal["eu", "federal", "state", "regional", "private"]
 FundingCategory = Literal[
     "digitalisierung", "ki", "innovation", "forschung",
-    "nachhaltigkeit", "gruendung", "export", "allgemein"
+    "nachhaltigkeit", "gruendung", "export", "allgemein", "medien"
 ]
 FundingYear = Literal[2025, 2026, 2027]
 
@@ -561,9 +561,9 @@ FUNDING_PROGRAMMES_2025_2027: List[Dict[str, Any]] = [
         "level": "federal",
         "country": "DE",
         "category": "medien",
-        "funding_rate": "20-25%",
-        "max_amount": "projektabhängig",
-        "max_amount_numeric": 4000000,
+        "funding_rate": "30%",
+        "max_amount": "DFFF I bis 5 Mio. €, DFFF II bis 25 Mio. €",
+        "max_amount_numeric": 5000000,
         "provider": "BKM / FFA",
         "fit_solo": 0.2,
         "fit_team": 0.8,
@@ -580,10 +580,10 @@ FUNDING_PROGRAMMES_2025_2027: List[Dict[str, Any]] = [
         "level": "federal",
         "country": "DE",
         "category": "medien",
-        "funding_rate": "bis 25%",
-        "max_amount": "projektabhängig",
-        "max_amount_numeric": 2500000,
-        "provider": "BMWK",
+        "funding_rate": "30%",
+        "max_amount": "Serien bis 20 Mio. €/Staffel",
+        "max_amount_numeric": 20000000,
+        "provider": "BKM / FFA",
         "fit_solo": 0.1,
         "fit_team": 0.7,
         "fit_kmu": 0.9,
@@ -613,23 +613,23 @@ FUNDING_PROGRAMMES_2025_2027: List[Dict[str, Any]] = [
         "risks": ["Regionalbindung der Ausgaben"],
     },
     {
-        "name": "Computerspieleförderung des Bundes",
+        "name": "Games-Förderung des Bundes",
         "year": 2025,
         "level": "federal",
         "country": "DE",
         "category": "medien",
-        "funding_rate": "projektabhängig",
-        "max_amount": "projektabhängig",
-        "max_amount_numeric": 2000000,
-        "provider": "BMWK",
+        "funding_rate": "bis 45% (KMU) / 50% (Start-ups)",
+        "max_amount": "bis 8 Mio. € (min. 300.000 €)",
+        "max_amount_numeric": 8000000,
+        "provider": "BMFTR (DLR Projektträger)",
         "fit_solo": 0.3,
         "fit_team": 0.8,
         "fit_kmu": 0.9,
         "ki_relevance": "medium",
         "deadline": "abhängig von Förderrunden",
         "years_available": [2025, 2026, 2027],
-        "requirements": ["Games-Entwicklung in DE"],
-        "risks": ["Verfügbarkeit der Förderrunden schwankt"],
+        "requirements": ["Games-Entwicklung in DE", "Kulturtest", "USK-Kennzeichnung"],
+        "risks": ["Budget 2026: 125 Mio. € — Mitte 2026 gute Antragschancen"],
     },
     {
         "name": "Creative Europe MEDIA",

@@ -180,10 +180,10 @@
       "region": "DE",
       "region_label": "Deutschland (bundesweit)",
       "funding_type": "Zuschuss",
-      "funding_rate": "20–25% der deutschen Herstellungskosten",
-      "max_amount": 4000000,
-      "max_amount_display": "projektabhängig, i. d. R. bis 4 Mio €",
-      "focus": "Kinofilmproduktion; Digitalisierung der Produktionsprozesse mitfinanzierbar",
+      "funding_rate": "30% der anerkannten deutschen Herstellungskosten (seit 02/2025)",
+      "max_amount": 5000000,
+      "max_amount_display": "DFFF I bis 5 Mio €, DFFF II (VFX/Produktionsdienstleister) bis 25 Mio €",
+      "focus": "Kinofilmproduktion (DFFF I ab 1 Mio € Herstellungskosten); DFFF II für Produktionsdienstleister/VFX (ab 20 Mio € Gesamtkosten)",
       "suitable_for": [
         "team",
         "kmu"
@@ -191,33 +191,34 @@
       "branchen": [
         "medien"
       ],
-      "notes": "BKM-Programm über die FFA abgewickelt; keine KI-Förderung im engeren Sinn, aber KI-gestützte Produktionsschritte sind Teil der förderfähigen Herstellungskosten",
+      "notes": "FFG-Novelle seit 1.1.2025; BKM-Programm, FFA-verwaltet; laufende Einreichung bis 6 Wochen vor Drehbeginn; Zusammenführung mit GMPF zu einer 'Anreizförderung' für Mitte 2026 angekündigt — vor Antrag aktuellen Richtlinienstand auf ffa.de prüfen",
       "relevance_ki": "medium",
       "priority": 1,
-      "url": "https://www.dfff-ffa.de"
+      "url": "https://www.ffa.de/dfff-i.html",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "ffa_produktion",
-      "title": "FFA – Produktions- und Projektförderung",
+      "title": "FFA – Referenzfilmförderung (FFG 2025)",
       "region": "DE",
       "region_label": "Deutschland (bundesweit)",
-      "funding_type": "Zuschuss/Darlehen",
-      "funding_rate": "projektabhängig",
-      "max_amount": 1000000,
-      "max_amount_display": "projektabhängig",
-      "focus": "Kinofilm: Produktion, Drehbuch/Stoffentwicklung, Verleih/Vertrieb",
+      "funding_type": "Zuschuss (automatisch nach Referenzpunkten)",
+      "funding_rate": "erfolgsabhängig (Punktesystem)",
+      "max_amount": 0,
+      "max_amount_display": "erfolgsabhängig",
+      "focus": "Abgabefinanzierte Bundesfilmförderung: Referenzmittel für neue Projekte; auch Drehbuchautor:innen und Regie werden beteiligt",
       "suitable_for": [
-        "solo",
         "team",
         "kmu"
       ],
       "branchen": [
         "medien"
       ],
-      "notes": "Stoffentwicklungs-/Drehbuchförderung auch für Einzelautorinnen und -autoren relevant; KI-Einsatz in Entwicklung/Produktion zunehmend Thema der Antragspraxis",
+      "notes": "Seit FFG-Novelle 1.1.2025: selektive Projektfilmförderung (Darlehen) und selektive Verleihförderung sind entfallen; Förderung läuft über Referenzpunkte (Besuchs-/Festival-/Preiserfolg)",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.ffa.de"
+      "url": "https://www.ffa.de/referenzfilmfoerderung.html",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "gmpf",
@@ -225,9 +226,9 @@
       "region": "DE",
       "region_label": "Deutschland (bundesweit)",
       "funding_type": "Zuschuss",
-      "funding_rate": "bis 25% der deutschen Herstellungskosten",
-      "max_amount": 2500000,
-      "max_amount_display": "projektabhängig",
+      "funding_rate": "30% der anerkannten deutschen Herstellungskosten (seit 02/2025)",
+      "max_amount": 20000000,
+      "max_amount_display": "Serien bis 20 Mio € pro Staffel; Filme ohne Kinostart bis 5 Mio €",
       "focus": "High-End-Serien und Filme mit hohem VFX-/Postproduktionsanteil",
       "suitable_for": [
         "team",
@@ -236,20 +237,21 @@
       "branchen": [
         "medien"
       ],
-      "notes": "Besonders relevant für VFX-/Postproduktionshäuser; KI-gestützte VFX-Workflows sind förderfähige Herstellungskosten",
+      "notes": "Richtlinie der BKM (nicht BMWK), verwaltet durch die FFA; für High-End-Serien und VFX-/postproduktionsstarke Produktionen; ab 2026 gemeinsamer Topf mit DFFF (ca. 250 Mio €/Jahr, Teilbetrag stand zuletzt unter Haushaltssperre)",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.bmwk.de"
+      "url": "https://www.ffa.de/german-motion-picture-fund-gmpf.html",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "games_bund",
-      "title": "Computerspieleförderung des Bundes",
+      "title": "Games-Förderung des Bundes (BMFTR)",
       "region": "DE",
       "region_label": "Deutschland (bundesweit)",
       "funding_type": "Zuschuss",
-      "funding_rate": "projektabhängig (anteilig)",
-      "max_amount": 2000000,
-      "max_amount_display": "projektabhängig",
+      "funding_rate": "bis 25% (Großunternehmen) / 45% (KMU) / 50% (Start-ups)",
+      "max_amount": 8000000,
+      "max_amount_display": "bis 8 Mio € pro Projekt (Mindestprojektgröße 300.000 €)",
       "focus": "Entwicklung und Prototyping von Games",
       "suitable_for": [
         "team",
@@ -258,10 +260,11 @@
       "branchen": [
         "medien"
       ],
-      "notes": "Für Games-Studios; KI-gestützte Produktionstools (Assets, QA, Dialoge) im Rahmen der Projektkosten; Verfügbarkeit der Förderrunden vor Antrag prüfen",
+      "notes": "Seit Mai 2025 beim BMFTR (vorher BMWK); nach Antragsstopp seit 08/2025 wieder offen, Budget 2026: 125 Mio € — Mitte 2026 noch erhebliche Mittel verfügbar; Antragsweg über DLR Projektträger; Kulturtest und USK-Kennzeichnung erforderlich",
       "relevance_ki": "medium",
-      "priority": 3,
-      "url": "https://www.bmwk.de/games"
+      "priority": 2,
+      "url": "https://www.bmftr.bund.de/DE/Technologie/Games/Games_node.html",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "fff_bayern",
@@ -270,8 +273,8 @@
       "region_label": "Bayern",
       "funding_type": "Zuschuss/Darlehen",
       "funding_rate": "projektabhängig",
-      "max_amount": 2000000,
-      "max_amount_display": "projektabhängig",
+      "max_amount": 3000000,
+      "max_amount_display": "Kinoproduktion bis 3 Mio € (Darlehen); Games: Zuschuss bis 70% / max. 250.000 €; XR bis 300.000 €",
       "focus": "Produktion, Stoffentwicklung, Games, VFX; eigene Linien für Digitales",
       "suitable_for": [
         "solo",
@@ -281,10 +284,11 @@
       "branchen": [
         "medien"
       ],
-      "notes": "Eigene Förderlinien u. a. für Games und VFX; Landeseffekt (Ausgaben in Bayern) erforderlich",
+      "notes": "Kino-Obergrenze seit 2025 auf 3 Mio € erhöht; einzige Länderförderung mit eigener XR-Richtlinie (Produktion max. 300.000 €); Games-Richtlinie zum 01.07.2026 fortgeschrieben; Bayern-Effekt: mind. 150% des Darlehens in Bayern ausgeben",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.fff-bayern.de"
+      "url": "https://www.fff-bayern.de",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "medienboard_bb",
@@ -294,7 +298,7 @@
       "funding_type": "Darlehen (bedingt rückzahlbar)",
       "funding_rate": "projektabhängig",
       "max_amount": 1500000,
-      "max_amount_display": "projektabhängig",
+      "max_amount_display": "New Media typ. 50.000–250.000 € (Einzelzusagen bis 500.000 €); Digitale Film-Produktion max. 20% / 500.000 €",
       "focus": "Film, High-End-Serien, New Media/Games, Innovative Audiovisuelle Inhalte",
       "suitable_for": [
         "solo",
@@ -304,10 +308,11 @@
       "branchen": [
         "medien"
       ],
-      "notes": "Linie 'New Media' ausdrücklich für innovative Formate (XR, Games, KI-gestützte Projekte); Regionaleffekt erforderlich",
+      "notes": "Förderlinie 'New Media' (Games, XR/Innovative AV-Inhalte, Serielle Formate; ca. 6 Mio €/Jahr) besteht fort; KI-gestützte Projekte und 'KI-Experimente' werden gefördert; Regionaleffekt: mind. die Fördersumme in Berlin/Brandenburg ausgeben; ca. 4 Einreichtermine/Jahr, verpflichtendes Beratungsgespräch vor Einreichung",
       "relevance_ki": "high",
       "priority": 1,
-      "url": "https://www.medienboard.de"
+      "url": "https://www.medienboard.de",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "filmstiftung_nrw",
@@ -317,7 +322,7 @@
       "funding_type": "Darlehen (bedingt rückzahlbar)",
       "funding_rate": "projektabhängig",
       "max_amount": 1500000,
-      "max_amount_display": "projektabhängig",
+      "max_amount_display": "Projektentwicklung bis 80% / max. 100.000 €; Games: Zuschuss bis 50% / max. 300.000 €",
       "focus": "Film, Serie, Games, Hörspiel/Audio, innovative Formate",
       "suitable_for": [
         "solo",
@@ -327,10 +332,11 @@
       "branchen": [
         "medien"
       ],
-      "notes": "Breites Spektrum inkl. Games- und Digitalförderung; Regionaleffekt erforderlich",
+      "notes": "Film klassisch als bedingt rückzahlbares zinsloses Darlehen; NEU seit 01.09.2025: Games als Zuschuss (max. 300.000 €, Fokus kleinere Studios) statt Darlehen; auch Audio-/Podcast- und innovative serielle Formate; 4 Sammeltermine/Jahr, Beratungsgespräch Pflicht",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.filmstiftung.de"
+      "url": "https://www.filmstiftung.de",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "mfg_bw",
@@ -340,7 +346,7 @@
       "funding_type": "Zuschuss/Darlehen",
       "funding_rate": "projektabhängig",
       "max_amount": 1000000,
-      "max_amount_display": "projektabhängig",
+      "max_amount_display": "Produktion: Darlehen bis 70% / max. 1 Mio €; Digital Content Funding (Games/Apps/XR): kleinere Zuschüsse",
       "focus": "Film, Animation/VFX, Games, Digitale Inhalte",
       "suitable_for": [
         "solo",
@@ -350,10 +356,11 @@
       "branchen": [
         "medien"
       ],
-      "notes": "Animations-/VFX-Standortschwerpunkt (Ludwigsburg); auch Digital-Content-Linien",
+      "notes": "Bedingt rückzahlbares zinsloses Darlehen; Ländereffekt mind. 120% der Fördersumme in BW; 'Digital Content Funding' (mit MFG-Innovationsagentur) für Games/Apps/XR/Cross-Media mit 500.000 €/Jahr; Animations-/VFX-Standort Ludwigsburg",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.mfg.de"
+      "url": "https://www.mfg.de",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "moin_hh_sh",
@@ -363,7 +370,7 @@
       "funding_type": "Darlehen (bedingt rückzahlbar)",
       "funding_rate": "projektabhängig",
       "max_amount": 1000000,
-      "max_amount_display": "projektabhängig",
+      "max_amount_display": "Projektentwicklung bis 80% / max. 150.000 €; Serienproduktion max. 500.000 €",
       "focus": "Film, Serie, Games und innovative audiovisuelle Formate",
       "suitable_for": [
         "solo",
@@ -373,10 +380,11 @@
       "branchen": [
         "medien"
       ],
-      "notes": "Regionaleffekt erforderlich; auch Nachwuchs- und Entwicklungslinien",
+      "notes": "Vier Gremien: High End, Director's Cut, Kurzfilm, Innovative (XR/innovative AV-Formate); erfolgsabhängig rückzahlbare Darlehen; KEINE eigene Games-Linie — Games in Hamburg über Gamecity Hamburg (Prototypen-Zuschuss bis 80.000 €); Einreichung über NEST-Portal",
       "relevance_ki": "medium",
       "priority": 3,
-      "url": "https://www.moin-filmfoerderung.de"
+      "url": "https://www.moin-filmfoerderung.de",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "mdm",
@@ -385,8 +393,8 @@
       "region_label": "Sachsen/Sachsen-Anhalt/Thüringen",
       "funding_type": "Darlehen (bedingt rückzahlbar)",
       "funding_rate": "projektabhängig",
-      "max_amount": 800000,
-      "max_amount_display": "projektabhängig",
+      "max_amount": 600000,
+      "max_amount_display": "regelhaft bis 250.000 €/Projekt; Games-/XR-Produktion bis 600.000 €",
       "focus": "Film, Serie, neue Medienformate",
       "suitable_for": [
         "solo",
@@ -396,10 +404,107 @@
       "branchen": [
         "medien"
       ],
-      "notes": "Regionaleffekt erforderlich",
+      "notes": "Zuschuss oder Darlehen projektabhängig; seit Ende 2024 eigene EU-notifizierte Games-/XR-Förderrichtlinie; 4 Vergabesitzungen/Jahr; Regionalbezug zu Sachsen/Sachsen-Anhalt/Thüringen erforderlich",
       "relevance_ki": "low",
       "priority": 3,
-      "url": "https://www.mdm-online.de"
+      "url": "https://www.mdm-online.de",
+      "last_verified": "2026-07-22"
+    },
+    {
+      "id": "bund_kulturelle_filmfoerderung",
+      "title": "Jurybasierte kulturelle Filmförderung des Bundes",
+      "region": "DE",
+      "region_label": "Deutschland (bundesweit)",
+      "funding_type": "Zuschuss",
+      "funding_rate": "projektabhängig",
+      "max_amount": 1000000,
+      "max_amount_display": "Treatment bis 15.000 €, Drehbuch bis 40.000 €, Produktion Langfilm bis 1 Mio €, Kurzfilm bis 40.000 €",
+      "focus": "Kulturell wertvolle Filmprojekte: Treatment, Drehbuch, Projektentwicklung, Produktion, Verleih",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "BKM-Mittel, seit 1.1.2025 von der FFA verwaltet (Richtlinie 31.03.2025); Drehbuch-/Treatmentförderung auch für Einzelautor:innen; feste Einreichfristen über das FFA-Serviceportal",
+      "relevance_ki": "low",
+      "priority": 2,
+      "url": "https://www.ffa.de",
+      "last_verified": "2026-07-22"
+    },
+    {
+      "id": "ffe_filmerbe",
+      "title": "Förderprogramm Filmerbe (FFE)",
+      "region": "DE",
+      "region_label": "Deutschland (bundesweit)",
+      "funding_type": "Zuschuss",
+      "funding_rate": "projektabhängig",
+      "max_amount": 80000,
+      "max_amount_display": "bis 70.000–80.000 € pro Projekt",
+      "focus": "Digitalisierung filmhistorisch, künstlerisch oder dokumentarisch wertvoller Filme",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Gemeinsam finanziert von BKM, Ländern und FFA; zwei Stichtage pro Jahr (15.01. und 15.07.); antragsberechtigt sind Rechteinhaber und Filmerbe-Einrichtungen — passt zu Archiv-Digitalisierungs- und Monetarisierungsprojekten (KI-Metadaten)",
+      "relevance_ki": "medium",
+      "priority": 3,
+      "url": "https://www.ffa.de/foerderprogramm-filmerbe.html",
+      "last_verified": "2026-07-22"
+    },
+    {
+      "id": "nordmedia",
+      "title": "nordmedia – Film- und Medienförderung Niedersachsen/Bremen",
+      "region": "NI",
+      "region_label": "Niedersachsen/Bremen",
+      "funding_type": "Zuschuss/Darlehen",
+      "funding_rate": "projektabhängig",
+      "max_amount": 300000,
+      "max_amount_display": "projektabhängig (Games-Einzelzusagen bis ~300.000 €)",
+      "focus": "Film, TV, innovative AV-Inhalte; eigene Games-Förderung",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Ca. 4 Vergaberunden/Jahr; Regionalbezug zu Niedersachsen/Bremen erforderlich",
+      "relevance_ki": "low",
+      "priority": 3,
+      "url": "https://www.nordmedia.de",
+      "last_verified": "2026-07-22"
+    },
+    {
+      "id": "hessenfilm",
+      "title": "Hessen Film & Medien",
+      "region": "HE",
+      "region_label": "Hessen",
+      "funding_type": "Zuschuss/Darlehen",
+      "funding_rate": "projektabhängig",
+      "max_amount": 500000,
+      "max_amount_display": "projektabhängig",
+      "focus": "Stoffentwicklung, Produktion, Talentfilm, Verleih, Kino; eigene Linie 'Medien' (Produktion & Prototyp für AV-Medienprojekte)",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Jahresbudget ca. 10 Mio €; mehrere Jury-Termine/Jahr; Regionalbezug zu Hessen erforderlich",
+      "relevance_ki": "low",
+      "priority": 3,
+      "url": "https://www.hessenfilm.de",
+      "last_verified": "2026-07-22"
     }
   ]
 }
