@@ -134,6 +134,7 @@ def _match_programmes(
     company_size: str,
     bundesland: Optional[str] = None,
     budget: Optional[float] = None,
+    branch: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """
     Filter and sort programmes based on company profile.
@@ -153,6 +154,15 @@ def _match_programmes(
         # Check if programme is suitable for company size
         suitable_for = prog.get("suitable_for", [])
         if company_size not in suitable_for:
+            continue
+
+        # Optional branch filter (Phase 1 media vertical): programmes with a
+        # "branchen" list only appear for matching branches; programmes
+        # without the field stay visible for everyone (fail-open).
+        prog_branchen = prog.get("branchen")
+        if prog_branchen and branch and branch.lower() not in [
+            str(b).lower() for b in prog_branchen
+        ]:
             continue
 
         # Check region match (DE = nationwide, or specific state)
@@ -232,6 +242,7 @@ def get_funding_for_germany_en(answers: Dict[str, Any]) -> FundingResult:
             company_size=company_size,
             bundesland=bundesland if bundesland else None,
             budget=budget,
+            branch=str(answers.get("branche", "") or "").strip() or None,
         )
 
         logger.info(

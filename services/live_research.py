@@ -98,6 +98,39 @@ BRANCHE_MAP = {
     "Immobilien": "Real estate",
     "Logistik/Transport": "Logistics transportation",
     "Marketing/Medien": "Marketing media",
+    # Kanonische Formular-Werte (Phase 1 Medien-Vertikale)
+    "medien": "Media entertainment film production",
+    "Medien & Kreativwirtschaft": "Media entertainment film production",
+}
+
+
+# =============================================================================
+# Phase 1 Medien-Vertikale: branchenspezifische Query-Overrides
+# =============================================================================
+# Für Branchen mit eigenem Eintrag werden einzelne Query-Templates ersetzt —
+# die generischen KMU-/Mittelstands-Queries treffen die Medienbranche schlecht
+# (Förderlandschaft ist Filmförderung statt BAFA/KfW, Trends sind
+# Produktions-/Post-Workflows statt Büro-Automatisierung).
+
+BRANCH_QUERY_OVERRIDES: Dict[str, Dict[str, Dict[str, str]]] = {
+    "medien": {
+        "markt_trends": {
+            "template": "KI Filmproduktion Postproduktion Medienbranche Deutschland Trends 2026",
+            "fallback": "generative KI Medien Kreativwirtschaft Deutschland Trends 2026",
+        },
+        "wettbewerb_benchmark": {
+            "template": "KI Einsatz Film TV Produktion Studios Benchmark Studie Deutschland",
+            "fallback": "AI adoption media entertainment industry study 2026",
+        },
+        "foerdermittel": {
+            "template": "Filmförderung Medienförderung {bundesland} Digital Innovation Games 2026 aktuell",
+            "fallback": "Filmförderung Deutschland Länder DFFF FFA Games-Förderung 2026 Übersicht",
+        },
+        "foerdermittel_eu": {
+            "template": "Creative Europe MEDIA funding audiovisual innovation AI 2026",
+            "fallback": "EU funding audiovisual media sector 2026",
+        },
+    },
 }
 
 
@@ -126,8 +159,11 @@ async def execute_research(
 
     # 1. Build template variables
     branche = briefing_data.get("branche", "")
+    # Lesbares Label bevorzugen (kanonische Werte wie "medien" ergeben
+    # schlechte Suchbegriffe); Fallback bleibt der Rohwert.
+    branche_query = briefing_data.get("BRANCHE_LABEL") or branche
     variables = {
-        "branche": branche,
+        "branche": branche_query,
         "branche_en": BRANCHE_MAP.get(branche, "SME"),
         "bundesland": briefing_data.get("bundesland", "Deutschland"),
         "handlungsfeld_1": handlungsfelder[0] if len(handlungsfelder) > 0 else "KI Automatisierung",
@@ -136,8 +172,12 @@ async def execute_research(
     }
 
     # 2. Build queries from templates
+    # Phase 1: branchenspezifische Overrides (z. B. medien) anwenden
+    overrides = BRANCH_QUERY_OVERRIDES.get(str(branche).strip().lower(), {})
     queries = {}
     for key, config in RESEARCH_QUERIES.items():
+        if key in overrides:
+            config = {**config, **overrides[key]}
         try:
             query_text = config["template"].format(**variables)
         except KeyError:

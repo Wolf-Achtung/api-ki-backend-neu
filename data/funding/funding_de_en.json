@@ -1,7 +1,7 @@
 {
   "country_code": "DE",
   "language": "en",
-  "last_updated": "2026-07-06",
+  "last_updated": "2026-07-22",
   "description": "German funding programmes with English translations for international users based in Germany",
   "programmes": [
     {
@@ -229,6 +229,235 @@
       "relevance_ki": "medium",
       "priority": 2,
       "url": ""
+    },
+    {
+      "id": "dfff",
+      "name_de": "DFFF – Deutscher Filmförderfonds",
+      "name_en": "German Federal Film Fund (DFFF)",
+      "region": "DE",
+      "region_de": "Deutschland (bundesweit)",
+      "region_en": "Germany (nationwide)",
+      "regions_en": [
+        "Germany (nationwide)"
+      ],
+      "funding_type_en": "Grant",
+      "funding_rate_en": "20–25% of German production costs",
+      "max_amount": 4000000,
+      "max_amount_en": "project-dependent, typically up to €4 million",
+      "focus_en": "Theatrical film production; digitalized production processes eligible",
+      "summary_en": "Federal grant administered via the FFA reimbursing a share of German production spend; AI-assisted production steps count as eligible production costs.",
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes_en": "Not an AI programme as such, but AI-assisted workflows are eligible costs",
+      "relevance_ki": "medium",
+      "priority": 1,
+      "url": "https://www.dfff-ffa.de"
+    },
+    {
+      "id": "ffa_produktion",
+      "name_de": "FFA – Produktions- und Projektförderung",
+      "name_en": "FFA – Production and Project Funding",
+      "region": "DE",
+      "region_de": "Deutschland (bundesweit)",
+      "region_en": "Germany (nationwide)",
+      "regions_en": [
+        "Germany (nationwide)"
+      ],
+      "funding_type_en": "Grant/Loan",
+      "funding_rate_en": "project-dependent",
+      "max_amount": 1000000,
+      "max_amount_en": "project-dependent",
+      "focus_en": "Theatrical film: production, script/story development, distribution",
+      "summary_en": "Germany's federal film board funds production, development and distribution; development funding is also relevant for individual writers.",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes_en": "Development funding also open to individual writers",
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.ffa.de"
+    },
+    {
+      "id": "gmpf",
+      "name_de": "German Motion Picture Fund (GMPF)",
+      "name_en": "German Motion Picture Fund (GMPF)",
+      "region": "DE",
+      "region_de": "Deutschland (bundesweit)",
+      "region_en": "Germany (nationwide)",
+      "regions_en": [
+        "Germany (nationwide)"
+      ],
+      "funding_type_en": "Grant",
+      "funding_rate_en": "up to 25% of German production costs",
+      "max_amount": 2500000,
+      "max_amount_en": "project-dependent",
+      "focus_en": "High-end series and films with a high VFX/post-production share",
+      "summary_en": "Particularly relevant for VFX and post-production houses; AI-assisted VFX workflows are eligible production costs.",
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes_en": "Focus on high-end series and VFX-heavy productions",
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.bmwk.de"
+    },
+    {
+      "id": "games_bund",
+      "name_de": "Computerspieleförderung des Bundes",
+      "name_en": "German Federal Games Funding",
+      "region": "DE",
+      "region_de": "Deutschland (bundesweit)",
+      "region_en": "Germany (nationwide)",
+      "regions_en": [
+        "Germany (nationwide)"
+      ],
+      "funding_type_en": "Grant",
+      "funding_rate_en": "project-dependent (pro-rata)",
+      "max_amount": 2000000,
+      "max_amount_en": "project-dependent",
+      "focus_en": "Development and prototyping of games",
+      "summary_en": "Federal funding for games studios; AI-assisted production tools (assets, QA, dialogue) within eligible project costs. Check current funding round availability before applying.",
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes_en": "Check availability of current funding rounds",
+      "relevance_ki": "medium",
+      "priority": 3,
+      "url": "https://www.bmwk.de/games"
+    },
+    {
+      "id": "medienboard_bb",
+      "name_de": "Medienboard Berlin-Brandenburg",
+      "name_en": "Medienboard Berlin-Brandenburg",
+      "region": "BE",
+      "region_de": "Berlin/Brandenburg",
+      "region_en": "Berlin/Brandenburg",
+      "regions_en": [
+        "Berlin/Brandenburg"
+      ],
+      "funding_type_en": "Conditionally repayable loan",
+      "funding_rate_en": "project-dependent",
+      "max_amount": 1500000,
+      "max_amount_en": "project-dependent",
+      "focus_en": "Film, high-end series, new media/games, innovative audiovisual content",
+      "summary_en": "Regional funder with a dedicated 'New Media' strand for innovative formats (XR, games, AI-assisted projects); regional spend required.",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes_en": "Regional spend effect required",
+      "relevance_ki": "high",
+      "priority": 1,
+      "url": "https://www.medienboard.de"
+    },
+    {
+      "id": "fff_bayern",
+      "name_de": "FFF Bayern – Film- und Fernsehförderung",
+      "name_en": "FFF Bavaria – Film and Television Fund",
+      "region": "BY",
+      "region_de": "Bayern",
+      "region_en": "Bavaria",
+      "regions_en": [
+        "Bavaria"
+      ],
+      "funding_type_en": "Grant/Loan",
+      "funding_rate_en": "project-dependent",
+      "max_amount": 2000000,
+      "max_amount_en": "project-dependent",
+      "focus_en": "Production, development, games, VFX; dedicated digital strands",
+      "summary_en": "Bavaria's film fund with dedicated strands for games and VFX; regional spend required.",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes_en": "Regional spend effect required",
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.fff-bayern.de"
+    },
+    {
+      "id": "filmstiftung_nrw",
+      "name_de": "Film- und Medienstiftung NRW",
+      "name_en": "Film- und Medienstiftung NRW",
+      "region": "NW",
+      "region_de": "Nordrhein-Westfalen",
+      "region_en": "North Rhine-Westphalia",
+      "regions_en": [
+        "North Rhine-Westphalia"
+      ],
+      "funding_type_en": "Conditionally repayable loan",
+      "funding_rate_en": "project-dependent",
+      "max_amount": 1500000,
+      "max_amount_en": "project-dependent",
+      "focus_en": "Film, series, games, audio, innovative formats",
+      "summary_en": "Broad regional funder including games and digital strands; regional spend required.",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes_en": "Regional spend effect required",
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.filmstiftung.de"
+    },
+    {
+      "id": "mfg_bw",
+      "name_de": "MFG Baden-Württemberg",
+      "name_en": "MFG Baden-Württemberg – Film and Media Fund",
+      "region": "BW",
+      "region_de": "Baden-Württemberg",
+      "region_en": "Baden-Württemberg",
+      "regions_en": [
+        "Baden-Württemberg"
+      ],
+      "funding_type_en": "Grant/Loan",
+      "funding_rate_en": "project-dependent",
+      "max_amount": 1000000,
+      "max_amount_en": "project-dependent",
+      "focus_en": "Film, animation/VFX, games, digital content",
+      "summary_en": "Regional funder with an animation/VFX cluster focus (Ludwigsburg) and digital content strands.",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes_en": "Animation/VFX cluster focus",
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.mfg.de"
     }
   ]
 }

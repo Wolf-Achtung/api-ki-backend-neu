@@ -50,6 +50,12 @@ NEWS_QUERIES: List[Dict[str, str]] = [
         "category": "KI-MARKT",
         "tag_color": "#f59e0b",
     },
+    # Phase 1 Medien-Vertikale
+    {
+        "query": "generative KI Filmproduktion Medienbranche Urheberrecht Kennzeichnung 2026",
+        "category": "MEDIEN & KI",
+        "tag_color": "#ec4899",
+    },
 ]
 
 # Allowed domains for DE-focused results

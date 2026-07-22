@@ -1,6 +1,6 @@
 {
   "country_code": "DE",
-  "last_updated": "2026-07-06",
+  "last_updated": "2026-07-22",
   "programmes": [
     {
       "id": "kfw_digital_innovation",
@@ -173,6 +173,233 @@
       "relevance_ki": "medium",
       "priority": 2,
       "url": ""
+    },
+    {
+      "id": "dfff",
+      "title": "DFFF – Deutscher Filmförderfonds",
+      "region": "DE",
+      "region_label": "Deutschland (bundesweit)",
+      "funding_type": "Zuschuss",
+      "funding_rate": "20–25% der deutschen Herstellungskosten",
+      "max_amount": 4000000,
+      "max_amount_display": "projektabhängig, i. d. R. bis 4 Mio €",
+      "focus": "Kinofilmproduktion; Digitalisierung der Produktionsprozesse mitfinanzierbar",
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "BKM-Programm über die FFA abgewickelt; keine KI-Förderung im engeren Sinn, aber KI-gestützte Produktionsschritte sind Teil der förderfähigen Herstellungskosten",
+      "relevance_ki": "medium",
+      "priority": 1,
+      "url": "https://www.dfff-ffa.de"
+    },
+    {
+      "id": "ffa_produktion",
+      "title": "FFA – Produktions- und Projektförderung",
+      "region": "DE",
+      "region_label": "Deutschland (bundesweit)",
+      "funding_type": "Zuschuss/Darlehen",
+      "funding_rate": "projektabhängig",
+      "max_amount": 1000000,
+      "max_amount_display": "projektabhängig",
+      "focus": "Kinofilm: Produktion, Drehbuch/Stoffentwicklung, Verleih/Vertrieb",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Stoffentwicklungs-/Drehbuchförderung auch für Einzelautorinnen und -autoren relevant; KI-Einsatz in Entwicklung/Produktion zunehmend Thema der Antragspraxis",
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.ffa.de"
+    },
+    {
+      "id": "gmpf",
+      "title": "German Motion Picture Fund (GMPF)",
+      "region": "DE",
+      "region_label": "Deutschland (bundesweit)",
+      "funding_type": "Zuschuss",
+      "funding_rate": "bis 25% der deutschen Herstellungskosten",
+      "max_amount": 2500000,
+      "max_amount_display": "projektabhängig",
+      "focus": "High-End-Serien und Filme mit hohem VFX-/Postproduktionsanteil",
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Besonders relevant für VFX-/Postproduktionshäuser; KI-gestützte VFX-Workflows sind förderfähige Herstellungskosten",
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.bmwk.de"
+    },
+    {
+      "id": "games_bund",
+      "title": "Computerspieleförderung des Bundes",
+      "region": "DE",
+      "region_label": "Deutschland (bundesweit)",
+      "funding_type": "Zuschuss",
+      "funding_rate": "projektabhängig (anteilig)",
+      "max_amount": 2000000,
+      "max_amount_display": "projektabhängig",
+      "focus": "Entwicklung und Prototyping von Games",
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Für Games-Studios; KI-gestützte Produktionstools (Assets, QA, Dialoge) im Rahmen der Projektkosten; Verfügbarkeit der Förderrunden vor Antrag prüfen",
+      "relevance_ki": "medium",
+      "priority": 3,
+      "url": "https://www.bmwk.de/games"
+    },
+    {
+      "id": "fff_bayern",
+      "title": "FFF Bayern – Film- und Fernsehförderung",
+      "region": "BY",
+      "region_label": "Bayern",
+      "funding_type": "Zuschuss/Darlehen",
+      "funding_rate": "projektabhängig",
+      "max_amount": 2000000,
+      "max_amount_display": "projektabhängig",
+      "focus": "Produktion, Stoffentwicklung, Games, VFX; eigene Linien für Digitales",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Eigene Förderlinien u. a. für Games und VFX; Landeseffekt (Ausgaben in Bayern) erforderlich",
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.fff-bayern.de"
+    },
+    {
+      "id": "medienboard_bb",
+      "title": "Medienboard Berlin-Brandenburg",
+      "region": "BE",
+      "region_label": "Berlin/Brandenburg",
+      "funding_type": "Darlehen (bedingt rückzahlbar)",
+      "funding_rate": "projektabhängig",
+      "max_amount": 1500000,
+      "max_amount_display": "projektabhängig",
+      "focus": "Film, High-End-Serien, New Media/Games, Innovative Audiovisuelle Inhalte",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Linie 'New Media' ausdrücklich für innovative Formate (XR, Games, KI-gestützte Projekte); Regionaleffekt erforderlich",
+      "relevance_ki": "high",
+      "priority": 1,
+      "url": "https://www.medienboard.de"
+    },
+    {
+      "id": "filmstiftung_nrw",
+      "title": "Film- und Medienstiftung NRW",
+      "region": "NW",
+      "region_label": "Nordrhein-Westfalen",
+      "funding_type": "Darlehen (bedingt rückzahlbar)",
+      "funding_rate": "projektabhängig",
+      "max_amount": 1500000,
+      "max_amount_display": "projektabhängig",
+      "focus": "Film, Serie, Games, Hörspiel/Audio, innovative Formate",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Breites Spektrum inkl. Games- und Digitalförderung; Regionaleffekt erforderlich",
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.filmstiftung.de"
+    },
+    {
+      "id": "mfg_bw",
+      "title": "MFG Baden-Württemberg – Film- und Medienförderung",
+      "region": "BW",
+      "region_label": "Baden-Württemberg",
+      "funding_type": "Zuschuss/Darlehen",
+      "funding_rate": "projektabhängig",
+      "max_amount": 1000000,
+      "max_amount_display": "projektabhängig",
+      "focus": "Film, Animation/VFX, Games, Digitale Inhalte",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Animations-/VFX-Standortschwerpunkt (Ludwigsburg); auch Digital-Content-Linien",
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.mfg.de"
+    },
+    {
+      "id": "moin_hh_sh",
+      "title": "MOIN Filmförderung Hamburg Schleswig-Holstein",
+      "region": "HH",
+      "region_label": "Hamburg/Schleswig-Holstein",
+      "funding_type": "Darlehen (bedingt rückzahlbar)",
+      "funding_rate": "projektabhängig",
+      "max_amount": 1000000,
+      "max_amount_display": "projektabhängig",
+      "focus": "Film, Serie, Games und innovative audiovisuelle Formate",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Regionaleffekt erforderlich; auch Nachwuchs- und Entwicklungslinien",
+      "relevance_ki": "medium",
+      "priority": 3,
+      "url": "https://www.moin-filmfoerderung.de"
+    },
+    {
+      "id": "mdm",
+      "title": "MDM – Mitteldeutsche Medienförderung",
+      "region": "SN",
+      "region_label": "Sachsen/Sachsen-Anhalt/Thüringen",
+      "funding_type": "Darlehen (bedingt rückzahlbar)",
+      "funding_rate": "projektabhängig",
+      "max_amount": 800000,
+      "max_amount_display": "projektabhängig",
+      "focus": "Film, Serie, neue Medienformate",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Regionaleffekt erforderlich",
+      "relevance_ki": "low",
+      "priority": 3,
+      "url": "https://www.mdm-online.de"
     }
   ]
 }

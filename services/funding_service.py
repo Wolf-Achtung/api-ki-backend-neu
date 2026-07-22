@@ -161,6 +161,7 @@ class FundingService:
         """Filter and convert programmes based on company profile."""
         size_group = self._normalize_size(answers.get("unternehmensgroesse", ""))
         region = answers.get("bundesland", "").upper()
+        branch = str(answers.get("branche", "") or "").strip().lower()
 
         filtered: List[FundingProgramme] = []
 
@@ -168,6 +169,16 @@ class FundingService:
             # Size filter
             suitable_for = prog.get("suitable_for", [])
             if size_group not in suitable_for:
+                continue
+
+            # Optional branch filter (Phase 1 Medien): Programme mit
+            # "branchen"-Liste erscheinen nur für passende Branchen.
+            # Programme ohne das Feld bleiben für alle sichtbar (fail-open);
+            # ebenso, wenn das Briefing keine Branche enthält.
+            prog_branchen = prog.get("branchen")
+            if prog_branchen and branch and branch not in [
+                str(b).lower() for b in prog_branchen
+            ]:
                 continue
 
             # Convert to FundingProgramme with localized texts

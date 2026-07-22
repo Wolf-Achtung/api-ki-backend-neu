@@ -481,10 +481,15 @@ def get_frontend_branch_options() -> list[tuple[str, str]]:
     FIX-BRANCH-13: Returns the 13 canonical form values from formbuilder_de_SINGLE_FULL.js.
     These are the exact values used in the questionnaire form.
 
+    Phase 1 Medien-Fokus: Über ENV ``VISIBLE_BRANCHES`` (kommagetrennte
+    Werte, z. B. "medien") lässt sich die sichtbare Auswahl einschränken.
+    Mapping, Profile und Alt-Daten bleiben davon unberührt — unbekannte
+    oder leere Filter zeigen fail-open alle 13 Branchen.
+
     Returns:
         List of (value, label) tuples for HTML select options
     """
-    return [
+    options = [
         ("marketing", "Marketing & Werbung"),
         ("beratung", "Beratung & Dienstleistungen"),
         ("it", "IT & Software"),
@@ -499,6 +504,19 @@ def get_frontend_branch_options() -> list[tuple[str, str]]:
         ("logistik", "Transport & Logistik"),
         ("gastronomie", "Gastronomie & Tourismus"),
     ]
+
+    import os
+    visible_raw = os.getenv("VISIBLE_BRANCHES", "")
+    if visible_raw.strip():
+        visible = {v.strip().lower() for v in visible_raw.split(",") if v.strip()}
+        filtered = [opt for opt in options if opt[0] in visible]
+        if filtered:
+            return filtered
+        log.warning(
+            "VISIBLE_BRANCHES=%r ergibt keine gültige Option — zeige alle Branchen",
+            visible_raw,
+        )
+    return options
 
 
 def is_branch_known(raw_value: str) -> bool:
