@@ -19,6 +19,44 @@ werden konnte — hier steht er als verbindliche Anweisung.
 """
 from __future__ import annotations
 
+import logging
+import os
+from pathlib import Path
+
+log = logging.getLogger(__name__)
+
+# Persona-Satz (erste Zeile des System-Prompts). Phase 1 Multi-Projekt:
+# pro Produkt/Vertikale überschreibbar — REPORT_PERSONA_TEXT (direkter Text)
+# oder REPORT_PERSONA_PATH (Datei, relativ zum Projekt-Root, z. B.
+# prompts/de/_persona_medien.md). Default = bisherige KMU/DACH-Persona,
+# damit sich ohne Konfiguration nichts ändert.
+_DEFAULT_PERSONA_DE = (
+    "Du bist Senior-Strategieberater für KI-Einführung bei kleinen und "
+    "mittleren Unternehmen im DACH-Raum, spezialisiert auf sichere, "
+    "EU-regelkonforme Umsetzung (EU AI Act, DSGVO). "
+    "Du schreibst Sektionen eines bezahlten Premium-Reports."
+)
+
+
+def _resolve_persona() -> str:
+    text = os.getenv("REPORT_PERSONA_TEXT", "").strip()
+    if text:
+        return text
+    path_raw = os.getenv("REPORT_PERSONA_PATH", "").strip()
+    if path_raw:
+        p = Path(path_raw)
+        if not p.is_absolute():
+            p = Path(__file__).resolve().parent.parent / p
+        try:
+            content = p.read_text(encoding="utf-8").strip()
+            if content:
+                return content
+            log.warning("REPORT_PERSONA_PATH=%s ist leer — nutze Default-Persona", p)
+        except Exception as exc:  # noqa: BLE001 - Persona darf Calls nie brechen
+            log.warning("REPORT_PERSONA_PATH=%s nicht lesbar (%s) — nutze Default-Persona", p, exc)
+    return _DEFAULT_PERSONA_DE
+
+
 REPORT_SYSTEM_PROMPT_DE = """Du bist Senior-Strategieberater für KI-Einführung bei kleinen und mittleren Unternehmen im DACH-Raum, spezialisiert auf sichere, EU-regelkonforme Umsetzung (EU AI Act, DSGVO). Du schreibst Sektionen eines bezahlten Premium-Reports.
 
 QUALITÄTSLATTE
@@ -56,6 +94,9 @@ def build_report_system_prompt(mode: str = "generate", lang: str = "de") -> str:
           DE-Basis (die Sektions-Prompts steuern die Zielsprache).
     """
     base = REPORT_SYSTEM_PROMPT_DE
+    persona = _resolve_persona()
+    if persona != _DEFAULT_PERSONA_DE:
+        base = base.replace(_DEFAULT_PERSONA_DE, persona, 1)
     if mode == "expand":
         return base + _EXPAND_SUFFIX_DE
     return base

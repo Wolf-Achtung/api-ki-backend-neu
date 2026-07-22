@@ -1,8 +1,7 @@
 {
   "branche": "medien",
   "display_name": "Medien & Kreativwirtschaft",
-  "description": "Verlage, Film/TV-Produktion, Designagenturen, Musikproduktion, Gaming, Content Creator",
-
+  "description": "Film/TV-Produktion, Postproduktion/VFX, Verlage, Designagenturen, Musikproduktion, Games, Content Creator, Entertainment",
   "typical_workflows": [
     "Content-Erstellung: Texte, Grafiken, Videos, Audio, 3D",
     "Projektmanagement: Briefing, Konzeption, Produktion, Delivery",
@@ -10,9 +9,11 @@
     "Produktion: Shooting, Recording, Editing, Postproduction",
     "Asset-Management: Medien organisieren, archivieren, wiederfinden",
     "Distribution: Veröffentlichung, Kanäle bespielen",
-    "Rechteclearing: Lizenzen, Freigaben, Nutzungsrechte"
+    "Rechteclearing: Lizenzen, Freigaben, Nutzungsrechte",
+    "Stoffentwicklung: Exposé, Treatment, Drehbuch, Pitch-Material",
+    "Virtual Production: Echtzeit-Engines, LED-Volume, Pre-Viz",
+    "Lokalisierung/Versionierung: Untertitel, Synchronisation, Formatadaption je Kanal"
   ],
-
   "common_pain_points": [
     "Kreative Blockaden: Ständig neue Ideen entwickeln müssen",
     "Feedback-Schleifen: Viele Korrekturschleifen pro Projekt",
@@ -20,9 +21,11 @@
     "Tight Deadlines: Kurze Produktionszeiten",
     "Viele Tools: Jedes Projekt andere Software",
     "Rechteunsicherheit: Lizenzen und Nutzungsrechte unklar",
-    "Preisdruck: Kunden erwarten viel für wenig Budget"
+    "Preisdruck: Kunden erwarten viel für wenig Budget",
+    "KI-Rechteunsicherheit: Verwertbarkeit von KI-Output, Training auf geschütztem Material, Klauseln fehlen in Altverträgen",
+    "Kennzeichnungspflicht: EU AI Act Art. 50 verlangt Transparenz bei synthetischen Inhalten (Deepfake-Regel)",
+    "Budgetdruck Auftragsproduktion: Sender/Plattformen erwarten KI-Effizienz bereits in der Kalkulation"
   ],
-
   "ai_opportunities": [
     "Ideengenerierung: Konzepte, Storylines, Moodboards per KI",
     "Text-Generierung: Drehbücher, Artikel, Werbetexte",
@@ -31,9 +34,12 @@
     "Audio-Bearbeitung: Noise Reduction, Mastering, Voice-Over",
     "Übersetzung/Lokalisierung: Content in andere Sprachen",
     "Tagging und Suche: Assets automatisch kategorisieren",
-    "Upscaling: Bilder/Videos in höhere Auflösung"
+    "Upscaling: Bilder/Videos in höhere Auflösung",
+    "Pre-Viz & Storyboards: Bild-/Videogenerierung für Pitch und Look-Development",
+    "Voice-Cloning & Dubbing: mehrsprachige Verwertung (nur mit dokumentierter Einwilligung der Sprecher)",
+    "Rough-Cut-Automation: Schnittvorschläge, Szenen-Erkennung, Logging",
+    "Archiv-Monetarisierung: KI-Metadaten machen Footage-Bestände durchsuchbar und lizenzierbar"
   ],
-
   "typical_tools": [
     "Adobe Creative Suite: Photoshop, Premiere, After Effects",
     "Figma für UI/UX Design",
@@ -42,18 +48,58 @@
     "Blender / Cinema 4D für 3D",
     "Notion / Frame.io für Projektmanagement",
     "Google Drive / Dropbox für Assets",
-    "Social Media Plattformen für Distribution"
+    "Social Media Plattformen für Distribution",
+    "Runway / Firefly für generative Bild- und Videoinhalte",
+    "ElevenLabs für synthetische Stimmen und Dubbing",
+    "Topaz für Upscaling und Restaurierung",
+    "Nuke / Unreal Engine für VFX und Virtual Production"
   ],
-
   "tool_ecosystem": {
-    "communication": ["Slack", "Teams", "Email", "Frame.io"],
-    "design": ["Adobe CC", "Figma", "Sketch", "Canva"],
-    "video": ["Premiere", "DaVinci Resolve", "Final Cut"],
-    "audio": ["Logic Pro", "Ableton", "Pro Tools"],
-    "3d": ["Blender", "Cinema 4D", "Maya"],
-    "storage": ["Google Drive", "Dropbox", "Frame.io"]
+    "communication": [
+      "Slack",
+      "Teams",
+      "Email",
+      "Frame.io"
+    ],
+    "design": [
+      "Adobe CC",
+      "Figma",
+      "Sketch",
+      "Canva"
+    ],
+    "video": [
+      "Premiere",
+      "DaVinci Resolve",
+      "Final Cut"
+    ],
+    "audio": [
+      "Logic Pro",
+      "Ableton",
+      "Pro Tools"
+    ],
+    "3d": [
+      "Blender",
+      "Cinema 4D",
+      "Maya"
+    ],
+    "storage": [
+      "Google Drive",
+      "Dropbox",
+      "Frame.io"
+    ],
+    "generative": [
+      "Runway",
+      "Adobe Firefly",
+      "Midjourney",
+      "ElevenLabs",
+      "Topaz Video AI"
+    ],
+    "vfx_virtual_production": [
+      "Nuke",
+      "Houdini",
+      "Unreal Engine"
+    ]
   },
-
   "realistic_quick_wins_solo": [
     {
       "title": "KI-gestützte Ideation",
@@ -110,7 +156,6 @@
       "investment": "0-30€/Monat"
     }
   ],
-
   "realistic_quick_wins_team": [
     {
       "title": "Zentrale Asset-Library mit KI-Suche",
@@ -120,9 +165,26 @@
       "implementation": "Assets migrieren, Metadaten pflegen, Team schulen",
       "difficulty": "mittel",
       "investment": "100-300€/Monat"
+    },
+    {
+      "title": "KI-gestützte Post-Pipeline",
+      "description": "Transkription, Untertitel, Rough-Cut-Vorschläge und Logging automatisieren — Schnittzeit pro Projekt deutlich senken.",
+      "hours_saved": 12,
+      "tool": "Descript, Premiere AI oder DaVinci Resolve Studio",
+      "implementation": "Pilot an einem laufenden Projekt, dann Standard-Workflow definieren",
+      "difficulty": "mittel",
+      "investment": "50-150€/Monat"
+    },
+    {
+      "title": "Pitch-/Pre-Viz-Material per Bildgenerierung",
+      "description": "Moodboards, Storyboards und Look-Frames in Stunden statt Wochen — mehr Pitches bei gleichem Aufwand.",
+      "hours_saved": 10,
+      "tool": "Midjourney, Runway oder Firefly (kommerziell abgesichert)",
+      "implementation": "Prompt-Bibliothek je Genre aufbauen, Freigabe-Regeln für KI-Material festlegen",
+      "difficulty": "niedrig",
+      "investment": "30-80€/Monat"
     }
   ],
-
   "realistic_quick_wins_kmu": [
     {
       "title": "Enterprise Creative Workflow Platform",
@@ -132,29 +194,56 @@
       "implementation": "Prozesse definieren, Tools integrieren, Team onboarden",
       "difficulty": "hoch",
       "investment": "500-2000€/Monat"
+    },
+    {
+      "title": "Archiv-Verschlagwortung & Rechte-Register",
+      "description": "Footage-/Asset-Bestand per KI-Metadaten durchsuchbar machen und Nutzungsrechte je Asset dokumentieren — Grundlage für Lizenzerlöse.",
+      "hours_saved": 25,
+      "tool": "Iconik, Frame.io oder eigene Lösung auf Vision-APIs",
+      "implementation": "Bestand priorisieren, Metadaten-Schema + Rechtefelder definieren, Batch-Verarbeitung",
+      "difficulty": "hoch",
+      "investment": "300-800€/Monat"
+    },
+    {
+      "title": "KI-Richtlinie & Art.-50-Kennzeichnungsprozess",
+      "description": "Verbindliche Regeln: welche KI-Tools erlaubt, wie synthetische Inhalte gekennzeichnet, wie Einwilligungen (Stimme/Gesicht) dokumentiert werden.",
+      "hours_saved": 8,
+      "tool": "Interne Richtlinie + Vertrags-Templates",
+      "implementation": "Workshop mit Produktion/Recht, Klauseln in Standardverträge aufnehmen",
+      "difficulty": "mittel",
+      "investment": "einmalig Beratung/Rechtsprüfung"
     }
   ],
-
   "industry_specific_notes": {
     "verlag": "Redaktionsprozesse, Lektorat, Print vs. Digital",
     "film_tv": "Produktionsphasen, Crew-Management, Postproduction",
     "design": "Konzeption, Branding, Reinzeichnung",
-    "musik": "Komposition, Recording, Mixing, Mastering"
+    "musik": "Komposition, Recording, Mixing, Mastering",
+    "vfx_post": "Rotoskopie, Cleanup, Upscaling zuerst automatisieren; Kalkulationsmodelle an KI-Effizienz anpassen",
+    "games": "KI-Assets in Konzeptkunst/QA/Dialogen; Store- und Publisher-Deklarationspflichten beachten",
+    "entertainment_recht": "Rechtekette bei KI-Output klären (Training, Output, Buyout); Stimm-/Gesichtsklone nur mit ausdrücklicher Einwilligung; EU AI Act Art. 50 Kennzeichnung synthetischer Inhalte"
   },
-
   "success_metrics": [
     "Projekt-Turnaround: Zeit von Briefing bis Delivery",
     "Korrekturschleifen: Anzahl pro Projekt",
     "Kreativer Output: Projekte pro Monat",
     "Kundenzufriedenheit: Feedback-Scores",
-    "Asset-Nutzung: Wiederverwendung von Content"
+    "Asset-Nutzung: Wiederverwendung von Content",
+    "Produktionskosten pro Minute fertigem Content",
+    "Lokalisierungsquote: Anteil mehrsprachig verwerteter Produktionen",
+    "Archiv-Nutzungsrate: Anteil wiederverwendeter/lizenzierter Assets"
   ],
-
   "typical_pricing_models": [
     "Projektpauschalen",
     "Tagessätze (500-2000€/Tag)",
     "Stundensätze (60-150€/h)",
     "Nutzungsrechte-basiert (Buyout vs. Lizenz)",
     "Retainer für laufende Betreuung"
+  ],
+  "regulatory_notes": [
+    "EU AI Act Art. 50: Transparenz-/Kennzeichnungspflichten für KI-generierte bzw. synthetische Inhalte (Deepfakes)",
+    "Urheberrecht: TDM-Vorbehalt (§ 44b UrhG) beim Training, ungeklärte Schutzfähigkeit reiner KI-Outputs",
+    "Persönlichkeitsrechte: Einwilligung für Stimm-/Gesichtsklone (Darsteller, Sprecherinnen) vertraglich sichern",
+    "DSGVO: Publikums-/Nutzerdaten bei Personalisierung und Reichweitenmessung"
   ]
 }

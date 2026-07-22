@@ -1,8 +1,7 @@
 {
   "branche": "creative_media",
   "display_name": "Creative & Media",
-  "description": "Marketing agencies, design agencies, publishers, film/TV production, content creators, PR consultants",
-
+  "description": "Film/TV production, post-production/VFX, publishing, design agencies, music production, games, content creators, entertainment",
   "typical_workflows": [
     "Content creation: Texts, graphics, videos, audio, social media posts",
     "Campaign planning: Conception and execution for clients",
@@ -11,9 +10,11 @@
     "Production: Shooting, recording, editing, post-production",
     "Asset management: Organize media, archive, retrieve",
     "Distribution: Publishing, channel management",
-    "Performance tracking: Analytics, reporting, optimization"
+    "Performance tracking: Analytics, reporting, optimization",
+    "Story development: outline, treatment, script, pitch material",
+    "Virtual production: real-time engines, LED volumes, pre-viz",
+    "Localization/versioning: subtitles, dubbing, per-channel format adaptation"
   ],
-
   "common_pain_points": [
     "Content production is time-consuming: 5-10 hours per week just for social media",
     "Creative blocks: Constantly needing to generate new ideas",
@@ -22,9 +23,11 @@
     "Multi-channel complexity: Each channel has different formats/requirements",
     "Trend monitoring: Constantly staying up to date",
     "Asset chaos: Can't find files",
-    "Tight deadlines: Short production times"
+    "Tight deadlines: Short production times",
+    "AI rights uncertainty: usability of AI output, training on protected material, missing clauses in legacy contracts",
+    "Labeling obligation: EU AI Act Art. 50 requires transparency for synthetic content (deepfake rule)",
+    "Commission budget pressure: broadcasters/platforms already expect AI efficiency in the calculation"
   ],
-
   "ai_opportunities": [
     "Content generation: Blog articles, social posts, ad copies via GPT",
     "Image generation: Visuals for social media with DALL-E/Midjourney",
@@ -34,9 +37,12 @@
     "A/B test variants: Quickly generate 10+ variants for ads",
     "SEO optimization: Keyword research and content optimization",
     "Idea generation: Concepts, headlines, storylines via AI",
-    "Video editing: Automatic rough cuts, transcription"
+    "Video editing: Automatic rough cuts, transcription",
+    "Pre-viz & storyboards: image/video generation for pitches and look development",
+    "Voice cloning & dubbing: multilingual exploitation (only with documented speaker consent)",
+    "Rough-cut automation: edit suggestions, scene detection, logging",
+    "Archive monetization: AI metadata makes footage libraries searchable and licensable"
   ],
-
   "typical_tools": [
     "Adobe Creative Suite / Canva for graphics",
     "Social media management platforms",
@@ -45,18 +51,58 @@
     "Email marketing: Mailchimp, Klaviyo",
     "Video editing: Premiere, DaVinci Resolve, Final Cut",
     "Audio: Logic Pro, Audition, Descript",
-    "Slack for team communication"
+    "Slack for team communication",
+    "Runway / Firefly for generative image and video content",
+    "ElevenLabs for synthetic voices and dubbing",
+    "Topaz for upscaling and restoration",
+    "Nuke / Unreal Engine for VFX and virtual production"
   ],
-
   "tool_ecosystem": {
-    "communication": ["Slack", "Teams", "Email", "Zoom"],
-    "design": ["Canva", "Adobe CC", "Figma"],
-    "social": ["Meta Business Suite", "Hootsuite", "Buffer", "Later"],
-    "analytics": ["Google Analytics", "Meta Ads Manager", "Semrush"],
-    "video": ["Premiere", "DaVinci Resolve", "Final Cut"],
-    "project": ["Asana", "Trello", "Monday.com"]
+    "communication": [
+      "Slack",
+      "Teams",
+      "Email",
+      "Zoom"
+    ],
+    "design": [
+      "Canva",
+      "Adobe CC",
+      "Figma"
+    ],
+    "social": [
+      "Meta Business Suite",
+      "Hootsuite",
+      "Buffer",
+      "Later"
+    ],
+    "analytics": [
+      "Google Analytics",
+      "Meta Ads Manager",
+      "Semrush"
+    ],
+    "video": [
+      "Premiere",
+      "DaVinci Resolve",
+      "Final Cut"
+    ],
+    "project": [
+      "Asana",
+      "Trello",
+      "Monday.com"
+    ],
+    "generative": [
+      "Runway",
+      "Adobe Firefly",
+      "Midjourney",
+      "ElevenLabs",
+      "Topaz Video AI"
+    ],
+    "vfx_virtual_production": [
+      "Nuke",
+      "Houdini",
+      "Unreal Engine"
+    ]
   },
-
   "realistic_quick_wins_solo": [
     {
       "title": "GPT-powered content pipeline",
@@ -104,7 +150,6 @@
       "investment": "$20/month"
     }
   ],
-
   "realistic_quick_wins_team": [
     {
       "title": "Central asset library with AI tagging",
@@ -114,9 +159,26 @@
       "implementation": "Migrate assets, set up tagging system",
       "difficulty": "medium",
       "investment": "$50-150/month"
+    },
+    {
+      "title": "AI-assisted post pipeline",
+      "description": "Automate transcription, subtitles, rough-cut suggestions and logging — significantly reduce edit time per project.",
+      "hours_saved": 12,
+      "tool": "Descript, Premiere AI or DaVinci Resolve Studio",
+      "implementation": "Pilot on a running project, then define the standard workflow",
+      "difficulty": "medium",
+      "investment": "€50-150/month"
+    },
+    {
+      "title": "Pitch/pre-viz material via image generation",
+      "description": "Moodboards, storyboards and look frames in hours instead of weeks — more pitches at the same effort.",
+      "hours_saved": 10,
+      "tool": "Midjourney, Runway or Firefly (commercially safe)",
+      "implementation": "Build a prompt library per genre, define approval rules for AI material",
+      "difficulty": "low",
+      "investment": "€30-80/month"
     }
   ],
-
   "realistic_quick_wins_kmu": [
     {
       "title": "Enterprise marketing automation",
@@ -126,18 +188,37 @@
       "implementation": "System setup, integration, team training",
       "difficulty": "high",
       "investment": "$800-2500/month"
+    },
+    {
+      "title": "Archive tagging & rights register",
+      "description": "Make footage/asset libraries searchable via AI metadata and document usage rights per asset — the basis for licensing revenue.",
+      "hours_saved": 25,
+      "tool": "Iconik, Frame.io or custom solution on vision APIs",
+      "implementation": "Prioritize inventory, define metadata schema + rights fields, batch processing",
+      "difficulty": "high",
+      "investment": "€300-800/month"
+    },
+    {
+      "title": "AI policy & Art. 50 labeling process",
+      "description": "Binding rules: which AI tools are allowed, how synthetic content is labeled, how consent (voice/likeness) is documented.",
+      "hours_saved": 8,
+      "tool": "Internal policy + contract templates",
+      "implementation": "Workshop with production/legal, add clauses to standard contracts",
+      "difficulty": "medium",
+      "investment": "one-off consulting/legal review"
     }
   ],
-
   "success_metrics": [
     "Content output: Number of posts/articles per week",
     "Engagement rate: Likes, comments, shares",
     "Lead generation: MQLs, SQLs per campaign",
     "ROAS: Return on Ad Spend",
     "Project turnaround: Time from briefing to delivery",
-    "Client retention: Customer retention rate"
+    "Client retention: Customer retention rate",
+    "Production cost per finished minute of content",
+    "Localization rate: share of productions exploited in multiple languages",
+    "Archive utilization: share of reused/licensed assets"
   ],
-
   "typical_pricing_models": [
     "Retainer models ($1500-10000/month)",
     "Project fees for campaigns",
@@ -145,5 +226,16 @@
     "Performance-based (% of ad spend)",
     "Hybrid models (retainer + performance)",
     "Day rates ($500-2000/day)"
+  ],
+  "industry_specific_notes": {
+    "vfx_post": "Automate rotoscoping, cleanup, upscaling first; adapt pricing models to AI efficiency",
+    "games": "AI assets in concept art/QA/dialogue; observe store and publisher disclosure obligations",
+    "entertainment_legal": "Clarify chain of rights for AI output (training, output, buyout); voice/likeness clones only with explicit consent; EU AI Act Art. 50 labeling of synthetic content"
+  },
+  "regulatory_notes": [
+    "EU AI Act Art. 50: transparency/labeling obligations for AI-generated or synthetic content (deepfakes)",
+    "Copyright: TDM opt-outs for training, unresolved protectability of pure AI outputs",
+    "Personality rights: secure contractual consent for voice/likeness clones (actors, voice artists)",
+    "GDPR: audience/user data in personalization and reach measurement"
   ]
 }
