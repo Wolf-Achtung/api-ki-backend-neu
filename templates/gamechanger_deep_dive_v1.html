@@ -607,17 +607,19 @@ h1, h2, h3, h4 {
     <div class="kpi-row">
         <div class="kpi-card">
             <div class="kpi-value" style="color: var(--report-accent);">
-                {{ canonical_bc.hours|default(0)|round(0)|int }}h
+                {{ canonical_bc.hours|float(0)|round(0)|int }}h
             </div>
             <div class="kpi-label">Einsparung/Monat</div>
         </div>
         {# FIX-TESTRUN-1244: KPI-Sanity-Gate — Jahr-1-ROI nahe null (CAPEX voll
            verrechnet) nicht als Cover-KPI ausspielen; stattdessen 3-Jahres-
-           Nettonutzen zeigen (Payback steht bereits in der Nachbar-Kachel). #}
-        {% set _dd_roi = canonical_bc.roi|default(0)|round(0)|int %}
+           Nettonutzen zeigen (Payback steht bereits in der Nachbar-Kachel).
+           |float(0) statt |default(0): Werte können als Strings ankommen,
+           und |round auf String wirft TypeError. #}
+        {% set _dd_roi = canonical_bc.roi|float(0)|round(0)|int %}
         {% if _dd_roi < 20 %}
-        {% set _dd_net3y = ((canonical_bc.hours|default(0)) * (canonical_bc.rate|default(0)) * 36
-            - (canonical_bc.capex|default(0)) - (canonical_bc.opex|default(0)) * 36)|round(0)|int %}
+        {% set _dd_net3y = ((canonical_bc.hours|float(0)) * (canonical_bc.rate|float(0)) * 36
+            - (canonical_bc.capex|float(0)) - (canonical_bc.opex|float(0)) * 36)|round(0)|int %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: #c2410c;">
                 +{{ '{:,}'.format(_dd_net3y)|replace(',', '.') }}&nbsp;€
@@ -627,14 +629,14 @@ h1, h2, h3, h4 {
         {% else %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: #c2410c;">
-                {{ canonical_bc.roi|default(0)|round(0)|int }}%
+                {{ canonical_bc.roi|float(0)|round(0)|int }}%
             </div>
             <div class="kpi-label">ROI (12 Monate)</div>
         </div>
         {% endif %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: var(--report-primary);">
-                {{ canonical_bc.payback|default(0)|round(1)|string|replace('.', ',') }} Mon.
+                {{ canonical_bc.payback|float(0)|round(1)|string|replace('.', ',') }} Mon.
             </div>
             <div class="kpi-label">Amortisation</div>
         </div>

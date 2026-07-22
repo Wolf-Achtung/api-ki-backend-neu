@@ -1407,18 +1407,21 @@ h1, h2, h3, h4 {
            voll verrechnet) ist mathematisch korrekt, aber als Cover-Headline
            kommunikationsschädlich ("1% ROI"). Unter 20% zeigt die Karte
            stattdessen die Amortisationszeit. #}
-        {% set _roi_cover = ROI_12M|round(0)|int if ROI_12M is not none and ROI_12M != '' else -1 %}
+        {# String-sicher: Variablen können nach dem Final-Sanitizer als deutsche
+           Strings ("11,9") ankommen — kein |round direkt auf Kontextwerte,
+           und kein |default(x|round) (Jinja wertet das Argument IMMER aus). #}
+        {% set _roi_cover = ROI_12M|float(-1)|round(0)|int if ROI_12M is not none and ROI_12M != '' else -1 %}
         {% if _roi_cover >= 0 and _roi_cover < 20 and PAYBACK_MONTHS %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: #c2410c;">
-                {{ PAYBACK_MONTHS_FMT_DE|default(PAYBACK_MONTHS|round(1)) }} Mon.
+                {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS is number %}{{ PAYBACK_MONTHS|round(1) }}{% else %}{{ PAYBACK_MONTHS }}{% endif %} Mon.
             </div>
             <div class="kpi-label">Amortisation</div>
         </div>
         {% else %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: #c2410c;">
-                {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% elif ROI_P50 and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% else %}—{% endif %}
+                {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M is number %}{{ ROI_12M|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M }}%{% elif ROI_P50 is number and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% else %}—{% endif %}
             </div>
             <div class="kpi-label">{% if ROI_12M and ROI_12M|int >= 200 %}ROI (gedeckelt){% else %}{{ ui("kpi_roi", "ROI-Projektion") }}{% endif %}</div>
         </div>
@@ -1645,13 +1648,13 @@ h1, h2, h3, h4 {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div>
                     <span style="font-size: 14pt; font-weight: 700; color: #c2410c;">
-                        {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS|round(1) }}{% else %}n/a{% endif %} Mo
+                        {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS is number %}{{ PAYBACK_MONTHS|round(1) }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS }}{% else %}n/a{% endif %} Mo
                     </span><br/>
                     <span style="font-size: 8pt; color: var(--c-text-2);">Amortisation</span>
                 </div>
                 <div>
                     <span style="font-size: 14pt; font-weight: 700; color: #047857;">
-                        {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% else %}—{% endif %}
+                        {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M is number %}{{ ROI_12M|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M }}%{% else %}—{% endif %}
                     </span><br/>
                     <span style="font-size: 8pt; color: var(--c-text-2);">ROI-Projektion</span>
                 </div>
@@ -1825,8 +1828,8 @@ h1, h2, h3, h4 {
     </div>
     <div class="glance-box glance-finance">
         <strong>Auf einen Blick:</strong>
-        ROI {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% endif %},
-        Amortisation in {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS|round(1) }}{% endif %} Monaten.
+        ROI {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M is number %}{{ ROI_12M|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M }}%{% endif %},
+        Amortisation in {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS is number %}{{ PAYBACK_MONTHS|round(1) }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS }}{% endif %} Monaten.
         {# KIS-1234: Tragfähigkeits-Aussage ROI-abhängig — der Pauschalsatz
            "auch ohne Fördermittel wirtschaftlich tragfähig" stand im Lauf 1234
            neben ROI 8 % und einem Budget UNTER der Investition. #}
@@ -1850,7 +1853,7 @@ h1, h2, h3, h4 {
             <tbody>
                 <tr>
                     <td style="padding: 6px 8px;"><strong>CAPEX-Sicht</strong> (R1-Standard)</td>
-                    <td style="padding: 6px 8px; font-weight: 600; color: #1e40af;">{% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M %}{{ ROI_12M|round(0)|int }}%{% endif %}</td>
+                    <td style="padding: 6px 8px; font-weight: 600; color: #1e40af;">{% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M is number %}{{ ROI_12M|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M }}%{% endif %}</td>
                     <td style="padding: 6px 8px; color: #475569;">Einmalige Startinvestition</td>
                 </tr>
                 <tr style="background: #fff;">
