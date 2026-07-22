@@ -523,8 +523,14 @@ def calculate_relevance_score(
     branch_lower = branch.lower() if branch else ""
     if "all" not in branches and branch_lower:
         if any(b in branch_lower for b in branches):
-            score *= 1.1  # Specific branch match bonus
-        # No penalty — most programs are "all" branches
+            score *= 1.3  # Specific branch match bonus (Phase 1: 1.1 → 1.3,
+            # damit Vertikalen-Programme die generischen KMU-Programme im
+            # Top-8-Cut der Fördertabelle zuverlässig schlagen)
+        elif program.get("branch_exclusive"):
+            # Phase 1 Medien: exklusiv getaggte Branchen-Programme (z. B.
+            # Filmförderung) erscheinen NUR für passende Branchen — für
+            # alle anderen hart ausfiltern statt nur nicht zu boosten.
+            return -1.0
 
     # --- AI ACT RELEVANCE BONUS ---
     if ai_act_risk in ["high-risk", "limited"] and program.get("ai_act_relevant"):

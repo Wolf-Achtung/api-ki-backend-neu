@@ -359,8 +359,7 @@
     "max_amount": "variabel (Kursgebühren)",
     "focus": "Weiterbildung, digitale Kompetenzen, KI-Qualifizierung",
     "suitable_for": [
-      "solo",
-      "team"
+      "solo"
     ],
     "notes": "Zuschüsse bis 90% der Kursgebühren für zertifizierte Schulungen",
     "relevance_ki": "Hoch – KI-Grundlagen, Prompt Engineering, Datenanalyse",
@@ -582,5 +581,365 @@
     "deadline": null,
     "deadline_notes": "Verfügbarkeit aktuell prüfen.",
     "verified_at": "2026-07-05"
+  },
+  {
+    "id": "dfff",
+    "title": "DFFF – Deutscher Filmförderfonds",
+    "region": "Deutschland (bundesweit)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Zuschuss",
+    "funding_rate": "30% der dt. Herstellungskosten",
+    "max_amount": "DFFF I bis 5 Mio €, DFFF II bis 25 Mio €",
+    "focus": "Kinofilmproduktion; KI-gestützte Produktionsschritte sind förderfähige Herstellungskosten",
+    "notes": "BKM/FFA; laufende Einreichung bis 6 Wochen vor Drehbeginn; DFFF/GMPF-Fusion Mitte 2026 angekündigt — Richtlinienstand prüfen",
+    "priority": 1,
+    "provider": "BKM / FFA",
+    "relevance_ki": "medium",
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
+    "url": "https://www.ffa.de/dfff-i.html",
+    "deadline": "laufend",
+    "deadline_notes": null,
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-22"
+  },
+  {
+    "id": "medienboard_bb",
+    "title": "Medienboard Berlin-Brandenburg (New Media)",
+    "region": "Deutschland (Berlin)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Bedingt rückzahlbares Darlehen/Zuschuss",
+    "funding_rate": "projektabhängig",
+    "max_amount": "typ. 50.000–250.000 € (bis 500.000 €)",
+    "focus": "Film, High-End-Serien, Games, XR und innovative AV-Inhalte — KI-gestützte Projekte werden explizit gefördert",
+    "notes": "Regionaleffekt: mind. Fördersumme in Berlin/Brandenburg; ca. 4 Einreichtermine/Jahr; Beratungsgespräch Pflicht",
+    "priority": 1,
+    "provider": "Medienboard Berlin-Brandenburg",
+    "relevance_ki": "high",
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
+    "url": "https://www.medienboard.de",
+    "deadline": "mehrere Termine/Jahr",
+    "deadline_notes": null,
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-22"
+  },
+  {
+    "id": "gmpf",
+    "title": "German Motion Picture Fund (GMPF)",
+    "region": "Deutschland (bundesweit)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Zuschuss",
+    "funding_rate": "30% der dt. Herstellungskosten",
+    "max_amount": "Serien bis 20 Mio €/Staffel",
+    "focus": "High-End-Serien und Filme mit hohem VFX-/Postproduktionsanteil",
+    "notes": "BKM-Richtlinie, FFA-verwaltet; KI-gestützte VFX-Workflows förderfähig",
+    "priority": 2,
+    "provider": "BKM / FFA",
+    "relevance_ki": "medium",
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
+    "url": "https://www.ffa.de/german-motion-picture-fund-gmpf.html",
+    "deadline": "laufend",
+    "deadline_notes": null,
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-22"
+  },
+  {
+    "id": "bund_kulturelle_filmfoerderung",
+    "title": "Jurybasierte kulturelle Filmförderung des Bundes",
+    "region": "Deutschland (bundesweit)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Zuschuss",
+    "funding_rate": "projektabhängig",
+    "max_amount": "Drehbuch bis 40.000 €, Langfilm bis 1 Mio €",
+    "focus": "Treatment, Drehbuch, Projektentwicklung, Produktion, Verleih — auch für Einzelautor:innen",
+    "notes": "BKM-Mittel, seit 2025 FFA-verwaltet; feste Einreichfristen über FFA-Serviceportal",
+    "priority": 2,
+    "provider": "BKM / FFA",
+    "relevance_ki": "low",
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
+    "url": "https://www.ffa.de",
+    "deadline": null,
+    "deadline_notes": "feste Fristen je Linie",
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-22"
+  },
+  {
+    "id": "games_bund",
+    "title": "Games-Förderung des Bundes (BMFTR)",
+    "region": "Deutschland (bundesweit)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Zuschuss",
+    "funding_rate": "bis 45% (KMU) / 50% (Start-ups)",
+    "max_amount": "bis 8 Mio € (min. 300.000 €)",
+    "focus": "Entwicklung und Prototyping von Games; KI-gestützte Produktionstools im Rahmen der Projektkosten",
+    "notes": "Seit 08/2025 wieder offen; Budget 2026: 125 Mio € — gute Antragschancen; Antrag via DLR Projektträger; Kulturtest + USK",
+    "priority": 1,
+    "provider": "BMFTR (DLR Projektträger)",
+    "relevance_ki": "medium",
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
+    "url": "https://www.bmftr.bund.de/DE/Technologie/Games/Games_node.html",
+    "deadline": "laufende Aufrufe",
+    "deadline_notes": null,
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-22"
+  },
+  {
+    "id": "ffe_filmerbe",
+    "title": "Förderprogramm Filmerbe (FFE)",
+    "region": "Deutschland (bundesweit)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Zuschuss",
+    "funding_rate": "projektabhängig",
+    "max_amount": "bis 70.000–80.000 €",
+    "focus": "Digitalisierung wertvoller Filmbestände — passt zu Archiv-Digitalisierung mit KI-Metadaten",
+    "notes": "BKM/Länder/FFA; antragsberechtigt: Rechteinhaber und Archive",
+    "priority": 3,
+    "provider": "BKM / Länder / FFA",
+    "relevance_ki": "medium",
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
+    "url": "https://www.ffa.de/foerderprogramm-filmerbe.html",
+    "deadline": "15.01. und 15.07.",
+    "deadline_notes": "zwei Stichtage/Jahr",
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-22"
+  },
+  {
+    "id": "fff_bayern",
+    "title": "FFF Bayern – Film-, Games- und XR-Förderung",
+    "region": "Deutschland (Bayern)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Darlehen/Zuschuss",
+    "funding_rate": "projektabhängig",
+    "max_amount": "Kino bis 3 Mio €; Games bis 250.000 €; XR bis 300.000 €",
+    "focus": "Produktion, Stoffentwicklung, Games, XR — einzige Länderförderung mit eigener XR-Richtlinie",
+    "notes": "Bayern-Effekt: mind. 150% des Darlehens in Bayern; Games-Richtlinie 07/2026 fortgeschrieben",
+    "priority": 2,
+    "provider": "FFF Bayern",
+    "relevance_ki": "medium",
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
+    "url": "https://www.fff-bayern.de",
+    "deadline": "mehrere Runden/Jahr",
+    "deadline_notes": null,
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-22"
+  },
+  {
+    "id": "filmstiftung_nrw",
+    "title": "Film- und Medienstiftung NRW",
+    "region": "Deutschland (Nordrhein-Westfalen)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Darlehen/Zuschuss",
+    "funding_rate": "Games: bis 50%",
+    "max_amount": "Projektentwicklung bis 100.000 €; Games-Zuschuss bis 300.000 €",
+    "focus": "Film, Serie, Games, Audio/Podcast, innovative Formate",
+    "notes": "Games seit 09/2025 als Zuschuss (Fokus kleinere Studios); 4 Sammeltermine/Jahr; Beratungsgespräch Pflicht",
+    "priority": 2,
+    "provider": "Film- und Medienstiftung NRW",
+    "relevance_ki": "medium",
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
+    "url": "https://www.filmstiftung.de",
+    "deadline": "4 Termine/Jahr",
+    "deadline_notes": null,
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-22"
+  },
+  {
+    "id": "mfg_bw",
+    "title": "MFG Baden-Württemberg (Film + Digital Content)",
+    "region": "Deutschland (Baden-Württemberg)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Darlehen/Zuschuss",
+    "funding_rate": "Produktion bis 70%",
+    "max_amount": "Produktion bis 1 Mio €",
+    "focus": "Film, Animation/VFX, Games, Digital Content (DCF)",
+    "notes": "BW-Effekt mind. 120%; Animations-/VFX-Cluster Ludwigsburg",
+    "priority": 2,
+    "provider": "MFG Baden-Württemberg",
+    "relevance_ki": "medium",
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
+    "url": "https://www.mfg.de",
+    "deadline": "mehrere Runden/Jahr",
+    "deadline_notes": null,
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-22"
+  },
+  {
+    "id": "mdm",
+    "title": "MDM – Mitteldeutsche Medienförderung (inkl. Games/XR)",
+    "region": "Deutschland (Sachsen)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Zuschuss/Darlehen",
+    "funding_rate": "projektabhängig",
+    "max_amount": "regelhaft bis 250.000 €; Games/XR bis 600.000 €",
+    "focus": "Film, Serie, Games/XR für Sachsen, Sachsen-Anhalt, Thüringen",
+    "notes": "Eigene Games-/XR-Richtlinie seit Ende 2024; 4 Vergabesitzungen/Jahr",
+    "priority": 3,
+    "provider": "MDM",
+    "relevance_ki": "medium",
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
+    "url": "https://www.mdm-online.de",
+    "deadline": "4 Termine/Jahr",
+    "deadline_notes": null,
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-22"
+  },
+  {
+    "id": "moin_hh_sh",
+    "title": "MOIN Filmförderung Hamburg Schleswig-Holstein",
+    "region": "Deutschland (Hamburg)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Erfolgsabhängig rückzahlbares Darlehen",
+    "funding_rate": "projektabhängig",
+    "max_amount": "Projektentwicklung bis 150.000 €; Serien bis 500.000 €",
+    "focus": "Film, Serie, XR/innovative Formate (Gremium 'Innovative')",
+    "notes": "Keine Games-Linie (Games: Gamecity Hamburg, Zuschuss bis 80.000 €); Einreichung via NEST",
+    "priority": 3,
+    "provider": "MOIN Filmförderung",
+    "relevance_ki": "medium",
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
+    "url": "https://moin-filmfoerderung.de",
+    "deadline": "Gremientermine",
+    "deadline_notes": null,
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-22"
+  },
+  {
+    "id": "nordmedia",
+    "title": "nordmedia (Niedersachsen/Bremen)",
+    "region": "Deutschland (Niedersachsen)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Zuschuss/Darlehen",
+    "funding_rate": "projektabhängig",
+    "max_amount": "projektabhängig (Games bis ~300.000 €)",
+    "focus": "Film, TV, innovative AV-Inhalte; eigene Games-Förderung",
+    "notes": "Ca. 4 Vergaberunden/Jahr; Regionalbezug erforderlich",
+    "priority": 3,
+    "provider": "nordmedia",
+    "relevance_ki": "low",
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
+    "url": "https://www.nordmedia.de",
+    "deadline": "4 Runden/Jahr",
+    "deadline_notes": null,
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-22"
+  },
+  {
+    "id": "creative_europe_media",
+    "title": "Creative Europe MEDIA",
+    "region": "EU (Europa)",
+    "country_code": "EU",
+    "status": "active",
+    "funding_type": "Zuschuss",
+    "funding_rate": "call-spezifisch 60–80%",
+    "max_amount": "call-abhängig (z. B. Games/XR bis 200.000 €)",
+    "focus": "Entwicklung, Vertrieb, Innovation für den audiovisuellen Sektor; Games/XR-Call jährlich",
+    "notes": "Programmperiode bis 2027 (ab 2028 'MEDIA+'); Calls öffnen im Herbst — 2026er Development-Deadlines überwiegend vorbei",
+    "priority": 2,
+    "provider": "EU Commission",
+    "relevance_ki": "medium",
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
+    "url": "https://culture.ec.europa.eu/creative-europe",
+    "deadline": "Calls ab Herbst 2026",
+    "deadline_notes": null,
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-22"
   }
 ]
