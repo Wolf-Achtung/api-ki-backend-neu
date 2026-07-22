@@ -1987,6 +1987,21 @@ h1, h2, h3, h4 {
 </section>
 {% endif %}
 
+<!-- ═══════ KI-RECHTE & KENNZEICHNUNG (Medien-Vertikale) ═══════ -->
+{% if KI_RECHTE_KENNZEICHNUNG_HTML and KI_RECHTE_KENNZEICHNUNG_HTML|trim %}
+<section class="section" id="ki-rechte-kennzeichnung" data-category="risk">
+    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
+    <div class="section-header">
+        <div>
+            <span class="badge badge-risk">Risiko</span>
+            <span class="section-kicker">Rechte &amp; Transparenz</span>
+            <h2>KI-Rechte &amp; Kennzeichnung</h2>
+        </div>
+    </div>
+    <div class="section-body">{{ KI_RECHTE_KENNZEICHNUNG_HTML|safe }}</div>
+</section>
+{% endif %}
+
 {# v7.1.4: T3-transition moved INSIDE funding-section to prevent orphan page
    (same fix as T1 — #funding-section has break-before:page) #}
 

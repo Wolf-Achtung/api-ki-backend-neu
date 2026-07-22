@@ -15,13 +15,64 @@
   },
   "_token_budgets": {
     "_note": "LLM token budgets (base) - SPRINT N3.1 increased for roadmap sections; min_words enforced by report_validator.py",
-    "executive_summary": {"base": 800, "min_words": {"solo": 150, "team": 180, "kmu": 200}, "validator_only": true},
-    "tools_empfehlungen": {"base": 1800, "min_words": {"solo": 120, "team": 160, "kmu": 200}, "validator_only": true},
-    "gamechanger": {"base": 4200, "min_words": {"solo": 500, "team": 600, "kmu": 700}},
-    "roadmap_12m": {"base": 4800, "min_words": {"solo": 550, "team": 600, "kmu": 650}},
-    "recommendations": {"base": 2800, "min_words": {"solo": 450, "team": 550, "kmu": 650}},
-    "strategie_governance": {"base": 3200, "min_words": {"solo": 90, "team": 130, "kmu": 160}},
-    "wettbewerb_benchmark": {"base": 3500, "min_words": {"solo": 200, "team": 300, "kmu": 400}}
+    "executive_summary": {
+      "base": 800,
+      "min_words": {
+        "solo": 150,
+        "team": 180,
+        "kmu": 200
+      },
+      "validator_only": true
+    },
+    "tools_empfehlungen": {
+      "base": 1800,
+      "min_words": {
+        "solo": 120,
+        "team": 160,
+        "kmu": 200
+      },
+      "validator_only": true
+    },
+    "gamechanger": {
+      "base": 4200,
+      "min_words": {
+        "solo": 500,
+        "team": 600,
+        "kmu": 700
+      }
+    },
+    "roadmap_12m": {
+      "base": 4800,
+      "min_words": {
+        "solo": 550,
+        "team": 600,
+        "kmu": 650
+      }
+    },
+    "recommendations": {
+      "base": 2800,
+      "min_words": {
+        "solo": 450,
+        "team": 550,
+        "kmu": 650
+      }
+    },
+    "strategie_governance": {
+      "base": 3200,
+      "min_words": {
+        "solo": 90,
+        "team": 130,
+        "kmu": 160
+      }
+    },
+    "wettbewerb_benchmark": {
+      "base": 3500,
+      "min_words": {
+        "solo": 200,
+        "team": 300,
+        "kmu": 400
+      }
+    }
   },
   "de": {
     "executive_summary": {
@@ -963,6 +1014,14 @@
       "size_aware": true,
       "required": false,
       "output": "html"
+    },
+    "ki_rechte_kennzeichnung": {
+      "title": "KI-Rechte & Kennzeichnung",
+      "path": "ki_rechte_kennzeichnung.md",
+      "purpose": "Rechtekette, Einwilligungen und Art.-50-Kennzeichnung für Medien-/Entertainment-Kunden",
+      "size_aware": true,
+      "required": false,
+      "output": "html"
     }
   },
   "en": {
@@ -1885,6 +1944,14 @@
       "path": "top_3_massnahmen.md",
       "purpose": "Top three priority measures",
       "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "ki_rechte_kennzeichnung": {
+      "title": "AI Rights & Labeling",
+      "path": "ki_rechte_kennzeichnung.md",
+      "purpose": "Chain of rights, consent and Art. 50 labeling for media/entertainment clients",
+      "size_aware": true,
       "required": false,
       "output": "html"
     }

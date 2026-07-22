@@ -64,6 +64,13 @@ _INCLUDE_DOMAINS = [
     "golem.de",
     "handelsblatt.com",
     "bsi.bund.de",
+    # Phase 1 Medien-Vertikale: Fachpresse Film/Medien/Games + Förderquellen
+    "dwdl.de",
+    "blickpunktfilm.de",
+    "gameswirtschaft.de",
+    "filmportal.de",
+    "ffa.de",
+    "kulturstaatsminister.de",
     "bitkom.org",
     "dihk.de",
     "bmwk.de",
