@@ -60,7 +60,7 @@ PLATIN+++ CONTENT DOD (mandatory):
 
     <h3>Contact</h3>
     <p>
-      Questions or feedback? Please reach out to <strong>contact@ai-security.now</strong>.
+      Questions or feedback? Please reach out to <strong>{{BRAND_CONTACT_EMAIL}}</strong>.
     </p>
   </div>
 </section>

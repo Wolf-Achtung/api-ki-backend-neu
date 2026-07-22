@@ -52,7 +52,7 @@ Hinweis auf Aktualitätsbezug zum Erstellungsdatum.
 Empfehlung zur Aktualisierung bei wesentlichen Änderungen.
 
 ### 6. Kontakt (1 Satz)
-kontakt@ki-sicherheit.jetzt
+{{BRAND_CONTACT_EMAIL}}
 
 ## MINDESTLÄNGE (STRIKT!)
 {% if COMPANY_SIZE == "solo" %}

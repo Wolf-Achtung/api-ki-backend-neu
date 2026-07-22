@@ -566,7 +566,7 @@ h1, h2, h3, h4 {
 <div class="cover" id="dd-cover">
     <!-- Teal Gradient Header -->
     <div style="position:absolute;top:0;left:0;right:0;padding:40px 40px 30px 40px;background-color:#0D7377;background-image:linear-gradient(135deg,#0D7377,#065F46);color:white;text-align:center;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
-        <img src="ki-sicherheit-logo-small.png" alt="KI-Sicherheit.jetzt" style="width:140px;height:auto;margin-bottom:12px;filter:brightness(0) invert(1);opacity:0.9;">
+        <img src="{{ brand.logo_small | default('ki-sicherheit-logo-small.png') }}" alt="{{ brand.logo_alt | default('KI-Sicherheit.jetzt') }}" style="width:140px;height:auto;margin-bottom:12px;filter:brightness(0) invert(1);opacity:0.9;">
         <div style="font-size:9pt;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.8);">
             KI-Potenzial-Analyse · {{ report_date_display }}
         </div>
@@ -653,7 +653,7 @@ h1, h2, h3, h4 {
 
     <!-- Trust Badges -->
     <div class="trust-badges">
-        <img src="tuev-logo-transparent.png" alt="TÜV Austria zertifiziert">
+        <img src="{{ brand.cert_logo | default('tuev-logo-transparent.png') }}" alt="{{ brand.cert_logo_alt | default('TÜV Austria zertifiziert') }}">
         <img src="KI-READY-2025-badge.png" alt="KI-Ready 2025">
         <img src="dsgvo.svg" alt="DSGVO-konform">
         <img src="eu-ai.svg" alt="EU AI Act">
@@ -795,11 +795,11 @@ h1, h2, h3, h4 {
 
     <!-- Contact Box -->
     <div class="contact-box" style="margin-top: var(--sp-xl);">
-        <p class="contact-name">Wolf Hohl</p>
-        <p class="contact-org">KI-Sicherheit.jetzt — Ihr Partner f&uuml;r KI-Readiness</p>
+        <p class="contact-name">{{ brand.advisor_name | default('Wolf Hohl') }}</p>
+        <p class="contact-org">{{ brand.brand_name | default('KI-Sicherheit.jetzt') }} — {{ brand.claim | default('Ihr Partner f&uuml;r KI-Readiness') }}</p>
         <div class="contact-btns">
-            <a href="https://ki-sicherheit.jetzt" class="btn btn-deep">Website besuchen</a>
-            <a href="mailto:kontakt@ki-sicherheit.jetzt" class="btn btn-primary">Kontakt aufnehmen</a>
+            <a href="{{ brand.site_url | default('https://ki-sicherheit.jetzt') }}" class="btn btn-deep">Website besuchen</a>
+            <a href="mailto:{{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}" class="btn btn-primary">Kontakt aufnehmen</a>
         </div>
     </div>
 </div>
@@ -812,10 +812,10 @@ h1, h2, h3, h4 {
         <div class="impressum-block">
             <h4>Impressum</h4>
             <p><strong>Verantwortlich f&uuml;r den Inhalt:</strong><br>
-            KI-Sicherheit.jetzt – Wolf Hohl<br>
+            {{ brand.brand_name | default('KI-Sicherheit.jetzt') }} – {{ brand.advisor_name | default('Wolf Hohl') }}<br>
             Greifswalder Str. 224a<br>
             10405 Berlin</p>
-            <p>E-Mail: kontakt@ki-sicherheit.jetzt</p>
+            <p>E-Mail: {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}</p>
         </div>
         <div class="impressum-block">
             <h4>Haftungsausschluss</h4>
@@ -840,7 +840,7 @@ h1, h2, h3, h4 {
 <!-- GDPR Mini Disclaimer -->
 <div class="gdpr-mini">
     Diese KI-Potenzial-Analyse nutzt Unternehmensdaten aus dem KI-Readiness Report. Verarbeitung auf Basis von Art. 6 (1) b DSGVO.
-    <a href="https://ki-sicherheit.jetzt/datenschutz" target="_blank">Datenschutzerkl&auml;rung</a>
+    <a href="{{ brand.privacy_url | default('https://ki-sicherheit.jetzt/datenschutz') }}" target="_blank">Datenschutzerkl&auml;rung</a>
 </div>
 
 <p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">

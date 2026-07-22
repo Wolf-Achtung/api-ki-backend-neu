@@ -214,7 +214,7 @@ class TestLegacyBranchValues:
         "handel_ecommerce": "handel",
         "gesundheit_pflege": "gesundheit",
         "bauwesen_architektur": "bauwesen_architektur",
-        "medien_kreativwirtschaft": "marketing",
+        "medien_kreativwirtschaft": "medien",
         "industrie_produktion": "industrie",
         "transport_logistik": "transport_logistik",
     }

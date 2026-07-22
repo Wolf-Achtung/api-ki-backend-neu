@@ -556,6 +556,10 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         import logging as _logging
         _logging.getLogger(__name__).debug("audit_render_context failed: %s", _e)
 
+    # Phase 0 Multi-Projekt: zentrales Branding für Templates bereitstellen
+    from services.brand_config import get_brand
+    context.setdefault("brand", get_brand())
+
     html = str(template.render(**context))
 
     # Post-process LLM HTML to use CSS design classes (KPI cards, timelines, etc.)
