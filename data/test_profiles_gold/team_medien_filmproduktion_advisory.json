@@ -1,0 +1,105 @@
+{
+  "profile_id": "team_medien_filmproduktion_advisory",
+  "description": "Kleine Film-/TV-Produktionsfirma (Team) mit Postproduktion in Berlin — Gold-Profil für den Medien-Pilot (Phase 1)",
+  "lang": "de",
+  "country": "DE",
+  "BRANCHE_LABEL": "Medien & Kreativwirtschaft",
+  "UNTERNEHMENSGROESSE_LABEL": "2–10 (Kleines Team)",
+  "HAUPTLEISTUNG": "Entwicklung und Produktion von dokumentarischen Formaten, Werbefilmen und High-End-Corporate-Content für Sender, Streamer und Markenkunden — von Stoffentwicklung, Treatment und Pitch-Material über Dreh und Postproduktion (Schnitt, Color Grading, Sounddesign, einfache VFX) bis zu Versionierung, Untertitelung und Lieferung in Sender- und Plattformspezifikationen. Dazu Rechteklärung, Musiklizenzierung und Archivrecherche.",
+  "expected_validation": {
+    "funding_flow": "DE",
+    "persona": "team",
+    "guardrails": true,
+    "word_guarantee": 50,
+    "pdf_size_limit_mb": 10
+  },
+  "answers": {
+    "branche": "medien",
+    "unternehmensgroesse": "team",
+    "bundesland": "be",
+    "hauptleistung": "Entwicklung und Produktion von dokumentarischen Formaten, Werbefilmen und High-End-Corporate-Content für Sender, Streamer und Markenkunden — von Stoffentwicklung, Treatment und Pitch-Material über Dreh und Postproduktion (Schnitt, Color Grading, Sounddesign, einfache VFX) bis zu Versionierung, Untertitelung und Lieferung in Sender- und Plattformspezifikationen. Dazu Rechteklärung, Musiklizenzierung und Archivrecherche.",
+    "zielgruppen": [
+      "b2b",
+      "grossunternehmen",
+      "kmu",
+      "oeffentliche_hand"
+    ],
+    "jahresumsatz": "bis_1m",
+    "it_infrastruktur": "cloudbasiert",
+    "interne_ki_kompetenzen": "mittel",
+    "datenquellen": [
+      "analytics",
+      "microsoft365",
+      "webtracking"
+    ],
+    "digitalisierungsgrad": "hoch",
+    "prozesse_papierlos": "ja",
+    "automatisierungsgrad": "niedrig",
+    "ki_einsatz": [
+      "research",
+      "contentkreation",
+      "dokumentenzusammenfassung",
+      "automatisierung"
+    ],
+    "ki_kompetenz": "mittel",
+    "ki_ziele": [
+      "beschleunigung",
+      "effizienz",
+      "qualitaet",
+      "skalierung"
+    ],
+    "ki_guardrails": "Kein KI-generiertes Material in Kundenprojekten ohne Kennzeichnung und Freigabe. Keine Stimmen- oder Gesichtsklone ohne schriftliche Einwilligung der Betroffenen. Kundenmaterial und ungeschnittenes Footage werden nicht in öffentliche KI-Tools hochgeladen. Rechtekette für jedes verwendete KI-Asset dokumentieren.",
+    "ki_projekte": "Im Einsatz sind KI-Transkription und automatische Untertitelung für Rohmaterial und Lieferfassungen, KI-Recherche für Stoffentwicklung und Archivmaterial sowie erste Tests mit Bildgenerierung für Moodboards und Pitch-Decks. Geplant sind ein durchsuchbares Footage-Archiv mit KI-Metadaten, KI-gestützte Rough-Cut-Vorschläge und mehrsprachige Versionierung mit synthetischen Stimmen für Corporate-Kunden.",
+    "anwendungsfaelle": [
+      "content_generation",
+      "recherche",
+      "workflowoptimierung",
+      "dokumentenpruefung"
+    ],
+    "zeitersparnis_prioritaet": "Die größten Zeitfresser sind Sichtung und Logging von Rohmaterial, Transkription und Untertitelung, Versionierung für verschiedene Kanäle und Sprachen, Archivrecherche sowie die Erstellung von Pitch- und Präsentationsmaterial. KI-Unterstützung verspricht hier die stärkste Entlastung, außerdem bei Angebots- und Kalkulationsdokumenten.",
+    "pilot_bereich": "workflowoptimierung",
+    "geschaeftsmodell_evolution": "Aufbau eines KI-gestützten Footage-Archivs mit Metadaten und dokumentierter Rechtekette, um Bestandsmaterial als Stock- und Lizenzgeschäft zu verwerten. Mehrsprachige Versionierung als Zusatzpaket für Corporate-Kunden. Perspektivisch standardisierte Produktionspakete, bei denen KI-gestützte Pre-Viz und schnellere Post kürzere Lieferzeiten zu stabilen Margen ermöglichen.",
+    "vision_3_jahre": "Eine Produktionsfirma, die Entwicklung, Produktion und Post mit dokumentierten KI-Workflows verzahnt: durchsuchbares Archiv, halbautomatische Post-Pipeline, mehrsprachige Auswertung als Standard — und gegenüber Sendern, Plattformen und Kunden nachweisbar rechtssicher im Umgang mit KI (Kennzeichnung, Einwilligungen, Rechtekette).",
+    "strategische_ziele": "Schnittzeit pro Projekt deutlich senken, mehr Pitches bei gleichem Aufwand, Archiv monetarisieren, mehrsprachige Auswertung als Standardangebot etablieren, KI-Richtlinie mit Kennzeichnungs- und Einwilligungsprozess verankern, Fördermittel für Entwicklung und Innovation aktiv nutzen.",
+    "massnahmen_komplexitaet": "mittel",
+    "roadmap_vorhanden": "teilweise",
+    "governance_richtlinien": "entwurf",
+    "change_management": "teilweise",
+    "zeitbudget": "10h_woche",
+    "vorhandene_tools": [
+      "microsoft365",
+      "notion",
+      "chatgpt",
+      "browserplugins"
+    ],
+    "regulierte_branche": [],
+    "trainings_interessen": [
+      "prompting_expert",
+      "contentkreation",
+      "automatisierung",
+      "datenqualitaet"
+    ],
+    "vision_prioritaet": "hoch",
+    "datenschutzbeauftragter": "extern",
+    "technische_massnahmen": "basis",
+    "folgenabschaetzung": "nein",
+    "meldewege": "teilweise",
+    "loeschregeln": "teilweise",
+    "ai_act_kenntnis": "grundkenntnisse",
+    "ki_hemmnisse": [
+      "kompetenz",
+      "ressourcen",
+      "datenschutz",
+      "integration"
+    ],
+    "bisherige_foerdermittel": "keine",
+    "interesse_foerderung": "ja",
+    "erfahrung_beratung": "grundkenntnisse",
+    "investitionsbudget": "bis_50k",
+    "marktposition": "etabliert",
+    "benchmark_wettbewerb": "durchschnittlich",
+    "innovationsprozess": "ad_hoc",
+    "risikofreude": "3",
+    "datenschutz": true
+  }
+}
