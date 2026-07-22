@@ -241,11 +241,11 @@
         "Germany (nationwide)"
       ],
       "funding_type_en": "Grant",
-      "funding_rate_en": "20–25% of German production costs",
-      "max_amount": 4000000,
-      "max_amount_en": "project-dependent, typically up to €4 million",
+      "funding_rate_en": "30% of recognized German production costs (since 02/2025)",
+      "max_amount": 5000000,
+      "max_amount_en": "DFFF I up to €5m; DFFF II (VFX/production services) up to €25m",
       "focus_en": "Theatrical film production; digitalized production processes eligible",
-      "summary_en": "Federal grant administered via the FFA reimbursing a share of German production spend; AI-assisted production steps count as eligible production costs.",
+      "summary_en": "Federal grant (BKM, administered by the FFA) reimbursing 30% of German production spend since the 2025 film law reform; rolling applications up to 6 weeks before principal photography. A merged DFFF/GMPF 'incentive funding' guideline was announced for mid-2026 — check ffa.de for the current state.",
       "suitable_for": [
         "team",
         "kmu"
@@ -253,39 +253,40 @@
       "branchen": [
         "medien"
       ],
-      "notes_en": "Not an AI programme as such, but AI-assisted workflows are eligible costs",
+      "notes_en": "FFG reform in force since 1 Jan 2025; higher caps (DFFF I €5m / DFFF II €25m)",
       "relevance_ki": "medium",
       "priority": 1,
-      "url": "https://www.dfff-ffa.de"
+      "url": "https://www.dfff-ffa.de",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "ffa_produktion",
-      "name_de": "FFA – Produktions- und Projektförderung",
-      "name_en": "FFA – Production and Project Funding",
+      "name_de": "FFA – Referenzfilmförderung (FFG 2025)",
+      "name_en": "FFA – Reference-Based Film Funding (FFG 2025)",
       "region": "DE",
       "region_de": "Deutschland (bundesweit)",
       "region_en": "Germany (nationwide)",
       "regions_en": [
         "Germany (nationwide)"
       ],
-      "funding_type_en": "Grant/Loan",
-      "funding_rate_en": "project-dependent",
-      "max_amount": 1000000,
-      "max_amount_en": "project-dependent",
-      "focus_en": "Theatrical film: production, script/story development, distribution",
-      "summary_en": "Germany's federal film board funds production, development and distribution; development funding is also relevant for individual writers.",
+      "funding_type_en": "Grant (automatic, points-based)",
+      "funding_rate_en": "success-based (reference points)",
+      "max_amount": 0,
+      "max_amount_en": "success-based",
+      "focus_en": "Levy-financed federal film funding via reference points; writers and directors now share in reference funds",
+      "summary_en": "Since the 2025 film law reform the FFA's selective project funding (loans) was abolished; production funding now runs automatically via reference points earned through box-office, festival and award success.",
       "suitable_for": [
-        "solo",
         "team",
         "kmu"
       ],
       "branchen": [
         "medien"
       ],
-      "notes_en": "Development funding also open to individual writers",
+      "notes_en": "Selective project and distribution funding abolished as of 1 Jan 2025",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.ffa.de"
+      "url": "https://www.ffa.de",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "gmpf",
@@ -298,11 +299,11 @@
         "Germany (nationwide)"
       ],
       "funding_type_en": "Grant",
-      "funding_rate_en": "up to 25% of German production costs",
-      "max_amount": 2500000,
-      "max_amount_en": "project-dependent",
+      "funding_rate_en": "30% of recognized German production costs (since 02/2025)",
+      "max_amount": 20000000,
+      "max_amount_en": "series up to €20m per season; non-theatrical films up to €5m",
       "focus_en": "High-end series and films with a high VFX/post-production share",
-      "summary_en": "Particularly relevant for VFX and post-production houses; AI-assisted VFX workflows are eligible production costs.",
+      "summary_en": "Guideline of the Federal Commissioner for Culture and the Media (BKM), administered by the FFA — relevant for high-end series and VFX/post-heavy productions; from 2026 a joint budget with the DFFF (approx. €250m/year).",
       "suitable_for": [
         "team",
         "kmu"
@@ -310,15 +311,16 @@
       "branchen": [
         "medien"
       ],
-      "notes_en": "Focus on high-end series and VFX-heavy productions",
+      "notes_en": "BKM programme (not BMWK); caps raised in 2025",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.bmwk.de"
+      "url": "https://www.bmwk.de",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "games_bund",
-      "name_de": "Computerspieleförderung des Bundes",
-      "name_en": "German Federal Games Funding",
+      "name_de": "Games-Förderung des Bundes (BMFTR)",
+      "name_en": "German Federal Games Funding (BMFTR)",
       "region": "DE",
       "region_de": "Deutschland (bundesweit)",
       "region_en": "Germany (nationwide)",
@@ -326,11 +328,11 @@
         "Germany (nationwide)"
       ],
       "funding_type_en": "Grant",
-      "funding_rate_en": "project-dependent (pro-rata)",
-      "max_amount": 2000000,
-      "max_amount_en": "project-dependent",
+      "funding_rate_en": "up to 25% (large companies) / 45% (SMEs) / 50% (start-ups)",
+      "max_amount": 8000000,
+      "max_amount_en": "up to €8m per project (minimum project size €300k)",
       "focus_en": "Development and prototyping of games",
-      "summary_en": "Federal funding for games studios; AI-assisted production tools (assets, QA, dialogue) within eligible project costs. Check current funding round availability before applying.",
+      "summary_en": "Moved to the Federal Ministry of Research, Technology and Space (BMFTR) in May 2025 and reopened for applications in August 2025 after a multi-year freeze; 2026 budget €125m with substantial funds still available mid-2026. Applications via DLR project management agency; culture test and USK rating required.",
       "suitable_for": [
         "team",
         "kmu"
@@ -338,10 +340,11 @@
       "branchen": [
         "medien"
       ],
-      "notes_en": "Check availability of current funding rounds",
+      "notes_en": "Reopened since 08/2025; good application prospects mid-2026",
       "relevance_ki": "medium",
       "priority": 3,
-      "url": "https://www.bmwk.de/games"
+      "url": "https://www.bmwk.de/games",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "medienboard_bb",
@@ -458,6 +461,66 @@
       "relevance_ki": "medium",
       "priority": 2,
       "url": "https://www.mfg.de"
+    },
+    {
+      "id": "bund_kulturelle_filmfoerderung",
+      "name_de": "Jurybasierte kulturelle Filmförderung des Bundes",
+      "name_en": "Jury-Based Cultural Film Funding of the Federal Government",
+      "region": "DE",
+      "region_de": "Deutschland (bundesweit)",
+      "region_en": "Germany (nationwide)",
+      "regions_en": [
+        "Germany"
+      ],
+      "funding_type_en": "Grant",
+      "funding_rate_en": "project-dependent",
+      "max_amount": 1000000,
+      "max_amount_en": "treatment up to €15k, screenplay up to €40k, feature production up to €1m",
+      "focus_en": "Culturally valuable film projects: treatment, screenplay, development, production, distribution",
+      "summary_en": "BKM funds administered by the FFA since 1 Jan 2025 (guideline of 31 Mar 2025); screenplay/treatment funding is open to individual writers; fixed submission deadlines via the FFA service portal.",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes_en": "Open to individual writers for screenplay/treatment funding",
+      "relevance_ki": "low",
+      "priority": 2,
+      "url": "https://www.ffa.de",
+      "last_verified": "2026-07-22"
+    },
+    {
+      "id": "ffe_filmerbe",
+      "name_de": "Förderprogramm Filmerbe (FFE)",
+      "name_en": "Film Heritage Funding Programme (FFE)",
+      "region": "DE",
+      "region_de": "Deutschland (bundesweit)",
+      "region_en": "Germany (nationwide)",
+      "regions_en": [
+        "Germany"
+      ],
+      "funding_type_en": "Grant",
+      "funding_rate_en": "project-dependent",
+      "max_amount": 80000,
+      "max_amount_en": "up to €70–80k per project",
+      "focus_en": "Digitization of historically, artistically or documentarily valuable films",
+      "summary_en": "Jointly financed by BKM, the federal states and the FFA; two annual deadlines (15 Jan and 15 Jul); open to rights holders and film heritage institutions — a good fit for archive digitization and AI-metadata monetization projects.",
+      "suitable_for": [
+        "solo",
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes_en": "Deadlines 15 Jan / 15 Jul",
+      "relevance_ki": "medium",
+      "priority": 3,
+      "url": "https://www.ffa.de/foerderprogramm-filmerbe.html",
+      "last_verified": "2026-07-22"
     }
   ]
 }

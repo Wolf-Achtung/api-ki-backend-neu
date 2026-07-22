@@ -142,9 +142,9 @@
       "region": "EU",
       "region_label": "Europäische Union",
       "funding_type": "Zuschuss",
-      "funding_rate": "projektabhängig (Ko-Finanzierung)",
+      "funding_rate": "call-spezifisch 60–80% Ko-Finanzierung (Slate Development: Pauschalbeträge)",
       "max_amount": 1000000,
-      "max_amount_display": "projektabhängig",
+      "max_amount_display": "call-abhängig, z. B. Co-Development max. 120.000–200.000 €, Slate 90.000–510.000 €",
       "focus": "Entwicklung, Vertrieb und Promotion audiovisueller Werke; Innovation-Calls inkl. neuer Technologien",
       "suitable_for": [
         "team",
@@ -153,10 +153,79 @@
       "branchen": [
         "medien"
       ],
-      "notes": "Zentrale EU-Förderung für die audiovisuelle Branche; einzelne Calls adressieren innovative Tools und Workflows (auch KI)",
+      "notes": "Programmperiode läuft bis 2027 (ab 2028 als 'MEDIA+' im geplanten Programm AgoraEU); Calls öffnen jeweils im Herbst des Vorjahres mit Deadlines Dez–Jul — 2026er Development-Deadlines sind überwiegend vorbei, nächste Runde ab Herbst 2026 beobachten",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://culture.ec.europa.eu/creative-europe"
+      "url": "https://culture.ec.europa.eu/creative-europe",
+      "last_verified": "2026-07-22"
+    },
+    {
+      "id": "crea_media_devvgim",
+      "title": "Creative Europe MEDIA – Video Games and Immersive Content Development",
+      "region": "EU",
+      "region_label": "Europäische Union",
+      "funding_type": "Zuschuss",
+      "funding_rate": "60% Ko-Finanzierung",
+      "max_amount": 200000,
+      "max_amount_display": "bis 200.000 € pro Projekt",
+      "focus": "Entwicklung narrativer Games und immersiver Inhalte (XR) — wichtigster EU-Topf für Games-/XR-Studios",
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Jährlicher Call (Deadline typ. Februar; 2026er Runde geschlossen, nächste ab Herbst 2026); Einzelantrag oder Konsortium; 10 Mio € Call-Budget",
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://culture.ec.europa.eu/creative-europe",
+      "last_verified": "2026-07-22"
+    },
+    {
+      "id": "horizon_cl2_heritage_ki",
+      "title": "Horizon Europe Cluster 2 – KI & Kreativwirtschaft (HERITAGE-Calls)",
+      "region": "EU",
+      "region_label": "Europäische Union",
+      "funding_type": "Zuschuss (Konsortialprojekte)",
+      "funding_rate": "bis 100% der förderfähigen Kosten (RIA)",
+      "max_amount": 5000000,
+      "max_amount_display": "mehrere Mio € pro Konsortialprojekt",
+      "focus": "KI-Integration in die Arbeitspraxis der Kreativwirtschaft; fairer Markt für Kreativinhalte im Zeitalter generativer KI",
+      "suitable_for": [
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Topics HORIZON-CL2-2026-01-HERITAGE-03/-04; Deadline 23.09.2026 (bei Verifikation offen); erfordert Forschungskonsortien (mind. 3 Partner aus 3 Ländern) — für Medienfirmen als Anwendungs-/Technologiepartner",
+      "relevance_ki": "high",
+      "priority": 2,
+      "url": "https://ec.europa.eu/info/funding-tenders/",
+      "last_verified": "2026-07-22"
+    },
+    {
+      "id": "eurimages",
+      "title": "Eurimages – Koproduktionsförderung (Europarat)",
+      "region": "EU",
+      "region_label": "Europarat (40 Mitgliedstaaten)",
+      "funding_type": "rückzahlbares zinsloses Darlehen/Zuschuss",
+      "funding_rate": "projektabhängig",
+      "max_amount": 500000,
+      "max_amount_display": "projektabhängig",
+      "focus": "Internationale Kino-Koproduktionen (Fiktion, Animation, Doku ab 70 Min.)",
+      "suitable_for": [
+        "team",
+        "kmu"
+      ],
+      "branchen": [
+        "medien"
+      ],
+      "notes": "Nur unabhängige Produktionsfirmen; Koproduktion zwischen Mitgliedstaaten, mind. 50% der Finanzierung je Koproduzent gesichert; 2026 zusätzlich Pilotprogramm für Serien-Koproduktionen; mehrere Einreichrunden/Jahr",
+      "relevance_ki": "low",
+      "priority": 3,
+      "url": "https://www.coe.int/en/web/eurimages",
+      "last_verified": "2026-07-22"
     }
   ]
 }
