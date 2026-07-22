@@ -4,6 +4,19 @@ Dieses Modul dient als 'Quelle der Wahrheit' für Labels/Optionen.
 Hinweis: Generiert heuristisch; bei Änderungen am Formbuilder bitte neu erzeugen.
 """
 fields = {
+  "medien_sparte": {
+    "label": "Sparte (Medien & Kreativwirtschaft)",
+    "type": "select",
+    "options": [
+      {"value": "produktion", "label": "Film-/TV-Produktion"},
+      {"value": "post_vfx", "label": "Postproduktion / VFX / Animation"},
+      {"value": "games", "label": "Games / Interactive"},
+      {"value": "verlag_publishing", "label": "Verlag / Publishing / Redaktion"},
+      {"value": "musik_audio", "label": "Musik / Audio / Podcast"},
+      {"value": "agentur_design", "label": "Agentur / Design / Werbung"},
+      {"value": "content_creation", "label": "Content Creation / Social Media"}
+    ]
+  },
   "branche": {
     "label": "In welcher Branche ist Ihr Unternehmen tätig?",
     "type": "select",

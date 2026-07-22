@@ -373,7 +373,8 @@
       "notes_en": "Regional spend effect required",
       "relevance_ki": "high",
       "priority": 1,
-      "url": "https://www.medienboard.de"
+      "url": "https://www.medienboard.de",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "fff_bayern",
@@ -402,7 +403,8 @@
       "notes_en": "Regional spend effect required",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.fff-bayern.de"
+      "url": "https://www.fff-bayern.de",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "filmstiftung_nrw",
@@ -431,7 +433,8 @@
       "notes_en": "Regional spend effect required",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.filmstiftung.de"
+      "url": "https://www.filmstiftung.de",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "mfg_bw",
@@ -460,7 +463,8 @@
       "notes_en": "Animation/VFX cluster focus",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.mfg.de"
+      "url": "https://www.mfg.de",
+      "last_verified": "2026-07-22"
     },
     {
       "id": "bund_kulturelle_filmfoerderung",

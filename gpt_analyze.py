@@ -1464,6 +1464,7 @@ _SECTION_MAX_TOKENS = {
     # explizites Token-Budget verhindert Regression bei globalen Default-Änderungen.
     "roadmap_90d_decision": 4000,
     "branch_deep_dive": 8000,  # FIX-B718: was 5000, LLM hits max_tokens → truncation
+    "ki_rechte_kennzeichnung": 5000,  # Phase 1 Medien: Rechte/Art.-50-Kapitel
     # ── EFFIZIENT ──
     "transparency_box": 3000,
     "kickoff_vorlage": 5000,
@@ -9155,6 +9156,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         if isinstance(_src, dict):
             # Single-choice fields
             for _k, _label_key in [('branche','BRANCHE_LABEL'),
+                                   ('medien_sparte','MEDIEN_SPARTE_LABEL'),
                                    ('unternehmensgroesse','UNTERNEHMENSGROESSE_LABEL'),
                                    ('bundesland','BUNDESLAND_LABEL'),
                                    ('jahresumsatz','JAHRESUMSATZ_LABEL'),
@@ -12261,6 +12263,8 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
         "prompt_framework": "prompt_framework",
         # FIX-C2: branch_deep_dive was missing
         "branch_deep_dive": "branch_deep_dive",
+        # Phase 1 Medien-Vertikale
+        "ki_rechte_kennzeichnung": "ki_rechte_kennzeichnung",
         # FIX-B16: Decision sections were missing → fell through to generic boilerplate
         "executive_decision": "executive_decision",
         "roadmap_90d_decision": "roadmap_90d_decision",
@@ -13209,6 +13213,7 @@ _HTML_KEY_TO_SECTION_NAME = {
     "GAMECHANGER_DECISION_HTML": "gamechanger_decision",
     "KI_STACK_SUMMARY_HTML": "ki_stack_summary",
     "BRANCH_DEEP_DIVE_HTML": "branch_deep_dive",
+    "KI_RECHTE_KENNZEICHNUNG_HTML": "ki_rechte_kennzeichnung",
 }
 
 def _regenerate_section_strict(
@@ -13459,6 +13464,18 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         ("score_interpretation", "SCORE_INTERPRETATION_HTML"),
         ("advisor_note", "ADVISOR_NOTE_HTML"),
     ]
+
+    # Phase 1 Medien-Vertikale: Rechte-/Kennzeichnungs-Kapitel nur für die
+    # Branche medien generieren (für andere Branchen bleibt der Report
+    # unverändert; Template rendert die Sektion nur, wenn der Key existiert).
+    try:
+        from services.branch_mapping import map_frontend_branch_to_engine
+        if map_frontend_branch_to_engine(str(briefing.get("branche", ""))) == "medien":
+            parallel_sections.append(
+                ("ki_rechte_kennzeichnung", "KI_RECHTE_KENNZEICHNUNG_HTML")
+            )
+    except Exception:
+        pass
 
     max_workers = int(os.getenv("GPT_PARALLEL_WORKERS", "10"))
 
