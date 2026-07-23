@@ -31,6 +31,8 @@ _inmem_lock = threading.Lock()
 
 class RequestCodeIn(BaseModel):
     email: EmailStr
+    # KIS-1250: UI language of the requesting page — drives the code-mail language
+    lang: str = "de"
 
 
 class LoginIn(BaseModel):
@@ -105,21 +107,38 @@ async def request_code(payload: RequestCodeIn, request: Request):
     # Build minimal login email (deliverability-first)
     ttl_sec = 600
     mins = max(1, ttl_sec // 60)
-    subject = "Ihr Anmeldecode"
+    _en = str(payload.lang or "de").lower().startswith("en")
 
-    text_template = (
-        "Ihr persönlicher Anmeldecode lautet:\n\n"
-        f"{code}\n\n"
-        f"Der Code ist {mins} Minuten gültig.\n\n"
-        "Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.\n\n"
-        "Kein Code angekommen?\n"
-        "• Spam- oder Junk-Ordner prüfen\n"
-        "• Code einfach erneut anfordern\n"
-        "• Bei Problemen: support@ki-sicherheit.jetzt\n\n"
-        "Diese E-Mail gehört zum Login-Prozess von ki-sicherheit.jetzt.\n"
-        "Es handelt sich nicht um Werbung.\n\n"
-        "– ki-sicherheit.jetzt\n"
-    )
+    if _en:
+        subject = "Your login code"
+        text_template = (
+            "Your personal login code is:\n\n"
+            f"{code}\n\n"
+            f"The code is valid for {mins} minutes.\n\n"
+            "If you did not request this login, you can ignore this e-mail.\n\n"
+            "No code received?\n"
+            "• Check your spam or junk folder\n"
+            "• Simply request a new code\n"
+            "• Having trouble? support@ki-sicherheit.jetzt\n\n"
+            "This e-mail is part of the login process of ki-sicherheit.jetzt.\n"
+            "It is not advertising.\n\n"
+            "– ki-sicherheit.jetzt\n"
+        )
+    else:
+        subject = "Ihr Anmeldecode"
+        text_template = (
+            "Ihr persönlicher Anmeldecode lautet:\n\n"
+            f"{code}\n\n"
+            f"Der Code ist {mins} Minuten gültig.\n\n"
+            "Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.\n\n"
+            "Kein Code angekommen?\n"
+            "• Spam- oder Junk-Ordner prüfen\n"
+            "• Code einfach erneut anfordern\n"
+            "• Bei Problemen: support@ki-sicherheit.jetzt\n\n"
+            "Diese E-Mail gehört zum Login-Prozess von ki-sicherheit.jetzt.\n"
+            "Es handelt sich nicht um Werbung.\n\n"
+            "– ki-sicherheit.jetzt\n"
+        )
 
     try:
         await mailer.send(
