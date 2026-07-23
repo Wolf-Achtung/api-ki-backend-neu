@@ -992,7 +992,24 @@ def render_deep_dive_html(sections: Dict[str, str],
         from services.brand_config import get_brand
         template_vars.setdefault("brand", get_brand())
 
-        return str(template.render(**template_vars))
+        _html = str(template.render(**template_vars))
+
+        # KIS-1246: Breite LLM-Tabellen härten (Spaltenbreiten + kompakte
+        # Header) — die Risiko-Matrix brach "EINTRITTSWAHRSCHEINLICHKEIT"
+        # in die Nachbarspalte (Lauf 1129, KPA S. 7).
+        try:
+            from services.style_lint import (
+                harden_wide_tables as _dd_hwt,
+                soften_table_long_words as _dd_shy,
+            )
+            _html, _n1 = _dd_hwt(_html)
+            _html, _n2 = _dd_shy(_html)
+            if _n1 or _n2:
+                log.info("[KIS-1246][KPA] Tabellen gehärtet: colgroups/header=%d shy=%d", _n1, _n2)
+        except Exception:
+            pass
+
+        return _html
 
     except Exception as exc:
         log.error("[GC-DEEP-DIVE] Template rendering failed: %s", exc)

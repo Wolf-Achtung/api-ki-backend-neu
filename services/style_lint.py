@@ -310,6 +310,108 @@ def soften_table_long_words(html: str) -> Tuple[str, int]:
 
 
 # --------------------------------------------------------------------------- #
+# A1c) Breite Tabellen härten: Spaltenbreiten + kompakte Header               #
+# --------------------------------------------------------------------------- #
+# KIS-1246: LLM-Tabellen mit 4-7 Spalten nutzen table-layout:fixed und damit
+# GLEICHE Spaltenbreiten — Tool-Namen brechen buchstabenweise um
+# ("Micr osoft Copilot"), lange Header laufen in die Nachbarspalte
+# ("DSGVO-KONFOR MITÄT" über "INTEGRATION", Strategie S. 18-20;
+# "EINTRITTSWAHRSCHEINLICHKEIT" über "AUSWIRKUNG", Potenzial-Analyse S. 7).
+# Fix: (1) bekannte Lang-Header auf kompakte Synonyme kürzen,
+# (2) pro Tabelle ein <colgroup> mit inhaltsbasierten Gewichten injizieren.
+
+_TABLE_BLOCK_RE = re.compile(r"<table\b[^>]*>[\s\S]*?</table>", re.IGNORECASE)
+_TABLE_OPEN_RE = re.compile(r"<table\b[^>]*>", re.IGNORECASE)
+_FIRST_ROW_RE = re.compile(r"<tr\b[^>]*>([\s\S]*?)</tr>", re.IGNORECASE)
+_HEADER_CELL_RE = re.compile(r"<t[dh]\b[^>]*>([\s\S]*?)</t[dh]>", re.IGNORECASE)
+_STRIP_TAGS_RE = re.compile(r"<[^>]+>")
+
+# Lang-Header → kompakte Fassung (case-insensitiv, auf Zellen-Klartext).
+_HEADER_SHORTENINGS: Dict[str, str] = {
+    "eintrittswahrscheinlichkeit": "Eintritt",
+    "umsetzungskomplexität": "Komplexität",
+    "dsgvo-konformität": "DSGVO",
+    "integration in bestehenden stack": "Integration",
+    "konkrete gegenmassnahme": "Gegenmaßnahme",
+    "konkrete gegenmaßnahme": "Gegenmaßnahme",
+    "verantwortung/ressourcen": "Verantwortung",
+    "umsatzprojektion": "Umsatz-Projektion",
+}
+
+# Spaltengewichte nach Header-Stichwort: schmal (1) für Ampeln/Kürzel,
+# breit (3) für Fließtext-Spalten. Default: 2.
+_COL_NARROW = (
+    "typ", "impact", "eintritt", "auswirkung", "passung", "empfehlung",
+    "priorität", "pfad", "quote", "dsgvo", "ampel", "score", "prio",
+    "zeithorizont", "komplexität", "frist",
+)
+_COL_WIDE = (
+    "funktion", "beschreibung", "integration", "link", "kontakt",
+    "gegenmaßnahme", "gegenmassnahme", "einordnung", "stop-signal",
+    "kernbotschaft", "prüfschritt", "bedeutung",
+)
+
+
+def _col_weight(header_text: str) -> float:
+    t = header_text.lower()
+    if any(k in t for k in _COL_WIDE):
+        return 3.0
+    if any(k in t for k in _COL_NARROW):
+        return 1.0
+    return 2.0
+
+
+def harden_wide_tables(html: str) -> Tuple[str, int]:
+    """Kürzt Lang-Header und injiziert <colgroup> in Tabellen mit ≥4 Spalten."""
+    if not html or "<table" not in html.lower():
+        return html, 0
+    count = 0
+
+    def _table(m: "re.Match[str]") -> str:
+        nonlocal count
+        table = m.group(0)
+        if "<colgroup" in table.lower():
+            return table
+
+        # 1. Header-Zellen der ersten Zeile lesen
+        row_m = _FIRST_ROW_RE.search(table)
+        if not row_m:
+            return table
+        cells = _HEADER_CELL_RE.findall(row_m.group(1))
+        if len(cells) < 4:
+            return table
+
+        # 2. Lang-Header kürzen (im gesamten Tabellen-HTML, nur Klartext)
+        for long, short in _HEADER_SHORTENINGS.items():
+            pattern = re.compile(re.escape(long), re.IGNORECASE)
+            new_table, n = pattern.subn(short, table)
+            if n:
+                table = new_table
+                count += n
+
+        # 3. Gewichte aus den (ggf. gekürzten) Headern ableiten
+        row_m = _FIRST_ROW_RE.search(table)
+        cells = _HEADER_CELL_RE.findall(row_m.group(1)) if row_m else cells
+        weights = [_col_weight(_STRIP_TAGS_RE.sub(" ", c)) for c in cells]
+        total = sum(weights) or 1.0
+        pcts = [max(6.0, w / total * 100.0) for w in weights]
+        norm = sum(pcts)
+        pcts = [p / norm * 100.0 for p in pcts]
+        colgroup = "<colgroup>" + "".join(
+            f'<col style="width:{p:.1f}%">' for p in pcts
+        ) + "</colgroup>"
+
+        open_m = _TABLE_OPEN_RE.search(table)
+        if not open_m:
+            return table
+        insert_at = open_m.end()
+        count += 1
+        return table[:insert_at] + colgroup + table[insert_at:]
+
+    return _TABLE_BLOCK_RE.sub(_table, html), count
+
+
+# --------------------------------------------------------------------------- #
 # A2) Marken-Schreibweise im Fließtext vereinheitlichen                       #
 # --------------------------------------------------------------------------- #
 _TAG_SPLIT_RE = re.compile(r"(<[^>]+>)")

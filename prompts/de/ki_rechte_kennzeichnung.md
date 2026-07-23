@@ -82,3 +82,17 @@ Nicht verwenden:
     <li>[5-7 ankreuzbare Punkte]</li>
   </ul>
 </section>
+
+<!-- FIX-KIS-1246: Expliziter Kontext-Block — das Modell hat ALLE nötigen
+     Angaben und darf NIE mit einer Rückfrage antworten. -->
+
+VORLIEGENDER UNTERNEHMENSKONTEXT (vollständig — keine Rückfragen nötig):
+- Branche: {{BRANCHE_LABEL}} · Sparte: {{MEDIEN_SPARTE_LABEL}}
+- Unternehmensgröße: {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
+- Hauptleistung: {{hauptleistung}}
+- Vorhandene KI-Leitplanken des Kunden: {{ki_guardrails}}
+
+VERBINDLICH: Antworte ausschließlich mit dem fertigen HTML-Abschnitt gemäß
+Pflichtstruktur. Stelle unter keinen Umständen Rückfragen, bitte nie um
+weitere Angaben und erkläre nie, was dir fehlt — alle benötigten
+Informationen stehen oben.

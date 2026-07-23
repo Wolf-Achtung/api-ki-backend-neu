@@ -581,17 +581,22 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
             soften_table_long_words as _sf_shy,
             fix_double_periods as _sf_fdp,
             fix_misc_typography as _sf_fmt,
+            harden_wide_tables as _sf_hwt,
         )
         html, _s1 = _sf_fss(html)
         html, _s2 = _sf_rpn(html)
+        # KIS-1246: Erst Spaltenbreiten/Kurz-Header, dann Soft-Hyphens —
+        # die 7-Spalten-Tool-/Fördertabellen brachen Tool-Namen
+        # buchstabenweise um ("Micr osoft"), Header liefen in Nachbarspalten.
+        html, _s6 = _sf_hwt(html)
         html, _s3 = _sf_shy(html)
         html, _s4 = _sf_fdp(html)
         html, _s5 = _sf_fmt(html)
-        if _s1 or _s2 or _s3 or _s4 or _s5:
+        if _s1 or _s2 or _s3 or _s4 or _s5 or _s6:
             import logging as _lg
             _lg.getLogger(__name__).info(
-                "[KIS-1235][STRATEGY-TEXTMECHANIK] spaces=%d punct_nodes=%d shy_words=%d periods=%d typo=%d",
-                _s1, _s2, _s3, _s4, _s5,
+                "[KIS-1235][STRATEGY-TEXTMECHANIK] spaces=%d punct_nodes=%d shy_words=%d periods=%d typo=%d tables=%d",
+                _s1, _s2, _s3, _s4, _s5, _s6,
             )
     except Exception:  # pragma: no cover
         pass

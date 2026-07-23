@@ -12274,34 +12274,40 @@ STATIC_SECTIONS = {
     "ai_act_summary",
 }
 
-_META_REFUSAL_PATTERNS = (
-    "bitte stellen sie",
-    "bitte geben sie mir",
-    "benötige ich mindestens",
-    "benötige ich folgende",
-    "please provide",
-    "i need the following",
-    "als ki-modell",
-    "als sprachmodell",
-    "gerne erstelle ich",
-    "um eine belastbare",
+# FIX-KIS-1246: Von fester Phrasenliste auf Struktur-Regex umgestellt — das
+# LLM formuliert Rückfragen jedes Mal anders (KIS-1244: "Bitte stellen Sie...",
+# KIS-1246: "Bitte senden Sie den Unternehmenskontext und die gewünschte
+# Report-Sektion..."). Eine Aufzählung wörtlicher Prefixe kann nie vollständig sein.
+_META_REFUSAL_RE = re.compile(
+    r"(bitte\s+(senden|stellen|geben|teilen|übermitteln|nennen|schicken)\s+sie"
+    r"|ohne\s+(angaben|diese\s+informationen|weitere\s+angaben|kontext|unternehmenskontext)"
+    r"|kann\s+ich\s+kein"
+    r"|benötige\s+ich|ich\s+benötige|ich\s+bräuchte"
+    r"|gewünschte\s+report-?sektion|welche\s+sektion"
+    r"|als\s+ki-?modell|als\s+sprachmodell|als\s+ki-?assistent"
+    r"|gerne\s+erstelle\s+ich|um\s+eine\s+belastbare"
+    r"|please\s+(provide|share|send)|i\s+need\s+(the|more|following)"
+    r"|i\s+cannot\s+(create|provide|write))",
+    re.IGNORECASE,
 )
 
 
 def _looks_like_meta_refusal(html: str) -> bool:
-    """FIX-TESTRUN-1244: Erkennt Assistenten-Rückfragen statt Report-Inhalt.
+    """FIX-TESTRUN-1244/KIS-1246: Erkennt Assistenten-Rückfragen statt Inhalt.
 
-    Kurze Outputs, deren Anfang wie eine Kontext-Rückfrage oder Meta-Antwort
-    klingt, dürfen nie ins PDF (Lauf KIS-1244: leeres Rechte-Kapitel mit
-    "Bitte stellen Sie den Unternehmenskontext ... bereit").
+    Outputs, deren Anfang wie eine Kontext-Rückfrage oder Meta-Antwort
+    klingt, dürfen nie ins PDF. Echte Report-Sektionen (300+ Wörter) beginnen
+    nie mit einer Rückfrage — geprüft werden nur die ersten 600 Zeichen,
+    und nur bei Outputs unterhalb der Länge realer Sektionen.
     """
     if not isinstance(html, str) or not html.strip():
         return False
     text = html.strip().lower()
-    if len(text) > 1200:
+    if len(text) > 2500:
         return False  # lange Sektionen sind nie reine Rückfragen
-    head = text[:400]
-    return any(p in head for p in _META_REFUSAL_PATTERNS)
+    # Nur der Anfang zählt: Rückfragen BEGINNEN mit diesen Mustern; weiter
+    # hinten wären Treffer wie "um eine belastbare Datenbasis…" False Positives.
+    return bool(_META_REFUSAL_RE.search(text[:300]))
 
 
 def _generate_content_section(section_name: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
@@ -12718,6 +12724,9 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                 "ki_skillplan": 150,                # RUN-622: Safety net
                 "templates_start": 100,             # RUN-622: Safety net
                 "data_readiness": 200,              # RUN-622: Safety net
+                # FIX-KIS-1246: Rückfragen sind ~35 Wörter — unter dieser
+                # Schwelle greift der kuratierte Fallback statt Kurz-Output.
+                "ki_rechte_kennzeichnung": 200,
             }
             min_words = platin_min_words.get(section_name, 10)
 
@@ -13071,14 +13080,42 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
         log.debug(f"LEGACY prompt length: {len(legacy_prompt)}")
         log.debug(f"LEGACY prompt starts: {legacy_prompt[:300]}...")
 
+    # FIX-KIS-1246 (P0): Für Sektionen ohne Legacy-Prompt (z. B.
+    # ki_rechte_kennzeichnung) ging bisher ein LEERER User-Prompt ans LLM —
+    # das Modell antwortete mit einer Kontext-Rückfrage ("Bitte senden Sie
+    # den Unternehmenskontext und die gewünschte Report-Sektion"), die im
+    # PDF landete. Ohne belastbaren Prompt: kein LLM-Call, direkt Fallback.
+    _legacy_prompt = prompts.get(section_name, "")
+    if len(_legacy_prompt.strip()) < 200:
+        log.error(
+            "[FIX-KIS-1246] Kein Legacy-Prompt für section=%s (len=%d) — "
+            "LLM-Call übersprungen, nutze kuratierten Fallback",
+            section_name, len(_legacy_prompt.strip()),
+        )
+        if error_gate:
+            error_gate.increment_fallback()
+        return _get_fallback_content(section_name, briefing, scores)
+
     out = _call_llm_for_section(
         section_key=section_name,
-        prompt=prompts.get(section_name, ""),
+        prompt=_legacy_prompt,
         system_prompt=build_report_system_prompt(),
         temperature=llm["temperature"],
         max_tokens=llm["max_tokens"],
         model=llm["model"],
     ) or ""
+
+    # FIX-KIS-1246: Rückfragen-Gate auch im Legacy-Pfad — der Enhanced-Pfad
+    # hatte das Gate bereits, der Legacy-Pfad nicht.
+    if _looks_like_meta_refusal(out):
+        log.error(
+            "[FIX-KIS-1246] Meta-/Rückfrage-Output im Legacy-Pfad für "
+            "section=%s erkannt (%r...) — verwerfe und nutze Fallback",
+            section_name, out[:120],
+        )
+        if error_gate:
+            error_gate.increment_fallback()
+        return _get_fallback_content(section_name, briefing, scores)
 
     # v7.0 DEBUG: Log legacy response for quick_wins
     if section_name == "quick_wins":
@@ -13118,6 +13155,7 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
         "tools_empfehlungen": 80, "unternehmensprofil_markt": 600,
         "wettbewerb_benchmark": 200, "ki_aktivitaeten_ziele": 150,
         "monetarisierung": 150, "ki_skillplan": 150, "templates_start": 100,
+        "ki_rechte_kennzeichnung": 200,  # FIX-KIS-1246
     }
     import re as _re_leg
     _leg_text = _re_leg.sub(r"<[^>]+>", "", out or "").strip()
@@ -13140,6 +13178,7 @@ Gesamt {overall}/100 • Governance {governance}/100 • Sicherheit {security}/1
         "tools_empfehlungen": 80, "unternehmensprofil_markt": 600,
         "wettbewerb_benchmark": 200, "ki_aktivitaeten_ziele": 150,
         "monetarisierung": 150, "ki_skillplan": 150, "templates_start": 100,
+        "ki_rechte_kennzeichnung": 200,  # FIX-KIS-1246
     }
     import re as _re_leg
     _leg_text = _re_leg.sub(r"<[^>]+>", "", out or "").strip()
@@ -20051,9 +20090,28 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             # Strip orphaned funding headings left over from table removal
             # (KIS-1233: nested-Tag-tolerant — "<h3><strong>Förder…" entging
             # der alten [^<]*-Variante)
+            # KIS-1246: h2-h4 statt nur h3 — im Lauf 1129 überlebte die
+            # Duplikat-Überschrift als Nicht-h3-Variante ("fp_prose head:
+            # Kernprogramme für Ihr Profil …") und erschien doppelt im PDF.
             _fp_prose = _re_kis1104.sub(
-                r'<h3[^>]*>(?:(?!</h3>).)*?(?:Kernprogramme|Förder(?:programm|mittel)|Programmüberblick)(?:(?!</h3>).)*?</h3>\s*',
+                r'<h[234][^>]*>(?:(?!</h[234]>).)*?(?:Kernprogramme|Förder(?:programm|mittel)|Programmüberblick)(?:(?!</h[234]>).)*?</h[234]>\s*',
                 '', _fp_prose, flags=_re_kis1104.IGNORECASE | _re_kis1104.DOTALL,
+            )
+            # Auch <p><strong>-Pseudo-Überschriften und nackten Text am
+            # Prose-Anfang entfernen.
+            _fp_prose = _re_kis1104.sub(
+                r'<p[^>]*>\s*(?:<strong[^>]*>\s*)?Kernprogramme\s+für\s+Ihr\s+Profil\s*(?:</strong>\s*)?</p>\s*',
+                '', _fp_prose, flags=_re_kis1104.IGNORECASE,
+            )
+            _fp_prose = _re_kis1104.sub(
+                r'^\s*Kernprogramme\s+für\s+Ihr\s+Profil\s*',
+                '', _fp_prose, flags=_re_kis1104.IGNORECASE,
+            )
+            # KIS-1246: Abgeschnittene Aufzählungs-Torsi am Prose-Ende tilgen
+            # (Lauf 1129, S. 25: verwaistes "<p>4.</p>" nach dem Healer-Trim).
+            _fp_prose = _re_kis1104.sub(
+                r'<(p|li|h[2-6])[^>]*>\s*\d{1,2}\.?\s*</\1>\s*$',
+                '', _fp_prose.rstrip(),
             )
             _fp_prose = _fp_prose.strip()
             # KIS-1233: Diagnose — der 1233-Lauf zeigte einen verstümmelten

@@ -45,6 +45,37 @@ funding_recommender — die Medien-Programme fließen dort mit diesem Fix automa
    Leerseiten/Orphan-Control, Logo-Beschnitt R3-Cover, Badge-Leiste ohne Kontext prüfen
    (abmahnrelevant, falls Zertifikate nicht führbar), „Basierend auf Live-Marktdaten"-Claim.
 
+## Testrun KIS-1246 (Briefing 1129, 23.07.2026) — Validierung Runde 1 + Fix-Runde 2
+
+Noten: R1 = 2, R2 = 2, R3 = 2+/1−. Runde-1-Fixes im Ergebnis bestätigt:
+Cover zeigt „11,9 Mon. Amortisation" statt „1 % ROI", „Reifegrad: Builder",
+Rechte-Kapitel im TOC, 8 Medien-Programme in der Fördertabelle (mit Links),
+Hero der KPA zeigt „+48.900 € Nettonutzen (3 Jahre)", Fallstudie medien-adaptiert,
+R2-Exec-Summary erklärt ROI-Methodik (19 % brutto vs. 1 % netto) und deckelt
+die 70-%-Förderquote als Plausibilitäts-Cap.
+
+### Fix-Runde 2 (dieser PR)
+
+| Befund (Report/Seite) | Ursache | Fix |
+|---|---|---|
+| Rechte-Kapitel WIEDER LLM-Rückfrage (R1 S.22): „Bitte senden Sie den Unternehmenskontext und die gewünschte Report-Sektion…" | Enhanced-Prompt-Pfad warf Exception → Legacy-Pfad rief LLM mit `prompts.get(section, "")` = LEEREM Prompt auf; Refusal-Gate (feste Phrasenliste) kannte die neue Formulierung nicht; min_words-Default 10 ließ die 35-Wörter-Rückfrage durch | (1) Legacy-Pfad: Prompt <200 Zeichen → kein LLM-Call, kuratierter Fallback; (2) Refusal-Gate auf Struktur-Regex umgestellt + auch im Legacy-Pfad aktiv; (3) `ki_rechte_kennzeichnung` min_words=200 in beiden Gates; (4) expliziter Kontext-Block + „nie Rückfragen"-Direktive in beiden Prompt-Dateien |
+| Tool-/Fördertabellen zerhackt (R2 S.18–20/29–30): „Micr osoft Copilot", Header-Kollision „DSGVO-KONFOR MITÄT"/„PASSUNGLINK" ; Risiko-Matrix-Header-Kollision (R3 S.7) | `table-layout:fixed` = GLEICHE Spaltenbreiten für 7-Spalten-Tabellen; lange Header ohne Trennstellen | `style_lint.harden_wide_tables()`: injiziert `<colgroup>` mit inhaltsbasierten Gewichten (schmal für Ampeln/Kürzel, breit für Fließtext) + kürzt Lang-Header (EINTRITTSWAHRSCHEINLICHKEIT→Eintritt, DSGVO-KONFORMITÄT→DSGVO, …); verdrahtet in strategy_renderer, report_renderer (Final-Pass) und gamechanger_deep_dive |
+| Starter-Kit generisch (R1 S.15/16): „CRM-System", „Team-KI-Plattform" für eine Filmproduktion | Kits nur nach Größe, nicht nach Branche | `TOOL_TEMPLATES_MEDIA` (solo/team/kmu): Transkription/Untertitelung, Frame.io-Review, Schnitt-KI im Bestand, Footage-Archiv/MAM, Rechte-Register |
+| Fast leere Seite 3 (R1): eine TOC-Zeile + Weißraum | Neues Rechte-Kapitel = 1 TOC-Zeile mehr als auf S. 2 passt | Selbstreferenzielle TOC-Einträge (Cover, Inhaltsverzeichnis) entfernt = 2 Zeilen frei |
+| Doppelte Überschrift „Kernprogramme für Ihr Profil" + hängender „4."-Torso (R1 S.23–25) | Duplikat überlebte als Nicht-h3-Variante den h3-Strip; Healer-Trim ließ Aufzählungs-Torso zurück | Heading-Strip auf h2–h4 + `<p><strong>`-Pseudo-Überschriften + nackten Text erweitert; Regex tilgt einsame Zähler-Absätze am Prose-Ende |
+| „30-Tage Challenge" endet bei Tag 23 (R1 S.17) | Woche-1-Drop für Intermediate renummeriert auf 1–23, Titel blieb „30 Tage" | Titel dynamisch („Ihre 23-Tage KI-Challenge") + Subtitle-Hinweis „Grundlagen-Woche übersprungen" |
+| Gemischte Sprache „KI-Relevanz: medium/high" (R1 S.23) | 13 Medien-Programme trugen englische `relevance_ki`-Werte | auf Sehr hoch/Hoch/Mittel/Niedrig eingedeutscht |
+
+### Offen (Runde 3, LOW)
+- R1 S.9: „Quick Wins: Top 3"-Überschrift verwaist am Seitenende (Karten mit
+  break-inside:avoid springen um — Gegen-Fix KIS-1128/M2 beachten)
+- R2 S.4/32/36: dünn gefüllte Seiten (Förder-Box bzw. Quellen-Spill)
+- R2 Kap. 6: Roadmap weiter 12 Monate trotz Antwort „3–6 Monate" (Exec Summary
+  rahmt inzwischen korrekt; Phasenstruktur-Steuerung noch offen)
+- R1 S.13: Konservativ-Szenario zeigt −48 % ROI (methodisch korrekt, rote Zahl
+  ggf. mit Einordnungssatz versehen)
+- Deploy Graceful-Drain (Railway killt laufende Läufe; Stale-Recovery greift)
+
 ## Verifikation Runde 1
 
 - Recommender: `medien/team/BE` → DFFF, Medienboard, Games-Bund, GMPF in Top 8;
