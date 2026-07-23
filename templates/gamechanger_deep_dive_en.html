@@ -622,7 +622,8 @@ h1, h2, h3, h4 {
             - (canonical_bc.capex|float(0)) - (canonical_bc.opex|float(0)) * 36)|round(0)|int %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: #c2410c;">
-                +{{ '{:,}'.format(_dd_net3y)|replace(',', '.') }}&nbsp;€
+                {# KIS-1248: EN-Zahlformat — Tausender-Komma statt deutschem Punkt #}
+                +{{ '{:,}'.format(_dd_net3y) }}&nbsp;€
             </div>
             <div class="kpi-label">Net benefit (3 years)</div>
         </div>
@@ -636,7 +637,7 @@ h1, h2, h3, h4 {
         {% endif %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: var(--report-primary);">
-                {{ canonical_bc.payback|float(0)|round(1)|string|replace('.', ',') }} mo.
+                {{ canonical_bc.payback|float(0)|round(1) }} mo.
             </div>
             <div class="kpi-label">Payback</div>
         </div>
