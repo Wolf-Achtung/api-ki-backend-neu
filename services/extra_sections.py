@@ -859,8 +859,8 @@ def build_core_funding_table_html(briefing: Dict[str, Any], lang: str = "de") ->
         try:
             from services.funding_recommender import _translate_funding_value_en
         except Exception:  # pragma: no cover
-            def _translate_funding_value_en(v: str) -> str:
-                return str(v or "")
+            def _translate_funding_value_en(value: str) -> str:
+                return str(value or "")
 
     # BAFA override: show region-specific rate and max subsidy
     # FIX-KIS-BAFA-Country: BAFA only for country=DE (override disabled otherwise)

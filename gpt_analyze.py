@@ -23580,10 +23580,16 @@ def _auto_trigger_potenzialanalyse(briefing_id: int, run_id: str) -> None:
             # verschickte KPA — ohne lang blieb die Fußzeile 'Seite x/y'
             # (die beiden On-Demand-Endpoints in routes/report.py waren
             # bereits gefixt, dieser dritte Call-Site fehlte).
+            _kpa_lang = "de"
             try:
-                _kpa_lang = str(getattr(db.get(Briefing, bid), "lang", "de") or "de")
+                from core.db import get_session as _kpa_gs
+                _kpa_db = next(_kpa_gs())
+                try:
+                    _kpa_lang = str(getattr(_kpa_db.get(Briefing, bid), "lang", "de") or "de")
+                finally:
+                    _kpa_db.close()
             except Exception:
-                _kpa_lang = "de"
+                pass
             pdf_result = render_pdf_from_html(
                 html=html,
                 meta={
