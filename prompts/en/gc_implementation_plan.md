@@ -105,10 +105,10 @@ Use these terms consistently throughout the report:
 - "AI governance" = umbrella term for rules, roles, approvals around AI use. "AI policy" = the concrete document.
 - "ROI" = always "ROI"; at first mention per section "Return on Investment (ROI)".
 - "Break-even" = the point of amortisation in running text. "Amortisation" only in tables/KPIs.
-- "EU AI Act" = always; at first mention "EU AI Act (the EU's AI regulation)". NOT standalone "AI regulation".
+- "EU AI Act" = always; at first mention "EU AI Act (the EU AI regulation)". NOT standalone "AI regulation".
 - "DPA" = at first mention "data processing agreement (DPA)", afterwards just "DPA".
 - "AI output" = general term for AI results. "AI draft" = text that still needs checking.
 - "Check step" = general. "Approval" = formal act. "Four-eyes principle" = two people check. NOT "review".
-- "GDPR" = never spell out. "Tool" = software. Do not switch terms within the same paragraph.
+- "GDPR" = never spell out; never write "DSGVO" ("GDPR-related", not "DSGVO-related"). "tool" = software; lower-case as a common noun mid-sentence (tool, not Tool). Do not switch terms within the same paragraph.
 
 TIME-SINK ANCHOR (MANDATORY, KIS-1238): If top time sinks or a time-saving priority are named above, at least one recommendation/phase must address these tasks DIRECTLY (by name). Run 1119 revolved exclusively around a single topic and left the named time sink untouched. If both fields are empty, this rule does not apply.

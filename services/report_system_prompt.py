@@ -85,18 +85,29 @@ SPRACHE & FORM
 # Kurze Suffixe für Spezial-Modi — halten die Basis identisch (Cache-freundlich).
 _EXPAND_SUFFIX_DE = "\n\nMODUS: ERWEITERUNG. Vertiefe den gelieferten Inhalt substanziell (mehr Konkretion, Beispiele, Konsequenzen für dieses Unternehmen) — keine Wiederholungen, keine Widersprüche zum Bestand."
 
+# KIS-1270: EN-Reports — Zweitaufruf-Pässe (Expand/Heal/Regen) müssen die
+# Zielsprache explizit erzwingen, sonst kippt die Sektion ins Deutsche.
+_EXPAND_SUFFIX_EN = "\n\nMODE: EXPANSION. Substantially deepen the provided content (more specifics, examples, consequences for this company) — no repetition, no contradictions with the existing text."
+_OUTPUT_LANG_SUFFIX_EN = "\n\nOUTPUT LANGUAGE: English. Write ALL prose in English, regardless of the language of these instructions."
+
 
 def build_report_system_prompt(mode: str = "generate", lang: str = "de") -> str:
     """Liefert den kanonischen System-Prompt für Report-Sektionen.
 
     mode: "generate" (Default) oder "expand" (Erweiterungs-Pass).
-    lang: aktuell nur "de" ausgearbeitet; andere Sprachen erhalten die
-          DE-Basis (die Sektions-Prompts steuern die Zielsprache).
+    lang: "de" (Default, byte-identisch zum bisherigen Verhalten) oder
+          "en" — hängt einen expliziten Output-Language-Suffix an, damit
+          Expand-/Heal-Pässe die Zielsprache nicht ins Deutsche kippen.
     """
     base = REPORT_SYSTEM_PROMPT_DE
     persona = _resolve_persona()
     if persona != _DEFAULT_PERSONA_DE:
         base = base.replace(_DEFAULT_PERSONA_DE, persona, 1)
+    _is_en = str(lang or "de").strip().lower().startswith("en")
     if mode == "expand":
+        if _is_en:
+            return base + _EXPAND_SUFFIX_EN + _OUTPUT_LANG_SUFFIX_EN
         return base + _EXPAND_SUFFIX_DE
+    if _is_en:
+        return base + _OUTPUT_LANG_SUFFIX_EN
     return base

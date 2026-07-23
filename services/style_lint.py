@@ -425,6 +425,9 @@ _HEADER_SHORTENINGS_EN: Dict[str, str] = {
     "application deadline": "Deadline",
     "probability of occurrence": "Likelihood",
     "implementation complexity": "Complexity",
+    # KIS-EN3-COLMIN: "FIT FOR YOUR COMPANY" stapelte sich vierzeilig in
+    # der schmalen Fit-Spalte (EN-Testlauf 3, Fördertabelle).
+    "fit for your company": "Fit",
 }
 _COL_NARROW_EN = (
     "budget", "fit", "phase", "priority", "status", "deadline", "effort",
@@ -448,6 +451,114 @@ def _col_weight(header_text: str, lang: str = "de") -> float:
     return 2.0
 
 
+# --------------------------------------------------------------------------- #
+# KIS-EN3-COLMIN: Inhaltsbasierte Mindestbreiten pro Spalte (nur lang=en)     #
+# --------------------------------------------------------------------------- #
+# EN-Testlauf 3: Die reine Keyword-Gewichtung erzwang keine MINDESTBREITE —
+# schmale Spalten (<10 %) mit langem Zellinhalt fragmentierten buchstabenweise
+# ("Parti al to yes, dep endi ng on tena nt setu p", GDPR-Spalte S. 14-16;
+# "Confidentia l production material", TOP-RISK S. 26-27; "Check curre nt
+# status", DEADLINE). Regeln (DE bleibt byte-identisch, Gate in
+# harden_wide_tables):
+#   1. Grund-Minimum: 10 % bei ≤5 Spalten, 8 % bei 6+.
+#   2. Text-lastige Spalten (längste Zelle >40 Zeichen) → wide-Gewicht
+#      UND Minimum 18 %.
+#   3. Wort-Minimum: die Spalte muss ihr längstes unteilbares Token tragen
+#      können (~1,35 % Breite pro Zeichen, Deckel 26 %) — verhindert
+#      Buchstabenumbrüche in Kurzphrasen ("Check current status").
+#   4. Datumsschutz: dd.mm.yyyy wird non-breaking gewrappt (zählt als Token).
+_EN_PCT_PER_CHAR = 1.35   # ≈ 100 % Tabellenbreite ≙ ~74 Zeichen (inkl. Padding)
+_EN_COL_MIN_CAP = 26.0    # Deckel für das Wort-Minimum einer einzelnen Spalte
+_EN_TEXT_HEAVY_LEN = 40   # längste Zelle > 40 Zeichen → Text-Spalte (wide)
+_EN_TEXT_MEDIUM_LEN = 25  # längste Zelle > 25 Zeichen → mindestens Gewicht 2
+_EN_TEXT_HEAVY_MIN = 18.0
+
+# Unteilbare Tokens: Wörter sowie dd.mm.yyyy-/dd.mm.-Daten.
+_EN_CELL_TOKEN_RE = re.compile(
+    r"\d{1,2}\.\d{1,2}\.(?:\s?\d{4})?|[A-Za-zÄÖÜäöüß]+"
+)
+# Datumsangaben ("31.12.2026", auch "31.12. 2026") dürfen nie umbrechen.
+_EN_DATE_RE = re.compile(r"(?<![\d.])\d{1,2}\.\d{1,2}\.\s?\d{4}(?!\d)")
+_EN_NOWRAP_SPAN = '<span style="white-space:nowrap">'
+
+
+def _en_column_stats(table: str, ncols: int) -> Tuple[List[int], List[int]]:
+    """(längste Zelle, längstes Token) je Spalte — über ALLE Zeilen."""
+    max_len = [0] * ncols
+    max_token = [0] * ncols
+    for row_inner in _FIRST_ROW_RE.findall(table):
+        cells = _HEADER_CELL_RE.findall(row_inner)
+        if len(cells) != ncols:
+            continue  # colspan-/Struktur-Zeilen nicht werten
+        for ci, cell in enumerate(cells):
+            text = " ".join(_STRIP_TAGS_RE.sub(" ", cell).split())
+            if len(text) > max_len[ci]:
+                max_len[ci] = len(text)
+            for tok in _EN_CELL_TOKEN_RE.findall(text):
+                if len(tok) > max_token[ci]:
+                    max_token[ci] = len(tok)
+    return max_len, max_token
+
+
+def _distribute_with_minimums(weights: List[float], mins: List[float]) -> List[float]:
+    """Gewichts-proportionale Prozente, die jede Spalten-Mindestbreite halten.
+
+    Wasserfüllung: Spalten unter Minimum werden auf ihr Minimum geklemmt,
+    der Rest wird proportional auf die übrigen verteilt. Sind die Minima in
+    Summe >100 %, werden sie gleichmäßig herunterskaliert."""
+    n = len(weights)
+    total_min = sum(mins)
+    if total_min >= 100.0:
+        return [m * 100.0 / total_min for m in mins]
+    clamped = [False] * n
+    for _ in range(n):
+        free_w = sum(w for w, c in zip(weights, clamped) if not c)
+        free_pct = 100.0 - sum(m for m, c in zip(mins, clamped) if c)
+        if free_w <= 0 or free_pct <= 0:
+            break
+        changed = False
+        for i in range(n):
+            if not clamped[i] and weights[i] / free_w * free_pct < mins[i]:
+                clamped[i] = True
+                changed = True
+        if not changed:
+            break
+    free_w = sum(w for w, c in zip(weights, clamped) if not c) or 1.0
+    free_pct = 100.0 - sum(m for m, c in zip(mins, clamped) if c)
+    return [
+        mins[i] if clamped[i] else weights[i] / free_w * free_pct
+        for i in range(n)
+    ]
+
+
+def _en_wrap_dates_nowrap(table: str) -> Tuple[str, int]:
+    """Wrappt dd.mm.yyyy-Daten in Tabellenzellen non-breaking (nur Textknoten)."""
+    wrapped = 0
+
+    def _cell(m: "re.Match[str]") -> str:
+        nonlocal wrapped
+        inner = m.group(2)
+        if _EN_NOWRAP_SPAN in inner:
+            return m.group(0)
+        parts = _TAG_SPLIT_RE.split(inner)
+        changed = False
+        for i, part in enumerate(parts):
+            if not part or part.startswith("<"):
+                continue
+            new_part, n = _EN_DATE_RE.subn(
+                lambda dm: _EN_NOWRAP_SPAN + dm.group(0) + "</span>", part
+            )
+            if n:
+                parts[i] = new_part
+                wrapped += n
+                changed = True
+        if not changed:
+            return m.group(0)
+        return m.group(1) + "".join(parts) + m.group(3)
+
+    return _TABLE_CELL_RE.sub(_cell, table), wrapped
+
+
 def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
     """Kürzt Lang-Header und injiziert <colgroup> in Tabellen mit ≥4 Spalten."""
     if not html or "<table" not in html.lower():
@@ -455,8 +566,9 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
     count = 0
     # KIS-1255 (B): EN-Kürzungen nur bei lang=en dazu — Default bleibt
     # byte-identisch zum bisherigen DE-Verhalten.
+    _en = str(lang or "de").lower().startswith("en")
     shortenings = dict(_HEADER_SHORTENINGS)
-    if str(lang or "de").lower().startswith("en"):
+    if _en:
         shortenings.update(_HEADER_SHORTENINGS_EN)
 
     def _table(m: "re.Match[str]") -> str:
@@ -485,10 +597,36 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
         row_m = _FIRST_ROW_RE.search(table)
         cells = _HEADER_CELL_RE.findall(row_m.group(1)) if row_m else cells
         weights = [_col_weight(_STRIP_TAGS_RE.sub(" ", c), lang=lang) for c in cells]
-        total = sum(weights) or 1.0
-        pcts = [max(6.0, w / total * 100.0) for w in weights]
-        norm = sum(pcts)
-        pcts = [p / norm * 100.0 for p in pcts]
+        if _en:
+            # KIS-EN3-COLMIN: inhaltsbasierte Klassifikation + Mindestbreiten
+            # (siehe Kommentarblock oben). Nur lang=en — DE byte-identisch.
+            ncols = len(cells)
+            max_len, max_token = _en_column_stats(table, ncols)
+            for ci in range(ncols):
+                if max_len[ci] > _EN_TEXT_HEAVY_LEN:
+                    weights[ci] = max(weights[ci], 3.0)
+                elif max_len[ci] > _EN_TEXT_MEDIUM_LEN:
+                    weights[ci] = max(weights[ci], 2.0)
+            base_min = 10.0 if ncols <= 5 else 8.0
+            mins: List[float] = []
+            for ci in range(ncols):
+                m_i = base_min
+                if max_len[ci] > _EN_TEXT_HEAVY_LEN:
+                    m_i = max(m_i, _EN_TEXT_HEAVY_MIN)
+                m_i = max(m_i, min(
+                    _EN_COL_MIN_CAP,
+                    (max_token[ci] + 1) * _EN_PCT_PER_CHAR,
+                ))
+                mins.append(m_i)
+            pcts = _distribute_with_minimums(weights, mins)
+            # Datumsschutz: "31.12.2026" / "31.12. 2026" nie umbrechen.
+            table, _n_dates = _en_wrap_dates_nowrap(table)
+            count += _n_dates
+        else:
+            total = sum(weights) or 1.0
+            pcts = [max(6.0, w / total * 100.0) for w in weights]
+            norm = sum(pcts)
+            pcts = [p / norm * 100.0 for p in pcts]
         colgroup = "<colgroup>" + "".join(
             f'<col style="width:{p:.1f}%">' for p in pcts
         ) + "</colgroup>"

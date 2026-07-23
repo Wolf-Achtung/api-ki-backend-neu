@@ -724,19 +724,24 @@ def _generate_ai_act_adjusted_table(
 
 # ----------------------------- Fördermatrix 2025/2026 -------------------------------
 
-def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
+def build_core_funding_table_html(briefing: Dict[str, Any], lang: str = "de") -> str:
     """
     Baut eine HTML-Tabelle mit Kern-Förderprogrammen 2025/2026.
     Size-aware Filterung und Priorisierung.
 
     Args:
         briefing: Enthält BRANCHE_LABEL, BUNDESLAND_LABEL, UNTERNEHMENSGROESSE_LABEL
+        lang: "de" (Default, byte-identisch) oder "en" — KIS-1270: EN-Header
+              und übersetzte Feldwerte (_FUNDING_TERMS_EN aus
+              funding_recommender); Programm-Namen/Träger bleiben unverändert.
 
     Returns:
         HTML-Tabelle mit gefilterten/priorisierten Förderprogrammen
     """
     import json
     import os
+
+    _is_en = str(lang or "de").strip().lower().startswith("en")
 
     # Förderdaten laden
     funding_file = os.path.join(os.path.dirname(__file__), "..", "data", "funding_programmes_core_2025.json")
@@ -833,14 +838,29 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
     html_parts.append('  <table class="funding-table table-modern">')
     html_parts.append('    <thead>')
     html_parts.append('      <tr>')
-    html_parts.append('        <th>Programm</th>')
-    html_parts.append('        <th>Region</th>')
-    html_parts.append('        <th>Förderquote</th>')
-    html_parts.append('        <th>Max. Volumen</th>')
-    html_parts.append('        <th>KI-Relevanz</th>')
+    if _is_en:
+        html_parts.append('        <th>Programme</th>')
+        html_parts.append('        <th>Region</th>')
+        html_parts.append('        <th>Funding rate</th>')
+        html_parts.append('        <th>Max. volume</th>')
+        html_parts.append('        <th>AI relevance</th>')
+    else:
+        html_parts.append('        <th>Programm</th>')
+        html_parts.append('        <th>Region</th>')
+        html_parts.append('        <th>Förderquote</th>')
+        html_parts.append('        <th>Max. Volumen</th>')
+        html_parts.append('        <th>KI-Relevanz</th>')
     html_parts.append('      </tr>')
     html_parts.append('    </thead>')
     html_parts.append('    <tbody>')
+
+    # KIS-1270: EN-Wert-Übersetzung wiederverwenden (KIS-1255-Map).
+    if _is_en:
+        try:
+            from services.funding_recommender import _translate_funding_value_en
+        except Exception:  # pragma: no cover
+            def _translate_funding_value_en(value: str) -> str:
+                return str(value or "")
 
     # BAFA override: show region-specific rate and max subsidy
     # FIX-KIS-BAFA-Country: BAFA only for country=DE (override disabled otherwise)
@@ -852,6 +872,10 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
     except ImportError:
         _bafa_override = False
 
+    # KIS-1270: EN-Anzeige der Relevanz-Stufe (CSS-Klasse bleibt auf dem
+    # deutschen Rohwert, damit das Styling unverändert greift).
+    _relevance_en = {"hoch": "High", "mittel": "Medium", "niedrig": "Low"}
+
     for prog in top_programmes:
         relevance_class = prog.get("relevance_ki", "Mittel").split()[0].lower()
         display_rate = prog["funding_rate"]
@@ -860,16 +884,42 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
         # Override BAFA with deterministic regional values
         if _bafa_override and prog.get("id") == "bafa_beratung":
             display_rate = f"{_bafa_quote}%"
-            display_amount = f"bis {_bafa_max:,} €".replace(",", ".")
+            if _is_en:
+                display_amount = f"up to {_bafa_max:,} €"
+            else:
+                display_amount = f"bis {_bafa_max:,} €".replace(",", ".")
+
+        display_focus = prog["focus"]
+        display_region = prog["region"]
+        display_relevance = prog.get("relevance_ki", "Mittel")
+        if _is_en:
+            display_rate = _translate_funding_value_en(str(display_rate))
+            display_amount = _translate_funding_value_en(str(display_amount))
+            display_focus = _translate_funding_value_en(str(display_focus))
+            _rel_head = str(display_relevance).split()[0].strip(" –-").lower() if display_relevance else ""
+            _rel_tail = str(display_relevance)[len(str(display_relevance).split()[0]):] if display_relevance else ""
+            display_relevance = (
+                _relevance_en.get(_rel_head, str(display_relevance).split()[0] if display_relevance else "Medium")
+                + _translate_funding_value_en(_rel_tail)
+            )
+            display_region = (
+                str(display_region)
+                .replace("Deutschland (bundesweit)", "Germany (nationwide)")
+                .replace("Deutschland (Länderprogramme)", "Germany (state programmes)")
+                .replace("Deutschland", "Germany")
+                .replace("EU (Europa)", "EU (Europe)")
+                .replace("Europa", "Europe")
+                .replace("bundesweit", "nationwide")
+            )
 
         html_parts.append('      <tr>')
         html_parts.append(f'        <td><strong>{prog["title"]}</strong><br>')
-        html_parts.append(f'          <span class="small muted">{prog["focus"]}</span>')
+        html_parts.append(f'          <span class="small muted">{display_focus}</span>')
         html_parts.append('        </td>')
-        html_parts.append(f'        <td>{prog["region"]}</td>')
+        html_parts.append(f'        <td>{display_region}</td>')
         html_parts.append(f'        <td>{display_rate}</td>')
         html_parts.append(f'        <td>{display_amount}</td>')
-        html_parts.append(f'        <td><span class="relevance-badge relevance-{relevance_class}">{prog.get("relevance_ki", "Mittel")}</span></td>')
+        html_parts.append(f'        <td><span class="relevance-badge relevance-{relevance_class}">{display_relevance}</span></td>')
         html_parts.append('      </tr>')
 
     html_parts.append('    </tbody>')
@@ -882,6 +932,18 @@ def build_core_funding_table_html(briefing: Dict[str, Any]) -> str:
         str(briefing.get("UNTERNEHMENSGROESSE_LABEL") or size_label or "").strip(),
         flags=re.IGNORECASE,
     ).strip()
+    if _is_en:
+        _profil_display_en = f' ({_size_display} employees)' if _size_display else ''
+        html_parts.append('  <div class="card-nobreak">')
+        html_parts.append('    <p class="small muted" style="margin-top: 6pt;">')
+        html_parts.append('      <strong>Note:</strong> These programmes are pre-selected specifically for your company profile')
+        html_parts.append(f'      {_profil_display_en}. Additional regional and industry-specific programmes ')
+        html_parts.append(f'      may be available. As of: {_current_quarter_label()}.')
+        html_parts.append('    </p>')
+        html_parts.append('  </div>')
+        html_parts.append('</div>')
+        return '\n'.join(html_parts)
+
     _profil_display = f' ({_size_display} Mitarbeitende)' if _size_display else ''
     html_parts.append('  <div class="card-nobreak">')
     html_parts.append('    <p class="small muted" style="margin-top: 6pt;">')

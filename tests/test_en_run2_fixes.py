@@ -205,10 +205,14 @@ class TestToolTableHardening:
         hardened, n = harden_wide_tables(TOOL_TABLE_EN, lang="en")
         assert n >= 1
         widths = _colgroup_widths(hardened)
-        # Gewichte: use case 2, tool 3, vendor 3, recommendation 3, gdpr 1
-        assert widths[1] == pytest.approx(25.0, abs=0.2)   # TOOL breit genug
-        assert widths[3] == pytest.approx(25.0, abs=0.2)   # RECOMMENDATION
-        assert widths[4] == pytest.approx(100 * 1 / 12, abs=0.2)
+        # Gewichte: use case 2, tool 3, vendor 3, recommendation 3, gdpr 1.
+        # KIS-EN3-COLMIN: Mindestbreiten (10 % bei ≤5 Spalten) heben die
+        # GDPR-Spalte von 8,3 % auf 10 %, die breiten Spalten geben
+        # proportional ab (25 % → 24,5 %).
+        assert widths[1] == pytest.approx(24.5, abs=0.3)   # TOOL breit genug
+        assert widths[3] == pytest.approx(24.5, abs=0.3)   # RECOMMENDATION
+        assert widths[4] == pytest.approx(10.0, abs=0.2)   # Mindestbreite
+        assert min(widths) >= 10.0 - 0.05
         # Balancer respektiert das vorhandene colgroup
         assert _balance_column_widths(hardened) == hardened
 

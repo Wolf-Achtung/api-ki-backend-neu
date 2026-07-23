@@ -964,7 +964,15 @@ def risk_report_to_html(
     }.get(report.ai_act_class, "#6b7280")
 
     # DSGVO level display
-    dsgvo_display = report.dsgvo_risk_level.capitalize()
+    # KIS-1270: Rohwert ist deutsch ("niedrig") — bei lang=en Low/Medium/High
+    # rendern statt "Niedrig"-Badge im EN-Report. DE bleibt byte-identisch.
+    if lang == "en":
+        dsgvo_display = {
+            "niedrig": "Low", "mittel": "Medium", "hoch": "High",
+        }.get(str(report.dsgvo_risk_level or "").strip().lower(),
+              report.dsgvo_risk_level.capitalize())
+    else:
+        dsgvo_display = report.dsgvo_risk_level.capitalize()
     dsgvo_color = {
         "hoch": "#dc2626",
         "mittel": "#f59e0b",
@@ -1112,14 +1120,26 @@ def risk_report_to_html(
         html_parts.append('<!-- DEBUG-ANCHOR: RISK_MATRIX_END -->')
 
     # Consolidated Score Block
-    html_parts.append(f'''
-        <div class="risk-block consolidated-block" style="margin-bottom:20px;padding:20px;background:linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);border-radius:10px;color:#fff;">
-            <p style="margin:0 0 12px 0;font-weight:600;font-size:13pt;">{labels["consolidated_title"]}</p>
-            <div style="display:flex;justify-content:space-around;text-align:center;">
+    # KIS-1270 (Audit Lauf 3, Punkt 16): Score-Kachel nur rendern, wenn ein
+    # belastbarer Wert existiert — sonst stand im PDF eine leere Zahl neben
+    # der Note. Normalfall (Score > 0) bleibt byte-identisch.
+    try:
+        _cons_score_ok = float(report.consolidated_score) > 0
+    except (TypeError, ValueError):
+        _cons_score_ok = False
+    if _cons_score_ok:
+        _cons_score_cell = f'''
                 <div>
                     <p style="margin:0;font-size:28pt;font-weight:700;">{report.consolidated_score:.0f}</p>
                     <p style="margin:4px 0 0 0;font-size:10pt;opacity:0.9;">{labels["score_label"]}</p>
-                </div>
+                </div>'''
+    else:
+        _cons_score_cell = ''
+        log.warning("[G29] consolidated_score fehlt/0 — Score-Kachel wird weggelassen (nur Grade)")
+    html_parts.append(f'''
+        <div class="risk-block consolidated-block" style="margin-bottom:20px;padding:20px;background:linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);border-radius:10px;color:#fff;">
+            <p style="margin:0 0 12px 0;font-weight:600;font-size:13pt;">{labels["consolidated_title"]}</p>
+            <div style="display:flex;justify-content:space-around;text-align:center;">{_cons_score_cell}
                 <div>
                     <p style="margin:0;font-size:28pt;font-weight:700;color:{grade_color};background:#fff;width:50px;height:50px;border-radius:50%;line-height:50px;display:inline-block;">{report.consolidated_grade}</p>
                     <p style="margin:4px 0 0 0;font-size:10pt;opacity:0.9;">{labels["grade_label"]}</p>

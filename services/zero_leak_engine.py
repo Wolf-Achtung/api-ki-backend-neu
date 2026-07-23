@@ -27,7 +27,11 @@ log = logging.getLogger(__name__)
 # String-based CRITICAL patterns (exact substring match, case-insensitive)
 CRITICAL_LEAK_PATTERNS: List[str] = [
     # System/developer prompt references
-    "system prompt",
+    # NOTE (KIS-1270, Audit Lauf 3 Punkt 13): "system prompt" als nackter
+    # Substring entfernt — zerstörte legitimen EN-Report-Text ("Set up
+    # system prompts for consistent results" → "Set up s for …", Day 8).
+    # Ersetzt durch kontext-sensitive Regex in CRITICAL_LEAK_REGEX, die nur
+    # Selbst-Referenzen des Modells trifft ("my system prompt", …).
     # NOTE: "systemprompt" moved to BENIGN (v1.2.2) - German word appears in explanatory text
     "developer prompt",
     "developer message",
@@ -86,6 +90,14 @@ CRITICAL_LEAK_PATTERNS: List[str] = [
 # Regex-based CRITICAL patterns for complex detection (compiled for performance)
 # Each tuple: (compiled_pattern, label_for_logging)
 CRITICAL_LEAK_REGEX: List[Tuple[Pattern, str]] = [
+    # KIS-1270: Selbst-Referenz auf den eigenen System-Prompt (echtes Leak) —
+    # instruktiver Gebrauch ("Set up system prompts", "a system prompt for
+    # your assistant") bleibt unangetastet.
+    (re.compile(
+        r"\b(?:my|in\s+my|per\s+my|according\s+to\s+(?:my|the))\s+system\s*prompt\b"
+        r"|\bsystem\s*prompt\s+(?:instructs|tells|forbids|prevents)\s+me\b"
+        r"|\b(?:meinem?|laut\s+meinem)\s+System[\s-]?Prompt\b",
+        re.IGNORECASE), "System_Prompt_Reveal"),
     # OpenAI API key pattern: sk- followed by 16+ alphanumeric chars
     (re.compile(r"\bsk-[A-Za-z0-9]{16,}\b"), "OpenAI_API_Key"),
     # Anthropic API key pattern: sk-ant- followed by alphanumeric

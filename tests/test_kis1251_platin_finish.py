@@ -47,7 +47,9 @@ class TestRoiEinordnung:
         assert "[KIS-1251][ROI-EINORDNUNG]" in src
         idx = src.find("KIS-1251: ROI-Ehrlichkeits-Einordnung")
         assert idx != -1
-        block = src[idx:idx + 3500]
+        # KIS-1270: Fenster 3500→6000 — die EN-Fassung der Box (lang=en)
+        # steht jetzt vor der DE-Fassung im selben Block.
+        block = src[idx:idx + 6000]
         assert "_re_roi < 10" in block
         assert "CANON_CAPEX_EUR" in block
         assert "CANON_HOURS_MONTH" in block

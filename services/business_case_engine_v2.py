@@ -804,6 +804,48 @@ def inject_canonical_to_sections(
                 _hl_short = _hl_full[:60].rsplit(" ", 1)[0]
         _hl_context = f" bei {_hl_short}" if _hl_short else ""
 
+        # KIS-1270: EN-Fassung der kanonischen BC-Prosa — vorher wurde die
+        # EN-Sektion hier deterministisch durch deutschen Text ersetzt.
+        _bc_lang_en = str(sections.get("LANG") or "de").strip().lower().startswith("en")
+        if _bc_lang_en:
+            _capex_en = f"{canonical.capex_eur:,.0f}"
+            _opex_en = f"{canonical.opex_month_eur:,.0f}"
+            _savings_en = f"{canonical.monthly_gross:,.0f}"
+            _payback_en = f"{canonical.payback_months:.1f}"
+            _bc_prose = (
+                f'<h3>Investment and running costs</h3>'
+                f'<p><strong>One-off investment (CAPEX):</strong> <strong>{_capex_en} €</strong>. '
+                f'<strong>Running costs (OPEX):</strong> <strong>{_opex_en} €/month</strong> – '
+                f'mainly for AI tools, infrastructure and licences.</p>'
+                f'<h3>Monthly effect</h3>'
+                f'<p>In day-to-day use, a realistic relief of around '
+                f'<strong>{_savings_en} €/month</strong> is achievable '
+                f'({_hours} h × {_rate} €/h). It comes from time gains in core processes, '
+                f'fewer manual loops and more consistent output quality.</p>'
+                f'<h3>Payback and ROI</h3>'
+                f'<p><strong>Payback formula:</strong> {_capex_en} € ÷ {_savings_en} € '
+                f'= <strong>{_payback_en} months</strong>. '
+                f'The ROI after 12 months is <strong>{_roi} %</strong> '
+                f'(→ see business case table).</p>'
+                f'<h3>Context by company size</h3>'
+                f'<p>For a small team, standardisation has a particularly strong effect: '
+                f'the more recurring steps run in fixed workflows, '
+                f'the faster the investment pays back.</p>'
+            )
+            if _bl_label and len(_bl_label) > 1:
+                _bc_prose += (
+                    f'<h3>Funding options</h3>'
+                    f'<p>In <strong>{_bl_label}</strong>, programmes for digitalisation and '
+                    f'AI projects may be relevant. Funding can shorten the payback period '
+                    f'(→ see funding potential).</p>'
+                )
+            _table_match = _re.search(r'(<table[\s\S]*)', _bc_html)
+            _table_part = _table_match.group(1) if _table_match else ""
+            sections["BUSINESS_CASE_HTML"] = _bc_prose + _table_part
+            sections["business_case"] = sections["BUSINESS_CASE_HTML"]
+            log.info("[FIX-R3-2][KIS-1270] Replaced BC prose with canonical EN template")
+            return updates
+
         _bc_prose = (
             f'<h3>Investition und laufende Kosten</h3>'
             f'<p><strong>Einmalige Investition (CAPEX):</strong> <strong>{_capex} €</strong>. '
@@ -2128,7 +2170,14 @@ def _generate_narrative_summary(
     realistic = next((s for s in scenarios if s.name == "realistic"), None)
     conservative = next((s for s in scenarios if s.name == "conservative"), None)
 
+    # KIS-1270: EN-Fassung der Assessment-Box (S.13) — vorher landete der
+    # deutsche Narrativ-Text ("erfordert sorgfältige Abwägung …") im
+    # EN-Report. DE-Pfad byte-identisch.
+    _lang_en = str((briefing or {}).get("lang") or "de").strip().lower().startswith("en")
+
     if not realistic:
+        if _lang_en:
+            return "The business case could not be fully calculated."
         return "Business Case konnte nicht vollständig berechnet werden."
 
     size = (briefing or {}).get("unternehmensgroesse", "Unternehmen")
@@ -2138,6 +2187,35 @@ def _generate_narrative_summary(
 
     # ROI assessment — FIX-B15: Cap displayed ROI at MAX_ROI for narrative consistency
     _narrative_roi = min(MAX_ROI, realistic.roi_12m)
+    if _lang_en:
+        _pb_en = f"{realistic.payback_months:.1f}"
+        if _narrative_roi >= 200:
+            parts.append(f"The business case shows a very attractive ROI of {_narrative_roi:.0f}% over 12 months.")
+        elif _narrative_roi >= 100:
+            parts.append(f"The business case is solid with an ROI of {_narrative_roi:.0f}% in the first year.")
+        elif _narrative_roi >= 50:
+            parts.append(f"The business case is moderately positive with {_narrative_roi:.0f}% ROI.")
+        else:
+            parts.append(f"The business case requires careful consideration at {_narrative_roi:.0f}% ROI.")
+
+        if realistic.payback_months <= 3:
+            parts.append(f"The investment pays back very quickly in just {_pb_en} months.")
+        elif realistic.payback_months <= 6:
+            parts.append(f"Payback is reached within {_pb_en} months.")
+        elif realistic.payback_months <= 12:
+            parts.append(f"Payback is at {_pb_en} months.")
+        else:
+            parts.append(f"At {_pb_en} months, payback takes somewhat longer.")
+
+        if funding_effect > 0:
+            funding_pct = (funding_effect / investment_total) * 100 if investment_total > 0 else 0
+            parts.append(f"Funding programmes can reduce the investment by up to {funding_pct:.0f}%.")
+
+        if conservative and conservative.roi_12m > 0:
+            parts.append(f"Even in the conservative scenario, the ROI remains positive at {conservative.roi_12m:.0f}%.")
+
+        return " ".join(parts)
+
     if _narrative_roi >= 200:
         parts.append(f"Der Business Case zeigt ein sehr attraktives ROI von {_narrative_roi:.0f}% über 12 Monate.")
     elif _narrative_roi >= 100:
