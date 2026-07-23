@@ -276,6 +276,8 @@ async def generate_strategy_report(
         _country_name = _COUNTRY_NAME_MAP.get(_country_code, "Deutschland")
 
         base_context = {
+            # KIS-1248: Sprache ins Prompt-Context durchreichen (EN-Direktive)
+            "lang": str(briefing_data.get("lang") or briefing_data.get("LANG") or "de").lower(),
             "branche": (briefing_data.get("branche", "") or "").title(),
             "hauptleistung": _hauptleistung,
             "segment": _segment_label(briefing_data.get("unternehmensgroesse", "")),
@@ -725,6 +727,21 @@ async def _generate_section(
         system_prompt = SYSTEM_PROMPT_STRATEGY_REPORT.format(
             **{k: str(v or "") for k, v in context.items()}
         )
+
+    # KIS-1248 (Voll-Englisch Stufe 2): Bei englischem Briefing erzwingt eine
+    # Output-Direktive englische Inhalte — die Strategie-Prompts selbst sind
+    # (noch) deutsch; native EN-Prompts sind die dokumentierte Ausbaustufe.
+    _sp_lang = str(context.get("lang") or context.get("LANG") or "de").lower()
+    if _sp_lang.startswith("en"):
+        _en_directive = (
+            "\n\nOUTPUT LANGUAGE (MANDATORY): Write the ENTIRE output in professional "
+            "business English. Translate all headings, labels and prose. Keep proper "
+            "nouns, program names (BAFA, ZIM, ProFIT, …) and product names unchanged. "
+            "Use English number formatting conventions only for words, NOT for the "
+            "numeric values provided in the context (keep them verbatim)."
+        )
+        prompt = prompt + _en_directive
+        system_prompt = system_prompt + _en_directive
 
     # Longer sections get more output tokens — S4 (Tool-Landschaft) has large prompts
     # FIX-S9-B2: Increased token budget for S4 to prevent truncation

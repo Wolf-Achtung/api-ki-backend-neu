@@ -1,0 +1,1352 @@
+<!-- KI-Strategiebericht Template v1.0 — 2026-03-10 -->
+<!-- Engine: Puppeteer/Chromium · Backend: FastAPI/Jinja2 · Design: Premium Strategy -->
+<!-- Fork of pdf_template_v7.html "Clean Corporate Plus", visually upgraded -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Strategy Report — {{ firmenname }}</title>
+    <style>
+/* ═══════════════════════════════════════════════════════
+   v1.0 STRATEGY BLUE — Premium Design System
+   Typography: Inter + Playfair Display
+   Colors: Navy + Gold + Blau
+   Layout: CSS Grid + Flexbox
+   Target: Puppeteer/Chromium A4 PDF
+   ═══════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Share+Tech+Mono&display=swap');
+
+/* ── Page Setup ─────────────────────────────────────── */
+@page {
+    size: A4;
+    margin: 20mm 20mm 25mm 23mm; /* links 3mm extra für Akzentlinie */
+    /* KIS-FOOTER: @bottom-center-Seitenzahl ENTFERNT — dupliziert die
+       Puppeteer-footerTemplate (Seite X / Y · Report-ID · Datum) und war in
+       prod-Chromium toter Code; auf neuerem Chromium doppelte Fussnote.
+       @bottom-right (Live-Marktdaten-Datum) BLEIBT: additive Info, keine
+       Seitenzahl-Dublette. */
+    @bottom-right {
+        content: "Market data research as of {{ research_date }}";
+        font-size: 6.5pt;
+        color: #9CA3AF;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+}
+
+/* ── Design Tokens ──────────────────────────────────── */
+:root {
+    /* Report-Type Palette: Strategic Navy (R3) */
+    --report-primary: #0F1D35;
+    --report-primary-dark: #0A1225;
+    --report-accent: #C5930A;
+    --report-accent-secondary: #2563EB;
+    --report-bg-panel: #F8FAFC;
+    --report-bg-highlight: #EFF6FF;
+    /* Navy Palette */
+    --navy-900: #0F1D35;
+    --navy-800: #162444;
+    --navy-700: #1E3050;
+    --navy-100: #e8f2fa;
+    --navy-50: #f0f5fa;
+    /* Gold Accent */
+    --gold-600: #C5930A;
+    --gold-100: #faf4dc;
+    /* Blau-Palette */
+    --strategy-accent: #1a5276;
+    --strategy-highlight: #2563EB;
+    --strategy-light: #EFF6FF;
+    /* Ampel / Traffic Light */
+    --ampel-green: #27ae60;
+    --ampel-yellow: #f39c12;
+    --ampel-red: #e74c3c;
+    /* Grays */
+    --c-text: #374151;
+    --c-text-2: #6B7280;
+    --c-text-3: #9CA3AF;
+    --c-border: #E5E7EB;
+    --c-bg: #F9FAFB;
+    --c-white: #ffffff;
+    /* Semantic */
+    --c-success: #10B981;
+    --c-danger: #EF4444;
+    --c-info: #3B82F6;
+    /* Typography */
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-heading: 'Playfair Display', Georgia, serif;
+    --font-mono: 'Share Tech Mono', monospace;
+    /* Spacing */
+    --sp-xs: 4px;
+    --sp-sm: 8px;
+    --sp-md: 16px;
+    --sp-lg: 24px;
+    --sp-xl: 32px;
+    --sp-2xl: 48px;
+    /* Radius */
+    --r-sm: 4px;
+    --r-md: 8px;
+    --r-lg: 12px;
+}
+
+/* ── Base Reset ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: var(--font-body);
+    /* KIS-1126 / C5 FIX: Increased from 10pt→11pt for better readability.
+       Audit found "Walls of Text" with 200+ word paragraphs at 10pt. */
+    font-size: 11pt;
+    line-height: 1.7;
+    color: var(--c-text);
+    background: var(--c-white);
+    -webkit-font-smoothing: antialiased;
+    orphans: 5;
+    widows: 5;
+    padding-left: 5mm; /* Platz für Akzentlinie (3mm) + Abstand (2mm) */
+}
+
+/* ── Seitenleiste / Accent Line (3mm Navy-Linie links) ── */
+body::before {
+    content: '';
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3mm;
+    background-color: var(--report-primary);
+    background-image: linear-gradient(180deg, #0F1D35 0%, #1a5276 50%, #162444 100%);
+    z-index: 1000;
+}
+
+/* ── Typography Scale ───────────────────────────────── */
+h1 {
+    font-family: var(--font-heading);
+    font-size: 30pt;
+    font-weight: 700;
+    color: var(--navy-900);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+h2 {
+    font-family: var(--font-heading);
+    font-size: 19pt;
+    font-weight: 600;
+    color: var(--navy-900);
+    line-height: 1.25;
+    margin: 0;
+}
+h3 {
+    font-family: var(--font-body);
+    font-size: 13pt;
+    font-weight: 600;
+    color: var(--navy-800);
+    line-height: 1.3;
+    margin: var(--sp-md) 0 var(--sp-sm);
+}
+h4 {
+    font-family: var(--font-body);
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--c-text);
+    line-height: 1.4;
+    margin: var(--sp-sm) 0 var(--sp-xs);
+}
+
+p { margin: var(--sp-sm) 0; }
+a { color: var(--strategy-highlight); text-decoration: none; }
+a:hover { text-decoration: underline; }
+strong { font-weight: 600; }
+.small { font-size: 8.5pt; }
+.muted { color: var(--c-text-3); }
+.text-2 { color: var(--c-text-2); }
+
+/* ── Lists & Tables ─────────────────────────────────── */
+ul, ol { padding-left: 1.5em; margin: var(--sp-sm) 0; }
+li { margin-bottom: var(--sp-xs); }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+    margin: var(--sp-md) 0;
+    /* KIS-1234: LLM-Tabellen mit vielen Spalten (Prioritätsmatrix) liefen
+       über den Satzspiegel hinaus — die letzte Spalte wurde im PDF
+       abgeschnitten (Lauf 1234, Strategie S. 8). fixed + Umbruch statt
+       Überlauf. */
+    table-layout: fixed;
+}
+th, td {
+    overflow-wrap: break-word;
+    word-break: normal;
+    /* KIS-1244: hyphens:auto trennte falsch ("Selbs-tbetrieb", "KONTAK T");
+       style_lint setzt &shy; an sprachlich korrekten Stellen. */
+    hyphens: manual;
+}
+/* KIS-1248: Spaltenköpfe brachen strichlos mitten im Wort
+   ("HANDLUN GSFELD", "LINK/KONT AKT") — Umbruch nur an Leerzeichen. */
+/* KIS-1254: hyphens:none ignorierte die &shy;-Trennstellen aus dem
+   Stil-Lint — lange Kopf-Woerter (MITIGATIONSSTRATEGIE) liefen in die
+   Nachbarspalte (Lauf 1123, S. 13/31/35). manual erlaubt NUR die
+   gesetzten Soft-Hyphens, weiterhin keine wilden Umbrueche. */
+th { hyphens: manual; overflow-wrap: normal; word-break: keep-all; }
+/* KIS-1235: Zeilen zusammenhalten, Tabellenkopf bei Umbruch wiederholen. */
+tr { break-inside: avoid; }
+thead { display: table-header-group; break-after: avoid; page-break-after: avoid; }
+/* KIS-1244: Kopf + erste Datenzeile unzertrennlich (Lauf 4, S. 16/17). */
+tbody tr:first-child { break-before: avoid-page; page-break-before: avoid; }
+/* KIS-1244: Absatz-Waisen vermeiden (Kapitelende allein auf Folgeseite). */
+p, li { orphans: 3; widows: 3; }
+/* KIS-1238: Kopfzeile nie allein am Seitenende (Lauf 1119: verwaiste
+   Header S. 4/9 der Potenzialanalyse, Zeilen folgten headerlos). */
+th {
+    background: var(--navy-50);
+    font-weight: 600;
+    text-align: left;
+    /* KIS-1235: kompakter, damit 7-Spalten-Köpfe seltener umbrechen. */
+    padding: 10px 8px;
+    border-bottom: 2px solid var(--navy-100);
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--navy-700);
+}
+td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--c-border);
+    vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) { background: var(--c-bg); }
+
+/* ── Tool-Comparison / Ampel Table ──────────────────── */
+table.tool-comparison {
+    border-radius: var(--r-md);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+table.tool-comparison th {
+    background: var(--navy-800);
+    color: white;
+    font-size: 8pt;
+    letter-spacing: 0.08em;
+}
+table.tool-comparison td {
+    font-size: 9pt;
+}
+.ampel-green { color: var(--ampel-green); font-weight: 600; }
+.ampel-yellow { color: var(--ampel-yellow); font-weight: 600; }
+.ampel-red { color: var(--ampel-red); font-weight: 600; }
+
+/* ── Page Structure ─────────────────────────────────── */
+.page { max-width: 210mm; margin: 0 auto; }
+.page-break { page-break-before: always; }
+
+/* ── Block Protection — keep cards/boxes together ───── */
+h1, h2, h3, h4 { break-after: avoid; }
+
+/* ══════════════════════════════════════════════════════
+   COVER PAGE
+   ══════════════════════════════════════════════════════ */
+.cover-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100vh;
+    padding: var(--sp-2xl) var(--sp-xl);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Decorative top bar */
+.cover-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background-color: var(--report-primary);
+    background-image: linear-gradient(90deg, #0F1D35, #1a5276, #C5930A);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+
+.cover-eyebrow {
+    font-family: var(--font-body);
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--strategy-accent);
+    margin-bottom: var(--sp-lg);
+}
+
+.cover-accent-line {
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold-600), var(--strategy-highlight));
+    border-radius: 2px;
+    margin: 0 auto var(--sp-xl);
+}
+
+.cover-page h1 {
+    font-size: 36pt;
+    margin-bottom: var(--sp-md);
+    color: var(--navy-900);
+}
+
+.cover-subtitle {
+    font-family: var(--font-heading);
+    font-size: 14pt;
+    color: var(--navy-700);
+    font-style: italic;
+    margin-bottom: var(--sp-xs);
+}
+
+.cover-meta {
+    font-size: 10.5pt;
+    color: var(--c-text-2);
+    margin-bottom: var(--sp-xl);
+}
+.cover-meta strong { color: var(--c-text); }
+
+/* Cover Score Ring */
+/* FIX-VU1: overflow hidden + max dimensions for PDF safety */
+.cover-score-ring {
+    margin: var(--sp-lg) auto;
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    max-width: 200px;
+    max-height: 200px;
+}
+.cover-score-ring svg {
+    transform: rotate(-90deg);
+    max-width: 100%;
+    height: auto;
+}
+.cover-score-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+.cover-score-number {
+    font-family: var(--font-heading);
+    font-size: 38pt;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--navy-900);
+}
+.cover-score-max {
+    font-size: 11pt;
+    color: var(--c-text-3);
+}
+.cover-score-label {
+    font-size: 10pt;
+    font-weight: 600;
+    color: var(--strategy-accent);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* Trust Badges */
+.trust-badges {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+.trust-badges img {
+    height: 36px;
+    width: auto;
+    opacity: 0.85;
+}
+
+/* TÜV Badge */
+.tuev-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--navy-50) 0%, var(--strategy-light) 100%);
+    border: 1px solid var(--navy-100);
+    border-radius: var(--r-md);
+    padding: 12px 24px;
+    margin-top: var(--sp-lg);
+}
+.tuev-badge-icon {
+    width: 36px;
+    height: 36px;
+}
+.tuev-badge-text {
+    text-align: left;
+}
+.tuev-badge-title {
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--navy-800);
+    letter-spacing: 0.04em;
+}
+.tuev-badge-sub {
+    font-size: 7.5pt;
+    color: var(--c-text-2);
+}
+
+.cover-research-date {
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+    margin-top: var(--sp-lg);
+    font-style: italic;
+}
+
+/* ══════════════════════════════════════════════════════
+   TABLE OF CONTENTS
+   ══════════════════════════════════════════════════════ */
+.toc-page {
+    padding: var(--sp-2xl) 0;
+}
+
+.toc-page h2 {
+    font-size: 22pt;
+    margin-bottom: var(--sp-lg);
+    padding-bottom: var(--sp-sm);
+    border-bottom: 3px solid var(--navy-900);
+}
+
+.toc-entry {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #F3F4F6;
+    text-decoration: none;
+    color: var(--c-text);
+    font-size: 10pt;
+}
+.toc-entry:last-child { border-bottom: none; }
+
+.toc-number {
+    font-family: var(--font-heading);
+    font-size: 14pt;
+    font-weight: 700;
+    color: var(--strategy-accent);
+    min-width: 32px;
+    text-align: right;
+}
+.toc-title {
+    flex: 1;
+    font-weight: 500;
+    color: var(--navy-800);
+}
+.toc-subtitle {
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+    font-weight: 400;
+}
+.toc-dots {
+    flex: 1;
+    border-bottom: 1px dotted var(--c-border);
+    margin: 0 8px;
+    min-width: 40px;
+}
+
+/* ══════════════════════════════════════════════════════
+   SECTION HEADER (used for Exec Summary and sections)
+   ══════════════════════════════════════════════════════ */
+.section-header {
+    margin-bottom: var(--sp-lg);
+    padding-bottom: var(--sp-sm);
+    border-bottom: 2px solid var(--gold-600);
+}
+.section-label {
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--strategy-accent);
+    margin-bottom: var(--sp-xs);
+}
+
+/* ══════════════════════════════════════════════════════
+   CHAPTER BANNER (compact top-banner, replaces full-page divider)
+   ══════════════════════════════════════════════════════ */
+/* KIS-1127/C4 + KIS-1128 audit M1: Compact ~80px banner.
+   break-after: avoid removed for family consistency with R1+KPA. Each strategy
+   banner already forces page-break via the `page-break` class on the macro,
+   so break-after was redundant and a regression risk. */
+.chapter-banner {
+    padding: 20px 32px 16px;
+    margin: 0 0 24px 0;
+    position: relative;
+    break-inside: avoid;
+    break-after: avoid; /* KIS-1244: Banner nie allein am Seitenende */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.chapter-banner__number {
+    font-size: 36px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    top: 14px;
+    left: 32px;
+    line-height: 1;
+}
+
+.chapter-banner__accent {
+    width: 32px;
+    height: 2px;
+    background: #c8954c;
+    margin: 4px 0 8px;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+
+/* Numbered variant: indent content past the number */
+.chapter-banner--numbered .chapter-banner__content {
+    padding-left: 40px;
+}
+
+/* Unnumbered variant: no indent */
+.chapter-banner--unnumbered .chapter-banner__content {
+    padding-left: 0;
+}
+
+.chapter-banner__category {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 0 0 4px;
+}
+
+.chapter-banner__title {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 500;
+    color: #ffffff;
+    margin: 0 0 2px;
+}
+
+.chapter-banner__subtitle {
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+}
+
+/* Strategy report: navy gradient */
+.chapter-banner--strategy {
+    background: linear-gradient(135deg, #1a2744 0%, #2a3d5f 100%);
+}
+
+/* ══════════════════════════════════════════════════════
+   SECTION CONTENT
+   ══════════════════════════════════════════════════════ */
+.section-content {
+    padding: var(--sp-xl) 0 var(--sp-lg);
+    /* KIS-1126 / C5 FIX: Matched to new body font-size for consistency */
+    font-size: 11pt;
+    line-height: 1.7;
+}
+/* KIS-1126 / C5 FIX: Increased paragraph spacing from 6px→10px for visual breathing room */
+.section-content p + p { margin-top: 10px; }
+.section-content h4 + p { margin-top: 6px; }
+/* KIS-1128 audit M8: orphans/widows 5/5 → 3/3 to align with R1+KPA family
+   standard. Higher values were a reaction to specific page-break artifacts
+   that are now mitigated upstream by Sprint A (banner break-after removal). */
+.section-content p, .section-content li { orphans: 3; widows: 3; }
+.section-content h3 { margin-top: var(--sp-lg); break-after: avoid; }
+.section-content h4 { break-after: avoid; }
+
+/* Management / Detail Level Separator */
+/* FIX-VU2: Static values for Puppeteer PDF rendering reliability */
+.section-content hr {
+    border: none;
+    border-top: 2px solid #faf4dc;
+    margin: 24px 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   EXECUTIVE SUMMARY BOX
+   ══════════════════════════════════════════════════════ */
+.exec-summary {
+    padding: var(--sp-xl) 0;
+}
+.exec-summary .section-body {
+    /* KIS-1126 / C5 FIX: Adjusted proportionally (was 10.5pt when body was 10pt) */
+    font-size: 11.5pt;
+    line-height: 1.75;
+}
+
+/* ══════════════════════════════════════════════════════
+   INFOGRAPHIC COMPONENTS
+   ══════════════════════════════════════════════════════ */
+
+/* Score Widget */
+.score-widget {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-md);
+    background: var(--report-bg-panel);
+    border-radius: var(--r-md);
+    padding: var(--sp-md) var(--sp-lg);
+    margin: var(--sp-md) 0;
+    break-inside: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.score-widget-value {
+    font-family: var(--font-heading);
+    font-size: 32pt;
+    font-weight: 700;
+    color: var(--navy-900);
+    line-height: 1;
+}
+.score-widget-label {
+    font-size: 9pt;
+    color: var(--c-text-2);
+    font-weight: 500;
+}
+.score-widget-bar {
+    width: 120px;
+    height: 6px;
+    background: var(--c-border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+.score-widget-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--strategy-accent), var(--strategy-highlight));
+}
+
+/* KPI Cards Row */
+.kpi-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin: var(--sp-lg) 0;
+}
+.kpi-card {
+    text-align: center;
+    padding: 16px 12px;
+    background: var(--report-bg-panel);
+    border-radius: var(--r-md);
+    border-top: 3px solid var(--report-primary);
+    break-inside: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.kpi-value {
+    font-family: var(--font-heading);
+    font-size: 22pt;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--navy-900);
+}
+.kpi-label {
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+    margin-top: 2px;
+}
+
+/* Timeline / Roadmap */
+.timeline {
+    position: relative;
+    padding-left: 32px;
+    margin: var(--sp-lg) 0;
+}
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--strategy-accent);
+}
+.timeline-item {
+    position: relative;
+    padding: var(--sp-sm) 0 var(--sp-lg);
+    break-inside: avoid;
+}
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 12px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--strategy-accent);
+    border: 2px solid var(--c-white);
+    box-shadow: 0 0 0 2px var(--strategy-accent);
+}
+.timeline-phase {
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--strategy-highlight);
+    margin-bottom: 2px;
+}
+.timeline-title {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--navy-800);
+}
+.timeline-desc {
+    font-size: 9.5pt;
+    color: var(--c-text-2);
+    margin-top: 2px;
+}
+
+/* Comparison Table with Traffic Light */
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-md);
+    margin: var(--sp-lg) 0;
+}
+.comparison-card {
+    background: var(--c-bg);
+    border-radius: var(--r-md);
+    padding: var(--sp-md);
+    break-inside: avoid;
+}
+.comparison-card h4 {
+    font-size: 10pt;
+    color: var(--navy-800);
+    margin-bottom: var(--sp-sm);
+}
+
+/* Highlight Box (for key findings / callouts) */
+.highlight-box {
+    background: var(--strategy-light);
+    border-left: 4px solid var(--strategy-highlight);
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+    padding: var(--sp-md) var(--sp-lg);
+    margin: var(--sp-lg) 0;
+    font-size: 10pt;
+    line-height: 1.6;
+    break-inside: avoid;
+}
+.highlight-box strong { color: var(--navy-800); }
+
+/* Tip Box */
+.tip-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    margin: var(--sp-md) 0;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    break-inside: avoid;
+}
+.tip-box::before {
+    content: 'Practical Tip';
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #047857;
+    margin-bottom: 4px;
+}
+
+/* Warning Box */
+.warning-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    margin: var(--sp-md) 0;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    break-inside: avoid;
+}
+.warning-box::before {
+    content: 'Note';
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #b45309;
+    margin-bottom: 4px;
+}
+
+/* Investment Scenario Cards */
+.scenario-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--sp-md);
+    margin: var(--sp-lg) 0;
+}
+.scenario-card {
+    background: var(--c-white);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    padding: var(--sp-md);
+    text-align: center;
+    break-inside: avoid;
+}
+.scenario-card.recommended {
+    border-color: var(--strategy-accent);
+    box-shadow: 0 2px 8px rgba(26,82,118,0.12);
+}
+.scenario-card.recommended::before {
+    content: 'RECOMMENDED';
+    display: block;
+    font-size: 7pt;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--c-white);
+    background: var(--strategy-accent);
+    padding: 3px 8px;
+    border-radius: var(--r-sm);
+    margin: -8px auto var(--sp-sm);
+    width: fit-content;
+}
+.scenario-label {
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--c-text-2);
+    margin-bottom: var(--sp-xs);
+}
+.scenario-value {
+    font-family: var(--font-heading);
+    font-size: 20pt;
+    font-weight: 700;
+    color: var(--navy-900);
+}
+.scenario-desc {
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+    margin-top: var(--sp-xs);
+}
+
+/* ══════════════════════════════════════════════════════
+   QUELLENANGABEN / SOURCES FOOTER
+   ══════════════════════════════════════════════════════ */
+.sources-footer {
+    border-top: 1px solid #ddd;
+    padding-top: 12px;
+    margin-top: var(--sp-xl);
+    font-size: 8pt;
+    color: #666;
+    line-height: 1.5;
+    /* KIS-1247: Quellen-Blöcke dürfen INTERN umbrechen und kleben am
+       vorigen Inhalt — als atomarer Block kippten lange URL-Listen allein
+       auf eine sonst leere Folgeseite (Lauf 1129, S. 32/36). */
+    break-inside: auto;
+    page-break-inside: auto;
+    break-before: avoid-page;
+    page-break-before: avoid;
+    orphans: 2;
+    widows: 2;
+}
+.sources-footer sup {
+    color: var(--strategy-highlight);
+    font-weight: 600;
+}
+.sources-footer a {
+    color: var(--c-text-2);
+    text-decoration: none;
+}
+.sources-footer a:hover { text-decoration: underline; }
+
+/* Inline Source Reference */
+sup.src-ref {
+    font-size: 7pt;
+    font-weight: 600;
+    color: var(--strategy-highlight);
+    cursor: default;
+}
+
+/* ══════════════════════════════════════════════════════
+   NÄCHSTE SCHRITTE / CTA
+   ══════════════════════════════════════════════════════ */
+.naechste-schritte {
+    padding: var(--sp-xl) 0;
+}
+.naechste-schritte h2 {
+    margin-bottom: var(--sp-lg);
+}
+.naechste-schritte ol {
+    counter-reset: step;
+    list-style: none;
+    padding-left: 0;
+}
+.naechste-schritte li {
+    counter-increment: step;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    background: var(--navy-50);
+    border-left: 4px solid var(--strategy-accent);
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+    break-inside: avoid;
+}
+.naechste-schritte li::before {
+    content: counter(step) ".";
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14pt;
+    color: var(--strategy-accent);
+    margin-right: 10px;
+}
+
+/* CTA Button */
+.cta-box {
+    background: linear-gradient(135deg, var(--navy-900) 0%, var(--strategy-accent) 100%);
+    border-radius: var(--r-lg);
+    padding: var(--sp-xl) var(--sp-2xl);
+    text-align: center;
+    margin-top: var(--sp-xl);
+    color: white;
+    break-inside: avoid;
+}
+.cta-box h3 {
+    color: white;
+    font-family: var(--font-heading);
+    font-size: 16pt;
+    margin-bottom: var(--sp-sm);
+}
+.cta-box p {
+    color: rgba(255,255,255,0.85);
+    font-size: 10pt;
+    margin-bottom: var(--sp-md);
+}
+.cta-btn {
+    display: inline-block;
+    padding: 10px 28px;
+    background: var(--gold-600);
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 10pt;
+    letter-spacing: 0.02em;
+}
+
+/* ══════════════════════════════════════════════════════
+   IMPRESSUM
+   ══════════════════════════════════════════════════════ */
+.impressum {
+    padding: var(--sp-xl) 0;
+}
+.impressum-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--sp-lg);
+    margin-bottom: var(--sp-lg);
+}
+.impressum-block h4 {
+    font-size: 10pt;
+    margin-bottom: var(--sp-sm);
+}
+.impressum-block p {
+    font-size: 9pt;
+    color: var(--c-text-2);
+    line-height: 1.6;
+}
+/* FIX-VU2: Static values for Puppeteer PDF rendering reliability */
+.impressum-divider {
+    height: 1px;
+    background: #E5E7EB;
+    margin: 24px 0;
+}
+.impressum-privacy {
+    background: var(--c-bg);
+    border-radius: var(--r-md);
+    padding: var(--sp-lg);
+}
+.impressum-privacy h3 { margin-bottom: var(--sp-md); }
+.impressum-privacy h4 { font-size: 10pt; margin-top: var(--sp-md); }
+.impressum-privacy p, .impressum-privacy li { font-size: 9pt; color: var(--c-text-2); }
+
+.gdpr-mini {
+    font-size: 7.5pt;
+    color: var(--c-text-3);
+    text-align: center;
+    padding: var(--sp-md) 0;
+    margin-top: var(--sp-lg);
+    border-top: 1px solid var(--c-border);
+}
+
+/* ══════════════════════════════════════════════════════
+   PRINT / PUPPETEER OPTIMIZATION
+   ══════════════════════════════════════════════════════ */
+@media print {
+    body::before {
+        position: fixed;
+        left: -23mm; /* shift into @page margin (content area starts at 23mm) */
+    }
+    body {
+        padding-left: 0; /* @page margin-left: 23mm already handles spacing */
+    }
+    .page-break {
+        page-break-before: always;
+    }
+    .chapter-banner {
+        page-break-inside: avoid;
+    }
+    .kpi-card, .scenario-card, .comparison-card,
+    .highlight-box, .tip-box, .warning-box,
+    .score-widget, .tuev-badge, .cta-box,
+    .impressum-block, .naechste-schritte li,
+    .advisor-note {
+        break-inside: avoid;
+    }
+    .section-content {
+        break-inside: auto;
+    }
+}
+
+/* ── KIS-1232: Persönliche Einschätzung als gestylte Box ──────────
+   Der Block existierte im Markup (#advisor-note), hatte aber keinerlei
+   CSS — im KIS-1232-Strategiebericht erschien die Einschätzung als
+   nackter Fließtext hinter den Quellen (S. 24). */
+.advisor-note {
+    background: var(--navy-50);
+    border: 1px solid var(--navy-100);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 28px 0;
+    page-break-inside: avoid;
+    position: relative;
+}
+.advisor-note::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--navy-700), var(--gold-600));
+    border-radius: 8px 8px 0 0;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.advisor-note-title {
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--navy-700);
+    margin-bottom: 8px;
+}
+.advisor-note-text {
+    font-size: 10.5pt;
+    line-height: 1.7;
+    font-style: italic;
+}
+.advisor-note-sig {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--navy-100);
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--navy-700);
+}
+    </style>
+</head>
+<body>
+
+    {# ── Macro: Compact Chapter Banner (KIS-1127/C4, replaces full-page dividers) ── #}
+    {% macro chapter_banner(title, subtitle="", num="", category="") %}
+    <div class="chapter-banner chapter-banner--strategy {% if num %}chapter-banner--numbered{% else %}chapter-banner--unnumbered{% endif %} page-break" style="background:linear-gradient(135deg,#1a2744 0%,#2a3d5f 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        {% if num %}<span class="chapter-banner__number" style="font-size:36px;font-weight:500;color:rgba(255,255,255,0.2);position:absolute;top:14px;left:32px;line-height:1;">{{ num }}</span>{% endif %}
+        <div class="chapter-banner__content" style="{% if num %}padding-left:40px;{% endif %}">
+            {% if category %}<p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">{{ category }}</p>{% endif %}
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">{{ title }}</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            {% if subtitle %}<p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">{{ subtitle }}</p>{% endif %}
+        </div>
+    </div>
+    {% endmacro %}
+
+    <!-- ====== DECKBLATT ====== -->
+    <div class="cover-page">
+        <img src="{{ brand.logo_small | default('ki-sicherheit-logo-small.png') }}" alt="{{ brand.logo_alt | default('KI-Sicherheit.jetzt') }}" style="width: 180px; height: auto; margin-bottom: 24px;">
+        <div class="cover-eyebrow">AI Strategy Report</div>
+        <div class="cover-accent-line" style="width:80px;height:3px;background-color:#C5930A;background-image:linear-gradient(90deg,#C5930A,#2563EB);border-radius:2px;margin:0 auto 32px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></div>
+        <h1>AI Strategy Report</h1>
+        <p class="cover-subtitle">{{ firmenname }} · {{ branche }}</p>
+        <p class="cover-meta">Created on <strong>{{ datum }}</strong> · Segment: {{ segment }} · {{ mitarbeiter }} employees</p>
+
+        <!-- Score Ring -->
+        <div class="cover-score-ring" style="width:180px;height:180px;margin:32px auto;position:relative;display:inline-block">
+            <svg width="180" height="180" viewBox="0 0 160 160">
+                <circle cx="80" cy="80" r="70" fill="none" stroke="#E5E7EB" stroke-width="8"/>
+                <circle cx="80" cy="80" r="70" fill="none" stroke="url(#scoreGrad)" stroke-width="8"
+                        stroke-dasharray="{{ (readiness_score|default(50)|float / 100 * 439.8)|round(1) }} 439.8"
+                        stroke-linecap="round"/>
+                <defs>
+                    <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#1a5276"/>
+                        <stop offset="100%" stop-color="#2e86c1"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div class="cover-score-content">
+                <div class="cover-score-number" style="color: var(--report-accent);">{{ readiness_score }}</div>
+                <div class="cover-score-max">/ 100</div>
+                <div class="cover-score-label">{{ reifegrad_label }}</div>
+            </div>
+        </div>
+
+        {# KIS-1247: Selbst verliehene Siegel entfernt (abmahnrelevant) —
+           nur der reale TÜV-Personennachweis bleibt, mit Einordnung. #}
+        <div class="trust-badges" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:24px;flex-wrap:wrap">
+            <img src="{{ brand.cert_logo | default('tuev-logo-transparent.png') }}" alt="{{ brand.cert_logo_alt | default('TÜV Austria certified') }}" height="50" style="height:50px;width:auto;max-width:120px">
+            <span style="font-size:9pt;color:#64748b">Created by {{ brand.advisor_signature | default('Wolf Hohl · TÜV-certified AI management') }}</span>
+        </div>
+
+        <p class="cover-research-date">Market data research as of {{ research_date }}</p>
+    </div>
+
+    <!-- ====== INHALTSVERZEICHNIS ====== -->
+    <div class="toc-page page-break">
+        <h2>Table of Contents</h2>
+
+        <div class="toc-entry" style="border-bottom: 2px solid var(--c-border); padding-bottom: 12px;">
+            <span class="toc-number" style="color: var(--gold-600);">—</span>
+            <span class="toc-title">Executive Summary</span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">1</span>
+            <span class="toc-title">Starting Position <span class="toc-subtitle">— Your AI Readiness Profile</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">2</span>
+            <span class="toc-title">Market &amp; Competition <span class="toc-subtitle">— Current Industry Data &amp; Benchmarks</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">3</span>
+            <span class="toc-title">Strategic Action Areas <span class="toc-subtitle">— Prioritized by Impact &amp; Feasibility</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">3b</span>
+            <span class="toc-title">AI Revenue Potential <span class="toc-subtitle">— New Revenue Streams Through AI</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">4</span>
+            <span class="toc-title">Tool Landscape &amp; Recommendations <span class="toc-subtitle">— GDPR-assessed Solutions</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">5</span>
+            <span class="toc-title">Investment Plan &amp; ROI <span class="toc-subtitle">— Scenarios, Break-Even &amp; Budget Fit</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">6</span>
+            <span class="toc-title">Implementation Roadmap <span class="toc-subtitle">— Your Phased Plan for Productive AI Use</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">7</span>
+            <span class="toc-title">Funding &amp; Financing <span class="toc-subtitle">— Current Programs</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">8</span>
+            <span class="toc-title">Risks &amp; Compliance <span class="toc-subtitle">— EU AI Act &amp; GDPR</span></span>
+        </div>
+
+        <div class="toc-entry">
+            <span class="toc-number">9</span>
+            <span class="toc-title">AI-Powered Competitive Advantage <span class="toc-subtitle">— Sustainable Advantages Through Strategic AI Use</span></span>
+        </div>
+
+        <div class="toc-entry" style="border-top: 2px solid var(--c-border); padding-top: 12px; margin-top: 4px;">
+            <span class="toc-number" style="color: var(--gold-600);">→</span>
+            <span class="toc-title">Your Next Steps</span>
+        </div>
+    </div>
+
+    <!-- ====== EXECUTIVE SUMMARY ====== -->
+    {{ chapter_banner("Executive Summary") }}
+    <div class="section-content">
+        {{ exec_summary | safe }}
+    </div>
+
+    <!-- ====== KAPITEL-TRENNER: 1 ====== -->
+    {{ chapter_banner("Starting Position", "Your AI Readiness Profile", num="1") }}
+
+    <!-- ====== S1: AUSGANGSLAGE ====== -->
+    <div class="section-content">
+        {{ section_s1 | safe }}
+    </div>
+
+    <!-- ====== KAPITEL-TRENNER: 2 ====== -->
+    {{ chapter_banner("Market &amp; Competition", "Current Industry Data &amp; Benchmarks", num="2") }}
+
+    <!-- ====== S2: MARKT & WETTBEWERB ====== -->
+    <div class="section-content">
+        {{ section_s2 | safe }}
+    </div>
+
+    <!-- ====== KAPITEL-TRENNER: 3 ====== -->
+    {{ chapter_banner("Strategic Action Areas", "Prioritized by Impact &amp; Feasibility", num="3") }}
+
+    <!-- ====== S3: HANDLUNGSFELDER ====== -->
+    <div class="section-content">
+        {{ section_s3 | safe }}
+    </div>
+
+    <!-- ====== KAPITEL-TRENNER: 3b ====== -->
+    {{ chapter_banner("AI Revenue Potential", "New Revenue Streams Through AI", num="3b") }}
+
+    <!-- ====== S3b: KI-UMSATZPOTENZIALE ====== -->
+    <div class="section-content">
+        {{ section_s3b | safe }}
+    </div>
+
+    <!-- ====== KAPITEL-TRENNER: 4 ====== -->
+    {{ chapter_banner("Tool Landscape &amp; Recommendations", "GDPR-assessed Solutions for Your Company", num="4") }}
+
+    <!-- ====== S4: TOOLS ====== -->
+    <div class="section-content">
+        {{ section_s4 | safe }}
+    </div>
+
+    <!-- ====== KAPITEL-TRENNER: 5 ====== -->
+    {{ chapter_banner("Investment Plan &amp; ROI", "Scenarios, Break-Even &amp; Budget Fit", num="5") }}
+
+    <!-- ====== S5: INVESTITIONSPLAN ====== -->
+    <div class="section-content">
+        {{ section_s5 | safe }}
+        <div class="info-box" style="margin-top: 1.2em; padding: 1em 1.2em; background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #3b82f6; border-radius: 6px; font-size: 9pt; color: #1e3a5f;">
+            <div style="display: flex; align-items: flex-start; gap: 8px;">
+                <span style="font-size: 14pt; flex-shrink: 0;">ℹ️</span>
+                <div>
+                    <strong style="font-size: 9.5pt;">Note on ROI Methodology — Difference from the AI Readiness Report</strong>
+                    <p style="margin: 6px 0 0 0; line-height: 1.5;">This strategy report compares the <strong>gross annual savings</strong> against the total investment over 12&nbsp;months (including software, implementation, training, and coordination). The AI Readiness Report additionally deducts the <strong>ongoing tool costs (OPEX)</strong> from the annual benefit, thereby reporting the more conservative net return. The differing ROI and break-even figures result from methodology, they are not contradictory — both calculation approaches are standard industry practice.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== KAPITEL-TRENNER: 6 ====== -->
+    {{ chapter_banner("Implementation Roadmap", "Your Phased Plan for Productive AI Use", num="6") }}
+
+    <!-- ====== S6: ROADMAP ====== -->
+    <div class="section-content">
+        {{ section_s6 | safe }}
+    </div>
+
+    <!-- ====== KAPITEL-TRENNER: 7 ====== -->
+    {{ chapter_banner("Funding &amp; Financing", "Current Programs for Your Company", num="7") }}
+
+    <!-- ====== S7: FÖRDERMITTEL ====== -->
+    <div class="section-content">
+        {{ section_s7 | safe }}
+    </div>
+
+    <!-- ====== KAPITEL-TRENNER: 8 ====== -->
+    {{ chapter_banner("Risks &amp; Compliance", "EU AI Act &amp; GDPR", num="8") }}
+
+    <!-- ====== S8: RISIKEN ====== -->
+    <div class="section-content">
+        {{ section_s8 | safe }}
+    </div>
+
+    <!-- ====== S-MOAT: KI-GESTÜTZTER WETTBEWERBSVORTEIL ====== -->
+    {% if section_s_moat %}
+    {{ chapter_banner("AI-Powered Competitive Advantage", "Sustainable Advantages Through Strategic AI Use", num="9") }}
+
+    <div class="section-content">
+        {{ section_s_moat | safe }}
+    </div>
+    {% endif %}
+
+    <!-- ====== PERSÖNLICHE EINSCHÄTZUNG (KIS-1142 Punkt 5) ====== -->
+    {% if section_advisor_note and section_advisor_note|trim %}
+    <div class="section" id="advisor-note">
+        <div class="advisor-note">
+            <div class="advisor-note-title">My Assessment for Your Company</div>
+            <div class="advisor-note-text">{{ section_advisor_note | safe }}</div>
+            <div class="advisor-note-sig">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-certified AI management') }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ====== NÄCHSTE SCHRITTE ====== -->
+    {{ chapter_banner("Your Next Steps") }}
+    <div class="section-content">
+        {{ naechste_schritte | safe }}
+    </div>
+
+    <!-- ====== IMPRESSUM / FOOTER ====== -->
+    <div class="impressum page-break">
+        <div class="section-header">
+            <span class="section-label">LEGAL</span>
+            <h2>Imprint &amp; Privacy</h2>
+        </div>
+        <div class="impressum-grid">
+            <div class="impressum-block">
+                <h4>Imprint</h4>
+                <p><strong>Responsible for content:</strong><br>
+                {{ brand.brand_name | default('KI-Sicherheit.jetzt') }} – {{ brand.advisor_name | default('Wolf Hohl') }}<br>
+                Greifswalder Str. 224a<br>
+                10405 Berlin</p>
+                <p>Email: {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}</p>
+            </div>
+            <div class="impressum-block">
+                <h4>Disclaimer</h4>
+                <p>This AI Strategy Report is provided solely for informational purposes and strategic orientation. Despite careful review, no liability is accepted for accuracy or completeness.{% if branche and ('steuer' in branche|lower or 'wirtschaftspr' in branche|lower or 'rechtsber' in branche|lower or 'buchhal' in branche|lower) %} Tax advisory professions: professional obligations under Section&nbsp;57 StBerG (confidentiality, data protection) must be reviewed on your own responsibility.{% endif %}</p>
+                <h4>Copyright</h4>
+                <p>All content in this report is subject to German copyright law.</p>
+            </div>
+            <div class="impressum-block">
+                <h4>Note on the EU AI Act</h4>
+                <p>This report provides information on obligations, risks, and funding opportunities for the use of AI under the EU AI Act and GDPR. It does not constitute legal advice.</p>
+            </div>
+        </div>
+        <div class="impressum-divider"></div>
+        <div class="impressum-privacy">
+            <h3>Privacy Notice</h3>
+            <p>Protecting your personal data is of particular importance to us.</p>
+            <h4>Data Processing</h4>
+            <p>The company data collected for this report is processed solely to produce the AI Strategy Report (Art. 6 (1) b GDPR).</p>
+            <h4>Your Rights Under the GDPR</h4>
+            <ul>
+                <li>Access, rectification, or erasure of your data</li>
+                <li>Data portability</li>
+                <li>Withdrawal of consent previously given</li>
+                <li>Complaint to the data protection authority</li>
+            </ul>
+            <p>Contact: {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}</p>
+        </div>
+
+        <div class="gdpr-mini">
+            This report uses company data for AI strategy analysis. Processing based on Art. 6 (1) b GDPR. Data processing agreement available on request.
+            Based on live market data as of {{ research_date }}.
+        </div>
+
+        <p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">
+            AI Strategy Report · Generated on {{ datum }} · {% if REPORT_DISPLAY_ID %}{{ REPORT_DISPLAY_ID }}{% else %}{{ report_id }}{% endif %}
+            {% if build_id %} · Build: {{ build_id }}{% endif %}
+        </p>
+    </div>
+
+</body>
+</html>

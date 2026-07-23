@@ -2372,7 +2372,9 @@ h1, h2, h3, h4 {
             <h4>Disclaimer</h4>
             <p>This report is provided for informational purposes only. Despite careful review, I accept no liability for the content of external links.</p>
             <h4>Copyright</h4>
-            <p>All content in this report is subject to German copyright law; all images were generated with the help of AI.</p>
+            {# KIS-1248: {{ report_year }} — dynamisches Jahr (test_year_audit
+               verlangt die Variable im EN-Template; Backend setzt sie immer). #}
+            <p>© {{ report_year }} — All content in this report is subject to German copyright law; all images were generated with the help of AI.</p>
         </div>
         <div class="impressum-block">
             <h4>Note on the EU AI Act</h4>

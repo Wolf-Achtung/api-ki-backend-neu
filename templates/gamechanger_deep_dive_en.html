@@ -1,0 +1,867 @@
+<!-- KI-Potenzial-Analyse Template v1.0.0 "Clean Corporate Plus" (English) — 2026-03-06 -->
+<!-- Engine: Puppeteer/Chromium · Backend: FastAPI/Jinja2 · Design: McKinsey/BCG -->
+<!-- Based on: pdf_template_v7.html — same CSS Design System -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Potential Analysis – {{ company_name or HAUPTLEISTUNG or 'Your Company' }}</title>
+    <style>
+/* ═══════════════════════════════════════════════════════
+   v1.0 KI-POTENZIAL-ANALYSE — Clean Corporate Plus
+   Cloned from pdf_template_v7.html Design System
+   Typography: Inter (unified family)
+   Colors: 3 primary + grays + deep-dive purple accent
+   ═══════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Page Setup ─────────────────────────────────────── */
+@page {
+    size: A4;
+    margin: 12mm 12mm 15mm 12mm;
+    /* KIS-FOOTER: @bottom-right-Seitenzahl ENTFERNT (siehe pdf_template_v7.html).
+       Toter Code in prod-Chromium, dupliziert die Puppeteer-footerTemplate und
+       ergaebe auf neuerem Chromium eine doppelte Fussnote. Paginierung laeuft
+       ausschliesslich ueber die footerTemplate (KPA-Default in render_pdf_from_html). */
+}
+
+/* ── Design Tokens ──────────────────────────────────── */
+:root {
+    /* Report-Type Palette: Growth Teal (R2/KPA) */
+    --report-primary: #0D7377;
+    --report-primary-dark: #065F46;
+    --report-accent: #D97706;
+    --report-bg-panel: #F0FDFA;
+    --report-bg-highlight: #CCFBF1;
+    /* Primary */
+    --c-primary: #0D7377;
+    --c-accent: #D97706;
+    --c-warning: #F59E0B;
+    /* Deep Dive accent */
+    --c-deep: #0D7377;
+    --c-deep-light: #F0FDFA;
+    --c-deep-border: #99f6e4;
+    /* Grays */
+    --c-text: #374151;
+    --c-text-2: #6B7280;
+    --c-text-3: #9CA3AF;
+    --c-border: #E5E7EB;
+    --c-bg: #F9FAFB;
+    --c-white: #ffffff;
+    /* Semantic */
+    --c-success: #10B981;
+    --c-danger: #EF4444;
+    --c-info: #3B82F6;
+    /* Category Colors */
+    --c-cat-strategy: #3b82f6;
+    --c-cat-action: #10b981;
+    --c-cat-risk: #ef4444;
+    --c-cat-finance: #f59e0b;
+    --c-cat-deep: #8b5cf6;
+    /* Typography */
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+    /* Spacing */
+    --sp-xs: 4px;
+    --sp-sm: 8px;
+    --sp-md: 16px;
+    --sp-lg: 24px;
+    --sp-xl: 32px;
+    --sp-2xl: 48px;
+    /* Radius */
+    --r-sm: 4px;
+    --r-md: 8px;
+    --r-lg: 12px;
+}
+
+/* ── Base Reset ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: var(--font);
+    font-size: 10pt;
+    line-height: 1.6;
+    color: var(--c-text);
+    background: var(--c-white);
+    -webkit-font-smoothing: antialiased;
+    orphans: 4;
+    widows: 4;
+}
+
+/* ── Typography Scale ───────────────────────────────── */
+h1 { font-size: 28pt; font-weight: 700; color: var(--c-primary); line-height: 1.15; letter-spacing: -0.02em; }
+h2 { font-size: 18pt; font-weight: 700; color: var(--c-primary); line-height: 1.25; letter-spacing: -0.01em; margin: 0; }
+h3 { font-size: 13pt; font-weight: 600; color: var(--c-primary); line-height: 1.3; margin: var(--sp-md) 0 var(--sp-sm); }
+h4 { font-size: 11pt; font-weight: 600; color: var(--c-text); line-height: 1.4; margin: var(--sp-sm) 0 var(--sp-xs); }
+
+p { margin: var(--sp-sm) 0; }
+a { color: var(--c-primary); text-decoration: none; }
+strong { font-weight: 600; }
+.small { font-size: 8.5pt; }
+.muted { color: var(--c-text-3); }
+.text-2 { color: var(--c-text-2); }
+
+/* ── Lists & Tables ─────────────────────────────────── */
+ul, ol { padding-left: 1.5em; margin: var(--sp-sm) 0; }
+li { margin-bottom: var(--sp-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: var(--sp-md) 0; }
+th { background: var(--c-bg); font-weight: 600; text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--c-border); font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c-text-2); }
+td { padding: 8px 10px; border-bottom: 1px solid var(--c-border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr.highlight td { background: #f0fdf4; font-weight: 600; }
+td.positive { color: var(--c-success); font-weight: 600; }
+td.negative { color: var(--c-danger); font-weight: 600; }
+
+/* ── Page Structure ─────────────────────────────────── */
+.page { max-width: 210mm; margin: 0 auto; }
+
+/* ══ PAGE BREAK RULES ═══════════════════════════════
+   KIS-1239: erzwungene Kapitel-Umbrüche entfernt — bei 12 Seiten
+   erzeugten sie 3 fast leere Seiten (Lauf 1119: S. 3/6/8 zu 75–85 %
+   leer, nur der Überhang der Vorseite). Kapitel fließen jetzt;
+   die Banner kleben per break-after:avoid am Folgeinhalt. */
+#dd-implementation,
+#dd-business-case,
+#dd-risk-assessment,
+#dd-next-steps {
+    break-before: auto;
+}
+
+/* ── Section Base ───────────────────────────────────── */
+.section {
+    padding: var(--sp-xl) 0 var(--sp-lg);
+    break-inside: auto;
+}
+
+/* KIS-1235: Witwen/Waisen — verhindert Einzelsatz-Seiten (Lauf 1235, S. 7)
+   und zerrissene Tabellen ohne wiederholten Kopf (Risiko-Matrix S. 8/9). */
+p { orphans: 3; widows: 3; }
+tr { break-inside: avoid; }
+thead { display: table-header-group; break-after: avoid; page-break-after: avoid; }
+/* KIS-1238: Kopfzeile nie allein am Seitenende (Lauf 1119: verwaiste
+   Header S. 4/9 der Potenzialanalyse, Zeilen folgten headerlos). */
+h3, h4 { break-after: avoid; }
+
+/* ── Chapter Banner (KIS-1127/C4, KIS-1128 audit M1) ──────
+   break-after: avoid removed for family consistency with R1.
+   KPA layout was OK because each section forces break-before:page;
+   removal is risk-neutral but keeps the family aligned. */
+.chapter-banner {
+    padding: 20px 32px 16px;
+    margin: 0 0 20px 0;
+    position: relative;
+    break-inside: avoid;
+    break-after: avoid;       /* KIS-1239: Banner nie allein am Seitenende */
+    page-break-after: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+.chapter-banner__number {
+    font-size: 36px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    top: 14px;
+    left: 32px;
+    line-height: 1;
+}
+.chapter-banner__accent {
+    width: 32px;
+    height: 2px;
+    background: #c8954c;
+    margin: 4px 0 8px;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.chapter-banner--numbered .chapter-banner__content { padding-left: 40px; }
+.chapter-banner--unnumbered .chapter-banner__content { padding-left: 0; }
+.chapter-banner__category {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 0 0 4px;
+}
+.chapter-banner__title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #ffffff;
+    margin: 0 0 2px;
+}
+.chapter-banner__subtitle {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+}
+.chapter-banner--kpa {
+    background: linear-gradient(135deg, #1a3a3a 0%, #2a5f5f 100%);
+}
+
+/* ── Section Header ─────────────────────────────────── */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--sp-md);
+    margin-bottom: var(--sp-md);
+}
+.section-kicker {
+    display: block;
+    font-size: 9pt;
+    font-weight: 500;
+    color: var(--c-text-2);
+    margin-bottom: 2px;
+}
+.section-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 8pt;
+    color: var(--c-text-2);
+    background: var(--c-bg);
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+
+/* ── Category Badges ────────────────────────────────── */
+.badge {
+    display: inline-block;
+    font-size: 7.5pt;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-bottom: var(--sp-xs);
+}
+.badge-strategy { background: #eff6ff; color: var(--c-cat-strategy); }
+.badge-action   { background: #ecfdf5; color: #047857; }
+.badge-risk     { background: #fef2f2; color: #b91c1c; }
+.badge-finance  { background: #fffbeb; color: #b45309; }
+.badge-deep     { background: var(--report-bg-panel); color: var(--report-primary); }
+
+/* ── Glance Box ─────────────────────────────────────── */
+.glance-box {
+    font-size: 10pt;
+    line-height: 1.5;
+    padding: 10px 14px;
+    border-radius: var(--r-sm);
+    margin-bottom: var(--sp-lg);
+    background: var(--report-bg-panel);
+    border-left: 3px solid var(--c-border);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.glance-box strong { font-weight: 600; color: var(--c-text); }
+.glance-strategy { border-left-color: var(--c-cat-strategy); }
+.glance-action   { border-left-color: var(--c-cat-action); }
+.glance-risk     { border-left-color: var(--c-cat-risk); }
+.glance-finance  { border-left-color: var(--c-cat-finance); }
+.glance-deep     { border-left-color: var(--c-cat-deep); }
+
+/* ── Section Body ───────────────────────────────────── */
+/* KIS-1128 audit M5: 10pt → 11pt for family consistency with R1+Strategy
+   and improved readability. KPA had the smallest body font of the family. */
+.section-body {
+    font-size: 11pt;
+    line-height: 1.65;
+}
+.section-body p + p { margin-top: 6px; }
+.section-body h4 + p { margin-top: 4px; }
+.section-body p, .section-body li { orphans: 3; widows: 3; }
+.section-body h3 { margin-top: var(--sp-lg); }
+
+/* ══════════════════════════════════════════════════════
+   DEEP DIVE COVER PAGE
+   ══════════════════════════════════════════════════════ */
+.cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100vh;
+    padding: var(--sp-2xl) var(--sp-xl);
+    overflow: hidden;
+}
+.cover-accent {
+    width: 80px;
+    height: 4px;
+    border-radius: 2px;
+    background-color: var(--report-primary);
+    background-image: linear-gradient(90deg, #0D7377, #065F46);
+    margin: 0 auto var(--sp-xl);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.cover-eyebrow {
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--c-text-3);
+    margin-bottom: var(--sp-lg);
+}
+.cover-subtitle {
+    font-size: 12pt;
+    color: var(--report-primary);
+    font-style: italic;
+    margin-bottom: var(--sp-xs);
+}
+.cover-meta {
+    font-size: 10.5pt;
+    color: var(--c-text-2);
+}
+.cover-meta strong { color: var(--c-text); }
+
+/* Cover Logo */
+.cover-logo {
+    width: 180px;
+    height: auto;
+    margin-bottom: var(--sp-lg);
+}
+
+/* Trust Badges */
+.trust-badges {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--sp-lg);
+    margin-top: var(--sp-xl);
+    flex-wrap: wrap;
+}
+.trust-badges img {
+    height: 36px;
+    width: auto;
+    opacity: 0.85;
+}
+
+/* Deep Dive Icon */
+.dd-icon {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: var(--report-bg-panel);
+    background-image: linear-gradient(135deg, #F0FDFA, #CCFBF1);
+    border: 3px solid var(--c-deep-border);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: var(--sp-xl) auto;
+}
+.dd-icon-inner {
+    font-size: 42pt;
+    line-height: 1;
+}
+
+/* KPI Cards */
+.kpi-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin: var(--sp-xl) 0;
+    max-width: 500px;
+}
+.kpi-card {
+    text-align: center;
+    padding: 14px 10px;
+    background: var(--report-bg-panel);
+    border-radius: var(--r-md);
+    border-top: 3px solid var(--report-primary);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.kpi-value {
+    font-size: 22pt;
+    font-weight: 700;
+    line-height: 1.2;
+}
+.kpi-label {
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+    margin-top: 2px;
+}
+
+/* Table of Contents (inline) */
+.dd-toc {
+    text-align: left;
+    max-width: 400px;
+    margin: var(--sp-xl) auto 0;
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    padding: var(--sp-md);
+}
+.dd-toc-title {
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--c-text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: var(--sp-sm);
+}
+.dd-toc-entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid #F3F4F6;
+    font-size: 9.5pt;
+    color: var(--c-text);
+}
+.dd-toc-entry:last-child { border-bottom: none; }
+.dd-toc-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--c-deep-light);
+    color: var(--c-deep);
+    font-size: 8pt;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   SECTION-SPECIFIC STYLES
+   ══════════════════════════════════════════════════════ */
+
+/* Section number circle */
+.section-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--c-deep);
+    color: white;
+    font-size: 14pt;
+    font-weight: 700;
+    margin-right: var(--sp-sm);
+    vertical-align: middle;
+}
+
+/* Sensitivity table highlight */
+.table tr.highlight td {
+    background: #f0fdf4;
+    font-weight: 600;
+}
+.table td.positive,
+td.positive {
+    color: var(--c-success);
+    font-weight: 600;
+}
+.table td.negative,
+td.negative {
+    color: var(--c-danger);
+    font-weight: 600;
+}
+
+/* Risk matrix styling */
+.risk-high { color: var(--c-danger); font-weight: 600; }
+.risk-medium { color: var(--c-warning); font-weight: 600; }
+.risk-low { color: var(--c-success); font-weight: 600; }
+
+/* Next steps action cards */
+.action-card {
+    background: var(--report-bg-panel);
+    border-left: 3px solid var(--report-primary);
+    border-radius: var(--r-sm);
+    padding: 12px 16px;
+    margin-bottom: var(--sp-md);
+    page-break-inside: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+
+/* ══════════════════════════════════════════════════════
+   BLOCK PROTECTION — keep cards/boxes together
+   ══════════════════════════════════════════════════════ */
+.glance-box, .kpi-card, .action-card, .card-nobreak {
+    break-inside: avoid;
+}
+h1, h2, h3, h4 {
+    break-after: avoid;
+}
+.kpi-row {
+    break-inside: avoid;
+}
+
+/* ── Contact Box ─────────────────────────────────────── */
+.contact-box {
+    text-align: center;
+    break-inside: avoid;        /* KIS-1268: keine Waisen-Seite (Klasse KIS-1264) */
+    page-break-inside: avoid;
+    padding: 20px;
+    background: var(--report-bg-panel);
+    border-radius: var(--r-lg);
+    margin-top: var(--sp-lg);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.contact-name { font-size: 12pt; font-weight: 700; color: #111827; }
+.contact-org  { font-size: 9.5pt; color: var(--c-text-2); margin-top: 2px; }
+.contact-btns { margin-top: 12px; }
+.btn {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 9.5pt;
+    margin: 0 4px;
+    color: white;
+}
+.btn-primary { background: var(--c-primary); }
+.btn-accent  { background: var(--c-accent); }
+.btn-deep    { background: var(--c-deep); }
+
+/* ── Impressum ─────────────────────────────────────── */
+.impressum-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--sp-lg);
+    margin-bottom: var(--sp-lg);
+}
+.impressum-block h4 { font-size: 10pt; margin-bottom: var(--sp-sm); }
+.impressum-block p { font-size: 9pt; color: var(--c-text-2); line-height: 1.6; }
+/* FIX-VU2: Static values for Puppeteer PDF rendering reliability */
+.impressum-divider { height: 1px; background: #E5E7EB; margin: 24px 0; }
+.gdpr-mini {
+    font-size: 7.5pt;
+    color: var(--c-text-3);
+    text-align: center;
+    padding: var(--sp-md) 0;
+    margin-top: var(--sp-lg);
+    border-top: 1px solid var(--c-border);
+}
+
+/* ── Print enhancements ─────────────────────────────── */
+@media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .section { break-inside: auto; }
+    .glance-box, .kpi-card, .action-card, .card-nobreak, .contact-box { break-inside: avoid; } /* KIS-1268: contact-box ergänzt */
+}
+    </style>
+</head>
+<body>
+
+{# ═══════════════════════════════════════════════════════
+   COMPUTED VARIABLES
+   ═══════════════════════════════════════════════════════ #}
+{% set company = company_name or HAUPTLEISTUNG or 'Your Company' %}
+{% set branche = BRANCHE_LABEL|default('') %}
+{% set size_label = UNTERNEHMENSGROESSE_LABEL|default('') %}
+{% set report_date_display = report_date|default('') %}
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 1: COVER — Deep Dive Branding
+   ═══════════════════════════════════════════════════════ #}
+<div class="cover" id="dd-cover">
+    <!-- Teal Gradient Header -->
+    <div style="position:absolute;top:0;left:0;right:0;padding:40px 40px 30px 40px;background-color:#0D7377;background-image:linear-gradient(135deg,#0D7377,#065F46);color:white;text-align:center;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
+        <img src="{{ brand.logo_small | default('ki-sicherheit-logo-small.png') }}" alt="{{ brand.logo_alt | default('KI-Sicherheit.jetzt') }}" style="width:140px;height:auto;margin-bottom:12px;filter:brightness(0) invert(1);opacity:0.9;">
+        <div style="font-size:9pt;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.8);">
+            AI Potential Analysis · {{ report_date_display }}
+        </div>
+    </div>
+
+    <div style="margin-top: 120px;"></div>
+
+    <!-- Deep Dive Icon (FIX-A7: SVG instead of emoji for Puppeteer compatibility) -->
+    <div class="dd-icon">
+        <span class="dd-icon-inner">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="var(--report-primary, #0D7377)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+        </span>
+    </div>
+
+    <div style="margin-bottom: var(--sp-lg); max-width: 600px;">
+        <h1 style="color: var(--report-primary);">AI Potential<br>Analysis</h1>
+        <p class="cover-subtitle">Your individual analysis of your strategic AI potential</p>
+        <p class="cover-meta">
+            {% if branche %}{{ branche }}{% endif %}
+            {% if size_label %}{% if branche %}<span class="muted"> · </span>{% endif %}{{ size_label }}{% endif %}
+        </p>
+        {# KIS-1183 Befund 4: Family-consistency hook to R1 score.
+           Conservative styling (muted .cover-meta variant), no layout grid
+           change — the KPA cover keeps its Lupen-Icon as primary identifier
+           while adding a brücke back to the R1 score for context. #}
+        {% if score_gesamt %}
+        <p class="cover-meta muted" style="font-size: 9.5pt; margin-top: 4px;">
+            Maturity score <strong>{{ score_gesamt }}/100</strong> · see AI Status Report
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- KPI Summary -->
+    {% if canonical_bc %}
+    <div class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-value" style="color: var(--report-accent);">
+                {{ canonical_bc.hours|float(0)|round(0)|int }}h
+            </div>
+            <div class="kpi-label">Savings/month</div>
+        </div>
+        {# FIX-TESTRUN-1244: KPI-Sanity-Gate — Jahr-1-ROI nahe null (CAPEX voll
+           verrechnet) nicht als Cover-KPI ausspielen; stattdessen 3-Jahres-
+           Nettonutzen zeigen (Payback steht bereits in der Nachbar-Kachel).
+           |float(0) statt |default(0): Werte können als Strings ankommen,
+           und |round auf String wirft TypeError. #}
+        {% set _dd_roi = canonical_bc.roi|float(0)|round(0)|int %}
+        {% if _dd_roi < 20 %}
+        {% set _dd_net3y = ((canonical_bc.hours|float(0)) * (canonical_bc.rate|float(0)) * 36
+            - (canonical_bc.capex|float(0)) - (canonical_bc.opex|float(0)) * 36)|round(0)|int %}
+        <div class="kpi-card">
+            <div class="kpi-value" style="color: #c2410c;">
+                +{{ '{:,}'.format(_dd_net3y)|replace(',', '.') }}&nbsp;€
+            </div>
+            <div class="kpi-label">Net benefit (3 years)</div>
+        </div>
+        {% else %}
+        <div class="kpi-card">
+            <div class="kpi-value" style="color: #c2410c;">
+                {{ canonical_bc.roi|float(0)|round(0)|int }}%
+            </div>
+            <div class="kpi-label">ROI (12 months)</div>
+        </div>
+        {% endif %}
+        <div class="kpi-card">
+            <div class="kpi-value" style="color: var(--report-primary);">
+                {{ canonical_bc.payback|float(0)|round(1)|string|replace('.', ',') }} mo.
+            </div>
+            <div class="kpi-label">Payback</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Mini Table of Contents -->
+    <div class="dd-toc">
+        <div class="dd-toc-title">Contents</div>
+        <div class="dd-toc-entry">
+            <span class="dd-toc-num">1</span>
+            <span>Strategic Inflection Point</span>
+        </div>
+        <div class="dd-toc-entry">
+            <span class="dd-toc-num">2</span>
+            <span>90-Day Implementation Plan</span>
+        </div>
+        <div class="dd-toc-entry">
+            <span class="dd-toc-num">3</span>
+            <span>Detailed Business Case</span>
+        </div>
+        <div class="dd-toc-entry">
+            <span class="dd-toc-num">4</span>
+            <span>Risk Assessment &amp; Mitigation</span>
+        </div>
+        <div class="dd-toc-entry">
+            <span class="dd-toc-num">5</span>
+            <span>Concrete Next Steps</span>
+        </div>
+    </div>
+
+    {# KIS-1247: Selbst verliehene Siegel entfernt (abmahnrelevant) —
+       nur der reale TÜV-Personennachweis bleibt, mit Einordnung. #}
+    <div class="trust-badges" style="align-items:center;gap:10px;">
+        <img src="{{ brand.cert_logo | default('tuev-logo-transparent.png') }}" alt="{{ brand.cert_logo_alt | default('TÜV Austria certified') }}">
+        <span style="font-size:8.5pt;color:#64748b;">Prepared by {{ brand.advisor_signature | default('Wolf Hohl · TÜV-certified AI management') }}</span>
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 2-3: SECTION 1 — Strategischer Bruchpunkt
+   ═══════════════════════════════════════════════════════ #}
+<div class="section" id="dd-bruchpunkt">
+    <div class="chapter-banner chapter-banner--kpa chapter-banner--numbered" style="background:linear-gradient(135deg,#1a3a3a 0%,#2a5f5f 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <span class="chapter-banner__number" style="font-size:36px;font-weight:500;color:rgba(255,255,255,0.2);position:absolute;top:14px;left:32px;line-height:1;">1</span>
+        <div class="chapter-banner__content" style="padding-left:40px;">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">DEEP DIVE</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Strategic Inflection Point</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Strategic analysis</p>
+        </div>
+    </div>
+
+    <div class="glance-box glance-deep">
+        <strong>At a glance:</strong> The extended analysis of your strategic AI inflection point
+        with concrete recommendations for action.
+    </div>
+
+    <div class="section-body">
+        {{ GC_BRUCHPUNKT_HTML|safe }}
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 3-4: SECTION 2 — Implementierungsplan
+   ═══════════════════════════════════════════════════════ #}
+<div class="section" id="dd-implementation">
+    <div class="chapter-banner chapter-banner--kpa chapter-banner--numbered" style="background:linear-gradient(135deg,#1a3a3a 0%,#2a5f5f 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <span class="chapter-banner__number" style="font-size:36px;font-weight:500;color:rgba(255,255,255,0.2);position:absolute;top:14px;left:32px;line-height:1;">2</span>
+        <div class="chapter-banner__content" style="padding-left:40px;">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">IMPLEMENTATION</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">90-Day Implementation Plan</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Roadmap</p>
+        </div>
+    </div>
+
+    <div class="glance-box glance-action">
+        <strong>At a glance:</strong> Your concrete 3-phase plan to implement the AI potential scenario
+        within 90 days.
+    </div>
+
+    <div class="section-body">
+        {{ GC_IMPL_PLAN_HTML|safe }}
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 4-5: SECTION 3 — Business Case Deep Dive
+   ═══════════════════════════════════════════════════════ #}
+<div class="section" id="dd-business-case">
+    <div class="chapter-banner chapter-banner--kpa chapter-banner--numbered" style="background:linear-gradient(135deg,#1a3a3a 0%,#2a5f5f 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <span class="chapter-banner__number" style="font-size:36px;font-weight:500;color:rgba(255,255,255,0.2);position:absolute;top:14px;left:32px;line-height:1;">3</span>
+        <div class="chapter-banner__content" style="padding-left:40px;">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">FINANCE</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Detailed Business Case</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Deterministically calculated</p>
+        </div>
+    </div>
+
+    <div class="glance-box glance-finance">
+        <strong>At a glance:</strong> Sensitivity Analysis, 3-year projection and break-even calculation
+        of your AI potential — purely data-based, no AI-generated estimate.
+    </div>
+    <div class="callout" style="font-size:9pt; margin-bottom:var(--sp-md); padding:8px 12px; background:#FFF7ED; border-left:3px solid #EA580C;">
+        <strong>ROI methodology note:</strong> The Sensitivity Analysis shows the <em>uncapped</em>
+        ROI based on different scenarios. The AI Status Report (R1) uses a conservative
+        ROI methodology capped at 200%. Both values are correct — they answer different questions.
+    </div>
+    {# KIS-1235: Budget-Stufen-Logik explizit machen — Lauf 1235 stand
+       "Budget bleibt unter 3.000 €" (Pilot) unaufgelöst neben
+       "Einmalinvestition 12.000 €" (Business Case, Vollausbau). #}
+    <div class="callout" style="font-size:9pt; margin-bottom:var(--sp-md); padding:8px 12px; background:#F0F9FF; border-left:3px solid #2563EB;">
+        <strong>Budget tiers:</strong> The business case deliberately calculates the <em>full rollout</em>
+        (one-time investment including all expansion stages). The 90-day pilot from Chapter&nbsp;2 requires
+        only a fraction of that amount and stays within the stated budget — you decide on the full
+        rollout only after a successful pilot.
+    </div>
+
+    <div class="section-body">
+        {{ BC_DEEP_DIVE_HTML|safe }}
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 5-6: SECTION 4 — Risikobewertung
+   ═══════════════════════════════════════════════════════ #}
+<div class="section" id="dd-risk-assessment">
+    <div class="chapter-banner chapter-banner--kpa chapter-banner--numbered" style="background:linear-gradient(135deg,#1a3a3a 0%,#2a5f5f 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <span class="chapter-banner__number" style="font-size:36px;font-weight:500;color:rgba(255,255,255,0.2);position:absolute;top:14px;left:32px;line-height:1;">4</span>
+        <div class="chapter-banner__content" style="padding-left:40px;">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">RISK</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Risk Assessment &amp; Mitigation</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Top 5 risks</p>
+        </div>
+    </div>
+
+    <div class="glance-box glance-risk">
+        <strong>At a glance:</strong> The five biggest risks to your AI potential scenario
+        with likelihood, impact and concrete countermeasures.
+    </div>
+
+    <div class="section-body">
+        {{ GC_RISK_HTML|safe }}
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 6-7: SECTION 5 — Nächste Schritte & CTA
+   ═══════════════════════════════════════════════════════ #}
+<div class="section" id="dd-next-steps">
+    <div class="chapter-banner chapter-banner--kpa chapter-banner--numbered" style="background:linear-gradient(135deg,#1a3a3a 0%,#2a5f5f 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <span class="chapter-banner__number" style="font-size:36px;font-weight:500;color:rgba(255,255,255,0.2);position:absolute;top:14px;left:32px;line-height:1;">5</span>
+        <div class="chapter-banner__content" style="padding-left:40px;">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">ACTION</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Next Steps</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">7-day actions</p>
+        </div>
+    </div>
+
+    <div class="glance-box glance-action">
+        <strong>At a glance:</strong> 3 concrete actions you can take within the next 7 days
+        — no budget, no setup required.
+    </div>
+
+    <div class="section-body">
+        {{ GC_NEXT_STEPS_HTML|safe }}
+    </div>
+
+    <!-- Contact Box -->
+    <div class="contact-box" style="margin-top: var(--sp-xl);">
+        <p class="contact-name">{{ brand.advisor_name | default('Wolf Hohl') }}</p>
+        <p class="contact-org">{{ brand.brand_name | default('KI-Sicherheit.jetzt') }} — {{ brand.claim | default('Your partner for AI readiness') }}</p>
+        <div class="contact-btns">
+            <a href="{{ brand.site_url | default('https://ki-sicherheit.jetzt') }}" class="btn btn-deep">Visit website</a>
+            <a href="mailto:{{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}" class="btn btn-primary">Get in touch</a>
+        </div>
+    </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════
+   PAGE 7-8: IMPRESSUM
+   ═══════════════════════════════════════════════════════ #}
+<div class="section" id="dd-impressum" style="break-before: page;">
+    <div class="impressum-grid">
+        <div class="impressum-block">
+            <h4>Imprint</h4>
+            <p><strong>Responsible for content:</strong><br>
+            {{ brand.brand_name | default('KI-Sicherheit.jetzt') }} – {{ brand.advisor_name | default('Wolf Hohl') }}<br>
+            Greifswalder Str. 224a<br>
+            10405 Berlin</p>
+            <p>Email: {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}</p>
+        </div>
+        <div class="impressum-block">
+            <h4>Disclaimer</h4>
+            <p>This document is provided for informational purposes only. Despite careful review, we accept no liability for its completeness or accuracy.{% if branche and ('steuer' in branche|lower or 'wirtschaftspr' in branche|lower or 'rechtsber' in branche|lower or 'buchhal' in branche|lower) %} Tax advisory professions: professional-law obligations under &sect;&nbsp;57 StBerG (confidentiality, data protection) must be reviewed on your own responsibility.{% endif %}</p>
+            <h4>Copyright</h4>
+            <p>All content is subject to German copyright law.</p>
+        </div>
+        <div class="impressum-block">
+            <h4>Note on the EU AI Act</h4>
+            {# KIS-1235: "Fördermöglichkeiten" aus dem Disclaimer gestrichen —
+               die KPA enthält bewusst keine Förderprogramme (die stehen im
+               KI-Status-Report); das Versprechen war faktisch falsch. #}
+            <p>This document provides information on potentials, obligations and risks in the use of AI. Funding programs can be found in the &ldquo;Funding&rdquo; chapter of the AI Status Report. It does not constitute legal advice. Please note: the transparency obligations to label AI-generated content (Art. 50 EU AI Act) apply from 2 August 2026.</p>
+        </div>
+    </div>
+    <div class="impressum-divider"></div>
+    <p class="small muted" style="text-align: center;">
+        Based on data from the KI-Readiness Report 1. No repeat questionnaire required.
+    </p>
+</div>
+
+<!-- GDPR Mini Disclaimer -->
+<div class="gdpr-mini">
+    This AI Potential Analysis uses company data from the KI-Readiness Report. Processing based on Art. 6 (1) b GDPR.
+    <a href="{{ brand.privacy_url | default('https://ki-sicherheit.jetzt/datenschutz') }}" target="_blank">Privacy Notice</a>
+</div>
+
+<p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">
+    AI Potential Analysis · Generated on {{ report_date_display }}{% if REPORT_DISPLAY_ID %} · {{ REPORT_DISPLAY_ID }}{% endif %}
+</p>
+
+</body>
+</html>

@@ -664,8 +664,20 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
         'gc_implementation_plan_summary': '',  # Filled after impl plan is generated
     }
 
+    # KIS-1248 (Voll-Englisch Stufe 2): Bei englischem Report englische
+    # Inhalte erzwingen — die gc_*-Prompts existieren nur auf Deutsch,
+    # daher DE-Prompt + verbindliche EN-Output-Direktive.
+    _gc_lang = str(context.get('LANG') or context.get('lang') or 'de').lower()
+
     try:
         prompt_text = load_prompt(prompt_name, lang="de", vars_dict=vars_dict)
+        if _gc_lang.startswith('en'):
+            prompt_text += (
+                "\n\nOUTPUT LANGUAGE (MANDATORY): Write the ENTIRE output in "
+                "professional business English (headings, labels, prose). Keep "
+                "proper nouns, program and product names unchanged; keep the "
+                "numeric values from the context verbatim."
+            )
     except Exception as exc:
         log.error(
             "[GC-DEEP-DIVE] Failed to load prompt %s: %s\n%s",
@@ -942,7 +954,20 @@ def render_deep_dive_html(sections: Dict[str, str],
 
         template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
         env = Environment(loader=FileSystemLoader(template_dir), autoescape=False)
-        template = env.get_template('gamechanger_deep_dive_v1.html')
+
+        # KIS-1248 (Voll-Englisch Stufe 2): EN-Template wählen, wenn der
+        # Report englisch ist und die EN-Fassung existiert.
+        _dd_lang = str(
+            context.get('LANG') or context.get('lang')
+            or sections.get('LANG') or 'de'
+        ).lower()
+        _dd_tpl = 'gamechanger_deep_dive_v1.html'
+        if _dd_lang.startswith('en') and os.path.exists(
+            os.path.join(template_dir, 'gamechanger_deep_dive_en.html')
+        ):
+            _dd_tpl = 'gamechanger_deep_dive_en.html'
+            log.info("[KIS-1248][LANG] Using EN deep-dive template")
+        template = env.get_template(_dd_tpl)
 
         # Merge sections and context for template
         template_vars = {**sections, **context}

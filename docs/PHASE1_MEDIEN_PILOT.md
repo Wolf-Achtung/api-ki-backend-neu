@@ -99,6 +99,19 @@ Frontend ist nach Deploy dieses Branches automatisch im Medien-Modus
   i18n-ui_labels (191) und die Engine-Label-Sets (Business Case, Vendor-Audit,
   Risk) waren bereits zweisprachig. Noch offen für Voll-EN: strategy_report- und
   KPA-Template, E-Mail-Templates, EN-Fassung der Medien-Förderprofile.
+- **Voll-Englisch (Stufe 2, KIS-1248)**: strategy_report_en.html und
+  gamechanger_deep_dive_en.html (1:1-Struktur, sichtbare Texte EN);
+  Sprachweichen in strategy_renderer und gamechanger_deep_dive wählen die
+  EN-Templates bei lang=en automatisch. LLM-Inhalte für Strategie/KPA
+  erhalten bei lang=en eine verbindliche EN-Output-Direktive (die
+  Strategie-/gc-Prompts selbst sind noch deutsch — native EN-Prompts und
+  EN-E-Mail-Templates sind die verbleibende Stufe 3). CI-Fix: EN-Template
+  nutzt {{ report_year }} (Copyright-Zeile; test_year_audit lebte mit der
+  Datei wieder auf).
+- **Medien-Tool-Katalog**: tools_seed.json von 15 auf 23 Einträge erweitert
+  (Amberscript, Simon Says, Frame.io, DeepL Pro, iconik, Trint, Aleph Alpha
+  PhariaAI, Premiere Speech-to-Text — alle mit best_for_industries=medien);
+  die Quartals-Routine verifiziert Neuzugänge automatisch mit.
 - **Weitere Sprachen**: Architektur trägt das Muster prompts/<lang>/ +
   Template-je-Sprache + ui_labels; Renderer ist aktuell de/en-binär
   (`is_en`) — für FR/ES/IT müsste die Sprachweiche auf Lang-Codes
