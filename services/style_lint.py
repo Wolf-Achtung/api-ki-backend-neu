@@ -369,21 +369,51 @@ _COL_WIDE = (
     "kernbotschaft", "prüfschritt", "bedeutung", "tool", "anbieter",
 )
 
+# KIS-1255 (B): EN-Header-Keywords — NUR bei lang=en aktiv, damit deutsche
+# Reports byte-identisch bleiben (Lauf 1132: EN-Roadmap "Mo nth 1-2" und
+# Tool-Tabelle "RECOM MENDA TION" wurden buchstabenweise zerquetscht, weil
+# die Keyword-Maps nur deutsche Header kannten). "benefit"/"trade-off"
+# stehen bewusst in WIDE, damit der "fit"-Narrow-Treffer sie nicht erfasst
+# (WIDE wird zuerst geprüft).
+_HEADER_SHORTENINGS_EN: Dict[str, str] = {
+    "gdpr compliance": "GDPR",
+    "gdpr conformity": "GDPR",
+    "application deadline": "Deadline",
+    "probability of occurrence": "Likelihood",
+    "implementation complexity": "Complexity",
+}
+_COL_NARROW_EN = (
+    "budget", "fit", "phase", "priority", "status", "deadline", "effort",
+    "gdpr", "risk",
+)
+_COL_WIDE_EN = (
+    "vendor", "recommendation", "focus", "description", "measure",
+    "action", "benefit", "trade-off", "mitigation", "summary",
+)
 
-def _col_weight(header_text: str) -> float:
+
+def _col_weight(header_text: str, lang: str = "de") -> float:
     t = header_text.lower()
-    if any(k in t for k in _COL_WIDE):
+    _en = str(lang or "de").lower().startswith("en")
+    wide = _COL_WIDE + (_COL_WIDE_EN if _en else ())
+    narrow = _COL_NARROW + (_COL_NARROW_EN if _en else ())
+    if any(k in t for k in wide):
         return 3.0
-    if any(k in t for k in _COL_NARROW):
+    if any(k in t for k in narrow):
         return 1.0
     return 2.0
 
 
-def harden_wide_tables(html: str) -> Tuple[str, int]:
+def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
     """Kürzt Lang-Header und injiziert <colgroup> in Tabellen mit ≥4 Spalten."""
     if not html or "<table" not in html.lower():
         return html, 0
     count = 0
+    # KIS-1255 (B): EN-Kürzungen nur bei lang=en dazu — Default bleibt
+    # byte-identisch zum bisherigen DE-Verhalten.
+    shortenings = dict(_HEADER_SHORTENINGS)
+    if str(lang or "de").lower().startswith("en"):
+        shortenings.update(_HEADER_SHORTENINGS_EN)
 
     def _table(m: "re.Match[str]") -> str:
         nonlocal count
@@ -400,7 +430,7 @@ def harden_wide_tables(html: str) -> Tuple[str, int]:
             return table
 
         # 2. Lang-Header kürzen (im gesamten Tabellen-HTML, nur Klartext)
-        for long, short in _HEADER_SHORTENINGS.items():
+        for long, short in shortenings.items():
             pattern = re.compile(re.escape(long), re.IGNORECASE)
             new_table, n = pattern.subn(short, table)
             if n:
@@ -410,7 +440,7 @@ def harden_wide_tables(html: str) -> Tuple[str, int]:
         # 3. Gewichte aus den (ggf. gekürzten) Headern ableiten
         row_m = _FIRST_ROW_RE.search(table)
         cells = _HEADER_CELL_RE.findall(row_m.group(1)) if row_m else cells
-        weights = [_col_weight(_STRIP_TAGS_RE.sub(" ", c)) for c in cells]
+        weights = [_col_weight(_STRIP_TAGS_RE.sub(" ", c), lang=lang) for c in cells]
         total = sum(weights) or 1.0
         pcts = [max(6.0, w / total * 100.0) for w in weights]
         norm = sum(pcts)

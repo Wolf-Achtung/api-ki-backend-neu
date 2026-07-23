@@ -1034,7 +1034,7 @@ def render_deep_dive_html(sections: Dict[str, str],
                 harden_wide_tables as _dd_hwt,
                 soften_table_long_words as _dd_shy,
             )
-            _html, _n1 = _dd_hwt(_html)
+            _html, _n1 = _dd_hwt(_html, lang=_dd_lang)
             _html, _n2 = _dd_shy(_html)
             if _n1 or _n2:
                 log.info("[KIS-1246][KPA] Tabellen gehärtet: colgroups/header=%d shy=%d", _n1, _n2)

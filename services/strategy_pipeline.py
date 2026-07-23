@@ -202,13 +202,19 @@ async def generate_strategy_report(
         logger.debug("SCORE-DEBUG-4: [Strategy %d] score passed to template = %d", briefing_id, _score)
         logger.debug("SCORE-DEBUG-5: [Strategy %d] stored_candidates = %r", briefing_id, _stored)
 
+        # KIS-1255 (EN-Lauf 1132): Report-Sprache steuert die Label-Varianten
+        # unten — EN-Prompt-Variablen dürfen keine rohen DE-Labels enthalten.
+        _lang_code = str(briefing_data.get("lang") or briefing_data.get("LANG") or "de").lower()
+        _is_en = _lang_code.startswith("en")
+
         # KIS-1126 / C1 FIX: Always use deterministic absolute label from get_score_label()
         # to ensure cross-report consistency (R1, KPA, Strategy all show same label for same score)
         _reifegrad_label = report1_sections.get("score_rating", "")
         if _score > 0:
             try:
                 from services.extra_sections import get_score_label
-                _reifegrad_label = get_score_label(_score, lang="de")
+                # KIS-1255 (A5): lang=en lieferte bisher "gut" statt "good".
+                _reifegrad_label = get_score_label(_score, lang="en" if _is_en else "de")
                 logger.info("[Strategy %d] reifegrad_label from deterministic lookup: %s (score=%d)",
                             briefing_id, _reifegrad_label, _score)
             except Exception:
@@ -263,9 +269,18 @@ async def generate_strategy_report(
         _vendor_audit_status = str(_r1_sections.get("VENDOR_AUDIT_STATUS", "") or "")
         # KIS-1235: Englischer Status ("fail") landete wörtlich im deutschen
         # Fließtext ("Der Vendor-Audit-Status … lautet fail.") — eindeutschen.
-        _vendor_audit_status = {
-            "pass": "bestanden", "warn": "mit Auflagen", "fail": "nicht bestanden",
-        }.get(_vendor_audit_status.strip().lower(), _vendor_audit_status)
+        # KIS-1255 (A5): Umgekehrt landete "nicht bestanden" im EN-Report —
+        # bei lang=en englische Labels (auch für bereits eingedeutschte Werte).
+        if _is_en:
+            _vendor_audit_status = {
+                "pass": "passed", "warn": "passed with conditions", "fail": "failed",
+                "bestanden": "passed", "mit auflagen": "passed with conditions",
+                "nicht bestanden": "failed",
+            }.get(_vendor_audit_status.strip().lower(), _vendor_audit_status)
+        else:
+            _vendor_audit_status = {
+                "pass": "bestanden", "warn": "mit Auflagen", "fail": "nicht bestanden",
+            }.get(_vendor_audit_status.strip().lower(), _vendor_audit_status)
 
         _COUNTRY_NAME_MAP = {
             "DE": "Deutschland",
@@ -275,20 +290,37 @@ async def generate_strategy_report(
         }
         _country_name = _COUNTRY_NAME_MAP.get(_country_code, "Deutschland")
 
+        # KIS-1255 (A5): Branchen-Slug "medien" wurde per .title() zu "Medien"
+        # im EN-Fließtext — bei lang=en das englische Display-Label verwenden.
+        _branche_raw = (briefing_data.get("branche", "") or "").strip()
+        if _is_en and _branche_raw:
+            from services.answers_normalizer import BRANCHEN_LABELS_EN
+            _branche_prompt = BRANCHEN_LABELS_EN.get(_branche_raw.lower(), _branche_raw.title())
+        else:
+            _branche_prompt = _branche_raw.title()
+
         base_context = {
             # KIS-1248: Sprache ins Prompt-Context durchreichen (EN-Direktive)
-            "lang": str(briefing_data.get("lang") or briefing_data.get("LANG") or "de").lower(),
-            "branche": (briefing_data.get("branche", "") or "").title(),
+            "lang": _lang_code,
+            "branche": _branche_prompt,
             "hauptleistung": _hauptleistung,
-            "segment": _segment_label(briefing_data.get("unternehmensgroesse", "")),
+            "segment": _segment_label(
+                briefing_data.get("unternehmensgroesse", ""),
+                lang="en" if _is_en else "de",
+            ),
             "mitarbeiter": briefing_data.get("mitarbeiter", ""),
             "bundesland": _bl_label,
             "country": _country_code,
             "country_name": _country_name,
-            "firmenname": briefing_data.get("unternehmen_name", "Ihr Unternehmen"),
+            # KIS-1255 (A2/A4): "Ihr Unternehmen" leakte in EN-Fließtext und
+            # Tabellen-Header ("FIT FOR IHR UNTERNEHMEN", Lauf 1132).
+            "firmenname": briefing_data.get(
+                "unternehmen_name", "your company" if _is_en else "Ihr Unternehmen",
+            ),
             # FIX-A3: Deterministic BAFA values for S7
             "bafa_foerderquote": str(_bafa_quote),
-            "bafa_max_foerderung": _bafa_max,
+            # KIS-1255 (C2): EN-Report bekommt EN-Tausendertrennung ("1,750 €").
+            "bafa_max_foerderung": _num_de_to_en(_bafa_max) if _is_en else _bafa_max,
             "readiness_score": _score,
             "reifegrad": _reifegrad_label,
             "reifegrad_label": _reifegrad_label,
@@ -326,16 +358,28 @@ async def generate_strategy_report(
                 strategy_questions.get("s2_zeitrahmen", ""),
                 lang=str(briefing_data.get("lang") or "de"),
             ),
-            "s3_prioritaeten": ", ".join(strategy_questions.get("s3_prioritaeten", [])),
-            "s4_engpass": strategy_questions.get("s4_engpass", ""),
+            # KIS-1255 (A6a): Die DE-Enum-Werte der Strategie-Fragen wurden im
+            # EN-Report wörtlich interpoliert ("Geschwindigkeit erhöhen",
+            # "zu wenig Know-how") — bei lang=en über EN-Labels übersetzen.
+            "s3_prioritaeten": ", ".join(
+                _strategy_enum_en("s3_prioritaeten", strategy_questions.get("s3_prioritaeten", []))
+                if _is_en else strategy_questions.get("s3_prioritaeten", [])
+            ),
+            "s4_engpass": _strategy_enum_value(
+                "s4_engpass", strategy_questions.get("s4_engpass", ""), _is_en),
             # s5_software: comma-separated string, merged in Frontend (strategy.html ~L1179-1184)
             # from s5_tools (checkboxes) + s5_tools_other (freetext). Backend only reads s5_software.
             "s5_software": strategy_questions.get("s5_software", ""),
-            "s6_foerderinteresse": strategy_questions.get("s6_foerderinteresse", ""),
-            "s7_entscheidung": strategy_questions.get("s7_entscheidung", ""),
-            "s8_erfahrung": strategy_questions.get("s8_erfahrung", ""),
-            "s9_ansatz": strategy_questions.get("s9_ansatz", ""),
-            "s10_datenschutz": strategy_questions.get("s10_datenschutz", ""),
+            "s6_foerderinteresse": _strategy_enum_value(
+                "s6_foerderinteresse", strategy_questions.get("s6_foerderinteresse", ""), _is_en),
+            "s7_entscheidung": _strategy_enum_value(
+                "s7_entscheidung", strategy_questions.get("s7_entscheidung", ""), _is_en),
+            "s8_erfahrung": _strategy_enum_value(
+                "s8_erfahrung", strategy_questions.get("s8_erfahrung", ""), _is_en),
+            "s9_ansatz": _strategy_enum_value(
+                "s9_ansatz", strategy_questions.get("s9_ansatz", ""), _is_en),
+            "s10_datenschutz": _strategy_enum_value(
+                "s10_datenschutz", strategy_questions.get("s10_datenschutz", ""), _is_en),
             # Budget values (pre-calculated, German format)
             **budget.to_dict(),
         }
@@ -431,8 +475,13 @@ async def generate_strategy_report(
                 size=_funding_size,
                 branch=briefing_data.get("branche", ""),
                 limit=8,
+                # KIS-1255 (A3): EN-Report — Feldwerte (Quote/Betrag) übersetzt,
+                # Programm-Namen bleiben unverändert.
+                lang="en" if _is_en else "de",
             )
-            _funding_data_block = format_funding_programs_for_prompt(_filtered_programs)
+            _funding_data_block = format_funding_programs_for_prompt(
+                _filtered_programs, lang="en" if _is_en else "de",
+            )
             logger.info(
                 "[Strategy %d] S7 funding (KIS-1093-B): %d pre-filtered programs for country=%s, bl=%s",
                 briefing_id, len(_filtered_programs), _country_code,
@@ -446,18 +495,32 @@ async def generate_strategy_report(
         # from the base_context that was already computed deterministically.
         # FIX-KIS-BAFA-Country: only inject the German BAFA baseline for country=DE.
         if not _funding_data_block.strip() and _country_code == "DE":
-            _funding_data_block = (
-                f"- BAFA – Förderung von Unternehmensberatungen für KMU (Träger: BAFA)\n"
-                f"  Förderquote: {_bafa_quote}%\n"
-                f"  Max. Förderung: {_bafa_max}\n"
-                f"  KI-Relevanz: high\n"
-                f"  Frist: bis 31.12.2026"
-            )
+            if _is_en:
+                # KIS-1255 (A3): EN-Fallback-Block — Programm-Name bleibt DE
+                # (Eigenname), Feld-Labels und Werte englisch.
+                _funding_data_block = (
+                    f"- BAFA – Förderung von Unternehmensberatungen für KMU (provider: BAFA)\n"
+                    f"  Funding rate: {_bafa_quote}%\n"
+                    f"  Max. funding: {_num_de_to_en(_bafa_max)}\n"
+                    f"  AI relevance: high\n"
+                    f"  Deadline: until 31.12.2026"
+                )
+            else:
+                _funding_data_block = (
+                    f"- BAFA – Förderung von Unternehmensberatungen für KMU (Träger: BAFA)\n"
+                    f"  Förderquote: {_bafa_quote}%\n"
+                    f"  Max. Förderung: {_bafa_max}\n"
+                    f"  KI-Relevanz: high\n"
+                    f"  Frist: bis 31.12.2026"
+                )
             # Also try to merge R1 programme names from report1_sections
             _r1_foerder = str(report1_sections.get("FOERDERPROGRAMME_HTML", "") or "")
             if _r1_foerder and "BAFA" not in _r1_foerder[:50]:
                 # R1 has a funding table — mention it so LLM doesn't ignore it
                 _funding_data_block += (
+                    "\n\nNOTE: Additional programmes were identified in the AI Readiness "
+                    "Report. Use the BAFA data above as the minimum."
+                ) if _is_en else (
                     "\n\nHINWEIS: Weitere Programme wurden im KI-Status-Report identifiziert. "
                     "Verwende die BAFA-Daten oben als Minimum."
                 )
@@ -492,7 +555,10 @@ async def generate_strategy_report(
             _kpa_top_use_cases = str(_r2_potenziale) if _r2_potenziale else "keine Angabe"
 
         s_moat_task = _generate_section("s_moat", base_context, {
-            "groesse": _segment_label(briefing_data.get("unternehmensgroesse", "")),
+            "groesse": _segment_label(
+                briefing_data.get("unternehmensgroesse", ""),
+                lang="en" if _is_en else "de",
+            ),
             "geschaeftsmodell_evolution": briefing_data.get("geschaeftsmodell_evolution", "") or "",
             "vision_3_jahre": briefing_data.get("vision_3_jahre", "") or "",
             "strategische_ziele": briefing_data.get("strategische_ziele", "") or "",
@@ -757,6 +823,18 @@ async def _generate_section(
     # Output-Direktive englische Inhalte — die Strategie-Prompts selbst sind
     # (noch) deutsch; native EN-Prompts sind die dokumentierte Ausbaustufe.
     _sp_lang = str(context.get("lang") or context.get("LANG") or "de").lower()
+    # KIS-1255 (A9): "F&E"/"Großunternehmen" aus dem Prompt-Kontext landeten
+    # roh im EN-Fließtext. prompts/strategy_prompts_en.py ist read-only —
+    # die Terminologie-Regel wird deshalb zur Laufzeit angehängt.
+    if _native_en:
+        system_prompt = system_prompt + (
+            "\n\nGERMAN INPUT TERMS (MANDATORY): The context data may contain German "
+            "technical terms. Always translate them into English in your output — "
+            "e.g. 'F&E' → 'R&D', 'Großunternehmen' → 'large enterprises', "
+            "'Zuschuss' → 'grant', 'Darlehen' → 'loan', 'Weiterbildung' → 'training'. "
+            "Only proper names of funding programmes, institutions and products "
+            "(BAFA, ZIM, KfW, ProFIT, …) stay unchanged."
+        )
     if _sp_lang.startswith("en") and not _native_en:
         _en_directive = (
             "\n\nOUTPUT LANGUAGE (MANDATORY): Write the ENTIRE output in professional "
@@ -894,7 +972,7 @@ def _bundesland_label(raw: str, country: str = "DE") -> str:
     return get_region_label(raw, country=country) or str(raw or "")
 
 
-def _segment_label(raw: str) -> str:
+def _segment_label(raw: str, lang: str = "de") -> str:
     """Map raw unternehmensgroesse value to a readable segment label for prompts."""
     _map = {
         "1": "Einzelunternehmer",
@@ -909,8 +987,115 @@ def _segment_label(raw: str) -> str:
         "kmu": "KMU (11\u2013100 Mitarbeiter)",
         "medium": "KMU (11\u2013100 Mitarbeiter)",
     }
+    # KIS-1255 (A8): EN-Report bekommt englische Segment-Labels.
+    if str(lang or "de").lower().startswith("en"):
+        _map = {
+            "1": "Sole proprietor",
+            "solo": "Sole proprietor",
+            "freelancer": "Sole proprietor",
+            "2-10": "Small business (2\u201310 employees)",
+            "2\u201310": "Small business (2\u201310 employees)",
+            "team": "Small business (2\u201310 employees)",
+            "klein": "Small business (2\u201310 employees)",
+            "11-100": "SME (11\u2013100 employees)",
+            "11\u2013100": "SME (11\u2013100 employees)",
+            "kmu": "SME (11\u2013100 employees)",
+            "medium": "SME (11\u2013100 employees)",
+        }
     key = str(raw or "").strip().lower()
     return _map.get(key, str(raw or ""))
+
+
+# =============================================================================
+# KIS-1255 (A6a): EN-Labels f\u00fcr die DE-Enum-Werte der Strategie-Fragen.
+# Referenz: routes/chat.py _QR_OPTION_LABELS_EN (read-only) \u2014 hier bewusst
+# dupliziert, damit die Pipeline keinen Import auf die Routes-Schicht bekommt.
+# Nur bei lang=en angewandt; DE-Pfad bleibt byte-identisch.
+# =============================================================================
+
+_STRATEGY_ENUM_LABELS_EN: Dict[str, Dict[str, str]] = {
+    "s3_prioritaeten": {
+        "Kosten senken": "Reduce costs",
+        "Umsatz steigern": "Increase revenue",
+        "Qualit\u00e4t verbessern": "Improve quality",
+        "Geschwindigkeit erh\u00f6hen": "Increase speed",
+        "Compliance sichern": "Ensure compliance",
+        "Neue Gesch\u00e4ftsfelder": "New business areas",
+        "Fachkr\u00e4ftemangel kompensieren": "Compensate skills shortage",
+        "Kundenerlebnis verbessern": "Improve customer experience",
+    },
+    "s4_engpass": {
+        "Zu wenig Know-how": "Not enough know-how",
+        "Kein Budget": "No budget",
+        "Fehlende Daten": "Missing data",
+        "Widerstand im Team": "Resistance in the team",
+        "Regulatorische Unsicherheit": "Regulatory uncertainty",
+        "Kein klarer Use Case": "No clear use case",
+        "Andere": "Other",
+    },
+    "s6_foerderinteresse": {
+        "Ja, dringend": "Yes, urgently",
+        "Ja, wenn passend": "Yes, if suitable",
+        "Nein, eigenes Budget": "No, own budget",
+        "Wei\u00df nicht": "Don't know",
+    },
+    "s7_entscheidung": {
+        "Entscheide allein": "I decide alone",
+        "Brauche Vorlage f\u00fcr Gesch\u00e4ftsleitung": "Proposal for management",
+        "Muss Gesellschafter \u00fcberzeugen": "Convince shareholders",
+        "Muss Aufsichtsrat/Beirat informieren": "Inform advisory/supervisory board",
+    },
+    "s8_erfahrung": {
+        "Noch keine": "None yet",
+        "Experimentiert": "Experimenting",
+        "Erste Tools im Einsatz": "First tools in use",
+        "Fortgeschritten": "Advanced",
+    },
+    "s9_ansatz": {
+        "Cloud-SaaS": "Cloud SaaS",
+        "On-Premise": "On-premise",
+        "Hybrid": "Hybrid",
+        "Egal": "Still unclear / no preference",
+    },
+    "s10_datenschutz": {
+        "Hoch": "High", "Mittel": "Medium", "Niedrig": "Low",
+    },
+}
+
+
+def _strategy_enum_en(field: str, values: Any) -> List[str]:
+    """\u00dcbersetzt eine Liste von DE-Enum-Werten eines Strategie-Felds nach EN."""
+    mapping = {k.lower(): v for k, v in _STRATEGY_ENUM_LABELS_EN.get(field, {}).items()}
+    out: List[str] = []
+    for v in (values or []):
+        s = str(v or "").strip()
+        out.append(mapping.get(s.lower(), s))
+    return out
+
+
+def _strategy_enum_value(field: str, value: Any, is_en: bool) -> Any:
+    """\u00dcbersetzt einen einzelnen Enum-Wert nach EN; DE-Pfad gibt das Original
+    unver\u00e4ndert zur\u00fcck (byte-identisch)."""
+    if not is_en:
+        return value
+    mapping = {k.lower(): v for k, v in _STRATEGY_ENUM_LABELS_EN.get(field, {}).items()}
+    s = str(value or "").strip()
+    return mapping.get(s.lower(), value if not s else s)
+
+
+def _num_de_to_en(text: str) -> str:
+    """Wandelt deutsche Tausenderpunkte in EN-Kommas ("1.750 \u20ac" \u2192 "1,750 \u20ac").
+
+    Nur auf Zahlen mit exakt 3er-Gruppen angewandt \u2014 Datumsangaben
+    ("31.12.2026") und Dezimalzahlen bleiben unber\u00fchrt.
+    """
+    if not text:
+        return str(text or "")
+    return re.sub(
+        r"(?<![\d.])(\d{1,3})((?:\.\d{3})+)(?!\.?\d)",
+        lambda m: m.group(1) + m.group(2).replace(".", ","),
+        str(text),
+    )
 
 
 def _derive_handlungsfelder(report1_data: Dict[str, Any], report2_data: Dict[str, Any]) -> List[str]:

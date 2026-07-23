@@ -2242,7 +2242,9 @@ def render(briefing_obj: Any,
         # KIS-1246: Breite LLM-Tabellen (≥4 Spalten) bekommen inhaltsbasierte
         # Spaltenbreiten + kompakte Header — vor den Soft-Hyphens, damit die
         # &shy;-Injektion auf den gekürzten Headern arbeitet.
-        html, _f8 = _final_hwt(html)
+        # KIS-1255: lang-aware — EN-Header (TOOL/VENDOR/RECOMMENDATION…) sonst
+        # ohne Gewichte → buchstabenweise Umbrüche (Lauf 1132).
+        html, _f8 = _final_hwt(html, lang=str(ctx.get("LANG") or ctx.get("lang") or "de"))
         # KIS-1235: Headless-Chromium trennt ohne Wörterbuch mitten im Wort
         # ("HANDLUN GSFELD") — Soft-Hyphens geben den Tabellen echte
         # Trennstellen.
