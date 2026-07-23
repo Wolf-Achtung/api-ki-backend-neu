@@ -315,11 +315,17 @@ async def generate_strategy_report(
             # KIS-1230: Zeitrahmen-Label in Prosa-sichere Form bringen — das
             # rohe Chip-Label führte zu "innerhalb von Sofort (1-3 Monate)"
             # im Executive Summary.
-            "s2_zeitrahmen": _zeitrahmen_prose(strategy_questions.get("s2_zeitrahmen", "")),
+            "s2_zeitrahmen": _zeitrahmen_prose(
+                strategy_questions.get("s2_zeitrahmen", ""),
+                lang=str(briefing_data.get("lang") or "de"),
+            ),
             # KIS-1247: Phasen-Fenster aus dem Zeitrahmen ableiten — die
             # Roadmap (Kap. 5/6) muss im gewählten Horizont enden statt
             # immer 12 Monate zu planen.
-            **phase_windows(strategy_questions.get("s2_zeitrahmen", "")),
+            **phase_windows(
+                strategy_questions.get("s2_zeitrahmen", ""),
+                lang=str(briefing_data.get("lang") or "de"),
+            ),
             "s3_prioritaeten": ", ".join(strategy_questions.get("s3_prioritaeten", [])),
             "s4_engpass": strategy_questions.get("s4_engpass", ""),
             # s5_software: comma-separated string, merged in Frontend (strategy.html ~L1179-1184)
@@ -665,13 +671,32 @@ async def _generate_section(
     """
     from prompts.strategy_prompts import STRATEGY_PROMPTS, SYSTEM_PROMPT_STRATEGY_REPORT
 
-    prompt_template = STRATEGY_PROMPTS.get(section_key, "")
+    # Build prompt
+    context = {**base_context, **extra_context}
+
+    # KIS-1249 (Voll-Englisch Stufe 3): Native EN-Prompts, wenn vorhanden —
+    # sonst greift weiter unten die EN-Output-Direktive auf den DE-Prompts.
+    _sp_lang_early = str(context.get("lang") or context.get("LANG") or "de").lower()
+    _prompts_map = STRATEGY_PROMPTS
+    _system_prompt_tpl = SYSTEM_PROMPT_STRATEGY_REPORT
+    _native_en = False
+    if _sp_lang_early.startswith("en"):
+        try:
+            from prompts.strategy_prompts_en import (
+                STRATEGY_PROMPTS_EN, SYSTEM_PROMPT_STRATEGY_REPORT_EN,
+            )
+            if STRATEGY_PROMPTS_EN.get(section_key):
+                _prompts_map = STRATEGY_PROMPTS_EN
+                _system_prompt_tpl = SYSTEM_PROMPT_STRATEGY_REPORT_EN
+                _native_en = True
+                logger.info("[Strategy %s] Using native EN prompt", section_key)
+        except ImportError:
+            logger.warning("[Strategy] strategy_prompts_en not available — EN via directive")
+
+    prompt_template = _prompts_map.get(section_key, "")
     if not prompt_template:
         logger.warning("[Strategy] No prompt template for section %s", section_key)
         return ""
-
-    # Build prompt
-    context = {**base_context, **extra_context}
     try:
         prompt = prompt_template.format(**{k: str(v or "") for k, v in context.items()})
     except KeyError as e:
@@ -716,15 +741,15 @@ async def _generate_section(
 
     # S31: Format system prompt with context (for industry, ROI bridge, vendor audit)
     try:
-        system_prompt = SYSTEM_PROMPT_STRATEGY_REPORT.format(
+        system_prompt = _system_prompt_tpl.format(
             **{k: str(v or "") for k, v in context.items()}
         )
     except KeyError:
-        system_prompt = SYSTEM_PROMPT_STRATEGY_REPORT
-        for key in re.findall(r"\{(\w+)\}", SYSTEM_PROMPT_STRATEGY_REPORT):
+        system_prompt = _system_prompt_tpl
+        for key in re.findall(r"\{(\w+)\}", _system_prompt_tpl):
             if key not in context:
                 context[key] = ""
-        system_prompt = SYSTEM_PROMPT_STRATEGY_REPORT.format(
+        system_prompt = _system_prompt_tpl.format(
             **{k: str(v or "") for k, v in context.items()}
         )
 
@@ -732,7 +757,7 @@ async def _generate_section(
     # Output-Direktive englische Inhalte — die Strategie-Prompts selbst sind
     # (noch) deutsch; native EN-Prompts sind die dokumentierte Ausbaustufe.
     _sp_lang = str(context.get("lang") or context.get("LANG") or "de").lower()
-    if _sp_lang.startswith("en"):
+    if _sp_lang.startswith("en") and not _native_en:
         _en_directive = (
             "\n\nOUTPUT LANGUAGE (MANDATORY): Write the ENTIRE output in professional "
             "business English. Translate all headings, labels and prose. Keep proper "
@@ -1099,19 +1124,27 @@ def _send_strategy_email(briefing_id: int, pdf_bytes: bytes, db_session: Any) ->
 
     from utils.report_display_id import get_report_display_id
     _display = get_report_display_id(briefing_id)
+    _mail_lang = str(getattr(briefing, "lang", "de") or "de").lower()
+    _en = _mail_lang.startswith("en")
     attachment = {
-        "filename": f"KI-Strategiebericht-{_display}.pdf",
+        "filename": (
+            f"AI-Strategy-Report-{_display}.pdf" if _en
+            else f"KI-Strategiebericht-{_display}.pdf"
+        ),
         "content": pdf_bytes,
         "mimetype": "application/pdf",
     }
-    subject = f"Ihr KI-Strategiebericht ({_display})"
+    subject = (
+        f"Your AI Strategy Report ({_display})" if _en
+        else f"Ihr KI-Strategiebericht ({_display})"
+    )
 
     # --- User email ---
     if user_email:
         ok, err = _send_email_via_resend(
             user_email,
             subject,
-            render_strategy_email(recipient="user", briefing_id=briefing_id),
+            render_strategy_email(recipient="user", briefing_id=briefing_id, lang=_mail_lang),
             attachments=[attachment],
         )
         if ok:
@@ -1188,11 +1221,15 @@ def _send_coach_reminder_email(briefing_id: int, db_session: Any) -> None:
         return
 
     _time.sleep(0.6)  # Resend rate limit: max 2 req/sec
-    subject = "Sie haben Fragen zu Ihren Reports? Ihr persönlicher KI-Coach steht bereit"
+    _mail_lang = str(getattr(briefing, "lang", "de") or "de").lower()
+    if _mail_lang.startswith("en"):
+        subject = "Questions about your reports? Your personal AI coach is ready"
+    else:
+        subject = "Sie haben Fragen zu Ihren Reports? Ihr persönlicher KI-Coach steht bereit"
     ok, err = _send_email_via_resend(
         user_email,
         subject,
-        render_coach_reminder_email(briefing_id=briefing_id),
+        render_coach_reminder_email(briefing_id=briefing_id, lang=_mail_lang),
     )
     if ok:
         # Resend-ID landet bereits in `[Resend Email ID]`-Log direkt vor diesem

@@ -3198,7 +3198,7 @@ FALLSTUDIEN_MEDIEN: List[Dict[str, Any]] = [
         "dauer_bis_roi": "4 Wochen"
     },
     {
-        "keywords": ("agentur", "werbung", "corporate", "marketing", "content", "verlag", "musik", "audio"),
+        "keywords": ("agentur", "werbung", "corporate", "marketing", "content", "verlag", "musik", "audio", "pr", "webdesign", "design", "social", "tonstudio"),
         "titel": "Werbefilm-Studio verdoppelt seine Pitch-Schlagzahl",
         "unternehmen": "Werbefilm-Studio, 5 Kreative (Markenkunden & Sender)",
         "unternehmen_solo": "Solo-Creative-Producer:in für Markenfilme",

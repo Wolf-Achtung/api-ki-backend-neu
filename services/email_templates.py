@@ -130,29 +130,46 @@ def generate_feedback_link(email: str, briefing_id: int = None) -> str:
     return url
 
 
-def render_coach_cta(briefing_id: int, accent_color: str) -> str:
+def render_coach_cta(briefing_id: int, accent_color: str, lang: str = "de") -> str:
     """Render the Coach-Gespräch CTA block for user-facing report emails."""
     coach_url = f"{_brand()['app_url']}/coach/{briefing_id}"
+    # KIS-1249: bilingual (de/en) — HTML structure exists only once.
+    _en = str(lang).lower().startswith("en")
+    _t = {
+        "headline": "Questions about your report?" if _en else "Fragen zu Ihrem Report?",
+        "body": (
+            "Talk to your personal AI coach — they know your report "
+            "and will guide you through the next steps."
+            if _en else
+            "Sprechen Sie mit Ihrem persönlichen KI-Coach — er kennt Ihren Report "
+            "und begleitet Sie bei den nächsten Schritten."
+        ),
+        "button": "Start coach session" if _en else "Coach-Gespräch starten",
+        "footnote": (
+            "Free of charge during the trial phase · Conversations are not stored"
+            if _en else
+            "Kostenlos während der Testphase · Gespräche werden nicht gespeichert"
+        ),
+    }
     return (
         '<table role="presentation" style="margin: 24px auto; width: 100%; max-width: 600px;">'
         '<tr>'
         '<td style="padding: 20px 16px; background: #f8f9fa; border-radius: 12px; text-align: center;">'
         '<p style="font-size: 16px; color: #1a1a1a; margin: 0 0 8px; font-weight: 600;">'
-        'Fragen zu Ihrem Report?'
+        f'{_t["headline"]}'
         '</p>'
         '<p style="font-size: 14px; color: #6b7280; margin: 0 0 18px; line-height: 1.5;">'
-        'Sprechen Sie mit Ihrem pers\u00f6nlichen KI-Coach \u2014 er kennt Ihren Report '
-        'und begleitet Sie bei den n\u00e4chsten Schritten.'
+        f'{_t["body"]}'
         '</p>'
         f'<a href="{escape(coach_url)}" '
         f'style="display: inline-block; background: {accent_color}; color: #ffffff; '
         'padding: 13px 28px; border-radius: 8px; text-decoration: none; '
         'font-weight: 600; font-size: 14px; '
         "font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;\">"
-        'Coach-Gespr\u00e4ch starten'
+        f'{_t["button"]}'
         '</a>'
         '<p style="font-size: 11px; color: #9ca3af; margin: 14px 0 0;">'
-        'Kostenlos w\u00e4hrend der Testphase \u00b7 Gespr\u00e4che werden nicht gespeichert'
+        f'{_t["footnote"]}'
         '</p>'
         '</td>'
         '</tr>'
@@ -160,7 +177,10 @@ def render_coach_cta(briefing_id: int, accent_color: str) -> str:
     )
 
 
-def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_summary_html: Optional[str] = None, user_email: Optional[str] = None, briefing_id: Optional[int] = None) -> str:
+def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_summary_html: Optional[str] = None, user_email: Optional[str] = None, briefing_id: Optional[int] = None, lang: str = "de") -> str:
+    # KIS-1249: bilingual (de/en) for user-facing mails; admin copy stays German.
+    _en = recipient != "admin" and str(lang).lower().startswith("en")
+    _lang_code = "en" if _en else "de"
     if recipient == "admin":
         # FIX-KIS-1027.5-B: "(inkl. Briefing)" aus Title entfernt — diese Mail
         # enthaelt KEIN Briefing mehr. Briefing-Daten + PDF kommen separat
@@ -168,12 +188,30 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
         title = "Kopie: KI‑Status‑Report"
         intro = "dies ist die Admin‑Kopie des automatisch generierten KI‑Status‑Reports."
         cta_hint = "Tipp: Für Audit‑Ready‑Kunden kann optional das EU‑AI‑Act‑Add‑on (Tabellen‑Kit/Compliance‑Kit/Audit‑Ready) ergänzt werden."
+    elif _en:
+        title = "Your AI Status Report"
+        intro = "please find your automatically generated AI Status Report."
+        cta_hint = ""
     else:
         title = "Ihr KI‑Status‑Report"
         intro = "anbei erhalten Sie Ihren automatisch generierten KI‑Status‑Report."
         cta_hint = ""
 
-    link_html = f'<p>Sie können den Report <a href="{escape(pdf_url)}">hier als PDF abrufen</a>.</p>' if pdf_url else ""
+    _t = {
+        "greeting": "Hello," if _en else "Guten Tag,",
+        "auto_note": (
+            "Note: This email was generated automatically." if _en
+            else "Hinweis: Diese E‑Mail wurde automatisch erzeugt."
+        ),
+    }
+
+    if pdf_url:
+        if _en:
+            link_html = f'<p>You can <a href="{escape(pdf_url)}">access the report as a PDF here</a>.</p>'
+        else:
+            link_html = f'<p>Sie können den Report <a href="{escape(pdf_url)}">hier als PDF abrufen</a>.</p>'
+    else:
+        link_html = ""
 
     # FIX-KIS-1027.5-B: Briefing-Section deaktiviert. Selbst wenn ein Caller
     # versehentlich briefing_summary_html durchreicht, wird sie nicht mehr
@@ -193,31 +231,63 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
     strategy_cta = ""
     if recipient != "admin" and briefing_id:
         _strategy_url = f"{_brand()['app_url']}/strategy.html?briefing_id={briefing_id}"
+        if _en:
+            _sc = {
+                "next_step": "Next step:",
+                "body": (
+                    'Request your personal <strong>AI Strategy Report</strong> now '
+                    '\u2014 10 questions, 3 minutes, and you will receive an individual implementation roadmap.'
+                ),
+                "button": "Request AI Strategy Report \u2192",
+                "tip": (
+                    'Tip: You will also shortly receive your '
+                    'AI Potential Analysis with an in-depth assessment of your strategic AI potential.'
+                ),
+            }
+        else:
+            _sc = {
+                "next_step": "N\u00e4chster Schritt:",
+                "body": (
+                    'Fordern Sie jetzt Ihren pers\u00f6nlichen <strong>KI\u2011Strategiebericht</strong> an '
+                    '\u2014 10 Fragen, 3 Minuten, und Sie erhalten einen individuellen Implementierungsfahrplan.'
+                ),
+                "button": "Strategiebericht anfordern \u2192",
+                "tip": (
+                    'Tipp: In K\u00fcrze erhalten Sie au\u00dferdem Ihre '
+                    'KI\u2011Potenzial\u2011Analyse mit vertiefter Bewertung Ihres strategischen KI\u2011Potenzials.'
+                ),
+            }
         strategy_cta = (
             '<hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">'
-            '<p style="font-size:15px;margin:0 0 8px"><strong>N\u00e4chster Schritt:</strong></p>'
-            '<p style="margin:0 0 12px">Fordern Sie jetzt Ihren pers\u00f6nlichen <strong>KI\u2011Strategiebericht</strong> an '
-            '\u2014 10 Fragen, 3 Minuten, und Sie erhalten einen individuellen Implementierungsfahrplan.</p>'
+            f'<p style="font-size:15px;margin:0 0 8px"><strong>{_sc["next_step"]}</strong></p>'
+            f'<p style="margin:0 0 12px">{_sc["body"]}</p>'
             f'<p><a href="{escape(_strategy_url)}" style="display:inline-block;background:#2B6CB0;color:#fff;'
             'padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">'
-            'Strategiebericht anfordern \u2192</a></p>'
-            '<p class="muted" style="margin-top:8px">Tipp: In K\u00fcrze erhalten Sie au\u00dferdem Ihre '
-            'KI\u2011Potenzial\u2011Analyse mit vertiefter Bewertung Ihres strategischen KI\u2011Potenzials.</p>'
+            f'{_sc["button"]}</a></p>'
+            f'<p class="muted" style="margin-top:8px">{_sc["tip"]}</p>'
         )
 
     # Add feedback section for user emails only
     feedback_section = ""
     if recipient != "admin" and user_email:
         feedback_link = generate_feedback_link(user_email, briefing_id=briefing_id)
+        if _en:
+            _fb_head = "Your feedback matters!"
+            _fb_body = "How helpful was the report? What can we improve?<br>Takes only 2–3 minutes:"
+            _fb_link = "→ Give feedback"
+        else:
+            _fb_head = "Ihr Feedback hilft!"
+            _fb_body = "Wie hilfreich war der Report? Was können wir verbessern?<br>Dauert nur 2–3 Minuten:"
+            _fb_link = "→ Feedback geben"
         feedback_section = f"""
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
-        <p style="font-size:15px;margin:0 0 8px">💬 <strong>Ihr Feedback hilft!</strong></p>
-        <p class="muted" style="margin:0 0 12px">Wie hilfreich war der Report? Was können wir verbessern?<br>Dauert nur 2–3 Minuten:</p>
-        <p><a href="{escape(feedback_link)}" style="color:#2B6CB0;font-weight:600">→ Feedback geben</a></p>
+        <p style="font-size:15px;margin:0 0 8px">💬 <strong>{_fb_head}</strong></p>
+        <p class="muted" style="margin:0 0 12px">{_fb_body}</p>
+        <p><a href="{escape(feedback_link)}" style="color:#2B6CB0;font-weight:600">{_fb_link}</a></p>
         """
 
     return f"""<!doctype html>
-<html lang="de">
+<html lang="{_lang_code}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -236,7 +306,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
     <div class="wrap">
       <div class="card">
         <h1>{escape(title)}</h1>
-        <p>Guten Tag,</p>
+        <p>{_t["greeting"]}</p>
         <p>{escape(intro)}</p>
         {link_html}
         {briefing_section}
@@ -244,31 +314,53 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
         {coach_cta}
         {strategy_cta}
         {feedback_section}
-        <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>
+        <p class="muted">{_t["auto_note"]}</p>
       </div>
     </div>
   </body>
 </html>"""
 
 
-def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] = None) -> str:
+def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] = None, lang: str = "de") -> str:
     """Render email HTML for KI-Potenzial-Analyse delivery.
 
     Args:
         recipient: "user" or "admin".
+        lang: "de" (default) or "en" — admin copies always stay German (KIS-1249).
     """
+    # KIS-1249: bilingual (de/en) for user-facing mails; admin copy stays German.
+    _en = recipient != "admin" and str(lang).lower().startswith("en")
+    _lang_code = "en" if _en else "de"
     if recipient == "admin":
         title = "Kopie: KI-Potenzial-Analyse"
         intro = "dies ist die Admin‑Kopie der KI-Potenzial-Analyse."
+    elif _en:
+        title = "Your AI Potential Analysis"
+        intro = "your AI Potential Analysis is ready."
     else:
         title = "Ihre KI-Potenzial-Analyse"
         intro = "Ihre KI-Potenzial-Analyse ist fertig."
 
-    body_text = (
-        "Im Anhang finden Sie die vertiefende Analyse Ihres strategischen KI‑Bruchpunkts "
-        "mit 90‑Tage‑Implementierungsplan, Business Case, Risikobewertung und konkreten n\u00e4chsten Schritten."
-    )
-    cta = "Bei Fragen stehen wir Ihnen gerne zur Verf\u00fcgung."
+    if _en:
+        body_text = (
+            "Attached you will find the in-depth analysis of your strategic AI breakpoint, "
+            "including a 90-day implementation plan, business case, risk assessment, and concrete next steps."
+        )
+        cta = "If you have any questions, we are happy to help."
+    else:
+        body_text = (
+            "Im Anhang finden Sie die vertiefende Analyse Ihres strategischen KI‑Bruchpunkts "
+            "mit 90‑Tage‑Implementierungsplan, Business Case, Risikobewertung und konkreten n\u00e4chsten Schritten."
+        )
+        cta = "Bei Fragen stehen wir Ihnen gerne zur Verf\u00fcgung."
+
+    _t = {
+        "greeting": "Hello," if _en else "Guten Tag,",
+        "auto_note": (
+            "Note: This email was generated automatically." if _en
+            else "Hinweis: Diese E‑Mail wurde automatisch erzeugt."
+        ),
+    }
 
     # KIS-1116: Strategy-Upsell removed from KPA-Email (belongs in R1-Email only)
     strategy_cta_html = ""
@@ -279,7 +371,7 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
         logger.info("[COACH-CTA-REMOVED] template=deep_dive briefing_id=%d", briefing_id)
 
     return f"""<!doctype html>
-<html lang="de">
+<html lang="{_lang_code}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -297,7 +389,7 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
     <div class="wrap">
       <div class="card">
         <h1>{escape(title)}</h1>
-        <p>Guten Tag,</p>
+        <p>{_t["greeting"]}</p>
         <p>{escape(intro)}</p>
         <p>{escape(body_text)}</p>
         <p>{escape(cta)}</p>
@@ -305,34 +397,57 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
         {coach_cta}
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
         <p class="muted">{_brand()['advisor_name']} — {_brand()['brand_name']}</p>
-        <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>
+        <p class="muted">{_t["auto_note"]}</p>
       </div>
     </div>
   </body>
 </html>"""
 
 
-def render_strategy_email(recipient: str = "user", briefing_id: Optional[int] = None) -> str:
+def render_strategy_email(recipient: str = "user", briefing_id: Optional[int] = None, lang: str = "de") -> str:
     """Render email HTML for KI-Strategiebericht delivery.
 
     Args:
         recipient: "user" or "admin".
         briefing_id: Briefing ID — required to render the Coach CTA for user emails.
     """
+    # KIS-1249: bilingual (de/en) for user-facing mails; admin copy stays German.
+    _en = recipient != "admin" and str(lang).lower().startswith("en")
+    _lang_code = "en" if _en else "de"
     if recipient == "admin":
         title = "Kopie: KI-Strategiebericht"
         intro = "dies ist die Admin\u2011Kopie des KI-Strategieberichts."
+    elif _en:
+        title = "Your AI Strategy Report"
+        intro = "your personal AI Strategy Report is ready."
     else:
         title = "Ihr KI-Strategiebericht"
         intro = "Ihr pers\u00f6nlicher KI-Strategiebericht liegt vor."
 
-    body_text = (
-        "Basierend auf Ihrem KI-Readiness Assessment und Ihren strategischen "
-        "Zusatzangaben haben wir einen ma\u00dfgeschneiderten Strategiefahrplan "
-        "f\u00fcr Ihr Unternehmen erstellt \u2014 mit priorisierten Handlungsempfehlungen, "
-        "90-Tage-Implementierungsplan, ROI-Prognosen und passenden F\u00f6rderprogrammen."
-    )
-    cta = "Ihr KI-Strategiebericht ist als PDF angeh\u00e4ngt. Bei Fragen stehen wir Ihnen gerne zur Verf\u00fcgung."
+    if _en:
+        body_text = (
+            "Based on your AI readiness assessment and your additional strategic input, "
+            "we have created a tailored strategy roadmap for your company \u2014 "
+            "with prioritized recommendations, a 90-day implementation plan, "
+            "ROI projections, and suitable funding programs."
+        )
+        cta = "Your AI Strategy Report is attached as a PDF. If you have any questions, we are happy to help."
+    else:
+        body_text = (
+            "Basierend auf Ihrem KI-Readiness Assessment und Ihren strategischen "
+            "Zusatzangaben haben wir einen ma\u00dfgeschneiderten Strategiefahrplan "
+            "f\u00fcr Ihr Unternehmen erstellt \u2014 mit priorisierten Handlungsempfehlungen, "
+            "90-Tage-Implementierungsplan, ROI-Prognosen und passenden F\u00f6rderprogrammen."
+        )
+        cta = "Ihr KI-Strategiebericht ist als PDF angeh\u00e4ngt. Bei Fragen stehen wir Ihnen gerne zur Verf\u00fcgung."
+
+    _t = {
+        "greeting": "Hello," if _en else "Guten Tag,",
+        "auto_note": (
+            "Note: This email was generated automatically." if _en
+            else "Hinweis: Diese E\u2011Mail wurde automatisch erzeugt."
+        ),
+    }
 
     # [COACH-CTA-REMOVED] Sprint B Dramaturgie — siehe render_report_ready_email.
     coach_cta = ""
@@ -340,7 +455,7 @@ def render_strategy_email(recipient: str = "user", briefing_id: Optional[int] = 
         logger.info("[COACH-CTA-REMOVED] template=strategy briefing_id=%d", briefing_id)
 
     return f"""<!doctype html>
-<html lang="de">
+<html lang="{_lang_code}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -358,21 +473,21 @@ def render_strategy_email(recipient: str = "user", briefing_id: Optional[int] = 
     <div class="wrap">
       <div class="card">
         <h1>{escape(title)}</h1>
-        <p>Guten Tag,</p>
+        <p>{_t["greeting"]}</p>
         <p>{escape(intro)}</p>
         <p>{escape(body_text)}</p>
         <p>{escape(cta)}</p>
         {coach_cta}
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
         <p class="muted">{_brand()['advisor_name']} — {_brand()['brand_name']}</p>
-        <p class="muted">Hinweis: Diese E\u2011Mail wurde automatisch erzeugt.</p>
+        <p class="muted">{_t["auto_note"]}</p>
       </div>
     </div>
   </body>
 </html>"""
 
 
-def render_coach_reminder_email(briefing_id: int) -> str:
+def render_coach_reminder_email(briefing_id: int, lang: str = "de") -> str:
     """4. Mail im Delivery-Vertrag: Coach-Reminder nach Strategy-Mail.
 
     Sprint B Coach-CTA-Dramaturgie: User erhält nach Versand aller drei
@@ -381,10 +496,58 @@ def render_coach_reminder_email(briefing_id: int) -> str:
     Klicks unmittelbar nach R1. Die drei Report-Mails enthalten daher
     KEINEN Coach-CTA mehr (siehe [COACH-CTA-REMOVED] Marker oben).
     """
-    title = "Ihr KI-Coach steht bereit"
-    cta = render_coach_cta(briefing_id, "#2B6CB0")
+    # KIS-1249: bilingual (de/en) — HTML structure exists only once.
+    _en = str(lang).lower().startswith("en")
+    _lang_code = "en" if _en else "de"
+    if _en:
+        title = "Your AI Coach is ready"
+        _greeting = "Hello,"
+        _auto_note = "Note: This email was generated automatically."
+        _intro_html = (
+            "<p>You have now received all three reports \u2014 the\n"
+            "        <strong>AI Status Report</strong>, the\n"
+            "        <strong>AI Potential Analysis</strong>, and the\n"
+            "        <strong>AI Strategy Report</strong>.</p>\n"
+            "        <p>Take your time to work through the reports.\n"
+            "        The contents complement each other \u2014 together they give you a complete\n"
+            "        picture of your AI starting position and your implementation path.</p>\n"
+            "        <p>Whenever questions come up, your personal\n"
+            "        <strong>AI coach</strong> is available at the link below with concrete,\n"
+            "        individual, and safe answers:</p>"
+        )
+        _topics_intro = "The coach knows your reports and typically supports you with:"
+        _topics_html = (
+            "<li>Concrete implementation questions from the quick wins and the 90-day roadmap</li>\n"
+            "          <li>Risk discussion and setting stop signals</li>\n"
+            "          <li>Tool selection and vendor comparison</li>\n"
+            "          <li>Funding strategy and program eligibility</li>"
+        )
+    else:
+        title = "Ihr KI-Coach steht bereit"
+        _greeting = "Guten Tag,"
+        _auto_note = "Hinweis: Diese E‑Mail wurde automatisch erzeugt."
+        _intro_html = (
+            "<p>Sie haben jetzt alle drei Reports erhalten \u2014 den\n"
+            "        <strong>KI‑Status‑Report</strong>, die\n"
+            "        <strong>KI‑Potenzial‑Analyse</strong> und den\n"
+            "        <strong>KI‑Strategiebericht</strong>.</p>\n"
+            "        <p>Nehmen Sie sich Zeit, die Reports in Ruhe durchzuarbeiten.\n"
+            "        Die Inhalte ergänzen sich \u2014 zusammen ergeben sie ein vollständiges\n"
+            "        Bild Ihrer KI‑Ausgangslage und Ihres Implementierungspfads.</p>\n"
+            "        <p>Sobald Fragen auftauchen, steht Ihnen Ihr persönlicher\n"
+            "        <strong>KI‑Coach</strong> unter folgendem Link für konkrete,\n"
+            "        individuelle und sichere Antworten zur Verfügung:</p>"
+        )
+        _topics_intro = "Der Coach kennt Ihre Reports und unterstützt Sie typischerweise bei:"
+        _topics_html = (
+            "<li>Konkreten Umsetzungsfragen aus den Quick Wins und der 90‑Tage‑Roadmap</li>\n"
+            "          <li>Risikodiskussion und Stop‑Signal‑Setzung</li>\n"
+            "          <li>Tool‑Auswahl und Anbietervergleich</li>\n"
+            "          <li>Förderstrategie und Programm‑Eignung</li>"
+        )
+    cta = render_coach_cta(briefing_id, "#2B6CB0", lang=lang)
     return f"""<!doctype html>
-<html lang="de">
+<html lang="{_lang_code}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -404,28 +567,16 @@ def render_coach_reminder_email(briefing_id: int) -> str:
     <div class="wrap">
       <div class="card">
         <h1>{escape(title)}</h1>
-        <p>Guten Tag,</p>
-        <p>Sie haben jetzt alle drei Reports erhalten — den
-        <strong>KI‑Status‑Report</strong>, die
-        <strong>KI‑Potenzial‑Analyse</strong> und den
-        <strong>KI‑Strategiebericht</strong>.</p>
-        <p>Nehmen Sie sich Zeit, die Reports in Ruhe durchzuarbeiten.
-        Die Inhalte ergänzen sich — zusammen ergeben sie ein vollständiges
-        Bild Ihrer KI‑Ausgangslage und Ihres Implementierungspfads.</p>
-        <p>Sobald Fragen auftauchen, steht Ihnen Ihr persönlicher
-        <strong>KI‑Coach</strong> unter folgendem Link für konkrete,
-        individuelle und sichere Antworten zur Verfügung:</p>
+        <p>{_greeting}</p>
+        {_intro_html}
         {cta}
-        <p style="margin-top:16px">Der Coach kennt Ihre Reports und unterstützt Sie typischerweise bei:</p>
+        <p style="margin-top:16px">{_topics_intro}</p>
         <ul>
-          <li>Konkreten Umsetzungsfragen aus den Quick Wins und der 90‑Tage‑Roadmap</li>
-          <li>Risikodiskussion und Stop‑Signal‑Setzung</li>
-          <li>Tool‑Auswahl und Anbietervergleich</li>
-          <li>Förderstrategie und Programm‑Eignung</li>
+          {_topics_html}
         </ul>
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
         <p class="muted">{_brand()['advisor_name']} — {_brand()['brand_name']}</p>
-        <p class="muted">Hinweis: Diese E‑Mail wurde automatisch erzeugt.</p>
+        <p class="muted">{_auto_note}</p>
       </div>
     </div>
   </body>

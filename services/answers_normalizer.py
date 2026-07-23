@@ -75,6 +75,23 @@ BRANCHEN_LABELS = {
     "gastronomie": "Gastronomie & Tourismus",  # v14.35.19: 13. Branche hinzugefügt
 }
 
+# KIS-1249: English display labels for lang=en reports (same keys as BRANCHEN_LABELS)
+BRANCHEN_LABELS_EN = {
+    "beratung": "Consulting & Services",
+    "marketing": "Marketing & Advertising",
+    "it_software": "IT & Software",
+    "finanzen": "Finance & Insurance",
+    "handel": "Retail & E-Commerce",
+    "bildung": "Education",
+    "verwaltung": "Public Administration",
+    "gesundheit": "Healthcare & Care",
+    "bau": "Construction & Architecture",
+    "medien": "Media & Creative Industries",
+    "industrie": "Industry & Manufacturing",
+    "logistik": "Transport & Logistics",
+    "gastronomie": "Hospitality & Tourism",
+}
+
 UNTERNEHMENSGROESSEN_LABELS = {
     "solo": "Solo",
     "team": "2–10 (Kleines Team)",

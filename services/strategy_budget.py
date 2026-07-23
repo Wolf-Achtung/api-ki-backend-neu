@@ -213,14 +213,31 @@ _ZEITRAHMEN_PROSE = {
 }
 
 
-def _zeitrahmen_prose(s2_zeitrahmen: str) -> str:
+# KIS-1249: EN-Prosa für den EN-Report (sonst leakte "3–6 Monaten
+# (kurzfristig)" als deutsches Fragment in englische Strategieberichte).
+_ZEITRAHMEN_PROSE_EN = {
+    "sofort (1-3 monate)":        "1–3 months (immediate start)",
+    "sofort (1–3 monate)":        "1–3 months (immediate start)",
+    "kurzfristig (3-6 monate)":   "3–6 months (near term)",
+    "kurzfristig (3–6 monate)":   "3–6 months (near term)",
+    "mittelfristig (6-12 monate)":  "6–12 months (medium term)",
+    "mittelfristig (6–12 monate)":  "6–12 months (medium term)",
+    "langfristig (12-18 monate)": "12–18 months (long term)",
+    "langfristig (12–18 monate)": "12–18 months (long term)",
+}
+
+
+def _zeitrahmen_prose(s2_zeitrahmen: str, lang: str = "de") -> str:
     """Prosa-sichere Form des Zeitrahmen-Labels ('innerhalb von …'-tauglich)."""
     if not s2_zeitrahmen:
         return ""
-    return _ZEITRAHMEN_PROSE.get(s2_zeitrahmen.strip().lower(), s2_zeitrahmen)
+    key = s2_zeitrahmen.strip().lower()
+    if str(lang).lower().startswith("en"):
+        return _ZEITRAHMEN_PROSE_EN.get(key, _ZEITRAHMEN_PROSE.get(key, s2_zeitrahmen))
+    return _ZEITRAHMEN_PROSE.get(key, s2_zeitrahmen)
 
 
-def phase_windows(s2_zeitrahmen: str) -> Dict[str, str]:
+def phase_windows(s2_zeitrahmen: str, lang: str = "de") -> Dict[str, str]:
     """KIS-1247: Phasen-Fenster aus dem gewählten Umsetzungs-Zeitrahmen.
 
     Bisher waren die Roadmap-Phasen fest auf 12 Monate verdrahtet
@@ -228,14 +245,21 @@ def phase_windows(s2_zeitrahmen: str) -> Dict[str, str]:
     (3-6 Monate)" gewählt hatte (Audit KIS-1244/1246, Strategie Kap. 5/6).
     """
     s = (s2_zeitrahmen or "").lower()
+    # KIS-1249: EN-Fenster für englische Reports (sonst leakte "Monat 1-2")
+    _m = "Month" if str(lang).lower().startswith("en") else "Monat"
+    _en = str(lang).lower().startswith("en")
     if "1-3" in s or "1–3" in s or "sofort" in s:
-        w, horizon = ("Monat 1", "Monat 2", "Monat 3"), "3 Monaten"
+        w = (f"{_m} 1", f"{_m} 2", f"{_m} 3")
+        horizon = "3 months" if _en else "3 Monaten"
     elif "3-6" in s or "3–6" in s or "kurzfristig" in s:
-        w, horizon = ("Monat 1-2", "Monat 3-4", "Monat 5-6"), "6 Monaten"
+        w = (f"{_m} 1-2", f"{_m} 3-4", f"{_m} 5-6")
+        horizon = "6 months" if _en else "6 Monaten"
     elif "12-18" in s or "12–18" in s or "langfristig" in s:
-        w, horizon = ("Monat 1-4", "Monat 5-11", "Monat 12-18"), "18 Monaten"
+        w = (f"{_m} 1-4", f"{_m} 5-11", f"{_m} 12-18")
+        horizon = "18 months" if _en else "18 Monaten"
     else:  # mittelfristig 6-12 / unbekannt → bisheriges 12-Monats-Raster
-        w, horizon = ("Monat 1-3", "Monat 4-8", "Monat 9-12"), "12 Monaten"
+        w = (f"{_m} 1-3", f"{_m} 4-8", f"{_m} 9-12")
+        horizon = "12 months" if _en else "12 Monaten"
     return {
         "phase_1_window": w[0],
         "phase_2_window": w[1],
