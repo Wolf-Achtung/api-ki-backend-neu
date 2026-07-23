@@ -261,21 +261,29 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     logger.debug("SCORE-DEBUG-4: [Renderer %s] score passed to template = %d", sr.briefing_id, readiness_score)
     logger.debug("SCORE-DEBUG-5: [Renderer %s] score_label = %s", sr.briefing_id, reifegrad_label)
 
+    # KIS-1249: report language drives static-text variants below
+    _ctx_lang = str(briefing_data.get("lang") or briefing_data.get("LANG") or "de").lower()
+    _ctx_en = _ctx_lang.startswith("en")
+
     # KIS-1126 / C1 FIX: Always use deterministic absolute label from get_score_label()
     # to ensure cross-report consistency (R1, KPA, Strategy all show same label for same score)
     if readiness_score > 0:
         try:
             from services.extra_sections import get_score_label
-            reifegrad_label = get_score_label(readiness_score, lang="de")
+            reifegrad_label = get_score_label(readiness_score, lang="en" if _ctx_en else "de")
             logger.info("[Strategy-Score] reifegrad_label from deterministic lookup: %s (score=%d)",
                         reifegrad_label, readiness_score)
         except Exception:
             if not reifegrad_label:
                 reifegrad_label = report1_sections.get("score_rating", "")
 
-    # Branche: use canonical display label (KIS-1116 Fix 1)
+    # Branche: use canonical display label (KIS-1116 Fix 1); EN label for lang=en (KIS-1249)
     branche_raw = briefing_data.get("branche", "")
-    branche_label = BRANCHEN_LABELS.get(branche_raw.lower(), branche_raw.title()) if branche_raw else ""
+    if _ctx_en:
+        from services.answers_normalizer import BRANCHEN_LABELS_EN
+        branche_label = BRANCHEN_LABELS_EN.get(branche_raw.lower(), branche_raw.title()) if branche_raw else ""
+    else:
+        branche_label = BRANCHEN_LABELS.get(branche_raw.lower(), branche_raw.title()) if branche_raw else ""
 
     # Research date from report1 or generation date (always German DD.MM.YYYY format)
     research_date = report1_meta.get("research_last_updated", "")
@@ -350,10 +358,21 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         )
         # Solo gets language without "Team" references
         is_solo = segment_raw in ("1", "solo", "freelancer")
-        naechste_schritte = (
-            SECTION_TEMPLATE_NAECHSTE_SCHRITTE_SOLO if is_solo
-            else SECTION_TEMPLATE_NAECHSTE_SCHRITTE_TEAM
-        )
+        if _ctx_en:
+            # KIS-1249: EN report gets the native EN static template
+            from prompts.strategy_prompts_en import (
+                SECTION_TEMPLATE_NAECHSTE_SCHRITTE_SOLO_EN,
+                SECTION_TEMPLATE_NAECHSTE_SCHRITTE_TEAM_EN,
+            )
+            naechste_schritte = (
+                SECTION_TEMPLATE_NAECHSTE_SCHRITTE_SOLO_EN if is_solo
+                else SECTION_TEMPLATE_NAECHSTE_SCHRITTE_TEAM_EN
+            )
+        else:
+            naechste_schritte = (
+                SECTION_TEMPLATE_NAECHSTE_SCHRITTE_SOLO if is_solo
+                else SECTION_TEMPLATE_NAECHSTE_SCHRITTE_TEAM
+            )
 
     # Load canonical budget values from DB (saved by pipeline after calculation)
     calculated_values = getattr(sr, "calculated_values", None) or {}
@@ -363,7 +382,22 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     _exec_body = sections.get("exec_summary", "")
     _strat_budget = calculated_values.get("budget_gesamt_jahr1", "")
     _r1_capex = report1_sections.get("capex", report1_sections.get("bc_capex", report1_meta.get("capex", "")))
-    if _exec_body and _strat_budget:
+    if _exec_body and _strat_budget and _ctx_en:
+        # KIS-1249: EN counterpart of the German ROI methodology note below
+        _r1_label = f" (initial investment there likewise {_r1_capex} €)" if _r1_capex else ""
+        _exec_body += (
+            '\n<div class="methodik-hinweis" style="margin-top:16px;padding:10px 14px;'
+            'background:#f0f4f8;border-left:3px solid #3b82f6;font-size:0.85em;color:#475569;">'
+            '<strong>ℹ️ ROI methodology:</strong> '
+            f'This strategy report calculates with the total investment over 12 months '
+            f'({_strat_budget} €, incl. software, implementation, training, coordination) '
+            'and states the gross ROI. '
+            'The AI Readiness Report additionally deducts the running tool costs (OPEX) '
+            f'from the annual benefit{_r1_label} and thus states the more conservative net return. '
+            'Differing ROI and break-even figures are methodological, not contradictory.'
+            '</div>'
+        )
+    elif _exec_body and _strat_budget:
         _r1_label = f" (Startinvestition dort ebenfalls {_r1_capex} €)" if _r1_capex else ""
         _exec_body += (
             '\n<div class="methodik-hinweis" style="margin-top:16px;padding:10px 14px;'
@@ -449,6 +483,32 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
                 f'</span>'
                 f'</div>'
             )
+            if _ctx_en:
+                # KIS-1249: EN counterpart of the funding box above
+                _netto_roi_display_en = "over 200" if _netto_roi > 200 else str(_netto_roi)
+                _foerder_note = (
+                    f'\n<div style="margin-top:12px;padding:12px 16px;'
+                    f'background:linear-gradient(135deg,#ecfdf5,#d1fae5);'
+                    f'border-left:4px solid #10b981;border-radius:6px;'
+                    f'font-size:0.95em;color:#065f46;">'
+                    f'<strong>With funding:</strong> '
+                    f'Taking into account a funding potential of up to 70 % '
+                    f'of the total investment (max. {_fmt_eur(_foerder_capped)} €), '
+                    f'your net investment drops to {_fmt_eur(_netto_invest)} € '
+                    f'— with a net ROI of {_netto_roi_display_en} % '
+                    f'and break-even as early as month {_netto_be}. '
+                    f'<br>'
+                    f'<span style="font-size:0.85em;color:#047857;">'
+                    f'<strong>Note on the assumption:</strong> '
+                    f'The 70 % rate is a <em>plausibility cap</em> assuming full use '
+                    f'of the programmes described in chapter 7 '
+                    f'(Funding &amp; Financing) — typically by combining a federal '
+                    f'with a state-level programme (e.g. BAFA plus regional digital bonus schemes). '
+                    f'A single funding programme usually reaches 50–60 %. '
+                    f'Check the combination options for your region.'
+                    f'</span>'
+                    f'</div>'
+                )
             _exec_body += _foerder_note
             logger.info(
                 "[KIS-1110-P3] Injected net-ROI: netto_invest=%d, netto_roi=%d%%, "

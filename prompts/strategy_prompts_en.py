@@ -1114,3 +1114,31 @@ FORBIDDEN:
 ## Example (do NOT copy — tone reference only)
 What stands out in your profile: the value-creation dimension at 82/100 shows that you are already using AI operationally and are not starting from a theoretical position. At the same time, the team-capacity bottleneck you named deserves to be taken seriously — with a 6-month timeframe, it decides whether phases 1 and 2 can run in parallel at all. For the next 14 days I would start in one place: secure written sign-off for the annual investment budget — only then is the effort of the tool evaluation worthwhile. The break-even signal at 9 months is realistic, but only if you lock in the basis for that decision now.""",
 }
+
+
+# =============================================================================
+# NEXT STEPS TEMPLATE (static, not LLM-generated) — EN counterpart of
+# SECTION_TEMPLATE_NAECHSTE_SCHRITTE_* in strategy_prompts.py
+# =============================================================================
+
+SECTION_TEMPLATE_NAECHSTE_SCHRITTE_SOLO_EN = """
+<ol>
+    <li><strong>Work through the strategy report</strong> — Review the results at your own pace and identify the quick wins.</li>
+    <li><strong>Start the quick win</strong> — Begin the identified quick win within the next 2 weeks. Low barrier to entry, fast results.</li>
+    <li><strong>Check funding options</strong> — Review the recommended funding programmes and submit applications before the deadlines expire.</li>
+    <li><strong>Tool evaluation</strong> — Test the recommended tools with free trials or demos. Allow 2-4 weeks for the evaluation.</li>
+    <li><strong>Roadmap review</strong> — Schedule a review after 3 months (end of phase 1) to assess progress and adjust phase 2.</li>
+</ol>
+<p><strong>Next touchpoint:</strong> Book a free 30-minute strategy call at <a href="https://ki-sicherheit.jetzt/termin">ki-sicherheit.jetzt/termin</a> to clarify any questions about the report.</p>
+"""
+
+SECTION_TEMPLATE_NAECHSTE_SCHRITTE_TEAM_EN = """
+<ol>
+    <li><strong>Work through the strategy report</strong> — Discuss the results with your team and identify the quick wins.</li>
+    <li><strong>Start the quick win</strong> — Begin the identified quick win within the next 2 weeks. Low barrier to entry, fast results.</li>
+    <li><strong>Apply for funding</strong> — Review the recommended funding programmes and submit applications before the deadlines expire.</li>
+    <li><strong>Tool evaluation</strong> — Test the recommended tools with free trials or demos. Allow 2-4 weeks for the evaluation.</li>
+    <li><strong>Roadmap review</strong> — Schedule a review after 3 months (end of phase 1) to assess progress and fine-tune phase 2.</li>
+</ol>
+<p><strong>Next touchpoint:</strong> Book a free 30-minute strategy call at <a href="https://ki-sicherheit.jetzt/termin">ki-sicherheit.jetzt/termin</a> to clarify any questions about the report.</p>
+"""
