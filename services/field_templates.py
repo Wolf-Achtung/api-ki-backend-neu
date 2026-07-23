@@ -155,6 +155,37 @@ FIELD_EXAMPLES: dict[str, list[str]] = {
 }
 
 
+# EN chip variants for lang=en sessions (same keys/order as FIELD_EXAMPLES;
+# fallback: German list — never crash).
+FIELD_EXAMPLES_EN: dict[str, list[str]] = {
+    "geschaeftsmodell_evolution": [
+        "Yes, new digital products or services conceivable",
+        "Yes, reach new customer groups or sales channels",
+        "Rather no, AI should mainly help internally",
+    ],
+    "vision_3_jahre": [
+        "AI is an integral part of the business model",
+        "New AI-based offerings established",
+        "The whole organisation works AI-natively",
+    ],
+    "strategische_ziele": [
+        "Automate recurring tasks and win back time",
+        "Significantly shorten customer response times",
+        "Ensure consistent quality at growing volume",
+    ],
+    "ki_guardrails": [
+        "No customer data in external AI tools",
+        "Final decisions made by humans only",
+        "Clearly label AI-generated content",
+    ],
+    "top_zeitfresser": [
+        "Writing offers and proposals",
+        "Email correspondence and ongoing scheduling",
+        "Documentation and follow-up reports",
+    ],
+}
+
+
 # ──────────────────────────────────────────────────────────────────────
 # Bug C H3: Short, user-visible field descriptions surfaced via
 # QuickReply.description.
@@ -190,6 +221,32 @@ FIELD_DESCRIPTIONS_SHORT: dict[str, str] = {
     ),
     "ki_hemmnisse": (
         "Mehrfachauswahl möglich — welche Hürden bremsen den KI-Einsatz?"
+    ),
+}
+
+
+# EN variants for lang=en sessions (fallback: German text — never crash).
+FIELD_DESCRIPTIONS_SHORT_EN: dict[str, str] = {
+    "datenschutzbeauftragter": (
+        "Usually mandatory from 20 employees with systematic data processing."
+    ),
+    "technische_massnahmen": (
+        "E.g. encryption, access control, backups."
+    ),
+    "folgenabschaetzung": (
+        "Required when processing sensitive or extensive personal data."
+    ),
+    "meldewege": (
+        "Who informs whom, and how quickly, after data breaches or incidents?"
+    ),
+    "loeschregeln": (
+        "Rules for when and how data is deleted or anonymised."
+    ),
+    "ai_act_kenntnis": (
+        "EU law regulating AI, phased in, fully applicable from August 2026."
+    ),
+    "ki_hemmnisse": (
+        "Multiple selection possible — which hurdles slow down your AI adoption?"
     ),
 }
 

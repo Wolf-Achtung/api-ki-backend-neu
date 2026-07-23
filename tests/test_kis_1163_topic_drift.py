@@ -219,9 +219,12 @@ class TestWireUp:
         # Must be defined at module scope and referenced in event_stream.
         assert "_HELP_REQUEST_HINTS:" in src
         assert "def is_natural_help_request(" in src
-        assert "is_natural_help_request(req.message)" in src, (
-            "event_stream no longer consults the natural help detector."
-        )
+        # KIS-1250: Detector ist lang-aware — Aufruf mit (req.message, _lang)
+        # erfüllt den Guard ebenso wie die alte Ein-Argument-Form.
+        assert (
+            "is_natural_help_request(req.message)" in src
+            or "is_natural_help_request(req.message, _lang)" in src
+        ), "event_stream no longer consults the natural help detector."
 
     def test_sentinel_backcompat_preserved(self):
         # Frontend help button still works after KIS-1163 extension.

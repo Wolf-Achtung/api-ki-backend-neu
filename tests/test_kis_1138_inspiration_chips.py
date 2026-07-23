@@ -281,7 +281,9 @@ class TestWireUp:
             r"field_examples:\s*list\[str\]\s*\|\s*None\s*=\s*None",
             src,
         )
-        cond_match = re.search(r"if\s+_next_field\s+and\s+_next_field\s+in\s+FIELD_EXAMPLES",
+        # KIS-1250: lang-aware Auswahl nutzt die gemergte Map `_examples_map`
+        # (DE-only weiterhin FIELD_EXAMPLES) — beide Formen erfüllen den Guard.
+        cond_match = re.search(r"if\s+_next_field\s+and\s+_next_field\s+in\s+(?:FIELD_EXAMPLES|_examples_map)",
                                src)
         assert init_match, "default-init `field_examples = None` missing"
         assert cond_match, "conditional assignment to FIELD_EXAMPLES missing"
@@ -309,9 +311,11 @@ class TestWireUp:
 
     def test_defensive_copy_used(self):
         src = inspect.getsource(_build_session_state)
-        assert "list(FIELD_EXAMPLES[" in src, (
-            "FIELD_EXAMPLES access must be wrapped in list(...) to hand out "
-            "a defensive copy — otherwise the module dict can be mutated."
+        # KIS-1250: lang-aware Auswahl über `_examples_map` — Defensive-Copy-
+        # Garantie gilt unverändert, nur der Map-Name ist neu.
+        assert ("list(FIELD_EXAMPLES[" in src) or ("list(_examples_map[" in src), (
+            "FIELD_EXAMPLES/_examples_map access must be wrapped in list(...) "
+            "to hand out a defensive copy — otherwise the module dict can be mutated."
         )
 
 
