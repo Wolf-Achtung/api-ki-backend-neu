@@ -14083,6 +14083,13 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             canon_opex_monthly=_sofort_opex_monthly,
             expertise_level=_sofort_expertise,
             ki_projekte=str(briefing.get("ki_projekte", "") or ""),
+            # KIS-1247: Sparte für die Medien-Fallstudien-Auswahl
+            medien_sparte=str(
+                briefing.get("medien_sparte", "")
+                or briefing.get("MEDIEN_SPARTE_LABEL", "")
+                or sections.get("MEDIEN_SPARTE_LABEL", "")
+                or ""
+            ),
         )
         log.info("[SOFORT-START] ✅ Generated Sofort-Start page for %s", sofort_branche[:30] if sofort_branche else "default")
     except Exception as e:

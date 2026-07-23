@@ -2319,6 +2319,23 @@ def business_case_report_to_html(
 
     html_parts.append('</div></div>')
 
+    # KIS-1247: Negatives Konservativ-Szenario einordnen — die rote Zahl
+    # (Lauf 1129: −48 %) wirkte ohne Kontext wie ein Verlustgeschäft, meint
+    # aber nur: Amortisation verschiebt sich ins zweite Jahr.
+    _cons_note = next((s for s in _render_scenarios if s.name == "conservative"), None)
+    if lang != "en" and _cons_note is not None and _cons_note.roi_12m < 0:
+        html_parts.append(
+            '<div style="margin:-8px 0 20px 0;padding:10px 14px;background:#fffbeb;'
+            'border-left:4px solid #f59e0b;border-radius:6px;font-size:9.5pt;color:#78350f;">'
+            '<strong>Einordnung Konservativ-Szenario:</strong> Ein negativer '
+            'Jahr-1-ROI bedeutet kein Verlustgeschäft, sondern dass die '
+            'Einführungsinvestition in diesem Szenario erst im zweiten Jahr '
+            'vollständig zurückverdient ist '
+            f'(Amortisation nach {_cons_note.payback_months:.1f} Monaten). '
+            'Ab dann wirkt die Zeitersparnis ohne weitere Einmalkosten.'
+            '</div>'
+        )
+
     # KPI Targets Section
     if report.kpi_targets_6m or report.kpi_targets_12m:
         html_parts.append(f'''

@@ -66,15 +66,19 @@ die 70-%-Förderquote als Plausibilitäts-Cap.
 | „30-Tage Challenge" endet bei Tag 23 (R1 S.17) | Woche-1-Drop für Intermediate renummeriert auf 1–23, Titel blieb „30 Tage" | Titel dynamisch („Ihre 23-Tage KI-Challenge") + Subtitle-Hinweis „Grundlagen-Woche übersprungen" |
 | Gemischte Sprache „KI-Relevanz: medium/high" (R1 S.23) | 13 Medien-Programme trugen englische `relevance_ki`-Werte | auf Sehr hoch/Hoch/Mittel/Niedrig eingedeutscht |
 
-### Offen (Runde 3, LOW)
-- R1 S.9: „Quick Wins: Top 3"-Überschrift verwaist am Seitenende (Karten mit
-  break-inside:avoid springen um — Gegen-Fix KIS-1128/M2 beachten)
-- R2 S.4/32/36: dünn gefüllte Seiten (Förder-Box bzw. Quellen-Spill)
-- R2 Kap. 6: Roadmap weiter 12 Monate trotz Antwort „3–6 Monate" (Exec Summary
-  rahmt inzwischen korrekt; Phasenstruktur-Steuerung noch offen)
-- R1 S.13: Konservativ-Szenario zeigt −48 % ROI (methodisch korrekt, rote Zahl
-  ggf. mit Einordnungssatz versehen)
-- Deploy Graceful-Drain (Railway killt laufende Läufe; Stale-Recovery greift)
+### Runde 3 (KIS-1247, dieser PR) — LOW-Punkte + Feinschliff
+
+| Punkt | Fix |
+|---|---|
+| Quick-Wins-Überschrift verwaist (R1 S.9) | `#quick-wins-section { break-before: page }` — deterministischer Kapitelanfang (Muster wie #aiact-compact) |
+| Quellen-Spill-Seiten (R2 S.32/36) | `.sources-footer`: intern umbrechbar + klebt am vorigen Inhalt (`break-inside:auto`, `break-before:avoid-page`) |
+| Roadmap ignorierte Zeitrahmen „3–6 Monate" (R2 Kap. 5/6) | `phase_windows()` leitet Phasen-Fenster aus s2_zeitrahmen ab (3/6/12/18-Monats-Raster); 12 Hardcodes in strategy_prompts ersetzt + verbindliche Horizont-Direktive |
+| Konservativ −48 % ohne Einordnung (R1 S.13) | Bedingte Einordnungs-Box unter den Szenario-Karten (negativer Jahr-1-ROI = Amortisation im 2. Jahr, kein Verlustgeschäft) |
+| Deploy killt laufende Läufe (600 s tote Statusseite) | Graceful Drain: SIGTERM-Handler gibt das laufende Briefing sofort wieder frei (status=accepted), neuer Container übernimmt ohne Stale-Timeout; Doppel-Lauf durch done-Race-Guard abgesichert |
+| Sparten-Label fehlte auf dem Cover | Cover-Meta zeigt MEDIEN_SPARTE_LABEL („Film-/TV-Produktion") zwischen Branche und Größe |
+| Nur 1 generischer Medien-Case | `FALLSTUDIEN_MEDIEN`-Pool: Doku-Produktion (Archiv), Werbefilm-Studio (Pitch-Sprint), Games-Studio (Lokalisierung) — sparten- und größen-aware, klar als fiktive Branchen-Beispiele gekennzeichnet |
+| Badge-Leiste abmahnrelevant (KI-READY/DSGVO/AI-Act-Siegel selbst verliehen) | In allen 3 Templates entfernt; nur der reale TÜV-Personennachweis bleibt, mit Einordnung „Erstellt von Wolf Hohl · TÜV-zertifizierter KI-Manager"; „Live-Marktdaten"-Claim → „Marktdaten-Recherche vom …" |
+| Vendor-Audit „0 % Compliance" wirkt wie K.-o. | Score-Kachel zeigt zusätzlich „mit AVV + Leitplanken erreichbar: X %"; rote Vendor-Karten mit verfügbarem AVV bekommen grünen „regelkonform einsetzbar"-Hinweis |
 
 ## Verifikation Runde 1
 
