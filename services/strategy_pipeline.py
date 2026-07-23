@@ -1162,8 +1162,11 @@ def _send_strategy_email(briefing_id: int, pdf_bytes: bytes, db_session: Any) ->
             _time.sleep(0.6)
             ok, err = _send_email_via_resend(
                 addr,
-                f"Kopie: KI-Strategiebericht — Briefing #{briefing_id}",
-                render_strategy_email(recipient="admin"),
+                (
+                    f"Copy: AI Strategy Report — Briefing #{briefing_id}" if _en
+                    else f"Kopie: KI-Strategiebericht — Briefing #{briefing_id}"
+                ),
+                render_strategy_email(recipient="admin", lang=_mail_lang),
                 attachments=[attachment],
             )
             if ok:

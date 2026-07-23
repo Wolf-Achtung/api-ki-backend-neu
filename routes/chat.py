@@ -2638,7 +2638,7 @@ async def chat_message(
                     _briefing_id = await _complete_strategy(session, collected, db, now)
                 else:
                     _briefing_id = _complete_r1(session, collected, db, now, request)
-                _redirect_url = _complete_redirect(rt, _briefing_id)
+                _redirect_url = _complete_redirect(rt, _briefing_id, session.lang)
                 log.info("[CHAT] Report triggered: briefing_id=%s, session=%s", _briefing_id, session.id)
                 yield f"event: report_started\ndata: {json.dumps({'briefing_id': _briefing_id, 'redirect_url': _redirect_url})}\n\n"
             except Exception as exc:
@@ -3081,7 +3081,7 @@ async def chat_complete(
     # instead of 400.
     rt = session.report_type
     if session.status == "completed" and session.briefing_id:
-        redirect = _complete_redirect(rt, session.briefing_id)
+        redirect = _complete_redirect(rt, session.briefing_id, session.lang)
         return ChatCompleteResponse(
             success=True,
             briefing_id=session.briefing_id,
@@ -3116,7 +3116,7 @@ async def chat_complete(
     else:
         briefing_id = _complete_r1(session, collected, db, now, request)
 
-    redirect = _complete_redirect(rt, briefing_id)
+    redirect = _complete_redirect(rt, briefing_id, session.lang)
 
     log.info(
         "[CHAT] Session %s completed -> briefing_id=%s (report_type=%s, fields=%d)",
@@ -3698,11 +3698,13 @@ def _resolve_user(request: Request | None, db: Session) -> tuple[int | None, str
         return None, None
 
 
-def _complete_redirect(report_type: str, briefing_id: int) -> str:
+def _complete_redirect(report_type: str, briefing_id: int, lang: str = "de") -> str:
     """Build the redirect URL after completion."""
+    # KIS-1251: lang=en mitgeben, damit status.html/strategy.html englisch rendern
+    _lang_suffix = "&lang=en" if str(lang or "de").lower().startswith("en") else ""
     if report_type == "strategy":
-        return f"/strategy.html?briefing_id={briefing_id}&status=generating"
-    return f"/formular/status.html?id={briefing_id}"
+        return f"/strategy.html?briefing_id={briefing_id}&status=generating{_lang_suffix}"
+    return f"/formular/status.html?id={briefing_id}{_lang_suffix}"
 
 
 def _build_session_state(

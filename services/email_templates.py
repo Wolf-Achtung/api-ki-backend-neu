@@ -135,6 +135,9 @@ def render_coach_cta(briefing_id: int, accent_color: str, lang: str = "de") -> s
     coach_url = f"{_brand()['app_url']}/coach/{briefing_id}"
     # KIS-1249: bilingual (de/en) — HTML structure exists only once.
     _en = str(lang).lower().startswith("en")
+    if _en:
+        # KIS-1251: Sprach-Param für die Coach-Seite mitgeben
+        coach_url += "?lang=en"
     _t = {
         "headline": "Questions about your report?" if _en else "Fragen zu Ihrem Report?",
         "body": (
@@ -179,7 +182,9 @@ def render_coach_cta(briefing_id: int, accent_color: str, lang: str = "de") -> s
 
 def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_summary_html: Optional[str] = None, user_email: Optional[str] = None, briefing_id: Optional[int] = None, lang: str = "de") -> str:
     # KIS-1249: bilingual (de/en) for user-facing mails; admin copy stays German.
-    _en = recipient != "admin" and str(lang).lower().startswith("en")
+    # KIS-1251: Admin-Kopien folgen jetzt ebenfalls der Briefing-Sprache
+    # (Wolf-Entscheidung Testlauf 1132: "diese Texte müssten alle englisch sein").
+    _en = str(lang).lower().startswith("en")
     _lang_code = "en" if _en else "de"
     if recipient == "admin":
         # FIX-KIS-1027.5-B: "(inkl. Briefing)" aus Title entfernt — diese Mail
@@ -231,6 +236,9 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
     strategy_cta = ""
     if recipient != "admin" and briefing_id:
         _strategy_url = f"{_brand()['app_url']}/strategy.html?briefing_id={briefing_id}"
+        # KIS-1251: Sprach-Param mitgeben — strategy.html rendert sonst deutsch
+        if _en:
+            _strategy_url += "&lang=en"
         if _en:
             _sc = {
                 "next_step": "Next step:",
@@ -329,7 +337,9 @@ def render_deep_dive_email(recipient: str = "user", briefing_id: Optional[int] =
         lang: "de" (default) or "en" — admin copies always stay German (KIS-1249).
     """
     # KIS-1249: bilingual (de/en) for user-facing mails; admin copy stays German.
-    _en = recipient != "admin" and str(lang).lower().startswith("en")
+    # KIS-1251: Admin-Kopien folgen jetzt ebenfalls der Briefing-Sprache
+    # (Wolf-Entscheidung Testlauf 1132: "diese Texte müssten alle englisch sein").
+    _en = str(lang).lower().startswith("en")
     _lang_code = "en" if _en else "de"
     if recipient == "admin":
         title = "Kopie: KI-Potenzial-Analyse"
@@ -412,7 +422,9 @@ def render_strategy_email(recipient: str = "user", briefing_id: Optional[int] = 
         briefing_id: Briefing ID — required to render the Coach CTA for user emails.
     """
     # KIS-1249: bilingual (de/en) for user-facing mails; admin copy stays German.
-    _en = recipient != "admin" and str(lang).lower().startswith("en")
+    # KIS-1251: Admin-Kopien folgen jetzt ebenfalls der Briefing-Sprache
+    # (Wolf-Entscheidung Testlauf 1132: "diese Texte müssten alle englisch sein").
+    _en = str(lang).lower().startswith("en")
     _lang_code = "en" if _en else "de"
     if recipient == "admin":
         title = "Kopie: KI-Strategiebericht"
