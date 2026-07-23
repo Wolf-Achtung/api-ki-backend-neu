@@ -1211,6 +1211,15 @@ async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
 
         from utils.report_display_id import get_report_display_id
         _kis = get_report_display_id(briefing_id)
+        # KIS-1257 (Lauf 1133): ohne lang im meta rendert der Default-Footer
+        # 'Seite x/y' — R2-Fußzeile blieb deutsch, während R1 (eigener
+        # Call-Site-Fix) schon 'Page x/y' zeigte.
+        try:
+            from models import Briefing as _Br
+            _pdf_briefing = db_session.query(_Br).filter(_Br.id == briefing_id).first()
+            _pdf_lang = str(getattr(_pdf_briefing, "lang", "de") or "de")
+        except Exception:
+            _pdf_lang = "de"
         result = await asyncio.to_thread(
             render_pdf_from_html,
             html_content,
@@ -1220,6 +1229,7 @@ async def _generate_pdf(db_session: Any, briefing_id: int) -> None:
                 "report_id": _kis,
                 # KIS-1230: Fußzeile zeigte 'KIS-#### • –' — Datum fehlte im meta.
                 "report_date": datetime.now(timezone.utc).strftime("%d.%m.%Y"),
+                "lang": _pdf_lang,
             },
         )
 

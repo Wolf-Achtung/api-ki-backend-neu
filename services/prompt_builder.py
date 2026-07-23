@@ -15,6 +15,25 @@ from typing import Any, Dict, Optional
 
 log = logging.getLogger(__name__)
 
+# EN-Testlauf 2: engine branch key (DE) → filename in data/branch_contexts/en/
+# The EN branch context files use English names; this map bridges the
+# normalized DE engine keys to them. Keys without an EN file fall back to
+# the DE context (status quo).
+EN_BRANCH_FILE_MAP: Dict[str, str] = {
+    "beratung": "consulting",
+    "it": "it_software",
+    "finanzen": "finance_insurance",
+    "handel": "commerce",
+    "bildung": "education",
+    "verwaltung": "public_sector",
+    "gesundheit": "healthcare",
+    "bau": "construction_architecture",
+    "medien": "creative_media",
+    "industrie": "manufacturing",
+    "logistik": "logistics_transport",
+    "energie": "energy_utility",
+}
+
 
 class PromptBuilder:
     """
@@ -110,13 +129,31 @@ class PromptBuilder:
         
         # Normalize the key using mappings
         normalized_key = self._normalize_key(key, context_type)
-        
+
         # Determine directory
         context_dir = self.branch_dir if context_type == "branch" else self.size_dir
-        
+
         # Try to load the file
         context_file = context_dir / f"{normalized_key}.json"
-        
+
+        # EN-Testlauf 2: language-aware resolution (DE behaviour unchanged)
+        if self.lang == "en":
+            if context_type == "branch":
+                en_name = EN_BRANCH_FILE_MAP.get(normalized_key, normalized_key)
+                en_file = self.data_dir / "branch_contexts" / "en" / f"{en_name}.json"
+                if en_file.exists():
+                    context_file = en_file
+                else:
+                    # Fallback: DE context (better German data than none)
+                    log.warning(f"⚠️ No EN branch context for '{normalized_key}', falling back to DE")
+                    context_file = self.data_dir / "branch_contexts" / f"{normalized_key}.json"
+            else:  # size
+                en_file = self.data_dir / "size_contexts" / "en" / f"{normalized_key}.json"
+                if en_file.exists():
+                    context_file = en_file
+                else:
+                    log.warning(f"⚠️ No EN size context for '{normalized_key}', falling back to DE")
+
         if not context_file.exists():
             log.warning(f"⚠️ Context file not found: {context_file}")
             # Return minimal fallback

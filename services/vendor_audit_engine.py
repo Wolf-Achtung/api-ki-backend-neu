@@ -1257,6 +1257,61 @@ def _generate_summary(
         )
 
 
+# KIS-1251: Render-seitige EN-Übersetzung der deterministischen DE-
+# Empfehlungen aus _generate_recommendations (Templates mit dynamischen
+# Vendor-Namen — Prefix-Mapping erhält die Namen und die Anzahl).
+_RECOMMENDATION_TEMPLATES_EN = [
+    (
+        "DPA (Data Processing Agreement) mit US-Anbietern prüfen und ggf. nachholen: ",
+        "Review DPAs (Data Processing Agreements) with US vendors and put them in place where missing: ",
+    ),
+    (
+        "Hochrisiko-Anbieter prüfen, Risikominimierung durch AVV/DPA einordnen: ",
+        "Review high-risk vendors and assess risk mitigation via DPA: ",
+    ),
+    ("Datenstandorte klären für: ", "Clarify data locations for: "),
+    ("Sicherheitsbewertung anfordern für: ", "Request a security assessment for: "),
+    (
+        "AI Act Konformitätsprüfung durchführen für: ",
+        "Carry out an AI Act conformity review for: ",
+    ),
+]
+
+_RECOMMENDATION_STATIC_EN = {
+    "Zertifizierungsnachweise (ISO 27001, SOC2) von Anbietern anfordern":
+        "Request certification evidence (ISO 27001, SOC2) from vendors",
+    "Mindestens einen EU-konformen Anbieter als Alternative evaluieren":
+        "Evaluate at least one EU-compliant vendor as an alternative",
+}
+
+_RECOMMENDATION_HINT_DE = (
+    "Hinweis: Für LLM-Anbieter (OpenAI, Anthropic) existieren aktuell keine "
+    "gleichwertigen EU-Alternativen — Fokus auf vertragliche Absicherung und "
+    "Datenminimierung."
+)
+_RECOMMENDATION_HINT_EN = (
+    "Note: for LLM providers (OpenAI, Anthropic) there are currently no "
+    "equivalent EU alternatives — focus on contractual safeguards and data "
+    "minimisation."
+)
+
+
+def _translate_recommendation_en(rec: str) -> str:
+    """Übersetzt eine deterministische DE-Empfehlung nach EN (Namen bleiben)."""
+    if not rec:
+        return rec
+    out = _RECOMMENDATION_STATIC_EN.get(rec.strip())
+    if out:
+        return out
+    text = rec
+    if _RECOMMENDATION_HINT_DE in text:
+        text = text.replace(_RECOMMENDATION_HINT_DE, _RECOMMENDATION_HINT_EN)
+    for de_prefix, en_prefix in _RECOMMENDATION_TEMPLATES_EN:
+        if text.startswith(de_prefix):
+            return en_prefix + text[len(de_prefix):]
+    return text
+
+
 # =============================================================================
 # MAIN GENERATION FUNCTION
 # =============================================================================
@@ -1418,6 +1473,24 @@ def vendor_audit_report_to_html(
     Returns:
         HTML string for PDF template
     """
+    _is_en = (lang or "").strip().lower().startswith("en")
+
+    # KIS-1251: Für EN-Reports deterministische deutsche Strings ersetzen —
+    # summary/recommendations werden in generate_vendor_audit_report ohne
+    # lang erzeugt (immer DE) und landeten unübersetzt im EN-Report
+    # ("0 Anbieter sind EU-konform", "2 rot (hohes Risiko)").
+    if _is_en:
+        try:
+            report = VendorAuditReport(
+                entries=report.entries,
+                summary=_generate_summary(report.entries, lang="en"),
+                recommendations=[
+                    _translate_recommendation_en(r) for r in report.recommendations
+                ],
+            )
+        except Exception as _en_exc:  # pragma: no cover — defensiv
+            log.warning("[G35][KIS-1251] EN summary/recommendation translation failed: %s", _en_exc)
+
     # Labels
     if lang == "en":
         labels = {
@@ -1576,9 +1649,9 @@ def vendor_audit_report_to_html(
                     <div style="font-size:14px;font-weight:600;color:#1e293b;">{report.eu_compliant_count} / {report.total_vendors}</div>
                 </td>
                 <td style="padding:8px;background:#fff;border-radius:6px;border:1px solid #e2e8f0;width:50%;">
-                    <span style="font-size:9px;color:#64748b;">{labels["compliance_score"]} (Rohzustand)</span>
+                    <span style="font-size:9px;color:#64748b;">{labels["compliance_score"]} {"(baseline)" if _is_en else "(Rohzustand)"}</span>
                     <div style="font-size:14px;font-weight:600;color:#1e293b;">{report.compliance_score:.0f}%</div>
-                    <div style="font-size:9px;color:#166534;margin-top:2px;">mit AVV + Leitplanken erreichbar: {_achievable_pct:.0f}%</div>
+                    <div style="font-size:9px;color:#166534;margin-top:2px;">{"achievable with DPA + guardrails" if _is_en else "mit AVV + Leitplanken erreichbar"}: {_achievable_pct:.0f}%</div>
                 </td>
             </tr>
             </table>
@@ -1774,7 +1847,7 @@ def vendor_audit_report_to_html(
 <p style="font-weight:700;margin:0 0 8px;">🔍 {t["title"]}</p>
 <p style="font-size:9px;color:#64748b;margin:0 0 8px;">{t["green_vendors"]}: {report.green_count} · {t["yellow_vendors"]}: {report.yellow_count} · {t["red_vendors"]}: {report.red_count} · {t["compliance_score"]}: {report.compliance_score:.0f}%</p>
 <table data-preserve="true" style="width:100%;border-collapse:collapse;font-size:9pt;">
-<tr style="background:#f8fafc;"><th style="padding:6px;text-align:left;">Vendor</th><th style="padding:6px;">Status</th><th style="padding:6px;text-align:left;">{t["jurisdiction"]}</th><th style="padding:6px;">AVV</th><th style="padding:6px;text-align:left;">Flags</th></tr>
+<tr style="background:#f8fafc;"><th style="padding:6px;text-align:left;">Vendor</th><th style="padding:6px;">Status</th><th style="padding:6px;text-align:left;">{t["jurisdiction"]}</th><th style="padding:6px;">{"DPA" if _is_en else "AVV"}</th><th style="padding:6px;text-align:left;">Flags</th></tr>
 {rows}
 </table>
 {recs_html}

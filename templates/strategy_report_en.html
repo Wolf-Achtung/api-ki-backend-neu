@@ -1087,7 +1087,10 @@ sup.src-ref {
         <div class="cover-accent-line" style="width:80px;height:3px;background-color:#C5930A;background-image:linear-gradient(90deg,#C5930A,#2563EB);border-radius:2px;margin:0 auto 32px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></div>
         <h1>AI Strategy Report</h1>
         <p class="cover-subtitle">{{ firmenname }} · {{ branche }}</p>
-        <p class="cover-meta">Created on <strong>{{ datum }}</strong> · Segment: {{ segment }} · {{ mitarbeiter }} employees</p>
+        {# KIS-EN2-COVER: Mitarbeiterzahl nicht doppeln, wenn das Segment-Label
+           sie schon nennt ("Small business (2-10 employees) · 2–10 employees",
+           EN-Testlauf 2). Singular "1 employee" für Sole proprietor. #}
+        <p class="cover-meta">Created on <strong>{{ datum }}</strong> · Segment: {{ segment }}{% if mitarbeiter and 'employee' not in (segment | lower) %}{% if mitarbeiter == '1' %} · 1 employee{% else %} · {{ mitarbeiter }} employees{% endif %}{% endif %}</p>
 
         <!-- Score Ring -->
         <div class="cover-score-ring" style="width:180px;height:180px;margin:32px auto;position:relative;display:inline-block">

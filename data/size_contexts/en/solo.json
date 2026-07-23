@@ -1,0 +1,148 @@
+{
+  "groesse": "solo",
+  "display_name": "Solo self-employed/freelancer",
+  "description": "One-person business without permanent employees. All roles are covered by one person.",
+
+  "characteristics": {
+    "mitarbeiter": 0,
+    "abteilungen": false,
+    "jahresumsatz_typical": "€30,000 - 150,000",
+    "time_constraint": "extremely high",
+    "decision_speed": "very fast (hours to days)",
+    "budget_sensitivity": "high",
+    "tech_affinity": "variable (from low to very high)",
+    "risk_tolerance": "medium to low"
+  },
+
+  "typical_challenges": [
+    "Forced all-rounder: marketing, sales, delivery, admin in one person",
+    "Capacity limit: scaling only through more of your own working hours",
+    "Acquisition vs. delivery: either find clients OR do project work",
+    "No cover: vacation = no revenue",
+    "Isolated: no colleagues for feedback, brainstorming, motivation",
+    "Price pressure: often competing with larger agencies",
+    "Cash flow: no reserves for investments",
+    "Admin overhead: managing bookkeeping, taxes, insurance yourself"
+  ],
+
+  "focus_priorities": [
+    "Time savings (absolute top priority!)",
+    "Automation of repetitive tasks",
+    "Marketing efficiency (little time = get the maximum out of it)",
+    "Tools that work IMMEDIATELY (no training overhead)",
+    "No dependency on expensive service providers",
+    "ROI must be clear and fast",
+    "Self-service tools (no implementation projects)"
+  ],
+
+  "forbidden_recommendations": [
+    "Build a team",
+    "Hire employees",
+    "Build a freelancer pool",
+    "Define department structures",
+    "Engage organisational consultants",
+    "Change management programmes",
+    "Team workshops",
+    "Leadership coaching",
+    "Define roles (except your own)",
+    "Enterprise software (SAP, Oracle, etc.)",
+    "ERP systems (far too complex)",
+    "Dedicated IT support",
+    "Complex multi-tool integrations"
+  ],
+
+  "recommended_instead": [
+    "No-code automation (Make, Zapier)",
+    "All-in-one tools instead of a tool zoo",
+    "Selective outsourcing (VA, bookkeeper)",
+    "Templates instead of custom development",
+    "SaaS tools with self-service",
+    "Community support instead of expensive support"
+  ],
+
+  "budget_realistic": {
+    "capex_max": 10000,
+    "capex_typical": 3000,
+    "capex_note": "Often from reserves, not credit-financed",
+    "opex_monthly_max": 300,
+    "opex_monthly_typical": 120,
+    "opex_note": "Every euro is weighed three times",
+    "hidden_costs": "Own time for setup, learning curve, maintenance"
+  },
+
+  "decision_criteria": [
+    "ROI must be clearly visible (ideally a calculator)",
+    "Payback under 6 months (better 3 months)",
+    "Tools must be self-service (no dependency)",
+    "No long onboarding time (max 1-2 days)",
+    "Scalable when the business grows (no repurchase)",
+    "Cancellable (no long contract lock-in)",
+    "GDPR-compliant (EU hosting preferred)"
+  ],
+
+  "time_allocation_typical": {
+    "delivery": "40-50%",
+    "akquise_marketing": "20-30%",
+    "administration": "15-20%",
+    "weiterbildung": "5-10%",
+    "strategie": "5%"
+  },
+
+  "time_allocation_ideal": {
+    "delivery": "60-70%",
+    "akquise_marketing": "15-20%",
+    "administration": "5-10%",
+    "weiterbildung": "5-10%",
+    "strategie": "5-10%"
+  },
+
+  "automation_priorities": [
+    "Email marketing and follow-ups (highest impact)",
+    "Proposal creation (very time-consuming)",
+    "Social media posting (often neglected)",
+    "Invoicing (most annoying)",
+    "Meeting documentation (underestimated)",
+    "Appointment scheduling (avoid ping-pong)"
+  ],
+
+  "quick_win_criteria": {
+    "hours_saved_min": 3,
+    "hours_saved_max": 15,
+    "note": "More than 15h/month is unrealistic for solo",
+    "payback_max_months": 6,
+    "implementation_max_hours": 8,
+    "learning_curve_max_hours": 4
+  },
+
+  "tool_selection_preferences": [
+    "Freemium models for testing",
+    "Monthly cancellation instead of annual subscription",
+    "German-language support preferred",
+    "YouTube tutorials available",
+    "Active community/forum",
+    "Mobile app available",
+    "Integrations with standard tools (Gmail, Google Calendar, etc.)"
+  ],
+
+  "success_patterns": [
+    "Find a niche instead of being a generalist",
+    "Productized services (standardised packages)",
+    "Build passive income (courses, templates)",
+    "Premium pricing instead of volume",
+    "Build retainer clients (predictable revenue)",
+    "Community/network as an acquisition channel"
+  ],
+
+  "typical_stundensatz": {
+    "einsteiger": "€40-70",
+    "etabliert": "€70-120",
+    "experte": "€120-250",
+    "note": "Large variance depending on industry and region"
+  },
+
+  "roadmap_horizons": {
+    "quick_wins": "0-3 months",
+    "scaling": "3-12 months",
+    "transformation": "12-24 months"
+  }
+}

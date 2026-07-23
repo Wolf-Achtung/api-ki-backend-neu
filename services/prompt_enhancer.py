@@ -1416,6 +1416,28 @@ ROADMAP_CONSTRAINTS: Dict[str, RoadmapConstraints] = {
 }
 
 
+# EN-Testlauf 2: English wording for the free-text constraint fields above.
+# Budgets/durations stay in ROADMAP_CONSTRAINTS (single source of truth);
+# only the human-readable strings are localized for lang=en.
+ROADMAP_CONSTRAINTS_TEXT_EN: Dict[str, Dict[str, str]] = {
+    "solo": {
+        "team_structure": "You + at most 1–2 freelancers",
+        "example_team": "1 backend dev (freelance, 20h)",
+        "realistic_capacity": "You mostly work yourself; freelancers for specialist tasks",
+    },
+    "team": {
+        "team_structure": "Core team + external experts",
+        "example_team": "2–3 developers + 1 project lead",
+        "realistic_capacity": "Small internal team + selective reinforcement",
+    },
+    "kmu": {
+        "team_structure": "Dedicated project team",
+        "example_team": "5–8 developers + PM + architect",
+        "realistic_capacity": "Full project team with different roles",
+    },
+}
+
+
 def _normalize_size(raw_size: str | None) -> str:
     """
     Normalize size value from briefing to internal ROADMAP_CONSTRAINTS key.
@@ -1474,6 +1496,35 @@ def enhance_roadmap_prompt(base_prompt: str, context: Dict[str, Any]) -> str:
     max_budget_total: int = constraints["max_budget_total"]
     max_realistic_budget = min(max_budget_total, budget_from_map)
 
+    # EN-Testlauf 2: language-aware constraints block (DE byte-identical)
+    lang_raw = context.get("lang") or context.get("LANG") or context.get("sprache") or "de"
+    if str(lang_raw).lower().strip().startswith("en"):
+        text_en = ROADMAP_CONSTRAINTS_TEXT_EN[size]
+        size_context_en = f"""
+CRITICAL CONSTRAINTS – Company size: {size.upper()}
+
+Budget limits (ADHERE STRICTLY!):
+- Total budget for 90 days: MAX €{max_realistic_budget:,}
+- Budget per phase: MAX €{constraints['max_budget_per_phase']:,}
+- Stated investment budget (category): {investment_budget}
+
+Team structure (REALISTIC!):
+- {text_en['team_structure']}
+- Example: {text_en['example_team']}
+- Capacity: {text_en['realistic_capacity']}
+
+Not recommended for {size}:
+- No project teams that do not match the company size
+- Respect the budget cap: max. €{max_realistic_budget:,}
+- Take realistic team capacities into account
+
+The roadmap MUST be feasible with the real budget and the company size!
+
+---
+
+"""
+        return size_context_en + base_prompt
+
     size_context = f"""
 KRITISCHE VORGABEN – Unternehmensgröße: {size.upper()}
 
@@ -1515,7 +1566,18 @@ class PromptEnhancer:
             data_dir: Path to context data directory
         """
         self.builder = PromptBuilder(data_dir=data_dir)
+        # EN-Testlauf 2: lazily created EN builder for lang=en reports
+        self._data_dir = data_dir
+        self._builder_en: Optional[PromptBuilder] = None
         log.info("✅ PromptEnhancer initialized (data_dir=%s)", data_dir)
+
+    def _get_builder(self, report_lang: str) -> PromptBuilder:
+        """Return the language-appropriate context builder (default: DE)."""
+        if str(report_lang or "de").lower().startswith("en"):
+            if self._builder_en is None:
+                self._builder_en = PromptBuilder(data_dir=self._data_dir, lang="en")
+            return self._builder_en
+        return self.builder
 
     def build_context_block(self, briefing_data: Dict[str, Any]) -> str:
         """
@@ -1548,9 +1610,10 @@ class PromptEnhancer:
         if not branche or not groesse:
             return "<!-- Context data incomplete -->"
 
-        # Load contexts
-        branch_ctx = self.builder.load_context("branch", branche)
-        size_ctx = self.builder.load_context("size", groesse)
+        # Load contexts (EN-Testlauf 2: language-aware data source)
+        _builder = self._get_builder(report_lang)
+        branch_ctx = _builder.load_context("branch", branche)
+        size_ctx = _builder.load_context("size", groesse)
 
         log.info("✅ Context loaded: hauptleistung=%s, branch=%s, size=%s, lang=%s",
                  hauptleistung[:30] + "..." if len(hauptleistung) > 30 else hauptleistung,
@@ -1685,8 +1748,23 @@ class PromptEnhancer:
         """
         strategic_context = briefing_data.get("strategic_context_block", "")
 
+        # EN-Testlauf 2: Injected instruction blocks must match the report
+        # language — otherwise EN prompts receive German context headers
+        # ("Denglisch" in the output). DE stays byte-identical.
+        lang_raw = briefing_data.get("lang") or briefing_data.get("LANG") or briefing_data.get("sprache") or "de"
+        is_en = str(lang_raw).lower().strip().startswith("en")
+
         if not strategic_context or strategic_context.strip() == "":
             # Fallback for empty context
+            if is_en:
+                return """
+## Strategic Context (Original Statements by the Company)
+
+No additional strategic free-text statements were provided; rely on the remaining answers.
+
+---
+
+"""
             return """
 ## Strategischer Kontext (Originalangaben des Unternehmens)
 
@@ -1697,6 +1775,17 @@ Es liegen keine zusätzlichen strategischen Freitext-Angaben vor; orientiere dic
 """
 
         # Build the full strategic context block
+        if is_en:
+            return f"""
+## Strategic Context (Original Statements by the Company)
+
+{strategic_context}
+
+**IMPORTANT:** If this block contains statements about no-gos, red lines, or sensitive topics (e.g. under "No-Gos & Guardrails"), they must be strictly respected. Do not make any recommendations that contradict these guardrails.
+
+---
+
+"""
         return f"""
 ## Strategischer Kontext (Originalangaben des Unternehmens)
 
@@ -1730,9 +1819,28 @@ Es liegen keine zusätzlichen strategischen Freitext-Angaben vor; orientiere dic
         if not strategic_context or strategic_context.strip() == "":
             return ""
 
+        # EN-Testlauf 2: language-aware instruction blocks (DE byte-identical)
+        lang_raw = briefing_data.get("lang") or briefing_data.get("LANG") or briefing_data.get("sprache") or "de"
+        is_en = str(lang_raw).lower().strip().startswith("en")
+
         # Quick Wins alignment instructions
         QUICK_WIN_PROMPTS = {"quick_wins"}
         if prompt_name in QUICK_WIN_PROMPTS:
+            if is_en:
+                return """
+## How to Use the Strategic Context
+
+Use the strategic context as follows:
+
+- **Prioritise all recommendations** along the "Strategic Priorities".
+- **Tackle the named "time sinks & process pain points" first** – they have the highest urgency.
+- **Align examples, wording, and use cases** with the "Most Important Service / Main Product".
+- **Consider ongoing AI projects only as a complement** (no duplicate work, no redundancy).
+- **If there are ideas for business model development:** mention 1–2 fast validation steps as a Quick Win.
+
+---
+
+"""
             return """
 ## Anleitung zur Nutzung des Strategischen Kontexts
 
@@ -1751,6 +1859,19 @@ Nutze den Strategischen Kontext wie folgt:
         # Roadmap alignment instructions (90d, 12m, etc.)
         ROADMAP_PROMPTS = {"roadmap", "roadmap_12m", "roadmap_90d", "pilot_plan"}
         if prompt_name in ROADMAP_PROMPTS:
+            if is_en:
+                return """
+## Roadmap Rules Based on the Strategic Context
+
+- **In the first 90 days:** focus on Quick Wins and operational relief based on the named "time sinks & process pain points".
+- **In the 6–12 month horizon:** define measures that systematically prepare the target picture ("Vision 2–3 years") and the "Strategic Priorities".
+- **If business model ideas were provided:** show concretely how they can be tested and validated (MVP, pilot customers, experiments).
+- **Ongoing or planned AI projects:** integrate them sensibly into the roadmap, avoid duplicate work.
+- **Most Important Service / Main Product:** all roadmap measures should ultimately strengthen this core process or make it more efficient.
+
+---
+
+"""
             return """
 ## Roadmap-Regeln basierend auf Strategischem Kontext
 
@@ -1768,7 +1889,7 @@ Nutze den Strategischen Kontext wie folgt:
         return ""
 
     def _build_guardrails_instructions(
-        self, prompt_name: str, strategic_context_block: str
+        self, prompt_name: str, strategic_context_block: str, lang: str = "de"
     ) -> str:
         """
         Build prompt-specific guardrails/no-gos instructions.
@@ -1779,10 +1900,13 @@ Nutze den Strategischen Kontext wie folgt:
         Args:
             prompt_name: Name of the prompt (e.g., 'risks', 'org_change')
             strategic_context_block: The strategic context string
+            lang: Report language ('de' or 'en') — controls the language of
+                the injected instruction block (EN-Testlauf 2)
 
         Returns:
             Formatted guardrails instruction string, or empty string if not applicable
         """
+        is_en = str(lang or "de").lower().strip().startswith("en")
         # Return empty if no strategic context or no guardrails mentioned
         if not strategic_context_block or strategic_context_block.strip() == "":
             return ""
@@ -1848,6 +1972,18 @@ Nutze den Strategischen Kontext wie folgt:
             "datenschutz",
         ]
         if any(kw in prompt_lower for kw in RISK_COMPLIANCE_KEYWORDS):
+            if is_en:
+                return """
+## Guardrails & No-Gos (binding)
+
+- **No recommendation may** contradict any of the stated no-gos.
+- **If a good practice conflicts with a guardrail:** name the conflict and propose a safe alternative.
+- **Always explain risks in the context** of the stated guardrails.
+- **Mention the guardrails explicitly** when describing risk mitigation measures.
+
+---
+
+"""
             return """
 ## Leitplanken & No-Gos (verbindlich zu beachten)
 
@@ -1871,6 +2007,17 @@ Nutze den Strategischen Kontext wie folgt:
             "mitarbeiter",
         ]
         if any(kw in prompt_lower for kw in CHANGE_CULTURE_KEYWORDS):
+            if is_en:
+                return """
+## Notes on Communication Within the Guardrails
+
+- **Adapt all change and communication examples** to the stated guardrails.
+- **Avoid statements** that would be sensitive or critical in the context of the no-gos.
+- **If guardrails concern team or works council sensitivity:** use particularly careful, neutral wording.
+
+---
+
+"""
             return """
 ## Hinweise zur Kommunikation im Rahmen der Leitplanken
 
@@ -1891,6 +2038,16 @@ Nutze den Strategischen Kontext wie folgt:
             "überblick",
         ]
         if any(kw in prompt_lower for kw in EXECUTIVE_SUMMARY_KEYWORDS):
+            if is_en:
+                return """
+## Guardrails Note for the Executive Summary
+
+- **If guardrails were stated:** phrase a brief reference to them ("The company places particular emphasis on ...").
+- **No details, no risks** – only a very short mention as a framework condition.
+
+---
+
+"""
             return """
 ## Leitplanken-Hinweis für Executive Summary
 
@@ -2185,7 +2342,7 @@ Nutze den Strategischen Kontext wie folgt:
             # === STEP 1c: Add guardrails/no-gos instructions ===
             # For Risk, Change, Executive prompts, add specific guardrails handling
             guardrails_instructions = self._build_guardrails_instructions(
-                prompt_name, strategic_context_raw
+                prompt_name, strategic_context_raw, lang=prompt_lang
             )
 
             # === STEP 1d: Add short-label instructions (Sprint G2.4) ===
@@ -2739,6 +2896,10 @@ def apply_smart_defaults_to_prompt(
     size = briefing_data.get("unternehmensgroesse", "team")
     branch = briefing_data.get("branche", "")
 
+    # EN-Testlauf 2: language-aware hint texts (DE byte-identical)
+    lang_raw = briefing_data.get("lang") or briefing_data.get("LANG") or briefing_data.get("sprache") or "de"
+    is_en = str(lang_raw).lower().strip().startswith("en")
+
     enhanced = prompt_text
     modifications = []
 
@@ -2750,7 +2911,10 @@ def apply_smart_defaults_to_prompt(
         )
         if adjustment and adjusted_words != base_min_words:
             # Inject word count hint into prompt
-            word_hint = f"\n\n[SMART DEFAULT: Mindestens {adjusted_words} Wörter für diese Sektion (angepasst basierend auf Segment-Performance)]\n"
+            if is_en:
+                word_hint = f"\n\n[SMART DEFAULT: At least {adjusted_words} words for this section (adjusted based on segment performance)]\n"
+            else:
+                word_hint = f"\n\n[SMART DEFAULT: Mindestens {adjusted_words} Wörter für diese Sektion (angepasst basierend auf Segment-Performance)]\n"
             enhanced = word_hint + enhanced
             modifications.append("word_count")
 
@@ -2758,7 +2922,10 @@ def apply_smart_defaults_to_prompt(
     phrase_prefs = engine.get_phrase_preferences(size, branch)
     if phrase_prefs.get("avoid_patterns"):
         avoid_list = ", ".join(phrase_prefs["avoid_patterns"])
-        phrase_hint = f"\n\n[SMART DEFAULT: Vermeide folgende Begriffe basierend auf Segment-Feedback: {avoid_list}]\n"
+        if is_en:
+            phrase_hint = f"\n\n[SMART DEFAULT: Avoid the following terms based on segment feedback: {avoid_list}]\n"
+        else:
+            phrase_hint = f"\n\n[SMART DEFAULT: Vermeide folgende Begriffe basierend auf Segment-Feedback: {avoid_list}]\n"
         enhanced = phrase_hint + enhanced
         modifications.append("phrase_preferences")
 

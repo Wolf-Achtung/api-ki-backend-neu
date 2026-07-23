@@ -1,0 +1,54 @@
+{
+  "groesse": "team",
+  "display_name": "2–10 (small team)",
+  "description": "Small team with 2-10 employees. First division of labour, but no fixed departments yet.",
+
+  "characteristics": {
+    "mitarbeiter": "2-10",
+    "abteilungen": false,
+    "jahresumsatz_typical": "€150,000 - 1,000,000",
+    "time_constraint": "high",
+    "decision_speed": "fast (days to weeks)",
+    "budget_sensitivity": "medium",
+    "tech_affinity": "medium to high",
+    "risk_tolerance": "medium"
+  },
+
+  "typical_challenges": [
+    "Coordination: who does what and when?",
+    "Knowledge transfer: how do we share know-how?",
+    "Missing processes: everyone does it differently",
+    "Founder bottleneck: all decisions go through one person",
+    "Scaling: growth brings chaos",
+    "Preserving culture: startup feeling vs. structure"
+  ],
+
+  "focus_priorities": [
+    "Improve collaboration",
+    "Standardise processes",
+    "Build knowledge management",
+    "Remove bottlenecks",
+    "Create scalability"
+  ],
+
+  "forbidden_recommendations": [
+    "Enterprise software",
+    "Dedicated IT department",
+    "Complex hierarchies",
+    "Too many tools (avoid a tool zoo)"
+  ],
+
+  "budget_realistic": {
+    "capex_max": 50000,
+    "capex_typical": 20000,
+    "opex_monthly_max": 1500,
+    "opex_monthly_typical": 600
+  },
+
+  "automation_priorities": [
+    "Team coordination (projects, tasks, deadlines)",
+    "Knowledge management (documentation, best practices)",
+    "Customer management (shared CRM)",
+    "Time tracking (who is working on what?)"
+  ]
+}

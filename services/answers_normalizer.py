@@ -98,6 +98,40 @@ UNTERNEHMENSGROESSEN_LABELS = {
     "kmu": "11–100 (KMU)",
 }
 
+# KIS-1251: English display labels for lang=en reports (same keys as
+# UNTERNEHMENSGROESSEN_LABELS). Also keyed by the German display label so
+# already-labelled values ("2–10 (Kleines Team)") can be re-mapped for EN.
+UNTERNEHMENSGROESSEN_LABELS_EN = {
+    "solo": "Solo",
+    "team": "2–10 (small team)",
+    "kmu": "11–100 (SME)",
+    # German display labels → EN (for values that were labelled upstream)
+    "2–10 (kleines team)": "2–10 (small team)",
+    "2-10 (kleines team)": "2–10 (small team)",
+    "11–100 (kmu)": "11–100 (SME)",
+    "11-100 (kmu)": "11–100 (SME)",
+}
+
+# KIS-1251: English labels for medien_sparte (keys = raw values from
+# field_registry.py plus the German display labels for robustness).
+MEDIEN_SPARTEN_LABELS_EN = {
+    "produktion": "Film/TV production",
+    "post_vfx": "Post-production / VFX / animation",
+    "games": "Games / interactive",
+    "verlag_publishing": "Publishing / editorial",
+    "musik_audio": "Music / audio / recording studio / podcast",
+    "agentur_design": "Agency / advertising / PR / web design",
+    "content_creation": "Content creation / social media",
+    # German display labels → EN
+    "film-/tv-produktion": "Film/TV production",
+    "postproduktion / vfx / animation": "Post-production / VFX / animation",
+    "games / interactive": "Games / interactive",
+    "verlag / publishing / redaktion": "Publishing / editorial",
+    "musik / audio / tonstudio / podcast": "Music / audio / recording studio / podcast",
+    "agentur / werbung / pr / webdesign": "Agency / advertising / PR / web design",
+    "content creation / social media": "Content creation / social media",
+}
+
 BUNDESLAENDER_LABELS = {
     "bw": "Baden-Württemberg",
     "by": "Bayern",

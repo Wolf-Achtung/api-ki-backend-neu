@@ -1143,7 +1143,19 @@ async def generate_deep_dive_pdf(
         "margin": {"top": "12mm", "right": "12mm", "bottom": "20mm", "left": "12mm"},
     }
 
-    _pdf_meta = {"briefing_id": briefing_id, "report_type": "gamechanger_deep_dive"}
+    # KIS-1257: lang im meta — sonst rendert der Default-Footer 'Seite x/y'
+    try:
+        from models import Briefing as _FbBr
+        from core.db import get_session as _fb_gs
+        _fb_db = next(_fb_gs())
+        try:
+            _fb_b = _fb_db.get(_FbBr, briefing_id)
+            _pdf_lang = str(getattr(_fb_b, "lang", "de") or "de")
+        finally:
+            _fb_db.close()
+    except Exception:
+        _pdf_lang = "de"
+    _pdf_meta = {"briefing_id": briefing_id, "report_type": "gamechanger_deep_dive", "lang": _pdf_lang}
 
     pdf_result = render_pdf_from_html(html=html, meta=_pdf_meta, pdf_options=pdf_options)
 
@@ -1264,7 +1276,19 @@ async def get_deep_dive_pdf(
         "margin": {"top": "12mm", "right": "12mm", "bottom": "20mm", "left": "12mm"},
     }
 
-    _pdf_meta = {"briefing_id": briefing_id, "report_type": "gamechanger_deep_dive"}
+    # KIS-1257: lang im meta — sonst rendert der Default-Footer 'Seite x/y'
+    try:
+        from models import Briefing as _FbBr
+        from core.db import get_session as _fb_gs
+        _fb_db = next(_fb_gs())
+        try:
+            _fb_b = _fb_db.get(_FbBr, briefing_id)
+            _pdf_lang = str(getattr(_fb_b, "lang", "de") or "de")
+        finally:
+            _fb_db.close()
+    except Exception:
+        _pdf_lang = "de"
+    _pdf_meta = {"briefing_id": briefing_id, "report_type": "gamechanger_deep_dive", "lang": _pdf_lang}
     pdf_result = render_pdf_from_html(html=html, meta=_pdf_meta, pdf_options=pdf_options)
 
     if pdf_result.get("error"):

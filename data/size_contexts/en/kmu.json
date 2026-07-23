@@ -1,0 +1,53 @@
+{
+  "groesse": "kmu",
+  "display_name": "11–100 (SME)",
+  "description": "Mid-sized company with first departments and a management level.",
+
+  "characteristics": {
+    "mitarbeiter": "11-100",
+    "abteilungen": true,
+    "jahresumsatz_typical": "€1,000,000 - 10,000,000",
+    "time_constraint": "medium",
+    "decision_speed": "medium (weeks to months)",
+    "budget_sensitivity": "medium",
+    "tech_affinity": "variable",
+    "risk_tolerance": "medium to high"
+  },
+
+  "typical_challenges": [
+    "Silos: departments work in isolation",
+    "Legacy systems: historically grown tool landscape",
+    "Change management: resistance to new tools",
+    "Governance: who decides what?",
+    "Compliance: GDPR (DSGVO), works council, ISO certifications",
+    "Scaling: processes do not grow along"
+  ],
+
+  "focus_priorities": [
+    "Process standardisation across departments",
+    "Governance and compliance",
+    "Approach change management in a structured way",
+    "Enterprise readiness (security, scaling)",
+    "ROI must be solid"
+  ],
+
+  "forbidden_recommendations": [
+    "Quick-and-dirty solutions",
+    "Tools without SSO/enterprise features",
+    "No compliance check"
+  ],
+
+  "budget_realistic": {
+    "capex_max": 200000,
+    "capex_typical": 80000,
+    "opex_monthly_max": 8000,
+    "opex_monthly_typical": 3000
+  },
+
+  "automation_priorities": [
+    "Enterprise CRM with pipeline management",
+    "ERP integration or upgrade",
+    "HR processes (recruiting, onboarding)",
+    "Compliance automation (GDPR, documentation)"
+  ]
+}

@@ -355,8 +355,28 @@ class ROIExplanation:
         </div>
         """
 
+    # KIS-1251: EN-Fassung der deterministischen Quellen-Anmerkungen —
+    # stundensatz_quelle/zeitersparnis_quelle werden auf Deutsch erzeugt
+    # (HOURLY_RATE_SOURCES, "Geschätzt aus Prozessanalyse") und landeten
+    # unübersetzt in der EN-ROI-Box.
+    _SOURCE_LABELS_EN = {
+        "Geschätzt aus Prozessanalyse": "Estimated from process analysis",
+        "Summe aus Quick Wins": "Sum of quick wins",
+        "Branchendurchschnitt für Solo-Selbstständige (BVMW 2024)":
+            "Industry average for solo freelancers (BVMW 2024)",
+        "Durchschnitt gemischte Rollen in kleinen Teams":
+            "Average for mixed roles in small teams",
+        "KMU-Durchschnitt inkl. anteiligem Overhead":
+            "SME average incl. pro-rata overhead",
+        "Unternehmensdurchschnitt mit Gemeinkosten":
+            "Company average incl. overhead costs",
+        "Standardsatz": "Standard rate",
+    }
+
     def _to_html_en(self) -> str:
         cap_note = " (capped to maximum)" if self.zeitersparnis_gecappt else ""
+        _rate_source_en = self._SOURCE_LABELS_EN.get(self.stundensatz_quelle, self.stundensatz_quelle)
+        _time_source_en = self._SOURCE_LABELS_EN.get(self.zeitersparnis_quelle, self.zeitersparnis_quelle)
 
         # P0.3: Option A - Show both raw and capped ROI when applicable
         if self.roi_raw != 0.0:
@@ -382,8 +402,8 @@ class ROIExplanation:
         <div class="roi-explanation-box" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:16px 0;font-size:13px;">
             <div style="font-weight:600;margin-bottom:12px;color:#1e293b;">📊 How I Calculate Your ROI</div>
             <table style="width:100%;border-collapse:collapse;">
-                <tr><td style="padding:4px 8px;">Hourly Rate</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.stundensatz} €/h</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{self.stundensatz_quelle}</td></tr>
-                <tr><td style="padding:4px 8px;">Time Savings</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.zeitersparnis_stunden:.0f} h/month{cap_note}</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{self.zeitersparnis_quelle}</td></tr>
+                <tr><td style="padding:4px 8px;">Hourly Rate</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.stundensatz} €/h</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{_rate_source_en}</td></tr>
+                <tr><td style="padding:4px 8px;">Time Savings</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.zeitersparnis_stunden:.0f} h/month{cap_note}</td><td style="padding:4px 8px;color:#64748b;font-size:11px;">{_time_source_en}</td></tr>
                 <tr><td style="padding:4px 8px;">One-time Costs (CAPEX)</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.einmalkosten:,.0f} €</td><td></td></tr>
                 <tr><td style="padding:4px 8px;">Ongoing Costs (OPEX)</td><td style="padding:4px 8px;text-align:right;font-weight:500;">{self.laufende_kosten_monat:,.0f} €/month</td><td></td></tr>
                 {"<tr><td style='padding:4px 8px;'>Funding Effect</td><td style='padding:4px 8px;text-align:right;font-weight:500;color:#16a34a;'>-" + f"{self.foerdereffekt:,.0f} €</td><td></td></tr>" if self.foerdereffekt > 0 else ""}

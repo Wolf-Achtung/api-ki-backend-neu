@@ -307,6 +307,20 @@ def calculate_bc_deep_dive(canonical_bc: Dict[str, float]) -> Dict[str, Any]:
     # must not recalculate from raw hours/rate/opex.
     base_net_monthly = (base_hours * rate) - opex_month
 
+    # KIS-EN2-BC (Rundungs-Inkonsistenz, EN-Testlauf 2): r1_payback kommt auf
+    # 1 Dezimale gerundet aus R1 (z. B. 11,9 statt exakt 11,852). Die
+    # proportionale Skalierung verstärkte diesen Rundungsfehler in den
+    # ±10 %-Szenarien (13,5 statt 13,4 bzw. 10,7 statt 10,6). Wenn r1_payback
+    # nur die gerundete Fassung von capex/base_net ist (kein echter
+    # R1-Puffer), rechnen wir die Szenario-Amortisation exakt aus capex/net;
+    # das Basis-Szenario behält r1_payback (Konsistenz zum Break-Even-Text).
+    _exact_base_payback = (capex / base_net_monthly) if base_net_monthly > 0 else 0.0
+    _r1_is_rounded_exact = (
+        r1_payback > 0
+        and _exact_base_payback > 0
+        and abs(r1_payback - _exact_base_payback) <= 0.05 + 1e-9
+    )
+
     # Sensitivity analysis
     scenarios = [
         ('-20%', 0.8),
@@ -329,7 +343,12 @@ def calculate_bc_deep_dive(canonical_bc: Dict[str, float]) -> Dict[str, Any]:
 
         net_monthly = monthly_savings - opex_month
         if net_monthly > 0:
-            if r1_payback > 0 and base_net_monthly > 0:
+            if _r1_is_rounded_exact:
+                # KIS-EN2-BC: r1_payback == round(capex/base_net, 1) → exakt
+                # rechnen statt den Rundungsfehler zu skalieren. Basis-Zeile
+                # bleibt auf r1_payback (identisch zum Break-Even-Absatz).
+                payback_months = r1_payback if modifier == 1.0 else capex / net_monthly
+            elif r1_payback > 0 and base_net_monthly > 0:
                 # Scale R1 payback proportionally: when net_monthly changes,
                 # payback changes by ratio of base to adjusted net.
                 payback_months = r1_payback * (base_net_monthly / net_monthly)
@@ -395,23 +414,45 @@ def calculate_bc_deep_dive(canonical_bc: Dict[str, float]) -> Dict[str, Any]:
     }
 
 
-def render_bc_deep_dive_html(bc_data: Dict[str, Any]) -> str:
+def render_bc_deep_dive_html(bc_data: Dict[str, Any], lang: str = "de") -> str:
     """
     Render the Business Case Deep Dive as HTML.
 
     DETERMINISTIC — no LLM. Pure template rendering.
+
+    KIS-EN2-BC (EN-Testlauf 2): lang='en' rendert den gesamten Block englisch
+    (Überschriften, Tabellen, Annahmen, Break-Even, 3-Jahres-Projektion) mit
+    EN-Zahlformat ("24,000 €", "11.9 mo."). Default 'de' bleibt unverändert.
     """
+    _en = str(lang or "de").lower().startswith("en")
+
     def _fmt(val: Any) -> str:
-        """Format number with German locale (dots as thousands separator)."""
+        """Format number with locale thousands separator (DE dot / EN comma)."""
         if isinstance(val, str):
             return val
         if isinstance(val, float) and val == float('inf'):
             return '—'
         try:
             n = int(round(float(val)))
-            return f"{n:,}".replace(',', '.')
+            s = f"{n:,}"
+            return s if _en else s.replace(',', '.')
         except (ValueError, TypeError):
             return str(val)
+
+    def _fmt_hours(val: Any) -> str:
+        """KIS-EN2-BC: Stunden mit 1 Dezimale anzeigen, wenn nicht ganzzahlig.
+
+        Die ±10 %-Szenarien rechnen mit 22,5/27,5 h — angezeigt wurde bisher
+        aber die ganzzahlig gerundete Fassung (22/28 h, EN-Testlauf 2).
+        """
+        try:
+            f = float(val)
+        except (ValueError, TypeError):
+            return str(val)
+        if abs(f - round(f)) < 0.05:
+            return _fmt(f)
+        s = f"{f:.1f}"
+        return s if _en else s.replace('.', ',')
 
     sensitivity = bc_data.get('sensitivity', [])
     projection = bc_data.get('projection', [])
@@ -420,6 +461,8 @@ def render_bc_deep_dive_html(bc_data: Dict[str, Any]) -> str:
     break_even_precise = bc_data.get('break_even_precise')
 
     # Build sensitivity table
+    _hours_unit = "h/mo." if _en else "h/Mon."
+    _month_unit = "mo." if _en else "Mon."
     sens_rows = []
     for s in sensitivity:
         # FIX: Show raw ROI in sensitivity table so scenarios are distinguishable.
@@ -427,16 +470,19 @@ def render_bc_deep_dive_html(bc_data: Dict[str, Any]) -> str:
         # sensitivity comparison all values were identical ("200% (gedeckelt)").
         roi_display = f"{int(s['roi_raw'])}%"
         # KIS-1232: deutsches Dezimalkomma ("12,6 Mon." statt "12.6 Mon.")
-        payback_display = (
-            f"{float(s['payback_months']):.1f}".replace(".", ",") + " Mon."
-            if s['payback_months'] != '—' else '—'
-        )
+        if s['payback_months'] != '—':
+            _pb = f"{float(s['payback_months']):.1f}"
+            payback_display = (_pb if _en else _pb.replace(".", ",")) + f" {_month_unit}"
+        else:
+            payback_display = '—'
+        # KIS-EN2-BC: interner Szenario-Key bleibt 'Basis', Anzeige EN 'Base'.
+        label_display = 'Base' if (_en and s['label'] == 'Basis') else s['label']
         row_class = ' class="highlight"' if s['label'] == 'Basis' else ''
         sens_rows.append(
             f'<tr{row_class}>'
-            f'<td><strong>{s["label"]}</strong></td>'
-            f'<td>{_fmt(s["hours_month"])} h/Mon.</td>'
-            f'<td>{_fmt(s["monthly_savings"])} €/Mon.</td>'
+            f'<td><strong>{label_display}</strong></td>'
+            f'<td>{_fmt_hours(s["hours_month"])} {_hours_unit}</td>'
+            f'<td>{_fmt(s["monthly_savings"])} €/{ "mo." if _en else "Mon."}</td>'
             f'<td>{_fmt(s["net_benefit_12m"])} €</td>'
             f'<td>{roi_display}</td>'
             f'<td>{payback_display}</td>'
@@ -444,12 +490,13 @@ def render_bc_deep_dive_html(bc_data: Dict[str, Any]) -> str:
         )
 
     # Build projection table
+    _year_label = "Year" if _en else "Jahr"
     proj_rows = []
     for p in projection:
         net_class = ' class="positive"' if p['cumulative_net'] > 0 else ' class="negative"'
         proj_rows.append(
             f'<tr>'
-            f'<td><strong>Jahr {p["year"]}</strong></td>'
+            f'<td><strong>{_year_label} {p["year"]}</strong></td>'
             f'<td>{_fmt(p["cumulative_savings"])} €</td>'
             f'<td>{_fmt(p["cumulative_cost"])} €</td>'
             f'<td{net_class}>{_fmt(p["cumulative_net"])} €</td>'
@@ -460,24 +507,102 @@ def render_bc_deep_dive_html(bc_data: Dict[str, Any]) -> str:
     # Sensitivitätstabelle steht, MUSS der Narrative-Absatz beide Lesarten
     # explizit zusammenführen, sonst wirkt "Monat X" widersprüchlich zur
     # Tabelle. Format: "im Laufe von Monat 12 (genau: 11,1 Monate)".
-    if break_even:
+    if _en:
+        if break_even:
+            if break_even_precise and abs(break_even_precise - break_even) > 0.05:
+                _precise_en = f"{break_even_precise:.1f}"
+                break_even_text = (
+                    f'<p><strong>Break-even:</strong> in the course of month {break_even} '
+                    f'(calculated: {_precise_en} months, '
+                    f'based on the base scenario with {_fmt_hours(base.get("hours", 0))} h/mo. of savings)</p>'
+                )
+            else:
+                break_even_text = (
+                    f'<p><strong>Break-even:</strong> month {break_even} '
+                    f'(base scenario with {_fmt_hours(base.get("hours", 0))} h/mo. of savings)</p>'
+                )
+        else:
+            break_even_text = (
+                '<p><strong>Break-even:</strong> not reachable within 12 months '
+                'under the current scenario.</p>'
+            )
+    elif break_even:
         if break_even_precise and abs(break_even_precise - break_even) > 0.05:
             _precise_de = f"{break_even_precise:.1f}".replace(".", ",")
             break_even_text = (
                 f'<p><strong>Break-Even:</strong> im Laufe von Monat {break_even} '
                 f'(rechnerisch nach {_precise_de} Monaten, '
-                f'bei Basis-Szenario mit {_fmt(base.get("hours", 0))} h/Mon. Einsparung)</p>'
+                f'bei Basis-Szenario mit {_fmt_hours(base.get("hours", 0))} h/Mon. Einsparung)</p>'
             )
         else:
             break_even_text = (
                 f'<p><strong>Break-Even:</strong> Monat {break_even} '
-                f'(bei Basis-Szenario mit {_fmt(base.get("hours", 0))} h/Mon. Einsparung)</p>'
+                f'(bei Basis-Szenario mit {_fmt_hours(base.get("hours", 0))} h/Mon. Einsparung)</p>'
             )
     else:
         break_even_text = (
             '<p><strong>Break-Even:</strong> Nicht innerhalb von 12 Monaten erreichbar '
             'bei aktuellem Szenario.</p>'
         )
+
+    if _en:
+        html = f"""
+<p><strong>Sensitivity Analysis</strong></p>
+<p>What happens if the actual time savings deviate from the base scenario?
+The following table shows the impact on ROI and payback.</p>
+<!-- FIX-KIS-1027.4-2C: methodology transparency for cross-report consistency -->
+<p style="font-size:0.85em;color:#475569;margin-top:-6px;">
+<strong>Methodology:</strong> This sensitivity analysis varies only the
+<em>time savings</em> (−20 % to +20 %) and keeps investment and OPEX constant.
+The AI Status Report (Report 1) additionally varies investment and OPEX
+proportionally, while the AI Strategy Report calculates with 12-month total
+costs. Diverging scenario values between the three reports are due to
+methodology and not a contradiction.
+</p>
+
+<table class="table">
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Savings</th>
+<th>Monthly benefit</th>
+<th>Net benefit (12M)</th>
+<th>ROI</th>
+<th>Payback</th>
+</tr>
+</thead>
+<tbody>
+{"".join(sens_rows)}
+</tbody>
+</table>
+
+<p><strong>Assumptions:</strong> hourly rate {_fmt(base.get("rate", 0))} €,
+one-time investment {_fmt(base.get("capex", 0))} €,
+running costs {_fmt(base.get("opex_month", 0))} €/month.</p>
+
+{break_even_text}
+
+<p><strong>3-Year Projection</strong></p>
+<p>Cumulative view over 3 years in the base scenario:</p>
+
+<table class="table">
+<thead>
+<tr>
+<th>Period</th>
+<th>Cumul. savings</th>
+<th>Cumul. costs</th>
+<th>Cumul. net benefit</th>
+</tr>
+</thead>
+<tbody>
+{"".join(proj_rows)}
+</tbody>
+</table>
+
+<p>The investment is calculated conservatively. With higher adoption, savings
+grow disproportionately because the one-time investment is already covered.</p>
+"""
+        return html.strip()
 
     html = f"""
 <p><strong>Sensitivitätsanalyse</strong></p>
@@ -592,8 +717,11 @@ def generate_deep_dive_sections(context: Dict[str, Any]) -> Dict[str, str]:
     sections['GC_BRUCHPUNKT_HTML'] = _strip_leading_glance_box(section1_raw)
 
     # Section 3: Deterministic BC Deep Dive
+    # KIS-EN2-BC: lang-aware — der deterministische Block blieb im
+    # EN-Report als einziger KPA-Teil deutsch (EN-Testlauf 2, S. 5-6).
+    _bc_lang = str(context.get('LANG') or context.get('lang') or 'de').lower()
     bc_data = calculate_bc_deep_dive(context.get('canonical_bc', {}))
-    sections['BC_DEEP_DIVE_HTML'] = render_bc_deep_dive_html(bc_data)
+    sections['BC_DEEP_DIVE_HTML'] = render_bc_deep_dive_html(bc_data, lang=_bc_lang)
 
     # Sections 2, 4, 5: LLM-generated
     llm_sections = [
@@ -677,6 +805,20 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
                 "professional business English (headings, labels, prose). Keep "
                 "proper nouns, program and product names unchanged; keep the "
                 "numeric values from the context verbatim."
+                # KIS-EN2-GC: Der EN-Testlauf 2 zeigte deutsche Fachbegriffe in
+                # Tabellen/Fließtext ("Pfad: Minimal", Spalte "Pfad", Zelle
+                # "Ausbau") — die DE-Prompt-Anweisungen (SZENARIO-SPALTE)
+                # nennen die Werte wörtlich. Verbindliche Übersetzungsliste:
+                "\nTRANSLATE these German terms from the instructions/context "
+                "consistently — never leave them in German: "
+                "Pfad → Path; Ausbau → Scale-up; Minimal → Minimal; "
+                "Standard → Standard; Freigabe → approval; "
+                "Prüfschritt → review step; KI-Owner → AI owner; "
+                "Vier-Augen-Prinzip → four-eyes principle; "
+                "AVV/AV-Vertrag → data processing agreement (DPA); "
+                "KI-Richtlinie → AI policy; KI-Entwurf → AI draft; "
+                "KI-Ausgabe → AI output; belastbar → reliable; "
+                "voraussichtlich → expected."
             )
     except Exception as exc:
         log.error(
@@ -825,11 +967,13 @@ def _enforce_kpa_break_even(html: str, canonical_payback: float) -> str:
 
     # Pattern handles optional HTML tags anywhere in the text, non-breaking
     # spaces, and Unicode hyphens (e.g. <strong>Break-Even:</strong> Monat 8)
+    # KIS-EN2-BC: auch EN-Prosa ("Break-even: month 8") wird erzwungen \u2014
+    # "[Mm]on(?:at|th)" ist ein Superset, DE-Verhalten unver\u00e4ndert.
     _T = r'(?:<[^>]+>)*'  # skip optional HTML tags
     pattern = (
         r'(' + _T + r'Break[\s\-\u2011\u2013\u2014]*' + _T +    # "<strong>Break-"
         r'[Ee]ven[:\s]*' + _T +                                   # "Even:</strong>"
-        r'(?:&nbsp;|\xa0|\s)*Monat(?:&nbsp;|\xa0|\s)*)' +         # " Monat "
+        r'(?:&nbsp;|\xa0|\s)*[Mm]on(?:at|th)(?:&nbsp;|\xa0|\s)*)' +  # " Monat "/" month "
         r'(\d+)'                                                   # the month number
     )
 
@@ -985,9 +1129,12 @@ def render_deep_dive_html(sections: Dict[str, str],
             import re as _re_m
             _bc = template_vars.get('BC_DEEP_DIVE_HTML', '')
             if isinstance(_bc, str) and _bc:
+                # KIS-EN2-BC: EN-Alternativen ergänzt (Methodology / "not a
+                # contradiction") — DE-Muster unverändert, DE byte-identisch.
                 _bc_new = _re_m.sub(
-                    r'<p>\s*(?:<strong>\s*)?Methodik:?(?:\s*</strong>)?'
-                    r'(?:(?!</p>).)*?(?:methodisch bedingt|kein Widerspruch|Beide Werte sind korrekt)'
+                    r'<p>\s*(?:<strong>\s*)?(?:Methodik|Methodology):?(?:\s*</strong>)?'
+                    r'(?:(?!</p>).)*?(?:methodisch bedingt|kein Widerspruch|Beide Werte sind korrekt'
+                    r'|due to methodology|not a contradiction|Both values are correct)'
                     r'(?:(?!</p>).)*?</p>',
                     '', _bc, flags=_re_m.DOTALL | _re_m.IGNORECASE,
                 )
@@ -1007,6 +1154,38 @@ def render_deep_dive_html(sections: Dict[str, str],
             or context.get('HAUPTLEISTUNG')
             or 'Ihr Unternehmen'
         )
+        # KIS-EN2-COVER: EN-Report zeigte deutschen Cover-Untertitel
+        # ("Medien & Kreativwirtschaft · Team (2–10 Mitarbeitende)") und
+        # deutschen PDF-Titel — Labels lang-aware übersetzen (nur en).
+        if _dd_lang.startswith('en'):
+            try:
+                from services.answers_normalizer import (
+                    BRANCHEN_LABELS, BRANCHEN_LABELS_EN,
+                )
+                _br_raw = str(template_vars.get('BRANCHE_LABEL') or '').strip()
+                _de_label_to_key = {v.lower(): k for k, v in BRANCHEN_LABELS.items()}
+                _br_key = (
+                    _br_raw.lower() if _br_raw.lower() in BRANCHEN_LABELS_EN
+                    else _de_label_to_key.get(_br_raw.lower(), '')
+                )
+                if _br_key:
+                    template_vars['BRANCHE_LABEL'] = BRANCHEN_LABELS_EN[_br_key]
+                _size_labels_en = {
+                    'solo': 'Solo / self-employed',
+                    'team': 'Team (2–10 employees)',
+                    'kmu': 'SME (11–100 employees)',
+                }
+                _cs = str(template_vars.get('COMPANY_SIZE') or '').lower().strip()
+                if _cs in _size_labels_en:
+                    template_vars['UNTERNEHMENSGROESSE_LABEL'] = _size_labels_en[_cs]
+                # PDF-Titel (<title>) folgt der übersetzten Branche
+                template_vars['company_name'] = (
+                    template_vars.get('BRANCHE_LABEL')
+                    or template_vars.get('HAUPTLEISTUNG')
+                    or 'Your company'
+                )
+            except Exception as _e:
+                log.warning("[KIS-EN2-COVER] EN label translation failed: %s", _e)
         # Unified customer-facing report number (KIS-XXXX)
         from utils.report_display_id import get_report_display_id
         _bid = context.get('briefing_id', 0)
@@ -1035,7 +1214,9 @@ def render_deep_dive_html(sections: Dict[str, str],
                 soften_table_long_words as _dd_shy,
             )
             _html, _n1 = _dd_hwt(_html, lang=_dd_lang)
-            _html, _n2 = _dd_shy(_html)
+            # KIS-EN2-SHY: lang durchreichen — EN-Wörter brauchen EN-Trennstellen
+            # ("Rights overes-timation", EN-Testlauf 2). Default de unverändert.
+            _html, _n2 = _dd_shy(_html, lang=_dd_lang)
             if _n1 or _n2:
                 log.info("[KIS-1246][KPA] Tabellen gehärtet: colgroups/header=%d shy=%d", _n1, _n2)
         except Exception:

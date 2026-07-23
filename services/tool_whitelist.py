@@ -205,12 +205,17 @@ def get_recommended_tools(
     for tool_id in tool_ids:
         cat = categories.get(tool_id, {})
         if cat:
+            # EN-Testlauf 2: use EN compliance note for lang=en (fallback: DE)
+            if lang == "en":
+                compliance_note = cat.get("compliance_note_en") or cat.get("compliance_note", "")
+            else:
+                compliance_note = cat.get("compliance_note", "")
             result.append({
                 "id": tool_id,
                 "label": cat.get(label_key, cat.get("label_de", tool_id)),
                 "description": cat.get(f"description_{lang}", cat.get("description_de", "")),
                 "use_cases": cat.get("use_cases", []),
-                "compliance_note": cat.get("compliance_note", ""),
+                "compliance_note": compliance_note,
             })
 
     return result
@@ -232,19 +237,32 @@ def get_data_classification(lang: str = "de") -> Dict[str, Dict[str, Any]]:
     result = {}
     for level, data in classification.items():
         label_key = f"label_{lang}" if lang in ("de", "en") else "label_de"
+        # EN-Testlauf 2: use EN example lists for lang=en (fallback: DE)
+        if lang == "en":
+            examples = data.get("examples_en") or data.get("examples", [])
+        else:
+            examples = data.get("examples", [])
         result[level] = {
             "label": data.get(label_key, level.upper()),
             "allowed": data.get("allowed", False),
             "conditions": data.get("conditions", []),
-            "examples": data.get("examples", []),
+            "examples": examples,
         }
 
     return result
 
 
-def get_blacklist() -> List[str]:
-    """Get list of tools/practices NOT to recommend."""
+def get_blacklist(lang: str = "de") -> List[str]:
+    """Get list of tools/practices NOT to recommend.
+
+    EN-Testlauf 2: for lang=en, prefer the `blacklist_en` list from the
+    config (fallback: DE `blacklist`). Default keeps DE behaviour.
+    """
     config = _load_config()
+    if str(lang or "de").lower().startswith("en"):
+        en_list = config.get("blacklist_en")
+        if en_list:
+            return cast(List[str], en_list)
     return cast(List[str], config.get("blacklist", []))
 
 
@@ -336,7 +354,7 @@ def get_whitelist_prompt_block(size: str, branch: Optional[str] = None, lang: st
     """
     tools = get_recommended_tools(size, branch, lang)
     classification = get_data_classification(lang)
-    blacklist = get_blacklist()
+    blacklist = get_blacklist(lang)
 
     if lang == "en":
         header = "## Allowed Tool Categories"
@@ -366,7 +384,8 @@ def get_whitelist_prompt_block(size: str, branch: Optional[str] = None, lang: st
             )
         lines.append(f"- **{data['label']}**: {allowed_text}")
         if data.get("examples"):
-            lines.append(f"  Beispiele: {', '.join(data['examples'][:3])}")
+            examples_prefix = "Examples:" if lang == "en" else "Beispiele:"
+            lines.append(f"  {examples_prefix} {', '.join(data['examples'][:3])}")
 
     lines.append("")
     lines.append(blacklist_header)
@@ -548,7 +567,10 @@ def get_tools_context_for_prompt(
             lines.append(f"- {tool}")
 
         if len(existing) > 10:
-            lines.append(f"- ... und {len(existing) - 10} weitere")
+            if lang == "en":
+                lines.append(f"- ... and {len(existing) - 10} more")
+            else:
+                lines.append(f"- ... und {len(existing) - 10} weitere")
 
         lines.append("")
         if lang == "en":

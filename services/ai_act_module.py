@@ -81,15 +81,31 @@ AI_ACT_DEADLINES = [
 ]
 
 
-def build_ai_act_deadline_box(risk_level: str = "", today: Optional[Any] = None) -> str:
-    """Countdown-Box mit dem nächsten AI-Act-Stichtag (HTML)."""
+# KIS-1251: EN-Fassung der Stichtags-Labels (Schlüssel = ISO-Datum)
+AI_ACT_DEADLINE_LABELS_EN = {
+    "2025-02-02": "Prohibited practices & AI literacy obligations (Art. 4, 5)",
+    "2025-08-02": "Obligations for GPAI models (Chapter V)",
+    "2026-08-02": "Transparency obligations (Art. 50) & high-risk obligations Annex III",
+    "2027-08-02": "High-risk AI in regulated products (Annex I)",
+}
+
+
+def build_ai_act_deadline_box(risk_level: str = "", today: Optional[Any] = None, lang: str = "de") -> str:
+    """Countdown-Box mit dem nächsten AI-Act-Stichtag (HTML).
+
+    KIS-1251: lang="en" liefert die englische Fassung (Datum bleibt bewusst
+    im Format dd.mm.yyyy); Default "de" bleibt byte-identisch.
+    """
     from datetime import date as _date
     d = today or _date.today()
+    is_en = (lang or "").strip().lower().startswith("en")
     upcoming = []
     for iso, label in AI_ACT_DEADLINES:
         y, m, dd = (int(x) for x in iso.split("-"))
         deadline = _date(y, m, dd)
         if deadline >= d:
+            if is_en:
+                label = AI_ACT_DEADLINE_LABELS_EN.get(iso, label)
             upcoming.append((deadline, label))
     if not upcoming:
         return ""
@@ -98,18 +114,29 @@ def build_ai_act_deadline_box(risk_level: str = "", today: Optional[Any] = None)
     date_fmt = next_deadline.strftime("%d.%m.%Y")
     urgency = ""
     if days <= 90:
-        urgency = f" — <strong>in {days} Tagen</strong>"
+        if is_en:
+            urgency = f" — <strong>in {days} days</strong>"
+        else:
+            urgency = f" — <strong>in {days} Tagen</strong>"
     relevance = ""
     if (risk_level or "").strip().lower() in ("limited", "begrenzt") and "Art. 50" in next_label:
-        relevance = (
-            " Für Ihre Einstufung (begrenztes Risiko) ist genau dieser Stichtag "
-            "maßgeblich: KI-Chatbots müssen sich als KI zu erkennen geben, "
-            "KI-generierte Inhalte müssen gekennzeichnet sein."
-        )
+        if is_en:
+            relevance = (
+                " For your classification (limited risk) this is exactly the "
+                "deadline that matters: AI chatbots must identify themselves as "
+                "AI, and AI-generated content must be labeled."
+            )
+        else:
+            relevance = (
+                " Für Ihre Einstufung (begrenztes Risiko) ist genau dieser Stichtag "
+                "maßgeblich: KI-Chatbots müssen sich als KI zu erkennen geben, "
+                "KI-generierte Inhalte müssen gekennzeichnet sein."
+            )
+    heading = "Next deadline" if is_en else "Nächster Stichtag"
     return (
         '<div class="callout" style="border-left:4px solid #b45309;background:#fffbeb;'
         'padding:12px 16px;margin:12px 0;break-inside:avoid;">'
-        f'<strong>Nächster Stichtag: {date_fmt}</strong>{urgency} · {next_label}.'
+        f'<strong>{heading}: {date_fmt}</strong>{urgency} · {next_label}.'
         f'{relevance}'
         '</div>'
     )

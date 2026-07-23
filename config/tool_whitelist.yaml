@@ -33,6 +33,7 @@ categories:
       - "Brainstorming"
       - "Recherche-Unterstützung"
     compliance_note: "AVV/DPA erforderlich, Training-Opt-out prüfen"
+    compliance_note_en: "DPA required, check training opt-out"
 
   wissensspeicher:
     id: "wissensspeicher"
@@ -45,6 +46,7 @@ categories:
       - "Template-Verwaltung"
       - "Wissensarchiv"
     compliance_note: "Zugriffsrechte und Versionierung einrichten"
+    compliance_note_en: "Set up access rights and versioning"
 
   aufgabenverwaltung:
     id: "aufgabenverwaltung"
@@ -93,6 +95,7 @@ categories:
       - "Datenintegration"
       - "Trigger-basierte Workflows"
     compliance_note: "Secrets-Handling, Logging einrichten"
+    compliance_note_en: "Set up secrets handling and logging"
 
   # -------------------------------------------------------------------------
   # COMMUNICATION / KOMMUNIKATION
@@ -108,6 +111,7 @@ categories:
       - "Interview-Transkripte"
       - "Sprachnotizen"
     compliance_note: "Einwilligung erforderlich, Aufbewahrungsfristen beachten"
+    compliance_note_en: "Consent required, observe retention periods"
 
   email_kommunikation:
     id: "email_kommunikation"
@@ -134,6 +138,7 @@ categories:
       - "Präsentationsbilder"
       - "Mockups"
     compliance_note: "IP/Urheberrecht beachten, keine Kundendesigns hochladen"
+    compliance_note_en: "Observe IP/copyright, do not upload client designs"
 
   content_erstellung:
     id: "content_erstellung"
@@ -308,6 +313,7 @@ branch_additions:
       - dms
     priority: risiko_compliance
     compliance_note: "BAIT/VAIT/MaRisk beachten"
+    compliance_note_en: "Observe BAIT/VAIT/MaRisk"
 
   handel:
     add:
@@ -333,6 +339,7 @@ branch_additions:
       - dms
     priority: terminplanung
     compliance_note: "Patientendaten = rot, besondere DSGVO-Anforderungen"
+    compliance_note_en: "Patient data = red, special GDPR (DSGVO) requirements"
 
   bau:
     add:
@@ -377,6 +384,11 @@ data_classification:
       - "Generische Prompts ohne Kundendaten"
       - "Öffentliche Brancheninfos"
       - "Allgemeine Templates"
+    examples_en:
+      - "Website copy"
+      - "Generic prompts without customer data"
+      - "Public industry information"
+      - "General templates"
 
   yellow:
     label_de: "GELB - Intern, nicht vertraulich"
@@ -390,6 +402,10 @@ data_classification:
       - "Interne Prozessdokumentation"
       - "Anonymisierte Beispiele"
       - "Template-Entwürfe"
+    examples_en:
+      - "Internal process documentation"
+      - "Anonymised examples"
+      - "Template drafts"
 
   red:
     label_de: "ROT - Vertraulich/personenbezogen"
@@ -401,6 +417,12 @@ data_classification:
       - "Gesundheitsdaten"
       - "Finanzdaten"
       - "Passwörter/API-Keys"
+    examples_en:
+      - "Customer data (names, e-mails)"
+      - "Contracts and proposals"
+      - "Health data"
+      - "Financial data"
+      - "Passwords/API keys"
 
 # =============================================================================
 # BLACKLIST: Tools/practices NOT to recommend
@@ -412,3 +434,12 @@ blacklist:
   - "Copy/Paste von ROT-Daten in öffentliche Chats"
   - "Shadow AI ohne Dokumentation"
   - "Tools ohne SSO/Teamverwaltung (für team/kmu)"
+
+# EN variants of the blacklist (used for lang=en prompt injection)
+blacklist_en:
+  - "Private/free accounts without a DPA"
+  - "Unknown browser extensions"
+  - "Tools without deletion/retention controls"
+  - "Copy/paste of RED data into public chats"
+  - "Shadow AI without documentation"
+  - "Tools without SSO/team management (for team/kmu)"

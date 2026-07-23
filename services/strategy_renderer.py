@@ -695,9 +695,31 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     # Phase 0 Multi-Projekt: zentrales Branding für Templates bereitstellen
     # KIS-1253: lang-aware — EN-Reports bekommen die englische Signatur
     from services.brand_config import get_brand_for_lang
-    context.setdefault("brand", get_brand_for_lang(str(context.get("LANG") or context.get("lang") or "de")))
+    # KIS-1257 (Lauf 1133): context hat keinen LANG-Key — _lang (aus dem
+    # Briefing, wählt auch das EN-Template) ist die richtige Quelle. Vorher
+    # fiel die Weiche auf de zurück → deutsche TÜV-Byline im EN-Report.
+    context.setdefault("brand", get_brand_for_lang(_lang))
 
     html = str(template.render(**context))
+
+    # KIS-EN2-TABLES: Bei EN die keyword-basierten Spaltengewichte VOR dem
+    # generischen Zeichen-Balancer anwenden. enhance_strategy_html →
+    # _balance_column_widths (KIS-1257) injiziert sonst zuerst ein colgroup
+    # (Clamp 8–34 %), und harden_wide_tables überspringt Tabellen mit
+    # vorhandenem colgroup — die EN-Keyword-Gewichte aus KIS-1255 griffen
+    # deshalb nie ("Mic ros oft 365 Co pilo t", "RECOM MENDA TION",
+    # EN-Testlauf 2, Strategie S. 18-19). DE-Pfad unverändert.
+    if _ctx_en:
+        try:
+            from services.style_lint import harden_wide_tables as _pre_hwt
+            html, _pre_n = _pre_hwt(html, lang="en")
+            if _pre_n:
+                logger.info(
+                    "[KIS-EN2-TABLES] %d Tabellen-Fix(e) vor html_enhancer angewandt",
+                    _pre_n,
+                )
+        except Exception:  # pragma: no cover
+            pass
 
     # Post-process LLM HTML to use CSS design classes (KPI cards, timelines, etc.)
     from services.html_enhancer import enhance_strategy_html
@@ -729,7 +751,9 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         # die Roadmap-/Tool-Tabellen (PHASE/FOCUS/BUDGET, TOOL/VENDOR/
         # RECOMMENDATION) wurden sonst buchstabenweise zerquetscht.
         html, _s6 = _sf_hwt(html, lang="en" if _ctx_en else "de")
-        html, _s3 = _sf_shy(html)
+        # KIS-EN2-SHY: lang durchreichen — EN-Trennstellen statt deutscher
+        # Heuristik ("overes-timation"). Default de bleibt byte-identisch.
+        html, _s3 = _sf_shy(html, lang="en" if _ctx_en else "de")
         html, _s4 = _sf_fdp(html)
         html, _s5 = _sf_fmt(html)
         if _s1 or _s2 or _s3 or _s4 or _s5 or _s6:
