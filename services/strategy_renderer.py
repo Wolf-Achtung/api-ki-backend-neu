@@ -695,7 +695,10 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     # Phase 0 Multi-Projekt: zentrales Branding für Templates bereitstellen
     # KIS-1253: lang-aware — EN-Reports bekommen die englische Signatur
     from services.brand_config import get_brand_for_lang
-    context.setdefault("brand", get_brand_for_lang(str(context.get("LANG") or context.get("lang") or "de")))
+    # KIS-1257 (Lauf 1133): context hat keinen LANG-Key — _lang (aus dem
+    # Briefing, wählt auch das EN-Template) ist die richtige Quelle. Vorher
+    # fiel die Weiche auf de zurück → deutsche TÜV-Byline im EN-Report.
+    context.setdefault("brand", get_brand_for_lang(_lang))
 
     html = str(template.render(**context))
 
