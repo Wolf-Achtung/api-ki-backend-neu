@@ -1807,12 +1807,32 @@ def _send_email_via_resend(to_email: str, subject: str, html_body: str, attachme
                         "content": base64.b64encode(content_bytes).decode('ascii')  # Resend expects list of bytes
                     })
         
+        # KIS-1252 Deliverability: Anzeigename im From (nackte Adresse als
+        # Display-Name wirkt wie Spam), Reply-To auf erreichbare Adresse,
+        # Plain-Text-Alternative (HTML-only ist ein starkes Spam-Signal —
+        # Coach-Mail von Lauf 1132 landete im Spam-Ordner).
+        _from = SMTP_FROM
+        if _from and "<" not in _from:
+            _from_name = os.getenv("MAIL_FROM_NAME", "KI-Sicherheit.jetzt")
+            _from = f"{_from_name} <{_from}>"
+
+        _text_body = re.sub(r"<(style|script)[^>]*>.*?</\1>", " ", html_body or "", flags=re.DOTALL | re.IGNORECASE)
+        _text_body = re.sub(r"<br\s*/?>|</p>|</div>|</h[1-6]>|</li>|</tr>", "\n", _text_body, flags=re.IGNORECASE)
+        _text_body = re.sub(r"<[^>]+>", "", _text_body)
+        _text_body = html.unescape(_text_body)
+        _text_body = re.sub(r"[ \t]+", " ", _text_body)
+        _text_body = re.sub(r"\n\s*\n\s*\n+", "\n\n", _text_body).strip()
+
         params: Dict[str, Any] = {
-            "from": SMTP_FROM,
+            "from": _from,
             "to": [to_email],
             "subject": subject,
-            "html": html_body
+            "html": html_body,
+            "text": _text_body or subject,
         }
+        _reply_to = os.getenv("MAIL_REPLY_TO", "").strip()
+        if _reply_to:
+            params["reply_to"] = [_reply_to]
 
         if resend_attachments:
             params["attachments"] = resend_attachments
