@@ -15,7 +15,8 @@
       "beratung",
       "dienstleistungen",
       "marketing"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Make (Integromat)",
@@ -36,7 +37,8 @@
       "handel",
       "it",
       "medien"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Railway.app",
@@ -54,7 +56,8 @@
       "it",
       "dienstleistungen",
       "beratung"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Notion",
@@ -74,7 +77,8 @@
       "dienstleistungen",
       "marketing",
       "medien"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "HubSpot",
@@ -92,7 +96,8 @@
       "beratung",
       "dienstleistungen",
       "handel"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "OpenAI API",
@@ -113,7 +118,8 @@
       "beratung",
       "marketing",
       "medien"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Mistral AI",
@@ -133,7 +139,8 @@
       "dienstleistungen",
       "beratung",
       "medien"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Perplexity API",
@@ -153,7 +160,8 @@
       "marketing",
       "it",
       "medien"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Tavily",
@@ -172,7 +180,8 @@
       "it",
       "dienstleistungen",
       "beratung"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Cloudflare Turnstile",
@@ -189,7 +198,8 @@
     ],
     "best_for_industries": [
       "alle"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Runway",
@@ -206,7 +216,8 @@
     "best_for_industries": [
       "medien",
       "marketing"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "ElevenLabs",
@@ -223,14 +234,15 @@
     "best_for_industries": [
       "medien",
       "marketing"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Descript",
     "url": "https://www.descript.com",
     "trust_url": "https://www.descript.com/privacy",
     "category": "Video-/Podcast-Editing & Transkription",
-    "price": "0-24 $/Monat",
+    "price": "0–35 $/Monat",
     "gdpr": "US (AVV prüfen)",
     "host": "US",
     "best_for_size": [
@@ -241,7 +253,8 @@
       "medien",
       "marketing",
       "bildung"
-    ]
+    ],
+    "verified_at": "2026-07-23"
   },
   {
     "name": "Adobe Firefly",
@@ -259,7 +272,8 @@
     "best_for_industries": [
       "medien",
       "marketing"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Topaz Video AI",
@@ -275,6 +289,7 @@
     ],
     "best_for_industries": [
       "medien"
-    ]
+    ],
+    "verified_at": null
   }
 ]

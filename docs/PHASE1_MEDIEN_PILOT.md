@@ -76,3 +76,32 @@ Frontend ist nach Deploy dieses Branches automatisch im Medien-Modus
   Gold-Report generieren, bevor der erste echte Pilot läuft.
 - Optional: EN-Persona (`_persona_medien` EN-Pendant), falls der Pilot
   international koproduziert.
+
+## Nachtrag 23.07.2026 — Internationalisierung & Daten-Aktualität (KIS-1248)
+
+- **Branding**: „TÜV-zertifizierter KI-Manager" → „TÜV-zertifiziertes KI-Management"
+  in allen Templates, Brand-Config und Prompts; „Live-Marktdaten"-Claim auch im
+  Strategiebericht-Seitenfuß entschärft.
+- **Quartals-Tool-Check**: `scripts/check_tools_freshness.py` prüft `verified_at`
+  aller Einträge in `data/tools_seed.json` (Exit 1 bei >100 Tagen/nie verifiziert).
+  Cloud-Routine `trig_014G1PCQxMLsryRB2BkNVXx4` läuft am 5. Jan/Apr/Jul/Okt
+  (07:00 UTC, Fresh Session, Push+E-Mail): verifiziert Preise/AVV-Status gegen
+  Herstellerquellen, aktualisiert tools_seed + Starter-Kit/Vendor-Basisdaten,
+  öffnet Draft-PR. Spot-Check 23.07.: Amberscript/DeepL aktuell, Descript-Preis
+  aktualisiert (0–35 $/Monat).
+- **EU-Förderung**: Eurimages (Europarat, Koproduktionen, bis 500 T€, 3 Calls/Jahr)
+  als medien-exklusives Programm ergänzt; EIC Accelerator, DIGITAL Europe,
+  Horizon Europe Cluster 4 und Creative Europe MEDIA waren bereits im Datensatz
+  (alle verified Juli 2026). Der monatliche Förder-Check überwacht auch diese.
+- **Englische Report-Variante (Phase 1)**: `templates/pdf_template_en.html`
+  (vollständige EN-Fassung von pdf_template_v7) — der Renderer wählt sie bei
+  `lang=en` automatisch (Pfad existierte bereits, Datei fehlte). Prompts/en,
+  i18n-ui_labels (191) und die Engine-Label-Sets (Business Case, Vendor-Audit,
+  Risk) waren bereits zweisprachig. Noch offen für Voll-EN: strategy_report- und
+  KPA-Template, E-Mail-Templates, EN-Fassung der Medien-Förderprofile.
+- **Weitere Sprachen**: Architektur trägt das Muster prompts/<lang>/ +
+  Template-je-Sprache + ui_labels; Renderer ist aktuell de/en-binär
+  (`is_en`) — für FR/ES/IT müsste die Sprachweiche auf Lang-Codes
+  verallgemeinert und je Sprache Template+Prompts übersetzt werden.
+  DE-spezifische Pässe (Siezen-Guard, Dezimal-Komma-Lint) sind lang-gated
+  zu halten.

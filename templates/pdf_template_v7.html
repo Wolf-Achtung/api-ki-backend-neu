@@ -1472,7 +1472,7 @@ h1, h2, h3, h4 {
     <div class="trust-badges" style="align-items: center; gap: 10px;">
         <img src="{{ brand.cert_logo | default('tuev-logo-transparent.png') }}" alt="{{ brand.cert_logo_alt | default('TÜV Austria zertifiziert') }}">
         <span style="font-size: 8.5pt; color: var(--c-text-2);">
-            Erstellt von {{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifizierter KI-Manager') }}
+            Erstellt von {{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifiziertes KI-Management') }}
         </span>
     </div>
 </div>
@@ -2144,7 +2144,7 @@ h1, h2, h3, h4 {
     <div class="advisor-note">
         <div class="advisor-note-title">Meine Einschätzung für Ihr Unternehmen</div>
         <div class="advisor-note-text">{{ ADVISOR_NOTE_HTML|safe }}</div>
-        <div class="advisor-note-sig">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifizierter KI-Manager') }}</div>
+        <div class="advisor-note-sig">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifiziertes KI-Management') }}</div>
     </div>
 </div>
 {% endif %}
@@ -2176,7 +2176,7 @@ h1, h2, h3, h4 {
     </div>
 
     <div class="contact-box">
-        <div class="contact-name">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifizierter KI-Manager') }}</div>
+        <div class="contact-name">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifiziertes KI-Management') }}</div>
         <div class="contact-org">{{ brand.brand_name | default('KI-Sicherheit.jetzt') }}</div>
         <div class="contact-btns">
             <a href="{{ brand.feedback_url | default('https://make.ki-sicherheit.jetzt/feedback/feedback.html') }}" class="btn btn-primary">Feedback geben</a>

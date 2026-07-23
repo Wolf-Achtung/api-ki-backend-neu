@@ -27,7 +27,7 @@
        @bottom-right (Live-Marktdaten-Datum) BLEIBT: additive Info, keine
        Seitenzahl-Dublette. */
     @bottom-right {
-        content: "Basierend auf Live-Marktdaten vom {{ research_date }}";
+        content: "Marktdaten-Recherche vom {{ research_date }}";
         font-size: 6.5pt;
         color: #9CA3AF;
         font-family: 'Inter', system-ui, sans-serif;
@@ -1111,7 +1111,7 @@ sup.src-ref {
            nur der reale TÜV-Personennachweis bleibt, mit Einordnung. #}
         <div class="trust-badges" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:24px;flex-wrap:wrap">
             <img src="{{ brand.cert_logo | default('tuev-logo-transparent.png') }}" alt="{{ brand.cert_logo_alt | default('TÜV Austria zertifiziert') }}" height="50" style="height:50px;width:auto;max-width:120px">
-            <span style="font-size:9pt;color:#64748b">Erstellt von {{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifizierter KI-Manager') }}</span>
+            <span style="font-size:9pt;color:#64748b">Erstellt von {{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifiziertes KI-Management') }}</span>
         </div>
 
         <p class="cover-research-date">Marktdaten-Recherche vom {{ research_date }}</p>
@@ -1284,7 +1284,7 @@ sup.src-ref {
         <div class="advisor-note">
             <div class="advisor-note-title">Meine Einschätzung für Ihr Unternehmen</div>
             <div class="advisor-note-text">{{ section_advisor_note | safe }}</div>
-            <div class="advisor-note-sig">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifizierter KI-Manager') }}</div>
+            <div class="advisor-note-sig">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifiziertes KI-Management') }}</div>
         </div>
     </div>
     {% endif %}
