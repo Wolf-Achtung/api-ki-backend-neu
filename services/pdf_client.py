@@ -183,13 +183,14 @@ def slim_html_sections(sections: Dict[str, Any]) -> Dict[str, Any]:
     return sections
 
 
-def build_footer_template(report_id: str, report_date: str, build_id: str = "") -> str:
+def build_footer_template(report_id: str, report_date: str, build_id: str = "", lang: str = "de") -> str:
     """
     Build Puppeteer footerTemplate with page numbers and report metadata.
 
     Args:
         report_id: Report ID (e.g., "R-20251219-KND")
         report_date: Report date in DD.MM.YYYY format
+        lang: Report language — "en" renders "Page x / y" (KIS-1253, Lauf 1132)
 
     Returns:
         HTML string for footerTemplate
@@ -198,11 +199,12 @@ def build_footer_template(report_id: str, report_date: str, build_id: str = "") 
     report_id_display = report_id if report_id else "–"
     report_date_display = report_date if report_date else "–"
     build_id_display = f" · Build: {build_id}" if build_id else ""
+    page_word = "Page" if str(lang or "de").lower().startswith("en") else "Seite"
 
     return f'''<div style="width:100%; font-size:9px; padding:0 14mm; box-sizing:border-box; color:#666;
             display:flex; align-items:center; justify-content:space-between;">
   <div>
-    Seite <span class="pageNumber"></span> / <span class="totalPages"></span>
+    {page_word} <span class="pageNumber"></span> / <span class="totalPages"></span>
   </div>
   <div>
     Report-ID: {report_id_display} • {report_date_display}{build_id_display}
@@ -431,6 +433,7 @@ def render_pdf_from_html(
             build_footer_template(
                 report_id=meta.get("report_id", "") or meta.get("display_id", ""),
                 report_date=meta.get("report_date", ""),
+                lang=str(meta.get("lang") or meta.get("LANG") or "de"),
             ),
         )
         _margin = dict(pdf_options.get("margin") or {})

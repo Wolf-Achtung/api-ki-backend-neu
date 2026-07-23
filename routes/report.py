@@ -428,7 +428,10 @@ def get_report_pdf_v2(
     report_date = analysis_meta.get("report_date", "")
 
     # Build PDF options with footer template (page numbers + report metadata)
-    footer_template = build_footer_template(report_id=report_id, report_date=report_date)
+    footer_template = build_footer_template(
+        report_id=report_id, report_date=report_date,
+        lang=str(getattr(briefing, "lang", "de") or "de"),
+    )
     pdf_options = {
         "format": "A4",
         "printBackground": True,

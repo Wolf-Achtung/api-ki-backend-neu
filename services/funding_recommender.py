@@ -699,12 +699,86 @@ def recommend_funding(
 # =============================================================================
 
 
+# =============================================================================
+# KIS-1255 (A3): EN-Wortersetzung für Förder-FELDWERTE (Quote/Betrag).
+# Die Programmdaten (funding_programmes_core_2025.json) sind deutsch —
+# "bis 80% (Zuschuss), Rest Darlehen" leakte wörtlich in die EN-Fördertabelle
+# (Lauf 1132). Nur auf funding_rate/max_funding angewandt, NIE auf
+# Programm-Namen/Träger/URLs. Reihenfolge: lange Phrasen vor kurzen.
+# =============================================================================
+
+_FUNDING_TERMS_EN: List[Tuple[str, str]] = [
+    (r"regional unterschiedlich", "varies by region"),
+    (r"projektabhängig", "project-dependent"),
+    (r"zinsvergünstigt", "reduced-interest"),
+    (r"Weiterbildungskosten", "training costs"),
+    (r"Weiterbildung", "training"),
+    (r"Lohnzuschuss", "wage subsidy"),
+    (r"Herstellungskosten", "production costs"),
+    (r"Einzelprojekte", "single projects"),
+    (r"Kursgebühren", "course fees"),
+    (r"variabel", "variable"),
+    (r"Zuschuss", "grant"),
+    (r"Darlehen", "loan"),
+    (r"Kredit", "loan"),
+    (r"keine Frist", "no deadline"),
+    (r"laufend", "rolling"),
+    (r"Staffel", "season"),
+    (r"Monaten", "months"),
+    (r"Monate", "months"),
+    (r"Monat", "month"),
+    (r"Jahren", "years"),
+    (r"Jahre", "years"),
+    (r"Jahr", "year"),
+    (r"bis zu", "up to"),
+    (r"bis", "up to"),
+    (r"typ\.", "typically"),
+    (r"Rest", "remainder"),
+    (r"dt\.", "German"),
+    (r"Mio\.", "million"),
+    (r"Mio", "million"),
+    (r"oft", "often"),
+    (r"der", "of the"),
+]
+
+_FUNDING_TERMS_EN_RE: List[Tuple["re.Pattern[str]", str]] = []
+
+
+def _translate_funding_value_en(value: str) -> str:
+    """Übersetzt häufige deutsche Begriffe in einem Förder-Feldwert nach EN.
+
+    Zusätzlich werden deutsche Tausenderpunkte in EN-Kommas gewandelt
+    ("16.500 €" → "16,500 €"). Wort-Ersetzung mit Wortgrenzen, damit
+    Teilwörter ("Basis" enthält "bis") unangetastet bleiben.
+    """
+    import re as _re
+    if not value:
+        return str(value or "")
+    if not _FUNDING_TERMS_EN_RE:
+        for pat, repl in _FUNDING_TERMS_EN:
+            _FUNDING_TERMS_EN_RE.append(
+                (_re.compile(r"(?<![A-Za-zÄÖÜäöüß])" + pat + r"(?![A-Za-zÄÖÜäöüß])",
+                             _re.IGNORECASE), repl)
+            )
+    out = str(value)
+    for rx, repl in _FUNDING_TERMS_EN_RE:
+        out = rx.sub(repl, out)
+    # DE-Tausenderpunkt → EN-Komma (Datumsangaben wie 31.12.2026 bleiben heil)
+    out = _re.sub(
+        r"(?<![\d.])(\d{1,3})((?:\.\d{3})+)(?!\.?\d)",
+        lambda m: m.group(1) + m.group(2).replace(".", ","),
+        out,
+    )
+    return out
+
+
 def get_filtered_funding_programs(
     bundesland: str,
     country: str = "DE",
     size: str = "team",
     branch: str = "",
     limit: int = 8,
+    lang: str = "de",
 ) -> list[dict]:
     """Return a pre-filtered, JSON-serializable list of funding programs.
 
@@ -713,13 +787,18 @@ def get_filtered_funding_programs(
     no regex removal, no re-injection needed.
 
     BAFA values are deterministic from config/bafa.py.
+
+    KIS-1255 (A3): lang="en" translates the field VALUES (funding_rate,
+    max_funding) and prefers summary_en — programme names stay unchanged.
+    The default lang="de" path is byte-identical to before.
     """
+    _is_en = str(lang or "de").lower().startswith("en")
     recs = recommend_funding(
         branch=branch,
         region=bundesland,
         size=size,
         country=country,
-        lang="de",
+        lang="en" if _is_en else "de",
         limit=limit,
     )
 
@@ -737,39 +816,63 @@ def get_filtered_funding_programs(
         entry = {
             "name": rec.name,
             "provider": rec.provider,
-            "funding_rate": rec.funding_rate,
-            "max_funding": rec.max_funding,
+            "funding_rate": (
+                _translate_funding_value_en(rec.funding_rate) if _is_en else rec.funding_rate
+            ),
+            "max_funding": (
+                _translate_funding_value_en(rec.max_funding) if _is_en else rec.max_funding
+            ),
             "ki_relevance": rec.ki_relevance,
             "url": rec.url or "",
-            "summary": rec.summary_de or "",
+            "summary": (
+                (rec.summary_en or rec.summary_de or "") if _is_en
+                else (rec.summary_de or "")
+            ),
         }
         # Override BAFA values with deterministic regional values
         if "bafa" in rec.name.lower():
             entry["funding_rate"] = f"{bafa_quote}%"
-            entry["max_funding"] = f"{bafa_max:,} €".replace(",", ".")
+            if _is_en:
+                entry["max_funding"] = f"{bafa_max:,} €"
+            else:
+                entry["max_funding"] = f"{bafa_max:,} €".replace(",", ".")
         programs.append(entry)
 
     return programs
 
 
-def format_funding_programs_for_prompt(programs: list[dict]) -> str:
+def format_funding_programs_for_prompt(programs: list[dict], lang: str = "de") -> str:
     """Format the filtered program list as a text block for LLM prompts.
 
     KIS-1093-B: Used by both R1 and Strategy S7 to inject the same
     pre-filtered program list into LLM context.
+
+    KIS-1255 (A3): lang="en" uses English field labels so the LLM does not
+    copy German labels ("Förderquote", "k.A.") into the EN report.
     """
     if not programs:
         return ""
+    _is_en = str(lang or "de").lower().startswith("en")
     lines = []
     for p in programs:
-        lines.append(
-            f"- {p['name']} (Träger: {p['provider']})\n"
-            f"  Förderquote: {p['funding_rate']}\n"
-            f"  Max. Förderung: {p['max_funding']}\n"
-            f"  KI-Relevanz: {p['ki_relevance']}\n"
-            f"  URL: {p['url'] or 'k.A.'}\n"
-            f"  Kurzbeschreibung: {p['summary'] or 'k.A.'}"
-        )
+        if _is_en:
+            lines.append(
+                f"- {p['name']} (provider: {p['provider']})\n"
+                f"  Funding rate: {p['funding_rate']}\n"
+                f"  Max. funding: {p['max_funding']}\n"
+                f"  AI relevance: {p['ki_relevance']}\n"
+                f"  URL: {p['url'] or 'n/a'}\n"
+                f"  Summary: {p['summary'] or 'n/a'}"
+            )
+        else:
+            lines.append(
+                f"- {p['name']} (Träger: {p['provider']})\n"
+                f"  Förderquote: {p['funding_rate']}\n"
+                f"  Max. Förderung: {p['max_funding']}\n"
+                f"  KI-Relevanz: {p['ki_relevance']}\n"
+                f"  URL: {p['url'] or 'k.A.'}\n"
+                f"  Kurzbeschreibung: {p['summary'] or 'k.A.'}"
+            )
     return "\n\n".join(lines)
 
 

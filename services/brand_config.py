@@ -87,3 +87,25 @@ def get_brand() -> Dict[str, str]:
 def reset_cache() -> None:
     """Nur für Tests: Cache invalidieren."""
     get_brand.cache_clear()
+
+
+# KIS-1253 (Lauf 1132): EN-Reports zeigten die deutsche Signatur
+# "TÜV-zertifiziertes KI-Management", weil der Brand-Wert den EN-Template-
+# Default überstimmt. Sprach-aware Wrapper für die Renderer.
+_EN_OVERRIDES: Dict[str, str] = {
+    "advisor_signature": "Wolf Hohl · TÜV-certified AI management",
+    "advisor_title": "TÜV-certified AI management",
+}
+
+
+def get_brand_for_lang(lang: str = "de") -> Dict[str, str]:
+    """Brand-Dict, bei lang=en mit englischen Signatur-Varianten.
+
+    Explizit per ENV/Config gesetzte EN-Werte (BRAND_ADVISOR_SIGNATURE_EN)
+    haben Vorrang vor den eingebauten Übersetzungen.
+    """
+    brand = dict(get_brand())
+    if str(lang or "de").lower().startswith("en"):
+        for key, default_en in _EN_OVERRIDES.items():
+            brand[key] = os.getenv(f"BRAND_{key.upper()}_EN") or default_en
+    return brand

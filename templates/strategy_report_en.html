@@ -1068,7 +1068,10 @@ sup.src-ref {
     {% macro chapter_banner(title, subtitle="", num="", category="") %}
     <div class="chapter-banner chapter-banner--strategy {% if num %}chapter-banner--numbered{% else %}chapter-banner--unnumbered{% endif %} page-break" style="background:linear-gradient(135deg,#1a2744 0%,#2a3d5f 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         {% if num %}<span class="chapter-banner__number" style="font-size:36px;font-weight:500;color:rgba(255,255,255,0.2);position:absolute;top:14px;left:32px;line-height:1;">{{ num }}</span>{% endif %}
-        <div class="chapter-banner__content" style="{% if num %}padding-left:40px;{% endif %}">
+        {# KIS-1255 (C1): 2-stellige Kapitelnummern ("3b") sind breiter als der
+           40px-Einzug — der Titel klebte an der Nummer ("3bAI Revenue
+           Potential", Lauf 1132). Mehr Einzug nur für mehrstellige Nummern. #}
+        <div class="chapter-banner__content" style="{% if num %}padding-left:{% if num|length > 1 %}64px{% else %}40px{% endif %};{% endif %}">
             {% if category %}<p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">{{ category }}</p>{% endif %}
             <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">{{ title }}</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>

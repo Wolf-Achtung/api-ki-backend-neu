@@ -69,7 +69,12 @@ def _strip_funding_total(s7_html: str) -> str:
     return cleaned
 
 
-def inject_opex_bridge(s5_html: str, software_monatlich: str, r1_opex_monatlich: str = "") -> str:
+def inject_opex_bridge(
+    s5_html: str,
+    software_monatlich: str,
+    r1_opex_monatlich: str = "",
+    lang: str = "de",
+) -> str:
     """FIX-KIS-1188-ITEM2: Append the OPEX-methodology bridge to Strategy S5.
 
     Strategy includes Software + Tool-Lizenzen + anteilige Betriebskosten;
@@ -87,6 +92,31 @@ def inject_opex_bridge(s5_html: str, software_monatlich: str, r1_opex_monatlich:
     if not s5_html or not software_monatlich:
         return s5_html
     _r1 = str(r1_opex_monatlich or "").strip()
+    # KIS-1255 (A1): Die statisch-deutsche OPEX-Box landete unverändert im
+    # EN-Report (Lauf 1132, S. 26) — bei lang=en die englische Fassung rendern.
+    if str(lang or "de").lower().startswith("en"):
+        _r1_sentence_en = (
+            f'The AI Readiness Report, by contrast, calculates with pure base '
+            f'software costs of {_r1} €/month. '
+            if _r1 else
+            'The AI Readiness Report, by contrast, calculates with the pure '
+            'base software costs only. '
+        )
+        bridge_en = (
+            '\n<div class="methodik-hinweis methodik-hinweis--opex" '
+            'style="margin-top:16px;padding:10px 14px;'
+            'background:#f0f4f8;border-left:3px solid #3b82f6;'
+            'font-size:0.85em;color:#475569;">'
+            '<strong>ℹ️ OPEX methodology:</strong> '
+            f'The {software_monatlich} €/month stated in this strategy report '
+            'covers software licences, tool subscriptions and pro-rated '
+            'operating costs (maintenance, support, backup). '
+            + _r1_sentence_en +
+            'Both figures are methodologically correct; they describe '
+            'different cost scopes of the same investment.'
+            '</div>'
+        )
+        return s5_html + bridge_en
     _r1_sentence = (
         f'Der KI-Readiness Report kalkuliert demgegenüber mit reinen '
         f'Software-Grundkosten von {_r1} €/Monat. '
@@ -313,6 +343,21 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         "kmu": "KMU (11–100 MA)",
         "medium": "KMU (11–100 MA)",
     }
+    # KIS-1255 (A8): EN-Cover zeigte "Kleinunternehmen (2-10 MA)" —
+    # bei lang=en englische Segment-Labels verwenden.
+    if _ctx_en:
+        segment_map = {
+            "1": "Sole proprietor",
+            "2–10": "Small business (2-10 employees)",
+            "2-10": "Small business (2-10 employees)",
+            "11–100": "SME (11–100 employees)",
+            "11-100": "SME (11–100 employees)",
+            "solo": "Sole proprietor",
+            "team": "Small business (2-10 employees)",
+            "small": "Small business (2-10 employees)",
+            "kmu": "SME (11–100 employees)",
+            "medium": "SME (11–100 employees)",
+        }
     # Mitarbeiter count mapping
     mitarbeiter_map = {
         "1": "1",
@@ -333,8 +378,11 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     if not segment_label:
         segment_label = segment_map.get(segment_key, "")
     if not segment_label and segment_raw:
-        # Readable fallback for unknown values
-        segment_label = f"Unternehmen ({segment_raw} Mitarbeiter)"
+        # Readable fallback for unknown values (KIS-1255: EN variant)
+        segment_label = (
+            f"Company ({segment_raw} employees)" if _ctx_en
+            else f"Unternehmen ({segment_raw} Mitarbeiter)"
+        )
 
     # Mitarbeiter: explicit field or derived from unternehmensgroesse
     mitarbeiter = briefing_data.get("mitarbeiter", "")
@@ -525,23 +573,40 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     try:
         _adv_html = sections.get("advisor_note", "") or sections.get("section_advisor_note", "")
         _adv_key = "advisor_note" if sections.get("advisor_note") else ("section_advisor_note" if sections.get("section_advisor_note") else "")
-        if _adv_key and _adv_html and "Datenbasis:" not in _adv_html:
+        if _adv_key and _adv_html and "Datenbasis:" not in _adv_html and "Data basis:" not in _adv_html:
             _sc = report1_meta.get("scores", {}) or {}
             _sc_parts = []
-            for _lbl, _k in (("Wertsch\u00f6pfung", "value"), ("Sicherheit", "security"),
-                             ("Governance", "governance"), ("Bef\u00e4higung", "enablement")):
+            # KIS-1255 (A6b): Die statische "Datenbasis:"-Zeile stand deutsch
+            # im EN-Report (Lauf 1132) \u2014 bei lang=en EN-Labels + EN-Satz.
+            _dim_lbls = (
+                (("value creation", "value"), ("security", "security"),
+                 ("governance", "governance"), ("enablement", "enablement"))
+                if _ctx_en else
+                (("Wertsch\u00f6pfung", "value"), ("Sicherheit", "security"),
+                 ("Governance", "governance"), ("Bef\u00e4higung", "enablement"))
+            )
+            for _lbl, _k in _dim_lbls:
                 _v = _sc.get(_k)
                 if _v:
                     _sc_parts.append(f"{_lbl} {int(float(_v))}")
             _sc_overall = _sc.get("overall")
             if _sc_parts and _sc_overall:
                 _sc_join = " \u00b7 ".join(_sc_parts)
-                sections[_adv_key] = _adv_html + (
-                    '<p class="small muted" style="margin-top:10px;font-size:0.8em;color:#64748b;">'
-                    f'Datenbasis: KI-Readiness-Score {int(float(_sc_overall))}/100 '
-                    f'({_sc_join}) aus dem KI-Readiness Report.'
-                    '</p>'
-                )
+                if _ctx_en:
+                    _databasis_line = (
+                        '<p class="small muted" style="margin-top:10px;font-size:0.8em;color:#64748b;">'
+                        f'Data basis: AI readiness score {int(float(_sc_overall))}/100 '
+                        f'({_sc_join}) from the AI Readiness Report.'
+                        '</p>'
+                    )
+                else:
+                    _databasis_line = (
+                        '<p class="small muted" style="margin-top:10px;font-size:0.8em;color:#64748b;">'
+                        f'Datenbasis: KI-Readiness-Score {int(float(_sc_overall))}/100 '
+                        f'({_sc_join}) aus dem KI-Readiness Report.'
+                        '</p>'
+                    )
+                sections[_adv_key] = _adv_html + _databasis_line
                 logger.info("[KIS-1250][ADVISOR-DATENBASIS] Score-Zeile ergänzt")
     except Exception as _adv_exc:  # pragma: no cover
         logger.warning("[KIS-1250][ADVISOR-DATENBASIS] übersprungen: %s", _adv_exc)
@@ -559,6 +624,8 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         sections.get("S5", ""),
         calculated_values.get("budget_software_monatlich", ""),
         r1_opex_monatlich=_r1_opex_for_bridge,
+        # KIS-1255 (A1): EN-Report bekommt die englische OPEX-Box.
+        lang="en" if _ctx_en else "de",
     )
 
     # KIS-1235: Der Firmenname wird aus Datenschutzgründen bewusst nie
@@ -580,7 +647,8 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         elif _seg:
             _firmenname = _seg
         else:
-            _firmenname = "Ihr Unternehmen"
+            # KIS-1255 (A4): "Ihr Unternehmen" leakte ins EN-Deckblatt.
+            _firmenname = "Your company" if _ctx_en else "Ihr Unternehmen"
 
     context = {
         # Cover metadata
@@ -625,8 +693,9 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         _logging.getLogger(__name__).debug("audit_render_context failed: %s", _e)
 
     # Phase 0 Multi-Projekt: zentrales Branding für Templates bereitstellen
-    from services.brand_config import get_brand
-    context.setdefault("brand", get_brand())
+    # KIS-1253: lang-aware — EN-Reports bekommen die englische Signatur
+    from services.brand_config import get_brand_for_lang
+    context.setdefault("brand", get_brand_for_lang(str(context.get("LANG") or context.get("lang") or "de")))
 
     html = str(template.render(**context))
 
@@ -656,7 +725,10 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         # KIS-1246: Erst Spaltenbreiten/Kurz-Header, dann Soft-Hyphens —
         # die 7-Spalten-Tool-/Fördertabellen brachen Tool-Namen
         # buchstabenweise um ("Micr osoft"), Header liefen in Nachbarspalten.
-        html, _s6 = _sf_hwt(html)
+        # KIS-1255 (B): EN-Header-Keywords nur bei lang=en aktivieren —
+        # die Roadmap-/Tool-Tabellen (PHASE/FOCUS/BUDGET, TOOL/VENDOR/
+        # RECOMMENDATION) wurden sonst buchstabenweise zerquetscht.
+        html, _s6 = _sf_hwt(html, lang="en" if _ctx_en else "de")
         html, _s3 = _sf_shy(html)
         html, _s4 = _sf_fdp(html)
         html, _s5 = _sf_fmt(html)

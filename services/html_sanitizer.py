@@ -325,8 +325,30 @@ def sanitize_en_locale_tokens(html: str, lang: str) -> str:
         return html
 
     out = html or ""
+
+    # KIS-1253 (Lauf 1132): URLs, E-Mail-Adressen und die Marken-Domain vor
+    # den Wort-Ersetzungen schützen — "Sicherheit"→"Security" machte aus
+    # ki-sicherheit.jetzt die nicht existente Domain "ki-Security.jetzt"
+    # (inkl. kaputter Kontakt-E-Mail im Impressum).
+    _shielded: List[str] = []
+
+    def _shield(m: "re.Match[str]") -> str:
+        _shielded.append(m.group(0))
+        return f"\x00LOCALE-SHIELD-{len(_shielded) - 1}\x00"
+
+    _protect_re = re.compile(
+        r"https?://[^\s\"'<>]+"                      # URLs
+        r"|[\w.+-]+@[\w-]+(?:\.[\w-]+)+"             # E-Mail-Adressen
+        r"|\b[\w-]*ki-sicherheit\.jetzt\b",           # Marken-Domain (auch nackt)
+        flags=re.IGNORECASE,
+    )
+    out = _protect_re.sub(_shield, out)
+
     for pattern, repl in _EN_LOCALE_REPLACEMENTS:
         out = re.sub(pattern, repl, out, flags=re.IGNORECASE)
+
+    for _i, _orig in enumerate(_shielded):
+        out = out.replace(f"\x00LOCALE-SHIELD-{_i}\x00", _orig)
 
     # Optional: Log leftover detection (warning only)
     de_check_words = ["Unternehmen", "Branche", "Bewertung", "Reifegrad",
