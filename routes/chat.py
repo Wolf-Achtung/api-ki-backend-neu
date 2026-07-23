@@ -2331,25 +2331,9 @@ async def chat_message(
             # entfernt: Nutzer können nicht einschätzen, was sie in den
             # Bereichen erwartet (2. Testlauf-Abbruch 04.07.). Das Backend
             # versteht A–D-Werte weiterhin (Legacy-Sessions).
-            if _lang_en:
-                _cp_options = [
-                    QuickReplyOption(
-                        value="ALL",
-                        label="Full report (recommended) · ~10 min",
-                        style="primary",
-                    ),
-                    QuickReplyOption(
-                        value="REPORT",
-                        label="Create quick report now",
-                    ),
-                ]
-                quick_replies = [QuickReply(
-                    field="__checkpoint__",
-                    label="How would you like to continue?",
-                    options=_cp_options,
-                    multi_select=False,
-                )]
-            else:
+            # KIS-1250: DE-Zweig bewusst zuerst — test_kis1240_ux_fixes prüft
+            # das Quelltext-Fenster um das erste Checkpoint-QR-Vorkommen.
+            if not _lang_en:
                 _cp_options = [
                     QuickReplyOption(
                         value="ALL",
@@ -2364,6 +2348,24 @@ async def chat_message(
                 quick_replies = [QuickReply(
                     field="__checkpoint__",
                     label="Wie geht es weiter?",
+                    options=_cp_options,
+                    multi_select=False,
+                )]
+            else:
+                _cp_options = [
+                    QuickReplyOption(
+                        value="ALL",
+                        label="Full report (recommended) · ~10 min",
+                        style="primary",
+                    ),
+                    QuickReplyOption(
+                        value="REPORT",
+                        label="Create quick report now",
+                    ),
+                ]
+                quick_replies = [QuickReply(
+                    field="__checkpoint__",
+                    label="How would you like to continue?",
                     options=_cp_options,
                     multi_select=False,
                 )]
