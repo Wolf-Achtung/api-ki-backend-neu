@@ -220,6 +220,30 @@ def _zeitrahmen_prose(s2_zeitrahmen: str) -> str:
     return _ZEITRAHMEN_PROSE.get(s2_zeitrahmen.strip().lower(), s2_zeitrahmen)
 
 
+def phase_windows(s2_zeitrahmen: str) -> Dict[str, str]:
+    """KIS-1247: Phasen-Fenster aus dem gewählten Umsetzungs-Zeitrahmen.
+
+    Bisher waren die Roadmap-Phasen fest auf 12 Monate verdrahtet
+    (Monat 1-3 / 4-8 / 9-12) — auch wenn der Kunde "Kurzfristig
+    (3-6 Monate)" gewählt hatte (Audit KIS-1244/1246, Strategie Kap. 5/6).
+    """
+    s = (s2_zeitrahmen or "").lower()
+    if "1-3" in s or "1–3" in s or "sofort" in s:
+        w, horizon = ("Monat 1", "Monat 2", "Monat 3"), "3 Monaten"
+    elif "3-6" in s or "3–6" in s or "kurzfristig" in s:
+        w, horizon = ("Monat 1-2", "Monat 3-4", "Monat 5-6"), "6 Monaten"
+    elif "12-18" in s or "12–18" in s or "langfristig" in s:
+        w, horizon = ("Monat 1-4", "Monat 5-11", "Monat 12-18"), "18 Monaten"
+    else:  # mittelfristig 6-12 / unbekannt → bisheriges 12-Monats-Raster
+        w, horizon = ("Monat 1-3", "Monat 4-8", "Monat 9-12"), "12 Monaten"
+    return {
+        "phase_1_window": w[0],
+        "phase_2_window": w[1],
+        "phase_3_window": w[2],
+        "planungshorizont": horizon,
+    }
+
+
 def _match_budget_key(s1_budget: str) -> str:
     """Match the s1_budget string to a _BUDGET_PROFILES key (fuzzy)."""
     if not s1_budget:

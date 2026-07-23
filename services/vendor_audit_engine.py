@@ -1524,6 +1524,18 @@ def vendor_audit_report_to_html(
         "fail": "#dc2626",
     }
 
+    # KIS-1247: Erreichbarer Compliance-Stand — Anbieter mit verfügbarem AVV
+    # sind nach Vertragsabschluss + Leitplanken regelkonform einsetzbar.
+    # Der nackte Rohzustands-Score ("0 %") wirkte wie ein K.-o.-Urteil.
+    _achievable_count = sum(
+        1 for e in (report.entries or [])
+        if e.overall_category == "green" or e.has_dpa
+    )
+    _achievable_pct = (
+        _achievable_count / report.total_vendors * 100.0
+        if report.total_vendors else 0.0
+    )
+
     html_parts = [f'''
     <div class="vendor-audit-engine" style="font-size:11pt;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
@@ -1564,8 +1576,9 @@ def vendor_audit_report_to_html(
                     <div style="font-size:14px;font-weight:600;color:#1e293b;">{report.eu_compliant_count} / {report.total_vendors}</div>
                 </td>
                 <td style="padding:8px;background:#fff;border-radius:6px;border:1px solid #e2e8f0;width:50%;">
-                    <span style="font-size:9px;color:#64748b;">{labels["compliance_score"]}</span>
+                    <span style="font-size:9px;color:#64748b;">{labels["compliance_score"]} (Rohzustand)</span>
                     <div style="font-size:14px;font-weight:600;color:#1e293b;">{report.compliance_score:.0f}%</div>
+                    <div style="font-size:9px;color:#166534;margin-top:2px;">mit AVV + Leitplanken erreichbar: {_achievable_pct:.0f}%</div>
                 </td>
             </tr>
             </table>
@@ -1634,6 +1647,17 @@ def vendor_audit_report_to_html(
                         <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">⚖️ {labels["ai_act"]}: {_relevance_label.get(entry.ai_act_relevance, entry.ai_act_relevance)}</span>
                     </div>
             ''')
+
+            # KIS-1247: Bei Rot mit verfügbarem AVV den erreichbaren Zustand
+            # direkt an der Karte ausweisen — die Ampel bewertet nur den
+            # Rohzustand (siehe Lesart-Box oben).
+            if entry.overall_category == "red" and entry.has_dpa and lang != "en":
+                html_parts.append(
+                    '<div style="margin-bottom:8px;padding:6px 10px;background:#f0fdf4;'
+                    'border:1px solid #86efac;border-radius:4px;font-size:9px;color:#166534;">'
+                    '✓ <strong>Mit abgeschlossenem AVV + Leitplanken:</strong> '
+                    'regelkonform einsetzbar</div>'
+                )
 
             # Certifications
             if entry.certifications:

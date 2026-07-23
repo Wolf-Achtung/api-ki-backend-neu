@@ -546,9 +546,9 @@ UNTERNEHMENSDATEN:
 VERBINDLICHE INVESTITIONSWERTE (berechnet, NICHT ändern!):
 Budget des Kunden: {s1_budget_label}
 Gesamtinvestition Jahr 1: {budget_gesamt_jahr1} €
-  - Phase 1 (Quick Wins, Monat 1-3): {budget_phase_1} €
-  - Phase 2 (Kernimplementierung, Monat 4-8): {budget_phase_2} €
-  - Phase 3 (Skalierung, Monat 9-12): {budget_phase_3} €
+  - Phase 1 (Quick Wins, {phase_1_window}): {budget_phase_1} €
+  - Phase 2 (Kernimplementierung, {phase_2_window}): {budget_phase_2} €
+  - Phase 3 (Skalierung, {phase_3_window}): {budget_phase_3} €
 
 Kostenaufschlüsselung (alle Werte JAHRESBASIS; Summe = Gesamtinvestition Jahr 1):
 - Software-Lizenzen (Jahresbedarf, entspricht {budget_software_monatlich} €/Monat × 12): {budget_software_jaehrlich} €
@@ -655,9 +655,9 @@ BUDGET (Zusammenfassung):
 {s5_budget_summary}
 
 PHASEN-BUDGETS (EXAKT übernehmen!):
-- Phase 1 (Quick Wins, Monat 1-3): {budget_phase_1} €
-- Phase 2 (Kernimplementierung, Monat 4-8): {budget_phase_2} €
-- Phase 3 (Skalierung, Monat 9-12): {budget_phase_3} €
+- Phase 1 (Quick Wins, {phase_1_window}): {budget_phase_1} €
+- Phase 2 (Kernimplementierung, {phase_2_window}): {budget_phase_2} €
+- Phase 3 (Skalierung, {phase_3_window}): {budget_phase_3} €
 
 BUDGET-ZAHLEN IN DIESER SECTION (VERBINDLICH):
 - Verwende AUSSCHLIESSLICH die oben genannten Phasen-Budgets ({budget_phase_1}, {budget_phase_2}, {budget_phase_3}).
@@ -666,12 +666,15 @@ BUDGET-ZAHLEN IN DIESER SECTION (VERBINDLICH):
 - Wenn du auf ROI, Business Case oder Fördermittel verweisen willst: „Details siehe Kapitel [X]."
 
 AUFGABE:
-1. Erstelle eine 12-Monats-Roadmap in 3 Phasen.
-2. Phase 1 (Monat 1-3): Quick Wins, Pilotprojekte, Grundlagen
+1. Erstelle eine Umsetzungs-Roadmap in 3 Phasen über {planungshorizont}.
+   VERBINDLICH: Der Kunde hat als Zeitrahmen "{s2_zeitrahmen}" gewählt —
+   die Roadmap MUSS innerhalb von {planungshorizont} enden. Plane KEINE
+   Monate jenseits dieses Horizonts und entschuldige die Verdichtung nicht.
+2. Phase 1 ({phase_1_window}): Quick Wins, Pilotprojekte, Grundlagen
    - Welche Handlungsfelder? Welche Tools? Welche Meilensteine?
-3. Phase 2 (Monat 4-8): Kernimplementierung, Rollout
+3. Phase 2 ({phase_2_window}): Kernimplementierung, Rollout
    - Welche Handlungsfelder? Welche Tools? Welche Meilensteine?
-4. Phase 3 (Monat 9-12): Skalierung, Optimierung
+4. Phase 3 ({phase_3_window}): Skalierung, Optimierung
    - Welche Handlungsfelder? Welche Tools? Welche Meilensteine?
 5. Für jede Phase: Konkrete Meilensteine, Verantwortlichkeiten, Budget.
 6. Berücksichtige den Engpass: {s4_engpass}.
@@ -887,9 +890,9 @@ VERBINDLICHE KENNZAHLEN (EXAKT diese Werte verwenden — KEINE eigenen Zahlen er
 - Quick Win: {quick_win}
 - Kundenbudget: {s1_budget_label}
 - Empfohlene Investition Jahr 1: {budget_gesamt_jahr1} €
-  - Phase 1 (Monat 1-3): {budget_phase_1} €
-  - Phase 2 (Monat 4-8): {budget_phase_2} €
-  - Phase 3 (Monat 9-12): {budget_phase_3} €
+  - Phase 1 ({phase_1_window}): {budget_phase_1} €
+  - Phase 2 ({phase_2_window}): {budget_phase_2} €
+  - Phase 3 ({phase_3_window}): {budget_phase_3} €
 - Monatliche Einsparung: {zeitersparnis_euro} €
 - ROI-Szenarien:
   - Konservativ: {roi_konservativ}% ROI, Break-Even Monat {breakeven_konservativ}

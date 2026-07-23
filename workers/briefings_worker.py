@@ -71,11 +71,44 @@ STALE_CHECK_INTERVAL_CYCLES = 15  # Every ~30 seconds at default poll interval
 _shutdown_requested = False
 
 
+# KIS-1247: Merkt sich das gerade laufende Briefing für den Drain-Release.
+_current_briefing_id: "int | None" = None
+
+
 def _handle_shutdown(signum, frame):
-    """Signal handler for graceful shutdown."""
+    """Signal handler for graceful shutdown.
+
+    KIS-1247 (Graceful Drain): Railway beendet den alten Container beim
+    Deploy nach kurzer Frist hart (SIGKILL) — eine laufende Generierung
+    (~4-5 Min) überlebt das Drain-Fenster nie. Bisher blieb das Briefing
+    dann 600 s in 'processing' hängen, bis die Stale-Recovery griff
+    (Lauf 1128: Nutzer sah minutenlang eine tote Statusseite). Wir geben
+    den Job daher SOFORT wieder frei, damit der neue Container ihn ohne
+    Wartezeit übernimmt. Doppel-Läufe im Überlappungsfenster sind durch
+    den done-Race-Guard in process_briefing abgesichert.
+    """
     global _shutdown_requested
     log.info("Shutdown signal received (sig=%s), finishing current job...", signum)
     _shutdown_requested = True
+    if _current_briefing_id is not None:
+        try:
+            _db = SessionLocal()
+            try:
+                _b = _db.query(Briefing).filter(Briefing.id == _current_briefing_id).first()
+                if _b is not None and _b.status == "processing" and _b.worker_id == WORKER_ID:
+                    _b.status = "accepted"
+                    _b.processing_at = None
+                    _b.worker_id = None
+                    _db.commit()
+                    log.info(
+                        "[DRAIN] Briefing %s sofort wieder freigegeben — "
+                        "neuer Container übernimmt ohne Stale-Timeout.",
+                        _current_briefing_id,
+                    )
+            finally:
+                _db.close()
+        except Exception as _drain_exc:  # pragma: no cover
+            log.warning("[DRAIN] Release fehlgeschlagen: %s", _drain_exc)
 
 
 def recover_stale_briefings(db: Session) -> int:
@@ -301,6 +334,10 @@ def process_briefing(db: Session, briefing: Briefing) -> bool:
     run_id = f"{WORKER_ID}-{briefing.id}-{uuid.uuid4().hex[:4]}"
     log.info("[%s] Processing briefing %s...", run_id, briefing.id)
 
+    # KIS-1247: Für den Drain-Release im Signal-Handler merken
+    global _current_briefing_id
+    _current_briefing_id = briefing.id
+
     _hb_stop = _start_processing_heartbeat(briefing.id)
     try:
         # Import here to avoid circular imports and ensure fresh module state
@@ -359,6 +396,7 @@ def process_briefing(db: Session, briefing: Briefing) -> bool:
 
     finally:
         _hb_stop.set()
+        _current_briefing_id = None
 
 
 def run_worker_loop():

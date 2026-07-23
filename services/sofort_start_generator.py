@@ -1706,6 +1706,7 @@ def generate_sofort_start_html(
     canon_opex_monthly: float = 0,  # FIX-GRAMMAR-T1: CANON OPEX for consistency
     expertise_level: str = "beginner",  # KIS-1132: competence-aware content
     ki_projekte: str = "",  # KIS-1132: existing AI projects for context
+    medien_sparte: str = "",  # KIS-1247: sparten-aware Fallstudien-Auswahl
 ) -> str:
     """
     Generiert die SOFORT_START_HTML Section.
@@ -2111,8 +2112,8 @@ def generate_sofort_start_html(
     
     
     
-    # Branchen-Fallstudie (Idee #5)
-    html += generate_fallstudie_html(branche, size_key)
+    # Branchen-Fallstudie (Idee #5) — KIS-1247: sparten-aware für Medien
+    html += generate_fallstudie_html(branche, size_key, medien_sparte=medien_sparte)
 
     # Entscheidungsvorlage für Vorgesetzte (Idee #10) - nur für Team/KMU
     if size_key in ["team", "kmu"]:
@@ -3177,6 +3178,73 @@ _FALLSTUDIE_UNTERNEHMEN: Dict[str, Dict[str, str]] = {
     },
 }
 
+# KIS-1247: Sparten-spezifischer Medien-Fallstudien-Pool. Alle Cases sind
+# fiktive, aber produktionstypische Branchen-Beispiele (Disclaimer wird im
+# HTML gerendert) — Auswahl über medien_sparte-Stichworte.
+FALLSTUDIEN_MEDIEN: List[Dict[str, Any]] = [
+    {
+        "keywords": ("produktion", "film", "tv", "doku", "post", "vfx"),
+        "titel": "Doku-Produktion erschließt ihr Rohmaterial-Archiv",
+        "unternehmen": "Produktionsfirma, 8 Mitarbeitende (Doku & Corporate)",
+        "unternehmen_solo": "Freie:r Filmemacher:in mit festem Editor:innen-Netzwerk",
+        "ausgangslage": "Sichtung und Logging fressen die Schnittzeit, Archivmaterial ist praktisch unauffindbar, Untertitel entstehen manuell pro Fassung",
+        "loesung": "Automatische Transkription + Szenenmarker beim Import (EU-Tool), textbasierter Rohschnitt in Premiere, Metadaten-Pflichtfelder im Archiv",
+        "ergebnis": {
+            "zeitersparnis": "60 Stunden/Monat (Team)",
+            "kosteneinsparung": "~5.700 €/Monat",
+            "qualitaet": "Schnittvorbereitung von 3 Tagen auf 1; Archiv-Clips in Minuten auffindbar und lizenzierbar"
+        },
+        "zitat": "Wir schneiden wieder Geschichten – statt Festplatten zu durchsuchen.",
+        "dauer_bis_roi": "4 Wochen"
+    },
+    {
+        "keywords": ("agentur", "werbung", "corporate", "marketing", "content", "verlag", "musik", "audio"),
+        "titel": "Werbefilm-Studio verdoppelt seine Pitch-Schlagzahl",
+        "unternehmen": "Werbefilm-Studio, 5 Kreative (Markenkunden & Sender)",
+        "unternehmen_solo": "Solo-Creative-Producer:in für Markenfilme",
+        "ausgangslage": "Treatments, Moodboards und Pitch-Decks binden die Kreativen, Stoffe bleiben liegen, Änderungsrunden dauern",
+        "loesung": "KI-Treatment-Entwürfe als Startpunkt, gekennzeichnete Moodboard-Visuals (Firefly), fester Freigabeschritt vor jedem Versand",
+        "ergebnis": {
+            "zeitersparnis": "30 Stunden/Monat (Team)",
+            "kosteneinsparung": "~2.900 €/Monat",
+            "qualitaet": "Doppelt so viele Pitches bei gleicher Teamgröße, höhere Trefferquote durch mehr Varianten"
+        },
+        "zitat": "Wir pitchen doppelt so oft – und die Ideen bleiben unsere.",
+        "dauer_bis_roi": "3 Wochen"
+    },
+    {
+        "keywords": ("games", "game", "animation", "interactive", "xr"),
+        "titel": "Games-Studio verkürzt die Lokalisierung um Wochen",
+        "unternehmen": "Independent-Studio, 12 Mitarbeitende",
+        "unternehmen_solo": "Solo-Entwickler:in mit Publisher-Anbindung",
+        "ausgangslage": "Untertitel, Übersetzungen und Asset-Verschlagwortung verzögern jeden Release; Store-Vorgaben zur KI-Deklaration sind unklar",
+        "loesung": "KI-Untertitel und Übersetzungs-Entwürfe mit menschlicher Endkontrolle, automatisches Asset-Tagging, dokumentierte KI-Deklaration je Build",
+        "ergebnis": {
+            "zeitersparnis": "50 Stunden/Monat (Team)",
+            "kosteneinsparung": "~4.000 €/Monat",
+            "qualitaet": "Lokalisierung in 6 statt 10 Wochen, Release in 5 Sprachen gleichzeitig, saubere Store-Deklaration"
+        },
+        "zitat": "Unsere Releases erscheinen jetzt gleichzeitig in fünf Sprachen.",
+        "dauer_bis_roi": "6 Wochen"
+    },
+]
+
+
+def _pick_medien_fallstudie(sparte: str, size_key: str) -> Dict[str, Any]:
+    """Wählt den passenden Medien-Case nach Sparte (Fallback: Produktion)."""
+    s = (sparte or "").lower()
+    chosen: Dict[str, Any] = FALLSTUDIEN_MEDIEN[0]
+    if s:
+        for case in FALLSTUDIEN_MEDIEN:
+            if any(k in s for k in case["keywords"]):
+                chosen = case
+                break
+    result = {k: v for k, v in chosen.items() if k not in ("keywords", "unternehmen_solo")}
+    if size_key == "solo" and chosen.get("unternehmen_solo"):
+        result["unternehmen"] = chosen["unternehmen_solo"]
+    return result
+
+
 FALLSTUDIEN: Dict[str, Dict[str, Any]] = {
     "beratung": {
         "titel": "Unternehmensberater spart 12 Stunden pro Woche",
@@ -3391,21 +3459,25 @@ FALLSTUDIEN: Dict[str, Dict[str, Any]] = {
 }
 
 
-def generate_fallstudie_html(branche: str, size_key: str = "solo") -> str:
+def generate_fallstudie_html(branche: str, size_key: str = "solo", medien_sparte: str = "") -> str:
     """
     Generiert eine branchenspezifische, segment-aware Fallstudie.
 
     FIX-PERSONA: Uses _FALLSTUDIE_UNTERNEHMEN to pick a company description
     matching the user's size segment, avoiding persona leaks like
     "Solo-Berater" in a KMU report.
+    KIS-1247: Medien-Branche wählt sparten-spezifisch aus dem
+    FALLSTUDIEN_MEDIEN-Pool (Produktion/Werbung/Games).
     """
     branche_key = get_branche_key(branche)
-    fallstudie: Dict[str, Any] = cast(Dict[str, Any], FALLSTUDIEN.get(branche_key, FALLSTUDIEN["default"]))
-
-    # FIX-PERSONA: Override "unternehmen" with segment-appropriate description
-    size_overrides = _FALLSTUDIE_UNTERNEHMEN.get(branche_key, {})
-    if size_key in size_overrides:
-        fallstudie = {**fallstudie, "unternehmen": size_overrides[size_key]}
+    if branche_key == "medien":
+        fallstudie: Dict[str, Any] = _pick_medien_fallstudie(medien_sparte, size_key)
+    else:
+        fallstudie = cast(Dict[str, Any], FALLSTUDIEN.get(branche_key, FALLSTUDIEN["default"]))
+        # FIX-PERSONA: Override "unternehmen" with segment-appropriate description
+        size_overrides = _FALLSTUDIE_UNTERNEHMEN.get(branche_key, {})
+        if size_key in size_overrides:
+            fallstudie = {**fallstudie, "unternehmen": size_overrides[size_key]}
     
     # KIS-1190 Sprint-1027.1 Item A: Fallstudie wird als externes Branchen-
     # Beispiel gekennzeichnet und gegen final_sanitizer F4 (Stunden/Woche →

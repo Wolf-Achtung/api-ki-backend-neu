@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from services.live_research import execute_research
-from services.strategy_budget import _user_budget_label, _zeitrahmen_prose, calculate_strategy_budget
+from services.strategy_budget import _user_budget_label, _zeitrahmen_prose, calculate_strategy_budget, phase_windows
 
 logger = logging.getLogger(__name__)
 
@@ -314,6 +314,10 @@ async def generate_strategy_report(
             # rohe Chip-Label führte zu "innerhalb von Sofort (1-3 Monate)"
             # im Executive Summary.
             "s2_zeitrahmen": _zeitrahmen_prose(strategy_questions.get("s2_zeitrahmen", "")),
+            # KIS-1247: Phasen-Fenster aus dem Zeitrahmen ableiten — die
+            # Roadmap (Kap. 5/6) muss im gewählten Horizont enden statt
+            # immer 12 Monate zu planen.
+            **phase_windows(strategy_questions.get("s2_zeitrahmen", "")),
             "s3_prioritaeten": ", ".join(strategy_questions.get("s3_prioritaeten", [])),
             "s4_engpass": strategy_questions.get("s4_engpass", ""),
             # s5_software: comma-separated string, merged in Frontend (strategy.html ~L1179-1184)
