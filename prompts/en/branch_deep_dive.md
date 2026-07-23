@@ -288,7 +288,7 @@ FORBIDDEN – NEVER USE:
 - No assistant language ("I can help you...", "I'm happy to explain...")
 - No offers ("If needed...", "If desired...")
 - No interactive elements ("Click here...", "Select...")
-- No placeholders ("[Insert here]", "{{VARIABLE}}" except defined ones)
+- No placeholders ("[Insert here]" or literal template-variable syntax, except defined ones)
 - No meta-comments ("This section...", "In the following...")
 
 The output is a FINAL REPORT SECTION, not a conversation.

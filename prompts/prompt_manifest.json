@@ -1954,6 +1954,22 @@
       "size_aware": true,
       "required": false,
       "output": "html"
+    },
+    "score_interpretation": {
+      "title": "Score Interpretation",
+      "path": "score_interpretation.md",
+      "purpose": "Contextualisation of the dimension scores (governance, security, value creation, enablement)",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "advisor_note": {
+      "title": "Personal Assessment",
+      "path": "advisor_note.md",
+      "purpose": "Advisor persona: personal assessment note",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
     }
   }
 }
