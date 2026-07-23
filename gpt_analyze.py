@@ -9808,6 +9808,11 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
                          briefing.get("PROZESSE_PAPIERLOS_LABEL") or briefing.get("prozesse_papierlos") or _FIX520_DEFAULT)
     base_vars.setdefault("REGULIERTE_BRANCHE_LABELS",
                          briefing.get("REGULIERTE_BRANCHE_LABELS") or briefing.get("regulierte_branche") or _FIX520_DEFAULT)
+    # KIS-1250: fehlte in den Prompt-Vars → Prompt-Contract-Fail für
+    # ki_rechte_kennzeichnung (DE fiel stumm auf Legacy zurück, EN hat keinen).
+    # Leerstring ist valide: Prompt behandelt "wenn vorhanden" explizit.
+    base_vars.setdefault("MEDIEN_SPARTE_LABEL",
+                         briefing.get("MEDIEN_SPARTE_LABEL") or "")
     base_vars.setdefault("IT_INFRASTRUKTUR_LABEL",
                          briefing.get("IT_INFRASTRUKTUR_LABEL") or briefing.get("it_infrastruktur") or _FIX520_DEFAULT)
     base_vars.setdefault("VORHANDENE_TOOLS_LABELS",
@@ -13847,10 +13852,13 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
 
     is_json_response = qw_raw_stripped.startswith('[') or qw_raw_stripped.startswith('{')
 
+    # KIS-1250: Briefing-Sprache für lang-aware Quick-Win-Fallbacks
+    _qw_lang = str(briefing.get("lang") or briefing.get("LANG") or "de").lower()
+
     def _render_qw_from_json(_raw_json: str, _mode: str) -> Optional[str]:
         """KIS-1231: Renderer-Kette Premium → Simple → Complex für den
         Salvage-Pfad (gleiche Reihenfolge wie der Hauptpfad unten)."""
-        _html = render_quickwins_premium_json(_raw_json, _mode)
+        _html = render_quickwins_premium_json(_raw_json, _mode, lang=_qw_lang)
         if _html:
             return _html
         _html = _quick_wins_simple_json_to_html(_raw_json)
@@ -13872,7 +13880,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         log.info("[FIX-510-QW] Detected template_mode=%s", qw_template_mode)
 
         # FIX-510 CHANGE 2: Try premium renderer FIRST (handles FIX-506 JSON format with rich fields)
-        premium_html = render_quickwins_premium_json(qw_raw, qw_template_mode)
+        premium_html = render_quickwins_premium_json(qw_raw, qw_template_mode, lang=_qw_lang)
         if premium_html:
             qw_html = premium_html
             qw_json_valid = True
@@ -13944,7 +13952,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             log.warning("[FIX-502] Content looks like JSON but was in HTML path - re-routing to JSON parse")
             # FIX-510: Try premium renderer first in re-route path
             qw_template_mode_reroute = detect_quickwins_template_mode(sections)
-            premium_html_reroute = render_quickwins_premium_json(qw_raw, qw_template_mode_reroute)
+            premium_html_reroute = render_quickwins_premium_json(qw_raw, qw_template_mode_reroute, lang=_qw_lang)
             if premium_html_reroute:
                 qw_html = premium_html_reroute
                 qw_json_valid = True
@@ -15318,6 +15326,10 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
     else:
         log.warning("[CI-DESIGN] Förderpotenzial HTML empty or too short")
     sections["foerderpotenzial"] = foerderpotenzial_html
+    # KIS-1250: Pristine-Snapshot — spätere Enforcer-Pässe (Dedupe/Template-Strip)
+    # können die Sektion leeren (Lauf 1131, lang=en); Restore-Quelle für RESCUE-640.
+    if foerderpotenzial_html and len(foerderpotenzial_html) > 200:
+        sections["_FOERDERPOTENZIAL_PRISTINE"] = foerderpotenzial_html
 
     # =========================================================================
     # FIX-R2-6A: Resolve Bundesland codes to full labels in Förder + Risk HTML
@@ -17876,7 +17888,10 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         # ============================================================
         _short_errors = [
             e for e in critical_errors + warning_errors
-            if e.category == "SECTION_TOO_SHORT"
+            # KIS-1250: SECTION_EMPTY ebenfalls heilen — Enforcer-Pässe können
+            # eine Sektion komplett leeren (Lauf 1131: FOERDERPOTENZIAL_HTML,
+            # lang=en) und der Gate brach dann hart ab.
+            if e.category in ("SECTION_TOO_SHORT", "SECTION_EMPTY")
         ]
         if _short_errors:
             log.warning("[%s] [RESCUE-640] %d sections too short, attempting rescue expansion...",
@@ -17885,11 +17900,44 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             for err in _short_errors:
                 _sec_key = err.section
                 _sec_html = sections.get(_sec_key, "")
-                if not isinstance(_sec_html, str) or not _sec_html.strip():
+                if not isinstance(_sec_html, str):
                     continue
 
                 _sec_text = re.sub(r"<[^>]+>", "", _sec_html).strip()
                 _sec_words = len(_sec_text.split()) if _sec_text else 0
+
+                # KIS-1250: Leere Sektion — Restore-Kette statt Expansion:
+                # Pristine-Snapshot → Shadow-Key → kuratierter Fallback.
+                if _sec_words < 10:
+                    _base = _sec_key.replace("_HTML", "")
+                    _restored = ""
+                    _restore_src = ""
+                    for _src_key in (f"_{_base}_PRISTINE", _base.lower()):
+                        _cand = sections.get(_src_key, "")
+                        if isinstance(_cand, str) and _cand.strip():
+                            _cand_words = len(re.sub(r"<[^>]+>", "", _cand).split())
+                            if _cand_words >= 40:
+                                _restored, _restore_src = _cand, _src_key
+                                break
+                    if not _restored:
+                        try:
+                            _restored = _get_fallback_content(_base.lower(), answers, scores) or ""
+                            _restore_src = "curated_fallback"
+                        except Exception as _rf_exc:
+                            log.error("[%s] [RESCUE-640][KIS-1250] Fallback error for %s: %s",
+                                      run_id, _sec_key, _rf_exc)
+                    if _restored and len(re.sub(r"<[^>]+>", "", _restored).split()) >= 40:
+                        sections[_sec_key] = _restored
+                        _lk = _base.lower()
+                        if _lk in sections and not str(sections.get(_lk, "")).strip():
+                            sections[_lk] = _restored
+                        _rescued += 1
+                        log.warning("[%s] [RESCUE-640][KIS-1250] %s war leer (%d Wörter) — restauriert aus %s",
+                                    run_id, _sec_key, _sec_words, _restore_src)
+                    else:
+                        log.error("[%s] [RESCUE-640][KIS-1250] %s leer und keine Restore-Quelle gefunden",
+                                  run_id, _sec_key)
+                    continue
 
                 # Extract min_words from error message
                 _min_match = re.search(r"Minimum.*?:\s*(\d+)", err.message)

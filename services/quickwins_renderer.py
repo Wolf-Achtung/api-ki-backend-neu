@@ -434,6 +434,10 @@ QUICKWIN_FIELD_ALIASES = {
         "issue", "Issue",
         "challenge", "Challenge",
         "current_state", "ist_zustand", "ist-zustand",
+        # KIS-1250: Der Prompt-JSON-Vertrag (DE wie EN) heißt das Feld
+        # "description" — ohne diesen Alias griff IMMER der Fallback-Text
+        # (Lauf 1131: deutsche Fallbacks im EN-Report).
+        "description", "Description", "beschreibung", "Beschreibung",
     ],
     "wirkung": [
         "wirkung", "Wirkung", "WIRKUNG",
@@ -445,6 +449,8 @@ QUICKWIN_FIELD_ALIASES = {
         "outcome", "Outcome",
         "value", "Value", "mehrwert", "Mehrwert",
         "effect", "Effect",
+        # KIS-1250: Prompt-JSON-Vertrag nennt das Feld "mit_ki"
+        "mit_ki", "mit_KI", "Mit_KI", "with_ai", "with_AI", "solution", "Solution",
     ],
     "umsetzung": [
         "umsetzung", "Umsetzung", "UMSETZUNG",
@@ -582,8 +588,46 @@ QUICKWIN_FIELD_FALLBACKS = {
     },
 }
 
+# KIS-1250: EN counterparts — a German fallback sentence must never appear
+# in an English report (run 1131 leaked "Aktueller Prozess ist zeitintensiv…").
+QUICKWIN_FIELD_FALLBACKS_EN = {
+    "problem": {
+        "automat": "Manual processes tie up time and increase error rates.",
+        "efficien": "Inefficient workflows cause avoidable costs.",
+        "communicat": "Inconsistent communication undermines professionalism.",
+        "content": "Content creation is time-consuming and resource-intensive.",
+        "data": "Data silos prevent well-founded decisions.",
+        "client": "Slow response times hurt client satisfaction.",
+        "customer": "Slow response times hurt customer satisfaction.",
+        "service": "Support requests overload the team.",
+        "default": "The current process is time-consuming and error-prone.",
+    },
+    "wirkung": {
+        "automat": "Automated workflows reduce time spent by 50-70%.",
+        "efficien": "More efficient processes measurably increase throughput.",
+        "communicat": "Consistent, professional communication strengthens brand perception.",
+        "content": "Faster content creation at consistent quality.",
+        "data": "Better data availability enables faster decisions.",
+        "client": "Shorter response times increase client retention.",
+        "customer": "Shorter response times increase customer retention.",
+        "service": "Relieves the support team of routine requests.",
+        "default": "Tangible time and cost savings at higher quality.",
+    },
+    "umsetzung": {
+        "automat": "Start automating the most frequent workflows step by step.",
+        "efficien": "Begin with the pilot project offering the highest optimisation potential.",
+        "communicat": "Create templates for frequent communication cases.",
+        "content": "Set up AI support for content workflows.",
+        "data": "Connect data sources and set up a dashboard.",
+        "client": "Implement a chatbot or self-service portal for standard requests.",
+        "customer": "Implement a chatbot or self-service portal for standard requests.",
+        "service": "Introduce FAQ-based automation for frequent questions.",
+        "default": "Start a pilot project with a small scope, then scale.",
+    },
+}
 
-def _get_field_fallback(field: str, title: str, hinweis: str = "") -> str:
+
+def _get_field_fallback(field: str, title: str, hinweis: str = "", lang: str = "de") -> str:
     """
     Get deterministic fallback text for a missing Quick Win field.
 
@@ -595,10 +639,15 @@ def _get_field_fallback(field: str, title: str, hinweis: str = "") -> str:
     Returns:
         Fallback text for the field
     """
-    if field not in QUICKWIN_FIELD_FALLBACKS:
+    _table = (
+        QUICKWIN_FIELD_FALLBACKS_EN
+        if str(lang or "de").lower().startswith("en")
+        else QUICKWIN_FIELD_FALLBACKS
+    )
+    if field not in _table:
         return ""
 
-    field_fallbacks = QUICKWIN_FIELD_FALLBACKS[field]
+    field_fallbacks = _table[field]
     combined = f"{title} {hinweis}".lower()
 
     # Try to match a keyword
@@ -609,7 +658,7 @@ def _get_field_fallback(field: str, title: str, hinweis: str = "") -> str:
     return field_fallbacks.get("default", "")
 
 
-def enforce_quickwins_complete(quickwins: list) -> list:
+def enforce_quickwins_complete(quickwins: list, lang: str = "de") -> list:
     """
     TASK B (P0) + TASK 1 (P0 FINAL): Ensure all Quick Wins have complete fields.
 
@@ -670,7 +719,7 @@ def enforce_quickwins_complete(quickwins: list) -> list:
                 qw_copy[field] = current_value
             else:
                 # Field is truly empty - fill with deterministic fallback
-                fallback = _get_field_fallback(field, title, hinweis)
+                fallback = _get_field_fallback(field, title, hinweis, lang=lang)
                 qw_copy[field] = fallback
                 completions_made += 1
                 log.info(
@@ -793,7 +842,7 @@ def enrich_quickwins_premium(html: str) -> str:
 # Renders FIX-506 JSON format (title, icon, problem, wirkung, umsetzung, hinweis)
 # to rich HTML cards that meet >=30 word requirements.
 
-def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL", run_id: str = "") -> Optional[str]:
+def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL", run_id: str = "", lang: str = "de") -> Optional[str]:
     """
     FIX-510 CHANGE 2: Premium renderer for FIX-506 QuickWins JSON format.
 
@@ -886,7 +935,7 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL", ru
         )
 
         # TASK B (P0): Apply completeness gate - fill empty fields with deterministic fallbacks
-        data = enforce_quickwins_complete(data)
+        data = enforce_quickwins_complete(data, lang=lang)
 
         # KIS-1232: Überschrift/TOC versprechen "Quick Wins: Top 3" — der
         # KMU-Lauf lieferte 4 Karten. Auf die Top-N kappen (ENV-Override).
