@@ -67,12 +67,19 @@ from services.chat_normalizer import (
 )
 from services.field_templates import (
     FIELD_DESCRIPTIONS_SHORT,
+    FIELD_DESCRIPTIONS_SHORT_EN,
     FIELD_EXAMPLES,
+    FIELD_EXAMPLES_EN,
     FIELD_QUESTIONS,
     get_confirmation,
     get_template_question,
     is_template_field,
 )
+
+
+def _is_en_lang(lang: str | None) -> bool:
+    """True when the session/interface language is English (e.g. 'en', 'en-GB')."""
+    return bool(lang) and str(lang).strip().lower().startswith("en")
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 log = logging.getLogger(__name__)
@@ -98,6 +105,8 @@ def _cleared_draft(prev: dict | None) -> dict:
 
 # KIS-1131: Canonical summary marker — used for both emission and detection.
 SUMMARY_MARKER = "**Zusammenfassung Ihrer Angaben:**"
+# EN summary marker (lang=en sessions) — detection checks both markers.
+SUMMARY_MARKER_EN = "**Summary of your details:**"
 
 # ---------------------------------------------------------------------------
 # Skip / Decline detection (module scope so tests can import)
@@ -105,6 +114,12 @@ SUMMARY_MARKER = "**Zusammenfassung Ihrer Angaben:**"
 # Exact-match skip words: whole-message equality check after strip+lower.
 SKIP_WORDS: frozenset[str] = frozenset({
     "weiter", "skip", "überspringen", "nächste", "weiter bitte", "nächste frage",
+})
+
+# EN-only skip words — merged with SKIP_WORDS for lang=en sessions ONLY,
+# so German session behaviour stays byte-identical.
+SKIP_WORDS_EN: frozenset[str] = frozenset({
+    "next", "continue", "next question", "skip it", "pass",
 })
 
 # Substring patterns that mark a message as a decline. Checked via
@@ -126,6 +141,15 @@ _DECLINE_PATTERNS: list[str] = [
     # KIS-1160: plain "nein" / "nö" must register as decline so Sonnet
     # receives the decline help-context instead of praising earlier answers.
     "nein", "nö", "nein danke",
+]
+
+# EN-only decline patterns — applied ONLY for lang=en sessions (in addition
+# to the German list), so German session behaviour stays byte-identical.
+_DECLINE_PATTERNS_EN: list[str] = [
+    "don't know", "dont know", "do not know", "no idea", "not sure",
+    "can't say", "cannot say", "hard to say", "no preference",
+    "doesn't matter", "does not matter", "skip this", "skip that",
+    "no comment", "i'd have to check", "would have to check",
 ]
 
 
@@ -167,15 +191,35 @@ _HELP_REQUEST_HINTS: frozenset[str] = frozenset({
     "nenne mir beispiele",
 })
 
+# EN-only help hints — applied ONLY for lang=en sessions (in addition to
+# the German set), so German session behaviour stays byte-identical.
+_HELP_REQUEST_HINTS_EN: frozenset[str] = frozenset({
+    "what do you mean",
+    "what does that mean",
+    "what does this mean",
+    "can you explain",
+    "could you explain",
+    "please explain",
+    "give me examples",
+    "give me an example",
+    "what options are there",
+    "which options are there",
+})
 
-def is_natural_help_request(message: str) -> bool:
+
+def is_natural_help_request(message: str, lang: str = "de") -> bool:
     """True when *message* reads like a clarification request in natural
     German — used in addition to the explicit ``__HELP_REQUEST__`` sentinel
-    so free-form rückfragen also trigger the field-specific help flow."""
+    so free-form rückfragen also trigger the field-specific help flow.
+    For lang=en sessions, English clarification phrases are matched too."""
     if not message:
         return False
     msg_lower = message.strip().lower()
-    return any(h in msg_lower for h in _HELP_REQUEST_HINTS)
+    if any(h in msg_lower for h in _HELP_REQUEST_HINTS):
+        return True
+    if _is_en_lang(lang):
+        return any(h in msg_lower for h in _HELP_REQUEST_HINTS_EN)
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -271,6 +315,43 @@ BLOCK_LABELS: dict[str, str] = {
     "C": "Tools & Automatisierung",
     "D": "Recht & Datenschutz",
 }
+
+# EN block labels for lang=en sessions (user-visible in transition texts/QRs).
+BLOCK_LABELS_EN: dict[str, str] = {
+    "A": "Funding & budget",
+    "B": "AI strategy & roadmap",
+    "C": "Tools & automation",
+    "D": "Legal & data protection",
+}
+
+
+def _block_label_for_lang(block_id: str, lang: str = "de") -> str:
+    if _is_en_lang(lang):
+        return BLOCK_LABELS_EN.get(block_id, BLOCK_LABELS.get(block_id, block_id))
+    return BLOCK_LABELS.get(block_id, block_id)
+
+
+def _summary_action_qr(lang: str = "de") -> "QuickReply":
+    """Summary-phase action buttons (start report / correct answers)."""
+    if _is_en_lang(lang):
+        return QuickReply(
+            field="__summary_action__",
+            label="Next step",
+            options=[
+                QuickReplyOption(value="__start_report__", label="Start analysis", style="primary"),
+                QuickReplyOption(value="__edit_summary__", label="Correct details", style="secondary"),
+            ],
+            multi_select=False,
+        )
+    return QuickReply(
+        field="__summary_action__",
+        label="Nächster Schritt",
+        options=[
+            QuickReplyOption(value="__start_report__", label="Auswertung starten", style="primary"),
+            QuickReplyOption(value="__edit_summary__", label="Angaben korrigieren", style="secondary"),
+        ],
+        multi_select=False,
+    )
 
 
 # KIS-1124 Testrun 6 Fix 2: Conservative defaults for fields that couldn't
@@ -521,7 +602,30 @@ STRATEGY_WELCOME = (
 )
 
 
-def _get_welcome(report_type: str) -> str:
+R1_WELCOME_EN = (
+    "Welcome to ki-sicherheit.jetzt! I'll guide you through a short "
+    "assessment — it takes about 10–15 minutes. At the end you'll receive "
+    "an individual AI report with concrete recommendations for your "
+    "business. Your answers are used exclusively for this analysis.\n\n"
+    "What industry is your company in? "
+    "If you're not sure, simply describe what you do "
+    "— I'll help with the classification."
+)
+
+STRATEGY_WELCOME_EN = (
+    "Welcome back! Based on your AI readiness analysis, I'll now prepare "
+    "your individual AI strategy report.\n\n"
+    "I still need a few details about your concrete implementation planning. "
+    "This takes about 3 minutes. If you're unsure about a question, "
+    "just ask — I'm happy to explain.\n\n"
+    "Let's begin: What budget have you planned specifically for AI "
+    "implementation over the next 12 months?"
+)
+
+
+def _get_welcome(report_type: str, lang: str = "de") -> str:
+    if _is_en_lang(lang):
+        return STRATEGY_WELCOME_EN if report_type == "strategy" else R1_WELCOME_EN
     if report_type == "strategy":
         return STRATEGY_WELCOME
     return R1_WELCOME
@@ -593,11 +697,11 @@ async def chat_start(
 
     # Build welcome quick replies (first field for this report type)
     first_fields = _get_first_qr_fields(req.report_type)
-    welcome_qr = _build_quick_replies(first_fields, req.report_type)
+    welcome_qr = _build_quick_replies(first_fields, req.report_type, lang=req.lang)
     state.quick_replies = welcome_qr
 
     # Save welcome message
-    welcome = _get_welcome(req.report_type)
+    welcome = _get_welcome(req.report_type, req.lang)
     welcome_msg = {
         "role": "assistant",
         "content": welcome,
@@ -658,6 +762,9 @@ async def chat_message(
     # inside event_stream() so the SSE connection starts immediately and
     # heartbeats keep the connection alive during the Haiku call.
     rt = session.report_type
+    # Session language (set at /start via req.lang; default "de").
+    _lang = getattr(session, "lang", None) or "de"
+    _lang_en = _is_en_lang(_lang)
     from services.chat_conversation import (
         generate_response, FIELD_DESCRIPTIONS, build_help_context,
         EDIT_MODE_SONNET_PROMPT, build_edit_extraction_context,
@@ -711,12 +818,14 @@ async def chat_message(
         # the currently-asked field and cannot drift onto unrelated topics.
         _is_help_request = (
             "__HELP_REQUEST__" in req.message
-            or (not _is_qr_click and is_natural_help_request(req.message))
+            or (not _is_qr_click and is_natural_help_request(req.message, _lang))
         )
 
         # Edit-mode detection: check if user wants to change a field after summary
         _is_in_edit_mode = bool(_draft_state_snapshot.get("edit_mode"))
         _edit_words = {"ändern", "etwas ändern", "korrigieren", "anpassen", "nein, etwas ändern", "nein ändern"}
+        if _lang_en:
+            _edit_words = _edit_words | {"change", "edit", "correct", "change something", "no, change something"}
         _is_edit_request = (
             not _is_qr_click
             and not _is_help_request
@@ -850,7 +959,7 @@ async def chat_message(
                 # wie "Recherche", "Administration" in zeitersparnis_prioritaet)
                 if qr_result.confidence == "low" and qr_field in FREETEXT_SUGGESTIONS:
                     _chip_profile = compute_user_profile(collected)
-                    _chip_suggestions = _get_freetext_suggestions(qr_field, collected, _chip_profile)
+                    _chip_suggestions = _get_freetext_suggestions(qr_field, collected, _chip_profile, lang=_lang)
                     if req.quick_reply_value in _chip_suggestions:
                         qr_result = NormResult(req.quick_reply_value, "high", False)
                 # KIS-1242: QR-Klick = Wahrheit. Wenn der geklickte Wert einer
@@ -1272,6 +1381,13 @@ async def chat_message(
             "report reicht", "das genügt", "fertig mit dem bereich",
             "mir reicht das", "reicht mir",
         ]
+        if _lang_en:
+            # EN-only additions (lang-gated so DE behaviour is unchanged)
+            _BLOCK_SKIP_PATTERNS = _BLOCK_SKIP_PATTERNS + [
+                "that's enough", "thats enough", "next topic", "next section",
+                "next area", "create the report", "generate the report",
+                "enough for the report", "move on",
+            ]
         _conv_phase_for_skip = _phase_state.get("conversation_phase", "phase_1") if rt == "r1" else None
         _msg_lower_pre = req.message.strip().lower()
         _is_block_skip = (
@@ -1290,11 +1406,12 @@ async def chat_message(
         # KIS-1124-S0-BE-2: Extended skip detection with decline phrases
         # KIS-1160: "nein" / "nö" recognized as decline so Sonnet gets the
         # decline help-context instead of drifting onto unrelated praise.
-        skip_words = SKIP_WORDS
+        skip_words = (SKIP_WORDS | SKIP_WORDS_EN) if _lang_en else SKIP_WORDS
+        _decline_patterns = (_DECLINE_PATTERNS + _DECLINE_PATTERNS_EN) if _lang_en else _DECLINE_PATTERNS
         _msg_lower = req.message.strip().lower()
         _is_skip_word = _msg_lower in skip_words
         _is_decline = (not normalized and not _is_qr_click and not _is_help_request
-                       and any(p in _msg_lower for p in _DECLINE_PATTERNS))
+                       and any(p in _msg_lower for p in _decline_patterns))
         _skip_confirmed_draft = False
 
         if (_is_skip_word or _is_decline) and not normalized:
@@ -1724,7 +1841,7 @@ async def chat_message(
         # coherent transitions (KIS-1123 Fix 1).
         _next_field_qr_context = None
         if next_fields:
-            _preview_qrs = _build_quick_replies(next_fields, rt, collected)
+            _preview_qrs = _build_quick_replies(next_fields, rt, collected, lang=_lang)
             _nf = next_fields[0]
             if _preview_qrs:
                 _qr = _preview_qrs[0]
@@ -1944,30 +2061,50 @@ async def chat_message(
             # 2. Abbruch am 04.07.: Die Bereichs-Chips + Schnellmodus +
             # Bestätigen-Schritt überforderten; der Selected-State des
             # empfohlenen Buttons war unsichtbar (blau auf blau).
-            _checkpoint_text = (
-                "Ich habe jetzt ein gutes Bild von Ihrem Unternehmen — "
-                "damit kann ich bereits einen soliden KI-Report erstellen.\n\n"
-                "Sie haben zwei Möglichkeiten: den Schnell-Report aus den "
-                "bisherigen Angaben — oder Sie beantworten noch einige "
-                "vertiefende Fragen (ca. 10 Minuten), dann werden Business "
-                "Case, Roadmap und Compliance-Teil deutlich konkreter. "
-                "Meine Empfehlung: der vollständige Report.\n\n"
-                "Am Ende prüfen Sie alle Angaben nochmal und können korrigieren."
-            )
+            if _lang_en:
+                _checkpoint_text = (
+                    "I now have a good picture of your business — "
+                    "I could already create a solid AI report from this.\n\n"
+                    "You have two options: the quick report based on what "
+                    "you've shared so far — or you answer a few more "
+                    "in-depth questions (about 10 minutes), which makes the "
+                    "business case, roadmap and compliance sections "
+                    "considerably more concrete. "
+                    "My recommendation: the full report.\n\n"
+                    "At the end you can review and correct all your answers."
+                )
+            else:
+                _checkpoint_text = (
+                    "Ich habe jetzt ein gutes Bild von Ihrem Unternehmen — "
+                    "damit kann ich bereits einen soliden KI-Report erstellen.\n\n"
+                    "Sie haben zwei Möglichkeiten: den Schnell-Report aus den "
+                    "bisherigen Angaben — oder Sie beantworten noch einige "
+                    "vertiefende Fragen (ca. 10 Minuten), dann werden Business "
+                    "Case, Roadmap und Compliance-Teil deutlich konkreter. "
+                    "Meine Empfehlung: der vollständige Report.\n\n"
+                    "Am Ende prüfen Sie alle Angaben nochmal und können korrigieren."
+                )
 
         # Block completion: inject inter-block transition text
         _block_transition_text = None
         if _cur_conv_phase == "phase_2" and rt == "r1" and _block_just_completed:
-            _completed_label = BLOCK_LABELS.get(_cur_block, _cur_block)
+            _completed_label = _block_label_for_lang(_cur_block, _lang)
             _remaining_blocks_after = [b for b in _phase_state.get("selected_blocks", [])
                                        if b not in _phase_state.get("completed_blocks", [])]
             if _remaining_blocks_after:
-                _next_label = BLOCK_LABELS.get(_remaining_blocks_after[0], "")
-                _block_transition_text = (
-                    f'Bereich \u201e{_completed_label}\u201c abgeschlossen. '
-                    f'Sollen wir mit \u201e{_next_label}\u201c weitermachen, '
-                    f'oder reicht das f\u00fcr den Report?'
-                )
+                _next_label = _block_label_for_lang(_remaining_blocks_after[0], _lang)
+                if _lang_en:
+                    _block_transition_text = (
+                        f'Section \u201c{_completed_label}\u201d completed. '
+                        f'Shall we continue with \u201c{_next_label}\u201d, '
+                        f'or is this enough for the report?'
+                    )
+                else:
+                    _block_transition_text = (
+                        f'Bereich \u201e{_completed_label}\u201c abgeschlossen. '
+                        f'Sollen wir mit \u201e{_next_label}\u201c weitermachen, '
+                        f'oder reicht das f\u00fcr den Report?'
+                    )
             else:
                 # All blocks done → transition to summary
                 _phase_state["conversation_phase"] = "summary"
@@ -1976,11 +2113,18 @@ async def chat_message(
                     {"ps": json.dumps(_phase_state), "sid": str(session.id)},
                 )
                 db.commit()
-                _block_transition_text = (
-                    f'Bereich \u201e{_completed_label}\u201c abgeschlossen \u2014 '
-                    f'damit haben wir alle gew\u00e4hlten Bereiche behandelt. '
-                    f'Ich erstelle jetzt Ihre Zusammenfassung.'
-                )
+                if _lang_en:
+                    _block_transition_text = (
+                        f'Section \u201c{_completed_label}\u201d completed \u2014 '
+                        f'that covers all selected areas. '
+                        f'I will now prepare your summary.'
+                    )
+                else:
+                    _block_transition_text = (
+                        f'Bereich \u201e{_completed_label}\u201c abgeschlossen \u2014 '
+                        f'damit haben wir alle gew\u00e4hlten Bereiche behandelt. '
+                        f'Ich erstelle jetzt Ihre Zusammenfassung.'
+                    )
 
         # KIS-1128B V1-BE-2: Template mode — bypass Sonnet for QR-to-QR turns.
         # When user clicked a QR button AND the next field has a deterministic
@@ -2000,6 +2144,7 @@ async def chat_message(
         _clean_commit_turn = bool(normalized) and not _draft_new_field
         if (
             (_is_qr_click or (_nf_has_deterministic_chips and _clean_commit_turn))
+            and not _lang_en  # EN: templates are German → let Sonnet answer in English
             and next_fields
             and is_template_field(next_fields[0])
             and not _checkpoint_triggered
@@ -2036,7 +2181,10 @@ async def chat_message(
 
                 if _report_start_requested:
                     # KIS-1125: Skip Sonnet — send confirmation, trigger completion below
-                    await queue.put("Ihre Auswertung wird jetzt erstellt. Sie erhalten den Report in Kürze.")
+                    if _lang_en:
+                        await queue.put("Your report is now being generated. You will receive it shortly.")
+                    else:
+                        await queue.put("Ihre Auswertung wird jetzt erstellt. Sie erhalten den Report in Kürze.")
                     return
 
                 if _template_text:
@@ -2065,6 +2213,7 @@ async def chat_message(
                     remaining_block_fields=_sonnet_block_remaining,
                     used_confirmations=_used_confirmations,
                     is_last_section=_is_last_section_complete,
+                    lang=_lang,
                 ):
                     await queue.put(token)
             except Exception as exc:
@@ -2088,7 +2237,7 @@ async def chat_message(
             if rt == "strategy":
                 _profile_ctx = _load_r1_profile_for_strategy(session, db)
             if next_fields and is_template_field(next_fields[0]):
-                _pqr = _build_quick_replies(next_fields[:1], rt, collected, _profile_ctx)
+                _pqr = _build_quick_replies(next_fields[:1], rt, collected, _profile_ctx, lang=_lang)
                 if _pqr:
                     _pqr_data = [qr.model_dump() for qr in _pqr]
                     yield f'event: preview_qr\ndata: {json.dumps(_pqr_data)}\n\n'
@@ -2112,7 +2261,10 @@ async def chat_message(
                 yield f"event: token\ndata: {json.dumps({'text': item})}\n\n"
         except Exception as exc:
             log.error("[CHAT] Streaming error: %s", exc, exc_info=True)
-            error_msg = "Entschuldigung, es gab einen Fehler. Bitte versuchen Sie es nochmal."
+            if _lang_en:
+                error_msg = "Sorry, something went wrong. Please try again."
+            else:
+                error_msg = "Entschuldigung, es gab einen Fehler. Bitte versuchen Sie es nochmal."
             yield f"event: error\ndata: {json.dumps({'code': 'stream_error', 'message': error_msg})}\n\n"
             return
         finally:
@@ -2179,37 +2331,48 @@ async def chat_message(
             # entfernt: Nutzer können nicht einschätzen, was sie in den
             # Bereichen erwartet (2. Testlauf-Abbruch 04.07.). Das Backend
             # versteht A–D-Werte weiterhin (Legacy-Sessions).
-            _cp_options = [
-                QuickReplyOption(
-                    value="ALL",
-                    label="Vollständiger Report (empfohlen) · ~10 Min",
-                    style="primary",
-                ),
-                QuickReplyOption(
-                    value="REPORT",
-                    label="Schnell-Report jetzt erstellen",
-                ),
-            ]
-            quick_replies = [QuickReply(
-                field="__checkpoint__",
-                label="Wie geht es weiter?",
-                options=_cp_options,
-                multi_select=False,
-            )]
+            if _lang_en:
+                _cp_options = [
+                    QuickReplyOption(
+                        value="ALL",
+                        label="Full report (recommended) · ~10 min",
+                        style="primary",
+                    ),
+                    QuickReplyOption(
+                        value="REPORT",
+                        label="Create quick report now",
+                    ),
+                ]
+                quick_replies = [QuickReply(
+                    field="__checkpoint__",
+                    label="How would you like to continue?",
+                    options=_cp_options,
+                    multi_select=False,
+                )]
+            else:
+                _cp_options = [
+                    QuickReplyOption(
+                        value="ALL",
+                        label="Vollständiger Report (empfohlen) · ~10 Min",
+                        style="primary",
+                    ),
+                    QuickReplyOption(
+                        value="REPORT",
+                        label="Schnell-Report jetzt erstellen",
+                    ),
+                ]
+                quick_replies = [QuickReply(
+                    field="__checkpoint__",
+                    label="Wie geht es weiter?",
+                    options=_cp_options,
+                    multi_select=False,
+                )]
         elif _final_phase == "summary" and not _report_start_requested and not _is_edit_request and (not _is_in_edit_mode or _edit_applied):
             # KIS-1124-HOTFIX: Summary phase needs action buttons so user can
             # start the report or request edits. Previously was [] → user had
             # to type manually, which is not discoverable.
             # KIS-1131 FX-2: Suppress during edit-mode (but show again after edit applied).
-            quick_replies = [QuickReply(
-                field="__summary_action__",
-                label="Nächster Schritt",
-                options=[
-                    QuickReplyOption(value="__start_report__", label="Auswertung starten", style="primary"),
-                    QuickReplyOption(value="__edit_summary__", label="Angaben korrigieren", style="secondary"),
-                ],
-                multi_select=False,
-            )]
+            quick_replies = [_summary_action_qr(_lang)]
         elif _final_phase == "phase_1" and _post_phase_1a:
             # Phase 1a: show QR for next sequential QR field
             if _no_extraction and _asked_field and _asked_field not in collected:
@@ -2217,7 +2380,7 @@ async def chat_message(
             else:
                 _next_qr = _get_next_phase_1a_field(collected)
                 qr_next = [_next_qr] if _next_qr else []
-            quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
+            quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx, lang=_lang)
         elif _final_phase == "phase_1":
             # Phase 1b: open conversation — show QR for structured fields
             # KIS-1124 Testrun 3 Bugs 16+17: Show QR buttons for fields that
@@ -2230,7 +2393,7 @@ async def chat_message(
                               if f in ("digitalisierungsgrad", "ki_kompetenz",
                                        "ki_ziele")]
             quick_replies = _build_quick_replies(
-                _p1b_qr_fields, rt, collected, _profile_ctx,
+                _p1b_qr_fields, rt, collected, _profile_ctx, lang=_lang,
             ) if _p1b_qr_fields else []
         elif _final_phase == "phase_2" and rt == "r1":
             if _block_just_completed:
@@ -2239,16 +2402,28 @@ async def chat_message(
                                         if b not in _phase_state.get("completed_blocks", [])]
                 if _remaining_blocks_qr:
                     _next_b = _remaining_blocks_qr[0]
-                    quick_replies = [QuickReply(
-                        field="__block_transition__",
-                        label="Nächster Schritt",
-                        options=[
-                            QuickReplyOption(value="continue",
-                                             label=f"Weiter: {BLOCK_LABELS.get(_next_b, _next_b)}"),
-                            QuickReplyOption(value="report", label="Report erstellen"),
-                        ],
-                        multi_select=False,
-                    )]
+                    if _lang_en:
+                        quick_replies = [QuickReply(
+                            field="__block_transition__",
+                            label="Next step",
+                            options=[
+                                QuickReplyOption(value="continue",
+                                                 label=f"Continue: {_block_label_for_lang(_next_b, _lang)}"),
+                                QuickReplyOption(value="report", label="Create report"),
+                            ],
+                            multi_select=False,
+                        )]
+                    else:
+                        quick_replies = [QuickReply(
+                            field="__block_transition__",
+                            label="Nächster Schritt",
+                            options=[
+                                QuickReplyOption(value="continue",
+                                                 label=f"Weiter: {BLOCK_LABELS.get(_next_b, _next_b)}"),
+                                QuickReplyOption(value="report", label="Report erstellen"),
+                            ],
+                            multi_select=False,
+                        )]
                 else:
                     # All blocks done → summary, no QR needed
                     quick_replies = []
@@ -2260,21 +2435,13 @@ async def chat_message(
                     qr_next = [_asked_field]
                 else:
                     qr_next = _block_remaining[:1]
-                quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
+                quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx, lang=_lang)
         elif _strategy_completion_ready and not _report_start_requested and not _is_edit_request and (not _is_in_edit_mode or _edit_applied):
             # KIS-1146: Strategy completion — emit __summary_action__ QR manually.
             # Mirrors the r1 summary branch above (line ~1913) since strategy
             # lacks phase_state. Same guard semantics: not an edit request,
             # and either not in edit mode or an edit was just applied.
-            quick_replies = [QuickReply(
-                field="__summary_action__",
-                label="Nächster Schritt",
-                options=[
-                    QuickReplyOption(value="__start_report__", label="Auswertung starten", style="primary"),
-                    QuickReplyOption(value="__edit_summary__", label="Angaben korrigieren", style="secondary"),
-                ],
-                multi_select=False,
-            )]
+            quick_replies = [_summary_action_qr(_lang)]
         else:
             # Legacy / Strategy: section-based QR
             if _no_extraction and _asked_field and _asked_field not in collected:
@@ -2283,14 +2450,14 @@ async def chat_message(
                 qr_next = get_next_fields(collected, _current_section, max_fields=1, report_type=rt)
 
             if _is_qr_click and not (req.quick_reply_field == "__checkpoint__"):
-                quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
+                quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx, lang=_lang)
             elif DRAFT_MODE_ENABLED and _pending_after_turn:
                 quick_replies = [QuickReply(
                     field="_draft_action",
-                    label="Angabe bestätigen",
+                    label="Confirm entry" if _lang_en else "Angabe bestätigen",
                     options=[
-                        QuickReplyOption(value="confirm", label="✓ Übernehmen"),
-                        QuickReplyOption(value="edit", label="✏️ Ändern"),
+                        QuickReplyOption(value="confirm", label="✓ Accept" if _lang_en else "✓ Übernehmen"),
+                        QuickReplyOption(value="edit", label="✏️ Edit" if _lang_en else "✏️ Ändern"),
                     ],
                     multi_select=False,
                 )]
@@ -2299,7 +2466,7 @@ async def chat_message(
             elif _is_edit_request or (_is_in_edit_mode and not _edit_applied):
                 quick_replies = []
             else:
-                quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx)
+                quick_replies = _build_quick_replies(qr_next, rt, collected, _profile_ctx, lang=_lang)
 
         # ------------------------------------------------------------------
         # Post-process response text (KIS-1124 Testrun 3: Bugs 13, 14, 9)
@@ -2308,7 +2475,7 @@ async def chat_message(
         if quick_replies:
             for qr in quick_replies:
                 _qr_labels.extend(opt.label for opt in (qr.options or []))
-        full_response = _post_process_response(full_response, _qr_labels or None)
+        full_response = _post_process_response(full_response, _qr_labels or None, lang=_lang)
 
         # KIS-1235: Leere Antwort abfangen — im Testlauf blieb nach dem
         # Blockwechsel ("Weiter: KI-Strategie & Roadmap") die Frage komplett
@@ -2318,13 +2485,19 @@ async def chat_message(
         if not full_response.strip() and not _report_start_requested:
             _fallback = None
             if next_fields:
-                _fallback = get_template_question(next_fields[0])
+                # EN: template questions are German → use generic EN question
+                _fallback = None if _lang_en else get_template_question(next_fields[0])
                 if not _fallback:
-                    _fb_label = get_field_label(next_fields[0], rt)
-                    if _fb_label:
-                        _fallback = f"Dann weiter: {_fb_label} — wie sieht das bei Ihnen aus?"
+                    if _lang_en:
+                        _fb_label = _QR_LABELS_EN.get(next_fields[0]) or get_field_label(next_fields[0], rt)
+                        if _fb_label:
+                            _fallback = f"Next up: {_fb_label} — how does that look for you?"
+                    else:
+                        _fb_label = get_field_label(next_fields[0], rt)
+                        if _fb_label:
+                            _fallback = f"Dann weiter: {_fb_label} — wie sieht das bei Ihnen aus?"
             if not _fallback and quick_replies:
-                _fallback = "Wie möchten Sie fortfahren?"
+                _fallback = "How would you like to proceed?" if _lang_en else "Wie möchten Sie fortfahren?"
             if _fallback:
                 log.warning(
                     "[CHAT][KIS-1235] Leere Antwort nach Post-Processing (turn %s, next=%s) — Fallback-Frage eingesetzt",
@@ -2344,11 +2517,17 @@ async def chat_message(
                 and not _report_start_requested
                 and not _checkpoint_triggered
                 and _final_phase not in ("summary", "checkpoint")):
-            _ng_q = get_template_question(next_fields[0])
+            # EN: template questions are German → use generic EN question
+            _ng_q = None if _lang_en else get_template_question(next_fields[0])
             if not _ng_q:
-                _ng_label = get_field_label(next_fields[0], rt)
-                _ng_q = (f"Dann weiter: {_ng_label} — wie sieht das bei Ihnen aus?"
-                         if _ng_label else "")
+                if _lang_en:
+                    _ng_label = _QR_LABELS_EN.get(next_fields[0]) or get_field_label(next_fields[0], rt)
+                    _ng_q = (f"Next up: {_ng_label} — how does that look for you?"
+                             if _ng_label else "")
+                else:
+                    _ng_label = get_field_label(next_fields[0], rt)
+                    _ng_q = (f"Dann weiter: {_ng_label} — wie sieht das bei Ihnen aus?"
+                             if _ng_label else "")
             if _ng_q and _ng_q not in full_response:
                 full_response = f"{full_response}\n\n{_ng_q}"
                 log.info(
@@ -2428,7 +2607,7 @@ async def chat_message(
         )
         if _should_send_summary:
             from services.chat_conversation import build_summary
-            summary_text = build_summary(collected, rt)
+            summary_text = build_summary(collected, rt, lang=_lang)
             yield f"event: token\ndata: {json.dumps({'text': summary_text})}\n\n"
             summary_msg = {
                 "role": "assistant",
@@ -2462,7 +2641,12 @@ async def chat_message(
                 yield f"event: report_started\ndata: {json.dumps({'briefing_id': _briefing_id, 'redirect_url': _redirect_url})}\n\n"
             except Exception as exc:
                 log.error("[CHAT] Report completion failed: %s", exc, exc_info=True)
-                yield f"event: error\ndata: {json.dumps({'code': 'completion_error', 'message': 'Report-Erstellung fehlgeschlagen. Bitte versuchen Sie es erneut.'})}\n\n"
+                _cmp_err = (
+                    "Report generation failed. Please try again."
+                    if _lang_en else
+                    "Report-Erstellung fehlgeschlagen. Bitte versuchen Sie es erneut."
+                )
+                yield f"event: error\ndata: {json.dumps({'code': 'completion_error', 'message': _cmp_err})}\n\n"
             # No QR buttons after report start
             quick_replies = []
 
@@ -2607,7 +2791,10 @@ async def chat_session_get(session_id: UUID, db: Session = Depends(get_db)):
     # Use state.next_fields (already computed with correct max_fields logic)
     # instead of calling get_next_fields again with default max_fields=1
     _profile_ctx = _load_r1_profile_for_strategy(session, db) if rt == "strategy" else None
-    state.quick_replies = _build_quick_replies(state.next_fields, rt, session.collected_fields, _profile_ctx)
+    state.quick_replies = _build_quick_replies(
+        state.next_fields, rt, session.collected_fields, _profile_ctx,
+        lang=getattr(session, "lang", None) or "de",
+    )
 
     # Last 10 messages
     all_msgs = session.messages or []
@@ -2686,6 +2873,8 @@ async def get_fast_mode_fields(session_id: UUID, db: Session = Depends(get_db)):
     ps = session.phase_state or {}
     selected = ps.get("selected_blocks", ["A", "B", "C", "D"])
     rt = session.report_type
+    _fm_lang = getattr(session, "lang", None) or "de"
+    _fm_en = _is_en_lang(_fm_lang)
 
     registry = get_registry_for_report(rt)
     result = []
@@ -2701,7 +2890,17 @@ async def get_fast_mode_fields(session_id: UUID, db: Session = Depends(get_db)):
                 continue
             reg = registry.get(field, {})
             qr_options = _QR_OPTIONS.get(field)
-            question = FIELD_QUESTIONS.get(field, get_field_label(field))
+            if _fm_en:
+                # EN: question falls back to the EN field label; option labels
+                # use label_en (fallback: DE label — never crash).
+                question = _QR_LABELS_EN.get(field) or FIELD_QUESTIONS.get(field, get_field_label(field))
+                if qr_options:
+                    qr_options = [
+                        {**o, "label": o.get("label_en") or o["label"]}
+                        for o in qr_options
+                    ]
+            else:
+                question = FIELD_QUESTIONS.get(field, get_field_label(field))
             block_fields.append({
                 "field": field,
                 "question": question,
@@ -2713,7 +2912,7 @@ async def get_fast_mode_fields(session_id: UUID, db: Session = Depends(get_db)):
         if block_fields:
             result.append({
                 "block": block_id,
-                "label": BLOCK_LABELS.get(block_id, block_id),
+                "label": _block_label_for_lang(block_id, _fm_lang),
                 "fields": block_fields,
             })
 
@@ -3008,6 +3207,7 @@ def _strip_context_preamble(text: str) -> str:
 def _post_process_response(
     text: str,
     qr_labels: list[str] | None = None,
+    lang: str = "de",
 ) -> str:
     """Clean Sonnet response before sending to frontend.
 
@@ -3099,10 +3299,14 @@ def _post_process_response(
         )
 
     # 4. English exclamations (Bug 9 reopen)
-    for word in _ENGLISH_EXCLAMATIONS:
-        text = re.sub(
-            rf'\b{word}[!.,]?\s*', '', text, flags=re.IGNORECASE,
-        )
+    # Skipped for lang=en responses — the whole answer is English there and
+    # blanket-stripping words like "Great" would mutilate legitimate prose
+    # (e.g. "Great Britain"). Flattery openers are still forbidden via prompt.
+    if not _is_en_lang(lang):
+        for word in _ENGLISH_EXCLAMATIONS:
+            text = re.sub(
+                rf'\b{word}[!.,]?\s*', '', text, flags=re.IGNORECASE,
+            )
 
     # 5. Forbidden flattery at sentence start (R5: +Exzellent, Brillant, etc.)
     # KIS-1124-HOTFIX: Previous regex only matched at absolute string start (^)
@@ -3517,6 +3721,11 @@ def _build_session_state(
     field_examples: list[str] | None = None
     field_examples_for: str | None = None
 
+    _ss_lang = getattr(session, "lang", None) or "de"
+    _ss_en = _is_en_lang(_ss_lang)
+    # EN sessions get EN inspiration chips (same keys, fallback DE list).
+    _examples_map = {**FIELD_EXAMPLES, **FIELD_EXAMPLES_EN} if _ss_en else FIELD_EXAMPLES
+
     rt = session.report_type
     sections = get_sections_for_report(rt)
     registry = get_registry_for_report(rt)
@@ -3547,13 +3756,13 @@ def _build_session_state(
     _cur_blk_for_chips = ps.get("current_block")
     if _cur_blk_for_chips:
         _remaining_block_fields = _get_block_fields(_cur_blk_for_chips, collected)
-        if _remaining_block_fields and _remaining_block_fields[0] in FIELD_EXAMPLES:
-            field_examples = list(FIELD_EXAMPLES[_remaining_block_fields[0]])
+        if _remaining_block_fields and _remaining_block_fields[0] in _examples_map:
+            field_examples = list(_examples_map[_remaining_block_fields[0]])
             field_examples_for = _remaining_block_fields[0]
     if field_examples is None:
         _next_field = next_fields[0] if next_fields else None
-        if _next_field and _next_field in FIELD_EXAMPLES:
-            field_examples = list(FIELD_EXAMPLES[_next_field])
+        if _next_field and _next_field in _examples_map:
+            field_examples = list(_examples_map[_next_field])
             field_examples_for = _next_field
 
     # KIS-1139: Drop chips the user has already chosen for this field. On a
@@ -3631,17 +3840,24 @@ def _build_session_state(
         _all_blocks = ["A", "B", "C", "D"]
         _unsurveyed = [b for b in _all_blocks if b not in ps["selected_blocks"]]
         if _unsurveyed:
-            _block_labels = {
-                "A": "Fördermittel & Budget",
-                "B": "KI-Strategie & Roadmap",
-                "C": "Tools & Automatisierung",
-                "D": "Recht & Datenschutz",
-            }
-            _names = [_block_labels.get(b, b) for b in _unsurveyed]
-            unsurveyed_note = (
-                f"Nicht vertiefte Bereiche: {', '.join(_names)}. "
-                "Diese werden im Report mit branchenüblichen Standardwerten ergänzt."
-            )
+            if _ss_en:
+                _names = [BLOCK_LABELS_EN.get(b, b) for b in _unsurveyed]
+                unsurveyed_note = (
+                    f"Areas not covered in depth: {', '.join(_names)}. "
+                    "These will be supplemented in the report with industry-standard defaults."
+                )
+            else:
+                _block_labels = {
+                    "A": "Fördermittel & Budget",
+                    "B": "KI-Strategie & Roadmap",
+                    "C": "Tools & Automatisierung",
+                    "D": "Recht & Datenschutz",
+                }
+                _names = [_block_labels.get(b, b) for b in _unsurveyed]
+                unsurveyed_note = (
+                    f"Nicht vertiefte Bereiche: {', '.join(_names)}. "
+                    "Diese werden im Report mit branchenüblichen Standardwerten ergänzt."
+                )
 
     # KIS-1128C V7-BE: Block progress metadata
     _cur_blk = ps.get("current_block")
@@ -3649,7 +3865,7 @@ def _build_session_state(
     _blk_progress = 0
     _blk_total = 0
     if _cur_blk:
-        _blk_label = BLOCK_LABELS.get(_cur_blk, "")
+        _blk_label = _block_label_for_lang(_cur_blk, _ss_lang) if _ss_en else BLOCK_LABELS.get(_cur_blk, "")
         if _cur_blk == "D":
             _blk_all = _get_datenschutz_block_fields(collected.get("branche", ""))
         else:
@@ -3666,6 +3882,13 @@ def _build_session_state(
     # the currently active block; otherwise we fall back to the legacy label,
     # which is correct for Phase 1 / checkpoint / summary / strategy flows.
     display_section_title = _blk_label or section_name
+    if _ss_en and not _blk_label:
+        # EN header: translate the legacy section name (fallback: DE name)
+        try:
+            from services.chat_conversation import _SECTION_NAMES_EN
+            display_section_title = _SECTION_NAMES_EN.get(section_name, section_name)
+        except Exception:
+            pass
 
     return ChatSessionState(
         session_id=session.id,
@@ -3712,7 +3935,7 @@ def _has_summary_been_sent(session: ChatSession) -> bool:
     for msg in messages:
         if msg.get("role") == "assistant":
             content = msg.get("content", "")
-            if SUMMARY_MARKER in content:
+            if SUMMARY_MARKER in content or SUMMARY_MARKER_EN in content:
                 return True
     return False
 
@@ -4241,6 +4464,325 @@ _QR_LABELS: dict[str, str] = {
     "datenreife": "Datenreife",
 }
 
+# EN field labels for quick replies (lang=en sessions).
+# Fallback is always the German label from _QR_LABELS — never crash.
+_QR_LABELS_EN: dict[str, str] = {
+    # Sektion 0
+    "branche": "Industry", "unternehmensgroesse": "Company size",
+    "selbststaendig": "Business type", "country": "Country",
+    "bundesland": "Federal state / region", "hauptleistung": "Main service",
+    "jahresumsatz": "Annual revenue",
+    "projekte_pro_monat": "Orders/projects per month",
+    # Sektion 1
+    "zielgruppen": "Target groups", "it_infrastruktur": "IT infrastructure",
+    "interne_ki_kompetenzen": "Internal AI team", "datenquellen": "Available data",
+    # Sektion 2
+    "digitalisierungsgrad": "Digitalisation level (1–10)",
+    "prozesse_papierlos": "Paperless processes", "automatisierungsgrad": "Degree of automation",
+    "ki_einsatz": "Current AI use", "ki_kompetenz": "AI competence",
+    # Sektion 3
+    "ki_ziele": "AI goals", "anwendungsfaelle": "Use cases",
+    "ki_projekte": "Existing AI projects", "pilot_bereich": "Pilot area",
+    "zeitersparnis_prioritaet": "Areas for relief", "geschaeftsmodell_evolution": "Business model ideas",
+    "vision_3_jahre": "3-year vision",
+    # Sektion 4
+    "strategische_ziele": "Strategic goals", "ki_guardrails": "AI guardrails",
+    "massnahmen_komplexitaet": "Implementation effort", "roadmap_vorhanden": "AI roadmap",
+    "governance_richtlinien": "Governance guidelines", "change_management": "Willingness to change",
+    # Sektion 5
+    "zeitbudget": "Time budget per week", "vorhandene_tools": "Systems in use",
+    "trainings_interessen": "Training topics", "vision_prioritaet": "Strategic lever",
+    "innovationsprozess": "Innovation process", "regulierte_branche": "Regulated industry",
+    # Sektion 6
+    "datenschutz": "Data protection",  # r1 consent bool (summary display only)
+    "datenschutzbeauftragter": "Data protection officer", "technische_massnahmen": "Protection measures",
+    "folgenabschaetzung": "Data protection impact assessment", "meldewege": "Reporting channels",
+    "loeschregeln": "Deletion policies", "ai_act_kenntnis": "EU AI Act knowledge",
+    "ki_hemmnisse": "AI barriers",
+    # Sektion 7
+    "bisherige_foerdermittel": "Previous funding", "interesse_foerderung": "Funding interest",
+    "erfahrung_beratung": "Consulting experience", "investitionsbudget": "Investment budget",
+    "marktposition": "Market position", "benchmark_wettbewerb": "Competitor comparison",
+    "risikofreude": "Risk appetite (1–5)",
+    # Strategy
+    "s1_budget": "AI implementation budget", "s2_zeitrahmen": "Implementation timeframe",
+    "s3_prioritaeten": "Top priorities (max. 3)", "s4_engpass": "Biggest bottleneck",
+    "s5_software": "Software in use", "s5_vision": "AI vision",
+    "s6_foerderinteresse": "Funding interest", "s7_entscheidung": "Decision structure",
+    "s8_erfahrung": "AI experience", "s9_ansatz": "Infrastructure approach",
+    "s10_datenschutz": "Data protection priority",
+    "wettbewerber_anzahl": "Competitors", "kundenbindung_typ": "Customer relationships",
+    "datenreife": "Data maturity",
+}
+
+
+# ---------------------------------------------------------------------------
+# EN option labels (lang=en sessions).
+# Source: /formular/formbuilder_en_SINGLE_FULL.js (matched by option value);
+# fields missing there (projekte_pro_monat, digitalisierungsgrad grouping,
+# risikofreude, strategy fields) translated to match the same register.
+# VALUES stay untouched (backend enums) — the loop below only injects a
+# "label_en" display key into the existing _QR_OPTIONS entries.
+# Purely numeric / product-name options (prozesse_papierlos, s5_software,
+# bundesland proper nouns) intentionally have no EN label (DE label is
+# language-neutral and used as fallback).
+# ---------------------------------------------------------------------------
+_QR_OPTION_LABELS_EN: dict[str, dict[str, str]] = {
+    "branche": {
+        "marketing": "Marketing & Advertising", "beratung": "Consulting & Services",
+        "it": "IT & Software", "finanzen": "Finance & Insurance",
+        "handel": "Retail & E-Commerce", "bildung": "Education",
+        "verwaltung": "Public Administration", "gesundheit": "Healthcare",
+        "bau": "Construction & Architecture", "medien": "Media & Creative Industries",
+        "industrie": "Manufacturing & Production", "logistik": "Transport & Logistics",
+        "gastronomie": "Hospitality & Tourism",
+    },
+    "unternehmensgroesse": {
+        "1": "1 (Solo/Freelancer)", "2–10": "2–10 (Small team)", "11–100": "11–100 (SME)",
+    },
+    "selbststaendig": {
+        "freiberufler": "Freelancer / self-employed",
+        "kapitalgesellschaft": "Single-person corporation (GmbH/UG)",
+        "einzelunternehmer": "Sole proprietor (registered business)",
+        "sonstiges": "Other",
+    },
+    "country": {
+        "DE": "Germany", "AT": "Austria", "CH": "Switzerland", "GB": "United Kingdom",
+    },
+    "jahresumsatz": {
+        "unter_100k": "Up to €100,000", "100k_500k": "€100,000–500,000",
+        "500k_2m": "€500,000–2M", "2m_10m": "€2–10M",
+        "ueber_10m": "Over €10M", "keine_angabe": "Prefer not to say",
+    },
+    "projekte_pro_monat": {
+        "unter_2": "Under 2", "2_5": "2–5", "6_10": "6–10",
+        "ueber_10": "Over 10", "keine_angabe": "Varies a lot / no answer",
+    },
+    "zielgruppen": {
+        "b2b": "B2B (business customers)", "b2c": "B2C (consumers)",
+        "kmu": "SMEs", "grossunternehmen": "Large enterprises",
+        "selbststaendige": "Self-employed/freelancers", "oeffentliche_hand": "Public sector",
+        "privatpersonen": "Private individuals", "startups": "Startups", "andere": "Other",
+    },
+    "it_infrastruktur": {
+        "cloud": "Cloud-based (e.g. Microsoft 365)", "on_premise": "Own data center (on-premises)",
+        "hybrid": "Hybrid (cloud + own servers)", "unklar": "Unclear / still open",
+    },
+    "interne_ki_kompetenzen": {
+        "ja": "Yes", "nein": "No", "in_planung": "In planning",
+    },
+    "datenquellen": {
+        "kundendaten": "Customer data (CRM, service)", "verkaufsdaten": "Sales/order data",
+        "produktionsdaten": "Production/operations data", "personaldaten": "Personnel/HR data",
+        "marketingdaten": "Marketing/campaign data", "sonstige": "Other data sources",
+    },
+    "digitalisierungsgrad": {
+        "2": "Low (1–3)", "5": "Medium (4–5)", "7": "Advanced (6–7)",
+        "8": "High (8–9)", "9": "Fully digital (10)",
+    },
+    "automatisierungsgrad": {
+        "sehr_niedrig": "Very low", "eher_niedrig": "Rather low",
+        "mittel": "Medium", "eher_hoch": "Rather high", "sehr_hoch": "Very high",
+    },
+    "ki_einsatz": {
+        "chatbots": "Chatbots / customer service", "marketing": "Marketing & content",
+        "vertrieb": "Sales & CRM", "datenanalyse": "Data analysis",
+        "produktion": "Production / logistics", "hr": "HR management",
+        "andere": "Other areas", "noch_keine": "Not yet in use",
+    },
+    "ki_kompetenz": {
+        "hoch": "High", "mittel": "Medium", "niedrig": "Low", "keine": "None",
+    },
+    "ki_ziele": {
+        "effizienz": "Increase efficiency", "automatisierung": "Automation",
+        "neue_produkte": "New products/services", "kundenservice": "Improve customer service",
+        "datenauswertung": "Better use of data", "kosten_senken": "Reduce costs",
+        "wettbewerbsfaehigkeit": "Competitiveness", "keine_angabe": "Still unclear",
+    },
+    "anwendungsfaelle": {
+        "chatbots": "Chatbots / FAQ automation", "content_generation": "Content generation",
+        "datenanalyse": "Data analysis & reporting", "dokumentation": "Documentation & knowledge",
+        "prozess_automation": "Process automation", "personalisierung": "Personalization",
+        "andere": "Other", "keine_angabe": "Still unclear",
+    },
+    "pilot_bereich": {
+        "kundenservice": "Customer service", "marketing": "Marketing / content",
+        "vertrieb": "Sales", "verwaltung": "Administration / back office",
+        "produktion": "Production / logistics", "andere": "Other",
+    },
+    "massnahmen_komplexitaet": {
+        "niedrig": "Low", "mittel": "Medium", "hoch": "High", "unklar": "Unclear",
+    },
+    "roadmap_vorhanden": {
+        "ja": "Yes", "teilweise": "Partially", "nein": "No",
+    },
+    "governance_richtlinien": {
+        "ja": "Yes", "teilweise": "Partially", "nein": "No",
+    },
+    "change_management": {
+        "sehr_hoch": "Very high", "hoch": "High", "mittel": "Medium",
+        "niedrig": "Low", "sehr_niedrig": "Very low",
+    },
+    "zeitbudget": {
+        "unter_2": "Under 2 hours", "2_5": "2–5 hours",
+        "5_10": "5–10 hours", "ueber_10": "Over 10 hours",
+    },
+    "vorhandene_tools": {
+        "crm": "CRM (HubSpot, Salesforce)", "erp": "ERP (SAP, Odoo)",
+        "projektmanagement": "Project management (Asana, Trello)",
+        "marketing_automation": "Marketing automation",
+        "buchhaltung": "Accounting software", "keine": "None / other",
+    },
+    "trainings_interessen": {
+        "prompt_engineering": "Prompt engineering", "llm_basics": "LLM basics",
+        "datenqualitaet_governance": "Data quality & governance",
+        "automatisierung": "Automation & scripts",
+        "ethik_recht": "Ethical & legal basics", "keine": "None / still unclear",
+    },
+    "vision_prioritaet": {
+        "gpt_services": "AI-powered services and products",
+        "kundenservice": "Customer service optimization",
+        "datenprodukte": "Data-based offerings",
+        "prozessautomation": "Internal process automation",
+        "marktfuehrerschaft": "Technology leadership",
+        "keine_angabe": "Still unclear",
+    },
+    "innovationsprozess": {
+        "innovationsteam": "Innovation team", "mitarbeitende": "Through employees",
+        "kunden": "With customers", "berater": "External consultants",
+        "zufall": "By chance", "unbekannt": "No clear strategy",
+    },
+    "regulierte_branche": {
+        "gesundheit": "Healthcare & medicine", "finanzen": "Finance & insurance",
+        "oeffentlich": "Public sector", "recht": "Legal services",
+        "vertraulich_nda": "Confidential client data / NDA",
+        "keine": "None of these industries",
+    },
+    "datenschutzbeauftragter": {
+        "ja": "Yes", "nein": "No", "teilweise": "Partially (external/planning)",
+    },
+    "technische_massnahmen": {
+        "alle": "All relevant measures", "teilweise": "Partially in place", "keine": "None yet",
+    },
+    "folgenabschaetzung": {
+        "ja": "Yes, completed", "nein": "No, not yet", "teilweise": "In planning",
+    },
+    "meldewege": {
+        "ja": "Yes, clearly defined", "teilweise": "Partially in place",
+        "nein": "No, not yet regulated",
+    },
+    "loeschregeln": {
+        "ja": "Yes, documented", "teilweise": "Partially in place",
+        "nein": "No, not yet defined",
+    },
+    "ai_act_kenntnis": {
+        "sehr_gut": "Very good", "gut": "Good",
+        "gehoert": "Heard of it", "unbekannt": "Not yet familiar",
+    },
+    "ki_hemmnisse": {
+        "rechtsunsicherheit": "Legal uncertainty", "datenschutz": "Data protection",
+        "knowhow": "Lack of know-how", "budget": "Limited budget",
+        "teamakzeptanz": "Team acceptance", "zeitmangel": "Lack of time",
+        "it_integration": "IT integration", "keine": "No barriers", "andere": "Other",
+    },
+    "bisherige_foerdermittel": {"ja": "Yes", "nein": "No"},
+    "interesse_foerderung": {
+        "ja": "Yes, suggest programmes", "nein": "No need",
+        "unklar": "Unclear, please advise",
+    },
+    "erfahrung_beratung": {"ja": "Yes", "nein": "No", "unklar": "Unclear"},
+    "investitionsbudget": {
+        "unter_2000": "Under €2,000", "2000_10000": "€2,000–10,000",
+        "10000_50000": "€10,000–50,000", "ueber_50000": "Over €50,000",
+        "unklar": "Still unclear",
+    },
+    "marktposition": {
+        "marktfuehrer": "Market leader", "oberes_drittel": "Upper third",
+        "mittelfeld": "Midfield", "nachzuegler": "Laggard",
+        "unsicher": "Hard to assess",
+    },
+    "benchmark_wettbewerb": {
+        "ja": "Yes, regularly", "nein": "No", "selten": "Rarely",
+    },
+    "risikofreude": {
+        "1": "1 (very cautious)", "2": "2", "3": "3 (balanced)",
+        "4": "4", "5": "5 (keen to experiment)",
+    },
+    # --- Strategy ---
+    "s1_budget": {
+        "unter_2000": "Under €2,000", "2000_10000": "€2,000 – 10,000",
+        "10000_50000": "€10,000 – 50,000", "ueber_50000": "Over €50,000",
+        "unklar": "Still unclear",
+    },
+    "s2_zeitrahmen": {
+        "Sofort (1-3 Monate)": "Immediately (1–3 months)",
+        "Kurzfristig (3-6 Monate)": "Short term (3–6 months)",
+        "Mittelfristig (6-12 Monate)": "Medium term (6–12 months)",
+        "Langfristig (12-18 Monate)": "Long term (12–18 months)",
+    },
+    "s3_prioritaeten": {
+        "Kosten senken": "Reduce costs", "Umsatz steigern": "Increase revenue",
+        "Qualität verbessern": "Improve quality",
+        "Geschwindigkeit erhöhen": "Increase speed",
+        "Compliance sichern": "Ensure compliance",
+        "Neue Geschäftsfelder": "New business areas",
+        "Fachkräftemangel kompensieren": "Compensate skills shortage",
+        "Kundenerlebnis verbessern": "Improve customer experience",
+    },
+    "s4_engpass": {
+        "Zu wenig Know-how": "Not enough know-how", "Kein Budget": "No budget",
+        "Fehlende Daten": "Missing data",
+        "Widerstand im Team": "Resistance in the team",
+        "Regulatorische Unsicherheit": "Regulatory uncertainty",
+        "Kein klarer Use Case": "No clear use case", "Andere": "Other",
+    },
+    "s6_foerderinteresse": {
+        "Ja, dringend": "Yes, urgently", "Ja, wenn passend": "Yes, if suitable",
+        "Nein, eigenes Budget": "No, own budget", "Weiß nicht": "Don't know",
+    },
+    "s7_entscheidung": {
+        "Entscheide allein": "I decide alone",
+        "Brauche Vorlage für Geschäftsleitung": "Proposal for management",
+        "Muss Gesellschafter überzeugen": "Convince shareholders",
+        "Muss Aufsichtsrat/Beirat informieren": "Inform advisory/supervisory board",
+    },
+    "s8_erfahrung": {
+        "Noch keine": "None yet", "Experimentiert": "Experimenting",
+        "Erste Tools im Einsatz": "First tools in use", "Fortgeschritten": "Advanced",
+    },
+    "s9_ansatz": {
+        "Cloud-SaaS": "Cloud SaaS", "On-Premise": "On-premise",
+        "Hybrid": "Hybrid", "Egal": "Still unclear / no preference",
+    },
+    "s10_datenschutz": {
+        "Hoch": "High", "Mittel": "Medium", "Niedrig": "Low",
+    },
+    "wettbewerber_anzahl": {
+        "wenige": "Few (1–3)", "mehrere": "Several (4–10)",
+        "viele": "Many (more than 10)", "unklar": "Hard to assess",
+    },
+    "kundenbindung_typ": {
+        "einmalig": "Mostly one-off customers",
+        "wiederkehrend": "Recurring customers / contracts",
+        "gemischt": "Mix of both",
+    },
+    "datenreife": {
+        "keine": "Hardly any / no structured data",
+        "basis": "Basic data (CRM, accounting)",
+        "umfangreich": "Extensive own data assets",
+        "unklar": "Not sure",
+    },
+}
+
+# Inject "label_en" into the existing _QR_OPTIONS entries (display-only key;
+# values and German labels stay byte-identical).
+for _f_en, _lbls_en in _QR_OPTION_LABELS_EN.items():
+    for _o_en in _QR_OPTIONS.get(_f_en, []):
+        _l_en = _lbls_en.get(str(_o_en.get("value")))
+        if _l_en:
+            _o_en["label_en"] = _l_en
+del _f_en, _lbls_en, _o_en, _l_en
+
 
 # ---------------------------------------------------------------------------
 # Freetext field suggestions (branche-specific + profile-aware)
@@ -4279,6 +4821,42 @@ _SOLO_FREETEXT_SUGGESTIONS: dict[str, list[str]] = {
     "ki_projekte": ["KI-Tools im Einsatz", "Automatisierungs-Tests", "Noch keine Projekte"],
 }
 
+# ---------------------------------------------------------------------------
+# EN freetext suggestions (lang=en sessions). Suggestion chips are taken over
+# verbatim as the user's answer, so they MUST be English for EN sessions.
+# Fallback: German suggestions — never crash.
+# ---------------------------------------------------------------------------
+
+FREETEXT_SUGGESTIONS_EN: dict[str, dict[str, list[str]]] = {
+    "zeitersparnis_prioritaet": {
+        "beratung": ["Proposal writing", "Client documentation", "Research", "Administration"],
+        "it": ["Bug tracking", "Documentation", "Meetings", "Deployment"],
+        "bau": ["Measurement & costing", "Site documentation", "Communication with authorities"],
+        "handel": ["Order processing", "Inventory", "Customer communication"],
+        "marketing": ["Content creation", "Reporting", "Campaign planning", "Client briefings"],
+        "finanzen": ["Compliance checks", "Reporting", "Customer communication"],
+        "gesundheit": ["Documentation", "Appointment management", "Billing"],
+        "gastronomie": ["Order management", "Staff scheduling", "Bookkeeping"],
+        "bildung": ["Lesson preparation", "Participant management", "Certificate creation", "Evaluations"],
+        "verwaltung": ["Application processing", "Reporting", "Citizen communication", "Documentation"],
+        "medien": ["Briefings & concepts", "Rights management", "Post-production", "Project coordination"],
+        "industrie": ["Quality documentation", "Maintenance planning", "Supplier communication", "Reporting"],
+        "logistik": ["Route planning", "Shipment tracking", "Customs documentation", "Customer communication"],
+        "default": ["Emails & communication", "Documentation", "Research", "Administration"],
+    },
+    "ki_projekte": {
+        "default": ["Used ChatGPT in the team", "Automation experiments", "No projects yet"],
+    },
+}
+
+_EXPERT_FREETEXT_SUGGESTIONS_EN: dict[str, list[str]] = {
+    "ki_projekte": ["API integration (OpenAI, Anthropic, etc.)", "Own AI workflows", "RAG / retrieval systems"],
+}
+
+_SOLO_FREETEXT_SUGGESTIONS_EN: dict[str, list[str]] = {
+    "ki_projekte": ["AI tools in use", "Automation experiments", "No projects yet"],
+}
+
 
 # ---------------------------------------------------------------------------
 # Profile-aware QR label overrides
@@ -4308,6 +4886,27 @@ _INTERMEDIATE_QR_LABELS: dict[str, str] = {
     "pilot_bereich": "Nächstes KI-Projekt",
 }
 
+# EN variants of the profile-aware label overrides (lang=en sessions).
+_SOLO_QR_LABELS_EN: dict[str, str] = {
+    "ki_kompetenz": "AI competence",
+    "change_management": "Willingness to change",
+    "interne_ki_kompetenzen": "AI/digitalisation skills",
+    "innovationsprozess": "Innovation approach",
+}
+
+_SMALL_TEAM_QR_LABELS_EN: dict[str, str] = {
+    "innovationsprozess": "Innovation approach",
+}
+
+_EXPERT_QR_LABELS_EN: dict[str, str] = {
+    "pilot_bereich": "AI expansion potential",
+    "ki_projekte": "Active AI projects",
+}
+
+_INTERMEDIATE_QR_LABELS_EN: dict[str, str] = {
+    "pilot_bereich": "Next AI project",
+}
+
 
 # ---------------------------------------------------------------------------
 # Profile-aware QR option filters
@@ -4324,9 +4923,9 @@ _SOLO_QR_REMOVE: dict[str, set[str]] = {
 # (completely overrides _QR_OPTIONS for these fields when is_solo=True)
 _SOLO_QR_OVERRIDE: dict[str, list[dict]] = {
     "interne_ki_kompetenzen": [
-        {"value": "ja", "label": "Ja, mit externen Partnern"},
-        {"value": "nein", "label": "Nein, alles selbst"},
-        {"value": "in_planung", "label": "Geplant"},
+        {"value": "ja", "label": "Ja, mit externen Partnern", "label_en": "Yes, with external partners"},
+        {"value": "nein", "label": "Nein, alles selbst", "label_en": "No, all myself"},
+        {"value": "in_planung", "label": "Geplant", "label_en": "Planned"},
     ],
 }
 
@@ -4355,11 +4954,16 @@ def _build_quick_replies(
     report_type: str = "r1",
     collected_fields: dict | None = None,
     profile_context: dict | None = None,
+    lang: str = "de",
 ) -> list[QuickReply]:
     """Build quick reply buttons for enum fields and freetext suggestions.
 
     Profile-aware: adapts labels and filters options based on
     Solo/Team/Expert/Intermediate detection from collected_fields.
+
+    lang="en" selects EN display labels (option "label_en" / _QR_LABELS_EN /
+    FREETEXT_SUGGESTIONS_EN) with German fallback — never crash. Option
+    VALUES are untouched. Default "de" is byte-identical to before.
 
     Args:
         profile_context: Optional pre-computed profile dict. Used by
@@ -4369,6 +4973,7 @@ def _build_quick_replies(
     registry = get_registry_for_report(report_type)
     collected = collected_fields or {}
     profile = profile_context or compute_user_profile(collected)
+    _en = _is_en_lang(lang)
     replies = []
 
     for field_name in next_fields:
@@ -4379,13 +4984,14 @@ def _build_quick_replies(
 
         # Freetext suggestions (for selected text fields)
         if reg.get("type") == "text" and field_name in FREETEXT_SUGGESTIONS:
-            suggestions = _get_freetext_suggestions(field_name, collected, profile)
+            suggestions = _get_freetext_suggestions(field_name, collected, profile, lang=lang)
             if suggestions:
                 options = [QuickReplyOption(value=s, label=s) for s in suggestions]
-                label = _get_context_label(field_name, profile)
+                label = _get_context_label(field_name, profile, lang=lang)
                 is_optional = not reg.get("required", False)
+                _sugg_suffix = "(suggestions)" if _en else "(Vorschläge)"
                 replies.append(QuickReply(
-                    field=field_name, label=f"{label} (Vorschläge)", options=options,
+                    field=field_name, label=f"{label} {_sugg_suffix}", options=options,
                     optional=is_optional,
                 ))
             continue
@@ -4410,41 +5016,64 @@ def _build_quick_replies(
         options_data = _filter_options_by_profile(field_name, options_data, profile)
 
         options = [
-            QuickReplyOption(value=o["value"], label=o["label"], description=o.get("description"))
+            QuickReplyOption(
+                value=o["value"],
+                label=(o.get("label_en") or o["label"]) if _en else o["label"],
+                description=o.get("description"),
+            )
             for o in options_data
         ]
-        label = _get_context_label(field_name, profile)
+        label = _get_context_label(field_name, profile, lang=lang)
         is_multi = reg.get("type") == "multi"
         max_sel = reg.get("max_select") if is_multi else None
         is_optional = not reg.get("required", False)
+        if _en:
+            _desc = FIELD_DESCRIPTIONS_SHORT_EN.get(field_name) or FIELD_DESCRIPTIONS_SHORT.get(field_name)
+        else:
+            _desc = FIELD_DESCRIPTIONS_SHORT.get(field_name)
         replies.append(QuickReply(
             field=field_name, label=label, options=options,
             multi_select=is_multi, max_select=max_sel,
             optional=is_optional,
-            description=FIELD_DESCRIPTIONS_SHORT.get(field_name),
+            description=_desc,
         ))
 
     return replies
 
 
-def _get_context_label(field_name: str, profile: dict) -> str:
-    """Get profile-aware QR label. Priority: expert > intermediate > solo > small_team > default."""
+def _get_context_label(field_name: str, profile: dict, lang: str = "de") -> str:
+    """Get profile-aware QR label. Priority: expert > intermediate > solo > small_team > default.
+
+    lang="en" resolves the EN variant of the matched override / default label,
+    falling back to the German label — never crash.
+    """
+    _en = _is_en_lang(lang)
     if profile.get("is_expert"):
         label = _EXPERT_QR_LABELS.get(field_name)
         if label:
+            if _en:
+                return _EXPERT_QR_LABELS_EN.get(field_name, label)
             return label
     if profile.get("is_intermediate"):
         label = _INTERMEDIATE_QR_LABELS.get(field_name)
         if label:
+            if _en:
+                return _INTERMEDIATE_QR_LABELS_EN.get(field_name, label)
             return label
     if profile.get("is_solo"):
         label = _SOLO_QR_LABELS.get(field_name)
         if label:
+            if _en:
+                return _SOLO_QR_LABELS_EN.get(field_name, label)
             return label
     if profile.get("is_small_team"):
         label = _SMALL_TEAM_QR_LABELS.get(field_name)
         if label:
+            if _en:
+                return _SMALL_TEAM_QR_LABELS_EN.get(field_name, label)
             return label
+    if _en:
+        return _QR_LABELS_EN.get(field_name) or _QR_LABELS.get(field_name, field_name)
     return _QR_LABELS.get(field_name, field_name)
 
 
@@ -4472,20 +5101,31 @@ def _filter_options_by_profile(
 
 def _get_freetext_suggestions(
     field_name: str, collected: dict, profile: dict | None = None,
+    lang: str = "de",
 ) -> list[str]:
-    """Get branche-specific + profile-aware suggestions for a freetext field."""
+    """Get branche-specific + profile-aware suggestions for a freetext field.
+
+    lang="en" serves the EN suggestion sets (fallback: German — never crash).
+    """
+    _en = _is_en_lang(lang)
     # Expert override takes priority
     if profile and profile.get("is_expert"):
-        expert = _EXPERT_FREETEXT_SUGGESTIONS.get(field_name)
+        expert = (
+            _EXPERT_FREETEXT_SUGGESTIONS_EN.get(field_name) if _en else None
+        ) or _EXPERT_FREETEXT_SUGGESTIONS.get(field_name)
         if expert:
             return expert
     # Solo override
     if profile and profile.get("is_solo"):
-        solo = _SOLO_FREETEXT_SUGGESTIONS.get(field_name)
+        solo = (
+            _SOLO_FREETEXT_SUGGESTIONS_EN.get(field_name) if _en else None
+        ) or _SOLO_FREETEXT_SUGGESTIONS.get(field_name)
         if solo:
             return solo
     # Default: branche-specific
-    suggestions_map = FREETEXT_SUGGESTIONS.get(field_name, {})
+    suggestions_map = (
+        FREETEXT_SUGGESTIONS_EN.get(field_name) if _en else None
+    ) or FREETEXT_SUGGESTIONS.get(field_name, {})
     if not suggestions_map:
         return []
     branche = collected.get("branche", "default")

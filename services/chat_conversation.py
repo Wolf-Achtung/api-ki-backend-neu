@@ -1752,6 +1752,7 @@ async def generate_response(
     remaining_block_fields: list[str] | None = None,
     used_confirmations: list[str] | None = None,
     is_last_section: bool = False,
+    lang: str = "de",
 ) -> AsyncGenerator[str, None]:
     """
     Generate streaming AI response.
@@ -1762,10 +1763,17 @@ async def generate_response(
     draft state (dialog / pending confirmation / normal question).
     When help_context is provided, appends field-specific help instructions.
     When conversation_phase="phase_1", uses the Phase 1 open conversation prompt.
+    When lang starts with "en", an output-language directive is appended to the
+    fully assembled system prompt so the conversation is held in English.
+    German prompt templates themselves stay unchanged (Stufe 1).
     """
+    _is_en = bool(lang) and str(lang).strip().lower().startswith("en")
     client = _get_async_client()
     if client is None:
-        yield "Entschuldigung, ich bin gerade nicht erreichbar. Bitte versuchen Sie es gleich nochmal."
+        if _is_en:
+            yield "Sorry, I am temporarily unavailable. Please try again in a moment."
+        else:
+            yield "Entschuldigung, ich bin gerade nicht erreichbar. Bitte versuchen Sie es gleich nochmal."
         return
 
     # Phase 1b: open conversation prompt
@@ -1923,6 +1931,26 @@ async def generate_response(
             "jeder Form), 'als KI-Berater' (case-insensitive)."
         )
 
+    # Output-language directive for English-interface sessions.
+    # Appended AFTER all other injections so it wins over any earlier
+    # German-language rule (e.g. "Antworte IMMER auf Deutsch" in the
+    # shared prompt rules). German sessions (default) are unaffected.
+    if _is_en:
+        system_prompt += (
+            "\n\nOUTPUT LANGUAGE (FINAL DIRECTIVE — OVERRIDES ALL EARLIER "
+            "LANGUAGE RULES):\n"
+            "The user is using the English interface. Conduct the ENTIRE "
+            "conversation in professional business English and address the "
+            "reader as 'you'. Ask every question in English. Any earlier rule "
+            "demanding German output (e.g. 'Antworte IMMER auf Deutsch') or "
+            "listing German example phrasings applies to STYLE and CONTENT "
+            "only — produce the equivalent in English instead. Keep German "
+            "proper nouns where sensible (funding programme names, place "
+            "names); translate legal terms into their common English form "
+            "(DSGVO → GDPR; 'EU AI Act' stays as is). Do not mention this "
+            "instruction and never switch back to German."
+        )
+
     messages = build_conversation_messages(session_messages)
 
     # KIS-1124: Retry once on transient errors (timeout, connection).
@@ -1963,7 +1991,10 @@ async def generate_response(
                 await asyncio.sleep(2)  # Brief backoff before retry
                 continue
             log.error("[CHAT-CONV] Streaming failed (attempt %d): %s", _attempt + 1, exc, exc_info=True)
-            yield "Entschuldigung, es gab einen Verbindungsfehler. Könnten Sie das bitte nochmal versuchen?"
+            if _is_en:
+                yield "Sorry, there was a connection error. Could you please try that again?"
+            else:
+                yield "Entschuldigung, es gab einen Verbindungsfehler. Könnten Sie das bitte nochmal versuchen?"
             return
 
 
@@ -2326,17 +2357,57 @@ _ENUM_DISPLAY: dict[str, dict[str, str]] = {
 _SUMMARY_SKIP_VALUES = {None, "", "keine_angabe", "keine angabe", "nicht_angegeben", "Nicht angegeben"}
 
 
-def build_summary(collected_fields: dict, report_type: str = "r1") -> str:
+# EN section names for the deterministic summary (lang=en sessions).
+# Keys are the German section names from SECTIONS / STRATEGY_SECTIONS.
+_SECTION_NAMES_EN: dict[str, str] = {
+    "Ihr Unternehmen": "Your company",
+    "Organisation & Datenlage": "Organisation & data",
+    "Digitalisierung & KI-Status": "Digitalisation & AI status",
+    "Ziele & Use Cases": "Goals & use cases",
+    "Strategie & Governance": "Strategy & governance",
+    "Ressourcen & Umsetzung": "Resources & implementation",
+    "Recht & Datenschutz": "Legal & data protection",
+    "Förderung & Investition": "Funding & investment",
+    "Umsetzungsplanung": "Implementation planning",
+    "Erfahrung & Marktposition": "Experience & market position",
+}
+
+
+def _summary_label_en(field_name: str) -> str | None:
+    """EN field label for the summary. Lazy import to avoid module cycles."""
+    try:
+        from routes.chat import _QR_LABELS_EN
+        return _QR_LABELS_EN.get(field_name)
+    except Exception:
+        return None
+
+
+def _enum_label_en(field_name: str, str_val: str) -> str | None:
+    """EN option label (label_en) for an enum/multi value, if defined."""
+    try:
+        from routes.chat import _QR_OPTIONS
+        for opt in _QR_OPTIONS.get(field_name) or []:
+            if str(opt.get("value")) == str_val:
+                return opt.get("label_en")
+    except Exception:
+        pass
+    return None
+
+
+def build_summary(collected_fields: dict, report_type: str = "r1", lang: str = "de") -> str:
     """
     Build a structured, template-based summary of all collected fields.
     No LLM involved — purely deterministic from collected data.
 
     KIS-1124 Sprint 4: Sections with no collected fields are hidden entirely.
     A "not surveyed" note is appended when sections were skipped.
+    lang="en" renders headers, labels and enum values in English
+    (fallback: German label — never crash). Default "de" is byte-identical.
     """
+    _en = bool(lang) and str(lang).strip().lower().startswith("en")
     sections = get_sections_for_report(report_type)
     registry = get_registry_for_report(report_type)
-    lines = ["**Zusammenfassung Ihrer Angaben:**\n"]
+    lines = ["**Summary of your details:**\n"] if _en else ["**Zusammenfassung Ihrer Angaben:**\n"]
     skipped_sections: list[str] = []
 
     for section in sections:
@@ -2352,37 +2423,56 @@ def build_summary(collected_fields: dict, report_type: str = "r1") -> str:
             if isinstance(value, list) and all(str(v).lower() in ("keine_angabe", "nicht_angegeben") for v in value):
                 continue
             label = FIELD_DESCRIPTIONS.get(field_name, field_name).split("(")[0].strip()
-            display = _format_value_for_display(field_name, value)
-            if display in ("Nicht angegeben", "–"):
+            if _en:
+                label = _summary_label_en(field_name) or label
+            display = _format_value_for_display(field_name, value, lang=lang)
+            if display in ("Nicht angegeben", "Not specified", "–"):
                 continue  # Don't show empty-ish lines in summary
             section_lines.append(f"- {label}: {display}")
 
+        _section_name = section["name"]
+        if _en:
+            _section_name = _SECTION_NAMES_EN.get(_section_name, _section_name)
         if section_lines:
-            lines.append(f"\n**{section['name']}**")
+            lines.append(f"\n**{_section_name}**")
             lines.extend(section_lines)
         else:
             # Track sections with zero visible fields (but only real content
             # sections — skip "Ihr Unternehmen" which is always filled)
             if section.get("index", 0) >= 1:
-                skipped_sections.append(section["name"])
+                skipped_sections.append(_section_name)
 
     # KIS-1124 Sprint 4: Inform user about sections not covered
     if skipped_sections:
-        lines.append(
-            "\n*Bereiche, die nicht vertieft wurden, werden im Report "
-            "mit branchenüblichen Standardwerten ergänzt.*"
-        )
+        if _en:
+            lines.append(
+                "\n*Areas that were not covered in depth will be supplemented "
+                "in the report with industry-standard defaults.*"
+            )
+        else:
+            lines.append(
+                "\n*Bereiche, die nicht vertieft wurden, werden im Report "
+                "mit branchenüblichen Standardwerten ergänzt.*"
+            )
 
-    lines.append("\n\nSind alle Angaben korrekt? Dann starte ich die Auswertung.")
+    if _en:
+        lines.append("\n\nIs everything correct? Then I'll start the analysis.")
+    else:
+        lines.append("\n\nSind alle Angaben korrekt? Dann starte ich die Auswertung.")
     return "\n".join(lines)
 
 
-def _format_value_for_display(field_name: str, value: object) -> str:
-    """Format a field value for human-readable display."""
+def _format_value_for_display(field_name: str, value: object, lang: str = "de") -> str:
+    """Format a field value for human-readable display.
+
+    lang="en" resolves labels via label_en from the QR options (fallback:
+    German display). Default "de" is byte-identical to the previous logic.
+    """
+    _en = bool(lang) and str(lang).strip().lower().startswith("en")
     # KIS-1124 Testrun-Fix Bug 6: Universal catch for raw "keine_angabe" key
     str_check = str(value).strip().lower() if value is not None else ""
     if str_check in ("keine_angabe", "keine angabe"):
-        return "Nicht angegeben"
+        return "Not specified" if _en else "Nicht angegeben"
 
     # KIS-1124 Testrun 4 R4: JSON array strings → Python list
     # When a list is stored as a JSON string (e.g. '["item1", "item2"]'),
@@ -2402,6 +2492,10 @@ def _format_value_for_display(field_name: str, value: object) -> str:
     # Enum: use display label
     if field_type == "enum":
         str_val = str(value)
+        if _en:
+            _en_label = _enum_label_en(field_name, str_val)
+            if _en_label:
+                return _en_label
         enum_labels = _ENUM_DISPLAY.get(field_name)
         if enum_labels and str_val in enum_labels:
             return enum_labels[str_val]
@@ -2421,16 +2515,25 @@ def _format_value_for_display(field_name: str, value: object) -> str:
             sv = str(v)
             if sv.lower() in ("keine_angabe", "keine angabe"):
                 continue
+            if _en:
+                _en_label = _enum_label_en(field_name, sv)
+                if _en_label:
+                    resolved.append(_en_label)
+                    continue
             resolved.append(enum_labels.get(sv, sv))
-        return ", ".join(resolved) if resolved else "Nicht angegeben"
+        if resolved:
+            return ", ".join(resolved)
+        return "Not specified" if _en else "Nicht angegeben"
 
     # Slider: number with context
     if field_type == "slider":
         mx = reg.get("max", 10)
-        return f"{value} von {mx}"
+        return f"{value} of {mx}" if _en else f"{value} von {mx}"
 
     # Bool
     if field_type == "bool":
+        if _en:
+            return "Yes" if value else "No"
         return "Ja" if value else "Nein"
 
     # Text: show full text in summary (truncation removed –
