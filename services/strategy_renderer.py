@@ -841,6 +841,20 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     except Exception:  # pragma: no cover
         pass
 
+    # KIS-EN3-NUMFMT: Der Strategy-Fließtext zeigte weiter DE-Zahlformate
+    # ("24.000 €", "28.500 €", EN-Testlauf 3 S. 3/18/19), während Kapitel 7
+    # bereits EN-Format hatte. Der konservative Normalizer aus dem
+    # html_sanitizer (Tausenderpunkt → Komma, Dezimalkomma → Punkt vor
+    # Einheiten; Datums-/URL-Schutz eingebaut) läuft als LETZTER Pass —
+    # nach _enforce_budget_values, das deutsche Formate reinjizieren kann.
+    # Nur lang=en, DE bleibt byte-identisch.
+    if _ctx_en:
+        try:
+            from services.html_sanitizer import normalize_en_number_formats as _en_numfmt
+            html = _en_numfmt(html)
+        except Exception:  # pragma: no cover
+            pass
+
     return html
 
 

@@ -693,6 +693,15 @@ def _transform_content_boxes(html: str) -> str:
         r'\1<span style="display:inline-block;background:#fef2f2;color:#b91c1c;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Low</span>',
         html,
     )
+    # KIS-EN3-BADGE: "Critical" als vierter EN-Ampel-Badge (rot) — die
+    # EN-Risikomatrix zeigte High/Medium als Badge, "Critical" aber nackt
+    # (EN-Testlauf 3). Nur Ganz-Zellen-Werte; Wertebereiche wie
+    # "Medium to high" bleiben bewusst Text.
+    html = re.sub(
+        r'(<td[^>]*>)\s*(?:<strong>)?(critical|Critical)(?:</strong>)?\s*(?=</td>)',
+        r'\1<span style="display:inline-block;background:#fef2f2;color:#b91c1c;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Critical</span>',
+        html,
+    )
 
     # 2F: "Quick Win" → blue inline badge
     # KIS-1232: nachfolgenden Doppelpunkt mitkonsumieren — "Quick Win:" wurde

@@ -7810,6 +7810,7 @@ def _regenerate_without_leaks(
     prompt_text: str,
     llm: Dict[str, Any],
     max_retries: int = 1,
+    lang: str = "de",
 ) -> str:
     """
     N4.6 Zero-Leak Policy: Regenerate content with strict anti-leak directive.
@@ -7819,11 +7820,29 @@ def _regenerate_without_leaks(
         prompt_text: Original prompt text
         llm: LLM parameters dict
         max_retries: Max regeneration attempts
+        lang: Report language ("de" default, byte-identical; "en" appends
+              an English directive so the regeneration keeps the EN report
+              language — KIS-1270)
 
     Returns:
         Regenerated content or empty string on failure
     """
-    strict_directive = """
+    _lang_en = str(lang or "de").strip().lower().startswith("en")
+    if _lang_en:
+        strict_directive = """
+
+STRICTLY FORBIDDEN - ASSISTANT LANGUAGE:
+You are writing a FINAL REPORT, NOT a conversation.
+NEVER use:
+- Questions to the reader
+- Offers to help
+- "If you like...", "If needed...", "If desired..."
+- "I can...", "I'd be happy to explain..."
+- Interactive calls to action
+Write the section in English.
+"""
+    else:
+        strict_directive = """
 
 STRIKT VERBOTEN - ASSISTENTEN-SPRACHE:
 Du schreibst einen FINALEN REPORT, KEIN Gespräch.
@@ -7844,7 +7863,7 @@ Verwende NIEMALS:
     result = _call_llm_for_section(
         section_key=section_name,
         prompt=enhanced_prompt,
-        system_prompt=build_report_system_prompt(),
+        system_prompt=build_report_system_prompt(lang="en" if _lang_en else "de"),
         temperature=max(0.0, llm["temperature"] - 0.1),  # Reduce temperature for stricter output
         max_tokens=llm["max_tokens"],
         model=llm["model"],
@@ -8466,7 +8485,8 @@ def _generate_hero_page(
     report_date: str,
     kpi_values: Dict[str, Any],
     reifegrad: str = "",
-    potential: int = 0
+    potential: int = 0,
+    lang: str = "de"
 ) -> str:
     """Generiert Hero-Seite 1 (CI-Design v2.0 Phase 3).
 
@@ -8499,33 +8519,54 @@ def _generate_hero_page(
     # Bei gesetztem net3y (von _generate_hero_page_from_context nur bei ROI <20%
     # befüllt) zeigt die mittlere Karte den 3-Jahres-Nettonutzen.
     net3y = kpi_values.get('net3y', '')
+    # KIS-1270: Hero-Seite lang-aware — S.1 zeigte im EN-Report deutsche
+    # KPI-Labels, Badges und Header (Lauf 1134, offener Punkt 5).
+    _hero_en = str(lang or "de").lower().startswith("en")
     if net3y:
-        roi_card = _generate_kpi_card(str(net3y), "Nettonutzen (3 Jahre)", "", "success")
+        roi_card = _generate_kpi_card(str(net3y), "Net benefit (3 years)" if _hero_en else "Nettonutzen (3 Jahre)", "", "success")
     else:
-        roi_card = _generate_kpi_card(str(roi) + "%", "ROI (12 Monate)", "", "success")
+        roi_card = _generate_kpi_card(str(roi) + "%", "ROI (12 months)" if _hero_en else "ROI (12 Monate)", "", "success")
 
-    kpi_cards = f'''
+    if _hero_en:
+        kpi_cards = f'''
+    {_generate_kpi_card(str(zeitersparnis), "Time savings", "per month", "highlight")}
+    {roi_card}
+    {_generate_kpi_card(str(payback) + " mo.", "Payback time", "", "")}
+    '''
+    else:
+        kpi_cards = f'''
     {_generate_kpi_card(str(zeitersparnis), "Zeitersparnis", "pro Monat", "highlight")}
     {roi_card}
     {_generate_kpi_card(str(payback) + " Mo.", "Payback-Zeit", "", "")}
     '''
 
     # Potential text
-    potential_text = f"Reifegrad: {html.escape(reifegrad)}" if reifegrad else ""
-    if potential > 0:
-        potential_text += f" · Potenzial: +{potential} Punkte"
+    if _hero_en:
+        potential_text = f"Maturity level: {html.escape(reifegrad)}" if reifegrad else ""
+        if potential > 0:
+            potential_text += f" · Potential: +{potential} points"
+    else:
+        potential_text = f"Reifegrad: {html.escape(reifegrad)}" if reifegrad else ""
+        if potential > 0:
+            potential_text += f" · Potenzial: +{potential} Punkte"
 
+    _hero_tag = "AI STATUS REPORT" if _hero_en else "KI-STATUS-REPORT"
+    _hero_h1 = "AI Readiness Report" if _hero_en else "KI-Readiness Report"
+    _hero_created = "Created by: TÜV-certified AI management" if _hero_en else "Erstellt von: TÜV-zertifiziertes KI-Management"
+    _hero_b1 = "EU AI Act compliant" if _hero_en else "EU AI Act konform"
+    _hero_b2 = "GDPR-oriented" if _hero_en else "DSGVO-orientiert"
+    _hero_b3 = "No legal advice" if _hero_en else "Keine Rechtsberatung"
     return f'''
     <div class="hero-page">
       <!-- Header -->
       <div class="hero-header">
-        <span class="hero-header__tag">KI-STATUS-REPORT · {html.escape(report_date)}</span>
+        <span class="hero-header__tag">{_hero_tag} · {html.escape(report_date)}</span>
         <span class="hero-header__id">Report-ID: {html.escape(report_id)}</span>
       </div>
 
       <!-- Titel -->
       <div class="hero-title">
-        <h1>KI-Readiness Report</h1>
+        <h1>{_hero_h1}</h1>
         <p class="hero-title__subtitle">{html.escape(hl_truncated)}</p>
         <p class="hero-title__meta">{html.escape(company)} · {html.escape(industry)} · {html.escape(size)}</p>
       </div>
@@ -8544,11 +8585,11 @@ def _generate_hero_page(
 
       <!-- Footer -->
       <div class="hero-footer">
-        <span>Erstellt von: TÜV-zertifiziertes KI-Management</span>
+        <span>{_hero_created}</span>
         <div class="hero-footer__badges">
-          <span class="badge">EU AI Act konform</span>
-          <span class="badge">DSGVO-orientiert</span>
-          <span class="badge">Keine Rechtsberatung</span>
+          <span class="badge">{_hero_b1}</span>
+          <span class="badge">{_hero_b2}</span>
+          <span class="badge">{_hero_b3}</span>
         </div>
       </div>
     </div>
@@ -8796,15 +8837,18 @@ def _generate_hero_page_from_context(
     from datetime import datetime
 
     # Score und Rating
+    # KIS-1270: Hero lang-aware (S.1 des EN-Reports war deutsch, Lauf 1134)
+    _hw_lang = str(briefing.get("lang") or sections.get("LANG") or "de").lower()
+    _hw_en = _hw_lang.startswith("en")
     score = scores.get("overall", 74)
     if score >= 80:
-        rating_text = "Exzellent"
+        rating_text = "Excellent" if _hw_en else "Exzellent"
     elif score >= 60:
-        rating_text = "Fortgeschritten"
+        rating_text = "Advanced" if _hw_en else "Fortgeschritten"
     elif score >= 40:
-        rating_text = "Basis-Readiness"
+        rating_text = "Basic readiness" if _hw_en else "Basis-Readiness"
     else:
-        rating_text = "Startphase"
+        rating_text = "Starting phase" if _hw_en else "Startphase"
 
     # Unternehmensdaten
     hauptleistung = sections.get("HAUPTLEISTUNG", "") or briefing.get("HAUPTLEISTUNG", "Kerngeschäft")
@@ -8820,7 +8864,9 @@ def _generate_hero_page_from_context(
     # FIX-R3-1: Format payback with German decimal (comma, 1 digit) before display
     _hero_payback_raw = briefing.get("PAYBACK_MONTHS", 4.4)
     try:
-        _hero_payback_fmt = f"{float(_hero_payback_raw):.1f}".replace(".", ",")
+        _hero_payback_fmt = f"{float(_hero_payback_raw):.1f}"
+        if not _hw_en:
+            _hero_payback_fmt = _hero_payback_fmt.replace(".", ",")
     except (ValueError, TypeError):
         _hero_payback_fmt = str(_hero_payback_raw)
     kpi_values = {
@@ -8849,19 +8895,20 @@ def _generate_hero_page_from_context(
             _n3_opex = float(str(briefing.get("OPEX_REALISTISCH_EUR", 0) or 0).replace(",", "."))
             _net3y = _n3_hours * _n3_rate * 36 - _n3_capex - _n3_opex * 36
             if _net3y > 0:
-                kpi_values['net3y'] = "+" + f"{int(_net3y):,}".replace(",", ".") + " €"
+                _n3_fmt = f"{int(_net3y):,}" if _hw_en else f"{int(_net3y):,}".replace(",", ".")
+                kpi_values['net3y'] = "+" + _n3_fmt + " €"
         except (ValueError, TypeError):
             pass
 
     # Reifegrad und Potenzial
     if score >= 70:
-        reifegrad = "Fortgeschrittene KI-Readiness"
+        reifegrad = "Advanced AI readiness" if _hw_en else "Fortgeschrittene KI-Readiness"
         potential = 15
     elif score >= 50:
-        reifegrad = "Solide Basis vorhanden"
+        reifegrad = "Solid foundation in place" if _hw_en else "Solide Basis vorhanden"
         potential = 25
     else:
-        reifegrad = "Hohes Entwicklungspotenzial"
+        reifegrad = "High development potential" if _hw_en else "Hohes Entwicklungspotenzial"
         potential = 40
 
     return _generate_hero_page(
@@ -8875,7 +8922,8 @@ def _generate_hero_page_from_context(
         report_date=report_date,
         kpi_values=kpi_values,
         reifegrad=reifegrad,
-        potential=potential
+        potential=potential,
+        lang=_hw_lang
     )
 
 
@@ -9070,6 +9118,88 @@ def _build_decision_confidence_html(sections: Dict[str, Any]) -> str:
     report_date = sections.get("report_date", datetime.now().strftime("%d.%m.%Y"))
     risk_level = sections.get("AI_ACT_RISK_LEVEL", "unbekannt")
     coverage_pct = sections.get("DATA_COVERAGE_PCT")
+
+    # KIS-1270: Der Block war hart deutsch — in EN-Reports entstanden
+    # Sanitizer-Mischformen ("Charakter der Recommendation", Rohwert
+    # "begrenzt" in EN-Sätzen). lang=en rendert eine echte EN-Fassung.
+    _dcl_lang_en = str(sections.get("LANG") or "de").strip().lower().startswith("en")
+
+    if _dcl_lang_en:
+        risk_display_map_en = {
+            "minimal": "minimal",
+            "limited": "limited",
+            "high-risk": "high",
+            "unbekannt": "unknown",
+        }
+        risk_display = risk_display_map_en.get(risk_level, risk_level)
+        stability_level = "high"
+        stability_color = "#16a34a"
+        if risk_level == "high-risk":
+            stability_level = "medium"
+            stability_color = "#ea580c"
+        coverage_line = ""
+        if coverage_pct is not None:
+            try:
+                coverage_val = int(coverage_pct)
+                coverage_line = f'<li>Data coverage: <strong>{coverage_val}%</strong> of relevant inputs analysed</li>'
+            except (ValueError, TypeError):
+                pass
+        if not coverage_line:
+            coverage_line = '<li>Data coverage: based on all information provided</li>'
+
+        return f'''
+<div class="confidence-card">
+    <div class="confidence-header">
+        <span class="confidence-icon">🎯</span>
+        <h3 class="confidence-title">Decision Confidence & Data Basis</h3>
+        <span class="confidence-date">As of: {html.escape(report_date)}</span>
+    </div>
+
+    <div class="confidence-grid">
+        <!-- Block 1: Data basis -->
+        <div class="confidence-block">
+            <h4>📊 Data basis</h4>
+            <ul class="confidence-list">
+                <li>Analysis based on your questionnaire answers and industry profile</li>
+                <li>Validated against current market data and best practices</li>
+                {coverage_line}
+            </ul>
+        </div>
+
+        <!-- Block 2: Stability of statements -->
+        <div class="confidence-block">
+            <h4>⚖️ Stability of statements</h4>
+            <ul class="confidence-list">
+                <li>Reliability: <strong style="color: {stability_color};">{stability_level}</strong></li>
+                <li>AI Act risk classification: <strong>{html.escape(risk_display)}</strong></li>
+                <li>Methodology: structured analysis with industry-specific benchmarks</li>
+            </ul>
+        </div>
+
+        <!-- Block 3: Assumptions & uncertainties -->
+        <div class="confidence-block">
+            <h4>⚠️ Assumptions & uncertainties</h4>
+            <ul class="confidence-list">
+                <li>Forecasts are based on current market conditions</li>
+                <li>ROI values are estimates based on typical implementations</li>
+                <li>Individual factors can influence outcomes</li>
+            </ul>
+        </div>
+
+        <!-- Block 4: Nature of the recommendation -->
+        <div class="confidence-block">
+            <h4>📋 Nature of the recommendation</h4>
+            <div class="confidence-checkbox">
+                <span class="checkbox-checked">☑</span>
+                <span>Realistic: recommendations are oriented towards practical feasibility</span>
+            </div>
+            <div class="confidence-note">
+                This report provides orientation – final decisions require company-specific review.
+            </div>
+        </div>
+    </div>
+</div>
+'''.strip()
 
     # Translate risk level to German display
     risk_display_map = {
@@ -12701,7 +12831,10 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                         detected_leaks[:200],  # Log first 3 for brevity
                     )
                     # Try regeneration with strict anti-leak directive
-                    regenerated = _regenerate_without_leaks(section_name, prompt_text, llm)
+                    regenerated = _regenerate_without_leaks(
+                        section_name, prompt_text, llm,
+                        lang=str(briefing.get("lang") or "de"),  # KIS-1270
+                    )
 
                     # FIX-511: Sanitize regenerated content too
                     regenerated, _ = _sanitize_healable_leaks(regenerated, section_name)
@@ -12789,7 +12922,29 @@ def _generate_content_section(section_name: str, briefing: Dict[str, Any], score
                     word_count,
                     min_words,
                 )
-                expand_prompt = f"""
+                # KIS-1270: Expand-Meta-Prompt lang-aware — der deutsche
+                # Zweit-Prompt schrieb zu kurze EN-Sektionen deutsch neu.
+                _n46_lang_en = str(briefing.get("lang") or "de").strip().lower().startswith("en")
+                if _n46_lang_en:
+                    expand_prompt = f"""
+The following content is too short and must be expanded.
+Target word count: at least {min_words} words (currently: {word_count}).
+
+EXPANSION RULES:
+- Keep ALL existing information, facts, figures and structure
+- Add MORE details, examples and explanations
+- Deepen every point with concrete actions
+- Use the same HTML structure
+- NO assistant language, NO questions to the reader
+- Write in English
+
+Existing content to expand:
+{result}
+
+Output the expanded HTML content (at least {min_words} words):
+"""
+                else:
+                    expand_prompt = f"""
 Der folgende Inhalt ist zu kurz und muss erweitert werden.
 Ziel-Wortanzahl: mindestens {min_words} Wörter (aktuell: {word_count}).
 
@@ -12808,7 +12963,9 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {min_words} Wörter):
                 expanded = _call_llm_for_section(
                     section_key=f"{section_name}_expand",
                     prompt=expand_prompt,
-                    system_prompt=build_report_system_prompt(mode="expand"),
+                    system_prompt=build_report_system_prompt(
+                        mode="expand", lang="en" if _n46_lang_en else "de"
+                    ),
                     temperature=llm["temperature"],
                     max_tokens=llm["max_tokens"] + 500,  # Allow more tokens for expansion
                     model=llm["model"],
@@ -13517,6 +13674,7 @@ def _expand_short_section(
     current_html: str,
     target_words: int,
     current_words: int,
+    lang: str = "de",
 ) -> Optional[str]:
     """
     FIX-629: Expand a section that is slightly below its minimum word count.
@@ -13542,7 +13700,31 @@ def _expand_short_section(
         section_key, current_words, target_words, words_needed,
     )
 
-    expand_prompt = f"""Du bist ein professioneller Report-Generator.
+    # KIS-1270: Der Expand-Meta-Prompt war hart deutsch — jede Sektion, die
+    # in einem EN-Report zu kurz geriet, wurde dadurch deutsch neu
+    # geschrieben (Sektions-Flipping zwischen Läufen). lang="de" bleibt
+    # byte-identisch zum bisherigen Verhalten.
+    _lang_en = str(lang or "de").strip().lower().startswith("en")
+    if _lang_en:
+        expand_prompt = f"""You are a professional report generator.
+
+The following HTML section is {current_words} words long but must contain at least {target_words} words.
+
+TASK: Expand the existing text by roughly {words_needed} additional words.
+- Keep ALL existing facts and figures unchanged.
+- Add substantive, context-relevant details (no filler words).
+- Keep the existing HTML structure and style.
+- Do not add new headings (h1, h2, h3).
+- No chat phrases, no questions, no meta commentary.
+- Neutral report language only. Write in English.
+- Output ONLY the expanded HTML fragment.
+
+EXISTING CONTENT:
+{current_html}
+
+EXPANDED CONTENT:"""
+    else:
+        expand_prompt = f"""Du bist ein professioneller Report-Generator.
 
 Der folgende HTML-Abschnitt ist {current_words} Wörter lang, muss aber mindestens {target_words} Wörter umfassen.
 
@@ -13563,7 +13745,9 @@ ERWEITERTER INHALT:"""
         response = _call_llm_for_section(
             section_key=section_key,
             prompt=expand_prompt,
-            system_prompt=build_report_system_prompt(mode="expand"),
+            system_prompt=build_report_system_prompt(
+                mode="expand", lang="en" if _lang_en else "de"
+            ),
             temperature=0.4,
             max_tokens=4000,
         )
@@ -14555,7 +14739,24 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                 try:
                     # Load base prompt and add extension instruction
                     _r12m_base_prompt = load_prompt("roadmap_12m", lang=_r12m_lang, vars_dict=_r12m_vars)
-                    _r12m_extend_instruction = f"""
+                    # KIS-1270: Extend-Instruction lang-aware — der deutsche
+                    # Zusatz kippte die EN-roadmap_12m im Regen-Pfad.
+                    if str(_r12m_lang or "de").strip().lower().startswith("en"):
+                        _r12m_extend_instruction = f"""
+
+IMPORTANT - MINIMUM LENGTH NOT REACHED:
+The previous output had only {_r12m_word_count} words; the minimum is {_roadmap_12m_min_words} words.
+
+EXPANSION REQUIREMENTS:
+- Expand to {_roadmap_12m_min_words}–{_roadmap_12m_min_words + 300} words
+- At least 10–12 bullet points in total
+- Cluster by months (0–3, 3–6, 6–12)
+- Output HTML only, no questions, no explanations
+- NO code fences (```)
+- Write in English
+"""
+                    else:
+                        _r12m_extend_instruction = f"""
 
 WICHTIG - MINDESTLÄNGE NICHT ERREICHT:
 Der vorherige Output hatte nur {_r12m_word_count} Wörter, Minimum sind {_roadmap_12m_min_words} Wörter.
@@ -16099,8 +16300,17 @@ def analyze_briefing(
                     log.info("[%s] 🔄 Regenerating %s (attempt %d/2)...", run_id, section_key, attempt + 1)
                     try:
                         # Build strict prompt that forbids problematic phrases
+                        # KIS-1270: lang-aware — der deutsche Suffix kippte
+                        # EN-Sektionen im C1-Regen-Pfad ins Deutsche.
                         forbidden_phrases = ", ".join([f'"{p}"' for p in EXECUTIVE_CRITICAL_PHRASES[:10]])
-                        strict_suffix = f"""
+                        if str(answers.get("lang") or "de").strip().lower().startswith("en"):
+                            strict_suffix = f"""
+
+IMPORTANT: You are a report generator, NOT a chat assistant.
+The following phrases are FORBIDDEN: {forbidden_phrases}
+Output ONLY the requested HTML fragment - no questions, no offers to help, no meta commentary. Write in English."""
+                        else:
+                            strict_suffix = f"""
 
 WICHTIG: Du bist ein Report-Generator, KEIN Chat-Assistent.
 VERBOTEN sind folgende Phrasen: {forbidden_phrases}
@@ -16659,21 +16869,40 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     sections["BUILD_ID"] = f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M')}"
 
     # v7.1.1: Static section transition texts (plain text, no HTML)
-    sections["TRANSITION_EXEC_TO_ACTION"] = (
-        "Die vorherigen Seiten haben Ihre Ausgangslage definiert \u2013 "
-        "Score, Reifegrad und strategische Leitplanken. "
-        "Ab hier wird es konkret: Ma\u00dfnahmen, Zeitpl\u00e4ne, Budget."
-    )
-    sections["TRANSITION_QUICKWINS_TO_ROADMAP"] = (
-        "Die Quick Wins liefern schnelle Erfolge innerhalb von Tagen. "
-        "F\u00fcr nachhaltige Wirkung braucht es einen strukturierten Plan \u2013 "
-        "Ihr 90-Tage-Fahrplan folgt auf der n\u00e4chsten Seite."
-    )
-    sections["TRANSITION_RISK_TO_FUNDING"] = (
-        "Die Risiko-Analyse zeigt, wo Handlungsbedarf besteht. "
-        "Die gute Nachricht: F\u00fcr viele dieser Ma\u00dfnahmen gibt es "
-        "F\u00f6rderprogramme, die Ihre Investition deutlich reduzieren."
-    )
+    # KIS-1270: lang-aware \u2014 die deutschen \u00dcberleitungen leakten in
+    # EN-Reports als Sanitizer-Mischformen ("Die Risk-Analysis zeigt\u2026").
+    if str(answers.get("lang") or "de").strip().lower().startswith("en"):
+        sections["TRANSITION_EXEC_TO_ACTION"] = (
+            "The previous pages defined your starting position \u2013 "
+            "score, maturity level and strategic guardrails. "
+            "From here on it gets concrete: actions, timelines, budget."
+        )
+        sections["TRANSITION_QUICKWINS_TO_ROADMAP"] = (
+            "The quick wins deliver fast results within days. "
+            "Lasting impact requires a structured plan \u2013 "
+            "your 90-day roadmap follows on the next page."
+        )
+        sections["TRANSITION_RISK_TO_FUNDING"] = (
+            "The risk analysis shows where action is needed. "
+            "The good news: many of these measures qualify for "
+            "funding programmes that significantly reduce your investment."
+        )
+    else:
+        sections["TRANSITION_EXEC_TO_ACTION"] = (
+            "Die vorherigen Seiten haben Ihre Ausgangslage definiert \u2013 "
+            "Score, Reifegrad und strategische Leitplanken. "
+            "Ab hier wird es konkret: Ma\u00dfnahmen, Zeitpl\u00e4ne, Budget."
+        )
+        sections["TRANSITION_QUICKWINS_TO_ROADMAP"] = (
+            "Die Quick Wins liefern schnelle Erfolge innerhalb von Tagen. "
+            "F\u00fcr nachhaltige Wirkung braucht es einen strukturierten Plan \u2013 "
+            "Ihr 90-Tage-Fahrplan folgt auf der n\u00e4chsten Seite."
+        )
+        sections["TRANSITION_RISK_TO_FUNDING"] = (
+            "Die Risiko-Analyse zeigt, wo Handlungsbedarf besteht. "
+            "Die gute Nachricht: F\u00fcr viele dieser Ma\u00dfnahmen gibt es "
+            "F\u00f6rderprogramme, die Ihre Investition deutlich reduzieren."
+        )
 
     # Problem #7 FIX: Personalized report subtitle from hauptleistung
     hauptleistung = answers.get("hauptleistung", "").strip()
@@ -16909,7 +17138,16 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         sections["RISK_CONSOLIDATED_SCORE"] = risk_report.consolidated_score
         sections["RISK_CONSOLIDATED_GRADE"] = risk_report.consolidated_grade
         sections["RISK_AI_ACT_CLASS"] = risk_report.ai_act_class
-        sections["RISK_DSGVO_LEVEL"] = risk_report.dsgvo_risk_level
+        # KIS-1270: DSGVO-Level ist ein deutscher Rohwert ("niedrig"/"mittel"/
+        # "hoch") — im EN-Report erschien das Badge als "Niedrig". Bei lang=en
+        # auf Low/Medium/High mappen (DE unverändert).
+        if str(report_lang or "de").lower().startswith("en"):
+            sections["RISK_DSGVO_LEVEL"] = {
+                "niedrig": "Low", "mittel": "Medium", "hoch": "High",
+            }.get(str(risk_report.dsgvo_risk_level or "").strip().lower(),
+                  risk_report.dsgvo_risk_level)
+        else:
+            sections["RISK_DSGVO_LEVEL"] = risk_report.dsgvo_risk_level
         sections["RISK_VENDOR_SCORE"] = risk_report.vendor_risk_score
 
         log.info("[%s] ✅ G29 Risk Engine 2.0 generated: score=%.1f, grade=%s, ai_act=%s",
@@ -17762,6 +18000,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     current_html=_html_content,
                     target_words=_min_words + 20,
                     current_words=_word_count,
+                    lang=str(answers.get("lang") or "de"),  # KIS-1270
                 )
                 if _expanded:
                     sections[_html_key] = _expanded
@@ -18065,6 +18304,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     current_html=_sec_html,
                     target_words=_min_words + 50,  # +50 buffer for safety
                     current_words=_sec_words,
+                    lang=str(answers.get("lang") or "de"),  # KIS-1270 (RESCUE-640)
                 )
                 
                 # FIX-700: Check if expansion was successful AND sufficient
@@ -19451,16 +19691,24 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             _c1_hours = _canon_h_display  # already computed above for FIX-R5-7
             _c1_payback = sections.get('PAYBACK_MONTHS_FMT_DE', '')
 
+            # KIS-1270: KPI-Kacheln lang-aware — bisher deterministisch
+            # deutsch ("nach 12 Monaten", "Std./Monat"), der EN-Sanitizer
+            # erzeugte daraus Mischformen ("11,9 Months", "25 Std./Month").
+            _c1_lang_en = str(sections.get('LANG') or 'de').strip().lower().startswith('en')
+
             # Clean ROI value to integer string
             try:
                 _c1_roi_int = str(int(float(str(_c1_roi).replace(',', '.').replace('%', '').strip())))
             except (ValueError, TypeError):
                 _c1_roi_int = ''
 
-            # Clean payback to German format (e.g. "1,6")
+            # Clean payback: German decimal comma (DE) / dot (EN)
             try:
                 _c1_pb_val = float(str(_c1_payback).replace(',', '.'))
-                _c1_pb_fmt = f"{_c1_pb_val:.1f}".replace('.', ',')
+                if _c1_lang_en:
+                    _c1_pb_fmt = f"{_c1_pb_val:.1f}"
+                else:
+                    _c1_pb_fmt = f"{_c1_pb_val:.1f}".replace('.', ',')
             except (ValueError, TypeError):
                 _c1_pb_fmt = str(_c1_payback)
 
@@ -19480,9 +19728,9 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 if 'roi' in label_text and _c1_roi_int:
                     new_val = f'{_c1_roi_int}%'
                 elif 'payback' in label_text and _c1_pb_fmt:
-                    new_val = f'{_c1_pb_fmt} Monate'
-                elif ('zeit' in label_text or 'stunden' in label_text or 'hours' in label_text or 'ersparnis' in label_text) and _c1_hours:
-                    new_val = f'{_c1_hours} Stunden/Monat'
+                    new_val = f'{_c1_pb_fmt} months' if _c1_lang_en else f'{_c1_pb_fmt} Monate'
+                elif ('zeit' in label_text or 'stunden' in label_text or 'hours' in label_text or 'ersparnis' in label_text or 'saving' in label_text) and _c1_hours:
+                    new_val = f'{_c1_hours} hours/month' if _c1_lang_en else f'{_c1_hours} Stunden/Monat'
                 else:
                     return m.group(0)
                 return prefix + new_val + suffix
@@ -19511,7 +19759,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             # ohne jede kpi-Klasse ("<p>ROI8 %nach 12 Monaten</p>") — der
             # 'kpi-label'-Trigger griff nicht, der Fließtext blieb stehen.
             _kpi_plainline = _re_c1.compile(
-                r'<(?:p|div)[^>]*>\s*(?:ROI|Break-Even|Zeitersparnis)[\d][^<]{0,90}</(?:p|div)>'
+                r'<(?:p|div)[^>]*>\s*(?:ROI|Break-Even|Zeitersparnis|Time\s+savings?)[\d][^<]{0,90}</(?:p|div)>'
             )
             if (_ki_stack_wrap
                     and ('kpi-label' in _ki_stack_wrap or _kpi_plainline.search(_ki_stack_wrap))
@@ -19522,21 +19770,37 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     r'<span[^>]*class=["\']kpi-value["\'][^>]*>[^<]*</span>\s*'
                     r'(?:<span[^>]*class=["\']kpi-sub["\'][^>]*>[^<]*</span>)?'
                     # KIS-1244: nackte Kennzahlen-Textzeilen ebenfalls ersetzen
-                    r'|<(?:p|div)[^>]*>\s*(?:ROI|Break-Even|Zeitersparnis)[\d][^<]{0,90}</(?:p|div)>'
+                    r'|<(?:p|div)[^>]*>\s*(?:ROI|Break-Even|Zeitersparnis|Time\s+savings?)[\d][^<]{0,90}</(?:p|div)>'
                 )
-                _canonical_block = (
-                    '<div class="kpi-triple">'
-                    f'<div class="kpi"><span class="kpi-label">ROI</span>'
-                    f'<span class="kpi-value">{_c1_roi_int}%</span>'
-                    f'<span class="kpi-sub">nach 12 Monaten</span></div>'
-                    f'<div class="kpi"><span class="kpi-label">Break-Even</span>'
-                    f'<span class="kpi-value">{_c1_pb_fmt} Monate</span>'
-                    f'<span class="kpi-sub">Amortisation der Einführungskosten</span></div>'
-                    f'<div class="kpi"><span class="kpi-label">Zeitersparnis</span>'
-                    f'<span class="kpi-value">{_c1_hours} Std./Monat</span>'
-                    f'<span class="kpi-sub">kanonischer Business Case</span></div>'
-                    '</div>'
-                )
+                if _c1_lang_en:
+                    # KIS-1270: kanonischer EN-Block (Werte aus derselben Kanonik)
+                    _canonical_block = (
+                        '<div class="kpi-triple">'
+                        f'<div class="kpi"><span class="kpi-label">ROI</span>'
+                        f'<span class="kpi-value">{_c1_roi_int}%</span>'
+                        f'<span class="kpi-sub">after 12 months</span></div>'
+                        f'<div class="kpi"><span class="kpi-label">Break-even</span>'
+                        f'<span class="kpi-value">{_c1_pb_fmt} months</span>'
+                        f'<span class="kpi-sub">payback of implementation costs</span></div>'
+                        f'<div class="kpi"><span class="kpi-label">Time savings</span>'
+                        f'<span class="kpi-value">{_c1_hours} hrs/month</span>'
+                        f'<span class="kpi-sub">canonical business case</span></div>'
+                        '</div>'
+                    )
+                else:
+                    _canonical_block = (
+                        '<div class="kpi-triple">'
+                        f'<div class="kpi"><span class="kpi-label">ROI</span>'
+                        f'<span class="kpi-value">{_c1_roi_int}%</span>'
+                        f'<span class="kpi-sub">nach 12 Monaten</span></div>'
+                        f'<div class="kpi"><span class="kpi-label">Break-Even</span>'
+                        f'<span class="kpi-value">{_c1_pb_fmt} Monate</span>'
+                        f'<span class="kpi-sub">Amortisation der Einführungskosten</span></div>'
+                        f'<div class="kpi"><span class="kpi-label">Zeitersparnis</span>'
+                        f'<span class="kpi-value">{_c1_hours} Std./Monat</span>'
+                        f'<span class="kpi-sub">kanonischer Business Case</span></div>'
+                        '</div>'
+                    )
                 _kpi_seen = [0]
 
                 def _kpi_rebuild(_m):
@@ -19727,7 +19991,28 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     return f"{int(n):,}".replace(",", ".")
                 if _re_net3 > 0:
                     _re_roi_disp = str(int(round(_re_roi)))
-                    _re_box = (
+                    # KIS-1270: EN-Fassung der Einordnungs-Box (S.13) \u2014 vorher
+                    # landete der deutsche Text im EN-Report.
+                    if str(sections.get('LANG') or answers.get('lang') or 'de').strip().lower().startswith('en'):
+                        def _re_fmt_en(n):
+                            return f"{int(n):,}"
+                        _re_box = (
+                            '<div class="hinweis-box roi-einordnung" style="margin-top:14px;'
+                            'padding:12px 16px;background:#f0fdf4;border-left:4px solid #22c55e;'
+                            'border-radius:6px;">'
+                            '<strong>ROI context:</strong> '
+                            f'The stated first-year ROI of {_re_roi_disp}\u00a0% is deliberately '
+                            'conservative: the entire initial investment of '
+                            f'{_re_fmt_en(_re_capex)}\u00a0\u20ac is charged fully against year one. '
+                            'From year\u00a02 it no longer applies \u2014 with the same time savings, the '
+                            f'cumulative net benefit over 3\u00a0years is approx. {_re_fmt_en(_re_net3)}\u00a0\u20ac '
+                            f'(approx. {_re_roi3}\u00a0% on the initial investment). The programmes listed '
+                            'in the funding chapter further reduce the effective initial investment '
+                            'and shorten the payback period accordingly.'
+                            '</div>'
+                        )
+                    else:
+                        _re_box = (
                         '<div class="hinweis-box roi-einordnung" style="margin-top:14px;'
                         'padding:12px 16px;background:#f0fdf4;border-left:4px solid #22c55e;'
                         'border-radius:6px;">'
@@ -19743,7 +20028,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                         '</div>'
                     )
                     _re_sec = sections.get('BUSINESS_CASE_HTML') or ''
-                    if _re_sec and 'ROI-Einordnung' not in _re_sec:
+                    if _re_sec and 'ROI-Einordnung' not in _re_sec and 'roi-einordnung' not in _re_sec:
                         sections['BUSINESS_CASE_HTML'] = _re_sec + _re_box
                         sections['business_case'] = sections['BUSINESS_CASE_HTML']
                         log.info('[KIS-1251][ROI-EINORDNUNG] ROI %.1f%% < 10%% \u2014 3-Jahres-Einordnung injiziert (Netto3=%s)', _re_roi, int(_re_net3))
@@ -19753,7 +20038,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                     # BUSINESS_CASE_HTML, im gerenderten PDF fehlte sie. Gleiches
                     # Doppel-Injektions-Muster wie beim Budget-Gate (FIX-C-geschuetzt).
                     _re_eng = sections.get('BUSINESS_CASE_ENGINE_HTML') or ''
-                    if _re_eng and 'ROI-Einordnung' not in _re_eng:
+                    if _re_eng and 'ROI-Einordnung' not in _re_eng and 'roi-einordnung' not in _re_eng:
                         sections['BUSINESS_CASE_ENGINE_HTML'] = _re_eng + _re_box
                         log.info('[KIS-1264][ROI-BOX-ENGINE] ROI-Einordnung auch in BUSINESS_CASE_ENGINE_HTML injiziert')
         except Exception as _re_exc:  # pragma: no cover
@@ -20246,7 +20531,12 @@ Digitalisierungs- und KI-Vorhaben relevant sein
     try:
         from services.extra_sections import build_core_funding_table_html
         import re as _re_kis1104
-        _core_html = build_core_funding_table_html(sections)
+        # KIS-1270 (Audit Lauf 3, Punkt 14): Dieser Re-Injektions-Pfad lief
+        # OHNE lang und überschrieb die EN-Fördertabelle (funding_service_en)
+        # mit der deutschen Kern-Matrix ("PROGRAMM/FÖRDER-QUOTE/KI-RELEVANZ").
+        _kis1104_lang = str(sections.get("LANG") or answers.get("lang") or "de").strip().lower()
+        _kis1104_en = _kis1104_lang.startswith("en")
+        _core_html = build_core_funding_table_html(sections, lang=_kis1104_lang)
         if _core_html and '<table' in _core_html.lower():
             # --- FOERDERPOTENZIAL_HTML (rendered by PDF template) ---
             _fp_html = sections.get("FOERDERPOTENZIAL_HTML", "") or ""
@@ -20260,7 +20550,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             # erzeugte die doppelte "Kernprogramme…"-Überschrift direkt nach
             # der Tabelle (Status-Report S. 22, Läufe 1232 + 1233).
             _fp_prose = _re_kis1104.sub(
-                r'<div class="card-nobreak">\s*<p class="small muted"[^>]*>\s*<strong>Hinweis:</strong>.*?</p>\s*</div>',
+                r'<div class="card-nobreak">\s*<p class="small muted"[^>]*>\s*<strong>(?:Hinweis|Note):</strong>.*?</p>\s*</div>',
                 '', _fp_prose, flags=_re_kis1104.DOTALL,
             )
             _fp_prose = _re_kis1104.sub(
@@ -20273,7 +20563,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             # Duplikat-Überschrift als Nicht-h3-Variante ("fp_prose head:
             # Kernprogramme für Ihr Profil …") und erschien doppelt im PDF.
             _fp_prose = _re_kis1104.sub(
-                r'<h[234][^>]*>(?:(?!</h[234]>).)*?(?:Kernprogramme|Förder(?:programm|mittel)|Programmüberblick)(?:(?!</h[234]>).)*?</h[234]>\s*',
+                r'<h[234][^>]*>(?:(?!</h[234]>).)*?(?:Kernprogramme|Förder(?:programm|mittel)|Programmüberblick|Core programmes|Funding programm?es?)(?:(?!</h[234]>).)*?</h[234]>\s*',
                 '', _fp_prose, flags=_re_kis1104.IGNORECASE | _re_kis1104.DOTALL,
             )
             # Auch <p><strong>-Pseudo-Überschriften und nackten Text am
@@ -20300,7 +20590,8 @@ Digitalisierungs- und KI-Vorhaben relevant sein
                 "[FIX-KIS-1104][DIAG] fp_prose head: %.160s",
                 _re_kis1104.sub(r'<[^>]+>', ' ', _fp_prose[:400]).strip(),
             )
-            _heading = '<h3>Kernprogramme für Ihr Profil</h3>\n'
+            _heading = ('<h3>Core programmes for your profile</h3>\n'
+                        if _kis1104_en else '<h3>Kernprogramme für Ihr Profil</h3>\n')
             if _fp_prose:
                 sections["FOERDERPOTENZIAL_HTML"] = (
                     f"{_heading}{_core_html}\n\n{_fp_prose}"
@@ -20330,7 +20621,7 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             )
             # --- FOERDERPROGRAMME_HTML + FUNDING_HTML ---
             sections["FOERDERPROGRAMME_HTML"] = (
-                f"<h3>Kernprogramme für Ihr Profil</h3>\n"
+                f"{_heading}"
                 f"{_core_html}"
             )
             sections["FUNDING_HTML"] = sections["FOERDERPROGRAMME_HTML"]
@@ -20801,7 +21092,35 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         """
         branche = context.get("BRANCHE_LABEL", briefing.get("branche", "Ihrem Unternehmen"))
 
-        ROADMAP_90D_STRICT_PROMPT = f"""Erstellen Sie eine 90-Tage-Roadmap für KI-Einführung in {branche}.
+        # KIS-1270: lang-aware — der deutsche Strict-Prompt schrieb die
+        # EN-Roadmap im Regen-Pfad deutsch neu.
+        _r90_lang_en = str(briefing.get("lang") or "de").strip().lower().startswith("en")
+        if _r90_lang_en:
+            ROADMAP_90D_STRICT_PROMPT = f"""Create a 90-day roadmap for AI adoption in {branche}.
+
+STRICT RULES (mandatory):
+- Exactly 6 bullet points in one <ul> list
+- Each bullet: 1 concrete, actionable measure
+- Minimum length: 300 characters in total
+- Language: English, suitable for a solo entrepreneur
+- FORBIDDEN: questions, chat phrases, "In this section...", the words Rollout, Skalierung, Modul, Stack
+
+FORMAT (exact):
+<div class="roadmap-90d">
+<h3>Your 90-Day AI Roadmap</h3>
+<ul>
+<li><strong>Weeks 1-2:</strong> [Concrete measure]</li>
+<li><strong>Weeks 3-4:</strong> [Concrete measure]</li>
+<li><strong>Weeks 5-6:</strong> [Concrete measure]</li>
+<li><strong>Weeks 7-8:</strong> [Concrete measure]</li>
+<li><strong>Weeks 9-10:</strong> [Concrete measure]</li>
+<li><strong>Weeks 11-12:</strong> [Concrete measure]</li>
+</ul>
+</div>
+
+Output HTML ONLY. No explanations, no markdown fences."""
+        else:
+            ROADMAP_90D_STRICT_PROMPT = f"""Erstellen Sie eine 90-Tage-Roadmap für KI-Einführung in {branche}.
 
 STRENGE REGELN (Pflicht):
 - Genau 6 Bulletpoints in einer <ul>-Liste
@@ -20903,6 +21222,21 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         log.error(f"[FIX-499-ROADMAP-REGEN] ❌ All {max_attempts} attempts failed")
         # FIX-B6: Hardcoded quality fallback instead of empty placeholder
         branche = context.get("BRANCHE_LABEL", "Ihrem Unternehmen")
+        # KIS-1270: EN-Fallback, damit der Notfall-Baustein die Sprache hält.
+        if _r90_lang_en:
+            _fallback_html_en = f"""<div class="roadmap-90d">
+<h3>Your 90-Day AI Roadmap</h3>
+<ul>
+<li><strong>Weeks 1–2:</strong> Take stock of your recurring tasks and processes – identify the three most time-consuming activities in {branche}.</li>
+<li><strong>Weeks 3–4:</strong> Research and test AI tools for your most important use case. Start with a free trial (e.g. ChatGPT, Microsoft Copilot).</li>
+<li><strong>Weeks 5–6:</strong> Start a pilot project: use the selected tool for one concrete task and document the time saved.</li>
+<li><strong>Weeks 7–8:</strong> Evaluate results and plan workflow integration. Define clear rules for AI use in your daily work.</li>
+<li><strong>Weeks 9–10:</strong> Identify a second use case and implement it using the lessons from the pilot project.</li>
+<li><strong>Weeks 11–12:</strong> Measure impact: compare time spent before and after and plan next steps for quarter 2.</li>
+</ul>
+</div>"""
+            log.info("[FIX-B6] Using EN quality fallback template for ROADMAP_90D_DECISION_HTML")
+            return _fallback_html_en
         _fallback_html = f"""<div class="roadmap-90d">
 <h3>Ihre 90-Tage KI-Roadmap</h3>
 <ul>
@@ -20932,7 +21266,44 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         """
         branche = context.get("BRANCHE_LABEL", briefing.get("branche", "Ihrem Unternehmen"))
 
-        KI_STACK_STRICT_PROMPT = f"""Erstellen Sie eine KI-Stack-Empfehlung für {branche}.
+        # KIS-1270: lang-aware Strict-Regen (siehe Roadmap-90d oben).
+        _ks_lang_en = str(briefing.get("lang") or "de").strip().lower().startswith("en")
+        if _ks_lang_en:
+            KI_STACK_STRICT_PROMPT = f"""Create an AI stack recommendation for {branche}.
+
+STRICT RULES (mandatory):
+- At least 6 concrete tool recommendations as bullet points
+- Each bullet: tool category + concrete use case
+- Minimum length: 600 characters in total
+- Language: English, suitable for a solo entrepreneur
+- FORBIDDEN: questions, chat phrases, "Here is...", code blocks, markdown
+
+GDPR CAVEAT (MANDATORY — FIX-KIS-1027.4.1-H3):
+EVERY mention of a US cloud LLM/SaaS provider
+(ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Notion AI, Gemini/Google,
+GitHub Copilot etc.) MUST be immediately followed by the suffix
+"(GDPR caveat — see vendor review)".
+EU providers (Mistral, Aleph Alpha, IONOS, DeepL) get NO suffix.
+Microsoft Copilot (EU Data Boundary) gets NO suffix, but
+Microsoft Copilot Pro / 365 Copilot without EU addendum does.
+
+FORMAT (exact):
+<div class="ki-stack-summary">
+<h3>Recommended AI Stack – Overview</h3>
+<ul>
+<li><strong>Text processing:</strong> [Concrete recommendation, US tools with (GDPR caveat — see vendor review)]</li>
+<li><strong>Document analysis:</strong> [Concrete recommendation]</li>
+<li><strong>Process automation:</strong> [Concrete recommendation]</li>
+<li><strong>Data visualization:</strong> [Concrete recommendation]</li>
+<li><strong>Quality assurance:</strong> [Concrete recommendation]</li>
+<li><strong>Knowledge management:</strong> [Concrete recommendation]</li>
+</ul>
+<p><em>Closing recommendation on tool selection.</em></p>
+</div>
+
+Output HTML ONLY. No explanations, no markdown fences."""
+        else:
+            KI_STACK_STRICT_PROMPT = f"""Erstellen Sie eine KI-Stack-Empfehlung für {branche}.
 
 STRENGE REGELN (Pflicht):
 - Mindestens 6 konkrete Tool-Empfehlungen als Bulletpoints
@@ -21234,7 +21605,35 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         """
         branche = context.get("BRANCHE_LABEL", briefing.get("branche", "Ihrem Unternehmen"))
 
-        GAMECHANGER_STRICT_PROMPT = f"""Erstellen Sie strategische KI-Optionen (Gamechanger-Potenziale) für {branche}.
+        # KIS-1270: lang-aware Strict-Regen (siehe Roadmap-90d oben).
+        _gc_lang_en = str(briefing.get("lang") or "de").strip().lower().startswith("en")
+        if _gc_lang_en:
+            GAMECHANGER_STRICT_PROMPT = f"""Create strategic AI options (game-changer potentials) for {branche}.
+
+STRICT RULES (mandatory):
+- At least 6 strategic options as bullet points
+- Each bullet: strategy name + concrete benefit
+- Minimum length: 600 characters in total
+- Language: English, suitable for a solo entrepreneur
+- FORBIDDEN: questions, chat phrases, "Here is...", code blocks, markdown
+
+FORMAT (exact):
+<div class="gamechanger-decision">
+<h3>Strategic AI Options – Game-Changer Potentials</h3>
+<ul>
+<li><strong>Automated customer interaction:</strong> [Concrete benefit for {branche}]</li>
+<li><strong>Predictive analytics:</strong> [Concrete benefit]</li>
+<li><strong>Content automation:</strong> [Concrete benefit]</li>
+<li><strong>Process optimization:</strong> [Concrete benefit]</li>
+<li><strong>Competitive analysis:</strong> [Concrete benefit]</li>
+<li><strong>Personalization:</strong> [Concrete benefit]</li>
+</ul>
+<p><em>Closing recommendation on strategic differentiation potential.</em></p>
+</div>
+
+Output HTML ONLY. No explanations, no markdown fences."""
+        else:
+            GAMECHANGER_STRICT_PROMPT = f"""Erstellen Sie strategische KI-Optionen (Gamechanger-Potenziale) für {branche}.
 
 STRENGE REGELN (Pflicht):
 - Mindestens 6 strategische Optionen als Bulletpoints

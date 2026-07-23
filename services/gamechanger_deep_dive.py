@@ -37,7 +37,10 @@ log = logging.getLogger(__name__)
 # Wir strippen den führenden LLM-emittierten Block; die statische Template-
 # Box bleibt als visueller Anker erhalten.
 _LEADING_GLANCE_BOX_RE = re.compile(
-    r'^\s*<p>\s*<strong>\s*Auf\s+einen\s+Blick:?\s*</strong>\s*.*?</p>\s*',
+    # KIS-EN3-GLANCE: auch EN "At a glance:" strippen — die EN-gc_*-Prompts
+    # fordern denselben Einstiegs-Absatz, der im EN-Testlauf 3 doppelt zur
+    # statischen Template-Glance-Box stand (Kap. 1/2/4).
+    r'^\s*<p>\s*<strong>\s*(?:Auf\s+einen\s+Blick|At\s+a\s+glance):?\s*</strong>\s*.*?</p>\s*',
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -818,7 +821,15 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
                 "AVV/AV-Vertrag → data processing agreement (DPA); "
                 "KI-Richtlinie → AI policy; KI-Entwurf → AI draft; "
                 "KI-Ausgabe → AI output; belastbar → reliable; "
-                "voraussichtlich → expected."
+                "voraussichtlich → expected; "
+                # KIS-EN3-GC: EN-Testlauf 3 zeigte "EU AI Act (KI-Verordnung
+                # der EU)" und "DSGVO-related checks" im EN-Report — die
+                # DE-Prompt-Anweisungen nennen beide Begriffe wörtlich.
+                "KI-Verordnung (der EU) → EU AI regulation "
+                "(first mention: 'EU AI Act (the EU AI regulation)'); "
+                "DSGVO → GDPR (e.g. 'GDPR-related', never 'DSGVO-related')."
+                "\nSTYLE: Do not capitalise common nouns mid-sentence "
+                "(write 'tool', not 'Tool'; 'software', not 'Software')."
             )
     except Exception as exc:
         log.error(
@@ -1221,6 +1232,32 @@ def render_deep_dive_html(sections: Dict[str, str],
                 log.info("[KIS-1246][KPA] Tabellen gehärtet: colgroups/header=%d shy=%d", _n1, _n2)
         except Exception:
             pass
+
+        if _dd_lang.startswith('en'):
+            # KIS-EN3-NUMFMT: LLM-Sections zeigten DE-Zahlformate im EN-KPA —
+            # konservativer Normalizer (Datums-/URL-Schutz eingebaut).
+            # DE-Pfad unverändert (byte-identisch).
+            try:
+                from services.html_sanitizer import normalize_en_number_formats as _en_numfmt
+                _html = _en_numfmt(_html)
+            except Exception:
+                pass
+            # KIS-EN3-ORPHAN: Waisen-Überschrift am Seitenende (EN-Testlauf 3,
+            # "First concrete step", S. 2). Die LLM-Prompts liefern
+            # Überschriften als <p><strong>…</strong></p> — anders als h3/h4
+            # greift die Template-Regel break-after:avoid dort nicht.
+            # Nur reine Überschrift-Absätze (kein Text nach </strong>), denen
+            # direkt Inhalt folgt; Label-Absätze ("Important: …") mit
+            # Folgetext im selben <p> bleiben unberührt (html_enhancer-Boxen
+            # matchen weiterhin ihr "<p>"-Muster).
+            try:
+                _html = re.sub(
+                    r'<p>(\s*<strong>[^<:]{3,80}</strong>\s*)</p>(?=\s*<(?:p|ul|ol|table)\b)',
+                    r'<p style="break-after:avoid;page-break-after:avoid">\1</p>',
+                    _html,
+                )
+            except Exception:
+                pass
 
         return _html
 

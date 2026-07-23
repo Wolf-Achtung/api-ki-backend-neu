@@ -121,6 +121,22 @@ LocaleRepl = Union[str, Callable[[re.Match], str]]
 
 _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     # ==========================================================================
+    # KIS-1270: Deutsche Branchen-Display-Labels (BRANCHEN_LABELS) → EN.
+    # Fix für Badges wie "INDUSTRY Medien & Kreativwirtschaft" — das Label
+    # war deutsch, nur das Label-Präfix wurde übersetzt.
+    # ==========================================================================
+    (r"\bBeratung & Dienstleistungen\b", "Consulting & Services"),
+    (r"\bMarketing & Werbung\b", "Marketing & Advertising"),
+    (r"\bFinanzen & Versicherungen\b", "Finance & Insurance"),
+    (r"\bHandel & E-Commerce\b", "Retail & E-Commerce"),
+    (r"\bGesundheit & Pflege\b", "Healthcare & Care"),
+    (r"\bBauwesen & Architektur\b", "Construction & Architecture"),
+    (r"\bMedien & Kreativwirtschaft\b", "Media & Creative Industries"),
+    (r"\bIndustrie & Produktion\b", "Industry & Manufacturing"),
+    (r"\bTransport & Logistik\b", "Transport & Logistics"),
+    (r"\bGastronomie & Tourismus\b", "Hospitality & Tourism"),
+
+    # ==========================================================================
     # LONGER PHRASES FIRST (avoid partial collisions)
     # ==========================================================================
     (r"\bIhr Unternehmen\b", "Your Company"),
@@ -149,8 +165,14 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     (r"\bMaßnahmen\b", "Actions"),
     (r"\bZusammenfassungen\b", "Summaries"),
     (r"\bZusammenfassung\b", "Summary"),
-    (r"\bEmpfehlungen\b", "Recommendations"),
-    (r"\bEmpfehlung\b", "Recommendation"),
+    # KIS-1270 (Audit Lauf 3, Punkt 17): "Empfehlung(en)" nur noch als
+    # UI-Token ersetzen (ganzer Tag-Inhalt oder vor Doppelpunkt) — die freie
+    # Ersetzung erzeugte Mischformen mitten in deutschen Sätzen
+    # ("Charakter der Recommendation").
+    (r"(?<=>)(\s*)Empfehlungen(\s*)(?=<)", r"\1Recommendations\2"),
+    (r"(?<=>)(\s*)Empfehlung(\s*)(?=<)", r"\1Recommendation\2"),
+    (r"\bEmpfehlungen(?=\s*:)", "Recommendations"),
+    (r"\bEmpfehlung(?=\s*:)", "Recommendation"),
 
     # --- Compound/plural + GDPR ---
     (r"\bBranchen-", "Industry-"),
@@ -164,7 +186,12 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     # BUSINESS CASE / FINANCIAL TERMS
     # ==========================================================================
     (r"\bKosten\b", "Costs"),
-    (r"\bNutzen\b", "Benefits"),
+    # KIS-1270 (Audit Lauf 3, Punkt 17): "Nutzen" nur noch als UI-Token
+    # (ganzer Tag-Inhalt oder vor Doppelpunkt) — die freie, case-insensitive
+    # Ersetzung zerstörte deutsche Verb-Imperative ("Nutzen Sie ein
+    # Recherche-Tool" → "Benefits Sie ein Recherche-Tool").
+    (r"(?<=>)(\s*)Nutzen(\s*)(?=<)", r"\1Benefits\2"),
+    (r"\bNutzen(?=\s*(?::|\(J1\)))", "Benefits"),
     (r"\bNutzenpotenzial\b", "Benefit potential"),
     (r"\bInvestition\b", "Investment"),
     (r"\bInvestitionen\b", "Investments"),
@@ -304,7 +331,11 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     # WORD-BOUNDARY SAFE REPLACEMENTS (tag contexts)
     # ==========================================================================
     (r">\s*Unternehmen\s*<", "> Company <"),
-    (r">\s*Unternehmens\s*", "> Company "),
+    # KIS-1270 (Audit Lauf 3, Punkt 17): "Unternehmens…"-Präfix-Regel
+    # entfernt — (r">\s*Unternehmens\s*", "> Company ") zerlegte Komposita
+    # am Tag-Anfang ("Unternehmensberatung" → "Company beratung").
+    # Nur noch der exakte Genitiv als ganzer Tag-Inhalt:
+    (r">\s*Unternehmens\s*<", "> Company's <"),
 ]
 
 
@@ -382,9 +413,19 @@ _EN_THOUSANDS_RE = re.compile(r"(?<![\d.,])(\d{1,3})((?:\.\d{3})+)(?!\.?\d)")
 
 # Dezimalkomma NUR vor typischen EN-Einheiten. Genau 1-2 Nachkommastellen —
 # "2,375 €" (bereits EN-Tausender) hat 3 Ziffern und bleibt unangetastet.
+# KIS-1270 (Audit Lauf 3, Punkt 8): "mo" auch OHNE Punkt akzeptieren —
+# die Business-Case-Box der Management Summary zeigte "11,9 mo".
 _EN_DECIMAL_UNIT_RE = re.compile(
     r"(?<![\d.,])(\d{1,3}),(\d{1,2})(?!\d)(\s*|&nbsp;)"
-    r"(mo\.|months?\b|h\b|hrs\b|hours?\b|%|€)"
+    r"(mo\.?\b|months?\b|h\b|hrs\b|hours?\b|%|€)"
+)
+
+# KIS-1270 (Audit Lauf 3, Punkt 11): vierstellige €-Beträge ohne
+# Tausendertrenner ("1425 €" / "2375 Euro") → EN-Komma ("1,425 €").
+# Konservativ: NUR direkt vor €/Euro (Jahreszahlen wie "2026" bleiben heil),
+# keine bereits formatierten Zahlen (kein . oder , angrenzend).
+_EN_FOURDIGIT_EUR_RE = re.compile(
+    r"(?<![\d.,])(\d)(\d{3})(?=(?:\s|&nbsp;| )*(?:€|Euros?\b))"
 )
 
 # Schutzschild: URLs, E-Mails, dd.mm.yyyy-Datumsangaben
@@ -426,6 +467,8 @@ def normalize_en_number_formats(html: str) -> str:
         out = _EN_DECIMAL_UNIT_RE.sub(r"\1.\2\3\4", out)
         # 2) Tausenderpunkte → Kommas ("24.000" → "24,000")
         out = _EN_THOUSANDS_RE.sub(_thousands, out)
+        # 3) KIS-1270: vierstellige €-Beträge → EN-Tausenderkomma ("1425 €" → "1,425 €")
+        out = _EN_FOURDIGIT_EUR_RE.sub(r"\1,\2", out)
         for i, orig in enumerate(shielded):
             out = out.replace(f"\x00EN-NUM-SHIELD-{i}\x00", orig)
         return out
@@ -444,9 +487,27 @@ def normalize_en_number_formats(html: str) -> str:
 
 # Punkt 8: nackte Aufzählungs-Torsi wie "<p><strong>4.</strong></p>" —
 # Referenz: services/style_lint.py _LONE_ENUM_NODE_RE (sprachunabhängig).
+# KIS-1270 (Audit Lauf 3, Punkt 12): gehärtet — die leere Sektion "4."
+# überlebte den Strip. Jetzt zusätzlich abgedeckt:
+#   * &nbsp;/NBSP und <br>-Reste innerhalb des Knotens
+#   * <span>-Wrapper zusätzlich zu strong/b/em
+#   * <div>-Container ("<div>4.</div>")
+#   * nackte Text-Torsi zwischen Blockenden und Folge-Überschrift
+#     ("</p>\n4.\n<h2>") — nur wenn der Textknoten NUR die Nummer enthält.
+_EN_LONE_ENUM_INLINE = r"(?:&nbsp;| |\s|<br\s*/?>)*"
 _EN_LONE_ENUM_NODE_RE = re.compile(
-    r"<(p|li|h[2-6])\b[^>]*>\s*(?:<(?:strong|b|em)[^>]*>\s*)*\d{1,2}\.?\s*"
-    r"(?:</(?:strong|b|em)>\s*)*</\1>",
+    r"<(p|li|h[2-6]|div)\b[^>]*>" + _EN_LONE_ENUM_INLINE +
+    r"(?:<(?:strong|b|em|span)[^>]*>" + _EN_LONE_ENUM_INLINE + r")*"
+    r"\d{1,2}\.?" + _EN_LONE_ENUM_INLINE +
+    r"(?:</(?:strong|b|em|span)>" + _EN_LONE_ENUM_INLINE + r")*"
+    r"</\1>",
+    re.IGNORECASE,
+)
+
+# Nackter Text-Torso: schließendes Blockelement, dann NUR "N." als Textknoten,
+# dann öffnende Überschrift/Section/Div — sonst nichts.
+_EN_LONE_ENUM_TEXT_RE = re.compile(
+    r"(</(?:p|ul|ol|table|div|h[1-6])>\s*)\d{1,2}\.\s*(?=<(?:h[1-6]|div|section|p)\b|$)",
     re.IGNORECASE,
 )
 
@@ -457,7 +518,9 @@ def _strip_lone_enum_nodes(html: str) -> str:
     """Entfernt verwaiste Aufzählungs-Knoten (z.B. leere Sektion '4.')."""
     if not html:
         return html
-    return _EN_LONE_ENUM_NODE_RE.sub("", html)
+    out = _EN_LONE_ENUM_NODE_RE.sub("", html)
+    out = _EN_LONE_ENUM_TEXT_RE.sub(r"\1", out)
+    return out
 
 
 def _strip_empty_pair_cards(html: str) -> str:

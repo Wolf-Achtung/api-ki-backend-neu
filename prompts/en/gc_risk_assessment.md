@@ -80,11 +80,11 @@ Use these terms consistently throughout the report:
 - "AI governance" = umbrella term for rules, roles, approvals around AI use. "AI policy" = the concrete document.
 - "ROI" = always "ROI"; at first mention per section "Return on Investment (ROI)".
 - "Break-even" = the point of amortisation in running text. "Amortisation" only in tables/KPIs.
-- "EU AI Act" = always; at first mention "EU AI Act (the EU's AI regulation)". NOT standalone "AI regulation".
+- "EU AI Act" = always; at first mention "EU AI Act (the EU AI regulation)". NOT standalone "AI regulation".
 - "DPA" = at first mention "data processing agreement (DPA)", afterwards just "DPA".
 - "AI output" = general term for AI results. "AI draft" = text that still needs checking.
 - "Check step" = general. "Approval" = formal act. "Four-eyes principle" = two people check. NOT "review".
-- "GDPR" = never spell out. "Tool" = software. Do not switch terms within the same paragraph.
+- "GDPR" = never spell out; never write "DSGVO" ("GDPR-related", not "DSGVO-related"). "tool" = software; lower-case as a common noun mid-sentence (tool, not Tool). Do not switch terms within the same paragraph.
 
 ## FORMATTING MARKERS
 Use the following markers in your HTML output where they fit the content:
