@@ -2388,7 +2388,8 @@ def _enum_label_en(field_name: str, str_val: str) -> str | None:
         from routes.chat import _QR_OPTIONS
         for opt in _QR_OPTIONS.get(field_name) or []:
             if str(opt.get("value")) == str_val:
-                return opt.get("label_en")
+                _lbl = opt.get("label_en")
+                return str(_lbl) if _lbl is not None else None
     except Exception:
         pass
     return None
