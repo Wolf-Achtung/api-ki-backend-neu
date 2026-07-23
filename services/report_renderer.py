@@ -2285,8 +2285,10 @@ def render(briefing_obj: Any,
     # jede weitere ohne <table> in den nächsten 800 Zeichen ist ein Artefakt.
     try:
         import re as _re_kp
+        # KIS-1247: h2-h4 statt nur h3 — im Lauf 1130 überlebte die zweite
+        # Überschrift als Nicht-h3-Variante (R1 S. 24).
         _kp_pat = _re_kp.compile(
-            r'<h3[^>]*>(?:(?!</h3>).)*?Kernprogramme\s+für\s+Ihr\s+Profil(?:(?!</h3>).)*?</h3>\s*',
+            r'<h[234][^>]*>(?:(?!</h[234]>).)*?Kernprogramme\s+für\s+Ihr\s+Profil(?:(?!</h[234]>).)*?</h[234]>\s*',
             _re_kp.DOTALL,
         )
         _kp_matches = list(_kp_pat.finditer(html))
@@ -2299,6 +2301,22 @@ def render(briefing_obj: Any,
                     _removed += 1
             if _removed:
                 log.info("[KIS-1237][FOERDER-HEADING] %d verwaiste Kernprogramme-Überschrift(en) entfernt", _removed)
+        # KIS-1247: Auch Pseudo-Überschriften (<p><strong>… / nackter Text)
+        # nach der ersten echten Überschrift tilgen — Lauf 1130 zeigte das
+        # Duplikat ohne Heading-Tag direkt vor dem Förderpotenzial-Prosatext.
+        _kp_first = _kp_pat.search(html)
+        if _kp_first:
+            _pseudo_pat = _re_kp.compile(
+                r'(?:<p[^>]*>\s*(?:<strong[^>]*>\s*)?|(?<=>)\s*)'
+                r'Kernprogramme\s+für\s+Ihr\s+Profil'
+                r'(?:\s*(?:</strong>)?\s*</p>|\s*(?=<))',
+                _re_kp.IGNORECASE,
+            )
+            _tail = html[_kp_first.end():]
+            _tail_new, _n_pseudo = _pseudo_pat.subn('', _tail)
+            if _n_pseudo:
+                html = html[:_kp_first.end()] + _tail_new
+                log.info("[KIS-1247][FOERDER-HEADING] %d Pseudo-Duplikat(e) entfernt", _n_pseudo)
     except Exception as _kp_exc:  # pragma: no cover
         log.warning("[KIS-1237][FOERDER-HEADING] skipped: %s", _kp_exc)
 
