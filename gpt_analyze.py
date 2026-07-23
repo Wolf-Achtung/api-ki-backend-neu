@@ -1837,16 +1837,35 @@ def _send_email_via_resend(to_email: str, subject: str, html_body: str, attachme
         if resend_attachments:
             params["attachments"] = resend_attachments
 
-        response = resend.Emails.send(params)
+        # KIS-1256: Retry mit Backoff. Die User-R1-Mail ging als einzige OHNE
+        # Wartepause direkt nach der vorherigen Mail raus — bei Resend-429
+        # (max 2 req/s) scheiterte genau sie still (kein Retry, nur
+        # email_error_user in der DB). 3 Versuche: sofort, +1.5s, +3s.
+        import time as _retry_time
+        _last_err: Optional[str] = None
+        for _attempt in range(3):
+            if _attempt:
+                _retry_time.sleep(1.5 * _attempt)
+            try:
+                response = resend.Emails.send(params)
+            except Exception as exc:
+                _last_err = str(exc)
+                log.warning(
+                    "⚠️ Resend send attempt %d/3 failed for %s: %s",
+                    _attempt + 1, _mask_email(to_email), _last_err[:200],
+                )
+                continue
 
-        # Log email ID for debugging in Resend dashboard
-        email_id = response.get("id") if isinstance(response, dict) else None
-        if email_id:
-            log.info(f"📬 Resend Email ID: {email_id} → {_mask_email(to_email)}")
-        else:
-            log.warning(f"⚠️ Resend response missing email ID for {_mask_email(to_email)}")
+            # Log email ID for debugging in Resend dashboard
+            email_id = response.get("id") if isinstance(response, dict) else None
+            if email_id:
+                log.info(f"📬 Resend Email ID: {email_id} → {_mask_email(to_email)}")
+            else:
+                log.warning(f"⚠️ Resend response missing email ID for {_mask_email(to_email)}")
 
-        return True, None
+            return True, None
+
+        return False, _last_err or "unknown send error"
 
     except Exception as exc:
         return False, str(exc)
@@ -22894,6 +22913,9 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
                 f"Your AI Status Report ({_display})" if _mail_lang.startswith("en")
                 else f"Ihr KI\u2011Status\u2011Report ({_display})"
             )
+            # KIS-1256: Resend-Rate-Limit (max 2 req/s) \u2014 die User-Mail war
+            # die einzige ohne Pause zur vorherigen Mail (Briefing-PDF).
+            time.sleep(0.6)
             ok, err = _send_email_via_resend(
                 user_email,
                 _mail_subject,
