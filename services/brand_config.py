@@ -95,6 +95,10 @@ def reset_cache() -> None:
 _EN_OVERRIDES: Dict[str, str] = {
     "advisor_signature": "Wolf Hohl · TÜV-certified AI management",
     "advisor_title": "TÜV-certified AI management",
+    # KIS-EN2-BRAND: Kontaktbox-Tagline blieb deutsch ("Ihr Partner für
+    # KI-Readiness"), weil der DE-Brand-Wert den EN-Template-Default
+    # überstimmt (EN-Testlauf 2, KPA Kontaktbox).
+    "claim": "Your partner for AI readiness",
 }
 
 

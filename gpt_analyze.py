@@ -14120,6 +14120,9 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
         _sofort_opex_monthly = float(sections.get("OPEX_REALISTISCH_EUR") or briefing.get("OPEX_REALISTISCH_EUR") or 0)
         # KIS-1132: Pass expertise level + answers for competence-aware content
         _sofort_expertise = detect_expertise_level(briefing)
+        # KIS-1251 (Punkt 2): lang durchreichen — EN-Report bekam den
+        # komplett deutschen Sofort-Start-Generator.
+        _sofort_lang = str(briefing.get("lang") or sections.get("LANG") or "de").lower()
         sections["SOFORT_START_HTML"] = generate_sofort_start_html(
             hauptleistung=sofort_hauptleistung,
             branche=sofort_branche,
@@ -14137,6 +14140,7 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                 or sections.get("MEDIEN_SPARTE_LABEL", "")
                 or ""
             ),
+            lang=_sofort_lang,
         )
         log.info("[SOFORT-START] ✅ Generated Sofort-Start page for %s", sofort_branche[:30] if sofort_branche else "default")
     except Exception as e:
@@ -14159,6 +14163,8 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             hauptleistung=sofort_hauptleistung,
             hours_per_week=_challenge_hpw,
             stundensatz=float(_sofort_rate) if _sofort_rate else 0.0,
+            # KIS-1251 (Punkt 3): EN-Fassung der 30-Tage-Challenge
+            lang=str(briefing.get("lang") or sections.get("LANG") or "de").lower(),
         )
     except Exception as e:
         log.warning("[30-TAGE-CHALLENGE] ⚠️ Failed: %s", e)
@@ -16683,15 +16689,71 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         if len(hauptleistung) > max_len:
             hauptleistung = hauptleistung[:max_len].rsplit(" ", 1)[0] + "..."
         sections["hauptleistung"] = hauptleistung
+    # KIS-1251 (Punkt 1): EN-Cover-Labels — bei lang=en die englischen
+    # Display-Labels für Branche/Größe/Sparte verwenden. Läuft NACH
+    # _theme_vars_for_branch (Theme-Lookup bleibt auf DE-Label/Key) und VOR
+    # dem REPORT_SUBTITLE-Bau. DE-Läufe bleiben byte-identisch.
+    _cover_lang = str(sections.get("LANG") or "de").strip().lower()
+    if _cover_lang.startswith("en"):
+        try:
+            from services.answers_normalizer import (
+                BRANCHEN_LABELS_EN,
+                UNTERNEHMENSGROESSEN_LABELS_EN,
+                MEDIEN_SPARTEN_LABELS_EN,
+            )
+            _b_key = str(answers.get("branche", "") or "").strip().lower()
+            _b_label_en = (
+                BRANCHEN_LABELS_EN.get(_b_key)
+                or BRANCHEN_LABELS_EN.get(
+                    str(sections.get("BRANCHE_LABEL", "")).strip().lower()
+                )
+            )
+            if _b_label_en:
+                sections["BRANCHE_LABEL"] = _b_label_en
+            _g_raw = str(
+                answers.get("unternehmensgroesse", "")
+                or sections.get("UNTERNEHMENSGROESSE_LABEL", "")
+            ).strip().lower()
+            _g_label_en = (
+                UNTERNEHMENSGROESSEN_LABELS_EN.get(_g_raw)
+                or UNTERNEHMENSGROESSEN_LABELS_EN.get(
+                    str(sections.get("UNTERNEHMENSGROESSE_LABEL", "")).strip().lower()
+                )
+            )
+            if _g_label_en:
+                sections["UNTERNEHMENSGROESSE_LABEL"] = _g_label_en
+            _sp_raw = str(
+                answers.get("medien_sparte", "")
+                or sections.get("MEDIEN_SPARTE_LABEL", "")
+            ).strip().lower()
+            _sp_label_en = (
+                MEDIEN_SPARTEN_LABELS_EN.get(_sp_raw)
+                or MEDIEN_SPARTEN_LABELS_EN.get(
+                    str(sections.get("MEDIEN_SPARTE_LABEL", "")).strip().lower()
+                )
+            )
+            if _sp_label_en:
+                sections["MEDIEN_SPARTE_LABEL"] = _sp_label_en
+            log.info("[KIS-1251] EN cover labels applied: branche=%s groesse=%s sparte=%s",
+                     sections.get("BRANCHE_LABEL"), sections.get("UNTERNEHMENSGROESSE_LABEL"),
+                     sections.get("MEDIEN_SPARTE_LABEL"))
+        except Exception as _en_lbl_exc:
+            log.warning("[KIS-1251] EN cover label mapping failed: %s", _en_lbl_exc)
+
     # REPORT_SUBTITLE: use clean BRANCHE_LABEL (not free-text hauptleistung)
     # KIS-1232: Punkt am Label-Ende abstreifen — das Template hängt an einer
     # Stelle selbst einen Satzpunkt an ("{{ REPORT_SUBTITLE }}."), wodurch im
     # KMU-Lauf "Finanzen & Versicherungen.." entstand.
+    # KIS-1251 (Punkt 1): EN-Untertitel "AI Readiness Assessment".
     branche_label = str(sections.get("BRANCHE_LABEL", "")).strip().rstrip(".")
+    _subtitle_prefix = (
+        "AI Readiness Assessment" if _cover_lang.startswith("en")
+        else "KI-Readiness Assessment"
+    )
     if branche_label:
-        sections["REPORT_SUBTITLE"] = f"KI-Readiness Assessment · {branche_label}"
+        sections["REPORT_SUBTITLE"] = f"{_subtitle_prefix} · {branche_label}"
     else:
-        sections["REPORT_SUBTITLE"] = "KI-Readiness Assessment"
+        sections["REPORT_SUBTITLE"] = _subtitle_prefix
     
     # Werkbank
     sections["WERKBANK_HTML"] = _build_werkbank_html_dynamic(answers)
@@ -16704,7 +16766,12 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     # obwohl Art. 50 nur 4 Wochen entfernt war.
     try:
         from services.ai_act_module import build_ai_act_deadline_box
-        _deadline_box = build_ai_act_deadline_box(str(sections.get("AI_ACT_RISK_LEVEL", "")))
+        # KIS-1251 (Punkt 7): lang durchreichen — EN-Report bekam die
+        # deutsche Fristen-Box ("Nächster Stichtag: … in 10 Tagen").
+        _deadline_box = build_ai_act_deadline_box(
+            str(sections.get("AI_ACT_RISK_LEVEL", "")),
+            lang=str(sections.get("LANG") or "de"),
+        )
         if _deadline_box:
             # KIS-1237: AI_ACT_DUTY_MATRIX_HTML ist der Slot, den
             # pdf_template_v7 im Kapitel "AI Act Kompakt" wirklich rendert —
@@ -22422,6 +22489,19 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
             (r'\bkern-toolset\b', 'Kern-Tool-Set'),
         ]
         
+        # KIS-1251 (Punkt 6): Der Global-Final-Enforcer besteht aus deutschen
+        # Grammatik-/Wort-Ersetzungen (Wir→Ich, Stack→Systemlandschaft,
+        # Pipeline→Prozess …). In EN-Reports erzeugte er Hybride wie
+        # "Your AI Systemlandschaft at a Glance". Bei lang=en laufen nur die
+        # sprachneutralen Ersetzungen (Redaction-Marker); DE bleibt identisch.
+        _gfe_lang = str(sections.get("LANG") or getattr(br, "lang", "de") or "de").strip().lower()
+        if _gfe_lang.startswith("en"):
+            global_replacements = [
+                (r'\[entfernt - unangemessener Inhalt\]', ''),
+                (r'\[removed - inappropriate content\]', ''),
+                (r'\[REDACTED\]', ''),
+            ]
+
         fixes_count = 0
         for pattern, replacement in global_replacements:
             _flags = re.IGNORECASE if 'skalier' in pattern.lower() or 'pipeline' in pattern.lower() else 0
@@ -22529,7 +22609,14 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     # =========================================================================
     try:
         _gf_html = result.get("html", "")
-        _gf_already = "Antrag: Einführung von KI-Assistenz-Tools" in (_gf_html or "")
+        # KIS-1251 (Punkt 4): lang-aware Dedup-Marker + EN-Vorlage
+        _gf_lang = str(sections.get("LANG") or getattr(br, "lang", "de") or "de").strip().lower()
+        _gf_marker = (
+            "Proposal: Introduction of AI assistance tools"
+            if _gf_lang.startswith("en")
+            else "Antrag: Einführung von KI-Assistenz-Tools"
+        )
+        _gf_already = _gf_marker in (_gf_html or "")
         from services.business_case_engine_v2 import get_hourly_rate, normalize_company_size
         _gf_size = normalize_company_size(size_raw)
 
@@ -22548,6 +22635,7 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                 opex_month=_gf_opex,
                 hauptleistung=_gf_hauptleistung,
                 capex=_gf_capex,
+                lang=_gf_lang,
             )
             # Anchor: inject before <section ... id="sofort-start">
             _anchor_idx = _gf_html.find('id="sofort-start"')
@@ -22564,6 +22652,21 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
                 log.info("[KIS-1094] GF-Vorlage: no sofort-start section in HTML (skipped)")
     except Exception as _gf_err:
         log.warning("[KIS-1094] GF-Vorlage bypass injection failed: %s", _gf_err)
+
+    # =========================================================================
+    # KIS-1251 (Punkte 8/9/10/12): EN-FINAL-PASS auf dem Gesamt-HTML.
+    # Läuft NUR bei lang=en (DE bleibt byte-identisch):
+    # Zahlenformate (24.000→24,000 / 11,9 mo.→11.9 mo.), Lone-Enum-Torsi
+    # ("<p><strong>4.</strong></p>"), leere pair-cards, Rights-Log-"d,".
+    # =========================================================================
+    try:
+        _enfp_lang = str(sections.get("LANG") or getattr(br, "lang", "de") or "de").strip().lower()
+        if _enfp_lang.startswith("en"):
+            from services.html_sanitizer import apply_en_final_locale_pass
+            result["html"] = apply_en_final_locale_pass(result["html"], _enfp_lang)
+            log.info("[KIS-1251] EN final locale pass applied to final HTML")
+    except Exception as _enfp_exc:
+        log.warning("[KIS-1251] EN final locale pass failed: %s", _enfp_exc)
 
     an = Analysis(
         user_id=br.user_id,

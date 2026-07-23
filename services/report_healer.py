@@ -2863,7 +2863,7 @@ _PAYBACK_PROGRESS_SPLIT_SPAN_FULL_PATTERN = re.compile(
 )
 
 
-def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
+def sanitize_payback_progress_labels(html: str, lang: str = "de") -> Tuple[str, int]:
     """
     TASK 4: Sanitize Payback Progress labels.
 
@@ -2871,14 +2871,26 @@ def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
     2. Replace "Payback Progress X%" → "Payback-Fortschritt: X" (no %)
     3. Remove duplicate payback progress labels (keep first occurrence)
 
+    KIS-1251: lang="en" keeps English labels WITH % sign
+    ("Payback progress: X%", "Payback: achieved"); default "de" unchanged.
+
     Args:
         html: HTML content to sanitize
+        lang: Report language ("de"/"en")
 
     Returns:
         Tuple of (sanitized_html, fixes_applied)
     """
     if not html:
         return html, 0
+
+    _is_en = (lang or "").strip().lower().startswith("en")
+    _label_done = "Payback: achieved" if _is_en else "Payback: erreicht"
+
+    def _label_progress(value: str) -> str:
+        if _is_en:
+            return f"Payback progress: {value}%"
+        return f"Payback-Fortschritt: {value}"
 
     result = html
     fixes_applied = 0
@@ -2890,10 +2902,10 @@ def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
         value = m.group(1)
         fixes_applied += 1
         if value == "100":
-            log.debug("[TASK1-FINAL] Replaced split-span 'Payback Progress 100%%' → 'Payback: erreicht'")
-            return "Payback: erreicht"
-        log.debug("[TASK1-FINAL] Replaced split-span 'Payback Progress %s%%' → 'Payback-Fortschritt: %s'", value, value)
-        return f"Payback-Fortschritt: {value}"
+            log.debug("[TASK1-FINAL] Replaced split-span 'Payback Progress 100%%' → '%s'", _label_done)
+            return _label_done
+        log.debug("[TASK1-FINAL] Replaced split-span 'Payback Progress %s%%' → '%s'", value, _label_progress(value))
+        return _label_progress(value)
 
     # First try full span pattern (more precise)
     if _PAYBACK_PROGRESS_SPLIT_SPAN_FULL_PATTERN.search(result):
@@ -2903,14 +2915,14 @@ def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
     if _PAYBACK_PROGRESS_SPLIT_SPAN_PATTERN.search(result):
         result = _PAYBACK_PROGRESS_SPLIT_SPAN_PATTERN.sub(replace_split_span, result)
 
-    # Step 1: Replace "Payback Progress 100%" with "Payback: erreicht"
+    # Step 1: Replace "Payback Progress 100%" with "Payback: erreicht"/"achieved"
     if _PAYBACK_PROGRESS_100_PATTERN.search(result):
         count_100 = len(_PAYBACK_PROGRESS_100_PATTERN.findall(result))
-        result = _PAYBACK_PROGRESS_100_PATTERN.sub("Payback: erreicht", result)
+        result = _PAYBACK_PROGRESS_100_PATTERN.sub(_label_done, result)
         fixes_applied += count_100
-        log.debug("[TASK4] Replaced %d 'Payback Progress 100%%' → 'Payback: erreicht'", count_100)
+        log.debug("[TASK4] Replaced %d 'Payback Progress 100%%' → '%s'", count_100, _label_done)
 
-    # Step 2: Replace remaining "Payback Progress X%" → "Payback-Fortschritt: X"
+    # Step 2: Replace remaining "Payback Progress X%" → localized label
     def replace_progress_percent(m: re.Match[str]) -> str:
         nonlocal fixes_applied
         text: str = m.group(0)
@@ -2919,10 +2931,10 @@ def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
         if num_match:
             value = num_match.group(1)
             fixes_applied += 1
-            # Convert 100 to "erreicht"
+            # Convert 100 to "erreicht"/"achieved"
             if value == "100":
-                return "Payback: erreicht"
-            return f"Payback-Fortschritt: {value}"
+                return _label_done
+            return _label_progress(value)
         return text
 
     result = _PAYBACK_PROGRESS_PERCENT_PATTERN.sub(replace_progress_percent, result)
@@ -2937,8 +2949,11 @@ def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
             fixes_applied += 1
             log.debug("[TASK4] Removed duplicate payback progress span")
 
-    # Also deduplicate "Payback: erreicht" if it appears multiple times
-    erreicht_pattern = re.compile(r'Payback:\s*erreicht', re.IGNORECASE)
+    # Also deduplicate "Payback: erreicht"/"Payback: achieved" if repeated
+    erreicht_pattern = re.compile(
+        r'Payback:\s*achieved' if _is_en else r'Payback:\s*erreicht',
+        re.IGNORECASE,
+    )
     erreicht_matches = list(erreicht_pattern.finditer(result))
     if len(erreicht_matches) > 1:
         # Keep first, remove rest
@@ -2949,12 +2964,19 @@ def sanitize_payback_progress_labels(html: str) -> Tuple[str, int]:
 
     # TASK 1 (FINAL FIX): Step 4: Replace any remaining standalone "Payback Progress" labels
     # This catches edge cases where the label exists without a value
-    remaining_pp = re.compile(r'Payback\s+Progress(?!\s*-?\s*Fortschritt)', re.IGNORECASE)
+    # KIS-1251: EN behält "Payback progress: X%" (Doppelpunkt-Ausschluss) und
+    # bekommt das EN-Label "Payback status".
+    if _is_en:
+        remaining_pp = re.compile(r'Payback\s+Progress(?!\s*-?\s*Fortschritt)(?!\s*:)', re.IGNORECASE)
+        _remaining_label = "Payback status"
+    else:
+        remaining_pp = re.compile(r'Payback\s+Progress(?!\s*-?\s*Fortschritt)', re.IGNORECASE)
+        _remaining_label = "Payback-Status"
     if remaining_pp.search(result):
         count_remaining = len(remaining_pp.findall(result))
-        result = remaining_pp.sub("Payback-Status", result)
+        result = remaining_pp.sub(_remaining_label, result)
         fixes_applied += count_remaining
-        log.debug("[TASK1-FINAL] Replaced %d remaining 'Payback Progress' → 'Payback-Status'", count_remaining)
+        log.debug("[TASK1-FINAL] Replaced %d remaining 'Payback Progress' → '%s'", count_remaining, _remaining_label)
 
     if fixes_applied > 0:
         log.info("[TASK4] Applied %d payback progress label fixes", fixes_applied)
@@ -4125,11 +4147,15 @@ def heal_report_html(
             log.warning("[FIX-F] Error in payback consistency (flat): %s - skipping", e)
 
     # TASK 4: Sanitize payback progress labels (remove %, deduplicate)
+    # KIS-1251: lang-aware — EN sections keep "Payback progress: X%".
+    _t4_lang = str(healed_sections.get("LANG") or "de").lower()
     if "F" not in skip:  # Part of Fix F family
         for key in list(healed_sections.keys()):
             if _is_html_section_key(key) and isinstance(healed_sections[key], str):
                 try:
-                    healed_sections[key], count = sanitize_payback_progress_labels(healed_sections[key])
+                    healed_sections[key], count = sanitize_payback_progress_labels(
+                        healed_sections[key], lang=_t4_lang
+                    )
                     result.payback_fixes += count
                 except Exception as e:
                     log.warning("[TASK4] Error in section '%s': %s - skipping", key, e)
@@ -4223,6 +4249,7 @@ def heal_final_html(
     canonical_payback_months: Optional[Union[float, Decimal, str]] = None,
     localize_labels: bool = True,
     run_quality_check: bool = False,
+    lang: str = "de",
 ) -> str:
     """
     POST-RENDER safety net: Heal the final rendered HTML string.
@@ -4309,14 +4336,16 @@ def heal_final_html(
         log.warning("[HEALER-POST] Fix F error: %s", e)
 
     # TASK 4: Sanitize payback progress labels (remove %, deduplicate)
+    # KIS-1251: lang-aware — EN keeps "Payback progress: X%".
+    _is_en_final = (lang or "").strip().lower().startswith("en")
     try:
-        result, payback_label_fixes = sanitize_payback_progress_labels(result)
+        result, payback_label_fixes = sanitize_payback_progress_labels(result, lang=lang)
         fixes_applied += payback_label_fixes
     except Exception as e:
         log.warning("[HEALER-POST] TASK4 payback label error: %s", e)
 
-    # TASK 3: Business-case label localization
-    if localize_labels:
+    # TASK 3: Business-case label localization (DE only — never germanize EN)
+    if localize_labels and not _is_en_final:
         try:
             result, label_fixes = localize_business_case_labels_de(result)
             fixes_applied += label_fixes

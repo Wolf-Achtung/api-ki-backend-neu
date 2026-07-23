@@ -724,6 +724,10 @@ _FUNDING_TERMS_EN: List[Tuple[str, str]] = [
     (r"keine Frist", "no deadline"),
     (r"laufend", "rolling"),
     (r"Staffel", "season"),
+    # KIS-EN2-FUND: "Serien bis 20 Mio €/Staffel" leakte als "Serien up to
+    # 20 million €/season" (EN-Testlauf 2, Strategie Förderkapitel).
+    (r"Serienproduktion", "series production"),
+    (r"Serien", "Series"),
     (r"Monaten", "months"),
     (r"Monate", "months"),
     (r"Monat", "month"),

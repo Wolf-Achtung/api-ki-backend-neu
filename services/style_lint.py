@@ -179,6 +179,35 @@ _NO_SPLIT_PAIRS = {"ch", "ck", "th", "ph", "qu", "ß"}
 _ONSET_PAIRS = {"bl", "br", "dr", "fl", "fr", "gl", "gr", "kl", "kr",
                 "pl", "pr", "tr", "kn", "gn", "zw"}
 
+# KIS-EN2-SHY: Englische Trennstellen mit hoher Priorität (3) — die deutschen
+# Heuristiken erzeugten in EN-Reports Brüche wie "overes-timation" (EN-Testlauf
+# 2, KPA-Risikotabelle). Bevorzugt werden Präfix-/Suffix-Grenzen
+# (over·estimation, estima·tion). NUR bei lang=en aktiv, DE byte-identisch.
+_EN_PREFIXES = (
+    "counter", "under", "inter", "trans", "multi", "super", "hyper",
+    "micro", "macro", "cyber", "over", "auto", "anti", "semi", "non",
+)
+_EN_SUFFIXES = (
+    "ability", "ization", "isation", "ization", "tion", "sion", "ment",
+    "ness", "ance", "ence", "ship", "able", "ible",
+)
+
+
+def _en_extra_points(word: str) -> List[Tuple[int, int]]:
+    """Zusätzliche EN-Trennstellen (Priorität 3): Präfix-/Suffix-Grenzen."""
+    lw = word.lower()
+    n = len(lw)
+    points: List[Tuple[int, int]] = []
+    for pre in _EN_PREFIXES:
+        if lw.startswith(pre) and n - len(pre) >= 4:
+            points.append((3, len(pre)))
+            break
+    for suf in _EN_SUFFIXES:
+        if lw.endswith(suf) and n - len(suf) >= 4:
+            points.append((3, n - len(suf)))
+            break
+    return points
+
 
 def _hyphenation_points(word: str) -> List[Tuple[int, int]]:
     """Kandidaten (Priorität, Einfügeposition) für weiche Trennstellen.
@@ -215,11 +244,15 @@ def _hyphenation_points(word: str) -> List[Tuple[int, int]]:
     return points
 
 
-def _soften_word(word: str, max_run: int = 11) -> str:
+def _soften_word(word: str, max_run: int = 11, lang: str = "de") -> str:
     """Fügt Soft-Hyphens so ein, dass kein Segment länger als max_run bleibt."""
     if _SHY in word:
         return word
     points = _hyphenation_points(word)
+    # KIS-EN2-SHY: EN-Präfix-/Suffix-Grenzen gewinnen gegen die deutschen
+    # Heuristiken (Priorität 3 > 2) — nur bei lang=en, DE byte-identisch.
+    if str(lang or "de").lower().startswith("en"):
+        points = points + _en_extra_points(word)
     if not points:
         return word
     out: List[str] = []
@@ -247,6 +280,11 @@ _CAMEL_COMPOUND_RE = re.compile(r"(?<=[a-zäöüß])K(?=omplexität)")
 # KIS-1247: Phasen-Überschriften kamen ohne Trenner an ("Quick Wins und
 # GrundlagenMonat 1-2", Strategie Kap. 6, Lauf 1130).
 _TITLE_MONAT_GLUE_RE = re.compile(r"(?<=[a-zäöüß])(Monat\s+\d)")
+# KIS-EN2-GLUE: gleiche Fehlerklasse im EN-Report ("Month 1-2Quick Wins,
+# pilot projects and foundations", EN-Testlauf 2, Strategie Kap. 6). Beide
+# Kleberichtungen; "Month" kommt in DE-Reports nicht vor → DE byte-identisch.
+_TITLE_MONTH_GLUE_EN_RE = re.compile(r"(Month\s+\d+(?:\s*[-–—]\s*\d+)?)(?=[A-Z])")
+_TITLE_MONTH_GLUE_EN_REV_RE = re.compile(r"(?<=[a-z])(Month\s+\d)")
 
 
 def fix_misc_typography(html: str) -> Tuple[str, int]:
@@ -261,9 +299,12 @@ def fix_misc_typography(html: str) -> Tuple[str, int]:
         new_part, n1 = _AMPEL_NOSPACE_RE.subn("● ", part)
         new_part, n2 = _CAMEL_COMPOUND_RE.subn("k", new_part)
         new_part, n3 = _TITLE_MONAT_GLUE_RE.subn(r" · \1", new_part)
-        if n1 or n2 or n3:
+        # KIS-EN2-GLUE: EN-Muster ("Month 1-2Quick Wins" / "FoundationsMonth 1")
+        new_part, n4 = _TITLE_MONTH_GLUE_EN_RE.subn(r"\1 · ", new_part)
+        new_part, n5 = _TITLE_MONTH_GLUE_EN_REV_RE.subn(r" · \1", new_part)
+        if n1 or n2 or n3 or n4 or n5:
             parts[i] = new_part
-            count += n1 + n2 + n3
+            count += n1 + n2 + n3 + n4 + n5
     return "".join(parts), count
 
 
@@ -283,8 +324,11 @@ def fix_double_periods(html: str) -> Tuple[str, int]:
     return "".join(parts), count
 
 
-def soften_table_long_words(html: str) -> Tuple[str, int]:
-    """Injiziert &shy; in lange Wörter innerhalb von Tabellenzellen."""
+def soften_table_long_words(html: str, lang: str = "de") -> Tuple[str, int]:
+    """Injiziert &shy; in lange Wörter innerhalb von Tabellenzellen.
+
+    KIS-EN2-SHY: lang='en' aktiviert englische Präfix-/Suffix-Trennstellen
+    (siehe _en_extra_points); Default 'de' bleibt byte-identisch."""
     if not html or "<t" not in html.lower():
         return html, 0
     count = 0
@@ -309,7 +353,7 @@ def soften_table_long_words(html: str) -> Tuple[str, int]:
                 nonlocal count
                 # KIS-1238: max_run 11 → 8 für Tabellenzellen — die schmalen
                 # Spalten (Lauf 1119: "HANDLUN GSFELD") brauchen kürzere Segmente.
-                softened = _soften_word(wm.group(0), max_run=_max_run)
+                softened = _soften_word(wm.group(0), max_run=_max_run, lang=lang)
                 if softened != wm.group(0):
                     count += 1
                 return softened

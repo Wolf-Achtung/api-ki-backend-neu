@@ -350,6 +350,9 @@ def sanitize_en_locale_tokens(html: str, lang: str) -> str:
     for _i, _orig in enumerate(_shielded):
         out = out.replace(f"\x00LOCALE-SHIELD-{_i}\x00", _orig)
 
+    # KIS-1251 (Punkt 12): Deutsche Zahlformate in EN-Reports normalisieren
+    out = normalize_en_number_formats(out)
+
     # Optional: Log leftover detection (warning only)
     de_check_words = ["Unternehmen", "Branche", "Bewertung", "Reifegrad",
                       "Kennzahlen", "Risiken", "Handlungsempfehlungen", "Unternehmensgröße",
@@ -359,6 +362,190 @@ def sanitize_en_locale_tokens(html: str, lang: str) -> str:
     if leftovers:
         log.warning("[locale-sanitize] DE leftovers after sanitize: %s", leftovers)
 
+    return out
+
+
+# =============================================================================
+# KIS-1251 (Punkt 12): EN-Zahlenformat-Normalizer
+# =============================================================================
+# Vereinheitlicht deutsche Zahlformate in EN-Reports:
+#   "24.000 €"   → "24,000 €"   (Tausenderpunkt → Komma)
+#   "11,9 months"→ "11.9 months" (Dezimalkomma → Punkt, nur vor Einheiten)
+# Schutz: Datumsangaben (dd.mm.yyyy) bleiben unangetastet (Datum bleibt
+# bewusst deutsch formatiert), ebenso URLs/E-Mails/IDs ("Art. 50", "v7.1").
+
+# Tausender: 1-3 Ziffern + eine oder mehrere ".ddd"-Gruppen. Kein Match, wenn
+# direkt davor Ziffer/Punkt/Komma steht (IDs, Versionen, Datum "02.08.2026"
+# matcht ohnehin nicht: weder "08" noch "2026" sind exakt 3 Ziffern) oder
+# danach eine weitere Ziffer/".Ziffer" folgt (Versionsketten wie "1.234.5").
+_EN_THOUSANDS_RE = re.compile(r"(?<![\d.,])(\d{1,3})((?:\.\d{3})+)(?!\.?\d)")
+
+# Dezimalkomma NUR vor typischen EN-Einheiten. Genau 1-2 Nachkommastellen —
+# "2,375 €" (bereits EN-Tausender) hat 3 Ziffern und bleibt unangetastet.
+_EN_DECIMAL_UNIT_RE = re.compile(
+    r"(?<![\d.,])(\d{1,3}),(\d{1,2})(?!\d)(\s*|&nbsp;)"
+    r"(mo\.|months?\b|h\b|hrs\b|hours?\b|%|€)"
+)
+
+# Schutzschild: URLs, E-Mails, dd.mm.yyyy-Datumsangaben
+_EN_NUM_PROTECT_RE = re.compile(
+    r"https?://[^\s\"'<>]+"
+    r"|[\w.+-]+@[\w-]+(?:\.[\w-]+)+"
+    r"|\b\d{1,2}\.\d{1,2}\.\d{4}\b",
+    flags=re.IGNORECASE,
+)
+
+
+# Tag-Split: Zahlen-Normalisierung NUR in Textknoten — Attribute (z.B. SVG
+# stroke-dasharray="128.112") bleiben unangetastet.
+_EN_NUM_TAG_SPLIT_RE = re.compile(r"(<[^>]+>)")
+
+
+def normalize_en_number_formats(html: str) -> str:
+    """Normalisiert deutsche Zahlformate zu EN-Konventionen (konservativ).
+
+    Wird nur für EN-Reports aufgerufen (Aufrufer gaten auf lang=en);
+    DE-Reports bleiben byte-identisch. Wirkt nur in Textknoten, nie in
+    Tags/Attributen; URLs, E-Mails und dd.mm.yyyy-Daten sind geschützt.
+    """
+    if not html:
+        return html
+
+    def _thousands(m: "re.Match[str]") -> str:
+        return m.group(1) + m.group(2).replace(".", ",")
+
+    def _normalize_text(text: str) -> str:
+        shielded: List[str] = []
+
+        def _shield(m: "re.Match[str]") -> str:
+            shielded.append(m.group(0))
+            return f"\x00EN-NUM-SHIELD-{len(shielded) - 1}\x00"
+
+        out = _EN_NUM_PROTECT_RE.sub(_shield, text)
+        # 1) Dezimalkomma vor Einheiten → Punkt ("11,9 months" → "11.9 months")
+        out = _EN_DECIMAL_UNIT_RE.sub(r"\1.\2\3\4", out)
+        # 2) Tausenderpunkte → Kommas ("24.000" → "24,000")
+        out = _EN_THOUSANDS_RE.sub(_thousands, out)
+        for i, orig in enumerate(shielded):
+            out = out.replace(f"\x00EN-NUM-SHIELD-{i}\x00", orig)
+        return out
+
+    parts = _EN_NUM_TAG_SPLIT_RE.split(html)
+    for i, part in enumerate(parts):
+        if part and not part.startswith("<"):
+            parts[i] = _normalize_text(part)
+    return "".join(parts)
+
+
+# =============================================================================
+# KIS-1251 (Punkt 8/9/10): Sprachunabhängige Struktur-Heiler für den
+# EN-Final-Pass (laufen nur bei lang=en, damit DE byte-identisch bleibt)
+# =============================================================================
+
+# Punkt 8: nackte Aufzählungs-Torsi wie "<p><strong>4.</strong></p>" —
+# Referenz: services/style_lint.py _LONE_ENUM_NODE_RE (sprachunabhängig).
+_EN_LONE_ENUM_NODE_RE = re.compile(
+    r"<(p|li|h[2-6])\b[^>]*>\s*(?:<(?:strong|b|em)[^>]*>\s*)*\d{1,2}\.?\s*"
+    r"(?:</(?:strong|b|em)>\s*)*</\1>",
+    re.IGNORECASE,
+)
+
+_EN_TAG_STRIP_RE = re.compile(r"<[^>]+>")
+
+
+def _strip_lone_enum_nodes(html: str) -> str:
+    """Entfernt verwaiste Aufzählungs-Knoten (z.B. leere Sektion '4.')."""
+    if not html:
+        return html
+    return _EN_LONE_ENUM_NODE_RE.sub("", html)
+
+
+def _strip_empty_pair_cards(html: str) -> str:
+    """Punkt 9: Entfernt .pair-card-Blöcke ohne sichtbaren Textinhalt
+    (z.B. Förderprogramm-Karte, die nur noch das Icon enthält)."""
+    if not html or "pair-card" not in html:
+        return html
+    out = []
+    pos = 0
+    open_re = re.compile(r'<div\b[^>]*class="[^"]*\bpair-card\b[^"]*"[^>]*>', re.IGNORECASE)
+    div_re = re.compile(r"<div\b[^>]*>|</div\s*>", re.IGNORECASE)
+    while True:
+        m = open_re.search(html, pos)
+        if not m:
+            out.append(html[pos:])
+            break
+        # Block-Ende über Div-Tiefe finden
+        depth = 1
+        scan = m.end()
+        end = None
+        while depth > 0:
+            t = div_re.search(html, scan)
+            if not t:
+                break
+            depth += 1 if t.group(0).lower().startswith("<div") else -1
+            scan = t.end()
+            if depth == 0:
+                end = scan
+        if end is None:
+            out.append(html[pos:])
+            break
+        block = html[m.start():end]
+        # Sichtbaren Text prüfen: Tags + SVG raus, Entities/Whitespace ignorieren
+        text = re.sub(r"<svg\b[\s\S]*?</svg>", "", block, flags=re.IGNORECASE)
+        text = _EN_TAG_STRIP_RE.sub("", text)
+        text = html_mod_unescape(text)
+        if text.strip():
+            out.append(html[pos:end])
+        else:
+            out.append(html[pos:m.start()])
+            log.info("[EN-FINAL-PASS] Removed empty pair-card block")
+        pos = end
+    return "".join(out)
+
+
+def html_mod_unescape(text: str) -> str:
+    try:
+        return html.unescape(text)
+    except Exception:
+        return text
+
+
+# Punkt 10: abgehacktes "d," im Rights-Log ("asset name, purpose, d, input
+# source") — vermutlich aus einer Kürzungs-/Sanitize-Stufe verstümmeltes
+# "date". Eng gefasst auf den Listenkontext.
+_EN_RIGHTS_LOG_D_RE = re.compile(
+    r"(purpose\s*,)\s*d\s*,(\s*(?:<[^>]+>\s*)*input\s+source)",
+    re.IGNORECASE,
+)
+
+
+def _repair_truncated_date_token(html: str) -> str:
+    if not html:
+        return html
+    return _EN_RIGHTS_LOG_D_RE.sub(r"\1 date,\2", html)
+
+
+def apply_en_final_locale_pass(html: str, lang: str) -> str:
+    """KIS-1251: Finaler EN-Pass auf dem gerenderten Gesamt-HTML.
+
+    Läuft NUR bei lang=en (DE-Reports bleiben byte-identisch):
+    1. Zahlenformat-Normalizer (Punkt 12)
+    2. Lone-Enum-Strip (Punkt 8, sprachunabhängige Regex)
+    3. Leere pair-cards entfernen (Punkt 9)
+    4. Rights-Log-"d,"-Reparatur (Punkt 10)
+    """
+    lang_norm = (lang or "").strip().lower()
+    if not lang_norm.startswith("en") or not html:
+        return html
+    out = html
+    try:
+        out = normalize_en_number_formats(out)
+        out = _strip_lone_enum_nodes(out)
+        out = _strip_empty_pair_cards(out)
+        out = _repair_truncated_date_token(out)
+    except Exception as exc:  # pragma: no cover — defensiv
+        log.warning("[EN-FINAL-PASS] failed: %s — returning input unchanged", exc)
+        return html
     return out
 
 

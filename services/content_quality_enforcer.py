@@ -410,6 +410,11 @@ _L10N_SKIP_KEYS = frozenset({
 
 def apply_badge_localization(sections: dict) -> dict:
     """KIS-1248: Deterministische Eindeutschung von Badge-/Slug-Resten."""
+    # KIS-1251: Nur für DE-Reports — die Eindeutschung machte in EN-Reports
+    # aus "ESSENTIAL"/"RECOMMENDED" die Badges "UNVERZICHTBAR"/"EMPFOHLEN".
+    _lang = str(sections.get("LANG") or "de").strip().lower()
+    if _lang.startswith("en"):
+        return sections
     total = 0
     for key, content in list(sections.items()):
         if not isinstance(content, str) or not content:

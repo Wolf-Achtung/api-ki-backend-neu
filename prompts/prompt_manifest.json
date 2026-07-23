@@ -1970,6 +1970,258 @@
       "size_aware": false,
       "required": false,
       "output": "html"
+    },
+    "foerderpotenzial": {
+      "title": "Funding Potential",
+      "path": "foerderpotenzial.md",
+      "purpose": "German federal programs (EN report)",
+      "size_aware": true,
+      "funding_scope": "DE",
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 3200,
+        "solo": 2560,
+        "team": 3200,
+        "kmu": 3680
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
+    },
+    "foerderprogramme": {
+      "title": "Funding Programmes (Reference)",
+      "path": "foerderprogramme.md",
+      "purpose": "Programme overview",
+      "size_aware": true,
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
+    },
+    "gc_implementation_plan": {
+      "title": "Gamechanger Implementation Plan",
+      "path": "gc_implementation_plan.md",
+      "purpose": "90-day deep dive implementation plan for gamechanger",
+      "size_aware": true,
+      "required": false,
+      "output": "html"
+    },
+    "gc_next_steps": {
+      "title": "Gamechanger Next Steps",
+      "path": "gc_next_steps.md",
+      "purpose": "Concrete next steps after gamechanger deep dive",
+      "size_aware": true,
+      "required": false,
+      "output": "html"
+    },
+    "gc_risk_assessment": {
+      "title": "Gamechanger Risk Assessment",
+      "path": "gc_risk_assessment.md",
+      "purpose": "Detailed risk assessment & safeguards for gamechanger deep dive",
+      "size_aware": true,
+      "required": false,
+      "output": "html"
+    },
+    "gc_strategic_analysis": {
+      "title": "Strategic Gamechanger Analysis",
+      "path": "gc_strategic_analysis.md",
+      "purpose": "Strategic inflection point analysis for gamechanger deep dive (KPA section 1)",
+      "size_aware": true,
+      "required": false,
+      "output": "html"
+    },
+    "ki_aktivitaeten_ziele": {
+      "title": "AI Activities & Goals",
+      "path": "ki_aktivitaeten_ziele.md",
+      "purpose": "Current AI usage and goals",
+      "size_aware": false,
+      "required": true,
+      "output": "html"
+    },
+    "kickoff_vorlage": {
+      "title": "Kickoff Template",
+      "path": "kickoff_vorlage.md",
+      "purpose": "Project kickoff template",
+      "size_aware": true,
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
+    },
+    "monetarisierung": {
+      "title": "Monetization",
+      "path": "monetarisierung.md",
+      "purpose": "AI-based business models",
+      "size_aware": true,
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
+    },
+    "strategie_governance": {
+      "title": "Strategy & Governance",
+      "path": "strategie_governance.md",
+      "purpose": "AI governance framework",
+      "size_aware": true,
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 3200,
+        "solo": 2560,
+        "team": 3200,
+        "kmu": 3680
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
+    },
+    "technologie_prozesse": {
+      "title": "Technology & Processes",
+      "path": "technologie_prozesse.md",
+      "purpose": "Tech stack and process analysis",
+      "size_aware": false,
+      "required": true,
+      "output": "html"
+    },
+    "tools_empfehlungen": {
+      "title": "Tool Recommendations",
+      "path": "tools_empfehlungen.md",
+      "purpose": "AI tools by category",
+      "size_aware": true,
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 2000,
+        "solo": 1600,
+        "team": 2000,
+        "kmu": 2300
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
+    },
+    "wettbewerb_benchmark": {
+      "title": "Competition & Benchmark",
+      "path": "wettbewerb_benchmark.md",
+      "purpose": "Competitive analysis",
+      "size_aware": true,
+      "required": true,
+      "output": "html",
+      "tokens": {
+        "base": 3500,
+        "solo": 2800,
+        "team": 3500,
+        "kmu": 4025
+      },
+      "persona_rules": {
+        "solo": {
+          "forbidden_terms": [
+            "Abteilung",
+            "Team",
+            "Mitarbeiter",
+            "Vorstand"
+          ],
+          "replacement_map": {
+            "Governance": "Eigenverantwortung",
+            "Stakeholder": "Partner",
+            "Compliance": "Sorgfaltspflicht"
+          }
+        }
+      }
     }
   }
 }

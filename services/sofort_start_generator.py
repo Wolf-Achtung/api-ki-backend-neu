@@ -1608,6 +1608,318 @@ Format: Executive Summary (max. 500 Wörter) + Detail-Anhang""",
 ]
 
 # =============================================================================
+# KIS-1251 (Punkt 2): EN-FASSUNG DER SOFORT-START-TEXTBAUSTEINE
+# =============================================================================
+# Für lang=en werden generische EN-Prompt-Sets verwendet (statt der 13
+# deutschen Branchen-Sets), parametrisiert mit der Hauptleistung. Die
+# DE-Datenstrukturen bleiben unverändert (DE byte-identisch).
+
+BEGINNER_PROMPTS_EN = [
+    {
+        "titel": "Draft a professional email",
+        "prompt": """Draft this email professionally and clearly:
+
+Recipient: [role/relationship]
+Occasion: [WHY am I writing?]
+Core message: [WHAT do I want?]
+Desired reaction: [WHAT should the recipient do?]
+
+Tone: [formal/friendly-professional]""",
+        "zeitersparnis": "10-15 min per email"
+    },
+    {
+        "titel": "Summarise a document",
+        "prompt": """Summarise this text:
+
+[PASTE TEXT HERE]
+
+Deliver:
+1. Executive summary (3 sentences)
+2. Key points (5 bullet points)
+3. Recommended action (if relevant)""",
+        "zeitersparnis": "15-30 min per document"
+    },
+    {
+        "titel": "Brainstorming partner",
+        "prompt": """Help me brainstorm:
+
+Topic/problem: [DESCRIPTION]
+Context: [BACKGROUND]
+Existing ideas: [IF ANY]
+
+Deliver:
+1. 10 creative ideas (including unconventional ones)
+2. Pros/cons for the top 3
+3. A recommendation on where to start""",
+        "zeitersparnis": "30-45 min per session"
+    }
+]
+
+LERN_PROMPT_EN = {
+    "titel": "Understand & explain AI opportunities and risks",
+    "prompt": """Explain the most important opportunities and risks of AI for small and medium-sized businesses, so that I can explain it to a business partner without expert knowledge in 3 sentences.
+
+Structure your answer as:
+1. Core statement (1 sentence)
+2. Why it matters (1 sentence)
+3. What changes as a result (1 sentence)
+
+Additionally: give me 3 common misconceptions about this topic.""",
+    "zeitersparnis": "15-20 min"
+}
+
+EXPERT_PROMPT_PATTERNS_EN = [
+    {
+        "titel": "System prompt for consistent outputs",
+        "prompt": """You are an experienced expert in {fachgebiet}. Your task is to perform [TASK].
+
+## Context
+- Target audience: [AUDIENCE]
+- Quality standard: [STANDARD]
+- Existing constraints: [CONSTRAINTS]
+
+## Output requirements
+- Format: [JSON/Markdown/structured text]
+- Maximum length: [TOKENS/WORDS]
+- Language: English, formal
+
+## Evaluation criteria
+1. Technical accuracy (priority 1)
+2. Structured output (priority 2)
+3. Actionability (priority 3)
+
+Answer ONLY in the defined format. No introductions, no meta comments.""",
+        "zeitersparnis": "Basis for all prompts"
+    },
+    {
+        "titel": "Step-by-step reasoning for complex analyses",
+        "prompt": """Analyse the following problem step by step:
+
+Problem: [DESCRIPTION]
+Context: {hauptleistung}
+
+Step 1: Identify the 3 most important influencing factors.
+Step 2: Rate each factor on a 1-5 scale (impact × likelihood).
+Step 3: Derive concrete recommendations.
+Step 4: Prioritise by effort/impact ratio.
+
+Format: structured table with factor | rating | recommendation | priority""",
+        "zeitersparnis": "Better analysis quality"
+    },
+    {
+        "titel": "Few-shot pattern for consistent assessments",
+        "prompt": """You assess [OBJECT] against the following criteria. Here are 2 examples:
+
+### Example 1 (rating: GOOD)
+Input: [EXAMPLE-INPUT-1]
+Rating: [STRUCTURED-RATING-1]
+Rationale: [RATIONALE-1]
+
+### Example 2 (rating: NEEDS IMPROVEMENT)
+Input: [EXAMPLE-INPUT-2]
+Rating: [STRUCTURED-RATING-2]
+Rationale: [RATIONALE-2]
+
+### Now assess:
+Input: [NEW INPUT]
+
+Assess in exactly the same format as the examples.""",
+        "zeitersparnis": "Consistent results"
+    },
+]
+
+INTERMEDIATE_PROMPTS_EN = [
+    {
+        "titel": "Process optimisation with AI",
+        "prompt": """Analyse the following work process and identify AI automation potential:
+
+Process: [DESCRIPTION OF THE PROCESS]
+Area: {hauptleistung}
+Frequency: [daily/weekly/monthly]
+Current time spent: [HOURS]
+
+Deliver:
+1. Which sub-steps can be automated?
+2. Which AI tool fits each step? (concrete names)
+3. Expected time savings per run
+4. Recommended implementation order
+5. Possible pitfalls and how to avoid them""",
+        "zeitersparnis": "1-2 hrs setup, then ongoing"
+    },
+    {
+        "titel": "Create an industry-specific template",
+        "prompt": """Create a reusable template for:
+
+Task: [e.g. client report, proposal, analysis]
+Industry: {hauptleistung}
+Audience: [WHO READS THIS?]
+
+The template should contain:
+1. Fixed structural elements (always the same)
+2. Variable placeholders (adapted per assignment)
+3. Quality criteria for review
+4. An example prompt to fill the template with AI
+
+Goal: 60-70% time savings at consistent quality.""",
+        "zeitersparnis": "30-45 min per template"
+    },
+    {
+        "titel": "AI-assisted research & summary",
+        "prompt": """Research and summarise:
+
+Topic: [TOPIC]
+Context: {hauptleistung}
+Depth: [overview / detailed analysis / decision basis]
+
+Requirements:
+1. Recent developments (last 12 months)
+2. Assess relevance for my line of business
+3. Derive 3 concrete recommendations
+4. Name sources and further resources
+
+Format: executive summary (max. 500 words) + detail annex""",
+        "zeitersparnis": "1-2 hrs per research task"
+    },
+]
+
+CHECKLISTE_START_EN = [
+    {"text": "Create a ChatGPT or Claude account", "dauer": "5 min"},
+    {"text": "Test the first prompt from this report", "dauer": "10 min"},
+    {"text": "Solve one real work task with AI", "dauer": "30 min"},
+    {"text": "Review and adjust the result", "dauer": "15 min"},
+    {"text": "Note down the time saved", "dauer": "5 min"},
+]
+
+CHECKLISTE_START_INTERMEDIATE_EN = [
+    {"text": "Identify a recurring process that costs >1h/week", "dauer": "15 min"},
+    {"text": "Develop a structured prompt for this process", "dauer": "30 min"},
+    {"text": "Test the prompt with 3 real examples and refine it", "dauer": "30 min"},
+    {"text": "Sketch a workflow automation (e.g. Make/n8n)", "dauer": "20 min"},
+    {"text": "Estimate and document the weekly time savings", "dauer": "10 min"},
+]
+
+CHECKLISTE_START_EXPERT_EN = [
+    {"text": "Analyse your existing AI stack for the biggest bottleneck", "dauer": "30 min"},
+    {"text": "Define a measurable optimisation goal (latency/cost/quality)", "dauer": "15 min"},
+    {"text": "Review or set up monitoring (Langfuse/Helicone)", "dauer": "30 min"},
+    {"text": "Document prompt versioning and evaluation process", "dauer": "20 min"},
+    {"text": "Capture a cost-per-output baseline for your top 3 use cases", "dauer": "20 min"},
+]
+
+WARNUNGEN_EN = [
+    {
+        "icon": "🔒",
+        "titel": "No sensitive data",
+        "text": "NEVER enter client data, passwords or confidential figures into AI tools."
+    },
+    {
+        "icon": "🔍",
+        "titel": "Always verify",
+        "text": "Do not blindly trust AI-generated figures and facts – always cross-check."
+    },
+    {
+        "icon": "🎯",
+        "titel": "Start small",
+        "text": "Begin with simple tasks, not with your most complex project."
+    }
+]
+
+WARNUNGEN_INTERMEDIATE_EN = [
+    {
+        "icon": "🔒",
+        "titel": "Data protection in automation",
+        "text": "When automating workflows: check which data flows through which APIs. GDPR also applies to AI pipelines."
+    },
+    {
+        "icon": "🔍",
+        "titel": "Safeguard output quality",
+        "text": "Automated AI outputs need spot checks. Define quality gates for critical processes."
+    },
+    {
+        "icon": "📋",
+        "titel": "Document your processes",
+        "text": "Document AI-assisted workflows so colleagues can use and maintain them too."
+    }
+]
+
+WARNUNGEN_EXPERT_EN = [
+    {
+        "icon": "🔒",
+        "titel": "API keys & secrets management",
+        "text": "No API keys in code or logs. Use a secrets manager (Vault, AWS Secrets Manager) and rotate regularly."
+    },
+    {
+        "icon": "📊",
+        "titel": "Cost monitoring is mandatory",
+        "text": "LLM API costs can grow exponentially. Set budget limits, alerts and cost-per-request tracking from day 1."
+    },
+    {
+        "icon": "⚖️",
+        "titel": "Mind AI Act compliance",
+        "text": "Document your AI system per the EU AI Act: intended purpose, risk classification, human oversight, transparency obligations."
+    }
+]
+
+# EN-Übersetzungen der Tool-Empfehlungs-Felder (Schlüssel = exakter DE-String)
+_TOOL_PREIS_EN = {
+    "20 €/Monat": "€20/month",
+    "25 €/Nutzer/Monat": "€25/user/month",
+    "10 €/Nutzer/Monat": "€10/user/month",
+    "30 €/Nutzer/Monat": "€30/user/month",
+    "25-30 €/Nutzer/Monat": "€25-30/user/month",
+    "ab 9 €/Monat": "from €9/month",
+    "ab 50 €/Monat": "from €50/month",
+    "30 €/Nutzer/Monat + API-Kosten": "€30/user/month + API costs",
+    "nutzungsbasiert (ab ~20 €/Monat)": "usage-based (from ~€20/month)",
+    "nutzungsbasiert": "usage-based",
+    "Open Source / ab 0 €": "open source / from €0",
+    "Open Source / ab 99 €/Monat": "open source / from €99/month",
+    "Cloud oder Self-hosted": "cloud or self-hosted",
+}
+
+_TOOL_NUTZEN_EN = {
+    "Texte, Analysen, Brainstorming": "Texts, analyses, brainstorming",
+    "Recherche mit Quellenangaben": "Research with cited sources",
+    "Gemeinsame Nutzung, Admin-Kontrolle": "Shared use, admin controls",
+    "Dokumentation & Wissensmanagement": "Documentation & knowledge management",
+    "Office-Integration, Enterprise-ready": "Office integration, enterprise-ready",
+    "Lange Dokumente, komplexe Analysen": "Long documents, complex analyses",
+    "Lange Dokumente, komplexe Analysen, Brainstorming": "Long documents, complex analyses, brainstorming",
+    "Workflow-Automatisierung ohne Code": "No-code workflow automation",
+    "Gemeinsame Nutzung, Prompt-Bibliotheken": "Shared use, prompt libraries",
+    "Workflow-Automatisierung, API-Integrationen": "Workflow automation, API integrations",
+    "Office-Integration + eigene KI-Workflows": "Office integration + custom AI workflows",
+    "Komplexe Automatisierungen, Self-hosted möglich": "Complex automations, self-hosting possible",
+    "Direkte API-Integration, volle Kontrolle": "Direct API integration, full control",
+    "LLM-Observability, Prompt-Tracking, Kosten-Monitoring": "LLM observability, prompt tracking, cost monitoring",
+    "API-Zugang, zentrale Steuerung, Rate Limiting": "API access, central control, rate limiting",
+    "Monitoring, Evaluierung, Cost-Tracking": "Monitoring, evaluation, cost tracking",
+    "Multi-Provider-Routing, Fallback, Cost Control": "Multi-provider routing, fallback, cost control",
+    "Monitoring, A/B-Testing, Prompt-Versionierung": "Monitoring, A/B testing, prompt versioning",
+}
+
+
+def _translate_tool_en(tool: Dict[str, Any]) -> Dict[str, Any]:
+    """Liefert eine EN-Kopie eines Tool-Eintrags (Name/URL bleiben)."""
+    out = dict(tool)
+    out["preis"] = _TOOL_PREIS_EN.get(str(tool.get("preis", "")), tool.get("preis", ""))
+    out["nutzen"] = _TOOL_NUTZEN_EN.get(str(tool.get("nutzen", "")), tool.get("nutzen", ""))
+    return out
+
+
+def _shorten_for_injection_en(text: str, max_len: int = 80) -> str:
+    """Kürzt die Hauptleistung satz-sauber für die EN-Injektion:
+    erster Satz, max. ``max_len`` Zeichen, Wortgrenze, ohne Schluss-Punkt."""
+    if not text:
+        return ""
+    first = re.split(r"(?<=[.!?])\s", text.strip(), maxsplit=1)[0].strip()
+    first = first.rstrip(".!?;, ")
+    if len(first) > max_len:
+        first = first[:max_len].rsplit(" ", 1)[0].rstrip(".!?;, ") + "…"
+    return first
+
+
+# =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
 
@@ -1707,13 +2019,17 @@ def generate_sofort_start_html(
     expertise_level: str = "beginner",  # KIS-1132: competence-aware content
     ki_projekte: str = "",  # KIS-1132: existing AI projects for context
     medien_sparte: str = "",  # KIS-1247: sparten-aware Fallstudien-Auswahl
+    lang: str = "de",  # KIS-1251: EN-Fassung bei lang=en
 ) -> str:
     """
     Generiert die SOFORT_START_HTML Section.
 
     PLATIN+++ FIX 1.1/1.2/1.4: Uses canonical rates and size-based time savings.
     KIS-1132: Expertise-aware content calibration.
+    KIS-1251: lang="en" liefert die EN-Fassung der Textbausteine inkl.
+    sauberer Hauptleistungs-Injektion; Default "de" bleibt byte-identisch.
     """
+    is_en = (lang or "").strip().lower().startswith("en")
 
     branche_key = get_branche_key(branche)
     branche_data = BRANCHE_PROMPTS.get(branche_key, BRANCHE_PROMPTS["default"])
@@ -1734,6 +2050,9 @@ def generate_sofort_start_html(
         tools = TOOL_EMPFEHLUNGEN_INTERMEDIATE.get(size_key, TOOL_EMPFEHLUNGEN_INTERMEDIATE["solo"])
     else:
         tools = TOOL_EMPFEHLUNGEN.get(size_key, TOOL_EMPFEHLUNGEN["solo"])
+    # KIS-1251: EN-Fassung der Tool-Felder (Preis/Nutzen)
+    if is_en:
+        tools = [_translate_tool_en(t) for t in tools]
 
     # PLATIN+++ FIX 1.1: Use canonical rate from single source of truth
     if stundensatz <= 0:
@@ -1787,7 +2106,44 @@ def generate_sofort_start_html(
     _ki_proj_clean = (ki_projekte or "").strip()
 
     # KIS-1132: Expertise-aware first step
-    if expertise_level == "expert":
+    # KIS-1251 (Punkt 2): EN-Fassung mit satz-sauberer Hauptleistungs-
+    # Injektion — die lange Freitext-Hauptleistung wird auf den ersten Satz
+    # (max. 80 Zeichen) gekürzt, damit kein zerschossener Satzbau entsteht.
+    if is_en:
+        _hl_short_en = _shorten_for_injection_en(_hl_clean)
+        if expertise_level == "expert":
+            if _ki_proj_clean:
+                erster_schritt = (
+                    f"Analyse your existing AI stack ({_shorten_for_injection_en(_ki_proj_clean)}) for the "
+                    f"biggest bottleneck: is it latency, cost, output quality or governance? "
+                    f"Define a measurable optimisation goal for the next 30 days."
+                )
+            else:
+                erster_schritt = (
+                    f"Analyse your existing AI usage around "
+                    f"{_hl_short_en or 'your core service'} for the biggest bottleneck: "
+                    f"latency, cost, output quality or governance? "
+                    f"Define a measurable optimisation goal for the next 30 days."
+                )
+        elif expertise_level == "intermediate":
+            erster_schritt = (
+                f"Identify the most time-consuming recurring process in "
+                f"{_hl_short_en or 'your day-to-day work'} and create a structured "
+                f"prompt that breaks this process into 3 steps. Test the result "
+                f"with a real example."
+            )
+        else:
+            if _hl_short_en:
+                erster_schritt = (
+                    f"Test ChatGPT with a typical task from your line of work "
+                    f"({_hl_short_en}). Use the copy-paste prompts on the next page."
+                )
+            else:
+                erster_schritt = (
+                    "Let ChatGPT draft your next email. "
+                    "Use the copy-paste prompts on the next page."
+                )
+    elif expertise_level == "expert":
         if _ki_proj_clean:
             erster_schritt = (
                 f"Analysieren Sie Ihren bestehenden KI-Stack ({_ki_proj_clean[:80]}) auf den "
@@ -1817,6 +2173,30 @@ def generate_sofort_start_html(
                 f"({_hl_clean}). Nutzen Sie dafür die Copy-Paste Prompts auf der nächsten Seite."
             )
     
+    # KIS-1251: lang-abhängige Scaffolding-Strings + Zahlformat
+    if is_en:
+        _t_first_step = "The ONE first step – doable today"
+        _t_savings_title = "Your potential time savings"
+        _t_per_month = "per month"
+        _t_per_year = "per year"
+        _t_net_savings = "Net savings*"
+        _net_fmt = f"{savings['net_savings']:,}"
+        _tool_costs_fmt = f"{savings['tool_costs']:,}"
+        _t_footnote = (
+            f"*At {savings['hourly_rate']}&nbsp;€/h, less ~{_tool_costs_fmt}&nbsp;€ tool costs/year"
+        )
+    else:
+        _t_first_step = "Der EINE erste Schritt – heute noch machbar"
+        _t_savings_title = "Ihre potenzielle Zeitersparnis"
+        _t_per_month = "pro Monat"
+        _t_per_year = "pro Jahr"
+        _t_net_savings = "Netto-Ersparnis*"
+        _net_fmt = f"{savings['net_savings']:,}".replace(",", ".")
+        _tool_costs_fmt = f"{savings['tool_costs']:,}".replace(",", ".")
+        _t_footnote = (
+            f"*Bei {savings['hourly_rate']}&nbsp;€/h, abzgl. ~{_tool_costs_fmt}&nbsp;€ Tool-Kosten/Jahr"
+        )
+
     # HTML generieren
     html = f'''
     <!-- ERSTER SCHRITT -->
@@ -1825,7 +2205,7 @@ def generate_sofort_start_html(
             <span style="font-size: 32px;">⚡</span>
             <div>
                 <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 8px 0; color: white;">
-                    Der EINE erste Schritt – heute noch machbar
+                    {_t_first_step}
                 </h3>
                 <p style="font-size: 15px; margin: 0; opacity: 0.95; line-height: 1.5;">
                     {erster_schritt}
@@ -1843,24 +2223,24 @@ def generate_sofort_start_html(
     <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
         <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #166534; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 20px;">💰</span>
-            Ihre potenzielle Zeitersparnis
+            {_t_savings_title}
         </h3>
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
             <div style="background: white; border-radius: 6px; padding: 12px;">
                 <div style="font-size: 24px; font-weight: 700; color: #166534;">{savings['hours_per_month']}h</div>
-                <div style="font-size: 11px; color: #64748b;">pro Monat</div>
+                <div style="font-size: 11px; color: #64748b;">{_t_per_month}</div>
             </div>
             <div style="background: white; border-radius: 6px; padding: 12px;">
                 <div style="font-size: 24px; font-weight: 700; color: #166534;">{savings['hours_per_year']}h</div>
-                <div style="font-size: 11px; color: #64748b;">pro Jahr</div>
+                <div style="font-size: 11px; color: #64748b;">{_t_per_year}</div>
             </div>
             <div style="background: white; border-radius: 6px; padding: 12px;">
-                <div style="font-size: 24px; font-weight: 700; color: #166534;">{f"{savings['net_savings']:,}".replace(",", ".")}&nbsp;€</div>
-                <div style="font-size: 11px; color: #64748b;">Netto-Ersparnis*</div>
+                <div style="font-size: 24px; font-weight: 700; color: #166534;">{_net_fmt}&nbsp;€</div>
+                <div style="font-size: 11px; color: #64748b;">{_t_net_savings}</div>
             </div>
         </div>
         <p style="font-size: 10px; color: #64748b; margin: 8px 0 0 0; text-align: right;">
-            *Bei {savings['hourly_rate']}&nbsp;€/h, abzgl. ~{f"{savings['tool_costs']:,}".replace(",", ".")}&nbsp;€ Tool-Kosten/Jahr
+            {_t_footnote}
         </p>
     </div>
     
@@ -1875,11 +2255,28 @@ def generate_sofort_start_html(
     # KIS-1132: Select prompts based on expertise level
     _hl_context_prefix = ""
     if _hl_clean:
-        _hl_context_prefix = f"Kontext: Mein Unternehmen ist spezialisiert auf {_hl_clean}.\n\n"
+        if is_en:
+            _hl_context_prefix = (
+                f"Context: My company specialises in "
+                f"{_shorten_for_injection_en(_hl_clean, max_len=120)}.\n\n"
+            )
+        else:
+            _hl_context_prefix = f"Kontext: Mein Unternehmen ist spezialisiert auf {_hl_clean}.\n\n"
 
     if expertise_level == "expert":
         # Expert: Prompt-Engineering-Patterns statt generische Prompts
-        html += f'''
+        if is_en:
+            html += f'''
+        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 24px;">🧠</span>
+            Prompt engineering patterns for your tech setup
+        </h3>
+        <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">
+            Reusable patterns for consistent, high-quality LLM outputs:
+        </p>
+'''
+        else:
+            html += f'''
         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 24px;">🧠</span>
             Prompt-Engineering-Patterns für Ihr Technikpaket
@@ -1888,7 +2285,7 @@ def generate_sofort_start_html(
             Wiederverwendbare Patterns für konsistente, hochwertige LLM-Outputs:
         </p>
 '''
-        _expert_prompts = EXPERT_PROMPT_PATTERNS
+        _expert_prompts = EXPERT_PROMPT_PATTERNS_EN if is_en else EXPERT_PROMPT_PATTERNS
         # KIS-1232: Kurzes Fachgebiet für den Experten-Slot — vorher wurde die
         # KOMPLETTE Hauptleistung (mehrere Sätze) in "…{X}-Experte" injiziert
         # und erzeugte kaputte Sätze wie "erfahrener Finanzberatung für
@@ -1896,11 +2293,17 @@ def generate_sofort_start_html(
         _fachgebiet = re.split(r'(?<=[a-zäöüß])[.!?]', _hl_clean, maxsplit=1)[0].strip() if _hl_clean else ""
         if not _fachgebiet or len(_fachgebiet) > 80:
             _fachgebiet = (_fachgebiet[:77].rsplit(" ", 1)[0] + "…") if len(_fachgebiet) > 80 else str(branche_data["name"])
+        # KIS-1251: EN-Fallback statt deutschem Branchen-Namen
+        if is_en and _fachgebiet == str(branche_data["name"]):
+            _fachgebiet = "your field"
+        _hl_injection = _hl_clean or str(branche_data["name"])
+        if is_en:
+            _hl_injection = _shorten_for_injection_en(_hl_clean, max_len=120) or "your core service"
         for i, prompt_data in enumerate(_expert_prompts, 1):
             _prompt_text = (
                 prompt_data["prompt"]
                 .replace("{fachgebiet}", _fachgebiet)
-                .replace("{hauptleistung}", _hl_clean or str(branche_data["name"]))
+                .replace("{hauptleistung}", _hl_injection)
             )
             html += f'''
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
@@ -1920,7 +2323,18 @@ def generate_sofort_start_html(
 
     elif expertise_level == "intermediate":
         # Intermediate: structured workflow prompts
-        html += f'''
+        if is_en:
+            html += f'''
+        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 24px;">📋</span>
+            3 workflow prompts for your business
+        </h3>
+        <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">
+            Structured prompts for workflow optimisation – copy and adapt:
+        </p>
+'''
+        else:
+            html += f'''
         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 24px;">📋</span>
             3 Workflow-Prompts für {branche_data["name"]}
@@ -1929,9 +2343,15 @@ def generate_sofort_start_html(
             Strukturierte Prompts für Workflow-Optimierung – kopieren und anpassen:
         </p>
 '''
-        _inter_prompts = INTERMEDIATE_PROMPTS
+        _inter_prompts = INTERMEDIATE_PROMPTS_EN if is_en else INTERMEDIATE_PROMPTS
         for i, prompt_data in enumerate(_inter_prompts, 1):
-            _prompt_text = prompt_data["prompt"].replace("{hauptleistung}", _hl_clean or str(branche_data["name"]))
+            if is_en:
+                _prompt_text = prompt_data["prompt"].replace(
+                    "{hauptleistung}",
+                    _shorten_for_injection_en(_hl_clean, max_len=120) or "your core service",
+                )
+            else:
+                _prompt_text = prompt_data["prompt"].replace("{hauptleistung}", _hl_clean or str(branche_data["name"]))
             html += f'''
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -1950,7 +2370,20 @@ def generate_sofort_start_html(
 
     else:
         # Beginner: original branch-specific prompts (unchanged)
-        html += f'''
+        # KIS-1251: EN nutzt generische EN-Prompts (die 13 Branchen-Sets
+        # existieren nur auf Deutsch)
+        if is_en:
+            html += f'''
+        <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 24px;">📋</span>
+            4 copy-paste prompts for your daily work
+        </h3>
+        <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">
+            Copy these prompts straight into ChatGPT or Claude:
+        </p>
+'''
+        else:
+            html += f'''
         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 24px;">📋</span>
             4 Copy-Paste Prompts für {branche_data["name"]}
@@ -1959,7 +2392,10 @@ def generate_sofort_start_html(
             Kopieren Sie diese Prompts direkt in ChatGPT oder Claude:
         </p>
 '''
-        prompts_list: List[Dict[str, Any]] = cast(List[Dict[str, Any]], branche_data["prompts"])
+        prompts_list: List[Dict[str, Any]] = (
+            cast(List[Dict[str, Any]], BEGINNER_PROMPTS_EN) if is_en
+            else cast(List[Dict[str, Any]], branche_data["prompts"])
+        )
         for i, prompt_data in enumerate(prompts_list, 1):
             _raw_prompt = _hl_context_prefix + prompt_data["prompt"] if _hl_context_prefix else prompt_data["prompt"]
             prompt_text = _raw_prompt
@@ -1979,17 +2415,18 @@ def generate_sofort_start_html(
         </div>
 '''
         # Lern-Prompt (beginner only)
-        _lern_raw = branche_data.get("lern_prompt")
+        _lern_raw = LERN_PROMPT_EN if is_en else branche_data.get("lern_prompt")
         lern_prompt: Dict[str, str] | None = cast(Dict[str, str], _lern_raw) if isinstance(_lern_raw, dict) else None
         if lern_prompt:
             _raw_lern = _hl_context_prefix + lern_prompt["prompt"] if _hl_context_prefix else lern_prompt["prompt"]
             lern_text = _raw_lern
+            _lern_badge = "Learning prompt" if is_en else "Lern-Prompt"
             html += f'''
         <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin-bottom: 12px; page-break-inside: avoid;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                 <h4 style="font-size: 14px; font-weight: 600; margin: 0; color: #92400e;">
                     4. {lern_prompt["titel"]}
-                    <span style="font-size: 10px; font-weight: 500; background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle;">Lern-Prompt</span>
+                    <span style="font-size: 10px; font-weight: 500; background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle;">{_lern_badge}</span>
                 </h4>
                 <span style="font-size: 11px; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; white-space: nowrap;">
                     ⏱️ {lern_prompt["zeitersparnis"]}
@@ -2006,12 +2443,13 @@ def generate_sofort_start_html(
 '''
 
     # Tools hinzufügen
-    html += '''
+    _t_tools_title = "Recommended tools" if is_en else "Empfohlene Tools"
+    html += f'''
     <!-- TOOL-EMPFEHLUNGEN -->
     <div style="margin-bottom: 24px;">
         <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 24px;">🛠️</span>
-            Empfohlene Tools
+            {_t_tools_title}
         </h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
 '''
@@ -2043,14 +2481,23 @@ def generate_sofort_start_html(
     
     # KIS-1132: Expertise-aware Checkliste
     if expertise_level == "expert":
-        _checkliste = CHECKLISTE_START_EXPERT
-        _checkliste_title = "Ihr Optimierungs-Fahrplan (erste 2 Stunden)"
+        _checkliste = CHECKLISTE_START_EXPERT_EN if is_en else CHECKLISTE_START_EXPERT
+        _checkliste_title = (
+            "Your optimisation roadmap (first 2 hours)" if is_en
+            else "Ihr Optimierungs-Fahrplan (erste 2 Stunden)"
+        )
     elif expertise_level == "intermediate":
-        _checkliste = CHECKLISTE_START_INTERMEDIATE
-        _checkliste_title = "Ihr Workflow-Optimierungs-Plan (erste 90 Minuten)"
+        _checkliste = CHECKLISTE_START_INTERMEDIATE_EN if is_en else CHECKLISTE_START_INTERMEDIATE
+        _checkliste_title = (
+            "Your workflow optimisation plan (first 90 minutes)" if is_en
+            else "Ihr Workflow-Optimierungs-Plan (erste 90 Minuten)"
+        )
     else:
-        _checkliste = CHECKLISTE_START
-        _checkliste_title = "Ihre Start-Checkliste (erste 60 Minuten)"
+        _checkliste = CHECKLISTE_START_EN if is_en else CHECKLISTE_START
+        _checkliste_title = (
+            "Your getting-started checklist (first 60 minutes)" if is_en
+            else "Ihre Start-Checkliste (erste 60 Minuten)"
+        )
 
     html += f'''
     <!-- CHECKLISTE -->
@@ -2078,18 +2525,21 @@ def generate_sofort_start_html(
 
     # KIS-1132: Expertise-aware Warnungen
     if expertise_level == "expert":
-        _warnungen = WARNUNGEN_EXPERT
+        _warnungen = WARNUNGEN_EXPERT_EN if is_en else WARNUNGEN_EXPERT
     elif expertise_level == "intermediate":
-        _warnungen = WARNUNGEN_INTERMEDIATE
+        _warnungen = WARNUNGEN_INTERMEDIATE_EN if is_en else WARNUNGEN_INTERMEDIATE
     else:
-        _warnungen = WARNUNGEN
+        _warnungen = WARNUNGEN_EN if is_en else WARNUNGEN
 
-    html += '''
+    _t_warn_title = (
+        "Important: what NOT to do" if is_en else "Wichtig: Das sollten Sie NICHT tun"
+    )
+    html += f'''
     <!-- WARNUNGEN -->
     <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px;">
         <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #92400e; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 20px;">⚠️</span>
-            Wichtig: Das sollten Sie NICHT tun
+            {_t_warn_title}
         </h3>
         <div style="display: flex; flex-direction: column; gap: 8px;">
 '''
@@ -2113,7 +2563,8 @@ def generate_sofort_start_html(
     
     
     # Branchen-Fallstudie (Idee #5) — KIS-1247: sparten-aware für Medien
-    html += generate_fallstudie_html(branche, size_key, medien_sparte=medien_sparte)
+    # KIS-1251: lang durchreichen (EN-Fassung der Fallstudie)
+    html += generate_fallstudie_html(branche, size_key, medien_sparte=medien_sparte, lang=lang)
 
     # Entscheidungsvorlage für Vorgesetzte (Idee #10) - nur für Team/KMU
     if size_key in ["team", "kmu"]:
@@ -2154,6 +2605,7 @@ def build_gf_vorlage_html(
     opex_month: int,
     hauptleistung: str,
     capex: int = 0,
+    lang: str = "de",
 ) -> str:
     """Deterministic template for GF-Entscheidungsvorlage.
 
@@ -2163,8 +2615,72 @@ def build_gf_vorlage_html(
     (600 \u20ac/Monat), w\u00e4hrend der Business Case mit der vollen
     Startinvestition rechnet. Eine GF h\u00e4tte auf dieser Basis etwas
     anderes genehmigt als der Report kalkuliert (Lauf 1119, S. 6).
+    KIS-1251 (Punkt 4): lang="en" liefert die englische Fassung inkl.
+    EN-Zahlenformat; Default "de" bleibt byte-identisch.
     """
     brutto = hours * rate * 12
+
+    if (lang or "").strip().lower().startswith("en"):
+        brutto_fmt_en = f"{brutto:,}"
+        capex_li_en = ""
+        if capex > 0:
+            capex_fmt_en = f"{int(capex):,}"
+            capex_li_en = (
+                f"<li>Initial investment (one-off, spread over 12 months): "
+                f"approx. {capex_fmt_en}\u00a0\u20ac \u2014 details in the business case</li>\n                "
+            )
+        return f'''
+    <div style="background: white; border: 2px solid #1e40af; border-radius: 8px; padding: 20px; margin-top: 24px;">
+        <h3 style="font-size: 18px; font-weight: 700; margin: 0 0 16px 0; color: #1e40af; text-align: center;">
+            \U0001f4c4 Decision template: introducing AI tools
+        </h3>
+        <p style="font-size: 12px; color: #64748b; text-align: center; margin: 0 0 16px 0;">
+            You can present this template to your management
+        </p>
+
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 16px;">
+            <h4 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Proposal: Introduction of AI assistance tools</h4>
+
+            <p style="font-size: 13px; margin: 0 0 12px 0;">
+                <strong>Area:</strong> {hauptleistung or "General"}<br>
+                <strong>Requested by:</strong> [YOUR NAME]<br>
+                <strong>Date:</strong> [DATE]
+            </p>
+
+            <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Expected benefits:</h4>
+            <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
+                <li>Time savings: {hours} hours/month</li>
+                <li>Annual gross time-savings value: approx. {brutto_fmt_en}\u00a0\u20ac ({hours}h \u00d7 {rate}\u00a0\u20ac \u00d7 12)</li>
+                <li>Quality gains on routine tasks</li>
+            </ul>
+
+            <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Investment:</h4>
+            <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
+                {capex_li_en}<li>Ongoing tool costs: approx. {opex_month}\u00a0\u20ac/month (organisation total)</li>
+                <li>Onboarding effort: approx. 2-4 hours</li>
+            </ul>
+
+            <h4 style="font-size: 13px; font-weight: 600; margin: 16px 0 8px 0;">Risk mitigation:</h4>
+            <ul style="font-size: 13px; margin: 0; padding-left: 20px;">
+                <li>No sensitive data in AI tools</li>
+                <li>All outputs are reviewed</li>
+                <li>A 30-day trial period is possible</li>
+            </ul>
+
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+                <div>
+                    <p style="font-size: 11px; color: #64748b; margin: 0;">Signature (requester)</p>
+                    <div style="border-bottom: 1px solid #1e293b; width: 150px; margin-top: 24px;"></div>
+                </div>
+                <div>
+                    <p style="font-size: 11px; color: #64748b; margin: 0;">Approval</p>
+                    <div style="border-bottom: 1px solid #1e293b; width: 150px; margin-top: 24px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+'''
+
     brutto_fmt = f"{brutto:,}".replace(",", ".")
     capex_li = ""
     if capex > 0:
@@ -2354,8 +2870,39 @@ _CHALLENGE_SOLO_WEEK_OVERRIDES: Dict[str, Dict[str, Any]] = {
 }
 
 
+# KIS-1251 (Punkt 3): EN-Fassung der Solo-Override-Wochen
+_CHALLENGE_SOLO_WEEK_OVERRIDES_EN: Dict[str, Dict[str, Any]] = {
+    "woche_3": {
+        "titel": "Templates & reuse",
+        "ziel": "Build your own prompt library and client templates",
+        "tage": [
+            {"tag": 15, "aufgabe": "Document your top 10 recurring tasks from weeks 1+2", "dauer": "30 min", "kategorie": "Reflexion"},
+            {"tag": 16, "aufgabe": "Turn each task into a reusable prompt", "dauer": "45 min", "kategorie": "Optimierung"},
+            {"tag": 17, "aufgabe": "Set up a prompt library in Notion/Obsidian/Markdown", "dauer": "30 min", "kategorie": "Setup"},
+            {"tag": 18, "aufgabe": "Client-specific templates (proposal, minutes, follow-up)", "dauer": "45 min", "kategorie": "Praxis"},
+            {"tag": 19, "aufgabe": "Establish template versioning (Git or cloud versions)", "dauer": "30 min", "kategorie": "Setup"},
+            {"tag": 20, "aufgabe": "Test: how much time does the library save per assignment?", "dauer": "30 min", "kategorie": "Reflexion"},
+            {"tag": 21, "aufgabe": "Week 3 review: mark your top 3 library building blocks", "dauer": "20 min", "kategorie": "Reflexion"},
+        ],
+    },
+    "woche_4": {
+        "titel": "Client onboarding & self-marketing",
+        "ziel": "Automate client workflows and build visibility",
+        "tage": [
+            {"tag": 22, "aufgabe": "Create a standard onboarding brief for new clients", "dauer": "45 min", "kategorie": "Praxis"},
+            {"tag": 23, "aufgabe": "Set up AI-assisted FAQ answers for regular clients", "dauer": "30 min", "kategorie": "Praxis"},
+            {"tag": 24, "aufgabe": "Prepare LinkedIn/newsletter posting building blocks", "dauer": "45 min", "kategorie": "Sharing"},
+            {"tag": 25, "aufgabe": "Write up a case study from your own project with AI help", "dauer": "45 min", "kategorie": "Praxis"},
+            {"tag": 26, "aufgabe": "Backup strategy: what to do if an AI service goes down?", "dauer": "30 min", "kategorie": "Strategie"},
+            {"tag": 27, "aufgabe": "Draft your own AI consulting fee position (service offer)", "dauer": "30 min", "kategorie": "Strategie"},
+            {"tag": 28, "aufgabe": "__QUARTAL_ZIEL__", "dauer": "30 min", "kategorie": "Planung"},
+        ],
+    },
+}
+
+
 def _filter_challenge_weeks_by_size(
-    challenge_data: Dict[str, Any], company_size: str,
+    challenge_data: Dict[str, Any], company_size: str, lang: str = "de",
 ) -> Dict[str, Any]:
     """Drop week-keys flagged as out-of-scale; apply solo-specific overrides.
 
@@ -2363,9 +2910,12 @@ def _filter_challenge_weeks_by_size(
     For solo+intermediate/expert, woche_3/4 get overridden with
     solo-realistic content (Vorlagen-Bibliothek + Mandanten-Onboarding)
     instead of Enterprise-LLM-Ops (KIS-1192 Item H).
+    KIS-1251: lang="en" wählt die EN-Override-Wochen; die Titel-Keywords
+    decken DE- und EN-Wochentitel ab.
     """
     size_norm = (company_size or "").strip().lower()
     skip_keys = _CHALLENGE_WEEKS_SKIP_BY_SIZE.get(size_norm, set())
+    _is_en = (lang or "").strip().lower().startswith("en")
 
     # Apply skip first
     if skip_keys:
@@ -2374,23 +2924,30 @@ def _filter_challenge_weeks_by_size(
     # Solo override for Intermediate/Expert (where week 3/4 are Enterprise-LLM-Ops)
     # Only triggers if the challenge variant actually has woche_3/woche_4 keys
     # (CHALLENGE_30_TAGE_EXPERT and _INTERMEDIATE do, CHALLENGE_30_TAGE/_LIGHT do not).
+    _expert_title_keywords = (
+        "optimierung", "ops", "skalierung", "optimisation", "optimization", "scaling",
+    )
     if size_norm == "solo":
         has_expert_week_3 = "woche_3" in challenge_data and any(
             kw in (challenge_data["woche_3"].get("titel") or "").lower()
-            for kw in ("optimierung", "ops", "skalierung")
+            for kw in _expert_title_keywords
         )
         has_expert_week_4 = "woche_4" in challenge_data and any(
             kw in (challenge_data["woche_4"].get("titel") or "").lower()
-            for kw in ("optimierung", "ops", "skalierung")
+            for kw in _expert_title_keywords
         )
         if has_expert_week_3 or has_expert_week_4:
+            _overrides = (
+                _CHALLENGE_SOLO_WEEK_OVERRIDES_EN if _is_en
+                else _CHALLENGE_SOLO_WEEK_OVERRIDES
+            )
             result: Dict[str, Any] = {}
             for k, v in challenge_data.items():
-                if k in _CHALLENGE_SOLO_WEEK_OVERRIDES and (
+                if k in _overrides and (
                     (k == "woche_3" and has_expert_week_3)
                     or (k == "woche_4" and has_expert_week_4)
                 ):
-                    result[k] = _CHALLENGE_SOLO_WEEK_OVERRIDES[k]
+                    result[k] = _overrides[k]
                 else:
                     result[k] = v
             return result
@@ -2830,6 +3387,285 @@ CHALLENGE_LIGHT = {
 }
 
 
+# =============================================================================
+# KIS-1251 (Punkt 3): EN-FASSUNG DER 30-TAGE-CHALLENGE-DATEN
+# =============================================================================
+
+ZEITBUDGET_CONFIG_EN = {
+    "unter_2": {
+        "label": "Under 2 hours/week",
+        "minuten_pro_tag": 15,
+        "intensitaet": "light",
+        "empfehlung": "Focus on the most important days (marked with ⭐)"
+    },
+    "2_5": {
+        "label": "2–5 hours/week",
+        "minuten_pro_tag": 30,
+        "intensitaet": "moderate",
+        "empfehlung": "The perfect pace for sustainable learning"
+    },
+    "5_10": {
+        "label": "5–10 hours/week",
+        "minuten_pro_tag": 60,
+        "intensitaet": "intensive",
+        "empfehlung": "You can do all tasks plus bonus challenges"
+    },
+    "ueber_10": {
+        "label": "Over 10 hours/week",
+        "minuten_pro_tag": 90,
+        "intensitaet": "full",
+        "empfehlung": "Maximum learning pace – ideal for a fast transformation"
+    }
+}
+
+CHALLENGE_30_TAGE_EN = {
+    "woche_1": {
+        "titel": "First steps",
+        "ziel": "Get to know AI tools and celebrate first wins",
+        "tage": [
+            {"tag": 1, "aufgabe": "Create a ChatGPT or Claude account", "dauer": "10 min", "kategorie": "Setup"},
+            {"tag": 2, "aufgabe": "Test the first prompt from this report", "dauer": "15 min", "kategorie": "Praxis"},
+            {"tag": 3, "aufgabe": "Draft a real email with AI", "dauer": "20 min", "kategorie": "Praxis"},
+            {"tag": 4, "aufgabe": "Compare the result with a manual version", "dauer": "10 min", "kategorie": "Reflexion"},
+            {"tag": 5, "aufgabe": "Have a text summarised", "dauer": "15 min", "kategorie": "Praxis"},
+            {"tag": 6, "aufgabe": "Brainstorm a current topic", "dauer": "20 min", "kategorie": "Praxis"},
+            {"tag": 7, "aufgabe": "Week 1 review: what saved time?", "dauer": "15 min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_2": {
+        "titel": "Build routines",
+        "ziel": "Integrate AI into daily workflows",
+        "tage": [
+            {"tag": 8, "aufgabe": "Morning routine: plan your day with AI", "dauer": "10 min", "kategorie": "Routine"},
+            {"tag": 9, "aufgabe": "Prepare a meeting with AI support", "dauer": "20 min", "kategorie": "Praxis"},
+            {"tag": 10, "aufgabe": "Have a complex client request analysed", "dauer": "25 min", "kategorie": "Praxis"},
+            {"tag": 11, "aufgabe": "Create and save your own prompt template", "dauer": "20 min", "kategorie": "Optimierung"},
+            {"tag": 12, "aufgabe": "Have a document/report structured", "dauer": "30 min", "kategorie": "Praxis"},
+            {"tag": 13, "aufgabe": "Get feedback on your own text", "dauer": "15 min", "kategorie": "Praxis"},
+            {"tag": 14, "aufgabe": "Week 2 review: document time savings", "dauer": "15 min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_3": {
+        "titel": "Boost efficiency",
+        "ziel": "Apply advanced techniques",
+        "tage": [
+            {"tag": 15, "aufgabe": "Test a multi-step prompt (step by step)", "dauer": "25 min", "kategorie": "Fortgeschritten"},
+            {"tag": 16, "aufgabe": "Use AI as a sparring partner for a decision", "dauer": "30 min", "kategorie": "Praxis"},
+            {"tag": 17, "aufgabe": "Have a process documentation created", "dauer": "30 min", "kategorie": "Praxis"},
+            {"tag": 18, "aufgabe": "Test a second AI tool (e.g. Perplexity)", "dauer": "20 min", "kategorie": "Exploration"},
+            {"tag": 19, "aufgabe": "Research task with cited sources", "dauer": "30 min", "kategorie": "Praxis"},
+            {"tag": 20, "aufgabe": "Prepare a presentation/pitch with AI", "dauer": "40 min", "kategorie": "Praxis"},
+            {"tag": 21, "aufgabe": "Week 3 review: identify your best use cases", "dauer": "20 min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_4": {
+        "titel": "Establish workflows",
+        "ziel": "Sustainable integration into everyday work",
+        "tage": [
+            {"tag": 22, "aufgabe": "Set up a personal prompt library", "dauer": "30 min", "kategorie": "Optimierung"},
+            {"tag": 23, "aufgabe": "Show a colleague one use case", "dauer": "20 min", "kategorie": "Sharing"},
+            {"tag": 24, "aufgabe": "Start a complex project with AI support", "dauer": "45 min", "kategorie": "Praxis"},
+            {"tag": 25, "aufgabe": "Quality control: critically review AI output", "dauer": "20 min", "kategorie": "Qualität"},
+            {"tag": 26, "aufgabe": "Workflow checklist for a recurring task", "dauer": "25 min", "kategorie": "Optimierung"},
+            {"tag": 27, "aufgabe": "Test alternative phrasings for the same task", "dauer": "20 min", "kategorie": "Fortgeschritten"},
+            {"tag": 28, "aufgabe": "Identify a team use case", "dauer": "25 min", "kategorie": "Scaling"},
+        ]
+    },
+    "abschluss": {
+        "titel": "Wrap-up & outlook",
+        "ziel": "Secure results and plan the next phase",
+        "tage": [
+            {"tag": 29, "aufgabe": "Calculate the ROI of the last 4 weeks", "dauer": "20 min", "kategorie": "Reflexion"},
+            {"tag": 30, "aufgabe": "Plan the next 30 days: what becomes standard?", "dauer": "30 min", "kategorie": "Planung"},
+        ]
+    }
+}
+
+CHALLENGE_30_TAGE_EXPERT_EN = {
+    "woche_1": {
+        "titel": "Stack audit",
+        "ziel": "Capture the status quo: measure cost, latency, quality",
+        "tage": [
+            {"tag": 1, "aufgabe": "Inventory all LLM API calls", "dauer": "30 min", "kategorie": "Analyse"},
+            {"tag": 2, "aufgabe": "Measure cost per request for your top 3 use cases", "dauer": "45 min", "kategorie": "Monitoring"},
+            {"tag": 3, "aufgabe": "Capture average latency per endpoint", "dauer": "30 min", "kategorie": "Monitoring"},
+            {"tag": 4, "aufgabe": "Assess output quality with 10 test cases", "dauer": "45 min", "kategorie": "Qualität"},
+            {"tag": 5, "aufgabe": "Set up a monitoring dashboard (Langfuse/Helicone)", "dauer": "60 min", "kategorie": "Setup"},
+            {"tag": 6, "aufgabe": "Create a baseline report: cost/quality/latency", "dauer": "30 min", "kategorie": "Analyse"},
+            {"tag": 7, "aufgabe": "Week 1 review: prioritise top 3 optimisation levers", "dauer": "20 min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_2": {
+        "titel": "Governance & compliance",
+        "ziel": "Draft an AI policy, define review steps, documentation",
+        "tage": [
+            {"tag": 8, "aufgabe": "Draft an AI usage policy (scope, roles, responsibility)", "dauer": "45 min", "kategorie": "Governance"},
+            {"tag": 9, "aufgabe": "Data classification: what may go into which LLM?", "dauer": "30 min", "kategorie": "Governance"},
+            {"tag": 10, "aufgabe": "AI Act risk classification for your use cases", "dauer": "45 min", "kategorie": "Governance"},
+            {"tag": 11, "aufgabe": "Define quality gates: when is LLM output production-ready?", "dauer": "30 min", "kategorie": "Qualität"},
+            {"tag": 12, "aufgabe": "Set up prompt versioning (Git/Langfuse)", "dauer": "45 min", "kategorie": "Optimierung"},
+            {"tag": 13, "aufgabe": "Create an incident response plan for LLM failures", "dauer": "30 min", "kategorie": "Governance"},
+            {"tag": 14, "aufgabe": "Week 2 review: finalise governance documents", "dauer": "20 min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_3": {
+        "titel": "Optimisation",
+        "ziel": "Optimise prompt engineering, caching, cost per output",
+        "tage": [
+            {"tag": 15, "aufgabe": "Test your top prompt with A/B variants", "dauer": "45 min", "kategorie": "Optimierung"},
+            {"tag": 16, "aufgabe": "Evaluate semantic caching for frequent requests", "dauer": "30 min", "kategorie": "Optimierung"},
+            {"tag": 17, "aufgabe": "Model routing: cheaper model for simple tasks", "dauer": "45 min", "kategorie": "Optimierung"},
+            {"tag": 18, "aufgabe": "Test prompt compression (cost vs. quality)", "dauer": "30 min", "kategorie": "Optimierung"},
+            {"tag": 19, "aufgabe": "Build an evaluation suite with 20+ test cases", "dauer": "60 min", "kategorie": "Qualität"},
+            {"tag": 20, "aufgabe": "Measure cost per output after optimisation (delta)", "dauer": "30 min", "kategorie": "Monitoring"},
+            {"tag": 21, "aufgabe": "Week 3 review: calculate the ROI of the optimisations", "dauer": "20 min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_4": {
+        "titel": "Scaling",
+        "ziel": "Monitoring, error handling, fallback strategies, team rollout",
+        "tage": [
+            {"tag": 22, "aufgabe": "Define a fallback strategy (provider B, cached response)", "dauer": "30 min", "kategorie": "Strategie"},
+            {"tag": 23, "aufgabe": "Configure rate limiting and budget alerts", "dauer": "30 min", "kategorie": "Monitoring"},
+            {"tag": 24, "aufgabe": "Review error handling and retry logic", "dauer": "45 min", "kategorie": "Optimierung"},
+            {"tag": 25, "aufgabe": "Team documentation: onboarding guide for LLM usage", "dauer": "45 min", "kategorie": "Sharing"},
+            {"tag": 26, "aufgabe": "Compliance check: all documentation duties fulfilled?", "dauer": "30 min", "kategorie": "Governance"},
+            {"tag": 27, "aufgabe": "Identify the next 3 use cases for LLM integration", "dauer": "30 min", "kategorie": "Strategie"},
+            {"tag": 28, "aufgabe": "Team presentation: share results and learnings", "dauer": "45 min", "kategorie": "Sharing"},
+        ]
+    },
+    "abschluss": {
+        "titel": "Wrap-up & scaling roadmap",
+        "ziel": "Secure results and plan the next-quarter roadmap",
+        "tage": [
+            {"tag": 29, "aufgabe": "Document the cost/quality delta vs. baseline", "dauer": "30 min", "kategorie": "Reflexion"},
+            {"tag": 30, "aufgabe": "Create a 90-day roadmap for LLM scaling", "dauer": "45 min", "kategorie": "Planung"},
+        ]
+    }
+}
+
+CHALLENGE_30_TAGE_INTERMEDIATE_EN = {
+    "woche_1": {
+        "titel": "Workflow analysis",
+        "ziel": "Identify time sinks and set up first AI workflows",
+        "tage": [
+            {"tag": 1, "aufgabe": "List the top 5 time sinks in your working day", "dauer": "15 min", "kategorie": "Analyse"},
+            {"tag": 2, "aufgabe": "For time sink #1: develop a structured prompt", "dauer": "25 min", "kategorie": "Praxis"},
+            {"tag": 3, "aufgabe": "Test the prompt with 3 real examples and refine it", "dauer": "25 min", "kategorie": "Praxis"},
+            {"tag": 4, "aufgabe": "For time sink #2: develop and test a prompt", "dauer": "30 min", "kategorie": "Praxis"},
+            {"tag": 5, "aufgabe": "Test a multi-step prompt (step-by-step guide)", "dauer": "25 min", "kategorie": "Fortgeschritten"},
+            {"tag": 6, "aufgabe": "Save a prompt template for your most frequent use case", "dauer": "15 min", "kategorie": "Optimierung"},
+            {"tag": 7, "aufgabe": "Week 1 review: which prompt saves the most time?", "dauer": "15 min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_2": {
+        "titel": "Automation",
+        "ziel": "Automate recurring tasks with AI workflows",
+        "tage": [
+            {"tag": 8, "aufgabe": "Create a Make/n8n account and a first workflow", "dauer": "30 min", "kategorie": "Setup"},
+            {"tag": 9, "aufgabe": "Set up an email-to-summary workflow", "dauer": "30 min", "kategorie": "Praxis"},
+            {"tag": 10, "aufgabe": "Document analysis workflow with AI support", "dauer": "30 min", "kategorie": "Praxis"},
+            {"tag": 11, "aufgabe": "Define quality criteria for automated outputs", "dauer": "20 min", "kategorie": "Qualität"},
+            {"tag": 12, "aufgabe": "Evaluate a second AI tool (Claude/Perplexity/specialist tool)", "dauer": "25 min", "kategorie": "Exploration"},
+            {"tag": 13, "aufgabe": "Set up a prompt library with your top 5 prompts", "dauer": "20 min", "kategorie": "Optimierung"},
+            {"tag": 14, "aufgabe": "Week 2 review: document time savings per workflow", "dauer": "15 min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_3": {
+        "titel": "Depth & quality",
+        "ziel": "Advanced techniques, quality assurance",
+        "tage": [
+            {"tag": 15, "aufgabe": "Set up system prompts for consistent results", "dauer": "30 min", "kategorie": "Fortgeschritten"},
+            {"tag": 16, "aufgabe": "Use AI as a sparring partner for decision-making", "dauer": "30 min", "kategorie": "Praxis"},
+            {"tag": 17, "aufgabe": "Create an industry-specific template with AI", "dauer": "30 min", "kategorie": "Praxis"},
+            {"tag": 18, "aufgabe": "Quality checklist: when is AI output usable?", "dauer": "20 min", "kategorie": "Qualität"},
+            {"tag": 19, "aufgabe": "Workflow integration: connect an AI tool to an existing system", "dauer": "45 min", "kategorie": "Fortgeschritten"},
+            {"tag": 20, "aufgabe": "Onboard colleagues: demonstrate your best use case", "dauer": "30 min", "kategorie": "Sharing"},
+            {"tag": 21, "aufgabe": "Week 3 review: rank your top 3 use cases by ROI", "dauer": "20 min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_4": {
+        "titel": "Scaling & standardisation",
+        "ziel": "Standardise workflows, involve the team, next steps",
+        "tage": [
+            {"tag": 22, "aufgabe": "Document standard prompts and share them with the team", "dauer": "25 min", "kategorie": "Sharing"},
+            {"tag": 23, "aufgabe": "Write down simple AI usage rules (do's & don'ts)", "dauer": "20 min", "kategorie": "Governance"},
+            {"tag": 24, "aufgabe": "Run a more complex project with an AI workflow", "dauer": "45 min", "kategorie": "Praxis"},
+            {"tag": 25, "aufgabe": "Feedback loop: systematically improve output quality", "dauer": "25 min", "kategorie": "Optimierung"},
+            {"tag": 26, "aufgabe": "Evaluate your tool set: what to keep, what to replace?", "dauer": "20 min", "kategorie": "Analyse"},
+            {"tag": 27, "aufgabe": "Automation roadmap for the next 3 months", "dauer": "30 min", "kategorie": "Planung"},
+            {"tag": 28, "aufgabe": "Budget planning: tools + time investment for next quarter", "dauer": "20 min", "kategorie": "Planung"},
+        ]
+    },
+    "abschluss": {
+        "titel": "Wrap-up & next phase",
+        "ziel": "Secure results and plan the expansion",
+        "tage": [
+            {"tag": 29, "aufgabe": "Calculate ROI: time savings × hourly rate", "dauer": "20 min", "kategorie": "Reflexion"},
+            {"tag": 30, "aufgabe": "Plan the next 30 days: which workflows become standard?", "dauer": "30 min", "kategorie": "Planung"},
+        ]
+    }
+}
+
+CHALLENGE_LIGHT_EN = {
+    "woche_1": {
+        "titel": "First steps",
+        "tage": [
+            {"tag": 1, "aufgabe": "Create an account", "dauer": "10 min", "prio": True},
+            {"tag": 2, "aufgabe": "Test your first prompt", "dauer": "15 min", "prio": True},
+            {"tag": 3, "aufgabe": "Have an email drafted", "dauer": "15 min", "prio": False},
+            {"tag": 4, "aufgabe": "Break / catch up", "dauer": "-", "prio": False},
+            {"tag": 5, "aufgabe": "Summarise a text", "dauer": "10 min", "prio": True},
+            {"tag": 6, "aufgabe": "Break / catch up", "dauer": "-", "prio": False},
+            {"tag": 7, "aufgabe": "Weekly review", "dauer": "10 min", "prio": True},
+        ]
+    },
+    "woche_2": {
+        "titel": "Apply",
+        "tage": [
+            {"tag": 8, "aufgabe": "Solve a real task with AI", "dauer": "15 min", "prio": True},
+            {"tag": 9, "aufgabe": "Break / catch up", "dauer": "-", "prio": False},
+            {"tag": 10, "aufgabe": "Save a prompt", "dauer": "10 min", "prio": True},
+            {"tag": 11, "aufgabe": "Break / catch up", "dauer": "-", "prio": False},
+            {"tag": 12, "aufgabe": "Test a second use case", "dauer": "15 min", "prio": True},
+            {"tag": 13, "aufgabe": "Break / catch up", "dauer": "-", "prio": False},
+            {"tag": 14, "aufgabe": "Weekly review + time savings", "dauer": "10 min", "prio": True},
+        ]
+    },
+    "woche_3": {
+        "titel": "Deepen",
+        "tage": [
+            {"tag": 15, "aufgabe": "Multi-step prompt", "dauer": "15 min", "prio": True},
+            {"tag": 16, "aufgabe": "Break / catch up", "dauer": "-", "prio": False},
+            {"tag": 17, "aufgabe": "Establish a routine", "dauer": "15 min", "prio": True},
+            {"tag": 18, "aufgabe": "Break / catch up", "dauer": "-", "prio": False},
+            {"tag": 19, "aufgabe": "Third use case", "dauer": "15 min", "prio": True},
+            {"tag": 20, "aufgabe": "Break / catch up", "dauer": "-", "prio": False},
+            {"tag": 21, "aufgabe": "Weekly review", "dauer": "10 min", "prio": True},
+        ]
+    },
+    "woche_4": {
+        "titel": "Consolidate",
+        "tage": [
+            {"tag": 22, "aufgabe": "Set up a prompt library", "dauer": "15 min", "prio": True},
+            {"tag": 23, "aufgabe": "Break / catch up", "dauer": "-", "prio": False},
+            {"tag": 24, "aufgabe": "Show a colleague", "dauer": "15 min", "prio": False},
+            {"tag": 25, "aufgabe": "Break / catch up", "dauer": "-", "prio": False},
+            {"tag": 26, "aufgabe": "Define a standard workflow", "dauer": "15 min", "prio": True},
+            {"tag": 27, "aufgabe": "Break / catch up", "dauer": "-", "prio": False},
+            {"tag": 28, "aufgabe": "Break / catch up", "dauer": "-", "prio": False},
+        ]
+    },
+    "abschluss": {
+        "titel": "Wrap-up & outlook",
+        "tage": [
+            {"tag": 29, "aufgabe": "Calculate the overall ROI", "dauer": "15 min", "prio": True},
+            {"tag": 30, "aufgabe": "Plan next steps", "dauer": "15 min", "prio": True},
+        ]
+    }
+}
+
+
 def generate_30_tage_challenge_html_v2(
     company_size: str = "solo",
     zeitbudget: str = "2_5",
@@ -2837,6 +3673,7 @@ def generate_30_tage_challenge_html_v2(
     hauptleistung: str = "",  # KIS-1132
     hours_per_week: float = 0.0,  # KIS-1134-FX-2: Prognose-Werte
     stundensatz: float = 0.0,  # KIS-1134-FX-2: Für €-Berechnung
+    lang: str = "de",  # KIS-1251: EN-Fassung bei lang=en
 ) -> str:
     """
     Generiert die 30-Tage Challenge angepasst ans Zeitbudget und Kompetenz-Level.
@@ -2850,25 +3687,29 @@ def generate_30_tage_challenge_html_v2(
         stundensatz: Stundensatz in EUR (KIS-1134-FX-2)
     """
 
+    # KIS-1251: EN-Fassung bei lang=en (Daten + Scaffolding)
+    is_en = (lang or "").strip().lower().startswith("en")
+
     # Zeitbudget-Config holen
-    zeit_config = ZEITBUDGET_CONFIG.get(zeitbudget, ZEITBUDGET_CONFIG["2_5"])
+    _zb_cfg = ZEITBUDGET_CONFIG_EN if is_en else ZEITBUDGET_CONFIG
+    zeit_config = _zb_cfg.get(zeitbudget, _zb_cfg["2_5"])
 
     # KIS-1132: Challenge-Daten basierend auf Expertise UND Intensität wählen
     show_prio = False
     if expertise_level == "expert":
-        challenge_data = CHALLENGE_30_TAGE_EXPERT
+        challenge_data = CHALLENGE_30_TAGE_EXPERT_EN if is_en else CHALLENGE_30_TAGE_EXPERT
     elif expertise_level == "intermediate":
-        challenge_data = CHALLENGE_30_TAGE_INTERMEDIATE
+        challenge_data = CHALLENGE_30_TAGE_INTERMEDIATE_EN if is_en else CHALLENGE_30_TAGE_INTERMEDIATE
     elif zeit_config["intensitaet"] == "light":
-        challenge_data = CHALLENGE_LIGHT
+        challenge_data = CHALLENGE_LIGHT_EN if is_en else CHALLENGE_LIGHT
         show_prio = True
     else:
-        challenge_data = CHALLENGE_30_TAGE
+        challenge_data = CHALLENGE_30_TAGE_EN if is_en else CHALLENGE_30_TAGE
 
     # KIS-1142 Punkt 6 Variante C: trim weeks flagged as out-of-scale for
     # the user's company size. No-op until _CHALLENGE_WEEKS_SKIP_BY_SIZE
     # is populated; wired now so the opt-in hook ships with the branch.
-    challenge_data = _filter_challenge_weeks_by_size(challenge_data, company_size)
+    challenge_data = _filter_challenge_weeks_by_size(challenge_data, company_size, lang=lang)
 
     # KIS-1142 Punkt 3: Woche 1 für Intermediate/Expert weglassen
     # (Variante B aus Briefing 9). Der bisherige Widerspruch — das Template
@@ -2893,26 +3734,44 @@ def generate_30_tage_challenge_html_v2(
     # Hotfix 1027.2.1 F3: Solo behält nach Item H alle 4 Wochen — Subtitle muss
     # company_size-aware sein, sonst widerspricht S.3 Management Summary dem
     # gerenderten Inhalt auf S.13-14.
-    _wochen_label = "4 Wochen" if _company_size_norm == "solo" else "3 Wochen"
-    if expertise_level == "expert":
-        _subtitle = f"Stack-Optimierung und Governance in {_wochen_label}"
-    elif expertise_level == "intermediate":
-        _subtitle = f"Vom Anwender zum Workflow-Profi in {_wochen_label}"
+    if is_en:
+        _wochen_label = "4 weeks" if _company_size_norm == "solo" else "3 weeks"
+        if expertise_level == "expert":
+            _subtitle = f"Stack optimisation and governance in {_wochen_label}"
+        elif expertise_level == "intermediate":
+            _subtitle = f"From user to workflow pro in {_wochen_label}"
+        else:
+            _subtitle = "From zero to AI pro – tailored to your time budget"
     else:
-        _subtitle = "Von Null auf KI-Profi – angepasst an Ihr Zeitbudget"
+        _wochen_label = "4 Wochen" if _company_size_norm == "solo" else "3 Wochen"
+        if expertise_level == "expert":
+            _subtitle = f"Stack-Optimierung und Governance in {_wochen_label}"
+        elif expertise_level == "intermediate":
+            _subtitle = f"Vom Anwender zum Workflow-Profi in {_wochen_label}"
+        else:
+            _subtitle = "Von Null auf KI-Profi – angepasst an Ihr Zeitbudget"
 
     # KIS-1246: Titel an die real gerenderte Tageszahl anpassen — nach dem
     # Woche-1-Drop endete die "30-Tage"-Challenge sichtbar bei Tag 23
     # (Audit KIS-1244/1246: "Challenge-Tage 24-30 fehlen").
+    # KIS-1251: EN-Grammatik "23-day" (nicht "23-Days").
     _total_days = sum(
         len(w.get("tage") or []) for w in challenge_data.values() if isinstance(w, dict)
     )
-    _challenge_title = (
-        "Ihre 30-Tage KI-Challenge" if _total_days >= 30
-        else f"Ihre {_total_days}-Tage KI-Challenge"
-    )
-    if _total_days < 30 and expertise_level in ("intermediate", "expert"):
-        _subtitle = f"{_subtitle} · Grundlagen-Woche übersprungen"
+    if is_en:
+        _challenge_title = (
+            "Your 30-day AI challenge" if _total_days >= 30
+            else f"Your {_total_days}-day AI challenge"
+        )
+        if _total_days < 30 and expertise_level in ("intermediate", "expert"):
+            _subtitle = f"{_subtitle} · foundations week skipped"
+    else:
+        _challenge_title = (
+            "Ihre 30-Tage KI-Challenge" if _total_days >= 30
+            else f"Ihre {_total_days}-Tage KI-Challenge"
+        )
+        if _total_days < 30 and expertise_level in ("intermediate", "expert"):
+            _subtitle = f"{_subtitle} · Grundlagen-Woche übersprungen"
 
     html = f'''
     <!-- M1-FIX: page-break-before entfernt — #challenge-section hat break-before:page in CSS -->
@@ -2933,9 +3792,9 @@ def generate_30_tage_challenge_html_v2(
     <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 12px; padding: 16px; margin-bottom: 24px; color: white;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase;">Ihr Zeitbudget</div>
+                <div style="font-size: 12px; opacity: 0.8; text-transform: uppercase;">{"Your time budget" if is_en else "Ihr Zeitbudget"}</div>
                 <div style="font-size: 20px; font-weight: 700;">{zeit_config["label"]}</div>
-                <div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">≈ {zeit_config["minuten_pro_tag"]} Minuten pro Tag</div>
+                <div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">≈ {zeit_config["minuten_pro_tag"]} {"minutes per day" if is_en else "Minuten pro Tag"}</div>
             </div>
             <div style="text-align: right; max-width: 250px;">
                 <div style="font-size: 13px; opacity: 0.95;">💡 {zeit_config["empfehlung"]}</div>
@@ -2947,7 +3806,17 @@ def generate_30_tage_challenge_html_v2(
     
     # Wenn Light-Version: Hinweis auf Prio-Tasks
     if show_prio:
-        html += '''
+        if is_en:
+            html += '''
+    <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+        <p style="margin: 0; font-size: 13px; color: #92400e;">
+            <strong>⭐ Tip when time is short:</strong> focus on the marked priority tasks.
+            The other days are planned as buffer.
+        </p>
+    </div>
+'''
+        else:
+            html += '''
     <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
         <p style="margin: 0; font-size: 13px; color: #92400e;">
             <strong>⭐ Tipp bei wenig Zeit:</strong> Konzentrieren Sie sich auf die markierten Prioritäts-Aufgaben. 
@@ -2964,10 +3833,15 @@ def generate_30_tage_challenge_html_v2(
 '''
 
     wochen_farben = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444"]
-    wochen_labels_v2 = ["Woche 1", "Woche 2", "Woche 3", "Woche 4", "Abschluss"]
+    if is_en:
+        wochen_labels_v2 = ["Week 1", "Week 2", "Week 3", "Week 4", "Wrap-up"]
+        _week_fallback = "Week"
+    else:
+        wochen_labels_v2 = ["Woche 1", "Woche 2", "Woche 3", "Woche 4", "Abschluss"]
+        _week_fallback = "Woche"
     for i, (woche_key, woche_data) in enumerate(challenge_data.items()):
         farbe = wochen_farben[i % len(wochen_farben)]
-        label = wochen_labels_v2[i] if i < len(wochen_labels_v2) else f"Woche {i+1}"
+        label = wochen_labels_v2[i] if i < len(wochen_labels_v2) else f"{_week_fallback} {i+1}"
         html += f'''
         <div style="background: {farbe}15; border: 2px solid {farbe}; border-radius: 8px; padding: 10px; text-align: center;">
             <div style="font-size: 11px; font-weight: 600; color: {farbe}; text-transform: uppercase;">{label}</div>
@@ -2996,7 +3870,8 @@ def generate_30_tage_challenge_html_v2(
         tage_list2: List[Dict[str, Any]] = cast(List[Dict[str, Any]], woche_data["tage"])
         for tag_data in tage_list2:
             is_prio = tag_data.get("prio", False)
-            is_pause = "Pause" in str(tag_data.get("aufgabe", ""))
+            _aufgabe_str = str(tag_data.get("aufgabe", ""))
+            is_pause = "Pause" in _aufgabe_str or "Break /" in _aufgabe_str
 
             if is_pause:
                 bg_color = "#f1f5f9"
@@ -3015,7 +3890,7 @@ def generate_30_tage_challenge_html_v2(
 
             html += f'''
             <div style="background: {bg_color}; border: 1px solid {border_color}; border-radius: 6px; padding: 8px; font-size: 10px;">
-                <div style="font-weight: 700; color: {farbe}; margin-bottom: 4px;">Tag {tag_data.get("tag", "")}</div>
+                <div style="font-weight: 700; color: {farbe}; margin-bottom: 4px;">{"Day" if is_en else "Tag"} {tag_data.get("tag", "")}</div>
                 <div style="color: {text_color}; line-height: 1.3; min-height: 32px;">{prio_star}{tag_data.get("aufgabe", "")}</div>
                 <div style="color: #94a3b8; font-size: 9px; margin-top: 4px;">⏱️ {tag_data.get("dauer", "")}</div>
             </div>
@@ -3035,26 +3910,32 @@ def generate_30_tage_challenge_html_v2(
 
     # Erfolgs-Tracking
     # L3: Added break-inside:avoid to prevent orphan micro-pages
-    html += '''
+    _t_tracking_title = "Your progress tracking" if is_en else "Ihr Erfolgs-Tracking"
+    html += f'''
     <!-- L3: break-inside:avoid prevents orphan micro-page -->
     <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 16px; margin-top: 20px; break-inside: avoid; page-break-inside: avoid;">
         <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 12px 0; color: #166534;">
-            📊 Ihr Erfolgs-Tracking
+            📊 {_t_tracking_title}
         </h3>
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
 '''
 
     # KIS-1232: Wochenwerte deutsch formatieren (5,8 h statt 5.8 h)
+    # KIS-1251: EN-Reports bekommen den Dezimalpunkt (5.8 h)
     def _de_hours(v: float) -> str:
+        if is_en:
+            return f"{v:g}"
         return f"{v:g}".replace(".", ",")
 
+    _t_week_word = "Week" if is_en else "Woche"
+    _t_saved_time = "Time saved:" if is_en else "Gesparte Zeit:"
     for w in range(1, 5):
         _display = f"~{_de_hours(_weekly_hours[w - 1])} h" if _has_values else "_____ h"
         html += f'''
             <div style="text-align: center;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">Woche {w}</div>
+                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">{_t_week_word} {w}</div>
                 <div style="border: 2px solid #22c55e; border-radius: 8px; padding: 12px; background: white;">
-                    <div style="font-size: 10px; color: #64748b;">Gesparte Zeit:</div>
+                    <div style="font-size: 10px; color: #64748b;">{_t_saved_time}</div>
                     <div style="font-size: 16px; font-weight: 700; color: #166534;">{_display}</div>
                 </div>
             </div>
@@ -3068,7 +3949,22 @@ def generate_30_tage_challenge_html_v2(
 '''
 
     # v14.18: Tipps für Erfolg
-    html += '''
+    if is_en:
+        html += '''
+        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 16px; margin-top: 16px; margin-bottom: 16px;">
+            <h4 style="font-size: 13px; font-weight: 600; margin: 0 0 12px 0; color: #1e40af;">💡 Tips for your success</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: #334155;">
+                <div>✓ Block a fixed slot in your calendar</div>
+                <div>✓ Small steps, big impact</div>
+                <div>✓ Document your wins</div>
+                <div>✓ If you fall behind: restart the next day</div>
+                <div>✓ Involve colleagues (where available)</div>
+                <div>✓ After 30 days: keep the routine going!</div>
+            </div>
+        </div>
+    '''
+    else:
+        html += '''
         <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 16px; margin-top: 16px; margin-bottom: 16px;">
             <h4 style="font-size: 13px; font-weight: 600; margin: 0 0 12px 0; color: #1e40af;">💡 Tipps für Ihren Erfolg</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: #334155;">
@@ -3082,9 +3978,27 @@ def generate_30_tage_challenge_html_v2(
         </div>
     '''
 
+    # KIS-1251: 30-vs-23-Tage-Inkonsistenz — die Prognose-/Gesamt-Zeile
+    # nennt bei gekürzter Challenge die real gerenderte Tageszahl.
+    _prognose_days = _total_days if _total_days < 30 else 30
     if _has_values:
-        _savings_str = f"{_total_savings:,}".replace(",", ".")
-        html += f'''
+        if is_en:
+            _savings_str_en = f"{_total_savings:,}"
+            html += f'''
+        <div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #22c55e;">
+            <span style="font-size: 14px; color: #166534; font-weight: 600;">
+                🎯 Projection after {_prognose_days} days: ~{_de_hours(_total_hours)} hours = ~{_savings_str_en} € saved
+            </span>
+            <div style="font-size: 11px; color: #475569; margin-top: 6px; line-height: 1.5;">
+                This tracking projection is conservative (ramp-up: 50&nbsp;%/75&nbsp;%/100&nbsp;%/100&nbsp;% of weekly performance).
+                The full target time savings from the business case are typically reached from month&nbsp;2.
+            </div>
+        </div>
+    </div>
+'''
+        else:
+            _savings_str = f"{_total_savings:,}".replace(",", ".")
+            html += f'''
         <div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #22c55e;">
             <span style="font-size: 14px; color: #166534; font-weight: 600;">
                 🎯 Prognose nach 30 Tagen: ~{_de_hours(_total_hours)} Stunden = ~{_savings_str} € gespart
@@ -3097,7 +4011,17 @@ def generate_30_tage_challenge_html_v2(
     </div>
 '''
     else:
-        html += '''
+        if is_en:
+            html += f'''
+        <div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #22c55e;">
+            <span style="font-size: 14px; color: #166534; font-weight: 600;">
+                🎯 Total after {_prognose_days} days: _______ hours = _______ € saved
+            </span>
+        </div>
+    </div>
+'''
+        else:
+            html += '''
         <div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #22c55e;">
             <span style="font-size: 14px; color: #166534; font-weight: 600;">
                 🎯 Gesamt nach 30 Tagen: _______ Stunden = _______ € gespart
@@ -3108,17 +4032,18 @@ def generate_30_tage_challenge_html_v2(
 
     # KIS-1235: Quartals-/Saisonbezug dynamisch auflösen (statt hartem
     # "Q2-Ziel … bis Sommer", das im Juli-Report veraltet war).
-    html = html.replace("__QUARTAL_ZIEL__", _resolve_quarter_goal())
+    html = html.replace("__QUARTAL_ZIEL__", _resolve_quarter_goal(lang=lang))
 
     return html
 
 
-def _resolve_quarter_goal(today: "Optional[Any]" = None) -> str:
+def _resolve_quarter_goal(today: "Optional[Any]" = None, lang: str = "de") -> str:
     """Tag-28-Aufgabe mit aktuellem Quartals-/Saisonbezug.
 
     Ziel-Quartal ist das aktuelle, solange mindestens ~1 Monat davon übrig
     ist (Tag 28 der Challenge liegt ~4 Wochen nach Report-Erstellung),
     sonst das Folgequartal.
+    KIS-1251: lang="en" liefert die englische Fassung.
     """
     from datetime import date as _date
     d = today or _date.today()
@@ -3129,6 +4054,9 @@ def _resolve_quarter_goal(today: "Optional[Any]" = None) -> str:
         year_q = quarter + 1
     if year_q > 4:
         year_q = 1
+    if (lang or "").strip().lower().startswith("en"):
+        season_en = {1: "spring", 2: "summer", 3: "autumn", 4: "the end of the year"}[year_q]
+        return f"Define a Q{year_q} goal: what should run AI-assisted by {season_en}?"
     season = {1: "zum Frühjahr", 2: "zum Sommer", 3: "zum Herbst", 4: "zum Jahresende"}[year_q]
     return f"Q{year_q}-Ziel definieren: Was soll bis {season} KI-gestützt laufen?"
 
@@ -3230,12 +4158,82 @@ FALLSTUDIEN_MEDIEN: List[Dict[str, Any]] = [
 ]
 
 
-def _pick_medien_fallstudie(sparte: str, size_key: str) -> Dict[str, Any]:
+# KIS-1251 (Punkt 2): EN-Fassung des Medien-Fallstudien-Pools (gleiche
+# Keywords/Reihenfolge wie FALLSTUDIEN_MEDIEN) + EN-Default-Fallstudie.
+FALLSTUDIEN_MEDIEN_EN: List[Dict[str, Any]] = [
+    {
+        "keywords": ("produktion", "film", "tv", "doku", "post", "vfx"),
+        "titel": "Documentary producer unlocks its raw-footage archive",
+        "unternehmen": "Production company, 8 employees (documentary & corporate)",
+        "unternehmen_solo": "Freelance filmmaker with a fixed editor network",
+        "ausgangslage": "Logging and review eat into editing time, archive material is practically unfindable, subtitles are created manually per version",
+        "loesung": "Automatic transcription + scene markers on ingest (EU tool), text-based rough cut in Premiere, mandatory metadata fields in the archive",
+        "ergebnis": {
+            "zeitersparnis": "60 hours/month (team)",
+            "kosteneinsparung": "~5,700 €/month",
+            "qualitaet": "Edit preparation down from 3 days to 1; archive clips findable and licensable in minutes"
+        },
+        "zitat": "Stories are created in the edit again – not while searching hard drives.",
+        "dauer_bis_roi": "4 weeks"
+    },
+    {
+        "keywords": ("agentur", "werbung", "corporate", "marketing", "content", "verlag", "musik", "audio", "pr", "webdesign", "design", "social", "tonstudio"),
+        "titel": "Commercial film studio doubles its pitch rate",
+        "unternehmen": "Commercial film studio, 5 creatives (brand clients & broadcasters)",
+        "unternehmen_solo": "Solo creative producer for brand films",
+        "ausgangslage": "Treatments, moodboards and pitch decks tie up the creatives, stories stay on the shelf, revision rounds take long",
+        "loesung": "AI treatment drafts as a starting point, labeled moodboard visuals (Firefly), a fixed approval step before every delivery",
+        "ergebnis": {
+            "zeitersparnis": "30 hours/month (team)",
+            "kosteneinsparung": "~2,900 €/month",
+            "qualitaet": "Twice as many pitches with the same team size, higher hit rate through more variants"
+        },
+        "zitat": "Twice as many pitches – and the ideas stay in-house.",
+        "dauer_bis_roi": "3 weeks"
+    },
+    {
+        "keywords": ("games", "game", "animation", "interactive", "xr"),
+        "titel": "Games studio cuts localisation time by weeks",
+        "unternehmen": "Independent studio, 12 employees",
+        "unternehmen_solo": "Solo developer with publisher ties",
+        "ausgangslage": "Subtitles, translations and asset tagging delay every release; store rules on AI disclosure are unclear",
+        "loesung": "AI subtitles and translation drafts with human final review, automatic asset tagging, documented AI disclosure per build",
+        "ergebnis": {
+            "zeitersparnis": "50 hours/month (team)",
+            "kosteneinsparung": "~4,000 €/month",
+            "qualitaet": "Localisation in 6 instead of 10 weeks, release in 5 languages simultaneously, clean store disclosure"
+        },
+        "zitat": "The release now ships in five languages at the same time.",
+        "dauer_bis_roi": "6 weeks"
+    },
+]
+
+FALLSTUDIE_DEFAULT_EN: Dict[str, Any] = {
+    "titel": "Freelancer saves 8 hours per week",
+    "unternehmen": "Freelancer, services",
+    "ausgangslage": "Time sinks: emails, proposals, documentation, research",
+    "loesung": "ChatGPT Plus for daily text tasks",
+    "ergebnis": {
+        "zeitersparnis": "8 hours/week",
+        "kosteneinsparung": "~2,500 €/month",
+        "qualitaet": "More time for the core business, better work-life balance"
+    },
+    "zitat": "I don't work less – but I get more done in the same time.",
+    "dauer_bis_roi": "2 weeks"
+}
+
+
+def _pick_medien_fallstudie(sparte: str, size_key: str, lang: str = "de") -> Dict[str, Any]:
     """Wählt den passenden Medien-Case nach Sparte (Fallback: Produktion)."""
     s = (sparte or "").lower()
-    chosen: Dict[str, Any] = FALLSTUDIEN_MEDIEN[0]
+    _pool = (
+        FALLSTUDIEN_MEDIEN_EN
+        if (lang or "").strip().lower().startswith("en")
+        else FALLSTUDIEN_MEDIEN
+    )
+    chosen: Dict[str, Any] = _pool[0]
     if s:
-        for case in FALLSTUDIEN_MEDIEN:
+        for case in _pool:
             if any(k in s for k in case["keywords"]):
                 chosen = case
                 break
@@ -3459,7 +4457,7 @@ FALLSTUDIEN: Dict[str, Dict[str, Any]] = {
 }
 
 
-def generate_fallstudie_html(branche: str, size_key: str = "solo", medien_sparte: str = "") -> str:
+def generate_fallstudie_html(branche: str, size_key: str = "solo", medien_sparte: str = "", lang: str = "de") -> str:
     """
     Generiert eine branchenspezifische, segment-aware Fallstudie.
 
@@ -3468,17 +4466,51 @@ def generate_fallstudie_html(branche: str, size_key: str = "solo", medien_sparte
     "Solo-Berater" in a KMU report.
     KIS-1247: Medien-Branche wählt sparten-spezifisch aus dem
     FALLSTUDIEN_MEDIEN-Pool (Produktion/Werbung/Games).
+    KIS-1251: lang="en" liefert EN-Scaffolding + EN-Cases (Medien-Pool und
+    Default; für andere Branchen greift der EN-Default-Case). DE unverändert.
     """
+    is_en = (lang or "").strip().lower().startswith("en")
     branche_key = get_branche_key(branche)
     if branche_key == "medien":
-        fallstudie: Dict[str, Any] = _pick_medien_fallstudie(medien_sparte, size_key)
+        fallstudie: Dict[str, Any] = _pick_medien_fallstudie(medien_sparte, size_key, lang=lang)
+    elif is_en:
+        # EN: nur der Default-Case ist übersetzt — branchenspezifische
+        # DE-Cases würden sonst deutsch im EN-Report landen.
+        fallstudie = dict(FALLSTUDIE_DEFAULT_EN)
     else:
         fallstudie = cast(Dict[str, Any], FALLSTUDIEN.get(branche_key, FALLSTUDIEN["default"]))
         # FIX-PERSONA: Override "unternehmen" with segment-appropriate description
         size_overrides = _FALLSTUDIE_UNTERNEHMEN.get(branche_key, {})
         if size_key in size_overrides:
             fallstudie = {**fallstudie, "unternehmen": size_overrides[size_key]}
-    
+
+    if is_en:
+        _fs_title = "Case study"
+        _fs_disclaimer = (
+            "Industry example · fictitious sample figures for illustration · "
+            "intentionally differs from your personal ROI"
+        )
+        _fs_company = "Company"
+        _fs_roi_after = "ROI reached after"
+        _fs_start = "Starting point"
+        _fs_solution = "Solution"
+        _fs_time = "Time saved"
+        _fs_savings = "Savings/month"
+        _fs_quality = "Quality"
+    else:
+        _fs_title = "Fallstudie"
+        _fs_disclaimer = (
+            "Branchen-Beispiel · fiktive Beispieldaten zur Veranschaulichung · "
+            "weicht von Ihrem persönlichen ROI bewusst ab"
+        )
+        _fs_company = "Unternehmen"
+        _fs_roi_after = "ROI erreicht nach"
+        _fs_start = "Ausgangslage"
+        _fs_solution = "Lösung"
+        _fs_time = "Zeitersparnis"
+        _fs_savings = "Ersparnis/Monat"
+        _fs_quality = "Qualität"
+
     # KIS-1190 Sprint-1027.1 Item A: Fallstudie wird als externes Branchen-
     # Beispiel gekennzeichnet und gegen final_sanitizer F4 (Stunden/Woche →
     # Stunden/Monat) per NO-SANITIZE-FALLSTUDIE-Marker geschützt. Werte sind
@@ -3489,31 +4521,31 @@ def generate_fallstudie_html(branche: str, size_key: str = "solo", medien_sparte
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
             <span style="font-size: 24px;">📊</span>
             <h3 style="font-size: 18px; font-weight: 700; margin: 0; color: #1e293b;">
-                Fallstudie: {fallstudie["titel"]}
+                {_fs_title}: {fallstudie["titel"]}
             </h3>
         </div>
         <div style="font-size: 11px; color: #64748b; font-style: italic; margin-bottom: 16px; padding: 4px 8px; background: #fff; border-left: 3px solid #94a3b8; border-radius: 0 4px 4px 0;">
-            Branchen-Beispiel · fiktive Beispieldaten zur Veranschaulichung · weicht von Ihrem persönlichen ROI bewusst ab
+            {_fs_disclaimer}
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div>
-                <div style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Unternehmen</div>
+                <div style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">{_fs_company}</div>
                 <div style="font-size: 13px; color: #334155;">{fallstudie["unternehmen"]}</div>
             </div>
             <div>
-                <div style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">ROI erreicht nach</div>
+                <div style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">{_fs_roi_after}</div>
                 <div style="font-size: 13px; color: #334155; font-weight: 600;">{fallstudie["dauer_bis_roi"]}</div>
             </div>
         </div>
         
         <div style="margin-bottom: 16px;">
-            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Ausgangslage</div>
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">{_fs_start}</div>
             <div style="font-size: 13px; color: #334155;">{fallstudie["ausgangslage"]}</div>
         </div>
         
         <div style="margin-bottom: 16px;">
-            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Lösung</div>
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">{_fs_solution}</div>
             <div style="font-size: 13px; color: #334155;">{fallstudie["loesung"]}</div>
         </div>
         
@@ -3521,15 +4553,15 @@ def generate_fallstudie_html(branche: str, size_key: str = "solo", medien_sparte
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
             <div style="background: white; border-radius: 8px; padding: 12px; text-align: center;">
                 <div style="font-size: 20px; font-weight: 700; color: #166534;">{fallstudie["ergebnis"]["zeitersparnis"]}</div>
-                <div style="font-size: 11px; color: #64748b;">Zeitersparnis</div>
+                <div style="font-size: 11px; color: #64748b;">{_fs_time}</div>
             </div>
             <div style="background: white; border-radius: 8px; padding: 12px; text-align: center;">
                 <div style="font-size: 20px; font-weight: 700; color: #166534;">{fallstudie["ergebnis"]["kosteneinsparung"]}</div>
-                <div style="font-size: 11px; color: #64748b;">Ersparnis/Monat</div>
+                <div style="font-size: 11px; color: #64748b;">{_fs_savings}</div>
             </div>
             <div style="background: white; border-radius: 8px; padding: 12px; text-align: center;">
                 <div style="font-size: 14px; font-weight: 600; color: #1e40af;">{fallstudie["ergebnis"]["qualitaet"]}</div>
-                <div style="font-size: 11px; color: #64748b;">Qualität</div>
+                <div style="font-size: 11px; color: #64748b;">{_fs_quality}</div>
             </div>
         </div>
         

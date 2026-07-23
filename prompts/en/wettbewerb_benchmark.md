@@ -75,8 +75,8 @@ Use phrasing without team/department terms!
         <td>82</td>
         <td>
           <!-- automatically derivable -->
-          {% if score_gesamt > 82 %}significantly above industry level
-          {% elif score_gesamt > 65 %}above industry level
+          {% if (score_gesamt|default(0)) > 82 %}significantly above industry level
+          {% elif (score_gesamt|default(0)) > 65 %}above industry level
           {% else %}below industry average{% endif %}
         </td>
       </tr>
@@ -87,8 +87,8 @@ Use phrasing without team/department terms!
         <td>68</td>
         <td>85</td>
         <td>
-          {% if score_befaehigung > 85 %}significantly above industry level
-          {% elif score_befaehigung > 68 %}above industry level
+          {% if (score_befaehigung|default(0)) > 85 %}significantly above industry level
+          {% elif (score_befaehigung|default(0)) > 68 %}above industry level
           {% else %}below industry average{% endif %}
         </td>
       </tr>
@@ -99,8 +99,8 @@ Use phrasing without team/department terms!
         <td>58</td>
         <td>78</td>
         <td>
-          {% if score_governance > 78 %}significantly above industry level
-          {% elif score_governance > 58 %}above industry level
+          {% if (score_governance|default(0)) > 78 %}significantly above industry level
+          {% elif (score_governance|default(0)) > 58 %}above industry level
           {% else %}below industry average{% endif %}
         </td>
       </tr>
@@ -111,8 +111,8 @@ Use phrasing without team/department terms!
         <td>62</td>
         <td>80</td>
         <td>
-          {% if score_sicherheit > 80 %}significantly above industry level
-          {% elif score_sicherheit > 62 %}above industry level
+          {% if (score_sicherheit|default(0)) > 80 %}significantly above industry level
+          {% elif (score_sicherheit|default(0)) > 62 %}above industry level
           {% else %}below industry average{% endif %}
         </td>
       </tr>
@@ -123,8 +123,8 @@ Use phrasing without team/department terms!
         <td>70</td>
         <td>88</td>
         <td>
-          {% if score_nutzen > 88 %}significantly above industry level
-          {% elif score_nutzen > 70 %}above industry level
+          {% if (score_nutzen|default(0)) > 88 %}significantly above industry level
+          {% elif (score_nutzen|default(0)) > 70 %}above industry level
           {% else %}below industry average{% endif %}
         </td>
       </tr>
@@ -137,16 +137,16 @@ Use phrasing without team/department terms!
     correspondingly high improvement potential:
   </p>
   <ul>
-    {% if score_befaehigung < 68 %}
+    {% if (score_befaehigung|default(0)) < 68 %}
       <li><strong>Enablement:</strong> significant gap compared to industry Ø ({{score_befaehigung}} vs. 68).</li>
     {% endif %}
-    {% if score_governance < 58 %}
+    {% if (score_governance|default(0)) < 58 %}
       <li><strong>Governance:</strong> significant gap compared to industry Ø ({{score_governance}} vs. 58).</li>
     {% endif %}
-    {% if score_sicherheit < 62 %}
+    {% if (score_sicherheit|default(0)) < 62 %}
       <li><strong>Security:</strong> significant gap compared to industry Ø ({{score_sicherheit}} vs. 62).</li>
     {% endif %}
-    {% if score_nutzen < 70 %}
+    {% if (score_nutzen|default(0)) < 70 %}
       <li><strong>Value Creation:</strong> significant gap compared to industry Ø ({{score_nutzen}} vs. 70).</li>
     {% endif %}
   </ul>
@@ -157,16 +157,16 @@ Use phrasing without team/department terms!
     foundation for further development:
   </p>
   <ul>
-    {% if score_befaehigung > 68 %}
+    {% if (score_befaehigung|default(0)) > 68 %}
       <li><strong>Enablement:</strong> noticeable lead over industry average ({{score_befaehigung}} vs. 68).</li>
     {% endif %}
-    {% if score_governance > 58 %}
+    {% if (score_governance|default(0)) > 58 %}
       <li><strong>Governance:</strong> noticeable lead over industry average ({{score_governance}} vs. 58).</li>
     {% endif %}
-    {% if score_sicherheit > 62 %}
+    {% if (score_sicherheit|default(0)) > 62 %}
       <li><strong>Security:</strong> noticeable lead over industry average ({{score_sicherheit}} vs. 62).</li>
     {% endif %}
-    {% if score_nutzen > 70 %}
+    {% if (score_nutzen|default(0)) > 70 %}
       <li><strong>Value Creation:</strong> noticeable lead over industry average ({{score_nutzen}} vs. 70).</li>
     {% endif %}
   </ul>
@@ -209,9 +209,9 @@ Use phrasing without team/department terms!
 
   <p>
     <strong>Strategic target corridor:</strong>
-    {% if score_gesamt >= 80 %}
+    {% if (score_gesamt|default(0)) >= 80 %}
       Towards top 5% of the industry.
-    {% elif score_gesamt >= 60 %}
+    {% elif (score_gesamt|default(0)) >= 60 %}
       Towards top 10% of the industry.
     {% else %}
       Towards top 25% – focus on stabilization and structured development.

@@ -707,6 +707,223 @@ KIT_DESCRIPTIONS: Dict[str, str] = {
 
 
 # =============================================================================
+# KIS-1251 (Punkt 5): EN-Fassung der Starter-Kit-Texte
+# =============================================================================
+# Übersetzungs-Maps (Schlüssel = exakter DE-String aus den Templates oben).
+# Unbekannte Strings bleiben unverändert (fail-open). DE-Pfad unverändert.
+
+KIT_DESCRIPTIONS_EN: Dict[str, str] = {
+    "solo": (
+        "A compact entry point for solo entrepreneurs: with this starter kit "
+        "you automate first tasks, use AI for text work and secure matching "
+        "funding – all with manageable effort."
+    ),
+    "team": (
+        "A team AI stack for effective collaboration: this kit enables shared "
+        "AI usage, automated workflows and structured communication – plus "
+        "access to attractive funding programmes."
+    ),
+    "kmu": (
+        "A growth kit for SMEs: a structured package for companies with "
+        "11-100 employees – focused on data quality, process automation and "
+        "step-by-step AI integration, including matching funding programmes."
+    ),
+}
+
+KIT_DESCRIPTIONS_EXPERT_EN: Dict[str, str] = {
+    "solo": (
+        "An operations kit for AI professionals: monitoring, prompt "
+        "versioning and evaluation for your existing LLM pipelines. Focus on "
+        "quality, cost and compliance – not on basics."
+    ),
+    "team": (
+        "A team operations kit: central API management, team-wide monitoring "
+        "and a governance framework for productive LLM usage. "
+        "Integration: 1-2 weeks."
+    ),
+    "kmu": (
+        "Enterprise LLM operations: scalable infrastructure with monitoring, "
+        "governance and automated quality gates for company-wide AI usage. "
+        "Integration: 2-4 weeks."
+    ),
+}
+
+_KIT_TEXT_EN: Dict[str, str] = {
+    # --- Tool names (generic DE names) ---
+    "KI-Assistent": "AI assistant",
+    "Workflow-Automation": "Workflow automation",
+    "Formular-Tool": "Form tool",
+    "Wissens-Datenbank": "Knowledge base",
+    "Team-KI-Plattform": "Team AI platform",
+    "Kollaborations-Tool": "Collaboration tool",
+    "Projekt-/Aufgaben-Management": "Project/task management",
+    "CRM-System": "CRM system",
+    "KI-Assistenz-Plattform (KMU)": "AI assistance platform (SME)",
+    "Datenqualitäts-Tool": "Data quality tool",
+    "Workflow-Automatisierung": "Workflow automation",
+    "BI/Reporting-System": "BI/reporting system",
+    "KI-Governance-Checkliste": "AI governance checklist",
+    "LLM-API-Zugang (Anthropic/OpenAI)": "LLM API access (Anthropic/OpenAI)",
+    "LLM-Monitoring (Langfuse)": "LLM monitoring (Langfuse)",
+    "Prompt-Versionierung (Git/Langfuse)": "Prompt versioning (Git/Langfuse)",
+    "Evaluierungs-Framework (Promptfoo)": "Evaluation framework (Promptfoo)",
+    "LLM-Gateway (LiteLLM/Portkey)": "LLM gateway (LiteLLM/Portkey)",
+    "LLM-Observability (Langfuse/Helicone)": "LLM observability (Langfuse/Helicone)",
+    "KI-Governance-Framework": "AI governance framework",
+    "CI/CD für Prompts": "CI/CD for prompts",
+    "LLM-Operations-Plattform": "LLM operations platform",
+    "Monitoring & Evaluierung": "Monitoring & evaluation",
+    "KI-Governance & Compliance": "AI governance & compliance",
+    "Evaluierungs-Pipeline": "Evaluation pipeline",
+    "Cost-Management & Budgetierung": "Cost management & budgeting",
+    # --- Media kit tool names ---
+    "Transkription & Untertitel (z. B. Amberscript, Descript)":
+        "Transcription & subtitles (e.g. Amberscript, Descript)",
+    "Schnitt-KI im Bestand (Premiere Textschnitt, DaVinci Neural Engine)":
+        "AI in your editing suite (Premiere text-based editing, DaVinci Neural Engine)",
+    "Belegte Recherche (z. B. Perplexity, nach AVV-Prüfung)":
+        "Cited research (e.g. Perplexity, after DPA review)",
+    "Rechte- & Projektablage (z. B. Notion, Airtable)":
+        "Rights & project repository (e.g. Notion, Airtable)",
+    "Transkription & Untertitelung (z. B. Amberscript, Simon Says)":
+        "Transcription & subtitling (e.g. Amberscript, Simon Says)",
+    "Review & Versionierung (z. B. Frame.io)":
+        "Review & versioning (e.g. Frame.io)",
+    "Footage-Archiv & Metadaten (z. B. iconik, CatDV oder Notion-Datenbank)":
+        "Footage archive & metadata (e.g. iconik, CatDV or a Notion database)",
+    "Bild-/Moodboard-KI (z. B. Adobe Firefly, gekennzeichnet)":
+        "Image/moodboard AI (e.g. Adobe Firefly, labeled)",
+    "Media-Asset-Management (z. B. iconik, axle.ai)":
+        "Media asset management (e.g. iconik, axle.ai)",
+    "Transkriptions-Pipeline (z. B. Amberscript API)":
+        "Transcription pipeline (e.g. Amberscript API)",
+    "Rechte-Register (z. B. SharePoint, Notion)":
+        "Rights register (e.g. SharePoint, Notion)",
+    "Workflow-Automation (z. B. Make, n8n)":
+        "Workflow automation (e.g. Make, n8n)",
+    # --- Categories ---
+    "KI-API": "AI API",
+    "Fragebogen / Intake": "Questionnaire / intake",
+    "Wissensmanagement / Docs": "Knowledge management / docs",
+    "Team-Kommunikation": "Team communication",
+    "CRM / Sales": "CRM / sales",
+    "Data Quality": "Data quality",
+    "Automation": "Automation",
+    "Monitoring / Observability": "Monitoring / observability",
+    "Governance": "Governance",
+    "DevOps": "DevOps",
+    "Qualitätssicherung": "Quality assurance",
+    "FinOps": "FinOps",
+    "Transkription / Untertitelung": "Transcription / subtitling",
+    "Postproduktion": "Post-production",
+    "Recherche": "Research",
+    "Wissensmanagement / Rechte": "Knowledge management / rights",
+    "Kollaboration / Freigabe": "Collaboration / approval",
+    "Medienverwaltung": "Media management",
+    "Kreation / Pitch": "Creation / pitch",
+    "Governance / Rechte": "Governance / rights",
+    # --- Tool purposes ---
+    "Alltägliche Textarbeit, Entwürfe, Recherche": "Everyday text work, drafts, research",
+    "Automatisierung wiederkehrender Aufgaben": "Automation of recurring tasks",
+    "Strukturierte Datenerfassung von Kunden": "Structured data capture from clients",
+    "Zentrale Ablage für Templates und Wissen": "Central repository for templates and knowledge",
+    "Gemeinsame KI-Nutzung im Team": "Shared AI usage in the team",
+    "Interne Kommunikation und Abstimmung": "Internal communication and coordination",
+    "Aufgabenverteilung und Fortschrittsverfolgung": "Task distribution and progress tracking",
+    "Prozessautomatisierung für Teamabläufe": "Process automation for team workflows",
+    "Kundenverwaltung und Vertrieb": "Client management and sales",
+    "Unternehmensweite KI-Integration für 11-100 Mitarbeiter": "Company-wide AI integration for 11-100 employees",
+    "Sicherung der Datenqualität für KI": "Safeguarding data quality for AI",
+    "Automatisierung wiederkehrender Geschäftsprozesse": "Automation of recurring business processes",
+    "Monitoring und Analytics": "Monitoring and analytics",
+    "AI Act Compliance und interne Richtlinien": "AI Act compliance and internal policies",
+    "Direkte API-Integration für eigene Pipelines": "Direct API integration for your own pipelines",
+    "Prompt-Tracking, Cost-Monitoring, Evaluierung": "Prompt tracking, cost monitoring, evaluation",
+    "Versionskontrolle und A/B-Testing für Prompts": "Version control and A/B testing for prompts",
+    "Automatisierte Qualitätsprüfung von LLM-Outputs": "Automated quality checks of LLM outputs",
+    "Zentrales API-Management, Multi-Provider-Routing": "Central API management, multi-provider routing",
+    "Team-weites Monitoring, Cost-Tracking, Evaluierung": "Team-wide monitoring, cost tracking, evaluation",
+    "AI Act Compliance, Richtlinien, Dokumentation": "AI Act compliance, policies, documentation",
+    "Automatisierte Tests und Deployment für Prompt-Änderungen": "Automated tests and deployment for prompt changes",
+    "Enterprise-weites LLM-Management mit Governance": "Enterprise-wide LLM management with governance",
+    "Produktionsreife Observability für alle LLM-Aufrufe": "Production-grade observability for all LLM calls",
+    "AI Act Compliance, Risikomanagement, Audit-Trail": "AI Act compliance, risk management, audit trail",
+    "Automatisierte Quality Gates und Regression Testing": "Automated quality gates and regression testing",
+    "Budget-Alerts, Cost-per-Output-Tracking, Optimierung": "Budget alerts, cost-per-output tracking, optimisation",
+    "Rohmaterial durchsuchbar machen, Untertitel-Entwürfe": "Make raw footage searchable, subtitle drafts",
+    "Textbasierter Rohschnitt, Rauschminderung, Reframing": "Text-based rough cut, noise reduction, reframing",
+    "Stoff- und Archivrecherche mit prüfbaren Quellen": "Story and archive research with verifiable sources",
+    "Rechtekette, Einwilligungen und Lizenzen pro Asset dokumentieren": "Document the chain of rights, consents and licences per asset",
+    "Automatische Transkripte, Untertitel und Sprachfassungen für alle Projekte": "Automatic transcripts, subtitles and language versions for all projects",
+    "Sichtung, Freigabe und Versionierung im Team bündeln": "Bundle review, approval and versioning in the team",
+    "Textbasierter Rohschnitt und KI-Funktionen in vorhandenen Tools aktivieren": "Activate text-based rough cut and AI features in existing tools",
+    "Durchsuchbares Archiv mit Rechtekette als zweite Erlösquelle": "Searchable archive with chain of rights as a second revenue stream",
+    "Moodboards und Pitch-Visuals — nur mit Kennzeichnung": "Moodboards and pitch visuals — only with labeling",
+    "Zentrales, durchsuchbares Archiv mit Metadaten und Rechtekette": "Central, searchable archive with metadata and chain of rights",
+    "Automatische Verschlagwortung und Untertitel ab Materialeingang": "Automatic tagging and subtitles from material ingest",
+    "Einwilligungen, Lizenzen und Kennzeichnungsstatus pro Asset": "Consents, licences and labeling status per asset",
+    "Material-Eingang, Metadaten und Freigaben automatisieren": "Automate material ingest, metadata and approvals",
+    "Sender-/Kundenfreigaben mit dokumentiertem Prüfschritt": "Broadcaster/client approvals with a documented review step",
+    # --- Funding names / fit reasons ---
+    "Förderung unternehmerischen Know-hows": "Förderung unternehmerischen Know-hows (BAFA consulting grant)",
+    "Beratungsförderung für Gründer und Selbstständige (bundesweit)": "Consulting grant for founders and the self-employed (nationwide)",
+    "EU-Innovationsförderung für Solo-Selbstständige": "EU innovation funding for solo self-employed",
+    "Beratungsförderung für kleine Teams (bundesweit)": "Consulting grant for small teams (nationwide)",
+    "KfW-Digitalisierungskredit": "KfW digitalisation loan",
+    "Günstige Finanzierung für Digitalisierungsvorhaben": "Low-cost financing for digitalisation projects",
+    "Für größere KI-Innovationsprojekte": "For larger AI innovation projects",
+    "Beratungsförderung für AI Act Compliance": "Consulting grant for AI Act compliance",
+    # --- Checklist titles/descriptions ---
+    "KI-Assistent einrichten": "Set up an AI assistant",
+    "Registrierung und erste Testläufe mit einem KI-Assistenten": "Registration and first test runs with an AI assistant",
+    "Erste Automatisierung erstellen": "Create a first automation",
+    "Einen wiederkehrenden Prozess automatisieren (z.B. E-Mail → Task)": "Automate one recurring process (e.g. email → task)",
+    "Persönliche KI-Richtlinie festlegen": "Define a personal AI policy",
+    "Dokumentieren, welche Daten in KI eingegeben werden dürfen": "Document which data may be entered into AI",
+    "Förderprogramm prüfen": "Check funding programmes",
+    "Passende Förderung identifizieren und Antragsinformationen sammeln": "Identify matching funding and collect application information",
+    "Erste Quick Wins dokumentieren": "Document first quick wins",
+    "Zeitersparnis und Qualitätsverbesserungen nach 2 Wochen notieren": "Note time savings and quality improvements after 2 weeks",
+    "Team-Workspace einrichten": "Set up a team workspace",
+    "Gemeinsamen Workspace und Kommunikationskanal aufsetzen": "Set up a shared workspace and communication channel",
+    "KI-Zugang für Team bereitstellen": "Provide AI access for the team",
+    "Team-Accounts für KI-Plattform anlegen und Berechtigungen vergeben": "Create team accounts for the AI platform and assign permissions",
+    "Team-Guidelines definieren": "Define team guidelines",
+    "Gemeinsame Regeln für KI-Nutzung im Team festlegen": "Agree shared rules for AI usage in the team",
+    "Erste Team-Automatisierung": "First team automation",
+    "Einen Team-übergreifenden Workflow automatisieren": "Automate one cross-team workflow",
+    "Förderantrag vorbereiten": "Prepare a funding application",
+    "Unterlagen für go-digital oder regionale Programme zusammenstellen": "Compile documents for go-digital or regional programmes",
+    "Kurzes Team-Training": "Short team training",
+    "30-minütiges Onboarding für alle Team-Mitglieder": "A 30-minute onboarding for all team members",
+    "KI-Strategie skizzieren": "Sketch an AI strategy",
+    "Grobe KI-Roadmap mit Prioritäten für die nächsten 12 Monate": "Rough AI roadmap with priorities for the next 12 months",
+    "Datenlandschaft analysieren": "Analyse the data landscape",
+    "Bestandsaufnahme vorhandener Datenquellen und -qualität": "Inventory of existing data sources and their quality",
+    "Pilotprojekt definieren": "Define a pilot project",
+    "Konkretes KI-Pilotprojekt mit messbaren Zielen festlegen": "Define a concrete AI pilot project with measurable goals",
+    "Governance-Framework etablieren": "Establish a governance framework",
+    "KI-Richtlinien, Rollen und Verantwortlichkeiten dokumentieren": "Document AI policies, roles and responsibilities",
+    "AI Act Compliance prüfen": "Check AI Act compliance",
+    "Risikoeinstufung und Compliance-Anforderungen klären": "Clarify risk classification and compliance requirements",
+    "ZIM-Antrag vorbereiten": "Prepare a ZIM application",
+    "Innovationsprojekt für ZIM-Förderung strukturieren": "Structure an innovation project for ZIM funding",
+    "Schulungskonzept erstellen": "Create a training concept",
+    "Rollenspezifische Trainings für Fachbereiche planen": "Plan role-specific trainings for departments",
+    # --- Investment ranges ---
+    "500–2.000 €/Jahr": "€500–2,000/year",
+    "2.000–10.000 €/Jahr": "€2,000–10,000/year",
+    "10.000–50.000 €/Jahr": "€10,000–50,000/year",
+    "variabel": "variable",
+}
+
+
+def _kit_en(text: str) -> str:
+    """EN-Lookup mit Fail-open auf den Originalstring."""
+    return _KIT_TEXT_EN.get(text, text)
+
+
+# =============================================================================
 # GENERATOR
 # =============================================================================
 
@@ -741,12 +958,21 @@ def generate_starter_kit(
     # KIS-1132: Use expertise_level if available (injected by gpt_analyze.py)
     expertise_level = str(ctx.get("expertise_level", "") or "").lower()
 
-    maturity_label = "Einsteiger" if maturity <= 2 else "Fortgeschritten" if maturity <= 3 else "Erfahren"
-    # KIS-1132: Override maturity label with expertise label if available
-    if expertise_level == "expert":
-        maturity_label = "KI-Experte"
-    elif expertise_level == "intermediate":
-        maturity_label = "KI-Anwender"
+    # KIS-1251 (Punkt 5): EN-Labels bei lang=en (DE unverändert)
+    _is_en = (lang or "").strip().lower().startswith("en")
+    if _is_en:
+        maturity_label = "Beginner" if maturity <= 2 else "Advanced" if maturity <= 3 else "Experienced"
+        if expertise_level == "expert":
+            maturity_label = "AI expert"
+        elif expertise_level == "intermediate":
+            maturity_label = "AI practitioner"
+    else:
+        maturity_label = "Einsteiger" if maturity <= 2 else "Fortgeschritten" if maturity <= 3 else "Erfahren"
+        # KIS-1132: Override maturity label with expertise label if available
+        if expertise_level == "expert":
+            maturity_label = "KI-Experte"
+        elif expertise_level == "intermediate":
+            maturity_label = "KI-Anwender"
     segment_label = f"{size_label.upper()}/{branch_group}/{maturity_label}"
 
     kit_id = f"{size_label}_{branch_group.lower()[:4]}_{maturity}"
@@ -785,6 +1011,20 @@ def generate_starter_kit(
         for c in checklist_templates
     ]
 
+    # KIS-1251 (Punkt 5): EN-Fassung der Template-Texte (Name/Kategorie/
+    # Zweck der Tools, Förder-Begründungen, Checklisten). Fail-open:
+    # unbekannte Strings bleiben unverändert.
+    if _is_en:
+        for t_obj in tools:
+            t_obj.name = _kit_en(t_obj.name)
+            t_obj.category = _kit_en(t_obj.category)
+            t_obj.purpose = _kit_en(t_obj.purpose)
+        for f_obj in funding:
+            f_obj.fit_reason = _kit_en(f_obj.fit_reason)
+        for c_obj in checklist:
+            c_obj.title = _kit_en(c_obj.title)
+            c_obj.description = _kit_en(c_obj.description)
+
     # Calculate estimates
     total_setup_days = sum(t.estimated_setup_days for t in tools)
     total_checklist_hours = sum(c.estimated_hours for c in checklist)
@@ -792,12 +1032,23 @@ def generate_starter_kit(
 
     # Estimate investment
     estimated_investment = _estimate_investment(size_label)
+    if _is_en:
+        estimated_investment = _kit_en(estimated_investment)
 
     # Calculate potential funding
     potential_funding = _calculate_potential_funding(funding)
+    if _is_en and potential_funding.startswith("bis zu "):
+        # "bis zu 6.500 €" → "up to €6,500"
+        _amount = potential_funding[len("bis zu "):].replace(" €", "").replace(".", ",")
+        potential_funding = f"up to €{_amount}"
 
     # Quick win count
     quick_win_count = min(3, len([t for t in tools if t.priority == 1]))
+
+    if _is_en:
+        _descriptions = KIT_DESCRIPTIONS_EXPERT_EN if expertise_level == "expert" else KIT_DESCRIPTIONS_EN
+    else:
+        _descriptions = KIT_DESCRIPTIONS_EXPERT if expertise_level == "expert" else KIT_DESCRIPTIONS
 
     return StarterKit(
         kit_id=kit_id,
@@ -810,7 +1061,7 @@ def generate_starter_kit(
         estimated_investment=estimated_investment,
         potential_funding=potential_funding,
         quick_win_count=quick_win_count,
-        description=(KIT_DESCRIPTIONS_EXPERT if expertise_level == "expert" else KIT_DESCRIPTIONS).get(size_label, ""),
+        description=_descriptions.get(size_label, ""),
     )
 
 
@@ -826,20 +1077,24 @@ def _normalize_size(size_raw: str) -> str:
 
 def _generate_kit_name(size_label: str, branch: str, lang: str, expertise_level: str = "") -> str:
     """Generate human-readable kit name."""
+    # KIS-1251: EN-Kit-Namen bei lang=en
+    _is_en = (lang or "").strip().lower().startswith("en")
     # KIS-1132: Expertise-aware kit names
     if expertise_level == "expert":
         size_names = {
-            "solo": "KI-Operations",
+            "solo": "AI Operations" if _is_en else "KI-Operations",
             "team": "Team-LLM-Ops",
-            "kmu": "Enterprise-LLM-Ops",
+            "kmu": "SME-LLM-Ops" if _is_en else "Enterprise-LLM-Ops",
         }
     else:
         size_names = {
             "solo": "Solo-Starter",
             "team": "Team-Boost",
-            "kmu": "KMU-Enterprise",
+            "kmu": "SME-Growth" if _is_en else "KMU-Enterprise",
         }
     base_name = size_names.get(size_label, "Starter")
+    if _is_en:
+        return f"{base_name} kit for {branch}"
     return f"{base_name} Kit für {branch}"
 
 
@@ -886,6 +1141,7 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
     Returns:
         HTML string
     """
+    _is_en = (lang or "").strip().lower().startswith("en")
     if lang == "en":
         title = "Your AI Starter Kit"
         tools_label = "Recommended Tools"
@@ -899,12 +1155,24 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
         checklist_label = "Quick-Start-Checkliste"
         summary_label = "Zusammenfassung"
 
+    # KIS-1251 (Punkt 5): EN-Scaffolding-Strings
+    _t_setup_unit = "day(s)" if _is_en else "Tag(e)"
+    _t_complexity = "Complexity" if _is_en else "Komplexität"
+    _t_step = "Step" if _is_en else "Schritt"
+    _t_days = "days" if _is_en else "Tage"
+    _t_impl_time = "Estimated implementation time" if _is_en else "Geschätzte Einführungszeit"
+    _t_tools_in_kit = "Tools in the kit" if _is_en else "Tools im Kit"
+    _t_funding_count = "Funding programmes" if _is_en else "Förderprogramme"
+    _t_funding_potential = "Funding potential" if _is_en else "Förderpotenzial"
+    _t_est_investment = "Estimated investment" if _is_en else "Geschätzte Investition"
+
     # Tools section
     tools_html = ""
     for t in kit.tools:
+        _badge_2 = "RECOMMENDED" if _is_en else "EMPFOHLEN"
         priority_badge = {
             1: '<span style="color:#22c55e;font-size:9px;font-weight:600;">ESSENTIAL</span>',
-            2: '<span style="color:#f59e0b;font-size:9px;font-weight:600;">EMPFOHLEN</span>',
+            2: f'<span style="color:#f59e0b;font-size:9px;font-weight:600;">{_badge_2}</span>',
             3: '<span style="color:#6b7280;font-size:9px;font-weight:600;">OPTIONAL</span>',
         }.get(t.priority, "")
 
@@ -916,7 +1184,7 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
             </div>
             <p style="margin:4px 0 0 0;font-size:11px;color:#6b7280;">{t.purpose}</p>
             <div style="margin-top:4px;font-size:10px;color:#9ca3af;">
-                Setup: ~{t.estimated_setup_days} Tag(e) | {t.category}
+                Setup: ~{t.estimated_setup_days} {_t_setup_unit} | {t.category}
             </div>
         </div>
         """
@@ -930,9 +1198,13 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
         # KIS-1254: Wert eingedeutscht rendern — der englische Rohwert stand
         # in einem eigenen <span>, sodass die Badge-Lokalisierung ihn über
         # die Tag-Grenze nicht fand (Platin-QA english_badge, Lauf 1123).
-        complexity_label = {"low": "niedrig", "medium": "mittel", "high": "hoch"}.get(
-            f.application_complexity, f.application_complexity
-        )
+        # KIS-1251: EN-Reports behalten die englischen Werte.
+        if _is_en:
+            complexity_label = f.application_complexity
+        else:
+            complexity_label = {"low": "niedrig", "medium": "mittel", "high": "hoch"}.get(
+                f.application_complexity, f.application_complexity
+            )
         funding_html += f"""
         <div style="padding:10px;background:#f0f7ff;border-radius:6px;margin-bottom:8px;border-left:3px solid #3b82f6;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -941,7 +1213,7 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
             </div>
             <p style="margin:4px 0 0 0;font-size:11px;color:#495057;">{f.fit_reason}</p>
             <div style="margin-top:4px;font-size:10px;color:#9ca3af;">
-                {f.provider} | Komplexität: <span style="color:{complexity_color};">{complexity_label}</span>
+                {f.provider} | {_t_complexity}: <span style="color:{complexity_color};">{complexity_label}</span>
             </div>
         </div>
         """
@@ -960,7 +1232,7 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
         <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">
             <span style="font-size:14px;">{icon}</span>
             <div>
-                <strong style="font-size:11px;color:#1f2937;">Schritt {c.step}: {c.title}</strong>
+                <strong style="font-size:11px;color:#1f2937;">{_t_step} {c.step}: {c.title}</strong>
                 <p style="margin:2px 0 0 0;font-size:10px;color:#6b7280;">{c.description}</p>
             </div>
         </div>
@@ -977,8 +1249,8 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
                 <p style="margin:4px 0 0 0;font-size:12px;color:#6b7280;">{kit.kit_name} – {kit.segment_label}</p>
             </div>
             <div style="text-align:right;">
-                <div style="font-size:20px;font-weight:700;color:#059669;">{kit.estimated_total_days} Tage</div>
-                <div style="font-size:10px;color:#6b7280;">Geschätzte Einführungszeit</div>
+                <div style="font-size:20px;font-weight:700;color:#059669;">{kit.estimated_total_days} {_t_days}</div>
+                <div style="font-size:10px;color:#6b7280;">{_t_impl_time}</div>
             </div>
         </div>
 
@@ -1004,7 +1276,7 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
                     💰 {funding_label}
                 </h4>
                 {funding_html}
-                {f'<div style="margin-top:12px;padding:8px;background:#dcfce7;border-radius:6px;text-align:center;"><strong style="color:#166534;font-size:12px;">Förderpotenzial: {kit.potential_funding}</strong></div>' if kit.potential_funding else ''}
+                {f'<div style="margin-top:12px;padding:8px;background:#dcfce7;border-radius:6px;text-align:center;"><strong style="color:#166534;font-size:12px;">{_t_funding_potential}: {kit.potential_funding}</strong></div>' if kit.potential_funding else ''}
             </div>
         </div>
 
@@ -1022,11 +1294,11 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
         <div style="margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
             <div style="background:#fff;padding:12px;border-radius:8px;text-align:center;">
                 <div style="font-size:20px;font-weight:700;color:#059669;">{len(kit.tools)}</div>
-                <div style="font-size:10px;color:#6b7280;">Tools im Kit</div>
+                <div style="font-size:10px;color:#6b7280;">{_t_tools_in_kit}</div>
             </div>
             <div style="background:#fff;padding:12px;border-radius:8px;text-align:center;">
                 <div style="font-size:20px;font-weight:700;color:#3b82f6;">{len(kit.funding)}</div>
-                <div style="font-size:10px;color:#6b7280;">Förderprogramme</div>
+                <div style="font-size:10px;color:#6b7280;">{_t_funding_count}</div>
             </div>
             <div style="background:#fff;padding:12px;border-radius:8px;text-align:center;">
                 <div style="font-size:20px;font-weight:700;color:#f59e0b;">{kit.quick_win_count}</div>
@@ -1035,7 +1307,7 @@ def generate_starter_kit_html(kit: StarterKit, lang: str = "de") -> str:
         </div>
 
         <p style="margin:16px 0 0 0;font-size:10px;color:#9ca3af;text-align:center;">
-            Geschätzte Investition: {kit.estimated_investment} | {summary_label}: {kit.segment_label}
+            {_t_est_investment}: {kit.estimated_investment} | {summary_label}: {kit.segment_label}
         </p>
     </div>
     """
@@ -1055,6 +1327,7 @@ def generate_starter_kit_compact_html(kit: StarterKit, lang: str = "de") -> str:
         Compact HTML string
     """
     title = "Starter-Kit" if lang == "de" else "Starter Kit"
+    _is_en = (lang or "").strip().lower().startswith("en")
 
     tools_list = ", ".join(t.name for t in kit.tools[:3])
 
@@ -1074,24 +1347,44 @@ def generate_starter_kit_compact_html(kit: StarterKit, lang: str = "de") -> str:
     crossref_block_html = ""
     if _is_crossref_only:
         funding_line_html = ""
-        funding_count_html = (
-            f"{len(kit.tools)} Tools | ~{kit.estimated_total_days} Tage Einführung"
-        )
-        crossref_block_html = (
-            '<p style="margin:8px 0 16px 0;font-size:11px;color:#475569;'
-            'font-style:italic;line-height:1.5;">'
-            '<strong>Förderung:</strong> '
-            'Detaillierte Förderprogramme '
-            'finden Sie im Hauptkapitel „Fördermittel &amp; Finanzierung".'
-            '</p>'
-        )
+        if _is_en:
+            funding_count_html = (
+                f"{len(kit.tools)} tools | ~{kit.estimated_total_days} days to implement"
+            )
+            crossref_block_html = (
+                '<p style="margin:8px 0 16px 0;font-size:11px;color:#475569;'
+                'font-style:italic;line-height:1.5;">'
+                '<strong>Funding:</strong> '
+                'You will find detailed funding programmes '
+                'in the main chapter "Funding &amp; Financing".'
+                '</p>'
+            )
+        else:
+            funding_count_html = (
+                f"{len(kit.tools)} Tools | ~{kit.estimated_total_days} Tage Einführung"
+            )
+            crossref_block_html = (
+                '<p style="margin:8px 0 16px 0;font-size:11px;color:#475569;'
+                'font-style:italic;line-height:1.5;">'
+                '<strong>Förderung:</strong> '
+                'Detaillierte Förderprogramme '
+                'finden Sie im Hauptkapitel „Fördermittel &amp; Finanzierung".'
+                '</p>'
+            )
     else:
         funding_list = ", ".join(f.name for f in kit.funding[:2])
-        funding_line_html = f"<strong>Förderung:</strong> {funding_list}"
-        funding_count_html = (
-            f"{len(kit.tools)} Tools | {len(kit.funding)} Förderprogramme | "
-            f"~{kit.estimated_total_days} Tage"
-        )
+        if _is_en:
+            funding_line_html = f"<strong>Funding:</strong> {funding_list}"
+            funding_count_html = (
+                f"{len(kit.tools)} tools | {len(kit.funding)} funding programmes | "
+                f"~{kit.estimated_total_days} days"
+            )
+        else:
+            funding_line_html = f"<strong>Förderung:</strong> {funding_list}"
+            funding_count_html = (
+                f"{len(kit.tools)} Tools | {len(kit.funding)} Förderprogramme | "
+                f"~{kit.estimated_total_days} Tage"
+            )
 
     return f"""
     <div class="starter-kit-compact" style="margin:16px 0;padding:16px;background:#ecfdf5;border-radius:8px;border:1px solid #a7f3d0;">
@@ -1149,16 +1442,29 @@ def inject_starter_kit_into_sections(
         # to avoid inconsistency (e.g. ZIM 380k vs NRW-specific MID program).
         foerder_main = sections.get("FOERDERPROGRAMME_HTML", "")
         if foerder_main and len(foerder_main) > 100:
-            kit.funding = [
-                StarterKitFunding(
-                    program_id="crossref_foerderprogramme",
-                    name="\u2192 siehe Kapitel F\u00f6rdermittel",
-                    provider="",
-                    max_amount="",
-                    fit_reason="Detaillierte F\u00f6rderprogramme finden Sie im Hauptkapitel F\u00f6rdermittel & Finanzierung.",
-                    application_complexity="low",
-                ),
-            ]
+            # KIS-1251 (Punkt 5): EN-Crossref bei lang=en
+            if (lang or "").strip().lower().startswith("en"):
+                kit.funding = [
+                    StarterKitFunding(
+                        program_id="crossref_foerderprogramme",
+                        name="\u2192 see the Funding chapter",
+                        provider="",
+                        max_amount="",
+                        fit_reason="You will find detailed funding programmes in the main chapter Funding & Financing.",
+                        application_complexity="low",
+                    ),
+                ]
+            else:
+                kit.funding = [
+                    StarterKitFunding(
+                        program_id="crossref_foerderprogramme",
+                        name="\u2192 siehe Kapitel F\u00f6rdermittel",
+                        provider="",
+                        max_amount="",
+                        fit_reason="Detaillierte F\u00f6rderprogramme finden Sie im Hauptkapitel F\u00f6rdermittel & Finanzierung.",
+                        application_complexity="low",
+                    ),
+                ]
             kit.potential_funding = ""
 
         sections["STARTER_KIT_HTML"] = generate_starter_kit_html(kit, lang)
