@@ -133,6 +133,13 @@ _PUNCT_ONLY_TEXTNODE_RE = re.compile(
 )
 
 
+# KIS-1247: Aufzählungs-Torso mit Inline-Tags ("<p><strong>4.</strong></p>")
+_LONE_ENUM_NODE_RE = re.compile(
+    r"<(p|li|h[2-6])\b[^>]*>\s*(?:<(?:strong|b|em)[^>]*>\s*)*\d{1,2}\.?\s*(?:</(?:strong|b|em)>\s*)*</\1>",
+    re.IGNORECASE,
+)
+
+
 def remove_punctuation_only_nodes(html: str) -> Tuple[str, int]:
     """Löscht <p>/<li>, deren Inhalt nur aus Satzzeichen/Whitespace besteht,
     sowie nackte Einzel-Satzzeichen zwischen Block-Elementen."""
@@ -140,7 +147,8 @@ def remove_punctuation_only_nodes(html: str) -> Tuple[str, int]:
         return html, 0
     result, count = _PUNCT_ONLY_NODE_RE.subn("", html)
     result, count2 = _PUNCT_ONLY_TEXTNODE_RE.subn(r"\1", result)
-    return result, count + count2
+    result, count3 = _LONE_ENUM_NODE_RE.subn("", result)
+    return result, count + count2 + count3
 
 
 # --------------------------------------------------------------------------- #
@@ -236,6 +244,9 @@ _DOUBLE_PERIOD_RE = re.compile(r"(?<=[0-9A-Za-zÄÖÜäöüß])\.\.(?!\.)")
 # ("UmsetzungsKomplexität") aus LLM-Output.
 _AMPEL_NOSPACE_RE = re.compile(r"●(?=[0-9A-Za-zÄÖÜäöüß])")
 _CAMEL_COMPOUND_RE = re.compile(r"(?<=[a-zäöüß])K(?=omplexität)")
+# KIS-1247: Phasen-Überschriften kamen ohne Trenner an ("Quick Wins und
+# GrundlagenMonat 1-2", Strategie Kap. 6, Lauf 1130).
+_TITLE_MONAT_GLUE_RE = re.compile(r"(?<=[a-zäöüß])(Monat\s+\d)")
 
 
 def fix_misc_typography(html: str) -> Tuple[str, int]:
@@ -249,9 +260,10 @@ def fix_misc_typography(html: str) -> Tuple[str, int]:
             continue
         new_part, n1 = _AMPEL_NOSPACE_RE.subn("● ", part)
         new_part, n2 = _CAMEL_COMPOUND_RE.subn("k", new_part)
-        if n1 or n2:
+        new_part, n3 = _TITLE_MONAT_GLUE_RE.subn(r" · \1", new_part)
+        if n1 or n2 or n3:
             parts[i] = new_part
-            count += n1 + n2
+            count += n1 + n2 + n3
     return "".join(parts), count
 
 
@@ -336,19 +348,25 @@ _HEADER_SHORTENINGS: Dict[str, str] = {
     "konkrete gegenmaßnahme": "Gegenmaßnahme",
     "verantwortung/ressourcen": "Verantwortung",
     "umsatzprojektion": "Umsatz-Projektion",
+    # KIS-1247: "ANTRAGSFRIST" drückte in der 7-Spalten-Fördertabelle die
+    # schmale PASSUNG-Spalte in die LINK-Spalte (Lauf 1130, Strategie S. 30).
+    "antragsfrist": "Frist",
 }
 
 # Spaltengewichte nach Header-Stichwort: schmal (1) für Ampeln/Kürzel,
 # breit (3) für Fließtext-Spalten. Default: 2.
+# KIS-1247: "passung" aus narrow entfernt (Header passte nicht in die
+# 6-%-Spalte und lief in die Nachbarspalte); "tool"/"anbieter" auf wide —
+# Tool-Namen brachen sonst buchstabenweise um ("Micr osoft", Lauf 1130).
 _COL_NARROW = (
-    "typ", "impact", "eintritt", "auswirkung", "passung", "empfehlung",
+    "typ", "impact", "eintritt", "auswirkung", "empfehlung",
     "priorität", "pfad", "quote", "dsgvo", "ampel", "score", "prio",
     "zeithorizont", "komplexität", "frist",
 )
 _COL_WIDE = (
     "funktion", "beschreibung", "integration", "link", "kontakt",
     "gegenmaßnahme", "gegenmassnahme", "einordnung", "stop-signal",
-    "kernbotschaft", "prüfschritt", "bedeutung",
+    "kernbotschaft", "prüfschritt", "bedeutung", "tool", "anbieter",
 )
 
 

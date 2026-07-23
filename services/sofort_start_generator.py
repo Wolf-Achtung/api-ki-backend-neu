@@ -3194,7 +3194,7 @@ FALLSTUDIEN_MEDIEN: List[Dict[str, Any]] = [
             "kosteneinsparung": "~5.700 €/Monat",
             "qualitaet": "Schnittvorbereitung von 3 Tagen auf 1; Archiv-Clips in Minuten auffindbar und lizenzierbar"
         },
-        "zitat": "Wir schneiden wieder Geschichten – statt Festplatten zu durchsuchen.",
+        "zitat": "Die Geschichten entstehen wieder im Schnitt – nicht beim Durchsuchen von Festplatten.",
         "dauer_bis_roi": "4 Wochen"
     },
     {
@@ -3209,7 +3209,7 @@ FALLSTUDIEN_MEDIEN: List[Dict[str, Any]] = [
             "kosteneinsparung": "~2.900 €/Monat",
             "qualitaet": "Doppelt so viele Pitches bei gleicher Teamgröße, höhere Trefferquote durch mehr Varianten"
         },
-        "zitat": "Wir pitchen doppelt so oft – und die Ideen bleiben unsere.",
+        "zitat": "Doppelt so viele Pitches – und die Ideen bleiben im Haus.",
         "dauer_bis_roi": "3 Wochen"
     },
     {
@@ -3224,7 +3224,7 @@ FALLSTUDIEN_MEDIEN: List[Dict[str, Any]] = [
             "kosteneinsparung": "~4.000 €/Monat",
             "qualitaet": "Lokalisierung in 6 statt 10 Wochen, Release in 5 Sprachen gleichzeitig, saubere Store-Deklaration"
         },
-        "zitat": "Unsere Releases erscheinen jetzt gleichzeitig in fünf Sprachen.",
+        "zitat": "Der Release erscheint jetzt in fünf Sprachen gleichzeitig.",
         "dauer_bis_roi": "6 Wochen"
     },
 ]

@@ -3847,9 +3847,29 @@ def apply_kpi_consistency_enforcer(sections: dict) -> dict:
         "CHALLENGE_30_TAGE_HTML", "SOFORT_START_HTML",
     ]
 
+    # KIS-1247: NO-SANITIZE-Regionen (z. B. die Fallstudie mit bewusst
+    # abweichenden fiktiven Beispielwerten) vor der Harmonisierung schützen —
+    # der Enforcer bog "60 Stunden/Monat (Team)" der Doku-Fallstudie auf den
+    # kanonischen Wert um (Lauf 1130, R1 S. 8), wodurch Stunden und
+    # €-Ersparnis nicht mehr zusammenpassten.
+    import re as _re_ns
+    _ns_re = _re_ns.compile(
+        r'<!--NO-SANITIZE-([A-Z0-9-]+)-->.*?<!--/NO-SANITIZE-\1-->',
+        _re_ns.DOTALL,
+    )
+
     for key in check_sections:
         if key in sections and sections[key] and isinstance(sections[key], str):
-            enforced, count = enforce_kpi_consistency(sections[key], canonical_kpis)
+            _shielded: list = []
+
+            def _stash(m: "_re_ns.Match[str]") -> str:
+                _shielded.append(m.group(0))
+                return f"\x00KPI-SHIELD-{len(_shielded) - 1}\x00"
+
+            _work = _ns_re.sub(_stash, sections[key])
+            enforced, count = enforce_kpi_consistency(_work, canonical_kpis)
+            for _i, _block in enumerate(_shielded):
+                enforced = enforced.replace(f"\x00KPI-SHIELD-{_i}\x00", _block)
             if count > 0:
                 sections[key] = enforced
                 total_enforcements += count

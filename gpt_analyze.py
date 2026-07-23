@@ -16237,6 +16237,16 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     for key in direct_copy_keys:
         sections[key] = answers.get(key, "")
 
+    # KIS-1247: Sparten-Label in die Template-Sections bringen — es wurde in
+    # _build_prompt_vars berechnet, aber hier nie kopiert, daher fehlte
+    # "Film-/TV-Produktion" auf dem Cover (Lauf 1130) trotz gesetztem
+    # medien_sparte im Briefing.
+    sections["MEDIEN_SPARTE_LABEL"] = (
+        answers.get("MEDIEN_SPARTE_LABEL")
+        or (_label_for("medien_sparte", answers.get("medien_sparte"))
+            if answers.get("medien_sparte") else "")
+    )
+
     # FIX-KIS-BAFA-Country: propagate country into sections so the core funding
     # table (build_core_funding_table_html → extra_sections.py) sees the real
     # country. Without this, country defaults to "DE" and the allowed_countries
