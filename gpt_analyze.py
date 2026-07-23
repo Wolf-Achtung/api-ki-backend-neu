@@ -23177,6 +23177,14 @@ def _auto_trigger_potenzialanalyse(briefing_id: int, run_id: str) -> None:
                 _kpa_rid = _kpa_display_id(bid)
             except Exception:
                 _kpa_rid = f"KPA-{bid}"
+            # KIS-1260 (Lauf 1134): DIESER Render-Pfad erzeugt die per Mail
+            # verschickte KPA — ohne lang blieb die Fußzeile 'Seite x/y'
+            # (die beiden On-Demand-Endpoints in routes/report.py waren
+            # bereits gefixt, dieser dritte Call-Site fehlte).
+            try:
+                _kpa_lang = str(getattr(db.get(Briefing, bid), "lang", "de") or "de")
+            except Exception:
+                _kpa_lang = "de"
             pdf_result = render_pdf_from_html(
                 html=html,
                 meta={
@@ -23184,6 +23192,7 @@ def _auto_trigger_potenzialanalyse(briefing_id: int, run_id: str) -> None:
                     "report_type": "gamechanger_deep_dive",
                     "report_id": _kpa_rid,
                     "report_date": datetime.now().strftime("%d.%m.%Y"),
+                    "lang": _kpa_lang,
                 },
                 pdf_options=pdf_options,
             )
