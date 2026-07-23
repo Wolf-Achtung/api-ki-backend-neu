@@ -625,8 +625,9 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         _logging.getLogger(__name__).debug("audit_render_context failed: %s", _e)
 
     # Phase 0 Multi-Projekt: zentrales Branding für Templates bereitstellen
-    from services.brand_config import get_brand
-    context.setdefault("brand", get_brand())
+    # KIS-1253: lang-aware — EN-Reports bekommen die englische Signatur
+    from services.brand_config import get_brand_for_lang
+    context.setdefault("brand", get_brand_for_lang(str(context.get("LANG") or context.get("lang") or "de")))
 
     html = str(template.render(**context))
 

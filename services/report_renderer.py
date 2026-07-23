@@ -1150,8 +1150,9 @@ def render(briefing_obj: Any,
     )
 
     # Phase 0 Multi-Projekt: zentrales Branding für Templates bereitstellen
-    from services.brand_config import get_brand
-    ctx.setdefault("brand", get_brand())
+    # KIS-1253: lang-aware — EN-Reports bekommen die englische Signatur
+    from services.brand_config import get_brand_for_lang
+    ctx.setdefault("brand", get_brand_for_lang(str(ctx.get("LANG") or ctx.get("lang") or "de")))
 
     html = env.get_template(tpl_name).render(**ctx)
 

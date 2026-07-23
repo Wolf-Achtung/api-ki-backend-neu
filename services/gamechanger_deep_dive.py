@@ -886,11 +886,17 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
 
         report1_sections = analysis.sections
         answers = briefing.answers or {}
+        _briefing_lang = str(getattr(briefing, "lang", "de") or "de").lower()
     finally:
         db.close()
 
     # 3. Build context
     context = build_gamechanger_context(report1_sections, answers)
+    # KIS-1253 (Lauf 1132): lang kam nie im Context an — Sprachweiche für
+    # EN-Template UND EN-Prompt-Direktive fiel immer auf de zurück, der
+    # Deep-Dive wurde trotz lang=en komplett deutsch gerendert.
+    context["LANG"] = _briefing_lang
+    context["lang"] = _briefing_lang
     bc = context.get('canonical_bc', {})
     log.info(
         "[GC-DEEP-DIVE] Context built for briefing %d: size=%s, branche=%s, "
@@ -1014,8 +1020,9 @@ def render_deep_dive_html(sections: Dict[str, str],
             log.debug("audit_render_context failed: %s", _e)
 
         # Phase 0 Multi-Projekt: zentrales Branding für Templates bereitstellen
-        from services.brand_config import get_brand
-        template_vars.setdefault("brand", get_brand())
+        # KIS-1253: lang-aware — EN-Reports bekommen die englische Signatur
+        from services.brand_config import get_brand_for_lang
+        template_vars.setdefault("brand", get_brand_for_lang(_dd_lang))
 
         _html = str(template.render(**template_vars))
 

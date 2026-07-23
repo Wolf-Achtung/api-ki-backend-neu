@@ -15819,6 +15819,14 @@ def analyze_briefing(
     except Exception:
         pass
 
+    # KIS-1253 (Lauf 1132): lang ins answers-Dict spiegeln. Das EN-Formular
+    # sendet lang nur im Submit-Umschlag (briefing.lang), NICHT in den
+    # answers — alle answers-basierten Sprachweichen (prompt_enhancer,
+    # prompt_loader, research) fielen dann auf de zurück, während Template
+    # und Mails (briefing.lang) englisch liefen: EN-Gerüst mit DE-Fließtext.
+    if not (answers.get("lang") or answers.get("LANG")):
+        answers["lang"] = str(getattr(br, "lang", "de") or "de").lower()
+
     # =========================================================================
     # FIX-SIZE-BUCKET: Normalize unternehmensgroesse to canonical segment EARLY
     # so ALL downstream consumers (score calibration, truncation, sofort_start,
@@ -23216,7 +23224,8 @@ def run_briefing_pipeline(db: Session, briefing_id: int, email: Optional[str] = 
         # Build PDF options with footer template (page numbers + report metadata)
         footer_template = build_footer_template(
             report_id=meta.get("report_id", ""),
-            report_date=meta.get("report_date", "")
+            report_date=meta.get("report_date", ""),
+            lang=str(getattr(br, "lang", "de") or "de")
         )
         pdf_options = {
             "format": "A4",
@@ -23377,7 +23386,8 @@ def run_async(
         # Build PDF options with footer template (page numbers + report metadata)
         footer_template = build_footer_template(
             report_id=meta.get("report_id", ""),
-            report_date=meta.get("report_date", "")
+            report_date=meta.get("report_date", ""),
+            lang=str(getattr(br, "lang", "de") or "de")
         )
         pdf_options = {
             "format": "A4",

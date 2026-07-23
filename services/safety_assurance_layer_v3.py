@@ -125,10 +125,14 @@ VENDOR_AUTHORITY_PATTERNS: Dict[SupportedLanguage, List[Tuple[str, str]]] = {
         (r"(?:Sie\s+)?müssen\s+(?:unbedingt\s+)?(Microsoft|Google|Amazon|IBM|SAP|Oracle|Salesforce)\s+verwenden", "eine geeignete Lösung sollte gewählt werden"),
     ],
     SupportedLanguage.EN: [
-        (r"(?:only\s+)?(?:a\s+)?(?:specific\s+)?vendor\s+(?:like\s+)?\w+", "a suitable vendor"),
-        (r"(?:we\s+)?recommend\s+(?:exclusively\s+)?\w+(?:\s+as\s+a\s+solution)?", "we recommend a suitable solution"),
+        # KIS-1253 (Lauf 1132): generische Patterns entfernt — Spiegelung der
+        # DE-v5.4-Entscheidung. "vendor \w+" traf JEDES "Vendor Audit"/"vendor
+        # audit status" und zerstörte Überschriften ("a suitable vendor");
+        # "recommend \w+" hätte jedes "recommend starting…" verstümmelt.
+        # Vendor-Neutralität wird wie im DE-Pfad über Prompts erzwungen.
+        (r"(?:we\s+)?recommend\s+(?:exclusively\s+)?(Microsoft|Google|Amazon|IBM|SAP|Oracle|Salesforce)(?:\s+as\s+a\s+solution)?", "we recommend a suitable solution"),
         (r"(?:Microsoft|Google|Amazon|IBM|SAP|Oracle|Salesforce)\s+is\s+(?:the\s+)?best", "a leading provider offers"),
-        (r"(?:you\s+)?must\s+(?:definitely\s+)?use\s+\w+", "a suitable solution should be chosen"),
+        (r"(?:you\s+)?must\s+(?:definitely\s+)?use\s+(?:Microsoft|Google|Amazon|IBM|SAP|Oracle|Salesforce)\b", "a suitable solution should be chosen"),
     ],
     SupportedLanguage.FR: [
         (r"(?:un\s+)?fournisseur\s+(?:spécifique\s+)?(?:comme\s+)?\w+", "un fournisseur approprié"),
