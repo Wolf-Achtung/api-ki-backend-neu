@@ -1041,8 +1041,11 @@ def _send_deep_dive_email(
                 time.sleep(0.6)  # Resend Rate Limit: max 2 req/sec
                 ok, err = _send_email_via_resend(
                     addr,
-                    f"Kopie: KI-Potenzial-Analyse — Briefing #{briefing_id}",
-                    render_deep_dive_email(recipient="admin"),
+                    (
+                        f"Copy: AI Potential Analysis — Briefing #{briefing_id}" if _en
+                        else f"Kopie: KI-Potenzial-Analyse — Briefing #{briefing_id}"
+                    ),
+                    render_deep_dive_email(recipient="admin", lang=_mail_lang),
                     attachments=[attachment],
                 )
                 if ok:

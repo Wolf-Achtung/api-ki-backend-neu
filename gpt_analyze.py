@@ -22893,15 +22893,23 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
             # doppelter Briefing-Information.
             briefing_summary_html = None
 
+            # KIS-1251: Admin-Kopie folgt der Briefing-Sprache (Testlauf 1132)
+            _adm_lang = str(getattr(br, "lang", "de") or "de").lower()
+            _adm_subject = (
+                f"New AI Status Report – Analysis #{rep.analysis_id} / Briefing #{rep.briefing_id}"
+                if _adm_lang.startswith("en")
+                else f"Neuer KI‑Status‑Report – Analysis #{rep.analysis_id} / Briefing #{rep.briefing_id}"
+            )
             for addr in _admin_recipients():
                 time.sleep(0.6)  # Resend Rate Limit: max 2 req/sec
                 ok, err = _send_email_via_resend(
                     addr,
-                    f"Neuer KI‑Status‑Report – Analysis #{rep.analysis_id} / Briefing #{rep.briefing_id}",
+                    _adm_subject,
                     render_report_ready_email(
                         recipient="admin",
                         pdf_url=pdf_url,
-                        briefing_summary_html=briefing_summary_html
+                        briefing_summary_html=briefing_summary_html,
+                        lang=_adm_lang
                     ),
                     attachments=attachments_admin
                 )
