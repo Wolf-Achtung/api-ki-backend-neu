@@ -22813,10 +22813,15 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
             # Unified display number for customer-facing emails
             from utils.report_display_id import get_report_display_id as _disp_id
             _display = _disp_id(br.id)
+            _mail_lang = str(getattr(br, "lang", "de") or "de").lower()
+            _mail_subject = (
+                f"Your AI Status Report ({_display})" if _mail_lang.startswith("en")
+                else f"Ihr KI\u2011Status\u2011Report ({_display})"
+            )
             ok, err = _send_email_via_resend(
                 user_email,
-                f"Ihr KI\u2011Status\u2011Report ({_display})",
-                render_report_ready_email(recipient="user", pdf_url=pdf_url, user_email=user_email, briefing_id=getattr(br, "id", None)),
+                _mail_subject,
+                render_report_ready_email(recipient="user", pdf_url=pdf_url, user_email=user_email, briefing_id=getattr(br, "id", None), lang=_mail_lang),
                 attachments=user_attachments
             )
             if ok:

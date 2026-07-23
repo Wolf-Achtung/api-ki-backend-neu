@@ -179,6 +179,24 @@ BRANCH_SYNONYMS: Dict[str, str] = {
     "publishing": "medien",
     "postproduktion": "medien",
     "vfx": "medien",
+    # KIS-1249: explizite Geschäftsfeld-Synonyme (PR/Webdesign/Tonstudio/Social)
+    "pr": "medien",
+    "pr-agentur": "medien",
+    "pr agentur": "medien",
+    "public relations": "medien",
+    "werbeagentur": "medien",
+    "webdesign": "medien",
+    "web design": "medien",
+    "tonstudio": "medien",
+    "audio": "medien",
+    "podcast": "medien",
+    "social media": "medien",
+    "social-media-agentur": "medien",
+    "social media agentur": "medien",
+    "content creation": "medien",
+    "influencer": "medien",
+    "animation": "medien",
+    "fotografie": "medien",
     # =========================================================================
     # Legacy/alternate formats (map to canonical 13 values)
     # =========================================================================

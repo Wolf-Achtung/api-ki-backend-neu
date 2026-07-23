@@ -629,30 +629,31 @@ def _transform_content_boxes(html: str) -> str:
     definitions are activated (highlight-box, tip-box, warning-box, info-box).
     """
 
-    # 2A: "Auf einen Blick:" → blue highlight box (class="highlight-box")
+    # 2A: "Auf einen Blick:" / "At a glance:" → blue highlight box (class="highlight-box")
+    # KIS-1249: EN marker variants added — native EN prompts emit English labels.
     html = re.sub(
-        r'<p>\s*<strong>Auf einen Blick:?</strong>\s*(.*?)</p>',
-        r'<div class="highlight-box" style="background:#ebf5fb;border-left:4px solid #2e86c1;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;font-size:10pt;line-height:1.6;break-inside:avoid"><strong>Auf einen Blick:</strong> \1</div>',
+        r'<p>\s*<strong>(Auf einen Blick|At a glance):?</strong>\s*(.*?)</p>',
+        r'<div class="highlight-box" style="background:#ebf5fb;border-left:4px solid #2e86c1;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;font-size:10pt;line-height:1.6;break-inside:avoid"><strong>\1:</strong> \2</div>',
         html, flags=re.DOTALL | re.IGNORECASE,
     )
 
-    # 2B: "Tipp/Praxis-Tipp/Hinweis:" → green tip box (class="tip-box")
+    # 2B: "Tipp/Praxis-Tipp/Hinweis:" / "Tip/Note:" → green tip box (class="tip-box")
     html = re.sub(
-        r'<p>\s*<strong>(Tipp|Praxis-Tipp|Hinweis):?</strong>\s*(.*?)</p>',
+        r'<p>\s*<strong>(Tipp|Praxis-Tipp|Hinweis|Tip|Note):?</strong>\s*(.*?)</p>',
         r'<div class="tip-box" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin:16px 0;font-size:9.5pt;line-height:1.55;break-inside:avoid"><strong>\1:</strong> \2</div>',
         html, flags=re.DOTALL | re.IGNORECASE,
     )
 
-    # 2C: "Wichtig/Achtung/Warnung:" → yellow warning box (class="warning-box")
+    # 2C: "Wichtig/Achtung/Warnung:" / "Important/Warning/Caution:" → yellow warning box (class="warning-box")
     html = re.sub(
-        r'<p>\s*<strong>(Wichtig|Achtung|Warnung):?</strong>\s*(.*?)</p>',
+        r'<p>\s*<strong>(Wichtig|Achtung|Warnung|Important|Warning|Caution):?</strong>\s*(.*?)</p>',
         r'<div class="warning-box" style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin:16px 0;font-size:9.5pt;line-height:1.55;break-inside:avoid"><strong>\1:</strong> \2</div>',
         html, flags=re.DOTALL | re.IGNORECASE,
     )
 
-    # 2D: "Empfehlung/Investitionsempfehlung/Handlungsempfehlung:" → blue gradient box (class="info-box")
+    # 2D: "Empfehlung/…" / "Recommendation/…" → blue gradient box (class="info-box")
     html = re.sub(
-        r'<p>\s*<strong>(Empfehlung|Investitionsempfehlung|Handlungsempfehlung):?</strong>\s*(.*?)</p>',
+        r'<p>\s*<strong>(Empfehlung|Investitionsempfehlung|Handlungsempfehlung|Recommendation|Investment recommendation|Action recommendation):?</strong>\s*(.*?)</p>',
         r'<div class="info-box" style="background:linear-gradient(135deg,#eff6ff,#e0f2fe);border:1px solid #93c5fd;border-left:4px solid #2563eb;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;font-size:10pt;line-height:1.6;break-inside:avoid"><strong>\1:</strong> \2</div>',
         html, flags=re.DOTALL | re.IGNORECASE,
     )
@@ -674,6 +675,22 @@ def _transform_content_boxes(html: str) -> str:
     html = re.sub(
         r'(<td[^>]*>)\s*(?:<strong>)?(niedrig|Niedrig)(?:</strong>)?\s*(?=</td>)',
         r'\1<span style="display:inline-block;background:#fef2f2;color:#b91c1c;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Niedrig</span>',
+        html,
+    )
+    # KIS-1249: EN ampel keywords (High/Medium/Low) — same badges, English labels
+    html = re.sub(
+        r'(<td[^>]*>)\s*(?:<strong>)?(high|High)(?:</strong>)?\s*(?=</td>)',
+        r'\1<span style="display:inline-block;background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">High</span>',
+        html,
+    )
+    html = re.sub(
+        r'(<td[^>]*>)\s*(?:<strong>)?(medium|Medium)(?:</strong>)?\s*(?=</td>)',
+        r'\1<span style="display:inline-block;background:#fffbeb;color:#b45309;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Medium</span>',
+        html,
+    )
+    html = re.sub(
+        r'(<td[^>]*>)\s*(?:<strong>)?(low|Low)(?:</strong>)?\s*(?=</td>)',
+        r'\1<span style="display:inline-block;background:#fef2f2;color:#b91c1c;padding:2px 8px;border-radius:4px;font-size:8pt;font-weight:600">Low</span>',
         html,
     )
 
@@ -698,10 +715,10 @@ def _transform_content_boxes(html: str) -> str:
         html,
     )
 
-    # 2G: "Quellen:" → dezenter footer
+    # 2G: "Quellen:" / "Sources:" → dezenter footer
     html = re.sub(
-        r'<p>\s*<strong>Quellen?:?</strong>\s*(.*?)</p>',
-        r'<div style="font-size:8pt;color:#9CA3AF;border-top:1px solid #E5E7EB;padding-top:12px;margin-top:24px"><strong>Quellen:</strong> \1</div>',
+        r'<p>\s*<strong>(Quellen?|Sources?):?</strong>\s*(.*?)</p>',
+        r'<div style="font-size:8pt;color:#9CA3AF;border-top:1px solid #E5E7EB;padding-top:12px;margin-top:24px"><strong>\1:</strong> \2</div>',
         html, flags=re.DOTALL,
     )
 

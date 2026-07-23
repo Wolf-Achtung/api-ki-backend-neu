@@ -1003,19 +1003,27 @@ def _send_deep_dive_email(
         user_email = _determine_user_email(db, briefing, None)
 
         _display = get_report_display_id(briefing_id)
+        _mail_lang = str(getattr(briefing, "lang", "de") or "de").lower()
+        _en = _mail_lang.startswith("en")
         attachment = {
-            "filename": f"KI-Potenzial-Analyse-{_display}.pdf",
+            "filename": (
+                f"AI-Potential-Analysis-{_display}.pdf" if _en
+                else f"KI-Potenzial-Analyse-{_display}.pdf"
+            ),
             "content": pdf_bytes,
             "mimetype": "application/pdf",
         }
-        subject = f"Ihre KI-Potenzial-Analyse ({_display})"
+        subject = (
+            f"Your AI Potential Analysis ({_display})" if _en
+            else f"Ihre KI-Potenzial-Analyse ({_display})"
+        )
 
         # --- User email ---
         if user_email:
             ok, err = _send_email_via_resend(
                 user_email,
                 subject,
-                render_deep_dive_email(recipient="user", briefing_id=briefing_id),
+                render_deep_dive_email(recipient="user", briefing_id=briefing_id, lang=_mail_lang),
                 attachments=[attachment],
             )
             if ok:
