@@ -1,0 +1,2413 @@
+<!-- KI-Readiness Report Template v7.1.0 "Clean Corporate Plus" — 2026-03-03 -->
+<!-- Engine: Puppeteer/Chromium · Backend: FastAPI/Jinja2 · Design: McKinsey/BCG -->
+<!-- Changelog v7.1: Fix leere Seite 2, Score-Interpretation, Advisor Note, Section Transitions, Tip/Warning Boxes -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Status Report {{ report_id }} – {{ BRANCHE_LABEL|default('AI Readiness Assessment') }}</title>
+    <style>
+/* ═══════════════════════════════════════════════════════
+   v7.1 CLEAN CORPORATE PLUS — Design System
+   Typography: Inter (unified family)
+   Colors: 3 primary + grays
+   Layout: CSS Grid + Flexbox
+   v7.1 additions: score-interpretation, advisor-note,
+   section-transition, tip-box, warning-box
+   ═══════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Page Setup ─────────────────────────────────────── */
+@page {
+    size: A4;
+    margin: 12mm 12mm 15mm 12mm;
+    /* KIS-FOOTER: @bottom-right-Seitenzahl ENTFERNT. Sie war in prod-Chromium
+       (Puppeteer 22.10 / ~M125) toter Code (rendert @page-Margin-Boxen nicht),
+       dupliziert aber die Puppeteer-footerTemplate (build_footer_template:
+       "Seite X / Y · Report-ID · Datum") und ergaebe auf neuerem Chromium eine
+       doppelte Fussnote. Paginierung laeuft ausschliesslich ueber die
+       footerTemplate. */
+}
+
+/* ── Design Tokens ──────────────────────────────────── */
+:root {
+    /* Report-Type Palette: Corporate Blue (R1) */
+    --report-primary: #2B6CB0;
+    --report-primary-dark: #1E4E8C;
+    --report-accent: #0C9AA0;
+    --report-bg-panel: #EBF4FF;
+    --report-bg-highlight: #DBEAFE;
+    /* Primary */
+    --c-primary: #2B6CB0;
+    --c-accent: #0C9AA0;
+    --c-warning: #F59E0B;
+    /* Grays */
+    --c-text: #374151;
+    --c-text-2: #6B7280;
+    --c-text-3: #9CA3AF;
+    --c-border: #E5E7EB;
+    --c-bg: #F9FAFB;
+    --c-white: #ffffff;
+    /* Semantic */
+    --c-success: #10B981;
+    --c-danger: #EF4444;
+    --c-info: #3B82F6;
+    /* Category Colors */
+    --c-cat-strategy: #3b82f6;
+    --c-cat-action: #10b981;
+    --c-cat-risk: #ef4444;
+    --c-cat-finance: #f59e0b;
+    --c-cat-deep: #8b5cf6;
+    /* Typography */
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+    /* Spacing */
+    --sp-xs: 4px;
+    --sp-sm: 8px;
+    --sp-md: 16px;
+    --sp-lg: 24px;
+    --sp-xl: 32px;
+    --sp-2xl: 48px;
+    /* Radius */
+    --r-sm: 4px;
+    --r-md: 8px;
+    --r-lg: 12px;
+}
+
+/* ── Base Reset ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: var(--font);
+    font-size: 11pt; /* M5-FIX: 10pt→11pt for better readability, consistent with strategy_report */
+    line-height: 1.6;
+    color: var(--c-text);
+    background: var(--c-white);
+    -webkit-font-smoothing: antialiased;
+    orphans: 4;
+    widows: 4;
+}
+
+/* ── Typography Scale ───────────────────────────────── */
+h1 { font-size: 28pt; font-weight: 700; color: var(--c-primary); line-height: 1.15; letter-spacing: -0.02em; }
+h2 { font-size: 18pt; font-weight: 700; color: var(--c-primary); line-height: 1.25; letter-spacing: -0.01em; margin: 0; }
+h3 { font-size: 13pt; font-weight: 600; color: var(--c-primary); line-height: 1.3; margin: var(--sp-md) 0 var(--sp-sm); }
+h4 { font-size: 11pt; font-weight: 600; color: var(--c-text); line-height: 1.4; margin: var(--sp-sm) 0 var(--sp-xs); }
+
+p { margin: var(--sp-sm) 0; }
+
+a { color: var(--c-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+strong { font-weight: 600; }
+
+.small { font-size: 8.5pt; }
+.muted { color: var(--c-text-3); }
+.text-2 { color: var(--c-text-2); }
+
+/* ── Links & Lists (from backend HTML blocks) ───────── */
+ul, ol { padding-left: 1.5em; margin: var(--sp-sm) 0; }
+li { margin-bottom: var(--sp-xs); }
+table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: var(--sp-md) 0; }
+th { background: var(--c-bg); font-weight: 600; text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--c-border); font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c-text-2); }
+td { padding: 8px 10px; border-bottom: 1px solid var(--c-border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+
+/* ── Page Structure ─────────────────────────────────── */
+.page { max-width: 210mm; margin: 0 auto; }
+
+/* ══ PAGE BREAK RULES v7.1.4 (Puppeteer/Chromium) ═══ */
+/* Selective breaks: only at major theme changes to avoid whitespace pages */
+/* v7.1.4: .break-exec-to-action removed — T1 transition now inside #sofort-start */
+.break-action-to-imprint { break-before: page; }
+
+/* Major chapter starts — new page */
+/* M3-FIX: #funding-section removed — flows after AI Act to avoid 70% whitespace on preceding page */
+/* KIS-1250: Kapitelfluss nach KPA-Muster. Lauf 1238 hatte 11 Seiten unter
+   ~45 % Füllgrad — Ursache waren erzwungene Umbrüche vor kurzen Kapiteln.
+   Nur die Anker-Kapitel behalten eine eigene Seite (Management Summary,
+   Sofort-Start, Entscheidungsvorlage, AI-Act, persönliche Einschätzung,
+   Impressum); Business Case, Challenge, Risiken, Ausblick und Gamechanger
+   fließen — beim KPA hat genau dieses Muster die Leerseiten eliminiert. */
+#mgmt-summary,
+#sofort-start,
+#advisor-note {
+    break-before: page;
+}
+#business-case-compact,
+#challenge-section,
+#risks-compact,
+#outlook-section,
+#gamechanger-section {
+    break-before: auto;
+}
+/* KIS-1250: Kapitel-Überschriften kleben am Folgeinhalt — verwaiste
+   Header am Seitenende (Lauf 1238, S. 10/15) entstehen nicht mehr. */
+.section > h2, .section-header {
+    break-after: avoid;
+    page-break-after: avoid;
+}
+/* KIS-1126 / C6 FIX: #decision gets its own page so the GF-Entscheidungsvorlage
+   is standalone-printable (was on same page as Management Summary).
+   KIS-1217 / 1027.7: page-break-before:always (Legacy-Alias) ergaenzt, damit der
+   erzwungene Umbruch unter Puppeteer/Chromium zuverlaessig auf dem GEMEINSAMEN
+   Wrapper (Header + glance-box + .exec-decision-box) greift. Der Break gehoert
+   auf diesen Container, NICHT auf die Box: deren break-before wurde in 367c969
+   entfernt (gab Cutoff nach Bullet 1, weil die Box mitten auf der Seite begann
+   und der Seitenrest < Boxhoehe war). break-inside:avoid bleibt verboten
+   (Clipping-Historie KIS-1199: Box hoeher als Seitenrest). Header + Box starten
+   so gemeinsam oben auf neuer Seite, die Box hat die volle Seite zur Verfuegung. */
+#decision {
+    break-before: page;
+    page-break-before: always;
+}
+/* KIS-1183 Befund 3: #aiact-compact starts on its own page.
+   Surgical fix — vendor-section regularly ends near bottom of preceding
+   page, leaving only the H2 header to fit. The glance-box+risk-banner
+   block then wandered to the next page, leaving the section-header
+   visually orphaned. NOT applied to vendor/funding (those would create
+   their own whitespace pattern; M1 already removed banner break-after). */
+#aiact-compact {
+    break-before: page;
+}
+/* KIS-1247: Gleiches Muster für Quick Wins — die Karten sind ~halbseitig
+   (break-inside:avoid), daher stand Banner+Glance-Box regelmäßig verwaist
+   am Seitenfuß (Lauf 1129, S. 9), die Karten sprangen um. Fester
+   Kapitelanfang ist deterministisch; Weißraum am Vorseitenende ist
+   Kapitelende-typisch und akzeptiert. */
+#quick-wins-section {
+    break-before: page;
+}
+/* Sub-sections flow naturally (no forced break):
+   #roadmap-90d, #tools-section,
+   #prompts-section, #vendor-section, #funding-section, #next-steps */
+
+/* ── Section Base ───────────────────────────────────── */
+.section {
+    padding: var(--sp-xl) 0 var(--sp-lg);
+    break-inside: auto;
+}
+/* KIS-1126 / C3 FIX: Headings stay with following content (browser default
+   reinforced). KIS-1128 audit M2: glance-box break-after removed — caused
+   cascade banner→glance→h3→content that pushed half-empty pages forward. */
+.section h2, .section h3, .section h4 {
+    break-after: avoid;
+}
+/* Phase/roadmap items should not break internally */
+.section-body h3 + p,
+.section-body h3 + ul,
+.section-body h3 + ol,
+.section-body h3 + div {
+    break-before: avoid;
+}
+
+/* ── Level Indicator ────────────────────────────────── */
+.level-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 8pt;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-text-3);
+    margin-bottom: var(--sp-md);
+    /* KIS-1216: Header-Badge nie allein am Seitenfuss — bleibt bei Header+Inhalt. */
+    break-after: avoid;
+    page-break-after: avoid;
+}
+.level-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.level-dot-exec     { background: var(--c-cat-strategy); }
+.level-dot-action   { background: var(--c-cat-action); }
+.level-dot-deep     { background: var(--c-cat-deep); }
+
+/* ── Section Header ─────────────────────────────────── */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--sp-md);
+    margin-bottom: var(--sp-md);
+    /* KIS-1216: Section-Header nie allein am Seitenfuss. */
+    break-after: avoid;
+    page-break-after: avoid;
+}
+.section-kicker {
+    display: block;
+    font-size: 9pt;
+    font-weight: 500;
+    color: var(--c-text-2);
+    margin-bottom: 2px;
+}
+.section-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 8pt;
+    color: var(--c-text-2);
+    background: var(--c-bg);
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+.pill-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c-accent);
+}
+.pill-danger  { background: var(--c-danger); }
+.pill-warning { background: var(--c-warning); }
+.pill-success { background: var(--c-accent); }
+
+/* ── Category Badges ────────────────────────────────── */
+.badge {
+    display: inline-block;
+    font-size: 7.5pt;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-bottom: var(--sp-xs);
+}
+.badge-strategy { background: var(--report-bg-panel); color: var(--report-primary); }
+.badge-action   { background: #ecfdf5; color: #047857; }
+.badge-risk     { background: #fef2f2; color: #b91c1c; }
+.badge-finance  { background: #fffbeb; color: #b45309; }
+.badge-deep     { background: #f5f3ff; color: var(--c-cat-deep); }
+
+/* ── Glance Box ─────────────────────────────────────── */
+.glance-box {
+    font-size: 10pt;
+    line-height: 1.5;
+    padding: 10px 14px;
+    border-radius: var(--r-sm);
+    margin-bottom: var(--sp-lg);
+    background: var(--report-bg-panel);
+    border-left: 3px solid var(--c-border);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.glance-box strong { font-weight: 600; color: var(--c-text); }
+.glance-strategy { border-left-color: var(--c-cat-strategy); }
+.glance-action   { border-left-color: var(--c-cat-action); }
+.glance-risk     { border-left-color: var(--c-cat-risk); }
+.glance-finance  { border-left-color: var(--c-cat-finance); }
+
+/* ── Section Body ───────────────────────────────────── */
+.section-body {
+    font-size: 11pt; /* M5-FIX: 10pt→11pt consistent with body and strategy_report */
+    line-height: 1.65;
+}
+.section-body p + p { margin-top: 6px; }
+.section-body h4 + p { margin-top: 4px; }
+/* M6-FIX: Reduced from 5→3 (KPA uses 3/3 successfully — lower values give Chromium more flexibility) */
+.section-body p, .section-body li { orphans: 3; widows: 3; }
+/* KIS-1235: Tabellenzeilen zusammenhalten, Kopf bei Umbruch wiederholen. */
+tr { break-inside: avoid; }
+p, li { orphans: 3; widows: 3; } /* KIS-1244: keine Absatz-Waisen */
+tbody tr:first-child { break-before: avoid-page; page-break-before: avoid; } /* KIS-1244 */
+thead { display: table-header-group; break-after: avoid; page-break-after: avoid; }
+/* KIS-1238: Kopfzeile nie allein am Seitenende (Lauf 1119: verwaiste
+   Header S. 4/9 der Potenzialanalyse, Zeilen folgten headerlos). */
+.section-body h3 { margin-top: var(--sp-lg); }
+
+/* ── Chapter Banner (KIS-1127/C4, KIS-1128 audit M1, KIS-1216) ──────
+   KIS-1128 hatte break-after:avoid entfernt, weil Banner auf Sektionen
+   ohne forced page-break (vendor, funding) 70% Whitespace auf der Vorseite
+   erzeugten, wenn Banner+Inhalt nicht zusammen passten.
+   KIS-1216 fuehrt break-after:avoid wieder ein, weil der gegenteilige Bug
+   (verwaister Banner-Header allein am Seitenfuss, Inhalt erst auf Folge-
+   seite) auf S.13/S.19 aufgetreten ist. Die damalige Whitespace-Ursache
+   ist durch C3/M2 entschaerft: grosse Folge-Container (scenarios-section,
+   business-case-engine-v2, roadmap-phase-card, …) sind inzwischen
+   break-inside:auto und fliessen, statt als Block mitzuspringen.
+   GEGENPROBE PFLICHT: nach Render pruefen, dass kein neuer leerer-Seiten-
+   Fall entsteht (Seitenzahl vorher 23). */
+.chapter-banner {
+    padding: 20px 32px 16px;
+    margin: 0 0 20px 0;
+    position: relative;
+    break-inside: avoid;
+    break-after: avoid;
+    page-break-after: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+.chapter-banner__number {
+    font-size: 36px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.2);
+    position: absolute;
+    top: 14px;
+    left: 32px;
+    line-height: 1;
+}
+.chapter-banner__accent {
+    width: 32px;
+    height: 2px;
+    background: #c8954c;
+    margin: 4px 0 8px;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.chapter-banner--numbered .chapter-banner__content { padding-left: 40px; }
+.chapter-banner--unnumbered .chapter-banner__content { padding-left: 0; }
+.chapter-banner__category {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 0 0 4px;
+}
+.chapter-banner__title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #ffffff;
+    margin: 0 0 2px;
+}
+.chapter-banner__subtitle {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+}
+.chapter-banner--r1 {
+    background: linear-gradient(135deg, #1a3a2a 0%, #2a5f3d 100%);
+}
+
+/* ── Funding section spacing ──────────────────────────── */
+#funding-section .section-body p { margin-bottom: 8px; }
+#funding-section .section-body ul,
+#funding-section .section-body ol { margin: 8px 0 12px; }
+
+/* ── Cross-Reference Link ───────────────────────────── */
+.xref {
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+    padding-top: var(--sp-md);
+    margin-top: var(--sp-md);
+    border-top: 1px solid var(--c-border);
+}
+
+/* ── Optional Section (SKIP_PAGES) ──────────────────── */
+.section-optional { opacity: 0.6; }
+
+/* ══════════════════════════════════════════════════════
+   COVER PAGE
+   ══════════════════════════════════════════════════════ */
+.cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    /* min-height statt fixed height + kein overflow:hidden: bei minimalem
+       Mehr-Inhalt wurde sonst durch justify-content:center oben (Score-Ring)
+       UND unten (Trust-Badges) abgeschnitten. min-height lässt das Cover
+       mitwachsen, TOC startet weiterhin auf der Folgeseite (keine Geist-Seite,
+       da kein forcierter page-break). */
+    min-height: 100vh;
+    padding: var(--sp-2xl) var(--sp-xl);
+}
+.cover-accent {
+    width: 60px;
+    height: 4px;
+    border-radius: 2px;
+    margin: 0 auto var(--sp-xl);
+}
+.cover-eyebrow {
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--c-text-3);
+    margin-bottom: var(--sp-lg);
+}
+.cover-subtitle {
+    font-size: 12pt;
+    color: var(--c-primary);
+    font-style: italic;
+    margin-bottom: var(--sp-xs);
+}
+.cover-meta {
+    font-size: 10.5pt;
+    color: var(--c-text-2);
+}
+.cover-meta strong { color: var(--c-text); }
+
+/* Cover Logo */
+.cover-logo {
+    width: 180px;
+    height: auto;
+    margin-bottom: var(--sp-lg);
+}
+
+/* Trust Badges */
+.trust-badges {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--sp-lg);
+    margin-top: var(--sp-xl);
+    flex-wrap: wrap;
+}
+.trust-badges img {
+    height: 36px;
+    width: auto;
+    opacity: 0.85;
+}
+
+/* Score Ring — KIS-Gauge-S1: score number lives inside the SVG (<text>),
+   so ring and number share one viewBox coordinate system. */
+.score-ring-wrap {
+    margin: var(--sp-xl) auto;
+    display: inline-block;
+    max-width: 200px;
+    max-height: 200px;
+}
+.score-ring-wrap svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Dimension Bars */
+.dim-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 28px;
+    text-align: left;
+    max-width: 480px;
+    margin: 0 auto var(--sp-xl);
+}
+.dim-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.5pt;
+    font-weight: 600;
+    color: var(--c-text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 3px;
+}
+.dim-track {
+    height: 5px;
+    background: #E5E7EB;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.dim-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+
+/* KPI Cards */
+.kpi-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: var(--sp-xl);
+}
+.kpi-card {
+    text-align: center;
+    padding: 14px 10px;
+    background: var(--report-bg-panel);
+    border-radius: var(--r-md);
+    border-top: 3px solid var(--report-primary);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.kpi-value {
+    font-size: 22pt;
+    font-weight: 700;
+    line-height: 1.2;
+}
+.kpi-label {
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+    margin-top: 2px;
+}
+
+/* Reading Guide */
+.reading-guide {
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    padding: var(--sp-md);
+}
+.reading-guide-title {
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--c-text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: var(--sp-sm);
+}
+.reading-guide-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+.rg-card {
+    padding: 10px;
+    background: var(--c-bg);
+    border-radius: var(--r-sm);
+    text-align: center;
+}
+.rg-card-title { font-size: 10pt; font-weight: 600; color: var(--c-text); }
+.rg-card-time  { font-size: 16pt; font-weight: 700; color: var(--c-primary); margin: 2px 0; }
+.rg-card-pages { font-size: 8pt; color: var(--c-text-3); }
+
+/* ══════════════════════════════════════════════════════
+   TABLE OF CONTENTS
+   ══════════════════════════════════════════════════════ */
+/* KIS-1257: TOC kompakter — 3 Einträge + Legende liefen auf eine fast
+   leere Folgeseite (Lauf KIS-1240, Status S. 3). Padding/Fontgröße so
+   reduziert, dass alle ~17 Einträge auf eine Seite passen. */
+.toc-level-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 3px 0 2px; /* KIS-1265: 5/3 → 3/2 */
+    margin-top: 4px;    /* KIS-1265: sp-sm → 4px */
+    border-bottom: 2px solid var(--c-border);
+}
+.toc-level-title {
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+.toc-level-header-exec .toc-level-title   { color: var(--c-cat-strategy); }
+.toc-level-header-action .toc-level-title { color: var(--c-cat-action); }
+.toc-level-header-deep .toc-level-title   { color: var(--c-cat-deep); }
+.toc-level-sub {
+    font-size: 8pt;
+    color: var(--c-text-3);
+    font-weight: 500;
+}
+
+.toc-entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 2px 0; /* KIS-1257: 6px → 4px; KIS-1264: 4px → 3px;
+                       KIS-1265: 3px → 2px — auch Lauf 1126 trug noch genau
+                       EINE übergelaufene TOC-Zeile auf S. 3 (97 Zeichen) */
+    border-bottom: 1px solid #F3F4F6;
+    text-decoration: none;
+    color: var(--c-text);
+    font-size: 9pt; /* KIS-1257: 9.5pt → 9pt */
+}
+.toc-entry:hover { background: var(--c-bg); }
+.toc-entry-cat { flex-shrink: 0; min-width: 65px; }
+.toc-entry .badge { margin-right: 4px; }
+.toc-entry-title { flex: 1; font-weight: 500; }
+.toc-audience {
+    font-size: 7.5pt;
+    color: var(--c-text-3);
+    text-align: right;
+    min-width: 40px;
+}
+.toc-focus {
+    font-size: 7pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 1px 5px;
+    border-radius: 2px;
+    background: var(--report-bg-highlight);
+    color: var(--report-primary);
+}
+.toc-skip-label {
+    font-size: 7pt;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 2px;
+    background: #f3f4f6;
+    color: var(--c-text-3);
+}
+.toc-legend {
+    font-size: 8pt;
+    color: var(--c-text-3);
+    margin-top: var(--sp-sm); /* KIS-1257: md → sm */
+    padding-top: var(--sp-sm);
+    border-top: 1px solid var(--c-border);
+}
+
+/* ══════════════════════════════════════════════════════
+   MANAGEMENT SUMMARY
+   ══════════════════════════════════════════════════════ */
+.mgmt-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-md);
+    margin-bottom: var(--sp-lg);
+}
+.mgmt-card {
+    padding: var(--sp-md);
+    border-radius: var(--r-md);
+    background: var(--c-white);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    page-break-inside: avoid;
+}
+.mgmt-card-label {
+    font-size: 8.5pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--c-text-2);
+    margin-bottom: var(--sp-sm);
+}
+
+/* Skip Hint */
+.skip-hint {
+    background: var(--report-bg-highlight);
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    font-size: 9.5pt;
+    line-height: 1.5;
+    margin-top: var(--sp-md);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.skip-hint strong {
+    color: var(--c-primary);
+}
+
+/* ══════════════════════════════════════════════════════
+   DECISION CARDS
+   ══════════════════════════════════════════════════════ */
+.decision-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    border-radius: var(--r-md);
+    margin-bottom: 10px;
+    page-break-inside: avoid;
+}
+.decision-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12pt;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+}
+.decision-text {
+    font-size: 10pt;
+    color: var(--c-text);
+    line-height: 1.6;
+}
+
+/* FIX-KIS-1192-ITEM-F: Decision-Section Page-Break-Härtung.
+   EXECUTIVE_DECISION_HTML enthält LLM-generiertes <ul>/<li> ohne
+   Container-Klasse. Bei längerem Content (KIS-1189) kann Chromium
+   mid-sentence schneiden. Innere Block-Container hart schützen,
+   plus orphans/widows für Prosa-Fluss.
+   .decision-card hat bereits page-break-inside:avoid (Z.658) —
+   hier ergänzen wir die LLM-Direkt-HTML-Pfade. */
+/* FIX-1027.5.3: #decision ul/ol RAUS — atomare Liste > Seitenhoehe clippt in
+   Chromium (R1 S.4, analysis.id=1064 und 1065: Tun-Bullet mid-sentence
+   abgeschnitten, Lassen + 3. Leitplanke verloren).
+   KIS-1027.5.3-B (aecc08a): Atomaritaet auch auf <li>-Ebene ENTFERNT —
+   break-inside:avoid auf '#decision li' UND '.exec-decision-box li' war die
+   letzte Clipping-Quelle (Kette figure->container->li) und clippte S.4 trotz
+   #decision { break-before: page } (KIS-1210/1211). Beide li-Pfade jetzt auf
+   auto; keine atomare Ebene mehr in der Decision-Kette. Belegt via DB:
+   decision-span vollstaendig (1065: 21.737 Zeichen), Cutoff war reiner
+   PDF-Render-Effekt. */
+#decision li,
+#decision p,
+#decision .executive-decision-fallback,
+#decision .decision-card {
+    break-inside: auto;
+    page-break-inside: auto;
+    orphans: 3;
+    widows: 3;
+}
+/* FIX-KIS-1027.5-H1: KEIN break-inside:avoid auf generischen div-Kindern
+   von #decision. Sprint 1027.2.3 hat figure-Wrapper entfernt, weil
+   Container-Atomaritaet bei >1-Seite-Inhalt zum Clipping fuehrte. Die
+   generische "#decision > div { break-inside: avoid }"-Regel re-introdu-
+   zierte denselben Bug (KIS-1199 R1 S.4: nur 1 von 3 Bullets sichtbar,
+   Tun-Bullet mid-sentence abgeschnitten). Schutz auf li-Ebene (oben) plus
+   .decision-card-Spezialfall ist ausreichend. Container darf jetzt
+   ueber Seitengrenze hinweg flieЯen, einzelne <li> bleiben atomar. */
+/* 1027.2.3: .exec-decision-figure-Wrapper aus 1027.2.2-A entfernt.
+   Chromium-Layout-Bug bei figure(min-height) + nested
+   .exec-decision-box(break-inside:avoid) clipte den Inhalt auf
+   min-height (176px). FIX-KIS-1027.5-H1 entfernt analog die
+   Container-Atomaritaet auf .exec-decision-box selbst, weil sie bei
+   3-Bullet-Inhalt jetzt dasselbe Clipping-Symptom triggert.
+   Atomaritaet bleibt auf <li>-Ebene (siehe oben + unten). */
+.exec-decision-box {
+    /* break-inside: avoid !important; -- FIX-KIS-1027.5-H1: entfernt */
+    /* page-break-inside: avoid !important; -- FIX-KIS-1027.5-H1: entfernt */
+    /* KIS-1216: break-before:page / page-break-before:always ENTFERNT.
+       Der erzwungene Umbruch liess den Section-Header allein auf der
+       Vorseite zurueck (R1 S.4 fast leer + verwaister Divider). Die Box
+       ist fuer break-inside:avoid zu lang (3 Leitplanken > Seitenhoehe,
+       siehe FIX-KIS-1027.5-H1/KIS-1199 Clipping-Historie), daher KEIN
+       Atomaritaets-Ersatz: Die Box fliesst frei, der Header bleibt via
+       break-after:avoid auf den Header-Typen bei seinem Inhalt. */
+    break-after: auto;
+    page-break-after: auto;
+    break-inside: auto;
+    page-break-inside: auto;   /* FIX-1027.5.5 */
+}
+.exec-decision-box ul {
+    break-inside: auto;
+    page-break-inside: auto;    /* FIX-1027.5.5 */
+}
+.exec-decision-box li {
+    break-inside: auto;
+    page-break-inside: auto;
+    orphans: 3;
+    widows: 3;
+}
+
+/* ══════════════════════════════════════════════════════
+   CONFIDENCE CARD (Decision Confidence Layer)
+   ══════════════════════════════════════════════════════ */
+.confidence-card {
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    padding: var(--sp-md);
+    page-break-inside: avoid;
+}
+.confidence-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: var(--sp-sm);
+}
+.confidence-header .confidence-icon { font-size: 14pt; }
+.confidence-header .confidence-title {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--c-primary);
+    margin: 0;
+}
+.confidence-header .confidence-date {
+    margin-left: auto;
+    font-size: 8.5pt;
+    color: var(--c-text-3);
+}
+.confidence-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--sp-sm);
+}
+.confidence-block h4 {
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: var(--c-text);
+    margin: 0 0 6px 0;
+}
+.confidence-list {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 8.5pt;
+    color: var(--c-text-2);
+    line-height: 1.5;
+}
+
+/* ══════════════════════════════════════════════════════
+   FUNDING PATH CARDS
+   ══════════════════════════════════════════════════════ */
+.funding-card {
+    background: var(--c-bg);
+    border-radius: var(--r-md);
+    padding: var(--sp-md);
+    margin-bottom: var(--sp-md);
+    border-left: 3px solid var(--c-cat-finance);
+    page-break-inside: avoid;
+}
+.funding-card-name {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--c-text);
+    margin-bottom: var(--sp-xs);
+}
+.funding-card-detail {
+    font-size: 9.5pt;
+    color: var(--c-text-2);
+    margin-bottom: var(--sp-xs);
+}
+.funding-card-next {
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: var(--c-cat-finance);
+}
+
+/* ══════════════════════════════════════════════════════
+   AI ACT RISK BANNER
+   ══════════════════════════════════════════════════════ */
+.risk-banner {
+    padding: 12px 16px;
+    border-radius: var(--r-md);
+    margin-bottom: var(--sp-md);
+}
+.risk-banner-high    { background: #FEF2F2; border-left: 4px solid #DC3545; }
+.risk-banner-limited { background: #FFFBEB; border-left: 4px solid #FFC107; }
+.risk-banner-low     { background: #F0FDF4; border-left: 4px solid #28A745; }
+
+/* ══════════════════════════════════════════════════════
+   CONTACT / NEXT STEPS BOX
+   ══════════════════════════════════════════════════════ */
+.contact-box {
+    text-align: center;
+    padding: 20px;
+    background: var(--report-bg-panel);
+    border-radius: var(--r-lg);
+    margin-top: var(--sp-lg);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.contact-name { font-size: 12pt; font-weight: 700; color: #111827; }
+.contact-org  { font-size: 9.5pt; color: var(--c-text-2); margin-top: 2px; }
+.contact-btns { margin-top: 12px; }
+.btn {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 9.5pt;
+    margin: 0 4px;
+    color: white;
+}
+.btn-primary { background: var(--c-primary); }
+.btn-accent  { background: var(--c-accent); }
+
+/* ══════════════════════════════════════════════════════
+   APPENDIX
+   ══════════════════════════════════════════════════════ */
+.appendix-cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 30vh;
+    padding: var(--sp-2xl) 0;
+    page-break-before: always;
+}
+.appendix-cover h2 {
+    font-size: 24pt;
+    margin-top: var(--sp-md);
+}
+.appendix-header {
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-cat-deep);
+    padding-bottom: var(--sp-sm);
+    border-bottom: 2px solid var(--c-cat-deep);
+    margin-bottom: var(--sp-lg);
+    /* KIS-1216: Anhang-Header nie allein am Seitenfuss. */
+    break-after: avoid;
+    page-break-after: avoid;
+}
+.appendix-section {
+    page-break-before: always;
+    padding: var(--sp-xl) 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   IMPRESSUM
+   ══════════════════════════════════════════════════════ */
+.impressum-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--sp-lg);
+    margin-bottom: var(--sp-lg);
+}
+.impressum-block h4 {
+    font-size: 10pt;
+    margin-bottom: var(--sp-sm);
+}
+.impressum-block p {
+    font-size: 9pt;
+    color: var(--c-text-2);
+    line-height: 1.6;
+}
+/* FIX-VU2: Static values for Puppeteer PDF rendering reliability */
+.impressum-divider {
+    height: 1px;
+    background: #E5E7EB;
+    margin: 24px 0;
+}
+.impressum-privacy {
+    background: var(--c-bg);
+    border-radius: var(--r-md);
+    padding: var(--sp-lg);
+}
+.impressum-privacy h3 { margin-bottom: var(--sp-md); }
+.impressum-privacy h4 { font-size: 10pt; margin-top: var(--sp-md); }
+.impressum-privacy p, .impressum-privacy li { font-size: 9pt; color: var(--c-text-2); }
+
+/* ── GDPR Disclaimer ────────────────────────────────── */
+.gdpr-mini {
+    font-size: 7.5pt;
+    color: var(--c-text-3);
+    text-align: center;
+    padding: var(--sp-md) 0;
+    margin-top: var(--sp-lg);
+    border-top: 1px solid var(--c-border);
+}
+
+/* ── Glossary ───────────────────────────────────────── */
+.glossary dt {
+    font-weight: 600;
+    font-size: 10pt;
+    color: var(--c-primary);
+    margin-top: var(--sp-sm);
+}
+.glossary dd {
+    font-size: 9.5pt;
+    color: var(--c-text-2);
+    margin-left: 0;
+    padding-left: var(--sp-md);
+    margin-bottom: var(--sp-xs);
+}
+
+/* ══ BLOCK PROTECTION v7.1.2 — keep cards/boxes together ═══ */
+/* Cards and info boxes */
+.mgmt-card, .decision-card, .funding-card, .kpi-card,
+.glance-box, .contact-box, .impressum-block,
+.reading-guide, .card-nobreak {
+    break-inside: avoid;
+}
+
+/* FIX-B3: Scenario cards — keep each card together, but allow the group to break between cards */
+.scenario-card {
+    break-inside: avoid;
+}
+/* M2-FIX: changed from avoid→auto — container often exceeds page height, causing half-empty pages */
+.scenarios-section {
+    break-inside: auto;
+}
+.business-case-engine-v2 {
+    break-inside: auto;
+}
+
+/* Headings must stay with following content */
+h1, h2, h3, h4 {
+    break-after: avoid;
+    page-break-after: avoid;   /* KIS-1216: Legacy-Alias fuer Puppeteer/Chromium */
+}
+
+/* Score displays and KPI rows */
+.mgmt-grid, .kpi-row, .dim-grid {
+    break-inside: avoid;
+}
+
+/* Appendix sections */
+.appendix-section {
+    break-before: page;
+    break-inside: auto;
+}
+
+/* Transitions stay with their section */
+.section-transition {
+    break-before: avoid;
+    break-inside: avoid;
+}
+
+/* KIS-1127 / C3 FIX: Allow page breaks INSIDE large containers
+   to prevent near-empty pages (Puppeteer pushes oversized blocks
+   to the next page as a whole, leaving >40% whitespace). */
+
+/* 90-Day Roadmap: Phase cards may break internally */
+.roadmap-phase-card {
+    break-inside: auto;
+    page-break-inside: auto;
+}
+
+/* Starter-Kit: Container and tool grid may break across pages */
+.starter-kit {
+    break-inside: auto;
+    page-break-inside: auto;
+}
+.starter-kit__tools {
+    break-inside: auto;
+    page-break-inside: auto;
+}
+/* Individual tool cards are small — keep together */
+.tool-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+/* Vendor-Audit: Allow break between summary and details */
+.vendor-audit-engine {
+    break-inside: auto;
+    page-break-inside: auto;
+}
+.vendor-details-section {
+    break-inside: auto;
+    page-break-inside: auto;
+}
+/* Individual vendor cards are compact — keep together */
+.vendor-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+/* ══════════════════════════════════════════════════════
+   v7.1 NEUE ELEMENTE — Clean Corporate Plus
+   ══════════════════════════════════════════════════════ */
+
+/* ── Score-Interpretation ──────────────────────────── */
+.score-interpretation {
+    background-color: var(--report-bg-panel);
+    background-image: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+    border-radius: var(--r-md);
+    padding: var(--sp-md) var(--sp-lg);
+    margin: var(--sp-lg) 0;
+    font-size: 10pt;
+    line-height: 1.65;
+    color: var(--c-text);
+    border-left: 4px solid var(--report-primary);
+    page-break-inside: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.score-interpretation strong {
+    color: var(--c-primary);
+    font-weight: 600;
+}
+
+/* ── Berater-Fazit (Advisor Note) ──────────────────── */
+.advisor-note {
+    background: var(--c-white);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+    padding: var(--sp-lg);
+    margin: var(--sp-xl) 0;
+    page-break-inside: avoid;
+    position: relative;
+}
+.advisor-note::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-image: linear-gradient(90deg, #2B6CB0, #0C9AA0);
+    background-color: var(--report-primary);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+.advisor-note-title {
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--c-text-3);
+    margin-bottom: var(--sp-sm);
+}
+.advisor-note-text {
+    font-size: 10.5pt;
+    line-height: 1.7;
+    color: var(--c-text);
+    font-style: italic;
+}
+.advisor-note-sig {
+    margin-top: var(--sp-md);
+    padding-top: var(--sp-sm);
+    border-top: 1px solid var(--c-border);
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--c-primary);
+    font-style: normal;
+}
+
+/* ── Section-Übergang (Transition) ─────────────────── */
+/* FIX-VU2: Static values for Puppeteer PDF rendering reliability */
+.section-transition {
+    text-align: center;
+    padding: 24px 32px;
+    margin: 0;
+    color: #6B7280;
+    font-size: 10pt;
+    line-height: 1.6;
+    font-style: italic;
+    page-break-after: avoid;
+}
+.section-transition::before {
+    content: '—';
+    display: block;
+    font-size: 16pt;
+    color: #E5E7EB;
+    margin-bottom: 8px;
+    font-style: normal;
+}
+
+/* ── Praxis-Tipp Box ───────────────────────────────── */
+.tip-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    margin: var(--sp-md) 0;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    page-break-inside: avoid;
+}
+.tip-box::before {
+    content: 'Practical Tip';
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #047857;
+    margin-bottom: 4px;
+}
+
+/* ── Warnung Box ───────────────────────────────────── */
+.warning-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    margin: var(--sp-md) 0;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    page-break-inside: avoid;
+}
+.warning-box::before {
+    content: 'Common Pitfall';
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #b45309;
+    margin-bottom: 4px;
+}
+
+/* ── KIS-1232: G21 KI-Stack Summary Card ────────────────
+   Der ki_stack_summary-Prompt (G21 PLATIN++) verspricht dem LLM diese
+   Klassen (.pair-card, .step-cards, .kpi-triple, .badge-block) — sie
+   fehlten im Template komplett, wodurch die Sektion als unformatierter
+   Text kollabierte (KIS-1232-Lauf, S. 12–14). */
+.ki-stack-summary { margin-top: var(--sp-sm); }
+.ki-stack-summary .stack-section { margin-bottom: var(--sp-md); }
+.ki-stack-summary .stack-section-title {
+    font-size: 10.5pt; font-weight: 700; color: var(--c-text);
+    margin-bottom: var(--sp-sm);
+}
+.pair-card {
+    display: flex; align-items: flex-start; gap: 10px;
+    border: 1px solid var(--c-border); border-radius: var(--r-md);
+    background: var(--c-white); padding: 10px 12px;
+    margin-bottom: var(--sp-sm); break-inside: avoid;
+}
+.pair-card-icon {
+    flex: 0 0 auto; width: 26px; height: 26px; padding: 5px;
+    border-radius: var(--r-sm); background: var(--report-bg-panel);
+    color: var(--c-primary);
+}
+.pair-card-icon svg { width: 16px; height: 16px; display: block; }
+.pair-card-content { flex: 1 1 auto; min-width: 0; }
+.pair-card-name { font-weight: 700; font-size: 10pt; margin: 0 0 2px; }
+.pair-card-category {
+    display: inline-block; font-size: 7.5pt; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--c-primary); background: var(--report-bg-highlight);
+    border-radius: 999px; padding: 1px 8px; margin-bottom: 3px;
+}
+.pair-card-description { font-size: 9.5pt; color: var(--c-text-2); margin: 0; }
+.step-cards {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-sm); break-inside: avoid;
+}
+.step-card {
+    border: 1px solid var(--c-border); border-radius: var(--r-md);
+    background: var(--c-bg); padding: 10px 12px; break-inside: avoid;
+}
+.step-card-number {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--c-primary); color: var(--c-white);
+    font-size: 9pt; font-weight: 700; line-height: 20px;
+    text-align: center; margin-bottom: 6px;
+}
+.step-card-title { font-weight: 700; font-size: 9.5pt; margin: 0 0 3px; }
+.step-card-body { font-size: 9pt; color: var(--c-text-2); }
+.kpi-triple {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-sm); break-inside: avoid;
+}
+.kpi-triple .kpi, .ki-stack-summary .kpi {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; border: 1px solid var(--c-border);
+    border-radius: var(--r-md); background: var(--c-white);
+    padding: 10px 8px; break-inside: avoid;
+}
+.kpi-triple .kpi-label, .ki-stack-summary .kpi-label {
+    font-size: 8pt; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--c-text-3); margin-bottom: 2px;
+}
+.kpi-triple .kpi-value, .ki-stack-summary .kpi-value {
+    font-size: 16pt; font-weight: 800; color: var(--c-primary);
+    line-height: 1.2;
+}
+.kpi-triple .kpi-sub, .ki-stack-summary .kpi-sub { font-size: 8.5pt; color: var(--c-text-2); }
+.badge-block {
+    display: flex; gap: var(--sp-sm); flex-wrap: wrap; break-inside: avoid;
+}
+.badge-block-item {
+    display: flex; align-items: baseline; gap: 6px;
+    border: 1px solid var(--c-border); border-radius: var(--r-md);
+    background: var(--c-bg); padding: 6px 12px;
+}
+.badge-block-label {
+    font-size: 8pt; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--c-text-3);
+}
+.badge-block-value { font-size: 10pt; font-weight: 700; }
+.badge-block-value.risk-low, .ki-stack-summary .risk-low { color: var(--c-success); }
+.badge-block-value.risk-medium, .ki-stack-summary .risk-medium { color: var(--c-warning); }
+.badge-block-value.risk-high, .ki-stack-summary .risk-high { color: var(--c-danger); }
+
+/* ── Print enhancements ─────────────────────────────── */
+@media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .section { break-inside: auto; }
+    .mgmt-card, .decision-card, .funding-card, .kpi-card,
+    .glance-box, .contact-box, .card-nobreak { break-inside: avoid; }
+    /* KIS-1232: G21-Stack-Karten und Empfehlungs-Boxen nicht über
+       Seitengrenzen brechen (Vendor-Empfehlungen brachen leer um) */
+    .pair-card, .step-card, .kpi-triple, .badge-block,
+    .vendor-recommendations-section { break-inside: avoid; }
+    /* KIS-1127/C3 + M2-FIX: Large containers flow across pages */
+    .roadmap-phase-card, .starter-kit, .starter-kit__tools,
+    .vendor-audit-engine, .vendor-details-section,
+    .scenarios-section, .business-case-engine-v2 { break-inside: auto; }
+    /* Small cards stay together */
+    .tool-card, .vendor-card, .scenario-card { break-inside: avoid; }
+    /* KIS-1127/C4 + KIS-1128 audit M1: break-after removed (cascade fix) */
+    .chapter-banner { break-inside: avoid; }
+}
+    </style>
+</head>
+<body>
+{# ═══════════════════════════════════════════════════════
+   COMPUTED VARIABLES (identical to v6.1.0)
+   ═══════════════════════════════════════════════════════ #}
+{% set IS_EN = ((report_lang or lang or 'de')|lower)[:2] == 'en' %}
+{% set score_int = score_gesamt|default(0)|int %}
+{% set variant = REPORT_VARIANT|default('accelerator' if score_int >= 71 else 'builder' if score_int >= 41 else 'starter') %}
+{% if score_int >= 91 %}{% set variant = 'leader' %}{% endif %}
+{% set variant_color = '#047857' if variant == 'leader' else '#3b82f6' if variant == 'accelerator' else '#f59e0b' if variant == 'builder' else '#ef4444' %}
+{% set variant_label = 'Leader' if variant == 'leader' else 'Accelerator' if variant == 'accelerator' else 'Builder' if variant == 'builder' else 'Starter' %}
+{% set score_level = 'excellent' if score_int >= 80 else 'good' if score_int >= 65 else 'medium' if score_int >= 50 else 'low' if score_int >= 30 else 'critical' %}
+{% set score_color = '#22c55e' if score_level == 'excellent' else '#84cc16' if score_level == 'good' else '#eab308' if score_level == 'medium' else '#f97316' if score_level == 'low' else '#ef4444' %}
+{% set gov_score = (score_governance|default(dim_governance|default(0)))|int %}
+{% set sec_score = (score_sicherheit|default(dim_sicherheit|default(0)))|int %}
+{% set wert_score = (score_wertschoepfung|default(dim_wertschoepfung|default(0)))|int %}
+{% set bef_score = (score_befaehigung|default(dim_befaehigung|default(0)))|int %}
+{% set focus_pages = FOCUS_PAGES|default([]) %}
+{% set skip_pages = SKIP_PAGES|default([]) %}
+
+{# ═══════════════════════════════════════════════════════
+   EBENE 1: EXECUTIVE VIEW
+   ═══════════════════════════════════════════════════════ #}
+
+<!-- ═══════ COVER ═══════ -->
+<div class="cover" id="cover" data-category="strategy">
+    <!-- R1 Corporate Blue Header-Stripe -->
+    <div style="position:absolute;top:0;left:0;right:0;background-color:#2B6CB0;color:white;padding:18px 40px;display:flex;align-items:center;justify-content:space-between;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
+        <img src="{{ brand.logo_small | default('ki-sicherheit-logo-small.png') }}" alt="{{ brand.logo_alt | default('KI-Sicherheit.jetzt') }}" style="height:36px;filter:brightness(0) invert(1);opacity:0.95;">
+        <span style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;opacity:0.9;">AI STATUS REPORT · {{ report_date }}</span>
+    </div>
+    <div style="margin-top:56px;"></div>
+    <div class="cover-accent" style="background: var(--report-primary); print-color-adjust: exact; -webkit-print-color-adjust: exact;"></div>
+    <div class="cover-eyebrow">
+        AI Status Report · {{ report_date }}
+        <span class="muted"> · </span>
+        {% if REPORT_DISPLAY_ID %}Report no.: {{ REPORT_DISPLAY_ID }}{% else %}Report ID: {{ report_id }}{% endif %}{% if BUILD_ID %} · Build: {{ BUILD_ID }}{% endif %}
+    </div>
+    <div style="margin-bottom: var(--sp-xl); max-width: 600px;">
+        <h1>KI-Readiness Report</h1>
+        {% if REPORT_SUBTITLE %}
+        <p class="cover-subtitle">{{ REPORT_SUBTITLE }}</p>
+        {% endif %}
+        <p class="cover-meta">
+            {# KIS-1130/Bug2: Removed company_name/kundencode display — we don't collect
+               company names for privacy reasons, so the internal kundencode (e.g. "KND")
+               was leaking to the cover, damaging customer trust. #}
+            <strong>{{ BRANCHE_LABEL }}</strong>
+            {# KIS-1247: Sparten-Label (z. B. "Film-/TV-Produktion") aufs Cover #}
+            {% if MEDIEN_SPARTE_LABEL and MEDIEN_SPARTE_LABEL|trim %}<span class="muted"> · </span>{{ MEDIEN_SPARTE_LABEL }}{% endif %}
+            <span class="muted"> · </span>{{ UNTERNEHMENSGROESSE_LABEL }}{% if BUNDESLAND_LABEL %}<span class="muted"> · </span>{{ BUNDESLAND_LABEL }}{% endif %}
+        </p>
+    </div>
+
+    <!-- Score Ring -->
+    <div class="score-ring-wrap">
+        <svg viewBox="0 0 100 100" width="180" height="180">
+            <g transform="rotate(-90 50 50)">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#E5E7EB" stroke-width="12"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="{{ score_color }}" stroke-width="12"
+                        stroke-linecap="round" stroke-dasharray="{{ (score_int / 100) * 251.2 }} 251.2"/>
+            </g>
+            <text x="50" y="52" text-anchor="middle" dominant-baseline="central"
+                  style="font-size:26px;font-weight:700;fill:var(--c-text);">{{ score_int }}</text>
+            <text x="50" y="66" text-anchor="middle"
+                  style="font-size:9px;fill:var(--c-text-3);">/100</text>
+            <text x="50" y="77" text-anchor="middle"
+                  style="font-size:6.5px;fill:var(--c-text-2);">{{ score_rating }}</text>
+        </svg>
+    </div>
+    <div style="font-size: 10pt; color: var(--c-text-2); margin-top: var(--sp-sm);">
+        {# FIX-TESTRUN-1244: Cover zeigte die Unternehmensgröße im Reifegrad-Slot #}
+        Maturity: {{ variant_label|default(size_label) }}
+        {% if top10_score_for_size and (top10_score_for_size|int > score_int) %}
+        <span class="muted"> · </span>Top 10% from {{ top10_score_for_size }}
+        {% endif %}
+    </div>
+
+    <!-- Dimension Bars -->
+    <div class="dim-grid" style="margin-top: var(--sp-xl);">
+        {% for dim_name, dim_val, dim_color in [
+            (ui("dim_governance", "Governance"), gov_score, '#22c55e' if gov_score >= 80 else '#84cc16' if gov_score >= 65 else '#eab308' if gov_score >= 50 else '#ef4444'),
+            (ui("dim_security", "Security"), sec_score, '#22c55e' if sec_score >= 80 else '#84cc16' if sec_score >= 65 else '#eab308' if sec_score >= 50 else '#ef4444'),
+            (ui("dim_value", "Value Creation"), wert_score, '#22c55e' if wert_score >= 80 else '#84cc16' if wert_score >= 65 else '#eab308' if wert_score >= 50 else '#ef4444'),
+            (ui("dim_enablement", "Enablement"), bef_score, '#22c55e' if bef_score >= 80 else '#84cc16' if bef_score >= 65 else '#eab308' if bef_score >= 50 else '#ef4444')
+        ] %}
+        <div>
+            <div class="dim-label"><span>{{ dim_name }}</span>&nbsp;<span>{{ dim_val }}</span></div>
+            <div class="dim-track"><div class="dim-fill" style="width: {{ dim_val }}%; background: {{ dim_color }};"></div></div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- KPI Row — R1 Corporate Blue KPI-Box -->
+    <div style="background-color:#EBF4FF;border-left:4px solid #2B6CB0;border-radius:8px;padding:20px 24px;margin:24px 0;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
+    <div class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-value" style="color: var(--c-accent);">
+                {# KIS-1235: Einheit "h" erzwingen — Display-Variablen kamen teils nackt ("15") an #}
+                {% if ZEITERSPARNIS_DISPLAY %}{{ ZEITERSPARNIS_DISPLAY }}{% if 'h' not in ZEITERSPARNIS_DISPLAY|string and 'Std' not in ZEITERSPARNIS_DISPLAY|string %}h{% endif %}{% elif TIME_SAVINGS_MONTH_HOURS_FMT %}{{ TIME_SAVINGS_MONTH_HOURS_FMT }}{% if 'h' not in TIME_SAVINGS_MONTH_HOURS_FMT|string and 'Std' not in TIME_SAVINGS_MONTH_HOURS_FMT|string %}h{% endif %}{% elif CANON_HOURS_MONTH and CANON_HOURS_MONTH|int > 0 %}{{ CANON_HOURS_MONTH|int }}h{% elif EINSPARUNG_STUNDEN_MONAT and EINSPARUNG_STUNDEN_MONAT|int > 0 %}{{ EINSPARUNG_STUNDEN_MONAT|int }}h{% elif zeitersparnis_h_monat %}{{ zeitersparnis_h_monat|round(0)|int }}h{% else %}—{% endif %}
+            </div>
+            <div class="kpi-label">{{ ui("kpi_time_savings", "Time saved/month") }}</div>
+        </div>
+        {# FIX-TESTRUN-1244: KPI-Sanity-Gate — ein Jahr-1-ROI nahe null (CAPEX
+           voll verrechnet) ist mathematisch korrekt, aber als Cover-Headline
+           kommunikationsschädlich ("1% ROI"). Unter 20% zeigt die Karte
+           stattdessen die Amortisationszeit. #}
+        {# String-sicher: Variablen können nach dem Final-Sanitizer als deutsche
+           Strings ("11,9") ankommen — kein |round direkt auf Kontextwerte,
+           und kein |default(x|round) (Jinja wertet das Argument IMMER aus). #}
+        {% set _roi_cover = ROI_12M|float(-1)|round(0)|int if ROI_12M is not none and ROI_12M != '' else -1 %}
+        {% if _roi_cover >= 0 and _roi_cover < 20 and PAYBACK_MONTHS %}
+        <div class="kpi-card">
+            <div class="kpi-value" style="color: #c2410c;">
+                {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS is number %}{{ PAYBACK_MONTHS|round(1) }}{% else %}{{ PAYBACK_MONTHS }}{% endif %} mo.
+            </div>
+            <div class="kpi-label">Payback</div>
+        </div>
+        {% else %}
+        <div class="kpi-card">
+            <div class="kpi-value" style="color: #c2410c;">
+                {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M is number %}{{ ROI_12M|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M }}%{% elif ROI_P50 is number and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% else %}—{% endif %}
+            </div>
+            <div class="kpi-label">{% if ROI_12M and ROI_12M|int >= 200 %}ROI (capped){% else %}{{ ui("kpi_roi", "ROI projection") }}{% endif %}</div>
+        </div>
+        {% endif %}
+        <div class="kpi-card">
+            <div class="kpi-value" style="color: var(--c-primary);">{{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('limited') }}</div>
+            <div class="kpi-label">AI Act risk class</div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Reading Guide -->
+    <div class="reading-guide">
+        <div class="reading-guide-title">{{ ui("reading_guide_title", "Reading Guide") }}</div>
+        <div class="reading-guide-grid">
+            <div class="rg-card">
+                <div class="rg-card-title">Executive View</div>
+                <div class="rg-card-time">5 min</div>
+                <div class="rg-card-pages">Go/No-Go decision</div>
+            </div>
+            <div class="rg-card">
+                <div class="rg-card-title">Action Guide</div>
+                <div class="rg-card-time">30 min</div>
+                <div class="rg-card-pages">Concrete roadmap</div>
+            </div>
+            <div class="rg-card">
+                <div class="rg-card-title">Deep Dive</div>
+                <div class="rg-card-time">As needed</div>
+                <div class="rg-card-pages">{% if ENABLE_APPENDIX|default(false) %}Appendix A1–A13{% else %}Reference guide{% endif %}</div>
+            </div>
+        </div>
+    </div>
+
+    {# KIS-1247: Selbst verliehene Siegel (KI-READY, DSGVO-konform, EU-AI-Act-
+       Ready) entfernt — abmahnrelevant, da keine verliehenen Zertifikate.
+       Der TÜV-Nachweis ist real (personenzertifizierter KI-Manager) und
+       wird als das ausgewiesen, was er ist. #}
+    <div class="trust-badges" style="align-items: center; gap: 10px;">
+        <img src="{{ brand.cert_logo | default('tuev-logo-transparent.png') }}" alt="{{ brand.cert_logo_alt | default('TÜV Austria certified') }}">
+        <span style="font-size: 8.5pt; color: var(--c-text-2);">
+            Prepared by {{ brand.advisor_signature | default('Wolf Hohl · TÜV-certified AI management') }}
+        </span>
+    </div>
+</div>
+
+<!-- ═══════ TABLE OF CONTENTS ═══════ -->
+<div class="section" id="toc" data-category="strategy">
+    <div style="margin-bottom: var(--sp-lg);">
+        <span class="badge badge-strategy">Strategy</span>
+        <h2>Table of Contents</h2>
+        <p style="font-size: 9.5pt; color: var(--c-text-2); margin-top: var(--sp-xs);">
+            All entries are linked within the PDF.
+            <span class="badge" style="background: {{ variant_color }}15; color: {{ variant_color }};">{{ variant_label }} ({{ score_int }}/100)</span>
+        </p>
+        <!-- KIS-1262: Legende nach OBEN — als letztes Element kippte sie
+             allein auf eine fast leere Folgeseite (Lauf KIS-1241, S. 3). -->
+        <div class="toc-legend" style="margin-top: 4px; padding-top: 4px;">
+            GF = Executive Management · IT = IT/Project Lead · CO = Compliance/Data Protection · FI = Controlling/Finance
+        </div>
+    </div>
+
+    <!-- EXECUTIVE VIEW -->
+    <div class="toc-level-header toc-level-header-exec">
+        <span class="toc-level-title">Executive View</span>
+        <span class="toc-level-sub">5 min · Go/No-Go decision</span>
+    </div>
+    {# KIS-1246: Selbstreferenzielle Einträge (Cover, Inhaltsverzeichnis)
+       entfernt — mit dem neuen Rechte-Kapitel lief sonst genau EINE
+       TOC-Zeile auf eine fast leere Seite 3 (Lauf 1129). #}
+    <a href="#mgmt-summary" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategy</span> <span class="toc-entry-title">Management Summary</span></a>
+    <a href="#decision" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategy</span> <span class="toc-entry-title">Decision Template</span></a>
+
+    <!-- ACTION GUIDE (Dynamic TOC) -->
+    <div class="toc-level-header toc-level-header-action" style="margin-top: var(--sp-md);">
+        <span class="toc-level-title">Action Guide</span>
+        <span class="toc-level-sub">30 min · Concrete roadmap</span>
+    </div>
+    {% set toc_action_entries = [] %}
+    {% if SOFORT_START_HTML and SOFORT_START_HTML|trim %}
+        {% set _ = toc_action_entries.append(("sofort-start", "action", "Your Fast Start", "start")) %}
+    {% endif %}
+    {% if QUICK_WINS_HTML and QUICK_WINS_HTML|trim %}
+        {% set _ = toc_action_entries.append(("quick-wins-section", "action", "Quick Wins: Top 3", "quickwins")) %}
+    {% endif %}
+    {% if ROADMAP_90D_DECISION_HTML and ROADMAP_90D_DECISION_HTML|trim %}
+        {% set _ = toc_action_entries.append(("roadmap-90d", "action", "90-Day Roadmap", "roadmap90")) %}
+    {% endif %}
+    {% if BUSINESS_CASE_ENGINE_HTML or (ROI_HTML and ROI_HTML|trim) %}
+        {% set _ = toc_action_entries.append(("business-case-compact", "finance", "Business Case", "business")) %}
+    {% endif %}
+    {% if KI_STACK_SUMMARY_HTML and KI_STACK_SUMMARY_HTML|trim %}
+        {% set _ = toc_action_entries.append(("tools-section", "action", "Tools & Starter-Kit", "tools")) %}
+    {% endif %}
+    {% if PROMPT_VORLAGEN_HTML and PROMPT_VORLAGEN_HTML|trim %}
+        {% set _ = toc_action_entries.append(("prompts-section", "action", "Copy-Paste Prompts", "prompts")) %}
+    {% endif %}
+    {% if CHALLENGE_30_TAGE_HTML and CHALLENGE_30_TAGE_HTML|trim %}
+        {% set _ = toc_action_entries.append(("challenge-section", "action", "30-Day Challenge", "challenge")) %}
+    {% endif %}
+    {% if RISK_ENGINE_HTML or RISK_ENGINE_V3_HTML %}
+        {% set _ = toc_action_entries.append(("risks-compact", "risk", "Risk Overview", "risks")) %}
+    {% endif %}
+    {% if VENDOR_AUDIT_HTML %}
+        {% set _ = toc_action_entries.append(("vendor-section", "risk", "Vendor Audit", "vendor")) %}
+    {% endif %}
+    {% if AI_ACT_RISK_LEVEL %}
+        {% set _ = toc_action_entries.append(("aiact-compact", "risk", "AI Act Essentials", "aiact")) %}
+    {% endif %}
+    {% if KI_RECHTE_KENNZEICHNUNG_HTML and KI_RECHTE_KENNZEICHNUNG_HTML|trim %}
+        {% set _ = toc_action_entries.append(("ki-rechte-kennzeichnung", "risk", "AI Rights & Labeling", "aiact")) %}
+    {% endif %}
+    {% if FOERDERPOTENZIAL_HTML or FUNDING_PATH_1 %}
+        {% set _ = toc_action_entries.append(("funding-section", "finance", "Funding Programs", "funding")) %}
+    {% endif %}
+    {% if ROADMAP_12M_HTML and ROADMAP_12M_HTML|trim %}
+        {% set _ = toc_action_entries.append(("outlook-section", "strategy", "12-Month Outlook", "outlook")) %}
+    {% endif %}
+    {% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim %}
+        {% set _ = toc_action_entries.append(("gamechanger-section", "strategy", "AI Potential Analysis", "gamechanger")) %}
+    {% endif %}
+    {% if ADVISOR_NOTE_HTML and ADVISOR_NOTE_HTML|trim %}
+    {% set _ = toc_action_entries.append(("advisor-note", "strategy", "Personal Assessment", "advisor")) %}
+    {% endif %}
+    {% set _ = toc_action_entries.append(("next-steps", "strategy", "Next Steps & Contact", "next")) %}
+
+    {% for anchor, cat, title, key in toc_action_entries %}
+    <a href="#{{ anchor }}" class="toc-entry{% if key in skip_pages %} section-optional{% endif %}">
+        <span class="toc-entry-cat badge badge-{{ cat }}">{{ 'Strategy' if cat == 'strategy' else 'Implementation' if cat == 'action' else 'Risk' if cat == 'risk' else 'Finance' }}</span>
+        <span class="toc-entry-title" style="{% if key in focus_pages %}font-weight:700;{% endif %}">{{ title }}</span>
+        {% if key in focus_pages %}<span class="toc-focus">FOCUS</span>{% endif %}
+        {% if key in skip_pages %}<span class="toc-skip-label">OPTIONAL</span>{% endif %}
+    </a>
+    {% endfor %}
+
+    <!-- DEEP DIVE ANHANG (conditional) -->
+    {% if ENABLE_APPENDIX|default(false) %}
+    <div class="toc-level-header toc-level-header-deep" style="margin-top: var(--sp-md);">
+        <span class="toc-level-title">Deep Dive Appendix</span>
+        <span class="toc-level-sub">For reference</span>
+    </div>
+    {% for ref, title in [
+        ("A1", "Detailed Risk Analysis"), ("A2", "AI Potential Analysis (complete)"),
+        ("A3", "12-Month Roadmap & Automation"), ("A4", "Recommendations (Detail)"),
+        ("A5", "ROI Simulation (3 Scenarios)"), ("A6", "Industry Profile & Market Intelligence"),
+        ("A7", "AI Skill Roadmap 2026"), ("A8", "Monetization & Offer Logic"),
+        ("A9", "AI Mini-Policy + AI Act Detail"), ("A10", "Starter Templates & Kickoff"),
+        ("A11", "30-Day Challenge (Weeks 2–4)"), ("A12", "Funding Potential (Detail)"),
+        ("A13", "Glossary & Creative Tools")
+    ] %}
+    <a href="#appendix-{{ ref|lower }}" class="toc-entry" style="opacity: 0.7;">
+        <span class="toc-entry-cat badge badge-deep">Deep Dive</span>
+        <span class="toc-entry-title">{{ ref }} – {{ title }}</span>
+    </a>
+    {% endfor %}
+    {% endif %}
+
+</div>
+
+<!-- ═══════ MANAGEMENT SUMMARY ═══════ -->
+<div class="section" id="mgmt-summary" data-category="strategy">
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">STRATEGY</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Management Summary</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Score, maturity, and strategic guardrails</p>
+        </div>
+    </div>
+
+    <div class="glance-box glance-strategy">
+        <strong>At a glance:</strong>
+        {% if CORE_MESSAGE_HTML %}
+        {{ CORE_MESSAGE_HTML }}
+        {% else %}
+        Score {{ score_int }}/100 ({{ score_rating }}). {{ REPORT_SUBTITLE|default('AI Readiness Assessment') }}.
+        {% endif %}
+    </div>
+
+    <div class="mgmt-grid">
+        <!-- Q1: Score -->
+        <div class="mgmt-card">
+            <div class="mgmt-card-label">Your Score</div>
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="flex-shrink: 0;">
+                    <svg viewBox="0 0 100 100" width="72" height="72" style="transform: rotate(-90deg);">
+                        <circle cx="50" cy="50" r="38" fill="none" stroke="#E5E7EB" stroke-width="10"/>
+                        <circle cx="50" cy="50" r="38" fill="none" stroke="{{ score_color }}" stroke-width="10"
+                                stroke-linecap="round" stroke-dasharray="{{ (score_int / 100) * 238.76 }} 238.76"/>
+                    </svg>
+                </div>
+                <div>
+                    <div style="font-size: 26pt; font-weight: 700; color: {{ score_color }}; line-height: 1;">{{ score_int }}</div>
+                    <div style="font-size: 8.5pt; color: var(--c-text-2);">of 100 points · {{ variant_label }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Q2: Core Message -->
+        <div class="mgmt-card">
+            <div class="mgmt-card-label">Core Message</div>
+            {% if CORE_MESSAGE_DETAIL_HTML %}
+            <div style="font-size: 10pt;">{{ CORE_MESSAGE_DETAIL_HTML|safe }}</div>
+            {% elif FINAL_CHECK_INTRO %}
+            <p style="font-size: 10pt; line-height: 1.6;">{{ FINAL_CHECK_INTRO }}</p>
+            {% else %}
+            <p style="font-size: 10pt; color: var(--c-text-2);">Details in the Action Guide.</p>
+            {% endif %}
+        </div>
+
+        <!-- Q3: Top 3 Actions -->
+        <div class="mgmt-card">
+            <div class="mgmt-card-label">Top 3 Actions</div>
+            {% if FINAL_CHECK_DECISIONS %}
+            {% for decision in FINAL_CHECK_DECISIONS[:3] %}
+            <div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px;">
+                <span style="background: {{ variant_color }}; color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 9pt; font-weight: 700; flex-shrink: 0;">{{ loop.index }}</span>
+                <span style="font-size: 9.5pt; line-height: 1.4;">{{ decision }}</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p style="font-size: 9.5pt; color: var(--c-text-2);">Details in the <a href="#quick-wins-section">Quick Wins</a></p>
+            {% endif %}
+        </div>
+
+        <!-- Q4: Business Case Preview -->
+        <div class="mgmt-card" style="background: #F0FDF4;">
+            <div class="mgmt-card-label" style="color: #047857;">Business Case</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div>
+                    <span style="font-size: 14pt; font-weight: 700; color: #c2410c;">
+                        {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS is number %}{{ PAYBACK_MONTHS|round(1) }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS }}{% else %}n/a{% endif %} mo
+                    </span><br/>
+                    <span style="font-size: 8pt; color: var(--c-text-2);">Payback</span>
+                </div>
+                <div>
+                    <span style="font-size: 14pt; font-weight: 700; color: #047857;">
+                        {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M is number %}{{ ROI_12M|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M }}%{% else %}—{% endif %}
+                    </span><br/>
+                    <span style="font-size: 8pt; color: var(--c-text-2);">ROI projection</span>
+                </div>
+                <div>
+                    <span style="font-size: 14pt; font-weight: 700; color: var(--c-primary);">
+                        {# KIS-1235: Einheit "h" erzwingen #}
+                        {% if TIME_SAVINGS_MONTH_HOURS_FMT %}{{ TIME_SAVINGS_MONTH_HOURS_FMT }}{% if 'h' not in TIME_SAVINGS_MONTH_HOURS_FMT|string and 'Std' not in TIME_SAVINGS_MONTH_HOURS_FMT|string %}h{% endif %}{% elif CANON_HOURS_MONTH and CANON_HOURS_MONTH|int > 0 %}{{ CANON_HOURS_MONTH|int }}h{% elif EINSPARUNG_STUNDEN_MONAT and EINSPARUNG_STUNDEN_MONAT|int > 0 %}{{ EINSPARUNG_STUNDEN_MONAT|int }}h{% elif zeitersparnis_h_monat %}{{ zeitersparnis_h_monat|round(0)|int }}h{% else %}—{% endif %}
+                    </span><br/>
+                    <span style="font-size: 8pt; color: var(--c-text-2);">Time saved/mo</span>
+                </div>
+                <div>
+                    <span style="font-size: 14pt; font-weight: 700; color: var(--c-text);">
+                        {% if CAPEX_DISPLAY_DE %}{{ CAPEX_DISPLAY_DE }}{% elif TOTAL_CAPEX %}{{ TOTAL_CAPEX|round(0)|int }}€{% else %}—{% endif %}
+                    </span><br/>
+                    <span style="font-size: 8pt; color: var(--c-text-2);">Investment</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# KIS-1264: Score-Interpretation + Kompetenz-Hinweis unteilbar — der
+       Hinweis kippte sonst als 196-Zeichen-Waise allein auf S. 5 (Lauf 1125) #}
+    <div style="break-inside: avoid; page-break-inside: avoid;">
+    {# v7.1: Score-Interpretation — Was bedeutet dieser Score? #}
+    {% if SCORE_INTERPRETATION_HTML and SCORE_INTERPRETATION_HTML|trim %}
+    <div class="score-interpretation">
+        {{ SCORE_INTERPRETATION_HTML|safe }}
+    </div>
+    {% endif %}
+
+    {% if SKIP_HINT %}
+    <div class="skip-hint"><strong>At your score ({{ score_int }}/100):</strong> {{ SKIP_HINT }}</div>
+    {# KIS-1142 P3: Der Hinweis-Text steuert jetzt auf expertise_level,
+       nicht auf den Score — das ist präziser (ein hoher Score aus Budget
+       oder Governance allein macht niemanden zum Workflow-Profi) und
+       spiegelt das Rendering korrekt wider (Woche 1 wird für Intermediate/
+       Expert tatsächlich aus der Challenge entfernt, nicht nur empfohlen). #}
+    {# [FIX-CHALLENGE-EXPERTISE] Solo bleibt von P3 (Woche-1-Drop) unberührt:
+       Solo+Intermediate/Expert verlieren nach P6-C ({woche_3, woche_4}-Drop)
+       so viele Wochen, dass Woche 1 erhalten bleiben muss. Der Hinweis muss
+       das widerspiegeln, sonst widerspricht er dem gerenderten Inhalt. #}
+    {% elif expertise_level == "expert" and company_size == "solo" %}
+    <div class="skip-hint"><strong>For your expertise level (advanced):</strong> The 30-Day Challenge is tailored to solo consultants and focuses on toolkit optimization and ground rules over 4 weeks. Focus on: Quick Wins, Vendor Audit, and AI Potential Analysis.</div>
+    {% elif expertise_level == "expert" %}
+    <div class="skip-hint"><strong>For your expertise level (advanced):</strong> The 30-Day Challenge starts directly with stack optimization and governance — the introductory week is skipped. Focus on: Quick Wins, Vendor Audit, and AI Potential Analysis.</div>
+    {% elif expertise_level == "intermediate" and company_size == "solo" %}
+    <div class="skip-hint"><strong>For your expertise level (experienced):</strong> The 30-Day Challenge is tailored to solo consultants and combines workflow analysis with automation over 4 weeks. Focus on: Quick Wins, 90-Day Roadmap, and Business Case.</div>
+    {% elif expertise_level == "intermediate" %}
+    <div class="skip-hint"><strong>For your expertise level (experienced):</strong> The 30-Day Challenge skips the fundamentals week and starts with workflow integration. Focus on: Quick Wins, 90-Day Roadmap, and Business Case.</div>
+    {% endif %}
+    </div>{# /KIS-1264 unteilbar #}
+</div>
+
+<!-- ═══════ ENTSCHEIDUNGSVORLAGE ═══════ -->
+<div class="section" id="decision" data-category="strategy">
+    <div class="level-indicator"><span class="level-dot level-dot-exec"></span> EXECUTIVE VIEW</div>
+    <span class="badge badge-strategy">Strategy</span>
+    <h2>Decision Template</h2>
+
+    <div class="glance-box glance-strategy">
+        <strong>At a glance:</strong> Three clear guardrails for your AI strategy – printable as a template for executive management.
+    </div>
+
+    {% if EXECUTIVE_DECISION_HTML and EXECUTIVE_DECISION_HTML|trim %}
+    {# 1027.2.3: <figure>-Wrapper aus 1027.2.2-A entfernt — zwei
+       ineinander geschachtelte atomare Blöcke (figure mit min-height +
+       inner .exec-decision-box) triggerten Chromium-Layout-Pass-Bug:
+       figure fixiert auf min-height (176px), Content (~280px) clippt.
+       .exec-decision-box trägt jetzt wieder allein die Atomarität. #}
+    {{ EXECUTIVE_DECISION_HTML|safe }}
+    {% elif FINAL_CHECK_DECISIONS %}
+    {% for decision in FINAL_CHECK_DECISIONS %}
+    <div class="decision-card">
+        <div class="decision-num" style="background: {{ variant_color }};">{{ loop.index }}</div>
+        <div class="decision-text">{{ decision }}</div>
+    </div>
+    {% endfor %}
+    {% elif FINAL_CHECK_INTRO %}
+    <p style="font-size: 11pt; line-height: 1.6;">{{ FINAL_CHECK_INTRO }}</p>
+    {% endif %}
+
+    {% if DECISION_CONFIDENCE_HTML and DECISION_CONFIDENCE_HTML|trim %}
+    <div style="margin-top: 12px;">{{ DECISION_CONFIDENCE_HTML|safe }}</div>
+    {% endif %}
+
+    <p class="small muted" style="text-align: center; margin-top: var(--sp-md);">This page is designed as a standalone decision template for executive management.</p>
+</div>
+
+{# ═══════════════════════════════════════════════════════
+   EBENE 2: ACTION GUIDE
+   ═══════════════════════════════════════════════════════ #}
+
+<!-- ═══ Break: Executive View → Action Guide ═══ -->
+{# v7.1.4: T1-transition moved INSIDE sofort-start to prevent orphan page.
+   Previously the transition sat between break-exec-to-action (break-before:page)
+   and #sofort-start (also break-before:page), creating an empty page. #}
+
+<!-- ═══════ SOFORT-START ═══════ -->
+{% if SOFORT_START_HTML and SOFORT_START_HTML|trim %}
+<section class="section {% if 'start' in skip_pages %}section-optional{% endif %}" id="sofort-start" data-category="action">
+    {% if TRANSITION_EXEC_TO_ACTION and TRANSITION_EXEC_TO_ACTION|trim %}
+    <div class="section-transition">{{ TRANSITION_EXEC_TO_ACTION }}</div>
+    {% endif %}
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">IMPLEMENTATION</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">{{ ui("sofort_start_title", "Your Fast Start") }}</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">The most important first step – achievable today</p>
+        </div>
+    </div>
+    <div class="section-body">{{ SOFORT_START_HTML|safe }}</div>
+</section>
+{% endif %}
+
+<!-- ═══════ QUICK WINS ═══════ -->
+{% if QUICK_WINS_HTML and QUICK_WINS_HTML|trim %}
+<section class="section" id="quick-wins-section" data-category="action">
+    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
+    <div class="section-header">
+        <div>
+            <span class="badge badge-action">Implementation</span>
+            <span class="section-kicker">Fast impact</span>
+            <h2>Quick Wins: Top 3</h2>
+        </div>
+        <span class="section-pill"><span class="pill-dot"></span>Prioritized for {{ variant_label }} maturity</span>
+    </div>
+    <div class="glance-box glance-action">
+        <strong>At a glance:</strong> Three measures with immediate leverage – all can be started in parallel.
+    </div>
+    <div class="section-body">{{ QUICK_WINS_HTML|safe }}</div>
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detailed measure descriptions → Appendix A4</div>{% endif %}
+</section>
+{% endif %}
+
+{# v7.1: Übergang Quick Wins → 90-Day Roadmap #}
+{% if TRANSITION_QUICKWINS_TO_ROADMAP and TRANSITION_QUICKWINS_TO_ROADMAP|trim %}
+<div class="section-transition">{{ TRANSITION_QUICKWINS_TO_ROADMAP }}</div>
+{% endif %}
+
+<!-- ═══════ 90-TAGE-ROADMAP ═══════ -->
+{% if ROADMAP_90D_DECISION_HTML and ROADMAP_90D_DECISION_HTML|trim %}
+<section class="section" id="roadmap-90d" data-category="action">
+    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
+    <div class="section-header">
+        <div>
+            <span class="badge badge-action">Implementation</span>
+            <span class="section-kicker">{{ ui("roadmap_kicker", "90-Day Plan") }}</span>
+            <h2>{{ ui("roadmap_title", "90-Day Roadmap") }}</h2>
+        </div>
+        <span class="section-pill"><span class="pill-dot"></span>Pragmatic execution</span>
+    </div>
+    <div class="glance-box glance-action">
+        <strong>At a glance:</strong> From preparation (day 30) through piloting (day 60) to consolidation (day 90).
+    </div>
+    <div class="section-body">{{ ROADMAP_90D_DECISION_HTML|safe }}</div>
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">12-Month Roadmap & Automation Paths → Appendix A3</div>{% endif %}
+</section>
+{% endif %}
+
+<!-- ═══════ BUSINESS CASE ═══════ -->
+{% if BUSINESS_CASE_ENGINE_HTML %}
+<section class="section" id="business-case-compact" data-category="finance">
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">FINANCE</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Business Case</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">ROI, payback, KPI projections</p>
+        </div>
+    </div>
+    <div class="glance-box glance-finance">
+        <strong>At a glance:</strong>
+        ROI {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M is number %}{{ ROI_12M|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M }}%{% endif %},
+        payback in {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS is number %}{{ PAYBACK_MONTHS|round(1) }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS }}{% endif %} months.
+        {# KIS-1234: Tragfähigkeits-Aussage ROI-abhängig — der Pauschalsatz
+           "auch ohne Fördermittel wirtschaftlich tragfähig" stand im Lauf 1234
+           neben ROI 8 % und einem Budget UNTER der Investition. #}
+        {% set _roi_num = (ROI_12M | default(0)) | round(0) | int %}
+        {% if _roi_num >= 25 %}The investment is economically viable even without funding programs.{% elif _roi_num >= 10 %}The investment is viable; funding programs noticeably shorten the payback period.{% else %}The economics are tightly calculated — funding programs and a phased entry are decisive here.{% endif %}
+    </div>
+    {# FIX-KIS-1027.5-A: Zwei ROI-Sichten transparent nebeneinander.
+       Spread zwischen CAPEX-basiertem R1-ROI und 12-Mo-Gesamt-ROI
+       (analog Strategy-Methodik) war für GF verwirrend; jetzt explizit. #}
+    {% if ROI_12M_GESAMT_DISPLAY_DE %}
+    <div class="roi-views-table" style="margin: 12px 0; padding: 12px 14px; background: #f0f4f8; border-left: 3px solid #3b82f6; border-radius: 6px; font-size: 0.92em;">
+        <strong>Two ROI views — methodology explained:</strong>
+        <table style="width: 100%; margin-top: 8px; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid #cbd5e1; text-align: left;">
+                    <th style="padding: 6px 8px; font-size: 0.85em; color: #475569;">View</th>
+                    <th style="padding: 6px 8px; font-size: 0.85em; color: #475569;">ROI (12 months)</th>
+                    <th style="padding: 6px 8px; font-size: 0.85em; color: #475569;">Investment basis</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 6px 8px;"><strong>CAPEX view</strong> (R1 standard)</td>
+                    <td style="padding: 6px 8px; font-weight: 600; color: #1e40af;">{% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M is number %}{{ ROI_12M|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M }}%{% endif %}</td>
+                    <td style="padding: 6px 8px; color: #475569;">One-off initial investment</td>
+                </tr>
+                <tr style="background: #fff;">
+                    <td style="padding: 6px 8px;"><strong>Total view</strong> (12-mo TCO)</td>
+                    <td style="padding: 6px 8px; font-weight: 600; color: #1e40af;">{{ ROI_12M_GESAMT_DISPLAY_DE }}</td>
+                    <td style="padding: 6px 8px; color: #475569;">Initial investment + 12 months of software OPEX</td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="margin: 8px 0 0 0; font-size: 0.85em; color: #475569; line-height: 1.5;">
+            Both values are correct — they differ only in the investment basis.
+            The AI strategy report (if commissioned) uses its own
+            12-month TCO methodology with a different cost structure (incl. implementation,
+            training, coordination); its ROI figures differ for methodological
+            reasons and are not contradictory.
+        </p>
+    </div>
+    {% endif %}
+    <div class="section-body">{{ BUSINESS_CASE_ENGINE_HTML|safe }}</div>
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detailed ROI Simulation & Monte Carlo Analysis → Appendix A5</div>{% endif %}
+</section>
+{% endif %}
+
+<!-- ═══════ TOOLS & STARTER-KIT ═══════ -->
+{% if KI_STACK_SUMMARY_HTML and KI_STACK_SUMMARY_HTML|trim %}
+<section class="section" id="tools-section" data-category="action">
+    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
+    <div class="section-header">
+        <div>
+            <span class="badge badge-action">Implementation</span>
+            <span class="section-kicker">{{ ui("ki_stack_kicker", "Executive AI Stack") }}</span>
+            <h2>{{ ui("ki_stack_title", "Tools & Starter-Kit") }}</h2>
+        </div>
+        <span class="section-pill"><span class="pill-dot"></span>Recommended tools + quick start</span>
+    </div>
+    <div class="glance-box glance-action">
+        <strong>At a glance:</strong> Your recommended AI tools and the fastest entry path.
+    </div>
+    <div class="section-body">
+        {{ KI_STACK_SUMMARY_HTML|safe }}
+        {% if STARTER_KIT_HTML %}
+        <div style="margin-top: var(--sp-md);">{{ STARTER_KIT_HTML|safe }}</div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ═══════ COPY-PASTE PROMPTS ═══════ -->
+{% if PROMPT_VORLAGEN_HTML and PROMPT_VORLAGEN_HTML|trim %}
+<section class="section {% if 'prompts' in skip_pages %}section-optional{% endif %}" id="prompts-section" data-category="action">
+    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
+    <span class="badge badge-action">Implementation</span>
+    <h2>Copy-Paste Prompts</h2>
+    <div class="glance-box glance-action">
+        <strong>At a glance:</strong> Ready-to-use prompts for {{ BRANCHE_LABEL|default('your daily work') }}.
+    </div>
+    <div class="section-body">{{ PROMPT_VORLAGEN_HTML|safe }}</div>
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Prompt Framework & Extended Templates → Appendix A10</div>{% endif %}
+</section>
+{% endif %}
+
+<!-- ═══════ 30-TAGE CHALLENGE ═══════ -->
+{% if CHALLENGE_30_TAGE_HTML and CHALLENGE_30_TAGE_HTML|trim %}
+<section class="section {% if 'challenge' in skip_pages %}section-optional{% endif %}" id="challenge-section" data-category="action">
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">IMPLEMENTATION</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">30-Day AI Challenge</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">30 days, small steps, big impact</p>
+        </div>
+    </div>
+    <div class="section-body">{{ CHALLENGE_30_TAGE_HTML|safe }}</div>
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Weeks 2–4 (Advanced) → Appendix A11</div>{% endif %}
+</section>
+{% endif %}
+
+<!-- ═══════ RISIKO-ÜBERSICHT ═══════ -->
+{% if RISK_ENGINE_HTML or RISK_ENGINE_V3_HTML %}
+<section class="section" id="risks-compact" data-category="risk">
+    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
+    <div class="section-header">
+        <div>
+            <span class="badge badge-risk">Risk</span>
+            <span class="section-kicker">Risk Analysis &amp; Compliance</span>
+            <h2>Risk Overview</h2>
+        </div>
+        <span class="section-pill"><span class="pill-dot pill-danger"></span>Top risks for {{ variant_label }} maturity</span>
+    </div>
+    <div class="glance-box glance-risk">
+        <strong>At a glance:</strong> Governance {{ gov_score }}/100, security {{ sec_score }}/100. Prioritized risks and immediate measures.
+    </div>
+    <div class="section-body">
+        {% if RISK_ENGINE_HTML %}{{ RISK_ENGINE_HTML|safe }}{% elif RISK_ENGINE_V3_HTML %}{{ RISK_ENGINE_V3_HTML|safe }}{% endif %}
+    </div>
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Full Risk Analysis (DPIA, Compliance, 12+ Risks) → Appendix A1</div>{% endif %}
+</section>
+{% endif %}
+
+<!-- ═══════ VENDOR-AUDIT ═══════ -->
+{% if VENDOR_AUDIT_HTML %}
+<section class="section" id="vendor-section" data-category="risk">
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">RISK</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Vendor Audit</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Data protection and compliance review of your AI tools</p>
+        </div>
+    </div>
+    <div class="section-body">{{ VENDOR_AUDIT_HTML|safe }}</div>
+</section>
+{% endif %}
+
+<!-- ═══════ AI ACT KOMPAKT ═══════ -->
+{% if AI_ACT_RISK_LEVEL or AI_ACT_DUTY_MATRIX_HTML %}
+<section class="section" id="aiact-compact" data-category="risk">
+    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
+    <div class="section-header">
+        <div>
+            <span class="badge badge-risk">Risk</span>
+            <span class="section-kicker">EU AI Act</span>
+            <h2>AI Act Essentials</h2>
+        </div>
+        <span class="section-pill">
+            <span class="pill-dot {% if AI_ACT_RISK_LEVEL == 'high-risk' %}pill-danger{% elif AI_ACT_RISK_LEVEL == 'limited' %}pill-warning{% else %}pill-success{% endif %}"></span>
+            {{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('limited') }}
+        </span>
+    </div>
+    <div class="glance-box glance-risk">
+        <strong>At a glance:</strong> Risk class: {{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('limited') }}. {% if AI_ACT_RISK_LEVEL == 'limited' %}Primarily transparency obligations.{% elif AI_ACT_RISK_LEVEL == 'high-risk' %}Extensive documentation and compliance obligations.{% else %}Minimal regulatory requirements.{% endif %}
+    </div>
+    <div class="section-body">
+        <div class="risk-banner {% if AI_ACT_RISK_LEVEL == 'high-risk' %}risk-banner-high{% elif AI_ACT_RISK_LEVEL == 'limited' %}risk-banner-limited{% else %}risk-banner-low{% endif %}">
+            <strong>Risk class: {{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('limited') }}{% if AI_ACT_RISK_LEVEL_DE and AI_ACT_RISK_LEVEL and AI_ACT_RISK_LEVEL_DE != AI_ACT_RISK_LEVEL %} (EU AI Act: {{ AI_ACT_RISK_LEVEL }}){% endif %}</strong>
+            {% if AI_ACT_RISK_SUMMARY %}<p style="margin: 6px 0 0;">{{ AI_ACT_RISK_SUMMARY }}</p>{% endif %}
+        </div>
+        {% if AI_ACT_DUTY_MATRIX_HTML %}
+        <h4>Duty Matrix</h4>
+        {{ AI_ACT_DUTY_MATRIX_HTML|safe }}
+        {% endif %}
+        {% if AI_ACT_NONCOMPLIANCE_ALERTS_HTML %}
+        <h4>Compliance Gaps</h4>
+        {{ AI_ACT_NONCOMPLIANCE_ALERTS_HTML|safe }}
+        {% endif %}
+        {% if AI_ACT_RECOMMENDED_NEXT_STEPS_HTML %}
+        <h4>Next Steps</h4>
+        {{ AI_ACT_RECOMMENDED_NEXT_STEPS_HTML|safe }}
+        {% endif %}
+    </div>
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Full AI Act Analysis + AI Mini-Policy → Appendix A9</div>{% endif %}
+</section>
+{% endif %}
+
+<!-- ═══════ KI-RECHTE & KENNZEICHNUNG (Medien-Vertikale) ═══════ -->
+{% if KI_RECHTE_KENNZEICHNUNG_HTML and KI_RECHTE_KENNZEICHNUNG_HTML|trim %}
+<section class="section" id="ki-rechte-kennzeichnung" data-category="risk">
+    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
+    <div class="section-header">
+        <div>
+            <span class="badge badge-risk">Risk</span>
+            <span class="section-kicker">Rights &amp; Transparency</span>
+            <h2>AI Rights &amp; Labeling</h2>
+        </div>
+    </div>
+    <div class="section-body">{{ KI_RECHTE_KENNZEICHNUNG_HTML|safe }}</div>
+</section>
+{% endif %}
+
+{# v7.1.4: T3-transition moved INSIDE funding-section to prevent orphan page
+   (same fix as T1 — #funding-section has break-before:page) #}
+
+<!-- ═══════ FÖRDERPROGRAMME ═══════ -->
+{% if FUNDING_PATH_1 or FOERDERPOTENZIAL_HTML %}
+<section class="section" id="funding-section" data-category="finance">
+    {% if TRANSITION_RISK_TO_FUNDING and TRANSITION_RISK_TO_FUNDING|trim %}
+    <div class="section-transition">{{ TRANSITION_RISK_TO_FUNDING }}</div>
+    {% endif %}
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">FINANCE</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Funding Programs</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Fastest paths to funding</p>
+        </div>
+    </div>
+    <div class="glance-box glance-finance">
+        <strong>At a glance:</strong> Selected funding programs with the highest fit for your profile.
+        {% set _roi_num_f = (ROI_12M | default(0)) | round(0) | int %}
+        {% if _roi_num_f >= 25 %}The business case is viable even without funding.{% elif _roi_num_f >= 10 %}Funding significantly shortens the payback period of the business case.{% else %}Funding is a key lever for the viability of this business case.{% endif %}
+    </div>
+    <div class="section-body">
+        {% if FUNDING_PATH_1 %}
+        <div class="funding-card">
+            <div class="funding-card-name">{{ FUNDING_PATH_1.name }}</div>
+            <div class="funding-card-detail"><strong>Fit:</strong> {{ FUNDING_PATH_1.fit }}</div>
+            <div class="funding-card-detail"><strong>Requirements:</strong> {{ FUNDING_PATH_1.requirements }}</div>
+            <div class="funding-card-next">→ {{ FUNDING_PATH_1.next_step }}</div>
+        </div>
+        {% endif %}
+        {% if FUNDING_PATH_2 %}
+        <div class="funding-card">
+            <div class="funding-card-name">{{ FUNDING_PATH_2.name }}</div>
+            <div class="funding-card-detail"><strong>Fit:</strong> {{ FUNDING_PATH_2.fit }}</div>
+            <div class="funding-card-detail"><strong>Requirements:</strong> {{ FUNDING_PATH_2.requirements }}</div>
+            <div class="funding-card-next">→ {{ FUNDING_PATH_2.next_step }}</div>
+        </div>
+        {% endif %}
+        {% if not FUNDING_PATH_1 and FOERDERPOTENZIAL_HTML and FOERDERPOTENZIAL_HTML|trim %}
+        {{ FOERDERPOTENZIAL_HTML|safe }}
+        {% endif %}
+    </div>
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detailed Funding Potential & Application Guidance → Appendix A12</div>{% endif %}
+</section>
+{% endif %}
+
+<!-- ═══════ 12-MONATS-AUSBLICK ═══════ -->
+{% if ROADMAP_12M_HTML and ROADMAP_12M_HTML|trim %}
+<section class="section" id="outlook-section" data-category="strategy">
+    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
+    <div class="section-header">
+        <div>
+            <span class="badge badge-strategy">Strategy</span>
+            <span class="section-kicker">{{ ui("roadmap_12m_kicker", "Strategic Planning") }}</span>
+            <h2>{{ ui("roadmap_12m_title", "12-Month Outlook") }}</h2>
+        </div>
+        <span class="section-pill"><span class="pill-dot"></span>Long-term transformation</span>
+    </div>
+    <div class="glance-box glance-strategy">
+        <strong>At a glance:</strong> Strategic transformation path over 12 months – 5 dimensions in parallel.
+    </div>
+    <div class="section-body">{{ ROADMAP_12M_HTML|safe }}</div>
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detailed 12-Month Roadmap & Automation Paths → Appendix A3</div>{% endif %}
+</section>
+{% endif %}
+
+<!-- ═══════ GAMECHANGER ═══════ -->
+{% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim %}
+<section class="section {% if 'gamechanger' in skip_pages %}section-optional{% endif %}" id="gamechanger-section" data-category="strategy">
+    <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+        <div class="chapter-banner__content">
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">STRATEGY</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">{{ ui("gamechanger_title", "AI Potential Analysis") }}</h2>
+            <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Transformative potential</p>
+        </div>
+    </div>
+    <div class="glance-box glance-strategy">
+        <strong>At a glance:</strong> The strategic inflection point that can transform your business model.
+    </div>
+    <div class="section-body">{{ GAMECHANGER_DECISION_HTML|safe }}</div>
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Full AI Potential Analysis (Architecture, Economies of Scale) → Appendix A2</div>{% endif %}
+    <!-- CTA: AI Potential Analysis -->
+    <div style="margin-top: 24px; padding: 16px 20px; background: #f0f9ff; border: 2px solid #0284c7; border-radius: 10px; break-inside: avoid; page-break-inside: avoid;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <span style="font-size: 18px;">📋</span>
+            <span style="font-weight: 700; font-size: 12pt; color: #0284c7;">Your Detailed AI Potential Analysis</span>
+        </div>
+        <p style="margin: 0; font-size: 10pt; color: #334155; line-height: 1.5;">
+            In addition to this report, you will receive your <strong>AI Potential Analysis</strong> as a separate document by email.
+            It includes: a detailed 90-day implementation plan, a risk assessment,
+            and concrete next steps for your company.
+        </p>
+    </div>
+</section>
+{% endif %}
+
+<!-- ═══════ PERSÖNLICHE EINSCHÄTZUNG (v7.1) ═══════ -->
+{% if ADVISOR_NOTE_HTML and ADVISOR_NOTE_HTML|trim %}
+<div class="section" id="advisor-note" data-category="strategy">
+    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
+    <span class="badge badge-strategy">Strategy</span>
+    <h2>Personal Assessment</h2>
+    <div class="advisor-note">
+        <div class="advisor-note-title">My assessment for your company</div>
+        <div class="advisor-note-text">{{ ADVISOR_NOTE_HTML|safe }}</div>
+        <div class="advisor-note-sig">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-certified AI management') }}</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ═══════ NÄCHSTE SCHRITTE & KONTAKT ═══════ -->
+{# KIS-1264: Kapitel unteilbar — die contact-box kippte sonst als
+   88-Zeichen-Waise allein auf S. 31 (Lauf 1125). Das Kapitel ist kurz
+   (Glance + 3 Entscheidungen + Kontakt) und passt immer auf eine Seite. #}
+<section class="section" id="next-steps" data-category="strategy" style="break-inside: avoid; page-break-inside: avoid;">
+    <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
+    <span class="badge badge-strategy">Strategy</span>
+    <h2>Next Steps &amp; Contact</h2>
+
+    <div class="glance-box glance-strategy">
+        <strong>At a glance:</strong> 3 concrete actions for this week – aligned with your maturity level ({{ variant_label }}).
+    </div>
+
+    <div style="margin-bottom: var(--sp-lg);">
+        {% if FINAL_CHECK_DECISIONS %}
+        {% for decision in FINAL_CHECK_DECISIONS[:3] %}
+        <div style="display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #F3F4F6;">
+            <span class="decision-num" style="background: {{ variant_color }};">{{ loop.index }}</span>
+            <div style="font-size: 11pt; font-weight: 600; color: #111827;">{{ decision }}</div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>You will find your next steps in the <a href="#quick-wins-section">Quick Wins</a> and the <a href="#roadmap-90d">90-Day Roadmap</a>.</p>
+        {% endif %}
+    </div>
+
+    <div class="contact-box">
+        <div class="contact-name">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-certified AI management') }}</div>
+        <div class="contact-org">{{ brand.brand_name | default('KI-Sicherheit.jetzt') }}</div>
+        <div class="contact-btns">
+            <a href="{{ brand.feedback_url | default('https://make.ki-sicherheit.jetzt/feedback/feedback.html') }}" class="btn btn-primary">Give Feedback</a>
+            <a href="{{ brand.site_url | default('https://ki-sicherheit.jetzt') }}" class="btn btn-accent">Web Version</a>
+        </div>
+    </div>
+</section>
+
+{# ═══════════════════════════════════════════════════════
+   EBENE 3: DEEP DIVE ANHANG
+   Steuerung via: ENABLE_APPENDIX=true
+   ═══════════════════════════════════════════════════════ #}
+{% if ENABLE_APPENDIX|default(false) %}
+
+<!-- APPENDIX COVER -->
+<div class="appendix-cover">
+    <div style="width: 60px; height: 4px; border-radius: 2px; background: var(--c-cat-deep);"></div>
+    <h2>Appendix</h2>
+    <p style="color: var(--c-text-2);">Deep dive &amp; reference – for consultation as needed</p>
+    <p class="small muted">All content supplements the key messages from the Action Guide.</p>
+</div>
+
+<!-- A1: Detailed Risk Analysis -->
+{% if RISK_ENGINE_V3_HTML or RISK_ENGINE_HTML %}
+<section class="appendix-section" id="appendix-a1" data-category="deep">
+    <div class="appendix-header">Appendix A1 · Detailed Risk Analysis</div>
+    <div class="section-body">
+        {% if RISK_ENGINE_V3_HTML %}{{ RISK_ENGINE_V3_HTML|safe }}{% endif %}
+        {% if RISK_ENGINE_HTML and RISK_ENGINE_V3_HTML %}
+        <div style="margin-top: var(--sp-lg); padding-top: var(--sp-md); border-top: 2px solid var(--c-border);">{{ RISK_ENGINE_HTML|safe }}</div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- A2: AI Potential Analysis (complete) -->
+{% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim %}
+<section class="appendix-section" id="appendix-a2" data-category="deep">
+    <div class="appendix-header">Appendix A2 · AI Potential Analysis (complete)</div>
+    <div class="section-body">
+        <p class="muted">The core AI potential analysis is in the Action Guide. Supplementary deep dives follow here.</p>
+        {% if GAMECHANGER_EXTENDED_HTML %}{{ GAMECHANGER_EXTENDED_HTML|safe }}{% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- A3: 12-Month Roadmap & Automatisierung -->
+{% if ROADMAP_12M_HTML or AUTOMATION_ROADMAP_HTML %}
+<section class="appendix-section" id="appendix-a3" data-category="deep">
+    <div class="appendix-header">Appendix A3 · 12-Month Roadmap &amp; Automation</div>
+    <div class="section-body">
+        {% if ROADMAP_12M_HTML and ROADMAP_12M_HTML|trim %}{{ ROADMAP_12M_HTML|safe }}{% endif %}
+        {% if AUTOMATION_ROADMAP_HTML %}<div style="margin-top: var(--sp-lg);">{{ AUTOMATION_ROADMAP_HTML|safe }}</div>{% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- A4: Recommendations (Detail) -->
+{% if RECOMMENDATIONS_ENGINE_HTML and RECOMMENDATIONS_ENGINE_HTML|trim %}
+<section class="appendix-section" id="appendix-a4" data-category="deep">
+    <div class="appendix-header">Appendix A4 · Recommendations (Detail)</div>
+    <div class="section-body">{{ RECOMMENDATIONS_ENGINE_HTML|safe }}</div>
+</section>
+{% endif %}
+
+<!-- A5: ROI-Simulation -->
+{% if BUSINESS_CASE_SIM_HTML or ROI_TRACKING_HTML %}
+<section class="appendix-section" id="appendix-a5" data-category="deep">
+    <div class="appendix-header">Appendix A5 · ROI Simulation (3 Scenarios)</div>
+    <div class="section-body">
+        {% if BUSINESS_CASE_SIM_HTML %}{{ BUSINESS_CASE_SIM_HTML|safe }}{% endif %}
+        {% if ROI_TRACKING_HTML %}<div style="margin-top: var(--sp-lg);">{{ ROI_TRACKING_HTML|safe }}</div>{% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- A6: Branchenprofil & Benchmark -->
+{% if BRANCH_PROFILE_HTML or BENCHMARK_ENGINE_HTML %}
+<section class="appendix-section" id="appendix-a6" data-category="deep">
+    <div class="appendix-header">Appendix A6 · Industry Profile &amp; Market Intelligence</div>
+    <div class="section-body">
+        {% if BRANCH_PROFILE_HTML %}{{ BRANCH_PROFILE_HTML|safe }}{% endif %}
+        {% if BRANCH_DEEP_DIVE_HTML %}<div style="margin-top: var(--sp-lg);">{{ BRANCH_DEEP_DIVE_HTML|safe }}</div>{% endif %}
+        {% if BRANCH_OPPORTUNITIES_HTML %}<div style="margin-top: var(--sp-lg);">{{ BRANCH_OPPORTUNITIES_HTML|safe }}</div>{% endif %}
+        {% if BENCHMARK_ENGINE_HTML %}<div style="margin-top: var(--sp-lg);">{{ BENCHMARK_ENGINE_HTML|safe }}</div>{% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- A7: AI Skill Roadmap -->
+{% if KI_SKILLPLAN_HTML and KI_SKILLPLAN_HTML|trim %}
+<section class="appendix-section" id="appendix-a7" data-category="deep">
+    <div class="appendix-header">Appendix A7 · AI Skill Roadmap 2026</div>
+    <div class="section-body">{{ KI_SKILLPLAN_HTML|safe }}</div>
+</section>
+{% endif %}
+
+<!-- A8: Monetarisierung -->
+{% if MONETARISIERUNG_HTML and MONETARISIERUNG_HTML|trim %}
+<section class="appendix-section" id="appendix-a8" data-category="deep">
+    <div class="appendix-header">Appendix A8 · Monetization &amp; Offer Logic</div>
+    <div class="section-body">{{ MONETARISIERUNG_HTML|safe }}</div>
+</section>
+{% endif %}
+
+<!-- A9: AI Policy + AI Act Detail -->
+{% if AI_POLICY_MINI_HTML %}
+<section class="appendix-section" id="appendix-a9" data-category="deep">
+    <div class="appendix-header">Appendix A9 · AI Mini-Policy + AI Act Detail</div>
+    <div class="section-body">
+        {{ AI_POLICY_MINI_HTML|safe }}
+        {% if AI_ACT_RELATED_USECASES_HTML %}
+        <div style="margin-top: var(--sp-lg);"><h3>AI Act – Relevant Use Cases</h3>{{ AI_ACT_RELATED_USECASES_HTML|safe }}</div>
+        {% endif %}
+        {% if AI_ACT_DATA_GAPS_HTML %}
+        <div style="margin-top: var(--sp-md);"><h3>Data Gaps &amp; Action Needed</h3>{{ AI_ACT_DATA_GAPS_HTML|safe }}</div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- A10: Starter-Templates & Kickoff -->
+{% if TEMPLATES_START_HTML or KICKOFF_VORLAGE_HTML or PROMPT_FRAMEWORK_HTML %}
+<section class="appendix-section" id="appendix-a10" data-category="deep">
+    <div class="appendix-header">Appendix A10 · Starter Templates &amp; Kickoff</div>
+    <div class="section-body">
+        {% if TEMPLATES_START_HTML %}{{ TEMPLATES_START_HTML|safe }}{% endif %}
+        {% if KICKOFF_VORLAGE_HTML %}<div style="margin-top: var(--sp-lg);"><h3>Kickoff Template</h3>{{ KICKOFF_VORLAGE_HTML|safe }}</div>{% endif %}
+        {% if PROMPT_FRAMEWORK_HTML %}<div style="margin-top: var(--sp-lg);"><h3>Prompt-Framework</h3>{{ PROMPT_FRAMEWORK_HTML|safe }}</div>{% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- A12: Funding Potential (Detail) -->
+{% if FOERDERPOTENZIAL_HTML and FOERDERPOTENZIAL_HTML|trim %}
+<section class="appendix-section" id="appendix-a12" data-category="deep">
+    <div class="appendix-header">Appendix A12 · Funding Potential (Detail)</div>
+    <div class="section-body">
+        {{ FOERDERPOTENZIAL_HTML|safe }}
+        {% if FUNDING_BRANCH_ALIGNMENT_HTML %}<div style="margin-top: var(--sp-md);">{{ FUNDING_BRANCH_ALIGNMENT_HTML|safe }}</div>{% endif %}
+        {% if TOOLS_FUNDING_ALIGNMENT_HTML %}<div style="margin-top: var(--sp-md);">{{ TOOLS_FUNDING_ALIGNMENT_HTML|safe }}</div>{% endif %}
+    </div>
+</section>
+{% endif %}
+
+<!-- A13: Glossary & Creative Tools -->
+<section class="appendix-section" id="appendix-a13" data-category="deep">
+    <div class="appendix-header">Appendix A13 · Glossary &amp; Creative Tools</div>
+    {% if kreative_ki_tools %}
+    <div style="margin-bottom: var(--sp-lg);">
+        <h3>Creative AI Tools for Your Company</h3>
+        <p class="text-2">Selected tools for creative and productive use cases.</p>
+        <ul>
+        {% for tool in kreative_ki_tools %}
+            <li><strong>{{ tool.name }}</strong>: {{ tool.beschreibung }}{% if tool.url %} – <a href="{{ tool.url }}">{{ tool.url }}</a>{% endif %}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    <h3>Glossary – Key AI Terms</h3>
+    <p class="text-2" style="margin-bottom: var(--sp-md);">The most important terms in this report.</p>
+    <dl class="glossary">
+        <dt>AI Act (EU)</dt><dd>European AI regulation with obligations depending on risk class.</dd>
+        <dt>API</dt><dd>Programming interface for connecting software systems.</dd>
+        <dt>GDPR (DSGVO)</dt><dd>General Data Protection Regulation governing personal data.</dd>
+        <dt>Fine-Tuning</dt><dd>Additional training of a model on your own data.</dd>
+        <dt>Guardrails</dt><dd>Validation steps that check/filter AI outputs.</dd>
+        <dt>Hallucination</dt><dd>Plausible-sounding but factually incorrect model output.</dd>
+        <dt>LLM</dt><dd>Large Language Model (GPT-4, Claude, Llama).</dd>
+        <dt>Prompt</dt><dd>Input instruction to an AI model.</dd>
+        <dt>RAG</dt><dd>Retrieval-Augmented Generation – AI with its own knowledge base.</dd>
+        <dt>Responsible AI</dt><dd>Responsible AI use with ethics &amp; compliance.</dd>
+        <dt>Token</dt><dd>Basic unit of model processing (~3-4 characters).</dd>
+        <dt>Human-in-the-Loop</dt><dd>Human oversight in AI decision processes.</dd>
+    </dl>
+</section>
+
+{% endif %}{# /ENABLE_APPENDIX #}
+
+<!-- ═══════ IMPRESSUM & DATENSCHUTZ (A14 – always shown) ═══════ -->
+<div class="section break-action-to-imprint" id="appendix-a14">
+    <div class="appendix-header">Imprint &amp; Privacy</div>
+    <div class="impressum-grid">
+        <div class="impressum-block">
+            <h4>Imprint</h4>
+            <p><strong>Responsible for content:</strong><br>
+            {{ brand.brand_name | default('KI-Sicherheit.jetzt') }} – {{ brand.advisor_name | default('Wolf Hohl') }}<br>
+            Greifswalder Str. 224a<br>
+            10405 Berlin</p>
+            <p>Email: {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}</p>
+        </div>
+        <div class="impressum-block">
+            <h4>Disclaimer</h4>
+            <p>This report is provided for informational purposes only. Despite careful review, I accept no liability for the content of external links.</p>
+            <h4>Copyright</h4>
+            <p>All content in this report is subject to German copyright law; all images were generated with the help of AI.</p>
+        </div>
+        <div class="impressum-block">
+            <h4>Note on the EU AI Act</h4>
+            <p>This report provides information on obligations, risks, and funding opportunities for the use of AI under the EU AI Act and GDPR. It does not constitute legal advice.</p>
+        </div>
+    </div>
+    <div class="impressum-divider"></div>
+    <div class="impressum-privacy">
+        <h3>Privacy Notice</h3>
+        <p>Protecting your personal data is of particular importance to me.</p>
+        <h4>Contacting me</h4>
+        <p>If you contact me via form or email, your details are stored for six months for processing purposes.</p>
+        <h4>Cookies</h4>
+        <p>No cookies for user tracking or analytics are used in creating and delivering this report.</p>
+        <h4>Your rights under the GDPR</h4>
+        <ul>
+            <li>Access, rectification, or erasure of your data</li>
+            <li>Data portability</li>
+            <li>Withdrawal of consent previously given</li>
+            <li>Complaint to the data protection authority</li>
+        </ul>
+        <p>If you wish to exercise your rights, please contact {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}.</p>
+    </div>
+</div>
+
+<!-- GDPR Mini Disclaimer -->
+<div class="gdpr-mini" data-ui="1">
+    {{ GDPR_MINI_DISCLAIMER|default(ui("gdpr_mini_default", "This report uses company data for AI readiness analysis. Processing based on Art. 6 (1) b GDPR. Data processing agreement available on request.")) }}
+    <a href="{{ brand.privacy_url | default('https://ki-sicherheit.jetzt/datenschutz') }}" target="_blank">{{ ui("gdpr_link_text", "Privacy Notice") }}</a>
+</div>
+
+<p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">
+    AI Status Report · Generated on {{ report_date }} · {% if REPORT_DISPLAY_ID %}{{ REPORT_DISPLAY_ID }}{% else %}{{ report_id }}{% endif %}
+    {% if BUILD_ID %} · Build: {{ BUILD_ID }}{% endif %}
+</p>
+
+</body>
+</html>
