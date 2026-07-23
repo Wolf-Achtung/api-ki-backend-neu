@@ -82,3 +82,16 @@ Do not use:
     <li>[5-7 checkable items]</li>
   </ul>
 </section>
+
+<!-- FIX-KIS-1246: Explicit context block — the model has ALL required
+     inputs and must NEVER reply with a clarifying question. -->
+
+AVAILABLE COMPANY CONTEXT (complete — no follow-up questions needed):
+- Industry: {{BRANCHE_LABEL}} · Segment: {{MEDIEN_SPARTE_LABEL}}
+- Company size: {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
+- Core service: {{hauptleistung}}
+- Existing AI guardrails: {{ki_guardrails}}
+
+MANDATORY: Respond only with the finished HTML section following the
+required structure. Never ask clarifying questions, never request more
+information, never explain what is missing — everything you need is above.

@@ -2230,6 +2230,7 @@ def render(briefing_obj: Any,
             soften_table_long_words as _final_shy,
             fix_double_periods as _final_fdp,
             fix_misc_typography as _final_fmt,
+            harden_wide_tables as _final_hwt,
         )
         html, _f1 = _final_fss(html)
         html, _f2 = _final_fdc(html)
@@ -2237,14 +2238,18 @@ def render(briefing_obj: Any,
         html, _f4 = _final_ncs(html)
         html, _f6 = _final_fdp(html)
         html, _f7 = _final_fmt(html)
+        # KIS-1246: Breite LLM-Tabellen (≥4 Spalten) bekommen inhaltsbasierte
+        # Spaltenbreiten + kompakte Header — vor den Soft-Hyphens, damit die
+        # &shy;-Injektion auf den gekürzten Headern arbeitet.
+        html, _f8 = _final_hwt(html)
         # KIS-1235: Headless-Chromium trennt ohne Wörterbuch mitten im Wort
         # ("HANDLUN GSFELD") — Soft-Hyphens geben den Tabellen echte
         # Trennstellen.
         html, _f5 = _final_shy(html)
-        if _f1 or _f2 or _f3 or _f4 or _f5 or _f6 or _f7:
+        if _f1 or _f2 or _f3 or _f4 or _f5 or _f6 or _f7 or _f8:
             log.info(
-                "[KIS-1234][TEXTMECHANIK-FINAL] spaces=%d decimals=%d punct_nodes=%d currency=%d shy_words=%d periods=%d typo=%d",
-                _f1, _f2, _f3, _f4, _f5, _f6, _f7,
+                "[KIS-1234][TEXTMECHANIK-FINAL] spaces=%d decimals=%d punct_nodes=%d currency=%d shy_words=%d periods=%d typo=%d tables=%d",
+                _f1, _f2, _f3, _f4, _f5, _f6, _f7, _f8,
             )
     except Exception as _tmf_exc:  # pragma: no cover
         log.warning("[KIS-1234][TEXTMECHANIK-FINAL] skipped: %s", _tmf_exc)

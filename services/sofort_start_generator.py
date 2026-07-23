@@ -2900,13 +2900,26 @@ def generate_30_tage_challenge_html_v2(
     else:
         _subtitle = "Von Null auf KI-Profi – angepasst an Ihr Zeitbudget"
 
+    # KIS-1246: Titel an die real gerenderte Tageszahl anpassen — nach dem
+    # Woche-1-Drop endete die "30-Tage"-Challenge sichtbar bei Tag 23
+    # (Audit KIS-1244/1246: "Challenge-Tage 24-30 fehlen").
+    _total_days = sum(
+        len(w.get("tage") or []) for w in challenge_data.values() if isinstance(w, dict)
+    )
+    _challenge_title = (
+        "Ihre 30-Tage KI-Challenge" if _total_days >= 30
+        else f"Ihre {_total_days}-Tage KI-Challenge"
+    )
+    if _total_days < 30 and expertise_level in ("intermediate", "expert"):
+        _subtitle = f"{_subtitle} · Grundlagen-Woche übersprungen"
+
     html = f'''
     <!-- M1-FIX: page-break-before entfernt — #challenge-section hat break-before:page in CSS -->
 
     <!-- 30-TAGE CHALLENGE HEADER -->
     <div style="text-align: center; margin-bottom: 24px; padding-top: 20px;">
         <h2 style="font-size: 28px; font-weight: 700; margin: 0 0 8px 0; color: #1e40af;">
-            🏆 Ihre 30-Tage KI-Challenge
+            🏆 {_challenge_title}
         </h2>
         <p style="font-size: 16px; color: #64748b; margin: 0;">
             {_subtitle}

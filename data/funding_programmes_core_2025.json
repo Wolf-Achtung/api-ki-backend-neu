@@ -595,7 +595,7 @@
     "notes": "BKM/FFA; laufende Einreichung bis 6 Wochen vor Drehbeginn; DFFF/GMPF-Fusion Mitte 2026 angekündigt — Richtlinienstand prüfen",
     "priority": 1,
     "provider": "BKM / FFA",
-    "relevance_ki": "medium",
+    "relevance_ki": "Mittel",
     "suitable_for": [
       "team",
       "kmu"
@@ -622,7 +622,7 @@
     "notes": "Regionaleffekt: mind. Fördersumme in Berlin/Brandenburg; ca. 4 Einreichtermine/Jahr; Beratungsgespräch Pflicht",
     "priority": 1,
     "provider": "Medienboard Berlin-Brandenburg",
-    "relevance_ki": "high",
+    "relevance_ki": "Hoch",
     "suitable_for": [
       "solo",
       "team",
@@ -650,7 +650,7 @@
     "notes": "BKM-Richtlinie, FFA-verwaltet; KI-gestützte VFX-Workflows förderfähig",
     "priority": 2,
     "provider": "BKM / FFA",
-    "relevance_ki": "medium",
+    "relevance_ki": "Mittel",
     "suitable_for": [
       "team",
       "kmu"
@@ -677,7 +677,7 @@
     "notes": "BKM-Mittel, seit 2025 FFA-verwaltet; feste Einreichfristen über FFA-Serviceportal",
     "priority": 2,
     "provider": "BKM / FFA",
-    "relevance_ki": "low",
+    "relevance_ki": "Niedrig",
     "suitable_for": [
       "solo",
       "team",
@@ -705,7 +705,7 @@
     "notes": "Seit 08/2025 wieder offen; Budget 2026: 125 Mio € — gute Antragschancen; Antrag via DLR Projektträger; Kulturtest + USK",
     "priority": 1,
     "provider": "BMFTR (DLR Projektträger)",
-    "relevance_ki": "medium",
+    "relevance_ki": "Mittel",
     "suitable_for": [
       "team",
       "kmu"
@@ -732,7 +732,7 @@
     "notes": "BKM/Länder/FFA; antragsberechtigt: Rechteinhaber und Archive",
     "priority": 3,
     "provider": "BKM / Länder / FFA",
-    "relevance_ki": "medium",
+    "relevance_ki": "Mittel",
     "suitable_for": [
       "solo",
       "team",
@@ -760,7 +760,7 @@
     "notes": "Bayern-Effekt: mind. 150% des Darlehens in Bayern; Games-Richtlinie 07/2026 fortgeschrieben",
     "priority": 2,
     "provider": "FFF Bayern",
-    "relevance_ki": "medium",
+    "relevance_ki": "Mittel",
     "suitable_for": [
       "solo",
       "team",
@@ -788,7 +788,7 @@
     "notes": "Games seit 09/2025 als Zuschuss (Fokus kleinere Studios); 4 Sammeltermine/Jahr; Beratungsgespräch Pflicht",
     "priority": 2,
     "provider": "Film- und Medienstiftung NRW",
-    "relevance_ki": "medium",
+    "relevance_ki": "Mittel",
     "suitable_for": [
       "solo",
       "team",
@@ -816,7 +816,7 @@
     "notes": "BW-Effekt mind. 120%; Animations-/VFX-Cluster Ludwigsburg",
     "priority": 2,
     "provider": "MFG Baden-Württemberg",
-    "relevance_ki": "medium",
+    "relevance_ki": "Mittel",
     "suitable_for": [
       "solo",
       "team",
@@ -844,7 +844,7 @@
     "notes": "Eigene Games-/XR-Richtlinie seit Ende 2024; 4 Vergabesitzungen/Jahr",
     "priority": 3,
     "provider": "MDM",
-    "relevance_ki": "medium",
+    "relevance_ki": "Mittel",
     "suitable_for": [
       "solo",
       "team",
@@ -872,7 +872,7 @@
     "notes": "Keine Games-Linie (Games: Gamecity Hamburg, Zuschuss bis 80.000 €); Einreichung via NEST",
     "priority": 3,
     "provider": "MOIN Filmförderung",
-    "relevance_ki": "medium",
+    "relevance_ki": "Mittel",
     "suitable_for": [
       "solo",
       "team",
@@ -900,7 +900,7 @@
     "notes": "Ca. 4 Vergaberunden/Jahr; Regionalbezug erforderlich",
     "priority": 3,
     "provider": "nordmedia",
-    "relevance_ki": "low",
+    "relevance_ki": "Niedrig",
     "suitable_for": [
       "solo",
       "team",
@@ -928,7 +928,7 @@
     "notes": "Programmperiode bis 2027 (ab 2028 'MEDIA+'); Calls öffnen im Herbst — 2026er Development-Deadlines überwiegend vorbei",
     "priority": 2,
     "provider": "EU Commission",
-    "relevance_ki": "medium",
+    "relevance_ki": "Mittel",
     "suitable_for": [
       "team",
       "kmu"

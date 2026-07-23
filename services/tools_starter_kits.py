@@ -430,6 +430,130 @@ CHECKLIST_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
 # KIS-1132: EXPERT TOOL TEMPLATES (overrides for expert users)
 # =============================================================================
 
+# KIS-1246 (Medien-Vertikale): Branchen-spezifische Kits statt generischer
+# Büro-Tools — im Lauf 1129 empfahl das Team-Kit einer Filmproduktion
+# "CRM-System" und "Projekt-Management" statt Produktions-Tools.
+TOOL_TEMPLATES_MEDIA: Dict[str, List[Dict[str, Any]]] = {
+    "solo": [
+        {
+            "name": "Transkription & Untertitel (z. B. Amberscript, Descript)",
+            "category": "Transkription / Untertitelung",
+            "purpose": "Rohmaterial durchsuchbar machen, Untertitel-Entwürfe",
+            "priority": 1,
+            "estimated_setup_days": 1,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Schnitt-KI im Bestand (Premiere Textschnitt, DaVinci Neural Engine)",
+            "category": "Postproduktion",
+            "purpose": "Textbasierter Rohschnitt, Rauschminderung, Reframing",
+            "priority": 1,
+            "estimated_setup_days": 2,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Belegte Recherche (z. B. Perplexity, nach AVV-Prüfung)",
+            "category": "Recherche",
+            "purpose": "Stoff- und Archivrecherche mit prüfbaren Quellen",
+            "priority": 2,
+            "estimated_setup_days": 1,
+            "funding_eligible": False,
+        },
+        {
+            "name": "Rechte- & Projektablage (z. B. Notion, Airtable)",
+            "category": "Wissensmanagement / Rechte",
+            "purpose": "Rechtekette, Einwilligungen und Lizenzen pro Asset dokumentieren",
+            "priority": 2,
+            "estimated_setup_days": 2,
+            "funding_eligible": True,
+        },
+    ],
+    "team": [
+        {
+            "name": "Transkription & Untertitelung (z. B. Amberscript, Simon Says)",
+            "category": "Transkription / Untertitelung",
+            "purpose": "Automatische Transkripte, Untertitel und Sprachfassungen für alle Projekte",
+            "priority": 1,
+            "estimated_setup_days": 2,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Review & Versionierung (z. B. Frame.io)",
+            "category": "Kollaboration / Freigabe",
+            "purpose": "Sichtung, Freigabe und Versionierung im Team bündeln",
+            "priority": 1,
+            "estimated_setup_days": 1,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Schnitt-KI im Bestand (Premiere Textschnitt, DaVinci Neural Engine)",
+            "category": "Postproduktion",
+            "purpose": "Textbasierter Rohschnitt und KI-Funktionen in vorhandenen Tools aktivieren",
+            "priority": 1,
+            "estimated_setup_days": 2,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Footage-Archiv & Metadaten (z. B. iconik, CatDV oder Notion-Datenbank)",
+            "category": "Medienverwaltung",
+            "purpose": "Durchsuchbares Archiv mit Rechtekette als zweite Erlösquelle",
+            "priority": 2,
+            "estimated_setup_days": 5,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Bild-/Moodboard-KI (z. B. Adobe Firefly, gekennzeichnet)",
+            "category": "Kreation / Pitch",
+            "purpose": "Moodboards und Pitch-Visuals — nur mit Kennzeichnung",
+            "priority": 2,
+            "estimated_setup_days": 1,
+            "funding_eligible": False,
+        },
+    ],
+    "kmu": [
+        {
+            "name": "Media-Asset-Management (z. B. iconik, axle.ai)",
+            "category": "Medienverwaltung",
+            "purpose": "Zentrales, durchsuchbares Archiv mit Metadaten und Rechtekette",
+            "priority": 1,
+            "estimated_setup_days": 7,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Transkriptions-Pipeline (z. B. Amberscript API)",
+            "category": "Transkription / Untertitelung",
+            "purpose": "Automatische Verschlagwortung und Untertitel ab Materialeingang",
+            "priority": 1,
+            "estimated_setup_days": 5,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Rechte-Register (z. B. SharePoint, Notion)",
+            "category": "Governance / Rechte",
+            "purpose": "Einwilligungen, Lizenzen und Kennzeichnungsstatus pro Asset",
+            "priority": 1,
+            "estimated_setup_days": 3,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Workflow-Automation (z. B. Make, n8n)",
+            "category": "Workflow-Automation",
+            "purpose": "Material-Eingang, Metadaten und Freigaben automatisieren",
+            "priority": 2,
+            "estimated_setup_days": 5,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Review & Versionierung (z. B. Frame.io)",
+            "category": "Kollaboration / Freigabe",
+            "purpose": "Sender-/Kundenfreigaben mit dokumentiertem Prüfschritt",
+            "priority": 2,
+            "estimated_setup_days": 2,
+            "funding_eligible": True,
+        },
+    ],
+}
+
 TOOL_TEMPLATES_EXPERT: Dict[str, List[Dict[str, Any]]] = {
     "solo": [
         {
@@ -629,8 +753,15 @@ def generate_starter_kit(
     kit_name = _generate_kit_name(size_label, branch_group, lang, expertise_level=expertise_level)
 
     # KIS-1132: Get templates based on expertise level
+    # KIS-1246: Medien-Branche bekommt produktionsnahe Tools statt
+    # generischer Büro-Kits (CRM/Projekt-Management).
+    _is_media_branch = any(
+        k in branch_group.lower() for k in ("medien", "kreativ", "entertainment", "film")
+    )
     if expertise_level == "expert":
         tool_templates = TOOL_TEMPLATES_EXPERT.get(size_label, TOOL_TEMPLATES_EXPERT["solo"])
+    elif _is_media_branch:
+        tool_templates = TOOL_TEMPLATES_MEDIA.get(size_label, TOOL_TEMPLATES_MEDIA["team"])
     else:
         tool_templates = TOOL_TEMPLATES.get(size_label, TOOL_TEMPLATES["team"])
     funding_templates = FUNDING_TEMPLATES.get(size_label, FUNDING_TEMPLATES["team"])
