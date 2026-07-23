@@ -2,11 +2,11 @@
 <!-- Engine: Puppeteer/Chromium · Backend: FastAPI/Jinja2 · Design: McKinsey/BCG -->
 <!-- Changelog v7.1: Fix leere Seite 2, Score-Interpretation, Advisor Note, Section Transitions, Tip/Warning Boxes -->
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>KI-Status-Report {{ report_id }} – {{ BRANCHE_LABEL|default('KI-Readiness Assessment') }}</title>
+    <title>AI Status Report {{ report_id }} – {{ BRANCHE_LABEL|default('AI Readiness Assessment') }}</title>
     <style>
 /* ═══════════════════════════════════════════════════════
    v7.1 CLEAN CORPORATE PLUS — Design System
@@ -1034,7 +1034,7 @@ h1, h2, h3, h4 {
    to prevent near-empty pages (Puppeteer pushes oversized blocks
    to the next page as a whole, leaving >40% whitespace). */
 
-/* 90-Tage-Roadmap: Phase cards may break internally */
+/* 90-Day Roadmap: Phase cards may break internally */
 .roadmap-phase-card {
     break-inside: auto;
     page-break-inside: auto;
@@ -1174,7 +1174,7 @@ h1, h2, h3, h4 {
     page-break-inside: avoid;
 }
 .tip-box::before {
-    content: 'Praxis-Tipp';
+    content: 'Practical Tip';
     display: block;
     font-size: 8pt;
     font-weight: 700;
@@ -1196,7 +1196,7 @@ h1, h2, h3, h4 {
     page-break-inside: avoid;
 }
 .warning-box::before {
-    content: 'Häufiger Fehler';
+    content: 'Common Pitfall';
     display: block;
     font-size: 8pt;
     font-weight: 700;
@@ -1339,14 +1339,14 @@ h1, h2, h3, h4 {
     <!-- R1 Corporate Blue Header-Stripe -->
     <div style="position:absolute;top:0;left:0;right:0;background-color:#2B6CB0;color:white;padding:18px 40px;display:flex;align-items:center;justify-content:space-between;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
         <img src="{{ brand.logo_small | default('ki-sicherheit-logo-small.png') }}" alt="{{ brand.logo_alt | default('KI-Sicherheit.jetzt') }}" style="height:36px;filter:brightness(0) invert(1);opacity:0.95;">
-        <span style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;opacity:0.9;">KI-STATUS-REPORT · {{ report_date }}</span>
+        <span style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;opacity:0.9;">AI STATUS REPORT · {{ report_date }}</span>
     </div>
     <div style="margin-top:56px;"></div>
     <div class="cover-accent" style="background: var(--report-primary); print-color-adjust: exact; -webkit-print-color-adjust: exact;"></div>
     <div class="cover-eyebrow">
-        KI-Status-Report · {{ report_date }}
+        AI Status Report · {{ report_date }}
         <span class="muted"> · </span>
-        {% if REPORT_DISPLAY_ID %}Report-Nr: {{ REPORT_DISPLAY_ID }}{% else %}Report-ID: {{ report_id }}{% endif %}{% if BUILD_ID %} · Build: {{ BUILD_ID }}{% endif %}
+        {% if REPORT_DISPLAY_ID %}Report no.: {{ REPORT_DISPLAY_ID }}{% else %}Report ID: {{ report_id }}{% endif %}{% if BUILD_ID %} · Build: {{ BUILD_ID }}{% endif %}
     </div>
     <div style="margin-bottom: var(--sp-xl); max-width: 600px;">
         <h1>KI-Readiness Report</h1>
@@ -1382,9 +1382,9 @@ h1, h2, h3, h4 {
     </div>
     <div style="font-size: 10pt; color: var(--c-text-2); margin-top: var(--sp-sm);">
         {# FIX-TESTRUN-1244: Cover zeigte die Unternehmensgröße im Reifegrad-Slot #}
-        Reifegrad: {{ variant_label|default(size_label) }}
+        Maturity: {{ variant_label|default(size_label) }}
         {% if top10_score_for_size and (top10_score_for_size|int > score_int) %}
-        <span class="muted"> · </span>Top 10% ab {{ top10_score_for_size }}
+        <span class="muted"> · </span>Top 10% from {{ top10_score_for_size }}
         {% endif %}
     </div>
 
@@ -1392,9 +1392,9 @@ h1, h2, h3, h4 {
     <div class="dim-grid" style="margin-top: var(--sp-xl);">
         {% for dim_name, dim_val, dim_color in [
             (ui("dim_governance", "Governance"), gov_score, '#22c55e' if gov_score >= 80 else '#84cc16' if gov_score >= 65 else '#eab308' if gov_score >= 50 else '#ef4444'),
-            (ui("dim_security", "Sicherheit"), sec_score, '#22c55e' if sec_score >= 80 else '#84cc16' if sec_score >= 65 else '#eab308' if sec_score >= 50 else '#ef4444'),
-            (ui("dim_value", "Wertschöpfung"), wert_score, '#22c55e' if wert_score >= 80 else '#84cc16' if wert_score >= 65 else '#eab308' if wert_score >= 50 else '#ef4444'),
-            (ui("dim_enablement", "Befähigung"), bef_score, '#22c55e' if bef_score >= 80 else '#84cc16' if bef_score >= 65 else '#eab308' if bef_score >= 50 else '#ef4444')
+            (ui("dim_security", "Security"), sec_score, '#22c55e' if sec_score >= 80 else '#84cc16' if sec_score >= 65 else '#eab308' if sec_score >= 50 else '#ef4444'),
+            (ui("dim_value", "Value Creation"), wert_score, '#22c55e' if wert_score >= 80 else '#84cc16' if wert_score >= 65 else '#eab308' if wert_score >= 50 else '#ef4444'),
+            (ui("dim_enablement", "Enablement"), bef_score, '#22c55e' if bef_score >= 80 else '#84cc16' if bef_score >= 65 else '#eab308' if bef_score >= 50 else '#ef4444')
         ] %}
         <div>
             <div class="dim-label"><span>{{ dim_name }}</span>&nbsp;<span>{{ dim_val }}</span></div>
@@ -1411,7 +1411,7 @@ h1, h2, h3, h4 {
                 {# KIS-1235: Einheit "h" erzwingen — Display-Variablen kamen teils nackt ("15") an #}
                 {% if ZEITERSPARNIS_DISPLAY %}{{ ZEITERSPARNIS_DISPLAY }}{% if 'h' not in ZEITERSPARNIS_DISPLAY|string and 'Std' not in ZEITERSPARNIS_DISPLAY|string %}h{% endif %}{% elif TIME_SAVINGS_MONTH_HOURS_FMT %}{{ TIME_SAVINGS_MONTH_HOURS_FMT }}{% if 'h' not in TIME_SAVINGS_MONTH_HOURS_FMT|string and 'Std' not in TIME_SAVINGS_MONTH_HOURS_FMT|string %}h{% endif %}{% elif CANON_HOURS_MONTH and CANON_HOURS_MONTH|int > 0 %}{{ CANON_HOURS_MONTH|int }}h{% elif EINSPARUNG_STUNDEN_MONAT and EINSPARUNG_STUNDEN_MONAT|int > 0 %}{{ EINSPARUNG_STUNDEN_MONAT|int }}h{% elif zeitersparnis_h_monat %}{{ zeitersparnis_h_monat|round(0)|int }}h{% else %}—{% endif %}
             </div>
-            <div class="kpi-label">{{ ui("kpi_time_savings", "Zeitersparnis/Monat") }}</div>
+            <div class="kpi-label">{{ ui("kpi_time_savings", "Time saved/month") }}</div>
         </div>
         {# FIX-TESTRUN-1244: KPI-Sanity-Gate — ein Jahr-1-ROI nahe null (CAPEX
            voll verrechnet) ist mathematisch korrekt, aber als Cover-Headline
@@ -1424,43 +1424,43 @@ h1, h2, h3, h4 {
         {% if _roi_cover >= 0 and _roi_cover < 20 and PAYBACK_MONTHS %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: #c2410c;">
-                {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS is number %}{{ PAYBACK_MONTHS|round(1) }}{% else %}{{ PAYBACK_MONTHS }}{% endif %} Mon.
+                {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS is number %}{{ PAYBACK_MONTHS|round(1) }}{% else %}{{ PAYBACK_MONTHS }}{% endif %} mo.
             </div>
-            <div class="kpi-label">Amortisation</div>
+            <div class="kpi-label">Payback</div>
         </div>
         {% else %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: #c2410c;">
                 {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M is number %}{{ ROI_12M|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M }}%{% elif ROI_P50 is number and ROI_P50 > 0 %}{{ ROI_P50|round(0)|int }}%{% else %}—{% endif %}
             </div>
-            <div class="kpi-label">{% if ROI_12M and ROI_12M|int >= 200 %}ROI (gedeckelt){% else %}{{ ui("kpi_roi", "ROI-Projektion") }}{% endif %}</div>
+            <div class="kpi-label">{% if ROI_12M and ROI_12M|int >= 200 %}ROI (capped){% else %}{{ ui("kpi_roi", "ROI projection") }}{% endif %}</div>
         </div>
         {% endif %}
         <div class="kpi-card">
-            <div class="kpi-value" style="color: var(--c-primary);">{{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('begrenzt') }}</div>
-            <div class="kpi-label">AI Act Risikoklasse</div>
+            <div class="kpi-value" style="color: var(--c-primary);">{{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('limited') }}</div>
+            <div class="kpi-label">AI Act risk class</div>
         </div>
     </div>
     </div>
 
     <!-- Reading Guide -->
     <div class="reading-guide">
-        <div class="reading-guide-title">{{ ui("reading_guide_title", "Lesezeit-Guide") }}</div>
+        <div class="reading-guide-title">{{ ui("reading_guide_title", "Reading Guide") }}</div>
         <div class="reading-guide-grid">
             <div class="rg-card">
                 <div class="rg-card-title">Executive View</div>
-                <div class="rg-card-time">5 Min</div>
-                <div class="rg-card-pages">Go/No-Go-Entscheidung</div>
+                <div class="rg-card-time">5 min</div>
+                <div class="rg-card-pages">Go/No-Go decision</div>
             </div>
             <div class="rg-card">
                 <div class="rg-card-title">Action Guide</div>
-                <div class="rg-card-time">30 Min</div>
-                <div class="rg-card-pages">Konkreter Fahrplan</div>
+                <div class="rg-card-time">30 min</div>
+                <div class="rg-card-pages">Concrete roadmap</div>
             </div>
             <div class="rg-card">
                 <div class="rg-card-title">Deep Dive</div>
-                <div class="rg-card-time">Nach Bedarf</div>
-                <div class="rg-card-pages">{% if ENABLE_APPENDIX|default(false) %}Anhang A1–A13{% else %}Nachschlagewerk{% endif %}</div>
+                <div class="rg-card-time">As needed</div>
+                <div class="rg-card-pages">{% if ENABLE_APPENDIX|default(false) %}Appendix A1–A13{% else %}Reference guide{% endif %}</div>
             </div>
         </div>
     </div>
@@ -1470,9 +1470,9 @@ h1, h2, h3, h4 {
        Der TÜV-Nachweis ist real (personenzertifizierter KI-Manager) und
        wird als das ausgewiesen, was er ist. #}
     <div class="trust-badges" style="align-items: center; gap: 10px;">
-        <img src="{{ brand.cert_logo | default('tuev-logo-transparent.png') }}" alt="{{ brand.cert_logo_alt | default('TÜV Austria zertifiziert') }}">
+        <img src="{{ brand.cert_logo | default('tuev-logo-transparent.png') }}" alt="{{ brand.cert_logo_alt | default('TÜV Austria certified') }}">
         <span style="font-size: 8.5pt; color: var(--c-text-2);">
-            Erstellt von {{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifiziertes KI-Management') }}
+            Prepared by {{ brand.advisor_signature | default('Wolf Hohl · TÜV-certified AI management') }}
         </span>
     </div>
 </div>
@@ -1480,44 +1480,44 @@ h1, h2, h3, h4 {
 <!-- ═══════ TABLE OF CONTENTS ═══════ -->
 <div class="section" id="toc" data-category="strategy">
     <div style="margin-bottom: var(--sp-lg);">
-        <span class="badge badge-strategy">Strategie</span>
-        <h2>Inhaltsverzeichnis</h2>
+        <span class="badge badge-strategy">Strategy</span>
+        <h2>Table of Contents</h2>
         <p style="font-size: 9.5pt; color: var(--c-text-2); margin-top: var(--sp-xs);">
-            Alle Einträge sind im PDF verlinkt.
+            All entries are linked within the PDF.
             <span class="badge" style="background: {{ variant_color }}15; color: {{ variant_color }};">{{ variant_label }} ({{ score_int }}/100)</span>
         </p>
         <!-- KIS-1262: Legende nach OBEN — als letztes Element kippte sie
              allein auf eine fast leere Folgeseite (Lauf KIS-1241, S. 3). -->
         <div class="toc-legend" style="margin-top: 4px; padding-top: 4px;">
-            GF = Geschäftsführung · IT = IT/Projektleitung · CO = Compliance/Datenschutz · FI = Controlling/Finanzen
+            GF = Executive Management · IT = IT/Project Lead · CO = Compliance/Data Protection · FI = Controlling/Finance
         </div>
     </div>
 
     <!-- EXECUTIVE VIEW -->
     <div class="toc-level-header toc-level-header-exec">
         <span class="toc-level-title">Executive View</span>
-        <span class="toc-level-sub">5 Min · Go/No-Go-Entscheidung</span>
+        <span class="toc-level-sub">5 min · Go/No-Go decision</span>
     </div>
     {# KIS-1246: Selbstreferenzielle Einträge (Cover, Inhaltsverzeichnis)
        entfernt — mit dem neuen Rechte-Kapitel lief sonst genau EINE
        TOC-Zeile auf eine fast leere Seite 3 (Lauf 1129). #}
-    <a href="#mgmt-summary" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategie</span> <span class="toc-entry-title">Management Summary</span></a>
-    <a href="#decision" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategie</span> <span class="toc-entry-title">Entscheidungsvorlage</span></a>
+    <a href="#mgmt-summary" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategy</span> <span class="toc-entry-title">Management Summary</span></a>
+    <a href="#decision" class="toc-entry"><span class="toc-entry-cat badge badge-strategy">Strategy</span> <span class="toc-entry-title">Decision Template</span></a>
 
     <!-- ACTION GUIDE (Dynamic TOC) -->
     <div class="toc-level-header toc-level-header-action" style="margin-top: var(--sp-md);">
         <span class="toc-level-title">Action Guide</span>
-        <span class="toc-level-sub">30 Min · Konkreter Fahrplan</span>
+        <span class="toc-level-sub">30 min · Concrete roadmap</span>
     </div>
     {% set toc_action_entries = [] %}
     {% if SOFORT_START_HTML and SOFORT_START_HTML|trim %}
-        {% set _ = toc_action_entries.append(("sofort-start", "action", "Ihr Sofort-Start", "start")) %}
+        {% set _ = toc_action_entries.append(("sofort-start", "action", "Your Fast Start", "start")) %}
     {% endif %}
     {% if QUICK_WINS_HTML and QUICK_WINS_HTML|trim %}
         {% set _ = toc_action_entries.append(("quick-wins-section", "action", "Quick Wins: Top 3", "quickwins")) %}
     {% endif %}
     {% if ROADMAP_90D_DECISION_HTML and ROADMAP_90D_DECISION_HTML|trim %}
-        {% set _ = toc_action_entries.append(("roadmap-90d", "action", "90-Tage-Roadmap", "roadmap90")) %}
+        {% set _ = toc_action_entries.append(("roadmap-90d", "action", "90-Day Roadmap", "roadmap90")) %}
     {% endif %}
     {% if BUSINESS_CASE_ENGINE_HTML or (ROI_HTML and ROI_HTML|trim) %}
         {% set _ = toc_action_entries.append(("business-case-compact", "finance", "Business Case", "business")) %}
@@ -1529,39 +1529,39 @@ h1, h2, h3, h4 {
         {% set _ = toc_action_entries.append(("prompts-section", "action", "Copy-Paste Prompts", "prompts")) %}
     {% endif %}
     {% if CHALLENGE_30_TAGE_HTML and CHALLENGE_30_TAGE_HTML|trim %}
-        {% set _ = toc_action_entries.append(("challenge-section", "action", "30-Tage Challenge", "challenge")) %}
+        {% set _ = toc_action_entries.append(("challenge-section", "action", "30-Day Challenge", "challenge")) %}
     {% endif %}
     {% if RISK_ENGINE_HTML or RISK_ENGINE_V3_HTML %}
-        {% set _ = toc_action_entries.append(("risks-compact", "risk", "Risiko-Übersicht", "risks")) %}
+        {% set _ = toc_action_entries.append(("risks-compact", "risk", "Risk Overview", "risks")) %}
     {% endif %}
     {% if VENDOR_AUDIT_HTML %}
-        {% set _ = toc_action_entries.append(("vendor-section", "risk", "Vendor-Audit", "vendor")) %}
+        {% set _ = toc_action_entries.append(("vendor-section", "risk", "Vendor Audit", "vendor")) %}
     {% endif %}
     {% if AI_ACT_RISK_LEVEL %}
-        {% set _ = toc_action_entries.append(("aiact-compact", "risk", "AI Act Kompakt", "aiact")) %}
+        {% set _ = toc_action_entries.append(("aiact-compact", "risk", "AI Act Essentials", "aiact")) %}
     {% endif %}
     {% if KI_RECHTE_KENNZEICHNUNG_HTML and KI_RECHTE_KENNZEICHNUNG_HTML|trim %}
-        {% set _ = toc_action_entries.append(("ki-rechte-kennzeichnung", "risk", "KI-Rechte & Kennzeichnung", "aiact")) %}
+        {% set _ = toc_action_entries.append(("ki-rechte-kennzeichnung", "risk", "AI Rights & Labeling", "aiact")) %}
     {% endif %}
     {% if FOERDERPOTENZIAL_HTML or FUNDING_PATH_1 %}
-        {% set _ = toc_action_entries.append(("funding-section", "finance", "Förderprogramme", "funding")) %}
+        {% set _ = toc_action_entries.append(("funding-section", "finance", "Funding Programs", "funding")) %}
     {% endif %}
     {% if ROADMAP_12M_HTML and ROADMAP_12M_HTML|trim %}
-        {% set _ = toc_action_entries.append(("outlook-section", "strategy", "12-Monats-Ausblick", "outlook")) %}
+        {% set _ = toc_action_entries.append(("outlook-section", "strategy", "12-Month Outlook", "outlook")) %}
     {% endif %}
     {% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim %}
-        {% set _ = toc_action_entries.append(("gamechanger-section", "strategy", "KI-Potenzial-Analyse", "gamechanger")) %}
+        {% set _ = toc_action_entries.append(("gamechanger-section", "strategy", "AI Potential Analysis", "gamechanger")) %}
     {% endif %}
     {% if ADVISOR_NOTE_HTML and ADVISOR_NOTE_HTML|trim %}
-    {% set _ = toc_action_entries.append(("advisor-note", "strategy", "Persönliche Einschätzung", "advisor")) %}
+    {% set _ = toc_action_entries.append(("advisor-note", "strategy", "Personal Assessment", "advisor")) %}
     {% endif %}
-    {% set _ = toc_action_entries.append(("next-steps", "strategy", "Nächste Schritte & Kontakt", "next")) %}
+    {% set _ = toc_action_entries.append(("next-steps", "strategy", "Next Steps & Contact", "next")) %}
 
     {% for anchor, cat, title, key in toc_action_entries %}
     <a href="#{{ anchor }}" class="toc-entry{% if key in skip_pages %} section-optional{% endif %}">
-        <span class="toc-entry-cat badge badge-{{ cat }}">{{ 'Strategie' if cat == 'strategy' else 'Umsetzung' if cat == 'action' else 'Risiko' if cat == 'risk' else 'Finanzen' }}</span>
+        <span class="toc-entry-cat badge badge-{{ cat }}">{{ 'Strategy' if cat == 'strategy' else 'Implementation' if cat == 'action' else 'Risk' if cat == 'risk' else 'Finance' }}</span>
         <span class="toc-entry-title" style="{% if key in focus_pages %}font-weight:700;{% endif %}">{{ title }}</span>
-        {% if key in focus_pages %}<span class="toc-focus">FOKUS</span>{% endif %}
+        {% if key in focus_pages %}<span class="toc-focus">FOCUS</span>{% endif %}
         {% if key in skip_pages %}<span class="toc-skip-label">OPTIONAL</span>{% endif %}
     </a>
     {% endfor %}
@@ -1569,20 +1569,20 @@ h1, h2, h3, h4 {
     <!-- DEEP DIVE ANHANG (conditional) -->
     {% if ENABLE_APPENDIX|default(false) %}
     <div class="toc-level-header toc-level-header-deep" style="margin-top: var(--sp-md);">
-        <span class="toc-level-title">Deep Dive Anhang</span>
-        <span class="toc-level-sub">Zum Nachschlagen</span>
+        <span class="toc-level-title">Deep Dive Appendix</span>
+        <span class="toc-level-sub">For reference</span>
     </div>
     {% for ref, title in [
-        ("A1", "Detaillierte Risikoanalyse"), ("A2", "KI-Potenzial-Analyse (vollständig)"),
-        ("A3", "12-Monats-Roadmap & Automatisierung"), ("A4", "Handlungsempfehlungen (Detail)"),
-        ("A5", "ROI-Simulation (3 Szenarien)"), ("A6", "Branchenprofil & Marktintelligenz"),
-        ("A7", "KI-Skill-Fahrplan 2026"), ("A8", "Monetarisierung & Angebotslogik"),
-        ("A9", "AI Mini-Policy + AI Act Detail"), ("A10", "Starter-Templates & Kickoff"),
-        ("A11", "30-Tage-Challenge (Woche 2–4)"), ("A12", "Förderpotenzial (Detail)"),
-        ("A13", "Glossar & Kreativtools")
+        ("A1", "Detailed Risk Analysis"), ("A2", "AI Potential Analysis (complete)"),
+        ("A3", "12-Month Roadmap & Automation"), ("A4", "Recommendations (Detail)"),
+        ("A5", "ROI Simulation (3 Scenarios)"), ("A6", "Industry Profile & Market Intelligence"),
+        ("A7", "AI Skill Roadmap 2026"), ("A8", "Monetization & Offer Logic"),
+        ("A9", "AI Mini-Policy + AI Act Detail"), ("A10", "Starter Templates & Kickoff"),
+        ("A11", "30-Day Challenge (Weeks 2–4)"), ("A12", "Funding Potential (Detail)"),
+        ("A13", "Glossary & Creative Tools")
     ] %}
     <a href="#appendix-{{ ref|lower }}" class="toc-entry" style="opacity: 0.7;">
-        <span class="toc-entry-cat badge badge-deep">Vertiefung</span>
+        <span class="toc-entry-cat badge badge-deep">Deep Dive</span>
         <span class="toc-entry-title">{{ ref }} – {{ title }}</span>
     </a>
     {% endfor %}
@@ -1594,26 +1594,26 @@ h1, h2, h3, h4 {
 <div class="section" id="mgmt-summary" data-category="strategy">
     <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <div class="chapter-banner__content">
-            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">STRATEGIE</p>
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">STRATEGY</p>
             <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Management Summary</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
-            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Score, Reifegrad und strategische Leitplanken</p>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Score, maturity, and strategic guardrails</p>
         </div>
     </div>
 
     <div class="glance-box glance-strategy">
-        <strong>Auf einen Blick:</strong>
+        <strong>At a glance:</strong>
         {% if CORE_MESSAGE_HTML %}
         {{ CORE_MESSAGE_HTML }}
         {% else %}
-        Score {{ score_int }}/100 ({{ score_rating }}). {{ REPORT_SUBTITLE|default('KI-Readiness Assessment') }}.
+        Score {{ score_int }}/100 ({{ score_rating }}). {{ REPORT_SUBTITLE|default('AI Readiness Assessment') }}.
         {% endif %}
     </div>
 
     <div class="mgmt-grid">
         <!-- Q1: Score -->
         <div class="mgmt-card">
-            <div class="mgmt-card-label">Ihr Score</div>
+            <div class="mgmt-card-label">Your Score</div>
             <div style="display: flex; align-items: center; gap: 14px;">
                 <div style="flex-shrink: 0;">
                     <svg viewBox="0 0 100 100" width="72" height="72" style="transform: rotate(-90deg);">
@@ -1624,26 +1624,26 @@ h1, h2, h3, h4 {
                 </div>
                 <div>
                     <div style="font-size: 26pt; font-weight: 700; color: {{ score_color }}; line-height: 1;">{{ score_int }}</div>
-                    <div style="font-size: 8.5pt; color: var(--c-text-2);">von 100 Punkten · {{ variant_label }}</div>
+                    <div style="font-size: 8.5pt; color: var(--c-text-2);">of 100 points · {{ variant_label }}</div>
                 </div>
             </div>
         </div>
 
         <!-- Q2: Core Message -->
         <div class="mgmt-card">
-            <div class="mgmt-card-label">Kernbotschaft</div>
+            <div class="mgmt-card-label">Core Message</div>
             {% if CORE_MESSAGE_DETAIL_HTML %}
             <div style="font-size: 10pt;">{{ CORE_MESSAGE_DETAIL_HTML|safe }}</div>
             {% elif FINAL_CHECK_INTRO %}
             <p style="font-size: 10pt; line-height: 1.6;">{{ FINAL_CHECK_INTRO }}</p>
             {% else %}
-            <p style="font-size: 10pt; color: var(--c-text-2);">Details im Action Guide.</p>
+            <p style="font-size: 10pt; color: var(--c-text-2);">Details in the Action Guide.</p>
             {% endif %}
         </div>
 
         <!-- Q3: Top 3 Actions -->
         <div class="mgmt-card">
-            <div class="mgmt-card-label">Top 3 Aktionen</div>
+            <div class="mgmt-card-label">Top 3 Actions</div>
             {% if FINAL_CHECK_DECISIONS %}
             {% for decision in FINAL_CHECK_DECISIONS[:3] %}
             <div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px;">
@@ -1652,7 +1652,7 @@ h1, h2, h3, h4 {
             </div>
             {% endfor %}
             {% else %}
-            <p style="font-size: 9.5pt; color: var(--c-text-2);">Details in den <a href="#quick-wins-section">Quick Wins</a></p>
+            <p style="font-size: 9.5pt; color: var(--c-text-2);">Details in the <a href="#quick-wins-section">Quick Wins</a></p>
             {% endif %}
         </div>
 
@@ -1662,28 +1662,28 @@ h1, h2, h3, h4 {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div>
                     <span style="font-size: 14pt; font-weight: 700; color: #c2410c;">
-                        {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS is number %}{{ PAYBACK_MONTHS|round(1) }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS }}{% else %}n/a{% endif %} Mo
+                        {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS is number %}{{ PAYBACK_MONTHS|round(1) }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS }}{% else %}n/a{% endif %} mo
                     </span><br/>
-                    <span style="font-size: 8pt; color: var(--c-text-2);">Amortisation</span>
+                    <span style="font-size: 8pt; color: var(--c-text-2);">Payback</span>
                 </div>
                 <div>
                     <span style="font-size: 14pt; font-weight: 700; color: #047857;">
                         {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M is number %}{{ ROI_12M|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M }}%{% else %}—{% endif %}
                     </span><br/>
-                    <span style="font-size: 8pt; color: var(--c-text-2);">ROI-Projektion</span>
+                    <span style="font-size: 8pt; color: var(--c-text-2);">ROI projection</span>
                 </div>
                 <div>
                     <span style="font-size: 14pt; font-weight: 700; color: var(--c-primary);">
                         {# KIS-1235: Einheit "h" erzwingen #}
                         {% if TIME_SAVINGS_MONTH_HOURS_FMT %}{{ TIME_SAVINGS_MONTH_HOURS_FMT }}{% if 'h' not in TIME_SAVINGS_MONTH_HOURS_FMT|string and 'Std' not in TIME_SAVINGS_MONTH_HOURS_FMT|string %}h{% endif %}{% elif CANON_HOURS_MONTH and CANON_HOURS_MONTH|int > 0 %}{{ CANON_HOURS_MONTH|int }}h{% elif EINSPARUNG_STUNDEN_MONAT and EINSPARUNG_STUNDEN_MONAT|int > 0 %}{{ EINSPARUNG_STUNDEN_MONAT|int }}h{% elif zeitersparnis_h_monat %}{{ zeitersparnis_h_monat|round(0)|int }}h{% else %}—{% endif %}
                     </span><br/>
-                    <span style="font-size: 8pt; color: var(--c-text-2);">Zeitersparnis/Mo</span>
+                    <span style="font-size: 8pt; color: var(--c-text-2);">Time saved/mo</span>
                 </div>
                 <div>
                     <span style="font-size: 14pt; font-weight: 700; color: var(--c-text);">
                         {% if CAPEX_DISPLAY_DE %}{{ CAPEX_DISPLAY_DE }}{% elif TOTAL_CAPEX %}{{ TOTAL_CAPEX|round(0)|int }}€{% else %}—{% endif %}
                     </span><br/>
-                    <span style="font-size: 8pt; color: var(--c-text-2);">Investition</span>
+                    <span style="font-size: 8pt; color: var(--c-text-2);">Investment</span>
                 </div>
             </div>
         </div>
@@ -1700,7 +1700,7 @@ h1, h2, h3, h4 {
     {% endif %}
 
     {% if SKIP_HINT %}
-    <div class="skip-hint"><strong>Bei Ihrem Score ({{ score_int }}/100):</strong> {{ SKIP_HINT }}</div>
+    <div class="skip-hint"><strong>At your score ({{ score_int }}/100):</strong> {{ SKIP_HINT }}</div>
     {# KIS-1142 P3: Der Hinweis-Text steuert jetzt auf expertise_level,
        nicht auf den Score — das ist präziser (ein hoher Score aus Budget
        oder Governance allein macht niemanden zum Workflow-Profi) und
@@ -1711,13 +1711,13 @@ h1, h2, h3, h4 {
        so viele Wochen, dass Woche 1 erhalten bleiben muss. Der Hinweis muss
        das widerspiegeln, sonst widerspricht er dem gerenderten Inhalt. #}
     {% elif expertise_level == "expert" and company_size == "solo" %}
-    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (fortgeschritten):</strong> Die 30-Tage-Challenge ist auf Solo-Berater zugeschnitten und fokussiert auf Werkzeugkasten-Optimierung und Spielregeln in 4 Wochen. Fokussieren Sie auf: Quick Wins, Vendor-Audit und KI-Potenzial-Analyse.</div>
+    <div class="skip-hint"><strong>For your expertise level (advanced):</strong> The 30-Day Challenge is tailored to solo consultants and focuses on toolkit optimization and ground rules over 4 weeks. Focus on: Quick Wins, Vendor Audit, and AI Potential Analysis.</div>
     {% elif expertise_level == "expert" %}
-    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (fortgeschritten):</strong> Die 30-Tage-Challenge startet direkt mit Stack-Optimierung und Governance — die Einstiegs-Woche entfällt. Fokussieren Sie auf: Quick Wins, Vendor-Audit und KI-Potenzial-Analyse.</div>
+    <div class="skip-hint"><strong>For your expertise level (advanced):</strong> The 30-Day Challenge starts directly with stack optimization and governance — the introductory week is skipped. Focus on: Quick Wins, Vendor Audit, and AI Potential Analysis.</div>
     {% elif expertise_level == "intermediate" and company_size == "solo" %}
-    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (erfahren):</strong> Die 30-Tage-Challenge ist auf Solo-Berater zugeschnitten und kombiniert Workflow-Analyse mit Automatisierung in 4 Wochen. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
+    <div class="skip-hint"><strong>For your expertise level (experienced):</strong> The 30-Day Challenge is tailored to solo consultants and combines workflow analysis with automation over 4 weeks. Focus on: Quick Wins, 90-Day Roadmap, and Business Case.</div>
     {% elif expertise_level == "intermediate" %}
-    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (erfahren):</strong> Die 30-Tage-Challenge überspringt die Grundlagen-Woche und startet mit Workflow-Integration. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
+    <div class="skip-hint"><strong>For your expertise level (experienced):</strong> The 30-Day Challenge skips the fundamentals week and starts with workflow integration. Focus on: Quick Wins, 90-Day Roadmap, and Business Case.</div>
     {% endif %}
     </div>{# /KIS-1264 unteilbar #}
 </div>
@@ -1725,11 +1725,11 @@ h1, h2, h3, h4 {
 <!-- ═══════ ENTSCHEIDUNGSVORLAGE ═══════ -->
 <div class="section" id="decision" data-category="strategy">
     <div class="level-indicator"><span class="level-dot level-dot-exec"></span> EXECUTIVE VIEW</div>
-    <span class="badge badge-strategy">Strategie</span>
-    <h2>Entscheidungsvorlage</h2>
+    <span class="badge badge-strategy">Strategy</span>
+    <h2>Decision Template</h2>
 
     <div class="glance-box glance-strategy">
-        <strong>Auf einen Blick:</strong> Drei klare Leitplanken für Ihre KI-Strategie – ausdruckbar als Vorlage für die Geschäftsführung.
+        <strong>At a glance:</strong> Three clear guardrails for your AI strategy – printable as a template for executive management.
     </div>
 
     {% if EXECUTIVE_DECISION_HTML and EXECUTIVE_DECISION_HTML|trim %}
@@ -1754,7 +1754,7 @@ h1, h2, h3, h4 {
     <div style="margin-top: 12px;">{{ DECISION_CONFIDENCE_HTML|safe }}</div>
     {% endif %}
 
-    <p class="small muted" style="text-align: center; margin-top: var(--sp-md);">Diese Seite ist als eigenständige Entscheidungsvorlage für die Geschäftsführung konzipiert.</p>
+    <p class="small muted" style="text-align: center; margin-top: var(--sp-md);">This page is designed as a standalone decision template for executive management.</p>
 </div>
 
 {# ═══════════════════════════════════════════════════════
@@ -1774,10 +1774,10 @@ h1, h2, h3, h4 {
     {% endif %}
     <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <div class="chapter-banner__content">
-            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">UMSETZUNG</p>
-            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">{{ ui("sofort_start_title", "Ihr Sofort-Start") }}</h2>
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">IMPLEMENTATION</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">{{ ui("sofort_start_title", "Your Fast Start") }}</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
-            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Der wichtigste erste Schritt – heute noch machbar</p>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">The most important first step – achievable today</p>
         </div>
     </div>
     <div class="section-body">{{ SOFORT_START_HTML|safe }}</div>
@@ -1790,21 +1790,21 @@ h1, h2, h3, h4 {
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <div class="section-header">
         <div>
-            <span class="badge badge-action">Umsetzung</span>
-            <span class="section-kicker">Schnelle Effekte</span>
+            <span class="badge badge-action">Implementation</span>
+            <span class="section-kicker">Fast impact</span>
             <h2>Quick Wins: Top 3</h2>
         </div>
-        <span class="section-pill"><span class="pill-dot"></span>Priorisiert für {{ variant_label }}-Reifegrad</span>
+        <span class="section-pill"><span class="pill-dot"></span>Prioritized for {{ variant_label }} maturity</span>
     </div>
     <div class="glance-box glance-action">
-        <strong>Auf einen Blick:</strong> Drei Maßnahmen mit sofortigem Hebel – alle parallel startbar.
+        <strong>At a glance:</strong> Three measures with immediate leverage – all can be started in parallel.
     </div>
     <div class="section-body">{{ QUICK_WINS_HTML|safe }}</div>
-    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detaillierte Maßnahmenbeschreibungen → Anhang A4</div>{% endif %}
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detailed measure descriptions → Appendix A4</div>{% endif %}
 </section>
 {% endif %}
 
-{# v7.1: Übergang Quick Wins → 90-Tage-Roadmap #}
+{# v7.1: Übergang Quick Wins → 90-Day Roadmap #}
 {% if TRANSITION_QUICKWINS_TO_ROADMAP and TRANSITION_QUICKWINS_TO_ROADMAP|trim %}
 <div class="section-transition">{{ TRANSITION_QUICKWINS_TO_ROADMAP }}</div>
 {% endif %}
@@ -1815,17 +1815,17 @@ h1, h2, h3, h4 {
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <div class="section-header">
         <div>
-            <span class="badge badge-action">Umsetzung</span>
-            <span class="section-kicker">{{ ui("roadmap_kicker", "90-Tage-Plan") }}</span>
-            <h2>{{ ui("roadmap_title", "90-Tage-Roadmap") }}</h2>
+            <span class="badge badge-action">Implementation</span>
+            <span class="section-kicker">{{ ui("roadmap_kicker", "90-Day Plan") }}</span>
+            <h2>{{ ui("roadmap_title", "90-Day Roadmap") }}</h2>
         </div>
-        <span class="section-pill"><span class="pill-dot"></span>Pragmatische Umsetzung</span>
+        <span class="section-pill"><span class="pill-dot"></span>Pragmatic execution</span>
     </div>
     <div class="glance-box glance-action">
-        <strong>Auf einen Blick:</strong> Von der Vorbereitung (Tag 30) über Pilotierung (Tag 60) zur Verstetigung (Tag 90).
+        <strong>At a glance:</strong> From preparation (day 30) through piloting (day 60) to consolidation (day 90).
     </div>
     <div class="section-body">{{ ROADMAP_90D_DECISION_HTML|safe }}</div>
-    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">12-Monats-Roadmap & Automatisierungspfade → Anhang A3</div>{% endif %}
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">12-Month Roadmap & Automation Paths → Appendix A3</div>{% endif %}
 </section>
 {% endif %}
 
@@ -1834,60 +1834,60 @@ h1, h2, h3, h4 {
 <section class="section" id="business-case-compact" data-category="finance">
     <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <div class="chapter-banner__content">
-            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">FINANZEN</p>
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">FINANCE</p>
             <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Business Case</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
-            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">ROI, Payback, Kennzahlen-Prognosen</p>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">ROI, payback, KPI projections</p>
         </div>
     </div>
     <div class="glance-box glance-finance">
-        <strong>Auf einen Blick:</strong>
+        <strong>At a glance:</strong>
         ROI {% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M is number %}{{ ROI_12M|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M }}%{% endif %},
-        Amortisation in {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS is number %}{{ PAYBACK_MONTHS|round(1) }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS }}{% endif %} Monaten.
+        payback in {% if PAYBACK_MONTHS_FMT_DE %}{{ PAYBACK_MONTHS_FMT_DE }}{% elif PAYBACK_MONTHS is number %}{{ PAYBACK_MONTHS|round(1) }}{% elif PAYBACK_MONTHS %}{{ PAYBACK_MONTHS }}{% endif %} months.
         {# KIS-1234: Tragfähigkeits-Aussage ROI-abhängig — der Pauschalsatz
            "auch ohne Fördermittel wirtschaftlich tragfähig" stand im Lauf 1234
            neben ROI 8 % und einem Budget UNTER der Investition. #}
         {% set _roi_num = (ROI_12M | default(0)) | round(0) | int %}
-        {% if _roi_num >= 25 %}Investition ist auch ohne Fördermittel wirtschaftlich tragfähig.{% elif _roi_num >= 10 %}Investition ist tragfähig; Fördermittel verkürzen die Amortisation spürbar.{% else %}Wirtschaftlichkeit ist knapp bemessen — Fördermittel und ein gestufter Einstieg sind hier entscheidend.{% endif %}
+        {% if _roi_num >= 25 %}The investment is economically viable even without funding programs.{% elif _roi_num >= 10 %}The investment is viable; funding programs noticeably shorten the payback period.{% else %}The economics are tightly calculated — funding programs and a phased entry are decisive here.{% endif %}
     </div>
     {# FIX-KIS-1027.5-A: Zwei ROI-Sichten transparent nebeneinander.
        Spread zwischen CAPEX-basiertem R1-ROI und 12-Mo-Gesamt-ROI
        (analog Strategy-Methodik) war für GF verwirrend; jetzt explizit. #}
     {% if ROI_12M_GESAMT_DISPLAY_DE %}
     <div class="roi-views-table" style="margin: 12px 0; padding: 12px 14px; background: #f0f4f8; border-left: 3px solid #3b82f6; border-radius: 6px; font-size: 0.92em;">
-        <strong>Zwei ROI-Sichten — methodisch erklärt:</strong>
+        <strong>Two ROI views — methodology explained:</strong>
         <table style="width: 100%; margin-top: 8px; border-collapse: collapse;">
             <thead>
                 <tr style="border-bottom: 1px solid #cbd5e1; text-align: left;">
-                    <th style="padding: 6px 8px; font-size: 0.85em; color: #475569;">Sicht</th>
-                    <th style="padding: 6px 8px; font-size: 0.85em; color: #475569;">ROI (12 Monate)</th>
-                    <th style="padding: 6px 8px; font-size: 0.85em; color: #475569;">Investitionsbasis</th>
+                    <th style="padding: 6px 8px; font-size: 0.85em; color: #475569;">View</th>
+                    <th style="padding: 6px 8px; font-size: 0.85em; color: #475569;">ROI (12 months)</th>
+                    <th style="padding: 6px 8px; font-size: 0.85em; color: #475569;">Investment basis</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td style="padding: 6px 8px;"><strong>CAPEX-Sicht</strong> (R1-Standard)</td>
+                    <td style="padding: 6px 8px;"><strong>CAPEX view</strong> (R1 standard)</td>
                     <td style="padding: 6px 8px; font-weight: 600; color: #1e40af;">{% if ROI_12M_DISPLAY_DE %}{{ ROI_12M_DISPLAY_DE }}{% elif ROI_12M is number %}{{ ROI_12M|round(0)|int }}%{% elif ROI_12M %}{{ ROI_12M }}%{% endif %}</td>
-                    <td style="padding: 6px 8px; color: #475569;">Einmalige Startinvestition</td>
+                    <td style="padding: 6px 8px; color: #475569;">One-off initial investment</td>
                 </tr>
                 <tr style="background: #fff;">
-                    <td style="padding: 6px 8px;"><strong>Gesamt-Sicht</strong> (12-Mo-TCO)</td>
+                    <td style="padding: 6px 8px;"><strong>Total view</strong> (12-mo TCO)</td>
                     <td style="padding: 6px 8px; font-weight: 600; color: #1e40af;">{{ ROI_12M_GESAMT_DISPLAY_DE }}</td>
-                    <td style="padding: 6px 8px; color: #475569;">Startinvestition + 12 Monate Software-OPEX</td>
+                    <td style="padding: 6px 8px; color: #475569;">Initial investment + 12 months of software OPEX</td>
                 </tr>
             </tbody>
         </table>
         <p style="margin: 8px 0 0 0; font-size: 0.85em; color: #475569; line-height: 1.5;">
-            Beide Werte sind korrekt — sie unterscheiden sich nur in der Investitionsbasis.
-            Der KI-Strategiebericht (sofern beauftragt) nutzt eine eigene
-            12-Monats-TCO-Methodik mit anderer Kostenstruktur (inkl. Implementierung,
-            Schulung, Koordination); die dortigen ROI-Werte sind methodisch bedingt
-            abweichend, nicht widersprüchlich.
+            Both values are correct — they differ only in the investment basis.
+            The AI strategy report (if commissioned) uses its own
+            12-month TCO methodology with a different cost structure (incl. implementation,
+            training, coordination); its ROI figures differ for methodological
+            reasons and are not contradictory.
         </p>
     </div>
     {% endif %}
     <div class="section-body">{{ BUSINESS_CASE_ENGINE_HTML|safe }}</div>
-    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detaillierte ROI-Simulation & Monte-Carlo-Analyse → Anhang A5</div>{% endif %}
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detailed ROI Simulation & Monte Carlo Analysis → Appendix A5</div>{% endif %}
 </section>
 {% endif %}
 
@@ -1897,14 +1897,14 @@ h1, h2, h3, h4 {
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <div class="section-header">
         <div>
-            <span class="badge badge-action">Umsetzung</span>
-            <span class="section-kicker">{{ ui("ki_stack_kicker", "Executive KI-Stack") }}</span>
+            <span class="badge badge-action">Implementation</span>
+            <span class="section-kicker">{{ ui("ki_stack_kicker", "Executive AI Stack") }}</span>
             <h2>{{ ui("ki_stack_title", "Tools & Starter-Kit") }}</h2>
         </div>
-        <span class="section-pill"><span class="pill-dot"></span>Empfohlene Tools + Quick-Start</span>
+        <span class="section-pill"><span class="pill-dot"></span>Recommended tools + quick start</span>
     </div>
     <div class="glance-box glance-action">
-        <strong>Auf einen Blick:</strong> Ihre empfohlenen KI-Tools und der schnellste Einstiegspfad.
+        <strong>At a glance:</strong> Your recommended AI tools and the fastest entry path.
     </div>
     <div class="section-body">
         {{ KI_STACK_SUMMARY_HTML|safe }}
@@ -1919,13 +1919,13 @@ h1, h2, h3, h4 {
 {% if PROMPT_VORLAGEN_HTML and PROMPT_VORLAGEN_HTML|trim %}
 <section class="section {% if 'prompts' in skip_pages %}section-optional{% endif %}" id="prompts-section" data-category="action">
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
-    <span class="badge badge-action">Umsetzung</span>
+    <span class="badge badge-action">Implementation</span>
     <h2>Copy-Paste Prompts</h2>
     <div class="glance-box glance-action">
-        <strong>Auf einen Blick:</strong> Sofort einsetzbare Prompts für {{ BRANCHE_LABEL|default('Ihren Arbeitsalltag') }}.
+        <strong>At a glance:</strong> Ready-to-use prompts for {{ BRANCHE_LABEL|default('your daily work') }}.
     </div>
     <div class="section-body">{{ PROMPT_VORLAGEN_HTML|safe }}</div>
-    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Prompt-Framework & erweiterte Vorlagen → Anhang A10</div>{% endif %}
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Prompt Framework & Extended Templates → Appendix A10</div>{% endif %}
 </section>
 {% endif %}
 
@@ -1934,14 +1934,14 @@ h1, h2, h3, h4 {
 <section class="section {% if 'challenge' in skip_pages %}section-optional{% endif %}" id="challenge-section" data-category="action">
     <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <div class="chapter-banner__content">
-            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">UMSETZUNG</p>
-            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">30-Tage KI-Challenge</h2>
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">IMPLEMENTATION</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">30-Day AI Challenge</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
-            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">30 Tage, kleine Schritte, große Wirkung</p>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">30 days, small steps, big impact</p>
         </div>
     </div>
     <div class="section-body">{{ CHALLENGE_30_TAGE_HTML|safe }}</div>
-    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Wochen 2–4 (Fortgeschrittene) → Anhang A11</div>{% endif %}
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Weeks 2–4 (Advanced) → Appendix A11</div>{% endif %}
 </section>
 {% endif %}
 
@@ -1951,19 +1951,19 @@ h1, h2, h3, h4 {
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <div class="section-header">
         <div>
-            <span class="badge badge-risk">Risiko</span>
-            <span class="section-kicker">Risikoanalyse &amp; Compliance</span>
-            <h2>Risiko-Übersicht</h2>
+            <span class="badge badge-risk">Risk</span>
+            <span class="section-kicker">Risk Analysis &amp; Compliance</span>
+            <h2>Risk Overview</h2>
         </div>
-        <span class="section-pill"><span class="pill-dot pill-danger"></span>Top-Risiken für {{ variant_label }}-Reifegrad</span>
+        <span class="section-pill"><span class="pill-dot pill-danger"></span>Top risks for {{ variant_label }} maturity</span>
     </div>
     <div class="glance-box glance-risk">
-        <strong>Auf einen Blick:</strong> Governance {{ gov_score }}/100, Sicherheit {{ sec_score }}/100. Priorisierte Risiken und Sofort-Maßnahmen.
+        <strong>At a glance:</strong> Governance {{ gov_score }}/100, security {{ sec_score }}/100. Prioritized risks and immediate measures.
     </div>
     <div class="section-body">
         {% if RISK_ENGINE_HTML %}{{ RISK_ENGINE_HTML|safe }}{% elif RISK_ENGINE_V3_HTML %}{{ RISK_ENGINE_V3_HTML|safe }}{% endif %}
     </div>
-    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Vollständige Risikoanalyse (DPIA, Compliance, 12+ Risiken) → Anhang A1</div>{% endif %}
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Full Risk Analysis (DPIA, Compliance, 12+ Risks) → Appendix A1</div>{% endif %}
 </section>
 {% endif %}
 
@@ -1972,10 +1972,10 @@ h1, h2, h3, h4 {
 <section class="section" id="vendor-section" data-category="risk">
     <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <div class="chapter-banner__content">
-            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">RISIKO</p>
-            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Vendor Prüfung</h2>
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">RISK</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Vendor Audit</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
-            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Datenschutz- und Compliance-Prüfung Ihrer KI-Tools</p>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Data protection and compliance review of your AI tools</p>
         </div>
     </div>
     <div class="section-body">{{ VENDOR_AUDIT_HTML|safe }}</div>
@@ -1988,37 +1988,37 @@ h1, h2, h3, h4 {
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <div class="section-header">
         <div>
-            <span class="badge badge-risk">Risiko</span>
+            <span class="badge badge-risk">Risk</span>
             <span class="section-kicker">EU AI Act</span>
-            <h2>AI Act Kompakt</h2>
+            <h2>AI Act Essentials</h2>
         </div>
         <span class="section-pill">
             <span class="pill-dot {% if AI_ACT_RISK_LEVEL == 'high-risk' %}pill-danger{% elif AI_ACT_RISK_LEVEL == 'limited' %}pill-warning{% else %}pill-success{% endif %}"></span>
-            {{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('begrenzt') }}
+            {{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('limited') }}
         </span>
     </div>
     <div class="glance-box glance-risk">
-        <strong>Auf einen Blick:</strong> Risikoklasse: {{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('begrenzt') }}. {% if AI_ACT_RISK_LEVEL == 'limited' %}Primär Transparenzpflichten.{% elif AI_ACT_RISK_LEVEL == 'high-risk' %}Umfangreiche Dokumentations- und Compliance-Pflichten.{% else %}Minimale regulatorische Anforderungen.{% endif %}
+        <strong>At a glance:</strong> Risk class: {{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('limited') }}. {% if AI_ACT_RISK_LEVEL == 'limited' %}Primarily transparency obligations.{% elif AI_ACT_RISK_LEVEL == 'high-risk' %}Extensive documentation and compliance obligations.{% else %}Minimal regulatory requirements.{% endif %}
     </div>
     <div class="section-body">
         <div class="risk-banner {% if AI_ACT_RISK_LEVEL == 'high-risk' %}risk-banner-high{% elif AI_ACT_RISK_LEVEL == 'limited' %}risk-banner-limited{% else %}risk-banner-low{% endif %}">
-            <strong>Risikoklasse: {{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('begrenzt') }}{% if AI_ACT_RISK_LEVEL_DE and AI_ACT_RISK_LEVEL and AI_ACT_RISK_LEVEL_DE != AI_ACT_RISK_LEVEL %} (EU AI Act: {{ AI_ACT_RISK_LEVEL }}){% endif %}</strong>
+            <strong>Risk class: {{ AI_ACT_RISK_LEVEL_DE|default(AI_ACT_RISK_LEVEL)|default('limited') }}{% if AI_ACT_RISK_LEVEL_DE and AI_ACT_RISK_LEVEL and AI_ACT_RISK_LEVEL_DE != AI_ACT_RISK_LEVEL %} (EU AI Act: {{ AI_ACT_RISK_LEVEL }}){% endif %}</strong>
             {% if AI_ACT_RISK_SUMMARY %}<p style="margin: 6px 0 0;">{{ AI_ACT_RISK_SUMMARY }}</p>{% endif %}
         </div>
         {% if AI_ACT_DUTY_MATRIX_HTML %}
-        <h4>Pflichten-Matrix</h4>
+        <h4>Duty Matrix</h4>
         {{ AI_ACT_DUTY_MATRIX_HTML|safe }}
         {% endif %}
         {% if AI_ACT_NONCOMPLIANCE_ALERTS_HTML %}
-        <h4>Compliance-Lücken</h4>
+        <h4>Compliance Gaps</h4>
         {{ AI_ACT_NONCOMPLIANCE_ALERTS_HTML|safe }}
         {% endif %}
         {% if AI_ACT_RECOMMENDED_NEXT_STEPS_HTML %}
-        <h4>Nächste Schritte</h4>
+        <h4>Next Steps</h4>
         {{ AI_ACT_RECOMMENDED_NEXT_STEPS_HTML|safe }}
         {% endif %}
     </div>
-    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Vollständige AI Act Analyse + AI Mini-Policy → Anhang A9</div>{% endif %}
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Full AI Act Analysis + AI Mini-Policy → Appendix A9</div>{% endif %}
 </section>
 {% endif %}
 
@@ -2028,9 +2028,9 @@ h1, h2, h3, h4 {
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <div class="section-header">
         <div>
-            <span class="badge badge-risk">Risiko</span>
-            <span class="section-kicker">Rechte &amp; Transparenz</span>
-            <h2>KI-Rechte &amp; Kennzeichnung</h2>
+            <span class="badge badge-risk">Risk</span>
+            <span class="section-kicker">Rights &amp; Transparency</span>
+            <h2>AI Rights &amp; Labeling</h2>
         </div>
     </div>
     <div class="section-body">{{ KI_RECHTE_KENNZEICHNUNG_HTML|safe }}</div>
@@ -2048,31 +2048,31 @@ h1, h2, h3, h4 {
     {% endif %}
     <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <div class="chapter-banner__content">
-            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">FINANZEN</p>
-            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Förderprogramme</h2>
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">FINANCE</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Funding Programs</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
-            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Schnellste Pfade zu Fördermitteln</p>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Fastest paths to funding</p>
         </div>
     </div>
     <div class="glance-box glance-finance">
-        <strong>Auf einen Blick:</strong> Ausgewählte Förderprogramme mit höchster Eignung für Ihr Profil.
+        <strong>At a glance:</strong> Selected funding programs with the highest fit for your profile.
         {% set _roi_num_f = (ROI_12M | default(0)) | round(0) | int %}
-        {% if _roi_num_f >= 25 %}Business Case ist auch ohne Förderung tragfähig.{% elif _roi_num_f >= 10 %}Förderung verkürzt die Amortisation des Business Case deutlich.{% else %}Förderung ist für die Wirtschaftlichkeit dieses Business Case ein wesentlicher Hebel.{% endif %}
+        {% if _roi_num_f >= 25 %}The business case is viable even without funding.{% elif _roi_num_f >= 10 %}Funding significantly shortens the payback period of the business case.{% else %}Funding is a key lever for the viability of this business case.{% endif %}
     </div>
     <div class="section-body">
         {% if FUNDING_PATH_1 %}
         <div class="funding-card">
             <div class="funding-card-name">{{ FUNDING_PATH_1.name }}</div>
-            <div class="funding-card-detail"><strong>Eignung:</strong> {{ FUNDING_PATH_1.fit }}</div>
-            <div class="funding-card-detail"><strong>Voraussetzungen:</strong> {{ FUNDING_PATH_1.requirements }}</div>
+            <div class="funding-card-detail"><strong>Fit:</strong> {{ FUNDING_PATH_1.fit }}</div>
+            <div class="funding-card-detail"><strong>Requirements:</strong> {{ FUNDING_PATH_1.requirements }}</div>
             <div class="funding-card-next">→ {{ FUNDING_PATH_1.next_step }}</div>
         </div>
         {% endif %}
         {% if FUNDING_PATH_2 %}
         <div class="funding-card">
             <div class="funding-card-name">{{ FUNDING_PATH_2.name }}</div>
-            <div class="funding-card-detail"><strong>Eignung:</strong> {{ FUNDING_PATH_2.fit }}</div>
-            <div class="funding-card-detail"><strong>Voraussetzungen:</strong> {{ FUNDING_PATH_2.requirements }}</div>
+            <div class="funding-card-detail"><strong>Fit:</strong> {{ FUNDING_PATH_2.fit }}</div>
+            <div class="funding-card-detail"><strong>Requirements:</strong> {{ FUNDING_PATH_2.requirements }}</div>
             <div class="funding-card-next">→ {{ FUNDING_PATH_2.next_step }}</div>
         </div>
         {% endif %}
@@ -2080,7 +2080,7 @@ h1, h2, h3, h4 {
         {{ FOERDERPOTENZIAL_HTML|safe }}
         {% endif %}
     </div>
-    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detailliertes Förderpotenzial & Antragshinweise → Anhang A12</div>{% endif %}
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detailed Funding Potential & Application Guidance → Appendix A12</div>{% endif %}
 </section>
 {% endif %}
 
@@ -2090,17 +2090,17 @@ h1, h2, h3, h4 {
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
     <div class="section-header">
         <div>
-            <span class="badge badge-strategy">Strategie</span>
-            <span class="section-kicker">{{ ui("roadmap_12m_kicker", "Strategische Planung") }}</span>
-            <h2>{{ ui("roadmap_12m_title", "12-Monats-Ausblick") }}</h2>
+            <span class="badge badge-strategy">Strategy</span>
+            <span class="section-kicker">{{ ui("roadmap_12m_kicker", "Strategic Planning") }}</span>
+            <h2>{{ ui("roadmap_12m_title", "12-Month Outlook") }}</h2>
         </div>
-        <span class="section-pill"><span class="pill-dot"></span>Langfristige Transformation</span>
+        <span class="section-pill"><span class="pill-dot"></span>Long-term transformation</span>
     </div>
     <div class="glance-box glance-strategy">
-        <strong>Auf einen Blick:</strong> Strategischer Transformationspfad über 12 Monate – 5 Dimensionen parallel.
+        <strong>At a glance:</strong> Strategic transformation path over 12 months – 5 dimensions in parallel.
     </div>
     <div class="section-body">{{ ROADMAP_12M_HTML|safe }}</div>
-    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detaillierte 12-Monats-Roadmap & Automatisierungspfade → Anhang A3</div>{% endif %}
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Detailed 12-Month Roadmap & Automation Paths → Appendix A3</div>{% endif %}
 </section>
 {% endif %}
 
@@ -2109,27 +2109,27 @@ h1, h2, h3, h4 {
 <section class="section {% if 'gamechanger' in skip_pages %}section-optional{% endif %}" id="gamechanger-section" data-category="strategy">
     <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <div class="chapter-banner__content">
-            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">STRATEGIE</p>
-            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">{{ ui("gamechanger_title", "KI-Potenzial-Analyse") }}</h2>
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">STRATEGY</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">{{ ui("gamechanger_title", "AI Potential Analysis") }}</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
-            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Transformatives Potenzial</p>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Transformative potential</p>
         </div>
     </div>
     <div class="glance-box glance-strategy">
-        <strong>Auf einen Blick:</strong> Der strategische Bruchpunkt, der Ihr Geschäftsmodell transformieren kann.
+        <strong>At a glance:</strong> The strategic inflection point that can transform your business model.
     </div>
     <div class="section-body">{{ GAMECHANGER_DECISION_HTML|safe }}</div>
-    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Vollständige KI-Potenzial-Analyse (Architektur, Skaleneffekte) → Anhang A2</div>{% endif %}
-    <!-- CTA: KI-Potenzial-Analyse -->
+    {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Full AI Potential Analysis (Architecture, Economies of Scale) → Appendix A2</div>{% endif %}
+    <!-- CTA: AI Potential Analysis -->
     <div style="margin-top: 24px; padding: 16px 20px; background: #f0f9ff; border: 2px solid #0284c7; border-radius: 10px; break-inside: avoid; page-break-inside: avoid;">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
             <span style="font-size: 18px;">📋</span>
-            <span style="font-weight: 700; font-size: 12pt; color: #0284c7;">Ihre ausf&uuml;hrliche KI-Potenzial-Analyse</span>
+            <span style="font-weight: 700; font-size: 12pt; color: #0284c7;">Your Detailed AI Potential Analysis</span>
         </div>
         <p style="margin: 0; font-size: 10pt; color: #334155; line-height: 1.5;">
-            Zusätzlich zu diesem Report erhalten Sie Ihre <strong>KI-Potenzial-Analyse</strong> als separates Dokument per Email.
-            Diese enthält: einen detaillierten 90-Tage-Implementierungsplan, eine Risikobewertung
-            und konkrete nächste Schritte für Ihr Unternehmen.
+            In addition to this report, you will receive your <strong>AI Potential Analysis</strong> as a separate document by email.
+            It includes: a detailed 90-day implementation plan, a risk assessment,
+            and concrete next steps for your company.
         </p>
     </div>
 </section>
@@ -2139,12 +2139,12 @@ h1, h2, h3, h4 {
 {% if ADVISOR_NOTE_HTML and ADVISOR_NOTE_HTML|trim %}
 <div class="section" id="advisor-note" data-category="strategy">
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
-    <span class="badge badge-strategy">Strategie</span>
-    <h2>Persönliche Einschätzung</h2>
+    <span class="badge badge-strategy">Strategy</span>
+    <h2>Personal Assessment</h2>
     <div class="advisor-note">
-        <div class="advisor-note-title">Meine Einschätzung für Ihr Unternehmen</div>
+        <div class="advisor-note-title">My assessment for your company</div>
         <div class="advisor-note-text">{{ ADVISOR_NOTE_HTML|safe }}</div>
-        <div class="advisor-note-sig">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifiziertes KI-Management') }}</div>
+        <div class="advisor-note-sig">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-certified AI management') }}</div>
     </div>
 </div>
 {% endif %}
@@ -2155,11 +2155,11 @@ h1, h2, h3, h4 {
    (Glance + 3 Entscheidungen + Kontakt) und passt immer auf eine Seite. #}
 <section class="section" id="next-steps" data-category="strategy" style="break-inside: avoid; page-break-inside: avoid;">
     <div class="level-indicator"><span class="level-dot level-dot-action"></span> ACTION GUIDE</div>
-    <span class="badge badge-strategy">Strategie</span>
-    <h2>Nächste Schritte &amp; Kontakt</h2>
+    <span class="badge badge-strategy">Strategy</span>
+    <h2>Next Steps &amp; Contact</h2>
 
     <div class="glance-box glance-strategy">
-        <strong>Auf einen Blick:</strong> 3 konkrete Handlungen für diese Woche – abgestimmt auf Ihren Reifegrad ({{ variant_label }}).
+        <strong>At a glance:</strong> 3 concrete actions for this week – aligned with your maturity level ({{ variant_label }}).
     </div>
 
     <div style="margin-bottom: var(--sp-lg);">
@@ -2171,16 +2171,16 @@ h1, h2, h3, h4 {
         </div>
         {% endfor %}
         {% else %}
-        <p>Ihre nächsten Schritte finden Sie in den <a href="#quick-wins-section">Quick Wins</a> und der <a href="#roadmap-90d">90-Tage-Roadmap</a>.</p>
+        <p>You will find your next steps in the <a href="#quick-wins-section">Quick Wins</a> and the <a href="#roadmap-90d">90-Day Roadmap</a>.</p>
         {% endif %}
     </div>
 
     <div class="contact-box">
-        <div class="contact-name">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifiziertes KI-Management') }}</div>
+        <div class="contact-name">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-certified AI management') }}</div>
         <div class="contact-org">{{ brand.brand_name | default('KI-Sicherheit.jetzt') }}</div>
         <div class="contact-btns">
-            <a href="{{ brand.feedback_url | default('https://make.ki-sicherheit.jetzt/feedback/feedback.html') }}" class="btn btn-primary">Feedback geben</a>
-            <a href="{{ brand.site_url | default('https://ki-sicherheit.jetzt') }}" class="btn btn-accent">Web-Version</a>
+            <a href="{{ brand.feedback_url | default('https://make.ki-sicherheit.jetzt/feedback/feedback.html') }}" class="btn btn-primary">Give Feedback</a>
+            <a href="{{ brand.site_url | default('https://ki-sicherheit.jetzt') }}" class="btn btn-accent">Web Version</a>
         </div>
     </div>
 </section>
@@ -2194,15 +2194,15 @@ h1, h2, h3, h4 {
 <!-- APPENDIX COVER -->
 <div class="appendix-cover">
     <div style="width: 60px; height: 4px; border-radius: 2px; background: var(--c-cat-deep);"></div>
-    <h2>Anhang</h2>
-    <p style="color: var(--c-text-2);">Vertiefung &amp; Referenz – zum Nachschlagen bei Bedarf</p>
-    <p class="small muted">Alle Inhalte ergänzen die Kernaussagen aus dem Action Guide.</p>
+    <h2>Appendix</h2>
+    <p style="color: var(--c-text-2);">Deep dive &amp; reference – for consultation as needed</p>
+    <p class="small muted">All content supplements the key messages from the Action Guide.</p>
 </div>
 
-<!-- A1: Detaillierte Risikoanalyse -->
+<!-- A1: Detailed Risk Analysis -->
 {% if RISK_ENGINE_V3_HTML or RISK_ENGINE_HTML %}
 <section class="appendix-section" id="appendix-a1" data-category="deep">
-    <div class="appendix-header">Anhang A1 · Detaillierte Risikoanalyse</div>
+    <div class="appendix-header">Appendix A1 · Detailed Risk Analysis</div>
     <div class="section-body">
         {% if RISK_ENGINE_V3_HTML %}{{ RISK_ENGINE_V3_HTML|safe }}{% endif %}
         {% if RISK_ENGINE_HTML and RISK_ENGINE_V3_HTML %}
@@ -2212,21 +2212,21 @@ h1, h2, h3, h4 {
 </section>
 {% endif %}
 
-<!-- A2: KI-Potenzial-Analyse (vollständig) -->
+<!-- A2: AI Potential Analysis (complete) -->
 {% if GAMECHANGER_DECISION_HTML and GAMECHANGER_DECISION_HTML|trim %}
 <section class="appendix-section" id="appendix-a2" data-category="deep">
-    <div class="appendix-header">Anhang A2 · KI-Potenzial-Analyse (vollständig)</div>
+    <div class="appendix-header">Appendix A2 · AI Potential Analysis (complete)</div>
     <div class="section-body">
-        <p class="muted">Die KI-Potenzial-Kernanalyse finden Sie im Action Guide. Hier folgen ergänzende Vertiefungen.</p>
+        <p class="muted">The core AI potential analysis is in the Action Guide. Supplementary deep dives follow here.</p>
         {% if GAMECHANGER_EXTENDED_HTML %}{{ GAMECHANGER_EXTENDED_HTML|safe }}{% endif %}
     </div>
 </section>
 {% endif %}
 
-<!-- A3: 12-Monats-Roadmap & Automatisierung -->
+<!-- A3: 12-Month Roadmap & Automatisierung -->
 {% if ROADMAP_12M_HTML or AUTOMATION_ROADMAP_HTML %}
 <section class="appendix-section" id="appendix-a3" data-category="deep">
-    <div class="appendix-header">Anhang A3 · 12-Monats-Roadmap &amp; Automatisierung</div>
+    <div class="appendix-header">Appendix A3 · 12-Month Roadmap &amp; Automation</div>
     <div class="section-body">
         {% if ROADMAP_12M_HTML and ROADMAP_12M_HTML|trim %}{{ ROADMAP_12M_HTML|safe }}{% endif %}
         {% if AUTOMATION_ROADMAP_HTML %}<div style="margin-top: var(--sp-lg);">{{ AUTOMATION_ROADMAP_HTML|safe }}</div>{% endif %}
@@ -2234,10 +2234,10 @@ h1, h2, h3, h4 {
 </section>
 {% endif %}
 
-<!-- A4: Handlungsempfehlungen (Detail) -->
+<!-- A4: Recommendations (Detail) -->
 {% if RECOMMENDATIONS_ENGINE_HTML and RECOMMENDATIONS_ENGINE_HTML|trim %}
 <section class="appendix-section" id="appendix-a4" data-category="deep">
-    <div class="appendix-header">Anhang A4 · Handlungsempfehlungen (Detail)</div>
+    <div class="appendix-header">Appendix A4 · Recommendations (Detail)</div>
     <div class="section-body">{{ RECOMMENDATIONS_ENGINE_HTML|safe }}</div>
 </section>
 {% endif %}
@@ -2245,7 +2245,7 @@ h1, h2, h3, h4 {
 <!-- A5: ROI-Simulation -->
 {% if BUSINESS_CASE_SIM_HTML or ROI_TRACKING_HTML %}
 <section class="appendix-section" id="appendix-a5" data-category="deep">
-    <div class="appendix-header">Anhang A5 · ROI-Simulation (3 Szenarien)</div>
+    <div class="appendix-header">Appendix A5 · ROI Simulation (3 Scenarios)</div>
     <div class="section-body">
         {% if BUSINESS_CASE_SIM_HTML %}{{ BUSINESS_CASE_SIM_HTML|safe }}{% endif %}
         {% if ROI_TRACKING_HTML %}<div style="margin-top: var(--sp-lg);">{{ ROI_TRACKING_HTML|safe }}</div>{% endif %}
@@ -2256,7 +2256,7 @@ h1, h2, h3, h4 {
 <!-- A6: Branchenprofil & Benchmark -->
 {% if BRANCH_PROFILE_HTML or BENCHMARK_ENGINE_HTML %}
 <section class="appendix-section" id="appendix-a6" data-category="deep">
-    <div class="appendix-header">Anhang A6 · Branchenprofil &amp; Marktintelligenz</div>
+    <div class="appendix-header">Appendix A6 · Industry Profile &amp; Market Intelligence</div>
     <div class="section-body">
         {% if BRANCH_PROFILE_HTML %}{{ BRANCH_PROFILE_HTML|safe }}{% endif %}
         {% if BRANCH_DEEP_DIVE_HTML %}<div style="margin-top: var(--sp-lg);">{{ BRANCH_DEEP_DIVE_HTML|safe }}</div>{% endif %}
@@ -2266,10 +2266,10 @@ h1, h2, h3, h4 {
 </section>
 {% endif %}
 
-<!-- A7: KI-Skill-Fahrplan -->
+<!-- A7: AI Skill Roadmap -->
 {% if KI_SKILLPLAN_HTML and KI_SKILLPLAN_HTML|trim %}
 <section class="appendix-section" id="appendix-a7" data-category="deep">
-    <div class="appendix-header">Anhang A7 · KI-Skill-Fahrplan 2026</div>
+    <div class="appendix-header">Appendix A7 · AI Skill Roadmap 2026</div>
     <div class="section-body">{{ KI_SKILLPLAN_HTML|safe }}</div>
 </section>
 {% endif %}
@@ -2277,7 +2277,7 @@ h1, h2, h3, h4 {
 <!-- A8: Monetarisierung -->
 {% if MONETARISIERUNG_HTML and MONETARISIERUNG_HTML|trim %}
 <section class="appendix-section" id="appendix-a8" data-category="deep">
-    <div class="appendix-header">Anhang A8 · Monetarisierung &amp; Angebotslogik</div>
+    <div class="appendix-header">Appendix A8 · Monetization &amp; Offer Logic</div>
     <div class="section-body">{{ MONETARISIERUNG_HTML|safe }}</div>
 </section>
 {% endif %}
@@ -2285,14 +2285,14 @@ h1, h2, h3, h4 {
 <!-- A9: AI Policy + AI Act Detail -->
 {% if AI_POLICY_MINI_HTML %}
 <section class="appendix-section" id="appendix-a9" data-category="deep">
-    <div class="appendix-header">Anhang A9 · AI Mini-Policy + AI Act Detail</div>
+    <div class="appendix-header">Appendix A9 · AI Mini-Policy + AI Act Detail</div>
     <div class="section-body">
         {{ AI_POLICY_MINI_HTML|safe }}
         {% if AI_ACT_RELATED_USECASES_HTML %}
-        <div style="margin-top: var(--sp-lg);"><h3>AI Act – Relevante Use Cases</h3>{{ AI_ACT_RELATED_USECASES_HTML|safe }}</div>
+        <div style="margin-top: var(--sp-lg);"><h3>AI Act – Relevant Use Cases</h3>{{ AI_ACT_RELATED_USECASES_HTML|safe }}</div>
         {% endif %}
         {% if AI_ACT_DATA_GAPS_HTML %}
-        <div style="margin-top: var(--sp-md);"><h3>Datenlücken &amp; Handlungsbedarf</h3>{{ AI_ACT_DATA_GAPS_HTML|safe }}</div>
+        <div style="margin-top: var(--sp-md);"><h3>Data Gaps &amp; Action Needed</h3>{{ AI_ACT_DATA_GAPS_HTML|safe }}</div>
         {% endif %}
     </div>
 </section>
@@ -2301,19 +2301,19 @@ h1, h2, h3, h4 {
 <!-- A10: Starter-Templates & Kickoff -->
 {% if TEMPLATES_START_HTML or KICKOFF_VORLAGE_HTML or PROMPT_FRAMEWORK_HTML %}
 <section class="appendix-section" id="appendix-a10" data-category="deep">
-    <div class="appendix-header">Anhang A10 · Starter-Templates &amp; Kickoff</div>
+    <div class="appendix-header">Appendix A10 · Starter Templates &amp; Kickoff</div>
     <div class="section-body">
         {% if TEMPLATES_START_HTML %}{{ TEMPLATES_START_HTML|safe }}{% endif %}
-        {% if KICKOFF_VORLAGE_HTML %}<div style="margin-top: var(--sp-lg);"><h3>Kickoff-Vorlage</h3>{{ KICKOFF_VORLAGE_HTML|safe }}</div>{% endif %}
+        {% if KICKOFF_VORLAGE_HTML %}<div style="margin-top: var(--sp-lg);"><h3>Kickoff Template</h3>{{ KICKOFF_VORLAGE_HTML|safe }}</div>{% endif %}
         {% if PROMPT_FRAMEWORK_HTML %}<div style="margin-top: var(--sp-lg);"><h3>Prompt-Framework</h3>{{ PROMPT_FRAMEWORK_HTML|safe }}</div>{% endif %}
     </div>
 </section>
 {% endif %}
 
-<!-- A12: Förderpotenzial (Detail) -->
+<!-- A12: Funding Potential (Detail) -->
 {% if FOERDERPOTENZIAL_HTML and FOERDERPOTENZIAL_HTML|trim %}
 <section class="appendix-section" id="appendix-a12" data-category="deep">
-    <div class="appendix-header">Anhang A12 · Förderpotenzial (Detail)</div>
+    <div class="appendix-header">Appendix A12 · Funding Potential (Detail)</div>
     <div class="section-body">
         {{ FOERDERPOTENZIAL_HTML|safe }}
         {% if FUNDING_BRANCH_ALIGNMENT_HTML %}<div style="margin-top: var(--sp-md);">{{ FUNDING_BRANCH_ALIGNMENT_HTML|safe }}</div>{% endif %}
@@ -2322,13 +2322,13 @@ h1, h2, h3, h4 {
 </section>
 {% endif %}
 
-<!-- A13: Glossar & Kreativtools -->
+<!-- A13: Glossary & Creative Tools -->
 <section class="appendix-section" id="appendix-a13" data-category="deep">
-    <div class="appendix-header">Anhang A13 · Glossar &amp; Kreativtools</div>
+    <div class="appendix-header">Appendix A13 · Glossary &amp; Creative Tools</div>
     {% if kreative_ki_tools %}
     <div style="margin-bottom: var(--sp-lg);">
-        <h3>Kreative KI-Tools für Ihr Unternehmen</h3>
-        <p class="text-2">Ausgewählte Tools für kreative und produktive Anwendungsfälle.</p>
+        <h3>Creative AI Tools for Your Company</h3>
+        <p class="text-2">Selected tools for creative and productive use cases.</p>
         <ul>
         {% for tool in kreative_ki_tools %}
             <li><strong>{{ tool.name }}</strong>: {{ tool.beschreibung }}{% if tool.url %} – <a href="{{ tool.url }}">{{ tool.url }}</a>{% endif %}</li>
@@ -2336,21 +2336,21 @@ h1, h2, h3, h4 {
         </ul>
     </div>
     {% endif %}
-    <h3>Glossar – zentrale KI-Begriffe</h3>
-    <p class="text-2" style="margin-bottom: var(--sp-md);">Die wichtigsten Begriffe aus diesem Report.</p>
+    <h3>Glossary – Key AI Terms</h3>
+    <p class="text-2" style="margin-bottom: var(--sp-md);">The most important terms in this report.</p>
     <dl class="glossary">
-        <dt>AI Act (EU)</dt><dd>Europäische KI-Verordnung mit Pflichten je nach Risikoklasse.</dd>
-        <dt>API</dt><dd>Programmierschnittstelle zur Software-Anbindung.</dd>
-        <dt>DSGVO</dt><dd>Datenschutz-Grundverordnung für personenbezogene Daten.</dd>
-        <dt>Fine-Tuning</dt><dd>Nachtrainieren eines Modells auf eigene Daten.</dd>
-        <dt>Guardrails</dt><dd>Prüfschritte, die KI-Ausgaben validieren/filtern.</dd>
-        <dt>Halluzination</dt><dd>Plausibel klingende, aber faktisch falsche Modellausgabe.</dd>
+        <dt>AI Act (EU)</dt><dd>European AI regulation with obligations depending on risk class.</dd>
+        <dt>API</dt><dd>Programming interface for connecting software systems.</dd>
+        <dt>GDPR (DSGVO)</dt><dd>General Data Protection Regulation governing personal data.</dd>
+        <dt>Fine-Tuning</dt><dd>Additional training of a model on your own data.</dd>
+        <dt>Guardrails</dt><dd>Validation steps that check/filter AI outputs.</dd>
+        <dt>Hallucination</dt><dd>Plausible-sounding but factually incorrect model output.</dd>
         <dt>LLM</dt><dd>Large Language Model (GPT-4, Claude, Llama).</dd>
-        <dt>Prompt</dt><dd>Eingabeinstruktion an ein KI-Modell.</dd>
-        <dt>RAG</dt><dd>Retrieval-Augmented Generation – KI mit eigener Wissensbasis.</dd>
-        <dt>Responsible AI</dt><dd>Verantwortungsvolle KI-Nutzung mit Ethik &amp; Compliance.</dd>
-        <dt>Token</dt><dd>Grundeinheit der Modellverarbeitung (~3-4 Zeichen).</dd>
-        <dt>Human-in-the-Loop</dt><dd>Menschliche Kontrolle bei KI-Entscheidungsprozessen.</dd>
+        <dt>Prompt</dt><dd>Input instruction to an AI model.</dd>
+        <dt>RAG</dt><dd>Retrieval-Augmented Generation – AI with its own knowledge base.</dd>
+        <dt>Responsible AI</dt><dd>Responsible AI use with ethics &amp; compliance.</dd>
+        <dt>Token</dt><dd>Basic unit of model processing (~3-4 characters).</dd>
+        <dt>Human-in-the-Loop</dt><dd>Human oversight in AI decision processes.</dd>
     </dl>
 </section>
 
@@ -2358,54 +2358,56 @@ h1, h2, h3, h4 {
 
 <!-- ═══════ IMPRESSUM & DATENSCHUTZ (A14 – always shown) ═══════ -->
 <div class="section break-action-to-imprint" id="appendix-a14">
-    <div class="appendix-header">Impressum &amp; Datenschutz</div>
+    <div class="appendix-header">Imprint &amp; Privacy</div>
     <div class="impressum-grid">
         <div class="impressum-block">
-            <h4>Impressum</h4>
-            <p><strong>Verantwortlich für den Inhalt:</strong><br>
+            <h4>Imprint</h4>
+            <p><strong>Responsible for content:</strong><br>
             {{ brand.brand_name | default('KI-Sicherheit.jetzt') }} – {{ brand.advisor_name | default('Wolf Hohl') }}<br>
             Greifswalder Str. 224a<br>
             10405 Berlin</p>
-            <p>E-Mail: {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}</p>
+            <p>Email: {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}</p>
         </div>
         <div class="impressum-block">
-            <h4>Haftungsausschluss</h4>
-            <p>Dieser Report dient ausschließlich der Information. Trotz sorgfältiger Prüfung übernehme ich keine Haftung für Inhalte externer Links.</p>
-            <h4>Urheberrecht</h4>
-            <p>Alle Inhalte dieses Reports unterliegen dem deutschen Urheberrecht, alle Bilder wurden mit Hilfe von KI erzeugt.</p>
+            <h4>Disclaimer</h4>
+            <p>This report is provided for informational purposes only. Despite careful review, I accept no liability for the content of external links.</p>
+            <h4>Copyright</h4>
+            {# KIS-1248: {{ report_year }} — dynamisches Jahr (test_year_audit
+               verlangt die Variable im EN-Template; Backend setzt sie immer). #}
+            <p>© {{ report_year }} — All content in this report is subject to German copyright law; all images were generated with the help of AI.</p>
         </div>
         <div class="impressum-block">
-            <h4>Hinweis zum EU AI Act</h4>
-            <p>Dieser Report informiert über Pflichten, Risiken und Fördermöglichkeiten beim Einsatz von KI nach EU AI Act und DSGVO. Er ersetzt keine Rechtsberatung.</p>
+            <h4>Note on the EU AI Act</h4>
+            <p>This report provides information on obligations, risks, and funding opportunities for the use of AI under the EU AI Act and GDPR. It does not constitute legal advice.</p>
         </div>
     </div>
     <div class="impressum-divider"></div>
     <div class="impressum-privacy">
-        <h3>Datenschutzerklärung</h3>
-        <p>Der Schutz Ihrer persönlichen Daten ist mir ein besonderes Anliegen.</p>
-        <h4>Kontakt mit mir</h4>
-        <p>Wenn Sie per Formular oder E-Mail Kontakt aufnehmen, werden Ihre Angaben zur Bearbeitung sechs Monate gespeichert.</p>
+        <h3>Privacy Notice</h3>
+        <p>Protecting your personal data is of particular importance to me.</p>
+        <h4>Contacting me</h4>
+        <p>If you contact me via form or email, your details are stored for six months for processing purposes.</p>
         <h4>Cookies</h4>
-        <p>Bei der Erstellung und Auslieferung dieses Reports kommen keine Cookies zur Nutzerverfolgung oder Analyse zum Einsatz.</p>
-        <h4>Ihre Rechte laut DSGVO</h4>
+        <p>No cookies for user tracking or analytics are used in creating and delivering this report.</p>
+        <h4>Your rights under the GDPR</h4>
         <ul>
-            <li>Auskunft, Berichtigung oder Löschung Ihrer Daten</li>
-            <li>Datenübertragbarkeit</li>
-            <li>Widerruf erteilter Einwilligungen</li>
-            <li>Beschwerde bei der Datenschutzbehörde</li>
+            <li>Access, rectification, or erasure of your data</li>
+            <li>Data portability</li>
+            <li>Withdrawal of consent previously given</li>
+            <li>Complaint to the data protection authority</li>
         </ul>
-        <p>Wenn Sie von Ihren Rechten Gebrauch machen wollen, wenden Sie sich bitte an {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}.</p>
+        <p>If you wish to exercise your rights, please contact {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}.</p>
     </div>
 </div>
 
 <!-- GDPR Mini Disclaimer -->
 <div class="gdpr-mini" data-ui="1">
-    {{ GDPR_MINI_DISCLAIMER|default(ui("gdpr_mini_default", "Dieser Report nutzt Unternehmensdaten zur KI-Readiness-Analyse. Verarbeitung auf Basis von Art. 6 (1) b DSGVO. AVV auf Anfrage.")) }}
-    <a href="{{ brand.privacy_url | default('https://ki-sicherheit.jetzt/datenschutz') }}" target="_blank">{{ ui("gdpr_link_text", "Datenschutzerklärung") }}</a>
+    {{ GDPR_MINI_DISCLAIMER|default(ui("gdpr_mini_default", "This report uses company data for AI readiness analysis. Processing based on Art. 6 (1) b GDPR. Data processing agreement available on request.")) }}
+    <a href="{{ brand.privacy_url | default('https://ki-sicherheit.jetzt/datenschutz') }}" target="_blank">{{ ui("gdpr_link_text", "Privacy Notice") }}</a>
 </div>
 
 <p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">
-    KI-Status-Report · Generiert am {{ report_date }} · {% if REPORT_DISPLAY_ID %}{{ REPORT_DISPLAY_ID }}{% else %}{{ report_id }}{% endif %}
+    AI Status Report · Generated on {{ report_date }} · {% if REPORT_DISPLAY_ID %}{{ REPORT_DISPLAY_ID }}{% else %}{{ report_id }}{% endif %}
     {% if BUILD_ID %} · Build: {{ BUILD_ID }}{% endif %}
 </p>
 

@@ -8505,7 +8505,7 @@ def _generate_hero_page(
 
       <!-- Footer -->
       <div class="hero-footer">
-        <span>Erstellt von: TÜV-zertifizierter KI-Manager</span>
+        <span>Erstellt von: TÜV-zertifiziertes KI-Management</span>
         <div class="hero-footer__badges">
           <span class="badge">EU AI Act konform</span>
           <span class="badge">DSGVO-orientiert</span>

@@ -1,12 +1,12 @@
-<!-- KI-Potenzial-Analyse Template v1.0.0 "Clean Corporate Plus" — 2026-03-06 -->
+<!-- KI-Potenzial-Analyse Template v1.0.0 "Clean Corporate Plus" (English) — 2026-03-06 -->
 <!-- Engine: Puppeteer/Chromium · Backend: FastAPI/Jinja2 · Design: McKinsey/BCG -->
 <!-- Based on: pdf_template_v7.html — same CSS Design System -->
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>KI-Potenzial-Analyse – {{ company_name or HAUPTLEISTUNG or 'Ihr Unternehmen' }}</title>
+    <title>AI Potential Analysis – {{ company_name or HAUPTLEISTUNG or 'Your Company' }}</title>
     <style>
 /* ═══════════════════════════════════════════════════════
    v1.0 KI-POTENZIAL-ANALYSE — Clean Corporate Plus
@@ -555,7 +555,7 @@ h1, h2, h3, h4 {
 {# ═══════════════════════════════════════════════════════
    COMPUTED VARIABLES
    ═══════════════════════════════════════════════════════ #}
-{% set company = company_name or HAUPTLEISTUNG or 'Ihr Unternehmen' %}
+{% set company = company_name or HAUPTLEISTUNG or 'Your Company' %}
 {% set branche = BRANCHE_LABEL|default('') %}
 {% set size_label = UNTERNEHMENSGROESSE_LABEL|default('') %}
 {% set report_date_display = report_date|default('') %}
@@ -568,7 +568,7 @@ h1, h2, h3, h4 {
     <div style="position:absolute;top:0;left:0;right:0;padding:40px 40px 30px 40px;background-color:#0D7377;background-image:linear-gradient(135deg,#0D7377,#065F46);color:white;text-align:center;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
         <img src="{{ brand.logo_small | default('ki-sicherheit-logo-small.png') }}" alt="{{ brand.logo_alt | default('KI-Sicherheit.jetzt') }}" style="width:140px;height:auto;margin-bottom:12px;filter:brightness(0) invert(1);opacity:0.9;">
         <div style="font-size:9pt;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.8);">
-            KI-Potenzial-Analyse · {{ report_date_display }}
+            AI Potential Analysis · {{ report_date_display }}
         </div>
     </div>
 
@@ -585,8 +585,8 @@ h1, h2, h3, h4 {
     </div>
 
     <div style="margin-bottom: var(--sp-lg); max-width: 600px;">
-        <h1 style="color: var(--report-primary);">KI-Potenzial-<br>Analyse</h1>
-        <p class="cover-subtitle">Ihre individuelle Analyse des strategischen KI-Potenzials</p>
+        <h1 style="color: var(--report-primary);">AI Potential<br>Analysis</h1>
+        <p class="cover-subtitle">Your individual analysis of your strategic AI potential</p>
         <p class="cover-meta">
             {% if branche %}{{ branche }}{% endif %}
             {% if size_label %}{% if branche %}<span class="muted"> · </span>{% endif %}{{ size_label }}{% endif %}
@@ -597,7 +597,7 @@ h1, h2, h3, h4 {
            while adding a brücke back to the R1 score for context. #}
         {% if score_gesamt %}
         <p class="cover-meta muted" style="font-size: 9.5pt; margin-top: 4px;">
-            Reifegrad-Score <strong>{{ score_gesamt }}/100</strong> · siehe KI-Status-Report
+            Maturity score <strong>{{ score_gesamt }}/100</strong> · see AI Status Report
         </p>
         {% endif %}
     </div>
@@ -609,7 +609,7 @@ h1, h2, h3, h4 {
             <div class="kpi-value" style="color: var(--report-accent);">
                 {{ canonical_bc.hours|float(0)|round(0)|int }}h
             </div>
-            <div class="kpi-label">Einsparung/Monat</div>
+            <div class="kpi-label">Savings/month</div>
         </div>
         {# FIX-TESTRUN-1244: KPI-Sanity-Gate — Jahr-1-ROI nahe null (CAPEX voll
            verrechnet) nicht als Cover-KPI ausspielen; stattdessen 3-Jahres-
@@ -622,57 +622,58 @@ h1, h2, h3, h4 {
             - (canonical_bc.capex|float(0)) - (canonical_bc.opex|float(0)) * 36)|round(0)|int %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: #c2410c;">
-                +{{ '{:,}'.format(_dd_net3y)|replace(',', '.') }}&nbsp;€
+                {# KIS-1248: EN-Zahlformat — Tausender-Komma statt deutschem Punkt #}
+                +{{ '{:,}'.format(_dd_net3y) }}&nbsp;€
             </div>
-            <div class="kpi-label">Nettonutzen (3 Jahre)</div>
+            <div class="kpi-label">Net benefit (3 years)</div>
         </div>
         {% else %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: #c2410c;">
                 {{ canonical_bc.roi|float(0)|round(0)|int }}%
             </div>
-            <div class="kpi-label">ROI (12 Monate)</div>
+            <div class="kpi-label">ROI (12 months)</div>
         </div>
         {% endif %}
         <div class="kpi-card">
             <div class="kpi-value" style="color: var(--report-primary);">
-                {{ canonical_bc.payback|float(0)|round(1)|string|replace('.', ',') }} Mon.
+                {{ canonical_bc.payback|float(0)|round(1) }} mo.
             </div>
-            <div class="kpi-label">Amortisation</div>
+            <div class="kpi-label">Payback</div>
         </div>
     </div>
     {% endif %}
 
     <!-- Mini Table of Contents -->
     <div class="dd-toc">
-        <div class="dd-toc-title">Inhalt</div>
+        <div class="dd-toc-title">Contents</div>
         <div class="dd-toc-entry">
             <span class="dd-toc-num">1</span>
-            <span>Strategischer Bruchpunkt</span>
+            <span>Strategic Inflection Point</span>
         </div>
         <div class="dd-toc-entry">
             <span class="dd-toc-num">2</span>
-            <span>90-Tage Implementierungsplan</span>
+            <span>90-Day Implementation Plan</span>
         </div>
         <div class="dd-toc-entry">
             <span class="dd-toc-num">3</span>
-            <span>Detaillierter Business Case</span>
+            <span>Detailed Business Case</span>
         </div>
         <div class="dd-toc-entry">
             <span class="dd-toc-num">4</span>
-            <span>Risikobewertung &amp; Absicherung</span>
+            <span>Risk Assessment &amp; Mitigation</span>
         </div>
         <div class="dd-toc-entry">
             <span class="dd-toc-num">5</span>
-            <span>Konkrete n&auml;chste Schritte</span>
+            <span>Concrete Next Steps</span>
         </div>
     </div>
 
     {# KIS-1247: Selbst verliehene Siegel entfernt (abmahnrelevant) —
        nur der reale TÜV-Personennachweis bleibt, mit Einordnung. #}
     <div class="trust-badges" style="align-items:center;gap:10px;">
-        <img src="{{ brand.cert_logo | default('tuev-logo-transparent.png') }}" alt="{{ brand.cert_logo_alt | default('TÜV Austria zertifiziert') }}">
-        <span style="font-size:8.5pt;color:#64748b;">Erstellt von {{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifiziertes KI-Management') }}</span>
+        <img src="{{ brand.cert_logo | default('tuev-logo-transparent.png') }}" alt="{{ brand.cert_logo_alt | default('TÜV Austria certified') }}">
+        <span style="font-size:8.5pt;color:#64748b;">Prepared by {{ brand.advisor_signature | default('Wolf Hohl · TÜV-certified AI management') }}</span>
     </div>
 </div>
 
@@ -683,16 +684,16 @@ h1, h2, h3, h4 {
     <div class="chapter-banner chapter-banner--kpa chapter-banner--numbered" style="background:linear-gradient(135deg,#1a3a3a 0%,#2a5f5f 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <span class="chapter-banner__number" style="font-size:36px;font-weight:500;color:rgba(255,255,255,0.2);position:absolute;top:14px;left:32px;line-height:1;">1</span>
         <div class="chapter-banner__content" style="padding-left:40px;">
-            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">VERTIEFUNG</p>
-            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Strategischer Bruchpunkt</h2>
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">DEEP DIVE</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Strategic Inflection Point</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
-            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Strategische Analyse</p>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Strategic analysis</p>
         </div>
     </div>
 
     <div class="glance-box glance-deep">
-        <strong>Auf einen Blick:</strong> Die erweiterte Analyse Ihres strategischen KI-Wendepunkts
-        mit konkreten Handlungsempfehlungen.
+        <strong>At a glance:</strong> The extended analysis of your strategic AI inflection point
+        with concrete recommendations for action.
     </div>
 
     <div class="section-body">
@@ -707,16 +708,16 @@ h1, h2, h3, h4 {
     <div class="chapter-banner chapter-banner--kpa chapter-banner--numbered" style="background:linear-gradient(135deg,#1a3a3a 0%,#2a5f5f 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <span class="chapter-banner__number" style="font-size:36px;font-weight:500;color:rgba(255,255,255,0.2);position:absolute;top:14px;left:32px;line-height:1;">2</span>
         <div class="chapter-banner__content" style="padding-left:40px;">
-            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">UMSETZUNG</p>
-            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">90-Tage Implementierungsplan</h2>
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">IMPLEMENTATION</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">90-Day Implementation Plan</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
-            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Fahrplan</p>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Roadmap</p>
         </div>
     </div>
 
     <div class="glance-box glance-action">
-        <strong>Auf einen Blick:</strong> Ihr konkreter 3-Phasen-Plan zur Umsetzung des KI-Potenzial-Szenarios
-        in 90 Tagen.
+        <strong>At a glance:</strong> Your concrete 3-phase plan to implement the AI potential scenario
+        within 90 days.
     </div>
 
     <div class="section-body">
@@ -731,30 +732,30 @@ h1, h2, h3, h4 {
     <div class="chapter-banner chapter-banner--kpa chapter-banner--numbered" style="background:linear-gradient(135deg,#1a3a3a 0%,#2a5f5f 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <span class="chapter-banner__number" style="font-size:36px;font-weight:500;color:rgba(255,255,255,0.2);position:absolute;top:14px;left:32px;line-height:1;">3</span>
         <div class="chapter-banner__content" style="padding-left:40px;">
-            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">FINANZEN</p>
-            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Detaillierter Business Case</h2>
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">FINANCE</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Detailed Business Case</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
-            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Deterministisch berechnet</p>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Deterministically calculated</p>
         </div>
     </div>
 
     <div class="glance-box glance-finance">
-        <strong>Auf einen Blick:</strong> Sensitivit&auml;tsanalyse, 3-Jahres-Projektion und Break-Even-Berechnung
-        f&uuml;r Ihr KI-Potenzial — rein datenbasiert, keine KI-generierte Sch&auml;tzung.
+        <strong>At a glance:</strong> Sensitivity Analysis, 3-year projection and break-even calculation
+        of your AI potential — purely data-based, no AI-generated estimate.
     </div>
     <div class="callout" style="font-size:9pt; margin-bottom:var(--sp-md); padding:8px 12px; background:#FFF7ED; border-left:3px solid #EA580C;">
-        <strong>Methodik-Hinweis ROI:</strong> Die Sensitivit&auml;tsanalyse zeigt den <em>ungedeckelten</em>
-        ROI auf Basis verschiedener Szenarien. Der KI-Status-Report (R1) verwendet eine konservative,
-        bei 200% gedeckelte ROI-Methodik. Beide Werte sind korrekt — sie beantworten unterschiedliche Fragen.
+        <strong>ROI methodology note:</strong> The Sensitivity Analysis shows the <em>uncapped</em>
+        ROI based on different scenarios. The AI Status Report (R1) uses a conservative
+        ROI methodology capped at 200%. Both values are correct — they answer different questions.
     </div>
     {# KIS-1235: Budget-Stufen-Logik explizit machen — Lauf 1235 stand
        "Budget bleibt unter 3.000 €" (Pilot) unaufgelöst neben
        "Einmalinvestition 12.000 €" (Business Case, Vollausbau). #}
     <div class="callout" style="font-size:9pt; margin-bottom:var(--sp-md); padding:8px 12px; background:#F0F9FF; border-left:3px solid #2563EB;">
-        <strong>Budget-Stufen:</strong> Der Business Case rechnet bewusst den <em>Vollausbau</em>
-        (Einmalinvestition inkl. aller Ausbaustufen). Der 90-Tage-Pilot aus Kapitel&nbsp;2 kommt mit
-        einem Bruchteil davon aus und bleibt im genannten Budgetrahmen — erst nach erfolgreichem
-        Pilot entscheiden Sie &uuml;ber den Vollausbau.
+        <strong>Budget tiers:</strong> The business case deliberately calculates the <em>full rollout</em>
+        (one-time investment including all expansion stages). The 90-day pilot from Chapter&nbsp;2 requires
+        only a fraction of that amount and stays within the stated budget — you decide on the full
+        rollout only after a successful pilot.
     </div>
 
     <div class="section-body">
@@ -769,16 +770,16 @@ h1, h2, h3, h4 {
     <div class="chapter-banner chapter-banner--kpa chapter-banner--numbered" style="background:linear-gradient(135deg,#1a3a3a 0%,#2a5f5f 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <span class="chapter-banner__number" style="font-size:36px;font-weight:500;color:rgba(255,255,255,0.2);position:absolute;top:14px;left:32px;line-height:1;">4</span>
         <div class="chapter-banner__content" style="padding-left:40px;">
-            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">RISIKO</p>
-            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Risikobewertung &amp; Absicherung</h2>
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">RISK</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Risk Assessment &amp; Mitigation</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
-            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Top-5-Risiken</p>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">Top 5 risks</p>
         </div>
     </div>
 
     <div class="glance-box glance-risk">
-        <strong>Auf einen Blick:</strong> Die f&uuml;nf gr&ouml;&szlig;ten Risiken f&uuml;r Ihr KI-Potenzial-Szenario
-        mit Eintrittswahrscheinlichkeit, Auswirkung und konkreten Gegenma&szlig;nahmen.
+        <strong>At a glance:</strong> The five biggest risks to your AI potential scenario
+        with likelihood, impact and concrete countermeasures.
     </div>
 
     <div class="section-body">
@@ -793,16 +794,16 @@ h1, h2, h3, h4 {
     <div class="chapter-banner chapter-banner--kpa chapter-banner--numbered" style="background:linear-gradient(135deg,#1a3a3a 0%,#2a5f5f 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <span class="chapter-banner__number" style="font-size:36px;font-weight:500;color:rgba(255,255,255,0.2);position:absolute;top:14px;left:32px;line-height:1;">5</span>
         <div class="chapter-banner__content" style="padding-left:40px;">
-            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">AKTION</p>
-            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">N&auml;chste Schritte</h2>
+            <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">ACTION</p>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">Next Steps</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
-            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">7-Tage-Aktionen</p>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">7-day actions</p>
         </div>
     </div>
 
     <div class="glance-box glance-action">
-        <strong>Auf einen Blick:</strong> 3 konkrete Handlungen f&uuml;r die n&auml;chsten 7 Tage,
-        die Sie sofort umsetzen k&ouml;nnen — ohne Budget, ohne Setup.
+        <strong>At a glance:</strong> 3 concrete actions you can take within the next 7 days
+        — no budget, no setup required.
     </div>
 
     <div class="section-body">
@@ -812,10 +813,10 @@ h1, h2, h3, h4 {
     <!-- Contact Box -->
     <div class="contact-box" style="margin-top: var(--sp-xl);">
         <p class="contact-name">{{ brand.advisor_name | default('Wolf Hohl') }}</p>
-        <p class="contact-org">{{ brand.brand_name | default('KI-Sicherheit.jetzt') }} — {{ brand.claim | default('Ihr Partner f&uuml;r KI-Readiness') }}</p>
+        <p class="contact-org">{{ brand.brand_name | default('KI-Sicherheit.jetzt') }} — {{ brand.claim | default('Your partner for AI readiness') }}</p>
         <div class="contact-btns">
-            <a href="{{ brand.site_url | default('https://ki-sicherheit.jetzt') }}" class="btn btn-deep">Website besuchen</a>
-            <a href="mailto:{{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}" class="btn btn-primary">Kontakt aufnehmen</a>
+            <a href="{{ brand.site_url | default('https://ki-sicherheit.jetzt') }}" class="btn btn-deep">Visit website</a>
+            <a href="mailto:{{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}" class="btn btn-primary">Get in touch</a>
         </div>
     </div>
 </div>
@@ -826,41 +827,41 @@ h1, h2, h3, h4 {
 <div class="section" id="dd-impressum" style="break-before: page;">
     <div class="impressum-grid">
         <div class="impressum-block">
-            <h4>Impressum</h4>
-            <p><strong>Verantwortlich f&uuml;r den Inhalt:</strong><br>
+            <h4>Imprint</h4>
+            <p><strong>Responsible for content:</strong><br>
             {{ brand.brand_name | default('KI-Sicherheit.jetzt') }} – {{ brand.advisor_name | default('Wolf Hohl') }}<br>
             Greifswalder Str. 224a<br>
             10405 Berlin</p>
-            <p>E-Mail: {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}</p>
+            <p>Email: {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}</p>
         </div>
         <div class="impressum-block">
-            <h4>Haftungsausschluss</h4>
-            <p>Dieses Dokument dient ausschlie&szlig;lich der Information. Trotz sorgf&auml;ltiger Pr&uuml;fung &uuml;bernehmen wir keine Haftung f&uuml;r Vollst&auml;ndigkeit oder Richtigkeit.{% if branche and ('steuer' in branche|lower or 'wirtschaftspr' in branche|lower or 'rechtsber' in branche|lower or 'buchhal' in branche|lower) %} Steuerberatende Berufe: Berufsrechtliche Pflichten gem&auml;&szlig; &sect;&nbsp;57 StBerG (Verschwiegenheit, Datenschutz) sind eigenverantwortlich zu pr&uuml;fen.{% endif %}</p>
-            <h4>Urheberrecht</h4>
-            <p>Alle Inhalte unterliegen dem deutschen Urheberrecht.</p>
+            <h4>Disclaimer</h4>
+            <p>This document is provided for informational purposes only. Despite careful review, we accept no liability for its completeness or accuracy.{% if branche and ('steuer' in branche|lower or 'wirtschaftspr' in branche|lower or 'rechtsber' in branche|lower or 'buchhal' in branche|lower) %} Tax advisory professions: professional-law obligations under &sect;&nbsp;57 StBerG (confidentiality, data protection) must be reviewed on your own responsibility.{% endif %}</p>
+            <h4>Copyright</h4>
+            <p>All content is subject to German copyright law.</p>
         </div>
         <div class="impressum-block">
-            <h4>Hinweis zum EU AI Act</h4>
+            <h4>Note on the EU AI Act</h4>
             {# KIS-1235: "Fördermöglichkeiten" aus dem Disclaimer gestrichen —
                die KPA enthält bewusst keine Förderprogramme (die stehen im
                KI-Status-Report); das Versprechen war faktisch falsch. #}
-            <p>Dieses Dokument informiert &uuml;ber Potenziale, Pflichten und Risiken beim Einsatz von KI. F&ouml;rderprogramme finden Sie im Kapitel &bdquo;F&ouml;rdermittel&ldquo; des KI-Status-Reports. Es ersetzt keine Rechtsberatung. Beachten Sie: Die Transparenzpflichten zur Kennzeichnung KI-generierter Inhalte (Art. 50 EU AI Act) gelten ab dem 2. August 2026.</p>
+            <p>This document provides information on potentials, obligations and risks in the use of AI. Funding programs can be found in the &ldquo;Funding&rdquo; chapter of the AI Status Report. It does not constitute legal advice. Please note: the transparency obligations to label AI-generated content (Art. 50 EU AI Act) apply from 2 August 2026.</p>
         </div>
     </div>
     <div class="impressum-divider"></div>
     <p class="small muted" style="text-align: center;">
-        Basierend auf Daten aus dem KI-Readiness Report 1. Keine erneute Befragung erforderlich.
+        Based on data from the KI-Readiness Report 1. No repeat questionnaire required.
     </p>
 </div>
 
 <!-- GDPR Mini Disclaimer -->
 <div class="gdpr-mini">
-    Diese KI-Potenzial-Analyse nutzt Unternehmensdaten aus dem KI-Readiness Report. Verarbeitung auf Basis von Art. 6 (1) b DSGVO.
-    <a href="{{ brand.privacy_url | default('https://ki-sicherheit.jetzt/datenschutz') }}" target="_blank">Datenschutzerkl&auml;rung</a>
+    This AI Potential Analysis uses company data from the KI-Readiness Report. Processing based on Art. 6 (1) b GDPR.
+    <a href="{{ brand.privacy_url | default('https://ki-sicherheit.jetzt/datenschutz') }}" target="_blank">Privacy Notice</a>
 </div>
 
 <p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">
-    KI-Potenzial-Analyse · Generiert am {{ report_date_display }}{% if REPORT_DISPLAY_ID %} · {{ REPORT_DISPLAY_ID }}{% endif %}
+    AI Potential Analysis · Generated on {{ report_date_display }}{% if REPORT_DISPLAY_ID %} · {{ REPORT_DISPLAY_ID }}{% endif %}
 </p>
 
 </body>

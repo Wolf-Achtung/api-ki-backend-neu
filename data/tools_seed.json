@@ -15,7 +15,8 @@
       "beratung",
       "dienstleistungen",
       "marketing"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Make (Integromat)",
@@ -36,7 +37,8 @@
       "handel",
       "it",
       "medien"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Railway.app",
@@ -54,7 +56,8 @@
       "it",
       "dienstleistungen",
       "beratung"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Notion",
@@ -74,7 +77,8 @@
       "dienstleistungen",
       "marketing",
       "medien"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "HubSpot",
@@ -92,7 +96,8 @@
       "beratung",
       "dienstleistungen",
       "handel"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "OpenAI API",
@@ -113,7 +118,8 @@
       "beratung",
       "marketing",
       "medien"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Mistral AI",
@@ -133,7 +139,8 @@
       "dienstleistungen",
       "beratung",
       "medien"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Perplexity API",
@@ -153,7 +160,8 @@
       "marketing",
       "it",
       "medien"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Tavily",
@@ -172,7 +180,8 @@
       "it",
       "dienstleistungen",
       "beratung"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Cloudflare Turnstile",
@@ -189,7 +198,8 @@
     ],
     "best_for_industries": [
       "alle"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Runway",
@@ -206,7 +216,8 @@
     "best_for_industries": [
       "medien",
       "marketing"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "ElevenLabs",
@@ -223,14 +234,15 @@
     "best_for_industries": [
       "medien",
       "marketing"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Descript",
     "url": "https://www.descript.com",
     "trust_url": "https://www.descript.com/privacy",
     "category": "Video-/Podcast-Editing & Transkription",
-    "price": "0-24 $/Monat",
+    "price": "0–35 $/Monat",
     "gdpr": "US (AVV prüfen)",
     "host": "US",
     "best_for_size": [
@@ -241,7 +253,8 @@
       "medien",
       "marketing",
       "bildung"
-    ]
+    ],
+    "verified_at": "2026-07-23"
   },
   {
     "name": "Adobe Firefly",
@@ -259,7 +272,8 @@
     "best_for_industries": [
       "medien",
       "marketing"
-    ]
+    ],
+    "verified_at": null
   },
   {
     "name": "Topaz Video AI",
@@ -275,6 +289,145 @@
     ],
     "best_for_industries": [
       "medien"
-    ]
+    ],
+    "verified_at": null
+  },
+  {
+    "name": "Amberscript",
+    "url": "https://www.amberscript.com",
+    "trust_url": "https://www.amberscript.com/en/privacy-policy/",
+    "category": "Transkription / Untertitelung",
+    "price": "ab ~10 €/Audiostunde (AI); Abos ab 19 €/Monat",
+    "gdpr": "EU-Anbieter (NL), AVV verfügbar",
+    "host": "EU",
+    "best_for_size": [
+      "solo",
+      "kmu"
+    ],
+    "best_for_industries": [
+      "medien"
+    ],
+    "verified_at": "2026-07-23"
+  },
+  {
+    "name": "Simon Says",
+    "url": "https://www.simonsaysai.com",
+    "trust_url": "https://www.simonsaysai.com/privacy",
+    "category": "Transkription / Schnittlisten",
+    "price": "Pay-as-you-go ~15 $/h; Pro-Pläne ab ~20 $/Monat",
+    "gdpr": "US (AVV/Speicherort prüfen)",
+    "host": "US",
+    "best_for_size": [
+      "solo",
+      "kmu"
+    ],
+    "best_for_industries": [
+      "medien"
+    ],
+    "verified_at": null
+  },
+  {
+    "name": "Frame.io (Adobe)",
+    "url": "https://frame.io",
+    "trust_url": "https://www.adobe.com/privacy.html",
+    "category": "Review / Versionierung",
+    "price": "in Creative Cloud enthalten / ab ~15 $/Monat",
+    "gdpr": "US (Adobe-AVV vorhanden)",
+    "host": "US/EU-Optionen",
+    "best_for_size": [
+      "solo",
+      "kmu"
+    ],
+    "best_for_industries": [
+      "medien"
+    ],
+    "verified_at": null
+  },
+  {
+    "name": "DeepL Pro",
+    "url": "https://www.deepl.com/pro",
+    "trust_url": "https://www.deepl.com/privacy",
+    "category": "Übersetzung / Lokalisierung",
+    "price": "ab ~9 €/Nutzer/Monat (jährlich)",
+    "gdpr": "EU-Anbieter (DE), AVV verfügbar",
+    "host": "EU",
+    "best_for_size": [
+      "solo",
+      "kmu",
+      "enterprise"
+    ],
+    "best_for_industries": [
+      "medien",
+      "beratung",
+      "marketing"
+    ],
+    "verified_at": "2026-07-23"
+  },
+  {
+    "name": "iconik",
+    "url": "https://www.iconik.io",
+    "trust_url": "https://www.iconik.io/legal",
+    "category": "Media Asset Management / Archiv",
+    "price": "ab ~89 $/Monat (Team, nutzungsabhängig)",
+    "gdpr": "EU-Anbieter (SE), AVV prüfen",
+    "host": "EU/US wählbar",
+    "best_for_size": [
+      "kmu"
+    ],
+    "best_for_industries": [
+      "medien"
+    ],
+    "verified_at": null
+  },
+  {
+    "name": "Trint",
+    "url": "https://trint.com",
+    "trust_url": "https://trint.com/privacy-policy",
+    "category": "Transkription / Untertitelung",
+    "price": "ab ~52 €/Monat",
+    "gdpr": "UK (AVV/Angemessenheit prüfen)",
+    "host": "UK/EU",
+    "best_for_size": [
+      "kmu"
+    ],
+    "best_for_industries": [
+      "medien"
+    ],
+    "verified_at": null
+  },
+  {
+    "name": "Aleph Alpha PhariaAI",
+    "url": "https://aleph-alpha.com",
+    "trust_url": "https://aleph-alpha.com/privacy",
+    "category": "KI-Wissensabfrage (EU)",
+    "price": "Preis auf Anfrage",
+    "gdpr": "EU-Anbieter (DE)",
+    "host": "EU",
+    "best_for_size": [
+      "kmu",
+      "enterprise"
+    ],
+    "best_for_industries": [
+      "medien",
+      "beratung"
+    ],
+    "verified_at": null
+  },
+  {
+    "name": "Adobe Premiere Pro (Speech to Text)",
+    "url": "https://www.adobe.com/products/premiere.html",
+    "trust_url": "https://www.adobe.com/privacy.html",
+    "category": "Postproduktion / Textschnitt",
+    "price": "Einzelabo ab ~26 €/Monat; in Creative Cloud enthalten",
+    "gdpr": "US (Adobe-AVV vorhanden)",
+    "host": "US/EU-Optionen",
+    "best_for_size": [
+      "solo",
+      "kmu"
+    ],
+    "best_for_industries": [
+      "medien"
+    ],
+    "verified_at": null
   }
 ]

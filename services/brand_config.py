@@ -29,10 +29,10 @@ _DEFAULTS: Dict[str, str] = {
     "brand_name": "KI-Sicherheit.jetzt",
     "claim": "Ihr Partner für KI-Readiness",
     "advisor_name": "Wolf Hohl",
-    "advisor_title": "TÜV-zertifizierter KI-Manager",
-    "advisor_signature": "Wolf Hohl · TÜV-zertifizierter KI-Manager",
+    "advisor_title": "TÜV-zertifiziertes KI-Management",
+    "advisor_signature": "Wolf Hohl · TÜV-zertifiziertes KI-Management",
     "advisor_bio": (
-        "TÜV-zertifizierter KI-Manager mit 30 Jahren Beratungserfahrung "
+        "TÜV-zertifiziertes KI-Management, 30 Jahre Beratungserfahrung "
         "in Marketing und Kommunikation"
     ),
     "contact_email": "kontakt@ki-sicherheit.jetzt",

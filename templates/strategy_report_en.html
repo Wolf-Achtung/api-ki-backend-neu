@@ -2,11 +2,11 @@
 <!-- Engine: Puppeteer/Chromium · Backend: FastAPI/Jinja2 · Design: Premium Strategy -->
 <!-- Fork of pdf_template_v7.html "Clean Corporate Plus", visually upgraded -->
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>KI-Strategiebericht — {{ firmenname }}</title>
+    <title>AI Strategy Report — {{ firmenname }}</title>
     <style>
 /* ═══════════════════════════════════════════════════════
    v1.0 STRATEGY BLUE — Premium Design System
@@ -27,7 +27,7 @@
        @bottom-right (Live-Marktdaten-Datum) BLEIBT: additive Info, keine
        Seitenzahl-Dublette. */
     @bottom-right {
-        content: "Marktdaten-Recherche vom {{ research_date }}";
+        content: "Market data research as of {{ research_date }}";
         font-size: 6.5pt;
         color: #9CA3AF;
         font-family: 'Inter', system-ui, sans-serif;
@@ -755,7 +755,7 @@ h1, h2, h3, h4 { break-after: avoid; }
     break-inside: avoid;
 }
 .tip-box::before {
-    content: 'Praxis-Tipp';
+    content: 'Practical Tip';
     display: block;
     font-size: 8pt;
     font-weight: 700;
@@ -777,7 +777,7 @@ h1, h2, h3, h4 { break-after: avoid; }
     break-inside: avoid;
 }
 .warning-box::before {
-    content: 'Hinweis';
+    content: 'Note';
     display: block;
     font-size: 8pt;
     font-weight: 700;
@@ -807,7 +807,7 @@ h1, h2, h3, h4 { break-after: avoid; }
     box-shadow: 0 2px 8px rgba(26,82,118,0.12);
 }
 .scenario-card.recommended::before {
-    content: 'EMPFOHLEN';
+    content: 'RECOMMENDED';
     display: block;
     font-size: 7pt;
     font-weight: 700;
@@ -1080,11 +1080,11 @@ sup.src-ref {
     <!-- ====== DECKBLATT ====== -->
     <div class="cover-page">
         <img src="{{ brand.logo_small | default('ki-sicherheit-logo-small.png') }}" alt="{{ brand.logo_alt | default('KI-Sicherheit.jetzt') }}" style="width: 180px; height: auto; margin-bottom: 24px;">
-        <div class="cover-eyebrow">KI-Strategiebericht</div>
+        <div class="cover-eyebrow">AI Strategy Report</div>
         <div class="cover-accent-line" style="width:80px;height:3px;background-color:#C5930A;background-image:linear-gradient(90deg,#C5930A,#2563EB);border-radius:2px;margin:0 auto 32px;print-color-adjust:exact;-webkit-print-color-adjust:exact"></div>
-        <h1>KI-Strategiebericht</h1>
+        <h1>AI Strategy Report</h1>
         <p class="cover-subtitle">{{ firmenname }} · {{ branche }}</p>
-        <p class="cover-meta">Erstellt am <strong>{{ datum }}</strong> · Segment: {{ segment }} · {{ mitarbeiter }} Mitarbeiter</p>
+        <p class="cover-meta">Created on <strong>{{ datum }}</strong> · Segment: {{ segment }} · {{ mitarbeiter }} employees</p>
 
         <!-- Score Ring -->
         <div class="cover-score-ring" style="width:180px;height:180px;margin:32px auto;position:relative;display:inline-block">
@@ -1110,16 +1110,16 @@ sup.src-ref {
         {# KIS-1247: Selbst verliehene Siegel entfernt (abmahnrelevant) —
            nur der reale TÜV-Personennachweis bleibt, mit Einordnung. #}
         <div class="trust-badges" style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:24px;flex-wrap:wrap">
-            <img src="{{ brand.cert_logo | default('tuev-logo-transparent.png') }}" alt="{{ brand.cert_logo_alt | default('TÜV Austria zertifiziert') }}" height="50" style="height:50px;width:auto;max-width:120px">
-            <span style="font-size:9pt;color:#64748b">Erstellt von {{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifiziertes KI-Management') }}</span>
+            <img src="{{ brand.cert_logo | default('tuev-logo-transparent.png') }}" alt="{{ brand.cert_logo_alt | default('TÜV Austria certified') }}" height="50" style="height:50px;width:auto;max-width:120px">
+            <span style="font-size:9pt;color:#64748b">Created by {{ brand.advisor_signature | default('Wolf Hohl · TÜV-certified AI management') }}</span>
         </div>
 
-        <p class="cover-research-date">Marktdaten-Recherche vom {{ research_date }}</p>
+        <p class="cover-research-date">Market data research as of {{ research_date }}</p>
     </div>
 
     <!-- ====== INHALTSVERZEICHNIS ====== -->
     <div class="toc-page page-break">
-        <h2>Inhaltsverzeichnis</h2>
+        <h2>Table of Contents</h2>
 
         <div class="toc-entry" style="border-bottom: 2px solid var(--c-border); padding-bottom: 12px;">
             <span class="toc-number" style="color: var(--gold-600);">—</span>
@@ -1128,57 +1128,57 @@ sup.src-ref {
 
         <div class="toc-entry">
             <span class="toc-number">1</span>
-            <span class="toc-title">Ausgangslage <span class="toc-subtitle">— Ihr KI-Readiness-Profil</span></span>
+            <span class="toc-title">Starting Position <span class="toc-subtitle">— Your AI Readiness Profile</span></span>
         </div>
 
         <div class="toc-entry">
             <span class="toc-number">2</span>
-            <span class="toc-title">Markt &amp; Wettbewerb <span class="toc-subtitle">— Aktuelle Branchendaten &amp; Benchmarks</span></span>
+            <span class="toc-title">Market &amp; Competition <span class="toc-subtitle">— Current Industry Data &amp; Benchmarks</span></span>
         </div>
 
         <div class="toc-entry">
             <span class="toc-number">3</span>
-            <span class="toc-title">Strategische Handlungsfelder <span class="toc-subtitle">— Priorisiert nach Impact &amp; Machbarkeit</span></span>
+            <span class="toc-title">Strategic Action Areas <span class="toc-subtitle">— Prioritized by Impact &amp; Feasibility</span></span>
         </div>
 
         <div class="toc-entry">
             <span class="toc-number">3b</span>
-            <span class="toc-title">KI-Umsatzpotenziale <span class="toc-subtitle">— Neue Erlösquellen durch KI</span></span>
+            <span class="toc-title">AI Revenue Potential <span class="toc-subtitle">— New Revenue Streams Through AI</span></span>
         </div>
 
         <div class="toc-entry">
             <span class="toc-number">4</span>
-            <span class="toc-title">Tool-Landschaft &amp; Empfehlungen <span class="toc-subtitle">— DSGVO-bewertete Lösungen</span></span>
+            <span class="toc-title">Tool Landscape &amp; Recommendations <span class="toc-subtitle">— GDPR-assessed Solutions</span></span>
         </div>
 
         <div class="toc-entry">
             <span class="toc-number">5</span>
-            <span class="toc-title">Investitionsplan &amp; ROI <span class="toc-subtitle">— Szenarien, Break-Even &amp; Budget-Fit</span></span>
+            <span class="toc-title">Investment Plan &amp; ROI <span class="toc-subtitle">— Scenarios, Break-Even &amp; Budget Fit</span></span>
         </div>
 
         <div class="toc-entry">
             <span class="toc-number">6</span>
-            <span class="toc-title">Umsetzungs-Roadmap <span class="toc-subtitle">— Ihr Phasenplan zur produktiven KI-Nutzung</span></span>
+            <span class="toc-title">Implementation Roadmap <span class="toc-subtitle">— Your Phased Plan for Productive AI Use</span></span>
         </div>
 
         <div class="toc-entry">
             <span class="toc-number">7</span>
-            <span class="toc-title">Fördermittel &amp; Finanzierung <span class="toc-subtitle">— Aktuelle Programme</span></span>
+            <span class="toc-title">Funding &amp; Financing <span class="toc-subtitle">— Current Programs</span></span>
         </div>
 
         <div class="toc-entry">
             <span class="toc-number">8</span>
-            <span class="toc-title">Risiken &amp; Compliance <span class="toc-subtitle">— EU AI Act &amp; DSGVO</span></span>
+            <span class="toc-title">Risks &amp; Compliance <span class="toc-subtitle">— EU AI Act &amp; GDPR</span></span>
         </div>
 
         <div class="toc-entry">
             <span class="toc-number">9</span>
-            <span class="toc-title">KI-gestützter Wettbewerbsvorteil <span class="toc-subtitle">— Nachhaltige Vorteile durch strategischen KI-Einsatz</span></span>
+            <span class="toc-title">AI-Powered Competitive Advantage <span class="toc-subtitle">— Sustainable Advantages Through Strategic AI Use</span></span>
         </div>
 
         <div class="toc-entry" style="border-top: 2px solid var(--c-border); padding-top: 12px; margin-top: 4px;">
             <span class="toc-number" style="color: var(--gold-600);">→</span>
-            <span class="toc-title">Ihre nächsten Schritte</span>
+            <span class="toc-title">Your Next Steps</span>
         </div>
     </div>
 
@@ -1189,7 +1189,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 1 ====== -->
-    {{ chapter_banner("Ausgangslage", "Ihr KI-Readiness-Profil", num="1") }}
+    {{ chapter_banner("Starting Position", "Your AI Readiness Profile", num="1") }}
 
     <!-- ====== S1: AUSGANGSLAGE ====== -->
     <div class="section-content">
@@ -1197,7 +1197,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 2 ====== -->
-    {{ chapter_banner("Markt &amp; Wettbewerb", "Aktuelle Branchendaten &amp; Benchmarks", num="2") }}
+    {{ chapter_banner("Market &amp; Competition", "Current Industry Data &amp; Benchmarks", num="2") }}
 
     <!-- ====== S2: MARKT & WETTBEWERB ====== -->
     <div class="section-content">
@@ -1205,7 +1205,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 3 ====== -->
-    {{ chapter_banner("Strategische Handlungsfelder", "Priorisiert nach Impact &amp; Machbarkeit", num="3") }}
+    {{ chapter_banner("Strategic Action Areas", "Prioritized by Impact &amp; Feasibility", num="3") }}
 
     <!-- ====== S3: HANDLUNGSFELDER ====== -->
     <div class="section-content">
@@ -1213,7 +1213,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 3b ====== -->
-    {{ chapter_banner("KI-Umsatzpotenziale", "Neue Erlösquellen durch KI", num="3b") }}
+    {{ chapter_banner("AI Revenue Potential", "New Revenue Streams Through AI", num="3b") }}
 
     <!-- ====== S3b: KI-UMSATZPOTENZIALE ====== -->
     <div class="section-content">
@@ -1221,7 +1221,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 4 ====== -->
-    {{ chapter_banner("Tool-Landschaft &amp; Empfehlungen", "DSGVO-bewertete Lösungen für Ihr Unternehmen", num="4") }}
+    {{ chapter_banner("Tool Landscape &amp; Recommendations", "GDPR-assessed Solutions for Your Company", num="4") }}
 
     <!-- ====== S4: TOOLS ====== -->
     <div class="section-content">
@@ -1229,7 +1229,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 5 ====== -->
-    {{ chapter_banner("Investitionsplan &amp; ROI", "Szenarien, Break-Even &amp; Budget-Fit", num="5") }}
+    {{ chapter_banner("Investment Plan &amp; ROI", "Scenarios, Break-Even &amp; Budget Fit", num="5") }}
 
     <!-- ====== S5: INVESTITIONSPLAN ====== -->
     <div class="section-content">
@@ -1238,15 +1238,15 @@ sup.src-ref {
             <div style="display: flex; align-items: flex-start; gap: 8px;">
                 <span style="font-size: 14pt; flex-shrink: 0;">ℹ️</span>
                 <div>
-                    <strong style="font-size: 9.5pt;">Hinweis zur ROI-Methodik — Abweichung zum KI-Readiness Report</strong>
-                    <p style="margin: 6px 0 0 0; line-height: 1.5;">Dieser Strategiebericht setzt die <strong>Brutto-Jahresersparnis</strong> gegen die Gesamtinvestition über 12&nbsp;Monate (inkl. Software, Implementierung, Schulung und Koordination). Der KI-Readiness Report zieht zusätzlich die <strong>laufenden Tool-Kosten (OPEX)</strong> vom Jahresnutzen ab und weist damit die konservativere Netto-Rendite aus. Die abweichenden ROI- und Break-Even-Werte sind methodisch bedingt, nicht widersprüchlich — beide Berechnungsansätze sind branchenüblich.</p>
+                    <strong style="font-size: 9.5pt;">Note on ROI Methodology — Difference from the AI Readiness Report</strong>
+                    <p style="margin: 6px 0 0 0; line-height: 1.5;">This strategy report compares the <strong>gross annual savings</strong> against the total investment over 12&nbsp;months (including software, implementation, training, and coordination). The AI Readiness Report additionally deducts the <strong>ongoing tool costs (OPEX)</strong> from the annual benefit, thereby reporting the more conservative net return. The differing ROI and break-even figures result from methodology, they are not contradictory — both calculation approaches are standard industry practice.</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 6 ====== -->
-    {{ chapter_banner("Umsetzungs-Roadmap", "Ihr Phasenplan zur produktiven KI-Nutzung", num="6") }}
+    {{ chapter_banner("Implementation Roadmap", "Your Phased Plan for Productive AI Use", num="6") }}
 
     <!-- ====== S6: ROADMAP ====== -->
     <div class="section-content">
@@ -1254,7 +1254,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 7 ====== -->
-    {{ chapter_banner("Fördermittel &amp; Finanzierung", "Aktuelle Programme für Ihr Unternehmen", num="7") }}
+    {{ chapter_banner("Funding &amp; Financing", "Current Programs for Your Company", num="7") }}
 
     <!-- ====== S7: FÖRDERMITTEL ====== -->
     <div class="section-content">
@@ -1262,7 +1262,7 @@ sup.src-ref {
     </div>
 
     <!-- ====== KAPITEL-TRENNER: 8 ====== -->
-    {{ chapter_banner("Risiken &amp; Compliance", "EU AI Act &amp; DSGVO", num="8") }}
+    {{ chapter_banner("Risks &amp; Compliance", "EU AI Act &amp; GDPR", num="8") }}
 
     <!-- ====== S8: RISIKEN ====== -->
     <div class="section-content">
@@ -1271,7 +1271,7 @@ sup.src-ref {
 
     <!-- ====== S-MOAT: KI-GESTÜTZTER WETTBEWERBSVORTEIL ====== -->
     {% if section_s_moat %}
-    {{ chapter_banner("KI-gestützter Wettbewerbsvorteil", "Nachhaltige Vorteile durch strategischen KI-Einsatz", num="9") }}
+    {{ chapter_banner("AI-Powered Competitive Advantage", "Sustainable Advantages Through Strategic AI Use", num="9") }}
 
     <div class="section-content">
         {{ section_s_moat | safe }}
@@ -1282,15 +1282,15 @@ sup.src-ref {
     {% if section_advisor_note and section_advisor_note|trim %}
     <div class="section" id="advisor-note">
         <div class="advisor-note">
-            <div class="advisor-note-title">Meine Einschätzung für Ihr Unternehmen</div>
+            <div class="advisor-note-title">My Assessment for Your Company</div>
             <div class="advisor-note-text">{{ section_advisor_note | safe }}</div>
-            <div class="advisor-note-sig">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-zertifiziertes KI-Management') }}</div>
+            <div class="advisor-note-sig">{{ brand.advisor_signature | default('Wolf Hohl · TÜV-certified AI management') }}</div>
         </div>
     </div>
     {% endif %}
 
     <!-- ====== NÄCHSTE SCHRITTE ====== -->
-    {{ chapter_banner("Ihre nächsten Schritte") }}
+    {{ chapter_banner("Your Next Steps") }}
     <div class="section-content">
         {{ naechste_schritte | safe }}
     </div>
@@ -1298,52 +1298,52 @@ sup.src-ref {
     <!-- ====== IMPRESSUM / FOOTER ====== -->
     <div class="impressum page-break">
         <div class="section-header">
-            <span class="section-label">RECHTLICHES</span>
-            <h2>Impressum &amp; Datenschutz</h2>
+            <span class="section-label">LEGAL</span>
+            <h2>Imprint &amp; Privacy</h2>
         </div>
         <div class="impressum-grid">
             <div class="impressum-block">
-                <h4>Impressum</h4>
-                <p><strong>Verantwortlich für den Inhalt:</strong><br>
+                <h4>Imprint</h4>
+                <p><strong>Responsible for content:</strong><br>
                 {{ brand.brand_name | default('KI-Sicherheit.jetzt') }} – {{ brand.advisor_name | default('Wolf Hohl') }}<br>
                 Greifswalder Str. 224a<br>
                 10405 Berlin</p>
-                <p>E-Mail: {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}</p>
+                <p>Email: {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}</p>
             </div>
             <div class="impressum-block">
-                <h4>Haftungsausschluss</h4>
-                <p>Dieser KI-Strategiebericht dient ausschließlich der Information und strategischen Orientierung. Trotz sorgfältiger Prüfung wird keine Haftung für Richtigkeit oder Vollständigkeit übernommen.{% if branche and ('steuer' in branche|lower or 'wirtschaftspr' in branche|lower or 'rechtsber' in branche|lower or 'buchhal' in branche|lower) %} Steuerberatende Berufe: Berufsrechtliche Pflichten gemäß §&nbsp;57 StBerG (Verschwiegenheit, Datenschutz) sind eigenverantwortlich zu prüfen.{% endif %}</p>
-                <h4>Urheberrecht</h4>
-                <p>Alle Inhalte dieses Berichts unterliegen dem deutschen Urheberrecht.</p>
+                <h4>Disclaimer</h4>
+                <p>This AI Strategy Report is provided solely for informational purposes and strategic orientation. Despite careful review, no liability is accepted for accuracy or completeness.{% if branche and ('steuer' in branche|lower or 'wirtschaftspr' in branche|lower or 'rechtsber' in branche|lower or 'buchhal' in branche|lower) %} Tax advisory professions: professional obligations under Section&nbsp;57 StBerG (confidentiality, data protection) must be reviewed on your own responsibility.{% endif %}</p>
+                <h4>Copyright</h4>
+                <p>All content in this report is subject to German copyright law.</p>
             </div>
             <div class="impressum-block">
-                <h4>Hinweis zum EU AI Act</h4>
-                <p>Dieser Bericht informiert über Pflichten, Risiken und Fördermöglichkeiten beim Einsatz von KI nach EU AI Act und DSGVO. Er ersetzt keine Rechtsberatung.</p>
+                <h4>Note on the EU AI Act</h4>
+                <p>This report provides information on obligations, risks, and funding opportunities for the use of AI under the EU AI Act and GDPR. It does not constitute legal advice.</p>
             </div>
         </div>
         <div class="impressum-divider"></div>
         <div class="impressum-privacy">
-            <h3>Datenschutzerklärung</h3>
-            <p>Der Schutz Ihrer persönlichen Daten ist uns ein besonderes Anliegen.</p>
-            <h4>Datenverarbeitung</h4>
-            <p>Die für diesen Bericht erhobenen Unternehmensdaten werden ausschließlich zur Erstellung des KI-Strategieberichts verarbeitet (Art. 6 Abs. 1 b DSGVO).</p>
-            <h4>Ihre Rechte laut DSGVO</h4>
+            <h3>Privacy Notice</h3>
+            <p>Protecting your personal data is of particular importance to us.</p>
+            <h4>Data Processing</h4>
+            <p>The company data collected for this report is processed solely to produce the AI Strategy Report (Art. 6 (1) b GDPR).</p>
+            <h4>Your Rights Under the GDPR</h4>
             <ul>
-                <li>Auskunft, Berichtigung oder Löschung Ihrer Daten</li>
-                <li>Datenübertragbarkeit</li>
-                <li>Widerruf erteilter Einwilligungen</li>
-                <li>Beschwerde bei der Datenschutzbehörde</li>
+                <li>Access, rectification, or erasure of your data</li>
+                <li>Data portability</li>
+                <li>Withdrawal of consent previously given</li>
+                <li>Complaint to the data protection authority</li>
             </ul>
-            <p>Kontakt: {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}</p>
+            <p>Contact: {{ brand.contact_email | default('kontakt@ki-sicherheit.jetzt') }}</p>
         </div>
 
         <div class="gdpr-mini">
-            Dieser Report nutzt Unternehmensdaten zur KI-Strategie-Analyse. Verarbeitung auf Basis von Art. 6 (1) b DSGVO. AVV auf Anfrage.
-            Basierend auf Live-Marktdaten vom {{ research_date }}.
+            This report uses company data for AI strategy analysis. Processing based on Art. 6 (1) b GDPR. Data processing agreement available on request.
+            Based on live market data as of {{ research_date }}.
         </div>
 
         <p class="small" style="text-align: center; color: var(--c-text-3); margin-top: var(--sp-lg);">
-            KI-Strategiebericht · Generiert am {{ datum }} · {% if REPORT_DISPLAY_ID %}{{ REPORT_DISPLAY_ID }}{% else %}{{ report_id }}{% endif %}
+            AI Strategy Report · Generated on {{ datum }} · {% if REPORT_DISPLAY_ID %}{{ REPORT_DISPLAY_ID }}{% else %}{{ report_id }}{% endif %}
             {% if build_id %} · Build: {{ build_id }}{% endif %}
         </p>
     </div>

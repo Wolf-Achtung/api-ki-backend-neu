@@ -142,10 +142,18 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
 
     template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
     env = Environment(loader=FileSystemLoader(template_dir), autoescape=False)
-    template = env.get_template("strategy_report.html")
 
     briefing = db_session.query(Briefing).filter(Briefing.id == sr.briefing_id).first()
     briefing_data = (briefing.answers if briefing else {}) or {}
+
+    # KIS-1248 (Voll-Englisch Stufe 2): EN-Template wählen, wenn das Briefing
+    # englisch ist und die EN-Fassung existiert — sonst wie bisher DE.
+    _lang = str(briefing_data.get("lang") or briefing_data.get("LANG") or "de").lower()
+    _tpl_name = "strategy_report.html"
+    if _lang.startswith("en") and os.path.exists(os.path.join(template_dir, "strategy_report_en.html")):
+        _tpl_name = "strategy_report_en.html"
+        logging.getLogger(__name__).info("[KIS-1248][LANG] Using EN strategy template")
+    template = env.get_template(_tpl_name)
     # KIS-1235: FB2-Antworten für die Spannungs-Box mitladen (Tools-,
     # Engpass- und Datenreife-Regeln lesen s5_software/s4_engpass etc.).
     try:

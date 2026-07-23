@@ -941,5 +941,32 @@
     ],
     "branch_exclusive": true,
     "verified_at": "2026-07-22"
+  },
+  {
+    "id": "eurimages",
+    "title": "Eurimages – Koproduktionsförderung (Europarat)",
+    "region": "Europa (Eurimages-Mitgliedstaaten)",
+    "country_code": "EU",
+    "status": "active",
+    "funding_type": "bedingt rückzahlbarer Vorschuss",
+    "funding_rate": "projektabhängig",
+    "max_amount": "bis 500.000 € (Spielfilm)",
+    "focus": "Internationale Koproduktionen (Spielfilm, Doku, Animation ab 70 Min.); mind. 2 Koproduzenten aus Mitgliedstaaten",
+    "notes": "3 Einreichrunden pro Jahr; Koproduzenten müssen unabhängig von Sendern/Plattformen sein; Konditionen je Call prüfen",
+    "priority": 2,
+    "provider": "Europarat / Eurimages",
+    "relevance_ki": "Niedrig – KI-Produktionsschritte als Teil der Herstellungskosten",
+    "suitable_for": [
+      "team",
+      "kmu"
+    ],
+    "url": "https://www.coe.int/en/web/eurimages",
+    "deadline": "3 Calls/Jahr",
+    "deadline_notes": null,
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "verified_at": "2026-07-23"
   }
 ]
