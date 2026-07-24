@@ -10041,7 +10041,91 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
 
     return base_vars
 # -------------------- 🎯 NEW: Better fallbacks when GPT fails ----------------
+# KIS-1272-R4-T1: Deutsche Stopwort-/Umlaut-Heuristik, um kuratierte DE-Fallbacks
+# in EN-Reports zu erkennen (einige Fallback-Zweige liefern bereits EN — die
+# dürfen NICHT nochmal durch die Übersetzung laufen).
+_DE_FALLBACK_UMLAUT_RE = re.compile(r"[äöüÄÖÜß]")
+_DE_FALLBACK_STOPWORD_RE = re.compile(
+    r"\b(?:und|oder|nicht|sowie|eine[nmrs]?|Ihre?[mnrs]?|wird|werden|sind|ist|"
+    r"bei|durch|keine[nmr]?|Unternehmen|Wochen|Monate[n]?|Schritte?)\b"
+)
+
+
+def _fallback_html_looks_german(html_text: str) -> bool:
+    """KIS-1272-R4-T1: True, wenn ein Fallback-HTML deutsch aussieht."""
+    if not html_text:
+        return False
+    plain = re.sub(r"<[^>]+>", " ", html_text)
+    if _DE_FALLBACK_UMLAUT_RE.search(plain):
+        return True
+    return len(_DE_FALLBACK_STOPWORD_RE.findall(plain)) >= 3
+
+
+def _translate_fallback_html_to_en(section_key: str, html_de: str) -> Optional[str]:
+    """KIS-1272-R4-T1: Übersetzt ein kuratiertes deutsches Fallback-HTML nach EN.
+
+    Strikter Übersetzungs-Prompt: HTML-Struktur, Zahlen und Eigennamen bleiben
+    unverändert, es wird nichts hinzugefügt. Gibt None zurück, wenn die
+    Übersetzung fehlschlägt — der Aufrufer behält dann das deutsche Original
+    (niemals leer). Muster (LLM-Helper + Fehlerbehandlung) analog zu
+    _expand_short_section.
+    """
+    translate_prompt = f"""You are a professional technical translator (German → English).
+
+TASK: Translate the following German HTML fragment into English.
+
+STRICT RULES:
+- Keep the HTML structure, all tags, attributes and CSS classes EXACTLY as they are.
+- Keep all numbers, currency amounts, percentages, dates and scores unchanged.
+- Keep proper nouns unchanged (e.g. funding program names like BAFA, DFFF, ProFIT, ZIM, KfW; brand names; "KI-Sicherheit.jetzt").
+- Translate ONLY the human-readable text content. Do not add, remove, shorten or reorder anything.
+- No explanations, no meta commentary, no markdown fences.
+- Output ONLY the translated HTML fragment.
+
+GERMAN HTML:
+{html_de}
+
+ENGLISH HTML:"""
+
+    try:
+        response = _call_llm_for_section(
+            section_key=section_key,
+            prompt=translate_prompt,
+            system_prompt=build_report_system_prompt(mode="expand", lang="en"),
+            temperature=0.2,
+            max_tokens=8000,
+        )
+        if not response or not response.strip():
+            log.warning("[KIS-1272-R4-T1] Empty translation response for %s", section_key)
+            return None
+        translated = response.replace("```html", "").replace("```", "").strip()
+        if not translated or "<" not in translated:
+            log.warning("[KIS-1272-R4-T1] Translation for %s lacks HTML — keeping German original", section_key)
+            return None
+        return translated
+    except Exception as exc:
+        log.warning("[KIS-1272-R4-T1] Fallback translation failed for %s: %s — keeping German original", section_key, exc)
+        return None
+
+
 def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
+    """KIS-1272-R4-T1: Sprach-Gate um die kuratierten Fallbacks.
+
+    DE bleibt byte-identisch (direkter Durchgriff auf die Implementierung).
+    EN: Wenn der kuratierte Fallback deutsch aussieht, wird er per LLM strikt
+    übersetzt; bei Fehlern bleibt das deutsche Original erhalten (nie leer).
+    """
+    html_out = _get_fallback_content_impl(section_key, briefing, scores)
+    _fb_lang = str(briefing.get("lang", "de") if isinstance(briefing, dict) else "de").strip().lower()
+    if not _fb_lang.startswith("en"):
+        return html_out
+    if not html_out or not _fallback_html_looks_german(html_out):
+        return html_out
+    translated = _translate_fallback_html_to_en(section_key, html_out)
+    return translated or html_out
+
+
+def _get_fallback_content_impl(section_key: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
     """🎯 UPDATED v5.0.0-PLATIN+: Size-aware fallback content mit PLATIN+ Wortlängen
 
     PLATIN+ Mindestlängen (WÖRTER, nicht Zeichen!):
@@ -13796,6 +13880,15 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     für Validator & interne Checks gesetzt.
     """
     sections: Dict[str, Any] = {}
+
+    # KIS-1272-R4-T6: LANG sofort setzen — apply_badge_localization (und andere
+    # LANG-gegatete Enforcer) laufen bereits INNERHALB dieser Funktion
+    # (apply_all_quality_enforcers), sections["LANG"] wurde aber erst später in
+    # analyze_briefing gesetzt. Ohne LANG griff der DE-Default und übersetzte
+    # in EN-Reports "limited" → "begrenzt" (Run 4: Badge "AI ACT RISK begrenzt",
+    # "begrenzt-risk category", "on a begrenzt scale"). DE bleibt unverändert
+    # (LANG="de" war dort implizit schon der wirksame Wert).
+    sections["LANG"] = str(briefing.get("lang") or briefing.get("LANG") or "de")
 
     # KIS-1117: Save original hauptleistung BEFORE parallel threads can mutate
     # briefing dict via _build_prompt_vars() (FIX-B726 cleanup + truncation).

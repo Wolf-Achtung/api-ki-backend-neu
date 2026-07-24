@@ -531,6 +531,73 @@ def _distribute_with_minimums(weights: List[float], mins: List[float]) -> List[f
     ]
 
 
+# --------------------------------------------------------------------------- #
+# KIS-1272 (EN-Lauf 4, Aufgabe 4): Sehr breite Tabellen (6-7 Spalten) liefen  #
+# weiter über den Satzspiegel — letzte Spalte "RATING" rechts abgeschnitten,  #
+# Mid-Word-Brüche ohne Trennstrich ("documentatio n", "producti on").        #
+# Fix (nur lang=en, DE byte-identisch):                                      #
+#   (a) table-layout:fixed + width:100% inline am <table>, colgroup-Prozente #
+#       summieren exakt auf 100 — nichts läuft mehr über die Seite hinaus.   #
+#   (b) Kompakt-Darstellung: font-size ~86 % am <table>, reduziertes Padding #
+#       auf den Zellen, damit die Mindestbreiten aufgehen.                   #
+#   (c) hyphens:auto (greift, weil die EN-Templates <html lang="en"> setzen  #
+#       — Chromium/WeasyPrint trennen dann MIT Trennstrich) plus             #
+#       overflow-wrap:anywhere als letzter Fallback für untrennbare Tokens.  #
+# --------------------------------------------------------------------------- #
+_EN_COMPACT_MIN_COLS = 6
+_EN_TABLE_COMPACT_STYLE = "table-layout:fixed;width:100%;font-size:0.86em"
+_EN_CELL_COMPACT_STYLE = "padding:4px 6px;hyphens:auto;overflow-wrap:anywhere"
+_TABLE_CELL_OPEN_RE = re.compile(r"<t[dh]\b[^>]*>", re.IGNORECASE)
+_STYLE_ATTR_VAL_RE = re.compile(r'style\s*=\s*"([^"]*)"', re.IGNORECASE)
+
+
+def _merge_inline_style(tag: str, extra: str) -> str:
+    """Fügt CSS-Deklarationen in ein Open-Tag ein (bestehende Properties
+    gewinnen — es wird nichts überschrieben, nur ergänzt)."""
+    m = _STYLE_ATTR_VAL_RE.search(tag)
+    if not m:
+        return tag[:-1] + f' style="{extra}">'
+    existing = m.group(1)
+    add_parts = []
+    for decl in extra.split(";"):
+        prop = decl.split(":", 1)[0].strip()
+        if not prop:
+            continue
+        if re.search(rf"(?:^|;)\s*{re.escape(prop)}\s*:", existing, re.IGNORECASE):
+            continue  # Property existiert schon → nicht anfassen
+        add_parts.append(decl)
+    if not add_parts:
+        return tag
+    merged = existing.rstrip().rstrip(";")
+    merged = (merged + ";" if merged else "") + ";".join(add_parts)
+    return tag[:m.start(1)] + merged + tag[m.end(1):]
+
+
+def _en_round_pcts_to_100(pcts: List[float]) -> List[float]:
+    """Rundet Spaltenprozente auf 1 Dezimale und gleicht den Rundungsrest an
+    der breitesten Spalte aus, damit die Summe EXAKT 100.0 ergibt (bei
+    table-layout:fixed sonst Überlauf über den Satzspiegel)."""
+    rounded = [round(p, 1) for p in pcts]
+    residual = round(100.0 - sum(rounded), 1)
+    if abs(residual) >= 0.05:
+        widest = max(range(len(rounded)), key=lambda i: rounded[i])
+        rounded[widest] = round(rounded[widest] + residual, 1)
+    return rounded
+
+
+def _en_compact_wide_table(table: str) -> str:
+    """Erzwingt fixed-Layout + Kompakt-Stil für sehr breite EN-Tabellen."""
+    open_m = _TABLE_OPEN_RE.search(table)
+    if open_m:
+        new_open = _merge_inline_style(open_m.group(0), _EN_TABLE_COMPACT_STYLE)
+        table = table[:open_m.start()] + new_open + table[open_m.end():]
+
+    def _cell(m: "re.Match[str]") -> str:
+        return _merge_inline_style(m.group(0), _EN_CELL_COMPACT_STYLE)
+
+    return _TABLE_CELL_OPEN_RE.sub(_cell, table)
+
+
 def _en_wrap_dates_nowrap(table: str) -> Tuple[str, int]:
     """Wrappt dd.mm.yyyy-Daten in Tabellenzellen non-breaking (nur Textknoten)."""
     wrapped = 0
@@ -619,6 +686,9 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
                 ))
                 mins.append(m_i)
             pcts = _distribute_with_minimums(weights, mins)
+            # KIS-1272 (4a): exakt 100 % — die .1f-Rundung erzeugte sonst
+            # Summen ≠ 100, die bei table-layout:fixed überlaufen.
+            pcts = _en_round_pcts_to_100(pcts)
             # Datumsschutz: "31.12.2026" / "31.12. 2026" nie umbrechen.
             table, _n_dates = _en_wrap_dates_nowrap(table)
             count += _n_dates
@@ -636,7 +706,15 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
             return table
         insert_at = open_m.end()
         count += 1
-        return table[:insert_at] + colgroup + table[insert_at:]
+        result = table[:insert_at] + colgroup + table[insert_at:]
+        # KIS-1272 (Aufgabe 4): sehr breite EN-Tabellen (6+ Spalten)
+        # zusätzlich fixieren + kompaktieren (fixed-Layout, width:100%,
+        # kleinere Schrift, weniger Padding, hyphens:auto). Nur lang=en —
+        # der DE-Pfad bleibt byte-identisch.
+        if _en and len(cells) >= _EN_COMPACT_MIN_COLS:
+            result = _en_compact_wide_table(result)
+            count += 1
+        return result
 
     return _TABLE_BLOCK_RE.sub(_table, html), count
 

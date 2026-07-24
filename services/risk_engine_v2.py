@@ -886,6 +886,54 @@ def _generate_narrative_summary(
 # HTML RENDERING
 # =============================================================================
 
+# KIS-1272-R4-T3a: Echte EN-Varianten der deterministischen Narrativ-Satzbausteine
+# aus _generate_narrative_summary. Run 4 zeigte Denglisch in der Summary-Box
+# ("Das Risk profile ist gut beherrschbar…"), weil die deutschen Sätze
+# ungeübersetzt in den EN-Report liefen. Nur im EN-Renderpfad angewendet.
+_NARRATIVE_SENTENCES_EN: Dict[str, str] = {
+    "Das Risikoprofil ist sehr günstig.": "The risk profile is very favorable.",
+    "Das Risikoprofil ist gut beherrschbar.": "The risk profile is well manageable.",
+    "Das Risikoprofil erfordert gezielte Maßnahmen.": "The risk profile requires targeted measures.",
+    "Das Risikoprofil zeigt erhöhten Handlungsbedarf.": "The risk profile shows an elevated need for action.",
+    "Das Risikoprofil erfordert dringende Maßnahmen.": "The risk profile requires urgent measures.",
+    "Das Risikoprofil wurde bewertet.": "The risk profile has been assessed.",
+    "Die geplanten KI-Anwendungen fallen unter die High-Risk Kategorie des AI Act und erfordern umfangreiche Dokumentation und Kontrollen.":
+        "The planned AI applications fall under the high-risk category of the AI Act and require extensive documentation and controls.",
+    "Für die KI-Anwendungen gelten Transparenzpflichten nach dem AI Act.":
+        "Transparency obligations under the AI Act apply to the AI applications.",
+    "Die KI-Anwendungen unterliegen minimalen regulatorischen Anforderungen.":
+        "The AI applications are subject to minimal regulatory requirements.",
+    "ACHTUNG: Einige geplante Anwendungen könnten unter verbotene Praktiken fallen.":
+        "WARNING: Some planned applications could fall under prohibited practices.",
+    "Im Bereich Datenschutz bestehen erhöhte Anforderungen.":
+        "Data protection requirements are elevated.",
+    "Standard-Datenschutzmaßnahmen sind erforderlich.":
+        "Standard data protection measures are required.",
+    "Die Datenschutzanforderungen sind überschaubar.":
+        "The data protection requirements are manageable.",
+}
+
+# KIS-1272-R4-T3b: EN-Zeilenlabels für die Default-Risk-Matrix
+# (_generate_default_risk_matrix erzeugt deutsche Titel; Run 4 zeigte
+# "Implementierungsrisiko" auf S.17 des EN-Reports).
+_MATRIX_TITLES_EN: Dict[str, str] = {
+    "AI Act Compliance": "AI Act Compliance",
+    "Datenschutz (DSGVO)": "Data protection (GDPR)",
+    "Vendor & Hosting": "Vendor & Hosting",
+    "Implementierungsrisiko": "Implementation risk",
+    "Change Management": "Change Management",
+}
+
+
+def _translate_narrative_summary_en(narrative: str) -> str:
+    """KIS-1272-R4-T3a: Deterministische DE-Narrativ-Sätze nach EN mappen."""
+    result = narrative or ""
+    for de_sentence, en_sentence in _NARRATIVE_SENTENCES_EN.items():
+        if de_sentence in result:
+            result = result.replace(de_sentence, en_sentence)
+    return result
+
+
 def risk_report_to_html(
     report: RiskReport,
     lang: str = "de",
@@ -924,6 +972,8 @@ def risk_report_to_html(
             "limited": "Limited Risk",
             "minimal": "Minimal Risk",
             "unacceptable": "Unacceptable",
+            # KIS-1272-R4-T3b: Kopfzelle der Risk-Matrix
+            "matrix_risk_col": "Risk",
         }
     else:
         labels = {
@@ -946,6 +996,8 @@ def risk_report_to_html(
             "limited": "Begrenzt",
             "minimal": "Minimal",
             "unacceptable": "Unzulässig",
+            # KIS-1272-R4-T3b: Kopfzelle der Risk-Matrix (DE unverändert)
+            "matrix_risk_col": "Risiko",
         }
 
     # AI Act class display
@@ -1091,7 +1143,7 @@ def risk_report_to_html(
                     <col style="width:25%;">
                 </colgroup>
                 <tr style="background:#f8fafc;">
-                    <td style="padding:8px;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:normal;overflow-wrap:break-word;word-break:break-word;">Risiko</td>
+                    <td style="padding:8px;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:normal;overflow-wrap:break-word;word-break:break-word;">{labels["matrix_risk_col"]}</td>
                     <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:nowrap;">L</td>
                     <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:nowrap;">I</td>
                     <td style="padding:8px;text-align:center;font-weight:600;border-bottom:1px solid #e2e8f0;white-space:nowrap;">Score</td>
@@ -1101,6 +1153,11 @@ def risk_report_to_html(
         for entry in report.risk_matrix[:6]:
             if isinstance(entry, RiskMatrixEntry):
                 color = RISK_COLORS.get(entry.color, "#6b7280")
+                # KIS-1272-R4-T3b: Deutsche Default-Matrix-Titel im EN-Report
+                # auf EN mappen (DE-Pfad unverändert).
+                _entry_title = entry.title
+                if lang == "en":
+                    _entry_title = _MATRIX_TITLES_EN.get(_entry_title, _entry_title)
                 # L1: Added overflow-wrap, word-break to prevent text truncation
                 # FIX-503B: Added white-space:normal and overflow:visible for WeasyPrint
                 # FIX-506 TASK 4: Enhanced CSS for WeasyPrint table cell wrapping
@@ -1108,7 +1165,7 @@ def risk_report_to_html(
                 <tr>
                     <td style="padding:8px;border-bottom:1px solid #f1f5f9;word-wrap:break-word;overflow-wrap:break-word;word-break:break-word;hyphens:auto;white-space:normal;max-width:0;">
                         <span style="display:inline-block;width:8px;height:8px;background:{color};border-radius:50%;margin-right:6px;flex-shrink:0;vertical-align:middle;"></span>
-                        <span style="word-wrap:break-word;overflow-wrap:break-word;">{entry.title}</span>
+                        <span style="word-wrap:break-word;overflow-wrap:break-word;">{_entry_title}</span>
                     </td>
                     <td style="padding:8px;text-align:center;border-bottom:1px solid #f1f5f9;">{entry.likelihood}</td>
                     <td style="padding:8px;text-align:center;border-bottom:1px solid #f1f5f9;">{entry.impact}</td>
@@ -1150,10 +1207,15 @@ def risk_report_to_html(
 
     # Narrative Summary
     if report.narrative_summary:
+        # KIS-1272-R4-T3a: Im EN-Report die deterministischen deutschen
+        # Narrativ-Sätze auf ihre EN-Varianten mappen (DE byte-identisch).
+        _narrative = report.narrative_summary
+        if lang == "en":
+            _narrative = _translate_narrative_summary_en(_narrative)
         html_parts.append(f'''
         <div class="risk-block summary-block" style="padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
             <p style="margin:0 0 8px 0;font-weight:600;color:#1e293b;">{labels["summary_title"]}</p>
-            <p style="margin:0;color:#475569;line-height:1.6;">{report.narrative_summary}</p>
+            <p style="margin:0;color:#475569;line-height:1.6;">{_narrative}</p>
         </div>
         ''')
 

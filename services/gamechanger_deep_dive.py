@@ -1234,6 +1234,27 @@ def render_deep_dive_html(sections: Dict[str, str],
             pass
 
         if _dd_lang.startswith('en'):
+            # KIS-1272 (EN-Lauf 4, Aufgabe 6): KPA-Outro — das EN-Template
+            # sagt "Based on data from the KI-Readiness Report 1." — die
+            # nackte "1." las sich wie eine kaputte Fußnoten-Referenz.
+            # Deterministisch zu "(Report 1)" auflösen; der generische
+            # Sanitizer unten fängt den zweiten Satz ("uses company data
+            # from the KI-Readiness Report") über das Mapping
+            # "KI-Readiness Report" → "AI Readiness Report".
+            _html = _html.replace(
+                "Based on data from the KI-Readiness Report 1.",
+                "Based on data from the AI Readiness Report (Report 1).",
+            )
+            # KIS-1272 (Aufgabe 2): Der EN-Token-Sanitizer lief bisher nur im
+            # R1-Renderer — Rest-DE-Tokens ("Prüfschritt", "Freigabe",
+            # "KI-Verordnung", "begrenzt", …) blieben im KPA stehen. Läuft
+            # nur bei lang=en; URLs/E-Mails/Marken-Domain/Logo-Dateinamen
+            # sind über den LOCALE-SHIELD geschützt.
+            try:
+                from services.html_sanitizer import sanitize_en_locale_tokens as _en_tokens
+                _html = _en_tokens(_html, 'en')
+            except Exception:
+                pass
             # KIS-EN3-NUMFMT: LLM-Sections zeigten DE-Zahlformate im EN-KPA —
             # konservativer Normalizer (Datums-/URL-Schutz eingebaut).
             # DE-Pfad unverändert (byte-identisch).

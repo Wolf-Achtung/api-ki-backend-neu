@@ -896,12 +896,19 @@ def build_core_funding_table_html(briefing: Dict[str, Any], lang: str = "de") ->
             display_rate = _translate_funding_value_en(str(display_rate))
             display_amount = _translate_funding_value_en(str(display_amount))
             display_focus = _translate_funding_value_en(str(display_focus))
-            _rel_head = str(display_relevance).split()[0].strip(" –-").lower() if display_relevance else ""
-            _rel_tail = str(display_relevance)[len(str(display_relevance).split()[0]):] if display_relevance else ""
-            display_relevance = (
-                _relevance_en.get(_rel_head, str(display_relevance).split()[0] if display_relevance else "Medium")
-                + _translate_funding_value_en(_rel_tail)
-            )
+            # KIS-1272-R4-T4: Ganze Relevanz-Zelle durch die (erweiterte)
+            # Phrasen-/Wort-Map übersetzen, dann Anfangsbuchstaben groß —
+            # das Head-Splitting ließ vorher "Sehr high – …"-Mischformen zu.
+            _rel_raw = str(display_relevance or "")
+            _rel_head = _rel_raw.split()[0].strip(" –-").lower() if _rel_raw.split() else ""
+            if _rel_head in _relevance_en and len(_rel_raw.split()) == 1:
+                display_relevance = _relevance_en[_rel_head]
+            else:
+                _rel_translated = _translate_funding_value_en(_rel_raw)
+                display_relevance = (
+                    (_rel_translated[:1].upper() + _rel_translated[1:])
+                    if _rel_translated.strip() else "Medium"
+                )
             display_region = (
                 str(display_region)
                 .replace("Deutschland (bundesweit)", "Germany (nationwide)")
