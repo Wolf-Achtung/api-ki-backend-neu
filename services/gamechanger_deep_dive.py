@@ -1240,10 +1240,12 @@ def render_deep_dive_html(sections: Dict[str, str],
             # Deterministisch zu "(Report 1)" auflösen; der generische
             # Sanitizer unten fängt den zweiten Satz ("uses company data
             # from the KI-Readiness Report") über das Mapping
-            # "KI-Readiness Report" → "AI Readiness Report".
+            # "KI-Readiness Report" → "AI Status Report".
+            # KIS-1273 (Aufgabe 5a): kanonischer Name ist "AI Status Report"
+            # — der KPA mischte sonst drei Benennungen (EN-Lauf 5, S. 5/6/10).
             _html = _html.replace(
                 "Based on data from the KI-Readiness Report 1.",
-                "Based on data from the AI Readiness Report (Report 1).",
+                "Based on data from the AI Status Report (Report 1).",
             )
             # KIS-1272 (Aufgabe 2): Der EN-Token-Sanitizer lief bisher nur im
             # R1-Renderer — Rest-DE-Tokens ("Prüfschritt", "Freigabe",
@@ -1255,6 +1257,12 @@ def render_deep_dive_html(sections: Dict[str, str],
                 _html = _en_tokens(_html, 'en')
             except Exception:
                 pass
+            # KIS-1273 (Aufgabe 5c): Kollaps "AI Readiness Report" →
+            # "AI Status Report" NUR im KPA-Render-Pfad (EN-gated) — LLM-
+            # Sections nennen Report 1 sonst gemischt (EN-Lauf 5 S. 10).
+            # Bewusst NICHT global: in R1/R2 kann "AI Readiness Report" als
+            # Hero-Titel legitim vorkommen.
+            _html = _html.replace('AI Readiness Report', 'AI Status Report')
             # KIS-EN3-NUMFMT: LLM-Sections zeigten DE-Zahlformate im EN-KPA —
             # konservativer Normalizer (Datums-/URL-Schutz eingebaut).
             # DE-Pfad unverändert (byte-identisch).

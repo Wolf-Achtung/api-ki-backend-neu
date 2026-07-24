@@ -144,9 +144,23 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     # LOCALE-SHIELD (Regex \b[\w-]*ki-sicherheit\.jetzt\b, IGNORECASE)
     # geschützt; bare "KI-Sicherheit" schützt der (?!-Sicherheit)-Lookahead.
     # ==========================================================================
+    # ==========================================================================
+    # KIS-1273 (EN-Lauf 5, Aufgabe 2): Kollaps-Regeln VOR dem DSGVO→GDPR-
+    # Mapping — Quelltexte wie "DSGVO (GDPR)"/"GDPR (DSGVO)" wurden sonst zu
+    # "GDPR (GDPR)" (6× im R2, z.B. "Use GDPR (GDPR), the European data
+    # protection law"). Flexibles Whitespace; nach dem Mapping fängt ein
+    # zweiter Kollaps in sanitize_en_locale_tokens Restfälle ab.
+    # ==========================================================================
+    (r"GDPR\s*\(\s*GDPR\s*\)", "GDPR"),
+    (r"GDPR\s*\(\s*DSGVO\s*\)", "GDPR"),
+    (r"DSGVO\s*\(\s*GDPR\s*\)", "GDPR"),
+
     (r"\(KI-Verordnung der EU\)", "(the EU AI Regulation)"),
     (r"\bKI-Verordnung\b", "EU AI Regulation"),
-    (r"\bKI-Readiness Report\b", "AI Readiness Report"),
+    # KIS-1273 (Aufgabe 5b): kanonischer EN-Name für Report 1 ist
+    # "AI Status Report" (vorher "AI Readiness Report" — der KPA mischte
+    # dadurch drei Benennungen, EN-Testlauf 5 S. 5/6/10).
+    (r"\bKI-Readiness Report\b", "AI Status Report"),
     (r"\bKI potential analysis\b", "AI potential analysis"),
     (r"\bKI\b(?!-Sicherheit)", "AI"),
     (r"\bPrüfschritte\b", "review steps"),
@@ -353,6 +367,11 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     (r"\bVorteile\b", "Advantages"),
     (r"\bAnwendung\b", "Application"),
     (r"\bAnwendungen\b", "Applications"),
+    # KIS-1273 (EN-Lauf 5, Aufgabe 4): Restdeutsch aus Run 5 ("broader
+    # Einführung", "wider Einführung"; KPA S.4 "Minimal sinnvoll is").
+    # Längere Phrase vor dem Einzeltoken.
+    (r"\bMinimal sinnvoll ist?\b", "The sensible minimum is"),
+    (r"\bEinführung\b", "rollout"),
 
     # ==========================================================================
     # WORD-BOUNDARY SAFE REPLACEMENTS (tag contexts)
@@ -400,13 +419,37 @@ def sanitize_en_locale_tokens(html: str, lang: str) -> str:
         r"|\b[\w-]*ki-sicherheit\.jetzt\b"            # Marken-Domain (auch nackt)
         # KIS-1272: Marken-Asset-Dateinamen (Logo) — "Sicherheit"→"Security"
         # machte aus src="ki-sicherheit-logo-small.png" einen toten Pfad.
-        r"|\b[\w-]*ki-sicherheit[\w-]*\.(?:png|jpe?g|svg|webp|gif)\b",
+        r"|\b[\w-]*ki-sicherheit[\w-]*\.(?:png|jpe?g|svg|webp|gif)\b"
+        # KIS-1273 (Aufgabe 3): Deutsche Förderprogramm-EIGENNAMEN bleiben
+        # unangetastet — "Förderung"→"Funding" etc. zerstörte sonst offizielle
+        # Programmnamen (Guardrail; die Quelle fixt die Förder-Map separat).
+        r"|BAFA\s*[–—-]\s*Förderung von Unternehmensberatungen(?:\s+für\s+KMU)?"
+        r"|Förderung von Unternehmensberatungen(?:\s+für\s+KMU)?"
+        r"|Games-Förderung des Bundes"
+        r"|Deutscher Filmförderfonds"
+        r"|Qualifizierungschancengesetz"
+        r"|Zentrales Innovationsprogramm Mittelstand"
+        r"|Medienboard Berlin-Brandenburg",
         flags=re.IGNORECASE,
     )
     out = _protect_re.sub(_shield, out)
 
     for pattern, repl in _EN_LOCALE_REPLACEMENTS:
         out = re.sub(pattern, repl, out, flags=re.IGNORECASE)
+
+    # KIS-1273 (Aufgabe 2): Kollaps NACH dem Mapping — falls das DSGVO→GDPR-
+    # Mapping erst hier ein "GDPR (GDPR)" erzeugt hat.
+    out = re.sub(r"GDPR\s*\(\s*GDPR\s*\)", "GDPR", out, flags=re.IGNORECASE)
+
+    # KIS-1273 (Aufgabe 4): \bKPA\b → "AI Potential Analysis" — NUR in
+    # sichtbaren Textknoten und case-sensitiv. Die IGNORECASE-Hauptliste
+    # würde sonst Attribute/IDs wie class="kpa-…" treffen (Tag-Split-Schutz
+    # analog _localize_snake_tokens / normalize_en_number_formats).
+    _kpa_parts = _EN_NUM_TAG_SPLIT_RE.split(out)
+    for _pi, _pp in enumerate(_kpa_parts):
+        if _pp and not _pp.startswith("<") and "KPA" in _pp:
+            _kpa_parts[_pi] = re.sub(r"\bKPA\b", "AI Potential Analysis", _pp)
+    out = "".join(_kpa_parts)
 
     for _i, _orig in enumerate(_shielded):
         out = out.replace(f"\x00LOCALE-SHIELD-{_i}\x00", _orig)
@@ -489,6 +532,21 @@ _EN_HYPHEN_RANGE_EUR_RE = re.compile(
     r"(?<=\d)-(?=\d[\d.,]*(?:[   ]|&nbsp;)*€)"
 )
 
+# KIS-1273 (Aufgabe 6a): Zahl-Hyphen-Zahl-Bereiche mit %-Suffix — der Report
+# brach nach dem Hyphen um ("45- 60%"). Hyphen → en-dash ohne Leerraum
+# ("45–60%"). Greift NUR mit %-Lookahead — ISO-Daten ("2026-01-15") und
+# Zählbereiche ("3-5 days") bleiben unberührt.
+_EN_PCT_RANGE_RE = re.compile(
+    r"(?<=\d)[ \t]*-[ \t]*(?=\d[\d.,]*(?:[ \t  ]|&nbsp;)*%)"
+)
+
+# KIS-1273 (Aufgabe 6b): gerade Einzel-Quotes um EIN Wort → typografische
+# Anführungszeichen ('failed' → “failed”). Bewusst eng: nur '<Buchstaben>'
+# mit Nicht-Wort-Umgebung — Apostrophe ("it's", "companies'") matchen nicht.
+# Läuft nur in Textknoten; <style>/<script>-Inhalte werden im Part-Loop
+# übersprungen (CSS-Strings wie font-family:'Inter' bleiben heil).
+_EN_QUOTED_WORD_RE = re.compile(r"(?<!\w)'([A-Za-z]+)'(?!\w)")
+
 # Schutzschild: URLs, E-Mails, dd.mm.yyyy-Datumsangaben
 _EN_NUM_PROTECT_RE = re.compile(
     r"https?://[^\s\"'<>]+"
@@ -534,18 +592,36 @@ def normalize_en_number_formats(html: str) -> str:
         out = _EN_MINUS_RANGE_RE.sub(r"\1–\2", out)
         # 5) KIS-1272 (7): "5,000-15,000€" → "5,000–15,000€" (en-dash, ohne Spaces)
         out = _EN_HYPHEN_RANGE_EUR_RE.sub("–", out)
+        # 5b) KIS-1273 (6a): "45- 60%" / "45-60%" → "45–60%" (en-dash, keine
+        #     Spaces — der Umbruch nach dem Hyphen entfällt)
+        out = _EN_PCT_RANGE_RE.sub("–", out)
         # 6) KIS-1272 (3a): "70 %" → "70%"
         out = _EN_PCT_TIGHT_RE.sub(r"\1%", out)
         # 7) KIS-1272 (3b): "15,000€" → "15,000 €"
         out = _EN_EUR_SPACE_RE.sub(r"\1 €", out)
+        # 8) KIS-1273 (6b): 'failed' → “failed” (nur Ein-Wort-Muster)
+        out = _EN_QUOTED_WORD_RE.sub("“\\1”", out)
         for i, orig in enumerate(shielded):
             out = out.replace(f"\x00EN-NUM-SHIELD-{i}\x00", orig)
         return out
 
     parts = _EN_NUM_TAG_SPLIT_RE.split(html)
+    # KIS-1273 (6b): <style>/<script>-Inhalte sind zwar "Textknoten", dürfen
+    # aber nie normalisiert werden (CSS-Strings, Zahlwerte, Quotes).
+    _skip_raw = False
     for i, part in enumerate(parts):
-        if part and not part.startswith("<"):
-            parts[i] = _normalize_text(part)
+        if not part:
+            continue
+        if part.startswith("<"):
+            _low = part[:8].lower()
+            if _low.startswith("<style") or _low.startswith("<script"):
+                _skip_raw = True
+            elif _low.startswith("</style") or _low.startswith("</scrip"):
+                _skip_raw = False
+            continue
+        if _skip_raw:
+            continue
+        parts[i] = _normalize_text(part)
     return "".join(parts)
 
 

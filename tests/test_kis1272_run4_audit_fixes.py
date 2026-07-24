@@ -202,7 +202,8 @@ class TestRiskEngineEN:
         assert "gut beherrschbar" not in html
         assert "Transparenzpflichten" not in html
         assert "überschaubar" not in html
-        assert "The risk profile is well manageable." in html
+        # KIS-1273 (Aufgabe 4): Wording poliert — "well manageable" → "manageable".
+        assert "The risk profile is manageable." in html
         assert "Transparency obligations under the AI Act apply" in html
         assert "The data protection requirements are manageable." in html
 

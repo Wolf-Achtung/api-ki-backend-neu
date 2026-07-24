@@ -9622,8 +9622,12 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         _size_bucket = _size_info.get("bucket", "team") if isinstance(_size_info, dict) else str(_size_info)
         _branch = briefing.get("branche", "")
         _country = (briefing.get("country") or "DE").upper()
+        # KIS-1273 (Aufgabe 2a): lang durchreichen — bei EN werden NUR die
+        # Feldwerte (Quote/Betrag/Relevanz) übersetzt, Programm-NAMEN bleiben
+        # per Shield unangetastet. DE-Pfad byte-identisch (Default "de").
         _funding_progs = get_filtered_funding_programs(
-            bundesland=_bl_code, size=_size_bucket, branch=_branch, country=_country
+            bundesland=_bl_code, size=_size_bucket, branch=_branch, country=_country,
+            lang=str(briefing.get("lang") or "de"),
         )
         if _funding_progs:
             _prog_lines = []
@@ -10044,11 +10048,34 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
 # KIS-1272-R4-T1: Deutsche Stopwort-/Umlaut-Heuristik, um kuratierte DE-Fallbacks
 # in EN-Reports zu erkennen (einige Fallback-Zweige liefern bereits EN — die
 # dürfen NICHT nochmal durch die Übersetzung laufen).
+# KIS-1273: Stopwortliste erweitert (für/von/mit/auch/dazu/bereits/laufende) und
+# als gemeinsame Kernfunktion _text_looks_german refaktoriert — dieselbe
+# Heuristik trägt jetzt sowohl das Fallback-Gate (KIS-1272) als auch das
+# sektionsweite EN-Sprachgate _en_language_sweep_sections (KIS-1273).
+# Bewusst case-sensitiv: "mit" bleibt lowercase-only, damit z. B. "MIT"
+# (Institution) in EN-Text nie als deutsches Stopwort zählt.
 _DE_FALLBACK_UMLAUT_RE = re.compile(r"[äöüÄÖÜß]")
 _DE_FALLBACK_STOPWORD_RE = re.compile(
     r"\b(?:und|oder|nicht|sowie|eine[nmrs]?|Ihre?[mnrs]?|wird|werden|sind|ist|"
-    r"bei|durch|keine[nmr]?|Unternehmen|Wochen|Monate[n]?|Schritte?)\b"
+    r"bei|durch|für|von|mit|auch|dazu|bereits|laufende[nmrs]?|"
+    r"keine[nmr]?|Unternehmen|Wochen|Monate[n]?|Schritte?)\b"
 )
+
+
+def _text_looks_german(plain_text: str, min_chars: int = 0) -> bool:
+    """KIS-1273: Kern-Heuristik — True, wenn sichtbarer Text deutsch aussieht.
+
+    Deutsch = (Umlaute/ß vorhanden ODER >= 3 deutsche Stopwörter) UND
+    sichtbarer Text >= min_chars Zeichen.
+    """
+    if not plain_text:
+        return False
+    stripped = " ".join(plain_text.split())
+    if min_chars and len(stripped) < min_chars:
+        return False
+    if _DE_FALLBACK_UMLAUT_RE.search(stripped):
+        return True
+    return len(_DE_FALLBACK_STOPWORD_RE.findall(stripped)) >= 3
 
 
 def _fallback_html_looks_german(html_text: str) -> bool:
@@ -10056,9 +10083,7 @@ def _fallback_html_looks_german(html_text: str) -> bool:
     if not html_text:
         return False
     plain = re.sub(r"<[^>]+>", " ", html_text)
-    if _DE_FALLBACK_UMLAUT_RE.search(plain):
-        return True
-    return len(_DE_FALLBACK_STOPWORD_RE.findall(plain)) >= 3
+    return _text_looks_german(plain, min_chars=0)
 
 
 def _translate_fallback_html_to_en(section_key: str, html_de: str) -> Optional[str]:
@@ -10106,6 +10131,208 @@ ENGLISH HTML:"""
     except Exception as exc:
         log.warning("[KIS-1272-R4-T1] Fallback translation failed for %s: %s — keeping German original", section_key, exc)
         return None
+
+
+# =============================================================================
+# KIS-1273 (EN-Testlauf 5): Strukturelles EN-Sprachgate auf Sektionsebene.
+# Lauf 5 zeigte, dass das LLM ganze Kapitel deutsch generieren kann (Management
+# Summary, Quick-Win-Karten, Förder-Narrative) — und dass die Sektionen von
+# Lauf zu Lauf "flippen". Punktuelle Wortersetzungen sind erschöpft; dieses
+# Gate läuft NUR bei lang=en, NACH allen Enforcern/Heals und unmittelbar VOR
+# render(): deutsche Blöcke werden erkannt und pro Sektion in EINEM LLM-Call
+# über ein Marker-Protokoll übersetzt (fail-open: bei Marker-Mismatch oder
+# leerer Antwort bleibt das Original). DE-Läufe sind byte-identisch (early
+# return, kein einziger Call).
+# =============================================================================
+
+# Block-Elemente per Regex (kein Parser nötig): p, li, td, th, h2-h6 …
+_LANG_SWEEP_BLOCK_RE = re.compile(
+    r"<(p|li|td|th|h[2-6])\b[^>]*>.*?</\1>",
+    re.IGNORECASE | re.DOTALL,
+)
+# … sowie Text-Divs ohne Kind-Block-Elemente (inline-Tags erlaubt).
+_LANG_SWEEP_DIV_RE = re.compile(
+    r"<div\b[^>]*>(?:(?!</?(?:div|p|ul|ol|li|table|tr|td|th|h[1-6])\b).)*?</div>",
+    re.IGNORECASE | re.DOTALL,
+)
+_LANG_SWEEP_MARKER_RE = re.compile(r"<<<BLOCK\s+(\d+)>>>")
+# Max. LLM-Calls pro Report (eine pro betroffener Sektion; Sektionen ohne
+# deutsche Blöcke kosten nichts).
+_LANG_SWEEP_MAX_LLM_CALLS = 10
+_LANG_SWEEP_MIN_BLOCK_CHARS = 25
+
+
+def _find_german_blocks(section_html: str) -> List["re.Match[str]"]:
+    """KIS-1273: Liefert Regex-Matches aller deutsch aussehenden Blöcke.
+
+    Verschachtelte Treffer (z. B. <li> innerhalb eines bereits erfassten
+    <td>) werden verworfen, damit Ersetzungen nie überlappen.
+    """
+    matches = list(_LANG_SWEEP_BLOCK_RE.finditer(section_html))
+    matches += list(_LANG_SWEEP_DIV_RE.finditer(section_html))
+    matches.sort(key=lambda m: (m.start(), -(m.end() - m.start())))
+    top_level: List["re.Match[str]"] = []
+    last_end = -1
+    for m in matches:
+        if m.start() < last_end:
+            continue  # in einem bereits akzeptierten Block enthalten/überlappend
+        top_level.append(m)
+        last_end = m.end()
+    german: List["re.Match[str]"] = []
+    for m in top_level:
+        plain = re.sub(r"<[^>]+>", " ", m.group(0))
+        if _text_looks_german(plain, min_chars=_LANG_SWEEP_MIN_BLOCK_CHARS):
+            german.append(m)
+    return german
+
+
+def _translate_de_blocks_to_en(section_key: str, blocks: List[str]) -> Optional[List[str]]:
+    """KIS-1273: Übersetzt deutsche HTML-Blöcke einer Sektion in EINEM LLM-Call.
+
+    Marker-Protokoll: Jeder Block geht mit <<<BLOCK n>>>-Marker in den Prompt,
+    die Antwort muss exakt dieselben Marker enthalten. Bei Marker-Mismatch,
+    leeren Blöcken oder leerer Antwort: None (Aufrufer behält das Original —
+    fail-open, nie kaputter Report).
+    """
+    if not blocks:
+        return None
+    numbered = "\n".join(
+        f"<<<BLOCK {i}>>>\n{b}" for i, b in enumerate(blocks)
+    )
+    translate_prompt = f"""You are a professional technical translator (German → English).
+
+TASK: The following HTML blocks come from an ENGLISH business report, but they were generated in German by mistake. Translate each block into English.
+
+STRICT RULES:
+- Keep the HTML structure, all tags, attributes and CSS classes EXACTLY as they are.
+- Keep all numbers, currency amounts, percentages, dates and scores unchanged.
+- Keep proper nouns unchanged (brand names; "KI-Sicherheit.jetzt").
+- IMPORTANT: Keep German funding programme NAMES exactly as written — e.g. "BAFA – Förderung von Unternehmensberatungen für KMU", "DFFF – Deutscher Filmförderfonds", "ProFIT", "ZIM", "KfW", "Games-Förderung des Bundes", "Medienboard", "Qualifizierungschancengesetz". These are official programme names, NOT text to translate.
+- Translate ONLY the human-readable text content. Do not add, remove, shorten or reorder anything.
+- Repeat each <<<BLOCK n>>> marker line EXACTLY, followed by the translated block. Output nothing else — no explanations, no markdown fences.
+
+GERMAN BLOCKS:
+{numbered}
+
+ENGLISH BLOCKS:"""
+
+    try:
+        response = _call_llm_for_section(
+            section_key=section_key,
+            prompt=translate_prompt,
+            system_prompt=build_report_system_prompt(mode="expand", lang="en"),
+            temperature=0.2,
+            max_tokens=8000,
+        )
+    except Exception as exc:
+        log.warning("[KIS-1273] Language sweep LLM call failed for %s: %s — keeping originals", section_key, exc)
+        return None
+    if not response or not str(response).strip():
+        log.warning("[KIS-1273] Empty language-sweep response for %s — keeping originals", section_key)
+        return None
+    cleaned = str(response).replace("```html", "").replace("```", "")
+    parts = _LANG_SWEEP_MARKER_RE.split(cleaned)
+    # parts = [preamble, idx0, text0, idx1, text1, …]
+    found: Dict[int, str] = {}
+    for i in range(1, len(parts) - 1, 2):
+        try:
+            idx = int(parts[i])
+        except (TypeError, ValueError):
+            return None
+        found[idx] = parts[i + 1].strip()
+    expected = set(range(len(blocks)))
+    if set(found.keys()) != expected:
+        log.warning(
+            "[KIS-1273] Marker mismatch for %s (expected %d blocks, got %s) — keeping originals",
+            section_key, len(blocks), sorted(found.keys()),
+        )
+        return None
+    if any(not found[i] for i in expected):
+        log.warning("[KIS-1273] Empty translated block for %s — keeping originals", section_key)
+        return None
+    return [found[i] for i in range(len(blocks))]
+
+
+def _en_language_sweep_sections(sections: Dict[str, Any], briefing: Dict[str, Any]) -> Dict[str, Any]:
+    """KIS-1273: EN-Sprachgate — übersetzt deutsche Blöcke in String-Sektionen.
+
+    Läuft NUR bei lang=en (DE bleibt byte-identisch, kein LLM-Call). Pro
+    betroffener Sektion genau EIN LLM-Call (Marker-Protokoll), gedeckelt auf
+    _LANG_SWEEP_MAX_LLM_CALLS. Danach werden zusätzlich die deterministischen
+    EN-Locale-Token-Mappings (html_sanitizer.sanitize_en_locale_tokens) neu
+    angewandt: Restore-/Heal-Pässe NACH dem Sanitizer-Final-Pass (RESCUE-640,
+    QW-Pristine-Restore, LLM-Heals) können sonst deutsche Tokens wie
+    "Vier-Augen-Prinzip" oder "siehe …" zurück in den Auslieferungszustand
+    bringen (Lauf 5, Kit-Seite S.14).
+    """
+    lang = str(
+        (briefing or {}).get("lang")
+        or (briefing or {}).get("LANG")
+        or sections.get("LANG", "de")
+    ).strip().lower()
+    if not lang.startswith("en"):
+        return sections
+
+    llm_calls = 0
+    failed_keys: set = set()
+    for key in list(sections.keys()):
+        val = sections.get(key)
+        if key.startswith("_") or not isinstance(val, str) or not val.strip():
+            continue
+        try:
+            german_matches = _find_german_blocks(val)
+        except Exception as exc:  # pragma: no cover
+            log.warning("[KIS-1273] Block scan failed for %s: %s", key, exc)
+            continue
+        if not german_matches:
+            continue
+        if llm_calls >= _LANG_SWEEP_MAX_LLM_CALLS:
+            log.warning(
+                "[KIS-1273] LLM budget (%d) exhausted — section %s keeps %d German block(s)",
+                _LANG_SWEEP_MAX_LLM_CALLS, key, len(german_matches),
+            )
+            failed_keys.add(key)
+            continue
+        llm_calls += 1
+        translated = _translate_de_blocks_to_en(key, [m.group(0) for m in german_matches])
+        if not translated:
+            # fail-open: Original behalten — und die Sektion auch von der
+            # Token-Nachsanitisierung ausnehmen, sonst würde aus dem bewusst
+            # behaltenen deutschen Block genau das Denglisch ("Das Project
+            # trägt sich…"), das dieses Gate verhindern soll.
+            failed_keys.add(key)
+            continue
+        rebuilt = val
+        for m, new_block in sorted(
+            zip(german_matches, translated), key=lambda t: t[0].start(), reverse=True
+        ):
+            rebuilt = rebuilt[: m.start()] + new_block + rebuilt[m.end():]
+        sections[key] = rebuilt
+        log.info(
+            "[KIS-1273] Language sweep: %d German block(s) translated in section %s",
+            len(german_matches), key,
+        )
+
+    # Deterministische EN-Token-Nachsanitisierung (siehe Docstring).
+    try:
+        from services.html_sanitizer import sanitize_en_locale_tokens
+        resanitized = 0
+        for key in list(sections.keys()):
+            val = sections.get(key)
+            if key.startswith("_") or not isinstance(val, str) or not val:
+                continue
+            if key in failed_keys:
+                continue  # fail-open-Sektion: unangetastet lassen (s. o.)
+            fixed = sanitize_en_locale_tokens(val, "en")
+            if fixed != val:
+                sections[key] = fixed
+                resanitized += 1
+        if resanitized:
+            log.info("[KIS-1273] Locale-token re-sanitize fixed %d section(s) after late heals", resanitized)
+    except Exception as exc:  # pragma: no cover
+        log.warning("[KIS-1273] Locale-token re-sanitize skipped: %s", exc)
+
+    return sections
 
 
 def _get_fallback_content(section_key: str, briefing: Dict[str, Any], scores: Dict[str, Any]) -> str:
@@ -22672,6 +22899,19 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
 
     # KIS-1094: L2 defense layer removed — GF-Vorlage is injected via bypass
     # in the post-render step (before sofort-start section).
+
+    # =========================================================================
+    # KIS-1273: Strukturelles EN-Sprachgate — NACH allen Quality-Enforcern,
+    # Konsistenz-/Heal-Pässen und Restores, unmittelbar VOR dem QA-Gate und
+    # render(). Deutsche Blöcke (Lauf 5: Management Summary, Quick-Win-Karten,
+    # Förder-Narrative) werden pro Sektion in einem LLM-Call übersetzt;
+    # DE-Läufe bleiben byte-identisch (early return im Gate). Fail-open.
+    # =========================================================================
+    try:
+        if str(report_lang or "de").strip().lower().startswith("en"):
+            sections = _en_language_sweep_sections(sections, answers)
+    except Exception as _lg_exc:  # pragma: no cover
+        log.warning("[%s] [KIS-1273] EN language sweep skipped: %s", run_id, _lg_exc)
 
     # KIS-1249/1251 / Platin+++ Stufe 1: maschinelles QA-Gate über dem
     # AUSLIEFERUNGSZUSTAND — nach Quality-Enforcer, Badge-Eindeutschung,

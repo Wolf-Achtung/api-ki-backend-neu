@@ -727,6 +727,9 @@ _FUNDING_TERMS_EN: List[Tuple[str, str]] = [
     (r"Produktionsschritten", "production steps"),
     (r"Produktionsschritte", "production steps"),
     (r"Mittel bis hoch", "Medium to high"),
+    # KIS-1273 (Aufgabe 2c): "Mittel" allein (Relevanz-Stufe) — NACH der
+    # Phrase "Mittel bis hoch"; Wortgrenzen schützen "Mittelstand" u. ä.
+    (r"Mittel", "Medium"),
     (r"Sehr hoch", "Very high"),
     (r"hoch", "high"),
     (r"niedrig", "low"),
@@ -735,10 +738,21 @@ _FUNDING_TERMS_EN: List[Tuple[str, str]] = [
     (r"KI-gestützten", "AI-supported"),
     (r"KI-gestützte", "AI-supported"),
     (r"oft Teil von", "often part of"),
+    # KIS-1273 (Aufgabe 2c, Lauf-5-Befund): "Mittel – KI als Teil von
+    # Digitalisierungsinvestitionen förderfähig" wurde nur halb übersetzt.
+    (r"als Teil von", "as part of"),
     (r"Projekten", "projects"),
     (r"Projekte", "projects"),
     (r"KI-Einführung", "AI adoption"),
     (r"im Rahmen der Projektentwicklung", "as part of project development"),
+    # KIS-1273 (Aufgabe 2c, Lauf-5-Befund): "… im Rahmen of the Projektkosten"
+    # entstand, weil nur "der" (→ "of the") gemappt war. Längste Phrase zuerst.
+    (r"im Rahmen der", "as part of the"),
+    (r"im Rahmen", "as part of"),
+    (r"Projektkosten", "project costs"),
+    (r"Wachstumsfinanzierung", "growth financing"),
+    (r"Verwaltungsdigitalisierung", "administrative digitalisation"),
+    (r"Prozessautomatisierung", "process automation"),
     (r"Projektentwicklung", "project development"),
     (r"AV-Inhalte", "AV content"),
     (r"Produktionstools", "production tools"),
@@ -790,6 +804,70 @@ _FUNDING_TERMS_EN: List[Tuple[str, str]] = [
 
 _FUNDING_TERMS_EN_RE: List[Tuple["re.Pattern[str]", str]] = []
 
+# =============================================================================
+# KIS-1273 (Aufgabe 2b): Shield für Förderprogramm-EIGENNAMEN.
+# Lauf 5 zeigte zerlegte Programmnamen ("BAFA – Funding von Unternehmens-
+# beratungen für KMU", "Games-Funding des Bundes") — auch in Prompt-Daten
+# für R2 und damit in Empfehlungsbox + Sources. Bekannte Programmnamen werden
+# VOR der Wort-Ersetzung durch Platzhalter geschützt und danach restauriert,
+# damit auch Fließtext-Anwendungen (z. B. build_core_funding_table_html)
+# Eigennamen nie zerlegen. Die Liste wird aus den Förder-Datensätzen
+# (data/funding*) gespeist, ergänzt um harte Kern-Aliase.
+# =============================================================================
+
+_FUNDING_NAME_SHIELD_BASE: List[str] = [
+    "BAFA – Förderung von Unternehmensberatungen für KMU",
+    "Förderung von Unternehmensberatungen für KMU",
+    "DFFF – Deutscher Filmförderfonds",
+    "Deutscher Filmförderfonds",
+    "Games-Förderung des Bundes (BMFTR)",
+    "Games-Förderung des Bundes",
+    "Jurybasierte kulturelle Filmförderung des Bundes",
+    "Förderprogramm Filmerbe (FFE)",
+    "Förderprogramm Filmerbe",
+    "FFF Bayern – Film-, Games- und XR-Förderung",
+    "MDM – Mitteldeutsche Medienförderung (inkl. Games/XR)",
+    "Mitteldeutsche Medienförderung",
+    "MOIN Filmförderung Hamburg Schleswig-Holstein",
+    "Innosuisse – Schweizerische Agentur für Innovationsförderung",
+    "LfA Förderbank Bayern",
+    "Eurimages – Koproduktionsförderung (Europarat)",
+    "Qualifizierungschancengesetz (Agentur für Arbeit)",
+    "Qualifizierungschancengesetz",
+    "Medienboard Berlin-Brandenburg (New Media)",
+    "Medienboard",
+    "KfW-Förderkredite Digitalisierung & Innovation",
+    "ZIM – Zentrales Innovationsprogramm Mittelstand",
+    "KOMPASS – Kompakte Hilfe für Solo-Selbstständige",
+    "ProFIT (Berlin)",
+    "ProFIT",
+    "ZIM",
+    "KfW",
+    "BAFA",
+    "DFFF",
+]
+
+_FUNDING_NAME_SHIELD_CACHE: List[str] = []
+
+
+def _funding_name_shield_list() -> List[str]:
+    """KIS-1273 (2b): Bekannte Programmnamen, längste zuerst (lazy, fail-open)."""
+    if _FUNDING_NAME_SHIELD_CACHE:
+        return _FUNDING_NAME_SHIELD_CACHE
+    names = set(_FUNDING_NAME_SHIELD_BASE)
+    try:
+        for program in load_funding_programs():
+            for field in ("title", "name"):
+                val = str(program.get(field) or "").strip()
+                # Nur „echte" Namen shielden — Kurzwörter würden Fließtext
+                # unnötig durchlöchern.
+                if len(val) >= 4:
+                    names.add(val)
+    except Exception as exc:  # pragma: no cover
+        log.debug("[KIS-1273] Funding name shield: dataset scan skipped: %s", exc)
+    _FUNDING_NAME_SHIELD_CACHE.extend(sorted(names, key=len, reverse=True))
+    return _FUNDING_NAME_SHIELD_CACHE
+
 
 def _translate_funding_value_en(value: str) -> str:
     """Übersetzt häufige deutsche Begriffe in einem Förder-Feldwert nach EN.
@@ -797,6 +875,10 @@ def _translate_funding_value_en(value: str) -> str:
     Zusätzlich werden deutsche Tausenderpunkte in EN-Kommas gewandelt
     ("16.500 €" → "16,500 €"). Wort-Ersetzung mit Wortgrenzen, damit
     Teilwörter ("Basis" enthält "bis") unangetastet bleiben.
+
+    KIS-1273 (2b): NIEMALS auf Programm-NAMEN anwenden — als zweite
+    Verteidigungslinie werden bekannte Programmnamen im Text per Platzhalter
+    geschützt und nach der Ersetzung restauriert.
     """
     import re as _re
     if not value:
@@ -808,6 +890,12 @@ def _translate_funding_value_en(value: str) -> str:
                              _re.IGNORECASE), repl)
             )
     out = str(value)
+    # KIS-1273 (2b): Programm-Eigennamen shielden (längste zuerst).
+    _shielded_names: List[str] = []
+    for _name in _funding_name_shield_list():
+        if _name in out:
+            out = out.replace(_name, f"\x00FUND-NAME-{len(_shielded_names)}\x00")
+            _shielded_names.append(_name)
     for rx, repl in _FUNDING_TERMS_EN_RE:
         out = rx.sub(repl, out)
     # DE-Tausenderpunkt → EN-Komma (Datumsangaben wie 31.12.2026 bleiben heil)
@@ -816,6 +904,8 @@ def _translate_funding_value_en(value: str) -> str:
         lambda m: m.group(1) + m.group(2).replace(".", ","),
         out,
     )
+    for _i, _name in enumerate(_shielded_names):
+        out = out.replace(f"\x00FUND-NAME-{_i}\x00", _name)
     return out
 
 
@@ -869,7 +959,14 @@ def get_filtered_funding_programs(
             "max_funding": (
                 _translate_funding_value_en(rec.max_funding) if _is_en else rec.max_funding
             ),
-            "ki_relevance": rec.ki_relevance,
+            # KIS-1273 (Aufgabe 2a): Relevanz-Feld bei EN übersetzen — es
+            # leakte deutsch in die Prompt-Daten ("AI relevance: Sehr hoch –
+            # KI-Projekte explizit förderfähig"). Programm-NAMEN bleiben per
+            # Shield in _translate_funding_value_en unangetastet; das
+            # name-Feld selbst geht NIE durch die Map.
+            "ki_relevance": (
+                _translate_funding_value_en(rec.ki_relevance) if _is_en else rec.ki_relevance
+            ),
             "url": rec.url or "",
             "summary": (
                 (rec.summary_en or rec.summary_de or "") if _is_en
@@ -903,11 +1000,16 @@ def format_funding_programs_for_prompt(programs: list[dict], lang: str = "de") -
     lines = []
     for p in programs:
         if _is_en:
+            # KIS-1273 (Aufgabe 2a): Das NAME-Feld geht NIEMALS durch die
+            # Übersetzungs-Map (Programm-Eigenname, z. B. "BAFA – Förderung
+            # von Unternehmensberatungen für KMU"). Nur Wert-/Relevanz-Felder
+            # werden (idempotent) übersetzt, falls der Aufrufer noch deutsche
+            # Rohwerte liefert.
             lines.append(
                 f"- {p['name']} (provider: {p['provider']})\n"
-                f"  Funding rate: {p['funding_rate']}\n"
-                f"  Max. funding: {p['max_funding']}\n"
-                f"  AI relevance: {p['ki_relevance']}\n"
+                f"  Funding rate: {_translate_funding_value_en(str(p['funding_rate'] or ''))}\n"
+                f"  Max. funding: {_translate_funding_value_en(str(p['max_funding'] or ''))}\n"
+                f"  AI relevance: {_translate_funding_value_en(str(p['ki_relevance'] or ''))}\n"
                 f"  URL: {p['url'] or 'n/a'}\n"
                 f"  Summary: {p['summary'] or 'n/a'}"
             )

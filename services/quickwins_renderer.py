@@ -1033,6 +1033,14 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL", ru
             _hinweis_raw = str(qw.get("hinweis", _hinweis_default) or _hinweis_default).strip()
             if _lang_en and _hinweis_raw.lower() == "siehe business case":
                 _hinweis_raw = "see business case"
+            elif _lang_en and re.search(r"\b[Ss]iehe\b", _hinweis_raw):
+                # KIS-1273 (Aufgabe 5, Lauf-5-Befund "– siehe AI-Projects"):
+                # generisches "siehe X" → "see X" NUR im Hinweis-/Fußnoten-
+                # Feld (kein globaler Ersatz). Die Fußnote kann unter 25
+                # Zeichen liegen und rutscht damit unter das Sprachgate
+                # (KIS-1273 Aufgabe 1); DE bleibt byte-identisch.
+                _hinweis_raw = re.sub(r"\bsiehe\b", "see", _hinweis_raw)
+                _hinweis_raw = re.sub(r"\bSiehe\b", "See", _hinweis_raw)
             hinweis = html_module.escape(_hinweis_raw)
 
             # Count words for this card
