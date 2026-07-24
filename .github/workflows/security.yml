@@ -26,7 +26,9 @@ jobs:
 
   pip-audit:
     name: pip-audit (Python deps)
-    if: hashFiles('requirements.txt') != '' || hashFiles('pyproject.toml') != ''
+    # KIS-1271: hashFiles() ist auf Job-Ebene nicht erlaubt (Invalid workflow
+    # file bei jedem main-Push seit PR #1058). Die Steps pruefen die Dateien
+    # ohnehin selbst per [ -f ... ] — Job-Level-Guard ersatzlos entfernt.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
