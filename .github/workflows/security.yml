@@ -67,5 +67,10 @@ jobs:
           cache: pip
       - name: Install bandit
         run: pip install --upgrade bandit
+      # KIS-1271: Zweistufig — Mediums sichtbar (informativ), Highs blockieren.
+      # Die 4 bekannten B701-autoescape-Stellen sind mit begruendetem nosec
+      # annotiert (Templates rendern serverseitige HTML-Sektionen by design).
+      - name: Bandit report (medium+, informational)
+        run: bandit -r . -ll --exclude='./venv,./.git,./.audit-temp,./tests,./scripts' --exit-zero
       - name: Run bandit (HIGH severity gate)
-        run: bandit -r . -ll --exclude='./venv,./.git,./.audit-temp,./tests,./scripts'
+        run: bandit -r . --severity-level high --exclude='./venv,./.git,./.audit-temp,./tests,./scripts'

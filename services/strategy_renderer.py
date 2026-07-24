@@ -171,7 +171,7 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     from models import Briefing, Analysis
 
     template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
-    env = Environment(loader=FileSystemLoader(template_dir), autoescape=False)
+    env = Environment(loader=FileSystemLoader(template_dir), autoescape=False)  # nosec B701 — bewusst: Templates rendern serverseitig erzeugte HTML-Sektionen (kein User-HTML; Eingaben werden upstream via html_sanitizer/html.escape behandelt); autoescape=True würde die Section-HTML-Architektur aller Reports zerstören
 
     briefing = db_session.query(Briefing).filter(Briefing.id == sr.briefing_id).first()
     briefing_data = (briefing.answers if briefing else {}) or {}

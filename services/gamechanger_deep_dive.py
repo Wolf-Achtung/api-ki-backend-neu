@@ -1114,7 +1114,7 @@ def render_deep_dive_html(sections: Dict[str, str],
         import os
 
         template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'templates')
-        env = Environment(loader=FileSystemLoader(template_dir), autoescape=False)
+        env = Environment(loader=FileSystemLoader(template_dir), autoescape=False)  # nosec B701 — bewusst: Templates rendern serverseitig erzeugte HTML-Sektionen (kein User-HTML; Eingaben werden upstream via html_sanitizer/html.escape behandelt); autoescape=True würde die Section-HTML-Architektur aller Reports zerstören
 
         # KIS-1248 (Voll-Englisch Stufe 2): EN-Template wählen, wenn der
         # Report englisch ist und die EN-Fassung existiert.

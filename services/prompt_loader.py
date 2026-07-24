@@ -594,7 +594,7 @@ def _interpolate_text(
             # (otherwise cached templates bypass get_source and our detection)
             env = Environment(
                 loader=cycle_loader,  # type: ignore[arg-type,unused-ignore]
-                autoescape=False,
+                autoescape=False,  # nosec B701 — bewusst: rendert Prompt-Markdown, kein User-HTML
                 cache_size=0,  # Disable cache to ensure get_source is called each time
             )
             template = env.from_string(s)

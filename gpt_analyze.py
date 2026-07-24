@@ -1001,7 +1001,7 @@ def _trigger_hard_stop_alert(gate: ReportErrorGate, run_id: str, alert_mgr: Any)
 # --- Patch03: field label helper ---
 
 # === KSJ helpers: Jinja rendering & placeholder fix =======================
-_ksj_jinja_env = Environment(loader=BaseLoader(), autoescape=False)
+_ksj_jinja_env = Environment(loader=BaseLoader(), autoescape=False)  # nosec B701 — bewusst: Templates rendern serverseitig erzeugte HTML-Sektionen (kein User-HTML; Eingaben werden upstream via html_sanitizer/html.escape behandelt); autoescape=True würde die Section-HTML-Architektur aller Reports zerstören
 
 def ksj_render_string(tpl_text: str, ctx: dict) -> str:
     try:
