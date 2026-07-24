@@ -849,6 +849,16 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
     # nach _enforce_budget_values, das deutsche Formate reinjizieren kann.
     # Nur lang=en, DE bleibt byte-identisch.
     if _ctx_en:
+        # KIS-1272 (EN-Lauf 4, Aufgabe 2): Der EN-Token-Sanitizer lief bisher
+        # nur im R1-Renderer — Rest-DE-Tokens im Strategy-Report ("Prüfschritt",
+        # "Freigabe", "Vier-Augen-Prinzip", "(KI-Verordnung der EU)",
+        # "begrenzt-risk", …) blieben deshalb stehen. Nur lang=en; URLs,
+        # E-Mails, Marken-Domain und Logo-Dateinamen schützt der LOCALE-SHIELD.
+        try:
+            from services.html_sanitizer import sanitize_en_locale_tokens as _en_tokens
+            html = _en_tokens(html, "en")
+        except Exception:  # pragma: no cover
+            pass
         try:
             from services.html_sanitizer import normalize_en_number_formats as _en_numfmt
             html = _en_numfmt(html)

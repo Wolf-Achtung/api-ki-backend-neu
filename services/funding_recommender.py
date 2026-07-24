@@ -708,6 +708,49 @@ def recommend_funding(
 # =============================================================================
 
 _FUNDING_TERMS_EN: List[Tuple[str, str]] = [
+    # KIS-1272-R4-T4: Phrasen-Map VOR der Wort-Map, längste zuerst — Run 4
+    # zeigte Mischsprache in AI-RELEVANCE/Notes-Zellen ("Sehr hoch – KI-Projects
+    # explizit förderfähig", "Medium up to hoch – KI often Teil von
+    # Digitali­sierungsprojekten"). Programm-Eigennamen (BAFA, DFFF, ProFIT)
+    # bleiben unangetastet; "KI-Sicherheit(.jetzt)" ist per Lookahead geschützt.
+    (r"Entwicklung und Prototyping von Games", "Development and prototyping of games"),
+    (r"ideal für initiale KI-Strategieberatung", "ideal for initial AI strategy consulting"),
+    (r"werden explizit gefördert", "are explicitly funded"),
+    (r"explizit gefördert", "explicitly funded"),
+    (r"explizit förderfähig", "explicitly eligible"),
+    (r"förderfähige", "eligible"),
+    (r"förderfähig", "eligible"),
+    (r"Digitalisierungsprojekten", "digitalisation projects"),
+    (r"Digitalisierungsprojekte", "digitalisation projects"),
+    (r"Digitalisierungsinvestitionen", "digitalisation investments"),
+    (r"Kinofilmproduktion", "Theatrical film production"),
+    (r"Produktionsschritten", "production steps"),
+    (r"Produktionsschritte", "production steps"),
+    (r"Mittel bis hoch", "Medium to high"),
+    (r"Sehr hoch", "Very high"),
+    (r"hoch", "high"),
+    (r"niedrig", "low"),
+    (r"KI-Projekten", "AI projects"),
+    (r"KI-Projekte", "AI projects"),
+    (r"KI-gestützten", "AI-supported"),
+    (r"KI-gestützte", "AI-supported"),
+    (r"oft Teil von", "often part of"),
+    (r"Projekten", "projects"),
+    (r"Projekte", "projects"),
+    (r"KI-Einführung", "AI adoption"),
+    (r"im Rahmen der Projektentwicklung", "as part of project development"),
+    (r"Projektentwicklung", "project development"),
+    (r"AV-Inhalte", "AV content"),
+    (r"Produktionstools", "production tools"),
+    (r"Digitalisierung", "digitalisation"),
+    (r"gefördert", "funded"),
+    (r"explizit", "explicitly"),
+    (r"Gering", "Low"),
+    (r"für", "for"),
+    (r"und", "and"),
+    (r"sind", "are"),
+    # Generisch \bKI\b→AI, aber NIE im Eigennamen/Domain "KI-Sicherheit(.jetzt)"
+    (r"KI(?!-Sicherheit)", "AI"),
     (r"regional unterschiedlich", "varies by region"),
     (r"projektabhängig", "project-dependent"),
     (r"zinsvergünstigt", "reduced-interest"),

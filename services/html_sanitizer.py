@@ -137,6 +137,28 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     (r"\bGastronomie & Tourismus\b", "Hospitality & Tourism"),
 
     # ==========================================================================
+    # KIS-1272 (EN-Lauf 4, Aufgabe 2): Restdeutsche Fach-Tokens.
+    # Reihenfolge: explizite KI-Phrasen VOR dem generischen \bKI\b-Token —
+    # Bindestrich-Komposita werden NUR über explizite Phrasen übersetzt.
+    # Die Marke "KI-Sicherheit.jetzt"/"ki-sicherheit.jetzt" ist über den
+    # LOCALE-SHIELD (Regex \b[\w-]*ki-sicherheit\.jetzt\b, IGNORECASE)
+    # geschützt; bare "KI-Sicherheit" schützt der (?!-Sicherheit)-Lookahead.
+    # ==========================================================================
+    (r"\(KI-Verordnung der EU\)", "(the EU AI Regulation)"),
+    (r"\bKI-Verordnung\b", "EU AI Regulation"),
+    (r"\bKI-Readiness Report\b", "AI Readiness Report"),
+    (r"\bKI potential analysis\b", "AI potential analysis"),
+    (r"\bKI\b(?!-Sicherheit)", "AI"),
+    (r"\bPrüfschritte\b", "review steps"),
+    (r"\bPrüfschritt\b", "review step"),
+    (r"\bFreigabe\b", "approval"),
+    (r"\bVier-Augen-Prinzip\b", "two-person principle"),
+    (r"\bbegrenzt-risk\b", "limited-risk"),
+    # Guardrail: "begrenzt" ist im EN-Kontext immer die AI-Act-Risikoklasse.
+    (r"\bbegrenzt\b", "limited"),
+    (r"\bsiehe Business Case\b", "see business case"),
+
+    # ==========================================================================
     # LONGER PHRASES FIRST (avoid partial collisions)
     # ==========================================================================
     (r"\bIhr Unternehmen\b", "Your Company"),
@@ -314,8 +336,13 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     (r"\bJahre\b", "Years"),
     (r"\bJahr\b", "Year"),
     # Time - Day
+    # KIS-1272 (EN-Lauf 4, Aufgabe 1): bare \bTag\b ersetzte auch das
+    # ENGLISCHE Verb "tag" ("Tag existing transcripts" → "Day existing
+    # transcripts", satzinitial "Tag a first batch" → "Day a first batch").
+    # Nur noch "Tag" unmittelbar vor einer Zahl ist der deutsche Zeitbegriff
+    # ("Tag 3" → "Day 3").
     (r"\bTage\b", "Days"),
-    (r"\bTag\b", "Day"),
+    (r"\bTag(?=\s+\d)", "Day"),
     # Additional common terms
     (r"\bAbteilung\b", "Department"),
     (r"\bProjekt\b", "Project"),
@@ -370,7 +397,10 @@ def sanitize_en_locale_tokens(html: str, lang: str) -> str:
     _protect_re = re.compile(
         r"https?://[^\s\"'<>]+"                      # URLs
         r"|[\w.+-]+@[\w-]+(?:\.[\w-]+)+"             # E-Mail-Adressen
-        r"|\b[\w-]*ki-sicherheit\.jetzt\b",           # Marken-Domain (auch nackt)
+        r"|\b[\w-]*ki-sicherheit\.jetzt\b"            # Marken-Domain (auch nackt)
+        # KIS-1272: Marken-Asset-Dateinamen (Logo) — "Sicherheit"→"Security"
+        # machte aus src="ki-sicherheit-logo-small.png" einen toten Pfad.
+        r"|\b[\w-]*ki-sicherheit[\w-]*\.(?:png|jpe?g|svg|webp|gif)\b",
         flags=re.IGNORECASE,
     )
     out = _protect_re.sub(_shield, out)
@@ -388,7 +418,11 @@ def sanitize_en_locale_tokens(html: str, lang: str) -> str:
     de_check_words = ["Unternehmen", "Branche", "Bewertung", "Reifegrad",
                       "Kennzahlen", "Risiken", "Handlungsempfehlungen", "Unternehmensgröße",
                       "Mitarbeiter", "Umsatz", "Potenzial", "Prozess", "Daten",
-                      "Ziel", "Analyse", "Ergebnis", "Jahr", "Tag"]
+                      # KIS-1272: "Tag" aus dem Leftover-Check entfernt — das
+                      # englische Verb "tag" bleibt jetzt bewusst stehen und
+                      # löste sonst bei jedem EN-Report eine False-Positive-
+                      # Warnung aus.
+                      "Ziel", "Analyse", "Ergebnis", "Jahr"]
     leftovers = [w for w in de_check_words if w in out]
     if leftovers:
         log.warning("[locale-sanitize] DE leftovers after sanitize: %s", leftovers)
@@ -426,6 +460,33 @@ _EN_DECIMAL_UNIT_RE = re.compile(
 # keine bereits formatierten Zahlen (kein . oder , angrenzend).
 _EN_FOURDIGIT_EUR_RE = re.compile(
     r"(?<![\d.,])(\d)(\d{3})(?=(?:\s|&nbsp;| )*(?:€|Euros?\b))"
+)
+
+# KIS-1272 (EN-Lauf 4, Aufgabe 3a): Prozent-Schreibweise vereinheitlichen —
+# "70 %" (Ziffer + Leerzeichen/nbsp + %) → "70%". Der Report mischte beide
+# Formen teils in derselben Tabelle.
+_EN_PCT_TIGHT_RE = re.compile(r"(\d)(?:[ \t  ]|&nbsp;)+%")
+
+# KIS-1272 (Aufgabe 3b): Ziffer direkt vor € → normales Leerzeichen einfügen
+# ("15,000€" → "15,000 €", konsistent zum Bestand "24,000 €").
+_EN_EUR_SPACE_RE = re.compile(r"(\d)€")
+
+# KIS-1272 (Aufgabe 3c): U+2212 (−) ZWISCHEN Zahlen ist ein Bereichsstrich →
+# en-dash ("10,000 − 50,000 €" → "10,000 – 50,000 €"). Echtes Minus vor einer
+# einzelnen Zahl ("−29 % ROI") bleibt unangetastet: das Muster verlangt
+# Ziffer + Leerzeichen VOR dem Minus.
+_EN_MINUS_RANGE_RE = re.compile(
+    r"(?<=\d)((?:[   ]|&nbsp;)+)−((?:[   ]|&nbsp;)+)(?=\d)"
+)
+
+# KIS-1272 (Aufgabe 7): Bindestrich-Bereich mit €-Suffix → en-dash OHNE
+# Leerzeichen um den Strich ("5,000-15,000€" → "5,000–15,000 €", Stil wie
+# R1-Bestand "50,000–250,000 €"). Greift NUR, wenn direkt nach der zweiten
+# Zahl (plus optionalem Leerraum) ein € folgt — ISO-Daten ("2026-01-15")
+# und Zählbereiche ("3-5 days") bleiben unberührt; dd.mm.yyyy ist ohnehin
+# über den Schutzschild ausgenommen.
+_EN_HYPHEN_RANGE_EUR_RE = re.compile(
+    r"(?<=\d)-(?=\d[\d.,]*(?:[   ]|&nbsp;)*€)"
 )
 
 # Schutzschild: URLs, E-Mails, dd.mm.yyyy-Datumsangaben
@@ -469,6 +530,14 @@ def normalize_en_number_formats(html: str) -> str:
         out = _EN_THOUSANDS_RE.sub(_thousands, out)
         # 3) KIS-1270: vierstellige €-Beträge → EN-Tausenderkomma ("1425 €" → "1,425 €")
         out = _EN_FOURDIGIT_EUR_RE.sub(r"\1,\2", out)
+        # 4) KIS-1272 (3c): "10,000 − 50,000" → en-dash (U+2212 nur ZWISCHEN Zahlen)
+        out = _EN_MINUS_RANGE_RE.sub(r"\1–\2", out)
+        # 5) KIS-1272 (7): "5,000-15,000€" → "5,000–15,000€" (en-dash, ohne Spaces)
+        out = _EN_HYPHEN_RANGE_EUR_RE.sub("–", out)
+        # 6) KIS-1272 (3a): "70 %" → "70%"
+        out = _EN_PCT_TIGHT_RE.sub(r"\1%", out)
+        # 7) KIS-1272 (3b): "15,000€" → "15,000 €"
+        out = _EN_EUR_SPACE_RE.sub(r"\1 €", out)
         for i, orig in enumerate(shielded):
             out = out.replace(f"\x00EN-NUM-SHIELD-{i}\x00", orig)
         return out
@@ -497,8 +566,10 @@ def normalize_en_number_formats(html: str) -> str:
 _EN_LONE_ENUM_INLINE = r"(?:&nbsp;| |\s|<br\s*/?>)*"
 _EN_LONE_ENUM_NODE_RE = re.compile(
     r"<(p|li|h[2-6]|div)\b[^>]*>" + _EN_LONE_ENUM_INLINE +
+    # KIS-1272 (Audit Lauf 4, R1 S.3): Punkt PFLICHT — "\d{1,2}\.?" löschte
+    # auch nackte Zahlen-Knoten wie die "70" der Score-Donut-Kachel.
     r"(?:<(?:strong|b|em|span)[^>]*>" + _EN_LONE_ENUM_INLINE + r")*"
-    r"\d{1,2}\.?" + _EN_LONE_ENUM_INLINE +
+    r"\d{1,2}\." + _EN_LONE_ENUM_INLINE +
     r"(?:</(?:strong|b|em|span)>" + _EN_LONE_ENUM_INLINE + r")*"
     r"</\1>",
     re.IGNORECASE,

@@ -973,10 +973,20 @@ def generate_starter_kit(
             maturity_label = "KI-Experte"
         elif expertise_level == "intermediate":
             maturity_label = "KI-Anwender"
-    segment_label = f"{size_label.upper()}/{branch_group}/{maturity_label}"
+
+    # KIS-1272-R4-T5: Im EN-Pfad (a) Branchenlabel englisch ("Medien" → "Media")
+    # und (b) den internen Slug "TEAM/Medien/…" lesbar lokalisieren
+    # ("Team · Media · AI practitioner"). DE bleibt byte-identisch.
+    if _is_en:
+        _branch_display = _BRANCH_SHORT_EN.get(branch_group.strip().lower(), branch_group)
+        _size_display_en = {"solo": "Solo", "team": "Team", "kmu": "SME"}.get(size_label, size_label.capitalize())
+        segment_label = f"{_size_display_en} · {_branch_display} · {maturity_label}"
+    else:
+        _branch_display = branch_group
+        segment_label = f"{size_label.upper()}/{branch_group}/{maturity_label}"
 
     kit_id = f"{size_label}_{branch_group.lower()[:4]}_{maturity}"
-    kit_name = _generate_kit_name(size_label, branch_group, lang, expertise_level=expertise_level)
+    kit_name = _generate_kit_name(size_label, _branch_display, lang, expertise_level=expertise_level)
 
     # KIS-1132: Get templates based on expertise level
     # KIS-1246: Medien-Branche bekommt produktionsnahe Tools statt
@@ -1063,6 +1073,37 @@ def generate_starter_kit(
         quick_win_count=quick_win_count,
         description=_descriptions.get(size_label, ""),
     )
+
+
+# KIS-1272-R4-T5: Kurze EN-Branchenlabels für Kit-Name/Untertitel
+# (Schlüssel = normalisierte Branchen-Enums bzw. deutsche Kurzlabels).
+_BRANCH_SHORT_EN = {
+    "medien": "Media",
+    "medien & kreativwirtschaft": "Media & Creative Industries",
+    "beratung": "Consulting",
+    "beratung & dienstleistungen": "Consulting & Services",
+    "marketing": "Marketing",
+    "marketing & werbung": "Marketing & Advertising",
+    "it_software": "IT & Software",
+    "it & software": "IT & Software",
+    "finanzen": "Finance",
+    "finanzen & versicherungen": "Finance & Insurance",
+    "handel": "Retail",
+    "handel & e-commerce": "Retail & E-Commerce",
+    "bildung": "Education",
+    "verwaltung": "Public administration",
+    "gesundheit": "Healthcare",
+    "gesundheit & pflege": "Healthcare & Care",
+    "bau": "Construction",
+    "bauwesen & architektur": "Construction & Architecture",
+    "industrie": "Industry",
+    "industrie & produktion": "Industry & Manufacturing",
+    "logistik": "Logistics",
+    "transport & logistik": "Transport & Logistics",
+    "gastronomie": "Hospitality",
+    "gastronomie & tourismus": "Hospitality & Tourism",
+    "allgemein": "General",
+}
 
 
 def _normalize_size(size_raw: str) -> str:

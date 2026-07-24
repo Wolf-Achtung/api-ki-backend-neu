@@ -2990,13 +2990,27 @@ def _drop_first_week_and_renumber(challenge_data: Dict[str, Any]) -> Dict[str, A
         return challenge_data
     result: Dict[str, Any] = {}
     day_counter = 1
+    # KIS-1272-R4-T11: Wochen-Zähler für die Review-Label-Korrektur — nach dem
+    # Drop von Woche 1 zeigte Tag 7 "Woche 2 Review" / "Week 2 review"
+    # (Off-by-one, DE und EN identisch betroffen). Die Review-Labels werden
+    # auf die NEUE Wochennummer umgeschrieben. Läuft nur im Skip-Pfad
+    # (intermediate/expert) — der Standard-Pfad ohne Skip bleibt byte-identisch.
+    week_counter = 0
+    _review_label_re = re.compile(r"\b(Woche|Week)\s+\d+(\s+[Rr]eview)")
     for key, week in trimmed:
         week_copy = dict(week)
         tage = week_copy.get("tage") or []
+        if key.startswith("woche_"):
+            week_counter += 1
         new_tage: List[Dict[str, Any]] = []
         for tag in tage:
             tag_copy = dict(tag)
             tag_copy["tag"] = day_counter
+            _aufgabe = tag_copy.get("aufgabe")
+            if isinstance(_aufgabe, str) and week_counter > 0:
+                tag_copy["aufgabe"] = _review_label_re.sub(
+                    lambda m: f"{m.group(1)} {week_counter}{m.group(2)}", _aufgabe
+                )
             new_tage.append(tag_copy)
             day_counter += 1
         week_copy["tage"] = new_tage

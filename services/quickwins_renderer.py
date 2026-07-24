@@ -837,6 +837,64 @@ def enrich_quickwins_premium(html: str) -> str:
 
 
 # =============================================================================
+# KIS-1272-R4-T2: Helpers für Premium-Karten — Labels, Listenwerte, Hinweis
+# =============================================================================
+
+# KIS-1272-R4-T2a: EN-Label-Map für die Feldboxen der Premium-Karten
+# (Run 4 zeigte "WIRKUNG:" im EN-Report). DE bleibt byte-identisch.
+QUICKWIN_CARD_LABELS = {
+    "de": {"problem": "Problem:", "wirkung": "Wirkung:", "umsetzung": "Umsetzung:"},
+    "en": {"problem": "Problem:", "wirkung": "Impact:", "umsetzung": "Implementation:"},
+}
+
+# KIS-1272-R4-T2b: String, der wie ein Python-Listen-Literal aussieht
+# (beginnt mit [' oder ["). Solche Werte dürfen nie roh gerendert werden.
+_QW_PY_LIST_LITERAL_RE = re.compile(r"^\[\s*['\"]")
+
+
+def _qw_items_to_ul_html(items) -> str:
+    """KIS-1272-R4-T2b: Listeneinträge als escaptes <ul><li> rendern."""
+    import html as html_module
+    lis = "".join(
+        f"<li>{html_module.escape(str(it).strip())}</li>"
+        for it in items
+        if str(it or "").strip()
+    )
+    if not lis:
+        return ""
+    return f'<ul style="margin:4px 0 0 0;padding-left:18px;">{lis}</ul>'
+
+
+def qw_field_value_to_html(value) -> str:
+    """KIS-1272-R4-T2b: Quick-Win-Feldwert sicher als HTML rendern.
+
+    - Liste/Tupel → <ul><li>…</li></ul>
+    - String, der wie ein Python-Listen-Literal aussieht (['…', '…']) →
+      defensiv per ast.literal_eval parsen und als <ul> joinen; bei
+      Parse-Fehler Original (escaped) behalten.
+    - Sonst: escapter String.
+
+    Sprachneutral — ein rohes Listen-Literal darf auch in DE nie erscheinen.
+    """
+    import html as html_module
+    if isinstance(value, (list, tuple)):
+        html_list = _qw_items_to_ul_html(value)
+        return html_list if html_list else ""
+    text = str(value or "").strip()
+    if _QW_PY_LIST_LITERAL_RE.match(text):
+        import ast
+        try:
+            parsed = ast.literal_eval(text)
+        except (ValueError, SyntaxError, MemoryError, RecursionError):
+            parsed = None
+        if isinstance(parsed, (list, tuple)):
+            html_list = _qw_items_to_ul_html(parsed)
+            if html_list:
+                return html_list
+    return html_module.escape(text)
+
+
+# =============================================================================
 # FIX-510 CHANGE 2: QuickWins Premium Renderer
 # =============================================================================
 # Renders FIX-506 JSON format (title, icon, problem, wirkung, umsetzung, hinweis)
@@ -954,16 +1012,28 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL", ru
         cards_html = []
         total_words = 0
 
+        # KIS-1272-R4-T2a: Label-Map sprachabhängig wählen (EN: Impact/Implementation).
+        _lang_en = str(lang or "de").lower().startswith("en")
+        _labels = QUICKWIN_CARD_LABELS["en" if _lang_en else "de"]
+
         for i, qw in enumerate(data):
             if not isinstance(qw, dict):
                 continue
 
             title = html_module.escape(str(qw.get("title", f"Quick Win {i+1}")).strip())
             icon = str(qw.get("icon", "🎯")).strip()
-            problem = html_module.escape(str(qw.get("problem", "")).strip())
-            wirkung = html_module.escape(str(qw.get("wirkung", "")).strip())
-            umsetzung = html_module.escape(str(qw.get("umsetzung", "")).strip())
-            hinweis = html_module.escape(str(qw.get("hinweis", "siehe Business Case")).strip())
+            # KIS-1272-R4-T2b: Listen/Listen-Literale sicher als <ul> rendern
+            # (sprachneutral — auch DE darf nie ein rohes ['…'] zeigen).
+            problem = qw_field_value_to_html(qw.get("problem", ""))
+            wirkung = qw_field_value_to_html(qw.get("wirkung", ""))
+            umsetzung = qw_field_value_to_html(qw.get("umsetzung", ""))
+            # KIS-1272-R4-T2c: Hinweis-Default und "siehe Business Case" im EN-Pfad
+            # englisch ("see business case"); DE bleibt byte-identisch.
+            _hinweis_default = "see business case" if _lang_en else "siehe Business Case"
+            _hinweis_raw = str(qw.get("hinweis", _hinweis_default) or _hinweis_default).strip()
+            if _lang_en and _hinweis_raw.lower() == "siehe business case":
+                _hinweis_raw = "see business case"
+            hinweis = html_module.escape(_hinweis_raw)
 
             # Count words for this card
             card_text = f"{title} {problem} {wirkung} {umsetzung} {hinweis}"
@@ -975,7 +1045,7 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL", ru
             if problem:
                 problem_block = f'''
         <div class="quick-win-problem" style="margin-bottom:10px;padding:10px;background:#fef2f2;border-radius:8px;border-left:3px solid #ef4444;">
-            <strong style="color:#dc2626;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Problem:</strong>
+            <strong style="color:#dc2626;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">{_labels["problem"]}</strong>
             <p style="margin:4px 0 0 0;">{problem}</p>
         </div>'''
 
@@ -983,7 +1053,7 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL", ru
             if wirkung:
                 wirkung_block = f'''
         <div class="quick-win-wirkung" style="margin-bottom:10px;padding:10px;background:#f0fdf4;border-radius:8px;border-left:3px solid #22c55e;">
-            <strong style="color:#16a34a;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Wirkung:</strong>
+            <strong style="color:#16a34a;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">{_labels["wirkung"]}</strong>
             <p style="margin:4px 0 0 0;">{wirkung}</p>
         </div>'''
 
@@ -991,7 +1061,7 @@ def render_quickwins_premium_json(raw_json: str, template_mode: str = "FULL", ru
             if umsetzung:
                 umsetzung_block = f'''
         <div class="quick-win-umsetzung" style="margin-bottom:10px;padding:10px;background:#eff6ff;border-radius:8px;border-left:3px solid #3b82f6;">
-            <strong style="color:#2563eb;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Umsetzung:</strong>
+            <strong style="color:#2563eb;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">{_labels["umsetzung"]}</strong>
             <p style="margin:4px 0 0 0;">{umsetzung}</p>
         </div>'''
 
@@ -1221,7 +1291,7 @@ def _inject_markers_into_html(html_content: str) -> str:
     return modified
 
 
-def normalize_quickwins_to_html(raw: str, strict: bool = False, company_size: str = "solo") -> tuple[str, dict]:
+def normalize_quickwins_to_html(raw: str, strict: bool = False, company_size: str = "solo", lang: str = "de") -> tuple[str, dict]:
     """
     FIX-512: Deterministic QuickWins normalization (Text/Bullets → HTML).
 
@@ -1264,7 +1334,8 @@ def normalize_quickwins_to_html(raw: str, strict: bool = False, company_size: st
     # --- Path 1: JSON (starts with [ or {) ---
     if stripped.startswith(('[', '{')):
         path = "JSON"
-        rendered = render_quickwins_premium_json(stripped)
+        # KIS-1272-R4-T2: lang durchreichen, damit EN-Karten EN-Labels bekommen.
+        rendered = render_quickwins_premium_json(stripped, lang=lang)
         if rendered:
             result_html = rendered
         else:
