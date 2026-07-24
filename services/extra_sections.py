@@ -920,6 +920,12 @@ def build_core_funding_table_html(briefing: Dict[str, Any], lang: str = "de") ->
             )
 
         html_parts.append('      <tr>')
+        # KIS-1273 (Aufgabe 2c): PROGRAMME-Spalte — der Programm-NAME
+        # (prog["title"]) geht NIEMALS durch die Übersetzungs-Map (Eigenname,
+        # z. B. "BAFA – Förderung von Unternehmensberatungen für KMU",
+        # "Games-Förderung des Bundes"). Der Untertitel (focus) enthält
+        # Kategorien und wird via _translate_funding_value_en übersetzt;
+        # eingebettete Eigennamen sind dort per Namens-Shield geschützt.
         html_parts.append(f'        <td><strong>{prog["title"]}</strong><br>')
         html_parts.append(f'          <span class="small muted">{display_focus}</span>')
         html_parts.append('        </td>')

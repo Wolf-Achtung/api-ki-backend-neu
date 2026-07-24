@@ -892,7 +892,8 @@ def _generate_narrative_summary(
 # ungeübersetzt in den EN-Report liefen. Nur im EN-Renderpfad angewendet.
 _NARRATIVE_SENTENCES_EN: Dict[str, str] = {
     "Das Risikoprofil ist sehr günstig.": "The risk profile is very favorable.",
-    "Das Risikoprofil ist gut beherrschbar.": "The risk profile is well manageable.",
+    # KIS-1273 (Aufgabe 4): "well manageable" war holpriges Englisch.
+    "Das Risikoprofil ist gut beherrschbar.": "The risk profile is manageable.",
     "Das Risikoprofil erfordert gezielte Maßnahmen.": "The risk profile requires targeted measures.",
     "Das Risikoprofil zeigt erhöhten Handlungsbedarf.": "The risk profile shows an elevated need for action.",
     "Das Risikoprofil erfordert dringende Maßnahmen.": "The risk profile requires urgent measures.",

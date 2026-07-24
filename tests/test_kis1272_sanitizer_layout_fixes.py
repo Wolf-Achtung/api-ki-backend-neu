@@ -9,9 +9,11 @@ Deckt ab (ohne Netzwerk/LLM):
    siehe Business Case) + LOCALE-SHIELD-Abdeckung (Domain, Logo-Dateiname).
 3. [P1] normalize_en_number_formats: "70 %"→"70%", "15,000€"→"15,000 €",
    U+2212 zwischen Zahlen → en-dash.
-4. [P0] harden_wide_tables: 6/7-Spalten-EN-Tabellen bekommen
-   table-layout:fixed + width:100%, colgroup exakt 100 %, Kompakt-Zellen
-   (Padding + hyphens:auto + overflow-wrap:anywhere); DE byte-identisch.
+4. [P0] harden_wide_tables: breite EN-Tabellen bekommen table-layout:fixed
+   + width:100%, colgroup exakt 100 %, Kompakt-Zellen. KIS-1273: statt
+   overflow-wrap:anywhere jetzt overflow-wrap:break-word + hyphens:auto (td)
+   bzw. hyphens:none (th); Kompaktierung ab 5 Spalten; Schrift fällt auf
+   0.8em, wenn die Spalten-Minima sonst >100 % ergäben. DE byte-identisch.
 5. [P1] Sensitivity-/3-Year-Blöcke: Regression — der deterministische
    BC-Deep-Dive-Block überlebt den kompletten EN-KPA-Render-Pfad.
 6. [P1] KPA-Outro: "KI-Readiness Report 1." → "AI Readiness Report
@@ -71,7 +73,8 @@ class TestNewEnMappings:
         ("<p>laut KI-Verordnung gilt</p>", "EU AI Regulation"),
         ("<p>begrenzt-risk classification</p>", "limited-risk"),
         ("<p>risk class: begrenzt</p>", "limited"),
-        ("<p>KI-Readiness Report data</p>", "AI Readiness Report"),
+        # KIS-1273 (5b): kanonischer Report-1-Name ist "AI Status Report"
+        ("<p>KI-Readiness Report data</p>", "AI Status Report"),
         ("<p>the KI potential analysis</p>", "AI potential analysis"),
         ("<p>siehe Business Case</p>", "see business case"),
     ])
@@ -192,7 +195,10 @@ class TestWideTableCompactionEn:
         open_tag = re.search(r"<table\b[^>]*>", out).group(0)
         assert "table-layout:fixed" in open_tag
         assert "width:100%" in open_tag
-        assert "font-size:0.86em" in open_tag
+        # KIS-1273 (1d): die Spalten-Minima dieser Tabelle (inkl. Header-
+        # Wort-Minima) summieren >100 % → Schrift fällt auf 0.8em statt die
+        # Spalten unter ihr Wort-Minimum zu drücken.
+        assert "font-size:0.8em" in open_tag
 
     def test_seven_cols_colgroup_sums_exactly_100(self):
         out, _ = harden_wide_tables(TOOL_TABLE_7, lang="en")
@@ -202,15 +208,37 @@ class TestWideTableCompactionEn:
 
     def test_seven_cols_cells_compact_and_hyphenated(self):
         out, _ = harden_wide_tables(TOOL_TABLE_7, lang="en")
-        cells = re.findall(r"<t[dh]\b[^>]*>", out)
-        assert cells
-        for c in cells:
+        # KIS-1273 (1a/1b): kein overflow-wrap:anywhere mehr (zerlegte
+        # Beträge/Enums ohne Trennstrich); td → hyphens:auto,
+        # th → hyphens:none (Header brechen nie mitten im Wort).
+        assert "overflow-wrap:anywhere" not in out
+        td_cells = re.findall(r"<td\b[^>]*>", out)
+        th_cells = re.findall(r"<th\b[^>]*>", out)
+        assert td_cells and th_cells
+        for c in td_cells:
             assert "padding:4px 6px" in c
             assert "hyphens:auto" in c
-            assert "overflow-wrap:anywhere" in c
+            assert "overflow-wrap:break-word" in c
+        for c in th_cells:
+            assert "padding:4px 6px" in c
+            assert "hyphens:none" in c
+            assert "overflow-wrap:break-word" in c
 
-    def test_five_cols_not_compacted(self):
+    def test_five_cols_now_compacted(self):
+        # KIS-1273 (1e): Schwelle 6 → 5 — die Priority-Tabelle (5 Spalten,
+        # "PRIORIT Y"/"Hig h") fiel sonst durch die Kompakt-Behandlung.
         out, _ = harden_wide_tables(TOOL_TABLE_5, lang="en")
+        assert "table-layout:fixed" in out
+        assert "hyphens:auto" in out
+        assert round(sum(_colgroup_widths(out)), 1) == 100.0
+
+    def test_four_cols_not_compacted(self):
+        table = """<table><thead><tr>
+<th>Tool</th><th>Vendor</th><th>Function</th><th>Rating</th>
+</tr></thead><tbody>
+<tr><td>Copilot</td><td>Microsoft</td><td>Drafting</td><td>Good</td></tr>
+</tbody></table>"""
+        out, _ = harden_wide_tables(table, lang="en")
         assert "table-layout:fixed" not in out
         assert "hyphens:auto" not in out
         # colgroup + exakte 100 gelten trotzdem
@@ -228,7 +256,7 @@ class TestWideTableCompactionEn:
         # bestehendes padding gewinnt, hyphens/overflow-wrap kommen dazu
         assert "padding:12px" in style
         assert "padding:4px 6px" not in style
-        assert "hyphens:auto" in style and "overflow-wrap:anywhere" in style
+        assert "hyphens:auto" in style and "overflow-wrap:break-word" in style
 
     def test_de_seven_cols_unchanged(self):
         de_table = TOOL_TABLE_7.replace("GDPR compliance", "DSGVO-Konformität")
@@ -236,8 +264,9 @@ class TestWideTableCompactionEn:
         o2, n2 = harden_wide_tables(de_table, lang="de")
         assert o1 == o2 and n1 == n2
         assert "table-layout:fixed" not in o1
-        assert "hyphens:auto" not in o1
-        assert "font-size:0.86em" not in o1
+        assert "hyphens" not in o1
+        assert "font-size:0.8" not in o1
+        assert "nowrap" not in o1
 
 
 # --------------------------------------------------------------------------- #
@@ -306,13 +335,15 @@ class TestSensitivityBlocksSurviveEnRender:
 # --------------------------------------------------------------------------- #
 class TestKpaOutroStringsEn:
     def test_outro_footnote_and_report_name_fixed(self):
+        # KIS-1273 (5a): kanonischer Name "AI Status Report"
         html = _render_kpa_en()
-        assert 'Based on data from the AI Readiness Report (Report 1).' in html
+        assert 'Based on data from the AI Status Report (Report 1).' in html
         assert 'KI-Readiness Report 1.' not in html
+        assert 'AI Readiness Report' not in html
 
     def test_gdpr_line_uses_english_report_name(self):
         html = _render_kpa_en()
-        assert 'uses company data from the AI Readiness Report' in html
+        assert 'uses company data from the AI Status Report' in html
         assert 'KI-Readiness Report' not in html
 
     def test_brand_domain_survives_kpa_sanitize(self):
@@ -332,6 +363,7 @@ class TestKpaOutroStringsEn:
         ctx = dict(KPA_CONTEXT, LANG='de', lang='de')
         html = render_deep_dive_html(sections, ctx)
         assert 'AI Readiness Report (Report 1)' not in html
+        assert 'AI Status Report (Report 1)' not in html
 
 
 class TestLoneEnumDotMandatory:

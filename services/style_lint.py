@@ -473,9 +473,14 @@ _EN_TEXT_HEAVY_LEN = 40   # längste Zelle > 40 Zeichen → Text-Spalte (wide)
 _EN_TEXT_MEDIUM_LEN = 25  # längste Zelle > 25 Zeichen → mindestens Gewicht 2
 _EN_TEXT_HEAVY_MIN = 18.0
 
-# Unteilbare Tokens: Wörter sowie dd.mm.yyyy-/dd.mm.-Daten.
+# Unteilbare Tokens: Wörter, dd.mm.yyyy-/dd.mm.-Daten sowie (KIS-1273)
+# Beträge/Zahlen mit Einheit ("10,800 €", "50.000 EUR", "50%") — die werden
+# jetzt non-breaking gewrappt und müssen deshalb als Ganzes in die Spalte
+# passen (EN-Testlauf 5: "4,8 00 €" / "10, 80 0 €" in der Roadmap-Tabelle).
 _EN_CELL_TOKEN_RE = re.compile(
-    r"\d{1,2}\.\d{1,2}\.(?:\s?\d{4})?|[A-Za-zÄÖÜäöüß]+"
+    r"\d{1,2}\.\d{1,2}\.(?:\s?\d{4})?"
+    r"|\d[\d.,]*(?:[  ]?(?:€|%|EUR\b|h\b(?:/mo\.?)?|mo\.?))?"
+    r"|[A-Za-zÄÖÜäöüß]+"
 )
 # Datumsangaben ("31.12.2026", auch "31.12. 2026") dürfen nie umbrechen.
 _EN_DATE_RE = re.compile(r"(?<![\d.])\d{1,2}\.\d{1,2}\.\s?\d{4}(?!\d)")
@@ -541,12 +546,24 @@ def _distribute_with_minimums(weights: List[float], mins: List[float]) -> List[f
 #   (b) Kompakt-Darstellung: font-size ~86 % am <table>, reduziertes Padding #
 #       auf den Zellen, damit die Mindestbreiten aufgehen.                   #
 #   (c) hyphens:auto (greift, weil die EN-Templates <html lang="en"> setzen  #
-#       — Chromium/WeasyPrint trennen dann MIT Trennstrich) plus             #
-#       overflow-wrap:anywhere als letzter Fallback für untrennbare Tokens.  #
+#       — Chromium/WeasyPrint trennen dann MIT Trennstrich).                 #
+#                                                                             #
+# KIS-1273 (EN-Lauf 5, Aufgabe 1): overflow-wrap:anywhere ENTFERNT — es      #
+# erlaubte Umbruch an JEDER Stelle ohne Trennstrich und zerlegte Beträge     #
+# ("4,8 00 €", "10, 80 0 €") und Enum-Werte buchstabenweise ("H i g h").     #
+# Stattdessen: overflow-wrap:break-word + hyphens:auto (td) bzw.             #
+# hyphens:none (th — Header brechen nie mitten im Wort, die Spalten-Minima   #
+# tragen jetzt auch das längste Header-Wort). Kompaktierung greift ab 5      #
+# Spalten (vorher 6 — die Priority-Tabelle "PRIORIT Y"/"Hig h" fiel durch).  #
 # --------------------------------------------------------------------------- #
-_EN_COMPACT_MIN_COLS = 6
-_EN_TABLE_COMPACT_STYLE = "table-layout:fixed;width:100%;font-size:0.86em"
-_EN_CELL_COMPACT_STYLE = "padding:4px 6px;hyphens:auto;overflow-wrap:anywhere"
+_EN_COMPACT_MIN_COLS = 5
+_EN_TABLE_COMPACT_FONT = "0.86em"
+_EN_TABLE_COMPACT_FONT_SMALL = "0.8em"  # KIS-1273 (1d): wenn Minima >100 %
+_EN_TABLE_COMPACT_STYLE = "table-layout:fixed;width:100%;font-size:{font}"
+_EN_CELL_COMPACT_STYLE = "padding:4px 6px;hyphens:auto;overflow-wrap:break-word"
+# KIS-1273 (1b): Header-Zellen nie trennen — "BU DG ET"/"FUNDIN G RATE"
+# (EN-Testlauf 5, Roadmap-/Fördertabellen-Header).
+_EN_TH_COMPACT_STYLE = "padding:4px 6px;hyphens:none;overflow-wrap:break-word"
 _TABLE_CELL_OPEN_RE = re.compile(r"<t[dh]\b[^>]*>", re.IGNORECASE)
 _STYLE_ATTR_VAL_RE = re.compile(r'style\s*=\s*"([^"]*)"', re.IGNORECASE)
 
@@ -585,15 +602,25 @@ def _en_round_pcts_to_100(pcts: List[float]) -> List[float]:
     return rounded
 
 
-def _en_compact_wide_table(table: str) -> str:
-    """Erzwingt fixed-Layout + Kompakt-Stil für sehr breite EN-Tabellen."""
+def _en_compact_wide_table(table: str, font_size: str = _EN_TABLE_COMPACT_FONT) -> str:
+    """Erzwingt fixed-Layout + Kompakt-Stil für sehr breite EN-Tabellen.
+
+    KIS-1273: th-Zellen bekommen hyphens:none (Header brechen nie im Wort),
+    td-Zellen hyphens:auto; overflow-wrap:break-word statt anywhere."""
     open_m = _TABLE_OPEN_RE.search(table)
     if open_m:
-        new_open = _merge_inline_style(open_m.group(0), _EN_TABLE_COMPACT_STYLE)
+        new_open = _merge_inline_style(
+            open_m.group(0), _EN_TABLE_COMPACT_STYLE.format(font=font_size)
+        )
         table = table[:open_m.start()] + new_open + table[open_m.end():]
 
     def _cell(m: "re.Match[str]") -> str:
-        return _merge_inline_style(m.group(0), _EN_CELL_COMPACT_STYLE)
+        _style = (
+            _EN_TH_COMPACT_STYLE
+            if m.group(0).lower().startswith("<th")
+            else _EN_CELL_COMPACT_STYLE
+        )
+        return _merge_inline_style(m.group(0), _style)
 
     return _TABLE_CELL_OPEN_RE.sub(_cell, table)
 
@@ -614,6 +641,70 @@ def _en_wrap_dates_nowrap(table: str) -> Tuple[str, int]:
                 continue
             new_part, n = _EN_DATE_RE.subn(
                 lambda dm: _EN_NOWRAP_SPAN + dm.group(0) + "</span>", part
+            )
+            if n:
+                parts[i] = new_part
+                wrapped += n
+                changed = True
+        if not changed:
+            return m.group(0)
+        return m.group(1) + "".join(parts) + m.group(3)
+
+    return _TABLE_CELL_RE.sub(_cell, table), wrapped
+
+
+# --------------------------------------------------------------------------- #
+# KIS-1273 (1c): Beträge/Zahlen mit Einheit + kurze Enum-Werte nie umbrechen  #
+# --------------------------------------------------------------------------- #
+# EN-Testlauf 5: overflow-wrap:anywhere zerlegte Geldbeträge mitten in den
+# Ziffern ("4,8 00 €", "10, 80 0 €", "8, 40 0 €", Roadmap S. 28-31) und
+# Enum-Werte buchstabenweise vertikal ("H i g h", "M e d i u m", FIT-Spalte
+# der Fördertabelle S. 33-35). Analog zu _en_wrap_dates_nowrap werden
+#   (1) Beträge/Zahlen mit Einheit (€, %, EUR, h, mo.) sowie Zahlen mit
+#       Tausendertrennern in <span style="white-space:nowrap"> gewrappt und
+#   (2) kurze Enum-Zellen (High/Medium/Low/Minimal/Standard/Scale-up,
+#       ≤ 12 Zeichen) als GANZE Zelle nowrap gesetzt.
+# Läuft nur im EN-Pfad von harden_wide_tables — DE bleibt byte-identisch.
+_EN_AMOUNT_RE = re.compile(
+    r"(?<![\d.,])"
+    r"(?:"
+    # Zahl + Einheit (inkl. Verbund "h/mo." aus dem BC-Deep-Dive)
+    r"\d[\d.,]*(?:[  ]|&nbsp;)?(?:€|%|EUR\b|h\b(?:/mo\.?)?|mo\.?)"
+    r"|\d{1,3}(?:[.,]\d{3})+"                             # Betrag mit Trennern
+    r")"
+    r"(?!\d)"
+)
+_EN_ENUM_CELL_RE = re.compile(
+    r"^(?:high|medium|low|minimal|standard|scale-up)$", re.IGNORECASE
+)
+_EN_ENUM_CELL_MAX_LEN = 12
+
+
+def _en_wrap_amounts_nowrap(table: str) -> Tuple[str, int]:
+    """Wrappt Beträge/Zahlen mit Einheit sowie kurze Enum-Zellen non-breaking."""
+    wrapped = 0
+
+    def _cell(m: "re.Match[str]") -> str:
+        nonlocal wrapped
+        inner = m.group(2)
+        text = " ".join(_STRIP_TAGS_RE.sub(" ", inner).split())
+        # (2) Kurze Enum-Werte: ganze Zelle nowrap ("H i g h" in der
+        #     FIT-Spalte). Nur wenn keine Datums-/Betrags-Spans drin sind.
+        if (_EN_ENUM_CELL_RE.match(text)
+                and len(text) <= _EN_ENUM_CELL_MAX_LEN
+                and _EN_NOWRAP_SPAN not in inner):
+            wrapped += 1
+            return m.group(1) + _EN_NOWRAP_SPAN + inner + "</span>" + m.group(3)
+        # (1) Beträge in Textknoten wrappen (Datums-Spans aus
+        #     _en_wrap_dates_nowrap sind eigene Textknoten und matchen nicht:
+        #     dd.mm.yyyy scheitert am (?<![\d.,])/(?!\d)-Schutz).
+        parts = _TAG_SPLIT_RE.split(inner)
+        changed = False
+        for i, part in enumerate(parts):
+            if not part or part.startswith("<"):
+                continue
+            new_part, n = _EN_AMOUNT_RE.subn(
+                lambda am: _EN_NOWRAP_SPAN + am.group(0) + "</span>", part
             )
             if n:
                 parts[i] = new_part
@@ -664,6 +755,7 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
         row_m = _FIRST_ROW_RE.search(table)
         cells = _HEADER_CELL_RE.findall(row_m.group(1)) if row_m else cells
         weights = [_col_weight(_STRIP_TAGS_RE.sub(" ", c), lang=lang) for c in cells]
+        _compact_font = _EN_TABLE_COMPACT_FONT
         if _en:
             # KIS-EN3-COLMIN: inhaltsbasierte Klassifikation + Mindestbreiten
             # (siehe Kommentarblock oben). Nur lang=en — DE byte-identisch.
@@ -675,6 +767,15 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
                 elif max_len[ci] > _EN_TEXT_MEDIUM_LEN:
                     weights[ci] = max(weights[ci], 2.0)
             base_min = 10.0 if ncols <= 5 else 8.0
+            # KIS-1273 (1b): Header-Schutz — th trägt jetzt hyphens:none,
+            # die Spalte muss deshalb auch das LÄNGSTE Header-Wort tragen
+            # ("BUDGET" brach dreifach: "BU DG ET", EN-Testlauf 5 S. 28-31).
+            # Header-Tokens stecken zwar meist schon in _en_column_stats,
+            # aber nur wenn die Kopfzeile exakt ncols Zellen hat — deshalb
+            # explizit aus den (ggf. gekürzten) Header-Zellen ableiten.
+            header_texts = [
+                " ".join(_STRIP_TAGS_RE.sub(" ", c).split()) for c in cells
+            ]
             mins: List[float] = []
             for ci in range(ncols):
                 m_i = base_min
@@ -684,7 +785,23 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
                     _EN_COL_MIN_CAP,
                     (max_token[ci] + 1) * _EN_PCT_PER_CHAR,
                 ))
+                _hdr_longest = max(
+                    (len(t) for t in _EN_CELL_TOKEN_RE.findall(header_texts[ci])),
+                    default=0,
+                )
+                m_i = max(m_i, min(
+                    _EN_COL_MIN_CAP,
+                    (_hdr_longest + 1) * _EN_PCT_PER_CHAR,
+                ))
                 mins.append(m_i)
+            # KIS-1273 (1d): Summieren die Minima auf >100 %, wird die
+            # Kompaktierung weiter heruntergeskaliert (font-size 0.8em statt
+            # 0.86em) und die Minima proportional zur kleineren Schrift —
+            # statt Spalten unter ihr Wort-Minimum zu drücken.
+            if ncols >= _EN_COMPACT_MIN_COLS and sum(mins) > 100.0:
+                _shrink = 0.8 / 0.86
+                mins = [m * _shrink for m in mins]
+                _compact_font = _EN_TABLE_COMPACT_FONT_SMALL
             pcts = _distribute_with_minimums(weights, mins)
             # KIS-1272 (4a): exakt 100 % — die .1f-Rundung erzeugte sonst
             # Summen ≠ 100, die bei table-layout:fixed überlaufen.
@@ -692,6 +809,10 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
             # Datumsschutz: "31.12.2026" / "31.12. 2026" nie umbrechen.
             table, _n_dates = _en_wrap_dates_nowrap(table)
             count += _n_dates
+            # KIS-1273 (1c): Beträge/Zahlen mit Einheit + kurze Enum-Zellen
+            # non-breaking — overflow-wrap zerlegte sie sonst mitten drin.
+            table, _n_amounts = _en_wrap_amounts_nowrap(table)
+            count += _n_amounts
         else:
             total = sum(weights) or 1.0
             pcts = [max(6.0, w / total * 100.0) for w in weights]
@@ -707,12 +828,13 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
         insert_at = open_m.end()
         count += 1
         result = table[:insert_at] + colgroup + table[insert_at:]
-        # KIS-1272 (Aufgabe 4): sehr breite EN-Tabellen (6+ Spalten)
-        # zusätzlich fixieren + kompaktieren (fixed-Layout, width:100%,
-        # kleinere Schrift, weniger Padding, hyphens:auto). Nur lang=en —
-        # der DE-Pfad bleibt byte-identisch.
+        # KIS-1272 (Aufgabe 4) / KIS-1273: sehr breite EN-Tabellen (5+
+        # Spalten) zusätzlich fixieren + kompaktieren (fixed-Layout,
+        # width:100%, kleinere Schrift, weniger Padding, hyphens:auto auf td,
+        # hyphens:none auf th). Nur lang=en — der DE-Pfad bleibt
+        # byte-identisch.
         if _en and len(cells) >= _EN_COMPACT_MIN_COLS:
-            result = _en_compact_wide_table(result)
+            result = _en_compact_wide_table(result, font_size=_compact_font)
             count += 1
         return result
 
