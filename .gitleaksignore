@@ -10,3 +10,14 @@ services/consistency_engine.py:generic-api-key:4009
 
 # tests/test_report_workflow.py: hard-coded test fixture "unique-key-12345" used for idempotency-key header
 tests/test_report_workflow.py:generic-api-key:253
+
+# KIS-1274: Full-history scan (scheduled run) reports per-commit fingerprints —
+# the path-based entries above only cover working-tree scans. All three
+# findings verified harmless (code comment / test fixture / docs placeholder
+# "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." = public JWT header example).
+78f63831999c54f60ca79ca1d88811f72238ff3e:services/consistency_engine.py:generic-api-key:4006
+1d7314cb0498dc8a7746e9fb021f93da8df9cfdd:services/consistency_engine.py:generic-api-key:4006
+de857fdeacef601605e02666d90af75d0c1616f6:tests/test_report_workflow.py:generic-api-key:148
+d6b4d298bbc3b4bf76d3113f49343dea652764c6:tests/test_report_workflow.py:generic-api-key:148
+b6d60e298142e790955133d8864e1ee966ec8816:FRONTEND_AUTH_FIX_BRIEFING.md:generic-api-key:38
+c9b900255cdf5557caf01564fdfb65e2adbe319a:FRONTEND_AUTH_FIX_BRIEFING.md:generic-api-key:38
