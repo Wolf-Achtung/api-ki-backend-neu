@@ -257,14 +257,23 @@ def apply_rejudge_ratchet(pre: Dict[str, Any], post: Dict[str, Any],
 
 
 def run_judge_heal(sections: Dict[str, Any], answers: Dict[str, Any] | None,
-                   judge_result: Dict[str, Any], run_id: str = "") -> Optional[Dict[str, Any]]:
+                   judge_result: Dict[str, Any], run_id: str = "",
+                   lang: str = "de") -> Optional[Dict[str, Any]]:
     """Repariert die vom Judge geflaggten Befunde und re-judged EINMAL.
+
+    KIS-1275 (Aufgabe 2): lang-aware — bei EN-Reports läuft der Heal mit einer
+    englischen Prompt-Variante (gleicher Kontrakt: max. MAX_EDITS chirurgische
+    find/replace-Edits, Zahlen- und Tag-Schutz). Der bisherige deutsche Prompt
+    verlangte wörtlich "Ton beibehalten (Sie-Form, beratend, deutsch)" und
+    injizierte damit NACH dem EN-Sprachgate deutsche Sätze in EN-Reports.
+    DE (default) bleibt byte-identisch.
 
     Fail-open: jeder Fehler → None + Log-Warnung, Report bleibt unangetastet.
     """
     if not _enabled():
         return None
     answers = answers or {}
+    _is_en = str(lang or "de").strip().lower().startswith("en")
     try:
         flagged = [c for c in (judge_result.get("checks") or [])
                    if str(c.get("verdict")) in ("gelb", "rot")]
@@ -289,26 +298,62 @@ def run_judge_heal(sections: Dict[str, Any], answers: Dict[str, Any] | None,
         if not section_blobs:
             return None
 
-        prompt = (
-            "Ein Qualitäts-Judge hat in einem fertigen KI-Beratungsreport diese "
-            "Kohärenz-Befunde geflaggt:\n\n"
-            f"{findings}\n\n"
-            + (f"KUNDENANGABEN (wörtlich):\n{kunde}\n\n" if kunde else "")
-            + "Unten die betroffenen Sektionen als HTML. Erzeuge MINIMALE "
-            f"chirurgische Edits (max. {MAX_EDITS}), die genau diese Befunde "
-            "beheben:\n"
-            "- Bei DUBLETTEN: Das ERSTE Vorkommen der Aussage bleibt unverändert; "
-            "formuliere die späteren Wiederholungen um oder straffe sie, sodass "
-            "jede Stelle einen eigenen Aspekt betont.\n"
-            "- Bei SPIEGELUNG: Erweitere einen BESTEHENDEN Satz so, dass die "
-            "wörtliche Kundenangabe explizit aufgegriffen und mit dem Fokus des "
-            "Reports verbunden wird (Brückensatz, keine neue Sektion).\n"
-            "- 'find' muss ein EXAKTER, EINZIGARTIGER Ausschnitt aus dem HTML "
-            f"sein (mind. {MIN_FIND_LEN} Zeichen, inkl. Tags, falls im Satz).\n"
-            "- KEINE neuen Zahlen, KEINE neuen HTML-Tag-Typen, Ton beibehalten "
-            "(Sie-Form, beratend, deutsch).\n\n"
-            + "\n\n".join(section_blobs)
-        )
+        if _is_en:
+            # KIS-1275 (Aufgabe 2): EN-Variante — identischer Kontrakt
+            # (max. MAX_EDITS chirurgische Edits), aber englischer Zieltext:
+            # kein Wort Deutsch darf in den EN-Report injiziert werden.
+            prompt = (
+                "A quality judge flagged these coherence findings in a "
+                "finished AI consulting report:\n\n"
+                f"{findings}\n\n"
+                + (f"CUSTOMER INPUT (verbatim):\n{kunde}\n\n" if kunde else "")
+                + "Below are the affected sections as HTML. Produce MINIMAL "
+                f"surgical edits (max. {MAX_EDITS}) that fix exactly these "
+                "findings:\n"
+                "- For DUPLICATES: keep the FIRST occurrence of the statement "
+                "unchanged; rephrase or tighten the later repetitions so each "
+                "spot emphasises its own aspect.\n"
+                "- For MIRRORING: extend an EXISTING sentence so the verbatim "
+                "customer input is explicitly picked up and connected to the "
+                "report's focus (bridging sentence, no new section).\n"
+                "- 'find' must be an EXACT, UNIQUE excerpt from the HTML "
+                f"(at least {MIN_FIND_LEN} characters, including tags if part "
+                "of the sentence).\n"
+                "- NO new numbers, NO new HTML tag types. Keep the consulting "
+                "tone. Write ONLY in English — the report is English, do NOT "
+                "introduce any German words.\n\n"
+                + "\n\n".join(section_blobs)
+            )
+            system_prompt = (
+                "You are a precise report surgeon: minimal, exact "
+                "find/replace edits, never restructuring whole sections. "
+                "All replacement text must be English."
+            )
+        else:
+            prompt = (
+                "Ein Qualitäts-Judge hat in einem fertigen KI-Beratungsreport diese "
+                "Kohärenz-Befunde geflaggt:\n\n"
+                f"{findings}\n\n"
+                + (f"KUNDENANGABEN (wörtlich):\n{kunde}\n\n" if kunde else "")
+                + "Unten die betroffenen Sektionen als HTML. Erzeuge MINIMALE "
+                f"chirurgische Edits (max. {MAX_EDITS}), die genau diese Befunde "
+                "beheben:\n"
+                "- Bei DUBLETTEN: Das ERSTE Vorkommen der Aussage bleibt unverändert; "
+                "formuliere die späteren Wiederholungen um oder straffe sie, sodass "
+                "jede Stelle einen eigenen Aspekt betont.\n"
+                "- Bei SPIEGELUNG: Erweitere einen BESTEHENDEN Satz so, dass die "
+                "wörtliche Kundenangabe explizit aufgegriffen und mit dem Fokus des "
+                "Reports verbunden wird (Brückensatz, keine neue Sektion).\n"
+                "- 'find' muss ein EXAKTER, EINZIGARTIGER Ausschnitt aus dem HTML "
+                f"sein (mind. {MIN_FIND_LEN} Zeichen, inkl. Tags, falls im Satz).\n"
+                "- KEINE neuen Zahlen, KEINE neuen HTML-Tag-Typen, Ton beibehalten "
+                "(Sie-Form, beratend, deutsch).\n\n"
+                + "\n\n".join(section_blobs)
+            )
+            system_prompt = (
+                "Du bist ein präziser Report-Chirurg: minimale, exakte "
+                "find/replace-Edits, niemals Umbau ganzer Sektionen."
+            )
 
         from services.anthropic_client import call_anthropic_structured
         result = call_anthropic_structured(
@@ -316,10 +361,7 @@ def run_judge_heal(sections: Dict[str, Any], answers: Dict[str, Any] | None,
             section="judge_heal",
             schema=HEAL_SCHEMA,
             tool_name="emit_edits",
-            system_prompt=(
-                "Du bist ein präziser Report-Chirurg: minimale, exakte "
-                "find/replace-Edits, niemals Umbau ganzer Sektionen."
-            ),
+            system_prompt=system_prompt,
             max_tokens=3000,
         )
         edits = (result or {}).get("edits") or []

@@ -427,12 +427,18 @@ def replace_kpi_terms(html: str, run_id: str = "") -> Tuple[str, int]:
 # MAIN ENTRY POINT
 # =============================================================================
 
+def _is_en_lang(lang: str) -> bool:
+    """KIS-1275 (Aufgabe 1): True für EN-Reports (en, en-GB, EN, …)."""
+    return str(lang or "de").strip().lower().startswith("en")
+
+
 def apply_solo_final_pass(
     html: str,
     run_id: str = "",
     enable_enterprise_elimination: bool = True,
     enable_duz_conversion: bool = True,
     enable_kpi_replacement: bool = True,
+    lang: str = "de",
 ) -> Tuple[str, Dict[str, int]]:
     """
     FIX-554: Apply all final solo cleanup passes to assembled HTML.
@@ -440,16 +446,29 @@ def apply_solo_final_pass(
     This function should be called AFTER the report HTML is fully assembled
     (post-render, post-minification) as the LAST processing step before PDF.
 
+    KIS-1275 (Aufgabe 1): Bei lang=en ist dieser Pass ein No-op. ALLE drei
+    Teilpässe sind reine Eindeutschungs-Maps (Enterprise→deutsche Begriffe,
+    Duz→Sie, KPI→Kennzahlen) — es gibt keine sprachneutralen Struktur-/
+    Längen-Operationen, die bei EN erhalten bleiben müssten. Ohne dieses Gate
+    machte der Governance-Catchall (IGNORECASE) aus "Good governance and
+    clear KPIs" das Denglisch "Good Spielregeln and clear Kennzahlen".
+    DE (default) bleibt byte-identisch.
+
     Args:
         html: Final assembled HTML
         run_id: Run identifier for logging
         enable_enterprise_elimination: Enable enterprise term removal
         enable_duz_conversion: Enable du→Sie conversion
         enable_kpi_replacement: Enable KPI→Kennzahlen replacement
+        lang: Report language ("de" default; "en*" skips all germanizing maps)
 
     Returns:
         Tuple of (cleaned_html, stats_dict)
     """
+    if _is_en_lang(lang):
+        log.debug("[FIX-554] Solo final pass skipped for lang=%s (run=%s)", lang, run_id)
+        return html, {"enterprise": 0, "duz_sie": 0, "kpi": 0, "total": 0}
+
     if not html:
         return html, {"enterprise": 0, "duz_sie": 0, "kpi": 0, "total": 0}
 
@@ -494,6 +513,7 @@ def apply_solo_final_pass(
 def apply_solo_final_pass_to_sections(
     sections: Dict[str, Any],
     run_id: str = "",
+    lang: str = "de",
 ) -> Tuple[Dict[str, Any], Dict[str, int]]:
     """
     Apply solo final pass to all string sections (pre-render).
@@ -503,12 +523,16 @@ def apply_solo_final_pass_to_sections(
     Args:
         sections: Dict of section_key → content
         run_id: For logging
+        lang: Report language ("de" default; "en*" = No-op, s. apply_solo_final_pass)
 
     Returns:
         Tuple of (processed_sections, aggregated_stats)
     """
     processed = dict(sections)
     total_stats: Dict[str, int] = {"enterprise": 0, "duz_sie": 0, "kpi": 0, "total": 0}
+
+    if _is_en_lang(lang):
+        return processed, total_stats
 
     for key, content in sections.items():
         if not isinstance(content, str):
@@ -519,7 +543,7 @@ def apply_solo_final_pass_to_sections(
         if key.startswith("_"):
             continue
 
-        result, stats = apply_solo_final_pass(content, run_id=f"{run_id}/{key}")
+        result, stats = apply_solo_final_pass(content, run_id=f"{run_id}/{key}", lang=lang)
         if stats["total"] > 0:
             processed[key] = result
             for stat_key in total_stats:
@@ -558,6 +582,7 @@ def apply_size_final_pass(
     html: str,
     segment: str = "solo",
     run_id: str = "",
+    lang: str = "de",
 ) -> Tuple[str, Dict[str, int]]:
     """
     Size-aware final pass: applies appropriate cleanup rules per segment.
@@ -566,15 +591,26 @@ def apply_size_final_pass(
     - team: Soft enterprise filtering + Duz→Sie (no KPI replacement)
     - kmu:  Minimal filtering + Duz→Sie (no KPI replacement)
 
+    KIS-1275 (Aufgabe 1): Bei lang=en No-op — alle Segment-Maps sind reine
+    Eindeutschungen (Team: "Compliance Framework"→"Regelwerk"; Solo:
+    Governance-/Audit-Trail-Catchalls mit IGNORECASE trafen auch englische
+    Prosa). Der Pass läuft in gpt_analyze NACH dem EN-Sprachgate und würde
+    dessen Ergebnis sonst wieder eindeutschen. DE (default) byte-identisch.
+
     Args:
         html: Final assembled HTML
         segment: "solo" | "team" | "kmu"
         run_id: For logging
+        lang: Report language ("de" default; "en*" skips the pass entirely)
 
     Returns:
         Tuple of (cleaned_html, stats_dict)
     """
     seg = segment.lower().strip()
+
+    if _is_en_lang(lang):
+        log.debug("[SIZE-PASS] %s final pass skipped for lang=%s (run=%s)", seg.upper(), lang, run_id)
+        return html, {"enterprise": 0, "duz_sie": 0, "kpi": 0, "total": 0}
 
     if seg == "solo":
         return apply_solo_final_pass(
@@ -582,6 +618,7 @@ def apply_size_final_pass(
             enable_enterprise_elimination=True,
             enable_duz_conversion=True,
             enable_kpi_replacement=True,
+            lang=lang,
         )
 
     if not html:
@@ -627,6 +664,7 @@ def apply_size_final_pass_to_sections(
     sections: Dict[str, Any],
     segment: str = "solo",
     run_id: str = "",
+    lang: str = "de",
 ) -> Tuple[Dict[str, Any], Dict[str, int]]:
     """
     Size-aware final pass applied to all string sections (pre-render).
@@ -635,12 +673,16 @@ def apply_size_final_pass_to_sections(
         sections: Dict of section_key → content
         segment: "solo" | "team" | "kmu"
         run_id: For logging
+        lang: Report language ("de" default; "en*" = No-op, s. apply_size_final_pass)
 
     Returns:
         Tuple of (processed_sections, aggregated_stats)
     """
     processed = dict(sections)
     total_stats: Dict[str, int] = {"enterprise": 0, "duz_sie": 0, "kpi": 0, "total": 0}
+
+    if _is_en_lang(lang):
+        return processed, total_stats
 
     for key, content in sections.items():
         if not isinstance(content, str):
@@ -650,7 +692,7 @@ def apply_size_final_pass_to_sections(
         if key.startswith("_"):
             continue
 
-        result, stats = apply_size_final_pass(content, segment=segment, run_id=f"{run_id}/{key}")
+        result, stats = apply_size_final_pass(content, segment=segment, run_id=f"{run_id}/{key}", lang=lang)
         if stats["total"] > 0:
             processed[key] = result
             for stat_key in total_stats:

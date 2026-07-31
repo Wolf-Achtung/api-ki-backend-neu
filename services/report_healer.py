@@ -4286,6 +4286,14 @@ def heal_final_html(
     result = html
     fixes_applied = 0
 
+    # KIS-1275 (Aufgabe 3): zentrales lang-Gate — alle Eindeutschungs-
+    # Subpässe (SOLO-Blacklist→deutsche Begriffe, Governance→Spielregeln,
+    # DE-Dezimalformat 3.5→3,5, deutsche Quick-Win-Fallbacks, qualitative
+    # DE-ROI-Spannen, BC-Label-Lokalisierung) laufen NUR bei lang=de.
+    # Sprachneutrale Reparaturen (Boilerplate-/Leak-Entfernung, leere Werte,
+    # Dedup) laufen weiterhin für alle Sprachen.
+    _is_en_final = (lang or "").strip().lower().startswith("en")
+
     log.info("[HEALER-POST] Starting heal_final_html: len=%d, segment=%s (canonical=%s)", len(html), segment, canonical_segment)
 
     # Fix A: Remove prompt/template artifacts (TASK 1 - robust patterns)
@@ -4307,7 +4315,8 @@ def heal_final_html(
         log.warning("[HEALER-POST] Fix A error: %s", e)
 
     # Fix B: SOLO blacklist enforcement (TASK 2 + TASK 3 FINAL FIX)
-    if segment_lower == "solo":
+    # KIS-1275: DE-only — die Ersatz-Maps sind deutsche Begriffe.
+    if segment_lower == "solo" and not _is_en_final:
         try:
             # TASK 2 (FINAL FIX): First apply phrase-level replacements
             for phrase, replacement in SOLO_TERM_REPLACEMENTS_EXTENDED.items():
@@ -4323,21 +4332,22 @@ def heal_final_html(
             log.warning("[HEALER-POST] Fix B (SOLO blacklist) error: %s", e)
 
     # Fix F: Payback decimal normalization (3.5 Monat* → 3,5 Monat*)
-    try:
-        decimal_matches = list(PAYBACK_DECIMAL_PATTERN.finditer(result))
-        if decimal_matches:
-            for m in reversed(decimal_matches):
-                old_val = m.group(0)
-                new_val = PAYBACK_DECIMAL_PATTERN.sub(r'\1,\2 \3', old_val)
-                if old_val != new_val:
-                    result = result[:m.start()] + new_val + result[m.end():]
-                    fixes_applied += 1
-    except Exception as e:
-        log.warning("[HEALER-POST] Fix F error: %s", e)
+    # KIS-1275: DE-only — deutsches Dezimalformat darf EN-Reports nicht treffen.
+    if not _is_en_final:
+        try:
+            decimal_matches = list(PAYBACK_DECIMAL_PATTERN.finditer(result))
+            if decimal_matches:
+                for m in reversed(decimal_matches):
+                    old_val = m.group(0)
+                    new_val = PAYBACK_DECIMAL_PATTERN.sub(r'\1,\2 \3', old_val)
+                    if old_val != new_val:
+                        result = result[:m.start()] + new_val + result[m.end():]
+                        fixes_applied += 1
+        except Exception as e:
+            log.warning("[HEALER-POST] Fix F error: %s", e)
 
     # TASK 4: Sanitize payback progress labels (remove %, deduplicate)
     # KIS-1251: lang-aware — EN keeps "Payback progress: X%".
-    _is_en_final = (lang or "").strip().lower().startswith("en")
     try:
         result, payback_label_fixes = sanitize_payback_progress_labels(result, lang=lang)
         fixes_applied += payback_label_fixes
@@ -4379,7 +4389,8 @@ def heal_final_html(
         log.warning("[HEALER-POST] FIX-RC3 error: %s", e)
 
     # TASK D: ROI as qualitative ranges for SOLO (P1 optional)
-    if segment_lower == "solo":
+    # KIS-1275: DE-only — format_roi_span liefert deutsche qualitative Spannen.
+    if segment_lower == "solo" and not _is_en_final:
         try:
             result, roi_fixes = sanitize_roi_for_solo(result)
             fixes_applied += roi_fixes
@@ -4387,11 +4398,14 @@ def heal_final_html(
             log.warning("[HEALER-POST] TASK-D ROI sanitization error: %s", e)
 
     # TASK 1 (P0 Final Solo Polish): Quick Wins empty field failsafe
-    try:
-        result, quickwin_fixes = sanitize_quickwin_empty_fields(result)
-        fixes_applied += quickwin_fixes
-    except Exception as e:
-        log.warning("[HEALER-POST] Quick Wins empty field failsafe error: %s", e)
+    # KIS-1275: DE-only — die Fallback-Texte (QUICKWIN_FALLBACK_TEXTS_DE)
+    # sind deutsch und dürfen nicht in EN-Reports injiziert werden.
+    if not _is_en_final:
+        try:
+            result, quickwin_fixes = sanitize_quickwin_empty_fields(result)
+            fixes_applied += quickwin_fixes
+        except Exception as e:
+            log.warning("[HEALER-POST] Quick Wins empty field failsafe error: %s", e)
 
     # TASK 3 (P1 Final Solo Polish): Remove input checklist under Strategische Empfehlungen
     try:
@@ -4402,7 +4416,8 @@ def heal_final_html(
 
     # TASK 3 (P0 FINAL) + TASK B (P1): Final Governance catch-all for SOLO
     # Includes split-tag handling for patterns like Gover</span><span>nance
-    if segment_lower == "solo":
+    # KIS-1275: DE-only — "Governance"→"Spielregeln" ist eine Eindeutschung.
+    if segment_lower == "solo" and not _is_en_final:
         governance_replacements = 0
 
         # STEP 1: Handle split-tag patterns (Gover</span><span>nance, Gover</b><b>nance, etc.)

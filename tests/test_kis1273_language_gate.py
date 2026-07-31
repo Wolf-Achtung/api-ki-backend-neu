@@ -101,20 +101,22 @@ class TestLanguageSweep:
         assert "Richten Sie" not in out["QUICK_WINS_HTML"]
 
     def test_marker_mismatch_keeps_original(self, monkeypatch):
+        # KIS-1275 (Aufgabe 7): fail-open-Sektionen behalten das Original,
+        # tragen aber jetzt die Fail-open-Markierung am Sektionsanfang.
         import gpt_analyze as g
         monkeypatch.setattr(
             g, "_call_llm_for_section",
             lambda **k: "<<<BLOCK 7>>>\n<p>wrong marker index</p>")
         sections = {"X_HTML": _DE_PARA}
         out = g._en_language_sweep_sections(sections, self._briefing("en"))
-        assert out["X_HTML"] == _DE_PARA              # fail-open
+        assert out["X_HTML"] == g._LANG_SWEEP_FAILOPEN_MARKER + _DE_PARA  # fail-open
 
     def test_empty_response_keeps_original(self, monkeypatch):
         import gpt_analyze as g
         monkeypatch.setattr(g, "_call_llm_for_section", lambda **k: "")
         sections = {"X_HTML": _DE_PARA}
         out = g._en_language_sweep_sections(sections, self._briefing("en"))
-        assert out["X_HTML"] == _DE_PARA
+        assert out["X_HTML"] == g._LANG_SWEEP_FAILOPEN_MARKER + _DE_PARA
 
     def test_llm_exception_keeps_original(self, monkeypatch):
         import gpt_analyze as g
@@ -123,7 +125,7 @@ class TestLanguageSweep:
             lambda **k: (_ for _ in ()).throw(RuntimeError("timeout")))
         sections = {"X_HTML": _DE_PARA}
         out = g._en_language_sweep_sections(sections, self._briefing("en"))
-        assert out["X_HTML"] == _DE_PARA
+        assert out["X_HTML"] == g._LANG_SWEEP_FAILOPEN_MARKER + _DE_PARA
 
     def test_funding_program_names_protected_in_prompt(self, monkeypatch):
         """Der Übersetzungs-Prompt weist deutsche Programm-EIGENNAMEN explizit
@@ -146,7 +148,9 @@ class TestLanguageSweep:
                      "Games-Förderung des Bundes", "Medienboard",
                      "Qualifizierungschancengesetz"):
             assert name in prompt, f"Programmname fehlt im Schutz-Hinweis: {name}"
-        assert sections["FOERDER_HTML"] == de_funding  # Name im Original unangetastet
+        # KIS-1275: fail-open (fake_llm liefert None) → Original + Markierung
+        assert de_funding in sections["FOERDER_HTML"]  # Name im Original unangetastet
+        assert sections["FOERDER_HTML"].startswith("<!--ksj-lang-failopen-->")
 
     def test_short_german_fragment_not_translated(self, monkeypatch):
         """Blöcke unter 25 Zeichen sichtbarem Text lösen keinen Call aus."""
@@ -178,6 +182,9 @@ class TestLanguageSweep:
         assert not calls
 
     def test_llm_budget_max_10_calls(self, monkeypatch):
+        # KIS-1275 (6b): inhaltsgleiche Sektionen werden dedupliziert —
+        # für den Budget-Test brauchen die 14 Sektionen daher DISTINKTE
+        # deutsche Inhalte (vorher 14× identisch = wäre jetzt nur 1 Call).
         import gpt_analyze as g
         calls = []
 
@@ -186,7 +193,10 @@ class TestLanguageSweep:
             return None  # fail-open, zählt aber als Call
 
         monkeypatch.setattr(g, "_call_llm_for_section", fake_llm)
-        sections = {f"SEC_{i:02d}_HTML": _DE_PARA for i in range(14)}
+        sections = {
+            f"SEC_{i:02d}_HTML": _DE_PARA.replace("Monate", f"Monate (Variante {i})")
+            for i in range(14)
+        }
         g._en_language_sweep_sections(sections, self._briefing("en"))
         assert len(calls) == 10
 
