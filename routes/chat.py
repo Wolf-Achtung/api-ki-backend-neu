@@ -416,9 +416,9 @@ def _normalize_medien_sparte(raw) -> str | None:
         return text
     for opt in _QR_OPTIONS.get(MEDIEN_SPARTE_FIELD, []):
         if text == str(opt.get("label", "")).strip().lower():
-            return opt["value"]
+            return str(opt["value"])
         if text == str(opt.get("label_en", "")).strip().lower():
-            return opt["value"]
+            return str(opt["value"])
     if _is_medien_sparte_other(text):
         return None
     for slug, keywords in _MEDIEN_SPARTE_KEYWORDS.items():
