@@ -104,6 +104,144 @@ FIELD_QUESTIONS: dict[str, str] = {
     "ai_act_kenntnis": "Wie gut kennen Sie den EU AI Act?",
     "regulierte_branche": "Unterliegt Ihre Branche besonderen regulatorischen Anforderungen?",
     "ki_hemmnisse": "Was bremst Sie aktuell am meisten beim KI-Einsatz?",
+
+    # ── KIS-1278: Freitext-Felder (Sonnet-pflichtig im Chat) ──
+    # Diese Einträge dienen NUR dem Fast-Mode-Formular (GET
+    # /session/{id}/fast-mode) — dort erschien bisher das nackte Label
+    # ("3-Jahres-Vision") ohne jeden Hinweis, WAS einzutragen ist.
+    # Der Template-Mode im Chat bleibt unverändert: get_template_question /
+    # is_template_field gaten weiterhin über SONNET_REQUIRED_FIELDS.
+    "ki_projekte": (
+        "Gibt es bei Ihnen schon KI-Tests, Tools oder Projekte — auch "
+        "informelle? Stichworte reichen."
+    ),
+    "geschaeftsmodell_evolution": (
+        "Könnte KI Ihr Geschäftsmodell selbst verändern — etwa durch neue "
+        "Produkte, Kundengruppen oder Vertriebswege?"
+    ),
+    "vision_3_jahre": (
+        "Wo soll Ihr Unternehmen in 2–3 Jahren mit KI stehen? "
+        "Stichworte reichen völlig."
+    ),
+    "strategische_ziele": (
+        "Was soll KI bei Ihnen in den nächsten 6–12 Monaten konkret "
+        "verbessern?"
+    ),
+    "ki_guardrails": (
+        "Gibt es No-Gos oder sensible Bereiche beim KI-Einsatz — etwa "
+        "Kundendaten oder finale Entscheidungen?"
+    ),
+}
+
+
+# ──────────────────────────────────────────────────────────────────────
+# KIS-1278: EN question texts (native English, same keys as
+# FIELD_QUESTIONS).
+#
+# Used ONLY where the backend serves deterministic question text to
+# lang=en sessions: the fast-mode form (previously fell back to the bare
+# EN field label, e.g. "3-year vision") and the deterministic
+# empty-response / question-guarantee fallbacks in routes/chat.py
+# (previously the generic "Next up: <label> — how does that look for
+# you?"). Regular EN chat turns keep going through Sonnet — the template
+# short-cut stays DE-only.
+# ──────────────────────────────────────────────────────────────────────
+
+FIELD_QUESTIONS_EN: dict[str, str] = {
+    # ── Phase 1a ──
+    "branche": "What industry are you in?",
+    "unternehmensgroesse": "How large is your company?",
+    "selbststaendig": "What is your business structure?",
+    "country": "In which country is your company based?",
+    "bundesland": "In which federal state or region?",
+    "investitionsbudget": "What investment budget are you planning for AI?",
+
+    # ── Phase 1b ──
+    "digitalisierungsgrad": "How digital is your company on a scale of 1–10?",
+    "ki_kompetenz": "How would you rate the AI competence in your team?",
+    "ki_ziele": "What are your most important goals for using AI?",
+
+    # ── Block A ──
+    "bisherige_foerdermittel": "Have you already used funding programmes for digitalisation or AI?",
+    "interesse_foerderung": "Are you interested in funding programmes for AI investments?",
+    "erfahrung_beratung": "Have you already used external consulting on AI topics?",
+    "marktposition": "How would you rate your current market position?",
+    "benchmark_wettbewerb": "Do you regularly compare yourself with competitors?",
+    "risikofreude": "How much risk are you willing to take with innovations and new business areas?",
+    "jahresumsatz": "Roughly what is your annual revenue?",
+
+    # ── Block B ──
+    "roadmap_vorhanden": "Does your company already have an AI roadmap or strategy?",
+    "change_management": "How high is the willingness to change in your team?",
+    "massnahmen_komplexitaet": "How would you rate the effort of introducing AI?",
+    "vision_prioritaet": "What is the most important strategic lever for AI in your company?",
+    "innovationsprozess": "How do innovations come about in your company?",
+    "zielgruppen": "Who are your most important target groups?",
+    "governance_richtlinien": "Do you already have AI governance guidelines?",
+
+    # ── Block C ──
+    "automatisierungsgrad": "How automated are your business processes?",
+    "ki_einsatz": "In which areas are you already using AI?",
+    "anwendungsfaelle": "Which AI use cases are particularly interesting for you?",
+    "pilot_bereich": "In which area would you most likely start an AI pilot project?",
+    "vorhandene_tools": (
+        "Which classic business systems (CRM, ERP, project management, "
+        "accounting) do you currently use? We'll ask about AI tools separately."
+    ),
+    "projekte_pro_monat": (
+        "How many orders or transactions (e.g. projects, orders, cases) "
+        "do you typically handle per month?"
+    ),
+    "zeitersparnis_prioritaet": (
+        "In which area of your work should AI relieve you first — "
+        "where would saved time be most valuable?"
+    ),
+    "top_zeitfresser": (
+        "And specifically: which two or three individual tasks cost you "
+        "the most time in your day-to-day work?"
+    ),
+    "trainings_interessen": "Which AI training topics interest you?",
+    "zeitbudget": "How much time per week can you dedicate to AI projects?",
+    "prozesse_papierlos": "What share of your processes is paperless?",
+    "it_infrastruktur": "How is your IT infrastructure set up?",
+    "interne_ki_kompetenzen": (
+        "Do you have systematically built AI know-how? "
+        "For solo entrepreneurs, your own competence counts."
+    ),
+    "datenquellen": "Which data sources are available to you for AI applications?",
+
+    # ── Block D ──
+    "datenschutz": "How important is data protection to you when using AI?",
+    "datenschutzbeauftragter": "Do you have a data protection officer?",
+    "technische_massnahmen": "How are you doing on technical safeguards for your data?",
+    "folgenabschaetzung": "Has a data protection impact assessment been carried out?",
+    "meldewege": "Are reporting channels for security incidents clearly defined?",
+    "loeschregeln": "Are there documented deletion and anonymisation policies?",
+    "ai_act_kenntnis": "How familiar are you with the EU AI Act?",
+    "regulierte_branche": "Is your industry subject to specific regulatory requirements?",
+    "ki_hemmnisse": "What is currently slowing you down most in adopting AI?",
+
+    # ── KIS-1278: freetext fields (Sonnet-required in chat) ──
+    "ki_projekte": (
+        "Are there any AI experiments, tools or projects at your company — "
+        "even informal ones? Keywords are fine."
+    ),
+    "geschaeftsmodell_evolution": (
+        "Could AI change your business model itself — for example through "
+        "new products, customer groups or sales channels?"
+    ),
+    "vision_3_jahre": (
+        "Where do you want your company to be with AI in 2–3 years? "
+        "Keywords are perfectly fine."
+    ),
+    "strategische_ziele": (
+        "What should AI concretely improve for you over the next "
+        "6–12 months?"
+    ),
+    "ki_guardrails": (
+        "Are there any no-gos or sensitive areas for AI use — such as "
+        "customer data or final decisions?"
+    ),
 }
 
 
@@ -297,6 +435,19 @@ def get_template_question(field_name: str) -> str | None:
     if field_name in SONNET_REQUIRED_FIELDS:
         return None
     return FIELD_QUESTIONS.get(field_name)
+
+
+def get_template_question_en(field_name: str) -> str | None:
+    """KIS-1278: EN counterpart of get_template_question.
+
+    Same SONNET_REQUIRED_FIELDS gate — freetext fields return None so
+    Sonnet formulates them, exactly like the German path. Used by the
+    deterministic EN fallbacks in routes/chat.py (empty-response guard,
+    question guarantee).
+    """
+    if field_name in SONNET_REQUIRED_FIELDS:
+        return None
+    return FIELD_QUESTIONS_EN.get(field_name)
 
 
 def is_template_field(field_name: str) -> bool:

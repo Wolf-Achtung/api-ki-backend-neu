@@ -528,6 +528,17 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
     "country": "Land des Unternehmens (Deutschland, Österreich, Schweiz, UK oder anderes)",
     "bundesland": "Bundesland / Kanton / Region (für regionale Fördermöglichkeiten)",
     "hauptleistung": "Hauptdienstleistung oder wichtigstes Produkt (Freitext, 2–3 Sätze)",
+    # KIS-1278: fehlte — bei nicht zuordenbarem Freitext auf die Sparten-Frage
+    # (Single-Branch-Medien-Modus, KIS-1276/1277) bekam Sonnet beim Re-Ask
+    # keinerlei Feld-Kontext.
+    "medien_sparte": (
+        "Sparte innerhalb der Medien- & Kreativbranche (7 Optionen: "
+        "Film-/TV-Produktion, Postproduktion/VFX/Animation, Games/Interactive, "
+        "Verlag/Publishing, Musik/Audio/Podcast, Agentur/Werbung/Design, "
+        "Content Creation/Social Media). Optional — passt keine Option, darf "
+        "der Nutzer seine Tätigkeit einfach in eigenen Worten beschreiben, "
+        "die Zuordnung passiert automatisch. Weisen Sie darauf hin."
+    ),
     "jahresumsatz": "Geschätzter Jahresumsatz (bis 100T€ / 100–500T€ / 500T€–2Mio / 2–10Mio / >10Mio / keine Angabe)",
     # Sektion 1
     "zielgruppen": "Zielgruppen (Mehrfachauswahl: B2B, B2C, KMU, Großunternehmen, Öffentliche Hand, etc.)",
@@ -608,7 +619,8 @@ FIELD_DESCRIPTIONS: dict[str, str] = {
         "fehlende Ressourcen, oder etwas anderes?' Passe die Beispiele an die Branche an "
         "(Beratung: API-Kosten, Qualitätskontrolle; Gesundheit: Datenschutz, Zertifizierung; "
         "Handel: Datenqualität, Warenwirtschaft; IT: Integration, Legacy-Systeme; "
-        "Industrie: Maschinenanbindung, Datensilos). "
+        "Industrie: Maschinenanbindung, Datensilos; "
+        "Medien: Urheberrecht/Nutzungsrechte, Kennzeichnung KI-generierter Inhalte). "
         "(Mehrfachauswahl: Rechtsunsicherheit, Datenschutz, Know-how, Budget, "
         "Teamakzeptanz, Zeitmangel, IT-Integration, Keine, Andere)",
     # Sektion 7

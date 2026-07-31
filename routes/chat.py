@@ -71,8 +71,10 @@ from services.field_templates import (
     FIELD_EXAMPLES,
     FIELD_EXAMPLES_EN,
     FIELD_QUESTIONS,
+    FIELD_QUESTIONS_EN,
     get_confirmation,
     get_template_question,
+    get_template_question_en,
     is_template_field,
 )
 
@@ -2833,8 +2835,11 @@ async def chat_message(
         if not full_response.strip() and not _report_start_requested:
             _fallback = None
             if next_fields:
-                # EN: template questions are German → use generic EN question
-                _fallback = None if _lang_en else get_template_question(next_fields[0])
+                # KIS-1278: EN sessions get the native EN template question
+                # (same SONNET_REQUIRED gate as DE); generic label question
+                # only as last resort.
+                _fallback = (get_template_question_en(next_fields[0])
+                             if _lang_en else get_template_question(next_fields[0]))
                 if not _fallback:
                     if _lang_en:
                         _fb_label = _QR_LABELS_EN.get(next_fields[0]) or get_field_label(next_fields[0], rt)
@@ -2865,8 +2870,10 @@ async def chat_message(
                 and not _report_start_requested
                 and not _checkpoint_triggered
                 and _final_phase not in ("summary", "checkpoint")):
-            # EN: template questions are German → use generic EN question
-            _ng_q = None if _lang_en else get_template_question(next_fields[0])
+            # KIS-1278: EN sessions get the native EN template question
+            # (same gate as DE); generic label question only as last resort.
+            _ng_q = (get_template_question_en(next_fields[0])
+                     if _lang_en else get_template_question(next_fields[0]))
             if not _ng_q:
                 if _lang_en:
                     _ng_label = _QR_LABELS_EN.get(next_fields[0]) or get_field_label(next_fields[0], rt)
@@ -3239,9 +3246,12 @@ async def get_fast_mode_fields(session_id: UUID, db: Session = Depends(get_db)):
             reg = registry.get(field, {})
             qr_options = _QR_OPTIONS.get(field)
             if _fm_en:
-                # EN: question falls back to the EN field label; option labels
-                # use label_en (fallback: DE label — never crash).
-                question = _QR_LABELS_EN.get(field) or FIELD_QUESTIONS.get(field, get_field_label(field))
+                # KIS-1278: native EN question text first (FIELD_QUESTIONS_EN);
+                # fallback EN field label, then DE — never crash. Option labels
+                # use label_en (fallback: DE label).
+                question = (FIELD_QUESTIONS_EN.get(field)
+                            or _QR_LABELS_EN.get(field)
+                            or FIELD_QUESTIONS.get(field, get_field_label(field)))
                 if qr_options:
                     qr_options = [
                         {**o, "label": o.get("label_en") or o["label"]}
