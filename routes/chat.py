@@ -255,6 +255,178 @@ PHASE_1_EXTRACTABLE_FIELDS: set[str] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# KIS-1276: Phase-1 Medien-Fokus — VISIBLE_BRANCHES + medien_sparte im Chat
+# ---------------------------------------------------------------------------
+# Der Branchen-Filter lebt in services.branch_mapping.get_frontend_branch_options
+# (ENV VISIBLE_BRANCHES, kommagetrennt; fail-open: leer/ungültig → alle 13).
+# Der Chat nutzt dieselbe Quelle, statt eine zweite Liste zu pflegen.
+# Ohne ENV bleibt das Verhalten byte-identisch (13 Chips, Branchen-Frage
+# zuerst, keine Sparten-Frage im Chat).
+
+MEDIEN_SPARTE_FIELD = "medien_sparte"
+
+# Werte-Slugs wie im Formbuilder (formbuilder_de_SINGLE_FULL.js, key
+# "medien_sparte") bzw. field_registry.py — services/answers_normalizer
+# verarbeitet genau diese Slugs (MEDIEN_SPARTEN_LABELS_EN).
+_MEDIEN_SPARTE_VALUES: tuple[str, ...] = (
+    "produktion", "post_vfx", "games", "verlag_publishing",
+    "musik_audio", "agentur_design", "content_creation",
+)
+
+# medien_sparte ist bewusst NICHT in der chat_normalizer-Registry (die würde
+# Sections/Progress für ALLE Sessions ändern). Dieses Mini-Registry liefert
+# _build_quick_replies die nötigen Metadaten (enum, optional, QR-Chips).
+_EXTRA_QR_FIELD_REGISTRY: dict[str, dict] = {
+    MEDIEN_SPARTE_FIELD: {"type": "enum", "required": False, "chat_mode": "QR"},
+}
+
+
+def _visible_branche_values() -> list[str]:
+    """Sichtbare Branchen-Slugs laut ENV VISIBLE_BRANCHES (fail-open: alle 13).
+
+    Single Source of Truth: services.branch_mapping.get_frontend_branch_options.
+    Die Slugs sind identisch mit den value-Keys in _QR_OPTIONS["branche"].
+    """
+    from services.branch_mapping import get_frontend_branch_options
+    return [value for value, _label in get_frontend_branch_options()]
+
+
+def _visible_branche_qr_options() -> list[dict]:
+    """_QR_OPTIONS["branche"] gefiltert über VISIBLE_BRANCHES.
+
+    Fail-open: Ergibt der Filter keine Option (ENV leer/ungültig oder
+    Slug-Mismatch), werden alle 13 Chips wie bisher ausgeliefert.
+    """
+    visible = set(_visible_branche_values())
+    options = [o for o in _QR_OPTIONS["branche"] if o["value"] in visible]
+    return options if options else list(_QR_OPTIONS["branche"])
+
+
+def _single_visible_branche() -> str | None:
+    """Slug der einzigen sichtbaren Branche — oder None (Mehr-Branchen-Modus)."""
+    visible = _visible_branche_values()
+    return visible[0] if len(visible) == 1 else None
+
+
+def _branche_value_allowed(value) -> bool:
+    """True, wenn ein (normalisierter) Branchen-Wert laut Filter sichtbar ist.
+
+    Fail-open: Ohne aktiven Filter (alle 13 sichtbar) immer True — damit
+    bleibt das Default-Verhalten byte-identisch.
+    """
+    visible = _visible_branche_values()
+    if len(visible) >= 13:
+        return True
+    return value in visible
+
+
+def _apply_single_branch_autofill(collected: dict) -> str | None:
+    """Single-Branch-Modus: `branche` automatisch in den State setzen.
+
+    Mutiert *collected* nur, wenn genau EINE Branche sichtbar ist und
+    `branche` noch nicht (z. B. via Prefill) gesetzt wurde.
+    Returns: den gesetzten Slug oder None.
+    """
+    single = _single_visible_branche()
+    if single and "branche" not in collected:
+        collected["branche"] = single
+        return single
+    return None
+
+
+def _phase_1a_qr_fields() -> list[str]:
+    """Phase-1a-QR-Sequenz — im Single-Branch-Medien-Modus mit Sparten-Frage.
+
+    Default (kein/mehrdeutiger Filter): exakt PHASE_1A_QR_FIELDS wie bisher.
+    """
+    if _single_visible_branche() == "medien":
+        fields = list(PHASE_1A_QR_FIELDS)
+        fields.insert(fields.index("branche") + 1, MEDIEN_SPARTE_FIELD)
+        return fields
+    return PHASE_1A_QR_FIELDS
+
+
+# Freitext → Sparten-Slug (deterministisch; Reihenfolge = Prio bei Overlap:
+# "Motion Design" soll post_vfx treffen, bevor "design" agentur_design zieht).
+_MEDIEN_SPARTE_KEYWORDS: dict[str, tuple[str, ...]] = {
+    "post_vfx": (
+        "post_vfx", "postproduktion", "post-produktion", "post production",
+        "postproduction", "vfx", "animation", "compositing", "color grading",
+        "colour grading", "motion design", "motion graphics", "schnitt",
+        "visual effects", "3d",
+    ),
+    "produktion": (
+        "film", "tv", "fernseh", "kino", "dreh", "videoproduktion",
+        "video production", "video-produktion", "doku", "produktionsfirma",
+        "movie", "television",
+    ),
+    "games": (
+        "games", "game ", "game-", "gaming", "spieleentwick", "spiele",
+        "interactive", "unity", "unreal", "computerspiel", "videospiel",
+    ),
+    "verlag_publishing": (
+        "verlag", "publishing", "redaktion", "zeitschrift", "magazin",
+        "zeitung", "buch", "lektorat", "journalis", "editorial", "publisher",
+    ),
+    "musik_audio": (
+        "musik", "music", "audio", "tonstudio", "ton-studio", "podcast",
+        "sound", "mastering", "mixing", "komponist", "hörbuch", "hoerbuch",
+        "recording studio", "label", "audiobook",
+    ),
+    "content_creation": (
+        "content", "social media", "social-media", "influencer", "youtube",
+        "tiktok", "instagram", "creator", "blog", "streaming", "twitch",
+    ),
+    "agentur_design": (
+        "agentur", "agency", "werbung", "werbe", "advertising",
+        "public relations", " pr", "pr-", "webdesign", "web design",
+        "grafik", "graphic", "design", "branding", "marketing",
+    ),
+}
+
+# Generische "Sonstiges"-Antworten → optionales Feld überspringen
+# ("weiter ohne Sparte", analog OPTIONAL_FIELDS im Formbuilder).
+_MEDIEN_SPARTE_OTHER_WORDS: frozenset[str] = frozenset({
+    "sonstiges", "sonstige", "andere", "anderes", "other", "none",
+    "keine", "keine sparte", "keine angabe", "keine_angabe", "k.a.", "unklar",
+})
+
+
+def _is_medien_sparte_other(raw) -> bool:
+    """True, wenn die Antwort generisch 'Sonstiges'/keine Sparte bedeutet."""
+    if raw is None:
+        return False
+    return str(raw).strip().lower() in _MEDIEN_SPARTE_OTHER_WORDS
+
+
+def _normalize_medien_sparte(raw) -> str | None:
+    """Freitext/Chip-Wert → einer der 7 Sparten-Slugs, sonst None.
+
+    Reihenfolge: exakter Slug → exaktes DE/EN-Label → Keyword-Zuordnung
+    ("wir machen Tonstudio-Arbeit" → musik_audio). None = keine Zuordnung
+    (Feld ist optional — Aufrufer fragt erneut oder überspringt).
+    """
+    if raw is None:
+        return None
+    text = str(raw).strip().lower()
+    if not text:
+        return None
+    if text in _MEDIEN_SPARTE_VALUES:
+        return text
+    for opt in _QR_OPTIONS.get(MEDIEN_SPARTE_FIELD, []):
+        if text == str(opt.get("label", "")).strip().lower():
+            return str(opt["value"])
+        if text == str(opt.get("label_en", "")).strip().lower():
+            return str(opt["value"])
+    if _is_medien_sparte_other(text):
+        return None
+    for slug, keywords in _MEDIEN_SPARTE_KEYWORDS.items():
+        if any(kw in text for kw in keywords):
+            return slug
+    return None
+
+
 def _get_datenschutz_block_fields(branche: str) -> list[str]:
     """Return Block D fields based on branche (Beratung → reduced set).
 
@@ -550,6 +722,10 @@ def _should_skip_qr_field(field: str, collected: dict) -> bool:
         return True
     if field == "selbststaendig" and collected.get("unternehmensgroesse") != "1":
         return True
+    # KIS-1276: Sparten-Frage nur, wenn die Branche Medien ist (analog
+    # showIf branche==="medien" im klassischen Formular).
+    if field == MEDIEN_SPARTE_FIELD and collected.get("branche") != "medien":
+        return True
     return False
 
 
@@ -560,7 +736,7 @@ def _is_phase_1a(phase_state: dict, collected: dict) -> bool:
     if phase_state.get("phase_1_qr_complete"):
         return False
     # Check if any QR fields are still missing (skip conditional fields)
-    return any(f not in collected for f in PHASE_1A_QR_FIELDS
+    return any(f not in collected for f in _phase_1a_qr_fields()
                if not _should_skip_qr_field(f, collected))
 
 
@@ -573,7 +749,7 @@ def _is_phase_1b(phase_state: dict, collected: dict) -> bool:
 
 def _get_next_phase_1a_field(collected: dict) -> str | None:
     """Get the next QR field in Phase 1a sequence."""
-    for f in PHASE_1A_QR_FIELDS:
+    for f in _phase_1a_qr_fields():
         if _should_skip_qr_field(f, collected):
             continue
         if f not in collected:
@@ -623,7 +799,59 @@ STRATEGY_WELCOME_EN = (
 )
 
 
+# KIS-1276: Willkommens-Varianten für den Single-Branch-Modus (ENV
+# VISIBLE_BRANCHES mit genau einer Branche). Die Branchen-Frage entfällt
+# (branche wird automatisch gesetzt); stattdessen wird direkt die erste
+# offene Frage gestellt. Die Mehr-Branchen-Konstanten oben bleiben
+# wortidentisch — diese Varianten greifen NUR im Single-Branch-Modus.
+_R1_WELCOME_INTRO = (
+    "Willkommen bei ki-sicherheit.jetzt! Ich führe Sie durch eine "
+    "kurze Bestandsaufnahme — in ca. 10–15 Minuten. Am Ende erhalten "
+    "Sie einen individuellen KI-Report mit konkreten Empfehlungen "
+    "für Ihr Unternehmen. Ihre Angaben werden ausschließlich für "
+    "die Analyse verwendet.\n\n"
+)
+
+_R1_WELCOME_INTRO_EN = (
+    "Welcome to ki-sicherheit.jetzt! I'll guide you through a short "
+    "assessment — it takes about 10–15 minutes. At the end you'll receive "
+    "an individual AI report with concrete recommendations for your "
+    "business. Your answers are used exclusively for this analysis.\n\n"
+)
+
+R1_WELCOME_MEDIEN_SPARTE = _R1_WELCOME_INTRO + (
+    "In welcher Sparte der Medien- & Kreativbranche sind Sie tätig? "
+    "Falls Sie unsicher sind, beschreiben Sie einfach, was Sie tun "
+    "— ich helfe bei der Zuordnung."
+)
+
+R1_WELCOME_MEDIEN_SPARTE_EN = _R1_WELCOME_INTRO_EN + (
+    "Which sector of the media & creative industries are you in? "
+    "If you're not sure, simply describe what you do "
+    "— I'll help with the classification."
+)
+
+# Generische Variante für einen Single-Branch-Fokus ≠ medien: erste Frage
+# ist dann die Unternehmensgröße (nächstes Phase-1a-Feld nach branche).
+R1_WELCOME_SINGLE_BRANCH = _R1_WELCOME_INTRO + (
+    "Wie groß ist Ihr Unternehmen — arbeiten Sie solo, "
+    "im kleinen Team oder als KMU?"
+)
+
+R1_WELCOME_SINGLE_BRANCH_EN = _R1_WELCOME_INTRO_EN + (
+    "How large is your company — are you working solo, "
+    "in a small team, or as an SME?"
+)
+
+
 def _get_welcome(report_type: str, lang: str = "de") -> str:
+    if report_type != "strategy":
+        # KIS-1276: Single-Branch-Modus — Sparten- statt Branchen-Frage.
+        single = _single_visible_branche()
+        if single == "medien":
+            return R1_WELCOME_MEDIEN_SPARTE_EN if _is_en_lang(lang) else R1_WELCOME_MEDIEN_SPARTE
+        if single:
+            return R1_WELCOME_SINGLE_BRANCH_EN if _is_en_lang(lang) else R1_WELCOME_SINGLE_BRANCH
     if _is_en_lang(lang):
         return STRATEGY_WELCOME_EN if report_type == "strategy" else R1_WELCOME_EN
     if report_type == "strategy":
@@ -634,6 +862,13 @@ def _get_welcome(report_type: str, lang: str = "de") -> str:
 def _get_first_qr_fields(report_type: str) -> list[str]:
     if report_type == "strategy":
         return ["s1_budget"]
+    # KIS-1276: Single-Branch-Modus — branche ist auto-gefüllt, erste Frage
+    # ist die Sparten-Frage (medien) bzw. die Unternehmensgröße (sonst).
+    single = _single_visible_branche()
+    if single == "medien":
+        return [MEDIEN_SPARTE_FIELD]
+    if single:
+        return ["unternehmensgroesse"]
     return ["branche"]
 
 
@@ -672,6 +907,14 @@ async def chat_start(
     initial_collected = dict(req.prefill or {})
     if req.report_type == "r1" and "datenschutz" not in initial_collected:
         initial_collected["datenschutz"] = True
+
+    # KIS-1276: Single-Branch-Modus (ENV VISIBLE_BRANCHES mit genau einer
+    # Branche) — branche automatisch setzen, Branchen-Frage überspringen.
+    # Ohne ENV (oder mit mehreren Branchen) ist das ein No-Op.
+    if req.report_type == "r1":
+        _autofilled = _apply_single_branch_autofill(initial_collected)
+        if _autofilled:
+            log.info("[CHAT] KIS-1276: Single-Branch-Modus — branche=%s auto-gesetzt", _autofilled)
 
     session = ChatSession(
         report_type=req.report_type,
@@ -952,7 +1195,27 @@ async def chat_message(
             # --- QR value write (single code path, draft-agnostic) ---
             # KIS-1131 FX-3: Skip meta-fields (__*__) — they are control signals,
             # not data fields, and would produce "Unknown field" warnings in normalize_field.
-            if qr_field != "_draft_action" and not qr_field.startswith("__"):
+            if qr_field == MEDIEN_SPARTE_FIELD:
+                # KIS-1276: medien_sparte ist bewusst nicht in der
+                # chat_normalizer-Registry — Chip-Klicks werden direkt
+                # persistiert (Slug-validiert); unbekannte/„Sonstiges"-Werte
+                # überspringen das optionale Feld (weiter ohne Sparte).
+                _ms_qr_val = _normalize_medien_sparte(req.quick_reply_value)
+                if _ms_qr_val:
+                    collected[qr_field] = _ms_qr_val
+                    normalized[qr_field] = _ms_qr_val
+                else:
+                    collected[qr_field] = ""  # optional → weiter ohne Sparte
+                field_meta[qr_field] = {
+                    "confidence": "high",
+                    "source_turn": turn,
+                    "raw_input": req.quick_reply_value,
+                    "normalized": True,
+                    "confirmed": True,
+                }
+                log.info("[CHAT] KIS-1276 Quick reply: medien_sparte=%s → %r",
+                         req.quick_reply_value, collected[qr_field])
+            elif qr_field != "_draft_action" and not qr_field.startswith("__"):
                 qr_result = normalize_field(qr_field, req.quick_reply_value, collected, report_type=rt)
                 # FIX: Chip-Klicks aus FREETEXT_SUGGESTIONS sind explizite User-Bestätigungen
                 # und sollen den is_low_quality_text-Check umgehen (sonst Loop bei 1-Wort-Chips
@@ -978,6 +1241,13 @@ async def chat_message(
                             "(Registry-Lücke prüfen!)",
                             qr_field, req.quick_reply_value,
                         )
+                # KIS-1276: Branchen-Werte außerhalb des VISIBLE_BRANCHES-
+                # Filters nicht persistieren (Chips sind serverseitig
+                # gefiltert; fail-open ohne ENV → Check immer True).
+                if (qr_field == "branche" and qr_result.confidence != "low"
+                        and not _branche_value_allowed(qr_result.value)):
+                    log.info("[CHAT] KIS-1276: QR branche=%r nicht sichtbar — verworfen", qr_result.value)
+                    qr_result = NormResult(None, "low", True)
                 if qr_result.confidence != "low":
                     collected[qr_field] = qr_result.value
                     normalized[qr_field] = qr_result.value
@@ -1131,6 +1401,10 @@ async def chat_message(
                     # Add enum options (but skip for freetext extraction fields)
                     if _ftype in ("enum", "multi") and _fname not in _FREETEXT_EXTRACTION_FIELDS:
                         _opts = ENUM_VALUES.get(_fname)
+                        if _fname == "branche":
+                            # KIS-1276: nur sichtbare Branchen anbieten
+                            # (fail-open: ohne Filter identische 13 Werte).
+                            _opts = _visible_branche_values()
                         if _opts:
                             _field_def["options"] = _opts
                     _target_fields.append(_field_def)
@@ -1199,6 +1473,12 @@ async def chat_message(
                     result = normalize_field(_mf_name, _mf_val, collected, report_type=rt)
                     if result.confidence == "low":
                         log.info("[CHAT] Phase 1: field %s low confidence, skipping", _mf_name)
+                        continue
+                    if _mf_name == "branche" and not _branche_value_allowed(result.value):
+                        # KIS-1276: Wert liegt außerhalb des VISIBLE_BRANCHES-
+                        # Filters — nicht persistieren (fail-open: ohne Filter
+                        # ist dieser Check immer True).
+                        log.info("[CHAT] KIS-1276: branche=%r nicht sichtbar — verworfen", result.value)
                         continue
                     collected[_mf_name] = result.value
                     normalized[_mf_name] = result.value
@@ -1291,6 +1571,12 @@ async def chat_message(
                         log.info("[CHAT] Field %s: low confidence, skipping", field_name)
                         continue
 
+                    if field_name == "branche" and not _branche_value_allowed(result.value):
+                        # KIS-1276: Wert außerhalb des VISIBLE_BRANCHES-Filters
+                        # (fail-open: ohne Filter immer erlaubt).
+                        log.info("[CHAT] KIS-1276: branche=%r nicht sichtbar — verworfen", result.value)
+                        continue
+
                     collected[field_name] = result.value
                     normalized[field_name] = result.value
 
@@ -1301,6 +1587,46 @@ async def chat_message(
                         "normalized": True,
                         "confirmed": False,
                     }
+
+                # KIS-1276: medien_sparte (Single-Branch-Medien-Modus) —
+                # deterministische Freitext-Zuordnung ("wir machen Tonstudio-
+                # Arbeit" → musik_audio). Das Feld ist nicht Teil der
+                # chat_normalizer-Registry und der Haiku-Tool-Definition,
+                # daher eigener Pfad statt normalize_field.
+                if (rt == "r1"
+                        and _asked_field == MEDIEN_SPARTE_FIELD
+                        and MEDIEN_SPARTE_FIELD not in collected
+                        and not _is_help_request
+                        and not _is_low_quality_input
+                        and not _is_edit_request
+                        and not _is_in_edit_mode):
+                    _ms_raw = None
+                    if isinstance(raw_extracted, dict):
+                        _ms_raw = raw_extracted.get(MEDIEN_SPARTE_FIELD)
+                    _ms_val = _normalize_medien_sparte(_ms_raw) or _normalize_medien_sparte(req.message)
+                    if _ms_val:
+                        collected[MEDIEN_SPARTE_FIELD] = _ms_val
+                        normalized[MEDIEN_SPARTE_FIELD] = _ms_val
+                        field_meta[MEDIEN_SPARTE_FIELD] = {
+                            "confidence": "high",
+                            "source_turn": turn,
+                            "raw_input": req.message,
+                            "normalized": True,
+                            "confirmed": False,
+                        }
+                        log.info("[CHAT] KIS-1276: medien_sparte=%s aus Freitext zugeordnet", _ms_val)
+                    elif _is_medien_sparte_other(req.message):
+                        # Generisch "Sonstiges" → optionales Feld überspringen
+                        collected[MEDIEN_SPARTE_FIELD] = ""
+                        field_meta[MEDIEN_SPARTE_FIELD] = {
+                            "confidence": "high",
+                            "source_turn": turn,
+                            "raw_input": req.message,
+                            "normalized": True,
+                            "confirmed": True,
+                        }
+                        log.info("[CHAT] KIS-1276: medien_sparte übersprungen (Sonstiges)")
+
                 # No fields extracted from free text → user likely asked a question
                 if not normalized:
                     _no_extraction = True
@@ -1441,7 +1767,26 @@ async def chat_message(
             # Only skip the next optional field if we didn't just confirm a draft.
             # "weiter" + pending draft = confirm only; "weiter" + no draft = skip.
             if not _skip_confirmed_draft:
-                asked = get_next_fields(collected, _current_section, report_type=rt)
+                # KIS-1276: medien_sparte ist nicht Teil der Section-Registry —
+                # get_next_fields würde beim Decline das falsche Feld treffen.
+                # Skip/Decline auf die Sparten-Frage direkt behandeln (optional
+                # → weiter ohne Sparte). Nur aktiv im Single-Branch-Medien-
+                # Modus; ohne ENV ist _p1a_declined nie medien_sparte.
+                _p1a_declined = (
+                    _get_next_phase_1a_field(collected)
+                    if rt == "r1" and _is_phase_1a(_phase_state, collected)
+                    else None
+                )
+                if _p1a_declined == MEDIEN_SPARTE_FIELD:
+                    collected[MEDIEN_SPARTE_FIELD] = ""
+                    field_meta[MEDIEN_SPARTE_FIELD] = {
+                        "confidence": "high", "source_turn": turn,
+                        "raw_input": "skipped", "normalized": True, "confirmed": True,
+                    }
+                    log.info("[CHAT] KIS-1276: medien_sparte übersprungen (Decline/Skip)")
+                    asked = []
+                else:
+                    asked = get_next_fields(collected, _current_section, report_type=rt)
                 if asked:
                     skip_field = asked[0]
                     skip_reg = registry.get(skip_field, {})
@@ -4034,6 +4379,19 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "logistik", "label": "Transport & Logistik"},
         {"value": "gastronomie", "label": "Gastronomie & Tourismus"},
     ],
+    # KIS-1276: Sparten-Frage im Single-Branch-Medien-Modus (VISIBLE_BRANCHES
+    # =medien). DE-Labels wie im Formbuilder (formbuilder_de_SINGLE_FULL.js,
+    # key "medien_sparte"); EN-Labels via _QR_OPTION_LABELS_EN (Quelle:
+    # services.answers_normalizer.MEDIEN_SPARTEN_LABELS_EN).
+    "medien_sparte": [
+        {"value": "produktion", "label": "Film-/TV-Produktion"},
+        {"value": "post_vfx", "label": "Postproduktion / VFX / Animation"},
+        {"value": "games", "label": "Games / Interactive"},
+        {"value": "verlag_publishing", "label": "Verlag / Publishing / Redaktion"},
+        {"value": "musik_audio", "label": "Musik / Audio / Tonstudio / Podcast"},
+        {"value": "agentur_design", "label": "Agentur / Werbung / PR / Webdesign"},
+        {"value": "content_creation", "label": "Content Creation / Social Media"},
+    ],
     "unternehmensgroesse": [
         {"value": "1", "label": "1 (Solo/Freiberuflich)"},
         {"value": "2–10", "label": "2–10 (Kleines Team)"},
@@ -4423,6 +4781,7 @@ _QR_OPTIONS: dict[str, list[dict]] = {
 _QR_LABELS: dict[str, str] = {
     # Sektion 0
     "branche": "Branche", "unternehmensgroesse": "Unternehmensgröße",
+    "medien_sparte": "Sparte (Medien & Kreativwirtschaft)",  # KIS-1276
     "selbststaendig": "Unternehmensform", "country": "Land",
     "bundesland": "Bundesland / Region", "hauptleistung": "Hauptleistung",
     "jahresumsatz": "Jahresumsatz",
@@ -4473,6 +4832,7 @@ _QR_LABELS: dict[str, str] = {
 _QR_LABELS_EN: dict[str, str] = {
     # Sektion 0
     "branche": "Industry", "unternehmensgroesse": "Company size",
+    "medien_sparte": "Sector (media & creative industries)",  # KIS-1276
     "selbststaendig": "Business type", "country": "Country",
     "bundesland": "Federal state / region", "hauptleistung": "Main service",
     "jahresumsatz": "Annual revenue",
@@ -4778,6 +5138,17 @@ _QR_OPTION_LABELS_EN: dict[str, dict[str, str]] = {
     },
 }
 
+# KIS-1276: EN-Labels für medien_sparte aus der Single Source of Truth
+# (services.answers_normalizer.MEDIEN_SPARTEN_LABELS_EN, KIS-1251) statt
+# einer Zweitliste — nur die 7 Slug-Keys, keine DE-Display-Label-Aliasse.
+from services.answers_normalizer import MEDIEN_SPARTEN_LABELS_EN as _MEDIEN_SPARTEN_LABELS_EN
+
+_QR_OPTION_LABELS_EN["medien_sparte"] = {
+    _v: _MEDIEN_SPARTEN_LABELS_EN[_v]
+    for _v in _MEDIEN_SPARTE_VALUES
+    if _v in _MEDIEN_SPARTEN_LABELS_EN
+}
+
 # Inject "label_en" into the existing _QR_OPTIONS entries (display-only key;
 # values and German labels stay byte-identical).
 for _f_en, _lbls_en in _QR_OPTION_LABELS_EN.items():
@@ -4984,7 +5355,10 @@ def _build_quick_replies(
         if field_name in collected:
             continue  # Already collected — no buttons
 
-        reg = registry.get(field_name, {})
+        # KIS-1276: medien_sparte lebt außerhalb der chat_normalizer-Registry
+        # (siehe _EXTRA_QR_FIELD_REGISTRY) — Fallback nur, wenn die Registry
+        # das Feld nicht kennt; alle bestehenden Felder unverändert.
+        reg = registry.get(field_name) or _EXTRA_QR_FIELD_REGISTRY.get(field_name, {})
 
         # Freetext suggestions (for selected text fields)
         if reg.get("type") == "text" and field_name in FREETEXT_SUGGESTIONS:
@@ -5010,6 +5384,10 @@ def _build_quick_replies(
         # Dynamic bundesland options based on collected country
         elif field_name == "bundesland":
             options_data = _build_bundesland_options(collected.get("country", "DE"))
+        elif field_name == "branche":
+            # KIS-1276: Branchen-Chips über VISIBLE_BRANCHES filtern
+            # (fail-open: ohne/ungültige ENV alle 13 wie bisher).
+            options_data = _visible_branche_qr_options()
         else:
             options_data = _QR_OPTIONS.get(field_name)
 

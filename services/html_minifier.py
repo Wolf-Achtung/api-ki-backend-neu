@@ -38,7 +38,10 @@ def _get_compiled_pattern(pattern: str, flags: int = 0) -> Pattern:
 
 
 # Pre-compiled patterns for HTML compression
-_RE_HTML_COMMENTS = re.compile(r'<!--(?!\[if).*?-->', re.DOTALL)
+# KIS-1275: ksj-lang-failopen-Marker gewhitelistet — der Sanitize-Hook in
+# report_renderer läuft NACH der Minifizierung und braucht den Marker, um
+# fail-open-Sektionen des EN-Sprachgates zu überspringen.
+_RE_HTML_COMMENTS = re.compile(r'<!--(?!\[if)(?!/?ksj-lang-failopen).*?-->', re.DOTALL)
 _RE_MULTIPLE_SPACES = re.compile(r'[ \t]+')
 _RE_TAG_WHITESPACE = re.compile(r'>\s+<')
 _RE_LEADING_WHITESPACE = re.compile(r'^\s+', re.MULTILINE)

@@ -10055,22 +10055,62 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
 # Bewusst case-sensitiv: "mit" bleibt lowercase-only, damit z. B. "MIT"
 # (Institution) in EN-Text nie als deutsches Stopwort zählt.
 _DE_FALLBACK_UMLAUT_RE = re.compile(r"[äöüÄÖÜß]")
+# KIS-1275 (Aufgabe 5a): Stopwortliste um Artikel/Präpositionen erweitert
+# (der/die/das/den/dem/dass/im/am/beim/zum/zur/dabei/dieser/diese/dieses) —
+# Repro aus dem Audit: "Das Team plant den Start im August" hatte 0 Treffer.
+# Artikel matchen bewusst auch kapitalisiert (Satzanfang); Schwelle bleibt >=3.
 _DE_FALLBACK_STOPWORD_RE = re.compile(
-    r"\b(?:und|oder|nicht|sowie|eine[nmrs]?|Ihre?[mnrs]?|wird|werden|sind|ist|"
+    r"\b(?:und|oder|nicht|sowie|dabei|dass|eine[nmrs]?|Ihre?[mnrs]?|wird|werden|sind|ist|"
     r"bei|durch|für|von|mit|auch|dazu|bereits|laufende[nmrs]?|"
+    r"[Dd]er|[Dd]ie|[Dd]as|[Dd]en|[Dd]em|[Dd]iese[rsnm]?|"
+    r"im|am|beim|zum|zur|"
     r"keine[nmr]?|Unternehmen|Wochen|Monate[n]?|Schritte?)\b"
 )
+
+# KIS-1275 (Aufgabe 5b): Quellen-/Studientitel in Anführungszeichen („…“, “…”,
+# "…", ‚…‘) werden vor der Zählung entfernt — zitierte deutsche Titel in
+# EN-Fließtext sind kein Indiz für einen deutschen Block.
+_DE_QUOTED_TITLE_RE = re.compile(
+    r"„[^“”\"]{2,200}[“”\"]"      # „deutscher Titel“
+    r"|“[^”\"]{2,200}[”\"]"       # “Titel”
+    r"|\"[^\"]{2,200}\""           # "Titel"
+    r"|‚[^‘’]{2,200}[‘’]"          # ‚Titel‘
+)
+
+
+def _neutralize_known_proper_names(text: str) -> str:
+    """KIS-1275 (Aufgabe 5b): Bekannte Eigennamen aus dem Prüftext entfernen.
+
+    False-Positive-Repro aus dem Audit: Ein englischer Block mit dem
+    Programmnamen "BAFA – Förderung von Unternehmensberatungen für KMU"
+    wurde als deutsch klassifiziert (Umlaut + Stopwörter im NAMEN) →
+    unnötiger LLM-Call + Mangling-Risiko. Die Shield-Liste kommt aus
+    services.funding_recommender._funding_name_shield_list (längste zuerst,
+    lazy, fail-open) — die Datei selbst wird NICHT verändert.
+    """
+    if not text:
+        return text
+    text = _DE_QUOTED_TITLE_RE.sub(" ", text)
+    try:
+        from services.funding_recommender import _funding_name_shield_list
+        for name in _funding_name_shield_list():
+            if name and name in text:
+                text = text.replace(name, " ")
+    except Exception:  # pragma: no cover — Shield ist Optimierung, nie Blocker
+        pass
+    return text
 
 
 def _text_looks_german(plain_text: str, min_chars: int = 0) -> bool:
     """KIS-1273: Kern-Heuristik — True, wenn sichtbarer Text deutsch aussieht.
 
     Deutsch = (Umlaute/ß vorhanden ODER >= 3 deutsche Stopwörter) UND
-    sichtbarer Text >= min_chars Zeichen.
+    sichtbarer Text >= min_chars Zeichen. KIS-1275 (5b): Bekannte Eigennamen
+    (Förderprogramme) und zitierte Titel werden vor der Zählung neutralisiert.
     """
     if not plain_text:
         return False
-    stripped = " ".join(plain_text.split())
+    stripped = " ".join(_neutralize_known_proper_names(plain_text).split())
     if min_chars and len(stripped) < min_chars:
         return False
     if _DE_FALLBACK_UMLAUT_RE.search(stripped):
@@ -10186,13 +10226,53 @@ def _find_german_blocks(section_html: str) -> List["re.Match[str]"]:
     return german
 
 
+_LANG_SWEEP_TAG_TOKEN_RE = re.compile(r"<(/?)([a-zA-Z][a-zA-Z0-9]*)")
+
+
+def _lang_sweep_tag_balance(html: str) -> Dict[Tuple[bool, str], int]:
+    """KIS-1275 (Aufgabe 4): Tag-Bilanz — Zählung pro (closing?, tag-name)."""
+    counts: Dict[Tuple[bool, str], int] = {}
+    for closing, name in _LANG_SWEEP_TAG_TOKEN_RE.findall(html or ""):
+        key = (closing == "/", name.lower())
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+def _lang_sweep_block_valid(original: str, candidate: str) -> Tuple[bool, str]:
+    """KIS-1275 (Aufgabe 4): Validiert einen übersetzten Block gegen sein Original.
+
+    Audit-Repro "Marker-Echo": Erwähnt das LLM einen <<<BLOCK n>>>-Marker im
+    übersetzten Text erneut, überschrieb der Split den Block mit dem Fragment
+    nach dem zweiten Marker (Tag-Bilanz -1, offenes </p> im Report). Checks:
+      (a) Ersatz enthält keinen Marker-String mehr,
+      (b) Tag-Bilanz (Zählung pro Tag-Name, öffnend/schließend) identisch,
+      (c) Ersatz nicht leer,
+      (d) Längen-Plausibilität: Ersatz zwischen 30 % und 300 % der
+          Originallänge (reduziert zusätzlich das Risiko still akzeptierter
+          vertauschter Marker-Nummern).
+    """
+    if not candidate:
+        return False, "leer"
+    if "<<<BLOCK" in candidate or _LANG_SWEEP_MARKER_RE.search(candidate):
+        return False, "Marker-Echo im Ersatz"
+    if _lang_sweep_tag_balance(candidate) != _lang_sweep_tag_balance(original):
+        return False, "Tag-Bilanz abweichend"
+    o_len = max(len(original), 1)
+    if not (0.3 * o_len <= len(candidate) <= 3.0 * o_len):
+        return False, f"Länge unplausibel ({len(candidate)} vs. {len(original)})"
+    return True, ""
+
+
 def _translate_de_blocks_to_en(section_key: str, blocks: List[str]) -> Optional[List[str]]:
     """KIS-1273: Übersetzt deutsche HTML-Blöcke einer Sektion in EINEM LLM-Call.
 
     Marker-Protokoll: Jeder Block geht mit <<<BLOCK n>>>-Marker in den Prompt,
-    die Antwort muss exakt dieselben Marker enthalten. Bei Marker-Mismatch,
-    leeren Blöcken oder leerer Antwort: None (Aufrufer behält das Original —
-    fail-open, nie kaputter Report).
+    die Antwort muss exakt dieselben Marker enthalten. Bei Marker-Mismatch
+    oder leerer Antwort: None (Aufrufer behält das Original — fail-open, nie
+    kaputter Report). KIS-1275 (Aufgabe 4): Zusätzlich wird JEDER Block vor
+    der Ersetzung einzeln validiert (_lang_sweep_block_valid) — bei Verstoß
+    bleibt genau dieser Block original (fail-open pro Block statt pro
+    Sektion); doppelt gelieferte Marker-Indizes gelten als verdorben.
     """
     if not blocks:
         return None
@@ -10234,11 +10314,16 @@ ENGLISH BLOCKS:"""
     parts = _LANG_SWEEP_MARKER_RE.split(cleaned)
     # parts = [preamble, idx0, text0, idx1, text1, …]
     found: Dict[int, str] = {}
+    tainted: set = set()
     for i in range(1, len(parts) - 1, 2):
         try:
             idx = int(parts[i])
         except (TypeError, ValueError):
             return None
+        if idx in found:
+            # KIS-1275 (Aufgabe 4): Marker-Echo — derselbe Index kam doppelt;
+            # dieser Block ist nicht vertrauenswürdig (Original behalten).
+            tainted.add(idx)
         found[idx] = parts[i + 1].strip()
     expected = set(range(len(blocks)))
     if set(found.keys()) != expected:
@@ -10247,10 +10332,62 @@ ENGLISH BLOCKS:"""
             section_key, len(blocks), sorted(found.keys()),
         )
         return None
-    if any(not found[i] for i in expected):
-        log.warning("[KIS-1273] Empty translated block for %s — keeping originals", section_key)
+    # KIS-1275 (Aufgabe 4): fail-open PRO BLOCK — ungültige Ersetzungen
+    # (Marker-Echo, Tag-Bilanz, leer, Länge) behalten das Original.
+    out: List[str] = []
+    kept_original = 0
+    for i in range(len(blocks)):
+        candidate = found[i]
+        if i in tainted:
+            ok, reason = False, "Marker-Index doppelt geliefert"
+        else:
+            ok, reason = _lang_sweep_block_valid(blocks[i], candidate)
+        if not ok:
+            log.warning(
+                "[KIS-1275] Block %d in %s keeps original (%s)",
+                i, section_key, reason,
+            )
+            out.append(blocks[i])
+            kept_original += 1
+        else:
+            out.append(candidate)
+    if kept_original == len(blocks):
+        log.warning("[KIS-1275] All %d block(s) invalid for %s — keeping originals", len(blocks), section_key)
         return None
-    return [found[i] for i in range(len(blocks))]
+    return out
+
+
+# KIS-1275 (Aufgabe 7): Fail-open-Markierung am Sektionsanfang. Der Sweep
+# markiert damit Sektionen, deren Übersetzung fehlschlug (oder deren
+# LLM-Budget erschöpft war) — sie enthalten bewusst behaltene DEUTSCHE
+# Blöcke. HINWEIS FÜR DEN SANITIZER (Parallel-Agent, html_sanitizer):
+# sanitize_en_locale_tokens wird in report_renderer.py auf das GESAMT-HTML
+# angewandt und tokenisiert so auch diese Sektionen zu Denglisch ("Die
+# Funding über das Funding programme"). Der Sanitizer könnte Bereiche ab
+# dieser Markierung (bis zum Sektionsende) überspringen. ACHTUNG:
+# services/html_minifier.py entfernt HTML-Kommentare (<!--…-->, außer
+# <!--[if …]) in optimize_html_for_pdf — das läuft in report_renderer VOR
+# dem Gesamt-HTML-Sanitize-Hook; der Kommentar müsste dort zusätzlich
+# gewhitelistet werden, damit die Markierung den Hook erreicht.
+_LANG_SWEEP_FAILOPEN_MARKER = "<!--ksj-lang-failopen-->"
+
+
+def _lang_sweep_key_priority(key: str) -> int:
+    """KIS-1275 (Aufgabe 6a): Budget-Priorisierung der Sektions-Keys.
+
+    Audit-Repro: 12 Anhang-Sektionen (Dict-Reihenfolge) verbrauchten das
+    10er-LLM-Budget, die Executive Summary blieb deutsch. Reihenfolge:
+    erst EXECUTIVE_SUMMARY*/EXEC*, dann QUICK_WINS*, dann übrige
+    _HTML-Keys, dann Rest (innerhalb der Gruppen stabil).
+    """
+    ku = key.upper()
+    if ku.startswith("EXECUTIVE_SUMMARY") or ku.startswith("EXEC"):
+        return 0
+    if ku.startswith("QUICK_WINS"):
+        return 1
+    if ku.endswith("_HTML"):
+        return 2
+    return 3
 
 
 def _en_language_sweep_sections(sections: Dict[str, Any], briefing: Dict[str, Any]) -> Dict[str, Any]:
@@ -10258,12 +10395,16 @@ def _en_language_sweep_sections(sections: Dict[str, Any], briefing: Dict[str, An
 
     Läuft NUR bei lang=en (DE bleibt byte-identisch, kein LLM-Call). Pro
     betroffener Sektion genau EIN LLM-Call (Marker-Protokoll), gedeckelt auf
-    _LANG_SWEEP_MAX_LLM_CALLS. Danach werden zusätzlich die deterministischen
-    EN-Locale-Token-Mappings (html_sanitizer.sanitize_en_locale_tokens) neu
-    angewandt: Restore-/Heal-Pässe NACH dem Sanitizer-Final-Pass (RESCUE-640,
-    QW-Pristine-Restore, LLM-Heals) können sonst deutsche Tokens wie
-    "Vier-Augen-Prinzip" oder "siehe …" zurück in den Auslieferungszustand
-    bringen (Lauf 5, Kit-Seite S.14).
+    _LANG_SWEEP_MAX_LLM_CALLS. KIS-1275: Sektionen werden priorisiert
+    abgearbeitet (Aufgabe 6a), inhaltsgleiche Shadow-Twins erhalten die
+    Übersetzung ihres Twins kopiert statt eines eigenen Calls (6b), und
+    fail-open-Sektionen werden mit _LANG_SWEEP_FAILOPEN_MARKER markiert (7).
+    Danach werden zusätzlich die deterministischen EN-Locale-Token-Mappings
+    (html_sanitizer.sanitize_en_locale_tokens) neu angewandt: Restore-/
+    Heal-Pässe NACH dem Sanitizer-Final-Pass (RESCUE-640, QW-Pristine-
+    Restore, LLM-Heals) können sonst deutsche Tokens wie "Vier-Augen-
+    Prinzip" oder "siehe …" zurück in den Auslieferungszustand bringen
+    (Lauf 5, Kit-Seite S.14).
     """
     lang = str(
         (briefing or {}).get("lang")
@@ -10275,9 +10416,24 @@ def _en_language_sweep_sections(sections: Dict[str, Any], briefing: Dict[str, An
 
     llm_calls = 0
     failed_keys: set = set()
-    for key in list(sections.keys()):
+    # KIS-1275 (6b): Übersetzungs-Cache nach Original-Inhalt — lowercase-
+    # Schattenkeys mit identischem Inhalt wie ihr _HTML-Twin (Audit-Repro:
+    # 4 Calls für 2 logische Sektionen) erhalten die Übersetzung kopiert.
+    # Cache-Wert: (übersetzter Inhalt oder None, fail-open?) — der Twin erbt
+    # beides (auch die fail-open-Markierung/Resanitize-Ausnahme).
+    translation_cache: Dict[str, Tuple[Optional[str], bool]] = {}
+    ordered_keys = sorted(list(sections.keys()), key=_lang_sweep_key_priority)
+    for key in ordered_keys:
         val = sections.get(key)
         if key.startswith("_") or not isinstance(val, str) or not val.strip():
+            continue
+        if val in translation_cache:
+            cached_html, cached_failed = translation_cache[val]
+            if cached_html is not None:
+                sections[key] = cached_html
+                log.info("[KIS-1275] Language sweep: twin translation copied to section %s", key)
+            if cached_failed:
+                failed_keys.add(key)
             continue
         try:
             german_matches = _find_german_blocks(val)
@@ -10294,24 +10450,43 @@ def _en_language_sweep_sections(sections: Dict[str, Any], briefing: Dict[str, An
             failed_keys.add(key)
             continue
         llm_calls += 1
-        translated = _translate_de_blocks_to_en(key, [m.group(0) for m in german_matches])
+        original_blocks = [m.group(0) for m in german_matches]
+        translated = _translate_de_blocks_to_en(key, original_blocks)
         if not translated:
             # fail-open: Original behalten — und die Sektion auch von der
             # Token-Nachsanitisierung ausnehmen, sonst würde aus dem bewusst
             # behaltenen deutschen Block genau das Denglisch ("Das Project
             # trägt sich…"), das dieses Gate verhindern soll.
             failed_keys.add(key)
+            translation_cache[val] = (None, True)
             continue
         rebuilt = val
         for m, new_block in sorted(
             zip(german_matches, translated), key=lambda t: t[0].start(), reverse=True
         ):
             rebuilt = rebuilt[: m.start()] + new_block + rebuilt[m.end():]
+        # KIS-1275 (Aufgabe 4): Teil-fail-open — blieb mindestens ein Block
+        # original (Validierung), gilt die Sektion als fail-open (Marker +
+        # keine Token-Nachsanitisierung), die validen Blöcke bleiben ersetzt.
+        # Twins erben die Teil-Übersetzung UND den fail-open-Status.
+        partly_failed = any(
+            nb == ob for nb, ob in zip(translated, original_blocks)
+        )
         sections[key] = rebuilt
+        translation_cache[val] = (rebuilt, partly_failed)
+        if partly_failed:
+            failed_keys.add(key)
         log.info(
             "[KIS-1273] Language sweep: %d German block(s) translated in section %s",
             len(german_matches), key,
         )
+
+    # KIS-1275 (Aufgabe 7): fail-open-Sektionen markieren (siehe Kommentar
+    # an _LANG_SWEEP_FAILOPEN_MARKER).
+    for key in failed_keys:
+        val = sections.get(key)
+        if isinstance(val, str) and _LANG_SWEEP_FAILOPEN_MARKER not in val:
+            sections[key] = _LANG_SWEEP_FAILOPEN_MARKER + val
 
     # Deterministische EN-Token-Nachsanitisierung (siehe Docstring).
     try:
@@ -22479,8 +22654,10 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         try:
             from services.solo_final_pass import apply_size_final_pass_to_sections
             _segment = persona if persona in ("solo", "team", "kmu") else "solo"
+            # KIS-1275 (Aufgabe 1): lang durchreichen — EN-Sektionen dürfen
+            # nicht eingedeutscht werden (No-op bei lang=en). DE unverändert.
             sections, section_pass_stats = apply_size_final_pass_to_sections(
-                sections, segment=_segment, run_id=run_id
+                sections, segment=_segment, run_id=run_id, lang=report_lang
             )
             if section_pass_stats.get("total", 0) > 0:
                 log.info(
@@ -22938,7 +23115,11 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         # GENAU EIN Re-Judge. Kein Loop, fail-open.
         if _judge_result and _judge_result.get("ampel") != "gruen":
             from services.judge_heal import run_judge_heal
-            run_judge_heal(sections, answers, _judge_result, run_id=run_id)
+            # KIS-1275 (Aufgabe 2): lang durchreichen — der Heal-Prompt war
+            # hart deutsch ("Sie-Form, beratend, deutsch") und injizierte
+            # NACH dem EN-Sprachgate deutsche Sätze. DE unverändert.
+            run_judge_heal(sections, answers, _judge_result, run_id=run_id,
+                          lang=report_lang)
     except Exception as _cj_exc:  # pragma: no cover
         log.warning("[%s] [PLATIN-JUDGE] Hook übersprungen: %s", run_id, _cj_exc)
 
@@ -22961,13 +23142,22 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
     # =========================================================================
     # FIX-A-G: POST-RENDER SAFETY NET (heal artifacts created during rendering)
     # =========================================================================
+    # KIS-1275 (Aufgabe 3): Der Aufruf war doppelt tot — (a) er übergab ein
+    # nicht existierendes Keyword `hauptleistung` an heal_final_html
+    # (TypeError, still im except verschluckt) und (b) render() liefert ein
+    # Dict {"html": …}, der Guard prüfte aber `isinstance(result, str)`.
+    # Der Post-Render-Healer lief dadurch in KEINEM Lauf. Jetzt an die echte
+    # Signatur angepasst, auf result["html"] angewendet und `lang`
+    # durchgereicht (Eindeutschungs-Subpässe im Healer sind auf DE gegated).
+    # ACHTUNG: Das reaktiviert den Healer bewusst auch für DE-Reports
+    # (beabsichtigte, DE-sichtbare Reparatur — der Healer soll laufen).
     try:
-        if result and isinstance(result, str):
-            result = heal_final_html(
-                result,
+        if result and isinstance(result, dict) and isinstance(result.get("html"), str):
+            result["html"] = heal_final_html(
+                result["html"],
                 segment=healer_segment,
                 canonical_payback_months=canonical_payback,
-            hauptleistung=hl_for_healer,
+                lang=report_lang,
             )
             log.info(f"[{run_id}] [HEALER-POST] Applied post-render healing")
     except Exception as e:
@@ -23309,7 +23499,10 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         from services.solo_final_pass import apply_size_final_pass
         _segment = persona if persona in ("solo", "team", "kmu") else "solo"
         final_html = result["html"]
-        final_html, final_stats = apply_size_final_pass(final_html, segment=_segment, run_id=run_id)
+        # KIS-1275 (Aufgabe 1): lang durchreichen — bei EN ist der Pass ein
+        # No-op, sonst deutscht er das Ergebnis des EN-Sprachgates wieder ein
+        # ("Good governance" → "Good Spielregeln"). DE unverändert.
+        final_html, final_stats = apply_size_final_pass(final_html, segment=_segment, run_id=run_id, lang=report_lang)
         result["html"] = final_html
         if final_stats.get("total", 0) > 0:
             log.info(

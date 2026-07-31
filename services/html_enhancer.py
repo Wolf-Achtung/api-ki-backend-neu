@@ -317,18 +317,39 @@ def _try_scenario_transform(table_html: str) -> str | None:
 
 _RE_TABLE = re.compile(r'<table(?:\s[^>]*)?>.*?</table>', re.DOTALL | re.IGNORECASE)
 
+# KIS-1275 (1b): Typografie-Properties, die der Enhancer auf EN-gehärteten
+# Tabellen (data-ksj-hardened="1", nur EN-Pfad von style_lint.
+# harden_wide_tables) NIE setzt/überschreibt — die Kompaktierung
+# (font-size:0.86/0.8em am <table>, padding:4px 6px auf th/td) ist die
+# Kalibrierungsbasis der colgroup-Spalten-Minima. Farben/Borders etc.
+# bleiben erlaubt.
+_RESPECT_TYPO_PROPS = frozenset({"font-size", "padding"})
 
-def _merge_or_add_style(match: re.Match[str], new_styles: str, tag: str) -> str:
+
+def _merge_or_add_style(
+    match: re.Match[str], new_styles: str, tag: str,
+    respect_existing: bool = False,
+) -> str:
     """FIX-HE1: Add styles to an HTML tag, merging with existing style if present.
 
     Parses CSS properties from both existing and new styles, merging them into
     a single style attribute. New properties override existing ones with the
     same name. Prevents duplicate style attributes.
+
+    ACHTUNG Semantik-Falle (KIS-1275, Aufgabe 1d): services.style_lint.
+    _merge_inline_style hat die UMGEKEHRTE Semantik (bestehende Properties
+    gewinnen immer). Default hier: NEUE gewinnen (Legacy, DE byte-identisch).
+    respect_existing=True dreht das um (bestehende gewinnen) — genutzt für
+    EN-Tabellen mit data-ksj-hardened="1", deren Kompakt-Styles
+    (font-size/padding aus harden_wide_tables) sonst überschrieben und die
+    darauf kalibrierten colgroup-Minima entwertet wurden (Clipping von
+    nowrap-Beträgen/Daten/Enums bei table-layout:fixed).
     """
     tag_html: str = match.group(0)
     existing = re.search(r'style="([^"]*)"', tag_html)
     if existing:
         # Parse existing + new properties, new overrides existing
+        # (bzw. bestehende gewinnen bei respect_existing=True)
         props: dict[str, str] = {}
         for prop in existing.group(1).split(';'):
             prop = prop.strip()
@@ -339,7 +360,17 @@ def _merge_or_add_style(match: re.Match[str], new_styles: str, tag: str) -> str:
             prop = prop.strip()
             if ':' in prop:
                 key, val = prop.split(':', 1)
-                props[key.strip()] = val.strip()
+                key_n = key.strip()
+                if respect_existing and (
+                    key_n in props
+                    or key_n.lower() in _RESPECT_TYPO_PROPS
+                ):
+                    # Bestehender Wert gewinnt; Typografie-Properties werden
+                    # auf gehärteten Tabellen auch dann nicht ergänzt, wenn
+                    # sie fehlen — th/td erben so die Kompaktschrift des
+                    # <table>-Tags statt z.B. font-size:9pt zu bekommen.
+                    continue
+                props[key_n] = val.strip()
         merged = ';'.join(f'{k}:{v}' for k, v in props.items())
         result = str(tag_html.replace(existing.group(0), f'style="{merged}"'))
         # FIX-S14A: Safety net — collapse any remaining duplicate style= attributes
@@ -368,21 +399,37 @@ def _merge_or_add_style(match: re.Match[str], new_styles: str, tag: str) -> str:
         return result
     else:
         attrs = match.group(1) if match.lastindex else ''
+        if respect_existing:
+            # KIS-1275 (1b): auch ohne bestehendes style-Attribut keine
+            # Typografie-Properties auf gehärtete Tabellen setzen.
+            kept = [
+                p.strip() for p in new_styles.split(';')
+                if p.strip()
+                and p.split(':', 1)[0].strip().lower() not in _RESPECT_TYPO_PROPS
+            ]
+            new_styles = ';'.join(kept)
         return f'<{tag} style="{new_styles}"{attrs}>'
 
 
-def _style_table_headers(table_html: str) -> str:
-    """Add inline styles to <th> and <td> elements in a table."""
+def _style_table_headers(table_html: str, respect_existing: bool = False) -> str:
+    """Add inline styles to <th> and <td> elements in a table.
+
+    KIS-1275 (1b): respect_existing=True für EN-gehärtete Tabellen
+    (data-ksj-hardened) — deren Kompakt-Padding/Font aus harden_wide_tables
+    gewinnt; Enhancer-Kosmetik (Farben, Borders, text-transform, …) kommt
+    weiterhin dazu, weil diese Properties dort nicht gesetzt sind."""
     # Style <th> elements — merge with existing style if present
     table_html = re.sub(
         r'<th([^>]*)>',
-        lambda m: _merge_or_add_style(m, _S_TH, 'th'),
+        lambda m: _merge_or_add_style(m, _S_TH, 'th',
+                                      respect_existing=respect_existing),
         table_html
     )
     # Style <td> elements — merge with existing style if present
     table_html = re.sub(
         r'<td([^>]*)>',
-        lambda m: _merge_or_add_style(m, _S_TD, 'td'),
+        lambda m: _merge_or_add_style(m, _S_TD, 'td',
+                                      respect_existing=respect_existing),
         table_html
     )
     # Alternating row backgrounds
@@ -413,6 +460,14 @@ def _transform_tables(html: str) -> str:
         if re.match(r'<table\s+class=', table_html):
             return str(table_html)
 
+        # KIS-1275 (1b): EN-gehärtete Tabellen (Marker aus
+        # style_lint.harden_wide_tables, nur EN-Pfad) — deren
+        # font-size/padding-Kompaktierung darf NICHT überschrieben werden
+        # (bestehende Properties gewinnen). DE-Tabellen tragen den Marker
+        # nie → DE-Ausgabe bleibt byte-identisch.
+        _open_m = re.match(r'<table\b[^>]*>', table_html, re.IGNORECASE)
+        _hardened = bool(_open_m and 'data-ksj-hardened' in _open_m.group(0))
+
         # Try specific transforms in order
         result = _try_kpi_transform(table_html)
         if result:
@@ -430,11 +485,12 @@ def _transform_tables(html: str) -> str:
         # FIX-HE1: Merge with existing style if LLM already set one
         table_html = re.sub(
             r'^<table([^>]*)>',
-            lambda m: _merge_or_add_style(m, _S_TABLE, 'table').rstrip('>') +
+            lambda m: _merge_or_add_style(m, _S_TABLE, 'table',
+                                          respect_existing=_hardened).rstrip('>') +
                       (' class="tool-comparison"' if 'class=' not in m.group(0) else '') + '>',
             table_html
         )
-        table_html = _style_table_headers(table_html)
+        table_html = _style_table_headers(table_html, respect_existing=_hardened)
         return str(table_html)
 
     return _RE_TABLE.sub(_replace_table, html)

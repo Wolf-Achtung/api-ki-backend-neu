@@ -479,7 +479,7 @@ _EN_TEXT_HEAVY_MIN = 18.0
 # passen (EN-Testlauf 5: "4,8 00 €" / "10, 80 0 €" in der Roadmap-Tabelle).
 _EN_CELL_TOKEN_RE = re.compile(
     r"\d{1,2}\.\d{1,2}\.(?:\s?\d{4})?"
-    r"|\d[\d.,]*(?:[  ]?(?:€|%|EUR\b|h\b(?:/mo\.?)?|mo\.?))?"
+    r"|\d[\d.,]*(?:[   ]?(?:€|%|EUR\b|h\b(?:/mo\b\.?)?|mo\b\.?))?"
     r"|[A-Za-zÄÖÜäöüß]+"
 )
 # Datumsangaben ("31.12.2026", auch "31.12. 2026") dürfen nie umbrechen.
@@ -570,7 +570,13 @@ _STYLE_ATTR_VAL_RE = re.compile(r'style\s*=\s*"([^"]*)"', re.IGNORECASE)
 
 def _merge_inline_style(tag: str, extra: str) -> str:
     """Fügt CSS-Deklarationen in ein Open-Tag ein (bestehende Properties
-    gewinnen — es wird nichts überschrieben, nur ergänzt)."""
+    gewinnen — es wird nichts überschrieben, nur ergänzt).
+
+    ACHTUNG Semantik-Falle (KIS-1275, Aufgabe 1d): services.html_enhancer.
+    _merge_or_add_style hat die UMGEKEHRTE Default-Semantik (NEUE Properties
+    überschreiben bestehende). Der Enhancer respektiert bestehende Werte nur
+    für Tabellen mit dem Marker data-ksj-hardened="1" (respect_existing=True),
+    den ausschließlich der EN-Pfad von harden_wide_tables setzt."""
     m = _STYLE_ATTR_VAL_RE.search(tag)
     if not m:
         return tag[:-1] + f' style="{extra}">'
@@ -669,7 +675,10 @@ _EN_AMOUNT_RE = re.compile(
     r"(?<![\d.,])"
     r"(?:"
     # Zahl + Einheit (inkl. Verbund "h/mo." aus dem BC-Deep-Dive)
-    r"\d[\d.,]*(?:[  ]|&nbsp;)?(?:€|%|EUR\b|h\b(?:/mo\.?)?|mo\.?)"
+    # KIS-1275 (4): "mo" nur mit Wortgrenze — `mo\.?` zerlegte "11.9 months"
+    # in "<span>11.9 mo</span>nths". KIS-1275 (6a): NBSP (U+00A0) und schmales
+    # NBSP (U+202F) zwischen Zahl und Einheit zusätzlich akzeptieren.
+    r"\d[\d.,]*(?:[   ]|&nbsp;)?(?:€|%|EUR\b|h\b(?:/mo\b\.?)?|mo\b\.?)"
     r"|\d{1,3}(?:[.,]\d{3})+"                             # Betrag mit Trennern
     r")"
     r"(?!\d)"
@@ -678,6 +687,64 @@ _EN_ENUM_CELL_RE = re.compile(
     r"^(?:high|medium|low|minimal|standard|scale-up)$", re.IGNORECASE
 )
 _EN_ENUM_CELL_MAX_LEN = 12
+
+
+# --------------------------------------------------------------------------- #
+# KIS-1275 (1c): Physikalische HART-Minima für nowrap-Inhalte + Header-Wörter #
+# --------------------------------------------------------------------------- #
+# EN-Abnahmeaudit nach Lauf 5: html_enhancer überschrieb die Kompakt-Styles
+# (font-size:10pt statt 0.86/0.8em, padding 24px statt 12px) — die auf die
+# Kompaktschrift kalibrierten Spalten-Minima waren damit zu knapp und
+# nowrap-Beträge/Daten/Enums ("10,800 €", "31.12.2026", "Medium") clippten
+# bei table-layout:fixed. Fix-Teil 1: der Enhancer respektiert die Kompakt-
+# Styles (Marker data-ksj-hardened, s. u.). Fix-Teil 2 (hier): die Minima
+# werden nicht mehr nur heuristisch ((token+1) × _EN_PCT_PER_CHAR), sondern
+# zusätzlich PHYSIKALISCH verifizierbar berechnet: Für jede Spalte muss das
+# längste UNTEILBARE Element — längster Betrag/Datum/Enum (nowrap-Spans) und
+# das längste Header-Wort (th trägt hyphens:none) — mit ~15 % Sicherheits-
+# marge in die Spalte passen. Modell: Satzspiegel 180 mm, Zell-Padding
+# 2×6 px ≈ 3,2 mm, ~2,1 mm/Zeichen bei 0.8em (10-pt-Basis), linear in em.
+# Das Padding schrumpft bei der 0.8em-Stufe NICHT mit — deshalb wird das
+# Hart-Minimum je Schriftgröße neu berechnet statt (wie die Soft-Minima)
+# nur skaliert. Nur lang=en und nur Kompakt-Tabellen (≥5 Spalten).
+_EN_PAGE_MM = 180.0        # nutzbarer Satzspiegel (A4, Report-Ränder)
+_EN_CELL_PAD_MM = 3.2      # horizontales Zell-Padding gesamt (2 × 6 px)
+_EN_CHAR_MM_08 = 2.1       # mm pro Zeichen bei font-size 0.8em · 10 pt Basis
+_EN_HARD_MARGIN = 1.15     # ~15 % Sicherheitsmarge auf die Zeichenbreite
+
+
+def _en_hard_min_pct(n_chars: int, font_em: float) -> float:
+    """Spalten-Mindestbreite (%) damit ein n_chars langes unteilbares Token
+    bei gegebener Kompakt-Schriftgröße (em) samt Padding + Marge passt."""
+    if n_chars <= 0:
+        return 0.0
+    char_mm = _EN_CHAR_MM_08 * (font_em / 0.8)
+    need_mm = n_chars * char_mm * _EN_HARD_MARGIN + _EN_CELL_PAD_MM
+    return min(_EN_COL_MIN_CAP, need_mm / _EN_PAGE_MM * 100.0)
+
+
+def _en_hard_token_stats(table: str, ncols: int) -> List[int]:
+    """Längstes unteilbares (nowrap-gewrapptes) Token je Spalte.
+
+    Zählt genau die Inhalte, die _en_wrap_dates_nowrap/_en_wrap_amounts_nowrap
+    non-breaking setzen: dd.mm.yyyy-Daten, Beträge/Zahlen mit Einheit und
+    kurze Enum-Zellen (ganze Zelle). Header-Wörter (hyphens:none) rechnet
+    der Aufrufer separat dazu."""
+    hard = [0] * ncols
+    for row_inner in _FIRST_ROW_RE.findall(table):
+        cells = _HEADER_CELL_RE.findall(row_inner)
+        if len(cells) != ncols:
+            continue
+        for ci, cell in enumerate(cells):
+            text = " ".join(_STRIP_TAGS_RE.sub(" ", cell).split())
+            if (_EN_ENUM_CELL_RE.match(text)
+                    and len(text) <= _EN_ENUM_CELL_MAX_LEN):
+                hard[ci] = max(hard[ci], len(text))
+            for tok in _EN_DATE_RE.findall(text):
+                hard[ci] = max(hard[ci], len(tok))
+            for tok in _EN_AMOUNT_RE.findall(text):
+                hard[ci] = max(hard[ci], len(tok))
+    return hard
 
 
 def _en_wrap_amounts_nowrap(table: str) -> Tuple[str, int]:
@@ -698,10 +765,22 @@ def _en_wrap_amounts_nowrap(table: str) -> Tuple[str, int]:
         # (1) Beträge in Textknoten wrappen (Datums-Spans aus
         #     _en_wrap_dates_nowrap sind eigene Textknoten und matchen nicht:
         #     dd.mm.yyyy scheitert am (?<![\d.,])/(?!\d)-Schutz).
+        # KIS-1275 (6c): Textknoten INNERHALB eines bereits gesetzten
+        #     nowrap-Spans überspringen — eine (real unerreichbare, aber
+        #     latente) Direkt-Doppelanwendung wrappte Beträge sonst doppelt.
         parts = _TAG_SPLIT_RE.split(inner)
         changed = False
+        _in_nowrap = False
         for i, part in enumerate(parts):
-            if not part or part.startswith("<"):
+            if not part:
+                continue
+            if part.startswith("<"):
+                if part == _EN_NOWRAP_SPAN:
+                    _in_nowrap = True
+                elif _in_nowrap and part.lower().startswith("</span"):
+                    _in_nowrap = False
+                continue
+            if _in_nowrap:
                 continue
             new_part, n = _EN_AMOUNT_RE.subn(
                 lambda am: _EN_NOWRAP_SPAN + am.group(0) + "</span>", part
@@ -776,7 +855,8 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
             header_texts = [
                 " ".join(_STRIP_TAGS_RE.sub(" ", c).split()) for c in cells
             ]
-            mins: List[float] = []
+            mins_soft: List[float] = []
+            hdr_words: List[int] = []
             for ci in range(ncols):
                 m_i = base_min
                 if max_len[ci] > _EN_TEXT_HEAVY_LEN:
@@ -793,15 +873,44 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
                     _EN_COL_MIN_CAP,
                     (_hdr_longest + 1) * _EN_PCT_PER_CHAR,
                 ))
-                mins.append(m_i)
-            # KIS-1273 (1d): Summieren die Minima auf >100 %, wird die
-            # Kompaktierung weiter heruntergeskaliert (font-size 0.8em statt
-            # 0.86em) und die Minima proportional zur kleineren Schrift —
-            # statt Spalten unter ihr Wort-Minimum zu drücken.
-            if ncols >= _EN_COMPACT_MIN_COLS and sum(mins) > 100.0:
-                _shrink = 0.8 / 0.86
-                mins = [m * _shrink for m in mins]
-                _compact_font = _EN_TABLE_COMPACT_FONT_SMALL
+                mins_soft.append(m_i)
+                hdr_words.append(_hdr_longest)
+            # KIS-1275 (1c): Zusätzlich HART-Minima für unteilbare Inhalte
+            # (nowrap-Beträge/Daten/Enums + längstes Header-Wort) über das
+            # physikalische Modell (_en_hard_min_pct, inkl. ~15 % Marge).
+            # Nur Kompakt-Tabellen (≥5 Spalten) — dort kontrolliert der
+            # EN-Pfad Font (0.86/0.8em) und Padding (4px 6px) selbst; der
+            # Enhancer respektiert sie über den data-ksj-hardened-Marker.
+            if ncols >= _EN_COMPACT_MIN_COLS:
+                hard_tokens = _en_hard_token_stats(table, ncols)
+                hard_tokens = [max(h, w) for h, w in zip(hard_tokens, hdr_words)]
+                mins = [
+                    max(s, _en_hard_min_pct(h, 0.86))
+                    for s, h in zip(mins_soft, hard_tokens)
+                ]
+                # KIS-1273 (1d): Summieren die Minima auf >100 %, wird die
+                # Kompaktierung weiter heruntergeskaliert (font-size 0.8em
+                # statt 0.86em). Soft-Minima skalieren proportional zur
+                # kleineren Schrift; die Hart-Minima werden für 0.8em NEU
+                # berechnet (das Zell-Padding schrumpft nicht mit).
+                if sum(mins) > 100.0:
+                    _shrink = 0.8 / 0.86
+                    _compact_font = _EN_TABLE_COMPACT_FONT_SMALL
+                    mins = [
+                        max(s * _shrink, _en_hard_min_pct(h, 0.8))
+                        for s, h in zip(mins_soft, hard_tokens)
+                    ]
+                    if sum(mins) > 100.0:
+                        # Physikalisch nicht mehr auflösbar — die Minima
+                        # werden in _distribute_with_minimums gleichmäßig
+                        # herunterskaliert (Clipping-Restrisiko, loggen).
+                        log.warning(
+                            "[KIS-1275][EN-TABLE] Hart-Minima summieren auf "
+                            "%.1f %% (>100) — Spalten werden skaliert",
+                            sum(mins),
+                        )
+            else:
+                mins = mins_soft
             pcts = _distribute_with_minimums(weights, mins)
             # KIS-1272 (4a): exakt 100 % — die .1f-Rundung erzeugte sonst
             # Summen ≠ 100, die bei table-layout:fixed überlaufen.
@@ -836,6 +945,22 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
         if _en and len(cells) >= _EN_COMPACT_MIN_COLS:
             result = _en_compact_wide_table(result, font_size=_compact_font)
             count += 1
+        # KIS-1275 (1a): EN-KOMPAKT-gehärtete Tabellen (≥5 Spalten) markieren.
+        # html_enhancer (_transform_tables/_style_table_headers) überschrieb
+        # die Kompakt-Styles sonst mit font-size:10pt/9pt + padding:10px/12px
+        # — der Marker schaltet dort auf respect_existing (bestehende
+        # Properties gewinnen; font-size/padding werden gar nicht ergänzt,
+        # damit th/td die Kompaktschrift der Tabelle erben). Nicht-kompakte
+        # EN-Tabellen (4 Spalten) behalten bewusst das Legacy-Enhancer-
+        # Styling. NUR im EN-Pfad gesetzt → DE-Ausgabe byte-identisch.
+        if _en and len(cells) >= _EN_COMPACT_MIN_COLS:
+            open_m2 = _TABLE_OPEN_RE.search(result)
+            if open_m2 and "data-ksj-hardened" not in open_m2.group(0):
+                tag = open_m2.group(0)
+                new_tag = tag[:-1] + ' data-ksj-hardened="1">'
+                result = (
+                    result[:open_m2.start()] + new_tag + result[open_m2.end():]
+                )
         return result
 
     return _TABLE_BLOCK_RE.sub(_table, html), count

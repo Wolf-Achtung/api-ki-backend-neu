@@ -119,7 +119,17 @@ from typing import List, Tuple, Union, Callable
 
 LocaleRepl = Union[str, Callable[[re.Match], str]]
 
-_EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
+# KIS-1275 (Aufgabe 3): Regeln sind 2-Tupel (pattern, repl) — dann laufen sie
+# wie bisher mit re.IGNORECASE — oder 3-Tupel (pattern, repl, flags) mit
+# expliziten Rule-Level-Flags (0 = case-sensitiv). Hintergrund: Die
+# IGNORECASE-Gesamtliste ließ \bTag(?=\s+\d) auch das englische lowercase
+# "tag" treffen ("tag 10 documents" → "Day 10 documents").
+LocaleRule = Union[
+    Tuple[str, LocaleRepl],
+    Tuple[str, LocaleRepl, int],
+]
+
+_EN_LOCALE_REPLACEMENTS: List[LocaleRule] = [
     # ==========================================================================
     # KIS-1270: Deutsche Branchen-Display-Labels (BRANCHEN_LABELS) → EN.
     # Fix für Badges wie "INDUSTRY Medien & Kreativwirtschaft" — das Label
@@ -193,6 +203,9 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     (r"\bEintrittswahrscheinlichkeit\b", "Probability"),
     (r"\bDSGVO-konforme\b", "GDPR-compliant"),
     (r"\bDSGVO-konform\b", "GDPR-compliant"),
+    # KIS-1275 (Aufgabe 6b): "DSGVO-konforme Nutzung" blieb halb deutsch
+    # ("GDPR-compliant Nutzung"). \b schützt Komposita ("Nutzungsrechte").
+    (r"\bNutzung\b", "use"),
 
     # --- Extended EN locale replacements (plural + UI synonyms) ---
     (r"\bInterne Review-Bewertungen\b", "Internal review ratings"),
@@ -278,7 +291,12 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     # ==========================================================================
     # KPI / DIMENSION LABELS
     # ==========================================================================
-    (r"\bSicherheit\b", "Security"),
+    # KIS-1275 (Aufgabe 2): Lookbehind — bare "KI-Sicherheit" (ohne .jetzt)
+    # wurde zweistufig zerstört: Pass 1 machte "KI-Security", Pass 2 griff
+    # dann mit \bKI\b(?!-Sicherheit) → "AI-Security" (die Kette läuft real
+    # 2×: Sektions-Sanitize + Re-Sanitize nach dem Sprachgate). Zusätzlich
+    # steht "KI-Sicherheit" jetzt im LOCALE-SHIELD (siehe _protect_re).
+    (r"(?<!KI-)(?<!ki-)\bSicherheit\b", "Security"),
     (r"\bWertschöpfung\b", "Value creation"),
     (r"\bBefähigung\b", "Enablement"),
     (r"\bGovernance\b", "Governance"),
@@ -356,7 +374,11 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
     # Nur noch "Tag" unmittelbar vor einer Zahl ist der deutsche Zeitbegriff
     # ("Tag 3" → "Day 3").
     (r"\bTage\b", "Days"),
-    (r"\bTag(?=\s+\d)", "Day"),
+    # KIS-1275 (Aufgabe 3): case-SENSITIV (flags=0) — die IGNORECASE-Liste
+    # traf sonst auch das englische Verb vor Zahl ("tag 10 documents" →
+    # "Day 10 documents", EN-Abnahmeaudit nach Lauf 5). Nur großgeschriebenes
+    # "Tag <Zahl>" ist der deutsche Zeitbegriff.
+    (r"\bTag(?=\s+\d)", "Day", 0),
     # Additional common terms
     (r"\bAbteilung\b", "Department"),
     (r"\bProjekt\b", "Project"),
@@ -385,6 +407,26 @@ _EN_LOCALE_REPLACEMENTS: List[Tuple[str, LocaleRepl]] = [
 ]
 
 
+# ==========================================================================
+# KIS-1275 (Aufgabe 7): Fail-open-Sektionen des EN-Sprachgates überspringen.
+# gpt_analyze._en_language_sweep_sections markiert Sektionen, deren
+# Übersetzung fehlschlug, mit einem Start-Kommentar am SEKTIONSANFANG
+# (_LANG_SWEEP_FAILOPEN_MARKER — dort gibt es KEINEN End-Marker). Diese
+# Sektionen enthalten bewusst behaltene DEUTSCHE Blöcke; die Token-Map
+# würde daraus Denglisch machen ("Die Funding über das Funding programme").
+# Der Bereich ab dem Marker wird deshalb komplett aus der Sanitisierung
+# ausgeschnitten und am Ende unverändert restauriert. Ende des Bereichs:
+# expliziter End-Marker <!--/ksj-lang-failopen--> (defensiv unterstützt),
+# sonst das nächste </section> (Sektionsgrenze im assemblierten Report),
+# sonst String-Ende. Der Marker bleibt im Output → idempotent.
+_LANG_FAILOPEN_MARKER = "<!--ksj-lang-failopen-->"  # == gpt_analyze._LANG_SWEEP_FAILOPEN_MARKER
+_LANG_FAILOPEN_REGION_RE = re.compile(
+    r"<!--ksj-lang-failopen-->[\s\S]*?"
+    r"(?:<!--/ksj-lang-failopen-->|(?=</section\b)|\Z)",
+    re.IGNORECASE,
+)
+
+
 def sanitize_en_locale_tokens(html: str, lang: str) -> str:
     """
     3.1.4.16: Final guardrail to prevent residual German UI tokens in EN reports.
@@ -403,6 +445,17 @@ def sanitize_en_locale_tokens(html: str, lang: str) -> str:
 
     out = html or ""
 
+    # KIS-1275 (Aufgabe 7): fail-open-Bereiche des Sprachgates ausschneiden
+    # (siehe Kommentar an _LANG_FAILOPEN_MARKER) — sie werden ganz am Ende
+    # byte-identisch restauriert (auch keine Zahlenformat-Normalisierung).
+    _failopen_saved: List[str] = []
+    if _LANG_FAILOPEN_MARKER in out:
+        def _save_failopen(m: "re.Match[str]") -> str:
+            _failopen_saved.append(m.group(0))
+            return f"\x00KSJ-FAILOPEN-{len(_failopen_saved) - 1}\x00"
+
+        out = _LANG_FAILOPEN_REGION_RE.sub(_save_failopen, out)
+
     # KIS-1253 (Lauf 1132): URLs, E-Mail-Adressen und die Marken-Domain vor
     # den Wort-Ersetzungen schützen — "Sicherheit"→"Security" machte aus
     # ki-sicherheit.jetzt die nicht existente Domain "ki-Security.jetzt"
@@ -420,6 +473,11 @@ def sanitize_en_locale_tokens(html: str, lang: str) -> str:
         # KIS-1272: Marken-Asset-Dateinamen (Logo) — "Sicherheit"→"Security"
         # machte aus src="ki-sicherheit-logo-small.png" einen toten Pfad.
         r"|\b[\w-]*ki-sicherheit[\w-]*\.(?:png|jpe?g|svg|webp|gif)\b"
+        # KIS-1275 (Aufgabe 2): auch die BARE Marke "KI-Sicherheit" (ohne
+        # .jetzt) schützen — sie wurde zweistufig zu "AI-Security" zerstört
+        # (Sicherheit→Security, dann KI→AI im zweiten Sanitize-Lauf). Die
+        # Domain-/Dateinamen-Alternativen weiter oben gewinnen bei .jetzt/.png.
+        r"|\bKI-Sicherheit\b"
         # KIS-1273 (Aufgabe 3): Deutsche Förderprogramm-EIGENNAMEN bleiben
         # unangetastet — "Förderung"→"Funding" etc. zerstörte sonst offizielle
         # Programmnamen (Guardrail; die Quelle fixt die Förder-Map separat).
@@ -434,8 +492,53 @@ def sanitize_en_locale_tokens(html: str, lang: str) -> str:
     )
     out = _protect_re.sub(_shield, out)
 
-    for pattern, repl in _EN_LOCALE_REPLACEMENTS:
-        out = re.sub(pattern, repl, out, flags=re.IGNORECASE)
+    # ==========================================================================
+    # KIS-1275 (Aufgabe 5): Die Wort-Map läuft NUR noch über Textknoten
+    # zwischen Tags (Tag-Split wie die KPA-Regel unten) und überspringt
+    # <style>/<script>-Inhalte komplett. Vorher liefen die Regeln über das
+    # rohe HTML und zerstörten CSS-Selektoren (.risiko{…}→.Risk{…}),
+    # data-Attribute (data-risiko=→data-Risk=) und Klassen
+    # (class="ki-card"→"AI-card"). BEWUSSTE Nebenwirkung: sichtbare
+    # Attributtexte (alt/title) werden nicht mehr übersetzt.
+    #
+    # Sentinel-Trick: einige Regeln verlangen Tag-Kontext ((?<=>)/(?=<) bzw.
+    # ">\s*Unternehmen\s*<"). Beim Arbeiten auf dem isolierten Textknoten
+    # werden die angrenzenden Tag-Klammern als 1-Zeichen-Sentinel ergänzt
+    # und danach wieder abgestreift — die Regeln verhalten sich damit exakt
+    # wie vorher, nur ohne Zugriff auf Tag-Inhalte.
+    def _apply_locale_rules(text: str) -> str:
+        for _rule in _EN_LOCALE_REPLACEMENTS:
+            _pat, _repl = _rule[0], _rule[1]
+            _flags = _rule[2] if len(_rule) > 2 else re.IGNORECASE
+            text = re.sub(_pat, _repl, text, flags=_flags)
+        return text
+
+    _tok_parts = _EN_NUM_TAG_SPLIT_RE.split(out)
+    _skip_raw = False
+    for _ti, _tp in enumerate(_tok_parts):
+        if not _tp:
+            continue
+        if _tp.startswith("<"):
+            _low = _tp[:8].lower()
+            if _low.startswith("<style") or _low.startswith("<script"):
+                _skip_raw = True
+            elif _low.startswith("</style") or _low.startswith("</scrip"):
+                _skip_raw = False
+            continue
+        if _skip_raw:
+            continue
+        _prev_tag = _ti > 0 and _tok_parts[_ti - 1].startswith("<")
+        _next_tag = (
+            _ti + 1 < len(_tok_parts) and _tok_parts[_ti + 1].startswith("<")
+        )
+        _probe = (">" if _prev_tag else "") + _tp + ("<" if _next_tag else "")
+        _probe = _apply_locale_rules(_probe)
+        if _prev_tag and _probe.startswith(">"):
+            _probe = _probe[1:]
+        if _next_tag and _probe.endswith("<"):
+            _probe = _probe[:-1]
+        _tok_parts[_ti] = _probe
+    out = "".join(_tok_parts)
 
     # KIS-1273 (Aufgabe 2): Kollaps NACH dem Mapping — falls das DSGVO→GDPR-
     # Mapping erst hier ein "GDPR (GDPR)" erzeugt hat.
@@ -469,6 +572,12 @@ def sanitize_en_locale_tokens(html: str, lang: str) -> str:
     leftovers = [w for w in de_check_words if w in out]
     if leftovers:
         log.warning("[locale-sanitize] DE leftovers after sanitize: %s", leftovers)
+
+    # KIS-1275 (Aufgabe 7): fail-open-Bereiche unverändert restaurieren
+    # (nach dem Leftover-Check — bewusst behaltenes Deutsch soll keine
+    # False-Positive-Warnung auslösen). Marker bleibt drin → idempotent.
+    for _i, _orig in enumerate(_failopen_saved):
+        out = out.replace(f"\x00KSJ-FAILOPEN-{_i}\x00", _orig)
 
     return out
 

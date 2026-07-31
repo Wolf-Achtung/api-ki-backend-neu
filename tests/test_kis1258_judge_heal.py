@@ -198,7 +198,8 @@ class TestHookContract:
     def test_heal_hooked_after_judge_before_render(self):
         src = _read("gpt_analyze.py")
         idx_judge = src.find("_judge_result = run_coherence_judge(sections, answers, run_id=run_id)")
-        idx_heal = src.find("run_judge_heal(sections, answers, _judge_result, run_id=run_id)")
+        # KIS-1275 (Aufgabe 2): Aufruf reicht jetzt lang=report_lang durch
+        idx_heal = src.find("run_judge_heal(sections, answers, _judge_result, run_id=run_id,")
         idx_render = src.find("result = render(", idx_judge)
         assert idx_judge != -1 and idx_heal != -1 and idx_render != -1
         assert idx_judge < idx_heal < idx_render
