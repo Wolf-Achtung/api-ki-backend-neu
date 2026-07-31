@@ -821,14 +821,15 @@ _R1_WELCOME_INTRO_EN = (
 
 R1_WELCOME_MEDIEN_SPARTE = _R1_WELCOME_INTRO + (
     "In welcher Sparte der Medien- & Kreativbranche sind Sie tätig? "
-    "Falls Sie unsicher sind, beschreiben Sie einfach, was Sie tun "
-    "— ich helfe bei der Zuordnung."
+    "Keine passende Sparte dabei? Kein Problem — schreiben Sie einfach "
+    "Ihre Branche oder Tätigkeit in eigenen Worten ins Textfeld, "
+    "ich kümmere mich um die Zuordnung."
 )
 
 R1_WELCOME_MEDIEN_SPARTE_EN = _R1_WELCOME_INTRO_EN + (
     "Which sector of the media & creative industries are you in? "
-    "If you're not sure, simply describe what you do "
-    "— I'll help with the classification."
+    "None of the options fit? No problem — just type your industry or "
+    "line of work in your own words and I'll take care of the mapping."
 )
 
 # Generische Variante für einen Single-Branch-Fokus ≠ medien: erste Frage
