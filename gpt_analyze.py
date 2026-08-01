@@ -10211,6 +10211,20 @@ def _lang_sweep_max_llm_calls() -> int:
         return 80
 
 
+# KIS-1283 (EN-Lauf 1140): Der Sweep lief sequenziell — ~60 Sektionen ×
+# ~8 s = 8,6 min der 19-min-Gesamtlaufzeit. Die Übersetzungs-Calls sind
+# unabhängig voneinander und werden jetzt mit N Threads parallel gefahren
+# (Budget bleibt global über einen Lock exakt gedeckelt). Hinweis: Unter
+# Parallelität ist die Budget-Vergabe nicht mehr strikt prioritätstreu —
+# relevant nur bei Budget-Erschöpfung, und das Budget (80) ist auf
+# Vollabdeckung dimensioniert. Parallelität 1 = exakt altes Verhalten.
+def _lang_sweep_parallelism() -> int:
+    try:
+        return max(1, int(os.getenv("LANG_SWEEP_PARALLELISM", "4")))
+    except (TypeError, ValueError):
+        return 4
+
+
 _LANG_SWEEP_MAX_LLM_CALLS = _lang_sweep_max_llm_calls()
 _LANG_SWEEP_MIN_BLOCK_CHARS = 25
 
@@ -10440,17 +10454,19 @@ def _en_language_sweep_sections(sections: Dict[str, Any], briefing: Dict[str, An
     # beides (auch die fail-open-Markierung/Resanitize-Ausnahme).
     translation_cache: Dict[str, Tuple[Optional[str], bool]] = {}
     ordered_keys = sorted(list(sections.keys()), key=_lang_sweep_key_priority)
+
+    # === KIS-1283 Phase 1: Scan (sequenziell, deterministisch) ===
+    # Prioritätsgeordnete Job-Liste der Erst-Vorkommen; inhaltsgleiche
+    # Schatten-Twins werden notiert und erben später Ergebnis + Status.
+    jobs: List[Tuple[str, str, list]] = []  # (key, val, german_matches)
+    job_primary_vals: set = set()
+    twin_keys: List[Tuple[str, str]] = []  # (key, val)
     for key in ordered_keys:
         val = sections.get(key)
         if key.startswith("_") or not isinstance(val, str) or not val.strip():
             continue
-        if val in translation_cache:
-            cached_html, cached_failed = translation_cache[val]
-            if cached_html is not None:
-                sections[key] = cached_html
-                log.info("[KIS-1275] Language sweep: twin translation copied to section %s", key)
-            if cached_failed:
-                failed_keys.add(key)
+        if val in job_primary_vals:
+            twin_keys.append((key, val))
             continue
         try:
             german_matches = _find_german_blocks(val)
@@ -10459,25 +10475,58 @@ def _en_language_sweep_sections(sections: Dict[str, Any], briefing: Dict[str, An
             continue
         if not german_matches:
             continue
-        if llm_calls >= _max_llm_calls:
-            log.warning(
-                "[KIS-1273] LLM budget (%d) exhausted — section %s keeps %d German block(s)",
-                _max_llm_calls, key, len(german_matches),
-            )
-            failed_keys.add(key)
-            continue
-        llm_calls += 1
-        original_blocks = [m.group(0) for m in german_matches]
-        translated = _translate_de_blocks_to_en(key, original_blocks)
-        if not translated and llm_calls < _max_llm_calls:
+        job_primary_vals.add(val)
+        jobs.append((key, val, german_matches))
+
+    # === KIS-1283 Phase 2: Übersetzen (parallel, Budget global gedeckelt) ===
+    import threading
+    _budget_lock = threading.Lock()
+    _budget_state = {"used": 0}
+
+    def _translate_job(job: Tuple[str, str, list]) -> Tuple[Optional[List[str]], bool]:
+        """Liefert (translated|None, nobudget). Retry-Semantik wie KIS-1281."""
+        job_key, _job_val, job_matches = job
+        with _budget_lock:
+            if _budget_state["used"] >= _max_llm_calls:
+                return None, True
+            _budget_state["used"] += 1
+        blocks = [m.group(0) for m in job_matches]
+        result = _translate_de_blocks_to_en(job_key, blocks)
+        if not result:
             # KIS-1281 (EN-Lauf 1139): quick_wins scheiterte einmalig am
             # Marker-Protokoll ("expected 11 blocks, got []") und blieb
             # deutsch (PDF S. 9–11). Ein Retry — zählt gegen das Budget —
             # fängt solche Einmal-Ausreißer ab; None deckt Mismatch, leere
             # Antwort und Call-Exceptions gleichermaßen ab.
-            log.info("[KIS-1281] Retrying language sweep for section %s", key)
-            llm_calls += 1
-            translated = _translate_de_blocks_to_en(key, original_blocks)
+            allow_retry = False
+            with _budget_lock:
+                if _budget_state["used"] < _max_llm_calls:
+                    _budget_state["used"] += 1
+                    allow_retry = True
+            if allow_retry:
+                log.info("[KIS-1281] Retrying language sweep for section %s", job_key)
+                result = _translate_de_blocks_to_en(job_key, blocks)
+        return result, False
+
+    _parallelism = _lang_sweep_parallelism()
+    if _parallelism > 1 and len(jobs) > 1:
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=_parallelism) as _pool:
+            results = list(_pool.map(_translate_job, jobs))
+    else:
+        results = [_translate_job(j) for j in jobs]
+    llm_calls = _budget_state["used"]
+
+    # === KIS-1283 Phase 3: Anwenden (sequenziell, in Prioritätsreihenfolge) ===
+    for (key, val, german_matches), (translated, nobudget) in zip(jobs, results):
+        if nobudget:
+            log.warning(
+                "[KIS-1273] LLM budget (%d) exhausted — section %s keeps %d German block(s)",
+                _max_llm_calls, key, len(german_matches),
+            )
+            failed_keys.add(key)
+            translation_cache[val] = (None, True)
+            continue
         if not translated:
             # fail-open: Original behalten — und die Sektion auch von der
             # Token-Nachsanitisierung ausnehmen, sonst würde aus dem bewusst
@@ -10495,6 +10544,7 @@ def _en_language_sweep_sections(sections: Dict[str, Any], briefing: Dict[str, An
         # original (Validierung), gilt die Sektion als fail-open (Marker +
         # keine Token-Nachsanitisierung), die validen Blöcke bleiben ersetzt.
         # Twins erben die Teil-Übersetzung UND den fail-open-Status.
+        original_blocks = [m.group(0) for m in german_matches]
         partly_failed = any(
             nb == ob for nb, ob in zip(translated, original_blocks)
         )
@@ -10506,6 +10556,18 @@ def _en_language_sweep_sections(sections: Dict[str, Any], briefing: Dict[str, An
             "[KIS-1273] Language sweep: %d German block(s) translated in section %s",
             len(german_matches), key,
         )
+
+    # Twins erben Übersetzung und fail-open-Status ihres Primär-Zwillings
+    # (KIS-1275 Aufgabe 6b — Semantik unverändert, nur nachgelagert).
+    for key, val in twin_keys:
+        if val not in translation_cache:
+            continue
+        cached_html, cached_failed = translation_cache[val]
+        if cached_html is not None:
+            sections[key] = cached_html
+            log.info("[KIS-1275] Language sweep: twin translation copied to section %s", key)
+        if cached_failed:
+            failed_keys.add(key)
 
     # KIS-1275 (Aufgabe 7): fail-open-Sektionen markieren (siehe Kommentar
     # an _LANG_SWEEP_FAILOPEN_MARKER).

@@ -440,6 +440,8 @@ class TestBudgetPriorityAndTwins:
         # KIS-1279: Default-Budget ist jetzt 40 (ENV) — Test pinnt 10, er
         # prüft die Priorisierung unter Budget-Erschöpfung.
         monkeypatch.setenv("LANG_SWEEP_MAX_LLM_CALLS", "10")
+        # KIS-1283: Call-Reihenfolge ist nur bei Parallelität 1 deterministisch.
+        monkeypatch.setenv("LANG_SWEEP_PARALLELISM", "1")
         sections = {f"ANNEX_{i:02d}_HTML": self._distinct_de(i) for i in range(12)}
         sections["EXECUTIVE_SUMMARY_HTML"] = self._distinct_de(90)
         sections["QUICK_WINS_HTML"] = self._distinct_de(91)
@@ -459,6 +461,8 @@ class TestBudgetPriorityAndTwins:
             return None
 
         monkeypatch.setattr(g, "_call_llm_for_section", fake_llm)
+        # KIS-1283: Call-Reihenfolge ist nur bei Parallelität 1 deterministisch.
+        monkeypatch.setenv("LANG_SWEEP_PARALLELISM", "1")
         sections = {
             "notes": self._distinct_de(1),
             "RISK_HTML": self._distinct_de(2),
