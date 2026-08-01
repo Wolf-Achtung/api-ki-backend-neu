@@ -63,6 +63,96 @@ def _read_code(email: str) -> Optional[str]:
         return code
 
 
+def build_login_code_email(code: str, mins: int, en: bool) -> "tuple[str, str, str]":
+    """KIS-1284: Login-Code-Mail als (subject, text, html).
+
+    Deliverability-first bleibt erhalten: Der Textteil ist unverändert die
+    bisherige Plain-Text-Mail (multipart/alternative), der HTML-Teil ist
+    bewusst minimal — keine Bilder, keine externen Links/Ressourcen, nur
+    Inline-CSS mit System-Schriften. Einzige sichtbare Neuerung: der Code
+    steht groß, fett und mit Buchstabenabstand in einer eigenen Box.
+    """
+    if en:
+        subject = "Your login code"
+        text = (
+            "Your personal login code is:\n\n"
+            f"{code}\n\n"
+            f"The code is valid for {mins} minutes.\n\n"
+            "If you did not request this login, you can ignore this e-mail.\n\n"
+            "No code received?\n"
+            "• Check your spam or junk folder\n"
+            "• Simply request a new code\n"
+            "• Having trouble? support@ki-sicherheit.jetzt\n\n"
+            "This e-mail is part of the login process of ki-sicherheit.jetzt.\n"
+            "It is not advertising.\n\n"
+            "– ki-sicherheit.jetzt\n"
+        )
+        intro = "Your personal login code is:"
+        validity = f"The code is valid for {mins} minutes."
+        ignore = "If you did not request this login, you can ignore this e-mail."
+        help_title = "No code received?"
+        help_items = (
+            "Check your spam or junk folder",
+            "Simply request a new code",
+            "Having trouble? support@ki-sicherheit.jetzt",
+        )
+        footer = (
+            "This e-mail is part of the login process of ki-sicherheit.jetzt. "
+            "It is not advertising."
+        )
+    else:
+        subject = "Ihr Anmeldecode"
+        text = (
+            "Ihr persönlicher Anmeldecode lautet:\n\n"
+            f"{code}\n\n"
+            f"Der Code ist {mins} Minuten gültig.\n\n"
+            "Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.\n\n"
+            "Kein Code angekommen?\n"
+            "• Spam- oder Junk-Ordner prüfen\n"
+            "• Code einfach erneut anfordern\n"
+            "• Bei Problemen: support@ki-sicherheit.jetzt\n\n"
+            "Diese E-Mail gehört zum Login-Prozess von ki-sicherheit.jetzt.\n"
+            "Es handelt sich nicht um Werbung.\n\n"
+            "– ki-sicherheit.jetzt\n"
+        )
+        intro = "Ihr persönlicher Anmeldecode lautet:"
+        validity = f"Der Code ist {mins} Minuten gültig."
+        ignore = (
+            "Falls Sie diese Anmeldung nicht angefordert haben, "
+            "können Sie diese E-Mail ignorieren."
+        )
+        help_title = "Kein Code angekommen?"
+        help_items = (
+            "Spam- oder Junk-Ordner prüfen",
+            "Code einfach erneut anfordern",
+            "Bei Problemen: support@ki-sicherheit.jetzt",
+        )
+        footer = (
+            "Diese E-Mail gehört zum Login-Prozess von ki-sicherheit.jetzt. "
+            "Es handelt sich nicht um Werbung."
+        )
+
+    help_html = "<br>".join(f"&bull; {item}" for item in help_items)
+    html = (
+        '<div style="font-family:-apple-system,\'Segoe UI\',Roboto,Helvetica,'
+        "Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px 16px;"
+        'color:#1f2937;">'
+        f'<p style="margin:0 0 16px 0;font-size:15px;line-height:1.5;">{intro}</p>'
+        '<div style="font-size:36px;font-weight:700;letter-spacing:8px;'
+        "font-family:'Courier New',Courier,monospace;background-color:#f3f4f6;"
+        "border:1px solid #e5e7eb;border-radius:8px;padding:18px 12px;"
+        f'text-align:center;margin:0 0 16px 0;">{code}</div>'
+        f'<p style="margin:0 0 12px 0;font-size:14px;line-height:1.5;">{validity}</p>'
+        f'<p style="margin:0 0 16px 0;font-size:14px;line-height:1.5;">{ignore}</p>'
+        f'<p style="margin:0 0 16px 0;font-size:13px;line-height:1.6;color:#6b7280;">'
+        f"<strong>{help_title}</strong><br>{help_html}</p>"
+        f'<p style="margin:0;font-size:12px;line-height:1.5;color:#9ca3af;">{footer}'
+        "<br>&ndash; ki-sicherheit.jetzt</p>"
+        "</div>"
+    )
+    return subject, text, html
+
+
 @router.post("/request-code", status_code=204, response_model=None)
 async def request_code(payload: RequestCodeIn, request: Request):
     """
@@ -103,49 +193,19 @@ async def request_code(payload: RequestCodeIn, request: Request):
     _store_code(str(payload.email), code, ttl_sec=600)
 
     mailer = Mailer.from_settings(s)
-    
+
     # Build minimal login email (deliverability-first)
     ttl_sec = 600
     mins = max(1, ttl_sec // 60)
     _en = str(payload.lang or "de").lower().startswith("en")
-
-    if _en:
-        subject = "Your login code"
-        text_template = (
-            "Your personal login code is:\n\n"
-            f"{code}\n\n"
-            f"The code is valid for {mins} minutes.\n\n"
-            "If you did not request this login, you can ignore this e-mail.\n\n"
-            "No code received?\n"
-            "• Check your spam or junk folder\n"
-            "• Simply request a new code\n"
-            "• Having trouble? support@ki-sicherheit.jetzt\n\n"
-            "This e-mail is part of the login process of ki-sicherheit.jetzt.\n"
-            "It is not advertising.\n\n"
-            "– ki-sicherheit.jetzt\n"
-        )
-    else:
-        subject = "Ihr Anmeldecode"
-        text_template = (
-            "Ihr persönlicher Anmeldecode lautet:\n\n"
-            f"{code}\n\n"
-            f"Der Code ist {mins} Minuten gültig.\n\n"
-            "Falls Sie diese Anmeldung nicht angefordert haben, können Sie diese E-Mail ignorieren.\n\n"
-            "Kein Code angekommen?\n"
-            "• Spam- oder Junk-Ordner prüfen\n"
-            "• Code einfach erneut anfordern\n"
-            "• Bei Problemen: support@ki-sicherheit.jetzt\n\n"
-            "Diese E-Mail gehört zum Login-Prozess von ki-sicherheit.jetzt.\n"
-            "Es handelt sich nicht um Werbung.\n\n"
-            "– ki-sicherheit.jetzt\n"
-        )
+    subject, text_template, html_template = build_login_code_email(code, mins, _en)
 
     try:
         await mailer.send(
             to=str(payload.email),
             subject=subject,
             text=text_template.strip(),
-            html=None,
+            html=html_template,
         )
     except Exception as e:
         log.error("Failed to send login code email to %s: %s", mask_email(str(payload.email)), str(e))
