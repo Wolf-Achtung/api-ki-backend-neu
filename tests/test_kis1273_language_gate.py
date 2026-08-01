@@ -75,7 +75,8 @@ class TestLanguageSweep:
         assert _EN_PARA in html                       # englischer Block byte-identisch
         assert _DE_PARA not in html                   # deutscher Block ersetzt
         assert "external grants" in html
-        assert captured["section"] == "MGMT_SUMMARY_HTML"
+        # KIS-1285: Sweep-Calls sind mit "lang_sweep_" gepräfixt (Routing-Fix)
+        assert captured["section"] == "lang_sweep_MGMT_SUMMARY_HTML"
         assert "<<<BLOCK 0>>>" in captured["prompt"]
 
     def test_multiple_german_blocks_one_llm_call(self, monkeypatch):

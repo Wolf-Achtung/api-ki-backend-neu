@@ -10324,8 +10324,14 @@ GERMAN BLOCKS:
 ENGLISH BLOCKS:"""
 
     try:
+        # KIS-1285 (EN-Lauf 1141): section_key mit "lang_sweep_" präfixen, damit
+        # sektionsname-basierte Sonderpfade in _call_llm_for_section NICHT
+        # greifen — für "quick_wins" erzwang der Structured-Tool-Use-Zweig eine
+        # JSON-Antwort, die das Marker-Protokoll nie erfüllen kann (Mismatch
+        # deterministisch, inklusive KIS-1281-Retry; deutsche Quick-Win-
+        # Überschrift im PDF von Lauf 1141).
         response = _call_llm_for_section(
-            section_key=section_key,
+            section_key=f"lang_sweep_{section_key}",
             prompt=translate_prompt,
             system_prompt=build_report_system_prompt(mode="expand", lang="en"),
             temperature=0.2,
