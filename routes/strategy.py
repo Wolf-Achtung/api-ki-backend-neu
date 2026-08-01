@@ -447,7 +447,14 @@ async def generate_strategy_report_endpoint(
         Analysis.briefing_id == briefing_id
     ).order_by(Analysis.id.desc()).first()
 
-    briefing_data = briefing.answers or {}
+    briefing_data = dict(briefing.answers or {})
+    # KIS-1279 (EN-Lauf 1138): lang ins answers-Dict spiegeln — KIS-1253-Analog
+    # für den Strategie-Pfad. Das EN-Formular sendet lang nur im Submit-Umschlag
+    # (briefing.lang), NICHT in den answers; ohne Spiegelung generierte die
+    # Strategie-Pipeline (base_context["lang"], Prompts, Renderer) einen
+    # komplett deutschen Bericht für englische Briefings.
+    if not (briefing_data.get("lang") or briefing_data.get("LANG")):
+        briefing_data["lang"] = str(getattr(briefing, "lang", "de") or "de").lower()
     strategy_questions_data = sq.to_dict()
     report1_data = (analysis.meta if analysis else {}) or {}
     report2_data: Dict[str, Any] = {}  # Placeholder — will be populated from gamechanger data if available
