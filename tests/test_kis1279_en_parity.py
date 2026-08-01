@@ -64,10 +64,12 @@ class TestStrategyLangMirroring:
 
 class TestLangSweepBudget:
 
-    def test_default_is_40(self, monkeypatch):
+    def test_default_is_80(self, monkeypatch):
+        # KIS-1281: 40 → 80 (Lauf 1139 hätte ~66 Calls gebraucht — die
+        # Kleinbuchstaben-Twins weichen nach Healer-Trims vom _HTML-Twin ab).
         import gpt_analyze
         monkeypatch.delenv("LANG_SWEEP_MAX_LLM_CALLS", raising=False)
-        assert gpt_analyze._lang_sweep_max_llm_calls() == 40
+        assert gpt_analyze._lang_sweep_max_llm_calls() == 80
 
     def test_env_override(self, monkeypatch):
         import gpt_analyze
@@ -77,7 +79,7 @@ class TestLangSweepBudget:
     def test_invalid_env_falls_back(self, monkeypatch):
         import gpt_analyze
         monkeypatch.setenv("LANG_SWEEP_MAX_LLM_CALLS", "viele")
-        assert gpt_analyze._lang_sweep_max_llm_calls() == 40
+        assert gpt_analyze._lang_sweep_max_llm_calls() == 80
 
     def test_negative_clamped_to_zero(self, monkeypatch):
         import gpt_analyze
