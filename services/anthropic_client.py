@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import logging
+import json
 import os
 from functools import lru_cache
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 try:
     import anthropic
@@ -151,6 +152,71 @@ def _extract_message_text(message: Any) -> str:
 #                                        Prefix ändert sich zwischen den Calls
 # Diese Funktion darf niemals werfen — sie hängt in Erfolgs- wie Retry-Pfaden.
 
+# --- KIS-1270: cache-korrekte Kostenschaetzung + DB-Persistenz --------------
+# Basispreise USD pro 1M Token (input, output) — Annahme Stand 2026-08,
+# ueberschreibbar per ANTHROPIC_PRICES_JSON='{"opus": [5, 25], ...}'.
+# Multiplikatoren auf den Input-Basispreis: regulaer 1,00x / 5m-Cache-Write
+# 1,25x / Cache-Read 0,10x. Bewusst IMMER mit allen drei Input-Feldern
+# gerechnet (creative-radar-Lektion: input_tokens allein untertreibt, sobald
+# Caching greift, weil das Feld nur die Token NACH dem Breakpoint enthaelt).
+_DEFAULT_PRICES: Dict[str, Any] = {"opus": (5.0, 25.0), "sonnet": (3.0, 15.0), "haiku": (1.0, 5.0)}
+
+
+def _price_for_model(model: str) -> "tuple[float, float]":
+    prices: Dict[str, Any] = dict(_DEFAULT_PRICES)
+    try:
+        _override = os.getenv("ANTHROPIC_PRICES_JSON", "")
+        if _override:
+            for k, v in json.loads(_override).items():
+                prices[str(k).lower()] = (float(v[0]), float(v[1]))
+    except Exception:
+        pass
+    m = (model or "").lower()
+    for key, pair in prices.items():
+        if key in m:
+            return (float(pair[0]), float(pair[1]))
+    _s = prices["sonnet"]
+    return (float(_s[0]), float(_s[1]))
+
+
+def estimate_anthropic_cost_usd(model: str, input_tokens: int,
+                                cache_creation: int, cache_read: int,
+                                output_tokens: int) -> float:
+    """total_input = input + 1,25*write + 0,10*read (jeweils x Basispreis)."""
+    base_in, base_out = _price_for_model(model)
+    input_cost = (input_tokens * 1.0 + cache_creation * 1.25 + cache_read * 0.10) * base_in / 1_000_000
+    output_cost = output_tokens * base_out / 1_000_000
+    return float(round(input_cost + output_cost, 6))
+
+
+def _persist_anthropic_usage(call_site: str, model: str, input_tokens: int,
+                             cache_creation: int, cache_read: int,
+                             output_tokens: int) -> None:
+    """Fail-open: Persistenz darf nie einen LLM-Call brechen (laeuft in
+    Worker-Threads; eigene Session pro Aufruf)."""
+    if os.getenv("ANTHROPIC_USAGE_DB", "1").strip().lower() in ("0", "false", "no", "off"):
+        return
+    try:
+        from core.db import SessionLocal
+        from models import AnthropicUsage
+        db = SessionLocal()
+        try:
+            db.add(AnthropicUsage(
+                call_site=call_site[:120], model=(model or "?")[:80],
+                input_tokens=input_tokens,
+                cache_creation_input_tokens=cache_creation,
+                cache_read_input_tokens=cache_read,
+                output_tokens=output_tokens,
+                cost_usd=estimate_anthropic_cost_usd(
+                    model, input_tokens, cache_creation, cache_read, output_tokens),
+            ))
+            db.commit()
+        finally:
+            db.close()
+    except Exception as _p_exc:  # pragma: no cover — nie den Call gefaehrden
+        log.debug("[CACHE-USAGE] DB-Persistenz uebersprungen (%s): %s", call_site, _p_exc)
+
+
 def log_anthropic_usage(message: Any, *, call_site: str, model: str = "") -> None:
     """Protokolliert die Cache-/Token-Felder aus ``message.usage``."""
     try:
@@ -177,6 +243,8 @@ def log_anthropic_usage(message: Any, *, call_site: str, model: str = "") -> Non
             call_site, model or "?", _input, _created, _read,
             _input + _created + _read, _u("output_tokens"),
         )
+        _persist_anthropic_usage(call_site, model, _input, _created, _read,
+                                 _u("output_tokens"))
     except Exception as _usage_exc:  # pragma: no cover — Logging darf nie brechen
         log.debug("[CACHE-USAGE] Logging fehlgeschlagen (%s): %s", call_site, _usage_exc)
 
