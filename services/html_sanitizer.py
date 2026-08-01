@@ -181,6 +181,18 @@ _EN_LOCALE_REPLACEMENTS: List[LocaleRule] = [
     # Guardrail: "begrenzt" ist im EN-Kontext immer die AI-Act-Risikoklasse.
     (r"\bbegrenzt\b", "limited"),
     (r"\bsiehe Business Case\b", "see business case"),
+    # ==========================================================================
+    # KIS-1285 (EN-Lauf 1141): Deutsche Überschriften-Fragmente unter der
+    # 25-Zeichen-Blockschwelle des Sprachgates — Phasen-Labels der Decision-
+    # Roadmap und Kartenköpfe blieben deutsch (PDF S. 8/26). Längere Phrasen
+    # vor kürzeren.
+    # ==========================================================================
+    (r"\bEntscheidungszusammenfassung\b", "Decision Summary"),
+    (r"\bEntscheidungsversion\b", "Decision Version"),
+    (r"\bKonsequenz für Sie\b", "What this means for you"),
+    (r"\bPilotierung\b", "Piloting"),
+    (r"\bGrundlage\b", "Foundation"),
+    (r"\bFokus\b", "Focus"),
 
     # ==========================================================================
     # LONGER PHRASES FIRST (avoid partial collisions)
