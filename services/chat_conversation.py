@@ -1992,6 +1992,14 @@ async def generate_response(
                 # Post-Processing (routes/chat.py) räumt das Fragment weg.
                 try:
                     _final = await stream.get_final_message()
+                    try:
+                        from services.anthropic_client import log_anthropic_usage
+                        log_anthropic_usage(
+                            _final, call_site="chat_conversation:stream",
+                            model=CONVERSATION_MODEL,
+                        )
+                    except Exception:  # pragma: no cover — Logging darf nie brechen
+                        pass
                     if getattr(_final, "stop_reason", None) == "max_tokens":
                         log.warning("[CHAT-CONV] Antwort bei max_tokens abgeschnitten (Turn-Text endet mitten im Satz)")
                 except Exception:

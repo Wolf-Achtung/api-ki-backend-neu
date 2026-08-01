@@ -21,6 +21,16 @@ EXTRACTOR_MODEL = os.getenv(
     "CHAT_EXTRACTOR_MODEL", "claude-haiku-4-5-20251001"
 )
 
+
+def _log_anthropic_usage(message: Any, *, call_site: str, model: str = "") -> None:
+    """Prompt-Caching-Diagnose (nur Logging). Lazy-Import wie in appetizer.py,
+    damit dieses Modul nicht am Import von services.anthropic_client hängt."""
+    try:
+        from services.anthropic_client import log_anthropic_usage
+        log_anthropic_usage(message, call_site=call_site, model=model)
+    except Exception:  # pragma: no cover — Logging darf nie brechen
+        pass
+
 # ---------------------------------------------------------------------------
 # System Prompt
 # ---------------------------------------------------------------------------
@@ -550,6 +560,9 @@ async def extract_fields(
             tools=[tool],
             tool_choice={"type": "auto"},  # auto: no tool call if user asks question
         )
+        _log_anthropic_usage(
+            response, call_site="chat_extractor:single_field", model=EXTRACTOR_MODEL,
+        )
 
         # Extract tool result
         for block in response.content:
@@ -907,6 +920,9 @@ async def extract_fields_multi(
             messages=messages,
             tools=[tool],
             tool_choice={"type": "auto"},
+        )
+        _log_anthropic_usage(
+            response, call_site="chat_extractor:multi_field", model=EXTRACTOR_MODEL,
         )
 
         for block in response.content:

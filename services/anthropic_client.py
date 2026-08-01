@@ -141,6 +141,46 @@ def _extract_message_text(message: Any) -> str:
             parts.append(getattr(block, "text", "") or "")
     return "".join(parts).strip()
 
+
+# --- Prompt-Caching-Diagnose (reines Logging) --------------------------------
+# Nach JEDEM Anthropic-Call wird response.usage protokolliert. Auswertung:
+#   cache_read_input_tokens > 0        → Cache greift
+#   cache_creation_input_tokens > 0    → dieser Call hat den Cache geschrieben
+#   beide durchgängig 0                → Prefix unter dem Modell-Minimum ODER
+#                                        kein cache_control gesetzt ODER der
+#                                        Prefix ändert sich zwischen den Calls
+# Diese Funktion darf niemals werfen — sie hängt in Erfolgs- wie Retry-Pfaden.
+
+def log_anthropic_usage(message: Any, *, call_site: str, model: str = "") -> None:
+    """Protokolliert die Cache-/Token-Felder aus ``message.usage``."""
+    try:
+        usage = getattr(message, "usage", None)
+
+        def _u(name: str) -> int:
+            if usage is None:
+                return 0
+            value = getattr(usage, name, None)
+            if value is None and isinstance(usage, dict):
+                value = usage.get(name)
+            try:
+                return int(value or 0)
+            except (TypeError, ValueError):
+                return 0
+
+        _input = _u("input_tokens")
+        _created = _u("cache_creation_input_tokens")
+        _read = _u("cache_read_input_tokens")
+        log.info(
+            "[CACHE-USAGE] call_site=%s model=%s input_tokens=%d "
+            "cache_creation_input_tokens=%d cache_read_input_tokens=%d "
+            "prompt_tokens_total=%d output_tokens=%d",
+            call_site, model or "?", _input, _created, _read,
+            _input + _created + _read, _u("output_tokens"),
+        )
+    except Exception as _usage_exc:  # pragma: no cover — Logging darf nie brechen
+        log.debug("[CACHE-USAGE] Logging fehlgeschlagen (%s): %s", call_site, _usage_exc)
+
+
 # --- RUN-622 P2: Opus Routing ------------------------------------------------
 OPUS_MODEL = os.getenv("ANTHROPIC_MODEL_OPUS", "claude-opus-4-6").strip()  # FIX-629 + FIX-STRIP
 _OPUS_SECTIONS_RAW = os.getenv("OPUS_SECTIONS", "")
@@ -614,11 +654,16 @@ def call_anthropic_structured(
     kwargs["tool_choice"] = {"type": "tool", "name": tool_name}
     try:
         message = client.messages.create(**kwargs)
+        log_anthropic_usage(message, call_site=f"structured:{section}", model=model_name)
     except anthropic.BadRequestError as exc:
         if "temperature" in str(exc) and "deprecated" in str(exc):
             kwargs.pop("temperature", None)
             try:
                 message = client.messages.create(**kwargs)
+                log_anthropic_usage(
+                    message, call_site=f"structured:{section}:retry-no-temp",
+                    model=model_name,
+                )
             except Exception as retry_exc:
                 log.warning("⚠️ [STRUCTURED] Retry gescheitert (%s): %s", section, str(retry_exc)[:200])
                 return None
@@ -710,6 +755,9 @@ def call_anthropic(
     _first_kwargs = _maybe_add_thinking(_first_kwargs, section, max_tok)
     try:
         message = client.messages.create(**_first_kwargs)
+        log_anthropic_usage(
+            message, call_site=f"call_anthropic:{section or 'unknown'}", model=model_name,
+        )
     except anthropic.BadRequestError as exc:
         # KIS-1230-HOTFIX: Reaktives Sicherheitsnetz — lehnt ein (neues)
         # Modell einen Sampling-Parameter ab ("`temperature` is deprecated"),
@@ -734,6 +782,11 @@ def call_anthropic(
                 )
                 _retry_kwargs.pop("temperature", None)
                 message = client.messages.create(**_retry_kwargs)
+                log_anthropic_usage(
+                    message,
+                    call_site=f"call_anthropic:{section or 'unknown'}:retry-no-temp",
+                    model=model_name,
+                )
             except Exception as retry_exc:
                 log.warning(
                     "⚠️ Retry ohne temperature gescheitert für Abschnitt '%s': %s — returning empty",
@@ -770,6 +823,11 @@ def call_anthropic(
                 messages=messages,
                 stop_sequences=stop_seqs,
             ))
+            log_anthropic_usage(
+                message,
+                call_site=f"call_anthropic:{section or 'unknown'}:model-fallback",
+                model=fallback_model,
+            )
             log.info(
                 "✅ Fallback auf Modell '%s' erfolgreich (Abschnitt '%s')",
                 fallback_model,
@@ -826,6 +884,11 @@ def call_anthropic(
                             retry_message = client.messages.create(**_trunc_kwargs)
                         else:
                             raise
+                    log_anthropic_usage(
+                        retry_message,
+                        call_site=f"call_anthropic:{section_label}:truncation-retry",
+                        model=model_name,
+                    )
                     retry_text = _extract_message_text(retry_message)
                     retry_stop = getattr(retry_message, "stop_reason", "unknown")
                     retry_usage = getattr(retry_message, "usage", None)

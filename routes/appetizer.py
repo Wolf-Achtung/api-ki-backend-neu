@@ -99,7 +99,7 @@ class AppetizerRequest(BaseModel):
 
 def call_claude_sonnet(system_prompt: str, user_prompt: str) -> str:
     """Call Claude Sonnet and return the raw text response."""
-    from services.anthropic_client import build_anthropic_create_kwargs
+    from services.anthropic_client import build_anthropic_create_kwargs, log_anthropic_usage
 
     client = anthropic.Anthropic()  # uses ANTHROPIC_API_KEY env var
     model = (
@@ -115,6 +115,7 @@ def call_claude_sonnet(system_prompt: str, user_prompt: str) -> str:
         system=system_prompt,
         messages=[{"role": "user", "content": user_prompt}],
     ))
+    log_anthropic_usage(message, call_site="appetizer", model=model)
     block = message.content[0]
     assert hasattr(block, "text"), f"Unexpected content block type: {block.type}"
     result: str = block.text
