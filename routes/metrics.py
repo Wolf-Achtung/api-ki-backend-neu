@@ -116,3 +116,59 @@ def metrics_summary(admin_key: str = Query(...), days: int = Query(30, ge=1, le=
     for day, event, n in rows:
         out.setdefault(str(day), {})[event] = n
     return {"days": days, "counts": out}
+
+
+@router.get("/metrics/anthropic-usage")
+def anthropic_usage_summary(admin_key: str = Query(...),
+                            days: int = Query(30, ge=1, le=365)) -> dict:
+    """KIS-1270: Aggregation der persistierten Usage nach call_site x model.
+
+    Liefert je Gruppe: Calls, Tokensummen (alle drei Input-Felder getrennt),
+    Output-Token, cache-korrekte Kosten. Dazu Gesamtkosten und die Zahl der
+    Briefings im Zeitraum als Mengengeruest."""
+    expected = os.getenv("STRATEGY_ADMIN_KEY", "")
+    if not expected:
+        raise HTTPException(status_code=500, detail="STRATEGY_ADMIN_KEY nicht konfiguriert")
+    if not hmac.compare_digest(admin_key, expected):
+        raise HTTPException(status_code=403, detail="Ungültiger Admin-Key")
+
+    from models import AnthropicUsage, Briefing
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    db = SessionLocal()
+    try:
+        rows = (
+            db.query(
+                AnthropicUsage.call_site,
+                AnthropicUsage.model,
+                func.count().label("calls"),
+                func.sum(AnthropicUsage.input_tokens),
+                func.sum(AnthropicUsage.cache_creation_input_tokens),
+                func.sum(AnthropicUsage.cache_read_input_tokens),
+                func.sum(AnthropicUsage.output_tokens),
+                func.sum(AnthropicUsage.cost_usd),
+            )
+            .filter(AnthropicUsage.created_at >= since)
+            .group_by(AnthropicUsage.call_site, AnthropicUsage.model)
+            .order_by(func.sum(AnthropicUsage.cost_usd).desc())
+            .all()
+        )
+        briefings = (db.query(func.count(Briefing.id))
+                     .filter(Briefing.created_at >= since).scalar()) or 0
+    finally:
+        db.close()
+
+    groups = []
+    total_cost = 0.0
+    for cs, model, calls, inp, created, read, out, cost in rows:
+        cost = round(float(cost or 0.0), 4)
+        total_cost += cost
+        groups.append({
+            "call_site": cs, "model": model, "calls": int(calls or 0),
+            "input_tokens": int(inp or 0),
+            "cache_creation_input_tokens": int(created or 0),
+            "cache_read_input_tokens": int(read or 0),
+            "output_tokens": int(out or 0),
+            "cost_usd": cost,
+        })
+    return {"days": days, "briefings": int(briefings),
+            "total_cost_usd": round(total_cost, 4), "groups": groups}

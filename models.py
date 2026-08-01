@@ -550,3 +550,30 @@ class MetricsEvent(Base):
         nullable=False,
         index=True,
     )
+
+
+class AnthropicUsage(Base):
+    """KIS-1270: Persistierte [CACHE-USAGE]-Daten je Anthropic-Call.
+
+    Ersetzt die fluechtige Railway-Log-Retention als Datenquelle fuer die
+    Prompt-Caching-Wirtschaftlichkeit. cost_usd ist die cache-korrekte
+    Schaetzung (input 1,0x + cache_write 1,25x + cache_read 0,10x auf den
+    Modell-Basispreis) — bewusst von Anfang an mit allen drei Input-Feldern
+    gerechnet, damit der creative-radar-Fehler (nur input_tokens) hier
+    strukturell nicht entstehen kann."""
+    __tablename__ = "anthropic_usage"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    call_site: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
+    model: Mapped[str] = mapped_column(String(80), nullable=False, index=True)
+    input_tokens: Mapped[int] = mapped_column(default=0, nullable=False)
+    cache_creation_input_tokens: Mapped[int] = mapped_column(default=0, nullable=False)
+    cache_read_input_tokens: Mapped[int] = mapped_column(default=0, nullable=False)
+    output_tokens: Mapped[int] = mapped_column(default=0, nullable=False)
+    cost_usd: Mapped[float] = mapped_column(default=0.0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        index=True,
+    )
