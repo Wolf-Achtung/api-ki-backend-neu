@@ -89,6 +89,8 @@ class TestLangSweepRetry:
 
         monkeypatch.setattr(g, "_translate_de_blocks_to_en", fail_first_only)
         monkeypatch.setenv("LANG_SWEEP_MAX_LLM_CALLS", "2")
+        # KIS-1283: Budget-Vergabe-Reihenfolge nur bei Parallelität 1 strikt.
+        monkeypatch.setenv("LANG_SWEEP_PARALLELISM", "1")
         sections = {
             "EXEC_HTML": _DE_BLOCK,
             "RISKS_HTML": _DE_BLOCK.replace("Angebotserstellung", "Risikoanalyse"),
