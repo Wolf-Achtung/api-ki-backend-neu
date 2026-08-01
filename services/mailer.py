@@ -9,7 +9,7 @@ import logging
 import os
 import smtplib
 from email.mime.text import MIMEText
-from typing import Optional
+from typing import Any, Optional
 
 import httpx
 
@@ -131,7 +131,16 @@ class Mailer:
             logger.error("❌ SMTP_FROM/SMTP_USER not configured - cannot send email")
             raise Exception("SMTP not configured: missing from address")
 
-        msg = MIMEText(html or text, "html" if html else "plain", "utf-8")
+        # KIS-1284: Mit HTML-Teil ein echtes multipart/alternative bauen —
+        # vorher wurde bei gesetztem html der Plain-Text-Teil verworfen
+        # (schlechter für Zustellbarkeit und Text-only-Clients).
+        if html:
+            from email.mime.multipart import MIMEMultipart
+            msg: Any = MIMEMultipart("alternative")
+            msg.attach(MIMEText(text, "plain", "utf-8"))
+            msg.attach(MIMEText(html, "html", "utf-8"))
+        else:
+            msg = MIMEText(text, "plain", "utf-8")
         msg["Subject"] = subject
         msg["From"] = f"{self.s.mail.from_name or 'KI-Sicherheit.jetzt'} <{from_addr}>"
         msg["To"] = to
