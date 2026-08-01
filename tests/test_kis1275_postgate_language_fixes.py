@@ -445,8 +445,10 @@ class TestBudgetPriorityAndTwins:
         sections["QUICK_WINS_HTML"] = self._distinct_de(91)
         g._en_language_sweep_sections(sections, _briefing("en"))
         assert len(calls) == 10                          # gepinntes Budget
-        assert calls[0] == "EXECUTIVE_SUMMARY_HTML"
-        assert calls[1] == "QUICK_WINS_HTML"
+        # KIS-1281: fehlgeschlagene Sektionen werden 1× wiederholt — die
+        # Prioritätsreihenfolge bleibt: erst EXEC (2 Calls), dann QUICK_WINS.
+        assert calls[0] == calls[1] == "EXECUTIVE_SUMMARY_HTML"
+        assert calls[2] == calls[3] == "QUICK_WINS_HTML"
 
     def test_html_keys_before_plain_keys(self, monkeypatch):
         import gpt_analyze as g
@@ -462,7 +464,9 @@ class TestBudgetPriorityAndTwins:
             "RISK_HTML": self._distinct_de(2),
         }
         g._en_language_sweep_sections(sections, _briefing("en"))
-        assert calls == ["RISK_HTML", "notes"]
+        # KIS-1281: je 1 Retry pro fehlgeschlagener Sektion, Reihenfolge
+        # unverändert _HTML vor plain.
+        assert calls == ["RISK_HTML", "RISK_HTML", "notes", "notes"]
 
     def test_twin_translated_once_and_copied(self, monkeypatch):
         """Audit-Repro: 4 Calls für 2 logische Sektionen (UPPER-_HTML +
@@ -514,7 +518,9 @@ class TestBudgetPriorityAndTwins:
             "executive_summary": _DE_PARA,
         }
         out = g._en_language_sweep_sections(sections, _briefing("en"))
-        assert len(calls) == 1
+        # KIS-1281: 2 Calls = Erstversuch + genau ein Retry für die
+        # Primär-Sektion; der Twin erbt weiterhin OHNE eigenen Call.
+        assert len(calls) == 2
         assert out["EXECUTIVE_SUMMARY_HTML"] == _FAILOPEN + _DE_PARA
         assert out["executive_summary"] == _FAILOPEN + _DE_PARA
 

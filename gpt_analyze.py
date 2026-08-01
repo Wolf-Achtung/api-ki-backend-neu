@@ -10199,13 +10199,16 @@ _LANG_SWEEP_MARKER_RE = re.compile(r"<<<BLOCK\s+(\d+)>>>")
 # Max. LLM-Calls pro Report (eine pro betroffener Sektion; Sektionen ohne
 # deutsche Blöcke kosten nichts). KIS-1279 (EN-Lauf 1138): Default 10 → 40 —
 # das 10er-Budget ließ 16 Kapitel (RISKS 26, UNTERNEHMENSPROFIL 20, BRANCH_
-# DEEP_DIVE 18 Blöcke …) deutsch zurück; ~6,5 s/Call ⇒ Vollausbau kostet
-# < 3 min Laufzeit und fällt nur bei lang=en an. Per ENV übersteuerbar.
+# DEEP_DIVE 18 Blöcke …) deutsch zurück. KIS-1281 (EN-Lauf 1139): 40 → 80 —
+# auch 40 reichte nicht, weil die Kleinbuchstaben-Schatten-Twins nach den
+# Healer-Trims inhaltlich vom _HTML-Twin abweichen (kein Twin-Copy) und je
+# einen eigenen Call brauchen; Lauf 1139 hätte ~66 gebraucht. ~8 s/Call,
+# fällt nur bei lang=en an. Per ENV übersteuerbar.
 def _lang_sweep_max_llm_calls() -> int:
     try:
-        return max(0, int(os.getenv("LANG_SWEEP_MAX_LLM_CALLS", "40")))
+        return max(0, int(os.getenv("LANG_SWEEP_MAX_LLM_CALLS", "80")))
     except (TypeError, ValueError):
-        return 40
+        return 80
 
 
 _LANG_SWEEP_MAX_LLM_CALLS = _lang_sweep_max_llm_calls()
@@ -10466,6 +10469,15 @@ def _en_language_sweep_sections(sections: Dict[str, Any], briefing: Dict[str, An
         llm_calls += 1
         original_blocks = [m.group(0) for m in german_matches]
         translated = _translate_de_blocks_to_en(key, original_blocks)
+        if not translated and llm_calls < _max_llm_calls:
+            # KIS-1281 (EN-Lauf 1139): quick_wins scheiterte einmalig am
+            # Marker-Protokoll ("expected 11 blocks, got []") und blieb
+            # deutsch (PDF S. 9–11). Ein Retry — zählt gegen das Budget —
+            # fängt solche Einmal-Ausreißer ab; None deckt Mismatch, leere
+            # Antwort und Call-Exceptions gleichermaßen ab.
+            log.info("[KIS-1281] Retrying language sweep for section %s", key)
+            llm_calls += 1
+            translated = _translate_de_blocks_to_en(key, original_blocks)
         if not translated:
             # fail-open: Original behalten — und die Sektion auch von der
             # Token-Nachsanitisierung ausnehmen, sonst würde aus dem bewusst
