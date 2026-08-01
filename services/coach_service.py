@@ -421,7 +421,10 @@ async def stream_coach_response(
     # reject temperature with 400 ("temperature is deprecated for this model").
     # Route streaming kwargs through the same helper used for messages.create
     # (PR #1018/#1020) so the gating is identical and reasoning_effort is wired.
-    from services.anthropic_client import build_anthropic_create_kwargs
+    from services.anthropic_client import (
+        build_anthropic_create_kwargs,
+        log_anthropic_usage,
+    )
     stream_kwargs = build_anthropic_create_kwargs(
         model=COACH_MODEL,
         max_tokens=COACH_MAX_TOKENS,
@@ -465,6 +468,17 @@ async def stream_coach_response(
                             break
                         buffer = buffer[close_idx + len(_CLOSE_TAG):]
                         inside_thinking = False
+
+            # Prompt-Caching-Diagnose (nur Logging): get_final_message()
+            # liefert die vom SDK bereits akkumulierte Message — kein
+            # zusätzlicher API-Roundtrip.
+            try:
+                _final = await stream.get_final_message()
+                log_anthropic_usage(
+                    _final, call_site="coach_service:stream", model=COACH_MODEL,
+                )
+            except Exception:  # pragma: no cover — Logging darf nie brechen
+                pass
 
         # Final flush after stream end
         if not inside_thinking and buffer:
