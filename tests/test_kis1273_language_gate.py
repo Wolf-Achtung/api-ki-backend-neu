@@ -193,6 +193,9 @@ class TestLanguageSweep:
             return None  # fail-open, zählt aber als Call
 
         monkeypatch.setattr(g, "_call_llm_for_section", fake_llm)
+        # KIS-1279: Default-Budget ist jetzt 40 (ENV-konfigurierbar) — der
+        # Test pinnt 10, er prüft den Deckel-Mechanismus, nicht den Default.
+        monkeypatch.setenv("LANG_SWEEP_MAX_LLM_CALLS", "10")
         sections = {
             f"SEC_{i:02d}_HTML": _DE_PARA.replace("Monate", f"Monate (Variante {i})")
             for i in range(14)

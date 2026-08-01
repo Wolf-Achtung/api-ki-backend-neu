@@ -65,6 +65,12 @@ def scan_sections(sections: Dict[str, Any], answers: Dict[str, Any] | None = Non
     _name = str(answers.get("unternehmen_name") or "").strip()
     _dsgvo_total = 0
 
+    # KIS-1279 (EN-Lauf 1138): Im EN-Report sind ESSENTIAL/RECOMMENDED/limited
+    # regulärer englischer Text, kein Badge-Leak — der english_badge-Check ist
+    # ein DE-Detektor und liefe bei lang=en nur in False Positives (und damit
+    # in unnötige Heal-LLM-Calls).
+    _lang_en = str(answers.get("lang") or answers.get("LANG") or "de").lower().startswith("en")
+
     for key, value in sections.items():
         if not isinstance(value, str) or len(value) < 20:
             continue
@@ -84,9 +90,10 @@ def scan_sections(sections: Dict[str, Any], answers: Dict[str, Any] | None = Non
             findings.append({"type": "raw_boolean", "section": key,
                              "detail": _RAW_BOOL_RE.search(text).group(0)})
 
-        for m in _ENGLISH_BADGE_RE.finditer(text):
-            findings.append({"type": "english_badge", "section": key,
-                             "detail": m.group(0)})
+        if not _lang_en:
+            for m in _ENGLISH_BADGE_RE.finditer(text):
+                findings.append({"type": "english_badge", "section": key,
+                                 "detail": m.group(0)})
 
         for m in _SNAKE_RE.finditer(_URL_RE.sub(" ", text)):
             if m.group(0) not in _SNAKE_WHITELIST:

@@ -178,6 +178,15 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
 
     # KIS-1248 (Voll-Englisch Stufe 2): EN-Template wählen, wenn das Briefing
     # englisch ist und die EN-Fassung existiert — sonst wie bisher DE.
+    # KIS-1279: Fallback auf die Briefing-Spalte — das EN-Formular sendet lang
+    # nur im Submit-Umschlag (briefing.lang), nicht in den answers. Einmal in
+    # briefing_data spiegeln, damit auch _ctx_lang (statische Text-Varianten
+    # weiter unten) die richtige Sprache sieht.
+    if not (briefing_data.get("lang") or briefing_data.get("LANG")):
+        briefing_data = {
+            **briefing_data,
+            "lang": str(getattr(briefing, "lang", None) or "de").lower(),
+        }
     _lang = str(briefing_data.get("lang") or briefing_data.get("LANG") or "de").lower()
     _tpl_name = "strategy_report.html"
     if _lang.startswith("en") and os.path.exists(os.path.join(template_dir, "strategy_report_en.html")):

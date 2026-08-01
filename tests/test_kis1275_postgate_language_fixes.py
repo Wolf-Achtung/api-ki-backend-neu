@@ -437,11 +437,14 @@ class TestBudgetPriorityAndTwins:
             return None
 
         monkeypatch.setattr(g, "_call_llm_for_section", fake_llm)
+        # KIS-1279: Default-Budget ist jetzt 40 (ENV) — Test pinnt 10, er
+        # prüft die Priorisierung unter Budget-Erschöpfung.
+        monkeypatch.setenv("LANG_SWEEP_MAX_LLM_CALLS", "10")
         sections = {f"ANNEX_{i:02d}_HTML": self._distinct_de(i) for i in range(12)}
         sections["EXECUTIVE_SUMMARY_HTML"] = self._distinct_de(90)
         sections["QUICK_WINS_HTML"] = self._distinct_de(91)
         g._en_language_sweep_sections(sections, _briefing("en"))
-        assert len(calls) == 10                          # Budget unverändert
+        assert len(calls) == 10                          # gepinntes Budget
         assert calls[0] == "EXECUTIVE_SUMMARY_HTML"
         assert calls[1] == "QUICK_WINS_HTML"
 

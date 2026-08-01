@@ -10197,8 +10197,18 @@ _LANG_SWEEP_DIV_RE = re.compile(
 )
 _LANG_SWEEP_MARKER_RE = re.compile(r"<<<BLOCK\s+(\d+)>>>")
 # Max. LLM-Calls pro Report (eine pro betroffener Sektion; Sektionen ohne
-# deutsche Blöcke kosten nichts).
-_LANG_SWEEP_MAX_LLM_CALLS = 10
+# deutsche Blöcke kosten nichts). KIS-1279 (EN-Lauf 1138): Default 10 → 40 —
+# das 10er-Budget ließ 16 Kapitel (RISKS 26, UNTERNEHMENSPROFIL 20, BRANCH_
+# DEEP_DIVE 18 Blöcke …) deutsch zurück; ~6,5 s/Call ⇒ Vollausbau kostet
+# < 3 min Laufzeit und fällt nur bei lang=en an. Per ENV übersteuerbar.
+def _lang_sweep_max_llm_calls() -> int:
+    try:
+        return max(0, int(os.getenv("LANG_SWEEP_MAX_LLM_CALLS", "40")))
+    except (TypeError, ValueError):
+        return 40
+
+
+_LANG_SWEEP_MAX_LLM_CALLS = _lang_sweep_max_llm_calls()
 _LANG_SWEEP_MIN_BLOCK_CHARS = 25
 
 
@@ -10415,6 +10425,10 @@ def _en_language_sweep_sections(sections: Dict[str, Any], briefing: Dict[str, An
         return sections
 
     llm_calls = 0
+    # KIS-1279: Budget pro Lauf frisch aus der ENV lesen (Deploy-Tuning ohne
+    # Neustart-Reihenfolge-Abhängigkeit; Import-Zeitpunkt-Konstante bleibt
+    # als Fallback/Referenz bestehen).
+    _max_llm_calls = _lang_sweep_max_llm_calls()
     failed_keys: set = set()
     # KIS-1275 (6b): Übersetzungs-Cache nach Original-Inhalt — lowercase-
     # Schattenkeys mit identischem Inhalt wie ihr _HTML-Twin (Audit-Repro:
@@ -10442,10 +10456,10 @@ def _en_language_sweep_sections(sections: Dict[str, Any], briefing: Dict[str, An
             continue
         if not german_matches:
             continue
-        if llm_calls >= _LANG_SWEEP_MAX_LLM_CALLS:
+        if llm_calls >= _max_llm_calls:
             log.warning(
                 "[KIS-1273] LLM budget (%d) exhausted — section %s keeps %d German block(s)",
-                _LANG_SWEEP_MAX_LLM_CALLS, key, len(german_matches),
+                _max_llm_calls, key, len(german_matches),
             )
             failed_keys.add(key)
             continue
