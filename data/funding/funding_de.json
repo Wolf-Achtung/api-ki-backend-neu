@@ -16,10 +16,11 @@
         "team",
         "kmu"
       ],
-      "notes": "Über Hausbank, langfristige Finanzierung für Digitalisierungsprojekte",
+      "notes": "ERP-Förderkredit Digitalisierung & Innovation (511/512/513): seit 2026 kein Mindestkreditbetrag mehr (ab 25.000 €), bis 25 Mio € je Vorhaben, Zins gestaffelt nach Digitalisierungs-/Innovationsgrad (ca. 3,5–5,2%), bis 10 Jahre Laufzeit, Antrag über die Hausbank.",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.kfw.de"
+      "url": "https://www.kfw.de",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "invest_bw",
@@ -27,18 +28,19 @@
       "region": "BW",
       "region_label": "Baden-Württemberg",
       "funding_type": "Zuschuss",
-      "funding_rate": "30–50%",
-      "max_amount": 200000,
-      "max_amount_display": "bis 200.000 €",
+      "funding_rate": "aufrufabhängig",
+      "max_amount": 650000,
+      "max_amount_display": "Einzelvorhaben bis 650.000 €, Verbund bis 1,3 Mio €",
       "focus": "Digitalisierung, KI-Einführung, Prozessoptimierung",
       "suitable_for": [
         "team",
         "kmu"
       ],
-      "notes": "Länderprogramm BW, für Unternehmen mit Standort in Baden-Württemberg",
+      "notes": "Aufruf-gebunden: themenspezifische Förderaufrufe mit zweistufigem Verfahren (Projektskizze über das elektronische Portal); Konditionen je Aufruf — aktuellen Aufrufstatus auf invest-bw.de prüfen.",
       "relevance_ki": "high",
       "priority": 1,
-      "url": "https://www.investbw.de"
+      "url": "https://www.investbw.de",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "profit_berlin",
@@ -46,18 +48,19 @@
       "region": "BE",
       "region_label": "Berlin",
       "funding_type": "Zuschuss + Darlehen",
-      "funding_rate": "bis 80%",
+      "funding_rate": "bis 50% Zuschuss (plus zinsverbilligte Darlehen)",
       "max_amount": 500000,
-      "max_amount_display": "variabel, projektabhängig",
+      "max_amount_display": "Zuschuss bis 500.000 €, Darlehen bis 1 Mio €",
       "focus": "F&E, Innovation, Digitalisierung, KI-Projekte",
       "suitable_for": [
         "team",
         "kmu"
       ],
-      "notes": "Berlin-spezifisch, für innovative F&E-Projekte mit Technologie-Schwerpunkt",
+      "notes": "Neue Richtlinie seit 01.01.2026: Zuschuss-Obergrenze von 400.000 € auf 500.000 € erhöht, vereinfachte Abrechnung, längere Darlehenslaufzeiten (Frühphase bis 10 Jahre, ohne Besicherung).",
       "relevance_ki": "high",
       "priority": 1,
-      "url": "https://www.ibb.de"
+      "url": "https://www.ibb.de",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "coaching_bonus_berlin",
@@ -65,19 +68,20 @@
       "region": "BE",
       "region_label": "Berlin",
       "funding_type": "Zuschuss",
-      "funding_rate": "bis 50%",
-      "max_amount": 4000,
-      "max_amount_display": "bis ~4.000 €",
+      "funding_rate": "50% (Bestand) / 80% (Gründung < 5 Jahre) des Tagessatzes",
+      "max_amount": 16000,
+      "max_amount_display": "bis 16.000 € (max. 20 Beratungstage à 1.000 €)",
       "focus": "Beratung/Coaching für KMU & Solo-Selbständige",
       "suitable_for": [
         "solo",
         "team",
         "kmu"
       ],
-      "notes": "Fördert externes Coaching zu Strategie, Digitalisierung, Markteintritt",
+      "notes": "Fördert externes Coaching (u. a. Digitalisierung/Strategie) durch akkreditierte Coaches; auch Kreativwirtschaft ausdrücklich antragsberechtigt.",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.ibb-business-team.de/coaching-bonus"
+      "url": "https://www.ibb-business-team.de/coaching-bonus",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "transfer_bonus_berlin",
@@ -93,10 +97,11 @@
         "team",
         "kmu"
       ],
-      "notes": "Fördert Technologietransfer; auch KI-Vorhaben mit Forschungspartnern",
+      "notes": "Fördert Technologietransfer mit Forschungseinrichtungen in Berlin/Brandenburg (auch KI-Vorhaben). Programmlaufzeit bis 31.12.2026 — Anträge nur noch in diesem Jahr; Projektstart erst nach Bewilligung.",
       "relevance_ki": "high",
       "priority": 2,
-      "url": "https://www.berlin.de/sen/wirtschaft/wirtschaft/foerderprogramme/transfer-bonus/"
+      "url": "https://www.berlin.de/sen/wirtschaft/wirtschaft/foerderprogramme/transfer-bonus/",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "innovationsgutschein_bayern",
@@ -104,18 +109,19 @@
       "region": "BY",
       "region_label": "Bayern",
       "funding_type": "Gutschein",
-      "funding_rate": "bis 50%",
-      "max_amount": 30000,
-      "max_amount_display": "bis 30.000 €",
+      "funding_rate": "40% (standard) / 50% (spezial)",
+      "max_amount": 49750,
+      "max_amount_display": "standard bis ~15.200 €, spezial bis ~49.750 € Zuschuss",
       "focus": "Externe Entwicklungs-/Dienstleistungen (z.B. Prototyping, Studien)",
       "suitable_for": [
         "team",
         "kmu"
       ],
-      "notes": "Fördert externe F&E-Leistungen; geeignet für KMU und Handwerk",
+      "notes": "Nur externe F&E-/Entwicklungsleistungen (Prototypen, Tests, Design); reine Softwareentwicklung ist NICHT förderfähig. Antrag an den Projektträger Bayern (PTB).",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.bayern-innovativ.de/innovationsgutschein"
+      "url": "https://www.bayern-innovativ.de/innovationsgutschein",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "zim",
@@ -131,10 +137,11 @@
         "team",
         "kmu"
       ],
-      "notes": "Für innovative KMU mit Forschungs- und Entwicklungsvorhaben",
+      "notes": "⚠️ Befristeter Antragsstopp seit 07.07.2026 (Haushaltsmittel erschöpft, alle Projektformen und Skizzen). Wiederaufnahme abhängig vom Bundeshaushalt 2027, angestrebt Anfang 2027 — bis dahin keine Anträge möglich.",
       "relevance_ki": "high",
-      "priority": 1,
-      "url": "https://www.zim.de"
+      "priority": 3,
+      "url": "https://www.zim.de",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "exist",
@@ -150,10 +157,11 @@
         "solo",
         "team"
       ],
-      "notes": "Für technologieorientierte und wissensbasierte Gründungen",
+      "notes": "Für technologieorientierte Hochschul-/Forschungs-Ausgründungen (Teams bis 3 Personen, 12 Monate Stipendium). Laufende Antragstellung mit quartalsweiser Bewertung; Programmrichtlinie läuft bis Ende 2029.",
       "relevance_ki": "high",
       "priority": 2,
-      "url": "https://www.exist.de"
+      "url": "https://www.exist.de",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "digital_verwaltung_itsec",
@@ -191,11 +199,11 @@
       "branchen": [
         "medien"
       ],
-      "notes": "FFG-Novelle seit 1.1.2025; BKM-Programm, FFA-verwaltet; laufende Einreichung bis 6 Wochen vor Drehbeginn; Zusammenführung mit GMPF zu einer 'Anreizförderung' für Mitte 2026 angekündigt — vor Antrag aktuellen Richtlinienstand auf ffa.de prüfen",
+      "notes": "FFG-Novelle seit 1.1.2025; BKM-Programm, FFA-verwaltet; laufende Einreichung bis 6 Wochen vor Drehbeginn. NEU: FFA-Serviceportal seit 22.07.2026 für DFFF-I-/GMPF-Anträge geöffnet — E-Mail-Anträge nur noch bis 31.08.2026, ab 01.09.2026 ausschließlich über portal.ffa.de. Anreizförderung (DFFF I/II + GMPF) auf ~250 Mio €/Jahr verdoppelt.",
       "relevance_ki": "medium",
       "priority": 1,
       "url": "https://www.ffa.de/dfff-i.html",
-      "last_verified": "2026-07-22"
+      "last_verified": "2026-08-05"
     },
     {
       "id": "ffa_produktion",
@@ -237,11 +245,11 @@
       "branchen": [
         "medien"
       ],
-      "notes": "Richtlinie der BKM (nicht BMWK), verwaltet durch die FFA; für High-End-Serien und VFX-/postproduktionsstarke Produktionen; ab 2026 gemeinsamer Topf mit DFFF (ca. 250 Mio €/Jahr, Teilbetrag stand zuletzt unter Haushaltssperre)",
+      "notes": "Richtlinie der BKM (nicht BMWK), verwaltet durch die FFA; für High-End-Serien und VFX-/postproduktionsstarke Produktionen. Gemeinsamer Topf mit DFFF (~250 Mio €/Jahr, Verdopplung beschlossen, Haushaltssperre aufgehoben); Antragstellung seit 22.07.2026 über das FFA-Serviceportal (E-Mail-Übergang nur bis 31.08.2026).",
       "relevance_ki": "medium",
       "priority": 2,
       "url": "https://www.ffa.de/german-motion-picture-fund-gmpf.html",
-      "last_verified": "2026-07-22"
+      "last_verified": "2026-08-05"
     },
     {
       "id": "games_bund",
@@ -260,11 +268,11 @@
       "branchen": [
         "medien"
       ],
-      "notes": "Seit Mai 2025 beim BMFTR (vorher BMWK); nach Antragsstopp seit 08/2025 wieder offen, Budget 2026: 125 Mio € — Mitte 2026 noch erhebliche Mittel verfügbar; Antragsweg über DLR Projektträger; Kulturtest und USK-Kennzeichnung erforderlich",
+      "notes": "Seit Mai 2025 beim BMFTR (Projektträger DLR); Budget 2026: 125 Mio € — Mitte 2026 erst ca. 35–40 Mio € gebunden, über 80 Mio € noch verfügbar: sehr gute Antragslage im 2. Halbjahr 2026. Bearbeitung nach Eingangsreihenfolge; Kulturtest und USK-Kennzeichnung erforderlich.",
       "relevance_ki": "medium",
       "priority": 2,
       "url": "https://www.bmftr.bund.de/DE/Technologie/Games/Games_node.html",
-      "last_verified": "2026-07-22"
+      "last_verified": "2026-08-05"
     },
     {
       "id": "fff_bayern",

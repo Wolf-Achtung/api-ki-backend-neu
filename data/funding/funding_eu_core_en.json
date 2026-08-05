@@ -11,10 +11,17 @@
       "funding_type_en": "Grant / Co-funding",
       "funding_rate_en": "Up to 70-100% (depending on call, action type, and participant role)",
       "max_amount_en": "Typically from €500k up to €10m+ per project (varies by call)",
-      "target_groups_en": ["Startups", "SMEs", "Large enterprises", "Research organisations", "Universities"],
+      "target_groups_en": [
+        "Startups",
+        "SMEs",
+        "Large enterprises",
+        "Research organisations",
+        "Universities"
+      ],
       "ai_relevance_en": "High",
-      "notes_en": "Requires consortium of multiple partners from different EU countries in most calls. Single-beneficiary options exist for specific instruments.",
-      "priority": 1
+      "notes_en": "2026–27 work programme adopted in December 2025 (€14bn overall); first calls open since 16 Dec 2025 via the Funding & Tenders Portal.",
+      "priority": 1,
+      "last_verified": "2026-08-05"
     },
     {
       "id": "digital_europe",
@@ -23,10 +30,16 @@
       "funding_type_en": "Grant / Co-funding",
       "funding_rate_en": "Up to 50-75% (varies by action type)",
       "max_amount_en": "Typically up to several million euros per project",
-      "target_groups_en": ["SMEs", "Public sector", "Tech consortia", "Digital Innovation Hubs"],
+      "target_groups_en": [
+        "SMEs",
+        "Public sector",
+        "Tech consortia",
+        "Digital Innovation Hubs"
+      ],
       "ai_relevance_en": "High",
-      "notes_en": "Focus on deployment rather than research. Often requires cross-border collaboration.",
-      "priority": 1
+      "notes_en": "Focus on deployment rather than research. 2026 calls (Advanced Digital Skills, Best Use of Technologies, GenAI/AI Continent) open since April 2026.",
+      "priority": 1,
+      "last_verified": "2026-08-05"
     },
     {
       "id": "eic_accelerator",
@@ -35,10 +48,15 @@
       "funding_type_en": "Grant + Equity (blended finance)",
       "funding_rate_en": "Up to €2.5m grant component + equity investment up to ~€15m",
       "max_amount_en": "Up to €17.5m total (grant + equity)",
-      "target_groups_en": ["Deep-tech startups", "Scale-ups", "High-growth SMEs"],
+      "target_groups_en": [
+        "Deep-tech startups",
+        "Scale-ups",
+        "High-growth SMEs"
+      ],
       "ai_relevance_en": "Very high",
-      "notes_en": "Highly competitive. Single-company applications. Requires strong business case and market potential.",
-      "priority": 1
+      "notes_en": "Highly competitive. 2026: six full-proposal cut-offs (7 Jan, 4 Mar, 6 May, 8 Jul, 2 Sep, 4 Nov 2026); short proposal (Step 1) can be submitted anytime. Grant up to €2.5m as lump sum.",
+      "priority": 1,
+      "last_verified": "2026-08-05"
     },
     {
       "id": "eic_pathfinder",
@@ -47,10 +65,16 @@
       "funding_type_en": "Grant",
       "funding_rate_en": "Up to 100%",
       "max_amount_en": "Up to €3-4m per project",
-      "target_groups_en": ["Research organisations", "Universities", "Deep-tech startups", "SMEs"],
+      "target_groups_en": [
+        "Research organisations",
+        "Universities",
+        "Deep-tech startups",
+        "SMEs"
+      ],
       "ai_relevance_en": "High",
-      "notes_en": "Focus on visionary research. Consortium required for Open calls; single applicants possible for Challenges.",
-      "priority": 2
+      "notes_en": "Focus on visionary research. Consortium required for Open calls; single applicants possible for Challenges. 2026: Open deadline was 12 May 2026 (closed); Challenges close 28 Oct 2026 — incl. 'DeepRAP' trustworthy cognitive AI challenge (up to €4m per project).",
+      "priority": 2,
+      "last_verified": "2026-08-05"
     },
     {
       "id": "esf_plus_digital_skills",
@@ -59,7 +83,12 @@
       "funding_type_en": "Grant / Co-funding",
       "funding_rate_en": "Varies by country and programme (typically 50-85%)",
       "max_amount_en": "Typically up to several hundred thousand euros per project",
-      "target_groups_en": ["SMEs", "Education providers", "Public sector", "Training organisations"],
+      "target_groups_en": [
+        "SMEs",
+        "Education providers",
+        "Public sector",
+        "Training organisations"
+      ],
       "ai_relevance_en": "Medium",
       "notes_en": "Implemented through national/regional programmes. Contact national ESF managing authority for specific calls.",
       "priority": 2
@@ -71,10 +100,15 @@
       "funding_type_en": "Loan / Guarantee / Equity",
       "funding_rate_en": "Favourable interest rates and terms",
       "max_amount_en": "From €25k (via intermediaries) to €50m+ (direct)",
-      "target_groups_en": ["Innovative SMEs", "Mid-caps", "Large enterprises"],
+      "target_groups_en": [
+        "Innovative SMEs",
+        "Mid-caps",
+        "Large enterprises"
+      ],
       "ai_relevance_en": "Medium",
-      "notes_en": "Access typically through local financial intermediaries. Direct EIB financing for larger amounts.",
-      "priority": 3
+      "notes_en": "Legacy initiative of the Horizon 2020 period (2014–2020) — new financing runs via InvestEU and current EIB Group instruments; check the InvestEU portal for available products. Access typically through local financial intermediaries.",
+      "priority": 3,
+      "last_verified": "2026-08-05"
     },
     {
       "id": "eurostars",
@@ -83,10 +117,14 @@
       "funding_type_en": "Grant",
       "funding_rate_en": "Up to 50-70% (varies by national funding body)",
       "max_amount_en": "Typically €500k-€2m total project cost",
-      "target_groups_en": ["Innovative SMEs", "Research partners"],
+      "target_groups_en": [
+        "Innovative SMEs",
+        "Research partners"
+      ],
       "ai_relevance_en": "Medium-High",
-      "notes_en": "Requires partners from at least 2 Eurostars countries. SME must lead the consortium.",
-      "priority": 2
+      "notes_en": "Requires partners from at least 2 Eurostars countries; SME must lead the consortium. Call 11: submissions 9 Jul–10 Sep 2026 (14:00 CET) via myeurekaproject.org; funding via national bodies.",
+      "priority": 2,
+      "last_verified": "2026-08-05"
     },
     {
       "id": "interreg",
@@ -95,7 +133,12 @@
       "funding_type_en": "Grant / Co-funding",
       "funding_rate_en": "Up to 70-85% (depending on programme and region)",
       "max_amount_en": "Varies widely by programme (typically €200k-€5m)",
-      "target_groups_en": ["SMEs", "Public authorities", "Research organisations", "Regional clusters"],
+      "target_groups_en": [
+        "SMEs",
+        "Public authorities",
+        "Research organisations",
+        "Regional clusters"
+      ],
       "ai_relevance_en": "Medium",
       "notes_en": "Multiple programmes covering different geographic areas. Partners from multiple regions/countries required.",
       "priority": 3
