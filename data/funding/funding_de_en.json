@@ -24,10 +24,11 @@
         "team",
         "kmu"
       ],
-      "notes_en": "Via commercial bank, long-term financing for digitalization projects",
+      "notes_en": "ERP loan for digitalisation & innovation (511/512/513): since 2026 no minimum loan amount (from €25,000), up to €25m per project, interest tiered by digitalisation/innovation level (approx. 3.5–5.2%), terms up to 10 years, applications via your house bank.",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.kfw.de"
+      "url": "https://www.kfw.de",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "invest_bw",
@@ -40,19 +41,20 @@
         "Baden-Württemberg"
       ],
       "funding_type_en": "Grant",
-      "funding_rate_en": "30–50%",
-      "max_amount": 200000,
-      "max_amount_en": "up to €200,000",
+      "funding_rate_en": "call-dependent",
+      "max_amount": 650000,
+      "max_amount_en": "up to €650,000 (collaborative projects up to €1.3m)",
       "focus_en": "Digitalization, AI implementation, process optimization",
       "summary_en": "Baden-Württemberg state grant for digitalization, AI implementation, and process optimization projects for companies located in the state.",
       "suitable_for": [
         "team",
         "kmu"
       ],
-      "notes_en": "State program, for companies located in Baden-Württemberg",
+      "notes_en": "Call-based: thematic funding calls with a two-stage procedure (project sketch via the electronic portal); conditions vary per call — check current call status on invest-bw.de.",
       "relevance_ki": "high",
       "priority": 1,
-      "url": "https://www.investbw.de"
+      "url": "https://www.investbw.de",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "profit_berlin",
@@ -65,19 +67,20 @@
         "Berlin"
       ],
       "funding_type_en": "Grant + Loan",
-      "funding_rate_en": "up to 80%",
+      "funding_rate_en": "up to 50% grant (plus subsidised loans)",
       "max_amount": 500000,
-      "max_amount_en": "variable, project-dependent",
+      "max_amount_en": "grant up to €500,000, loans up to €1m",
       "focus_en": "R&D, innovation, digitalization, AI projects",
       "summary_en": "Berlin's primary R&D and innovation funding program for technology-focused projects including AI and digitalization initiatives.",
       "suitable_for": [
         "team",
         "kmu"
       ],
-      "notes_en": "Berlin-specific, for innovative R&D projects with technology focus",
+      "notes_en": "New guideline since 1 Jan 2026: grant ceiling raised from €400k to €500k, simplified reporting, longer loan terms (early-stage up to 10 years, unsecured).",
       "relevance_ki": "high",
       "priority": 1,
-      "url": "https://www.ibb.de"
+      "url": "https://www.ibb.de",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "coaching_bonus_berlin",
@@ -90,9 +93,9 @@
         "Berlin"
       ],
       "funding_type_en": "Grant",
-      "funding_rate_en": "up to 50%",
-      "max_amount": 4000,
-      "max_amount_en": "up to ~€4,000",
+      "funding_rate_en": "50% (established) / 80% (companies < 5 years) of the daily rate",
+      "max_amount": 16000,
+      "max_amount_en": "up to €16,000 (max. 20 coaching days at €1,000/day)",
       "focus_en": "Consulting/coaching for SMEs & freelancers",
       "summary_en": "Berlin grant supporting external business coaching for strategy, digitalization, and market entry for SMEs and freelancers.",
       "suitable_for": [
@@ -100,10 +103,11 @@
         "team",
         "kmu"
       ],
-      "notes_en": "Supports external coaching for strategy, digitalization, market entry",
+      "notes_en": "Funds external coaching (incl. digitalisation/strategy) by accredited coaches; creative-industry companies are explicitly eligible.",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.ibb-business-team.de/coaching-bonus"
+      "url": "https://www.ibb-business-team.de/coaching-bonus",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "transfer_bonus_berlin",
@@ -125,10 +129,11 @@
         "team",
         "kmu"
       ],
-      "notes_en": "Supports technology transfer; including AI projects with research partners",
+      "notes_en": "Funds technology transfer with research institutions in Berlin/Brandenburg (incl. AI projects). Programme runs until 31 Dec 2026 — applications only possible this year; project start only after approval.",
       "relevance_ki": "high",
       "priority": 2,
-      "url": "https://www.berlin.de/sen/wirtschaft/wirtschaft/foerderprogramme/transfer-bonus/"
+      "url": "https://www.berlin.de/sen/wirtschaft/wirtschaft/foerderprogramme/transfer-bonus/",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "innovationsgutschein_bayern",
@@ -141,19 +146,20 @@
         "Bavaria"
       ],
       "funding_type_en": "Voucher",
-      "funding_rate_en": "up to 50%",
-      "max_amount": 30000,
-      "max_amount_en": "up to €30,000",
+      "funding_rate_en": "40% (standard) / 50% (special)",
+      "max_amount": 49750,
+      "max_amount_en": "standard up to ~€15,200, special up to ~€49,750 grant",
       "focus_en": "External development services (e.g., prototyping, feasibility studies)",
       "summary_en": "Bavarian voucher program supporting external R&D services such as prototyping and feasibility studies for SMEs and craftsmen.",
       "suitable_for": [
         "team",
         "kmu"
       ],
-      "notes_en": "Supports external R&D services; suitable for SMEs and craftsmen",
+      "notes_en": "Only external R&D/development services (prototyping, testing, design); pure software development is NOT eligible. Applications go to Projektträger Bayern (PTB).",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.bayern-innovativ.de/innovationsgutschein"
+      "url": "https://www.bayern-innovativ.de/innovationsgutschein",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "zim",
@@ -175,10 +181,11 @@
         "team",
         "kmu"
       ],
-      "notes_en": "For innovative SMEs with research and development projects",
+      "notes_en": "⚠️ Temporary application freeze since 7 July 2026 (federal budget exhausted, all project forms). Resumption depends on the 2027 federal budget, targeted for early 2027 — no new applications until then.",
       "relevance_ki": "high",
-      "priority": 1,
-      "url": "https://www.zim.de"
+      "priority": 3,
+      "url": "https://www.zim.de",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "exist",
@@ -200,10 +207,11 @@
         "solo",
         "team"
       ],
-      "notes_en": "For technology-oriented and knowledge-based startups",
+      "notes_en": "For technology-oriented university/research spin-offs (teams of up to 3, 12-month stipend). Rolling applications with quarterly evaluation; programme guideline runs until end of 2029.",
       "relevance_ki": "high",
       "priority": 2,
-      "url": "https://www.exist.de"
+      "url": "https://www.exist.de",
+      "last_verified": "2026-08-05"
     },
     {
       "id": "digital_verwaltung_itsec",
@@ -253,11 +261,11 @@
       "branchen": [
         "medien"
       ],
-      "notes_en": "FFG reform in force since 1 Jan 2025; higher caps (DFFF I €5m / DFFF II €25m)",
+      "notes_en": "BKM programme administered by FFA; rolling submission until 6 weeks before principal photography. NEW: FFA service portal open since 22 July 2026 for DFFF I/GMPF applications — email applications only until 31 Aug 2026, portal-only from 1 Sep 2026 (portal.ffa.de). Incentive funding (DFFF I/II + GMPF) doubled to ~€250m/year.",
       "relevance_ki": "medium",
       "priority": 1,
       "url": "https://www.dfff-ffa.de",
-      "last_verified": "2026-07-22"
+      "last_verified": "2026-08-05"
     },
     {
       "id": "ffa_produktion",
@@ -311,11 +319,11 @@
       "branchen": [
         "medien"
       ],
-      "notes_en": "BKM programme (not BMWK); caps raised in 2025",
+      "notes_en": "BKM guideline administered by FFA; for high-end series and VFX/post-heavy productions. Shared budget with DFFF (~€250m/year, doubling confirmed, budget freeze lifted); applications via the FFA service portal since 22 July 2026 (email transition only until 31 Aug 2026).",
       "relevance_ki": "medium",
       "priority": 2,
       "url": "https://www.bmwk.de",
-      "last_verified": "2026-07-22"
+      "last_verified": "2026-08-05"
     },
     {
       "id": "games_bund",
@@ -340,11 +348,11 @@
       "branchen": [
         "medien"
       ],
-      "notes_en": "Reopened since 08/2025; good application prospects mid-2026",
+      "notes_en": "With BMFTR since May 2025 (project agency DLR); 2026 budget: €125m — only ~€35–40m committed by mid-2026, more than €80m still available: very good application window in H2/2026. Processed in order of receipt; culture test and USK rating required.",
       "relevance_ki": "medium",
       "priority": 3,
       "url": "https://www.bmwk.de/games",
-      "last_verified": "2026-07-22"
+      "last_verified": "2026-08-05"
     },
     {
       "id": "medienboard_bb",
