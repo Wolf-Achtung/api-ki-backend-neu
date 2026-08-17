@@ -2415,6 +2415,78 @@ def _enum_label_en(field_name: str, str_val: str) -> str | None:
     return None
 
 
+# ---------------------------------------------------------------------------
+# KIS-1287: Restate-Block — Ziel, Rahmen und Schmerzpunkte vor der Feldliste
+# ---------------------------------------------------------------------------
+# Die drei Angaben, die den Report am stärksten formen, stehen als kompakte
+# Spiegelung über der Detailliste — genau an der Stelle, an der der Flow
+# ohnehin fragt "Sind alle Angaben korrekt?". Rein deterministisch, kein LLM.
+# Freitext-Werte erscheinen im vollen Wortlaut (nie paraphrasiert).
+
+_RESTATE_SOURCES: dict[str, list[tuple[str, str, list[str], str]]] = {
+    # (DE-Label, EN-Label, Feld-Kandidaten, Modus: "first" | "all")
+    "r1": [
+        ("Ihr Ziel", "Your goal",
+         ["strategische_ziele", "ki_ziele", "vision_3_jahre"], "first"),
+        ("Ihr Budget und Zeitrahmen", "Your budget and time frame",
+         ["investitionsbudget", "zeitbudget"], "all"),
+        ("Ihre größten Zeitfresser", "Your biggest time sinks",
+         ["top_zeitfresser", "zeitersparnis_prioritaet"], "first"),
+    ],
+    "strategy": [
+        ("Ihr Ziel", "Your goal", ["s5_vision", "s3_prioritaeten"], "first"),
+        ("Ihr Budget und Zeitrahmen", "Your budget and time frame",
+         ["s1_budget", "s2_zeitrahmen"], "all"),
+        ("Ihr größter Engpass", "Your biggest bottleneck", ["s4_engpass"], "first"),
+    ],
+}
+
+
+def _restate_value(field_name: str, value: object, lang: str) -> str | None:
+    """Display-Wert für den Restate-Block — None bei leeren Angaben."""
+    if value is None or value == "" or (
+        isinstance(value, str) and value.strip().lower() in _SUMMARY_SKIP_VALUES
+    ):
+        return None
+    if isinstance(value, list) and all(
+        str(v).lower() in ("keine_angabe", "nicht_angegeben") for v in value
+    ):
+        return None
+    display = _format_value_for_display(field_name, value, lang=lang)
+    if display in ("Nicht angegeben", "Not specified", "–"):
+        return None
+    return display
+
+
+def _build_restate_lines(collected_fields: dict, report_type: str, lang: str) -> list[str]:
+    """'Das habe ich verstanden:'-Block für die Schlusszusammenfassung.
+
+    Rendert nur, wenn mindestens zwei der drei Zeilen belegt sind —
+    eine einzelne Zeile wirkt wie eine unvollständige Analyse.
+    """
+    _en = bool(lang) and str(lang).strip().lower().startswith("en")
+    spec = _RESTATE_SOURCES.get(report_type or "r1")
+    if not spec:
+        return []
+    rows: list[str] = []
+    for de_label, en_label, fields, mode in spec:
+        values: list[str] = []
+        for field_name in fields:
+            display = _restate_value(field_name, collected_fields.get(field_name), lang)
+            if display is None:
+                continue
+            values.append(display)
+            if mode == "first":
+                break
+        if not values:
+            continue
+        rows.append(f"- {en_label if _en else de_label}: {', '.join(values)}")
+    if len(rows) < 2:
+        return []
+    header = "This is what I understood:" if _en else "Das habe ich verstanden:"
+    return [header, *rows]
+
+
 def build_summary(collected_fields: dict, report_type: str = "r1", lang: str = "de") -> str:
     """
     Build a structured, template-based summary of all collected fields.
@@ -2429,6 +2501,8 @@ def build_summary(collected_fields: dict, report_type: str = "r1", lang: str = "
     sections = get_sections_for_report(report_type)
     registry = get_registry_for_report(report_type)
     lines = ["**Summary of your details:**\n"] if _en else ["**Zusammenfassung Ihrer Angaben:**\n"]
+    # KIS-1287: Ziel, Rahmen und Schmerzpunkte kompakt über der Detailliste.
+    lines.extend(_build_restate_lines(collected_fields, report_type, lang))
     skipped_sections: list[str] = []
 
     for section in sections:
