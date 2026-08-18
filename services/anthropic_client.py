@@ -657,13 +657,27 @@ def _build_user_content(prompt: str, context_prefix: Optional[str]) -> List[Any]
     return [{"type": "text", "text": prompt}]
 
 
+# KIS-1288: Modelle, deren Thinking-Einschaltform {"type": "adaptive"} ist.
+# Das alte Format {"type": "enabled", "budget_tokens": N} lehnen sie mit 400
+# ab (Sonnet 5 / Opus 5 / 4.7 / 4.8) bzw. es ist deprecated (4.6). Die Menge
+# ist identisch mit den Modellen, die temperature ablehnen — bewusst geteilt.
+_ADAPTIVE_THINKING_MODEL_MARKERS = _NO_TEMPERATURE_MODEL_MARKERS
+
+
 def _maybe_add_thinking(kwargs: dict, section: Optional[str], max_tok: int) -> dict:
     """Extended Thinking für ausgewählte Sektionen (Default: aus).
 
     ANTHROPIC_THINKING_BUDGET=<tokens> + ANTHROPIC_THINKING_SECTIONS=a,b,c
-    aktivieren thinking für die genannten Sektionen. max_tokens wird auf
-    Budget+2000 angehoben (API-Anforderung: max_tokens > budget_tokens);
-    temperature/output_config sind mit thinking unvereinbar und entfallen.
+    aktivieren thinking für die genannten Sektionen.
+
+    KIS-1288: Das Format hängt vom Modell ab. 4.6+/Claude-5-Modelle bekommen
+    {"type": "adaptive"} — budget_tokens gibt dort 400. Ältere Modelle
+    behalten das budget_tokens-Format (dort Pflicht). In beiden Fällen wird
+    max_tokens auf Budget+2000 angehoben (alt: API-Anforderung
+    max_tokens > budget_tokens; adaptiv: Kopffreiheit, weil Denk-Tokens
+    gegen max_tokens zählen) und temperature entfällt (mit thinking
+    unvereinbar). output_config (effort) bleibt bei adaptive erhalten —
+    effort steuert dort die Denktiefe.
     """
     try:
         _budget = int(os.getenv("ANTHROPIC_THINKING_BUDGET", "0"))
@@ -678,11 +692,19 @@ def _maybe_add_thinking(kwargs: dict, section: Optional[str], max_tok: int) -> d
     }
     if section.strip().lower() not in _sections:
         return kwargs
-    kwargs["thinking"] = {"type": "enabled", "budget_tokens": _budget}
+    _model = str(kwargs.get("model") or "").lower()
+    _adaptive = any(marker in _model for marker in _ADAPTIVE_THINKING_MODEL_MARKERS)
+    if _adaptive:
+        kwargs["thinking"] = {"type": "adaptive"}
+    else:
+        kwargs["thinking"] = {"type": "enabled", "budget_tokens": _budget}
+        kwargs.pop("output_config", None)
     kwargs.pop("temperature", None)
-    kwargs.pop("output_config", None)
     kwargs["max_tokens"] = max(max_tok, _budget + 2000)
-    log.info("🧠 [KIS-1234-P2] Extended Thinking für section=%s (budget=%d)", section, _budget)
+    log.info(
+        "🧠 [KIS-1234-P2/KIS-1288] Extended Thinking für section=%s (format=%s, budget=%d)",
+        section, "adaptive" if _adaptive else "budget_tokens", _budget,
+    )
     return kwargs
 
 
@@ -741,14 +763,57 @@ def call_anthropic_structured(
     except Exception as exc:
         log.warning("⚠️ [STRUCTURED] API-Fehler (%s): %s", section, str(exc)[:200])
         return None
+
+    # KIS-1288: Gleiches Netz wie call_anthropic (KIS-1231). Endet der Call
+    # am Token-Limit, ist der tool_use-Input oft unvollständig oder fehlt —
+    # einmaliger Retry mit erhöhtem Budget statt abgeschnittener Struktur.
+    if getattr(message, "stop_reason", None) == "max_tokens":
+        retry_max = _truncation_retry_max_tokens(max_tok)
+        if _truncation_retry_enabled() and retry_max > max_tok:
+            log.warning(
+                "⚠️ [STRUCTURED/KIS-1288] section=%s hit max_tokens (%d) — Retry mit Budget %d",
+                section, max_tok, retry_max,
+            )
+            retry_kwargs = dict(kwargs)
+            retry_kwargs["max_tokens"] = retry_max
+            try:
+                retry_message = client.messages.create(**retry_kwargs)
+                log_anthropic_usage(
+                    retry_message,
+                    call_site=f"structured:{section}:truncation-retry",
+                    model=model_name,
+                )
+                if getattr(retry_message, "stop_reason", None) != "max_tokens":
+                    message = retry_message
+                else:
+                    log.warning(
+                        "⚠️ [STRUCTURED/KIS-1288] Retry section=%s erneut am Limit (%d) — "
+                        "verwende Erst-Antwort",
+                        section, retry_max,
+                    )
+            except Exception as retry_exc:
+                log.warning(
+                    "⚠️ [STRUCTURED/KIS-1288] Retry section=%s gescheitert: %s — "
+                    "verwende Erst-Antwort",
+                    section, str(retry_exc)[:200],
+                )
+
+    _input = _extract_structured_tool_input(message, tool_name)
+    if _input is not None:
+        log.info("✅ [STRUCTURED] section=%s via tool_use (stop=%s)",
+                 section, getattr(message, "stop_reason", "?"))
+        return _input
+    log.warning("⚠️ [STRUCTURED] Kein tool_use-Block in Antwort (%s)", section)
+    return None
+
+
+def _extract_structured_tool_input(message: Any, tool_name: str) -> Optional[dict]:
+    """Liest den input des passenden tool_use-Blocks aus einer Message."""
     for block in getattr(message, "content", []) or []:
         if getattr(block, "type", None) == "tool_use" and getattr(block, "name", "") == tool_name:
             _input = getattr(block, "input", None)
             if isinstance(_input, dict):
-                log.info("✅ [STRUCTURED] section=%s via tool_use (stop=%s)",
-                         section, getattr(message, "stop_reason", "?"))
                 return _input
-    log.warning("⚠️ [STRUCTURED] Kein tool_use-Block in Antwort (%s)", section)
     return None
 
 
