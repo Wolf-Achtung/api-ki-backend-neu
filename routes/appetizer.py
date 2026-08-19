@@ -99,7 +99,11 @@ class AppetizerRequest(BaseModel):
 
 def call_claude_sonnet(system_prompt: str, user_prompt: str) -> str:
     """Call Claude Sonnet and return the raw text response."""
-    from services.anthropic_client import build_anthropic_create_kwargs, log_anthropic_usage
+    from services.anthropic_client import (
+        _extract_message_text,
+        build_anthropic_create_kwargs,
+        log_anthropic_usage,
+    )
 
     client = anthropic.Anthropic()  # uses ANTHROPIC_API_KEY env var
     model = (
@@ -116,9 +120,11 @@ def call_claude_sonnet(system_prompt: str, user_prompt: str) -> str:
         messages=[{"role": "user", "content": user_prompt}],
     ))
     log_anthropic_usage(message, call_site="appetizer", model=model)
-    block = message.content[0]
-    assert hasattr(block, "text"), f"Unexpected content block type: {block.type}"
-    result: str = block.text
+    # WARTUNG-2026-08: content[0] ist bei Modellen mit adaptivem Denken
+    # (claude-sonnet-5) oft ein thinking-Block ohne .text — alle Text-Blöcke
+    # einsammeln statt auf den ersten Block zu vertrauen.
+    result = _extract_message_text(message)
+    assert result.strip(), "No text blocks in Anthropic response"
     return result
 
 
