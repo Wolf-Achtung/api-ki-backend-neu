@@ -35,7 +35,6 @@ FALLBACK: Wenn hauptleistung <10 Zeichen oder unklar → branchenspezifisch form
 APPETIZER_USER_PROMPT_TEMPLATE = """\
 Analysiere:
 
-FIRMA: {firma}
 BRANCHE: {branche}
 MITARBEITER: {mitarbeiter}
 HAUPTLEISTUNG: {hauptleistung}
@@ -85,7 +84,6 @@ JSON:
 
 
 def build_user_prompt(
-    firma: str,
     branche: str,
     mitarbeiter: str,
     hauptleistung: str,
@@ -96,7 +94,6 @@ def build_user_prompt(
     score_einordnung: str,
 ) -> str:
     return APPETIZER_USER_PROMPT_TEMPLATE.format(
-        firma=firma,
         branche=branche,
         mitarbeiter=mitarbeiter,
         hauptleistung=hauptleistung,

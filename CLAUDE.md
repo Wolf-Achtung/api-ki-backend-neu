@@ -56,9 +56,10 @@ Merkregeln:
 
 - Chat-Modell deprecated (siehe Tabelle) — Wechsel ist eine
   Produktentscheidung, nicht automatisch ausgeführt.
-- `routes/appetizer.py` hat keinen Aufrufer im eigenen Frontend und fragt
-  als einziger Pfad einen Firmennamen ab (`firma`) — Produktentscheidung
-  nötig: abschalten oder Feld entfernen.
+- `routes/appetizer.py` bleibt aktiv (Wolf plant eine Einbindung), hat
+  aber noch keinen Aufrufer im eigenen Frontend. Das `firma`-Feld wurde
+  am 2026-08-19 entfernt — die Firmennamen-Invariante gilt jetzt ohne
+  Ausnahme (Test: tests/test_wartung_2026_08_appetizer.py).
 - pdfservice: Docker-Image `puppeteer:22.10.0` (Mai 2024) gepinnt, kein
   Lockfile → `npm audit` nicht möglich.
 - Monatlicher Förder-Freshness-Check: nächster Lauf Anfang September 2026

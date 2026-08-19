@@ -725,7 +725,6 @@ def _render_appetizer_admin_email(request_data: dict, result: dict) -> str:
     """Internal: admin lead-notification for Schnell-Check."""
     score = result.get("score", {})
     rows = [
-        ("Firma", request_data.get("firma", "")),
         ("Branche", request_data.get("branche", "")),
         ("Mitarbeiter", _MITARBEITER_LABELS.get(request_data.get("mitarbeiter", ""), request_data.get("mitarbeiter", ""))),
         ("Hauptleistung", request_data.get("hauptleistung", "")),

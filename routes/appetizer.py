@@ -64,8 +64,10 @@ class KiErfahrungEnum(str, Enum):
     regelmaessig = "regelmaessig"
 
 
+# WARTUNG-2026-08: Kein firma-Feld mehr — der Firmenname wird nirgendwo
+# erhoben (Sicherheits-Invariante). Legacy-Clients, die "firma" noch
+# mitsenden, stören nicht: Pydantic ignoriert unbekannte Felder.
 class AppetizerRequest(BaseModel):
-    firma: str = Field(default="Unternehmen", max_length=100)
     branche: BrancheEnum
     mitarbeiter: MitarbeiterEnum
     hauptleistung: str = Field(..., max_length=200)
@@ -169,7 +171,9 @@ def save_appetizer_lead(request: AppetizerRequest, result: dict, score: dict):
                      :score_wert, :score_einordnung, :result_json)
             """),
             {
-                "firma": request.firma,
+                # DB-Spalte bleibt (NOT-NULL-kompatibel), Inhalt ist ein
+                # fester Platzhalter — kein erhobener Firmenname.
+                "firma": "Unternehmen",
                 "branche": request.branche.value,
                 "mitarbeiter": request.mitarbeiter.value,
                 "hauptleistung": request.hauptleistung,
@@ -299,7 +303,6 @@ def generate_appetizer(request: AppetizerRequest, background: BackgroundTasks):
 
     # 2. Build prompt and call LLM for content
     user_prompt = build_user_prompt(
-        firma=request.firma,
         branche=request.branche.value,
         mitarbeiter=request.mitarbeiter.value,
         hauptleistung=request.hauptleistung,
@@ -339,7 +342,6 @@ def generate_appetizer(request: AppetizerRequest, background: BackgroundTasks):
             _send_appetizer_emails,
             email=request.email,
             request_data={
-                "firma": request.firma,
                 "branche": request.branche.value,
                 "mitarbeiter": request.mitarbeiter.value,
                 "hauptleistung": request.hauptleistung,
