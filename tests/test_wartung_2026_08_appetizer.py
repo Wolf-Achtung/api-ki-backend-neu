@@ -68,3 +68,42 @@ class TestAppetizerTextExtraction:
             pass
         else:
             raise AssertionError("expected AssertionError for empty response")
+
+
+class TestFirmaRemoved:
+    """Sicherheits-Invariante: Der Firmenname wird nirgendwo erhoben.
+
+    Der Appetizer war der letzte Pfad mit einem firma-Feld. Es ist
+    entfernt; die DB-Spalte bekommt einen festen Platzhalter.
+    """
+
+    VALID = {
+        "branche": "medien",
+        "mitarbeiter": "2-10",
+        "hauptleistung": "Postproduktion und VFX",
+        "zeitaufwand_repetitiv": "25_50",
+        "ki_erfahrung": "erste_versuche",
+        "groesste_herausforderung": "Zeitmangel",
+    }
+
+    def test_request_model_has_no_firma_field(self):
+        assert "firma" not in appetizer.AppetizerRequest.model_fields
+
+    def test_legacy_payload_with_firma_is_ignored(self):
+        req = appetizer.AppetizerRequest(**{**self.VALID, "firma": "Geheime GmbH"})
+        assert not hasattr(req, "firma")
+        assert "Geheime GmbH" not in req.model_dump_json()
+
+    def test_prompt_builder_has_no_firma(self):
+        import inspect
+        from prompts.appetizer_prompts import APPETIZER_USER_PROMPT_TEMPLATE, build_user_prompt
+        assert "firma" not in inspect.signature(build_user_prompt).parameters
+        assert "FIRMA" not in APPETIZER_USER_PROMPT_TEMPLATE
+
+    def test_admin_email_has_no_firma_row(self):
+        from services.email_templates import _render_appetizer_admin_email
+        html = _render_appetizer_admin_email(
+            {**self.VALID, "email": "x@y.de", "newsletter_optin": False},
+            {"score": {"wert": 42, "einordnung": "Solide"}},
+        )
+        assert "Firma" not in html

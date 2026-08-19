@@ -27,7 +27,7 @@ Alle Modell-IDs sind per ENV konfigurierbar. Die Tabelle zeigt den
 | Chat-Extraktion | `CHAT_EXTRACTOR_MODEL` | Default `claude-haiku-4-5-20251001` | Aktiv |
 | Coach | `ANTHROPIC_MODEL_COACH` → `ANTHROPIC_MODEL_OPUS` | `claude-opus-4-8` | Aktiv |
 | Appetizer | `ANTHROPIC_MODEL_APPETIZER` → `ANTHROPIC_MODEL` | `claude-sonnet-5` | Aktiv |
-| OpenAI-Fallback-Kette | `OPENAI_MODEL` | Default `gpt-4o` | Verfügbar; Aktualität zuletzt nicht online prüfbar (Egress-Proxy) |
+| OpenAI-Fallback-Kette | `OPENAI_MODEL` | `gpt-4.1-mini` (Railway-ENV, seit 2026-08-19) | Aktiv; non-reasoning, kein Abschaltdatum angekündigt (Stand 08/2026) |
 
 Merkregeln:
 
@@ -56,9 +56,10 @@ Merkregeln:
 
 - Chat-Modell deprecated (siehe Tabelle) — Wechsel ist eine
   Produktentscheidung, nicht automatisch ausgeführt.
-- `routes/appetizer.py` hat keinen Aufrufer im eigenen Frontend und fragt
-  als einziger Pfad einen Firmennamen ab (`firma`) — Produktentscheidung
-  nötig: abschalten oder Feld entfernen.
+- `routes/appetizer.py` bleibt aktiv (Wolf plant eine Einbindung), hat
+  aber noch keinen Aufrufer im eigenen Frontend. Das `firma`-Feld wurde
+  am 2026-08-19 entfernt — die Firmennamen-Invariante gilt jetzt ohne
+  Ausnahme (Test: tests/test_wartung_2026_08_appetizer.py).
 - pdfservice: Docker-Image `puppeteer:22.10.0` (Mai 2024) gepinnt, kein
   Lockfile → `npm audit` nicht möglich.
 - Monatlicher Förder-Freshness-Check: nächster Lauf Anfang September 2026
