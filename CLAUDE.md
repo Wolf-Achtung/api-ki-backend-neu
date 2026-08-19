@@ -27,7 +27,7 @@ Alle Modell-IDs sind per ENV konfigurierbar. Die Tabelle zeigt den
 | Chat-Extraktion | `CHAT_EXTRACTOR_MODEL` | Default `claude-haiku-4-5-20251001` | Aktiv |
 | Coach | `ANTHROPIC_MODEL_COACH` → `ANTHROPIC_MODEL_OPUS` | `claude-opus-4-8` | Aktiv |
 | Appetizer | `ANTHROPIC_MODEL_APPETIZER` → `ANTHROPIC_MODEL` | `claude-sonnet-5` | Aktiv |
-| OpenAI-Fallback-Kette | `OPENAI_MODEL` | Default `gpt-4o` | Verfügbar; Aktualität zuletzt nicht online prüfbar (Egress-Proxy) |
+| OpenAI-Fallback-Kette | `OPENAI_MODEL` | `gpt-4.1-mini` (Railway-ENV, seit 2026-08-19) | Aktiv; non-reasoning, kein Abschaltdatum angekündigt (Stand 08/2026) |
 
 Merkregeln:
 
