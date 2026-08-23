@@ -59,6 +59,11 @@ class Briefing(Base):
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
     lang: Mapped[str] = mapped_column(String(5), default="de", nullable=False)
+    # Resilienz V1 (2026-08-23): Typ-Weiche. 'r1' laeuft ueber den Worker,
+    # 'resilienz' wird in-process generiert (routes/resilienz.py). Der
+    # Worker-Claim filtert auf 'r1' — neue Typen NIE ungefiltert in die
+    # r1-Pipeline laufen lassen (Diagnose-Befund: kpa-Praezedenzfall).
+    report_type: Mapped[str] = mapped_column(String(20), default="r1", nullable=False)
     answers: Mapped[dict] = mapped_column(JSONType, default=dict, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
