@@ -1,7 +1,8 @@
 -- Migration: Add strategy_questions and strategy_reports tables for Report 3 (KI-Strategiebericht)
 -- Date: 2026-03-09
 -- Author: Claude Code
--- NOTE: DO NOT auto-apply. Wolf applies this manually after review.
+-- NOTE: Wird wie alle migrations/*.sql automatisch beim App-Start angewandt
+-- (core/migrate.py, idempotent). Historischer Hinweis entfernt (Wartung 2026-08).
 
 BEGIN;
 

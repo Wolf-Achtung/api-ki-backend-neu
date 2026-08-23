@@ -1023,6 +1023,86 @@
       "required": false,
       "output": "html"
     },
+    "automation_roadmap_engine": {
+      "title": "Automatisierungs-Roadmap (Engine)",
+      "path": "automation_roadmap_engine.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "benchmark_engine": {
+      "title": "Benchmark-Vergleich (Engine)",
+      "path": "benchmark_engine.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "business_case_engine_v2": {
+      "title": "Business-Case-Kanonik (Engine)",
+      "path": "business_case_engine_v2.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "business_case_simulation": {
+      "title": "Business-Case-Simulation (Engine)",
+      "path": "business_case_simulation.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "funding_engine_v2": {
+      "title": "Foerderprogramm-Empfehlung (Engine)",
+      "path": "funding_engine_v2.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "recommendations_engine": {
+      "title": "Handlungsempfehlungen (Engine)",
+      "path": "recommendations_engine.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "risk_engine_v2": {
+      "title": "Risiko-Analyse v2 (Engine)",
+      "path": "risk_engine_v2.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "risk_engine_v3": {
+      "title": "Risiko-Analyse v3 (Engine)",
+      "path": "risk_engine_v3.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "tools_engine_v4": {
+      "title": "Tool-Empfehlungen v4 (Engine)",
+      "path": "tools_engine_v4.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "vendor_audit_engine": {
+      "title": "Vendor-Audit (Engine)",
+      "path": "vendor_audit_engine.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
     "resilienz_kernaussage": {
       "title": "Resilienz: Kernaussage",
       "path": "resilienz_kernaussage.md",
@@ -2244,6 +2324,86 @@
           }
         }
       }
+    },
+    "automation_roadmap_engine": {
+      "title": "Automatisierungs-Roadmap (Engine)",
+      "path": "automation_roadmap_engine.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "benchmark_engine": {
+      "title": "Benchmark-Vergleich (Engine)",
+      "path": "benchmark_engine.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "business_case_engine_v2": {
+      "title": "Business-Case-Kanonik (Engine)",
+      "path": "business_case_engine_v2.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "business_case_simulation": {
+      "title": "Business-Case-Simulation (Engine)",
+      "path": "business_case_simulation.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "funding_engine_v2": {
+      "title": "Foerderprogramm-Empfehlung (Engine)",
+      "path": "funding_engine_v2.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "recommendations_engine": {
+      "title": "Handlungsempfehlungen (Engine)",
+      "path": "recommendations_engine.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "risk_engine_v2": {
+      "title": "Risiko-Analyse v2 (Engine)",
+      "path": "risk_engine_v2.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "risk_engine_v3": {
+      "title": "Risiko-Analyse v3 (Engine)",
+      "path": "risk_engine_v3.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "tools_engine_v4": {
+      "title": "Tool-Empfehlungen v4 (Engine)",
+      "path": "tools_engine_v4.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
+    },
+    "vendor_audit_engine": {
+      "title": "Vendor-Audit (Engine)",
+      "path": "vendor_audit_engine.md",
+      "purpose": "Engine-Prompt (deterministisch orchestriert); Wartung 2026-08: Manifest-Luecke geschlossen",
+      "size_aware": false,
+      "required": false,
+      "output": "html"
     }
   }
 }

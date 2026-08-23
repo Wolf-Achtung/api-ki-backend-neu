@@ -24569,9 +24569,17 @@ def run_async(
         pdf_url = pdf_info.get("pdf_url")
         pdf_bytes = pdf_info.get("pdf_bytes")
         pdf_error = pdf_info.get("error")
+        # Wartung 2026-08 (Befund 10): Thin-Page-Check lief nur im Worker-Pfad —
+        # der API-Pfad (run_async) rendert dasselbe Dokument und prüft jetzt gleich.
+        if pdf_bytes:
+            try:
+                from services.platin_qa import scan_pdf_pages
+                scan_pdf_pages(pdf_bytes, run_id=run_id, label="R1")
+            except Exception as _tp_exc:  # pragma: no cover
+                log.warning("[%s] [PLATIN-QA] thin_page-Hook übersprungen: %s", run_id, _tp_exc)
         if DBG_PDF:
             log.debug("[%s] 📄 pdf_render done url=%s bytes=%s error=%s", run_id, bool(pdf_url), len(pdf_bytes or b""), pdf_error)
-        
+
         if not pdf_url and not pdf_bytes:
             error_msg = f"PDF failed: {pdf_error or 'no output'}"
             log.error("[%s] ❌ %s", run_id, error_msg)

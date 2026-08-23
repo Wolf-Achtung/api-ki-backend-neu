@@ -44,9 +44,10 @@ This guide covers the operational aspects of the KI-Readiness Backend for system
    pip install -r requirements.txt
    ```
 
-4. Run database migrations:
+4. Run database migrations (also applied automatically on app start
+   via `core/migrate.py` + `migrations/*.sql`):
    ```bash
-   alembic upgrade head
+   python scripts/migrate.py
    ```
 
 5. Start the server:
