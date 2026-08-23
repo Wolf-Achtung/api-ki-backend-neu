@@ -659,7 +659,7 @@ def render(briefing_obj: Any,
             log.info(f"🌐 Using English template (default): {tpl_path}")
     else:
         # DE: Use REPORT_TEMPLATE_PATH_DE or REPORT_TEMPLATE_PATH (legacy) or default
-        default_tpl = "templates/pdf_template.html"
+        default_tpl = "templates/pdf_template_v7.html"
         env_override_de = os.getenv("REPORT_TEMPLATE_PATH_DE")
         env_override_legacy = os.getenv("REPORT_TEMPLATE_PATH")
         if env_override_de:

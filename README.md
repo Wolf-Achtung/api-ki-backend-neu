@@ -16,8 +16,8 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env with your credentials
 
-# 3. Run migrations
-alembic upgrade head
+# 3. Run migrations (laufen auch automatisch beim App-Start)
+python scripts/migrate.py
 
 # 4. Start server
 uvicorn main:app --host 0.0.0.0 --port 8000

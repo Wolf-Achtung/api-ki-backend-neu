@@ -3929,6 +3929,9 @@ async def _complete_strategy(
         "wettbewerber_anzahl": collected.get("wettbewerber_anzahl"),
         "kundenbindung_typ": collected.get("kundenbindung_typ"),
         "datenreife": collected.get("datenreife"),
+        # Wartung 2026-08 (Diagnose-Befund 5): per Chat erhobene Vision ging
+        # verloren — Feld fehlte nur in DIESEM Upsert (Formular-Weg war korrekt).
+        "s5_vision": collected.get("s5_vision"),
     }
 
     if existing:
