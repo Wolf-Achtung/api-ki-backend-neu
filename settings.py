@@ -309,7 +309,7 @@ class AppSettings(BaseSettings):
             pdf=PDFConfig(
                 service_url=os.getenv("PDF_SERVICE_URL", ""),
                 timeout_ms=int(os.getenv("PDF_TIMEOUT_MS", "120000")),
-                template_path=os.getenv("REPORT_TEMPLATE_PATH", "templates/pdf_template.html"),
+                template_path=os.getenv("REPORT_TEMPLATE_PATH", "templates/pdf_template_v7.html"),
                 max_html_kb=int(os.getenv("MAX_HTML_PAYLOAD_KB", "350")),
                 max_pdf_mb=int(os.getenv("MAX_PDF_SIZE_MB", "20")),
                 warn_size_mb=float(os.getenv("PDF_WARN_SIZE_MB", "10")),

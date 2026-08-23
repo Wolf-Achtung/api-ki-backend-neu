@@ -34,15 +34,16 @@ DDL = [
         is_admin BOOLEAN DEFAULT FALSE
     )"""),
     # login_codes
+    # Wartung 2026-08 (Befund 2): an models.py (LoginCode) angeglichen —
+    # das alte NOT-NULL-code_hash liess ORM-Inserts auf frischer DB scheitern.
     text("""    CREATE TABLE IF NOT EXISTS login_codes (
         id SERIAL PRIMARY KEY,
-        email VARCHAR(255) NOT NULL,
-        code_hash VARCHAR(255) NOT NULL,
+        email VARCHAR(320) NOT NULL,
+        code VARCHAR(64) NOT NULL,
+        purpose VARCHAR(40) DEFAULT 'login',
         created_at TIMESTAMPTZ DEFAULT NOW(),
-        expires_at TIMESTAMPTZ NOT NULL,
-        consumed_at TIMESTAMPTZ,
-        attempts INTEGER DEFAULT 0,
-        ip_address VARCHAR(45)
+        expires_at TIMESTAMPTZ,
+        consumed_at TIMESTAMPTZ
     )"""),
     text("CREATE INDEX IF NOT EXISTS idx_login_codes_email ON login_codes(email)"),
     text("CREATE INDEX IF NOT EXISTS idx_login_codes_expires ON login_codes(expires_at)"),
@@ -66,15 +67,19 @@ DDL = [
         created_at TIMESTAMPTZ DEFAULT NOW()
     )"""),
     # analyses
+    # Wartung 2026-08 (Befund 2): DDL an models.py angeglichen — meta und
+    # raw_sections fehlten; ein Erst-Insert brach auf frisch migrierter DB.
+    # analysis_data/status bleiben fuer Alt-DBs erhalten (harmlos).
     text("""    CREATE TABLE IF NOT EXISTS analyses (
         id SERIAL PRIMARY KEY,
         briefing_id INTEGER,
         user_id INTEGER,
-        analysis_data JSONB DEFAULT '{}'::jsonb,
+        meta JSONB DEFAULT '{}'::jsonb,
+        raw_sections JSONB,
         html TEXT,
-        status VARCHAR(50) DEFAULT 'pending',
         created_at TIMESTAMPTZ DEFAULT NOW()
     )"""),
+    text("ALTER TABLE analyses ADD COLUMN IF NOT EXISTS meta JSONB DEFAULT '{}'::jsonb"),
     # reports
     text("""    CREATE TABLE IF NOT EXISTS reports (
         id SERIAL PRIMARY KEY,

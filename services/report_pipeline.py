@@ -71,7 +71,7 @@ def render_report_html(briefing: Dict[str, Any], snippets: Dict[str, str]) -> st
 
     This function is kept for backward compatibility only.
     """
-    template_path = os.getenv("REPORT_TEMPLATE_PATH", "templates/pdf_template.html")
+    template_path = os.getenv("REPORT_TEMPLATE_PATH", "templates/pdf_template_v7.html")
     with open(template_path, "r", encoding="utf-8") as f:
         template = f.read()
 
