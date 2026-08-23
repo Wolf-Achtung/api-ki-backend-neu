@@ -135,6 +135,21 @@ class TestSubmitValidation:
             db.close()
 
 
+class TestKatalogEndpoint:
+
+    def test_katalog_braucht_login(self, client):
+        assert client.get("/api/resilienz/katalog").status_code == 401
+
+    def test_katalog_liefert_22_fragen_ohne_gewichte(self, client, auth_headers):
+        r = client.get("/api/resilienz/katalog", headers=auth_headers)
+        assert r.status_code == 200
+        data = r.json()
+        assert len(data["blocks"]) == 6
+        assert sum(len(b["questions"]) for b in data["blocks"]) == 22
+        # Gewichte/Scoring-Interna bleiben serverseitig
+        assert "weight" not in str(data)
+
+
 class TestOwnership:
 
     def test_fremder_check_403(self, client, auth_headers, monkeypatch):

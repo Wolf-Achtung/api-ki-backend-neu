@@ -95,6 +95,30 @@ def _load_owned_briefing(briefing_id: int, email: str, db: Session):
     return briefing
 
 
+@router.get("/katalog")
+async def resilienz_katalog(request: Request):
+    """Fragenkatalog fuers Frontend — eine Quelle, keine Duplikation."""
+    _require_user_email(request)
+    from services.resilienz_score import load_katalog
+
+    katalog = load_katalog("de")
+    return {
+        "version": katalog["version"],
+        "benchmark_minuten": katalog["benchmark_minuten"],
+        "blocks": [
+            {
+                "id": b["id"],
+                "titel": b["titel"],
+                "questions": [
+                    {"id": q["id"], "text": q["text"], "stufen": q["stufen"]}
+                    for q in b["questions"]
+                ],
+            }
+            for b in katalog["blocks"]
+        ],
+    }
+
+
 @router.post("/submit", status_code=202)
 async def submit_resilienz(
     payload: ResilienzSubmitIn,
