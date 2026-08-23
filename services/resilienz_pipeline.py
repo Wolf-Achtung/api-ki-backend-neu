@@ -108,8 +108,10 @@ def build_zeitstrahl_svg(reaktionsluecke_label: str, benchmark_minuten: int) -> 
         f'<rect x="0" y="26" width="60" height="18" rx="4" fill="#c0392b"/>'
         f'<text x="70" y="40" font-size="13" font-weight="bold" fill="#c0392b">~{benchmark_minuten} Minuten</text>'
         f'<text x="0" y="78" font-size="13" fill="#333">Ihre Organisation (geschätzt aus Ihren Angaben)</text>'
-        f'<rect x="0" y="86" width="520" height="18" rx="4" fill="#5b6770"/>'
-        f'<text x="530" y="100" font-size="13" font-weight="bold" fill="#333">{reaktionsluecke_label}</text>'
+        f'<rect x="0" y="86" width="400" height="18" rx="4" fill="#5b6770"/>'
+        # KIS-1259: Label stand bei x=530 und lief aus dem 640er-viewBox
+        # ("mehr als 8 Stunde") — kuerzerer Balken, Label mit Platz daneben.
+        f'<text x="410" y="100" font-size="13" font-weight="bold" fill="#333">{reaktionsluecke_label}</text>'
         "</svg>"
     )
 
@@ -153,16 +155,30 @@ def _build_llm_vars(result: Dict[str, Any], answers: Dict[str, int], katalog: Di
 
 
 def _llm_section(section: str, vars_dict: Dict[str, Any], lang: str) -> Optional[str]:
-    """Ein LLM-Absatz; None bei jedem Fehler (Aufrufer hat Fallback)."""
+    """Ein LLM-Absatz; None bei jedem Fehler (Aufrufer hat Fallback).
+
+    KIS-1259: bewusst OHNE should_use_anthropic — dessen ANTHROPIC_SECTIONS-
+    Whitelist sortierte die neuen Sektionsnamen still aus (nur debug-Log),
+    und der Report fiel unbemerkt auf die deterministischen Texte zurueck.
+    Resilienz nutzt immer Anthropic; ohne Client greift der Fallback —
+    jetzt mit sichtbarem Log in beiden Richtungen.
+    """
+    import time as _time
     try:
-        from services.anthropic_client import call_anthropic, should_use_anthropic
+        from services.anthropic_client import call_anthropic, get_anthropic_client
         from services.prompt_loader import load_prompt
-        if not should_use_anthropic(section):
+        if get_anthropic_client() is None:
+            log.warning("[RESILIENZ] LLM-Sektion %s uebersprungen: kein Anthropic-Client", section)
             return None
         prompt = load_prompt(section, lang, vars_dict)
+        _t0 = _time.time()
         text = call_anthropic(prompt, section=section, max_tokens=900)
         if text and text.strip():
+            log.info("[RESILIENZ] LLM-Sektion %s ok (%.1fs, %d Zeichen)",
+                     section, _time.time() - _t0, len(text))
             return str(text).strip()
+        log.warning("[RESILIENZ] LLM-Sektion %s leer (%.1fs) — deterministischer Fallback",
+                    section, _time.time() - _t0)
     except Exception as exc:
         log.warning("[RESILIENZ] LLM-Sektion %s fail-open: %s", section, str(exc)[:200])
     return None
@@ -193,6 +209,14 @@ def render_resilienz_html(briefing: Any) -> Dict[str, Any]:
     from utils.report_display_id import get_report_display_id
 
     rl = result["reaktionsluecke"]
+    # KIS-1259: Deterministischer Befund-Fallback war 6x derselbe Satz.
+    # Jetzt traegt jede Empfehlung ihre schwaechste Frage + Antwort.
+    frage_map = {q["id"]: q for b in katalog["blocks"] for q in b["questions"]}
+    for e in empfehlungen:
+        block = next(b for b in katalog["blocks"] if b["id"] == e["block"])
+        weakest_qid = min((q["id"] for q in block["questions"]), key=lambda qid: answers_int[qid])
+        e["schwaechste_frage"] = frage_map[weakest_qid]["text"]
+        e["schwaechste_antwort"] = frage_map[weakest_qid]["stufen"][answers_int[weakest_qid] - 1]
     blocks_ctx = []
     for block in katalog["blocks"]:
         bid = block["id"]
@@ -308,6 +332,7 @@ def render_resilienz_pdf(html: str, briefing_id: int) -> Dict[str, Any]:
     from datetime import datetime as _dt, timezone as _tz
 
     from services.pdf_client import build_footer_template, render_pdf_from_html
+    from utils.report_display_id import get_report_display_id
     return render_pdf_from_html(
         html,
         meta={"briefing_id": briefing_id, "report_type": "resilienz"},
@@ -315,7 +340,9 @@ def render_resilienz_pdf(html: str, briefing_id: int) -> Dict[str, Any]:
             "printBackground": True,
             "displayHeaderFooter": True,
             "headerTemplate": "<div></div>",
-            "footerTemplate": build_footer_template(str(briefing_id), _dt.now(_tz.utc).strftime("%d.%m.%Y"), lang="de"),
+            # KIS-1259: Footer zeigte die rohe Briefing-ID (1142), der
+            # Kopf die Display-ID (KIS-1259) — jetzt einheitlich.
+            "footerTemplate": build_footer_template(get_report_display_id(briefing_id), _dt.now(_tz.utc).strftime("%d.%m.%Y"), lang="de"),
             "margin": {"top": "14mm", "right": "14mm", "bottom": "20mm", "left": "14mm"},
         },
     )

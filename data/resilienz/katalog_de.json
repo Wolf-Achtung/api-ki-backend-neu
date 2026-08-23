@@ -7,7 +7,7 @@
   "blocks": [
     {
       "id": "A",
-      "titel": "Kronjuwelen",
+      "titel": "Kernsysteme",
       "weight": 0.15,
       "questions": [
         {
@@ -303,7 +303,7 @@
   "deckelregel_begruendung": "Technik kann Ihre organisatorische Obergrenze nicht überwinden.",
   "empfehlungen": {
     "A": {
-      "quick_win": "Kronjuwelen-Liste: 30-Minuten-Übung mit der Frage „Was würde ein Angreifer bei uns als Geisel nehmen?“",
+      "quick_win": "Kernsysteme-Liste: 30-Minuten-Übung mit der Frage „Was würde ein Angreifer bei uns als Geisel nehmen?“",
       "ausbau": "Kaskadenkarte-Workshop"
     },
     "B": {

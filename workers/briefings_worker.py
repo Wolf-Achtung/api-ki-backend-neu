@@ -440,6 +440,19 @@ def process_briefing(db: Session, briefing: Briefing) -> bool:
         _current_briefing_id = None
 
 
+def _ensure_migrations() -> None:
+    """KIS-1259: Beim Deploy startete der Worker vor dem Web-Container und
+    scheiterte laut an der noch fehlenden report_type-Spalte. migrate_all
+    ist idempotent — der Worker macht sich jetzt selbst startklar."""
+    try:
+        from core.db import engine
+        from core.migrate import migrate_all
+        migrate_all(engine)
+        log.info("DB migrations ensured (core.migrate)")
+    except Exception as exc:
+        log.warning("Migrations check failed (weiter mit Poll): %s", exc)
+
+
 def run_worker_loop():
     """Main worker loop: poll DB, claim jobs, process, repeat."""
     log.info("=" * 60)
@@ -448,6 +461,7 @@ def run_worker_loop():
     log.info("Poll interval: %s seconds", POLL_INTERVAL)
     log.info("Stale briefing timeout: %s seconds", STALE_BRIEFING_TIMEOUT_SECONDS)
     log.info("Database: %s", "SQLite" if is_sqlite else "PostgreSQL")
+    _ensure_migrations()
     log.info("=" * 60)
 
     # Register signal handlers for graceful shutdown

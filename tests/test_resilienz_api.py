@@ -211,6 +211,19 @@ class TestPipelineRendering:
         with pytest.raises(ValueError, match="nur DE"):
             pipeline.render_resilienz_html(_B())
 
+    def test_fallback_befunde_nicht_repetitiv(self, monkeypatch):
+        # KIS-1259: 6x derselbe Satz -> jetzt schwaechste Angabe je Block
+        out = self._render(monkeypatch, _valid_answers(2, F1=1, F2=1, F3=1))
+        html = out["html"]
+        assert html.count("den größten Abstand") <= 1
+        assert "NIS2 sagt mir nichts" in html  # schwaechste Angabe Block F
+
+    def test_footer_und_zeitstrahl_kis1259(self, monkeypatch):
+        # Zeitstrahl-Label liegt im viewBox (Balken 400, Text ab 410)
+        out = self._render(monkeypatch, _valid_answers(4, B2=1))
+        assert 'x="410"' in out["html"]
+        assert 'x="530"' not in out["html"]
+
     def test_kein_firmenname_im_report(self, monkeypatch):
         # Invariante: Der Check erhebt keinen Firmennamen — im HTML darf
         # kein Feld/Label danach fragen.
