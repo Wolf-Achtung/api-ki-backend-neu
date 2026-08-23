@@ -1,0 +1,330 @@
+{
+  "module": "resilienz",
+  "version": "1.0",
+  "lang": "de",
+  "_kommentar": "Fachliche Referenz: resilienz-check-modul.md (2026-08-23). Fragen, Stufen, Gewichte und Regeln werden hier NICHT umformuliert — nur technisch abgebildet. Weitere Sprachen: katalog_<lang>.json mit identischen IDs/Gewichten, nur Texte übersetzt.",
+  "benchmark_minuten": 15,
+  "blocks": [
+    {
+      "id": "A",
+      "titel": "Kronjuwelen",
+      "weight": 0.15,
+      "questions": [
+        {
+          "id": "A1",
+          "text": "Wissen Sie, welche 3–5 Systeme oder Datenbestände Ihr Unternehmen existenziell braucht?",
+          "stufen": [
+            "Nie systematisch überlegt",
+            "Grob im Kopf der Geschäftsführung",
+            "Dokumentierte Liste vorhanden",
+            "Dokumentiert, mit Verantwortlichen und jährlicher Überprüfung"
+          ]
+        },
+        {
+          "id": "A2",
+          "text": "Wenn Sie ein Angreifer wären: Wüssten Sie, was Sie bei sich selbst stehlen, verschlüsseln oder als Geisel nehmen würden — und über welchen Weg?",
+          "stufen": [
+            "Nein",
+            "Vage Vorstellung",
+            "Die wichtigsten Angriffswege sind benannt",
+            "Angriffswege dokumentiert und mit Fachleuten durchgespielt"
+          ]
+        },
+        {
+          "id": "A3",
+          "text": "Wer außer Ihren eigenen Leuten hat Zugriff auf Ihre wichtigsten Systeme (IT-Dienstleister, Softwareanbieter, Fernwartung)?",
+          "stufen": [
+            "Weiß ich nicht genau",
+            "Ungefähr bekannt",
+            "Vollständige Liste vorhanden",
+            "Liste vorhanden, Zugriffe zeitlich begrenzt und protokolliert"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "titel": "Erkennen",
+      "weight": 0.20,
+      "questions": [
+        {
+          "id": "B1",
+          "text": "Würden Sie einen laufenden Angriff auf Ihre Systeme bemerken — und wodurch?",
+          "stufen": [
+            "Vermutlich erst, wenn etwas nicht mehr funktioniert",
+            "Durch Virenschutz-Warnungen auf einzelnen Geräten",
+            "Zentrale Überwachung (selbst oder Dienstleister)",
+            "Aktive Frühwarnung, die auch ungewöhnliches Verhalten legitimer Zugänge meldet"
+          ]
+        },
+        {
+          "id": "B2",
+          "text": "Ein Alarm schlägt Samstagnacht um 2 Uhr an. Wann erfährt ein handlungsfähiger Mensch davon?",
+          "stufen": [
+            "Montagmorgen",
+            "Im Lauf des Wochenendes, mit Glück",
+            "Rufbereitschaft (intern oder Dienstleister) reagiert innerhalb von Stunden",
+            "Automatische Sofortmaßnahme plus Benachrichtigung innerhalb von Minuten"
+          ]
+        },
+        {
+          "id": "B3",
+          "text": "Verhält sich ein Zugang ungewöhnlich (Anmeldung nachts, fremdes Land, massenhafter Datenexport) — fällt das auf?",
+          "stufen": [
+            "Nein",
+            "Nur bei manueller Kontrolle",
+            "Teilweise automatische Hinweise (z.B. M365-Warnungen aktiviert)",
+            "Systematische Verhaltensüberwachung mit definierten Reaktionen"
+          ]
+        },
+        {
+          "id": "B4",
+          "text": "Wie geht Ihr Umfeld mit Sicherheitswarnungen um?",
+          "stufen": [
+            "Werden meist weggeklickt",
+            "Werden gesammelt, aber selten geprüft",
+            "Werden geprüft, aber ohne feste Zuständigkeit",
+            "Feste Zuständigkeit, Fehlalarme werden reduziert statt ignoriert"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "titel": "Entscheiden",
+      "weight": 0.25,
+      "questions": [
+        {
+          "id": "C1",
+          "text": "Ein System ist mutmaßlich kompromittiert. Wer darf es sofort vom Netz nehmen?",
+          "stufen": [
+            "Nur die Geschäftsführung nach Rücksprache",
+            "IT/Dienstleister nach eingeholter Freigabe",
+            "Benannte Personen nach vorab definierten Kriterien, Info danach",
+            "Automatische Trennung bei definierten Signalen, menschliche Prüfung danach"
+          ]
+        },
+        {
+          "id": "C2",
+          "text": "Gibt es schriftlich festgelegte Wenn-dann-Entscheidungen für den Ernstfall („Wenn X passiert, wird sofort Y getan — ohne Rückfrage“)?",
+          "stufen": [
+            "Nein",
+            "Sinngemäß im Kopf einzelner Personen",
+            "Für die wichtigsten Szenarien dokumentiert",
+            "Dokumentiert, freigegeben und mindestens einmal geübt"
+          ]
+        },
+        {
+          "id": "C3",
+          "text": "Der Hauptentscheider ist im Flugzeug, im Urlaub oder krank. Was passiert?",
+          "stufen": [
+            "Es wird gewartet",
+            "Improvisation",
+            "Benannte Stellvertretung mit klarer Befugnis",
+            "Entscheidungen hängen nicht an Einzelpersonen (Playbooks + Stellvertreterkette)"
+          ]
+        },
+        {
+          "id": "C4",
+          "text": "Dürfen Schutzmaßnahmen zuerst ausgeführt und danach gemeldet werden — oder braucht jede Maßnahme vorher eine Genehmigung?",
+          "stufen": [
+            "Immer erst Genehmigung",
+            "Genehmigung mit 1–2 Unterschriften",
+            "Vorab genehmigte Maßnahmen für bekannte Fälle",
+            "Handeln vor Melden ist für definierte Fälle ausdrücklich erlaubt"
+          ]
+        },
+        {
+          "id": "C5",
+          "text": "Falls etwas automatisiert ist: Was geschah nach dem letzten Fehlgriff der Automatik?",
+          "stufen": [
+            "Automatisierung gibt es nicht / wurde nach einem Fehler abgeschaltet",
+            "Seither muss ein Mensch alles freigeben",
+            "Der Fehler wurde analysiert, die Regel verbessert",
+            "Fehlgriffe werden systematisch ausgewertet, Automatisierung schrittweise erweitert"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D",
+      "titel": "Handeln & Wiederherstellen",
+      "weight": 0.20,
+      "questions": [
+        {
+          "id": "D1",
+          "text": "Existiert ein Notfallplan, der auch dann verfügbar ist, wenn Ihre IT ausgefallen ist (gedruckt oder auf getrenntem Gerät)?",
+          "stufen": [
+            "Nein",
+            "Digital irgendwo abgelegt",
+            "Aktuell und offline verfügbar",
+            "Aktuell, offline verfügbar, alle Beteiligten kennen ihn"
+          ]
+        },
+        {
+          "id": "D2",
+          "text": "Ihre Datensicherung: getrennt vom Netzwerk — und wann wurde die Wiederherstellung zuletzt wirklich getestet?",
+          "stufen": [
+            "Backup vorhanden, nie getestet / nicht getrennt",
+            "Getestet vor mehr als einem Jahr",
+            "Jährlich getestet, eine Kopie offline/getrennt",
+            "Regelmäßig getestet inkl. Zeitmessung, Offline-Kopie, definierte Wiederanlaufreihenfolge"
+          ]
+        },
+        {
+          "id": "D3",
+          "text": "Totalausfall heute Nacht: Wann können Sie wieder arbeiten?",
+          "stufen": [
+            "Keine Ahnung",
+            "Wochen",
+            "Wenige Tage",
+            "Unter 24 Stunden, belegt durch Test"
+          ]
+        },
+        {
+          "id": "D4",
+          "text": "Liegen die Notfallkontakte (IT-Dienstleister, Cyber-Versicherung, Meldestellen, ggf. Anwalt) griffbereit außerhalb der IT?",
+          "stufen": [
+            "Nein",
+            "Verstreut vorhanden",
+            "Zentrale Liste, offline verfügbar",
+            "Liste aktuell, Erreichbarkeiten und Vertragspflichten (Meldefristen!) geprüft"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E",
+      "titel": "Lernen & Üben",
+      "weight": 0.10,
+      "questions": [
+        {
+          "id": "E1",
+          "text": "Haben Sie den Ernstfall je durchgespielt (Planübung am Tisch genügt)?",
+          "stufen": [
+            "Nie",
+            "Einmal, länger her",
+            "Jährlich",
+            "Regelmäßig, mit dokumentierten Konsequenzen"
+          ]
+        },
+        {
+          "id": "E2",
+          "text": "Führen Vorfälle und Beinahe-Vorfälle bei Ihnen zu konkreten Änderungen?",
+          "stufen": [
+            "Werden nicht erfasst",
+            "Werden besprochen, versanden",
+            "Werden ausgewertet, meist mit Maßnahme",
+            "Fester Lernprozess: jeder Vorfall verändert Regeln, Technik oder Zuständigkeit"
+          ]
+        },
+        {
+          "id": "E3",
+          "text": "Bekommt Vorbeugung bei Ihnen Zeit und Budget — oder erst nach einem Schaden?",
+          "stufen": [
+            "Sicherheit ist Kostenfaktor, wird verschoben",
+            "Budget nur nach Vorfällen",
+            "Festes jährliches Sicherheitsbudget",
+            "Vorbeugung wird gemessen und honoriert (verhinderte Schäden zählen als Leistung)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "F",
+      "titel": "Pflichtenlage",
+      "weight": 0.10,
+      "questions": [
+        {
+          "id": "F1",
+          "text": "Ist Ihre NIS2-Betroffenheit geprüft?",
+          "stufen": [
+            "NIS2 sagt mir nichts",
+            "Gehört, nicht geprüft",
+            "Geprüft: nicht betroffen (dokumentiert)",
+            "Betroffen und Maßnahmen eingeleitet / geprüft nicht betroffen, Lieferkettenwirkung bedacht"
+          ]
+        },
+        {
+          "id": "F2",
+          "text": "Kennen Sie Ihre Meldepflichten im Ernstfall (72-Stunden-Frist DSGVO, ggf. NIS2-Meldung, Versicherungsauflagen)?",
+          "stufen": [
+            "Nein",
+            "Grob",
+            "Bekannt, Zuständigkeit benannt",
+            "Bekannt, vorbereitete Meldewege und Textbausteine"
+          ]
+        },
+        {
+          "id": "F3",
+          "text": "Falls Sie eine Cyber-Versicherung haben: Erfüllen Sie nachweislich deren Obliegenheiten (MFA, Backups, Updates)?",
+          "stufen": [
+            "Keine Versicherung / Bedingungen unbekannt",
+            "Versichert, Auflagen nie geprüft",
+            "Auflagen bekannt und größtenteils erfüllt",
+            "Auflagen dokumentiert erfüllt, jährlich geprüft"
+          ]
+        }
+      ]
+    }
+  ],
+  "derived": {
+    "score": "weighted_mean(block_means) * 25",
+    "reaktionsluecke": "min(B2,C1,C2,C3,C4) -> band[1..4]",
+    "ampel": "min(block_means) -> cap(gesamt)"
+  },
+  "reaktionsluecke_bands": [
+    {
+      "min_stufe": 1,
+      "label": "mehr als 8 Stunden",
+      "ampel": "rot",
+      "aussage": "Ein automatisierter Angriff ist ~30-mal schneller abgeschlossen, als Ihre Organisation entscheiden kann."
+    },
+    {
+      "min_stufe": 2,
+      "label": "2–8 Stunden",
+      "ampel": "rot",
+      "aussage": "Ihre Abläufe stammen aus einer Zeit, in der Angriffe Tage dauerten."
+    },
+    {
+      "min_stufe": 3,
+      "label": "15 Minuten – 2 Stunden",
+      "ampel": "gelb",
+      "aussage": "Sie können reagieren — aber nicht in jedem Fall schnell genug."
+    },
+    {
+      "min_stufe": 4,
+      "label": "unter 15 Minuten",
+      "ampel": "gruen",
+      "aussage": "Ihre Entscheidungswege sind auf Maschinengeschwindigkeit vorbereitet."
+    }
+  ],
+  "ehrlichkeitsregel": "geschätzte Reaktionslücke auf Basis Ihrer Angaben",
+  "deckelregel_begruendung": "Technik kann Ihre organisatorische Obergrenze nicht überwinden.",
+  "empfehlungen": {
+    "A": {
+      "quick_win": "Kronjuwelen-Liste: 30-Minuten-Übung mit der Frage „Was würde ein Angreifer bei uns als Geisel nehmen?“",
+      "ausbau": "Kaskadenkarte-Workshop"
+    },
+    "B": {
+      "quick_win": "Vorhandene M365-/Cloud-Warnungen aktivieren; Zuständigkeit für Alarme benennen",
+      "ausbau": "Frühwarn-Setup mit Systemhaus-Partner"
+    },
+    "C": {
+      "quick_win": "EINE Wenn-dann-Entscheidung schriftlich festlegen und von der GF freigeben lassen",
+      "ausbau": "Entscheidungs-Playbook-Paket"
+    },
+    "D": {
+      "quick_win": "Backup-Wiederherstellung eines einzelnen Systems testen, Dauer notieren; Notfallkontakte ausdrucken",
+      "ausbau": "Notfallplan + Wiederanlauf-Konzept"
+    },
+    "E": {
+      "quick_win": "60-Minuten-Tischübung mit vorbereitetem Szenario",
+      "ausbau": "Jährliche Tabletop-Übung"
+    },
+    "F": {
+      "quick_win": "NIS2-Betroffenheit mit Checkliste prüfen; Versicherungsbedingungen lesen",
+      "ausbau": "Compliance-Mapping (Brücke zum AI-Act-Modul)"
+    }
+  }
+}
