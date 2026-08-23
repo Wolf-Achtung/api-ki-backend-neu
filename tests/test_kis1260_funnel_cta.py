@@ -18,6 +18,7 @@ class TestResilienzCTA:
         assert "/resilienz.html" in html
         # Wording vermeidet den Begriff Resilienz im sichtbaren Text
         assert "Resilienz-Check" not in html.replace("resilienz.html", "")
+        assert "automatisierten Cyber-Angriff" in html
 
     def test_admin_mail_ohne_cta(self):
         assert "Reaktionslücke ermitteln" not in _mail(recipient="admin")

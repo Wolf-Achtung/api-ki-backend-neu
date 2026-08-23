@@ -186,6 +186,8 @@ class TestPipelineRendering:
         assert "mehr als 8 Stunden" in html
         assert "<svg" in html  # Zeitstrahl + Radar
         assert "Selbstauskunft" in html
+        assert "Cyberangriffs-Check" in html  # Produktname (Wolfs Wahl, 2026-08-23)
+        assert "KI-Resilienz-Check" not in html
         assert out["meta"]["scores"]["reaktionsluecke"]["min_stufe"] == 1
 
     def test_deckelregel_sichtbar(self, monkeypatch):
