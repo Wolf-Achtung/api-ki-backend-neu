@@ -305,6 +305,8 @@ def generate_resilienz_report(briefing_id: int) -> None:
 
 
 def render_resilienz_pdf(html: str, briefing_id: int) -> Dict[str, Any]:
+    from datetime import datetime as _dt, timezone as _tz
+
     from services.pdf_client import build_footer_template, render_pdf_from_html
     return render_pdf_from_html(
         html,
@@ -313,7 +315,7 @@ def render_resilienz_pdf(html: str, briefing_id: int) -> Dict[str, Any]:
             "printBackground": True,
             "displayHeaderFooter": True,
             "headerTemplate": "<div></div>",
-            "footerTemplate": build_footer_template(str(briefing_id), lang="de"),
+            "footerTemplate": build_footer_template(str(briefing_id), _dt.now(_tz.utc).strftime("%d.%m.%Y"), lang="de"),
             "margin": {"top": "14mm", "right": "14mm", "bottom": "20mm", "left": "14mm"},
         },
     )
