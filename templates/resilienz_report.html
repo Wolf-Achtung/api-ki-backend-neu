@@ -26,7 +26,9 @@
   table { width: 100%; border-collapse: collapse; margin: 10px 0; }
   th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
-  .qw { background: #f4f7f9; border-radius: 6px; padding: 10px 12px; margin: 8px 0; }
+  .qw { background: #f4f7f9; border-radius: 6px; padding: 10px 12px; margin: 8px 0;
+        page-break-inside: avoid; }
+  .befund { page-break-inside: avoid; }
   .qw b { color: var(--blau); }
   .disclaimer { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 10px; font-size: 10px; color: var(--muted); }
   .svgwrap { max-width: 520px; margin: 12px auto; }
@@ -95,9 +97,12 @@
     {{ befunde_html | safe }}
   {% else %}
     {% for e in empfehlungen %}
+      <div class="befund">
       <h3>Block {{ e.block }} — {{ e.titel }} (Stufe {{ "%.1f" | format(e.mean) }})</h3>
-      <p>Ihre Angaben zeigen hier den größten Abstand zur Vorbereitung.
-      Der schnellste Weg zu einem belegbaren Fortschritt steht unten.</p>
+      <p>{% if loop.first %}Hier liegt der größte Abstand zur Vorbereitung.
+      {% endif %}Die schwächste Angabe in diesem Bereich:
+      „{{ e.schwaechste_antwort }}“ — auf die Frage „{{ e.schwaechste_frage }}“.</p>
+      </div>
     {% endfor %}
   {% endif %}
 
