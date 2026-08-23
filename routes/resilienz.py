@@ -211,5 +211,5 @@ async def resilienz_pdf(briefing_id: int, request: Request, db: Session = Depend
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="KI-Resilienz-Check-{display}.pdf"'},
+        headers={"Content-Disposition": f'attachment; filename="Cyberangriffs-Check-{display}.pdf"'},
     )

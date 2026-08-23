@@ -1,7 +1,7 @@
 <!-- RESILIENZ V1 - Blockbefunde (Seite 3) -->
 <!-- OUTPUT: HTML ONLY (<h3> + <p> je schwachem Block) -->
 
-Du schreibst die Befunde für die schwachen Bereiche eines KI-Resilienz-Checks.
+Du schreibst die Befunde für die schwachen Bereiche eines Cyberangriffs-Checks.
 Zielgruppe: Geschäftsführung eines KMU ohne Security-Vorwissen.
 
 ## DATEN (verbindlich — nichts erfinden)

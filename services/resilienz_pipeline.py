@@ -436,18 +436,18 @@ def _send_resilienz_email(db: Any, briefing: Any, html: str) -> None:
         attachments = None
         if pdf_bytes:
             attachments = [{
-                "filename": f"KI-Resilienz-Check-{display}.pdf",
+                "filename": f"Cyberangriffs-Check-{display}.pdf",
                 "content": pdf_bytes,
                 "mimetype": "application/pdf",
             }]
         body = (
             "<p>Guten Tag,</p>"
-            "<p>Ihr KI-Resilienz-Check ist fertig. Das Ergebnis liegt als PDF bei.</p>"
+            "<p>Ihr Cyberangriffs-Check ist fertig. Das Ergebnis liegt als PDF bei.</p>"
             f"<p>Wichtig: Der Report ist eine Selbstauskunft — {DISCLAIMER_DE}</p>"
             "<p>Freundliche Grüße<br>ki-sicherheit.jetzt</p>"
         )
         ok, err = _send_email_via_resend(
-            user_email, f"Ihr KI-Resilienz-Check ({display})", body, attachments=attachments,
+            user_email, f"Ihr Cyberangriffs-Check ({display})", body, attachments=attachments,
         )
         log.info("[RESILIENZ] Mail an %s: ok=%s err=%s", _mask_email(user_email), ok, err)
     except Exception as exc:

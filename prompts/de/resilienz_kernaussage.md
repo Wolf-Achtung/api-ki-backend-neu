@@ -1,7 +1,7 @@
 <!-- RESILIENZ V1 - Kernaussage (Seite 1) -->
 <!-- OUTPUT: HTML ONLY (1-2 <p>-Absaetze) -->
 
-Du schreibst den Kernabsatz für Seite 1 eines KI-Resilienz-Checks.
+Du schreibst den Kernabsatz für Seite 1 eines Cyberangriffs-Checks.
 Zielgruppe: Geschäftsführung eines KMU ohne Security-Vorwissen.
 
 ## DATEN (verbindlich — nichts erfinden)

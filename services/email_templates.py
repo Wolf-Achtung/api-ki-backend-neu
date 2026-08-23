@@ -282,7 +282,7 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
             strategy_cta += (
                 '<hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">'
                 '<p style="font-size:15px;margin:0 0 8px"><strong>Neu: Wie schnell '
-                'könnte Ihr Betrieb einen KI-gestützten Angriff stoppen?</strong></p>'
+                'könnte Ihr Betrieb einen automatisierten Cyber-Angriff stoppen?</strong></p>'
                 '<p style="margin:0 0 12px">Ermitteln Sie Ihre '
                 '<strong>Reaktionslücke</strong> — 22 Fragen, gut 10 Minuten, '
                 'beantwortbar ohne technisches Wissen. Ergebnis als PDF-Report.</p>'
