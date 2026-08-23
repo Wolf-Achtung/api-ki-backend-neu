@@ -132,9 +132,28 @@ def recover_stale_briefings(db: Session) -> int:
     try:
         if is_sqlite:
             # SQLite: Simple update
+            # Resilienz V1: Nicht-r1-Briefings laufen in-process; ein Requeue
+            # auf 'accepted' waere ein Zombie (kein Worker zieht sie). Sie
+            # werden stattdessen ehrlich als failed markiert.
+            stale_other = db.query(Briefing).filter(
+                Briefing.status == "processing",
+                Briefing.processing_at < cutoff_time,
+                Briefing.report_type != "r1",
+            ).all()
+            for briefing in stale_other:
+                log.warning(
+                    "🔄 Stale non-r1 briefing %s (%s) -> failed",
+                    briefing.id, briefing.report_type,
+                )
+                briefing.status = "failed"
+                briefing.error = "stale: in-process generation died"
+            if stale_other:
+                db.commit()
+
             stale_briefings = db.query(Briefing).filter(
                 Briefing.status == "processing",
-                Briefing.processing_at < cutoff_time
+                Briefing.processing_at < cutoff_time,
+                Briefing.report_type == "r1",
             ).all()
 
             count = 0
@@ -161,6 +180,7 @@ def recover_stale_briefings(db: Session) -> int:
                     worker_id = NULL
                 WHERE status = 'processing'
                   AND processing_at < :cutoff
+                  AND report_type = 'r1'
                 RETURNING id, processing_at, worker_id
             """),
             {"cutoff": cutoff_time}
@@ -172,7 +192,24 @@ def recover_stale_briefings(db: Session) -> int:
                 row[0], row[1], row[2]
             )
 
-        if result:
+        # Resilienz V1: gestorbene In-process-Generierungen (non-r1) ehrlich
+        # als failed markieren statt sie als Zombies zu requeuen.
+        other = db.execute(
+            text("""
+                UPDATE briefings
+                SET status = 'failed',
+                    error = 'stale: in-process generation died'
+                WHERE status = 'processing'
+                  AND processing_at < :cutoff
+                  AND report_type <> 'r1'
+                RETURNING id, report_type
+            """),
+            {"cutoff": cutoff_time}
+        ).fetchall()
+        for row in other:
+            log.warning("🔄 Stale non-r1 briefing %s (%s) -> failed", row[0], row[1])
+
+        if result or other:
             db.commit()
 
         return len(result)
@@ -202,7 +239,10 @@ def claim_next_briefing(db: Session) -> Optional[Briefing]:
         # SQLite fallback: simple SELECT (not race-safe, but works for dev/test)
         # PLATIN+++ v5.4: Accept both 'accepted' and 'queued'
         briefing = db.query(Briefing).filter(
-            Briefing.status.in_(["accepted", "queued"])
+            Briefing.status.in_(["accepted", "queued"]),
+            # Resilienz V1: Nur r1 gehoert dem Worker; andere Typen werden
+            # in-process generiert und duerfen nicht in die r1-Pipeline.
+            Briefing.report_type == "r1",
         ).order_by(
             Briefing.created_at.asc()  # FIFO by creation time
         ).first()
@@ -223,6 +263,7 @@ def claim_next_briefing(db: Session) -> Optional[Briefing]:
             text("""
                 SELECT id FROM briefings
                 WHERE status IN ('accepted', 'queued')
+                  AND report_type = 'r1'
                 ORDER BY created_at ASC
                 LIMIT 1
                 FOR UPDATE SKIP LOCKED

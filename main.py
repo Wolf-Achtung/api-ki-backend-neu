@@ -262,6 +262,9 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
     # KI-Potenzial-Check Appetizer
     cfg.append(("routes.appetizer", "/api/appetizer", "generate"))
 
+    # KI-Resilienz-Check (V1, Entscheidung 2026-08-23)
+    cfg.append(("routes.resilienz", "/api", "resilienz"))
+
     # News research pipeline (cron-triggered)
     cfg.append(("routes.content", "/api", "content"))
 

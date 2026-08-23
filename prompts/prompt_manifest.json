@@ -1102,6 +1102,28 @@
       "size_aware": false,
       "required": false,
       "output": "html"
+    },
+    "resilienz_kernaussage": {
+      "title": "Resilienz: Kernaussage",
+      "path": "resilienz_kernaussage.md",
+      "purpose": "Seite-1-Absatz des KI-Resilienz-Checks (Reaktionsluecke)",
+      "size_aware": false,
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 900
+      }
+    },
+    "resilienz_befunde": {
+      "title": "Resilienz: Blockbefunde",
+      "path": "resilienz_befunde.md",
+      "purpose": "Befunde je schwachem Block des KI-Resilienz-Checks",
+      "size_aware": false,
+      "required": false,
+      "output": "html",
+      "tokens": {
+        "base": 900
+      }
     }
   },
   "en": {
