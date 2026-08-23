@@ -274,6 +274,22 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
             f'{_sc["button"]}</a></p>'
             f'<p class="muted" style="margin-top:8px">{_sc["tip"]}</p>'
         )
+        # KIS-1260: Funnel-Einstieg fuer den Reaktionsluecken-Check —
+        # gleicher Mechanismus wie der Strategy-CTA. Nur DE (Check ist
+        # V1 deutschsprachig); Wording vermeidet den Begriff "Resilienz".
+        if not _en:
+            _resilienz_url = f"{_brand()['app_url']}/resilienz.html"
+            strategy_cta += (
+                '<hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">'
+                '<p style="font-size:15px;margin:0 0 8px"><strong>Neu: Wie schnell '
+                'könnte Ihr Betrieb einen KI-gestützten Angriff stoppen?</strong></p>'
+                '<p style="margin:0 0 12px">Ermitteln Sie Ihre '
+                '<strong>Reaktionslücke</strong> — 22 Fragen, gut 10 Minuten, '
+                'beantwortbar ohne technisches Wissen. Ergebnis als PDF-Report.</p>'
+                f'<p><a href="{escape(_resilienz_url)}" style="display:inline-block;'
+                'background:#2B6CB0;color:#fff;padding:10px 20px;border-radius:8px;'
+                'text-decoration:none;font-weight:600">Reaktionslücke ermitteln →</a></p>'
+            )
 
     # Add feedback section for user emails only
     feedback_section = ""
