@@ -43,6 +43,8 @@ ALLOWED_EVENTS = frozenset({
     "q1_completed",
     "strategy_submitted",
     "feedback_submitted",
+    "resilienz_started",
+    "resilienz_completed",
 })
 
 _MAX_FIELD = 120

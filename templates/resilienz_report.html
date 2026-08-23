@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>KI-Resilienz-Check {{ display_id }}</title>
+<style>
+  :root {
+    --ink: #1c2733; --muted: #5b6770; --line: #e3e7ea;
+    --rot: #c0392b; --gelb: #d4a017; --gruen: #1e7d46; --blau: #1e5aa0;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: var(--ink); margin: 0; font-size: 13px; line-height: 1.55; }
+  .page { page-break-after: always; padding: 10mm 4mm; }
+  .page:last-child { page-break-after: auto; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 0 0 12px; border-bottom: 2px solid var(--line); padding-bottom: 6px; }
+  h3 { font-size: 14px; margin: 18px 0 6px; }
+  .kicker { color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-size: 11px; }
+  .meta { color: var(--muted); font-size: 11px; margin-bottom: 26px; }
+  .kernzahl { font-size: 34px; font-weight: 700; margin: 18px 0 2px; }
+  .aussage { font-size: 15px; margin: 14px 0; }
+  .badge { display: inline-block; padding: 3px 12px; border-radius: 12px; color: #fff; font-weight: 600; font-size: 12px; }
+  .hinweis { color: var(--muted); font-size: 11px; }
+  .box { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin: 12px 0; }
+  .box.deckel { border-left: 4px solid var(--rot); }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+  .qw { background: #f4f7f9; border-radius: 6px; padding: 10px 12px; margin: 8px 0; }
+  .qw b { color: var(--blau); }
+  .disclaimer { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 10px; font-size: 10px; color: var(--muted); }
+  .svgwrap { max-width: 520px; margin: 12px auto; }
+  .score-ring { font-size: 42px; font-weight: 700; }
+  ol.montag li { margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<!-- Seite 1: Die eine Zahl -->
+<div class="page">
+  <div class="kicker">KI-Resilienz-Check · ki-sicherheit.jetzt</div>
+  <h1>Ihre Reaktionslücke</h1>
+  <div class="meta">Report {{ display_id }} · {{ datum }} · Selbstauskunft, keine Sicherheitsprüfung</div>
+
+  <div class="kernzahl" style="color: {{ ampel_farbe }};">{{ reaktionsluecke.label }}</div>
+  <div class="hinweis">{{ ehrlichkeitsregel }} — Benchmark: ein automatisierter Angriff ist in ~{{ benchmark_minuten }} Minuten abgeschlossen.</div>
+
+  <div class="svgwrap">{{ zeitstrahl_svg | safe }}</div>
+
+  <p class="aussage"><strong>{{ reaktionsluecke.aussage }}</strong></p>
+
+  {% if kernaussage_html %}
+    {{ kernaussage_html | safe }}
+  {% else %}
+    <p>Die Reaktionslücke entsteht aus Ihrer langsamsten Stelle, nicht aus dem Durchschnitt:
+    Bestimmend {% if reaktionsluecke.treiber | length == 1 %}ist Ihre Antwort{% else %}sind Ihre Antworten{% endif %}
+    zu {{ reaktionsluecke.treiber | join(", ") }}. Genau dort setzt der erste Schritt an.</p>
+  {% endif %}
+</div>
+
+<!-- Seite 2: Score + Blockprofil -->
+<div class="page">
+  <h2>Resilienz-Score und Blockprofil</h2>
+  <p><span class="score-ring">{{ score }}</span> <span class="hinweis">/ 100</span>
+     &nbsp; <span class="badge" style="background: {{ ampel_farbe }};">Gesamtampel: {{ ampel_label }}</span></p>
+
+  {% if gedeckelt %}
+  <div class="box deckel">
+    <strong>Warum die Ampel nicht besser ist als Ihr schwächster Block:</strong>
+    {{ deckelregel_begruendung }} Die Gesamtampel folgt dem schwächsten Bereich —
+    ein starker Durchschnitt gleicht eine blockierte Entscheidungskette nicht aus.
+  </div>
+  {% endif %}
+
+  <div class="svgwrap">{{ radar_svg | safe }}</div>
+
+  <table>
+    <tr><th>Block</th><th>Bereich</th><th>Stufe (1–4)</th><th>Ampel</th></tr>
+    {% for b in blocks %}
+    <tr>
+      <td>{{ b.id }}</td>
+      <td>{{ b.titel }}</td>
+      <td>{{ "%.1f" | format(b.mean) }}</td>
+      <td><span class="badge" style="background: {{ b.farbe }};">{{ b.ampel | capitalize }}</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<!-- Seite 3: Befunde + Quick Wins -->
+<div class="page">
+  <h2>Befunde und erste Schritte</h2>
+
+  {% if befunde_html %}
+    {{ befunde_html | safe }}
+  {% else %}
+    {% for e in empfehlungen %}
+      <h3>Block {{ e.block }} — {{ e.titel }} (Stufe {{ "%.1f" | format(e.mean) }})</h3>
+      <p>Ihre Angaben zeigen hier den größten Abstand zur Vorbereitung.
+      Der schnellste Weg zu einem belegbaren Fortschritt steht unten.</p>
+    {% endfor %}
+  {% endif %}
+
+  <h3>Sofort machbar (diese Woche, intern)</h3>
+  {% for e in empfehlungen %}
+  <div class="qw">
+    <b>Block {{ e.block }} · {{ e.titel }}:</b> {{ e.quick_win }}
+    <div class="hinweis">Ausbaustufe: {{ e.ausbau }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Seite 4: Pflichtenlage -->
+<div class="page">
+  <h2>Pflichtenlage (NIS2 · DSGVO · Versicherung)</h2>
+  <p>Ihre Angaben aus Block F — der rechtliche Rahmen Ihrer Vorbereitung:</p>
+  <table>
+    <tr><th>Frage</th><th>Ihre Angabe</th></tr>
+    {% for b in blocks if b.id == "F" %}
+      {% for a in b.antworten %}
+      <tr><td>{{ a.text }}</td><td>{{ a.stufe_text }} <span class="hinweis">(Stufe {{ a.stufe }})</span></td></tr>
+      {% endfor %}
+    {% endfor %}
+  </table>
+  <p class="hinweis">Hinweis: Die Bewertung Ihrer NIS2-Betroffenheit und Ihrer Meldepflichten
+  ersetzt keine Rechtsberatung.</p>
+</div>
+
+<!-- Seite 5: Was Sie am Montag tun -->
+<div class="page">
+  <h2>Was Sie am Montag tun</h2>
+  <ol class="montag">
+    {% for e in empfehlungen[:2] %}
+    <li><strong>{{ e.titel }}:</strong> {{ e.quick_win }}</li>
+    {% endfor %}
+    <li><strong>Reaktionslücke messen statt schätzen:</strong> Der nächste Schritt ist ein
+    Kaskadenkarte-Workshop zu EINER kritischen Geschäftsfunktion — dort wird aus der
+    Schätzung eine gemessene Zahl mit priorisiertem Maßnahmenplan.</li>
+  </ol>
+
+  <div class="disclaimer">
+    {{ disclaimer }}<br>
+    Methodisch inspiriert von Chris Perkins&#8217; Resilienz-Ansatz, für deutsche KMU adaptiert.
+  </div>
+</div>
+
+</body>
+</html>
