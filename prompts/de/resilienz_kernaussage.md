@@ -11,12 +11,17 @@ Zielgruppe: Geschäftsführung eines KMU ohne Security-Vorwissen.
 - Kernaussage-Vorlage: {{reaktionsluecke_aussage}}
 - Bestimmende Antworten (der langsamste Faktor begrenzt das System):
 {{treiber_antworten}}
+- Betriebskontext (aus dem KI-Status-Check; "unbekannt" = nicht vorhanden):
+{{betriebskontext}}
 
 ## AUFGABE
 
 Schreibe 1–2 kurze Absätze (zusammen 60–110 Wörter) als HTML (<p>…</p>):
 1. Was die Reaktionslücke für diesen Betrieb konkret bedeutet — abgeleitet
-   aus den bestimmenden Antworten, nicht aus Allgemeinplätzen.
+   aus den bestimmenden Antworten, nicht aus Allgemeinplätzen. Ist der
+   Betriebskontext bekannt, verankere die Folgen dort (Beispiel
+   Postproduktion/Medien: laufende Projekte, Rohmaterial, NDA-Material,
+   Abgabetermine, Kundendaten — nur was zum Kontext passt).
 2. Der eine Satz, warum der langsamste Faktor zählt und nicht der Durchschnitt.
 
 ## REGELN (strikt)

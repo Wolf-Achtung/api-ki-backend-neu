@@ -224,6 +224,34 @@ class TestPipelineRendering:
         assert 'x="410"' in out["html"]
         assert 'x="530"' not in out["html"]
 
+    def test_betriebskontext_auf_seite_1(self, monkeypatch):
+        # KIS-1260: r1-Kontext personalisiert Kopfzeile und LLM-Vars
+        import services.resilienz_pipeline as pipeline
+        captured = {}
+
+        def fake_llm(section, vars_dict, lang, max_tokens=900):
+            captured[section] = dict(vars_dict)
+            return None
+
+        monkeypatch.setattr(pipeline, "_llm_section", fake_llm)
+
+        class _B:
+            id = 4713
+            lang = "de"
+            answers = _valid_answers()
+
+        out = pipeline.render_resilienz_html(
+            _B(), r1_kontext={"branche": "Medien & Kreativwirtschaft",
+                              "sparte": "Postproduktion/VFX/Animation",
+                              "hauptleistung": "Postproduktion für Werbefilme"},
+        )
+        assert "Medien &amp; Kreativwirtschaft (Postproduktion/VFX/Animation)" in out["html"]
+        assert "Postproduktion für Werbefilme" in captured["resilienz_kernaussage"]["betriebskontext"]
+
+    def test_ohne_kontext_unveraendert(self, monkeypatch):
+        out = self._render(monkeypatch, _valid_answers(3))
+        assert "aus dem KI-Status-Check" not in out["html"]
+
     def test_kein_firmenname_im_report(self, monkeypatch):
         # Invariante: Der Check erhebt keinen Firmennamen — im HTML darf
         # kein Feld/Label danach fragen.

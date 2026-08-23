@@ -42,7 +42,7 @@
 <div class="page">
   <div class="kicker">KI-Resilienz-Check · ki-sicherheit.jetzt</div>
   <h1>Ihre Reaktionslücke</h1>
-  <div class="meta">Report {{ display_id }} · {{ datum }} · Selbstauskunft, keine Sicherheitsprüfung</div>
+  <div class="meta">Report {{ display_id }} · {{ datum }} · Selbstauskunft, keine Sicherheitsprüfung{% if betriebskontext %}<br>Ihr Betrieb (aus dem KI-Status-Check): {{ betriebskontext }}{% endif %}</div>
 
   <div class="kernzahl" style="color: {{ ampel_farbe }};">{{ reaktionsluecke.label }}</div>
   <div class="hinweis">{{ ehrlichkeitsregel }} — Benchmark: ein automatisierter Angriff ist in ~{{ benchmark_minuten }} Minuten abgeschlossen.</div>

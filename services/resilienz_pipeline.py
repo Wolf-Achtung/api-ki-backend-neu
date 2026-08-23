@@ -53,6 +53,56 @@ DISCLAIMER_DE = (
 _AMPEL_FARBEN = {"rot": "#c0392b", "gelb": "#d4a017", "gruen": "#1e7d46"}
 _AMPEL_LABELS = {"rot": "Rot", "gelb": "Gelb", "gruen": "Grün"}
 
+# KIS-1260: Sparten-Labels (Medien-Vertikale) fuer den Betriebskontext
+_SPARTE_LABELS = {
+    "film_tv": "Film-/TV-Produktion",
+    "post_vfx": "Postproduktion/VFX/Animation",
+    "games": "Games/Interactive",
+    "verlag": "Verlag/Publishing",
+    "musik_audio": "Musik/Audio/Podcast",
+    "agentur": "Agentur/Werbung/Design",
+    "content_creation": "Content Creation/Social Media",
+}
+
+
+def load_r1_kontext(db: Any, user_id: Optional[int]) -> Optional[Dict[str, str]]:
+    """KIS-1260: Branche/Sparte/Hauptleistung aus dem letzten fertigen
+    r1-Briefing desselben Users — personalisiert die LLM-Texte, ohne dass
+    der Check selbst Firmendaten erhebt. Kein r1 vorhanden -> None."""
+    if not user_id:
+        return None
+    try:
+        from models import Briefing
+        from services.answers_normalizer import BRANCHEN_LABELS
+
+        r1 = (
+            db.query(Briefing)
+            .filter(
+                Briefing.user_id == user_id,
+                Briefing.report_type == "r1",
+                Briefing.status == "done",
+            )
+            .order_by(Briefing.id.desc())
+            .first()
+        )
+        if not r1:
+            return None
+        answers = dict(r1.answers or {})
+        branche = str(answers.get("branche") or "").strip().lower()
+        kontext: Dict[str, str] = {}
+        if branche:
+            kontext["branche"] = BRANCHEN_LABELS.get(branche, branche)
+        sparte = str(answers.get("medien_sparte") or "").strip().lower()
+        if sparte:
+            kontext["sparte"] = _SPARTE_LABELS.get(sparte, sparte)
+        hauptleistung = str(answers.get("hauptleistung") or "").strip()
+        if hauptleistung:
+            kontext["hauptleistung"] = hauptleistung[:300]
+        return kontext or None
+    except Exception as exc:
+        log.warning("[RESILIENZ] r1-Kontext nicht ladbar: %s", str(exc)[:200])
+        return None
+
 
 # ---------------------------------------------------------------------------
 # SVG-Bausteine (deterministisch, keine Chart-Library)
@@ -154,7 +204,22 @@ def _build_llm_vars(result: Dict[str, Any], answers: Dict[str, int], katalog: Di
     }
 
 
-def _llm_section(section: str, vars_dict: Dict[str, Any], lang: str) -> Optional[str]:
+def _kontext_zeile(r1_kontext: Optional[Dict[str, str]]) -> str:
+    """Eine Zeile Betriebskontext fuer Prompt und Report-Kopf."""
+    if not r1_kontext:
+        return ""
+    teile = []
+    if r1_kontext.get("branche"):
+        b = r1_kontext["branche"]
+        if r1_kontext.get("sparte"):
+            b += f" ({r1_kontext['sparte']})"
+        teile.append(b)
+    if r1_kontext.get("hauptleistung"):
+        teile.append(r1_kontext["hauptleistung"])
+    return " — ".join(teile)
+
+
+def _llm_section(section: str, vars_dict: Dict[str, Any], lang: str, max_tokens: int = 900) -> Optional[str]:
     """Ein LLM-Absatz; None bei jedem Fehler (Aufrufer hat Fallback).
 
     KIS-1259: bewusst OHNE should_use_anthropic — dessen ANTHROPIC_SECTIONS-
@@ -172,7 +237,7 @@ def _llm_section(section: str, vars_dict: Dict[str, Any], lang: str) -> Optional
             return None
         prompt = load_prompt(section, lang, vars_dict)
         _t0 = _time.time()
-        text = call_anthropic(prompt, section=section, max_tokens=900)
+        text = call_anthropic(prompt, section=section, max_tokens=max_tokens)
         if text and text.strip():
             log.info("[RESILIENZ] LLM-Sektion %s ok (%.1fs, %d Zeichen)",
                      section, _time.time() - _t0, len(text))
@@ -188,7 +253,7 @@ def _llm_section(section: str, vars_dict: Dict[str, Any], lang: str) -> Optional
 # Hauptpipeline
 # ---------------------------------------------------------------------------
 
-def render_resilienz_html(briefing: Any) -> Dict[str, Any]:
+def render_resilienz_html(briefing: Any, r1_kontext: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
     """HTML + Metadaten fuer ein Resilienz-Briefing bauen (ohne DB-Write)."""
     lang = str(getattr(briefing, "lang", "de") or "de").lower()
     if not lang.startswith("de"):
@@ -203,8 +268,12 @@ def render_resilienz_html(briefing: Any) -> Dict[str, Any]:
     empfehlungen = build_empfehlungen(result["block_means"], "de")
 
     llm_vars = _build_llm_vars(result, answers_int, katalog, empfehlungen)
+    betriebskontext = _kontext_zeile(r1_kontext)
+    llm_vars["betriebskontext"] = betriebskontext or "unbekannt"
     kernaussage = _llm_section("resilienz_kernaussage", llm_vars, "de")
-    befunde = _llm_section("resilienz_befunde", llm_vars, "de")
+    # KIS-1260: Befunde brauchen Luft — das adaptive Denken von Sonnet 5
+    # zaehlt gegen max_tokens; 900 liess Block F leer (doppelte Truncation).
+    befunde = _llm_section("resilienz_befunde", llm_vars, "de", max_tokens=2500)
 
     from utils.report_display_id import get_report_display_id
 
@@ -255,6 +324,7 @@ def render_resilienz_html(briefing: Any) -> Dict[str, Any]:
         radar_svg=build_radar_svg(result["block_means"], katalog),
         blocks=blocks_ctx,
         empfehlungen=empfehlungen,
+        betriebskontext=betriebskontext,
         kernaussage_html=kernaussage,
         befunde_html=befunde,
         disclaimer=DISCLAIMER_DE,
@@ -269,6 +339,7 @@ def render_resilienz_html(briefing: Any) -> Dict[str, Any]:
         "html": html,
         "meta": {
             "report_type": "resilienz",
+            "betriebskontext": betriebskontext or None,
             "katalog_version": katalog["version"],
             "scores": {
                 "score": result["score"],
@@ -300,7 +371,8 @@ def generate_resilienz_report(briefing_id: int) -> None:
         briefing.processing_at = datetime.now(timezone.utc)
         db.commit()
 
-        rendered = render_resilienz_html(briefing)
+        r1_kontext = load_r1_kontext(db, briefing.user_id)
+        rendered = render_resilienz_html(briefing, r1_kontext=r1_kontext)
 
         analysis = Analysis(
             user_id=briefing.user_id,
