@@ -130,6 +130,31 @@ def generate_feedback_link(email: str, briefing_id: int = None) -> str:
     return url
 
 
+def render_cyber_cta(lang: str = "de") -> str:
+    """CTA-Block fuer den Cyberangriffs-Check.
+
+    KIS-1262: Der Block sass in der Status-Report-Mail, die damit vier
+    Links trug (PDF, Strategie, Check, Feedback). Er wandert in die
+    Strategie-Mail — dort ist der CTA-Platz frei, seit der Coach-CTA in
+    seine eigene Mail gezogen ist (Sprint-B-Dramaturgie: ein Angebot pro
+    Mail). Nur DE, weil der Check V1 deutschsprachig ist.
+    """
+    if str(lang).lower().startswith("en"):
+        return ""
+    url = f"{_brand()['app_url']}/resilienz.html"
+    return (
+        '<hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">'
+        '<p style="font-size:15px;margin:0 0 8px"><strong>Wie schnell könnte Ihr '
+        'Betrieb einen automatisierten Cyber-Angriff stoppen?</strong></p>'
+        '<p style="margin:0 0 12px">Ermitteln Sie Ihre <strong>Reaktionslücke</strong> — '
+        '22 Fragen, gut 10 Minuten, beantwortbar ohne technisches Wissen. '
+        'Ergebnis als PDF-Report.</p>'
+        f'<p><a href="{escape(url)}" style="display:inline-block;background:#2B6CB0;'
+        'color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;'
+        'font-weight:600">Reaktionslücke ermitteln →</a></p>'
+    )
+
+
 def render_coach_cta(briefing_id: int, accent_color: str, lang: str = "de") -> str:
     """Render the Coach-Gespräch CTA block for user-facing report emails."""
     coach_url = f"{_brand()['app_url']}/coach/{briefing_id}"
@@ -274,22 +299,9 @@ def render_report_ready_email(recipient: str, pdf_url: Optional[str], briefing_s
             f'{_sc["button"]}</a></p>'
             f'<p class="muted" style="margin-top:8px">{_sc["tip"]}</p>'
         )
-        # KIS-1260: Funnel-Einstieg fuer den Reaktionsluecken-Check —
-        # gleicher Mechanismus wie der Strategy-CTA. Nur DE (Check ist
-        # V1 deutschsprachig); Wording vermeidet den Begriff "Resilienz".
-        if not _en:
-            _resilienz_url = f"{_brand()['app_url']}/resilienz.html"
-            strategy_cta += (
-                '<hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">'
-                '<p style="font-size:15px;margin:0 0 8px"><strong>Neu: Wie schnell '
-                'könnte Ihr Betrieb einen automatisierten Cyber-Angriff stoppen?</strong></p>'
-                '<p style="margin:0 0 12px">Ermitteln Sie Ihre '
-                '<strong>Reaktionslücke</strong> — 22 Fragen, gut 10 Minuten, '
-                'beantwortbar ohne technisches Wissen. Ergebnis als PDF-Report.</p>'
-                f'<p><a href="{escape(_resilienz_url)}" style="display:inline-block;'
-                'background:#2B6CB0;color:#fff;padding:10px 20px;border-radius:8px;'
-                'text-decoration:none;font-weight:600">Reaktionslücke ermitteln →</a></p>'
-            )
+        # KIS-1262: Der Cyberangriffs-Check stand hier als zweiter CTA und
+        # machte diese Mail vierlinkig. Er sitzt jetzt in der Strategie-Mail
+        # (render_cyber_cta) und auf der Warteseite des Fragebogens.
 
     # Add feedback section for user emails only
     feedback_section = ""
@@ -482,6 +494,10 @@ def render_strategy_email(recipient: str = "user", briefing_id: Optional[int] = 
     if recipient != "admin" and briefing_id is not None:
         logger.info("[COACH-CTA-REMOVED] template=strategy briefing_id=%d", briefing_id)
 
+    # KIS-1262: Der freie CTA-Platz dieser Mail traegt jetzt den
+    # Cyberangriffs-Check (vorher: zweiter Link in der Status-Report-Mail).
+    cyber_cta = render_cyber_cta(_lang_code) if recipient != "admin" else ""
+
     return f"""<!doctype html>
 <html lang="{_lang_code}">
   <head>
@@ -506,6 +522,7 @@ def render_strategy_email(recipient: str = "user", briefing_id: Optional[int] = 
         <p>{escape(body_text)}</p>
         <p>{escape(cta)}</p>
         {coach_cta}
+        {cyber_cta}
         <hr style="border:none;border-top:1px solid #e6edf3;margin:24px 0">
         <p class="muted">{_brand()['advisor_name']} — {_brand()['brand_name']}</p>
         <p class="muted">{_t["auto_note"]}</p>

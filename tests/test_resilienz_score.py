@@ -59,9 +59,12 @@ class TestKatalogStruktur:
 
 class TestScore:
 
-    def test_alle_stufe_1_ergibt_25(self):
+    def test_alle_stufe_1_ergibt_0(self):
+        # KIS-1261: Skala ueber den erreichbaren Bereich gestreckt.
+        # Frueher war 25 der Boden — "keine Vorbereitung" las sich als
+        # ein Viertel Fortschritt.
         r = calculate_resilienz(_answers(1))
-        assert r["score"] == 25
+        assert r["score"] == 0
         assert r["ampel"] == "rot"
         assert r["reaktionsluecke"]["min_stufe"] == 1
         assert r["reaktionsluecke"]["label"] == "mehr als 8 Stunden"
