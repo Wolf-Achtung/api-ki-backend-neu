@@ -264,6 +264,9 @@ def _build_router_config() -> List[Tuple[str, str, str]]:
 
     # KI-Resilienz-Check (V1, Entscheidung 2026-08-23)
     cfg.append(("routes.resilienz", "/api", "resilienz"))
+    # KIS-1263: oeffentlicher Cyberangriffs-Check (ohne Login) — eigener
+    # Router, damit der eingeloggte Weg unberuehrt bleibt.
+    cfg.append(("routes.cyber_public", "/api", "cyber-public"))
 
     # News research pipeline (cron-triggered)
     cfg.append(("routes.content", "/api", "content"))
