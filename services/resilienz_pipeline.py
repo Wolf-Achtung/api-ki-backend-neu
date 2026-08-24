@@ -205,18 +205,62 @@ def _build_llm_vars(result: Dict[str, Any], answers: Dict[str, int], katalog: Di
 
 
 def _kontext_zeile(r1_kontext: Optional[Dict[str, str]]) -> str:
-    """Eine Zeile Betriebskontext fuer Prompt und Report-Kopf."""
+    """Betriebskontext fuer den Prompt — Branche, Sparte, Hauptleistung.
+
+    KIS-1261: Die Hauptleistung ist ein Freitext aus dem r1-Fragebogen und
+    kann in jeder Sprache dastehen. Fuer den Prompt ist das unkritisch (das
+    Modell antwortet ohnehin deutsch), fuer den Report-Kopf nicht — dort
+    steht nur die uebersetzte Branchenzeile (_kontext_kopf).
+    """
     if not r1_kontext:
         return ""
     teile = []
-    if r1_kontext.get("branche"):
-        b = r1_kontext["branche"]
-        if r1_kontext.get("sparte"):
-            b += f" ({r1_kontext['sparte']})"
-        teile.append(b)
+    if _kontext_kopf(r1_kontext):
+        teile.append(_kontext_kopf(r1_kontext))
     if r1_kontext.get("hauptleistung"):
-        teile.append(r1_kontext["hauptleistung"])
+        teile.append(r1_kontext["hauptleistung"][:180])
     return " — ".join(teile)
+
+
+def _kontext_kopf(r1_kontext: Optional[Dict[str, str]]) -> str:
+    """Kurze Branchenzeile fuer Seite 1 — immer deutsch, immer einzeilig."""
+    if not r1_kontext or not r1_kontext.get("branche"):
+        return ""
+    kopf = r1_kontext["branche"]
+    if r1_kontext.get("sparte"):
+        kopf += f" ({r1_kontext['sparte']})"
+    return kopf
+
+
+_BEFUND_MIN_ZEICHEN = 40
+
+
+def _fehlende_befund_bloecke(befunde_html: str, empfehlungen: List[Dict[str, Any]]) -> List[str]:
+    """Welche schwachen Bloecke hat das Modell im Befundtext ausgelassen?
+
+    KIS-1261: Der Lauf lieferte fuenf von sechs Befunden — ausgerechnet
+    Block C (Entscheiden, hoechstes Gewicht, Treiber der Reaktionsluecke)
+    fehlte. Ein Retry kostet 20 Sekunden und garantiert nichts; dieses Netz
+    haengt die fehlenden Bloecke deterministisch an.
+    """
+    text = befunde_html or ""
+    fehlend = []
+    for e in empfehlungen:
+        marker = f"Block {e['block']}"
+        pos = text.find(marker)
+        if pos < 0 or len(text) - pos < _BEFUND_MIN_ZEICHEN:
+            fehlend.append(e["block"])
+    return fehlend
+
+
+def _deterministischer_befund(e: Dict[str, Any]) -> str:
+    """Ein Befund aus den Angaben selbst — gleiche Form wie der Fallback."""
+    return (
+        f'<div class="befund"><h3>Block {e["block"]} — {e["titel"]}</h3>'
+        f'<p>Die schwächste Angabe in diesem Bereich: „{e["schwaechste_antwort"]}“ — '
+        f'auf die Frage „{e["schwaechste_frage"]}“. Genau hier verlängert sich '
+        f'Ihre Reaktionszeit im Ernstfall.</p></div>'
+    )
 
 
 def _llm_section(section: str, vars_dict: Dict[str, Any], lang: str, max_tokens: int = 900) -> Optional[str]:
@@ -267,6 +311,16 @@ def render_resilienz_html(briefing: Any, r1_kontext: Optional[Dict[str, str]] = 
     result = calculate_resilienz(answers_int, "de")
     empfehlungen = build_empfehlungen(result["block_means"], "de")
 
+    # KIS-1259: Deterministischer Befund-Fallback war 6x derselbe Satz.
+    # Jetzt traegt jede Empfehlung ihre schwaechste Frage + Antwort — und
+    # seit KIS-1261 speist das auch das Vollstaendigkeits-Netz unten.
+    frage_map = {q["id"]: q for b in katalog["blocks"] for q in b["questions"]}
+    for e in empfehlungen:
+        block = next(b for b in katalog["blocks"] if b["id"] == e["block"])
+        weakest_qid = min((q["id"] for q in block["questions"]), key=lambda qid: answers_int[qid])
+        e["schwaechste_frage"] = frage_map[weakest_qid]["text"]
+        e["schwaechste_antwort"] = frage_map[weakest_qid]["stufen"][answers_int[weakest_qid] - 1]
+
     llm_vars = _build_llm_vars(result, answers_int, katalog, empfehlungen)
     betriebskontext = _kontext_zeile(r1_kontext)
     llm_vars["betriebskontext"] = betriebskontext or "unbekannt"
@@ -275,17 +329,17 @@ def render_resilienz_html(briefing: Any, r1_kontext: Optional[Dict[str, str]] = 
     # zaehlt gegen max_tokens; 900 liess Block F leer (doppelte Truncation).
     befunde = _llm_section("resilienz_befunde", llm_vars, "de", max_tokens=2500)
 
+    if befunde:
+        fehlend = _fehlende_befund_bloecke(befunde, empfehlungen)
+        if fehlend:
+            log.warning("[RESILIENZ] Befunde ohne Block %s — deterministisch ergaenzt",
+                        ", ".join(fehlend))
+            nachtrag = [e for e in empfehlungen if e["block"] in fehlend]
+            befunde += "".join(_deterministischer_befund(e) for e in nachtrag)
+
     from utils.report_display_id import get_report_display_id
 
     rl = result["reaktionsluecke"]
-    # KIS-1259: Deterministischer Befund-Fallback war 6x derselbe Satz.
-    # Jetzt traegt jede Empfehlung ihre schwaechste Frage + Antwort.
-    frage_map = {q["id"]: q for b in katalog["blocks"] for q in b["questions"]}
-    for e in empfehlungen:
-        block = next(b for b in katalog["blocks"] if b["id"] == e["block"])
-        weakest_qid = min((q["id"] for q in block["questions"]), key=lambda qid: answers_int[qid])
-        e["schwaechste_frage"] = frage_map[weakest_qid]["text"]
-        e["schwaechste_antwort"] = frage_map[weakest_qid]["stufen"][answers_int[weakest_qid] - 1]
     blocks_ctx = []
     for block in katalog["blocks"]:
         bid = block["id"]
@@ -324,7 +378,10 @@ def render_resilienz_html(briefing: Any, r1_kontext: Optional[Dict[str, str]] = 
         radar_svg=build_radar_svg(result["block_means"], katalog),
         blocks=blocks_ctx,
         empfehlungen=empfehlungen,
-        betriebskontext=betriebskontext,
+        # KIS-1261: Seite 1 zeigt nur die uebersetzte Branchenzeile. Der
+        # r1-Freitext "hauptleistung" stand dort in Originalsprache (im
+        # Testlauf englisch) und sprengte die Kopfzeile.
+        betriebskontext=_kontext_kopf(r1_kontext),
         kernaussage_html=kernaussage,
         befunde_html=befunde,
         disclaimer=DISCLAIMER_DE,

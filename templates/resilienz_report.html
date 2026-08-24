@@ -62,7 +62,7 @@
 
 <!-- Seite 2: Score + Blockprofil -->
 <div class="page">
-  <h2>Resilienz-Score und Blockprofil</h2>
+  <h2>Ihr Vorbereitungsgrad und das Blockprofil</h2>
   <p><span class="score-ring">{{ score }}</span> <span class="hinweis">/ 100</span>
      &nbsp; <span class="badge" style="background: {{ ampel_farbe }};">Gesamtampel: {{ ampel_label }}</span></p>
 
@@ -89,9 +89,9 @@
   </table>
 </div>
 
-<!-- Seite 3: Befunde + Quick Wins -->
+<!-- Seite 3: Befunde -->
 <div class="page">
-  <h2>Befunde und erste Schritte</h2>
+  <h2>Was Ihre Antworten zeigen</h2>
 
   {% if befunde_html %}
     {{ befunde_html | safe }}
@@ -105,8 +105,13 @@
       </div>
     {% endfor %}
   {% endif %}
+</div>
 
-  <h3>Sofort machbar (diese Woche, intern)</h3>
+<!-- Seite 4: Erste Schritte (KIS-1261: eigene Seite — zusammen mit den
+     Befunden rutschte der letzte Kasten allein auf eine leere Folgeseite) -->
+<div class="page">
+  <h2>Sofort machbar (diese Woche, intern)</h2>
+  <p class="hinweis">Sortiert nach Abstand: Der erste Kasten betrifft Ihren schwächsten Bereich.</p>
   {% for e in empfehlungen %}
   <div class="qw">
     <b>Block {{ e.block }} · {{ e.titel }}:</b> {{ e.quick_win }}
@@ -134,6 +139,8 @@
 <!-- Seite 5: Was Sie am Montag tun -->
 <div class="page">
   <h2>Was Sie am Montag tun</h2>
+  <p class="hinweis">Ihr Merkzettel: die zwei dringendsten Schritte aus der Liste davor,
+  plus der Weg von der Schätzung zur Messung.</p>
   <ol class="montag">
     {% for e in empfehlungen[:2] %}
     <li><strong>{{ e.titel }}:</strong> {{ e.quick_win }}</li>

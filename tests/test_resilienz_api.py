@@ -250,6 +250,62 @@ class TestPipelineRendering:
         assert "Medien &amp; Kreativwirtschaft (Postproduktion/VFX/Animation)" in out["html"]
         assert "Postproduktion für Werbefilme" in captured["resilienz_kernaussage"]["betriebskontext"]
 
+    def test_freitext_bleibt_im_prompt_nicht_im_kopf(self, monkeypatch):
+        # KIS-1261: Die r1-Hauptleistung ist ein Freitext in Originalsprache
+        # (im Testlauf englisch). Sie speist den Prompt, nicht die Kopfzeile.
+        import services.resilienz_pipeline as pipeline
+        captured = {}
+
+        def fake_llm(section, vars_dict, lang, max_tokens=900):
+            captured[section] = dict(vars_dict)
+            return None
+
+        monkeypatch.setattr(pipeline, "_llm_section", fake_llm)
+
+        class _B:
+            id = 4714
+            lang = "de"
+            answers = _valid_answers()
+
+        englisch = "We are a Berlin post-production studio for commercials."
+        out = pipeline.render_resilienz_html(
+            _B(), r1_kontext={"branche": "Medien & Kreativwirtschaft",
+                              "sparte": "Postproduktion/VFX/Animation",
+                              "hauptleistung": englisch},
+        )
+        assert englisch not in out["html"]
+        assert englisch in captured["resilienz_kernaussage"]["betriebskontext"]
+        assert "Medien &amp; Kreativwirtschaft (Postproduktion/VFX/Animation)" in out["html"]
+
+    def test_alle_schwachen_bloecke_haben_befund(self, monkeypatch):
+        # KIS-1261: Das Modell lieferte 5 von 6 Befunden — Block C fehlte.
+        import services.resilienz_pipeline as pipeline
+        luecke = (
+            "<h3>Block A — Kernsysteme</h3><p>Keine Übersicht der kritischen Systeme.</p>"
+            "<h3>Block B — Erkennen</h3><p>Ein Vorfall fiele erst am Montag auf.</p>"
+            "<h3>Block D — Handeln</h3><p>Kein Vorgehen festgelegt.</p>"
+            "<h3>Block E — Lernen</h3><p>Nie geübt.</p>"
+            "<h3>Block F — Pflichtenlage</h3><p>NIS2 ungeklärt.</p>"
+        )
+        monkeypatch.setattr(pipeline, "_llm_section",
+                            lambda s, *a, **k: luecke if s == "resilienz_befunde" else None)
+
+        class _B:
+            id = 4715
+            lang = "de"
+            answers = _valid_answers(1)
+
+        html = pipeline.render_resilienz_html(_B())["html"]
+        for block in ("A", "B", "C", "D", "E", "F"):
+            assert f"Block {block}" in html, f"Befund zu Block {block} fehlt"
+
+    def test_wort_resilienz_nicht_als_produktbegriff(self, monkeypatch):
+        # Wolfs Vorgabe: "Resilienz" ist kein sichtbarer Produktbegriff mehr.
+        # Ausnahme: die Methodenquelle (Chris Perkins' Ansatz heisst so).
+        out = self._render(monkeypatch, _valid_answers(3))
+        assert "Resilienz-Score" not in out["html"]
+        assert out["html"].count("Resilienz") <= 1
+
     def test_ohne_kontext_unveraendert(self, monkeypatch):
         out = self._render(monkeypatch, _valid_answers(3))
         assert "aus dem KI-Status-Check" not in out["html"]
