@@ -4,7 +4,11 @@
 Fachliche Referenz: resilienz-check-modul.md / data/resilienz/katalog_de.json.
 Drei Regeln, die es im restlichen Scoring des Projekts bewusst NICHT gibt:
 
-1. Gewichteter Score: weighted_mean(block_means) * 25  -> 0..100
+1. Gewichteter Score: (weighted_mean(block_means) - 1) / 3 * 100 -> 0..100.
+   Die Skala ist ueber den erreichbaren Bereich gestreckt (KIS-1261):
+   Stufe 1 ueberall = 0, Stufe 4 ueberall = 100. Die fruehere Formel
+   (mean * 25) hatte 25 als Boden — ein Betrieb ohne jede Vorbereitung
+   las dort ein Viertel Fortschritt ab, den es nicht gab.
 2. Min-Regel (Reaktionsluecke): min(B2, C1, C2, C3, C4) -> Band 1..4.
    Der langsamste Faktor bestimmt das System, nicht der Durchschnitt.
 3. Deckelregel: Die Gesamtampel ist nie besser als der schwaechste Block
@@ -96,8 +100,10 @@ def calculate_resilienz(answers: Dict[str, int], lang: str = "de") -> Dict[str, 
         weighted_sum += mean * block["weight"]
         weight_sum += block["weight"]
 
-    # Gewichteter Mittelwert der Blockmittel (1..4), normiert auf 0..100.
-    score = round((weighted_sum / weight_sum) * 25)
+    # Gewichteter Mittelwert der Blockmittel (1..4), gestreckt auf 0..100:
+    # Stufe 1 ueberall = 0, Stufe 4 ueberall = 100 (KIS-1261).
+    gewichtetes_mittel = weighted_sum / weight_sum
+    score = round((gewichtetes_mittel - 1.0) / 3.0 * 100)
 
     # Min-Regel: der langsamste Entscheidungs-/Alarmfaktor bestimmt das Band.
     min_stufe = min(answers[f] for f in REAKTIONSLUECKE_FIELDS)
@@ -108,7 +114,7 @@ def calculate_resilienz(answers: Dict[str, int], lang: str = "de") -> Dict[str, 
     block_ampeln = {bid: _block_ampel(m) for bid, m in block_means.items()}
     schwaechster_block = min(block_means, key=lambda bid: block_means[bid])
     ampel = _worst_ampel(band["ampel"], *block_ampeln.values())
-    gedeckelt = _AMPEL_ORDER.index(ampel) < _AMPEL_ORDER.index(_block_ampel(weighted_sum / weight_sum))
+    gedeckelt = _AMPEL_ORDER.index(ampel) < _AMPEL_ORDER.index(_block_ampel(gewichtetes_mittel))
 
     return {
         "score": score,

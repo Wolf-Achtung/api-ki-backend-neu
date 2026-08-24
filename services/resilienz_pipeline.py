@@ -65,10 +65,20 @@ _SPARTE_LABELS = {
 }
 
 
+# KIS-1261: Ein r1-Briefing aelter als ein Jahr beschreibt womoeglich
+# einen anderen Betrieb als heute. Aelteres wird nicht mehr uebernommen.
+R1_KONTEXT_MAX_TAGE = 365
+
+
 def load_r1_kontext(db: Any, user_id: Optional[int]) -> Optional[Dict[str, str]]:
     """KIS-1260: Branche/Sparte/Hauptleistung aus dem letzten fertigen
     r1-Briefing desselben Users — personalisiert die LLM-Texte, ohne dass
-    der Check selbst Firmendaten erhebt. Kein r1 vorhanden -> None."""
+    der Check selbst Firmendaten erhebt. Kein r1 vorhanden -> None.
+
+    KIS-1261: Der Kontext stammt aus einem frueheren Fragebogen, nicht aus
+    diesem Check — das war im Report nicht erkennbar. Er traegt jetzt sein
+    Datum, und aelter als R1_KONTEXT_MAX_TAGE wird er verworfen.
+    """
     if not user_id:
         return None
     try:
@@ -87,6 +97,14 @@ def load_r1_kontext(db: Any, user_id: Optional[int]) -> Optional[Dict[str, str]]
         )
         if not r1:
             return None
+        stand = getattr(r1, "done_at", None) or getattr(r1, "created_at", None)
+        if stand:
+            if stand.tzinfo is None:
+                stand = stand.replace(tzinfo=timezone.utc)
+            alter_tage = (datetime.now(timezone.utc) - stand).days
+            if alter_tage > R1_KONTEXT_MAX_TAGE:
+                log.info("[RESILIENZ] r1-Kontext verworfen: %s Tage alt", alter_tage)
+                return None
         answers = dict(r1.answers or {})
         branche = str(answers.get("branche") or "").strip().lower()
         kontext: Dict[str, str] = {}
@@ -98,6 +116,8 @@ def load_r1_kontext(db: Any, user_id: Optional[int]) -> Optional[Dict[str, str]]
         hauptleistung = str(answers.get("hauptleistung") or "").strip()
         if hauptleistung:
             kontext["hauptleistung"] = hauptleistung[:300]
+        if kontext and stand:
+            kontext["stand"] = stand.strftime("%d.%m.%Y")
         return kontext or None
     except Exception as exc:
         log.warning("[RESILIENZ] r1-Kontext nicht ladbar: %s", str(exc)[:200])
@@ -223,12 +243,18 @@ def _kontext_zeile(r1_kontext: Optional[Dict[str, str]]) -> str:
 
 
 def _kontext_kopf(r1_kontext: Optional[Dict[str, str]]) -> str:
-    """Kurze Branchenzeile fuer Seite 1 — immer deutsch, immer einzeilig."""
+    """Kurze Branchenzeile fuer Seite 1 — immer deutsch, immer einzeilig.
+
+    KIS-1261: mit Datum, damit erkennbar ist, dass die Angabe aus einem
+    frueheren Fragebogen stammt und nicht aus diesem Check.
+    """
     if not r1_kontext or not r1_kontext.get("branche"):
         return ""
     kopf = r1_kontext["branche"]
     if r1_kontext.get("sparte"):
         kopf += f" ({r1_kontext['sparte']})"
+    if r1_kontext.get("stand"):
+        kopf += f", Stand {r1_kontext['stand']}"
     return kopf
 
 

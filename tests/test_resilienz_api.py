@@ -316,3 +316,48 @@ class TestPipelineRendering:
         out = self._render(monkeypatch, _valid_answers(3))
         assert "Firmenname" not in out["html"]
         assert "firma" not in out["html"].lower()
+
+
+class TestR1KontextHerkunft:
+    """KIS-1261: Woher der Betriebskontext stammt, muss sichtbar sein."""
+
+    def _briefing(self, done_at, answers=None):
+        class _R1:
+            report_type = "r1"
+            status = "done"
+        _R1.done_at = done_at
+        _R1.answers = answers if answers is not None else {
+            "branche": "medien", "medien_sparte": "post_vfx",
+            "hauptleistung": "Postproduktion",
+        }
+        return _R1()
+
+    def _db(self, r1):
+        class _Q:
+            def filter(self, *a, **k): return self
+            def order_by(self, *a, **k): return self
+            def first(self): return r1
+
+        class _DB:
+            def query(self, *a, **k): return _Q()
+        return _DB()
+
+    def test_kontext_traegt_sein_datum(self):
+        from datetime import datetime, timedelta, timezone
+        import services.resilienz_pipeline as pipeline
+
+        stand = datetime.now(timezone.utc) - timedelta(days=30)
+        kontext = pipeline.load_r1_kontext(self._db(self._briefing(stand)), 1)
+        assert kontext["stand"] == stand.strftime("%d.%m.%Y")
+        assert "Stand " + kontext["stand"] in pipeline._kontext_kopf(kontext)
+
+    def test_alter_kontext_wird_verworfen(self):
+        from datetime import datetime, timedelta, timezone
+        import services.resilienz_pipeline as pipeline
+
+        alt = datetime.now(timezone.utc) - timedelta(days=pipeline.R1_KONTEXT_MAX_TAGE + 1)
+        assert pipeline.load_r1_kontext(self._db(self._briefing(alt)), 1) is None
+
+    def test_ohne_r1_kein_kontext(self):
+        import services.resilienz_pipeline as pipeline
+        assert pipeline.load_r1_kontext(self._db(None), 1) is None
