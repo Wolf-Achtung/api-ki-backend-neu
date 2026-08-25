@@ -285,15 +285,35 @@ def _sende_bestaetigungsmail(email: str, briefing_id: int) -> None:
 
 
 def _seite(titel: str, text: str, status_code: int = 200) -> Response:
+    """Schlichte Seite fuer den Bestaetigungslink aus der E-Mail.
+
+    Eigenstaendiges HTML: Die Seite liegt auf der API-Domain und kann das
+    Stylesheet des Frontends nicht einbinden. Die Werte entsprechen den
+    Marken-Tokens in make-ki-frontend/brand.css — bei einer Palettenaenderung
+    dort auch hier nachziehen.
+    """
     html = (
         '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         f"<title>{titel}</title><style>"
-        "body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a;"
-        "background:#f6f9ff;margin:0;padding:48px 16px;line-height:1.55}"
-        ".c{max-width:520px;margin:0 auto;background:#fff;border:1px solid #e6edf3;"
-        "border-radius:12px;padding:28px}h1{font-size:20px;margin:0 0 12px;color:#0F1D35}"
-        "p{font-size:15px}</style></head><body><div class=\"c\">"
+        ":root{--bg:#f8fafb;--karte:#ffffff;--linie:#e2e8f0;"
+        "--text:#0e1525;--gedaempft:#3d4f63;--navy:#1a3a5c;--gold:#c9a227}"
+        "@media(prefers-color-scheme:dark){:root{--bg:#0a1628;--karte:#0e1e36;"
+        "--linie:#1f3350;--text:#e8eef6;--gedaempft:#a8b5c4;--navy:#c5ddf0}}"
+        "body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;"
+        "color:var(--text);background:var(--bg);margin:0;padding:48px 16px;line-height:1.55}"
+        ".marke{max-width:520px;margin:0 auto 14px;font-family:ui-monospace,"
+        "SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;letter-spacing:.5px;"
+        "color:var(--gedaempft);text-decoration:none;display:block}"
+        ".c{max-width:520px;margin:0 auto;background:var(--karte);"
+        "border:1px solid var(--linie);border-top:3px solid var(--gold);"
+        "border-radius:12px;padding:28px}"
+        "h1{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"
+        "font-size:20px;font-weight:600;margin:0 0 12px;color:var(--navy);"
+        "letter-spacing:.3px}"
+        "p{font-size:15px;margin:0;color:var(--gedaempft)}</style></head><body>"
+        '<a class="marke" href="https://ki-sicherheit.jetzt">KI-Sicherheit.jetzt</a>'
+        '<div class="c">'
         f"<h1>{titel}</h1><p>{text}</p></div></body></html>"
     )
     return Response(content=html, media_type="text/html; charset=utf-8", status_code=status_code)
