@@ -99,14 +99,20 @@ class TestPhase1bAllowlistIncludesKiZiele:
         # conversation" comment. Collapse whitespace before matching so
         # reflowed formatting doesn't break the test.
         normalized = " ".join(src.split())
+        # 2026-08: Die harte Allowlist wurde durch einen
+        # faehigkeitsbasierten Filter ersetzt — jedes Feld mit
+        # _QR_OPTIONS- oder FREETEXT_SUGGESTIONS-Eintrag behaelt seine
+        # Knoepfe. Die KIS-1142-Intention (ki_ziele darf nie wieder
+        # stillschweigend rausfallen) sichert jetzt dieser Guard plus
+        # der funktionale Sentinel in test_phase1b_qr_kopplung.py.
         needle = (
             '_p1b_qr_fields = [f for f in next_fields '
-            'if f in ("digitalisierungsgrad", "ki_kompetenz", "ki_ziele")]'
+            'if f in _QR_OPTIONS or f in FREETEXT_SUGGESTIONS]'
         )
         assert needle in normalized, (
-            "Phase 1b QR allowlist in routes/chat.py must include "
-            "'ki_ziele' alongside 'digitalisierungsgrad' and "
-            "'ki_kompetenz' (KIS-1142)."
+            "Phase 1b QR filter in routes/chat.py must be capability-based "
+            "(_QR_OPTIONS / FREETEXT_SUGGESTIONS) so ki_ziele and every "
+            "other structured field keeps its buttons (KIS-1142 successor)."
         )
 
 
