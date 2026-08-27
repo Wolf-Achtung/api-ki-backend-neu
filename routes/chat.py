@@ -749,6 +749,45 @@ def _is_phase_1b(phase_state: dict, collected: dict) -> bool:
     return not _is_phase_1a(phase_state, collected)
 
 
+# ── Phase-1b-Frage→Feld-Anker ────────────────────────────────────────
+# Screenshot-Befund 2026-08: next_fields hing auf einem Freitextfeld
+# (Extraktion leer), waehrend Sonnet im selben Zug bereits das naechste
+# strukturierte Feld erfragte — die Frage erreichte den Nutzer ohne
+# Antwort-Knoepfe. Da die fertige Sonnet-Antwort VOR dem QR-Bau vorliegt,
+# laesst sich die Kopplung nachtraeglich herstellen: Ist die gestellte
+# Frage eindeutig genau einem offenen QR-Feld zuzuordnen, werden dessen
+# Knoepfe gesendet. Konservativ: bei 0 oder >1 Treffern passiert nichts —
+# lieber keine Knoepfe als falsche.
+_P1B_QUESTION_SIGNALS: dict[str, tuple[str, ...]] = {
+    "digitalisierungsgrad": ("digital",),
+    "ki_kompetenz": (
+        "ki-kenntnis", "ki-kompetenz", "ki-erfahrung", "erfahrung mit ki",
+        "kenntnisse mit ki", "vertraut mit ki",
+        "ai experience", "ai skills", "ai knowledge",
+        "experience with ai", "familiar with ai",
+    ),
+    "ki_ziele": ("ziel", "goal", "objective"),
+}
+
+
+def _infer_p1b_asked_qr_field(
+    question_text: str, candidates: list[str],
+) -> str | None:
+    """Ordnet eine frei formulierte Phase-1b-Frage einem QR-Feld zu.
+
+    Liefert das Feld nur bei EINDEUTIGEM Treffer (genau ein Kandidat,
+    dessen Signalwort im Fragetext vorkommt) — sonst None.
+    """
+    if not question_text or not candidates:
+        return None
+    text = question_text.lower()
+    treffer = [
+        f for f in candidates
+        if any(sig in text for sig in _P1B_QUESTION_SIGNALS.get(f, ()))
+    ]
+    return treffer[0] if len(treffer) == 1 else None
+
+
 def _get_next_phase_1a_field(collected: dict) -> str | None:
     """Get the next QR field in Phase 1a sequence."""
     for f in _phase_1a_qr_fields():
@@ -2739,9 +2778,26 @@ async def chat_message(
             # KIS-1142: ki_ziele added — multi-select with 8 canonical options
             # in _QR_OPTIONS. Freetext answers still accepted via
             # _FREETEXT_EXTRACTION_FIELDS (extractor preserves user wording).
+            # KIS-1142-Nachfolger: Nicht mehr eine harte Feld-Allowlist
+            # entscheidet, sondern die QR-Faehigkeit — jedes Feld mit
+            # _QR_OPTIONS- oder FREETEXT_SUGGESTIONS-Eintrag behaelt seine
+            # Knoepfe. (ki_ziele fiel 2026-06 aus der alten Allowlist,
+            # diese Klasse Bug ist damit strukturell zu.)
             _p1b_qr_fields = [f for f in next_fields
-                              if f in ("digitalisierungsgrad", "ki_kompetenz",
-                                       "ki_ziele")]
+                              if f in _QR_OPTIONS or f in FREETEXT_SUGGESTIONS]
+            if not _p1b_qr_fields:
+                # Frage→Feld-Anker (siehe _infer_p1b_asked_qr_field):
+                # Sonnets fertige Antwort liegt hier bereits vor.
+                _p1b_offene_qr = [f for f in PHASE_1B_OPEN_FIELDS
+                                  if f not in collected and f in _QR_OPTIONS]
+                _p1b_anker = _infer_p1b_asked_qr_field(full_response, _p1b_offene_qr)
+                if _p1b_anker:
+                    _p1b_qr_fields = [_p1b_anker]
+                    log.info(
+                        "[CHAT] Phase 1b QR-Anker: Frage dem Feld %s zugeordnet "
+                        "— Knoepfe ergaenzt (next_fields war %s)",
+                        _p1b_anker, next_fields,
+                    )
             quick_replies = _build_quick_replies(
                 _p1b_qr_fields, rt, collected, _profile_ctx, lang=_lang,
             ) if _p1b_qr_fields else []
