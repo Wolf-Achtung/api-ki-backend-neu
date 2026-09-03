@@ -63,10 +63,12 @@ Merkregeln:
   auf ihrem Standardwert. Werkzeug: `scripts/env_unused.py`.
   Löschen muss Wolf in Railway.
 - Tool-Daten: `data/tools_seed.json` hat 20 von 23 Einträgen ohne
-  `verified_at`. Der Tool-Radar läuft (Issue #1168, 32 Befunde). Seine
-  Tavily-Vorschläge sind für Tools deutlich unschärfer als für
-  Förderprogramme — Tool-Namen wie „Railway", „Runway", „Make" sind
-  mehrdeutig. Vor Übernahme jede Quelle einzeln prüfen.
+  `verified_at`. Der Tool-Radar läuft (Issue #1168). Die
+  Domainbeschränkung (KIS-1273) wirkt: Der Lauf vom 03.09. 22:23 lieferte
+  35 Kandidaten, alle auf der jeweiligen Herstellerdomain. Preise und
+  DSGVO-Status muss trotzdem ein Mensch bestätigen — der Radar meldet
+  nur. Tote Trust-URLs bei Topaz, Simon Says, iconik, Aleph Alpha und
+  Mistral sind offen (kein Ersatz gefunden).
 - `services/funding_engine_v2.py` wurde am 2026-09-03 gelöscht (toter
   Code, 1278 Zeilen, nur von der eigenen Testdatei importiert). Damit
   gibt es zwei Förderquellen statt drei: `funding_programmes_core_2025`
