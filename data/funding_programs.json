@@ -5,9 +5,9 @@
     "target": "FuE/Innovation",
     "amount": "Zuschuss/Darlehen (variabel)",
     "deadline": "rollierend",
-    "url": "https://www.ibb.de",
+    "url": "https://www.ibb.de/de/foerderprogramme/pro-fit-projektfinanzierung.html",
     "notes": "Typisch für technologiegetriebene Vorhaben; Kombination möglich",
-    "verified_at": "2026-07-05"
+    "verified_at": "2026-09-03"
   },
   {
     "name": "Berlin – Coaching BONUS (IBB Business Team)",
@@ -27,11 +27,11 @@
     "target": "Kooperation mit Forschungseinrichtungen",
     "amount": "bis 45.000 € (Zuschuss)",
     "deadline": "laufend",
-    "url": "https://www.berlin.de/sen/wirtschaft/wirtschaft/foerderprogramme/transfer-bonus/",
+    "url": "https://www.ibb.de/de/foerderprogramme/transfer-bonus.html",
     "fit": "Team, KMU",
     "priority": 2,
     "notes": "Fördert Technologietransfer; auch KI‑Vorhaben mit Forschungspartnern.",
-    "verified_at": "2026-07-05"
+    "verified_at": "2026-09-03"
   },
   {
     "name": "Berlin – Pro FIT (IBB) – FuE/Validierung",
@@ -39,11 +39,11 @@
     "target": "Forschung & Entwicklung, Validierung",
     "amount": "Zuschuss/Darlehen, Quote nach Projektphase",
     "deadline": "rollierend",
-    "url": "https://www.ibb.de/de/foerderprogramme/pro-fit",
+    "url": "https://www.ibb.de/de/foerderprogramme/pro-fit-projektfinanzierung.html",
     "fit": "Team, KMU",
     "priority": 3,
     "notes": "Für technologiegetriebene Projekte; Kombination aus Zuschuss & Darlehen.",
-    "verified_at": "2026-07-05"
+    "verified_at": "2026-09-03"
   },
   {
     "name": "Bayern – Innovationsgutschein (Bayern Innovativ)",
@@ -51,11 +51,11 @@
     "target": "Externe Entwicklungs‑/Dienstleistungen (z. B. Prototyping, Studien)",
     "amount": "Gutschein i.d.R. 50% bis 30.000 €",
     "deadline": "laufend",
-    "url": "https://www.bayern-innovativ.de/innovationsgutschein",
+    "url": "https://www.bayern-innovativ.de/leistungen/projekttraeger/projekttraeger-bayern/innovationsgutschein-bayern",
     "fit": "Team, KMU",
     "priority": 2,
     "notes": "Fördert externe F&E‑Leistungen; geeignet für KMU und Handwerk.",
-    "verified_at": "2026-07-05"
+    "verified_at": "2026-09-03"
   },
   {
     "name": "Bayern – Förderung von Künstlicher Intelligenz (versch. Programme)",
