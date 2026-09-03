@@ -157,3 +157,47 @@ class TestRadarBleibtRuhigUndErinnert:
         from datetime import date
         from scripts.funding_radar import check_program
         assert check_program({"title": "X", "status": "paused"}, date(2030, 1, 1)) == []
+
+
+class TestEineRegelFuerAllePfade:
+    """KIS-1270: Der Lauf KIS-1264 zeigte ZIM trotz Antragsstopp weiter in
+    der R1-Foerdertabelle, waehrend der Strategiebericht es korrekt
+    weglies. Grund: Die Statusregel stand zweimal im Code, und KIS-1268
+    hatte nur eine der beiden Stellen ergaenzt."""
+
+    def test_regel_kennt_beide_stati(self):
+        from services.funding_recommender import NICHT_BEANTRAGBAR_STATUS
+        assert NICHT_BEANTRAGBAR_STATUS == frozenset({"expired", "paused"})
+
+    def test_ist_beantragbar_urteilt_richtig(self):
+        from services.funding_recommender import ist_beantragbar
+        assert ist_beantragbar({"status": "active"})
+        assert ist_beantragbar({})  # ohne Angabe gilt aktiv
+        assert not ist_beantragbar({"status": "paused"})
+        assert not ist_beantragbar({"status": "expired"})
+        assert not ist_beantragbar({"status": "  PAUSED "})  # tolerant
+
+    def test_r1_foerdertabelle_zeigt_kein_zim(self):
+        """Der Pfad, der im Lauf KIS-1264 durchgerutscht ist."""
+        from services.extra_sections import build_core_funding_table_html
+        html = build_core_funding_table_html({
+            "BRANCHE_LABEL": "Medien & Kreativwirtschaft",
+            "BUNDESLAND_LABEL": "Berlin",
+            "UNTERNEHMENSGROESSE_LABEL": "2-10 (Kleines Team)",
+        })
+        assert "ZIM" not in html
+        assert len(html) > 200, "Tabelle unerwartet leer — Filter zu scharf?"
+
+    def test_keine_zweite_kopie_der_statusregel(self):
+        """Wer die Regel erneut ausschreibt, bricht sie beim naechsten Mal
+        wieder auseinander."""
+        from pathlib import Path
+        repo = Path(__file__).resolve().parent.parent
+        kopien = []
+        for pfad in list((repo / "services").glob("*.py")):
+            if pfad.name == "funding_recommender.py":
+                continue
+            text = pfad.read_text(encoding="utf-8")
+            if 'status", "active") != "expired"' in text:
+                kopien.append(pfad.name)
+        assert not kopien, f"Eigene Statusregel in: {kopien}"
