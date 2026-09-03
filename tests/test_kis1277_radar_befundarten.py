@@ -115,6 +115,34 @@ class TestSuchenGehenZuDenTotenUrls:
         assert gesucht == ["T3", "T1"]
 
 
+class TestKeinGlobalerModulErsatz:
+    """Beim ersten Lauf dieser Datei schlug der Timeout-Test nur im
+    Gesamtlauf fehl, nie allein. Ursache: eine andere Testdatei ersetzte
+    beim Einsammeln `sys.modules['requests']` durch ein MagicMock — fuer
+    den ganzen Lauf. `requests.exceptions.ReadTimeout` war danach kein
+    Ausnahmetyp mehr, und `raise` ergab einen TypeError."""
+
+    def test_requests_ist_das_echte_modul(self):
+        import requests
+        assert isinstance(requests.exceptions.ReadTimeout, type)
+        assert issubclass(requests.exceptions.ReadTimeout, Exception)
+
+    def test_keine_datei_ersetzt_ein_modul_global(self):
+        from pathlib import Path
+        repo = Path(__file__).resolve().parent.parent
+        treffer = []
+        for pfad in (repo / "tests").glob("*.py"):
+            for nr, zeile in enumerate(pfad.read_text(encoding="utf-8").splitlines(), 1):
+                code = zeile.split("#")[0]
+                if "sys.modules[" in code and "=" in code and "del " not in code:
+                    treffer.append(f"{pfad.name}:{nr}")
+        assert not treffer, (
+            "Globaler Modul-Ersatz auf Dateiebene wirkt fuer den ganzen "
+            f"Testlauf: {treffer}. Stattdessen monkeypatch oder "
+            "patch.dict(sys.modules, ...) im Test."
+        )
+
+
 class TestKorrigierteTrustUrls:
     """Die zwei Adressen, die der Radar-Lauf vom 03.09.2026 selbst
     geliefert hat — beide auf der Herstellerdomain, beide als Ersatz fuer
