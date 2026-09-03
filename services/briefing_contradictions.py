@@ -60,11 +60,32 @@ def detect_contradictions(
     s = strategy_answers or b.get("_strategy_answers") or {}
     findings: List[str] = []
 
+    def _explizit_negativ(*keys: str) -> bool:
+        """KIS-1267: Nur ein TATSAECHLICH negativ beantwortetes Feld zaehlt.
+
+        _NEGATIVES enthaelt den leeren String — ein unbeantwortetes Feld
+        galt damit als "keine". Im Lauf KIS-1262 stand deshalb im
+        Status-Report: "'Datenreife: keine' widerspricht dem
+        Digitalisierungsgrad von 8/10." Die Frage nach der Datenreife
+        stellt der R1-Fragebogen aber gar nicht — sie kommt erst im
+        Strategie-Fragebogen. Der Report zitierte also eine Antwort, die
+        der Kunde nie gegeben hat. Der Live-Check im Chat macht das ueber
+        _answered_negative() schon richtig; hier fehlte das Gegenstueck.
+        """
+        for key in keys:
+            for quelle in (s, b):
+                roh = quelle.get(key)
+                if roh is None or str(roh).strip() == "":
+                    continue
+                if _norm(roh) in _NEGATIVES:
+                    return True
+                break  # Feld ist beantwortet, aber nicht negativ
+        return False
+
     # 1. "Vorhandene Tools: keine" vs. real genutzte Software (FB2/ki_projekte)
-    tools_fb1 = _norm(b.get("vorhandene_tools"))
     tools_fb2 = _norm(s.get("s5_software") or b.get("s5_software"))
     ki_projekte = _norm(b.get("ki_projekte"))
-    if tools_fb1 in _NEGATIVES and (tools_fb2 or "api" in ki_projekte):
+    if _explizit_negativ("vorhandene_tools") and (tools_fb2 or "api" in ki_projekte):
         _raw = s.get("s5_software") or b.get("s5_software") or b.get("ki_projekte")
         genannt = (", ".join(str(v) for v in _raw) if isinstance(_raw, list)
                    else str(_raw or "")).strip() or tools_fb2 or ki_projekte
@@ -76,10 +97,9 @@ def detect_contradictions(
         )
 
     # 2. "Interne KI-Kompetenzen: Nein" vs. hohe persönliche KI-Kompetenz
-    interne = _norm(b.get("interne_ki_kompetenzen"))
     kompetenz = _norm(b.get("ki_kompetenz") or b.get("ki_knowhow"))
     erfahrung = _norm(s.get("s9_ki_erfahrung") or b.get("ki_erfahrung"))
-    if interne in _NEGATIVES and (kompetenz in _HIGH or erfahrung in _HIGH):
+    if _explizit_negativ("interne_ki_kompetenzen") and (kompetenz in _HIGH or erfahrung in _HIGH):
         findings.append(
             "'Interne KI-Kompetenzen: Nein' steht neben hoher persönlicher "
             "KI-Kompetenz/Erfahrung. Bei Solo-/Kleinstbetrieben ist die Frage "
@@ -88,12 +108,11 @@ def detect_contradictions(
         )
 
     # 3. "Datenreife: keine" vs. hoher Digitalisierungs-/Automatisierungsgrad
-    datenreife = _norm(s.get("datenreife") or b.get("datenreife"))
     try:
         digi = float(str(b.get("digitalisierungsgrad", "0")).replace(",", "."))
     except (ValueError, TypeError):
         digi = 0.0
-    if datenreife in _NEGATIVES and digi >= 7:
+    if _explizit_negativ("datenreife") and digi >= 7:
         findings.append(
             f"'Datenreife: keine' widerspricht dem Digitalisierungsgrad von {digi:g}/10. "
             "Wahrscheinlich fehlt keine Digitalisierung, sondern eine STRUKTURIERTE, "

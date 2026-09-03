@@ -607,15 +607,20 @@ WICHTIG (FIX-KIS-1027.4-3C): Setze KEIN zusätzliches Label vor den Einordnungss
 Die Szenario-ZAHLEN (ROI %, Break-Even Monate) sind berechnet — NICHT ändern. Nur die sprachliche Einordnung ergänzen.
 
 ROI-BRÜCKE ZU REPORT 1 (PFLICHT — VOR der ersten ROI-Nennung einbauen):
+KIS-1267: Der folgende Block ist FERTIGER LESERTEXT. Übernimm ihn sinngemäß
+in eigenen Worten in den Fließtext. Übernimm KEINE Anweisung, die an dich
+gerichtet ist, und KEINE Ticket-Nummer in die Ausgabe.
+--- LESERTEXT ANFANG ---
 Der KI-Readiness Report zeigt einen ROI von {r1_roi_pct}% bezogen auf die
 Startinvestition von {r1_capex} € — dort werden zusätzlich die laufenden
 Tool-Kosten (OPEX) vom Jahresnutzen abgezogen. Der vorliegende Strategiebericht
 setzt die Brutto-Jahresersparnis gegen die Gesamtinvestition über 12 Monate
 ({budget_gesamt_jahr1} €, inklusive Software, Schulung, Implementierung und
-Koordination). Erklären Sie dem Leser verständlich, warum die ROI-Zahlen
-unterschiedlich sind — beide sind korrekt. KIS-1238: Führe die Differenz NICHT
-allein auf unterschiedliche Investitionssummen zurück (die können identisch
-sein); der entscheidende Unterschied ist der OPEX-Abzug in Report 1.
+Koordination). Beide Werte sind korrekt; sie unterscheiden sich durch den
+OPEX-Abzug in Report 1.
+--- LESERTEXT ENDE ---
+Der entscheidende Unterschied ist der OPEX-Abzug, NICHT eine unterschiedliche
+Investitionssumme — die kann in beiden Berichten identisch sein.
 
 FAKTEN- UND ANNAHMEN-TRENNUNG (VERBINDLICH):
 - Harte Eingabedaten, Scores, deterministische Zahlen und explizite Nutzerangaben als Tatsachen behandeln.
