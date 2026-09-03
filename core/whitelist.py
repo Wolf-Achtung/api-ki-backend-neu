@@ -5,10 +5,24 @@ core.whitelist — Single source of truth for the test-phase E-Mail-Whitelist.
 Imported by routes/auth.py (gate /auth/request-code) and by report-pipeline
 endpoints that need to verify the JWT subject is allowed to trigger LLM work.
 Keep the canonical list here; do not duplicate it elsewhere.
+
+KIS-1264: Zusaetzliche Adressen kommen aus der ENV-Variablen
+EXTRA_WHITELIST (kommagetrennt). Damit laesst sich jemand freischalten,
+ohne Code zu aendern und ohne Deploy — ein Backend-Deploy bricht laufende
+Report-Generierungen ab, das soll eine Freischaltung nicht kosten.
+Admin-Rechte bleiben bewusst code-only: sie sind eine Sicherheitsgrenze
+und keine Betriebseinstellung.
 """
 from __future__ import annotations
 
+import logging
+import os
+
 from fastapi import HTTPException, status
+
+log = logging.getLogger(__name__)
+
+EXTRA_WHITELIST_ENV = "EXTRA_WHITELIST"
 
 # Canonical whitelist. Synchron mit setup_database.py TESTUSERS halten.
 # Alle Adressen werden case-insensitive verglichen (lower).
@@ -21,6 +35,9 @@ EMAIL_WHITELIST: frozenset[str] = frozenset(
         "post@zero2.de",
         "giselapeter@peter-partner.de",
         "wolf.hohl@web.de",
+        "jan.bonath@white-spot-films.com",
+        "jbfilm@outlook.de",
+        "mail@ennoreese.de",
         "geffertj@mac.com",
         "geffertkilian@gmail.com",
         "berndemhart46@gmail.com",
@@ -53,11 +70,45 @@ EMAIL_WHITELIST: frozenset[str] = frozenset(
 ADMIN_EMAILS: frozenset[str] = frozenset({"bewertung@ki-sicherheit.jetzt"})
 
 
+_zuletzt_geloggt: frozenset[str] | None = None
+
+
+def _extra_whitelist() -> frozenset[str]:
+    """Adressen aus EXTRA_WHITELIST (kommagetrennt, case-insensitive).
+
+    Bewusst bei jedem Aufruf frisch gelesen statt beim Import: Der Login
+    ist kein heisser Pfad, und ein Cache wuerde nach einer ENV-Aenderung
+    einen alten Stand festhalten. Eintraege ohne "@" werden verworfen —
+    ein Tippfehler soll nicht still zu einem toten Eintrag werden.
+    """
+    global _zuletzt_geloggt
+
+    roh = os.getenv(EXTRA_WHITELIST_ENV, "") or ""
+    eintraege = [e.strip().lower() for e in roh.split(",")]
+    gueltig = frozenset(e for e in eintraege if e and "@" in e)
+    verworfen = [e for e in eintraege if e and "@" not in e]
+
+    if gueltig != _zuletzt_geloggt:
+        _zuletzt_geloggt = gueltig
+        if gueltig:
+            log.info("[WHITELIST] %d Adresse(n) aus %s übernommen",
+                     len(gueltig), EXTRA_WHITELIST_ENV)
+        if verworfen:
+            log.warning("[WHITELIST] %d Eintrag/Einträge in %s ohne '@' ignoriert: %s",
+                        len(verworfen), EXTRA_WHITELIST_ENV, ", ".join(verworfen))
+    return gueltig
+
+
+def all_whitelisted() -> frozenset[str]:
+    """Wirksame Whitelist: fester Code-Bestand plus ENV-Ergänzungen."""
+    return EMAIL_WHITELIST | _extra_whitelist()
+
+
 def is_whitelisted(email: str | None) -> bool:
     """Return True iff the given email is in the test-phase whitelist."""
     if not email:
         return False
-    return email.strip().lower() in EMAIL_WHITELIST
+    return email.strip().lower() in all_whitelisted()
 
 
 def require_whitelisted(email: str | None) -> str:
@@ -71,7 +122,7 @@ def require_whitelisted(email: str | None) -> str:
             detail="Diese E-Mail-Adresse ist nicht für die Testphase freigeschaltet.",
         )
     normalised = email.strip().lower()
-    if normalised not in EMAIL_WHITELIST:
+    if normalised not in all_whitelisted():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Diese E-Mail-Adresse ist nicht für die Testphase freigeschaltet.",

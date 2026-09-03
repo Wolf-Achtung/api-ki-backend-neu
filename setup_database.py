@@ -61,6 +61,10 @@ TESTUSERS: List[str] = [
     "post@zero2.de",
     "giselapeter@peter-partner.de",
     "wolf.hohl@web.de",
+    # KIS-1264: neu freigeschaltet (2026-08-24)
+    "jan.bonath@white-spot-films.com",
+    "jbfilm@outlook.de",
+    "mail@ennoreese.de",
     "geffertj@mac.com",
     "geffertkilian@gmail.com",
     "levent.graef@posteo.de",

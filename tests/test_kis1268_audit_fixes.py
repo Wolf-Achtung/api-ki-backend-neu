@@ -219,3 +219,54 @@ class TestPromptYearHardcodes:
         assert "(2025/2026/2027)" not in src
         assert "Förder-Timeline 2025–2027" not in src
         assert "{{report_date}}" in src
+
+
+# =========================================================================
+# KIS-1264: Whitelist zusaetzlich aus EXTRA_WHITELIST
+# =========================================================================
+
+class TestExtraWhitelistAusEnv:
+    """Freischalten ohne Deploy — ein Backend-Deploy bricht laufende
+    Report-Generierungen ab, das soll eine Freischaltung nicht kosten."""
+
+    def test_env_adresse_wird_freigeschaltet(self, monkeypatch):
+        from core.whitelist import is_whitelisted
+        assert not is_whitelisted("neu@example.org")
+        monkeypatch.setenv("EXTRA_WHITELIST", "neu@example.org")
+        assert is_whitelisted("neu@example.org")
+
+    def test_mehrere_adressen_und_schreibweise(self, monkeypatch):
+        from core.whitelist import is_whitelisted
+        monkeypatch.setenv("EXTRA_WHITELIST", " Eins@Example.ORG , zwei@example.org ")
+        assert is_whitelisted("eins@example.org")
+        assert is_whitelisted("ZWEI@example.org")
+
+    def test_eintrag_ohne_at_wird_verworfen(self, monkeypatch):
+        from core.whitelist import all_whitelisted
+        monkeypatch.setenv("EXTRA_WHITELIST", "kaputt.de,gut@example.org")
+        wirksam = all_whitelisted()
+        assert "gut@example.org" in wirksam
+        assert "kaputt.de" not in wirksam
+
+    def test_leere_env_aendert_nichts(self, monkeypatch):
+        from core.whitelist import EMAIL_WHITELIST, all_whitelisted
+        monkeypatch.setenv("EXTRA_WHITELIST", "")
+        assert all_whitelisted() == EMAIL_WHITELIST
+
+    def test_env_macht_niemanden_zum_admin(self, monkeypatch):
+        # Admin bleibt eine Sicherheitsgrenze, keine Betriebseinstellung.
+        from core.whitelist import is_admin, is_whitelisted
+        monkeypatch.setenv("EXTRA_WHITELIST", "moechtegern@example.org")
+        assert is_whitelisted("moechtegern@example.org")
+        assert not is_admin("moechtegern@example.org")
+
+    def test_require_whitelisted_akzeptiert_env_adresse(self, monkeypatch):
+        from core.whitelist import require_whitelisted
+        monkeypatch.setenv("EXTRA_WHITELIST", "neu@example.org")
+        assert require_whitelisted("Neu@Example.org") == "neu@example.org"
+
+    def test_neu_freigeschaltete_adressen_sind_drin(self):
+        from core.whitelist import is_whitelisted
+        for adresse in ("jan.bonath@white-spot-films.com", "jbfilm@outlook.de",
+                        "mail@ennoreese.de", "michelmorales@me.com"):
+            assert is_whitelisted(adresse), adresse
