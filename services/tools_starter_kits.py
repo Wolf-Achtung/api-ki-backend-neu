@@ -231,7 +231,7 @@ TOOL_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
 # Funding templates per size
 # Fix-Batch B3: Removed regional funding programs (NRW, BW) that caused false positives
 # Only universal BMWK/federal programs are included here.
-# Regional programs should be handled by funding_engine_v2 with bundesland filter.
+# Regionale Programme kommen aus funding_recommender (bundesland-gefiltert).
 FUNDING_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
     # PLATIN+++ FIX 4.1: Removed go-digital (ended Dec 2024) and Digital Jetzt (ended Dec 2023)
     "solo": [

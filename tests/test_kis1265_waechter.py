@@ -64,7 +64,8 @@ class TestFundingRadarKandidaten:
         programme = [{"title": "A", "status": "active"}, {"title": "B", "status": "active"},
                      {"title": "C", "status": "discontinued"}]
         collect_candidates(programme, [], api_key="k", year=2026, scan_all=True,
-                           search=lambda n, y, k: gesucht.append(n) or [])
+                           # KIS-1273: die Suche ist jetzt domaingebunden
+                           search=lambda n, y, k, **kw: gesucht.append(n) or [])
         assert gesucht == ["A", "B"]
 
     def test_suchanfrage_nennt_programm_jahr_und_frist(self):
@@ -128,7 +129,8 @@ class TestToolsRadar:
         befunde = [{"type": "stale", "tool": f"T{i}", "detail": "d"} for i in range(20)]
         befunde.append({"type": "dead_url", "tool": "T0", "detail": "doppelt"})
         collect_candidates([], befunde, api_key="k", year=2026, limit=12,
-                           search=lambda n, y, k: gesucht.append(n) or [])
+                           # KIS-1273: die Suche ist jetzt domaingebunden
+                           search=lambda n, y, k, **kw: gesucht.append(n) or [])
         assert len(gesucht) == 12
         assert gesucht.count("T0") == 1
 
