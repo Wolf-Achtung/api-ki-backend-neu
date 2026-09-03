@@ -91,7 +91,13 @@ _BC_EMPTY_VALUE_PATTERNS: List[Tuple[str, str]] = [
     # "€." or "€ ." → "n. v."
     (r'<strong>\s*€\s*</strong>\s*\.', 'n.&thinsp;v.'),
     (r'<strong>\s*&nbsp;\s*€\s*</strong>', '<strong>n.&thinsp;v.</strong>'),
-    (r'(?<!\d)\s*€\s*\.(?!\d)', ' n.&thinsp;v.'),
+    # KIS-1267: Der Lookbehind stand vor dem optionalen \s*, griff also erst
+    # NACH dem Leerzeichen und sah dort kein Ziffer mehr. Damit zerstoerte
+    # das Muster jeden Satz, der regulaer auf einen Betrag endet: Lauf
+    # KIS-1262 druckte "Investitionsbudget liegt bei 2.000-10.000 n. v."
+    # statt "... 2.000-10.000 EUR." Jetzt schuetzt der Lookbehind die Stelle
+    # unmittelbar vor dem Euro-Zeichen mit — ein echter Betrag bleibt stehen.
+    (r'(?<![\d\s])\s*€\s*\.(?!\d)', ' n.&thinsp;v.'),
     # "bei %" or "bei  %" → "bei n. v."
     (r'bei\s+<strong>\s*&nbsp;\s*%\s*</strong>', 'bei <strong>n.&thinsp;v.</strong>'),
     (r'bei\s+<strong>\s*%\s*</strong>', 'bei <strong>n.&thinsp;v.</strong>'),

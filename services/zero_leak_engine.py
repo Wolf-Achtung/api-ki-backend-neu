@@ -104,6 +104,20 @@ CRITICAL_LEAK_REGEX: List[Tuple[Pattern, str]] = [
     (re.compile(r"\bsk-ant-[A-Za-z0-9]{16,}\b"), "Anthropic_API_Key"),
     # Generic secret patterns with key-like structure
     (re.compile(r"\b[A-Za-z0-9_]*(SECRET|KEY|TOKEN)[A-Za-z0-9_]*\s*[=:]\s*['\"][A-Za-z0-9+/=]{20,}['\"]", re.IGNORECASE), "Exposed_Secret"),
+    # KIS-1267: Prompt-Anweisung im Lesertext. Lauf KIS-1262 druckte auf
+    # S. 21 des Strategieberichts woertlich: "Erklaeren Sie dem Leser
+    # verstaendlich, warum die ROI-Zahlen unterschiedlich sind ... KIS-1238:
+    # Fuehre die Differenz NICHT allein auf ... zurueck." Die Quelle ist
+    # entschaerft (prompts/strategy_prompts.py), das hier ist das Netz.
+    # Eine Ticket-ID als ANWEISUNGS-Praefix ("KIS-1238: <Text>") ist
+    # eindeutig intern. Die Report-ID im Fuss ("Report-ID: KIS-1262")
+    # trifft das Muster nicht — dort steht kein Doppelpunkt nach der Zahl.
+    (re.compile(r"\bKIS-\d{3,4}\s*:\s*[^<]{0,400}?\.(?=\s|<|$)"), "Ticket_Instruction"),
+    # Anweisung an den Schreibenden statt an den Leser. Bewusst eng auf
+    # "dem Leser" begrenzt: "Erklaeren Sie Ihrem Team ..." ist legitimer
+    # Beratungstext und bleibt unangetastet.
+    (re.compile(r"\bErkl[äa]ren\s+Sie\s+dem\s+Leser\b[^<]{0,300}?\.(?=\s|<|$)",
+                re.IGNORECASE), "Meta_Instruction"),
 ]
 
 # =============================================================================

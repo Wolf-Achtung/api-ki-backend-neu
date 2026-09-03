@@ -2569,10 +2569,20 @@ def validate_location_in_section(html: str, correct_bundesland: str) -> tuple[st
             result = new_result
 
         # For remaining occurrences (not in <li>/<tr> with Förder-keywords):
-        # Replace with "Ihr Bundesland" as before
-        remaining = list(re.finditer(bl_pattern, result, re.IGNORECASE))
+        # Replace with "Ihr Bundesland" as before.
+        #
+        # KIS-1267: NICHT innerhalb eines Bindestrich-Kompositums ersetzen.
+        # Lauf KIS-1262 druckte auf S. 27 des Status-Reports "Medienboard
+        # Berlin-Ihr Bundesland": Der Nutzer sitzt in Berlin, "Brandenburg"
+        # galt als fremdes Bundesland — und \b trennt am Bindestrich mitten
+        # im Eigennamen "Berlin-Brandenburg". Eigennamen wie
+        # "Berlin-Brandenburg", "Rheinland-Pfalz" oder "Sachsen-Anhalt"
+        # bleiben damit ganz. Die Erkennung oben nutzt weiter bl_pattern —
+        # eine fremde Foerderzeile wird also nach wie vor komplett entfernt.
+        bl_replace_pattern = rf'(?<!-){bl_pattern}(?!-)'
+        remaining = list(re.finditer(bl_replace_pattern, result, re.IGNORECASE))
         if remaining:
-            result = re.sub(bl_pattern, "Ihr Bundesland", result, flags=re.IGNORECASE)
+            result = re.sub(bl_replace_pattern, "Ihr Bundesland", result, flags=re.IGNORECASE)
             removals += len(remaining)
             log.warning(f"[LOCATION-VALIDATOR] Replaced wrong Bundesland '{bundesland}' → 'Ihr Bundesland' (correct: {correct_bundesland})")
 
