@@ -14,6 +14,8 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+
+from core.admin_auth import require_admin_key, verify_admin_key
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -27,17 +29,13 @@ MAX_LIMIT = 500
 
 
 def _verify_admin_key(admin_key: str) -> None:
-    """Verify admin_key against STRATEGY_ADMIN_KEY env var."""
-    expected_key = os.getenv("STRATEGY_ADMIN_KEY", "")
-    if not expected_key:
-        raise HTTPException(status_code=500, detail="STRATEGY_ADMIN_KEY nicht konfiguriert")
-    if not hmac.compare_digest(admin_key or "", expected_key):
-        raise HTTPException(status_code=403, detail="Ungültiger Admin-Key")
+    """KIS-1271: Delegiert an core.admin_auth — eine Regel, eine Stelle."""
+    verify_admin_key(admin_key)
 
 
 @router.get("/list")
 def list_feedback(
-    admin_key: str = Query(..., description="Admin API Key"),
+    _admin: None = Depends(require_admin_key),
     type: Optional[str] = Query(None, description="Filter by feedback type (payload->type)"),
     since: Optional[str] = Query(None, description="Filter: created_at >= this date (ISO format, e.g. 2026-03-01)"),
     limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT, description="Max entries to return"),
@@ -51,7 +49,6 @@ def list_feedback(
     - since: only entries created on or after this date
     - limit: max entries (default 100, max 500)
     """
-    _verify_admin_key(admin_key)
 
     # Build query dynamically
     conditions: List[str] = []

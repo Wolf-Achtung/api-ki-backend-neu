@@ -21,7 +21,9 @@ import logging
 import os
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, HTTPException, Query, Request, Response
+from fastapi import Depends, APIRouter, HTTPException, Query, Request, Response
+
+from core.admin_auth import require_admin_key
 from sqlalchemy import func
 
 from core.db import SessionLocal
@@ -90,14 +92,8 @@ async def track_event(request: Request) -> Response:
 
 
 @router.get("/metrics/summary")
-def metrics_summary(admin_key: str = Query(...), days: int = Query(30, ge=1, le=365)) -> dict:
+def metrics_summary(_admin: None = Depends(require_admin_key), days: int = Query(30, ge=1, le=365)) -> dict:
     """Tages-Zählstände je Event (nur Admin)."""
-    expected = os.getenv("STRATEGY_ADMIN_KEY", "")
-    if not expected:
-        raise HTTPException(status_code=500, detail="STRATEGY_ADMIN_KEY nicht konfiguriert")
-    if not hmac.compare_digest(admin_key, expected):
-        raise HTTPException(status_code=403, detail="Ungültiger Admin-Key")
-
     since = datetime.now(timezone.utc) - timedelta(days=days)
     db = SessionLocal()
     try:
@@ -121,19 +117,13 @@ def metrics_summary(admin_key: str = Query(...), days: int = Query(30, ge=1, le=
 
 
 @router.get("/metrics/anthropic-usage")
-def anthropic_usage_summary(admin_key: str = Query(...),
+def anthropic_usage_summary(_admin: None = Depends(require_admin_key),
                             days: int = Query(30, ge=1, le=365)) -> dict:
     """KIS-1270: Aggregation der persistierten Usage nach call_site x model.
 
     Liefert je Gruppe: Calls, Tokensummen (alle drei Input-Felder getrennt),
     Output-Token, cache-korrekte Kosten. Dazu Gesamtkosten und die Zahl der
     Briefings im Zeitraum als Mengengeruest."""
-    expected = os.getenv("STRATEGY_ADMIN_KEY", "")
-    if not expected:
-        raise HTTPException(status_code=500, detail="STRATEGY_ADMIN_KEY nicht konfiguriert")
-    if not hmac.compare_digest(admin_key, expected):
-        raise HTTPException(status_code=403, detail="Ungültiger Admin-Key")
-
     from models import AnthropicUsage, Briefing
     since = datetime.now(timezone.utc) - timedelta(days=days)
     db = SessionLocal()
