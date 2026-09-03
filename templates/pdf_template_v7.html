@@ -1713,11 +1713,13 @@ h1, h2, h3, h4 {
     {% elif expertise_level == "expert" and company_size == "solo" %}
     <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (fortgeschritten):</strong> Die 30-Tage-Challenge ist auf Solo-Berater zugeschnitten und fokussiert auf Werkzeugkasten-Optimierung und Spielregeln in 4 Wochen. Fokussieren Sie auf: Quick Wins, Vendor-Audit und KI-Potenzial-Analyse.</div>
     {% elif expertise_level == "expert" %}
-    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (fortgeschritten):</strong> Die 30-Tage-Challenge startet direkt mit Stack-Optimierung und Governance — die Einstiegs-Woche entfällt. Fokussieren Sie auf: Quick Wins, Vendor-Audit und KI-Potenzial-Analyse.</div>
+    {# KIS-1267: ohne feste Tageszahl — bei gedroppter Einstiegs-Woche endet
+       die Challenge sichtbar vor Tag 30 und der Titel nennt die kuerzere Zahl. #}
+    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (fortgeschritten):</strong> Ihre KI-Challenge startet direkt mit Stack-Optimierung und Governance — die Einstiegs-Woche entfällt. Fokussieren Sie auf: Quick Wins, Vendor-Audit und KI-Potenzial-Analyse.</div>
     {% elif expertise_level == "intermediate" and company_size == "solo" %}
     <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (erfahren):</strong> Die 30-Tage-Challenge ist auf Solo-Berater zugeschnitten und kombiniert Workflow-Analyse mit Automatisierung in 4 Wochen. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
     {% elif expertise_level == "intermediate" %}
-    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (erfahren):</strong> Die 30-Tage-Challenge überspringt die Grundlagen-Woche und startet mit Workflow-Integration. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
+    <div class="skip-hint"><strong>Für Ihr Kompetenzniveau (erfahren):</strong> Ihre KI-Challenge überspringt die Grundlagen-Woche und startet mit Workflow-Integration. Fokussieren Sie auf: Quick Wins, 90-Tage-Roadmap und Business Case.</div>
     {% endif %}
     </div>{# /KIS-1264 unteilbar #}
 </div>
@@ -2121,7 +2123,11 @@ h1, h2, h3, h4 {
     <div class="section-body">{{ GAMECHANGER_DECISION_HTML|safe }}</div>
     {% if ENABLE_APPENDIX|default(false) %}<div class="xref">Vollständige KI-Potenzial-Analyse (Architektur, Skaleneffekte) → Anhang A2</div>{% endif %}
     <!-- CTA: KI-Potenzial-Analyse -->
-    <div style="margin-top: 24px; padding: 16px 20px; background: #f0f9ff; border: 2px solid #0284c7; border-radius: 10px; break-inside: avoid; page-break-inside: avoid;">
+    {# KIS-1267: break-before:avoid haelt den Kasten bei seinem Vortext.
+       Lauf KIS-1262 schob ihn als unteilbaren Block allein auf Seite 31 —
+       PLATIN-QA meldete "thin_page R1:S.31: nur 330 Zeichen". Gleiches
+       Muster wie .section-transition weiter oben im Stylesheet. #}
+    <div style="margin-top: 24px; padding: 16px 20px; background: #f0f9ff; border: 2px solid #0284c7; border-radius: 10px; break-inside: avoid; page-break-inside: avoid; break-before: avoid; page-break-before: avoid;">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
             <span style="font-size: 18px;">📋</span>
             <span style="font-weight: 700; font-size: 12pt; color: #0284c7;">Ihre ausf&uuml;hrliche KI-Potenzial-Analyse</span>
