@@ -1,6 +1,6 @@
 # Steckbrief api-ki-backend-neu
 
-Letzter Wartungs-Durchgang: **2026-08-19** (Skill `/wartung`).
+Letzter Wartungs-Durchgang: **2026-09-03**.
 Dieser Steckbrief listet die betriebskritischen Fakten. Details stehen in
 `.env.example` und in den verlinkten Dateien.
 
@@ -22,7 +22,7 @@ Alle Modell-IDs sind per ENV konfigurierbar. Die Tabelle zeigt den
 |---|---|---|---|
 | Report-Sektionen (Standard) | `ANTHROPIC_MODEL_DEFAULT` (Vorrang) → `ANTHROPIC_MODEL` | `claude-sonnet-5` (Railway setzt `ANTHROPIC_MODEL_DEFAULT`) | Aktiv; Denken läuft adaptiv mit (Voreinstellung) |
 | 8 Premium-Sektionen | `ANTHROPIC_MODEL_OPUS` + `OPUS_SECTIONS` | `claude-opus-4-8` | Aktiv; Denken aus |
-| Anthropic-Fallback | `ANTHROPIC_MODEL_FALLBACK` | `claude-haiku-4-5-20251001` (Railway-ENV; Code-Default wäre Sonnet 4.5) | Aktiv; billiger und schwächer als der Code-Default — bewusste Wahl prüfen |
+| Anthropic-Fallback | `ANTHROPIC_MODEL_FALLBACK` | `claude-haiku-4-5-20251001` (Railway-ENV; Code-Default ist Sonnet 4.5) | Greift NUR bei `NotFoundError`, also praktisch nie — dann aber für JEDE Sektion. Haiku senkt dort die Qualität ohne nennenswerte Ersparnis. **Empfehlung: Railway-Override entfernen** (Test: tests/test_kis1272_fallback_modell.py) |
 | Chat-Gespräch | `CHAT_CONVERSATION_MODEL` | `claude-sonnet-4-5-20250929` (Railway-ENV, seit 2026-09) | Aktiv; Deprecation von Sonnet 4 damit erledigt |
 | Chat-Extraktion | `CHAT_EXTRACTOR_MODEL` | Default `claude-haiku-4-5-20251001` | Aktiv |
 | Coach | `ANTHROPIC_MODEL_COACH` → `ANTHROPIC_MODEL_OPUS` | `claude-opus-4-8` | Aktiv |
@@ -52,23 +52,45 @@ Merkregeln:
   `LANG_SWEEP_PARALLELISM=4`, `STALE_BRIEFING_TIMEOUT=600`,
   `ANTHROPIC_THINKING_BUDGET=0` (Denk-Opt-in aus).
 
-## Bekannte Punkte (offen, Stand 2026-08-19)
+## Bekannte Punkte (offen, Stand 2026-09-03)
 
-- ENV-Audit 2026-09 (`docs/env-audit-2026-09.md`): 94 Railway-Variablen
-  liest der Code nie, 28 ohne Wirkung. Abbau in zwei Tranchen offen
-  (Wolf, Railway). Schreibweisen-Falle `USE_INTERNAL_RESEARCH` seit
-  KIS-1266 behoben — der Name wird jetzt gelesen.
+- ENV-Tranche 2: `docs/env-tranche2-2026-09-03.md` nennt 37 sicher
+  löschbare Variablen — gegengeprüft am aktuellen Code. Der ältere
+  `docs/env-audit-2026-09.md` ist an 8 Stellen überholt (KIS-1266 hat
+  `USE_INTERNAL_RESEARCH` und die `RESEARCH_INCLUDE_*`-Listen
+  angeschlossen). Löschen muss Wolf in Railway.
+- Tool-Daten: `data/tools_seed.json` hat 20 von 23 Einträgen ohne
+  `verified_at`. Der Tool-Radar läuft (Issue #1168, 32 Befunde). Seine
+  Tavily-Vorschläge sind für Tools deutlich unschärfer als für
+  Förderprogramme — Tool-Namen wie „Railway", „Runway", „Make" sind
+  mehrdeutig. Vor Übernahme jede Quelle einzeln prüfen.
+- `services/funding_engine_v2.py` ist toter Code: 1278 Zeilen, 24
+  Programme, importiert nur von der eigenen Testdatei. Drift-Tests in
+  tests/test_kis1268_foerderdaten.py halten den Zustand fest. Löschen
+  oder verdrahten ist eine offene Produktentscheidung.
+- Zwei Förderdaten-Punkte ohne Beleg (als Notiz im Datensatz vermerkt):
+  „aws digi Invest" als eigenständiges Programm, und der Status von
+  Digitalbonus Bayern (steht als `expired`, Seite wieder erreichbar).
+- ZIM steht bis zur Wiedervorlage am 15.01.2027 auf `paused` und fällt
+  aus allen Empfehlungen. Der Förder-Radar erinnert ab diesem Datum.
 - Perplexity liefert die Markt-Box, die das DE-Template nicht rendert:
-  zwei Aufrufe je Report ohne sichtbaren Nutzen. Entscheidung offen
-  (rendern oder abschalten).
+  zwei Aufrufe je Report ohne sichtbaren Nutzen. Entscheidung offen.
 - `routes/appetizer.py` bleibt aktiv (Wolf plant eine Einbindung), hat
-  aber noch keinen Aufrufer im eigenen Frontend. Das `firma`-Feld wurde
-  am 2026-08-19 entfernt — die Firmennamen-Invariante gilt jetzt ohne
-  Ausnahme (Test: tests/test_wartung_2026_08_appetizer.py).
+  aber noch keinen Aufrufer im eigenen Frontend.
 - pdfservice: Docker-Image `puppeteer:22.10.0` (Mai 2024) gepinnt, kein
   Lockfile → `npm audit` nicht möglich.
-- Monatlicher Förder-Freshness-Check: nächster Lauf Anfang September 2026
-  (`scripts/check_funding_freshness.py --max-age-days 90`).
+- GitHub-Label `datenpflege` existiert nicht — die Wächter legen ihre
+  Issues deshalb ohne Label an.
+
+## Werkzeuge
+
+- `scripts/compare_reports.py alt.pdf neu.pdf` — vergleicht zwei
+  Report-Läufe: Kennzahlen, dünne Seiten, Rückfall-Prüfung gegen die
+  behobenen Fehler. Exit-Code 1 bei einem Rückfall.
+- `POST /api/admin/testrun/replay/{briefing_id}` — erzeugt einen Lauf
+  mit identischen Antworten (kopiert auch FB2). Admin-Key jetzt per
+  Header `X-Admin-Key`; der Query-Parameter bleibt gültig, verträgt aber
+  kein `+` im Schlüssel.
 
 ## Nicht verhandelbar
 

@@ -17,6 +17,8 @@ import time
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+
+from core.admin_auth import require_admin_key, verify_admin_key
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -37,12 +39,8 @@ _DIAGNOSTIC_FIELDS = [
 # ---------- Auth ----------
 
 def _verify_admin_key(admin_key: str) -> None:
-    """Verify admin_key against STRATEGY_ADMIN_KEY env var."""
-    expected_key = os.getenv("STRATEGY_ADMIN_KEY", "")
-    if not expected_key:
-        raise HTTPException(status_code=500, detail="STRATEGY_ADMIN_KEY nicht konfiguriert")
-    if not hmac.compare_digest(admin_key, expected_key):
-        raise HTTPException(status_code=403, detail="Ungültiger Admin-Key")
+    """KIS-1271: Delegiert an core.admin_auth — eine Regel, eine Stelle."""
+    verify_admin_key(admin_key)
 
 
 # ---------- Request model ----------
@@ -63,7 +61,7 @@ _REPLAY_DEDUP_WINDOW_MINUTES = 30
 def replay_testrun(
     briefing_id: int,
     request: Request,
-    admin_key: str = Query(..., description="Admin API Key"),
+    _admin: None = Depends(require_admin_key),
     force: bool = Query(False, description="Bypass duplicate guard"),
     body: Optional[ReplayRequest] = None,
     db: Session = Depends(get_db),
@@ -81,7 +79,6 @@ def replay_testrun(
         {"answer_overrides": {"bundesland": "sn"}}
     to inject a missing Bundesland field.
     """
-    _verify_admin_key(admin_key)
 
     # 1. Load source briefing
     from models import Briefing
@@ -262,14 +259,13 @@ def replay_testrun(
 @router.get("/inspect/{briefing_id}")
 def inspect_briefing_answers(
     briefing_id: int,
-    admin_key: str = Query(..., description="Admin API Key"),
+    _admin: None = Depends(require_admin_key),
     db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
     """
     Inspect the stored answers of a briefing for replay debugging.
     Shows all answer keys and critical field values without exposing full data.
     """
-    _verify_admin_key(admin_key)
 
     from models import Briefing
 

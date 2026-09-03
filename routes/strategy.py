@@ -24,6 +24,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+
+from core.admin_auth import require_admin_key, verify_admin_key
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -609,7 +611,7 @@ def _render_strategy_html(sr: StrategyReport, db: Session) -> str:
 @router.post("/admin/unlock/{briefing_id}")
 async def admin_unlock_strategy(
     briefing_id: int,
-    admin_key: str = Query(..., description="Admin API Key"),
+    _admin: None = Depends(require_admin_key),
     db: Session = Depends(get_db),
 ):
     """
@@ -617,12 +619,6 @@ async def admin_unlock_strategy(
     Setzt payment_status='beta' in strategy_reports.
     Wird nur für die ersten Beta-Tester verwendet.
     """
-    expected_key = os.getenv("STRATEGY_ADMIN_KEY", "")
-    if not expected_key:
-        raise HTTPException(status_code=500, detail="STRATEGY_ADMIN_KEY nicht konfiguriert")
-    if not hmac.compare_digest(admin_key, expected_key):
-        raise HTTPException(status_code=403, detail="Ungültiger Admin-Key")
-
     # Prüfe ob Briefing existiert
     briefing = db.query(Briefing).filter(Briefing.id == briefing_id).first()
     if not briefing:
@@ -652,22 +648,13 @@ async def admin_unlock_strategy(
 @router.post("/admin/reset-status/{briefing_id}")
 async def admin_reset_status(
     briefing_id: int,
-    admin_key: str = Query(..., description="Admin API Key"),
+    _admin: None = Depends(require_admin_key),
     db: Session = Depends(get_db),
 ):
     """
     Reset stuck generation: Setzt status von 'generating' auf 'questions_saved'.
     Nur nötig nach Container-Restart während laufender Generierung.
     """
-    expected_key = os.getenv("STRATEGY_ADMIN_KEY", "")
-    if not expected_key:
-        raise HTTPException(status_code=500, detail="STRATEGY_ADMIN_KEY nicht konfiguriert")
-    if not hmac.compare_digest(admin_key, expected_key):
-        return JSONResponse(
-            status_code=401,
-            content={"error": "unauthorized", "detail": "Ungültiger Admin-Key"},
-        )
-
     sr = db.query(StrategyReport).filter(
         StrategyReport.briefing_id == briefing_id
     ).first()
@@ -710,25 +697,20 @@ async def admin_reset_status(
 
 
 def _verify_admin_key(admin_key: str) -> None:
-    """Shared admin key verification for re-test endpoints."""
-    expected_key = os.getenv("STRATEGY_ADMIN_KEY", "")
-    if not expected_key:
-        raise HTTPException(status_code=500, detail="STRATEGY_ADMIN_KEY nicht konfiguriert")
-    if not hmac.compare_digest(admin_key, expected_key):
-        raise HTTPException(status_code=403, detail="Ungültiger Admin-Key")
+    """KIS-1271: Delegiert an core.admin_auth — eine Regel, eine Stelle."""
+    verify_admin_key(admin_key)
 
 
 @router.post("/admin/sanitizer-check/{briefing_id}")
 async def admin_sanitizer_check(
     briefing_id: int,
-    admin_key: str = Query(..., description="Admin API Key"),
+    _admin: None = Depends(require_admin_key),
     db: Session = Depends(get_db),
 ):
     """
     Dry-Run Sanitizer Check: Zeigt was gepatcht/geskippt würde, ohne DB-Write.
     Schnellster Feedback-Loop für Sanitizer-Bugs (~2 Sekunden).
     """
-    _verify_admin_key(admin_key)
 
     sr = db.query(StrategyReport).filter(
         StrategyReport.briefing_id == briefing_id
@@ -827,7 +809,7 @@ async def admin_sanitizer_check(
 @router.post("/admin/re-render/{briefing_id}")
 async def admin_strategy_re_render(
     briefing_id: int,
-    admin_key: str = Query(..., description="Admin API Key"),
+    _admin: None = Depends(require_admin_key),
     db: Session = Depends(get_db),
 ):
     """
@@ -835,7 +817,6 @@ async def admin_strategy_re_render(
     Lädt raw_sections (oder sections), führt Sanitizer + Renderer erneut aus,
     speichert neues HTML in DB.
     """
-    _verify_admin_key(admin_key)
 
     sr = db.query(StrategyReport).filter(
         StrategyReport.briefing_id == briefing_id
@@ -888,14 +869,13 @@ async def admin_strategy_re_render(
 @router.post("/admin/r1-re-render/{briefing_id}")
 async def admin_r1_re_render(
     briefing_id: int,
-    admin_key: str = Query(..., description="Admin API Key"),
+    _admin: None = Depends(require_admin_key),
     db: Session = Depends(get_db),
 ):
     """
     R1 Re-Render: Re-runs Healer → Final Sanitizer → B25 Enforcer → Renderer
     ohne neue LLM-Calls. Lädt sections aus Analysis.meta, rendert neu, speichert HTML.
     """
-    _verify_admin_key(admin_key)
 
     analysis = (
         db.query(Analysis)
