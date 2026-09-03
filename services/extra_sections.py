@@ -775,11 +775,17 @@ def build_core_funding_table_html(briefing: Dict[str, Any], lang: str = "de") ->
 
     # FIX-KIS-1098-R1-FUNDING: Filter by country AND size AND status
     # DE companies see DE + EU programs only; AT sees AT + EU; etc.
+    # KIS-1270: Statusregel aus funding_recommender statt eigener Kopie.
+    # Der Lauf KIS-1264 zeigte ZIM trotz Antragsstopp weiter in dieser
+    # Tabelle — KIS-1268 hatte "paused" nur im Recommender ergaenzt, und
+    # diese zweite Stelle filterte weiterhin nur "expired".
+    from services.funding_recommender import ist_beantragbar
+
     allowed_countries = {country, "EU"}
     filtered = [
         p for p in all_programmes
         if size_group in p.get("suitable_for", [])
-        and p.get("status", "active") != "expired"
+        and ist_beantragbar(p)
         and p.get("country_code", "DE").upper() in allowed_countries
     ]
 

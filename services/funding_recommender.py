@@ -33,6 +33,28 @@ FUNDING_DATA_PATH = os.getenv("FUNDING_DATA_PATH", "data/funding_programmes_core
 
 
 # =============================================================================
+# Welche Programme darf ein Report empfehlen?
+# =============================================================================
+# KIS-1270: Diese Regel stand zweimal im Code — hier und in
+# extra_sections.build_foerder_tabelle. KIS-1268 fuegte "paused" nur hier
+# hinzu; der Lauf KIS-1264 zeigte ZIM daraufhin weiter in der
+# R1-Foerdertabelle, waehrend der Strategiebericht es korrekt wegliess.
+# Eine Regel, eine Stelle.
+#
+# "expired" = beendet, "paused" = befristet nicht beantragbar (ZIM hat seit
+# dem 07.07.2026 einen Antragsstopp, Wiederaufnahme Anfang 2027 angestrebt).
+# Beides gehoert nicht in eine Empfehlung; der Eintrag bleibt aber als
+# kuratierte Historie im Datenbestand.
+NICHT_BEANTRAGBAR_STATUS = frozenset({"expired", "paused"})
+
+
+def ist_beantragbar(programm: Dict[str, Any]) -> bool:
+    """True, wenn ein Programm aktuell beantragt werden kann."""
+    return str(programm.get("status", "active")).strip().lower() \
+        not in NICHT_BEANTRAGBAR_STATUS
+
+
+# =============================================================================
 # DATA STRUCTURES
 # =============================================================================
 
@@ -417,19 +439,7 @@ def load_funding_programs() -> List[Dict[str, Any]]:
     if not programs:
         programs = list(CORE_FUNDING_PROGRAMS)
 
-    # Filter expired programs and normalize
-    #
-    # KIS-1268: "paused" kommt dazu. ZIM hat seit dem 07.07.2026 einen
-    # befristeten Antragsstopp (Haushaltsmittel erschoepft), neue Antraege
-    # fruehestens Anfang 2027. Der Lauf KIS-1262 empfahl ZIM trotzdem als
-    # Weg fuer groessere Entwicklungsprojekte — ein Programm, das der Kunde
-    # aktuell nicht beantragen kann. "expired" waere die falsche Kategorie:
-    # Das Programm ist nicht beendet, bereits gestellte Antraege laufen
-    # weiter, und es kehrt zurueck. Deshalb ein eigener Status, der sich
-    # 2027 mit einer Zeile zurueckdrehen laesst.
-    nicht_beantragbar = {"expired", "paused"}
-    active = [p for p in programs
-              if p.get("status", "active") not in nicht_beantragbar]
+    active = [p for p in programs if ist_beantragbar(p)]
     return [_normalize_program(p) for p in active]
 
 
