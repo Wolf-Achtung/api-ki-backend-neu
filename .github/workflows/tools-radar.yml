@@ -1,0 +1,70 @@
+# KIS-1265: Tool-Radar — monatliche Pflege-Überwachung der kuratierten
+# Tool-Liste (data/tools_seed.json). Gegenstück zum Förder-Radar: Prüfdatum,
+# Erreichbarkeit, Recherche-Kandidaten. Preise bleiben kuratiert — der
+# Radar meldet, der Mensch entscheidet. Läuft außerhalb von Railway.
+name: Tools Radar
+
+on:
+  schedule:
+    - cron: "30 6 1 * *"   # am 1. jedes Monats, 06:30 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  tools-radar:
+    name: Tool-Radar
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip requests
+
+      - name: Run Tool-Radar (URL-Checks + Recherche-Kandidaten)
+        id: radar
+        env:
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+        run: |
+          python scripts/tools_radar.py --check-urls --tavily --report tools_report.md
+          count=$(grep -oP '(?<=\*\*)\d+(?= Befund)' tools_report.md || echo 0)
+          echo "findings=${count}" >> "$GITHUB_OUTPUT"
+          cat tools_report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Issue erstellen/aktualisieren bei Befunden
+        if: steps.radar.outputs.findings != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ASSIGNEE: ${{ github.repository_owner }}
+        run: |
+          title="🧰 Tool-Radar: ${{ steps.radar.outputs.findings }} Tool-Befund(e) zur Prüfung"
+          existing=$(gh issue list --state open --search "Tool-Radar in:title" --json number --jq '.[0].number' || true)
+          if [ -n "$existing" ] && [ "$existing" != "null" ]; then
+            gh issue comment "$existing" --body-file tools_report.md
+            gh issue edit "$existing" --title "$title" --add-assignee "$ASSIGNEE" || true
+          else
+            gh issue create --title "$title" --body-file tools_report.md --label "datenpflege" --assignee "$ASSIGNEE" || \
+            gh issue create --title "$title" --body-file tools_report.md --assignee "$ASSIGNEE" || \
+            gh issue create --title "$title" --body-file tools_report.md
+          fi
+
+      - name: Bericht per Mail (nur bei Befunden)
+        if: steps.radar.outputs.findings != '0'
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+          ADMIN_NOTIFY_EMAIL: ${{ secrets.ADMIN_NOTIFY_EMAIL }}
+        run: |
+          python scripts/notify_mail.py \
+            --subject "🧰 Tool-Radar: ${{ steps.radar.outputs.findings }} Befund(e) zur Prüfung" \
+            --file tools_report.md --only-if-findings
