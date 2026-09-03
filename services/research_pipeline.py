@@ -279,6 +279,20 @@ def _market_insights_box(items: List[Dict[str, str]]) -> str:
 
 # --- TAVILY INTEGRATION ---
 
+def _policy_domains(kind: str) -> Tuple[List[str], List[str]]:
+    """KIS-1266: (include, exclude) aus research_policy — die ENV-Listen
+    RESEARCH_INCLUDE_FUNDING/TOOLS und RESEARCH_EXCLUDE waren gepflegt, aber
+    nirgends angeschlossen. Fail-open: ohne Policy keine Filter."""
+    try:
+        from services.research_policy import load_policy_from_env
+        policy = load_policy_from_env()
+        include = policy.include_funding if kind == "funding" else policy.include_tools
+        return list(include or []), list(policy.exclude or [])
+    except Exception as exc:
+        log.debug("research_policy nicht verfügbar (%s) — ohne Domänenfilter", exc)
+        return [], []
+
+
 def _tavily_funding_search(bundesland: str, branche: str, days: int = 90, report_year: int = None) -> List[Dict[str, str]]:
     """Live-Suche nach Förderprogrammen via Tavily API.
 
@@ -303,8 +317,11 @@ def _tavily_funding_search(bundesland: str, branche: str, days: int = 90, report
     log.info("🔍 Tavily funding search: %s", query)
 
     try:
-        results = provider_tavily.search(query, max_results=8, days=days)
-        log.info("✅ Tavily returned %d funding results", len(results))
+        include, exclude = _policy_domains("funding")
+        results = provider_tavily.search(query, max_results=8, days=days,
+                                         include_domains=include, exclude_domains=exclude)
+        log.info("✅ Tavily returned %d funding results (domains: %d include / %d exclude)",
+                 len(results), len(include), len(exclude))
         return results
     except Exception as exc:
         log.warning("⚠️ Tavily funding search failed: %s", exc)
@@ -334,8 +351,11 @@ def _tavily_tools_search(branche: str, use_cases: List[str], days: int = 60, rep
     log.info("🔍 Tavily tools search: %s", query)
 
     try:
-        results = provider_tavily.search(query, max_results=8, days=days)
-        log.info("✅ Tavily returned %d tools results", len(results))
+        include, exclude = _policy_domains("tools")
+        results = provider_tavily.search(query, max_results=8, days=days,
+                                         include_domains=include, exclude_domains=exclude)
+        log.info("✅ Tavily returned %d tools results (domains: %d include / %d exclude)",
+                 len(results), len(include), len(exclude))
         return results
     except Exception as exc:
         log.warning("⚠️ Tavily tools search failed: %s", exc)

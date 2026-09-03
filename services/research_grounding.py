@@ -25,6 +25,18 @@ from typing import Any, Dict
 
 log = logging.getLogger(__name__)
 
+# KIS-1266: Ergebnis des letzten run_research-Laufs, damit analyze_briefing
+# es wiederverwendet statt ein zweites Mal zu suchen. Wird beim Abholen
+# geleert — ein Report konsumiert genau die Blöcke, die für ihn entstanden.
+_LAST_BLOCKS: Dict[str, Any] = {}
+
+
+def take_last_research_blocks() -> Dict[str, Any]:
+    """Blöcke des letzten Grounding-Laufs abholen (einmalig, danach leer)."""
+    global _LAST_BLOCKS
+    blocks, _LAST_BLOCKS = _LAST_BLOCKS, {}
+    return blocks
+
 # Welche Sektion bekommt welche Research-Komponenten.
 _SECTION_SOURCES: Dict[str, tuple] = {
     "tools_empfehlungen": ("TOOLS_TABLE_HTML", "NEWS_BOX_HTML"),
@@ -74,6 +86,13 @@ def build_research_grounding(answers: Dict[str, Any]) -> Dict[str, str]:
     except Exception as exc:
         log.warning("[RESEARCH-GROUNDING] research unavailable (%s) — continuing ungrounded", exc)
         return {}
+
+    # KIS-1266: Die Blöcke einmal aufheben. analyze_briefing brauchte
+    # dieselben Ergebnisse ein zweites Mal (Quellenstand, Tool-/Förder-
+    # Tabellen) und rief run_research dafür erneut auf — zwei weitere
+    # Tavily-Suchen und bis zu acht Sekunden je Report, ohne neuen Inhalt.
+    global _LAST_BLOCKS
+    _LAST_BLOCKS = dict(blocks)
 
     last_updated = str(blocks.get("last_updated") or "")
     grounding: Dict[str, str] = {}

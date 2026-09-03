@@ -70,6 +70,19 @@ EMAIL_WHITELIST: frozenset[str] = frozenset(
 ADMIN_EMAILS: frozenset[str] = frozenset({"bewertung@ki-sicherheit.jetzt"})
 
 
+def all_admins() -> frozenset[str]:
+    """KIS-1266: Code-Konstante plus ENV ADMIN_EMAILS (kommagetrennt).
+
+    Vorher gab es zwei Admin-Listen: routes/admin.py las die ENV, der
+    Strategie-Admin-Pfad nur die Konstante — wolf.hohl@web.de war damit
+    halb Admin. Jetzt gilt an beiden Stellen dieselbe Vereinigung. Der
+    Eintrag in der ENV macht niemanden zum Testnutzer: die Whitelist
+    bleibt getrennt (EXTRA_WHITELIST)."""
+    roh = os.getenv("ADMIN_EMAILS", "") or ""
+    aus_env = frozenset(e.strip().lower() for e in roh.split(",") if e.strip() and "@" in e)
+    return ADMIN_EMAILS | aus_env
+
+
 _zuletzt_geloggt: frozenset[str] | None = None
 
 
@@ -131,7 +144,7 @@ def require_whitelisted(email: str | None) -> str:
 
 
 def is_admin(email: str | None) -> bool:
-    """Return True iff the given email is an admin."""
+    """Return True iff the given email is an admin (Konstante ∪ ENV ADMIN_EMAILS)."""
     if not email:
         return False
-    return email.strip().lower() in ADMIN_EMAILS
+    return email.strip().lower() in all_admins()

@@ -8,7 +8,7 @@ SPRINT G14-B: Reduced timeout from 20s to 8s for faster fallback.
 """
 from __future__ import annotations
 import os, json, logging, re, requests
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 LOGGER = logging.getLogger(__name__)
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
@@ -40,7 +40,13 @@ def _sanitize_query(query: str, max_len: int = 400) -> str:
     return q
 
 
-def search(query: str, max_results: int = 6, days: int = 30) -> List[Dict]:
+def search(query: str, max_results: int = 6, days: int = 30,
+           include_domains: Optional[List[str]] = None,
+           exclude_domains: Optional[List[str]] = None) -> List[Dict]:
+    """Tavily-Suche. KIS-1266: include_domains/exclude_domains reichen die
+    Domänenlisten aus research_policy an die API durch — vorher wurden die
+    gepflegten Listen (RESEARCH_INCLUDE_FUNDING/TOOLS, RESEARCH_EXCLUDE)
+    nirgends angewandt, und die Fördersuche lieferte Blogs statt Portale."""
     if not TAVILY_API_KEY:
         LOGGER.warning("TAVILY_API_KEY not set")
         return []
@@ -68,6 +74,12 @@ def search(query: str, max_results: int = 6, days: int = 30) -> List[Dict]:
         "include_answer": False,
         "include_raw_content": False,
     }
+    # KIS-1266: Domänenfilter an die API — Tavily akzeptiert Listen von
+    # Hostnamen. Leere Listen werden nicht gesendet (Default-Verhalten).
+    if include_domains:
+        payload["include_domains"] = [d.strip().lower() for d in include_domains if d and d.strip()][:300]
+    if exclude_domains:
+        payload["exclude_domains"] = [d.strip().lower() for d in exclude_domains if d and d.strip()][:150]
 
     # Only add time_range if not searching all time
     if days < 365:
