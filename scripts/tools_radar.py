@@ -78,22 +78,49 @@ def check_url(url: str, timeout: float = 15.0) -> Optional[str]:
         return f"{type(exc).__name__}"
 
 
+def hersteller_domain(url: str) -> str:
+    """Domain aus der Tool-URL, ohne "www." — die Suchbeschraenkung."""
+    from urllib.parse import urlparse
+    zerlegt = urlparse(str(url or ""))
+    if zerlegt.scheme not in ("http", "https"):
+        return ""
+    host = (zerlegt.netloc or "").lower()
+    return host[4:] if host.startswith("www.") else host
+
+
 def build_candidate_query(name: str, year: int) -> str:
+    """KIS-1273: ohne Jahreszahl und ohne Marketing-Woerter.
+
+    Die alte Query lautete "<Name> Preise Preisaenderung Datenschutz AVV
+    Hosting <Jahr>" und lief als freie Websuche. Bei mehrdeutigen
+    Tool-Namen kam Unsinn heraus: Der Lauf vom 03.09.2026 lieferte fuer
+    "Railway.app" Preise der indischen Eisenbahn und fuer "Perplexity
+    API" die Fernwaermepreise der BEW Berlin. Die Suche laeuft jetzt
+    zusaetzlich domainbeschraenkt (siehe tavily_candidates), deshalb
+    reichen hier die Sachbegriffe.
+    """
     clean = " ".join(str(name).split())
-    return f"{clean} Preise Preisänderung Datenschutz AVV Hosting {year}"
+    return f"{clean} pricing plans privacy data processing agreement hosting"
 
 
 def tavily_candidates(name: str, year: int, api_key: str, *, max_results: int = 3,
-                      days: int = 60, timeout: float = 10.0) -> List[Dict[str, str]]:
-    """Fail-open: jeder Fehler ergibt eine leere Liste. Basissuche (1 Credit)."""
-    if not api_key or not name:
+                      days: int = 60, timeout: float = 10.0,
+                      domain: str = "") -> List[Dict[str, str]]:
+    """Fail-open: jeder Fehler ergibt eine leere Liste. Basissuche (1 Credit).
+
+    KIS-1273: Mit `domain` sucht Tavily nur auf der Herstellerseite. Ohne
+    Domain wird gar nicht gesucht — ein Preis-Blog ist als Beleg fuer
+    einen Report wertlos, und Rauschen kostet mehr Zeit als es spart.
+    """
+    if not api_key or not name or not domain:
         return []
     try:
         import requests
         resp = requests.post(
             TAVILY_ENDPOINT,
             json={"api_key": api_key, "query": build_candidate_query(name, year),
-                  "search_depth": "basic", "max_results": max_results, "days": days,
+                  "search_depth": "basic", "max_results": max_results,
+                  "include_domains": [domain],
                   "include_answer": False, "include_raw_content": False},
             timeout=timeout,
         )
@@ -139,13 +166,15 @@ def collect_candidates(tools: List[Dict[str, Any]], findings: List[Dict[str, str
     """Kandidaten nur für Tools mit Befund, höchstens `limit` Suchen je Lauf."""
     if not api_key:
         return {}
+    domains = {str(t.get("name") or ""): hersteller_domain(t.get("url") or "")
+               for t in tools}
     betroffen = []
     for f in findings:
         if f["tool"] not in betroffen:
             betroffen.append(f["tool"])
     out: Dict[str, List[Dict[str, str]]] = {}
     for name in betroffen[:limit]:
-        hits = search(name, year, api_key)
+        hits = search(name, year, api_key, domain=domains.get(name, ""))
         if hits:
             out[name] = hits
     return out

@@ -64,10 +64,11 @@ Merkregeln:
   Tavily-Vorschläge sind für Tools deutlich unschärfer als für
   Förderprogramme — Tool-Namen wie „Railway", „Runway", „Make" sind
   mehrdeutig. Vor Übernahme jede Quelle einzeln prüfen.
-- `services/funding_engine_v2.py` ist toter Code: 1278 Zeilen, 24
-  Programme, importiert nur von der eigenen Testdatei. Drift-Tests in
-  tests/test_kis1268_foerderdaten.py halten den Zustand fest. Löschen
-  oder verdrahten ist eine offene Produktentscheidung.
+- `services/funding_engine_v2.py` wurde am 2026-09-03 gelöscht (toter
+  Code, 1278 Zeilen, nur von der eigenen Testdatei importiert). Damit
+  gibt es zwei Förderquellen statt drei: `funding_programmes_core_2025`
+  (Kern) und `data/funding/funding_de.json`. Die Statusregel liegt in
+  `funding_recommender.ist_beantragbar`.
 - Zwei Förderdaten-Punkte ohne Beleg (als Notiz im Datensatz vermerkt):
   „aws digi Invest" als eigenständiges Programm, und der Status von
   Digitalbonus Bayern (steht als `expired`, Seite wieder erreichbar).
