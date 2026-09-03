@@ -1692,7 +1692,18 @@ ENABLE_NSFW_FILTER = (os.getenv("ENABLE_NSFW_FILTER", "1") in ("1", "true", "TRU
 ENABLE_REALISTIC_SCORES = (os.getenv("ENABLE_REALISTIC_SCORES", "1") in ("1", "true", "TRUE", "yes", "YES"))
 ENABLE_LLM_CONTENT = (os.getenv("ENABLE_LLM_CONTENT", "1") in ("1", "true", "TRUE", "yes", "YES"))
 ENABLE_REPAIR_HTML = (os.getenv("ENABLE_REPAIR_HTML", "1") in ("1", "true", "TRUE", "yes", "YES"))
-USE_INTERNAL_RESEARCH = (os.getenv("RESEARCH_PROVIDER", "hybrid") != "disabled")
+# KIS-1266: Der Schalter hiess in Railway seit jeher USE_INTERNAL_RESEARCH,
+# der Code las aber nur RESEARCH_PROVIDER — ein gesetztes "0" schaltete
+# nichts ab (Schreibweisen-Falle wie OPENAI_MODEL_DEFAULT). Ist der Name
+# gesetzt, gilt er; sonst wie bisher RESEARCH_PROVIDER != disabled.
+def _resolve_use_internal_research() -> bool:
+    explicit = os.getenv("USE_INTERNAL_RESEARCH", "").strip().lower()
+    if explicit:
+        return explicit in ("1", "true", "yes", "on")
+    return os.getenv("RESEARCH_PROVIDER", "hybrid").strip().lower() != "disabled"
+
+
+USE_INTERNAL_RESEARCH = _resolve_use_internal_research()
 ENABLE_AI_ACT_SECTION = (os.getenv("ENABLE_AI_ACT_SECTION", "1") in ("1", "true", "TRUE", "yes", "YES"))
 USE_PROMPT_SYSTEM = (os.getenv("USE_PROMPT_SYSTEM", "1") in ("1", "true", "TRUE", "yes", "YES"))
 # KIS-PROMPT P1: Research-Grounding-Blöcke (section_name -> Kontextblock).
@@ -17230,8 +17241,21 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     try:
         from services.research_pipeline import run_research
         if USE_INTERNAL_RESEARCH and run_research:
-            log.info("[%s] 🔬 Running internal research...", run_id)
-            research_blocks = run_research(answers)
+            # KIS-1266: Das Grounding (research_grounding) hat run_research
+            # fuer diesen Report bereits ausgefuehrt. Diese Bloecke
+            # wiederverwenden statt zwei weitere Tavily-Suchen und bis zu
+            # acht Sekunden fuer identische Ergebnisse auszugeben.
+            research_blocks = None
+            try:
+                from services.research_grounding import take_last_research_blocks
+                research_blocks = take_last_research_blocks() or None
+            except Exception:
+                research_blocks = None
+            if research_blocks:
+                log.info("[%s] 🔬 Reusing research blocks from grounding (no second run)", run_id)
+            else:
+                log.info("[%s] 🔬 Running internal research...", run_id)
+                research_blocks = run_research(answers)
             if isinstance(research_blocks, dict):
                 for k, v in research_blocks.items():
                     if isinstance(v, str): 

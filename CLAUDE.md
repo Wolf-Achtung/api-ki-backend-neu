@@ -20,10 +20,10 @@ Alle Modell-IDs sind per ENV konfigurierbar. Die Tabelle zeigt den
 
 | Zweck | ENV-Variable | Wirksam in Prod | Status |
 |---|---|---|---|
-| Report-Sektionen (Standard) | `ANTHROPIC_MODEL` | `claude-sonnet-5` | Aktiv; Denken läuft adaptiv mit (Voreinstellung) |
+| Report-Sektionen (Standard) | `ANTHROPIC_MODEL_DEFAULT` (Vorrang) → `ANTHROPIC_MODEL` | `claude-sonnet-5` (Railway setzt `ANTHROPIC_MODEL_DEFAULT`) | Aktiv; Denken läuft adaptiv mit (Voreinstellung) |
 | 8 Premium-Sektionen | `ANTHROPIC_MODEL_OPUS` + `OPUS_SECTIONS` | `claude-opus-4-8` | Aktiv; Denken aus |
-| Anthropic-Fallback | `ANTHROPIC_MODEL_FALLBACK` | Default `claude-sonnet-4-5-20250929` | Aktiv |
-| Chat-Gespräch | `CHAT_CONVERSATION_MODEL` | Default `claude-sonnet-4-20250514` | ⚠️ **DEPRECATED** (Abschaltdatum offen; Quelle: Anthropic-Modellreferenz, Stand 2026-06-24) — Nachfolger festlegen |
+| Anthropic-Fallback | `ANTHROPIC_MODEL_FALLBACK` | `claude-haiku-4-5-20251001` (Railway-ENV; Code-Default wäre Sonnet 4.5) | Aktiv; billiger und schwächer als der Code-Default — bewusste Wahl prüfen |
+| Chat-Gespräch | `CHAT_CONVERSATION_MODEL` | `claude-sonnet-4-5-20250929` (Railway-ENV, seit 2026-09) | Aktiv; Deprecation von Sonnet 4 damit erledigt |
 | Chat-Extraktion | `CHAT_EXTRACTOR_MODEL` | Default `claude-haiku-4-5-20251001` | Aktiv |
 | Coach | `ANTHROPIC_MODEL_COACH` → `ANTHROPIC_MODEL_OPUS` | `claude-opus-4-8` | Aktiv |
 | Appetizer | `ANTHROPIC_MODEL_APPETIZER` → `ANTHROPIC_MODEL` | `claude-sonnet-5` | Aktiv |
@@ -54,8 +54,13 @@ Merkregeln:
 
 ## Bekannte Punkte (offen, Stand 2026-08-19)
 
-- Chat-Modell deprecated (siehe Tabelle) — Wechsel ist eine
-  Produktentscheidung, nicht automatisch ausgeführt.
+- ENV-Audit 2026-09 (`docs/env-audit-2026-09.md`): 94 Railway-Variablen
+  liest der Code nie, 28 ohne Wirkung. Abbau in zwei Tranchen offen
+  (Wolf, Railway). Schreibweisen-Falle `USE_INTERNAL_RESEARCH` seit
+  KIS-1266 behoben — der Name wird jetzt gelesen.
+- Perplexity liefert die Markt-Box, die das DE-Template nicht rendert:
+  zwei Aufrufe je Report ohne sichtbaren Nutzen. Entscheidung offen
+  (rendern oder abschalten).
 - `routes/appetizer.py` bleibt aktiv (Wolf plant eine Einbindung), hat
   aber noch keinen Aufrufer im eigenen Frontend. Das `firma`-Feld wurde
   am 2026-08-19 entfernt — die Firmennamen-Invariante gilt jetzt ohne
