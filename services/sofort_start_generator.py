@@ -3748,8 +3748,35 @@ def generate_30_tage_challenge_html_v2(
     # Hotfix 1027.2.1 F3: Solo behält nach Item H alle 4 Wochen — Subtitle muss
     # company_size-aware sein, sonst widerspricht S.3 Management Summary dem
     # gerenderten Inhalt auf S.13-14.
+    # KIS-1246: Titel an die real gerenderte Tageszahl anpassen — nach dem
+    # Woche-1-Drop endete die "30-Tage"-Challenge sichtbar bei Tag 23
+    # (Audit KIS-1244/1246: "Challenge-Tage 24-30 fehlen").
+    # KIS-1251: EN-Grammatik "23-day" (nicht "23-Days").
+    _wochen_mit_tagen = [
+        w for w in challenge_data.values()
+        if isinstance(w, dict) and (w.get("tage") or [])
+    ]
+    _total_days = sum(len(w["tage"]) for w in _wochen_mit_tagen)
+
+    # KIS-1267: Wochenzahl aus den real gerenderten Bloecken, nicht aus der
+    # Firmengroesse. Lauf KIS-1262 (Team 2-10, intermediate) zeigte im
+    # Untertitel "in 3 Wochen", darunter aber vier Wochenbloecke mit
+    # 7+7+7+2 Tagen. Der Drop der Grundlagen-Woche kuerzt die Tage, die
+    # Zahl der Bloecke haengt aber am Datensatz.
+    #
+    # Gezaehlt werden nur die NUMMERIERTEN Bloecke: wochen_labels_v2 vergibt
+    # an Position 5 "Abschluss" statt "Woche 5" (Solo behaelt fuenf Bloecke,
+    # zeigt aber "Woche 1-4 + Abschluss" — die alte Konstante "4 Wochen" war
+    # dort also richtig und bleibt es).
+    _wochen_anzahl = len(challenge_data)
+    if _wochen_anzahl > 4:
+        _wochen_anzahl -= 1
+
+    # Alle "nach 30 Tagen"-Zeilen nennen dieselbe Zahl wie der Titel.
+    _prognose_days = _total_days if 0 < _total_days < 30 else 30
+
     if is_en:
-        _wochen_label = "4 weeks" if _company_size_norm == "solo" else "3 weeks"
+        _wochen_label = f"{_wochen_anzahl} weeks" if _wochen_anzahl != 1 else "1 week"
         if expertise_level == "expert":
             _subtitle = f"Stack optimisation and governance in {_wochen_label}"
         elif expertise_level == "intermediate":
@@ -3757,21 +3784,13 @@ def generate_30_tage_challenge_html_v2(
         else:
             _subtitle = "From zero to AI pro – tailored to your time budget"
     else:
-        _wochen_label = "4 Wochen" if _company_size_norm == "solo" else "3 Wochen"
+        _wochen_label = f"{_wochen_anzahl} Wochen" if _wochen_anzahl != 1 else "1 Woche"
         if expertise_level == "expert":
             _subtitle = f"Stack-Optimierung und Governance in {_wochen_label}"
         elif expertise_level == "intermediate":
             _subtitle = f"Vom Anwender zum Workflow-Profi in {_wochen_label}"
         else:
             _subtitle = "Von Null auf KI-Profi – angepasst an Ihr Zeitbudget"
-
-    # KIS-1246: Titel an die real gerenderte Tageszahl anpassen — nach dem
-    # Woche-1-Drop endete die "30-Tage"-Challenge sichtbar bei Tag 23
-    # (Audit KIS-1244/1246: "Challenge-Tage 24-30 fehlen").
-    # KIS-1251: EN-Grammatik "23-day" (nicht "23-Days").
-    _total_days = sum(
-        len(w.get("tage") or []) for w in challenge_data.values() if isinstance(w, dict)
-    )
     if is_en:
         _challenge_title = (
             "Your 30-day AI challenge" if _total_days >= 30
@@ -3964,7 +3983,7 @@ def generate_30_tage_challenge_html_v2(
 
     # v14.18: Tipps für Erfolg
     if is_en:
-        html += '''
+        html += f'''
         <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 16px; margin-top: 16px; margin-bottom: 16px;">
             <h4 style="font-size: 13px; font-weight: 600; margin: 0 0 12px 0; color: #1e40af;">💡 Tips for your success</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: #334155;">
@@ -3973,12 +3992,12 @@ def generate_30_tage_challenge_html_v2(
                 <div>✓ Document your wins</div>
                 <div>✓ If you fall behind: restart the next day</div>
                 <div>✓ Involve colleagues (where available)</div>
-                <div>✓ After 30 days: keep the routine going!</div>
+                <div>✓ After {_prognose_days} days: keep the routine going!</div>
             </div>
         </div>
     '''
     else:
-        html += '''
+        html += f'''
         <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 16px; margin-top: 16px; margin-bottom: 16px;">
             <h4 style="font-size: 13px; font-weight: 600; margin: 0 0 12px 0; color: #1e40af;">💡 Tipps für Ihren Erfolg</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: #334155;">
@@ -3987,14 +4006,15 @@ def generate_30_tage_challenge_html_v2(
                 <div>✓ Erfolge dokumentieren</div>
                 <div>✓ Bei Rückstand: nächsten Tag neu starten</div>
                 <div>✓ Kollegen einbeziehen (wenn vorhanden)</div>
-                <div>✓ Nach 30 Tagen: Routine beibehalten!</div>
+                <div>✓ Nach {_prognose_days} Tagen: Routine beibehalten!</div>
             </div>
         </div>
     '''
 
     # KIS-1251: 30-vs-23-Tage-Inkonsistenz — die Prognose-/Gesamt-Zeile
     # nennt bei gekürzter Challenge die real gerenderte Tageszahl.
-    _prognose_days = _total_days if _total_days < 30 else 30
+    # KIS-1267: _prognose_days wird jetzt oben gesetzt, zusammen mit
+    # _total_days — die Tipp-Kaesten weiter oben brauchen den Wert auch.
     if _has_values:
         if is_en:
             _savings_str_en = f"{_total_savings:,}"
@@ -4015,7 +4035,7 @@ def generate_30_tage_challenge_html_v2(
             html += f'''
         <div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #22c55e;">
             <span style="font-size: 14px; color: #166534; font-weight: 600;">
-                🎯 Prognose nach 30 Tagen: ~{_de_hours(_total_hours)} Stunden = ~{_savings_str} € gespart
+                🎯 Prognose nach {_prognose_days} Tagen: ~{_de_hours(_total_hours)} Stunden = ~{_savings_str} € gespart
             </span>
             <div style="font-size: 11px; color: #475569; margin-top: 6px; line-height: 1.5;">
                 Diese Tracking-Prognose ist konservativ (Ramp-up: 50&nbsp;%/75&nbsp;%/100&nbsp;%/100&nbsp;% der Wochenleistung).
@@ -4035,10 +4055,10 @@ def generate_30_tage_challenge_html_v2(
     </div>
 '''
         else:
-            html += '''
+            html += f'''
         <div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #22c55e;">
             <span style="font-size: 14px; color: #166534; font-weight: 600;">
-                🎯 Gesamt nach 30 Tagen: _______ Stunden = _______ € gespart
+                🎯 Gesamt nach {_prognose_days} Tagen: _______ Stunden = _______ € gespart
             </span>
         </div>
     </div>

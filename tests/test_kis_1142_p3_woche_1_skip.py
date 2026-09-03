@@ -126,18 +126,29 @@ class TestRendererDropsWocheOneForIntExpert:
         # Beginner must still see the original Woche 1 "Erste Schritte".
         assert CHALLENGE_30_TAGE["woche_1"]["titel"] in html
 
-    def test_subtitle_announces_three_weeks_for_team_advanced(self):
-        # Team/KMU + intermediate/expert dropt Woche 1 → 3 Wochen Subtitle.
-        expert_html = generate_30_tage_challenge_html_v2(
-            company_size="team", expertise_level="expert", zeitbudget="2_5",
-        )
-        inter_html = generate_30_tage_challenge_html_v2(
-            company_size="team", expertise_level="intermediate", zeitbudget="2_5",
-        )
-        assert "in 3 Wochen" in expert_html
-        assert "in 3 Wochen" in inter_html
-        assert "in 4 Wochen" not in expert_html
-        assert "in 4 Wochen" not in inter_html
+    def test_subtitle_matches_rendered_weeks_for_team_advanced(self):
+        # KIS-1267: Der Test forderte hier fest "in 3 Wochen". Der Drop von
+        # Woche 1 kuerzt aber nur die TAGE (30 → 23); nummerierte
+        # Wochenbloecke bleiben vier, weil der Datensatz fuenf Bloecke hat
+        # (Woche 1-4 + "Abschluss"). Im Lauf KIS-1262 stand deshalb
+        # "Vom Anwender zum Workflow-Profi in 3 Wochen" ueber vier
+        # sichtbaren Wochen — genau der Widerspruch, den dieser Test laut
+        # eigener Begruendung verhindern soll. Geprueft wird jetzt die
+        # Invariante statt einer festen Zahl.
+        import re
+
+        for level in ("expert", "intermediate"):
+            html = generate_30_tage_challenge_html_v2(
+                company_size="team", expertise_level=level, zeitbudget="2_5",
+            )
+            match = re.search(r"in (\d+) Wochen", html)
+            assert match, f"Subtitle ohne Wochenzahl ({level})"
+            angekuendigt = int(match.group(1))
+            gerendert = len(set(re.findall(r"Woche (\d+):", html)))
+            assert angekuendigt == gerendert, (
+                f"{level}: Subtitle nennt {angekuendigt} Wochen, "
+                f"gerendert sind {gerendert}"
+            )
 
     def test_subtitle_announces_four_weeks_for_solo_advanced(self):
         # Hotfix 1027.2.1 F3: Solo + intermediate/expert behält nach Item H
