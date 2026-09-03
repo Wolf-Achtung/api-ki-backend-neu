@@ -129,6 +129,27 @@ def detect_contradictions(
             "Problem, sondern unklare Priorisierung innerhalb des Rahmens."
         )
 
+    # 5. Zwei Budget-Angaben, die sich unterscheiden (KIS-1267)
+    #
+    # investitionsbudget (FB1) und s1_budget (FB2) nutzen dieselbe
+    # Enum-Skala — es ist dieselbe Frage, zweimal gestellt. Im Lauf
+    # KIS-1262 kamen zwei verschiedene Antworten heraus (2000_10000 und
+    # 10000_50000). Ergebnis: Der Status-Report schrieb "uebersteigt
+    # diesen Rahmen", der Strategiebericht "ist ausreichend" — zur selben
+    # Investition. Ungleiche Angaben muessen thematisiert statt geglaettet
+    # werden.
+    budget_r1 = _norm(b.get("investitionsbudget"))
+    budget_fb2 = _norm(s.get("s1_budget") or b.get("s1_budget"))
+    if budget_r1 and budget_fb2 and budget_r1 != budget_fb2:
+        findings.append(
+            f"Zum Budget liegen zwei unterschiedliche Angaben vor: "
+            f"{_fmt_budget(budget_r1)} im Readiness-Fragebogen, "
+            f"{_fmt_budget(budget_fb2)} im Strategie-Fragebogen. "
+            "Fuer die Bewertung der Investition gilt die spaetere Angabe "
+            "aus dem Strategie-Fragebogen; die Differenz sollte benannt "
+            "und nicht stillschweigend geglaettet werden."
+        )
+
     return findings
 
 

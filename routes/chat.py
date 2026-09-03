@@ -950,6 +950,24 @@ async def chat_start(
     if req.report_type == "r1" and "datenschutz" not in initial_collected:
         initial_collected["datenschutz"] = True
 
+    # KIS-1267: Strategie-Fragen, die der R1-Fragebogen schon beantwortet
+    # hat, nicht noch einmal stellen. Ein bereits gefuelltes Feld
+    # ueberspringt der Chat ohnehin (_missing_fields). Abgeleitet wird nur,
+    # wo die Zuordnung belastbar ist; alles andere wird weiter gefragt.
+    # Ein explizites prefill aus dem Request hat Vorrang.
+    if req.report_type == "strategy":
+        from services.strategy_prefill import ableiten_aus_r1
+
+        _abgeleitet = ableiten_aus_r1(getattr(briefing, "answers", None))
+        _uebernommen = [f for f in _abgeleitet if f not in initial_collected]
+        for _feld in _uebernommen:
+            initial_collected[_feld] = _abgeleitet[_feld]
+        if _uebernommen:
+            log.info(
+                "[CHAT] KIS-1267: %d Strategie-Feld(er) aus R1 uebernommen: %s",
+                len(_uebernommen), ", ".join(sorted(_uebernommen)),
+            )
+
     # KIS-1276: Single-Branch-Modus (ENV VISIBLE_BRANCHES mit genau einer
     # Branche) — branche automatisch setzen, Branchen-Frage überspringen.
     # Ohne ENV (oder mit mehreren Branchen) ist das ein No-Op.
