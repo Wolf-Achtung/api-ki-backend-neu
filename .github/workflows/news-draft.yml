@@ -1,0 +1,59 @@
+# KIS-1265: News-Entwurf für ki-sicherheit.jetzt/aktuell — wöchentlich.
+#
+# Läuft bewusst hier und nicht über /api/content/research-news: Der
+# Endpunkt blockiert im Web-Container die Ereignisschleife für die gesamte
+# Laufzeit (synchrone Tavily- und LLM-Aufrufe im async-Handler). Dieser Job
+# berührt Railway nicht — fällt er aus, fehlt eine Mail, sonst nichts.
+#
+# Secrets (Repository → Settings → Secrets → Actions):
+#   TAVILY_API_KEY, OPENAI_API_KEY, RESEND_API_KEY, RESEND_FROM,
+#   ADMIN_NOTIFY_EMAIL
+# Fehlt eines, endet der Lauf grün mit Hinweis statt rot.
+name: News Draft
+
+on:
+  schedule:
+    - cron: "0 5 * * 1"   # montags 05:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  news-draft:
+    name: News-Entwurf (Tavily → LLM → Mail)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Entwurf erstellen und versenden
+        env:
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.NEWS_MODEL || 'gpt-4.1-mini' }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+          ADMIN_NOTIFY_EMAIL: ${{ secrets.ADMIN_NOTIFY_EMAIL }}
+        run: python scripts/news_draft.py --out news_draft.html
+
+      - name: Entwurf als Artefakt sichern
+        if: always() && hashFiles('news_draft.html') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: news-draft
+          path: news_draft.html
+          retention-days: 60

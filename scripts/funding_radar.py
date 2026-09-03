@@ -64,6 +64,51 @@ def _blacklist_terms() -> List[str]:
         return ["go-digital"]
 
 
+# ---------------------------------------------------------------------------
+# KIS-1265: Tavily-Kandidaten — Recherche-Hinweise, keine Datenänderung
+# ---------------------------------------------------------------------------
+
+TAVILY_ENDPOINT = "https://api.tavily.com/search"
+
+
+def build_candidate_query(name: str, year: int) -> str:
+    """Suchanfrage für Änderungen an einem Programm — Frist, Stopp, Neuauflage."""
+    clean = " ".join(str(name).replace("–", " ").replace("—", " ").split())
+    return f"{clean} Förderprogramm {year} Frist Antragsstopp Änderung"
+
+
+def tavily_candidates(name: str, year: int, api_key: str, *,
+                      max_results: int = 3, days: int = 45,
+                      timeout: float = 10.0) -> List[Dict[str, str]]:
+    """Bis zu drei aktuelle Treffer zu einem Programm — Hinweise für den
+    Menschen, der die Richtlinie prüft. Der Radar ändert keine Daten.
+
+    Fail-open: Jeder Fehler ergibt eine leere Liste. Basissuche (1 Credit)
+    statt „advanced": Es geht um Hinweise, nicht um Volltext.
+    """
+    if not api_key or not name:
+        return []
+    try:
+        import requests
+        resp = requests.post(
+            TAVILY_ENDPOINT,
+            json={"api_key": api_key, "query": build_candidate_query(name, year),
+                  "search_depth": "basic", "max_results": max_results, "days": days,
+                  "include_answer": False, "include_raw_content": False},
+            timeout=timeout,
+        )
+        resp.raise_for_status()
+        out = []
+        for r in (resp.json() or {}).get("results") or []:
+            url = str(r.get("url") or "").strip()
+            title = " ".join(str(r.get("title") or "").split())[:120]
+            if url and title:
+                out.append({"title": title, "url": url})
+        return out[:max_results]
+    except Exception:
+        return []
+
+
 def check_program(prog: Dict[str, Any], today: date, max_age_days: int = 120,
                   blacklist: Optional[List[str]] = None) -> List[Dict[str, str]]:
     """Deterministische Checks für EIN Programm (ohne Netz). Testbar."""
@@ -154,10 +199,35 @@ def run_radar(today: date, check_urls: bool = False,
     return findings
 
 
-def render_report(findings: List[Dict[str, str]], today: date) -> str:
+def collect_candidates(programs: List[Dict[str, Any]], findings: List[Dict[str, str]],
+                       api_key: str, year: int, *, scan_all: bool = False,
+                       search=tavily_candidates) -> Dict[str, List[Dict[str, str]]]:
+    """Tavily-Kandidaten je Programm — standardmäßig nur für Programme mit
+    Befund (begrenzt die Kosten auf eine Handvoll Suchen pro Lauf), mit
+    scan_all für alle aktiven Programme (Monatsroutine)."""
+    if not api_key:
+        return {}
+    betroffen = {f["program"] for f in findings}
+    out: Dict[str, List[Dict[str, str]]] = {}
+    for prog in programs:
+        name = str(prog.get("title") or prog.get("name") or "").strip()
+        status = str(prog.get("status") or "active").lower()
+        if not name or status in ("expired", "discontinued", "eingestellt", "archived"):
+            continue
+        if not scan_all and name not in betroffen:
+            continue
+        hits = search(name, year, api_key)
+        if hits:
+            out[name] = hits
+    return out
+
+
+def render_report(findings: List[Dict[str, str]], today: date,
+                  candidates: Optional[Dict[str, List[Dict[str, str]]]] = None) -> str:
     lines = [f"# 🔎 Förder-Radar — {today.isoformat()}", ""]
     if not findings:
         lines.append("✅ Keine Befunde — alle Programme aktuell verifiziert und erreichbar.")
+        lines.extend(_render_candidates(candidates))
         return "\n".join(lines)
     lines.append(f"**{len(findings)} Befund(e)** — bitte Richtlinien prüfen und "
                  "`data/funding_programmes_core_2025.json` aktualisieren "
@@ -172,7 +242,26 @@ def render_report(findings: List[Dict[str, str]], today: date) -> str:
     lines.append("_Hinweis: Förderquoten/Höchstbeträge sind bewusst NICHT "
                  "automatisch aktualisiert — Prozentsätze aus Web-Recherche sind "
                  "nicht richtliniensicher. Der Radar meldet, der Mensch entscheidet._")
+    lines.extend(_render_candidates(candidates))
     return "\n".join(lines)
+
+
+def _render_candidates(candidates: Optional[Dict[str, List[Dict[str, str]]]]) -> List[str]:
+    """KIS-1265: Recherche-Hinweise (Tavily) als eigener Abschnitt —
+    Lesestoff für die Prüfung, ausdrücklich keine verifizierten Fakten."""
+    if not candidates:
+        return []
+    total = sum(len(v) for v in candidates.values())
+    lines = ["", "## 🔍 Recherche-Kandidaten (Tavily, ungeprüft)", "",
+             f"**{total} Kandidat(en)** zu {len(candidates)} Programm(en) — "
+             "aktuelle Treffer der letzten Wochen. Nur Lesehinweise: Fristen und "
+             "Quoten weiterhin gegen die Richtlinie prüfen.", ""]
+    for name in sorted(candidates):
+        lines.append(f"**{name}**")
+        for hit in candidates[name]:
+            lines.append(f"- [{hit['title']}]({hit['url']})")
+        lines.append("")
+    return lines
 
 
 def main() -> int:
@@ -181,14 +270,28 @@ def main() -> int:
     ap.add_argument("--max-age", type=int, default=120)
     ap.add_argument("--report", default="radar_report.md")
     ap.add_argument("--fail-on-findings", action="store_true")
+    # KIS-1265: Tavily-Kandidaten. Ohne TAVILY_API_KEY still übersprungen.
+    ap.add_argument("--tavily", action="store_true",
+                    help="Recherche-Kandidaten für Programme mit Befund anhängen")
+    ap.add_argument("--tavily-all", action="store_true",
+                    help="Recherche-Kandidaten für ALLE aktiven Programme (Monatsroutine)")
     args = ap.parse_args()
 
     today = date.today()
     findings = run_radar(today, check_urls=args.check_urls, max_age_days=args.max_age)
-    report = render_report(findings, today)
+
+    candidates: Dict[str, List[Dict[str, str]]] = {}
+    if args.tavily or args.tavily_all:
+        import os
+        candidates = collect_candidates(load_programs(), findings,
+                                        os.getenv("TAVILY_API_KEY", ""), today.year,
+                                        scan_all=args.tavily_all)
+
+    report = render_report(findings, today, candidates)
     Path(args.report).write_text(report, encoding="utf-8")
     print(report)
-    print(f"\n::notice::Förder-Radar: {len(findings)} Befund(e)")
+    print(f"\n::notice::Förder-Radar: {len(findings)} Befund(e), "
+          f"{sum(len(v) for v in candidates.values())} Recherche-Kandidat(en)")
     if findings and args.fail_on_findings:
         return 1
     return 0
