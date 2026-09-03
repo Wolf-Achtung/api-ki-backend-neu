@@ -1,98 +1,105 @@
-# Tranche 2 — gegengeprüft am 03.09.2026
+# ENV-Tranche 2 — korrigiert am 03.09.2026
 
-Der ENV-Audit (`docs/env-audit-2026-09.md`) stammt von **vor** KIS-1266.
-Seither wurden mehrere Variablen im Code angeschlossen. Wer die alte
-Liste ungeprüft abarbeitet, löscht funktionierende Konfiguration.
+**Diese Datei ersetzt eine falsche Liste.** Die erste Fassung nannte 37
+Variablen zum Löschen. In Railway existierte davon genau eine. Der Grund:
+Die Liste war gegen den Code geprüft, aber nie gegen die tatsächlich
+gesetzten Variablen. Die übrigen 36 Namen standen zwar in `.env.example`
+und in einem älteren Audit — in Railway aber nicht.
 
-Diese Liste ist gegen den Stand von `main` am 03.09.2026 neu geprüft:
-jeder Name wurde in `services/`, `routes/`, `core/`, `workers/`,
-`utils/`, `scripts/`, `gpt_analyze.py`, `main.py` und `settings.py`
-gesucht, Testdateien ausgenommen.
+Diese Fassung geht den umgekehrten Weg: Ausgangspunkt sind die **273
+Shared Variables**, die am 03.09.2026 in Railway stehen. Jeder Name wurde
+gegen den Laufzeit-Code geprüft.
 
-## Löschen — 37 Variablen
-
-Kein Leser im Code. Railway startet den Dienst nach dem Löschen neu;
-das ist der einzige Effekt. **Nicht während eines Testlaufs.**
+Das Prüfverfahren steckt jetzt in `scripts/env_unused.py`:
 
 ```
-ANTHROPIC_BASE_URL
-ANTHROPIC_ENABLED
-API_RATE_LIMIT_PER_MIN
-AUTH_ALLOW_DEV_CONSOLE
-AUTH_SEND_MAIL
-CORS_MAX_AGE
-DEBUG_LOG_HTML_SNAPSHOT
-DEBUG_LOG_PROMPTS
-DISABLE_HIGH_RISK_AUTO_UPGRADE
-ENABLE_GUARDRAILS
-ENABLE_METRICS
-ENABLE_PERPLEXITY
-ENABLE_PROMPT_LABELS
-ENABLE_SENSITIVITY_TABLE
-ENABLE_TAVILY
-FEEDBACK_SECRET
-GUARDRAILS_V
-HARD_FAIL_ON_HTML_ERRORS
-HARD_FAIL_ON_VALIDATION_ERRORS
-MARKET_INSIGHTS_ENABLED
-MAX_GUARDRAIL_HITS
-MAX_PARALLEL_LLM_CALLS
-MAX_PARALLEL_SECTIONS
-OPENAI_MAX_TOKENS_PROMPT_FRAMEWORK
-PERPLEXITY_MAX_TOKENS
-PERPLEXITY_RATE_LIMIT_PER_HOUR
-PERPLEXITY_TIMEOUT_MS
-REPORT_ADMIN_EMAIL
-RESEARCH_COUNTRY
-RESEARCH_DAYS_DEFAULT
-RESEARCH_DAYS_MAX
-RESEARCH_DAYS_MIN
-RESEARCH_LANG
-RESEARCH_RSS_EXTRA_PATH
-STARTER_KITS_MAX_TOOLS
-TOKEN_LIMIT_HTML_REPAIR
-USE_STOCK_IMAGES
+python scripts/env_unused.py meine_variablen.txt
 ```
 
-Zu den letzten sieben (`RESEARCH_DAYS_*`, `RESEARCH_LANG`,
-`RESEARCH_COUNTRY`, `PERPLEXITY_TIMEOUT_MS`, `PERPLEXITY_MAX_TOKENS`):
-Sie werden in `settings.py` in Pydantic-Felder eingelesen, aber **kein
-einziger Verbraucher liest diese Felder**. Sie sind damit wirkungslos —
-geprüft, nicht vermutet.
+Die Datei enthält die Namen so, wie Railway sie anzeigt — durch
+Leerzeichen oder Zeilen getrennt.
 
-## Nicht löschen — 8 Variablen, die der Audit falsch einordnet
+## Ergebnis: 4 löschen, 1 entscheiden
 
-Diese standen auf der alten Liste, werden aber **heute gelesen und
-wirken**:
+### Sicher löschen (4)
 
-| Variable | Wird gelesen in | Seit |
+| Variable | Warum |
+|---|---|
+| `RATE_LIMIT_PER_MINUTE` | Der Code liest `REPORT_RATE_LIMIT_PER_MINUTE`. |
+| `PROMPT_STABILITY_ENABLED` | Der Code liest `STABILITY_SCORING_ENABLED`. |
+| `REPORT_ADMIN_EMAIL` | Kein Treffer im ganzen Repo. |
+| `CORS_ALLOW_CREDENTIALS` | Nur `tools/validate_env.py` liest sie — ein Diagnosewerkzeug. Die CORS-Einstellung selbst steht fest in `main.py`. |
+
+### Entscheiden (1)
+
+`POLL_INTERVAL` — der Worker liest `WORKER_POLL_INTERVAL`
+(`workers/briefings_worker.py:55`). Die gesetzte Variable wirkt nicht.
+Zwei Wege: löschen, oder auf `WORKER_POLL_INTERVAL` umbenennen, wenn das
+Poll-Intervall wirklich vom Standardwert (2 Sekunden) abweichen soll.
+
+### Stehen lassen: die Smoke-Test-Variablen (5)
+
+`SERVICE_TOKEN`, `SMOKE_AUTH_TOKEN`, `SMOKE_BASE_URL`, `API_BASE_URL`,
+`POLL_TIMEOUT` gehören zu `scripts/submit_fixture.py` und den
+GitHub-Workflows. Im Railway-Dienst wirken sie nicht. Sie kosten nichts
+und dokumentieren die Gegenwerte des Smoke-Tests — `SERVICE_TOKEN` ist
+der Client-Wert zu `SERVICE_TOKEN_SECRET`, das der Dienst prüft.
+
+## Drei Schreibweisen-Fallen
+
+Der wichtigere Befund als die Löschliste: Drei Einstellungen laufen auf
+ihrem Standardwert, obwohl in Railway etwas anderes steht.
+
+| Railway hat | Der Code liest | Folge |
 |---|---|---|
-| `USE_INTERNAL_RESEARCH` | `gpt_analyze.py` | KIS-1266 |
-| `RESEARCH_INCLUDE_FUNDING` | `services/research_policy.py` | KIS-1266 |
-| `RESEARCH_INCLUDE_TOOLS` | `services/research_policy.py` | KIS-1266 |
-| `RESEARCH_EXCLUDE` | `services/research_policy.py` | KIS-1266 |
-| `RATE_LIMIT_PER_MINUTE` | `services/rate_limit.py` | — |
-| `REPORT_TEMPLATE_PATH` | `services/report_renderer.py` | — |
-| `ENABLE_LIVE_TOOL_PRICING` | `services/live_data_integration.py` | — |
-| `ENABLE_LIVE_FOERDERPROGRAMME` | `services/live_data_integration.py` | — |
+| `RATE_LIMIT_PER_MINUTE` | `REPORT_RATE_LIMIT_PER_MINUTE` | Report-Limit läuft auf 5/Minute |
+| `PROMPT_STABILITY_ENABLED` | `STABILITY_SCORING_ENABLED` | Stabilitäts-Scoring läuft auf „an" |
+| `POLL_INTERVAL` | `WORKER_POLL_INTERVAL` | Worker pollt alle 2 Sekunden |
 
-Die drei `RESEARCH_INCLUDE_*`/`RESEARCH_EXCLUDE`-Listen sind seit
-KIS-1266 an die Tavily-Suche angeschlossen — genau die Verbesserung, die
-der Audit unter Punkt 6 empfohlen hatte. Sie zu löschen würde die
-Domänenfilter wieder abschalten.
+Alle drei Standardwerte sind brauchbar. Es besteht kein Handlungsdruck —
+aber wer eine dieser Zahlen ändern will, muss den langen Namen setzen.
 
-## Ebenfalls nicht löschen
+## Warum das Verfahren vorher danebengriff
 
-`TAVILY_MAX_RESULTS`, `TAVILY_TIMEOUT_MS`, `TAVILY_RATE_LIMIT_PER_HOUR`
-werden in `services/live_data_integration.py` gelesen. Ob dieses Modul im
-Report-Pfad aktiv ist, wurde hier nicht geprüft — im Zweifel stehen
-lassen, sie kosten nichts.
+Vier blinde Flecken, alle vier jetzt im Skript behandelt und in
+`tests/test_kis1274_env_pruefung.py` festgehalten:
 
-`MISE_PYTHON_GITHUB_ATTESTATIONS` gehört zum Railway-Build und bleibt.
+1. **Nur nach `os.getenv("NAME")` gesucht.** Namen, die über eine
+   Konstante weitergereicht werden, galten als ungenutzt.
+   → Nach dem nackten Namen suchen, nicht nach einem Zugriffsmuster.
+2. **Zusammengesetzte Namen.** `f"OPENAI_MAX_TOKENS_{sektion}"` steht
+   nirgends wörtlich im Code.
+   → Die bekannten Präfixe kennen (`PRAEFIXE` im Skript).
+3. **Teilzeichenketten.** `RATE_LIMIT_PER_MINUTE` fand sich in
+   `REPORT_RATE_LIMIT_PER_MINUTE` — und wurde deshalb als „wird gelesen"
+   eingestuft. Diese eine Verwechslung drehte die Antwort ins Gegenteil.
+   → Wortgrenzen, die `_` als Wortzeichen behandeln. `\b` reicht nicht.
+4. **Helfer statt `os.getenv`.** `_bool_env("X")`, `get_bool("X")`,
+   `_truthy("X")`.
+   → Löst sich mit Punkt 1.
+
+Ein fünfter Fall kam beim Bauen dazu: Eine Datei, die ENV-Namen nennt,
+um über sie zu reden — diese Datei hier, oder eine Testdatei — meldet
+jeden Namen darauf als „benutzt". Das Skript überspringt `docs/`,
+`tests/` und sich selbst.
+
+## Grenzen des Skripts
+
+Ein Treffer im Laufzeit-Code ist ein Hinweis, kein Beweis. Steht der Name
+nirgends in Anführungszeichen, ist er wahrscheinlich nur eine
+Python-Konstante gleichen Namens — so lag der Fall bei
+`PROMPT_STABILITY_ENABLED`. Das Skript meldet diese Fälle getrennt unter
+`NUR BEZEICHNER`. Jede Stelle dort gehört einzeln angesehen.
+
+Umgekehrt gilt: `DATABASE_URL` und `MISE_PYTHON_GITHUB_ATTESTATIONS`
+stehen nirgends im Code, weil Railway sie liest. Das Skript kennt sie
+(`PLATTFORM_VARIABLEN`).
 
 ## Reihenfolge
 
-1. Die 37 oben löschen. Kein Deploy nötig, nur ein Neustart.
-2. Danach einen Report erzeugen und mit `scripts/compare_reports.py`
+1. Die vier oben in Railway löschen. Kein Deploy, nur ein Neustart.
+   **Nicht während eines Testlaufs.**
+2. `POLL_INTERVAL` entscheiden.
+3. Danach einen Report erzeugen und mit `scripts/compare_reports.py`
    gegen den letzten Lauf halten. Bleiben die Kennzahlen gleich und
    meldet die Rückfall-Prüfung nichts, war das Löschen folgenlos.
