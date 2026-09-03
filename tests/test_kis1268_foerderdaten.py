@@ -1,0 +1,159 @@
+# -*- coding: utf-8 -*-
+"""KIS-1268: Tote Förder-URLs ersetzt, ZIM als pausiert gekennzeichnet.
+
+Der Förder-Radar-Lauf vom 03.09.2026 meldete zehn tote URLs. Parallel
+zeigte die Recherche: ZIM hat seit dem 07.07.2026 einen befristeten
+Antragsstopp — der Lauf KIS-1262 empfahl das Programm trotzdem als Weg
+für größere Entwicklungsprojekte.
+
+Jede URL hier wurde am 03.09.2026 gegen die offizielle Programmseite
+geprüft. Der Radar prüft die Erreichbarkeit fortlaufend weiter.
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+REPO = Path(__file__).resolve().parent.parent
+KERN = REPO / "data" / "funding_programmes_core_2025.json"
+FALLBACK = REPO / "data" / "funding_programs.json"
+DE = REPO / "data" / "funding" / "funding_de.json"
+
+
+def _progs(pfad: Path):
+    roh = json.loads(pfad.read_text(encoding="utf-8"))
+    if isinstance(roh, list):
+        return roh
+    return roh.get("programmes") or roh.get("programs") or []
+
+
+ALLE_DATEIEN = [KERN, FALLBACK, DE]
+
+# Die zehn URLs aus der Radar-Mail vom 03.09.2026.
+TOTE_URLS = {
+    "https://www.aws.at/digitalisierung/",
+    "https://www.bmdw.gv.at/Digitalisierung/KMUDigital.html",
+    "https://www.kfw.de/inlandsfoerderung/Unternehmen/Digitalisierung-Innovation/",
+    "https://www.stmwi.bayern.de/digitalisierung/digitalbonus/",
+    "https://www.baden-wuerttemberg.de/de/service/foerderprogramme/invest-bw",
+    "https://www.ibb.de/de/foerderprogramme/profit.html",
+    "https://www.bmas.de/DE/Arbeit/Aus-und-Weiterbildung/Weiterbildungsrepublik/KOMPASS/kompass.html",
+    "https://www.berlin.de/sen/wirtschaft/wirtschaft/foerderprogramme/transfer-bonus/",
+    "https://www.ibb.de/de/foerderprogramme/pro-fit",
+    "https://www.bayern-innovativ.de/innovationsgutschein",
+}
+
+
+class TestKeineTotenUrls:
+
+    @pytest.mark.parametrize("pfad", ALLE_DATEIEN, ids=lambda p: p.name)
+    def test_gemeldete_urls_kommen_nicht_mehr_vor(self, pfad):
+        vorhanden = {p.get("url") for p in _progs(pfad)}
+        treffer = vorhanden & TOTE_URLS
+        assert not treffer, f"{pfad.name} enthält noch tote URLs: {treffer}"
+
+    def test_korrigierte_eintraege_zeigen_auf_eine_programmseite(self):
+        """"https://www.ibb.de" als Programm-URL ist keine Programmseite —
+        der Leser landet auf der Startseite und sucht selbst. Geprueft nur
+        fuer die hier korrigierten Eintraege; die uebrigen Altdaten sind
+        Sache des Radars, nicht dieses PRs."""
+        korrigiert = {"profit_berlin", "kfw_digital_innovation", "kompass",
+                      "invest_bw_digital_ki", "digi4kmu_at", "aws_digi_invest",
+                      "digitalbonus_bayern", "zim"}
+        for p in _progs(KERN):
+            if p["id"] not in korrigiert:
+                continue
+            url = (p.get("url") or "").rstrip("/")
+            # invest-bw.de ist selbst die Programmseite des Programms.
+            if url == "https://invest-bw.de":
+                continue
+            assert url.count("/") > 2, f"{p['id']}: nackte Domain {url}"
+
+
+class TestZimAntragsstopp:
+    """ZIM ist nicht beendet, sondern pausiert: Antragsstopp seit
+    07.07.2026, neue Anträge frühestens Anfang 2027, bereits gestellte
+    Anträge laufen weiter."""
+
+    def _zim(self, pfad: Path):
+        for p in _progs(pfad):
+            if "ZIM" in str(p.get("title") or p.get("name") or ""):
+                return p
+        return None
+
+    @pytest.mark.parametrize("pfad", [KERN, DE], ids=lambda p: p.name)
+    def test_status_ist_paused(self, pfad):
+        zim = self._zim(pfad)
+        assert zim is not None, f"ZIM fehlt in {pfad.name}"
+        assert zim["status"] == "paused"
+
+    def test_status_ist_nicht_expired(self):
+        """'expired' waere die falsche Kategorie — das Programm kehrt zurueck."""
+        assert self._zim(KERN)["status"] != "expired"
+
+    def test_notiz_nennt_stopp_und_rueckkehr(self):
+        notiz = self._zim(KERN)["notes"]
+        assert "07.07.2026" in notiz
+        assert "2027" in notiz
+        assert "Antragsstopp" in notiz
+
+    def test_url_zeigt_auf_die_amtliche_meldung(self):
+        assert "antragsstopp" in self._zim(KERN)["url"].lower()
+
+
+class TestRecommenderFiltertPausierte:
+
+    def test_paused_wird_nicht_empfohlen(self):
+        from services.funding_recommender import load_funding_programs
+        titel = [p.get("title", "") for p in load_funding_programs()]
+        assert not any("ZIM" in t for t in titel), (
+            "ZIM steht trotz Antragsstopp in den Empfehlungen"
+        )
+
+    def test_aktive_programme_bleiben(self):
+        from services.funding_recommender import load_funding_programs
+        progs = load_funding_programs()
+        assert len(progs) > 10
+        assert all(p.get("status", "active") not in ("expired", "paused")
+                   for p in progs)
+
+
+class TestPruefdatumGesetzt:
+
+    def test_geaenderte_eintraege_tragen_das_pruefdatum(self):
+        geaendert = {"profit_berlin", "kfw_digital_innovation", "kompass",
+                     "invest_bw_digital_ki", "digi4kmu_at", "aws_digi_invest",
+                     "digitalbonus_bayern", "zim"}
+        for p in _progs(KERN):
+            if p["id"] in geaendert:
+                assert p["verified_at"] == "2026-09-03", p["id"]
+
+
+class TestRadarBleibtRuhigUndErinnert:
+    """Ein dokumentierter Antragsstopp ist kein Pflegerückstand — aber er
+    darf auch nicht für immer verstummen."""
+
+    def test_paused_erzeugt_heute_keinen_befund(self):
+        from datetime import date
+        from scripts.funding_radar import check_program
+        zim = next(p for p in _progs(KERN) if "ZIM" in p["title"])
+        assert check_program(zim, date(2026, 9, 3)) == []
+
+    def test_ab_wiedervorlage_meldet_der_radar_wieder(self):
+        from datetime import date
+        from scripts.funding_radar import check_program
+        zim = next(p for p in _progs(KERN) if "ZIM" in p["title"])
+        befunde = check_program(zim, date(2027, 1, 15))
+        assert len(befunde) == 1
+        assert befunde[0]["type"] == "recheck"
+
+    def test_wiedervorlage_ist_gesetzt(self):
+        zim = next(p for p in _progs(KERN) if "ZIM" in p["title"])
+        assert zim["recheck_after"] == "2027-01-15"
+
+    def test_paused_ohne_wiedervorlage_bleibt_still(self):
+        from datetime import date
+        from scripts.funding_radar import check_program
+        assert check_program({"title": "X", "status": "paused"}, date(2030, 1, 1)) == []

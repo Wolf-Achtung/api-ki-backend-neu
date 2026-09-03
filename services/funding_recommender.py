@@ -418,7 +418,18 @@ def load_funding_programs() -> List[Dict[str, Any]]:
         programs = list(CORE_FUNDING_PROGRAMS)
 
     # Filter expired programs and normalize
-    active = [p for p in programs if p.get("status", "active") != "expired"]
+    #
+    # KIS-1268: "paused" kommt dazu. ZIM hat seit dem 07.07.2026 einen
+    # befristeten Antragsstopp (Haushaltsmittel erschoepft), neue Antraege
+    # fruehestens Anfang 2027. Der Lauf KIS-1262 empfahl ZIM trotzdem als
+    # Weg fuer groessere Entwicklungsprojekte — ein Programm, das der Kunde
+    # aktuell nicht beantragen kann. "expired" waere die falsche Kategorie:
+    # Das Programm ist nicht beendet, bereits gestellte Antraege laufen
+    # weiter, und es kehrt zurueck. Deshalb ein eigener Status, der sich
+    # 2027 mit einer Zeile zurueckdrehen laesst.
+    nicht_beantragbar = {"expired", "paused"}
+    active = [p for p in programs
+              if p.get("status", "active") not in nicht_beantragbar]
     return [_normalize_program(p) for p in active]
 
 

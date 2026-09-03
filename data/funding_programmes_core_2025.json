@@ -105,14 +105,14 @@
       "team",
       "kmu"
     ],
-    "notes": "Österreichische Wirtschaftsservice (aws), Schwerpunkt auf KMU-Digitalisierung",
+    "notes": "Programmzuschnitt bei aws geaendert: Die Digitalisierungs-foerderung laeuft unter aws Digitalisierung bzw. KMU.DIGITAL. Ein eigenstaendiges 'digi Invest' war am 03.09.2026 nicht belegbar — vor Nennung im Report pruefen.",
     "relevance_ki": "Sehr hoch – explizit KI und Automation gefördert",
     "priority": 1,
-    "url": "https://www.aws.at/digitalisierung/",
+    "url": "https://www.aws.at/en/aws-digitalization/",
     "provider": "aws (Austria Wirtschaftsservice)",
     "deadline": null,
     "deadline_notes": "Laufend verfügbar für österreichische KMU.",
-    "verified_at": "2026-07-05"
+    "verified_at": "2026-09-03"
   },
   {
     "id": "forschungspraemie_at",
@@ -153,14 +153,14 @@
       "team",
       "kmu"
     ],
-    "notes": "Regional unterschiedliche Schwerpunkte (Wien, Niederösterreich, Steiermark etc.)",
+    "notes": "KMU.DIGITAL laeuft weiter (Beratungsfoerderung seit 12.01.2026 wieder offen, Umsetzungsfoerderung seit 07.05.2026). Der Jahrestopf 2026 ist zeitweise ausgeschoepft — vor Antragstellung den aktuellen Call-Status pruefen. Traeger ist jetzt das BMWET (vormals BMDW).",
     "relevance_ki": "Hoch – KI als Kernbestandteil der Digitalisierung",
     "priority": 2,
-    "url": "https://www.bmdw.gv.at/Digitalisierung/KMUDigital.html",
+    "url": "https://www.bmwet.gv.at/Services/Foerderungen/aws/KMU-DIGITAL.html",
     "provider": "BMDW / WKO (Österreich)",
     "deadline": null,
     "deadline_notes": "Regionale Programme, variieren nach Bundesland.",
-    "verified_at": "2026-07-05"
+    "verified_at": "2026-09-03"
   },
   {
     "id": "kfw_digital_innovation",
@@ -179,11 +179,11 @@
     "notes": "Über Hausbank, langfristige Finanzierung für Digitalisierungsprojekte",
     "relevance_ki": "Mittel – KI als Teil von Digitalisierungsinvestitionen förderfähig",
     "priority": 2,
-    "url": "https://www.kfw.de/inlandsfoerderung/Unternehmen/Digitalisierung-Innovation/",
+    "url": "https://www.kfw.de/inlandsfoerderung/Unternehmen/Innovation-und-Digitalisierung/Innovation-und-Digitalisierung.html",
     "provider": "KfW Bankengruppe",
     "deadline": null,
     "deadline_notes": "Laufend verfügbar. ERP-Digitalisierungs- und Innovationskredit. Zinsgünstige Darlehen, kein Zuschuss.",
-    "verified_at": "2026-07-05"
+    "verified_at": "2026-09-03"
   },
   {
     "id": "eu_kmu_ip_fonds",
@@ -246,14 +246,14 @@
       "team",
       "kmu"
     ],
-    "notes": "Länderprogramm Bayern, für Unternehmen mit Standort in Bayern. Fördert Hard-/Software und Maßnahmen zur Digitalisierung & IT-Sicherheit",
+    "notes": "Status 'expired' aus fruehrerer Pruefung uebernommen. Die offizielle Programmseite ist am 03.09.2026 wieder erreichbar — Programmstatus vor Wiederaufnahme in Reports gegen die Richtlinie pruefen.",
     "relevance_ki": "Sehr hoch – explizit für Digitalisierung und KI-Einführung",
     "priority": 1,
-    "url": "https://www.stmwi.bayern.de/digitalisierung/digitalbonus/",
+    "url": "https://www.stmwi.bayern.de/foerderungen/digitalbonus-bayern/",
     "provider": "Bayerisches Staatsministerium für Wirtschaft",
     "deadline": null,
     "deadline_notes": "Laufend verfügbar. Standard: bis 10.000€ (50%), Plus: bis 50.000€ (50%). Antrag über Bezirksregierung. [KIS-1263] Laut Runtime-Blacklist (b25_enforcer, FIX-B26) ausgelaufen — bei Neuauflage status=active setzen.",
-    "verified_at": "2026-07-05"
+    "verified_at": "2026-09-03"
   },
   {
     "id": "invest_bw_digital_ki",
@@ -272,11 +272,11 @@
     "notes": "Länderprogramm BW, für Unternehmen mit Standort in Baden-Württemberg",
     "relevance_ki": "Sehr hoch – expliziter KI-Fokus",
     "priority": 1,
-    "url": "https://www.baden-wuerttemberg.de/de/service/foerderprogramme/invest-bw",
+    "url": "https://invest-bw.de/",
     "provider": "Ministerium für Wirtschaft BaWü",
     "deadline": null,
     "deadline_notes": "Programmverfügbarkeit prüfen — wird in Wellen ausgeschrieben.",
-    "verified_at": "2026-07-05"
+    "verified_at": "2026-09-03"
   },
   {
     "id": "profit_berlin",
@@ -295,11 +295,11 @@
     "notes": "Berlin-spezifisch, für innovative F&E-Projekte mit Technologie-Schwerpunkt",
     "relevance_ki": "Sehr hoch – KI-Projekte explizit förderfähig",
     "priority": 1,
-    "url": "https://www.ibb.de/de/foerderprogramme/profit.html",
+    "url": "https://www.ibb.de/de/foerderprogramme/pro-fit-projektfinanzierung.html",
     "provider": "IBB (Investitionsbank Berlin)",
     "deadline": null,
     "deadline_notes": "Laufend verfügbar für Berliner Unternehmen. Zuschüsse und zinsgünstige Darlehen für FuE und Innovation.",
-    "verified_at": "2026-07-05"
+    "verified_at": "2026-09-03"
   },
   {
     "id": "bafa_beratung",
@@ -330,7 +330,7 @@
     "title": "ZIM – Zentrales Innovationsprogramm Mittelstand",
     "region": "Deutschland (bundesweit)",
     "country_code": "DE",
-    "status": "active",
+    "status": "paused",
     "funding_type": "Zuschuss",
     "funding_rate": "bis 45-60%",
     "max_amount": "bis 310.500 € (Einzelprojekte)",
@@ -339,14 +339,15 @@
       "team",
       "kmu"
     ],
-    "notes": "2026 neu: 35% Personalkosten für externe KI-Experten förderfähig",
+    "notes": "Befristeter Antragsstopp seit 07.07.2026, 12:00 Uhr (Haushaltsmittel erschoepft). Neue Antraege fruehestens Anfang 2027, abhaengig vom Bundeshaushalt. Bereits gestellte Antraege werden weiter beschieden, laufende Auszahlungen sind nicht betroffen. Ausgenommen vom Stopp sind Antraege in bi-/multilateralen Calls mit Partnerlaendern.",
     "relevance_ki": "Sehr hoch – explizit für innovative KI-Projekte",
     "priority": 1,
-    "url": "https://www.zim.de",
+    "url": "https://www.zim.de/ZIM/Redaktion/DE/Meldungen/2026/3/2026-07-07-befristeter-antragsstopp.html",
     "provider": "BMWE (Bundesministerium für Wirtschaft und Energie)",
-    "deadline": "30.06.2027",
-    "deadline_notes": "Laufende Antragstellung, kein fester Stichtag. Neue Richtlinie seit 01.01.2025 mit verbesserten Konditionen.",
-    "verified_at": "2026-07-05"
+    "deadline": "ANTRAGSSTOPP bis voraussichtlich Anfang 2027",
+    "deadline_notes": "Befristeter Antragsstopp seit 07.07.2026, 12:00 Uhr (Haushaltsmittel erschoepft). Neue Antraege fruehestens Anfang 2027, abhaengig vom Bundeshaushalt. Bereits gestellte Antraege werden weiter beschieden, laufende Auszahlungen sind nicht betroffen. Ausgenommen vom Stopp sind Antraege in bi-/multilateralen Calls mit Partnerlaendern.",
+    "verified_at": "2026-09-03",
+    "recheck_after": "2027-01-15"
   },
   {
     "id": "kompass",
@@ -361,14 +362,14 @@
     "suitable_for": [
       "solo"
     ],
-    "notes": "Zuschüsse bis 90% der Kursgebühren für zertifizierte Schulungen",
+    "notes": "Verlaengert bis zum Ende der ESF-Plus-Foerderperiode: Qualifizierungsschecks koennen die KOMPASS-Anlaufstellen bis 29.02.2028 ausstellen. Zuschuss bis 4.500 EUR.",
     "relevance_ki": "Hoch – KI-Grundlagen, Prompt Engineering, Datenanalyse",
     "priority": 2,
-    "url": "https://www.bmas.de/DE/Arbeit/Aus-und-Weiterbildung/Weiterbildungsrepublik/KOMPASS/kompass.html",
+    "url": "https://www.esf.de/portal/DE/ESF-Plus-2021-2027/Foerderprogramme/bmas/kompass.html",
     "provider": "BMAS (Bundesministerium für Arbeit und Soziales)",
     "deadline": null,
     "deadline_notes": "Laufend verfügbar. Zuschüsse bis 90% der Kursgebühren für zertifizierte Weiterbildungen.",
-    "verified_at": "2026-07-05"
+    "verified_at": "2026-09-03"
   },
   {
     "id": "qualifizierungschancengesetz",

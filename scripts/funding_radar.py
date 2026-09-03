@@ -123,6 +123,19 @@ def check_program(prog: Dict[str, Any], today: date, max_age_days: int = 120,
     # kuratierte Historie erhalten.
     if status in ("expired", "discontinued", "eingestellt", "archived"):
         return []
+
+    # KIS-1268: "paused" ist ebenfalls dokumentierter Zustand — ein
+    # befristeter Antragsstopp, kein Pflegerückstand (ZIM seit 07.07.2026).
+    # Anders als bei "expired" kommt das Programm aber zurück. Damit der
+    # Eintrag nicht für immer verstummt, trägt er ein Wiedervorlage-Datum:
+    # Ab diesem Tag meldet der Radar ihn wieder zur Prüfung.
+    if status == "paused":
+        recheck = _parse_date(str(prog.get("recheck_after") or "").strip())
+        if recheck and recheck <= today:
+            return [{"type": "recheck", "program": name,
+                     "detail": f"Antragsstopp seit Wiedervorlage {recheck} — "
+                               "prüfen, ob wieder beantragbar (status=active)"}]
+        return []
     deadline_raw = str(prog.get("deadline") or "").strip()
     deadline = _parse_date(deadline_raw)
     if status not in ("active", ""):

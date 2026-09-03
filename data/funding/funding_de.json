@@ -19,7 +19,7 @@
       "notes": "ERP-Förderkredit Digitalisierung & Innovation (511/512/513): seit 2026 kein Mindestkreditbetrag mehr (ab 25.000 €), bis 25 Mio € je Vorhaben, Zins gestaffelt nach Digitalisierungs-/Innovationsgrad (ca. 3,5–5,2%), bis 10 Jahre Laufzeit, Antrag über die Hausbank.",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.kfw.de",
+      "url": "https://www.kfw.de/inlandsfoerderung/Unternehmen/Innovation-und-Digitalisierung/Innovation-und-Digitalisierung.html",
       "last_verified": "2026-08-05"
     },
     {
@@ -39,7 +39,7 @@
       "notes": "Aufruf-gebunden: themenspezifische Förderaufrufe mit zweistufigem Verfahren (Projektskizze über das elektronische Portal); Konditionen je Aufruf — aktuellen Aufrufstatus auf invest-bw.de prüfen.",
       "relevance_ki": "high",
       "priority": 1,
-      "url": "https://www.investbw.de",
+      "url": "https://invest-bw.de/",
       "last_verified": "2026-08-05"
     },
     {
@@ -59,7 +59,7 @@
       "notes": "Neue Richtlinie seit 01.01.2026: Zuschuss-Obergrenze von 400.000 € auf 500.000 € erhöht, vereinfachte Abrechnung, längere Darlehenslaufzeiten (Frühphase bis 10 Jahre, ohne Besicherung).",
       "relevance_ki": "high",
       "priority": 1,
-      "url": "https://www.ibb.de",
+      "url": "https://www.ibb.de/de/foerderprogramme/pro-fit-projektfinanzierung.html",
       "last_verified": "2026-08-05"
     },
     {
@@ -100,7 +100,7 @@
       "notes": "Fördert Technologietransfer mit Forschungseinrichtungen in Berlin/Brandenburg (auch KI-Vorhaben). Programmlaufzeit bis 31.12.2026 — Anträge nur noch in diesem Jahr; Projektstart erst nach Bewilligung.",
       "relevance_ki": "high",
       "priority": 2,
-      "url": "https://www.berlin.de/sen/wirtschaft/wirtschaft/foerderprogramme/transfer-bonus/",
+      "url": "https://www.ibb.de/de/foerderprogramme/transfer-bonus.html",
       "last_verified": "2026-08-05"
     },
     {
@@ -120,7 +120,7 @@
       "notes": "Nur externe F&E-/Entwicklungsleistungen (Prototypen, Tests, Design); reine Softwareentwicklung ist NICHT förderfähig. Antrag an den Projektträger Bayern (PTB).",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.bayern-innovativ.de/innovationsgutschein",
+      "url": "https://www.bayern-innovativ.de/leistungen/projekttraeger/projekttraeger-bayern/innovationsgutschein-bayern",
       "last_verified": "2026-08-05"
     },
     {
@@ -137,11 +137,13 @@
         "team",
         "kmu"
       ],
-      "notes": "⚠️ Befristeter Antragsstopp seit 07.07.2026 (Haushaltsmittel erschöpft, alle Projektformen und Skizzen). Wiederaufnahme abhängig vom Bundeshaushalt 2027, angestrebt Anfang 2027 — bis dahin keine Anträge möglich.",
+      "notes": "Befristeter Antragsstopp seit 07.07.2026, 12:00 Uhr (Haushaltsmittel erschoepft). Neue Antraege fruehestens Anfang 2027, abhaengig vom Bundeshaushalt. Bereits gestellte Antraege werden weiter beschieden, laufende Auszahlungen sind nicht betroffen. Ausgenommen vom Stopp sind Antraege in bi-/multilateralen Calls mit Partnerlaendern.",
       "relevance_ki": "high",
       "priority": 3,
-      "url": "https://www.zim.de",
-      "last_verified": "2026-08-05"
+      "url": "https://www.zim.de/ZIM/Redaktion/DE/Meldungen/2026/3/2026-07-07-befristeter-antragsstopp.html",
+      "last_verified": "2026-08-05",
+      "status": "paused",
+      "recheck_after": "2027-01-15"
     },
     {
       "id": "exist",
