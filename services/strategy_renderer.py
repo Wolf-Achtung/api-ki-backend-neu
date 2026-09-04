@@ -711,24 +711,31 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
 
     html = str(template.render(**context))
 
-    # KIS-EN2-TABLES: Bei EN die keyword-basierten Spaltengewichte VOR dem
-    # generischen Zeichen-Balancer anwenden. enhance_strategy_html →
+    # KIS-EN2-TABLES: Die Spaltengewichte VOR dem generischen
+    # Zeichen-Balancer anwenden. enhance_strategy_html →
     # _balance_column_widths (KIS-1257) injiziert sonst zuerst ein colgroup
     # (Clamp 8–34 %), und harden_wide_tables überspringt Tabellen mit
-    # vorhandenem colgroup — die EN-Keyword-Gewichte aus KIS-1255 griffen
-    # deshalb nie ("Mic ros oft 365 Co pilo t", "RECOM MENDA TION",
-    # EN-Testlauf 2, Strategie S. 18-19). DE-Pfad unverändert.
-    if _ctx_en:
-        try:
-            from services.style_lint import harden_wide_tables as _pre_hwt
-            html, _pre_n = _pre_hwt(html, lang="en")
-            if _pre_n:
-                logger.info(
-                    "[KIS-EN2-TABLES] %d Tabellen-Fix(e) vor html_enhancer angewandt",
-                    _pre_n,
-                )
-        except Exception:  # pragma: no cover
-            pass
+    # vorhandenem colgroup — die Keyword-Gewichte griffen deshalb nie
+    # ("Mic ros oft 365 Co pilo t", "RECOM MENDA TION", EN-Testlauf 2,
+    # Strategie S. 18-19).
+    #
+    # KIS-1286: Bis Lauf 1270 lief das nur für Englisch. Der Balancer greift
+    # nur bei "echter Schieflage" (breiteste Spalte ≥ 3× schmalste) — genau
+    # die Fördertabelle mit ihrer 70-Zeichen-URL neben "Hoch". Sie bekam
+    # deshalb 8-%-Spalten und druckte "(Zuschu ss)", "Darlehe n",
+    # "Aktu ell prüf en" (Strategie S. 28), während die ausgewogenere
+    # Tool-Tabelle daneben sauber lief. Der Unterschied war nicht die
+    # Sprache, sondern wer zuerst ein colgroup setzt.
+    try:
+        from services.style_lint import harden_wide_tables as _pre_hwt
+        html, _pre_n = _pre_hwt(html, lang="en" if _ctx_en else "de")
+        if _pre_n:
+            logger.info(
+                "[KIS-EN2-TABLES] %d Tabellen-Fix(e) vor html_enhancer angewandt",
+                _pre_n,
+            )
+    except Exception:  # pragma: no cover
+        pass
 
     # Post-process LLM HTML to use CSS design classes (KPI cards, timelines, etc.)
     from services.html_enhancer import enhance_strategy_html

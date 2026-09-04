@@ -237,6 +237,19 @@ _LONG_WORD_RE = re.compile(r"[A-Za-zÄÖÜäöüß]{14,}")
 # KIS-1254: Kopfzellen-Schwelle — th-Spalten sind schmaler als Fließtext,
 # dort brauchen schon 10+-Zeichen-Wörter Trennstellen (ZIELKONFLIKT = 12).
 _TH_LONG_WORD_RE = re.compile(r"[A-Za-zÄÖÜäöüß]{10,}")
+# KIS-1286: Umbruchstelle nach einem Schrägstrich zwischen zwei Wörtern.
+# Nullbreite — der Umbruch wird erlaubt, aber kein Trennstrich gedruckt
+# ("GitHub/GitLab" ist keine Worttrennung).
+#
+# Beide Seiten brauchen mindestens vier Buchstaben. Sonst trifft die Regel
+# Einheiten ("h/mo.", "€/Monat") und Kürzel ("Film/TV") — die sollen ganz
+# bleiben, und sie passen ohnehin in jede Spalte.
+_ZWSP = "​"
+_SLASH_MIN_LETTERS = 4
+_SLASH_BREAK_RE = re.compile(
+    rf"(?<=[A-Za-zÄÖÜäöüß]{{{_SLASH_MIN_LETTERS}}})/"
+    rf"(?![​])(?=[A-Za-zÄÖÜäöüß]{{{_SLASH_MIN_LETTERS}}})"
+)
 _VOWELS = set("aeiouäöüy")
 
 
@@ -433,7 +446,18 @@ def soften_table_long_words(html: str, lang: str = "de") -> Tuple[str, int]:
                         count += 1
                     return softened
 
-                inner_parts[i] = _word_re.sub(_word, part)
+                neu = _word_re.sub(_word, part)
+                if kompakt:
+                    # KIS-1286: Schrägstrich-Fügungen sind für die
+                    # Wortsuche zwei kurze Wörter und bekommen deshalb keine
+                    # Trennstelle — "GitHub/GitLab" (13 Zeichen) brach in
+                    # der Spalte hart zu "GitHub/GitLa b" (Lauf 1270,
+                    # Strategie S. 18). Ein Nullbreiten-Leerzeichen nach dem
+                    # Schrägstrich gibt den Umbruch frei, ohne einen
+                    # Trennstrich zu drucken.
+                    neu, _n_slash = _SLASH_BREAK_RE.subn("/" + _ZWSP, neu)
+                    count += _n_slash
+                inner_parts[i] = neu
             return m.group(1) + "".join(inner_parts) + m.group(3)
 
         return _cell
