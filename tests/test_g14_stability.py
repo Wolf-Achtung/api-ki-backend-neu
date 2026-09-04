@@ -463,9 +463,19 @@ class TestG14_Integration:
 
         from services.research_pipeline import run_research
 
-        # Mock feedparser to avoid real network calls that hang in CI
+        # KIS-1280: Zwei Netzwege, nicht einer. feedparser war gestopft,
+        # harvest_links -> http_get -> requests.get war offen. Der Aufruf
+        # ging bis dahin wirklich ins Netz; im Lauf vom 04.09.2026 blieb
+        # er an einer SSL-Leseoperation haengen und riss die ganze
+        # Testsuite in die Zeitgrenze.
+        #
+        # Aufgefallen ist das erst, nachdem KIS-1277 den globalen
+        # sys.modules-Ersatz fuer requests entfernt hat: Der hatte jeden
+        # echten Aufruf zu einem MagicMock gemacht und diesen Test
+        # jahrelang stumm gestellt.
         mock_feed = type("Feed", (), {"entries": [], "bozo": False, "feed": {}})()
-        with patch("services.research_clients.feedparser.parse", return_value=mock_feed):
+        with patch("services.research_clients.feedparser.parse", return_value=mock_feed), \
+                patch("services.research_clients.http_get", return_value=None):
             result = run_research({})
 
         assert "TOOLS_TABLE_HTML" in result
