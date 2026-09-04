@@ -25,8 +25,8 @@ PLATIN+++ CONTENT DOD (mandatory):
 - [✓] Size-specific focus:
       * Solo: Low barriers, small budgets (<10k), consulting & starter grants (BAFA, ERP start loans)
         Vocabulary: No "team", "department", "employees" → "capacity", "resources"
-      * Team (2-10): Process digitization, SME-innovativ, go-digital, team efficiency
-      * SME (11-100): Larger programs (ZIM, KfW digitization), structural funding, pilot projects
+      * Team (2-10): Process digitization, KMU-innovativ, BAFA consulting grant, team efficiency
+      * SME (11-100): Larger programs (KfW digitization, regional media funds such as Medienboard, FFF, MFG), structural funding, pilot projects
 - [✓] Mention connections to recommended tools and starter kit,
       alignment with 90-day roadmap phases and 3-year vision
 - [✓] Conclude with neutral note that funding rates & requirements may change;
@@ -125,9 +125,9 @@ PLATIN+++ CONTENT DOD (mandatory):
       {% if COMPANY_SIZE == "solo" %}
       Starter grants like BAFA or ERP loans reduce the entry barrier for solo founders.
       {% elif COMPANY_SIZE == "team" %}
-      Programs like SME-innovativ or go-digital focus on process digitization for growing teams.
+      Programs like KMU-innovativ or the BAFA consulting grant focus on process digitization for growing teams.
       {% else %}
-      Larger programs (e.g., ZIM, KfW Digitization) support structural projects and scaling.
+      Larger programs (e.g., KfW Digitization, regional media funds) support structural projects and scaling.
       {% endif %}
     </li>
   </ul>

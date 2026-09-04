@@ -46,7 +46,7 @@ Developer:
      BRANCHEN-AWARE (verbindlich):
        - Nutze branchenspezifische Tools, Workflows, Pain Points und typische Datenherkünfte aus dem CONTEXT_BLOCK.
        - Branchenabhängig variieren:
-           - fachliche Spezial-Tools (z. B. CAD/Architektur, E-Commerce, Gesundheits-IT, Marketing-Automation)
+           - fachliche Spezial-Tools (z. B. Schnitt- und Grading-Software, DAW und Stimmsynthese, Redaktionssystem, Game-Engine, Media-Asset-Management)
            - Compliance-/Regulatorik-Aufwände (z. B. Finanzen, Gesundheit)
            - Datenaufbereitungskosten (z. B. Produktion vs. Dienstleistung)
            - Integrationskosten (ERP/CRM/Branchensysteme)
@@ -135,7 +135,7 @@ Developer:
         <td>Fachspezifische KI- oder Branchen-Tools</td>
         <td>Laufend</td>
         <td>
-          Variiert nach Branche (z.&nbsp;B. ERP, CRM, CAD, Diagnostik, E-Commerce, Marketing Automation)
+          Variiert nach Sparte (z.&nbsp;B. Schnittsystem, DAW, Redaktionssystem, Game-Engine, Media-Asset-Management, CRM)
         </td>
         <td>€&nbsp;XX</td>
         <td>€&nbsp;XX</td>
@@ -187,9 +187,9 @@ Developer:
     <li>Aufwände für die Pflege und Aktualisierung von Vorlagen, Prompts und Dokumentation.</li>
     <li>Branchenspezifische Zusatzaufwände:
       <ul>
-        <li>Gesundheit/Finanzen: Datenschutz/Compliance-Reviews.</li>
-        <li>Produktion/Logistik: Datenbereinigung, Sensor-/Maschinendaten.</li>
-        <li>Marketing/Kreativwirtschaft: Asset-Management, Markenrichtlinien.</li>
+        <li>Film/TV und Postproduktion: Archiv-Verschlagwortung, Rechte-Metadaten, Speicher für Rohmaterial.</li>
+        <li>Verlag und Agentur: Asset-Management, Markenrichtlinien, Freigabeprozesse.</li>
+        <li>Audio und Games: Lizenzprüfung für Stimmen und Assets, Qualitätssicherung.</li>
       </ul>
     </li>
     <li>Kleinere Zusatzlizenzen (z.&nbsp;B. Speicher, Plug-ins, optionale Add-ons).</li>

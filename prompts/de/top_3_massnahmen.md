@@ -27,8 +27,8 @@ MAßNAHME 1: Adressiert {{ZEITERSPARNIS_PRIORITAET}}
 
 MAßNAHME 2: Passt zu {{hauptleistung}}
 - Frage: Was ist DER kritische Erfolgsfaktor für diese spezielle Leistung?
-- Beispiel Fragebogen+GPT: "GPT-Auswertungs-Standard definieren" statt "Standard-Workflow"
-- Beispiel Steuerberater: "Mandanten-Dokumente automatisch klassifizieren"
+- Beispiel Postproduktion: "Transkriptions-Standard für Rohmaterial definieren" statt "Standard-Workflow"
+- Beispiel Verlag: "Manuskripte per KI vorlektorieren"
 
 MAßNAHME 3: Adressiert Risiken/Guardrails
 - Beachte {{KI_GUARDRAILS}} wenn vorhanden

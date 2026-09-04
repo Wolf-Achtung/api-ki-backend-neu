@@ -250,7 +250,7 @@ TASK:
 5. Articulate the strategic urgency.
 
 Use the research results as your data basis. If no data is available,
-use general SME benchmarks for Germany 2025/2026.
+phrase it qualitatively and label any positioning as an assumption — never invent comparison figures.
 
 SPRINT 2 — OPT-B2 STRENGTHEN THE COMPETITIVE FRAME (MANDATORY):
 Write for a managing director with no prior AI knowledge. Not "competitive matrix" but "How you can stand out."
@@ -783,7 +783,7 @@ COUNTRY RULE (CRITICAL):
 - For CH: Swiss programs (e.g. Innosuisse) + EU programs. NEVER BAFA, ZIM, Mittelstand-Digital or other DE programs.
 - For AT: Austrian programs (e.g. aws, FFG) + EU programs. NEVER BAFA or other DE programs.
 - For GB: UK programs (e.g. Innovate UK) + EU programs. NEVER BAFA or other DE programs.
-- For DE: German programs (BAFA, ZIM, state-level funding) + EU programs.
+- For DE: German programs (BAFA, KfW, regional media funds) + EU programs. ZIM is suspended until 15 Jan 2027 — do not name it.
 
 DETERMINISTIC BAFA DATA (use ONLY if country = DE):
 - Program: BAFA "Förderung von Unternehmensberatungen für KMU"
@@ -881,7 +881,7 @@ SPRINT 2 — OPT-B6 STRENGTHEN COMPLIANCE DEPTH (MANDATORY):
 Write for a managing director with no prior AI knowledge. Explain technical terms on first use.
 (a) OBLIGATION-TO-CHECK: Translate every compliance obligation (EU AI Act, GDPR) into a concrete check in daily work. Not "observe the transparency obligation", but e.g. "Before sending, check: is it recognizable that AI was involved?"
 (b) COMPLIANCE CHECKLIST: Name a responsible person and timeframe for each compliance task. Phrase it appropriately for the segment.
-(c) INDUSTRY-SPECIFIC COMPLIANCE: Call out concrete professional-law requirements of {branche} — e.g. professional secrecy in tax advisory, patient data protection in healthcare.
+(c) INDUSTRY-SPECIFIC COMPLIANCE: Call out concrete professional-law requirements of {branche} — e.g. labelling duty for synthetic content (Art. 50), rights chain for AI-generated assets, personality rights in voice and face, youth protection in games.
 (d) LINK TO GOVERNANCE: For compliance violations, refer to the escalation path from B5/S3.
 CONSTRAINT: No legal advice. Existing AI Act classification unchanged.
 

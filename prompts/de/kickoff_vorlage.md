@@ -59,7 +59,7 @@ Fokus: Begrüßung & Ziele, Ausgangslage, KI-Potenziale, Datenlage, Quick Wins, 
 {% endif %}
 
 Passe die Themen an {{BRANCHE_LABEL}} an. Statt generisches "KI-Potenziale identifizieren"
-lieber branchenspezifisch formulieren (z.B. für Handwerk: "Welche Abläufe kosten am meisten Zeit?").
+lieber branchenspezifisch formulieren (z.B. für Postproduktion: "Welche Schritte zwischen Rohmaterial und Freigabe kosten am meisten Zeit?").
 
 ### Teil 2: Fragenkatalog zur Vorbereitung
 4 Bereiche mit jeweils 1–2 konkreten Fragen, SPEZIFISCH für {{BRANCHE_LABEL}}:

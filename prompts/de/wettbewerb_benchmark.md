@@ -40,6 +40,7 @@ BRANCHEN-MODIFIKATOREN:
   MARKETING/KREATIV = Schwerpunkt Wertschöpfung & Befähigung
   INDUSTRIE/PRODUKTION = Schwerpunkt Datenqualität & Prozessintegration
   E-COMMERCE/HANDEL = Schwerpunkt Konsistenz, Datenfeeds, Automatisierung
+  MEDIEN/KREATIV nach Sparte: Post/Audio = Durchsatz und Rechtekette; Verlag/Agentur = Freigaben und Kennzeichnung; Games = Lokalisierung und Live-Betrieb
 
 ANTI-REDUNDANZ:
 - Benchmark-Daten HIER vollständig

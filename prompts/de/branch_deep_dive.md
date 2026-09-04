@@ -67,10 +67,10 @@ Analysiere die konkrete Hauptleistung des Users:
 Leite daraus eine Sub-Spezialisierung innerhalb von {{BRANCH_SHORT_LABEL}} ab:
 
 BEISPIELE für Sub-Spezialisierungen:
-- Beratung + "Fragebogen und GPT-Auswertung" → "KI-Consulting mit Fragebogen-Fokus"
-- Beratung + "Marketingstrategien" → "Marketing-Beratung"
-- IT + "Webentwicklung" → "Webentwicklung & Digital-Agentur"
-- Handwerk + "Sanitärinstallation" → "Sanitär-Fachbetrieb"
+- Postproduktion + "Schnitt, Grading und VFX für Werbefilme" → "Postproduktion mit VFX-Schwerpunkt"
+- Verlag + "Sachbuch und Fachzeitschriften" → "Fachverlag mit Print- und Digitalgeschäft"
+- Tonstudio + "Synchron und Podcast-Produktion" → "Audio-Studio mit Synchron-Schwerpunkt"
+- Games + "Mobile Games mit Live-Betrieb" → "Mobile-Games-Studio mit Live-Ops"
 
 Falls keine klare Sub-Spezialisierung erkennbar:
 → Nutze Standard-Profil für {{BRANCH_SHORT_LABEL}}
@@ -174,7 +174,7 @@ Passe Tiefe und Schwerpunkt an die Unternehmensgröße an:
 
 - KMU (mittelständische Unternehmen):
   - Strategische Tiefe: Wettbewerbsvorteile, Erweiterung, Governance.
-  - Benchmarks mit Mittelstandsfokus.
+  - Benchmarks nur aus dem Kontext (Medien- und Kreativbranche) — keine erfundenen Vergleichswerte.
   - Regulatorische Aspekte detaillierter darstellen.
   - Textumfang: mindestens 350 Wörter, maximal 600 Wörter.
 

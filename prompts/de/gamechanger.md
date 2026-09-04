@@ -292,7 +292,7 @@ Der Gamechanger MUSS so spezifisch sein, dass er für ein Unternehmen
 NICHT unverändert gelten würde.
 
 PRÜFFRAGE VOR OUTPUT:
-"Würde diese Idee auch für einen Steuerberater / IT-Dienstleister / Handwerker funktionieren?"
+"Würde diese Idee auch für ein Tonstudio, einen Verlag und ein Games-Studio unverändert funktionieren?"
 → Wenn JA: zu generisch. Neu formulieren.
 
 WERTSCHÖPFUNGSLOGIK STATT PROZESSIDEE (v7.0 NEU):

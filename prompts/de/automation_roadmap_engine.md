@@ -131,7 +131,7 @@ Erstelle eine umfassende Automations-Roadmap mit:
       "dependencies": ["proc_003"],
       "blockers": ["data_quality"],
       "recommended_tools": ["ChatGPT", "Zendesk"],
-      "recommended_funding": ["go-digital"],
+      "recommended_funding": ["BAFA Unternehmensberatung"],
       "risk_relation": "low",
       "phase_assignment": "phase_1",
       "category": "customer_service"
@@ -145,7 +145,7 @@ Erstelle eine umfassende Automations-Roadmap mit:
       "dependencies": [],
       "blockers": [],
       "recommended_tools": ["ChatGPT", "Jasper"],
-      "recommended_funding": ["go-digital"],
+      "recommended_funding": ["BAFA Unternehmensberatung"],
       "risk_relation": "low",
       "phase_assignment": "phase_1",
       "category": "content_creation"

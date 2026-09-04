@@ -16,10 +16,10 @@ Analyze the user's concrete main service:
 Derive a sub-specialization within {{BRANCH_SHORT_LABEL}}:
 
 EXAMPLES for sub-specializations:
-- Consulting + "Questionnaire and GPT evaluation" → "AI consulting with questionnaire focus"
-- Consulting + "Marketing strategies" → "Marketing consulting"
-- IT + "Web development" → "Web development & digital agency"
-- Craft + "Plumbing installation" → "Plumbing specialist"
+- Post-production + "Editing, grading and VFX for commercials" → "Post-production with VFX focus"
+- Publishing + "Non-fiction and trade journals" → "Specialist publisher with print and digital"
+- Recording studio + "Dubbing and podcast production" → "Audio studio with dubbing focus"
+- Games + "Mobile games with live operations" → "Mobile games studio with live ops"
 
 If no clear sub-specialization is identifiable:
 → Use standard profile for {{BRANCH_SHORT_LABEL}}

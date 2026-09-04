@@ -16,8 +16,8 @@ PLATIN+++ CONTENT DOD (mandatory):
 - [✓] Provide funding ranges as percentages (e.g., "30–50%"), use a factual and neutral tone, and avoid marketing language.
 - [✓] Tailor content to company size:
   * **Solo:** highlight low barriers and small budgets (<€10k); reference consulting and starter grants (BAFA, ERP start-up loans). Avoid terms like "team", "department" or "employees"; use "capacity" and "resources" instead.
-  * **Team (2–10):** focus on process digitalisation, SME‑innovative and go‑digital programs; mention collaboration and team efficiency.
-  * **KMU (11–100):** emphasise larger programs such as ZIM and KfW digitalisation loans; address structural funding and potential for pilot projects.
+  * **Team (2–10):** focus on process digitalisation, KMU-innovativ and the BAFA consulting grant; mention collaboration and team efficiency.
+  * **KMU (11–100):** emphasise larger programs such as KfW digitalisation loans and regional media funds (Medienboard, FFF, MFG); address structural funding and potential for pilot projects.
 - [✓] Mention connections to recommended tools and starter kits where appropriate, and align with the phases of the 90‑day roadmap and the company’s 3‑year vision. Ensure the section on funding focus areas reflects {{HAUPTLEISTUNG}} and {{BRANCHE_LABEL}}.
 - [✓] Conclude with a neutral note that funding rates and requirements may change and advise readers to check official guidelines before applying.
 =============================================================================
@@ -63,9 +63,9 @@ PLATIN+++ CONTENT DOD (mandatory):
       {% if COMPANY_SIZE == "solo" %}
       Starter grants such as BAFA or ERP loans reduce the entry barrier for individual founders.
       {% elif COMPANY_SIZE == "team" %}
-      Programmes like SME‑innovativ or go‑digital focus on process digitalisation for growing teams.
+      Programmes like KMU-innovativ or the BAFA consulting grant focus on process digitalisation for growing teams.
       {% else %}
-      Larger programmes (e.g. ZIM, KfW Digitalisation) support structural projects and scaling efforts.
+      Larger programmes (e.g. KfW Digitalisation, regional media funds) support structural projects and scaling efforts.
       {% endif %}
     </li>
   </ul>

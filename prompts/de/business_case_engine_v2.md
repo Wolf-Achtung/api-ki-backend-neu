@@ -225,7 +225,7 @@ Die Szenarien MÜSSEN logisch konsistent sein:
 - "Grundsätzlich gilt..."
 - Generische Floskeln ohne konkrete Zahlen
 
-## Beispiel-Output (KMU Produktion, Realistic)
+## Beispiel-Output (Postproduktion, Kleines Team, Realistic)
 
 ```json
 {

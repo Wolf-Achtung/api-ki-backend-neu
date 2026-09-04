@@ -43,8 +43,10 @@
        - Finance, Healthcare, Public Sector, Legal:
            → Increased transparency, documentation, and verification requirements; careful data use,
              clear internal approvals; potentially close to high-risk use cases.
-       - Marketing, Creative Industries:
-           → Focus on clear labelling & fairness, avoiding misleading content.
+       - Media & Creative Industries (film/TV, post, audio, agency, publishing, games, content creation):
+           → Labelling of synthetic content (Art. 50), rights chain for AI output,
+             personality rights in voice and face; publishing: reader transparency;
+             games: store disclosure and youth protection.
        - Manufacturing/Production:
            → Documentation & human oversight for automated workflows.
        - E-Commerce/Retail:
@@ -138,9 +140,9 @@
       clear internal approvals; potentially close to high-risk use cases.
     </li>
     <li>
-      <strong>Marketing &amp; Creative Industries:</strong>
-      Focus on clear labelling, avoiding misleading content, asset review,
-      brand-compliant use of generative AI.
+      <strong>Media &amp; Creative Industries:</strong>
+      Labelling of synthetic content (Art. 50), rights chain for AI-generated assets,
+      personality rights in voice and face, approvals towards clients and broadcasters.
     </li>
     <li>
       <strong>Manufacturing &amp; Production:</strong>

@@ -145,7 +145,7 @@ DETERMINISTISCHE BAFA-DATEN (verwende EXAKT diese Werte, KEINE eigenen Schätzun
 VERFÜGBARE FÖRDERPROGRAMME (FIX-KIS-1098 — VERBINDLICH):
 {% if FUNDING_PROGRAMS_LIST %}
 Diese Programme wurden automatisch für das Unternehmensprofil gefiltert.
-Nenne NUR Programme aus dieser Liste oder allgemeine Bundesprogramme (BAFA, ZIM, KfW).
+Nenne NUR Programme aus dieser Liste oder allgemeine Bundesprogramme (BAFA, KfW). ZIM ist bis 15.01.2027 ausgesetzt — nicht nennen.
 KEINE österreichischen, schweizer oder britischen Programme nennen!
 {{FUNDING_PROGRAMS_LIST}}
 {% endif %}
@@ -153,7 +153,7 @@ KEINE österreichischen, schweizer oder britischen Programme nennen!
 PERSONA-VARIATIONEN (COMPANY_SIZE):
 - solo: niedrige Hürden, <10.000€, Beratungs-/Gründerförderung, BAFA ({{BAFA_FOERDERUNG_DISPLAY}}), ERP-Gründerkredit
 - team: Prozessdigitalisierung, KMU-innovativ, BAFA ({{BAFA_FOERDERUNG_DISPLAY}})
-- kmu: ZIM, KfW-Digitalisierung, strukturelle Förderung
+- kmu: KfW-Digitalisierung, Länder-Medienförderung (Medienboard, FFF, MFG), strukturelle Förderung
 
 ANTI-REDUNDANZ:
 - Business-Case-Zahlen EINMAL nennen, nicht wiederholen
