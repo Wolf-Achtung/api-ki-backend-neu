@@ -508,14 +508,15 @@ ENUM_VALUES: dict[str, list[str]] = {
     "interne_ki_kompetenzen": ["ja", "nein", "in_planung"],
     "datenquellen": [
         "kundendaten", "verkaufsdaten", "produktionsdaten",
-        "personaldaten", "marketingdaten", "sonstige",
+        "personaldaten", "marketingdaten", "rohmaterial_archiv", "rechte_lizenzen",
+        "manuskripte_texte", "nutzungsdaten", "sonstige",
     ],
     # --- Sektion 2 ---
     "prozesse_papierlos": ["0-20", "21-50", "51-80", "81-100"],
     "automatisierungsgrad": ["sehr_niedrig", "eher_niedrig", "mittel", "eher_hoch", "sehr_hoch"],
     "ki_einsatz": [
         "chatbots", "marketing", "vertrieb", "datenanalyse",
-        "produktion", "hr", "andere", "noch_keine",
+        "produktion", "redaktion", "studio_audio", "hr", "andere", "noch_keine",
     ],
     "ki_kompetenz": ["hoch", "mittel", "niedrig", "keine"],
     # --- Sektion 3 ---
@@ -525,9 +526,12 @@ ENUM_VALUES: dict[str, list[str]] = {
     ],
     "anwendungsfaelle": [
         "chatbots", "content_generation", "datenanalyse", "dokumentation",
-        "prozess_automation", "personalisierung", "andere", "keine_angabe",
+        "prozess_automation", "personalisierung", "transkription_untertitel",
+        "archiv_verschlagwortung", "synchron_dubbing", "lokalisierung", "vorlektorat",
+        "andere", "keine_angabe",
     ],
-    "pilot_bereich": ["kundenservice", "marketing", "vertrieb", "verwaltung", "produktion", "andere"],
+    "pilot_bereich": ["kundenservice", "marketing", "vertrieb", "verwaltung", "produktion",
+                      "redaktion", "studio_audio", "andere"],
     # --- Sektion 4 ---
     "massnahmen_komplexitaet": ["niedrig", "mittel", "hoch", "unklar"],
     "roadmap_vorhanden": ["ja", "teilweise", "nein"],
@@ -535,10 +539,12 @@ ENUM_VALUES: dict[str, list[str]] = {
     "change_management": ["sehr_hoch", "hoch", "mittel", "niedrig", "sehr_niedrig"],
     # --- Sektion 5 ---
     "zeitbudget": ["unter_2", "2_5", "5_10", "ueber_10"],
-    "vorhandene_tools": ["crm", "erp", "projektmanagement", "marketing_automation", "buchhaltung", "keine"],
+    "vorhandene_tools": ["crm", "erp", "projektmanagement", "marketing_automation", "buchhaltung",
+                         "schnitt_grading", "audio_daw", "redaktion_satz", "engine", "review_mam", "keine"],
     "trainings_interessen": [
         "prompt_engineering", "llm_basics", "datenqualitaet_governance",
-        "automatisierung", "ethik_recht", "keine",
+        "automatisierung", "ethik_recht", "ki_rechte_kennzeichnung",
+        "stimme_gesicht_einwilligung", "keine",
     ],
     "vision_prioritaet": [
         "gpt_services", "kundenservice", "datenprodukte",

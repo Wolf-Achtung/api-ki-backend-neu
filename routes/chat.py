@@ -646,6 +646,11 @@ _ANWENDUNG_TO_PILOT: dict[str, str] = {
     "prozess_automation": "verwaltung",
     "dokumentenanalyse": "verwaltung",
     "qualitaetskontrolle": "produktion",
+    # KIS-1291: Medien-Anwendungsfaelle
+    "transkription_untertitel": "produktion",
+    "archiv_verschlagwortung": "produktion",
+    "synchron_dubbing": "studio_audio",
+    "vorlektorat": "redaktion",
 }
 
 
@@ -4543,6 +4548,10 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "produktionsdaten", "label": "Produktions-/Betriebsdaten"},
         {"value": "personaldaten", "label": "Personal-/HR-Daten"},
         {"value": "marketingdaten", "label": "Marketing-/Kampagnendaten"},
+        {"value": "rohmaterial_archiv", "label": "Rohmaterial / Archiv"},
+        {"value": "rechte_lizenzen", "label": "Rechte- und Lizenzdaten"},
+        {"value": "manuskripte_texte", "label": "Manuskripte / Texte"},
+        {"value": "nutzungsdaten", "label": "Nutzungsdaten (Streaming, Store)"},
         {"value": "sonstige", "label": "Sonstige Datenquellen"},
     ],
     # --- Sektion 2 ---
@@ -4573,7 +4582,9 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "marketing", "label": "Marketing & Content"},
         {"value": "vertrieb", "label": "Vertrieb & CRM"},
         {"value": "datenanalyse", "label": "Datenanalyse"},
-        {"value": "produktion", "label": "Produktion / Logistik"},
+        {"value": "produktion", "label": "Produktion / Postproduktion"},
+        {"value": "redaktion", "label": "Redaktion / Lektorat"},
+        {"value": "studio_audio", "label": "Studio / Audio"},
         {"value": "hr", "label": "Personalmanagement"},
         {"value": "andere", "label": "Andere Bereiche"},
         {"value": "noch_keine", "label": "Noch keine Nutzung"},
@@ -4602,6 +4613,11 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "dokumentation", "label": "Dokumentation & Wissen"},
         {"value": "prozess_automation", "label": "Prozessautomation"},
         {"value": "personalisierung", "label": "Personalisierung"},
+        {"value": "transkription_untertitel", "label": "Transkription / Untertitel"},
+        {"value": "archiv_verschlagwortung", "label": "Archiv-Verschlagwortung"},
+        {"value": "synchron_dubbing", "label": "Synchron / Dubbing"},
+        {"value": "lokalisierung", "label": "Lokalisierung"},
+        {"value": "vorlektorat", "label": "Vorlektorat"},
         {"value": "andere", "label": "Andere"},
         {"value": "keine_angabe", "label": "Noch unklar"},
     ],
@@ -4610,7 +4626,9 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "marketing", "label": "Marketing / Content"},
         {"value": "vertrieb", "label": "Vertrieb"},
         {"value": "verwaltung", "label": "Verwaltung / Backoffice"},
-        {"value": "produktion", "label": "Produktion / Logistik"},
+        {"value": "produktion", "label": "Produktion / Postproduktion"},
+        {"value": "redaktion", "label": "Redaktion / Lektorat"},
+        {"value": "studio_audio", "label": "Studio / Audio"},
         {"value": "andere", "label": "Andere"},
     ],
     # --- Sektion 4 ---
@@ -4650,6 +4668,11 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "projektmanagement", "label": "Projektmanagement (Asana, Trello)"},
         {"value": "marketing_automation", "label": "Marketing Automation"},
         {"value": "buchhaltung", "label": "Buchhaltungssoftware"},
+        {"value": "schnitt_grading", "label": "Schnitt / Grading (Premiere, DaVinci, Avid)"},
+        {"value": "audio_daw", "label": "Audio (Pro Tools, Logic)"},
+        {"value": "redaktion_satz", "label": "Redaktion / Satz (InDesign, CMS)"},
+        {"value": "engine", "label": "Engine (Unreal, Unity)"},
+        {"value": "review_mam", "label": "Review / MAM (Frame.io, iconik)"},
         {"value": "keine", "label": "Keine / andere"},
     ],
     "trainings_interessen": [
@@ -4658,6 +4681,8 @@ _QR_OPTIONS: dict[str, list[dict]] = {
         {"value": "datenqualitaet_governance", "label": "Datenqualität & Governance"},
         {"value": "automatisierung", "label": "Automatisierung & Skripte"},
         {"value": "ethik_recht", "label": "Ethische & rechtliche Grundlagen"},
+        {"value": "ki_rechte_kennzeichnung", "label": "KI-Rechte & Kennzeichnung"},
+        {"value": "stimme_gesicht_einwilligung", "label": "Stimme & Gesicht: Einwilligung"},
         {"value": "keine", "label": "Keine / noch unklar"},
     ],
     "vision_prioritaet": [
@@ -5026,7 +5051,7 @@ _QR_OPTION_LABELS_EN: dict[str, dict[str, str]] = {
     "datenquellen": {
         "kundendaten": "Customer data (CRM, service)", "verkaufsdaten": "Sales/order data",
         "produktionsdaten": "Production/operations data", "personaldaten": "Personnel/HR data",
-        "marketingdaten": "Marketing/campaign data", "sonstige": "Other data sources",
+        "marketingdaten": "Marketing/campaign data", "rohmaterial_archiv": "Raw footage / archive", "rechte_lizenzen": "Rights and licence data", "manuskripte_texte": "Manuscripts / texts", "nutzungsdaten": "Usage data (streaming, store)", "sonstige": "Other data sources",
     },
     "digitalisierungsgrad": {
         "2": "Low (1–3)", "5": "Medium (4–5)", "7": "Advanced (6–7)",
@@ -5039,7 +5064,7 @@ _QR_OPTION_LABELS_EN: dict[str, dict[str, str]] = {
     "ki_einsatz": {
         "chatbots": "Chatbots / customer service", "marketing": "Marketing & content",
         "vertrieb": "Sales & CRM", "datenanalyse": "Data analysis",
-        "produktion": "Production / logistics", "hr": "HR management",
+        "produktion": "Production / post-production", "redaktion": "Editorial / proofreading", "studio_audio": "Studio / audio", "hr": "HR management",
         "andere": "Other areas", "noch_keine": "Not yet in use",
     },
     "ki_kompetenz": {
@@ -5054,13 +5079,13 @@ _QR_OPTION_LABELS_EN: dict[str, dict[str, str]] = {
     "anwendungsfaelle": {
         "chatbots": "Chatbots / FAQ automation", "content_generation": "Content generation",
         "datenanalyse": "Data analysis & reporting", "dokumentation": "Documentation & knowledge",
-        "prozess_automation": "Process automation", "personalisierung": "Personalization",
+        "prozess_automation": "Process automation", "personalisierung": "Personalization", "transkription_untertitel": "Transcription / subtitles", "archiv_verschlagwortung": "Archive tagging", "synchron_dubbing": "Dubbing / voice-over", "lokalisierung": "Localisation", "vorlektorat": "AI pre-editing",
         "andere": "Other", "keine_angabe": "Still unclear",
     },
     "pilot_bereich": {
         "kundenservice": "Customer service", "marketing": "Marketing / content",
         "vertrieb": "Sales", "verwaltung": "Administration / back office",
-        "produktion": "Production / logistics", "andere": "Other",
+        "produktion": "Production / post-production", "redaktion": "Editorial / proofreading", "studio_audio": "Studio / audio", "andere": "Other",
     },
     "massnahmen_komplexitaet": {
         "niedrig": "Low", "mittel": "Medium", "hoch": "High", "unklar": "Unclear",
@@ -5083,13 +5108,13 @@ _QR_OPTION_LABELS_EN: dict[str, dict[str, str]] = {
         "crm": "CRM (HubSpot, Salesforce)", "erp": "ERP (SAP, Odoo)",
         "projektmanagement": "Project management (Asana, Trello)",
         "marketing_automation": "Marketing automation",
-        "buchhaltung": "Accounting software", "keine": "None / other",
+        "buchhaltung": "Accounting software", "schnitt_grading": "Editing / grading (Premiere, DaVinci, Avid)", "audio_daw": "Audio (Pro Tools, Logic)", "redaktion_satz": "Editorial / layout (InDesign, CMS)", "engine": "Engine (Unreal, Unity)", "review_mam": "Review / MAM (Frame.io, iconik)", "keine": "None / other",
     },
     "trainings_interessen": {
         "prompt_engineering": "Prompt engineering", "llm_basics": "LLM basics",
         "datenqualitaet_governance": "Data quality & governance",
         "automatisierung": "Automation & scripts",
-        "ethik_recht": "Ethical & legal basics", "keine": "None / still unclear",
+        "ethik_recht": "Ethical & legal basics", "ki_rechte_kennzeichnung": "AI rights & labelling", "stimme_gesicht_einwilligung": "Voice & face: consent", "keine": "None / still unclear",
     },
     "vision_prioritaet": {
         "gpt_services": "AI-powered services and products",
