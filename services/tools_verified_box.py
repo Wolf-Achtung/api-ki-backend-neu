@@ -60,9 +60,14 @@ _TEXTE = {
         "beleg_label": "Datenschutz",
         "kein_preis": "siehe Anbieterseite",
         "fuss_geprueft": "Preisangabe bestätigt am",
+        # KIS-1282: Kein "wir". Eine globale Ersetzung in gpt_analyze.py
+        # (\bwir\b -> ich, Berater-Stimme im Singular) traf im Lauf
+        # KIS-1266 diesen festen Text und machte daraus "weisen ich nicht
+        # aus". Die Regel tauscht Wörter, nicht Verbformen — statischer
+        # Text muss ihr deshalb ausweichen.
         "fuss_ungeprueft": (
-            "Preise ohne Prüfdatum weisen wir nicht aus. Der Anbieter nennt "
-            "den aktuellen Preis auf der verlinkten Seite."),
+            "Ein Preis erscheint hier nur mit Prüfdatum. Den aktuellen "
+            "Preis nennt der Anbieter auf der verlinkten Seite."),
     },
     "en": {
         "titel": "Verified tool data",

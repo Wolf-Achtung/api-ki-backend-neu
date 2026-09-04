@@ -110,7 +110,7 @@ class TestBlockInhalt:
     def test_fusszeile_erklaert_die_luecke(self):
         html = build_verified_tools_html(BEISPIEL, tools=[
             {"name": "A", "price": "9 €", "trust_url": "https://a.de/p"}])
-        assert "ohne Prüfdatum" in html
+        assert "nur mit Prüfdatum" in html
 
     def test_fusszeile_nennt_das_pruefdatum(self):
         html = build_verified_tools_html(BEISPIEL, tools=[
