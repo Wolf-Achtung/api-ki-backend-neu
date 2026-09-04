@@ -59,6 +59,45 @@ def normalize_currency_spacing(html: str) -> Tuple[str, int]:
 
 
 # --------------------------------------------------------------------------- #
+# A1a) KIS-1284: Prozent-Abstand normalisieren                                #
+# --------------------------------------------------------------------------- #
+# lint_style meldet die gemischte Schreibweise seit jeher, repariert hat sie
+# niemand. Lauf 1268, in EINEM Dokument: 23 x "80%" gegen 11 x "80 %"
+# (Status-Report), 7 gegen 15 im Strategiebericht. DIN 5008 verlangt den
+# Abstand; geschuetzt, damit "80 %" in schmalen Tabellenspalten nicht
+# umbricht (dieselbe Schreibweise erkennt _EN_AMOUNT_RE als ein Token).
+#
+# Nur in Textknoten — "width:80%" in einem style-Attribut wuerde sonst
+# zerstoert. Ausgenommen bleibt "%ig" ("100%ige Tochter").
+_NBSP = " "
+_PERCENT_SPACE_RE = re.compile(
+    r"(\d)[ \t  ]*%(?![\wÄÖÜäöüß])"
+)
+
+
+def normalize_percent_spacing(html: str) -> Tuple[str, int]:
+    """Erzwingt "<Ziffer>&nbsp;%" in Textknoten (DIN 5008)."""
+    if not html or "%" not in html:
+        return html, 0
+    parts = _TAG_SPLIT_RE.split(html)
+    count = 0
+    ziel = _NBSP + "%"
+    for i, part in enumerate(parts):
+        if not part or part.startswith("<"):
+            continue
+
+        def _repl(m: "re.Match[str]") -> str:
+            nonlocal count
+            if m.group(0) == m.group(1) + ziel:
+                return m.group(0)
+            count += 1
+            return m.group(1) + ziel
+
+        parts[i] = _PERCENT_SPACE_RE.sub(_repl, part)
+    return "".join(parts), count
+
+
+# --------------------------------------------------------------------------- #
 # A1b) KIS-1232: Fehlende Leerzeichen nach Satzzeichen reparieren             #
 # --------------------------------------------------------------------------- #
 # Der KMU-Lauf zeigte zusammengeklebte Sätze aus drei Quellen: Nutzereingaben
@@ -472,6 +511,14 @@ _EN_COL_MIN_CAP = 26.0    # Deckel für das Wort-Minimum einer einzelnen Spalte
 _EN_TEXT_HEAVY_LEN = 40   # längste Zelle > 40 Zeichen → Text-Spalte (wide)
 _EN_TEXT_MEDIUM_LEN = 25  # längste Zelle > 25 Zeichen → mindestens Gewicht 2
 _EN_TEXT_HEAVY_MIN = 18.0
+# KIS-1284: Deckel für das Wort-Minimum, wenn die Summe sonst >100 % ergibt.
+# Bis 12 Zeichen bleibt ein Wort geschützt; längere brechen mit Trennstrich.
+_SOFT_TOKEN_CAP = 12
+# KIS-1284: Untergrenze für JEDE Spalte — so viele Zeichen muss sie am Stück
+# tragen. Ein Wort bis acht Zeichen hat keine sinnvolle Trennstelle; "konform"
+# in der DSGVO-Spalte wurde zu "ko nf or m" (Lauf 1268, Strategie S. 23).
+# Bei Spalten, deren längstes Wort kürzer ist, gilt dessen Länge.
+_MIN_UNBREAKABLE_CHARS = 8
 
 # Unteilbare Tokens: Wörter, dd.mm.yyyy-/dd.mm.-Daten sowie (KIS-1273)
 # Beträge/Zahlen mit Einheit ("10,800 €", "50.000 EUR", "50%") — die werden
@@ -485,6 +532,28 @@ _EN_CELL_TOKEN_RE = re.compile(
 # Datumsangaben ("31.12.2026", auch "31.12. 2026") dürfen nie umbrechen.
 _EN_DATE_RE = re.compile(r"(?<![\d.])\d{1,2}\.\d{1,2}\.\s?\d{4}(?!\d)")
 _EN_NOWRAP_SPAN = '<span style="white-space:nowrap">'
+
+
+def _unbreakable_len(word: str, is_en: bool) -> int:
+    """Breite, die ein Kopfwort wirklich am Stück braucht (Zeichen).
+
+    KIS-1284: Bis hierher zählte das ganze Wort. Im DE-Pfad setzt aber
+    ``soften_table_long_words`` unmittelbar nach der Härtung &shy; in jedes
+    Kopfwort ab 10 Zeichen (Segmente ≤ 6), und ``hyphens:manual`` auf th
+    lässt genau dort brechen. "HANDLUNGSFELD" braucht deshalb 7 Zeichen
+    Spaltenbreite, nicht 13 — bei sieben Spalten ist das der Unterschied
+    zwischen einer passenden und einer zerhackten Tabelle.
+
+    Im EN-Pfad steht auf th weiter ``hyphens:none``; dort zählt das ganze
+    Wort wie bisher.
+    """
+    if is_en or len(word) < 10:
+        return len(word)
+    softened = _soften_word(word, max_run=6, lang="de")
+    if _SHY not in softened:
+        return len(word)
+    # +1 für den Trennstrich, den die Zeile am Bruch zusätzlich setzt.
+    return max(len(seg) for seg in softened.split(_SHY)) + 1
 
 
 def _en_column_stats(table: str, ncols: int) -> Tuple[List[int], List[int]]:
@@ -561,9 +630,19 @@ _EN_TABLE_COMPACT_FONT = "0.86em"
 _EN_TABLE_COMPACT_FONT_SMALL = "0.8em"  # KIS-1273 (1d): wenn Minima >100 %
 _EN_TABLE_COMPACT_STYLE = "table-layout:fixed;width:100%;font-size:{font}"
 _EN_CELL_COMPACT_STYLE = "padding:4px 6px;hyphens:auto;overflow-wrap:break-word"
+# KIS-1284: Fuer Deutsch KEIN hyphens:auto — KIS-1244 hat dokumentiert, dass
+# Chromium ohne deutsches Trennwoerterbuch falsch trennt ("Selbs-tbetrieb").
+# manual laesst genau die &shy;-Stellen zu, die der Stil-Lint selbst setzt.
+_DE_CELL_COMPACT_STYLE = "padding:4px 6px;hyphens:manual;overflow-wrap:break-word"
 # KIS-1273 (1b): Header-Zellen nie trennen — "BU DG ET"/"FUNDIN G RATE"
 # (EN-Testlauf 5, Roadmap-/Fördertabellen-Header).
 _EN_TH_COMPACT_STYLE = "padding:4px 6px;hyphens:none;overflow-wrap:break-word"
+# KIS-1284: Im DE-Pfad manual statt none. soften_table_long_words setzt
+# direkt nach der Härtung &shy; in jedes Kopfwort ab 10 Zeichen (Segmente
+# ≤ 6). "HANDLUNGSFELD" bricht damit mit Trennstrich zu "HAND-LUNGS-FELD",
+# statt seine Spalte auf volle 13 Zeichen Breite zu zwingen. none würde
+# genau diese Trennstellen ignorieren.
+_DE_TH_COMPACT_STYLE = "padding:4px 6px;hyphens:manual;overflow-wrap:break-word"
 _TABLE_CELL_OPEN_RE = re.compile(r"<t[dh]\b[^>]*>", re.IGNORECASE)
 _STYLE_ATTR_VAL_RE = re.compile(r'style\s*=\s*"([^"]*)"', re.IGNORECASE)
 
@@ -608,11 +687,16 @@ def _en_round_pcts_to_100(pcts: List[float]) -> List[float]:
     return rounded
 
 
-def _en_compact_wide_table(table: str, font_size: str = _EN_TABLE_COMPACT_FONT) -> str:
-    """Erzwingt fixed-Layout + Kompakt-Stil für sehr breite EN-Tabellen.
+def _en_compact_wide_table(
+    table: str,
+    font_size: str = _EN_TABLE_COMPACT_FONT,
+    lang: str = "en",
+) -> str:
+    """Erzwingt fixed-Layout + Kompakt-Stil für sehr breite Tabellen.
 
     KIS-1273: th-Zellen bekommen hyphens:none (Header brechen nie im Wort),
-    td-Zellen hyphens:auto; overflow-wrap:break-word statt anywhere."""
+    td-Zellen hyphens:auto; overflow-wrap:break-word statt anywhere.
+    KIS-1284: Im deutschen Pfad steht auf td hyphens:manual statt auto."""
     open_m = _TABLE_OPEN_RE.search(table)
     if open_m:
         new_open = _merge_inline_style(
@@ -620,11 +704,15 @@ def _en_compact_wide_table(table: str, font_size: str = _EN_TABLE_COMPACT_FONT) 
         )
         table = table[:open_m.start()] + new_open + table[open_m.end():]
 
+    _is_en = str(lang or "de").lower().startswith("en")
+    _td_style = _EN_CELL_COMPACT_STYLE if _is_en else _DE_CELL_COMPACT_STYLE
+    _th_style = _EN_TH_COMPACT_STYLE if _is_en else _DE_TH_COMPACT_STYLE
+
     def _cell(m: "re.Match[str]") -> str:
         _style = (
-            _EN_TH_COMPACT_STYLE
+            _th_style
             if m.group(0).lower().startswith("<th")
-            else _EN_CELL_COMPACT_STYLE
+            else _td_style
         )
         return _merge_inline_style(m.group(0), _style)
 
@@ -683,8 +771,12 @@ _EN_AMOUNT_RE = re.compile(
     r")"
     r"(?!\d)"
 )
+# KIS-1284: Die deutschen Entsprechungen fehlten — "Hoch"/"Mittel" in der
+# PASSUNG-Spalte der Fördertabelle wurden nicht als unteilbar gezaehlt.
 _EN_ENUM_CELL_RE = re.compile(
-    r"^(?:high|medium|low|minimal|standard|scale-up)$", re.IGNORECASE
+    r"^(?:high|medium|low|minimal|standard|scale-up"
+    r"|hoch|mittel|niedrig|gering|ja|nein|offen|aktiv|laufend)$",
+    re.IGNORECASE,
 )
 _EN_ENUM_CELL_MAX_LEN = 12
 
@@ -835,9 +927,18 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
         cells = _HEADER_CELL_RE.findall(row_m.group(1)) if row_m else cells
         weights = [_col_weight(_STRIP_TAGS_RE.sub(" ", c), lang=lang) for c in cells]
         _compact_font = _EN_TABLE_COMPACT_FONT
-        if _en:
+        # KIS-1284: Die Haertung galt bis hierher nur fuer Englisch. Lauf
+        # KIS-1268 zeigte dieselben Symptome im deutschen Strategiebericht:
+        # "Ja, EU - ko nf or m", "Bis 31.1 2.20 26", "Na htl os in Mi cr os
+        # oft 36 5," (S. 20-23 und 30). Ursache war der else-Zweig unten: Er
+        # leitet die Spaltenbreite allein aus der KOPFZEILE ab und laesst
+        # 6 %-Spalten zu — bei 180 mm Satzspiegel rund vier Zeichen breit.
+        # Ab 5 Spalten laeuft deshalb jetzt in beiden Sprachen der
+        # inhaltsbasierte Pfad.
+        _breit = len(cells) >= _EN_COMPACT_MIN_COLS
+        if _en or _breit:
             # KIS-EN3-COLMIN: inhaltsbasierte Klassifikation + Mindestbreiten
-            # (siehe Kommentarblock oben). Nur lang=en — DE byte-identisch.
+            # (siehe Kommentarblock oben).
             ncols = len(cells)
             max_len, max_token = _en_column_stats(table, ncols)
             for ci in range(ncols):
@@ -866,7 +967,8 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
                     (max_token[ci] + 1) * _EN_PCT_PER_CHAR,
                 ))
                 _hdr_longest = max(
-                    (len(t) for t in _EN_CELL_TOKEN_RE.findall(header_texts[ci])),
+                    (_unbreakable_len(t, _en)
+                     for t in _EN_CELL_TOKEN_RE.findall(header_texts[ci])),
                     default=0,
                 )
                 m_i = max(m_i, min(
@@ -884,6 +986,12 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
             if ncols >= _EN_COMPACT_MIN_COLS:
                 hard_tokens = _en_hard_token_stats(table, ncols)
                 hard_tokens = [max(h, w) for h, w in zip(hard_tokens, hdr_words)]
+                if not _en:
+                    # KIS-1284: Grundlast je Spalte (s. _MIN_UNBREAKABLE_CHARS).
+                    hard_tokens = [
+                        max(h, min(t, _MIN_UNBREAKABLE_CHARS))
+                        for h, t in zip(hard_tokens, max_token)
+                    ]
                 mins = [
                     max(s, _en_hard_min_pct(h, 0.86))
                     for s, h in zip(mins_soft, hard_tokens)
@@ -901,14 +1009,56 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
                         for s, h in zip(mins_soft, hard_tokens)
                     ]
                     if sum(mins) > 100.0:
-                        # Physikalisch nicht mehr auflösbar — die Minima
-                        # werden in _distribute_with_minimums gleichmäßig
-                        # herunterskaliert (Clipping-Restrisiko, loggen).
-                        log.warning(
-                            "[KIS-1275][EN-TABLE] Hart-Minima summieren auf "
-                            "%.1f %% (>100) — Spalten werden skaliert",
-                            sum(mins),
+                        # KIS-1284: Bis hierher wurden ALLE Minima gleich
+                        # heruntergeskaliert — auch die harten. Die 7-spaltige
+                        # Fördertabelle (Lauf 1268, S. 30) verlor dabei ihre
+                        # Frist-Spalte von 15,2 % auf 11,0 %, und "Bis
+                        # 31.12.2026" brach zu "Bis 31.1 2.20 26".
+                        #
+                        # Die Soft-Minima tragen das längste WORT einer Spalte
+                        # ("Unternehmensberatungen", 22 Zeichen → 26 %). Solche
+                        # Wörter darf man trennen; ein Datum oder ein Betrag
+                        # nicht. Reicht der Platz nicht, wird das Wort-Minimum
+                        # deshalb bei _SOFT_TOKEN_CAP Zeichen gedeckelt: kurze
+                        # Wörter ("konform") bleiben geschützt, lange
+                        # ("Unternehmensberatungen") brechen mit Trennstrich.
+                        # Das Hart-Minimum bleibt in jedem Fall unangetastet.
+                        _cap_pct = min(
+                            _EN_COL_MIN_CAP,
+                            (_SOFT_TOKEN_CAP + 1) * _EN_PCT_PER_CHAR,
                         )
+                        hard_only = [
+                            _en_hard_min_pct(h, 0.8) for h in hard_tokens
+                        ]
+                        mid = [
+                            max(h, min(s * _shrink, _cap_pct))
+                            for s, h in zip(mins_soft, hard_only)
+                        ]
+                        if sum(mid) <= 100.0:
+                            mins = mid
+                            log.info(
+                                "[KIS-1284][TABLE] Soft-Minima (%.1f %%) passen "
+                                "nicht — Wort-Minimum auf %d Zeichen gedeckelt "
+                                "(%.1f %%)", sum(mins_soft), _SOFT_TOKEN_CAP,
+                                sum(mid),
+                            )
+                        elif sum(hard_only) <= 100.0:
+                            mins = hard_only
+                            log.info(
+                                "[KIS-1284][TABLE] Soft-Minima (%.1f %%) passen "
+                                "nicht — nur die harten (%.1f %%) gelten",
+                                sum(mins_soft), sum(hard_only),
+                            )
+                        else:
+                            # Physikalisch nicht mehr auflösbar — die Minima
+                            # werden in _distribute_with_minimums gleichmäßig
+                            # herunterskaliert (Clipping-Restrisiko, loggen).
+                            mins = hard_only
+                            log.warning(
+                                "[KIS-1275][TABLE] Hart-Minima summieren auf "
+                                "%.1f %% (>100) — Spalten werden skaliert",
+                                sum(hard_only),
+                            )
             else:
                 mins = mins_soft
             pcts = _distribute_with_minimums(weights, mins)
@@ -942,8 +1092,10 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
         # width:100%, kleinere Schrift, weniger Padding, hyphens:auto auf td,
         # hyphens:none auf th). Nur lang=en — der DE-Pfad bleibt
         # byte-identisch.
-        if _en and len(cells) >= _EN_COMPACT_MIN_COLS:
-            result = _en_compact_wide_table(result, font_size=_compact_font)
+        if _breit:
+            result = _en_compact_wide_table(
+                result, font_size=_compact_font, lang=lang
+            )
             count += 1
         # KIS-1275 (1a): EN-KOMPAKT-gehärtete Tabellen (≥5 Spalten) markieren.
         # html_enhancer (_transform_tables/_style_table_headers) überschrieb
@@ -951,9 +1103,11 @@ def harden_wide_tables(html: str, lang: str = "de") -> Tuple[str, int]:
         # — der Marker schaltet dort auf respect_existing (bestehende
         # Properties gewinnen; font-size/padding werden gar nicht ergänzt,
         # damit th/td die Kompaktschrift der Tabelle erben). Nicht-kompakte
-        # EN-Tabellen (4 Spalten) behalten bewusst das Legacy-Enhancer-
-        # Styling. NUR im EN-Pfad gesetzt → DE-Ausgabe byte-identisch.
-        if _en and len(cells) >= _EN_COMPACT_MIN_COLS:
+        # Tabellen mit 4 Spalten behalten bewusst das Legacy-Enhancer-
+        # Styling. KIS-1284: gilt jetzt fuer beide Sprachen — ohne den
+        # Marker ueberschriebe der Enhancer die Kompakt-Schrift wieder mit
+        # 10pt/12px, auf die die Spalten-Minima nicht kalibriert sind.
+        if _breit:
             open_m2 = _TABLE_OPEN_RE.search(result)
             if open_m2 and "data-ksj-hardened" not in open_m2.group(0):
                 tag = open_m2.group(0)

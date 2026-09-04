@@ -149,11 +149,38 @@ Werkzeuge ohne belegte Datenschutzlage.
   in deterministischen Bausteinen vermeidet die erste Person Plural
   ganz. Schalter: `BERATERSTIMME_ENABLED=0`.
 
+## Tabellen im PDF (KIS-1284)
+
+Breite Tabellen sind die empfindlichste Stelle im Layout. Headless-Chromium
+hat kein deutsches Trennwörterbuch; zu schmale Spalten brechen deshalb ohne
+Trennstrich mitten im Wort.
+
+- Ab **5 Spalten** läuft die inhaltsbasierte Härtung
+  (`style_lint.harden_wide_tables`): Spaltenbreiten aus dem längsten
+  unteilbaren Inhalt, Daten und Beträge non-breaking, `table-layout:fixed`,
+  Kompaktschrift, Marker `data-ksj-hardened="1"`. Darunter bleibt es beim
+  alten Pfad.
+- Der Marker ist Pflicht: Ohne ihn setzt `html_enhancer` Schrift und
+  Padding zurück — genau die Werte, auf die die Spalten-Minima kalibriert
+  sind.
+- **Deutsch trennt nur an gesetzten Stellen** (`hyphens:manual`).
+  `hyphens:auto` erzeugt „Selbs-tbetrieb" (KIS-1244). Die Trennstellen
+  setzt `soften_table_long_words` direkt danach als `&shy;`.
+- Reichen die Mindestbreiten nicht auf 100 %, greift die Staffel:
+  Wort-Minimum auf 12 Zeichen deckeln → nur noch die harten Minima →
+  gleichmäßig skalieren (mit Warnung im Log).
+- Bis KIS-1284 galt das alles **nur für Englisch**. Die drei EN-Läufe
+  (KIS-1272/1273/1275) hielten den DE-Pfad ausdrücklich byte-identisch —
+  und damit kaputt.
+
 ## Werkzeuge
 
 - `scripts/compare_reports.py alt.pdf neu.pdf` — vergleicht zwei
   Report-Läufe: Kennzahlen, dünne Seiten, Rückfall-Prüfung gegen die
-  behobenen Fehler. Exit-Code 1 bei einem Rückfall.
+  sieben behobenen Fehler. Exit-Code 1 bei einem Rückfall. Seit
+  KIS-1284 prüft es auch auf zerhackte Tabellenzellen; „€/Monat" zählt
+  nur mit Kontext („laufende Tool-Kosten"), sonst schlug der Preis des
+  ersten Werkzeugs als OPEX-Abweichung durch.
 - `scripts/env_unused.py liste.txt` — prüft eine Liste von ENV-Namen
   gegen den Laufzeit-Code. Kennt die vier Fallen, an denen die
   Handprüfung scheitert (Konstanten, dynamische Namen,

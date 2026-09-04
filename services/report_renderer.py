@@ -863,7 +863,10 @@ def render(briefing_obj: Any,
         _roi_12m = sections.get("ROI_12M")
         if _roi_12m is not None:
             try:
-                sections["ROI_12M_DISPLAY_DE"] = Markup(f"{int(float(_roi_12m))} %")
+                from services.roi_anzeige import als_prozent as _roi_prozent
+                sections["ROI_12M_DISPLAY_DE"] = Markup(
+                    _roi_prozent(_roi_12m) or f"{int(float(_roi_12m))} %"
+                )
                 log.info("[FIX-v720-COVER-ROI] Set ROI_12M_DISPLAY_DE=%s from ROI_12M", sections["ROI_12M_DISPLAY_DE"])
             except (ValueError, TypeError):
                 pass
@@ -885,7 +888,12 @@ def render(briefing_obj: Any,
                     _roi_gesamt = (_annual_saving - _gesamt_invest) / _gesamt_invest * 100.0
                     # Konservativ deckeln auf 200 % wie R1-ROI (vermeidet Show-Effekte)
                     _roi_gesamt_capped = min(200.0, max(-100.0, _roi_gesamt))
-                    sections["ROI_12M_GESAMT_DISPLAY_DE"] = Markup(f"{int(round(_roi_gesamt_capped))} %")
+                    # KIS-1284: gleiche Regel wie fuer die CAPEX-Sicht.
+                    from services.roi_anzeige import als_prozent as _roi_prozent
+                    sections["ROI_12M_GESAMT_DISPLAY_DE"] = Markup(
+                        _roi_prozent(_roi_gesamt_capped)
+                        or f"{int(round(_roi_gesamt_capped))} %"
+                    )
                     # FIX-KIS-1027.5-ci: kein "_RAW"-Float-Key mehr in sections —
                     # safe_sections wurde von mypy als Dict[str, Markup] inferiert
                     # (ab Z. 780). Falls künftig ein Raw-Konsumer dazukommt, in
@@ -2228,6 +2236,7 @@ def render(briefing_obj: Any,
             fix_decimal_comma_units as _final_fdc,
             remove_punctuation_only_nodes as _final_rpn,
             normalize_currency_spacing as _final_ncs,
+            normalize_percent_spacing as _final_nps,
             soften_table_long_words as _final_shy,
             fix_double_periods as _final_fdp,
             fix_misc_typography as _final_fmt,
@@ -2237,6 +2246,9 @@ def render(briefing_obj: Any,
         html, _f2 = _final_fdc(html)
         html, _f3 = _final_rpn(html)
         html, _f4 = _final_ncs(html)
+        # KIS-1284: vor _final_hwt — die Spaltenbreiten sollen "80 %" als ein
+        # Token sehen.
+        html, _f9 = _final_nps(html)
         html, _f6 = _final_fdp(html)
         html, _f7 = _final_fmt(html)
         # KIS-1246: Breite LLM-Tabellen (≥4 Spalten) bekommen inhaltsbasierte
@@ -2249,10 +2261,10 @@ def render(briefing_obj: Any,
         # ("HANDLUN GSFELD") — Soft-Hyphens geben den Tabellen echte
         # Trennstellen.
         html, _f5 = _final_shy(html)
-        if _f1 or _f2 or _f3 or _f4 or _f5 or _f6 or _f7 or _f8:
+        if _f1 or _f2 or _f3 or _f4 or _f5 or _f6 or _f7 or _f8 or _f9:
             log.info(
-                "[KIS-1234][TEXTMECHANIK-FINAL] spaces=%d decimals=%d punct_nodes=%d currency=%d shy_words=%d periods=%d typo=%d tables=%d",
-                _f1, _f2, _f3, _f4, _f5, _f6, _f7, _f8,
+                "[KIS-1234][TEXTMECHANIK-FINAL] spaces=%d decimals=%d punct_nodes=%d currency=%d shy_words=%d periods=%d typo=%d tables=%d percent=%d",
+                _f1, _f2, _f3, _f4, _f5, _f6, _f7, _f8, _f9,
             )
     except Exception as _tmf_exc:  # pragma: no cover
         log.warning("[KIS-1234][TEXTMECHANIK-FINAL] skipped: %s", _tmf_exc)

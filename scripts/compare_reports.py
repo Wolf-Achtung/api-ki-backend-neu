@@ -44,17 +44,21 @@ THIN_PAGE_ZEICHEN = 350
 
 def seiten_text(pfad: Path) -> List[str]:
     """Text je Seite. PyMuPDF bevorzugt, pypdf als Rückfallebene —
-    beide stehen in requirements.txt."""
+    beide stehen in requirements.txt.
+
+    KIS-1284: Geschützte Leerzeichen werden zu gewöhnlichen. Seit die
+    Prozent-Schreibweise vereinheitlicht ist ("80 %" mit nbsp), würden die
+    Kennzahl-Muster sonst je nach Lauf mal greifen und mal nicht."""
     try:
         import pymupdf  # type: ignore
 
         with pymupdf.open(pfad) as doc:
-            return [seite.get_text() for seite in doc]
+            seiten = [seite.get_text() for seite in doc]
     except ImportError:
-        pass
-    from pypdf import PdfReader  # type: ignore
+        from pypdf import PdfReader  # type: ignore
 
-    return [(s.extract_text() or "") for s in PdfReader(str(pfad)).pages]
+        seiten = [(s.extract_text() or "") for s in PdfReader(str(pfad)).pages]
+    return [s.replace(" ", " ").replace(" ", " ") for s in seiten]
 
 
 # =========================================================================
@@ -72,7 +76,13 @@ _KENNZAHLEN: List[Tuple[str, str]] = [
     ("Amortisation", r"([\d,]+)\s*Mon(?:ate|\.)\s*\n?\s*Amortisation"),
     ("Investition (CAPEX)", r"([\d.]+)\s*€\s*\n?\s*Investition"),
     ("Stundensatz", r"(\d{2,3})\s*€/h"),
-    ("OPEX/Monat", r"([\d.]+)\s*€/Monat"),
+    # KIS-1284: Der Kontext gehört ins Muster. Ohne ihn traf "€/Monat" im
+    # Strategiebericht den Preis des ersten Werkzeugs in der Vergleichs-
+    # tabelle ("Ab ca. 15 €/Monat") und meldete eine Kennzahl-Abweichung
+    # 600 → 15, wo sich nichts geändert hatte.
+    ("OPEX/Monat",
+     r"([\d.]+)\s*€/Monat\s*(?:\n\s*)?(?:laufende|Tool-Kosten|OPEX|Betrieb)"
+     r"|(?:laufende[nr]?\s+Tool-Kosten|OPEX)[^\d€]{0,40}?([\d.]+)\s*€/Monat"),
 ]
 
 
@@ -81,7 +91,10 @@ def kennzahlen(text: str) -> Dict[str, str]:
     for name, muster in _KENNZAHLEN:
         treffer = re.search(muster, text, re.IGNORECASE)
         if treffer:
-            gefunden[name] = treffer.group(1)
+            # Erste nicht-leere Gruppe (Muster mit Alternativen).
+            wert = next((g for g in treffer.groups() if g), None)
+            if wert:
+                gefunden[name] = wert
     return gefunden
 
 
@@ -143,7 +156,37 @@ PRUEFUNGEN = [
         "Challenge nennt widersprüchliche Zahlen (KIS-1267)",
         _challenge_widerspruch,
     ),
+    (
+        "zerhackte_tabelle",
+        "Tabellenzelle bricht buchstabenweise um (KIS-1284)",
+        lambda t: _zerhackte_tabelle(t),
+    ),
 ]
+
+
+# KIS-1284: Zu schmale Tabellenspalten brachen Wörter ohne Trennstrich
+# ("Na htl os in Mi cr os oft 36 5,", Strategie S. 20-23 im Lauf 1268).
+# Im PDF-Text erscheint das als Folge sehr kurzer Zeilen aus Wortstücken.
+# Ein einzelnes Fragment ist normal (Ampelwerte, "ca.", Spaltenköpfe) —
+# gezählt wird deshalb erst eine Kette.
+_FRAGMENT_RE = re.compile(r"^[A-Za-zÄÖÜäöüß]{1,3}$")
+_FRAGMENT_KETTE = 4
+
+
+def _zerhackte_tabelle(text: str) -> Optional[str]:
+    kette: List[str] = []
+    for zeile in text.split("\n"):
+        if _FRAGMENT_RE.fullmatch(zeile.strip()):
+            kette.append(zeile.strip())
+            if len(kette) >= _FRAGMENT_KETTE:
+                continue
+        elif kette:
+            if len(kette) >= _FRAGMENT_KETTE:
+                return " ".join(kette[:8])
+            kette = []
+    if len(kette) >= _FRAGMENT_KETTE:
+        return " ".join(kette[:8])
+    return None
 
 
 def rueckfaelle(text: str) -> List[Tuple[str, str, str]]:

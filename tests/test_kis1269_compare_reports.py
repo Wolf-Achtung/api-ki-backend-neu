@@ -125,11 +125,20 @@ class TestKennzahlen:
         assert kennzahlen(self.KOPF).get(feld) == wert
 
     def test_business_case_werte(self):
-        text = "24.000 €\nInvestition\n95 €/h\n350 €/Monat"
+        # KIS-1284: "€/Monat" braucht seinen Kontext — im Strategiebericht
+        # traf das nackte Muster sonst den Preis des ersten Werkzeugs.
+        text = ("24.000 €\nInvestition\n95 €/h\n"
+                "350 €/Monat laufende Tool-Kosten")
         k = kennzahlen(text)
         assert k["Investition (CAPEX)"] == "24.000"
         assert k["Stundensatz"] == "95"
         assert k["OPEX/Monat"] == "350"
+
+    def test_toolpreis_ist_kein_opex(self):
+        """Lauf 1267/1268: "Ab ca. 15 €/Monat" (Descript) wurde als
+        OPEX-Abweichung 600 → 15 gemeldet, wo sich nichts geaendert hatte."""
+        text = "Descript / Descript Inc.\nKI-Videoschnitt\nAb ca. 15 €/Monat"
+        assert "OPEX/Monat" not in kennzahlen(text)
 
     def test_fehlende_kennzahl_fliegt_nicht_auf_die_nase(self):
         assert kennzahlen("nichts davon") == {}
@@ -153,7 +162,7 @@ class TestDuenneSeiten:
 # =========================================================================
 
 def test_alle_pruefungen_haben_namen_und_beschreibung():
-    assert len(PRUEFUNGEN) == 6
+    assert len(PRUEFUNGEN) == 7  # KIS-1284: zerhackte_tabelle dazu
     for name, beschreibung, pruefe in PRUEFUNGEN:
         assert name and beschreibung and callable(pruefe)
         assert pruefe("harmloser Text ohne Befund") is None

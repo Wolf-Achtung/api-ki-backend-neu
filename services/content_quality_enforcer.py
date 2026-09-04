@@ -2538,8 +2538,15 @@ def validate_location_in_section(html: str, correct_bundesland: str) -> tuple[st
         if "nordrhein" in bundesland.lower() and correct_lower == "nrw":
             continue
 
-        # Suche nach dem falschen Bundesland
-        bl_pattern = rf'\b{re.escape(bundesland)}\b'
+        # Suche nach dem falschen Bundesland.
+        #
+        # KIS-1284: Der Bindestrich-Schutz aus KIS-1267 sass nur auf der
+        # ERSETZUNG. Die Zeilen-Loeschung unten benutzte weiter das nackte
+        # Muster — ein Berliner Kunde mit der Zeile "Medienboard Berlin-
+        # Brandenburg" in der Foerdertabelle haette sie samt Programm
+        # verloren, weil \b am Bindestrich trennt. Das Muster traegt den
+        # Schutz deshalb jetzt selbst; beide Pfade nutzen dasselbe.
+        bl_pattern = rf'(?<!-)\b{re.escape(bundesland)}\b(?!-)'
         if not re.search(bl_pattern, result, re.IGNORECASE):
             continue
 
@@ -2577,9 +2584,9 @@ def validate_location_in_section(html: str, correct_bundesland: str) -> tuple[st
         # galt als fremdes Bundesland — und \b trennt am Bindestrich mitten
         # im Eigennamen "Berlin-Brandenburg". Eigennamen wie
         # "Berlin-Brandenburg", "Rheinland-Pfalz" oder "Sachsen-Anhalt"
-        # bleiben damit ganz. Die Erkennung oben nutzt weiter bl_pattern —
-        # eine fremde Foerderzeile wird also nach wie vor komplett entfernt.
-        bl_replace_pattern = rf'(?<!-){bl_pattern}(?!-)'
+        # bleiben damit ganz. KIS-1284: Der Schutz steckt jetzt schon in
+        # bl_pattern, damit die Zeilen-Loeschung dieselbe Regel benutzt.
+        bl_replace_pattern = bl_pattern
         remaining = list(re.finditer(bl_replace_pattern, result, re.IGNORECASE))
         if remaining:
             result = re.sub(bl_replace_pattern, "Ihr Bundesland", result, flags=re.IGNORECASE)

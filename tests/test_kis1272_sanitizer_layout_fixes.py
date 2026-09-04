@@ -258,15 +258,25 @@ class TestWideTableCompactionEn:
         assert "padding:4px 6px" not in style
         assert "hyphens:auto" in style and "overflow-wrap:break-word" in style
 
-    def test_de_seven_cols_unchanged(self):
+    def test_de_seven_cols_hardened_too(self):
+        """KIS-1284: Die Haertung galt bis Lauf 1268 nur fuer Englisch.
+
+        Der deutsche Strategiebericht zeigte dieselben Symptome ("Na htl os
+        in Mi cr os oft 36 5,", S. 20-23). Ab 5 Spalten laeuft der
+        inhaltsbasierte Pfad jetzt in beiden Sprachen — mit einem
+        Unterschied: hyphens:manual statt auto (KIS-1244).
+        """
         de_table = TOOL_TABLE_7.replace("GDPR compliance", "DSGVO-Konformität")
         o1, n1 = harden_wide_tables(de_table)
         o2, n2 = harden_wide_tables(de_table, lang="de")
         assert o1 == o2 and n1 == n2
-        assert "table-layout:fixed" not in o1
-        assert "hyphens" not in o1
-        assert "font-size:0.8" not in o1
-        assert "nowrap" not in o1
+        assert "table-layout:fixed" in o1
+        assert "hyphens:manual" in o1
+        assert "hyphens:auto" not in o1
+        # Keine Spalte faellt unter die Grundlast von acht Zeichen (12,5 %).
+        widths = [float(w) for w in re.findall(r'<col style="width:([\d.]+)%"', o1)]
+        assert len(widths) == 7
+        assert min(widths) >= 7.0, widths
 
 
 # --------------------------------------------------------------------------- #
