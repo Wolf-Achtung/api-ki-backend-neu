@@ -1,0 +1,90 @@
+{
+  "profile_id": "medien_musik_audio_sparte",
+  "description": "KIS-1295 Sparten-Gate: Musik / Audio / Tonstudio / Podcast — deterministisches Gold-Profil mit gesetztem medien_sparte",
+  "lang": "de",
+  "country": "DE",
+  "BRANCHE_LABEL": "Medien & Kreativwirtschaft",
+  "UNTERNEHMENSGROESSE_LABEL": "Solo",
+  "MEDIEN_SPARTE_LABEL": "Musik / Audio / Tonstudio / Podcast",
+  "HAUPTLEISTUNG": "Tonstudio für Synchron, Hörbuch und Podcast-Produktion: Aufnahme, Schnitt, Mischung, Sprecherpool.",
+  "expected_validation": {
+    "funding_flow": "DE",
+    "guardrails": true
+  },
+  "answers": {
+    "zielgruppen": [
+      "b2b",
+      "kmu"
+    ],
+    "jahresumsatz": "500k_2m",
+    "it_infrastruktur": "hybrid",
+    "interne_ki_kompetenzen": "in_planung",
+    "prozesse_papierlos": "51-80",
+    "automatisierungsgrad": "eher_niedrig",
+    "ki_kompetenz": "mittel",
+    "ki_ziele": [
+      "effizienz",
+      "automatisierung",
+      "wettbewerbsfaehigkeit"
+    ],
+    "ki_guardrails": "Kein KI-generiertes Material ohne Kennzeichnung und Freigabe. Keine Stimmen- oder Gesichtsklone ohne schriftliche Einwilligung. Kundenmaterial wird nicht in öffentliche KI-Tools hochgeladen.",
+    "massnahmen_komplexitaet": "mittel",
+    "roadmap_vorhanden": "teilweise",
+    "governance_richtlinien": "teilweise",
+    "change_management": "mittel",
+    "zeitbudget": "5_10",
+    "regulierte_branche": [
+      "vertraulich_nda"
+    ],
+    "vision_prioritaet": "prozessautomation",
+    "datenschutzbeauftragter": "teilweise",
+    "technische_massnahmen": "teilweise",
+    "folgenabschaetzung": "nein",
+    "meldewege": "teilweise",
+    "loeschregeln": "teilweise",
+    "ai_act_kenntnis": "gehoert",
+    "ki_hemmnisse": [
+      "knowhow",
+      "zeitmangel",
+      "rechtsunsicherheit"
+    ],
+    "bisherige_foerdermittel": "nein",
+    "interesse_foerderung": "ja",
+    "erfahrung_beratung": "nein",
+    "investitionsbudget": "10000_50000",
+    "marktposition": "mittelfeld",
+    "benchmark_wettbewerb": "selten",
+    "innovationsprozess": "mitarbeitende",
+    "datenschutz": true,
+    "branche": "medien",
+    "unternehmensgroesse": "1",
+    "bundesland": "hh",
+    "hauptleistung": "Tonstudio für Synchron, Hörbuch und Podcast-Produktion: Aufnahme, Schnitt, Mischung, Sprecherpool.",
+    "ki_einsatz": [
+      "studio_audio"
+    ],
+    "datenquellen": [
+      "rohmaterial_archiv",
+      "rechte_lizenzen"
+    ],
+    "anwendungsfaelle": [
+      "transkription_untertitel",
+      "synchron_dubbing"
+    ],
+    "vorhandene_tools": [
+      "audio_daw",
+      "review_mam"
+    ],
+    "trainings_interessen": [
+      "stimme_gesicht_einwilligung",
+      "ki_rechte_kennzeichnung"
+    ],
+    "pilot_bereich": "studio_audio",
+    "zeitersparnis_prioritaet": "Sichten der Takes, Aufräumen der Rohaufnahmen, Podcast-Nachbearbeitung.",
+    "ki_projekte": "Rohaufnahmen werden automatisch transkribiert, um Takes zu finden; Stimmsynthese nur mit Einwilligung.",
+    "medien_sparte": "musik_audio",
+    "geschaeftsmodell_evolution": "Bestehende Leistungen mit KI schneller und rechtssicher liefern; ein Zusatzangebot aus dem Bestand entwickeln.",
+    "vision_3_jahre": "Dokumentierte KI-Workflows in der Kernleistung, jede Ausgabe gekennzeichnet, Rechtekette nachweisbar.",
+    "strategische_ziele": "Durchlaufzeit senken, Kapazität für kreative Arbeit gewinnen, KI-Richtlinie verankern."
+  }
+}

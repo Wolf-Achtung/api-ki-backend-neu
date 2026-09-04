@@ -1,0 +1,94 @@
+{
+  "profile_id": "medien_produktion_sparte",
+  "description": "KIS-1295 Sparten-Gate: Film-/TV-Produktion — deterministisches Gold-Profil mit gesetztem medien_sparte",
+  "lang": "de",
+  "country": "DE",
+  "BRANCHE_LABEL": "Medien & Kreativwirtschaft",
+  "UNTERNEHMENSGROESSE_LABEL": "2–10 (Kleines Team)",
+  "MEDIEN_SPARTE_LABEL": "Film-/TV-Produktion",
+  "HAUPTLEISTUNG": "Entwicklung und Produktion von Dokumentationen und Corporate-Filmen für Sender, Streamer und Markenkunden — von Treatment und Dreh bis Lieferung.",
+  "expected_validation": {
+    "funding_flow": "DE",
+    "guardrails": true
+  },
+  "answers": {
+    "zielgruppen": [
+      "b2b",
+      "kmu"
+    ],
+    "jahresumsatz": "500k_2m",
+    "it_infrastruktur": "hybrid",
+    "interne_ki_kompetenzen": "in_planung",
+    "prozesse_papierlos": "51-80",
+    "automatisierungsgrad": "eher_niedrig",
+    "ki_kompetenz": "mittel",
+    "ki_ziele": [
+      "effizienz",
+      "automatisierung",
+      "wettbewerbsfaehigkeit"
+    ],
+    "ki_guardrails": "Kein KI-generiertes Material ohne Kennzeichnung und Freigabe. Keine Stimmen- oder Gesichtsklone ohne schriftliche Einwilligung. Kundenmaterial wird nicht in öffentliche KI-Tools hochgeladen.",
+    "massnahmen_komplexitaet": "mittel",
+    "roadmap_vorhanden": "teilweise",
+    "governance_richtlinien": "teilweise",
+    "change_management": "mittel",
+    "zeitbudget": "5_10",
+    "regulierte_branche": [
+      "vertraulich_nda"
+    ],
+    "vision_prioritaet": "prozessautomation",
+    "datenschutzbeauftragter": "teilweise",
+    "technische_massnahmen": "teilweise",
+    "folgenabschaetzung": "nein",
+    "meldewege": "teilweise",
+    "loeschregeln": "teilweise",
+    "ai_act_kenntnis": "gehoert",
+    "ki_hemmnisse": [
+      "knowhow",
+      "zeitmangel",
+      "rechtsunsicherheit"
+    ],
+    "bisherige_foerdermittel": "nein",
+    "interesse_foerderung": "ja",
+    "erfahrung_beratung": "nein",
+    "investitionsbudget": "10000_50000",
+    "marktposition": "mittelfeld",
+    "benchmark_wettbewerb": "selten",
+    "innovationsprozess": "mitarbeitende",
+    "datenschutz": true,
+    "branche": "medien",
+    "unternehmensgroesse": "2–10",
+    "bundesland": "be",
+    "hauptleistung": "Entwicklung und Produktion von Dokumentationen und Corporate-Filmen für Sender, Streamer und Markenkunden — von Treatment und Dreh bis Lieferung.",
+    "ki_einsatz": [
+      "produktion",
+      "marketing"
+    ],
+    "datenquellen": [
+      "rohmaterial_archiv",
+      "rechte_lizenzen",
+      "kundendaten"
+    ],
+    "anwendungsfaelle": [
+      "transkription_untertitel",
+      "archiv_verschlagwortung",
+      "content_generation"
+    ],
+    "vorhandene_tools": [
+      "schnitt_grading",
+      "review_mam",
+      "projektmanagement"
+    ],
+    "trainings_interessen": [
+      "ki_rechte_kennzeichnung",
+      "prompt_engineering"
+    ],
+    "pilot_bereich": "produktion",
+    "zeitersparnis_prioritaet": "Sichtung und Logging von Rohmaterial, Untertitel je Fassung, Archivrecherche.",
+    "ki_projekte": "Transkription und Untertitel laufen automatisch; ein durchsuchbares Footage-Archiv mit KI-Metadaten ist geplant.",
+    "medien_sparte": "produktion",
+    "geschaeftsmodell_evolution": "Bestehende Leistungen mit KI schneller und rechtssicher liefern; ein Zusatzangebot aus dem Bestand entwickeln.",
+    "vision_3_jahre": "Dokumentierte KI-Workflows in der Kernleistung, jede Ausgabe gekennzeichnet, Rechtekette nachweisbar.",
+    "strategische_ziele": "Durchlaufzeit senken, Kapazität für kreative Arbeit gewinnen, KI-Richtlinie verankern."
+  }
+}

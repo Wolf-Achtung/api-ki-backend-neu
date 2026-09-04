@@ -294,6 +294,31 @@ nannte den 02.08.2026 „in wenigen Wochen erreicht" — vier Wochen danach.
   `scripts/compare_reports.py`: „Stichtag als Zukunft",
   „Standard-Werkzeug als Hochrisiko", „erfundenes Werkzeug".
 
+## Benchmarks sind Richtwerte (KIS-1294)
+
+Vier Quellen, keine gemessen: `services/benchmarks.py` (tot, gelöscht —
+der BDZV-Wert „96/100" maß den Anteil KI-Nutzer in Zeitungsverlagen, nicht
+einen Reifegrad), `data/benchmarks.json` (interne Synthese), die
+Größen-Schwellen `extra_sections.BENCHMARK_SCORES` (Deckblatt) und der
+Prompt `wettbewerb_benchmark.md` samt EN-Alias `competition_benchmark.md`
+(„Benchmark aus 30 Assessments", feste Ø- und Top-10-Zahlen).
+
+- **Regel:** Eine Zahl ohne benannte Messung heißt im Report
+  „Richtwert" / „guide value". Nie „Branchendurchschnitt", „Studie",
+  „Assessments". Wer eine echte Quelle einträgt, darf die Zahl wieder
+  als Messung nennen — mit Titel und URL im Datensatz.
+- Die Zahlen selbst blieben unverändert; nur ihre Bezeichnung ist jetzt
+  ehrlich. Test: `tests/test_kis1294_benchmarks_richtwert.py`.
+
+## Sparten-Gate (KIS-1295)
+
+Sieben Gold-Profile `data/test_profiles_gold/medien_<sparte>_sparte.json`
+mit gesetztem `medien_sparte` laufen in `tests/golden/test_sparten_gate.py`
+durch alles, was ohne Netz entscheidet: Label, Fallstudie, R1-Fördertabelle,
+Förderempfehlung, Werkzeugliste und Faktenblock, System-Prompt,
+Options-Labels, Platin-Kette. Wer Stufe 1 bis 4 anfasst, sieht es hier
+zuerst. Die Profile nutzen das Vokabular aus `chat_normalizer.ENUM_VALUES`.
+
 ## Textknoten sind nicht nur Text (KIS-1285)
 
 `_TAG_SPLIT_RE` teilt HTML an Tags. Was dazwischen liegt, gilt als Text —

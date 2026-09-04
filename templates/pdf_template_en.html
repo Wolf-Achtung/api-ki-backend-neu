@@ -1384,7 +1384,8 @@ h1, h2, h3, h4 {
         {# FIX-TESTRUN-1244: Cover zeigte die Unternehmensgröße im Reifegrad-Slot #}
         Maturity: {{ variant_label|default(size_label) }}
         {% if top10_score_for_size and (top10_score_for_size|int > score_int) %}
-        <span class="muted"> · </span>Top 10% of {{ top10_score_for_size }}
+        {# KIS-1294: the threshold is an internal guide value by size, not a measurement #}
+        <span class="muted"> · </span>Guide value top 10%: from {{ top10_score_for_size }}
         {% endif %}
     </div>
 

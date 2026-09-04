@@ -7958,7 +7958,8 @@ def _build_benchmark_html(briefing: Dict[str, Any], lang: str = "de") -> str:
         if bench and isinstance(bench, dict):
             avg = bench.get("avg", "—")
             top25 = bench.get("top25", "—")
-            source = bench.get("source", "Industry Study 2024" if lang == "en" else "Branchenstudie 2024")
+            # KIS-1294: kein erfundener Studientitel als Rückfall — Richtwert sagen.
+            source = bench.get("source", "Guide value (internal synthesis)" if lang == "en" else "Richtwert (interne Synthese)")
             row_html.append(f"<tr><td><strong>{ui('industry', lang)}</strong>: {html.escape(branche)}</td><td>Ø {avg}% · Top‑25% {top25}%</td><td>{html.escape(source)}</td></tr>")
         else:
             row_html.append(f"<tr><td><strong>{ui('industry', lang)}</strong>: {html.escape(branche or '—')}</td><td>—</td><td>—</td></tr>")

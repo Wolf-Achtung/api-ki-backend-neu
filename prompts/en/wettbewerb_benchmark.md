@@ -8,9 +8,10 @@
 <!-- TOKEN-BUDGET: 2500 (solo:0.8x=2000, team:1.0x=2500, kmu:1.15x=2875) -->
 <!-- RESEARCH: Can integrate market data from {{RESEARCH_PROVENANCE_HTML}} -->
 <!--
-PURPOSE: Comparison with industry average and top 10%.
+PURPOSE: Position the score against internal guide values (Ø guide value and top-10% guide value).
 
-BENCHMARK NUMBERS (DO NOT CHANGE!):
+GUIDE VALUES (DO NOT CHANGE!) — internal synthesis, not a measurement, not a study (KIS-1294).
+Call them "guide value" in the text, never "industry average", "study" or "assessments":
   Overall: Ø 65, Top 10% = 82
   Enablement: Ø 68, Top 10% = 85
   Governance: Ø 58, Top 10% = 78
@@ -18,9 +19,9 @@ BENCHMARK NUMBERS (DO NOT CHANGE!):
   Value Creation: Ø 70, Top 10% = 88
 
 SCORE LOGIC:
-  > Top 10% → "significantly above industry level"
-  between Ø and Top 10% → "above industry level"
-  < Ø → "below industry average"
+  > Top 10% → "well above the guide value"
+  between Ø and Top 10% → "above the guide value"
+  < Ø → "below the guide value"
 
 PERSONA VARIATIONS (SIZE-AWARE STRATEGY):
 - solo: personal routines, pragmatic standards, direct benefit effects
@@ -53,17 +54,17 @@ Use phrasing without team/department terms!
   <h2>Competition &amp; Benchmarking</h2>
 
   <p>
-    <strong>Data basis:</strong> Benchmark from 30 assessments in
+    <strong>Data basis:</strong> Internal guide values (synthesis 2024/25, not a measurement) for
     <strong>{{BRANCHE_LABEL}}</strong>, as of <strong>{{report_date}}</strong>.
   </p>
 
-  <h3>Score Comparison (Company vs. Industry)</h3>
+  <h3>Score Comparison (Company vs. guide value)</h3>
   <table class="table">
     <thead>
       <tr>
         <th>Category</th>
         <th>Your Score</th>
-        <th>Ø Industry</th>
+        <th>Ø guide value</th>
         <th>Top&nbsp;10%</th>
         <th>Position</th>
       </tr>
@@ -76,9 +77,9 @@ Use phrasing without team/department terms!
         <td>82</td>
         <td>
           <!-- automatically derivable -->
-          {% if (score_gesamt|default(0)) > 82 %}significantly above industry level
-          {% elif (score_gesamt|default(0)) > 65 %}above industry level
-          {% else %}below industry average{% endif %}
+          {% if (score_gesamt|default(0)) > 82 %}well above the guide value
+          {% elif (score_gesamt|default(0)) > 65 %}above the guide value
+          {% else %}below the guide value{% endif %}
         </td>
       </tr>
 
@@ -88,9 +89,9 @@ Use phrasing without team/department terms!
         <td>68</td>
         <td>85</td>
         <td>
-          {% if (score_befaehigung|default(0)) > 85 %}significantly above industry level
-          {% elif (score_befaehigung|default(0)) > 68 %}above industry level
-          {% else %}below industry average{% endif %}
+          {% if (score_befaehigung|default(0)) > 85 %}well above the guide value
+          {% elif (score_befaehigung|default(0)) > 68 %}above the guide value
+          {% else %}below the guide value{% endif %}
         </td>
       </tr>
 
@@ -100,9 +101,9 @@ Use phrasing without team/department terms!
         <td>58</td>
         <td>78</td>
         <td>
-          {% if (score_governance|default(0)) > 78 %}significantly above industry level
-          {% elif (score_governance|default(0)) > 58 %}above industry level
-          {% else %}below industry average{% endif %}
+          {% if (score_governance|default(0)) > 78 %}well above the guide value
+          {% elif (score_governance|default(0)) > 58 %}above the guide value
+          {% else %}below the guide value{% endif %}
         </td>
       </tr>
 
@@ -112,9 +113,9 @@ Use phrasing without team/department terms!
         <td>62</td>
         <td>80</td>
         <td>
-          {% if (score_sicherheit|default(0)) > 80 %}significantly above industry level
-          {% elif (score_sicherheit|default(0)) > 62 %}above industry level
-          {% else %}below industry average{% endif %}
+          {% if (score_sicherheit|default(0)) > 80 %}well above the guide value
+          {% elif (score_sicherheit|default(0)) > 62 %}above the guide value
+          {% else %}below the guide value{% endif %}
         </td>
       </tr>
 
@@ -124,9 +125,9 @@ Use phrasing without team/department terms!
         <td>70</td>
         <td>88</td>
         <td>
-          {% if (score_nutzen|default(0)) > 88 %}significantly above industry level
-          {% elif (score_nutzen|default(0)) > 70 %}above industry level
-          {% else %}below industry average{% endif %}
+          {% if (score_nutzen|default(0)) > 88 %}well above the guide value
+          {% elif (score_nutzen|default(0)) > 70 %}above the guide value
+          {% else %}below the guide value{% endif %}
         </td>
       </tr>
     </tbody>
@@ -134,41 +135,41 @@ Use phrasing without team/department terms!
 
   <h3>Your Biggest Gaps</h3>
   <p>
-    The following areas show the largest distance to the industry average and offer
+    The following areas show the largest distance to the guide value and offer
     correspondingly high improvement potential:
   </p>
   <ul>
     {% if (score_befaehigung|default(0)) < 68 %}
-      <li><strong>Enablement:</strong> significant gap compared to industry Ø ({{score_befaehigung}} vs. 68).</li>
+      <li><strong>Enablement:</strong> significant gap compared to the Ø guide value ({{score_befaehigung}} vs. 68).</li>
     {% endif %}
     {% if (score_governance|default(0)) < 58 %}
-      <li><strong>Governance:</strong> significant gap compared to industry Ø ({{score_governance}} vs. 58).</li>
+      <li><strong>Governance:</strong> significant gap compared to the Ø guide value ({{score_governance}} vs. 58).</li>
     {% endif %}
     {% if (score_sicherheit|default(0)) < 62 %}
-      <li><strong>Security:</strong> significant gap compared to industry Ø ({{score_sicherheit}} vs. 62).</li>
+      <li><strong>Security:</strong> significant gap compared to the Ø guide value ({{score_sicherheit}} vs. 62).</li>
     {% endif %}
     {% if (score_nutzen|default(0)) < 70 %}
-      <li><strong>Value Creation:</strong> significant gap compared to industry Ø ({{score_nutzen}} vs. 70).</li>
+      <li><strong>Value Creation:</strong> significant gap compared to the Ø guide value ({{score_nutzen}} vs. 70).</li>
     {% endif %}
   </ul>
 
   <h3>Your Strongest Strengths</h3>
   <p>
-    These areas are noticeably above the industry average and can serve as a
+    These areas are noticeably above the guide value and can serve as a
     foundation for further development:
   </p>
   <ul>
     {% if (score_befaehigung|default(0)) > 68 %}
-      <li><strong>Enablement:</strong> noticeable lead over industry average ({{score_befaehigung}} vs. 68).</li>
+      <li><strong>Enablement:</strong> noticeable lead over guide value ({{score_befaehigung}} vs. 68).</li>
     {% endif %}
     {% if (score_governance|default(0)) > 58 %}
-      <li><strong>Governance:</strong> noticeable lead over industry average ({{score_governance}} vs. 58).</li>
+      <li><strong>Governance:</strong> noticeable lead over guide value ({{score_governance}} vs. 58).</li>
     {% endif %}
     {% if (score_sicherheit|default(0)) > 62 %}
-      <li><strong>Security:</strong> noticeable lead over industry average ({{score_sicherheit}} vs. 62).</li>
+      <li><strong>Security:</strong> noticeable lead over guide value ({{score_sicherheit}} vs. 62).</li>
     {% endif %}
     {% if (score_nutzen|default(0)) > 70 %}
-      <li><strong>Value Creation:</strong> noticeable lead over industry average ({{score_nutzen}} vs. 70).</li>
+      <li><strong>Value Creation:</strong> noticeable lead over guide value ({{score_nutzen}} vs. 70).</li>
     {% endif %}
   </ul>
 

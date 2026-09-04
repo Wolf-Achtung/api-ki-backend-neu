@@ -1,0 +1,96 @@
+{
+  "profile_id": "medien_games_sparte",
+  "description": "KIS-1295 Sparten-Gate: Games / Interactive — deterministisches Gold-Profil mit gesetztem medien_sparte",
+  "lang": "de",
+  "country": "DE",
+  "BRANCHE_LABEL": "Medien & Kreativwirtschaft",
+  "UNTERNEHMENSGROESSE_LABEL": "11–100 (KMU)",
+  "MEDIEN_SPARTE_LABEL": "Games / Interactive",
+  "HAUPTLEISTUNG": "Entwicklung von Mobile- und PC-Spielen mit eigenem Team: Konzept, Art, Code, Live-Betrieb; Release in mehreren Sprachen gleichzeitig.",
+  "expected_validation": {
+    "funding_flow": "DE",
+    "guardrails": true
+  },
+  "answers": {
+    "zielgruppen": [
+      "b2b",
+      "kmu"
+    ],
+    "jahresumsatz": "500k_2m",
+    "it_infrastruktur": "hybrid",
+    "interne_ki_kompetenzen": "in_planung",
+    "prozesse_papierlos": "51-80",
+    "automatisierungsgrad": "eher_niedrig",
+    "ki_kompetenz": "mittel",
+    "ki_ziele": [
+      "effizienz",
+      "automatisierung",
+      "wettbewerbsfaehigkeit"
+    ],
+    "ki_guardrails": "Kein KI-generiertes Material ohne Kennzeichnung und Freigabe. Keine Stimmen- oder Gesichtsklone ohne schriftliche Einwilligung. Kundenmaterial wird nicht in öffentliche KI-Tools hochgeladen.",
+    "massnahmen_komplexitaet": "mittel",
+    "roadmap_vorhanden": "teilweise",
+    "governance_richtlinien": "teilweise",
+    "change_management": "mittel",
+    "zeitbudget": "5_10",
+    "regulierte_branche": [
+      "vertraulich_nda"
+    ],
+    "vision_prioritaet": "prozessautomation",
+    "datenschutzbeauftragter": "teilweise",
+    "technische_massnahmen": "teilweise",
+    "folgenabschaetzung": "nein",
+    "meldewege": "teilweise",
+    "loeschregeln": "teilweise",
+    "ai_act_kenntnis": "gehoert",
+    "ki_hemmnisse": [
+      "knowhow",
+      "zeitmangel",
+      "rechtsunsicherheit"
+    ],
+    "bisherige_foerdermittel": "nein",
+    "interesse_foerderung": "ja",
+    "erfahrung_beratung": "nein",
+    "investitionsbudget": "10000_50000",
+    "marktposition": "mittelfeld",
+    "benchmark_wettbewerb": "selten",
+    "innovationsprozess": "mitarbeitende",
+    "datenschutz": true,
+    "branche": "medien",
+    "unternehmensgroesse": "11–100",
+    "bundesland": "bw",
+    "hauptleistung": "Entwicklung von Mobile- und PC-Spielen mit eigenem Team: Konzept, Art, Code, Live-Betrieb; Release in mehreren Sprachen gleichzeitig.",
+    "ki_einsatz": [
+      "produktion",
+      "marketing",
+      "datenanalyse"
+    ],
+    "datenquellen": [
+      "nutzungsdaten",
+      "rechte_lizenzen",
+      "kundendaten"
+    ],
+    "anwendungsfaelle": [
+      "lokalisierung",
+      "content_generation",
+      "datenanalyse"
+    ],
+    "vorhandene_tools": [
+      "engine",
+      "projektmanagement",
+      "crm"
+    ],
+    "trainings_interessen": [
+      "ki_rechte_kennzeichnung",
+      "prompt_engineering",
+      "datenqualitaet_governance"
+    ],
+    "pilot_bereich": "produktion",
+    "zeitersparnis_prioritaet": "Lokalisierung in acht Sprachen je Patch, Asset-Varianten, Regressionstests.",
+    "ki_projekte": "Konzeptkunst-Varianten per Bildmodell; Dialogtexte als Entwurf; Lokalisierung noch von Hand.",
+    "medien_sparte": "games",
+    "geschaeftsmodell_evolution": "Bestehende Leistungen mit KI schneller und rechtssicher liefern; ein Zusatzangebot aus dem Bestand entwickeln.",
+    "vision_3_jahre": "Dokumentierte KI-Workflows in der Kernleistung, jede Ausgabe gekennzeichnet, Rechtekette nachweisbar.",
+    "strategische_ziele": "Durchlaufzeit senken, Kapazität für kreative Arbeit gewinnen, KI-Richtlinie verankern."
+  }
+}
