@@ -237,12 +237,131 @@ def render_report(findings: List[Dict[str, str]], today: date,
     return "\n".join(lines)
 
 
+# =========================================================================
+# KIS-1281 Stufe 2: Korrekturvorschlaege statt reiner Meldungen
+# =========================================================================
+#
+# Der Radar meldete "Preis unbestaetigt" — 20-mal, jeden Monat, und
+# niemand kam hinterher. Eine Liste, die nur waechst, wird nicht
+# abgearbeitet, sondern ignoriert.
+#
+# Was der Radar selbst belegen kann, darf er vorschlagen: Eine tote
+# Adresse ersetzt durch eine erreichbare auf derselben Herstellerdomain.
+# Alt gibt 404, neu antwortet, gleiche Domain — das sind Tatsachen, keine
+# Vermutungen. Der Mensch sieht den Diff und entscheidet per Merge.
+#
+# Preise bleiben aussen vor. Ein Suchtreffer liefert eine Seite, keinen
+# gepruesten Preis. Ihn zu uebernehmen wuerde genau die Regel brechen,
+# die den Werkzeug-Block traegt (KIS-1280): kein Preis ohne Pruefdatum.
+
+# Woran man eine Datenschutz-/AVV-Seite erkennt. Reihenfolge = Rangfolge.
+_BELEG_WOERTER = (
+    "privacy-policy", "datenschutz", "privacy", "data-processing",
+    "data-protection", "dpa", "gdpr", "legal", "terms",
+)
+
+
+def _beleg_rang(hit: Dict[str, str]) -> int:
+    """Kleiner ist besser. Ein Treffer ohne Stichwort landet hinten."""
+    text = f"{hit.get('url', '')} {hit.get('title', '')}".lower()
+    for rang, wort in enumerate(_BELEG_WOERTER):
+        if wort in text:
+            return rang
+    return len(_BELEG_WOERTER)
+
+
+def schlage_url_korrekturen_vor(
+    tools: List[Dict[str, Any]],
+    findings: List[Dict[str, str]],
+    candidates: Dict[str, List[Dict[str, str]]],
+    *,
+    pruefe=check_url,
+) -> List[Dict[str, str]]:
+    """Belegte Ersatzadressen fuer tote URLs.
+
+    Nur ``dead_url`` — ein ``unpruefbar`` (Timeout) belegt nicht, dass
+    die Seite weg ist, und darf deshalb nichts ueberschreiben.
+
+    Jeder Vorschlag ist dreifach geprueft: gleiche Herstellerdomain,
+    neue Adresse erreichbar, alte Adresse nachweislich tot.
+    """
+    nach_name = {str(t.get("name") or ""): t for t in tools}
+    vorschlaege: List[Dict[str, str]] = []
+
+    for f in findings:
+        if f.get("type") != "dead_url":
+            continue
+        name = f.get("tool", "")
+        tool = nach_name.get(name)
+        if not tool:
+            continue
+        feld = str(f.get("detail", "")).split(":", 1)[0].strip()
+        if feld not in ("url", "trust_url"):
+            continue
+        alt = str(tool.get(feld) or "")
+        domain = hersteller_domain(tool.get("url") or "")
+        if not domain:
+            continue
+
+        treffer = sorted(candidates.get(name) or [], key=_beleg_rang)
+        for hit in treffer:
+            neu = str(hit.get("url") or "").strip()
+            if not neu or neu == alt:
+                continue
+            if hersteller_domain(neu) != domain and not hersteller_domain(neu).endswith(domain):
+                continue
+            if pruefe(neu) is not None:  # nicht erreichbar
+                continue
+            vorschlaege.append({"tool": name, "feld": feld, "alt": alt,
+                                "neu": neu, "titel": hit.get("title", "")})
+            break
+    return vorschlaege
+
+
+def wende_korrekturen_an(vorschlaege: List[Dict[str, str]],
+                         pfad: Path = TOOLS_PATH) -> int:
+    """Schreibt die Vorschlaege in die Seed-Datei. Gibt die Anzahl zurueck.
+
+    Textersetzung statt json.dump: Die Datei ist handgepflegt, und ein
+    neu serialisiertes JSON wuerde jede Zeile als geaendert zeigen. Ein
+    Diff, den niemand lesen kann, wird nicht geprueft.
+    """
+    if not vorschlaege:
+        return 0
+    roh = pfad.read_text(encoding="utf-8")
+    angewendet = 0
+    for v in vorschlaege:
+        alt, neu = f'"{v["alt"]}"', f'"{v["neu"]}"'
+        if v["alt"] and alt in roh:
+            roh = roh.replace(alt, neu)
+            angewendet += 1
+    if angewendet:
+        pfad.write_text(roh, encoding="utf-8")
+    return angewendet
+
+
+def render_vorschlaege(vorschlaege: List[Dict[str, str]]) -> str:
+    if not vorschlaege:
+        return ""
+    zeilen = ["", "## 🔧 Vorgeschlagene Korrekturen", "",
+              f"**{len(vorschlaege)}** tote Adresse(n) durch eine erreichbare "
+              "auf derselben Herstellerdomain ersetzt. Alt tot, neu geprueft.", "",
+              "| Tool | Feld | alt | neu |", "|---|---|---|---|"]
+    for v in vorschlaege:
+        zeilen.append(f"| {v['tool']} | {v['feld']} | {v['alt']} | {v['neu']} |")
+    zeilen += ["", "_Preise bleiben aussen vor: Ein Suchtreffer liefert eine "
+               "Seite, keinen geprueften Preis._"]
+    return "\n".join(zeilen)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--check-urls", action="store_true")
     ap.add_argument("--tavily", action="store_true")
     ap.add_argument("--max-age", type=int, default=120)
     ap.add_argument("--report", default="tools_report.md")
+    ap.add_argument("--apply-fixes", action="store_true",
+                    help="belegte URL-Korrekturen in data/tools_seed.json schreiben")
     args = ap.parse_args()
 
     today = date.today()
@@ -251,11 +370,18 @@ def main() -> int:
     if args.tavily:
         candidates = collect_candidates(load_tools(), findings,
                                         os.getenv("TAVILY_API_KEY", ""), today.year)
-    report = render_report(findings, today, candidates)
+
+    vorschlaege: List[Dict[str, str]] = []
+    if args.apply_fixes and args.check_urls and candidates:
+        vorschlaege = schlage_url_korrekturen_vor(load_tools(), findings, candidates)
+        wende_korrekturen_an(vorschlaege)
+
+    report = render_report(findings, today, candidates) + render_vorschlaege(vorschlaege)
     Path(args.report).write_text(report, encoding="utf-8")
     print(report)
     print(f"\n::notice::Tool-Radar: {len(findings)} Befund(e), "
-          f"{sum(len(v) for v in candidates.values())} Recherche-Kandidat(en)")
+          f"{sum(len(v) for v in candidates.values())} Recherche-Kandidat(en), "
+          f"{len(vorschlaege)} Korrektur(en)")
     return 0
 
 

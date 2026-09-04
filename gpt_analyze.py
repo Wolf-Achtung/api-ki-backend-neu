@@ -14473,6 +14473,22 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     except Exception as _rg_exc:
         log.warning("[RESEARCH-GROUNDING] skipped: %s", _rg_exc)
 
+    # KIS-1281 Stufe 1: Die gepflegten Werkzeug- und Förderdaten als
+    # Faktenblock dazu. Anders als die Live-Recherche braucht dieser Weg
+    # kein Netz — faellt Tavily aus, stehen die geprueften Tatsachen
+    # trotzdem im Prompt. Beide Bloecke ergaenzen sich: Die Liste sagt,
+    # WAS genannt werden darf, die Recherche liefert die Aktualitaet.
+    try:
+        from services.kuratierte_fakten import (
+            build_kuratierte_grounding,
+            verbinde_grounding,
+        )
+        _RESEARCH_GROUNDING = verbinde_grounding(
+            build_kuratierte_grounding(briefing), _RESEARCH_GROUNDING
+        )
+    except Exception as _kf_exc:
+        log.warning("[KIS-1281] kuratierte Fakten uebersprungen: %s", _kf_exc)
+
     # KIS-1234-P2: Gemeinsamen Kontext-Prefix EINMAL vor den Threads bauen —
     # muss für alle Sektions-Calls byte-identisch sein (Cache-Key ist der
     # exakte Prefix; _build_prompt_vars mutiert briefing währenddessen).

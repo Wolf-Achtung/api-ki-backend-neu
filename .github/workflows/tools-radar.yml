@@ -10,8 +10,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write        # KIS-1281 Stufe 2: Zweig für Korrekturvorschläge
   issues: write
+  pull-requests: write
 
 jobs:
   tools-radar:
@@ -36,10 +37,45 @@ jobs:
         env:
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
         run: |
-          python scripts/tools_radar.py --check-urls --tavily --report tools_report.md
+          python scripts/tools_radar.py --check-urls --tavily --apply-fixes \
+            --report tools_report.md
           count=$(grep -oP '(?<=\*\*)\d+(?= Befund)' tools_report.md || echo 0)
           echo "findings=${count}" >> "$GITHUB_OUTPUT"
+          if git diff --quiet -- data/tools_seed.json; then
+            echo "fixes=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "fixes=1" >> "$GITHUB_OUTPUT"
+          fi
           cat tools_report.md >> "$GITHUB_STEP_SUMMARY"
+
+      # KIS-1281 Stufe 2: Was der Radar selbst belegen kann — alte Adresse
+      # tot, neue erreichbar, gleiche Herstellerdomain — schlägt er als PR
+      # vor. Aus einer Meldung, die jemand abtippen muss, wird eine
+      # Entscheidung per Merge. Preise bleiben ausgenommen: Ein Suchtreffer
+      # liefert eine Seite, keinen geprüften Preis.
+      - name: Korrektur-PR öffnen
+        if: steps.radar.outputs.fixes == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ASSIGNEE: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          zweig="radar/tool-urls-$(date -u +%Y%m%d)"
+          git config user.name "tool-radar"
+          git config user.email "noreply@ki-sicherheit.jetzt"
+          git checkout -b "$zweig"
+          git add data/tools_seed.json
+          git commit -m "Tool-Radar: tote Trust-URLs ersetzt ($(date -u +%Y-%m-%d))
+
+          Alte Adresse gibt 404, neue antwortet, gleiche Herstellerdomain.
+          Preise bleiben unveraendert - der Radar prueft Erreichbarkeit,
+          keine Preise."
+          git push -u origin "$zweig"
+          gh pr create \
+            --title "🔧 Tool-Radar: tote Trust-URLs ersetzt" \
+            --body-file tools_report.md \
+            --assignee "$ASSIGNEE" \
+            --draft || true
 
       - name: Issue erstellen/aktualisieren bei Befunden
         if: steps.radar.outputs.findings != '0'

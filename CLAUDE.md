@@ -109,6 +109,38 @@ Merkregeln:
 - GitHub-Label `datenpflege` existiert nicht — die Wächter legen ihre
   Issues deshalb ohne Label an.
 
+## Trennung von Tatsache und Einordnung (KIS-1281)
+
+Im Report stehen zwei Sorten Aussagen, und sie haben verschiedene
+Quellen. Wer das vermischt, bekommt ZIM trotz Antragsstopp und
+Werkzeuge ohne belegte Datenschutzlage.
+
+| Sorte | Quelle | Beispiel |
+|---|---|---|
+| Prüfbare Tatsache | gepflegte Daten | Preis, DSGVO-Status, Förderquote, Frist |
+| Beratende Einordnung | Sprachmodell | „Für Ihre Postproduktion zuerst der Schnitt" |
+
+- **Stufe 1** — `services/kuratierte_fakten.py` reicht die gepflegten
+  Daten als Faktenblock in die Prompts `tools_empfehlungen` und
+  `foerderpotenzial`. Regel im Block: nur diese Namen, keine Preise in
+  den Fließtext. Braucht kein Netz (anders als `research_grounding`);
+  beide Blöcke werden mit `verbinde_grounding` zusammengeführt, die
+  kuratierten zuerst. Schalter: `KURATIERTE_FAKTEN_ENABLED=0`.
+- **Stufe 2** — `scripts/tools_radar.py --apply-fixes` ersetzt tote
+  Adressen durch erreichbare auf derselben Herstellerdomain und öffnet
+  einen Entwurfs-PR. Dreifach geprüft: gleiche Domain, neu erreichbar,
+  alt nachweislich tot (`unpruefbar` zählt nicht). **Preise nie
+  automatisch** — ein Suchtreffer ist eine Seite, kein geprüfter Preis.
+- **Stufe 3** — `funding_recommender.ist_beantragbar` prüft jetzt auch
+  die Frist. Textangaben („laufend", „4 Termine/Jahr") gelten als offen.
+  Entfernt heute kein Programm; das Netz spannt für später.
+- **Stufe 4** — Feedback-Felder `tools_adopted` und `funding_applied`
+  (Freitext, freiwillig), ausgewertet mit
+  `scripts/empfehlungs_resonanz.py`. Der wertvollste Wert steht unter
+  „Genannt, aber nicht von uns empfohlen": die einzige Stelle, an der
+  Neues von aussen hereinkommt, ohne dass ein Modell es erfindet.
+  Belastbar ab etwa 30 Rückmeldungen.
+
 ## Werkzeuge
 
 - `scripts/compare_reports.py alt.pdf neu.pdf` — vergleicht zwei
