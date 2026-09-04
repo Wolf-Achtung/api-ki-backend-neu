@@ -211,8 +211,25 @@ Resilienz-Check kannten sie nicht.
   ändert sich nichts.
 - KPA: `MEDIEN_SPARTE_LABEL` im Kontext; die vier `gc_*`-Prompts nennen
   sie bedingt (`{% if MEDIEN_SPARTE_LABEL %}`).
-- Noch **nicht** an der Sparte: Werkzeug- und Förderauswahl, Starter-Kits,
-  Faktenblock. Dafür fehlt ein Sparten-Feld in den Daten (Stufe 4).
+- **Sparten-Feld in den Daten** (KIS-1292, Stufe 4): `sparten` ist eine
+  optionale Liste von Slugs an Werkzeugen (`tools_seed.json`, 13 von 23)
+  und Förderprogrammen (`funding_programmes_core_2025.json`, alle 14
+  exklusiven Medienprogramme). `medien_sparte.passt_zur_sparte` liefert
+  `None` (kein Feld oder keine Kunden-Sparte: nichts ändert sich),
+  `True` oder `False`. Werkzeuge: Treffer steigt auf, nichts fällt heraus.
+  Förderung: Treffer ×1.2; kein Treffer bei `branch_exclusive` → raus
+  (ein Tonstudio sieht keinen DFFF mehr), sonst ×0.8. Der Faktenblock
+  (`kuratierte_fakten`) läuft über `recommend_tools` mit. Fallstudien:
+  Verlag, Tonstudio und Content Creation haben eigene Fälle
+  (`sofort_start_generator.FALLSTUDIEN_MEDIEN`, DE und EN); die Auswahl
+  geht über den Slug, nicht mehr über Teilstrings im Label.
+  Test: `tests/test_kis1292_sparte_daten.py`.
+- **Tot:** `extra_sections.build_starter_stacks` iteriert über
+  `data/starter_stacks.json` wie über eine Liste; die Datei ist ein Dict.
+  Jeder Eintrag wirft, die Schleife fängt das still, das Ergebnis ist
+  immer „Keine Starter-Stacks konfiguriert". Kein Template rendert
+  `STARTER_STACKS_HTML`. Kein Sparten-Ziel — erst Entscheidung, ob der
+  Baustein leben soll.
 - In Produktion setzt Railway `VISIBLE_BRANCHES=medien` und
   `REPORT_PERSONA_PATH`; lokal stehen beide in `.env.example` als
   Kommentar.
@@ -277,6 +294,13 @@ Deckblatt des Strategieberichts verlor seinen Score (Lauf 1269).
 
   Vorher `…/api/healthz` abfragen: Ein Deploy mitten in der Generierung
   bricht sie ab. `?force=true` hebt die 30-Minuten-Sperre auf.
+
+  **Zwei Nummern, eine Falle:** Die `<id>` ist die Briefing-ID aus der
+  Datenbank. Die Nummer im PDF-Dateinamen (`KIS1272`) ist die Briefing-ID
+  **plus 117** (`REPORT_DISPLAY_OFFSET`, `utils/report_display_id.py`).
+  Wer „Replay von 1272" liest, muss `replay/1155` aufrufen; das Ergebnis
+  ist Briefing 1156 und heißt im PDF KIS1273. Am 04.09.2026 stand
+  `replay/1272` als Befehl in einer Antwort — die ID gibt es nicht.
 
 ## Nicht verhandelbar
 

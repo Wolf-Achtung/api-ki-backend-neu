@@ -608,7 +608,11 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22"
+    "verified_at": "2026-07-22",
+    "sparten": [
+      "produktion",
+      "post_vfx"
+    ]
   },
   {
     "id": "medienboard_bb",
@@ -636,7 +640,12 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22"
+    "verified_at": "2026-07-22",
+    "sparten": [
+      "produktion",
+      "post_vfx",
+      "games"
+    ]
   },
   {
     "id": "gmpf",
@@ -663,7 +672,11 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22"
+    "verified_at": "2026-07-22",
+    "sparten": [
+      "produktion",
+      "post_vfx"
+    ]
   },
   {
     "id": "bund_kulturelle_filmfoerderung",
@@ -691,7 +704,10 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22"
+    "verified_at": "2026-07-22",
+    "sparten": [
+      "produktion"
+    ]
   },
   {
     "id": "games_bund",
@@ -718,7 +734,10 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22"
+    "verified_at": "2026-07-22",
+    "sparten": [
+      "games"
+    ]
   },
   {
     "id": "ffe_filmerbe",
@@ -746,7 +765,11 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22"
+    "verified_at": "2026-07-22",
+    "sparten": [
+      "produktion",
+      "post_vfx"
+    ]
   },
   {
     "id": "fff_bayern",
@@ -774,7 +797,12 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22"
+    "verified_at": "2026-07-22",
+    "sparten": [
+      "produktion",
+      "post_vfx",
+      "games"
+    ]
   },
   {
     "id": "filmstiftung_nrw",
@@ -802,7 +830,13 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22"
+    "verified_at": "2026-07-22",
+    "sparten": [
+      "produktion",
+      "post_vfx",
+      "games",
+      "musik_audio"
+    ]
   },
   {
     "id": "mfg_bw",
@@ -830,7 +864,13 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22"
+    "verified_at": "2026-07-22",
+    "sparten": [
+      "produktion",
+      "post_vfx",
+      "games",
+      "content_creation"
+    ]
   },
   {
     "id": "mdm",
@@ -858,7 +898,12 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22"
+    "verified_at": "2026-07-22",
+    "sparten": [
+      "produktion",
+      "post_vfx",
+      "games"
+    ]
   },
   {
     "id": "moin_hh_sh",
@@ -886,7 +931,11 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22"
+    "verified_at": "2026-07-22",
+    "sparten": [
+      "produktion",
+      "post_vfx"
+    ]
   },
   {
     "id": "nordmedia",
@@ -914,7 +963,12 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22"
+    "verified_at": "2026-07-22",
+    "sparten": [
+      "produktion",
+      "post_vfx",
+      "games"
+    ]
   },
   {
     "id": "creative_europe_media",
@@ -941,7 +995,12 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22"
+    "verified_at": "2026-07-22",
+    "sparten": [
+      "produktion",
+      "post_vfx",
+      "games"
+    ]
   },
   {
     "id": "eurimages",
@@ -968,6 +1027,9 @@
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-23"
+    "verified_at": "2026-07-23",
+    "sparten": [
+      "produktion"
+    ]
   }
 ]

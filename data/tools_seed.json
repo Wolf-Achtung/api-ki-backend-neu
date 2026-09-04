@@ -217,7 +217,12 @@
       "medien",
       "marketing"
     ],
-    "verified_at": null
+    "verified_at": null,
+    "sparten": [
+      "post_vfx",
+      "agentur_design",
+      "content_creation"
+    ]
   },
   {
     "name": "ElevenLabs",
@@ -235,7 +240,13 @@
       "medien",
       "marketing"
     ],
-    "verified_at": null
+    "verified_at": null,
+    "sparten": [
+      "musik_audio",
+      "games",
+      "produktion",
+      "content_creation"
+    ]
   },
   {
     "name": "Descript",
@@ -254,7 +265,12 @@
       "marketing",
       "bildung"
     ],
-    "verified_at": "2026-07-23"
+    "verified_at": "2026-07-23",
+    "sparten": [
+      "content_creation",
+      "musik_audio",
+      "produktion"
+    ]
   },
   {
     "name": "Adobe Firefly",
@@ -273,7 +289,13 @@
       "medien",
       "marketing"
     ],
-    "verified_at": null
+    "verified_at": null,
+    "sparten": [
+      "agentur_design",
+      "verlag_publishing",
+      "content_creation",
+      "games"
+    ]
   },
   {
     "name": "Topaz Video AI",
@@ -290,7 +312,11 @@
     "best_for_industries": [
       "medien"
     ],
-    "verified_at": null
+    "verified_at": null,
+    "sparten": [
+      "post_vfx",
+      "produktion"
+    ]
   },
   {
     "name": "Amberscript",
@@ -307,7 +333,13 @@
     "best_for_industries": [
       "medien"
     ],
-    "verified_at": "2026-07-23"
+    "verified_at": "2026-07-23",
+    "sparten": [
+      "produktion",
+      "post_vfx",
+      "musik_audio",
+      "content_creation"
+    ]
   },
   {
     "name": "Simon Says",
@@ -324,7 +356,11 @@
     "best_for_industries": [
       "medien"
     ],
-    "verified_at": null
+    "verified_at": null,
+    "sparten": [
+      "produktion",
+      "post_vfx"
+    ]
   },
   {
     "name": "Frame.io (Adobe)",
@@ -341,7 +377,12 @@
     "best_for_industries": [
       "medien"
     ],
-    "verified_at": null
+    "verified_at": null,
+    "sparten": [
+      "produktion",
+      "post_vfx",
+      "agentur_design"
+    ]
   },
   {
     "name": "DeepL Pro",
@@ -361,7 +402,14 @@
       "beratung",
       "marketing"
     ],
-    "verified_at": "2026-07-23"
+    "verified_at": "2026-07-23",
+    "sparten": [
+      "verlag_publishing",
+      "games",
+      "produktion",
+      "agentur_design",
+      "content_creation"
+    ]
   },
   {
     "name": "iconik",
@@ -377,7 +425,11 @@
     "best_for_industries": [
       "medien"
     ],
-    "verified_at": null
+    "verified_at": null,
+    "sparten": [
+      "produktion",
+      "post_vfx"
+    ]
   },
   {
     "name": "Trint",
@@ -393,7 +445,12 @@
     "best_for_industries": [
       "medien"
     ],
-    "verified_at": null
+    "verified_at": null,
+    "sparten": [
+      "produktion",
+      "verlag_publishing",
+      "content_creation"
+    ]
   },
   {
     "name": "Aleph Alpha PhariaAI",
@@ -411,7 +468,11 @@
       "medien",
       "beratung"
     ],
-    "verified_at": null
+    "verified_at": null,
+    "sparten": [
+      "verlag_publishing",
+      "agentur_design"
+    ]
   },
   {
     "name": "Adobe Premiere Pro (Speech to Text)",
@@ -428,6 +489,11 @@
     "best_for_industries": [
       "medien"
     ],
-    "verified_at": null
+    "verified_at": null,
+    "sparten": [
+      "produktion",
+      "post_vfx",
+      "content_creation"
+    ]
   }
 ]

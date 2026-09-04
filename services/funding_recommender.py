@@ -23,6 +23,9 @@ from dataclasses import dataclass, field, asdict
 from datetime import date as _date, datetime as _datetime
 from typing import Any, Dict, List, Optional, Tuple
 
+# KIS-1292 (Stufe 4): Sparten-Feld in den Foerderdaten
+from services.medien_sparte import passt_zur_sparte as _passt_zur_sparte, slug as _sparte_slug
+
 log = logging.getLogger(__name__)
 
 # =============================================================================
@@ -485,6 +488,7 @@ def calculate_relevance_score(
     roi: float,
     budget: str = "",
     country: str = "",
+    sparte: str = "",
 ) -> float:
     """
     Calculate relevance score for a funding program.
@@ -493,6 +497,13 @@ def calculate_relevance_score(
       base_score (segment match) × region_boost × ki_relevance_boost
 
     Returns score from 0.0 to 1.0, or -1.0 to signal "filter out".
+
+    KIS-1292 (Stufe 4): ``sparte`` ist der Slug aus ``medien_sparte``.
+    Programme mit ``sparten``-Feld gelten nur fuer die genannten Sparten:
+    Treffer ×1.2; kein Treffer bei einem exklusiven Branchenprogramm
+    (``branch_exclusive``) → raus, sonst ×0.8. Ohne Sparte oder ohne Feld
+    aendert sich nichts — der Tonstudio-Kunde bekam bisher DFFF und GMPF
+    (Kinofilm, High-End-Serie), die er nie beantragen kann.
     """
     user_region = _resolve_user_region(region)
     # If explicit country parameter provided, it takes precedence over
@@ -584,6 +595,15 @@ def calculate_relevance_score(
             # Filmförderung) erscheinen NUR für passende Branchen — für
             # alle anderen hart ausfiltern statt nur nicht zu boosten.
             return -1.0
+
+    # --- SPARTEN MATCH (KIS-1292) ---
+    _sparte_treffer = _passt_zur_sparte(program, sparte)
+    if _sparte_treffer is True:
+        score *= 1.2
+    elif _sparte_treffer is False:
+        if program.get("branch_exclusive"):
+            return -1.0
+        score *= 0.8
 
     # --- AI ACT RELEVANCE BONUS ---
     if ai_act_risk in ["high-risk", "limited"] and program.get("ai_act_relevant"):
@@ -684,6 +704,7 @@ def recommend_funding(
     limit: int = 5,
     budget: str = "",
     country: str = "",
+    sparte: str = "",
 ) -> List[FundingRecommendation]:
     """
     Get personalized funding recommendations.
@@ -713,7 +734,7 @@ def recommend_funding(
         # Calculate relevance (returns -1.0 for filtered-out programs)
         score = calculate_relevance_score(
             program, branch, region, size, maturity, ai_act_risk, roi, budget,
-            country=country,
+            country=country, sparte=sparte,
         )
 
         if score < 0.0:  # Filtered out by country/segment
@@ -969,6 +990,7 @@ def get_filtered_funding_programs(
     branch: str = "",
     limit: int = 8,
     lang: str = "de",
+    sparte: str = "",
 ) -> list[dict]:
     """Return a pre-filtered, JSON-serializable list of funding programs.
 
@@ -990,6 +1012,7 @@ def get_filtered_funding_programs(
         country=country,
         lang="en" if _is_en else "de",
         limit=limit,
+        sparte=sparte,
     )
 
     # Inject deterministic BAFA values from config
@@ -1190,6 +1213,7 @@ def get_recommendations_for_report(
         ai_act_risk=ai_act_risk,
         lang=lang,
         limit=limit,
+        sparte=_sparte_slug(briefing.get("medien_sparte")),
     )
 
     return [r.to_dict() for r in recommendations]

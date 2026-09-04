@@ -473,6 +473,7 @@ async def generate_strategy_report(
                 get_filtered_funding_programs,
                 format_funding_programs_for_prompt,
             )
+            from services.medien_sparte import slug as _sparte_slug
             # KIS-1098: Normalize size before passing — DB stores "11–100" (en-dash)
             # but funding_recommender's inline normalization only checks hyphen "11-".
             from services.business_case_engine_v2 import normalize_company_size as _norm_size
@@ -486,6 +487,8 @@ async def generate_strategy_report(
                 # KIS-1255 (A3): EN-Report — Feldwerte (Quote/Betrag) übersetzt,
                 # Programm-Namen bleiben unverändert.
                 lang="en" if _is_en else "de",
+                # KIS-1292: Sparte — Filmförderung nur für Film-Sparten.
+                sparte=_sparte_slug(briefing_data.get("medien_sparte")),
             )
             _funding_data_block = format_funding_programs_for_prompt(
                 _filtered_programs, lang="en" if _is_en else "de",
