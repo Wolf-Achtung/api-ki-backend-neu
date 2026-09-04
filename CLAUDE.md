@@ -67,12 +67,20 @@ Merkregeln:
   Domainbeschränkung (KIS-1273) wirkt: Der Lauf vom 03.09. 22:23 lieferte
   35 Kandidaten, alle auf der jeweiligen Herstellerdomain. Preise und
   DSGVO-Status muss trotzdem ein Mensch bestätigen — der Radar meldet
-  nur. Tote Trust-URLs bei Topaz, Simon Says, iconik, Aleph Alpha und
-  Mistral sind offen (kein Ersatz gefunden).
-- `services/funding_engine_v2.py` wurde am 2026-09-03 gelöscht (toter
-  Code, 1278 Zeilen, nur von der eigenen Testdatei importiert). Damit
-  gibt es zwei Förderquellen statt drei: `funding_programmes_core_2025`
-  (Kern) und `data/funding/funding_de.json`. Die Statusregel liegt in
+  nur. Alle zwölf toten Trust-URLs sind ersetzt (KIS-1277/1278);
+  Adobe-Befunde sind Timeouts, keine toten Seiten.
+- Zwei Tool-Listen: `data/tools_seed.json` (23 Einträge, der Radar prüft
+  sie) und `DEFAULT_TOOLS` in `services/tools_recommender.py` (12
+  Einträge, Notfall-Ausweichliste, ungeprüft). Wo sich beide
+  überschneiden, hält `tests/test_kis1278_zweite_toolliste.py` sie
+  gleich. Der Seed-Pfad ist seit KIS-1278 absolut — vorher konnte ein
+  anderes Arbeitsverzeichnis still die Ausweichliste aktivieren.
+- Toter Code gelöscht: `services/funding_engine_v2.py` (1278 Zeilen,
+  2026-09-03) und `services/funding_parser.py` (101 Zeilen, 2026-09-04,
+  kein Aufrufer). Es bleiben zwei Förderquellen:
+  `funding_programmes_core_2025` (Kern) und `data/funding/funding_de.json`,
+  dazu `data/funding_programs.json` als Fallback in
+  `services/research_pipeline.py`. Die Statusregel liegt in
   `funding_recommender.ist_beantragbar`.
 - Zwei Förderdaten-Punkte ohne Beleg (als Notiz im Datensatz vermerkt):
   „aws digi Invest" als eigenständiges Programm, und der Status von
