@@ -31,8 +31,8 @@ ACTION 1: Addresses {{ZEITERSPARNIS_PRIORITAET}}
 
 ACTION 2: Fits {{hauptleistung}}
 - Question: What is THE critical success factor for this specific service?
-- Example questionnaire+GPT: "Define GPT evaluation standard" instead of "Standard workflow"
-- Example tax advisor: "Auto-classify client documents"
+- Example post-production: "Define transcription standard for raw footage" instead of "Standard workflow"
+- Example publisher: "AI pre-editing for manuscripts"
 
 ACTION 3: Addresses risks/guardrails
 - Consider {{KI_GUARDRAILS}} if present

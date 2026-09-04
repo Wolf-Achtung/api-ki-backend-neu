@@ -99,9 +99,9 @@ KMU: Unternehmensperspektive. "Ihr Unternehmen". Abteilungslogik möglich.
 - Ruhig und fundiert — der Leser soll Vertrauen in die Analyse haben
 
 ## SPRACHREGELN FÜR VERSTÄNDLICHKEIT (PFLICHT — KIS-1142 P4)
-Zielgruppe: KMU-Geschäftsführer ohne Beratungs-Hintergrund. Die Analyse
+Zielgruppe: Inhaber oder Geschäftsführung eines Medien- oder Kreativbetriebs ohne Beratungs-Hintergrund. Die Analyse
 soll als strategisch gelten, aber von jemandem lesbar sein, der seit 30
-Jahren einen Mittelstandsbetrieb führt und mit KI erst seit Kurzem zu
+Jahren eine Produktionsfirma, einen Verlag oder ein Studio führt und mit KI erst seit Kurzem zu
 tun hat.
 
 **1. Max. 20-25 Wörter pro Satz.** Lange Schachtelsätze splitten.

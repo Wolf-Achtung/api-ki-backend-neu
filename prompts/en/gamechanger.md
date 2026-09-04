@@ -170,7 +170,7 @@ The Gamechanger MUST be so specific that it would NOT apply unchanged to a compa
 - with a different main service.
 
 VERIFICATION QUESTION BEFORE OUTPUT:
-"Would this idea also work for a tax consultant / IT service provider / craftsman?"
+"Would this idea also work unchanged for a recording studio, a publisher and a games studio?"
 → If YES: too generic. Reformulate.
 
 VALUE CREATION LOGIC INSTEAD OF PROCESS IDEA (v7.0 NEW):

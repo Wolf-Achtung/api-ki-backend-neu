@@ -120,20 +120,19 @@ Analyze the company data and create 3-5 Quick Wins as a **JSON Array** (NO HTML!
 
 ## TOOL RECOMMENDATIONS
 
-**Solo Budget (max €50/month):**
-- ChatGPT Plus: €20/month
-- Claude Pro: €18/month
-- Perplexity Pro: €20/month
+No prices in the text — a price appears only from verified data (see the tools box).
 
-**Team Budget (max €200/month):**
-- Microsoft Copilot: €22/user
-- Notion AI: €10/user
-- Otter.ai: €17/month
+**Solo (small budget):**
+- AI assistants: Claude Pro (GDPR caveat — see vendor audit), ChatGPT Plus (GDPR caveat — see vendor audit), Perplexity Pro (GDPR caveat — see vendor audit)
 
-**Industry-specific:**
-- IT/Software: GitHub Copilot (€19/month)
-- Consulting: Claude Pro + Perplexity Pro
-- Marketing: Jasper (€49/month), Midjourney (€10/month)
+**Team:**
+- Microsoft Copilot, Notion AI, transcription (Amberscript, Trint)
+
+**By segment:**
+- Post-production/film: transcription and tagging (Amberscript, Simon Says), review and versioning (Frame.io)
+- Audio/podcast: Descript, ElevenLabs (rights and consent first)
+- Publishing/agency: DeepL Pro, Adobe Firefly (commercially cleared)
+- Games: DeepL Pro for localisation, Runway for pre-vis
 
 ## QUALITY CHECKS (CHECK BEFORE OUTPUT!)
 

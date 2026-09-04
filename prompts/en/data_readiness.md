@@ -20,7 +20,7 @@ SPRINT N1 – TEMPLATE PHRASES TO AVOID:
 
 AVAILABLE VARIABLES (labels/user inputs):
 - {{BRANCH_CONTEXT_LABEL}} – Sector context for narrative introduction.
-- {{BRANCHE_LABEL}} – Branch label (e.g. retail, manufacturing).
+- {{BRANCHE_LABEL}} – Branch label (e.g. media & creative industries).
 - {{UNTERNEHMENSGROESSE_LABEL}} – Company size label.
 - {{HAUPTLEISTUNG}} – Main service/product.
 - {{IT_INFRASTRUKTUR_LABEL}} – e.g. "cloud‑based", "on‑premises", "hybrid".

@@ -225,7 +225,7 @@ Scenarios MUST be logically consistent:
 - "Basically..."
 - Generic phrases without concrete numbers
 
-## Example Output (SME Manufacturing, Realistic)
+## Example Output (Post-production, Small Team, Realistic)
 
 ```json
 {

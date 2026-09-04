@@ -36,7 +36,7 @@ Erstelle einen 3-Stufen-Kompetenzaufbau-Plan für KI-Nutzung,
 SPEZIFISCH zugeschnitten auf **{{HAUPTLEISTUNG}}** in **{{BRANCHE_LABEL}}**.
 
 Jede Stufe muss branchenspezifische Beispiele enthalten.
-Ein Handwerksbetrieb braucht andere Skills als ein Medienunternehmen —
+Ein Tonstudio braucht andere Skills als ein Verlag oder ein Games-Studio —
 die Empfehlungen müssen zur Branche passen.
 
 ## PFLICHTSTRUKTUR (3 Stufen als HTML)

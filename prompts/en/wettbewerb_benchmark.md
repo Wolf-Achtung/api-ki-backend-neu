@@ -32,6 +32,7 @@ BRANCH MODIFIERS:
   MARKETING/CREATIVE = Focus on Value Creation & Enablement
   INDUSTRY/PRODUCTION = Focus on Data Quality & Process Integration
   E-COMMERCE/RETAIL = Focus on Consistency, Data Feeds, Automation
+  MEDIA/CREATIVE by segment: post/audio = throughput and rights chain; publishing/agency = approvals and labelling; games = localisation and live ops
 
 ANTI-REDUNDANCY:
 - Benchmark data presented HERE in full

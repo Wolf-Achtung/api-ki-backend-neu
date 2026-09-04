@@ -200,38 +200,38 @@ Auswahl basierend auf:
 - "Erwägen Sie..."
 - Generische Floskeln ohne konkrete Handlung
 
-## Beispiel-Output (KMU Produktion)
+## Beispiel-Output (Postproduktion, Kleines Team)
 
 ```json
 {
-  "summary": "Für Ihr mittelständisches Produktionsunternehmen wurden 7 priorisierte Handlungsempfehlungen identifiziert. Der Fokus liegt auf Tool-Implementierung, Risiko-Mitigation und Förder-Nutzung mit einer Gesamtinvestition von rund 25.000€.",
+  "summary": "Für Ihr Postproduktionshaus wurden 7 priorisierte Handlungsempfehlungen identifiziert. Der Fokus liegt auf Tool-Implementierung, Risiko-Mitigation und Förder-Nutzung mit einer Gesamtinvestition von rund 25.000€.",
   "top_3_ids": ["rec1", "rec2", "rec4"],
   "recommendations": [
     {
       "id": "rec1",
-      "title": "ChatGPT Enterprise für Prozessdokumentation implementieren",
-      "description": "Starten Sie mit ChatGPT Enterprise für die automatisierte Erstellung von Produktionsdokumentationen. Beginnen Sie mit 3 Pilotprozessen im Qualitätsmanagement.",
-      "reason": "Höchster Fit-Score (0.9) für KMU, schnellster ROI und direkte Zeitersparnis in der Dokumentation.",
+      "title": "Transkriptions-Pipeline für Rohmaterial aufbauen",
+      "description": "Starten Sie mit einer lokal betriebenen Transkription für Rohmaterial (NDA-fähig). Beginnen Sie mit 3 Pilotprojekten in der Sichtung.",
+      "reason": "Höchster Fit-Score (0.9) für kleine Teams, schnellster ROI und direkte Zeitersparnis vor dem Schnitt.",
       "impact_level": "high",
       "urgency_level": "high",
       "risk_relation": "neutral",
       "required_investment": 8000.0,
-      "related_tools": ["ChatGPT Enterprise"],
-      "related_funding": ["go-digital"],
+      "related_tools": ["Amberscript"],
+      "related_funding": ["BAFA Unternehmensberatung"],
       "related_risks": [],
       "timeline_phase": "phase_1"
     },
     {
       "id": "rec2",
-      "title": "Förderantrag go-digital bis Q1 einreichen",
-      "description": "Bereiten Sie den Förderantrag für 'go-digital' vor. Fördersumme bis zu 50% der Beratungskosten möglich.",
+      "title": "Förderantrag BAFA Unternehmensberatung bis Q1 einreichen",
+      "description": "Bereiten Sie den Förderantrag für die BAFA-Beratungsförderung vor. Zuschuss bis zu 50 % der Beratungskosten möglich.",
       "reason": "Bundesweites Programm mit hoher Passung zu Ihrer Branche und Größe.",
       "impact_level": "high",
       "urgency_level": "high",
       "risk_relation": "neutral",
       "required_investment": 500.0,
       "related_tools": ["ChatGPT Enterprise", "Microsoft Copilot"],
-      "related_funding": ["go-digital"],
+      "related_funding": ["BAFA Unternehmensberatung"],
       "related_risks": [],
       "timeline_phase": "phase_1"
     },
@@ -301,7 +301,7 @@ Auswahl basierend auf:
       "risk_relation": "requires_mitigation",
       "required_investment": 10000.0,
       "related_tools": ["ChatGPT Enterprise", "Microsoft Copilot"],
-      "related_funding": ["ZIM"],
+      "related_funding": ["KfW-Digitalisierung"],
       "related_risks": [],
       "timeline_phase": "phase_3"
     }

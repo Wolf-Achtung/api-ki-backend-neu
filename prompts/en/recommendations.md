@@ -35,8 +35,8 @@ PERSONALIZATION CONTEXT (available from briefing):
 MEASURE 1: MUST directly address {{ZEITERSPARNIS_PRIORITAET}}
 → Question: How can AI/automation reduce THIS specific time drain?
 → FORBIDDEN: "Define minimal stack" (too generic!)
-→ Example AI Consultant: "Build questionnaire template library – reduces implementation effort per project"
-→ Example Tax Advisor: "Automatically classify client documents – eliminates manual pre-sorting"
+→ Example post-production: "Transcribe and tag raw footage automatically – removes manual review before the edit"
+→ Example publisher: "AI pre-editing for manuscripts – shortens the first correction loop"
 
 MEASURE 2: MUST fit {{hauptleistung}}
 → Question: What is THE critical success factor for this specific service?
@@ -246,14 +246,14 @@ USE INSTEAD:
 
 EXAMPLE TRANSFORMATIONS:
 ❌ "Define minimal stack"
-✅ "Build questionnaire template library" (for AI consultant)
-✅ "Automate client document classification" (for tax advisor)
-✅ "Establish content batch process" (for content agency)
+✅ "Build transcription pipeline for raw footage" (for post-production)
+✅ "Set up pre-editing workflow for manuscripts" (for publisher)
+✅ "Establish batch variants for social formats" (for content creation)
 
 ❌ "Establish standard workflow"
-✅ "Define GPT evaluation standard" (for questionnaire business)
-✅ "Build tax return draft pipeline" (for tax advisor)
-✅ "Implement editorial approval workflow" (for content agency)
+✅ "Define approval workflow for AI dubbing" (for recording studio)
+✅ "Build localisation pipeline with term base" (for games studio)
+✅ "Standardise pitch modules with client approval" (for agency)
 
 ❌ "Introduce review rule"
 ✅ "Review checklist against unauthorized predictions" (for health guardrails)

@@ -29,7 +29,7 @@ SPRINT G18 - BRANCH SENTENCES HARMONIZATION
 
 BRANCH_CORE_LABEL (mandatory):
 - Core industry in 4-6 words
-- Example: "Tax consulting with focus on freelancers"
+- Example: "Post-production with VFX focus"
 
 BRANCH_SHORT_LABEL (mandatory):
 - Use a short label for industry + main service.
@@ -110,9 +110,9 @@ ELEMENT 2: THREE DECISIONS (Bullet list)
   • "3. [Reference to {{KI_GUARDRAILS}} or quality] – [risk minimization]."
 
   CONCRETE EXAMPLES:
-  • AI Consultant: "1. Template library instead of custom code – reusable analyses for every client."
-  • Tax Advisor: "1. Automate document classification – eliminates manual pre-sorting."
-  • Content Agency: "1. Batch production instead of custom work – scales output without quality loss."
+  • Post-production: "1. Transcribe and tag raw footage automatically – removes manual review before the edit."
+  • Publisher: "1. AI pre-editing for manuscripts – shortens the first correction loop."
+  • Content creation: "1. Batch variants for social formats – scales output without quality loss."
 
   FORBIDDEN: "Define minimal stack" (too generic!)
 

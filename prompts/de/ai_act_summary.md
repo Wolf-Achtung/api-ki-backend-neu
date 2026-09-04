@@ -77,8 +77,10 @@ THEMEN-OWNERSHIP (verbindlich):
      BRANCHEN-AWARE:
        - Finanzen, Gesundheit, öffentlicher Sektor, Recht:
            → erhöhte Anforderungen, hohe Sensibilität, strengere Dokumentation.
-       - Marketing, Kreativwirtschaft:
-           → Fokus auf Kennzeichnung & Fairness, Vermeidung irreführender Inhalte.
+       - Medien & Kreativwirtschaft (Film/TV, Post, Audio, Agentur, Verlag, Games, Content Creation):
+           → Kennzeichnung synthetischer Inhalte (Art. 50), Rechtekette bei KI-Output,
+             Persönlichkeitsrechte an Stimme und Gesicht; Verlag: Leser-Transparenz;
+             Games: Store-Deklaration und Jugendschutz.
        - Industrie/Produktion:
            → Dokumentation & Human Oversight bei automatisierten Workflows.
        - E-Commerce/Handel:
@@ -116,9 +118,9 @@ THEMEN-OWNERSHIP (verbindlich):
 Formuliere verständlich für einen Geschäftsführer ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung in einem Halbsatz erklären.
 
 COMPLIANCE ALS OPERATIVE HANDLUNGSANWEISUNG (PFLICHT):
-(a) PFLICHTEN-ZU-PRÜFSCHRITT-MAPPING: Übersetze jede Compliance-Pflicht (Art. 5, Art. 6, Art. 50, DSGVO) in einen konkreten Prüfschritt im Arbeitsalltag. Nicht „Transparenzpflicht beachten", sondern „Vor dem Versand an Mandanten prüfen: Ist erkennbar, dass KI an der Erstellung beteiligt war?"
+(a) PFLICHTEN-ZU-PRÜFSCHRITT-MAPPING: Übersetze jede Compliance-Pflicht (Art. 5, Art. 6, Art. 50, DSGVO) in einen konkreten Prüfschritt im Arbeitsalltag. Nicht „Transparenzpflicht beachten", sondern „Vor der Abgabe an Auftraggeber oder Sender prüfen: Ist erkennbar, dass KI an der Erstellung beteiligt war?"
 (b) COMPLIANCE-CHECKLISTE MIT VERANTWORTLICHEM: In „Empfohlene nächste Schritte" pro Schritt einen Verantwortlichen und Zeitrahmen ergänzen. Solo: „Sie selbst, diese Woche". Team: „KI-Koordinator, innerhalb 2 Wochen". KMU: „Datenschutzbeauftragter + Fachbereichsleitung, innerhalb 4 Wochen".
-(c) BRANCHENSPEZIFISCHE COMPLIANCE: Im Abschnitt „Branchenspezifische Besonderheiten" konkrete Berufsrecht-Anforderungen einfordern — etwa Verschwiegenheitspflicht (StBerG §57) bei Steuerberatung, Patientendatenschutz bei Gesundheit, Beraterhaftung bei Finanzdienstleistung.
+(c) BRANCHENSPEZIFISCHE COMPLIANCE: Im Abschnitt „Branchenspezifische Besonderheiten" konkrete Berufsrecht-Anforderungen einfordern — etwa Urheber- und Leistungsschutzrechte bei KI-generierten Assets, Persönlichkeitsrechte bei Stimmklonen und synthetischen Darstellern, Kennzeichnungspflicht (Art. 50) gegenüber Sendern, Lesern und Plattformen, Jugendschutz bei Games.
 (d) VERKNÜPFUNG ZU GOVERNANCE: Ergänze bei „Risiken bei Non-Compliance" einen Querverweis: „Bei Compliance-Verstößen greift der Eskalationspfad aus der KI-Governance (→ siehe Governance-Abschnitt)."
 CONSTRAINT: Keine Rechtsberatung. Bestehende Fristen-Tabelle und AI-Act-Klassifizierung NICHT ändern. Bestehende Wortlimits einhalten.
 <!-- /SPRINT 2 -->
@@ -190,9 +192,9 @@ CONSTRAINT: Keine Rechtsberatung. Bestehende Fristen-Tabelle und AI-Act-Klassifi
       klare interne Freigaben; besondere Aufmerksamkeit bei automatisierten Entscheidungen.
     </li>
     <li>
-      <strong>Marketing &amp; Kreativwirtschaft:</strong>
-      Fokus auf klare Kennzeichnung, Vermeidung irreführender Inhalte, Prüfung von Assets,
-      markenkonforme Nutzung generativer KI.
+      <strong>Medien &amp; Kreativwirtschaft:</strong>
+      Kennzeichnung synthetischer Inhalte (Art. 50), Rechtekette bei KI-generierten Assets,
+      Persönlichkeitsrechte an Stimme und Gesicht, Freigaben gegenüber Auftraggebern und Sendern.
     </li>
     <li>
       <strong>Industrie &amp; Produktion:</strong>

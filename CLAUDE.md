@@ -216,6 +216,17 @@ Resilienz-Check kannten sie nicht.
 - In Produktion setzt Railway `VISIBLE_BRANCHES=medien` und
   `REPORT_PERSONA_PATH`; lokal stehen beide in `.env.example` als
   Kommentar.
+- **Kein Beispiel aus einer fremden Branche** (KIS-1289). Ein Beispiel
+  schlägt jede Regel — ein Steuerberater-Beispiel zieht den Text vom
+  Tonstudio weg. Ersatz-Beispiele verteilen sich über die Sparten.
+  `tests/test_kis1289_prompt_beispiele.py` prüft jede Prompt-Datei; der
+  Test findet auch den geschützten Bindestrich in `go‑digital`, den
+  `grep` übersieht.
+- **Ausgesetzte Programme nie als Empfehlung im Prompt**: ZIM
+  (`paused` bis 15.01.2027) und go-digital (`expired`) standen bis
+  KIS-1289 in acht Prompts als Beispiel oder Whitelist — auch im
+  deutschen Förder-Prompt für KMU. Der PDF-Wächter hätte das erst
+  hinterher gefunden.
 
 ## Textknoten sind nicht nur Text (KIS-1285)
 

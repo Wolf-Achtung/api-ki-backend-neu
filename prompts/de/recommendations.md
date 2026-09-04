@@ -183,8 +183,8 @@ INDIVIDUALISIERUNGS-KONTEXT (verfügbar aus Briefing):
 MAßNAHME 1: MUSS {{ZEITERSPARNIS_PRIORITAET}} direkt adressieren
 → Frage: Wie kann KI/Automatisierung DIESEN spezifischen Zeitfresser reduzieren?
 → VERBOTEN: "Minimal-Stack definieren" (zu generisch!)
-→ Beispiel KI-Berater: "Fragebogen-Template-Bibliothek aufbauen – reduziert Umsetzungsaufwand pro Projekt"
-→ Beispiel Steuerberater: "Mandanten-Dokumente automatisch klassifizieren – eliminiert manuelle Vorsortierung"
+→ Beispiel Postproduktion: "Rohmaterial automatisch transkribieren und verschlagworten – spart die manuelle Sichtung vor dem Schnitt"
+→ Beispiel Verlag: "Manuskripte per KI vorlektorieren – verkürzt die erste Korrekturschleife"
 
 MAßNAHME 2: MUSS zu {{hauptleistung}} passen
 → Frage: Was ist DER kritische Erfolgsfaktor für diese spezielle Leistung?
@@ -421,14 +421,14 @@ STATTDESSEN NUTZEN:
 
 BEISPIEL-TRANSFORMATIONEN:
 ❌ "Minimal-Stack festlegen"
-✅ "Fragebogen-Template-Bibliothek aufbauen" (für KI-Berater)
-✅ "Mandanten-Dokument-Klassifizierung automatisieren" (für Steuerberater)
-✅ "Content-Batch-Prozess etablieren" (für Content-Agentur)
+✅ "Transkriptions-Pipeline für Rohmaterial aufbauen" (für Postproduktion)
+✅ "Vorlektorat-Workflow für Manuskripte einrichten" (für Verlag)
+✅ "Varianten-Batch für Social-Formate etablieren" (für Content Creation)
 
 ❌ "Standard-Workflow etablieren"
-✅ "GPT-Auswertungs-Standard definieren" (für Fragebogen-Business)
-✅ "Steuererklärungsentwurf-Pipeline aufbauen" (für Steuerberater)
-✅ "Editorial-Freigabe-Workflow implementieren" (für Content-Agentur)
+✅ "Freigabe-Workflow für KI-Dubbing definieren" (für Tonstudio)
+✅ "Lokalisierungs-Pipeline mit Termdatenbank aufbauen" (für Games-Studio)
+✅ "Pitch-Bausteine mit Kundenfreigabe standardisieren" (für Agentur)
 
 ❌ "Review-Regel einführen"
 ✅ "Review-Checkliste gegen unerlaubte Prognosen" (bei Gesundheits-Guardrails)

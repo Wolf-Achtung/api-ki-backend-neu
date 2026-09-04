@@ -246,7 +246,7 @@ AUFGABE:
 5. Formuliere die strategische Dringlichkeit.
 
 Verwende die Recherche-Ergebnisse als Datenbasis. Wenn keine Daten verfügbar sind,
-verwende allgemeine Mittelstands-Benchmarks für Deutschland 2025/2026.
+formuliere qualitativ und kennzeichne Einordnungen als Annahme — keine erfundenen Vergleichszahlen.
 
 SPRINT 2 — OPT-B2 WETTBEWERBS-FRAMEWORK STÄRKEN (PFLICHT):
 Formuliere verständlich für einen GF ohne KI-Vorwissen. Nicht „Wettbewerbsmatrix", sondern „Wie Sie sich abheben können."
@@ -798,7 +798,7 @@ LÄNDER-REGEL (KRITISCH):
 - Für CH: Schweizer Programme (z.B. Innosuisse) + EU-Programme. NIEMALS BAFA, ZIM, Mittelstand-Digital oder andere DE-Programme.
 - Für AT: Österreichische Programme (z.B. aws, FFG) + EU-Programme. NIEMALS BAFA oder andere DE-Programme.
 - Für GB: UK-Programme (z.B. Innovate UK) + EU-Programme. NIEMALS BAFA oder andere DE-Programme.
-- Für DE: Deutsche Programme (BAFA, ZIM, Landesförderung) + EU-Programme.
+- Für DE: Deutsche Programme (BAFA, KfW, Landes-Medienförderung) + EU-Programme. ZIM ist bis 15.01.2027 ausgesetzt — nicht nennen.
 
 DETERMINISTISCHE BAFA-DATEN (NUR verwenden wenn Land = DE):
 - Programm: BAFA "Förderung von Unternehmensberatungen für KMU"
@@ -896,7 +896,7 @@ SPRINT 2 — OPT-B6 COMPLIANCE-TIEFE STÄRKEN (PFLICHT):
 Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erster Verwendung erklären.
 (a) PFLICHTEN-ZU-PRÜFSCHRITT: Übersetze jede Compliance-Pflicht (EU AI Act, DSGVO) in einen konkreten Prüfschritt im Arbeitsalltag. Nicht „Transparenzpflicht beachten", sondern etwa „Vor dem Versand prüfen: Ist erkennbar, dass KI beteiligt war?"
 (b) COMPLIANCE-CHECKLISTE: Pro Compliance-Aufgabe einen Verantwortlichen und Zeitrahmen benennen. Segment-gerecht formulieren.
-(c) BRANCHENSPEZIFISCHE COMPLIANCE: Konkrete Berufsrecht-Anforderungen der {branche} einfordern — etwa Verschwiegenheitspflicht bei Steuerberatung, Patientendatenschutz bei Gesundheit.
+(c) BRANCHENSPEZIFISCHE COMPLIANCE: Konkrete Berufsrecht-Anforderungen der {branche} einfordern — etwa Kennzeichnungspflicht für synthetische Inhalte (Art. 50), Rechtekette bei KI-generierten Assets, Persönlichkeitsrechte an Stimme und Gesicht, Jugendschutz bei Games.
 (d) VERKNÜPFUNG ZU GOVERNANCE: Bei Compliance-Verstößen auf den Eskalationspfad aus B5/S3 verweisen.
 CONSTRAINT: Keine Rechtsberatung. Bestehende AI-Act-Klassifizierung unverändert.
 

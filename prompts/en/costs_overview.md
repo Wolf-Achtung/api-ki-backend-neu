@@ -35,9 +35,9 @@
      BRANCH‑AWARE (mandatory):
        - Use industry‑specific tools, workflows, pain points and typical data sources from the CONTEXT_BLOCK.
        - Variations by industry:
-           - specialist tools (e.g. CAD/architecture, e‑commerce, health IT, marketing automation)
+           - specialist tools (e.g. editing and grading software, DAW and voice synthesis, editorial system, game engine, media asset management)
            - compliance/regulatory efforts (e.g. finance, health)
-           - data preparation costs (e.g. manufacturing vs. services)
+           - data preparation costs (e.g. archive tagging vs. text-based work)
            - integration costs (ERP/CRM/industry systems)
 
      GOAL:
@@ -176,9 +176,9 @@
     <li>Effort for maintaining and updating templates, prompts and documentation.</li>
     <li>Industry‑specific additional efforts:
       <ul>
-        <li>Health/finance: data protection/compliance reviews.</li>
-        <li>Manufacturing/logistics: data cleansing, sensor/machine data.</li>
-        <li>Marketing/creative industries: asset management, brand guidelines.</li>
+        <li>Film/TV and post-production: archive tagging, rights metadata, storage for raw footage.</li>
+        <li>Publishing and agencies: asset management, brand guidelines, approval processes.</li>
+        <li>Audio and games: licence checks for voices and assets, quality assurance.</li>
       </ul>
     </li>
     <li>Smaller additional licences (e.g. storage, plug‑ins, optional add‑ons).</li>

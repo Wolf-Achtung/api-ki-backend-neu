@@ -30,4 +30,4 @@ BRANCHENBEZEICHNUNG-REGEL:
 "{{BRANCHE_LABEL}}" maximal 1x verwenden. Danach: "Ihr Unternehmen" oder "Ihre Branche".
 
 ## Beispiel (NICHT kopieren — nur als Struktur-Orientierung)
-Ein Score von 78/100 platziert Ihr Unternehmen im oberen Drittel vergleichbarer Dienstleister im Mittelstand. Besonders stark ist die Befähigung Ihres Teams mit 85/100 — eine ungewöhnlich solide Basis für die weitere KI-Integration. Der größte Hebel liegt im Bereich Governance (62/100), wo strukturierte Prozesse und Verantwortlichkeiten den Reifegrad signifikant steigern können.
+Ein Score von 78/100 platziert Ihr Unternehmen im oberen Drittel vergleichbarer Betriebe der Medien- und Kreativbranche. Besonders stark ist die Befähigung Ihres Teams mit 85/100 — eine ungewöhnlich solide Basis für die weitere KI-Integration. Der größte Hebel liegt im Bereich Governance (62/100), wo strukturierte Prozesse und Verantwortlichkeiten den Reifegrad signifikant steigern können.

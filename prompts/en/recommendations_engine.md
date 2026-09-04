@@ -195,38 +195,38 @@ Selection based on:
 - "Consider…"
 - Generic phrases without concrete action
 
-## Example output (SME manufacturing)
+## Example output (post-production, small team)
 
 ```json
 {
-  "summary": "For your medium‑sized manufacturing company seven prioritised recommendations were identified. The focus is on tool implementation, risk mitigation and utilisation of funding with a total investment of around €25,000.",
+  "summary": "For your post-production house seven prioritised recommendations were identified. The focus is on tool implementation, risk mitigation and utilisation of funding with a total investment of around €25,000.",
   "top_3_ids": ["rec1", "rec2", "rec4"],
   "recommendations": [
     {
       "id": "rec1",
-      "title": "Implement ChatGPT Enterprise for process documentation",
-      "description": "Start using ChatGPT Enterprise for automated creation of production documentation. Begin with three pilot processes in quality management.",
-      "reason": "Highest fit score (0.9) for SMEs, fastest ROI and direct time savings in documentation.",
+      "title": "Build transcription pipeline for raw footage",
+      "description": "Start with locally hosted transcription for raw footage (NDA-safe). Begin with three pilot projects in footage review.",
+      "reason": "Highest fit score (0.9) for small teams, fastest ROI and direct time savings before the edit.",
       "impact_level": "high",
       "urgency_level": "high",
       "risk_relation": "neutral",
       "required_investment": 8000.0,
-      "related_tools": ["ChatGPT Enterprise"],
-      "related_funding": ["go‑digital"],
+      "related_tools": ["Amberscript"],
+      "related_funding": ["BAFA consulting grant"],
       "related_risks": [],
       "timeline_phase": "phase_1"
     },
     {
       "id": "rec2",
-      "title": "Submit go‑digital funding application by Q1",
-      "description": "Prepare the funding application for 'go‑digital'. Funding of up to 50% of consulting costs is possible.",
+      "title": "Submit BAFA consulting grant application by Q1",
+      "description": "Prepare the application for the BAFA consulting grant. Up to 50 % of consulting costs may be funded.",
       "reason": "Nationwide programme with high suitability for your industry and size.",
       "impact_level": "high",
       "urgency_level": "high",
       "risk_relation": "neutral",
       "required_investment": 500.0,
       "related_tools": ["ChatGPT Enterprise", "Microsoft Copilot"],
-      "related_funding": ["go‑digital"],
+      "related_funding": ["BAFA consulting grant"],
       "related_risks": [],
       "timeline_phase": "phase_1"
     },
@@ -296,7 +296,7 @@ Selection based on:
       "risk_relation": "requires_mitigation",
       "required_investment": 10000.0,
       "related_tools": ["ChatGPT Enterprise", "Microsoft Copilot"],
-      "related_funding": ["ZIM"],
+      "related_funding": ["KfW digitisation"],
       "related_risks": [],
       "timeline_phase": "phase_3"
     }

@@ -211,7 +211,7 @@ TEAM: Leichtgewichtiges Change Management:
 {% else %}
 KMU: Strukturiertes Change Management:
 (a) CHANGE-NARRATIV: 2-3 Sätze „Warum KI gut für die Belegschaft ist" — Mitarbeiterperspektive, nicht GF-Sicht.
-(b) TOP-3-WIDERSTÄNDE + MITIGATION: Branchenspezifisch (etwa bei Steuerberatung: „Angst vor Qualitätsverlust bei Mandantenarbeit", „Sorge um Arbeitsplätze", „Überforderung durch neue Tools").
+(b) TOP-3-WIDERSTÄNDE + MITIGATION: Branchenspezifisch (etwa in der Postproduktion: „Angst vor Qualitätsverlust im Schnitt", „Sorge um die eigene Rolle", „Überforderung durch neue Tools").
 (c) KOMMUNIKATIONSPLAN: Kick-off zu Beginn, Zwischenbericht nach Phase 1, Erfolge sichtbar machen.
 (d) ADOPTION-KENNZAHLEN: Neben technischen Kennzahlen auch: aktive Nutzer, Nutzungsfrequenz, Team-Zufriedenheit.
 {% endif %}
