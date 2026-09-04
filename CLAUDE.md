@@ -175,6 +175,17 @@ Trennstrich mitten im Wort.
 - In gehärteten Tabellen gilt die Kopfzeilen-Schwelle für Trennstellen
   (ab 10 Zeichen) auch für Datenzellen — bei 12,5 % Spaltenbreite bricht
   sonst schon „Abonnement" strichlos (KIS-1285).
+- **Reihenfolge entscheidet.** `harden_wide_tables` überspringt Tabellen,
+  die schon ein `<colgroup>` tragen. `html_enhancer._balance_column_widths`
+  setzt eines — aber nur bei „echter Schieflage" (breiteste Spalte ≥ 3×
+  schmalste), also genau bei der Fördertabelle mit ihrer 70-Zeichen-URL
+  neben „Hoch". Deshalb läuft die Härtung im Strategiebericht **vor** dem
+  Enhancer (KIS-1286). Wer eine neue Tabellenstufe einhängt, prüft diese
+  Reihenfolge zuerst.
+- Schrägstrich-Fügungen („GitHub/GitLab") bekommen in gehärteten Tabellen
+  ein Nullbreiten-Leerzeichen nach dem Schrägstrich — nie einen
+  Trennstrich. Beide Seiten brauchen vier Buchstaben, sonst träfe die
+  Regel Einheiten wie `h/mo.`.
 
 ## Textknoten sind nicht nur Text (KIS-1285)
 
