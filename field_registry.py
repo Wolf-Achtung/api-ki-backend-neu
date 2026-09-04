@@ -270,6 +270,22 @@ fields = {
         "label": "Marketing-/Kampagnendaten"
       },
       {
+        "value": "rohmaterial_archiv",
+        "label": "Rohmaterial / Archiv"
+      },
+      {
+        "value": "rechte_lizenzen",
+        "label": "Rechte- und Lizenzdaten"
+      },
+      {
+        "value": "manuskripte_texte",
+        "label": "Manuskripte / Texte"
+      },
+      {
+        "value": "nutzungsdaten",
+        "label": "Nutzungsdaten (Streaming, Store)"
+      },
+      {
         "value": "sonstige",
         "label": "Sonstige Datenquellen"
       },
@@ -327,7 +343,15 @@ fields = {
       },
       {
         "value": "produktion",
-        "label": "Produktion / Logistik"
+        "label": "Produktion / Postproduktion"
+      },
+      {
+        "value": "redaktion",
+        "label": "Redaktion / Lektorat"
+      },
+      {
+        "value": "studio_audio",
+        "label": "Studio / Audio"
       },
       {
         "value": "hr",
@@ -414,6 +438,26 @@ fields = {
         "label": "Personalisierung"
       },
       {
+        "value": "transkription_untertitel",
+        "label": "Transkription / Untertitel"
+      },
+      {
+        "value": "archiv_verschlagwortung",
+        "label": "Archiv-Verschlagwortung"
+      },
+      {
+        "value": "synchron_dubbing",
+        "label": "Synchron / Dubbing"
+      },
+      {
+        "value": "lokalisierung",
+        "label": "Lokalisierung"
+      },
+      {
+        "value": "vorlektorat",
+        "label": "Vorlektorat"
+      },
+      {
         "value": "andere",
         "label": "Andere"
       },
@@ -439,7 +483,15 @@ fields = {
       },
       {
         "value": "produktion",
-        "label": "Produktion / Logistik"
+        "label": "Produktion / Postproduktion"
+      },
+      {
+        "value": "redaktion",
+        "label": "Redaktion / Lektorat"
+      },
+      {
+        "value": "studio_audio",
+        "label": "Studio / Audio"
       },
       {
         "value": "andere",
@@ -542,6 +594,26 @@ fields = {
         "label": "Buchhaltungssoftware"
       },
       {
+        "value": "schnitt_grading",
+        "label": "Schnitt / Grading (Premiere, DaVinci, Avid)"
+      },
+      {
+        "value": "audio_daw",
+        "label": "Audio (Pro Tools, Logic)"
+      },
+      {
+        "value": "redaktion_satz",
+        "label": "Redaktion / Satz (InDesign, CMS)"
+      },
+      {
+        "value": "engine",
+        "label": "Engine (Unreal, Unity)"
+      },
+      {
+        "value": "review_mam",
+        "label": "Review / MAM (Frame.io, iconik)"
+      },
+      {
         "value": "keine",
         "label": "Keine / andere"
       },
@@ -584,6 +656,14 @@ fields = {
       {
         "value": "ethik_recht",
         "label": "Ethische & rechtliche Grundlagen"
+      },
+      {
+        "value": "ki_rechte_kennzeichnung",
+        "label": "KI-Rechte & Kennzeichnung"
+      },
+      {
+        "value": "stimme_gesicht_einwilligung",
+        "label": "Stimme & Gesicht: Einwilligung"
       },
       {
         "value": "keine",

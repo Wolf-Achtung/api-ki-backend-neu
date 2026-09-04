@@ -2208,7 +2208,7 @@ _ENUM_DISPLAY: dict[str, dict[str, str]] = {
     "datenquellen": {
         "kundendaten": "Kundendaten (CRM, Service)", "verkaufsdaten": "Verkaufs-/Bestelldaten",
         "produktionsdaten": "Produktions-/Betriebsdaten", "personaldaten": "Personal-/HR-Daten",
-        "marketingdaten": "Marketing-/Kampagnendaten", "sonstige": "Sonstige Datenquellen",
+        "marketingdaten": "Marketing-/Kampagnendaten", "rohmaterial_archiv": "Rohmaterial / Archiv", "rechte_lizenzen": "Rechte- und Lizenzdaten", "manuskripte_texte": "Manuskripte / Texte", "nutzungsdaten": "Nutzungsdaten (Streaming, Store)", "sonstige": "Sonstige Datenquellen",
     },
     # ── R1: Block 2 – Status Quo ──
     "prozesse_papierlos": {
@@ -2221,7 +2221,7 @@ _ENUM_DISPLAY: dict[str, dict[str, str]] = {
     "ki_einsatz": {
         "chatbots": "Chatbots / Kundenservice", "marketing": "Marketing & Content",
         "vertrieb": "Vertrieb & CRM", "datenanalyse": "Datenanalyse",
-        "produktion": "Produktion / Logistik", "hr": "Personalmanagement",
+        "produktion": "Produktion / Postproduktion", "redaktion": "Redaktion / Lektorat", "studio_audio": "Studio / Audio", "hr": "Personalmanagement",
         "andere": "Andere Bereiche", "noch_keine": "Noch keine Nutzung",
     },
     "ki_kompetenz": {
@@ -2237,13 +2237,13 @@ _ENUM_DISPLAY: dict[str, dict[str, str]] = {
     "anwendungsfaelle": {
         "chatbots": "Chatbots / FAQ-Automatisierung", "content_generation": "Content-Generierung",
         "datenanalyse": "Datenanalyse & Reporting", "dokumentation": "Dokumentation & Wissen",
-        "prozess_automation": "Prozessautomation", "personalisierung": "Personalisierung",
+        "prozess_automation": "Prozessautomation", "personalisierung": "Personalisierung", "transkription_untertitel": "Transkription / Untertitel", "archiv_verschlagwortung": "Archiv-Verschlagwortung", "synchron_dubbing": "Synchron / Dubbing", "lokalisierung": "Lokalisierung", "vorlektorat": "Vorlektorat",
         "andere": "Andere", "keine_angabe": "Noch unklar",
     },
     "pilot_bereich": {
         "kundenservice": "Kundenservice", "marketing": "Marketing / Content",
         "vertrieb": "Vertrieb", "verwaltung": "Verwaltung / Backoffice",
-        "produktion": "Produktion / Logistik", "andere": "Andere",
+        "produktion": "Produktion / Postproduktion", "redaktion": "Redaktion / Lektorat", "studio_audio": "Studio / Audio", "andere": "Andere",
     },
     # ── R1: Block 4 – Strategie & Governance ──
     "massnahmen_komplexitaet": {
@@ -2271,7 +2271,7 @@ _ENUM_DISPLAY: dict[str, dict[str, str]] = {
         "crm": "CRM-Systeme (HubSpot, Salesforce)", "erp": "ERP-Systeme (SAP, Odoo)",
         "projektmanagement": "Projektmanagement (Asana, Trello)",
         "marketing_automation": "Marketing Automation",
-        "buchhaltung": "Buchhaltungssoftware", "keine": "Keine klassischen Systeme / andere",
+        "buchhaltung": "Buchhaltungssoftware", "schnitt_grading": "Schnitt / Grading (Premiere, DaVinci, Avid)", "audio_daw": "Audio (Pro Tools, Logic)", "redaktion_satz": "Redaktion / Satz (InDesign, CMS)", "engine": "Engine (Unreal, Unity)", "review_mam": "Review / MAM (Frame.io, iconik)", "keine": "Keine klassischen Systeme / andere",
     },
     "regulierte_branche": {
         "gesundheit": "Gesundheit & Medizin", "finanzen": "Finanzen & Versicherungen",
@@ -2283,7 +2283,7 @@ _ENUM_DISPLAY: dict[str, dict[str, str]] = {
         "prompt_engineering": "Prompt Engineering", "llm_basics": "LLM-Grundlagen",
         "datenqualitaet_governance": "Datenqualität & Governance",
         "automatisierung": "Automatisierung & Skripte",
-        "ethik_recht": "Ethische & rechtliche Grundlagen", "keine": "Keine / noch unklar",
+        "ethik_recht": "Ethische & rechtliche Grundlagen", "ki_rechte_kennzeichnung": "KI-Rechte & Kennzeichnung", "stimme_gesicht_einwilligung": "Stimme & Gesicht: Einwilligung", "keine": "Keine / noch unklar",
     },
     "vision_prioritaet": {
         "gpt_services": "KI-gestützte Services und Produkte",

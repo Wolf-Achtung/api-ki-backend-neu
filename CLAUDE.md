@@ -227,6 +227,16 @@ Resilienz-Check kannten sie nicht.
   KIS-1289 in acht Prompts als Beispiel oder Whitelist — auch im
   deutschen Förder-Prompt für KMU. Der PDF-Wächter hätte das erst
   hinterher gefunden.
+- **Eine Option lebt an fünf Stellen** (KIS-1291): `field_registry.py`
+  (Label-Fallback `_flat_option_label`), `routes/chat.py` (`_QR_OPTIONS`
+  DE, EN-Anzeige-Map, `_ANWENDUNG_TO_PILOT`),
+  `services/chat_conversation.py` (DE-Anzeige),
+  `services/chat_normalizer.py` (`ENUM_VALUES`) — plus beide Formbuilder
+  im Frontend. `tests/test_kis1291_optionen.py` hält die fünf gleich;
+  wer eine Option ergänzt, ergänzt alle. Der Wert `produktion` bleibt
+  (Smart-Skip hängt daran), das Label heißt jetzt „Produktion /
+  Postproduktion". Achtung: `produktion` ist auch ein Sparten-Wert
+  („Film-/TV-Produktion") — Ersetzungen am Label verankern, nie am Wert.
 
 ## Textknoten sind nicht nur Text (KIS-1285)
 
