@@ -22,6 +22,9 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
+# KIS-1293: „gelten ab" wurde am 02.08.2026 zu „gelten seit" — einmal gerechnet.
+from services.ai_act_stichtag import art50_satz as _art50_satz
+
 log = logging.getLogger(__name__)
 
 # =============================================================================
@@ -446,8 +449,8 @@ def _generate_duty_matrix_de(risk_level: str, branche: str, is_solo: bool) -> st
             rows.append(("Richtlinien", "Einfache Regeln für die KI-Nutzung im Unternehmen", "Empfohlen"))
         note = ('<p class="small muted">Für Ihre aktuelle Einstufung bestehen überwiegend '
                 'keine spezifischen Pflichten aus dem EU AI Act. Wichtig: Die Transparenzpflichten '
-                'zur Kennzeichnung KI-generierter Inhalte (Art. 50 EU AI Act) gelten ab dem '
-                '2. August 2026 — prüfen Sie, ob Ihre Anwendungsfälle darunterfallen.</p>')
+                'zur Kennzeichnung KI-generierter Inhalte (Art. 50 EU AI Act) '
+                + _art50_satz("de") + ' — prüfen Sie, ob Ihre Anwendungsfälle darunterfallen.</p>')
 
     elif risk_level == "limited":
         rows = [
@@ -519,7 +522,7 @@ def _generate_duty_matrix_en(risk_level: str, branche: str, is_solo: bool) -> st
             rows.append(("Guidelines", "Simple rules for AI usage in the organization", "Recommended"))
         note = ('<p class="small muted">For your current classification, most EU AI Act '
                 'obligations do not apply. Note: the transparency obligations for labeling '
-                'AI-generated content (Art. 50 EU AI Act) apply from 2 August 2026 — check '
+                'AI-generated content (Art. 50 EU AI Act) ' + _art50_satz("en") + ' — check '
                 'whether your use cases fall under them.</p>')
 
     elif risk_level == "limited":

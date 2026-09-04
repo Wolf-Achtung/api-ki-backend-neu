@@ -67,7 +67,7 @@ _KOPF_FOERDER = (
 _FUSS = "=== ENDE ===\n"
 
 
-def _tool_zeile(t: Dict[str, Any]) -> str:
+def _tool_zeile(t: Dict[str, Any], mit_url: bool = False) -> str:
     name = str(t.get("name") or "").strip()
     if not name:
         return ""
@@ -78,6 +78,10 @@ def _tool_zeile(t: Dict[str, Any]) -> str:
                                      str(t.get("gdpr") or "").strip()) if x)
     if hosting:
         teile.append(f"Hosting: {hosting}")
+    # KIS-1293: Der Strategiebericht verlangt Quellenangaben — ohne URL im
+    # Block erfand das Modell „Vendor-Audit-Status Report 1 (Kundenunterlagen)".
+    if mit_url and t.get("url"):
+        teile.append(str(t["url"]).strip())
     return "- " + " | ".join(teile)
 
 
@@ -100,6 +104,74 @@ def build_tool_fakten(answers: Dict[str, Any], max_tools: int = MAX_TOOLS) -> st
     if not zeilen:
         return ""
     return _KOPF_TOOLS + "\n".join(zeilen) + "\n" + _FUSS
+
+
+_KOPF_TOOLS_STRATEGIE_DE = (
+    "\n\n=== GEPRÜFTE WERKZEUG-DATEN (VERBINDLICH FÜR DIESE SECTION) ===\n"
+    "Diese Liste wird redaktionell gepflegt. Regeln:\n"
+    "- Nenne als konkrete Produkte AUSSCHLIESSLICH Werkzeuge aus dieser Liste "
+    "oder Software, die der Kunde laut Stack bereits nutzt (und deren "
+    "hauseigene KI-Zusätze, z. B. Copilot bei Microsoft 365). Ein anderes "
+    "Produkt existiert für diese Section nicht — auch nicht aus der "
+    "Live-Recherche. Gattungsbegriffe ('Schnittsoftware', "
+    "'Compliance-Werkzeug') sind erlaubt.\n"
+    "- Preise: nur die Art (Abonnement, nutzungsbasiert, im Abo enthalten) — "
+    "keine Beträge.\n"
+    "- Datenschutz: übernimm die Hosting-Angabe aus der Liste wörtlich. "
+    "Erfinde keine eigene Einstufung, keinen Audit-Status und keine Quelle. "
+    "Der Vendor-Audit-Status aus Report 1 gilt für die Werkzeuge, die der "
+    "Kunde im Fragebogen genannt hat — nie für ein empfohlenes Werkzeug.\n"
+    "- Quellen am Ende: nur die Anbieteradressen aus dieser Liste.\n\n"
+)
+_KOPF_TOOLS_STRATEGIE_EN = (
+    "\n\n=== VERIFIED TOOL DATA (BINDING FOR THIS SECTION) ===\n"
+    "This list is maintained editorially. Rules:\n"
+    "- Name as concrete products ONLY tools from this list or software the "
+    "client already uses according to the stack (and its built-in AI add-ons, "
+    "e.g. Copilot with Microsoft 365). Any other product does not exist for "
+    "this section — not even from the live research. Generic terms "
+    "('editing software', 'compliance tool') are allowed.\n"
+    "- Prices: only the type (subscription, usage-based, included) — no amounts.\n"
+    "- Data protection: quote the hosting note from the list verbatim. Do not "
+    "invent a rating, an audit status or a source. The vendor audit status "
+    "from Report 1 applies to the tools the client named in the questionnaire "
+    "— never to a recommended tool.\n"
+    "- Sources at the end: only the vendor addresses from this list.\n\n"
+)
+_FALLBACK_TOOLS_DE = (
+    "\n\n=== WERKZEUG-DATEN ===\nKein Faktenblock verfügbar. Nenne als konkrete "
+    "Produkte nur Software aus dem Stack des Kunden; sonst Gattungsbegriffe. "
+    "Keine Preise, keine Datenschutz-Einstufungen, kein Audit-Status.\n\n"
+)
+_FALLBACK_TOOLS_EN = (
+    "\n\n=== TOOL DATA ===\nNo fact block available. Name as concrete products "
+    "only software from the client's stack; otherwise generic terms. No prices, "
+    "no data protection ratings, no audit status.\n\n"
+)
+
+
+def build_tool_fakten_strategie(answers: Dict[str, Any], lang: str = "de",
+                                max_tools: int = MAX_TOOLS) -> str:
+    """KIS-1293: Faktenblock für S4 des Strategieberichts.
+
+    S4 hatte bis Lauf KIS1272 keinen Faktenblock und erfand Produkte
+    („Adobe Sensei", „Legiscope"), Preismodelle, DSGVO-Einstufungen und
+    einen „Vendor-Audit-Status: nicht bestanden" für Claude und Runway.
+    Nie leer: ohne Daten kommt die Rückfall-Regel, damit die Section nicht
+    frei erfindet.
+    """
+    en = str(lang or "de").lower().startswith("en")
+    try:
+        from services.tools_recommender import recommend_tools
+        tools = recommend_tools(answers, max_tools=max_tools) or []
+    except Exception as exc:
+        log.warning("[KIS-1293] Werkzeugliste nicht lesbar: %s", exc)
+        tools = []
+    zeilen = [z for z in (_tool_zeile(t, mit_url=True) for t in tools[:max_tools]) if z]
+    if not zeilen:
+        return _FALLBACK_TOOLS_EN if en else _FALLBACK_TOOLS_DE
+    kopf = _KOPF_TOOLS_STRATEGIE_EN if en else _KOPF_TOOLS_STRATEGIE_DE
+    return kopf + "\n".join(zeilen) + "\n" + _FUSS
 
 
 def _programm_zeile(p: Dict[str, Any]) -> str:

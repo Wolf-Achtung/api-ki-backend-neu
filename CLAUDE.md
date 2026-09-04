@@ -255,6 +255,36 @@ Resilienz-Check kannten sie nicht.
   Postproduktion". Achtung: `produktion` ist auch ein Sparten-Wert
   („Film-/TV-Produktion") — Ersetzungen am Label verankern, nie am Wert.
 
+## Der Strategiebericht erfindet, was er nicht bekommt (KIS-1293)
+
+Lauf KIS1272 (04.09.2026): Das Kapitel „Tool-Landschaft" (S4) empfahl
+„Adobe Sensei", „Legiscope", „TrustArc", nannte Preismodelle und
+DSGVO-Einstufungen im Fließtext und heftete den Vendor-Audit-Status aus
+Report 1 („nicht bestanden") an Claude und Runway. Quelle laut Bericht:
+„Vendor-Audit-Status Report 1 (Kundenunterlagen)". Das Risiko-Kapitel
+(S8) stufte Copilot und Runway als „voraussichtlich hochriskant" ein und
+nannte den 02.08.2026 „in wenigen Wochen erreicht" — vier Wochen danach.
+
+- KIS-1281 galt nur für R1. Der Strategiebericht hatte **keinen**
+  Faktenblock. Jetzt: `kuratierte_fakten.build_tool_fakten_strategie`
+  (mit Anbieter-URL, sparten-sortiert über `recommend_tools`) als
+  `{kuratierte_tools}` in S4 (DE/EN). Nie leer — ohne Daten steht die
+  Rückfall-Regel im Prompt. Regel: nur Werkzeuge aus der Liste oder aus
+  dem Stack des Kunden; Preis nur als Art; Hosting wörtlich; der
+  Audit-Status gilt nie für ein empfohlenes Werkzeug.
+- Der Prompt sagte „wenn das Reportdatum vor dem Stichtag liegt", gab
+  dem Modell aber kein Datum. Jetzt rechnet `services/ai_act_stichtag.py`
+  (`art50_prompt_text`, `art50_satz`) und liefert `{ai_act_stichtag}`
+  in S8; die festen Hinweise (Pflichtenmatrix, KPA-Impressum,
+  Feldhilfe) sagen „gelten seit". **Jede Frist gehört in Code, nie in
+  einen Prompt-Satz mit Bedingung.**
+- `{ai_act_risikoklasse}`: Text-, Bild-, Video- und Ton-Werkzeuge sind
+  keine Hochrisiko-Systeme nach Anhang III. Hochrisiko nur über den
+  Anwendungsfall, nie über das Werkzeug.
+- Test: `tests/test_kis1293_strategie_fakten.py`. Wächter in
+  `scripts/compare_reports.py`: „Stichtag als Zukunft" und
+  „Standard-Werkzeug als Hochrisiko".
+
 ## Textknoten sind nicht nur Text (KIS-1285)
 
 `_TAG_SPLIT_RE` teilt HTML an Tags. Was dazwischen liegt, gilt als Text —
@@ -269,7 +299,7 @@ Deckblatt des Strategieberichts verlor seinen Score (Lauf 1269).
 
 - `scripts/compare_reports.py alt.pdf neu.pdf` — vergleicht zwei
   Report-Läufe: Kennzahlen, dünne Seiten, Rückfall-Prüfung gegen die
-  sieben behobenen Fehler. Exit-Code 1 bei einem Rückfall. Seit
+  neun behobenen Fehler. Exit-Code 1 bei einem Rückfall. Seit
   KIS-1284 prüft es auch auf zerhackte Tabellenzellen; „€/Monat" zählt
   nur mit Kontext („laufende Tool-Kosten"), sonst schlug der Preis des
   ersten Werkzeugs als OPEX-Abweichung durch.
