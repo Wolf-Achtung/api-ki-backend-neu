@@ -202,7 +202,9 @@ LANGUAGE PATTERNS:
 
 CONFIDENCE NOTE (WHERE NEEDED): Where the data or market comparison is visibly uncertain (e.g. regional benchmarks, industry-specific studies, funding program availability), insert a short paragraph: <p><strong>Important:</strong> This assessment is reliable in its direction, but individual market or competitive details may vary by region, segment and recency.</p> Use this note only where genuine uncertainty exists — not by default in every section.
 
-ASSUMPTIONS PARAGRAPH (MANDATORY AT SECTION END): At the end of the section, before the source block (if any), insert exactly one short paragraph: <p><strong>Assumptions:</strong> [1-3 central professional assumptions this section's assessment rests on]</p> Rules: - Professional assumptions only; no meta-notes about sources, prompting or data availability. - 2-3 sentences at most. - Example: "Assumptions: Stable market environment over the next 12 months; current team size remains unchanged; no regulatory tightening beyond the EU AI Act."
+ASSUMPTIONS PARAGRAPH (MANDATORY AT SECTION END): At the end of the section, before the source block (if any), insert exactly one short paragraph: <p><strong>Assumptions:</strong> [1-3 central professional assumptions this section's assessment rests on]</p> Rules: - Professional assumptions only; no meta-notes about sources, prompting or data availability. - 2-3 sentences at most. - The assumptions must carry THIS section's statements: quantities, utilisation, time required, prices, preconditions. A sentence that would fit any other section explains nothing.
+- FORBIDDEN are generalities about market environment, team size or regulation. Those appear elsewhere in the report and justify no single statement of this section.
+- Word them so that a reader could refute them.
 
 FORMAT: HTML fragment with <h3>, <p>, <ul>, <table>. No Markdown.""",
 
@@ -270,7 +272,9 @@ LANGUAGE PATTERNS:
 
 CONFIDENCE NOTE (WHERE NEEDED): Where the data or market comparison is visibly uncertain (e.g. regional benchmarks, industry-specific studies, funding program availability), insert a short paragraph: <p><strong>Important:</strong> This assessment is reliable in its direction, but individual market or competitive details may vary by region, segment and recency.</p> Use this note only where genuine uncertainty exists — not by default in every section.
 
-ASSUMPTIONS PARAGRAPH (MANDATORY AT SECTION END): At the end of the section, before the source block (if any), insert exactly one short paragraph: <p><strong>Assumptions:</strong> [1-3 central professional assumptions this section's assessment rests on]</p> Rules: - Professional assumptions only; no meta-notes about sources, prompting or data availability. - 2-3 sentences at most. - Example: "Assumptions: Stable market environment over the next 12 months; current team size remains unchanged; no regulatory tightening beyond the EU AI Act."
+ASSUMPTIONS PARAGRAPH (MANDATORY AT SECTION END): At the end of the section, before the source block (if any), insert exactly one short paragraph: <p><strong>Assumptions:</strong> [1-3 central professional assumptions this section's assessment rests on]</p> Rules: - Professional assumptions only; no meta-notes about sources, prompting or data availability. - 2-3 sentences at most. - The assumptions must carry THIS section's statements: quantities, utilisation, time required, prices, preconditions. A sentence that would fit any other section explains nothing.
+- FORBIDDEN are generalities about market environment, team size or regulation. Those appear elsewhere in the report and justify no single statement of this section.
+- Word them so that a reader could refute them.
 
 FORMAT: HTML fragment. Use a table for the industry benchmark.
 Sources at the end as <div class="sources">.""",
@@ -354,7 +358,9 @@ TRADE-OFF FIELD (MANDATORY IN TABLES): Add a short "Trade-off" field to every pr
 
 SCENARIO COLUMN (MANDATORY IN ROADMAP TABLES): Add a compact "Path" column to roadmap and prioritization tables with exactly one of three values: - "Minimal" — the safe entry, lowest effort - "Standard" — the recommended implementation under normal conditions - "Scale-up" — the ambitious path at high implementation maturity Assign each measure to exactly one path. No new calculation models, no new figures — classification only.
 
-ASSUMPTIONS PARAGRAPH (MANDATORY AT SECTION END): At the end of the section, before the source block (if any), insert exactly one short paragraph: <p><strong>Assumptions:</strong> [1-3 central professional assumptions this section's assessment rests on]</p> Rules: - Professional assumptions only; no meta-notes about sources, prompting or data availability. - 2-3 sentences at most. - Example: "Assumptions: Stable market environment over the next 12 months; current team size remains unchanged; no regulatory tightening beyond the EU AI Act."
+ASSUMPTIONS PARAGRAPH (MANDATORY AT SECTION END): At the end of the section, before the source block (if any), insert exactly one short paragraph: <p><strong>Assumptions:</strong> [1-3 central professional assumptions this section's assessment rests on]</p> Rules: - Professional assumptions only; no meta-notes about sources, prompting or data availability. - 2-3 sentences at most. - The assumptions must carry THIS section's statements: quantities, utilisation, time required, prices, preconditions. A sentence that would fit any other section explains nothing.
+- FORBIDDEN are generalities about market environment, team size or regulation. Those appear elsewhere in the report and justify no single statement of this section.
+- Word them so that a reader could refute them.
 
 FORMAT: HTML fragment. Use a table for the prioritization matrix.
 Traffic-light colors as CSS classes or inline styles.""",
@@ -632,7 +638,9 @@ LANGUAGE PATTERNS:
 
 TRADE-OFFS (MANDATORY): Name at least one real trade-off for every major recommendation. Examples: speed vs. quality, automation vs. control, data protection vs. convenience, standardization vs. individuality, investment today vs. benefit later. State trade-offs briefly in the body text, without an extra box. FORBIDDEN: presenting measures as free, risk-free or without tension.
 
-ASSUMPTIONS PARAGRAPH (MANDATORY AT SECTION END): At the end of the section, before the source block (if any), insert exactly one short paragraph: <p><strong>Assumptions:</strong> [1-3 central professional assumptions this section's assessment rests on]</p> Rules: - Professional assumptions only; no meta-notes about sources, prompting or data availability. - 2-3 sentences at most. - Example: "Assumptions: Stable market environment over the next 12 months; current team size remains unchanged; no regulatory tightening beyond the EU AI Act."
+ASSUMPTIONS PARAGRAPH (MANDATORY AT SECTION END): At the end of the section, before the source block (if any), insert exactly one short paragraph: <p><strong>Assumptions:</strong> [1-3 central professional assumptions this section's assessment rests on]</p> Rules: - Professional assumptions only; no meta-notes about sources, prompting or data availability. - 2-3 sentences at most. - The assumptions must carry THIS section's statements: quantities, utilisation, time required, prices, preconditions. A sentence that would fit any other section explains nothing.
+- FORBIDDEN are generalities about market environment, team size or regulation. Those appear elsewhere in the report and justify no single statement of this section.
+- Word them so that a reader could refute them.
 
 FORMAT: HTML fragment. Use tables for budget and ROI.""",
 
