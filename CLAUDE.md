@@ -141,6 +141,14 @@ Werkzeuge ohne belegte Datenschutzlage.
   Neues von aussen hereinkommt, ohne dass ein Modell es erfindet.
   Belastbar ab etwa 30 Rückmeldungen.
 
+- Beraterstimme: Hinter der Marke steht eine Person. Der Status-Report
+  setzt `wir` seit jeher in `ich` (Ersetzungsliste in `gpt_analyze.py`,
+  tauscht aber nur Wörter — „weisen wir" wurde zu „weisen ich"). Der
+  Strategiebericht nutzt seit KIS-1283 `services/beraterstimme.py`, das
+  die Verbform mitzieht („empfehlen wir" → „empfehle ich"). Fester Text
+  in deterministischen Bausteinen vermeidet die erste Person Plural
+  ganz. Schalter: `BERATERSTIMME_ENABLED=0`.
+
 ## Werkzeuge
 
 - `scripts/compare_reports.py alt.pdf neu.pdf` — vergleicht zwei

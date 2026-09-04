@@ -9,6 +9,16 @@ import logging
 
 log = logging.getLogger(__name__)
 
+
+def beraterstimme_in_singular(html: str):
+    """KIS-1283, fail-open: Ohne den Baustein bleibt der Text, wie er ist."""
+    try:
+        from services.beraterstimme import in_singular
+        return in_singular(html)
+    except Exception as exc:  # pragma: no cover - Schutznetz
+        log.debug("[KIS-1283] Beraterstimme nicht verfuegbar: %s", exc)
+        return html, 0
+
 # ── Pass 1: Plausibilitätsprüfung für Prozentwerte ──────────────────
 
 # Kontextwörter die auf Adoptions-/Nutzungs-Metriken hindeuten
@@ -273,6 +283,17 @@ def sanitize_strategy_sections(
 
     for key in strategy_keys:
         html = sections[key]
+
+        # Pass 0a (KIS-1283): Beraterstimme in den Singular. Der
+        # Status-Report macht das seit jeher (Ersetzung in
+        # gpt_analyze.py), der Strategiebericht bisher nicht — im Lauf
+        # KIS-1267 standen darin zehn Stellen in der ersten Person
+        # Plural neben sechs im Singular. Derselbe Kunde las in einem
+        # Dokument "ich" und im anderen "wir".
+        html, _bs = beraterstimme_in_singular(html)
+        if _bs:
+            sections[key] = html
+            patches_applied += _bs
 
         # Pass 0 (KIS-1234): Ampel-Emojis -> CSS-Spans
         for _emoji, _span in _AMPEL_EMOJI_MAP:
