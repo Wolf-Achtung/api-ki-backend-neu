@@ -156,10 +156,49 @@ def rueckfaelle(text: str) -> List[Tuple[str, str, str]]:
     return treffer
 
 
+# KIS-1280: Kennzeichen der Abschluss-Seite. Sie trägt bewusst wenig Text —
+# Ausblick plus Kontaktbox sind das gewollte Ende, keine Layout-Panne.
+_ABSCHLUSS_MERKMALE = ("Website besuchen", "Kontakt aufnehmen")
+
+
+def ist_abschluss_seite(text: str) -> bool:
+    """Trägt die Seite die Kontaktbox (Handlungsaufruf am Berichtsende)?"""
+    return all(m in text for m in _ABSCHLUSS_MERKMALE)
+
+
+def wiederholte_annahmen(text: str) -> List[Tuple[str, int]]:
+    """Annahmen-Absätze, die wörtlich mehrfach im Bericht stehen.
+
+    KIS-1280: Der Strategiebericht verlangt je Abschnitt einen Absatz
+    „Annahmen:". Im Lauf KIS-1265 stand dreimal wörtlich derselbe Satz —
+    „Stabiles Marktumfeld …; aktuelle Teamgröße bleibt bestehen; keine
+    regulatorischen Verschärfungen". Das ist eine Leerformel: Sie trägt
+    keine einzige Zahl des Abschnitts und wäre für jedes Unternehmen
+    gleich richtig. Der Leser überblättert sie beim zweiten Mal, und mit
+    ihr die Stellen, an denen echte Annahmen stehen.
+    """
+    absaetze = re.findall(r"Annahmen:\s*(.{40,400}?)(?=\s*(?:Quellen?:|Seite\s+\d))",
+                          re.sub(r"\s+", " ", text))
+    zaehler: Dict[str, int] = {}
+    for a in absaetze:
+        schluessel = a.strip().lower()
+        zaehler[schluessel] = zaehler.get(schluessel, 0) + 1
+    return [(a, n) for a, n in zaehler.items() if n > 1]
+
+
 def duenne_seiten(seiten: List[str]) -> List[Tuple[int, int]]:
-    """(Seitenzahl, Zeichen) für jede Seite unter der PLATIN-QA-Schwelle."""
+    """(Seitenzahl, Zeichen) für jede Seite unter der PLATIN-QA-Schwelle.
+
+    KIS-1280: Die Abschluss-Seite zählt nicht mit. Im Lauf KIS-1265 trug
+    Seite 8 der Potenzialanalyse 348 Zeichen — Ausblick und Kontaktbox,
+    also genau das vorgesehene Ende. Im Lauf davor waren es 790 Zeichen,
+    weil zufällig noch eine Handlung mit drauf gerutscht war. Beide Male
+    dieselbe Seite, dieselbe Absicht. Eine Prüfung, die je nach Textlänge
+    mal meldet und mal nicht, bringt niemandem etwas: Man gewöhnt sich
+    das Wegsehen an, und dann übersieht man die echte leere Seite.
+    """
     return [(i, len(t.strip())) for i, t in enumerate(seiten, 1)
-            if len(t.strip()) < THIN_PAGE_ZEICHEN]
+            if len(t.strip()) < THIN_PAGE_ZEICHEN and not ist_abschluss_seite(t)]
 
 
 # =========================================================================
@@ -216,6 +255,14 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"- Seite {nr}: {zeichen} Zeichen (Schwelle {THIN_PAGE_ZEICHEN})")
     else:
         print("Keine.")
+
+    doppelt = wiederholte_annahmen(neu_text)
+    if doppelt:
+        print("\n## Wiederholte Annahmen\n")
+        for satz, anzahl in doppelt:
+            print(f"- {anzahl}× wörtlich gleich: „{satz[:110]}…\"")
+        print("\nAnnahmen sollen die Zahlen ihres Abschnitts tragen. "
+              "Ein Satz, der überall passt, erklärt nirgends etwas.")
 
     treffer = rueckfaelle(neu_text)
     print("\n## Rückfall-Prüfung\n")

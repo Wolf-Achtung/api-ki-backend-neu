@@ -430,7 +430,12 @@ Für JEDE der 3 Strategien liefere:
 4. Preismodell — konkreter Preisvorschlag in € (Spanne oder Festpreis)
 5. KI-Hebel — welche KI-Tools/Prozesse ermöglichen das?
 6. Erster Validierungsschritt — 1 konkreter Test (maximal 2 Wochen, maximal 500 €)
-7. Umsatzprojektion — konservative Schätzung: Monatsumsatz nach 6 Monaten
+7. Umsatzprojektion — konservative Schätzung: Monatsumsatz nach 6 Monaten.
+   PFLICHT: Nenne im selben Satz die Menge, aus der sich die Zahl ergibt
+   (Aufträge je Monat, Abonnenten, Auslastung, Workshop-Termine).
+   Richtig: „voraussichtlich 10.000 € im Monat, bei 4–6 Aufträgen".
+   Falsch:  „voraussichtlich 10.000 € im Monat."
+   Eine Umsatzzahl ohne ihre Menge ist eine Behauptung, keine Schätzung.
 
 Gib abschließend eine Empfehlung: Welche Strategie zuerst, warum, und wie die drei aufeinander aufbauen.
 
@@ -452,6 +457,15 @@ REGELN:
 - Wenn der Kunde „nur lokal" als Guardrail hat: KEINE Cloud-Tools als Hauptempfehlung
 
 ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section genau einen kurzen Absatz ein: <p><strong>Annahmen:</strong> [1-3 zentrale fachliche Annahmen, auf denen die Umsatzprojektionen beruhen]</p> Maximal 2-3 Sätze.
+Die Annahmen müssen die ZAHLEN dieser Section tragen: Menge, Auslastung,
+Preis, Gewinnungsrate. Allgemeine Sätze über Marktumfeld, Teamgröße oder
+Regulierung gehören NICHT hierher — sie stehen bereits in anderen
+Abschnitten und erklären keine einzige Umsatzzahl.
+Richtig: „Je Auftrag rechnen wir mit zwei Tagen Aufwand; die Auslastung
+liegt bei vier Aufträgen im Monat; der Abo-Preis liegt in der Mitte der
+genannten Spanne."
+Falsch: „Stabiles Marktumfeld in den nächsten 12 Monaten; aktuelle
+Teamgröße bleibt bestehen; keine regulatorischen Verschärfungen."
 
 FORMAT: HTML-Fragment. Verwende für die Strategien jeweils eine eigene <h3>-Überschrift und strukturierte Absätze. Nutze eine abschließende Tabelle für die Übersicht aller 3 Strategien (Name, Zeithorizont, Preismodell, Umsatzprojektion).""",
 
