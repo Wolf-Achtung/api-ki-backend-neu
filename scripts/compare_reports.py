@@ -209,6 +209,25 @@ def ist_abschluss_seite(text: str) -> bool:
     return all(m in text for m in _ABSCHLUSS_MERKMALE)
 
 
+# KIS-1285: Der Score gehört auf das Deckblatt. Im Lauf 1269 fehlte er im
+# Strategiebericht — eine CSS-Regel war zerstört, die Box rutschte aus einem
+# overflow:hidden. Das Skript meldete zwar die dünne Seite 1, aber niemand
+# las das als "die Kennzahl ist weg". Deshalb sagt es das jetzt selbst.
+_SCORE_AUF_SEITE_RE = re.compile(r"\b\d{1,3}\s*/\s*100\b")
+
+
+def fehlende_deckblatt_kennzahl(seiten: List[str]) -> Optional[str]:
+    """Fehlt auf Seite 1 der Score (»79 / 100«)?"""
+    if not seiten:
+        return None
+    if _SCORE_AUF_SEITE_RE.search(seiten[0]):
+        return None
+    if not _SCORE_AUF_SEITE_RE.search("\n".join(seiten)):
+        return None  # Report ohne Score — kein Deckblatt-Befund
+    return ("Auf Seite 1 fehlt der Score (»79 / 100«), im Bericht steht er. "
+            "Prüfen, ob eine CSS-Regel den Score-Ring leer laufen lässt.")
+
+
 def wiederholte_annahmen(text: str) -> List[Tuple[str, int]]:
     """Annahmen-Absätze, die wörtlich mehrfach im Bericht stehen.
 
@@ -306,6 +325,11 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"- {anzahl}× wörtlich gleich: „{satz[:110]}…\"")
         print("\nAnnahmen sollen die Zahlen ihres Abschnitts tragen. "
               "Ein Satz, der überall passt, erklärt nirgends etwas.")
+
+    fehlt = fehlende_deckblatt_kennzahl(neu_seiten)
+    if fehlt:
+        print("\n## Deckblatt\n")
+        print(f"- {fehlt}")
 
     treffer = rueckfaelle(neu_text)
     print("\n## Rückfall-Prüfung\n")

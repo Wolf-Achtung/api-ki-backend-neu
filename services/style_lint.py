@@ -69,6 +69,39 @@ def normalize_currency_spacing(html: str) -> Tuple[str, int]:
 #
 # Nur in Textknoten — "width:80%" in einem style-Attribut wuerde sonst
 # zerstoert. Ausgenommen bleibt "%ig" ("100%ige Tochter").
+#
+# KIS-1285: Der Inhalt von <style> und <script> steht zwischen zwei Tags und
+# ist fuer einen Tag-Splitter ein Textknoten wie jeder andere. Im Lauf 1269
+# wurde daraus
+#     .cover-score-content { top: 50 %; left: 50 %; }
+# Chromium verwirft solche Deklarationen still. Die Box verlor ihre absolute
+# Zentrierung, rutschte aus dem overflow:hidden des Score-Rings — und das
+# Deckblatt des Strategieberichts zeigte keinen Score mehr. Beide Elemente
+# werden deshalb uebersprungen.
+_CODE_OPEN_RE = re.compile(r"<\s*(?:style|script)\b", re.IGNORECASE)
+_CODE_CLOSE_RE = re.compile(r"<\s*/\s*(?:style|script)\s*>", re.IGNORECASE)
+
+
+def textknoten(parts: List[str]):
+    """Indizes der echten Textknoten aus einem _TAG_SPLIT_RE-Ergebnis.
+
+    Uebersprungen werden Tags und der Inhalt von <style>/<script>. Ein
+    Tag-Splitter sieht CSS und JavaScript sonst als gewoehnlichen Text —
+    und jede Ersetzung darin erzeugt still ungueltigen Code (KIS-1285).
+    """
+    im_code = False
+    for i, part in enumerate(parts):
+        if not part:
+            continue
+        if part.startswith("<"):
+            if _CODE_CLOSE_RE.match(part):
+                im_code = False
+            elif _CODE_OPEN_RE.match(part) and not part.rstrip().endswith("/>"):
+                im_code = True
+            continue
+        if im_code:
+            continue
+        yield i, part
 _NBSP = " "
 _PERCENT_SPACE_RE = re.compile(
     r"(\d)[ \t  ]*%(?![\wÄÖÜäöüß])"
@@ -76,15 +109,16 @@ _PERCENT_SPACE_RE = re.compile(
 
 
 def normalize_percent_spacing(html: str) -> Tuple[str, int]:
-    """Erzwingt "<Ziffer>&nbsp;%" in Textknoten (DIN 5008)."""
+    """Erzwingt "<Ziffer>&nbsp;%" in Textknoten (DIN 5008).
+
+    Tags, Attribute und der Inhalt von <style>/<script> bleiben unberührt.
+    """
     if not html or "%" not in html:
         return html, 0
     parts = _TAG_SPLIT_RE.split(html)
     count = 0
     ziel = _NBSP + "%"
-    for i, part in enumerate(parts):
-        if not part or part.startswith("<"):
-            continue
+    for i, part in textknoten(parts):
 
         def _repl(m: "re.Match[str]") -> str:
             nonlocal count
@@ -117,9 +151,7 @@ def fix_missing_sentence_space(html: str) -> Tuple[str, int]:
         return html, 0
     parts = _TAG_SPLIT_RE.split(html)
     count = 0
-    for i, part in enumerate(parts):
-        if not part or part.startswith("<"):
-            continue
+    for i, part in textknoten(parts):
         new_part, n = _SENTENCE_SPACE_RE.subn(r"\1 ", part)
         if n:
             parts[i] = new_part
@@ -144,9 +176,7 @@ def fix_decimal_comma_units(html: str) -> Tuple[str, int]:
         return html, 0
     parts = _TAG_SPLIT_RE.split(html)
     count = 0
-    for i, part in enumerate(parts):
-        if not part or part.startswith("<"):
-            continue
+    for i, part in textknoten(parts):
         new_part, n = _DECIMAL_UNIT_RE.subn(r"\1,\2", part)
         if n:
             parts[i] = new_part
@@ -332,9 +362,7 @@ def fix_misc_typography(html: str) -> Tuple[str, int]:
         return html, 0
     parts = _TAG_SPLIT_RE.split(html)
     count = 0
-    for i, part in enumerate(parts):
-        if not part or part.startswith("<"):
-            continue
+    for i, part in textknoten(parts):
         new_part, n1 = _AMPEL_NOSPACE_RE.subn("● ", part)
         new_part, n2 = _CAMEL_COMPOUND_RE.subn("k", new_part)
         new_part, n3 = _TITLE_MONAT_GLUE_RE.subn(r" · \1", new_part)
@@ -353,9 +381,7 @@ def fix_double_periods(html: str) -> Tuple[str, int]:
         return html, 0
     parts = _TAG_SPLIT_RE.split(html)
     count = 0
-    for i, part in enumerate(parts):
-        if not part or part.startswith("<"):
-            continue
+    for i, part in textknoten(parts):
         new_part, n = _DOUBLE_PERIOD_RE.subn(".", part)
         if n:
             parts[i] = new_part
@@ -372,35 +398,57 @@ def soften_table_long_words(html: str, lang: str = "de") -> Tuple[str, int]:
         return html, 0
     count = 0
 
-    def _cell(m: "re.Match[str]") -> str:
-        nonlocal count
-        # KIS-1254: Kopfzellen (th) brauchen eine niedrigere Schwelle und
-        # kürzere Segmente — "ZIELKONFLIKT" (12) und "HANDLUNGSFELD" (13)
-        # fielen durch die 14er-Schwelle und liefen in die Nachbarspalte
-        # (Lauf 1123, Strategie S. 13/31/35).
-        _is_th = m.group(1).lower().startswith("<th")
-        _word_re = _TH_LONG_WORD_RE if _is_th else _LONG_WORD_RE
-        _max_run = 6 if _is_th else 8
-        inner_parts = _TAG_SPLIT_RE.split(m.group(2))
-        for i, part in enumerate(inner_parts):
-            if not part or part.startswith("<"):
-                continue
-            if "http" in part or "@" in part or "www." in part:
-                continue
+    def _macher(kompakt: bool):
+        def _cell(m: "re.Match[str]") -> str:
+            nonlocal count
+            # KIS-1254: Kopfzellen (th) brauchen eine niedrigere Schwelle und
+            # kürzere Segmente — "ZIELKONFLIKT" (12) und "HANDLUNGSFELD" (13)
+            # fielen durch die 14er-Schwelle und liefen in die Nachbarspalte
+            # (Lauf 1123, Strategie S. 13/31/35).
+            #
+            # KIS-1285: In gehärteten Tabellen (≥5 Spalten) gilt die
+            # Kopfzeilen-Schwelle auch für Datenzellen. "Abonnement" (10) fiel
+            # durch die 14er-Schwelle und brach in der 12,5-%-Spalte
+            # strichlos zu "Abonnem ent" (Lauf 1269, Strategie S. 20).
+            _is_th = m.group(1).lower().startswith("<th")
+            _streng = _is_th or kompakt
+            _word_re = _TH_LONG_WORD_RE if _streng else _LONG_WORD_RE
+            _max_run = 6 if _streng else 8
+            inner_parts = _TAG_SPLIT_RE.split(m.group(2))
+            for i, part in enumerate(inner_parts):
+                if not part or part.startswith("<"):
+                    continue
+                if "http" in part or "@" in part or "www." in part:
+                    continue
 
-            def _word(wm: "re.Match[str]") -> str:
-                nonlocal count
-                # KIS-1238: max_run 11 → 8 für Tabellenzellen — die schmalen
-                # Spalten (Lauf 1119: "HANDLUN GSFELD") brauchen kürzere Segmente.
-                softened = _soften_word(wm.group(0), max_run=_max_run, lang=lang)
-                if softened != wm.group(0):
-                    count += 1
-                return softened
+                def _word(wm: "re.Match[str]") -> str:
+                    nonlocal count
+                    # KIS-1238: max_run 11 → 8 für Tabellenzellen — die schmalen
+                    # Spalten (Lauf 1119: "HANDLUN GSFELD") brauchen kürzere
+                    # Segmente.
+                    softened = _soften_word(
+                        wm.group(0), max_run=_max_run, lang=lang
+                    )
+                    if softened != wm.group(0):
+                        count += 1
+                    return softened
 
-            inner_parts[i] = _word_re.sub(_word, part)
-        return m.group(1) + "".join(inner_parts) + m.group(3)
+                inner_parts[i] = _word_re.sub(_word, part)
+            return m.group(1) + "".join(inner_parts) + m.group(3)
 
-    result = _TABLE_CELL_RE.sub(_cell, html)
+        return _cell
+
+    # Erst die gehärteten Tabellen mit der strengeren Schwelle. Der zweite
+    # Durchgang fasst sie nicht noch einmal an: Ein bereits getrenntes Wort
+    # zerfällt am &shy; in Teile, die keine Schwelle mehr erreichen.
+    def _table(m: "re.Match[str]") -> str:
+        tabelle = m.group(0)
+        if "data-ksj-hardened" not in tabelle.lower():
+            return tabelle
+        return _TABLE_CELL_RE.sub(_macher(True), tabelle)
+
+    result = _TABLE_BLOCK_RE.sub(_table, html)
+    result = _TABLE_CELL_RE.sub(_macher(False), result)
     return result, count
 
 
@@ -1139,9 +1187,7 @@ def normalize_brand_prose(html: str) -> Tuple[str, int]:
         return html, 0
     parts = _TAG_SPLIT_RE.split(html)
     count = 0
-    for i, part in enumerate(parts):
-        if not part or part.startswith("<"):
-            continue  # Tag/Attribut überspringen
+    for i, part in textknoten(parts):
 
         def _repl(m: "re.Match[str]") -> str:
             nonlocal count

@@ -172,6 +172,19 @@ Trennstrich mitten im Wort.
 - Bis KIS-1284 galt das alles **nur für Englisch**. Die drei EN-Läufe
   (KIS-1272/1273/1275) hielten den DE-Pfad ausdrücklich byte-identisch —
   und damit kaputt.
+- In gehärteten Tabellen gilt die Kopfzeilen-Schwelle für Trennstellen
+  (ab 10 Zeichen) auch für Datenzellen — bei 12,5 % Spaltenbreite bricht
+  sonst schon „Abonnement" strichlos (KIS-1285).
+
+## Textknoten sind nicht nur Text (KIS-1285)
+
+`_TAG_SPLIT_RE` teilt HTML an Tags. Was dazwischen liegt, gilt als Text —
+auch der Inhalt von `<style>` und `<script>`. Die Prozent-Normalisierung
+machte daraus `top: 50 %`; Chromium verwarf die Regel still, und das
+Deckblatt des Strategieberichts verlor seinen Score (Lauf 1269).
+**Jede Funktion, die auf Textknoten arbeitet, muss diese beiden Elemente
+überspringen.** Betroffen sind alle `_TAG_SPLIT_RE`-Nutzer in
+`style_lint.py` und `solo_final_pass.py`.
 
 ## Werkzeuge
 
@@ -186,9 +199,22 @@ Trennstrich mitten im Wort.
   Handprüfung scheitert (Konstanten, dynamische Namen,
   Teilzeichenketten, `_bool_env`-Helfer).
 - `POST /api/admin/testrun/replay/{briefing_id}` — erzeugt einen Lauf
-  mit identischen Antworten (kopiert auch FB2). Admin-Key jetzt per
-  Header `X-Admin-Key`; der Query-Parameter bleibt gültig, verträgt aber
-  kein `+` im Schlüssel.
+  mit identischen Antworten (kopiert auch FB2). Admin-Key per Header
+  `X-Admin-Key`; der Query-Parameter bleibt gültig, verträgt aber kein
+  `+` im Schlüssel. **Ohne `email_override` setzt der Endpunkt eine
+  Wegwerf-Adresse** (`test-replay-<zeit>@ki-sicherheit.jetzt`) — sonst
+  ginge bei jedem Testlauf eine Mail an den echten Kunden.
+
+  ```bash
+  curl -X POST \
+    -H 'X-Admin-Key: $STRATEGY_ADMIN_KEY' \
+    -H 'Content-Type: application/json' \
+    -d '{"email_override":"wolf@hohl.rocks"}' \
+    'https://api-ki-backend-neu-production.up.railway.app/api/admin/testrun/replay/<id>?force=true'
+  ```
+
+  Vorher `…/api/healthz` abfragen: Ein Deploy mitten in der Generierung
+  bricht sie ab. `?force=true` hebt die 30-Minuten-Sperre auf.
 
 ## Nicht verhandelbar
 
