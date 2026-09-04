@@ -78,6 +78,16 @@ Merkregeln:
   überschneiden, hält `tests/test_kis1278_zweite_toolliste.py` sie
   gleich. Der Seed-Pfad ist seit KIS-1278 absolut — vorher konnte ein
   anderes Arbeitsverzeichnis still die Ausweichliste aktivieren.
+- Der Werkzeug-Block im R1-Report (`VERIFIED_TOOLS_HTML`, KIS-1280)
+  rendert `tools_seed.json` deterministisch. **Regel: Ein Preis
+  erscheint nur mit `verified_at`.** Ohne Prüfdatum steht der Verweis
+  auf die Anbieterseite. Stand 04.09.2026 haben 20 von 23 Einträgen kein
+  Prüfdatum — die Lücke ist im Report sichtbar, mit Absicht.
+  Kill-Switch: `VERIFIED_TOOLS_BOX_ENABLED=0`.
+- Zwei tote Tool-Pfade (nicht gelöscht, aber ohne Wirkung):
+  `services/tools_html_output.py` hat keinen Aufrufer, und
+  `TOOLS_FUNDING_ALIGNMENT_HTML` wird erzeugt, sitzt aber in Anhang A12
+  — kein Anhang erscheint in den Berichten.
 - Toter Code gelöscht: `services/funding_engine_v2.py` (1278 Zeilen,
   2026-09-03) und `services/funding_parser.py` (101 Zeilen, 2026-09-04,
   kein Aufrufer). Es bleiben zwei Förderquellen:

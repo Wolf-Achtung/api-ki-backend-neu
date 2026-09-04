@@ -17654,6 +17654,18 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         sections.setdefault("TOOLS_FUNDING_ALIGNMENT_HTML", "")
         sections.setdefault("TOOLS_FUNDING_ALIGNMENT_COMPACT_HTML", "")
 
+    # KIS-1280: Gepflegte Werkzeugdaten sichtbar machen. Bis hierher las
+    # sie niemand — tools_html_output hat keinen Aufrufer, und der
+    # Alignment-Block sitzt in einem Anhang, den kein Bericht zeigt.
+    try:
+        from services.tools_verified_box import inject_verified_tools
+        sections = inject_verified_tools(sections, answers, lang=report_lang)
+    except ImportError:
+        log.debug("[%s] KIS-1280 tools_verified_box not available", run_id)
+    except Exception as e:
+        log.warning("[%s] ⚠️ Verified tools box failed: %s", run_id, e)
+        sections.setdefault("VERIFIED_TOOLS_HTML", "")
+
     try:
         from services.tools_starter_kits import inject_starter_kit_into_sections
         sections = inject_starter_kit_into_sections(sections, answers, lang=report_lang)

@@ -1910,6 +1910,11 @@ h1, h2, h3, h4 {
     </div>
     <div class="section-body">
         {{ KI_STACK_SUMMARY_HTML|safe }}
+        {# KIS-1280: Die gepflegten Werkzeugdaten direkt neben dem erzeugten
+           Text — Preis nur mit Prüfdatum, Datenschutzseite verlinkt. #}
+        {% if VERIFIED_TOOLS_HTML and VERIFIED_TOOLS_HTML|trim %}
+        <div style="margin-top: var(--sp-md);">{{ VERIFIED_TOOLS_HTML|safe }}</div>
+        {% endif %}
         {% if STARTER_KIT_HTML %}
         <div style="margin-top: var(--sp-md);">{{ STARTER_KIT_HTML|safe }}</div>
         {% endif %}
