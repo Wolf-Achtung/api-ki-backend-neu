@@ -105,14 +105,15 @@ def get_score_context(overall_score: int, size: str, lang: str = "de") -> Dict[s
 
     # Benchmark-relative context (kept as separate field for additional insight)
     if lang == "en":
+        # KIS-1294: internal guide values by size — say so, every time.
         if overall_score >= benchmark["top10"]:
-            benchmark_context = "You are in the Top 10% for your company size"
+            benchmark_context = "You are in the top 10% for your company size (guide value)"
         elif overall_score >= benchmark["avg"]:
-            benchmark_context = "above average for your company size"
+            benchmark_context = "above the guide value for your company size"
         elif overall_score >= benchmark["avg"] - 10:
-            benchmark_context = "on average for your company size"
+            benchmark_context = "at the guide value for your company size"
         else:
-            benchmark_context = "below average for your company size"
+            benchmark_context = "below the guide value for your company size"
 
         size_labels = {
             "solo": "Solo Consultant",
@@ -123,14 +124,16 @@ def get_score_context(overall_score: int, size: str, lang: str = "de") -> Dict[s
         }
         default_label = "Company"
     else:
+        # KIS-1294: Die Schwellen sind interne Richtwerte nach Größe, keine
+        # Messung — der Text sagt das jedes Mal dazu.
         if overall_score >= benchmark["top10"]:
-            benchmark_context = "Sie gehören zu den Top 10% für Ihre Unternehmensgröße"
+            benchmark_context = "Sie liegen über dem Richtwert für die Top 10 % Ihrer Unternehmensgröße"
         elif overall_score >= benchmark["avg"]:
-            benchmark_context = "über dem Durchschnitt für Ihre Unternehmensgröße"
+            benchmark_context = "über dem Richtwert für Ihre Unternehmensgröße"
         elif overall_score >= benchmark["avg"] - 10:
-            benchmark_context = "im Durchschnitt für Ihre Unternehmensgröße"
+            benchmark_context = "im Bereich des Richtwerts für Ihre Unternehmensgröße"
         else:
-            benchmark_context = "unter dem Durchschnitt für Ihre Unternehmensgröße"
+            benchmark_context = "unter dem Richtwert für Ihre Unternehmensgröße"
 
         size_labels = {
             "solo": "Solo-Berater",
@@ -1015,7 +1018,7 @@ def build_benchmarks_section(
     ]
     if ref and isinstance(ref, dict):
         html.append(
-            "<p class='small muted'>Referenzwerte basieren auf aktuellen Benchmarks ähnlicher Unternehmen.</p>"
+            "<p class='small muted'>Referenzwerte sind interne Richtwerte (Synthese 2024/25), keine Messung ähnlicher Unternehmen.</p>"
         )
     return "\n".join(html)
 

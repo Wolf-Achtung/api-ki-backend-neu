@@ -16,9 +16,10 @@ BRANCHENBEZEICHNUNG-REGEL:
 Die Branchenbezeichnung "{{BRANCHE_LABEL}}" darf MAXIMAL 2x im gesamten Text vorkommen.
 Ab der 3. Verwendung NUR noch Kurzformen: "Ihr Unternehmen", "Ihre Branche", "Ihr Geschäftsfeld".
 
-ZWECK: Vergleich mit Branchendurchschnitt und Top 10%.
+ZWECK: Einordnung des Scores gegen interne Richtwerte (Ø-Richtwert und Top-10-%-Richtwert).
 
-BENCHMARK-ZAHLEN (NICHT ÄNDERN!):
+RICHTWERTE (NICHT ÄNDERN!) — interne Synthese, keine Messung, keine Studie (KIS-1294).
+Nenne sie im Text „Richtwert", nie „Branchendurchschnitt", „Studie" oder „Assessments":
   Gesamt: Ø 65, Top 10% = 82
   Befähigung: Ø 68, Top 10% = 85
   Governance: Ø 58, Top 10% = 78
@@ -26,9 +27,9 @@ BENCHMARK-ZAHLEN (NICHT ÄNDERN!):
   Wertschöpfung: Ø 70, Top 10% = 88
 
 SCORE-LOGIK:
-  > Top 10% → „stark über Branchenniveau"
-  zwischen Ø und Top 10% → „über Branchenniveau"
-  < Ø → „unter Branchendurchschnitt"
+  > Top 10% → „deutlich über dem Richtwert"
+  zwischen Ø und Top 10% → „über dem Richtwert"
+  < Ø → „unter dem Richtwert"
 
 PERSONA-VARIATIONEN (SIZE-AWARE STRATEGIE):
 - solo: persönliche Routinen, pragmatische Standards, direkte Nutzeneffekte
@@ -76,7 +77,7 @@ WETTBEWERBSTIEFE (PFLICHT):
 (a) KONKRETE WETTBEWERBSPOSITION: Ordne die Score-Vergleichswerte (Ø vs. Top 10%) nicht nur tabellarisch, sondern im Fließtext ein: „In der Kategorie [X] liegen Sie [über/unter] dem Durchschnitt — das bedeutet konkret: [was das Unternehmen bereits kann / wo es zurückliegt]." Pro Score-Kategorie 1 Satz Einordnung.
 (b) DIFFERENZIERUNGSHEBEL DURCH KI: Formuliere mindestens einen konkreten Differenzierungshebel — wie kann KI dieses Unternehmen von Wettbewerbern abheben? Basierend auf den Stärken aus der Score-Tabelle. Muster: „Ihre Stärke in [Kategorie] ermöglicht es, [konkreter Vorteil] schneller als Wettbewerber zu erreichen."
 (c) DRINGLICHKEITSDIMENSION (realistisch, nicht alarmistisch): Ergänze in der Überholungs-Strategie einen konkreten Hinweis, was bei Nicht-Handeln passiert. Formulierung mit Unsicherheits-Hedge: „Erfahrungsgemäß ist zu erwarten, dass Wettbewerber, die [konkreter Schritt] umsetzen, einen Vorsprung aufbauen, der sich [konkrete Konsequenz]."
-CONSTRAINT: Keine erfundenen Marktanteile oder Adoptionszahlen. Bestehende Benchmark-Zahlen (Ø 65, Top 10% = 82 etc.) unverändert.
+CONSTRAINT: Keine erfundenen Marktanteile oder Adoptionszahlen. Bestehende Richtwerte (Ø 65, Top 10% = 82 etc.) unverändert.
 
 CONFIDENCE-HINWEIS (BEI BEDARF): Wo Datenlage oder Marktvergleich erkennbar unsicher ist (z.B. regionale Benchmarks, branchenspezifische Studien, Förderprogramm-Verfügbarkeit), füge einen kurzen Absatz ein: <p><strong>Wichtig:</strong> Diese Einordnung ist belastbar in der Richtung, aber einzelne Markt- oder Wettbewerbsdetails können je nach Region, Segment und Aktualität abweichen.</p> Nutze diesen Hinweis nur dort, wo tatsächlich Unsicherheit besteht — nicht pauschal in jeder Section.
 
@@ -87,17 +88,17 @@ ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section, vor dem Qu
   <h2>Wettbewerb &amp; Benchmarking</h2>
 
   <p>
-    <strong>Datenbasis:</strong> Benchmark aus 30 Assessments in
+    <strong>Datenbasis:</strong> Interne Richtwerte (Synthese 2024/25, keine Messung) für
     <strong>{{BRANCHE_LABEL}}</strong>, Stand <strong>{{report_date}}</strong>.
   </p>
 
-  <h3>Score-Vergleich (Unternehmen vs. Branche)</h3>
+  <h3>Score-Vergleich (Unternehmen vs. Richtwert)</h3>
   <table class="table">
     <thead>
       <tr>
         <th>Kategorie</th>
         <th>Ihr Score</th>
-        <th>Ø Branche</th>
+        <th>Ø-Richtwert</th>
         <th>Top&nbsp;10%</th>
         <th>Position</th>
       </tr>
@@ -110,9 +111,9 @@ ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section, vor dem Qu
         <td>82</td>
         <td>
           <!-- automatisch ableitbar -->
-          {% if (score_gesamt|default(0)) > 82 %}stark über Branchenniveau
-          {% elif (score_gesamt|default(0)) > 65 %}über Branchenniveau
-          {% else %}unter Branchendurchschnitt{% endif %}
+          {% if (score_gesamt|default(0)) > 82 %}deutlich über dem Richtwert
+          {% elif (score_gesamt|default(0)) > 65 %}über dem Richtwert
+          {% else %}unter dem Richtwert{% endif %}
         </td>
       </tr>
 
@@ -122,9 +123,9 @@ ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section, vor dem Qu
         <td>68</td>
         <td>85</td>
         <td>
-          {% if (score_befaehigung|default(0)) > 85 %}stark über Branchenniveau
-          {% elif (score_befaehigung|default(0)) > 68 %}über Branchenniveau
-          {% else %}unter Branchendurchschnitt{% endif %}
+          {% if (score_befaehigung|default(0)) > 85 %}deutlich über dem Richtwert
+          {% elif (score_befaehigung|default(0)) > 68 %}über dem Richtwert
+          {% else %}unter dem Richtwert{% endif %}
         </td>
       </tr>
 
@@ -134,9 +135,9 @@ ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section, vor dem Qu
         <td>58</td>
         <td>78</td>
         <td>
-          {% if (score_governance|default(0)) > 78 %}stark über Branchenniveau
-          {% elif (score_governance|default(0)) > 58 %}über Branchenniveau
-          {% else %}unter Branchendurchschnitt{% endif %}
+          {% if (score_governance|default(0)) > 78 %}deutlich über dem Richtwert
+          {% elif (score_governance|default(0)) > 58 %}über dem Richtwert
+          {% else %}unter dem Richtwert{% endif %}
         </td>
       </tr>
 
@@ -146,9 +147,9 @@ ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section, vor dem Qu
         <td>62</td>
         <td>80</td>
         <td>
-          {% if (score_sicherheit|default(0)) > 80 %}stark über Branchenniveau
-          {% elif (score_sicherheit|default(0)) > 62 %}über Branchenniveau
-          {% else %}unter Branchendurchschnitt{% endif %}
+          {% if (score_sicherheit|default(0)) > 80 %}deutlich über dem Richtwert
+          {% elif (score_sicherheit|default(0)) > 62 %}über dem Richtwert
+          {% else %}unter dem Richtwert{% endif %}
         </td>
       </tr>
 
@@ -158,9 +159,9 @@ ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section, vor dem Qu
         <td>70</td>
         <td>88</td>
         <td>
-          {% if (score_nutzen|default(0)) > 88 %}stark über Branchenniveau
-          {% elif (score_nutzen|default(0)) > 70 %}über Branchenniveau
-          {% else %}unter Branchendurchschnitt{% endif %}
+          {% if (score_nutzen|default(0)) > 88 %}deutlich über dem Richtwert
+          {% elif (score_nutzen|default(0)) > 70 %}über dem Richtwert
+          {% else %}unter dem Richtwert{% endif %}
         </td>
       </tr>
     </tbody>
@@ -168,41 +169,41 @@ ANNAHMEN-ABSATZ (PFLICHT AM SECTION-ENDE): Füge am Ende der Section, vor dem Qu
 
   <h3>Ihre größten Gaps</h3>
   <p>
-    Die folgenden Bereiche zeigen den größten Abstand zum Branchendurchschnitt und bieten
+    Die folgenden Bereiche zeigen den größten Abstand zum Richtwert und bieten
     entsprechend hohes Verbesserungspotenzial:
   </p>
   <ul>
     {% if (score_befaehigung|default(0)) < 68 %}
-      <li><strong>Befähigung:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_befaehigung|default(0)}} vs. 68).</li>
+      <li><strong>Befähigung:</strong> deutlicher Rückstand gegenüber dem Ø-Richtwert ({{score_befaehigung|default(0)}} vs. 68).</li>
     {% endif %}
     {% if (score_governance|default(0)) < 58 %}
-      <li><strong>Governance:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_governance|default(0)}} vs. 58).</li>
+      <li><strong>Governance:</strong> deutlicher Rückstand gegenüber dem Ø-Richtwert ({{score_governance|default(0)}} vs. 58).</li>
     {% endif %}
     {% if (score_sicherheit|default(0)) < 62 %}
-      <li><strong>Sicherheit:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_sicherheit|default(0)}} vs. 62).</li>
+      <li><strong>Sicherheit:</strong> deutlicher Rückstand gegenüber dem Ø-Richtwert ({{score_sicherheit|default(0)}} vs. 62).</li>
     {% endif %}
     {% if (score_nutzen|default(0)) < 70 %}
-      <li><strong>Wertschöpfung:</strong> deutlicher Rückstand gegenüber dem Branchen-Ø ({{score_nutzen|default(0)}} vs. 70).</li>
+      <li><strong>Wertschöpfung:</strong> deutlicher Rückstand gegenüber dem Ø-Richtwert ({{score_nutzen|default(0)}} vs. 70).</li>
     {% endif %}
   </ul>
 
   <h3>Ihre stärksten Stärken</h3>
   <p>
-    Diese Bereiche liegen erkennbar über dem Branchendurchschnitt und können als
+    Diese Bereiche liegen erkennbar über dem Richtwert und können als
     Fundament für weitere Entwicklung dienen:
   </p>
   <ul>
     {% if (score_befaehigung|default(0)) > 68 %}
-      <li><strong>Befähigung:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_befaehigung|default(0)}} vs. 68).</li>
+      <li><strong>Befähigung:</strong> erkennbarer Vorsprung vor dem Ø-Richtwert ({{score_befaehigung|default(0)}} vs. 68).</li>
     {% endif %}
     {% if (score_governance|default(0)) > 58 %}
-      <li><strong>Governance:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_governance|default(0)}} vs. 58).</li>
+      <li><strong>Governance:</strong> erkennbarer Vorsprung vor dem Ø-Richtwert ({{score_governance|default(0)}} vs. 58).</li>
     {% endif %}
     {% if (score_sicherheit|default(0)) > 62 %}
-      <li><strong>Sicherheit:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_sicherheit|default(0)}} vs. 62).</li>
+      <li><strong>Sicherheit:</strong> erkennbarer Vorsprung vor dem Ø-Richtwert ({{score_sicherheit|default(0)}} vs. 62).</li>
     {% endif %}
     {% if (score_nutzen|default(0)) > 70 %}
-      <li><strong>Wertschöpfung:</strong> erkennbarer Vorsprung vor dem Branchendurchschnitt ({{score_nutzen|default(0)}} vs. 70).</li>
+      <li><strong>Wertschöpfung:</strong> erkennbarer Vorsprung vor dem Ø-Richtwert ({{score_nutzen|default(0)}} vs. 70).</li>
     {% endif %}
   </ul>
 

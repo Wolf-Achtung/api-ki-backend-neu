@@ -1,65 +1,65 @@
 {
   "last_updated": "2025-11-10",
   "schema": 1,
-  "notes": "Konservative Richtwerte (Ø=Durchschnitt; Top‑25%=oberes Quartil) – Meta‑Benchmark 2024/25; für Projekte bitte kalibrieren.",
+  "notes": "Interne Richtwerte (Ø = Richtwert Durchschnitt; Top-25 % = Richtwert oberes Quartil), Synthese 2024/25 — keine Messung, keine benannte Studie. KIS-1294: Der Report nennt sie Richtwert.",
   "marketing & werbung": {
     "avg": 45,
     "top25": 64,
-    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+    "source": "Richtwert — interne Synthese 2024/25, keine Messung"
   },
   "beratung & dienstleistungen": {
     "avg": 42,
     "top25": 60,
-    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+    "source": "Richtwert — interne Synthese 2024/25, keine Messung"
   },
   "it & software": {
     "avg": 58,
     "top25": 76,
-    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+    "source": "Richtwert — interne Synthese 2024/25, keine Messung"
   },
   "finanzen & versicherungen": {
     "avg": 48,
     "top25": 68,
-    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+    "source": "Richtwert — interne Synthese 2024/25, keine Messung"
   },
   "handel & e-commerce": {
     "avg": 46,
     "top25": 66,
-    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+    "source": "Richtwert — interne Synthese 2024/25, keine Messung"
   },
   "bildung": {
     "avg": 38,
     "top25": 58,
-    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+    "source": "Richtwert — interne Synthese 2024/25, keine Messung"
   },
   "verwaltung": {
     "avg": 35,
     "top25": 54,
-    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+    "source": "Richtwert — interne Synthese 2024/25, keine Messung"
   },
   "gesundheit & pflege": {
     "avg": 36,
     "top25": 56,
-    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+    "source": "Richtwert — interne Synthese 2024/25, keine Messung"
   },
   "bauwesen & architektur": {
     "avg": 37,
     "top25": 57,
-    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+    "source": "Richtwert — interne Synthese 2024/25, keine Messung"
   },
   "medien & kreativwirtschaft": {
     "avg": 44,
     "top25": 62,
-    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+    "source": "Richtwert — interne Synthese 2024/25, keine Messung"
   },
   "industrie & produktion": {
     "avg": 50,
     "top25": 70,
-    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+    "source": "Richtwert — interne Synthese 2024/25, keine Messung"
   },
   "transport & logistik": {
     "avg": 41,
     "top25": 61,
-    "source": "Meta‑Benchmark 2024/25 (interne Synthese)"
+    "source": "Richtwert — interne Synthese 2024/25, keine Messung"
   }
 }

@@ -39,7 +39,7 @@ class TestWettbewerbBenchmarkTemplate:
         assert "75" in result  # score_gesamt
         assert "70" in result  # score_befaehigung
         assert "IT & Software" in result
-        assert "über Branchenniveau" in result  # 75 > 65
+        assert "über dem Richtwert" in result  # 75 > 65
 
     def test_render_with_missing_scores_uses_defaults(self, tmp_path):
         """Template renders without error when scores are missing (uses defaults)."""
@@ -59,7 +59,7 @@ class TestWettbewerbBenchmarkTemplate:
         result = load_prompt("wettbewerb_benchmark", lang="de", vars_dict=vars_dict)
 
         # Should render with default(0) values
-        assert "unter Branchendurchschnitt" in result  # 0 < 65
+        assert "unter dem Richtwert" in result  # 0 < 65
         assert "Marketing" in result
 
     def test_render_with_zero_scores(self, tmp_path):
@@ -83,7 +83,7 @@ class TestWettbewerbBenchmarkTemplate:
         result = load_prompt("wettbewerb_benchmark", lang="de", vars_dict=vars_dict)
 
         # 0 should be displayed and classified correctly
-        assert "unter Branchendurchschnitt" in result
+        assert "unter dem Richtwert" in result
         assert "Handel" in result
 
     def test_render_with_empty_string_scores(self, tmp_path):
@@ -130,7 +130,7 @@ class TestWettbewerbBenchmarkTemplate:
         result = load_prompt("competition_benchmark", lang="en", vars_dict=vars_dict)
 
         # English template should have EN text
-        assert "significantly above industry level" in result or "above industry level" in result
+        assert "well above the guide value" in result or "above the guide value" in result
         assert "Finance" in result
 
     def test_strict_mode_no_fallback_with_valid_scores(self):
@@ -157,7 +157,7 @@ class TestWettbewerbBenchmarkTemplate:
                 "wettbewerb_benchmark", lang="de", vars_dict=vars_dict
             )
             assert "70" in result
-            assert "über Branchenniveau" in result
+            assert "über dem Richtwert" in result
 
 
 class TestScoreConditionalLogic:
@@ -182,7 +182,7 @@ class TestScoreConditionalLogic:
         }
 
         result = load_prompt("wettbewerb_benchmark", lang="de", vars_dict=vars_dict)
-        assert "stark über Branchenniveau" in result
+        assert "deutlich über dem Richtwert" in result
 
     def test_medium_score_classification(self):
         """Scores between average and Top 10% are classified correctly."""
@@ -203,7 +203,7 @@ class TestScoreConditionalLogic:
         }
 
         result = load_prompt("wettbewerb_benchmark", lang="de", vars_dict=vars_dict)
-        assert "über Branchenniveau" in result
+        assert "über dem Richtwert" in result
 
     def test_low_score_classification(self):
         """Scores below average are classified correctly."""
@@ -224,4 +224,4 @@ class TestScoreConditionalLogic:
         }
 
         result = load_prompt("wettbewerb_benchmark", lang="de", vars_dict=vars_dict)
-        assert "unter Branchendurchschnitt" in result
+        assert "unter dem Richtwert" in result
