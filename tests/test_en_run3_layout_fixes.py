@@ -141,21 +141,21 @@ class TestDeByteIdentity:
         o2, n2 = harden_wide_tables(self.DE_TABLE, lang="de")
         assert o1 == o2 and n1 == n2
 
-    def test_de_keeps_legacy_width_formula(self):
-        """DE: Keyword-Gewichte + max(6 %) + Normalisierung — unverändert."""
+    def test_de_widths_respect_content(self):
+        """KIS-1284: Die alte DE-Formel leitete die Breite allein aus der
+        Kopfzeile ab und liess 6-%-Spalten zu — rund vier Zeichen breit.
+        Jetzt traegt jede Spalte ihren laengsten unteilbaren Inhalt."""
         out, _ = harden_wide_tables(self.DE_TABLE, lang="de")
         widths = _colgroup_widths(out)
-        # Handlungsfeld default 2, Impact narrow 1, Aufwand default 2,
-        # Priorität narrow 1, Frist narrow 1 → 7 → [28.6, 14.3, 28.6, 14.3, 14.3]
-        assert widths == [
-            pytest.approx(28.6, abs=0.1), pytest.approx(14.3, abs=0.1),
-            pytest.approx(28.6, abs=0.1), pytest.approx(14.3, abs=0.1),
-            pytest.approx(14.3, abs=0.1),
-        ]
+        assert len(widths) == 5
+        assert sum(widths) == pytest.approx(100.0, abs=0.2)
+        # "bis 31.12.2026" (10 Zeichen nowrap) braucht ~15 %.
+        assert widths[4] >= 15.0, widths
 
-    def test_de_no_date_nowrap(self):
+    def test_de_date_is_nowrap(self):
+        """Lauf 1268 druckte "Bis 31.1 2.20 26" (Strategie S. 30)."""
         out, _ = harden_wide_tables(self.DE_TABLE, lang="de")
-        assert "nowrap" not in out
+        assert '<span style="white-space:nowrap">31.12.2026</span>' in out
 
 
 # --------------------------------------------------------------------------- #

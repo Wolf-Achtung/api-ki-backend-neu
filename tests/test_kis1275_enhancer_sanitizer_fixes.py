@@ -271,18 +271,19 @@ class TestMarkerRespect:
         assert "padding:4px 6px" not in out
         assert "font-size:9pt" in out
 
-    def test_only_en_compact_tables_carry_marker(self):
-        # EN kompakt (5+ Spalten) → Marker
+    def test_only_compact_tables_carry_marker(self):
+        # Kompakt (5+ Spalten) → Marker, KIS-1284 auch auf Deutsch
         out_en, _ = harden_wide_tables(PRIORITY_TABLE_5, lang="en")
         assert 'data-ksj-hardened="1"' in out_en
-        # DE → nie
         out_de, _ = harden_wide_tables(PRIORITY_TABLE_5, lang="de")
-        assert "data-ksj-hardened" not in out_de
-        # EN mit 4 Spalten (keine Kompaktierung) → kein Marker
+        assert 'data-ksj-hardened="1"' in out_de
+        # 4 Spalten (keine Kompaktierung) → kein Marker
         four = """<table><tr><th>Tool</th><th>Vendor</th><th>Function</th><th>Rating</th></tr>
 <tr><td>Copilot</td><td>Microsoft</td><td>Drafting</td><td>Good</td></tr></table>"""
         out4, _ = harden_wide_tables(four, lang="en")
         assert "data-ksj-hardened" not in out4
+        out4_de, _ = harden_wide_tables(four, lang="de")
+        assert "data-ksj-hardened" not in out4_de
 
     def test_marker_not_duplicated_on_second_pass(self):
         out1, _ = harden_wide_tables(PRIORITY_TABLE_5, lang="en")
@@ -291,7 +292,7 @@ class TestMarkerRespect:
 
 
 # --------------------------------------------------------------------------- #
-# 1c. DE bleibt byte-identisch (volle Kette, Legacy-Styling)                  #
+# 1c. DE-Kette: ab 5 Spalten gehaertet (KIS-1284), darunter Legacy-Styling    #
 # --------------------------------------------------------------------------- #
 DE_TABLE_7 = """<table><thead><tr>
 <th>Phase</th><th>Fokus</th><th>Budget</th><th>Förderquote</th><th>Frist</th>
@@ -304,22 +305,45 @@ DE_TABLE_7 = """<table><thead><tr>
 </tbody></table>"""
 
 
+DE_TABLE_4 = """<table><thead><tr>
+<th>Phase</th><th>Fokus</th><th>Budget</th><th>Pfad</th>
+</tr></thead><tbody>
+<tr><td>Grundlagen</td><td>Datenqualität</td><td>4.800 €</td><td>Standard</td></tr>
+<tr><td>Skalierung</td><td>Automatisierung</td><td>10.800 €</td><td>Scale-up</td></tr>
+</tbody></table>"""
+
+
 class TestDeByteIdentity:
-    def test_de_chain_keeps_legacy_enhancer_styles(self):
+    def test_de_chain_survives_enhancer(self):
+        """KIS-1284: Der Marker muss auch auf Deutsch halten.
+
+        Ohne ihn setzt der Enhancer font-size:10pt und padding:10px/12px
+        zurueck — genau die Werte, auf die die Spalten-Minima NICHT
+        kalibriert sind (KIS-1275, Aufgabe 1a).
+        """
         hardened, _ = harden_wide_tables(DE_TABLE_7, lang="de")
         out = enhance_strategy_html(hardened)
         table = _first_table(out)
         open_tag = re.match(r"<table\b[^>]*>", table).group(0)
-        # Legacy-Typografie unverändert (Enhancer gewinnt wie bisher)
-        assert "font-size:10pt" in open_tag
-        assert "padding:10px 12px" in table   # th
-        assert "padding:8px 12px" in table    # td
-        # Nichts aus dem EN-Pfad leakt
+        assert 'data-ksj-hardened="1"' in open_tag
+        assert "font-size:0.8" in open_tag
+        assert "font-size:10pt" not in open_tag
+        assert "padding:4px 6px" in table
+        # Deutsch trennt nur an gesetzten &shy;-Stellen.
+        assert "hyphens:manual" in table
+        assert "hyphens:auto" not in table
+        # Das Datum bleibt am Stueck.
+        assert '<span style="white-space:nowrap">31.12.2026</span>' in out
+
+    def test_de_four_cols_keep_legacy_styling(self):
+        """Unter fuenf Spalten aendert KIS-1284 nichts."""
+        hardened, _ = harden_wide_tables(DE_TABLE_4, lang="de")
+        out = enhance_strategy_html(hardened)
         assert "data-ksj-hardened" not in out
-        assert "nowrap" not in out
-        assert "hyphens" not in out
-        assert "font-size:0.8" not in out
+        assert "font-size:10pt" in out
         assert "padding:4px 6px" not in out
+        assert "hyphens" not in out
+        assert "nowrap" not in out
 
     def test_de_harden_default_and_explicit_identical(self):
         o1, n1 = harden_wide_tables(DE_TABLE_7)

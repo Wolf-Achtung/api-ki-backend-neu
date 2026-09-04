@@ -1223,13 +1223,20 @@ def render_deep_dive_html(sections: Dict[str, str],
             from services.style_lint import (
                 harden_wide_tables as _dd_hwt,
                 soften_table_long_words as _dd_shy,
+                normalize_percent_spacing as _dd_nps,
             )
+            # KIS-1284: Prozent-Abstand zuerst — die Potenzialanalyse mischte
+            # im Lauf 1268 zehnmal "80%" mit zehnmal "80 %".
+            _html, _n3 = _dd_nps(_html)
             _html, _n1 = _dd_hwt(_html, lang=_dd_lang)
             # KIS-EN2-SHY: lang durchreichen — EN-Wörter brauchen EN-Trennstellen
             # ("Rights overes-timation", EN-Testlauf 2). Default de unverändert.
             _html, _n2 = _dd_shy(_html, lang=_dd_lang)
-            if _n1 or _n2:
-                log.info("[KIS-1246][KPA] Tabellen gehärtet: colgroups/header=%d shy=%d", _n1, _n2)
+            if _n1 or _n2 or _n3:
+                log.info(
+                    "[KIS-1246][KPA] Tabellen gehärtet: colgroups/header=%d "
+                    "shy=%d percent=%d", _n1, _n2, _n3,
+                )
         except Exception:
             pass
 

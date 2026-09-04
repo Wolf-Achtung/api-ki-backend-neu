@@ -1106,6 +1106,15 @@ class ReportValidator:
         excluded = set()
 
         for key, value in self.sections.items():
+            # KIS-1284: Interne Sicherungskopien (fuehrender Unterstrich,
+            # z. B. _QUICK_WINS_PRISTINE) sind bewusst wortgleich mit ihrer
+            # Sektion und erscheinen in keinem Report. Der Redundanz-Pruefer
+            # meldete sie trotzdem — im Lauf 1268 zweimal
+            # ("QUICK_WINS_HTML, _QUICK_WINS_PRISTINE"). Zwei von fuenf
+            # moeglichen Warnungen gingen so an eine garantierte Dublette.
+            if key.startswith("_"):
+                excluded.add(key)
+                continue
             # Check if this is a shadow key with existing HTML version
             html_key = self.SHADOW_KEY_TO_HTML_MAP.get(key)
             if html_key and html_key in self.sections:
@@ -2850,7 +2859,15 @@ class ReportValidator:
                 if bl.lower() in user_scannable_lower:
                     continue
 
-                if bl in content_stripped:
+                # KIS-1284: Nicht am Bindestrich mitten in einem Eigennamen
+                # anschlagen. Der Strip-Schritt oben macht aus "Medienboard
+                # Berlin-Brandenburg" fuer einen Berliner Kunden ein
+                # "Medienboard -Brandenburg"; die reine Teilstring-Suche
+                # meldete daraufhin in JEDEM Report ein "falsches
+                # Bundesland" — fuer ein Programm, das genau so heisst
+                # (Lauf 1268, FOERDERPOTENZIAL_HTML). Dieselbe Regel wie im
+                # LOCATION-VALIDATOR (content_quality_enforcer).
+                if re.search(rf'(?<!-)\b{re.escape(bl)}\b(?!-)', content_stripped):
                     # FIX-LOCATION: WARNING only — never crash the pipeline
                     # over a Bundesland label mismatch
                     self.errors.append(

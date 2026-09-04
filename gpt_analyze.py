@@ -20039,8 +20039,17 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         # 3. ROI_12M_DISPLAY_DE - FIX-620: Show only capped value (avoids N4.3 numerical=2)
         # The raw (berechnet) value is still available in Business Case engine detail.
         roi_capped = sections.get("ROI_12M", 0)
-        roi_capped_str = _fmt_int_no_float(roi_capped)
-        sections["ROI_12M_DISPLAY_DE"] = f"{roi_capped_str} %"
+        # KIS-1284: Unter 10 % mit einer Nachkommastelle — sonst zeigen die
+        # zwei ROI-Sichten auf der Business-Case-Seite dieselbe Zahl (Lauf
+        # 1268: beide "1 %", darunter der Satz, sie unterschieden sich).
+        try:
+            from services.roi_anzeige import als_prozent as _roi_prozent
+            _roi_txt = _roi_prozent(roi_capped)
+        except Exception:  # pragma: no cover - Schutznetz
+            _roi_txt = None
+        sections["ROI_12M_DISPLAY_DE"] = (
+            _roi_txt if _roi_txt else f"{_fmt_int_no_float(roi_capped)} %"
+        )
 
         # =================================================================
         # FIX-B731: Cap ROI_P50 + PAYBACK_P50 to canonical values

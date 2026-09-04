@@ -157,13 +157,19 @@ class TestWideTableEnRun5:
         assert f"{NOWRAP}{NOWRAP}" not in out
         assert "31.12.202<span" not in out and f"{NOWRAP}12.202" not in out
 
-    def test_de_byte_identical(self):
+    def test_de_default_and_explicit_identical(self):
+        """Ohne lang-Angabe gilt Deutsch — das bleibt so.
+
+        KIS-1284: Die Haertung selbst gilt jetzt auch fuer Deutsch (Lauf
+        1268: "Bis 31.1 2.20 26" in der Fördertabelle). Deutsch bekommt
+        hyphens:manual, Englisch weiter hyphens:auto.
+        """
         o_default, n_default = harden_wide_tables(ROADMAP_TABLE_7)
         o_de, n_de = harden_wide_tables(ROADMAP_TABLE_7, lang="de")
         assert o_default == o_de and n_default == n_de
-        for needle in ("nowrap", "hyphens", "overflow-wrap",
-                       "table-layout:fixed", "font-size:0.8"):
-            assert needle not in o_de, needle
+        assert "hyphens:manual" in o_de
+        assert "hyphens:auto" not in o_de
+        assert "table-layout:fixed" in o_de
 
 
 class TestAmountNowrapUnit:
