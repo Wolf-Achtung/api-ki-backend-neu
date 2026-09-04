@@ -127,6 +127,19 @@ def build_gamechanger_context(report1_sections: Dict[str, Any],
         raw_label, size_label, report1_sections.get('UNTERNEHMENSGROESSE_LABEL'),
     )
 
+    def _sparte_label_fuer(_briefing: dict, _r1: dict) -> str:
+        try:
+            from services.medien_sparte import label as _sl
+            _lang = str(
+                (_briefing or {}).get('lang') or (_r1 or {}).get('LANG') or 'de'
+            )
+            return (
+                _sl((_briefing or {}).get('medien_sparte'), lang=_lang)
+                or _sl((_r1 or {}).get('MEDIEN_SPARTE_LABEL'), lang=_lang)
+            )
+        except Exception:  # pragma: no cover - Schutznetz
+            return ''
+
     segment_info = {
         'COMPANY_SIZE': company_size,
         'UNTERNEHMENSGROESSE_LABEL': size_label,
@@ -138,6 +151,10 @@ def build_gamechanger_context(report1_sections: Dict[str, Any],
             report1_sections.get('HAUPTLEISTUNG')
             or briefing.get('hauptleistung', '')
         ),
+        # KIS-1288: Die Sparte erreichte die Potenzialanalyse nicht
+        # (Branchen-Audit 04.09.2026). Label aus dem gemeinsamen Baustein,
+        # Sprache aus dem Briefing.
+        'MEDIEN_SPARTE_LABEL': _sparte_label_fuer(briefing, report1_sections),
         # Company name / identifier for display (NOT hauptleistung!)
         'kundencode': (
             report1_sections.get('kundencode')
@@ -786,6 +803,7 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
         'COMPANY_SIZE': context.get('COMPANY_SIZE', 'solo'),
         'UNTERNEHMENSGROESSE_LABEL': context.get('UNTERNEHMENSGROESSE_LABEL', ''),
         'BRANCHE_LABEL': context.get('BRANCHE_LABEL', ''),
+        'MEDIEN_SPARTE_LABEL': context.get('MEDIEN_SPARTE_LABEL', ''),
         'HAUPTLEISTUNG': context.get('HAUPTLEISTUNG', ''),
         'gamechanger_decision': context.get('gamechanger_decision', ''),
         'GAMECHANGER_HTML': context.get('GAMECHANGER_HTML', ''),

@@ -22,6 +22,8 @@ nächsten Handlungen zusammen, die in den nächsten 7 Tagen umsetzbar sind.
 ## KONTEXT
 - **Unternehmensgröße:** {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
 - **Branche:** {{BRANCHE_LABEL}}
+{% if MEDIEN_SPARTE_LABEL %}- **Sparte:** {{MEDIEN_SPARTE_LABEL}} — Beispiele, Werkzeuge und Risiken auf diese Sparte zuschneiden.
+{% endif %}
 - **Hauptleistung:** {{HAUPTLEISTUNG}}
 - **Strategische KI-Potenzial-Entscheidung:** {{gamechanger_decision}}
 - **Implementierungsplan Phase 1:** {{gc_implementation_plan_summary}}

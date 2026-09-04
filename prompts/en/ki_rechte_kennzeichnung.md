@@ -39,7 +39,9 @@ CONTEXT:
 - If {{MEDIEN_SPARTE_LABEL}} is present: tailor examples to the segment
   (production: cast/archive; post/VFX: reference material/upscaling sources;
   games: assets/store disclosure; publishing: text/image rights, reader
-  transparency; music/audio: voices/samples; agency: client approvals/ad labeling)
+  transparency; music/audio: voices/samples; agency: client approvals/ad labeling;
+  content creation: platform disclosure rules, personality rights in
+  voice/face, sponsorship transparency)
 - Acknowledge the client's existing guardrails ({{ki_guardrails}}) and extend
   them instead of repeating.
 
