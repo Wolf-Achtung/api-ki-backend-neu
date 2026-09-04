@@ -166,6 +166,14 @@ Trennstrich mitten im Wort.
 - **Deutsch trennt nur an gesetzten Stellen** (`hyphens:manual`).
   `hyphens:auto` erzeugt „Selbs-tbetrieb" (KIS-1244). Die Trennstellen
   setzt `soften_table_long_words` direkt danach als `&shy;`.
+- Die Trennheuristik folgt der **Silbenregel**, nicht der Wortbildung.
+  Komposita brechen deshalb manchmal eine Stelle zu spät
+  („projek-tabhängig", „Startin-vestition"). Ohne Wörterbuch ist das
+  nicht zu beheben — eine Regel, die „sch" pauschal in die Folgesilbe
+  schiebt, macht aus dem korrekten „Deutsch-land" ein „Deut-schland"
+  (geprüft am Lauf 1271, als Kommentar im Code festgehalten).
+  Unteilbare Paare (`ck`, `ch`, `ß` …) sind dagegen hart geschützt —
+  auch gegen die Onset-Regel, die die Trennstelle verschiebt (KIS-1287).
 - Reichen die Mindestbreiten nicht auf 100 %, greift die Staffel:
   Wort-Minimum auf 12 Zeichen deckeln → nur noch die harten Minima →
   gleichmäßig skalieren (mit Warnung im Log).

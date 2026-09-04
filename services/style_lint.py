@@ -313,11 +313,27 @@ def _hyphenation_points(word: str) -> List[Tuple[int, int]]:
             points.append((2, i + 1))
         elif (cur not in _VOWELS and prev_c not in _VOWELS and nxt in _VOWELS
                 and prev_c + cur not in _NO_SPLIT_PAIRS and prev_c != "c"):
+            # KIS-1287, geprüft und verworfen: Eine Regel "sch wandert als
+            # Ganzes in die Folgesilbe" repariert "Prüfsch·ritte" und
+            # "Besch·werden" (je 1x im Lauf 1271) — macht aber aus dem
+            # korrekten "Deutsch·land" (8x) ein "Deut·schland". Ob "sch"
+            # zur vorigen oder zur nächsten Silbe gehört, entscheidet die
+            # Wortbildung, nicht die Buchstabenfolge. Ohne Wörterbuch ist
+            # das nicht zu trennen, und der Tausch wäre ein Verlust.
+            #
             # Cluster: …Konsonant | Konsonant+Vokal (letzter Konsonant wandert).
             # KIS-1238: Onset-Cluster (pl, tr, …) bleiben zusammen —
             # "Kom·plexität" statt "Komp·lexität".
             if (prev_c + cur in _ONSET_PAIRS and i >= 2
-                    and lw[i - 2] not in _VOWELS):
+                    and lw[i - 2] not in _VOWELS
+                    # KIS-1287: Die Onset-Regel schiebt die Trennstelle um
+                    # eins nach vorn — und landete damit mitten in einem
+                    # unteilbaren Paar. "Entwicklung" wurde zu
+                    # "Entwic·klung" (Lauf 1271, 2x): "kl" soll zusammen-
+                    # bleiben, aber "ck" darf man nicht trennen. Greift die
+                    # Verschiebung nicht, bleibt es bei der Trennung nach
+                    # dem Cluster — "Entwick·lung", wie es der Duden setzt.
+                    and lw[i - 2] + prev_c not in _NO_SPLIT_PAIRS):
                 points.append((1, i - 1))
             else:
                 points.append((1, i))
