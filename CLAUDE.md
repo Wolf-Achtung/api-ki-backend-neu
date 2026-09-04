@@ -54,14 +54,17 @@ Merkregeln:
 
 ## Bekannte Punkte (offen, Stand 2026-09-03)
 
-- ENV-Tranche 2: `docs/env-tranche2-2026-09-03.md` — geprüft wurden die
-  273 Railway-Variablen gegen den Code, nicht umgekehrt. Ergebnis: 4
-  löschen, 1 entscheiden (`POLL_INTERVAL`). Drei Schreibweisen-Fallen:
-  Railway hat `RATE_LIMIT_PER_MINUTE`, `PROMPT_STABILITY_ENABLED`,
-  `POLL_INTERVAL` — der Code liest `REPORT_RATE_LIMIT_PER_MINUTE`,
-  `STABILITY_SCORING_ENABLED`, `WORKER_POLL_INTERVAL`. Alle drei laufen
-  auf ihrem Standardwert. Werkzeug: `scripts/env_unused.py`.
-  Löschen muss Wolf in Railway.
+- ENV-Prüfung: `docs/env-tranche2-2026-09-03.md` — 309 Railway-Variablen
+  gegen den Code geprüft. 42 löschbar, dazu `DATABASE_URL` und
+  `MISE_PYTHON_GITHUB_ATTESTATIONS` (mit keinem Dienst verbunden).
+  Vier Schreibweisen-Fallen: Railway hat `RATE_LIMIT_PER_MINUTE`,
+  `PROMPT_STABILITY_ENABLED`, `POLL_INTERVAL`, `RESEARCH_CACHE_TTL` —
+  der Code liest `REPORT_RATE_LIMIT_PER_MINUTE`,
+  `STABILITY_SCORING_ENABLED`, `WORKER_POLL_INTERVAL`,
+  `RESEARCH_CACHE_TTL_DAYS`. Alle vier laufen auf ihrem Standardwert.
+  `ENABLE_TAVILY`/`ENABLE_PERPLEXITY` sind wirkungslos — beide Dienste
+  schalten über die Anwesenheit ihres API-Schlüssels. Werkzeug:
+  `scripts/env_unused.py`. Löschen muss Wolf in Railway.
 - Tool-Daten: `data/tools_seed.json` hat 20 von 23 Einträgen ohne
   `verified_at`. Der Tool-Radar läuft (Issue #1168). Die
   Domainbeschränkung (KIS-1273) wirkt: Der Lauf vom 03.09. 22:23 lieferte
