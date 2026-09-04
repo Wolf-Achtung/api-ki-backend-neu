@@ -438,7 +438,10 @@ For EACH of the 3 strategies deliver:
 2. What exactly — the concrete offering in 2-3 sentences
 3. For whom — a specific target buyer (not generic)
 4. Pricing model — a concrete price suggestion in € (range or fixed price)
-5. AI lever — which AI tools/processes make this possible?
+5. AI lever — which AI tools/processes make this possible? As concrete
+   products ONLY tools from this list or from the client's stack:
+   {kuratierte_tools_namen}. Otherwise use a generic term ("transcription service").
+   No tool prices, no data protection ratings.
 6. First validation step — 1 concrete test (max. 2 weeks, max. 500 €)
 7. Revenue projection — conservative estimate: monthly revenue after 6 months
 
@@ -462,6 +465,9 @@ RULES:
 - If the client's guardrail is "local only": NO cloud tools as the primary recommendation
 
 ASSUMPTIONS PARAGRAPH (MANDATORY AT SECTION END): At the end of the section insert exactly one short paragraph: <p><strong>Assumptions:</strong> [1-3 central professional assumptions behind the revenue projections]</p> 2-3 sentences at most.
+
+SOURCES (KIS-1293): No invented reports or studies ("AI Readiness Report
+2024"). If no source from the input exists, omit the source line.
 
 FORMAT: HTML fragment. Give each strategy its own <h3> heading and structured paragraphs. Close with a summary table of all 3 strategies (name, time horizon, pricing model, revenue projection).""",
 

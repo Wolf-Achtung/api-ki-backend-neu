@@ -434,7 +434,10 @@ Für JEDE der 3 Strategien liefere:
 2. Was genau — konkretes Angebot in 2–3 Sätzen
 3. Für wen — spezifischer Zielkäufer (nicht generisch)
 4. Preismodell — konkreter Preisvorschlag in € (Spanne oder Festpreis)
-5. KI-Hebel — welche KI-Tools/Prozesse ermöglichen das?
+5. KI-Hebel — welche KI-Tools/Prozesse ermöglichen das? Als konkrete
+   Produkte NUR Werkzeuge aus dieser Liste oder aus dem Stack des Kunden:
+   {kuratierte_tools_namen}. Sonst Gattungsbegriff („Transkriptionsdienst").
+   Keine Werkzeugpreise, keine Datenschutz-Einstufungen.
 6. Erster Validierungsschritt — 1 konkreter Test (maximal 2 Wochen, maximal 500 €)
 7. Umsatzprojektion — konservative Schätzung: Monatsumsatz nach 6 Monaten.
    PFLICHT: Nenne im selben Satz die Menge, aus der sich die Zahl ergibt
@@ -472,6 +475,10 @@ liegt bei vier Aufträgen im Monat; der Abo-Preis liegt in der Mitte der
 genannten Spanne."
 Falsch: „Stabiles Marktumfeld in den nächsten 12 Monaten; aktuelle
 Teamgröße bleibt bestehen; keine regulatorischen Verschärfungen."
+
+QUELLEN (KIS-1293): Keine erfundenen Berichte oder Studien („KI Readiness
+Report 2024"). Wenn keine Quelle aus dem Input vorliegt, lass die
+Quellenangabe weg.
 
 FORMAT: HTML-Fragment. Verwende für die Strategien jeweils eine eigene <h3>-Überschrift und strukturierte Absätze. Nutze eine abschließende Tabelle für die Übersicht aller 3 Strategien (Name, Zeithorizont, Preismodell, Umsatzprojektion).""",
 

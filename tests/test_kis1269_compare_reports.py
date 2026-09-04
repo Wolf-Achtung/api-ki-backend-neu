@@ -162,7 +162,7 @@ class TestDuenneSeiten:
 # =========================================================================
 
 def test_alle_pruefungen_haben_namen_und_beschreibung():
-    assert len(PRUEFUNGEN) == 9  # KIS-1284: zerhackte_tabelle; KIS-1293: Stichtag, Hochrisiko
+    assert len(PRUEFUNGEN) == 10  # KIS-1284: zerhackte_tabelle; KIS-1293: Stichtag, Hochrisiko, erfundenes Werkzeug
     for name, beschreibung, pruefe in PRUEFUNGEN:
         assert name and beschreibung and callable(pruefe)
         assert pruefe("harmloser Text ohne Befund") is None

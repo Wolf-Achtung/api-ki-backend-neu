@@ -281,9 +281,18 @@ nannte den 02.08.2026 „in wenigen Wochen erreicht" — vier Wochen danach.
 - `{ai_act_risikoklasse}`: Text-, Bild-, Video- und Ton-Werkzeuge sind
   keine Hochrisiko-Systeme nach Anhang III. Hochrisiko nur über den
   Anwendungsfall, nie über das Werkzeug.
+- Nachlauf KIS1273: S4 war sauber, aber das Umsatzkapitel (S3b) nannte
+  „Adobe Sensei" als KI-Hebel — es bekam nur die Namensliste
+  `{kuratierte_tools_namen}` nach. Die R1-Fördertabelle
+  (`extra_sections.build_core_funding_table_html`) ist ein **eigener
+  Pfad** und zeigte dem VFX-Studio weiter die Games-Förderung; der
+  Sparten-Filter steht jetzt auch dort. Die Sofort-Start-Seite trug
+  feste Preise aus dem Code („25–30 €/Nutzer/Monat") — jetzt
+  `_sofort_preis`: Preis nur, wenn das Werkzeug mit `verified_at` im
+  Seed steht, sonst „siehe Anbieterseite".
 - Test: `tests/test_kis1293_strategie_fakten.py`. Wächter in
-  `scripts/compare_reports.py`: „Stichtag als Zukunft" und
-  „Standard-Werkzeug als Hochrisiko".
+  `scripts/compare_reports.py`: „Stichtag als Zukunft",
+  „Standard-Werkzeug als Hochrisiko", „erfundenes Werkzeug".
 
 ## Textknoten sind nicht nur Text (KIS-1285)
 
@@ -299,7 +308,7 @@ Deckblatt des Strategieberichts verlor seinen Score (Lauf 1269).
 
 - `scripts/compare_reports.py alt.pdf neu.pdf` — vergleicht zwei
   Report-Läufe: Kennzahlen, dünne Seiten, Rückfall-Prüfung gegen die
-  neun behobenen Fehler. Exit-Code 1 bei einem Rückfall. Seit
+  zehn behobenen Fehler. Exit-Code 1 bei einem Rückfall. Seit
   KIS-1284 prüft es auch auf zerhackte Tabellenzellen; „€/Monat" zählt
   nur mit Kontext („laufende Tool-Kosten"), sonst schlug der Preis des
   ersten Werkzeugs als OPEX-Abweichung durch.

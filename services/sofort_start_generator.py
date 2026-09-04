@@ -1899,6 +1899,35 @@ _TOOL_NUTZEN_EN = {
 }
 
 
+def _sofort_preis(tool: Dict[str, Any], is_en: bool = False) -> str:
+    """KIS-1293: Ein Preis erscheint nur mit Prüfdatum (Regel aus KIS-1280).
+
+    Die Sofort-Start-Seite trug seit jeher feste Preise („25–30 €/Nutzer/Monat")
+    aus diesem Modul — ohne Prüfdatum, ohne Pflege durch den Tool-Radar.
+    Jetzt: Steht das Werkzeug mit ``verified_at`` in ``tools_seed.json``,
+    kommt der Preis von dort; sonst der Verweis auf den Anbieter.
+    """
+    kein_preis = "see vendor site" if is_en else "siehe Anbieterseite"
+    name = str(tool.get("name") or "").strip().lower()
+    if not name:
+        return kein_preis
+    try:
+        from services.tools_recommender import _load_seed
+        from services.tools_verified_box import _parse_datum
+        for eintrag in _load_seed():
+            seed_name = str(eintrag.get("name") or "").strip().lower()
+            kern = seed_name.split(" (")[0].split(" api")[0].strip()
+            if not kern or (kern not in name and name.split(" ")[0] not in seed_name):
+                continue
+            if _parse_datum(eintrag.get("verified_at")) is None:
+                return kein_preis
+            preis = str(eintrag.get("price") or "").strip()
+            return preis or kein_preis
+    except Exception as exc:  # pragma: no cover - Schutznetz
+        log.warning("[KIS-1293] Sofort-Start-Preis nicht prüfbar: %s", exc)
+    return kein_preis
+
+
 def _translate_tool_en(tool: Dict[str, Any]) -> Dict[str, Any]:
     """Liefert eine EN-Kopie eines Tool-Eintrags (Name/URL bleiben)."""
     out = dict(tool)
@@ -2465,7 +2494,7 @@ def generate_sofort_start_html(
                 </p>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-size: 14px; font-weight: 600; color: #1e40af;">
-                        {tool["preis"]}
+                        {_sofort_preis(tool, is_en)}
                     </span>
                     <span style="font-size: 10px; color: #64748b;">
                         {tool["url"].replace("https://", "")}
