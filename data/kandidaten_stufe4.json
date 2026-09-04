@@ -1,0 +1,164 @@
+{
+  "_hinweis": "KIS-1296: Handprüfung Stufe 4. Je Eintrag: Seite öffnen, drei Felder prüfen, 'bestaetigt' auf true setzen und Felder korrigieren, wo die Vermutung falsch ist. 'preis' bleibt leer, wenn Sie den Preis nicht auf der Anbieterseite gesehen haben. Dann: python3 scripts/kandidaten_uebernehmen.py",
+  "_regel": "Vermutungen sind keine Tatsachen. Nur was Sie auf der Anbieterseite gesehen haben, kommt in die Daten.",
+  "werkzeuge": [
+    {
+      "name": "LanguageTool",
+      "url": "https://languagetool.org/de",
+      "trust_url": "https://languagetool.org/legal/privacy",
+      "category": "Korrektur / Stil",
+      "sparten": ["verlag_publishing", "agentur_design", "content_creation"],
+      "vermutung": {"sitz": "Deutschland (Potsdam)", "host": "EU", "gdpr": "EU-Anbieter (DE), AVV prüfen", "preisart": "Free / Abonnement"},
+      "pruefen": ["Impressum: Sitz und Firma", "Datenschutz: AVV oder DPA für Geschäftskunden?", "Preise: Free-Stufe und Team-Abo?"],
+      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+    },
+    {
+      "name": "DeepL Write",
+      "url": "https://www.deepl.com/de/write",
+      "trust_url": "https://www.deepl.com/de/privacy",
+      "category": "Umformulierung / Stil",
+      "sparten": ["verlag_publishing", "agentur_design", "content_creation"],
+      "vermutung": {"sitz": "Deutschland (Köln)", "host": "EU", "gdpr": "EU-Anbieter (DE), AVV verfügbar", "preisart": "Teil von DeepL Pro"},
+      "pruefen": ["Ist Write in DeepL Pro enthalten oder eigenes Abo?", "Datenschutz: AVV-Seite vorhanden?"],
+      "host": "", "gdpr": "", "preis": "", "bestaetigt": null,
+      "_hinweis": "DeepL Pro steht schon im Seed. Wenn Write darin enthalten ist: NICHT als eigenen Eintrag bestätigen, sondern 'bestaetigt': false."
+    },
+    {
+      "name": "Duden-Mentor",
+      "url": "https://www.duden.de/mentor",
+      "trust_url": "https://www.duden.de/datenschutz",
+      "category": "Korrektur nach Duden",
+      "sparten": ["verlag_publishing"],
+      "vermutung": {"sitz": "Deutschland (Cornelsen, Berlin)", "host": "EU", "gdpr": "EU-Anbieter (DE), AVV prüfen", "preisart": "Abonnement"},
+      "pruefen": ["Impressum: Cornelsen Verlag?", "Gibt es eine Unternehmenslizenz?", "Datenschutz: AVV?"],
+      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+    },
+    {
+      "name": "Auphonic",
+      "url": "https://auphonic.com/",
+      "trust_url": "https://auphonic.com/privacy",
+      "category": "Podcast-Nachbearbeitung / Pegel / Rauschen",
+      "sparten": ["musik_audio", "content_creation", "produktion"],
+      "vermutung": {"sitz": "Österreich (Wien)", "host": "EU", "gdpr": "EU-Anbieter (AT), AVV prüfen", "preisart": "Free-Stunden / Abonnement / Guthaben"},
+      "pruefen": ["Impressum: Auphonic GmbH, Wien?", "Datenschutz: AVV/DPA?", "Preise: Modell (Stunden-Guthaben oder Abo)?"],
+      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+    },
+    {
+      "name": "iZotope RX",
+      "url": "https://www.izotope.com/en/products/rx.html",
+      "trust_url": "https://www.izotope.com/en/privacy-policy.html",
+      "category": "Audio-Restauration / Rauschentfernung",
+      "sparten": ["musik_audio", "post_vfx", "produktion"],
+      "vermutung": {"sitz": "USA", "host": "lokal (Desktop-App)", "gdpr": "US-Anbieter, Verarbeitung lokal", "preisart": "Einmallizenz / Abonnement"},
+      "pruefen": ["Verarbeitet RX lokal ohne Cloud-Upload?", "Preise: Einmallizenz oder Abo?"],
+      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+    },
+    {
+      "name": "Adobe Podcast Enhance",
+      "url": "https://podcast.adobe.com/enhance",
+      "trust_url": "https://www.adobe.com/de/privacy.html",
+      "category": "Sprachverbesserung (Cloud)",
+      "sparten": ["musik_audio", "content_creation"],
+      "vermutung": {"sitz": "USA", "host": "US (Cloud)", "gdpr": "US (Adobe-AVV vorhanden)", "preisart": "Free / Teil des Creative-Cloud-Abos"},
+      "pruefen": ["Ist Enhance kostenlos oder im CC-Abo?", "Werden Dateien in die Cloud geladen?"],
+      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+    },
+    {
+      "name": "Lokalise",
+      "url": "https://lokalise.com/",
+      "trust_url": "https://lokalise.com/privacy-policy",
+      "category": "Lokalisierungs-Pipeline / KI-Übersetzung",
+      "sparten": ["games", "content_creation"],
+      "vermutung": {"sitz": "unsicher (EU-Gründung, Sitz prüfen)", "host": "unsicher", "gdpr": "prüfen", "preisart": "Abonnement je Sitz"},
+      "pruefen": ["Impressum/Footer: Firma und Land", "Datenschutz: DPA-Seite?", "Preise: pro Sitz?"],
+      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+    },
+    {
+      "name": "Crowdin",
+      "url": "https://crowdin.com/",
+      "trust_url": "https://crowdin.com/privacy",
+      "category": "Lokalisierungs-Pipeline / KI-Übersetzung",
+      "sparten": ["games", "content_creation"],
+      "vermutung": {"sitz": "unsicher (US-Gesellschaft, EU-Team)", "host": "unsicher", "gdpr": "prüfen", "preisart": "Free / Abonnement"},
+      "pruefen": ["Footer: Firma und Land", "Datenschutz: DPA?", "Preise: Modell"],
+      "host": "", "gdpr": "", "preis": "", "bestaetigt": null,
+      "_hinweis": "Lokalise ODER Crowdin reicht — beide bestätigen nur, wenn beide klar sind."
+    },
+    {
+      "name": "Scenario",
+      "url": "https://www.scenario.com/",
+      "trust_url": "https://www.scenario.com/privacy",
+      "category": "Asset-Varianten aus eigenem Stil (Games)",
+      "sparten": ["games", "agentur_design"],
+      "vermutung": {"sitz": "unsicher (USA/Frankreich)", "host": "US (Cloud)", "gdpr": "prüfen", "preisart": "Abonnement"},
+      "pruefen": ["Footer: Firma und Land", "Rechte an trainierten Modellen und Ausgaben?", "Datenschutz: DPA?"],
+      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+    },
+    {
+      "name": "Inworld AI",
+      "url": "https://inworld.ai/",
+      "trust_url": "https://inworld.ai/privacy",
+      "category": "NPC-Dialoge / Charakter-KI (Games)",
+      "sparten": ["games"],
+      "vermutung": {"sitz": "USA", "host": "US (Cloud)", "gdpr": "US (AVV prüfen)", "preisart": "nutzungsbasiert"},
+      "pruefen": ["Footer: Firma und Land", "Datenschutz: DPA?", "Store-Deklaration für KI-Inhalte nötig?"],
+      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+    },
+    {
+      "name": "Opus Clip",
+      "url": "https://www.opus.pro/",
+      "trust_url": "https://www.opus.pro/privacy",
+      "category": "Kurzformate aus Langvideo",
+      "sparten": ["content_creation", "agentur_design"],
+      "vermutung": {"sitz": "USA", "host": "US (Cloud)", "gdpr": "US (AVV prüfen)", "preisart": "Free / Abonnement"},
+      "pruefen": ["Footer: Firma und Land", "Datenschutz: DPA?", "Preise: Modell"],
+      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+    },
+    {
+      "name": "Canva Magic Studio",
+      "url": "https://www.canva.com/de_de/magic-studio/",
+      "trust_url": "https://www.canva.com/de_de/policies/privacy-policy/",
+      "category": "Grafik / Varianten / Präsentation",
+      "sparten": ["content_creation", "agentur_design", "verlag_publishing"],
+      "vermutung": {"sitz": "Australien", "host": "US/AU (Cloud)", "gdpr": "AU-Anbieter, AVV prüfen", "preisart": "Free / Abonnement je Nutzer"},
+      "pruefen": ["Datenschutz: DPA für Teams?", "Preise: Modell"],
+      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+    }
+  ],
+  "programme": [
+    {
+      "id": "initiative_musik",
+      "title": "Initiative Musik – Infrastruktur- und Exportförderung",
+      "url": "https://www.initiative-musik.de/foerderung/",
+      "provider": "Initiative Musik gGmbH (BKM)",
+      "region": "Deutschland (bundesweit)",
+      "sparten": ["musik_audio"],
+      "vermutung": {"antragsberechtigt": "Unternehmen der Musikwirtschaft, Künstler:innen, Spielstätten", "frist": "mehrere Runden/Jahr", "quote": "Zuschuss, projektabhängig"},
+      "pruefen": ["Ist ein Tonstudio als Unternehmen der Musikwirtschaft antragsberechtigt?", "Welches Teilprogramm passt (Infrastruktur, Export)?", "Nächste Frist?"],
+      "funding_rate": "", "max_amount": "", "deadline": "", "focus": "", "bestaetigt": null
+    },
+    {
+      "id": "musikfonds",
+      "title": "Musikfonds – Projektförderung",
+      "url": "https://www.musikfonds.de/",
+      "provider": "Musikfonds e. V. (BKM)",
+      "region": "Deutschland (bundesweit)",
+      "sparten": ["musik_audio"],
+      "vermutung": {"antragsberechtigt": "Künstler:innen, Ensembles, Initiativen — Unternehmen prüfen", "frist": "2 Runden/Jahr", "quote": "Zuschuss"},
+      "pruefen": ["Sind Unternehmen antragsberechtigt oder nur Künstler:innen?", "Nächste Frist?"],
+      "funding_rate": "", "max_amount": "", "deadline": "", "focus": "", "bestaetigt": null
+    },
+    {
+      "id": "deutscher_verlagspreis",
+      "title": "Deutscher Verlagspreis",
+      "url": "https://www.deutscher-verlagspreis.de/",
+      "provider": "BKM / Kurt Wolff Stiftung",
+      "region": "Deutschland (bundesweit)",
+      "sparten": ["verlag_publishing"],
+      "vermutung": {"antragsberechtigt": "unabhängige Verlage bis zu einer Umsatzgrenze", "frist": "jährliche Bewerbungsphase", "quote": "Preisgeld, keine Projektförderung"},
+      "pruefen": ["Bewerbungszeitraum?", "Umsatzgrenze?", "Preisgeld-Kategorien?"],
+      "funding_rate": "", "max_amount": "", "deadline": "", "focus": "", "bestaetigt": null,
+      "_hinweis": "Ein Preis, keine Projektförderung. Im Report als 'Preis (Bewerbung möglich)' kennzeichnen."
+    }
+  ]
+}
