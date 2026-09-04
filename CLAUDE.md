@@ -195,6 +195,28 @@ Trennstrich mitten im Wort.
   Trennstrich. Beide Seiten brauchen vier Buchstaben, sonst träfe die
   Regel Einheiten wie `h/mo.`.
 
+## Die Sparte (KIS-1288)
+
+Der Fragebogen erhebt `medien_sparte` mit sieben Werten
+(`field_registry.py`). Befund vom 04.09.2026
+(`docs/branchen-audit-2026-09-04.md`): Sie erreichte einen Prompt von
+139, die Fallstudie und das Deckblatt — Strategiebericht, KPA und
+Resilienz-Check kannten sie nicht.
+
+- Label immer aus `services/medien_sparte.py` (`label`, `aus_antworten`).
+  Ein unbekannter Wert ergibt ein leeres Label, nie den Roh-Slug.
+- Strategiebericht: `medien_sparte` im Kontext; `persona_und_sparte`
+  ersetzt die „Mittelstand"-Zeile des System-Prompts durch die
+  konfigurierte Persona (`REPORT_PERSONA_PATH`). Ohne Konfiguration
+  ändert sich nichts.
+- KPA: `MEDIEN_SPARTE_LABEL` im Kontext; die vier `gc_*`-Prompts nennen
+  sie bedingt (`{% if MEDIEN_SPARTE_LABEL %}`).
+- Noch **nicht** an der Sparte: Werkzeug- und Förderauswahl, Starter-Kits,
+  Faktenblock. Dafür fehlt ein Sparten-Feld in den Daten (Stufe 4).
+- In Produktion setzt Railway `VISIBLE_BRANCHES=medien` und
+  `REPORT_PERSONA_PATH`; lokal stehen beide in `.env.example` als
+  Kommentar.
+
 ## Textknoten sind nicht nur Text (KIS-1285)
 
 `_TAG_SPLIT_RE` teilt HTML an Tags. Was dazwischen liegt, gilt als Text —

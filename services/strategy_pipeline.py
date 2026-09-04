@@ -299,10 +299,17 @@ async def generate_strategy_report(
         else:
             _branche_prompt = _branche_raw.title()
 
+        # KIS-1288: Die Sparte erreichte den Strategiebericht bis zum
+        # Branchen-Audit vom 04.09.2026 nicht — ein Verlag und ein Tonstudio
+        # bekamen als Branchenkontext dasselbe Wort "Medien".
+        from services.medien_sparte import aus_antworten as _sparte_label
+        _medien_sparte = _sparte_label(briefing_data, lang="en" if _is_en else "de")
+
         base_context = {
             # KIS-1248: Sprache ins Prompt-Context durchreichen (EN-Direktive)
             "lang": _lang_code,
             "branche": _branche_prompt,
+            "medien_sparte": _medien_sparte,
             "hauptleistung": _hauptleistung,
             "segment": _segment_label(
                 briefing_data.get("unternehmensgroesse", ""),
@@ -314,9 +321,10 @@ async def generate_strategy_report(
             "country_name": _country_name,
             # KIS-1255 (A2/A4): "Ihr Unternehmen" leakte in EN-Fließtext und
             # Tabellen-Header ("FIT FOR IHR UNTERNEHMEN", Lauf 1132).
-            "firmenname": briefing_data.get(
-                "unternehmen_name", "your company" if _is_en else "Ihr Unternehmen",
-            ),
+            # KIS-1288: Der Firmenname wird nirgends erhoben (CI-Invariante,
+            # tests/golden). Ein Lesezugriff auf "unternehmen_name" war der
+            # letzte Pfad, auf dem er in einen Prompt haette gelangen koennen.
+            "firmenname": "your company" if _is_en else "Ihr Unternehmen",
             # FIX-A3: Deterministic BAFA values for S7
             "bafa_foerderquote": str(_bafa_quote),
             # KIS-1255 (C2): EN-Report bekommt EN-Tausendertrennung ("1,750 €").
@@ -818,6 +826,22 @@ async def _generate_section(
         system_prompt = _system_prompt_tpl.format(
             **{k: str(v or "") for k, v in context.items()}
         )
+
+    # KIS-1288: Persona und Sparte auch im Strategiebericht. Die erste
+    # Zeile des System-Prompts lautete "KI-Strategieberater fuer den
+    # deutschen Mittelstand" — die Medien-Persona aus REPORT_PERSONA_PATH
+    # erreichte nur den Status-Report. Ohne konfigurierte Persona bleibt
+    # der Prompt, wie er war.
+    try:
+        from services.medien_sparte_prompt import persona_und_sparte
+        system_prompt = persona_und_sparte(
+            system_prompt,
+            sparte=str(context.get("medien_sparte") or ""),
+            lang=str(context.get("lang") or "de"),
+        )
+    except Exception as _ps_exc:  # pragma: no cover - Schutznetz
+        logger.warning("[Strategy %s][KIS-1288] Persona uebersprungen: %s",
+                       section_key, _ps_exc)
 
     # KIS-1248 (Voll-Englisch Stufe 2): Bei englischem Briefing erzwingt eine
     # Output-Direktive englische Inhalte — die Strategie-Prompts selbst sind

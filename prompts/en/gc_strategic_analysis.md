@@ -27,6 +27,8 @@ into a standalone, deepened analysis.
 ## CONTEXT
 - **Company size:** {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
 - **Industry:** {{BRANCHE_LABEL}}
+{% if MEDIEN_SPARTE_LABEL %}- **Segment:** {{MEDIEN_SPARTE_LABEL}} — tailor examples, tools and risks to this segment.
+{% endif %}
 - **Core offering:** {{HAUPTLEISTUNG}}
 - **Named top time sinks:** {{TOP_ZEITFRESSER}}
 - **Time-saving priority:** {{ZEITERSPARNIS_PRIORITAET}}

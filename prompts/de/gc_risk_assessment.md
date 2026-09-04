@@ -22,6 +22,8 @@ des identifizierten KI-Potenzials — nicht allgemeine KI-Risiken.
 ## KONTEXT
 - **Unternehmensgröße:** {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
 - **Branche:** {{BRANCHE_LABEL}}
+{% if MEDIEN_SPARTE_LABEL %}- **Sparte:** {{MEDIEN_SPARTE_LABEL}} — Beispiele, Werkzeuge und Risiken auf diese Sparte zuschneiden.
+{% endif %}
 - **Hauptleistung:** {{HAUPTLEISTUNG}}
 - **Strategische KI-Potenzial-Entscheidung:** {{gamechanger_decision}}
 - **KI-Potenzial-Inhalt:** {{GAMECHANGER_HTML}}

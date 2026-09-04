@@ -22,6 +22,8 @@ next actions that can be implemented within the next 7 days.
 ## CONTEXT
 - **Company size:** {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
 - **Industry:** {{BRANCHE_LABEL}}
+{% if MEDIEN_SPARTE_LABEL %}- **Segment:** {{MEDIEN_SPARTE_LABEL}} — tailor examples, tools and risks to this segment.
+{% endif %}
 - **Core offering:** {{HAUPTLEISTUNG}}
 - **Strategic AI potential decision:** {{gamechanger_decision}}
 - **Implementation plan phase 1:** {{gc_implementation_plan_summary}}

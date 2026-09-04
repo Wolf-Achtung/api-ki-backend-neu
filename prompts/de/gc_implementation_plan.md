@@ -26,6 +26,8 @@ Du bist ein erfahrener Implementierungsberater und erstellst einen detaillierten
 ## KONTEXT
 - **Unternehmensgröße:** {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
 - **Branche:** {{BRANCHE_LABEL}}
+{% if MEDIEN_SPARTE_LABEL %}- **Sparte:** {{MEDIEN_SPARTE_LABEL}} — Beispiele, Werkzeuge und Risiken auf diese Sparte zuschneiden.
+{% endif %}
 - **Hauptleistung:** {{HAUPTLEISTUNG}}
 - **Benannte Top-Zeitfresser:** {{TOP_ZEITFRESSER}}
 - **Zeitersparnis-Priorität:** {{ZEITERSPARNIS_PRIORITAET}}

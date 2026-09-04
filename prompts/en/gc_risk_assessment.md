@@ -22,6 +22,8 @@ AI potential — not general AI risks.
 ## CONTEXT
 - **Company size:** {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
 - **Industry:** {{BRANCHE_LABEL}}
+{% if MEDIEN_SPARTE_LABEL %}- **Segment:** {{MEDIEN_SPARTE_LABEL}} — tailor examples, tools and risks to this segment.
+{% endif %}
 - **Core offering:** {{HAUPTLEISTUNG}}
 - **Strategic AI potential decision:** {{gamechanger_decision}}
 - **AI potential content:** {{GAMECHANGER_HTML}}

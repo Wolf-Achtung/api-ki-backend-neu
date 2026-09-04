@@ -53,16 +53,13 @@ DISCLAIMER_DE = (
 _AMPEL_FARBEN = {"rot": "#c0392b", "gelb": "#d4a017", "gruen": "#1e7d46"}
 _AMPEL_LABELS = {"rot": "Rot", "gelb": "Gelb", "gruen": "Grün"}
 
-# KIS-1260: Sparten-Labels (Medien-Vertikale) fuer den Betriebskontext
-_SPARTE_LABELS = {
-    "film_tv": "Film-/TV-Produktion",
-    "post_vfx": "Postproduktion/VFX/Animation",
-    "games": "Games/Interactive",
-    "verlag": "Verlag/Publishing",
-    "musik_audio": "Musik/Audio/Podcast",
-    "agentur": "Agentur/Werbung/Design",
-    "content_creation": "Content Creation/Social Media",
-}
+# KIS-1260: Sparten-Labels (Medien-Vertikale) fuer den Betriebskontext.
+# KIS-1288: Die eigene Liste hatte drei von sieben Schluesseln falsch
+# ("film_tv", "verlag", "agentur" statt "produktion", "verlag_publishing",
+# "agentur_design") — der Resilienz-Report druckte fuer diese Sparten den
+# Roh-Slug. Jetzt aus dem gemeinsamen Baustein; ein unbekannter Wert
+# ergibt ein leeres Label, nie den Slug.
+from services.medien_sparte import label as _sparte_label
 
 
 # KIS-1261: Ein r1-Briefing aelter als ein Jahr beschreibt womoeglich
@@ -110,9 +107,9 @@ def load_r1_kontext(db: Any, user_id: Optional[int]) -> Optional[Dict[str, str]]
         kontext: Dict[str, str] = {}
         if branche:
             kontext["branche"] = BRANCHEN_LABELS.get(branche, branche)
-        sparte = str(answers.get("medien_sparte") or "").strip().lower()
-        if sparte:
-            kontext["sparte"] = _SPARTE_LABELS.get(sparte, sparte)
+        sparte_label = _sparte_label(answers.get("medien_sparte"))
+        if sparte_label:
+            kontext["sparte"] = sparte_label
         hauptleistung = str(answers.get("hauptleistung") or "").strip()
         if hauptleistung:
             kontext["hauptleistung"] = hauptleistung[:300]

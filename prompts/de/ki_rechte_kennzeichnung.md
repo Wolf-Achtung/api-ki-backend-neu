@@ -39,7 +39,9 @@ KONTEXTBEZUG:
 - Wenn {{MEDIEN_SPARTE_LABEL}} vorhanden: Beispiele auf die Sparte zuschneiden
   (Produktion: Darsteller/Archiv; Post/VFX: Referenzmaterial/Upscaling-Quellen;
   Games: Assets/Store-Deklaration; Verlag: Text-/Bildrechte, Leser-Transparenz;
-  Musik/Audio: Stimmen/Samples; Agentur: Kundenfreigaben/Werbekennzeichnung)
+  Musik/Audio: Stimmen/Samples; Agentur: Kundenfreigaben/Werbekennzeichnung;
+  Content Creation: Plattform-Kennzeichnungspflichten, Persönlichkeitsrechte
+  bei Stimme/Gesicht, Sponsoring-Transparenz)
 - Vorhandene Guardrails des Kunden ({{ki_guardrails}}) anerkennen und
   gezielt ergänzen statt wiederholen.
 
