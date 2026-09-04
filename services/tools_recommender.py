@@ -76,11 +76,16 @@ TOOLS_TREND_STORAGE_PATH = os.environ.get(
 # CURATED SEED DATA
 # =============================================================================
 
+# Notfall-Ausweichliste: greift nur, wenn data/tools_seed.json fehlt oder
+# nicht lesbar ist. Der Tool-Radar prueft sie NICHT — er kennt nur die
+# Seed-Datei. Damit sie nicht unbemerkt veraltet, haelt
+# tests/test_kis1278_zweite_toolliste.py fest: Wo beide Listen dasselbe
+# Werkzeug fuehren, muessen url und trust_url uebereinstimmen.
 DEFAULT_TOOLS: List[Dict[str, Any]] = [
     {
         "name": "Tally.so",
         "url": "https://tally.so",
-        "trust_url": "https://tally.so/help/privacy",
+        "trust_url": "https://tally.so/help/privacy-policy",
         "category": "Fragebogen / Intake",
         "price": "0-29 EUR/Monat",
         "gdpr": "EU/US (DPA)",
@@ -91,7 +96,7 @@ DEFAULT_TOOLS: List[Dict[str, Any]] = [
     {
         "name": "Make (Integromat)",
         "url": "https://www.make.com",
-        "trust_url": "https://www.make.com/de/privacy-policy",
+        "trust_url": "https://www.make.com/en/privacy-notice",
         "category": "Workflow-Automation",
         "price": "Free + Plans",
         "gdpr": "EU/US (DPA)",
@@ -102,7 +107,7 @@ DEFAULT_TOOLS: List[Dict[str, Any]] = [
     {
         "name": "Notion",
         "url": "https://www.notion.so",
-        "trust_url": "https://www.notion.so/de-de/security",
+        "trust_url": "https://www.notion.so/help/privacy",
         "category": "Wissensmanagement / Docs",
         "price": "0-8 EUR/User",
         "gdpr": "US (DPA, SOC2)",
@@ -146,7 +151,7 @@ DEFAULT_TOOLS: List[Dict[str, Any]] = [
     {
         "name": "Mistral AI",
         "url": "https://mistral.ai",
-        "trust_url": "https://mistral.ai/legal/privacy/",
+        "trust_url": "https://legal.mistral.ai/terms/privacy-policy",
         "category": "KI-API (EU)",
         "price": "Usage-basiert",
         "gdpr": "EU-Anbieter",
@@ -312,8 +317,16 @@ SMART_DEFAULTS: Dict[str, Dict[str, Any]] = {
 # =============================================================================
 
 def _load_seed() -> List[Dict[str, Any]]:
-    """Load tools from seed file or default."""
-    seed_file = Path("data/tools_seed.json")
+    """Load tools from seed file or default.
+
+    KIS-1278: Der Pfad war relativ und hing damit am
+    Arbeitsverzeichnis des Prozesses. Steht das woanders,
+    findet der Code die Datei nicht, faellt still auf DEFAULT_TOOLS
+    zurueck — 12 statt 23 Tools, mit Preisen und Trust-URLs, die niemand
+    pflegt und die der Tool-Radar nicht prueft. Kein Fehler im Log, nur
+    ein schlechterer Report.
+    """
+    seed_file = Path(__file__).resolve().parent.parent / "data" / "tools_seed.json"
     if seed_file.exists():
         try:
             data = json.loads(seed_file.read_text(encoding="utf-8"))

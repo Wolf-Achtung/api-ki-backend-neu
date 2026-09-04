@@ -124,7 +124,7 @@
   {
     "name": "Mistral AI",
     "url": "https://mistral.ai",
-    "trust_url": "https://mistral.ai/legal/privacy/",
+    "trust_url": "https://legal.mistral.ai/terms/privacy-policy",
     "category": "KI-API (EU)",
     "price": "Usage-basiert",
     "gdpr": "EU-Anbieter",
@@ -278,7 +278,7 @@
   {
     "name": "Topaz Video AI",
     "url": "https://www.topazlabs.com/topaz-video-ai",
-    "trust_url": "https://www.topazlabs.com/privacy",
+    "trust_url": "https://topazlabs.com/privacy",
     "category": "Upscaling / Restaurierung",
     "price": "Einmalkauf ~299 $",
     "gdpr": "lokal (Desktop-App)",
@@ -312,7 +312,7 @@
   {
     "name": "Simon Says",
     "url": "https://www.simonsaysai.com",
-    "trust_url": "https://www.simonsaysai.com/privacy",
+    "trust_url": "https://www.simonsaysai.com/help/2657979-can-i-read-your-privacy-policy-terms-of-service",
     "category": "Transkription / Schnittlisten",
     "price": "Pay-as-you-go ~15 $/h; Pro-Pläne ab ~20 $/Monat",
     "gdpr": "US (AVV/Speicherort prüfen)",
@@ -366,7 +366,7 @@
   {
     "name": "iconik",
     "url": "https://www.iconik.io",
-    "trust_url": "https://www.iconik.io/legal",
+    "trust_url": "https://www.iconik.io/terms-and-conditions",
     "category": "Media Asset Management / Archiv",
     "price": "ab ~89 $/Monat (Team, nutzungsabhängig)",
     "gdpr": "EU-Anbieter (SE), AVV prüfen",
@@ -398,7 +398,7 @@
   {
     "name": "Aleph Alpha PhariaAI",
     "url": "https://aleph-alpha.com",
-    "trust_url": "https://aleph-alpha.com/privacy",
+    "trust_url": "https://docs.aleph-alpha.com/docs/privacy-policy-de/",
     "category": "KI-Wissensabfrage (EU)",
     "price": "Preis auf Anfrage",
     "gdpr": "EU-Anbieter (DE)",
