@@ -171,6 +171,12 @@ PRUEFUNGEN = [
             r"|deadline[^.\n]{0,60}in a few weeks|in a few weeks[^.\n]{0,60}deadline", t)) else None),
     ),
     (
+        "erfundenes_werkzeug",
+        "Werkzeug ausserhalb der gepflegten Liste empfohlen (KIS-1293)",
+        lambda t: (m.group(0) if (m := re.search(
+            r"Adobe Sensei|Legiscope|TrustArc|OpenDP|\bAIVA\b|Azure Cognitive Services", t)) else None),
+    ),
+    (
         "werkzeug_als_hochrisiko",
         "Standard-Werkzeug als Hochrisiko-System eingestuft (KIS-1293)",
         lambda t: (m.group(0)[:100] if (m := re.search(

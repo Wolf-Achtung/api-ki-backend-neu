@@ -140,3 +140,96 @@ class TestFesteTexte:
     def test_feldhilfe_sagt_seit(self):
         src = (REPO / "services" / "field_templates.py").read_text(encoding="utf-8")
         assert "ab August 2026" not in src and "from August 2026" not in src
+
+
+class TestNachlaufKIS1273:
+    """Lauf KIS1273 (nach dem ersten Fix): S4 sauber, aber S3b nannte „Adobe
+    Sensei" und „Azure Cognitive Services" als KI-Hebel, Copilot bekam die
+    Hosting-Zeile von Frame.io, und die R1-Fördertabelle zeigte dem
+    VFX-Studio weiter die Games-Förderung — eigener Pfad in extra_sections."""
+
+    def test_r1_kerntabelle_filtert_nach_sparte(self):
+        from services.extra_sections import build_core_funding_table_html
+        basis = {"BRANCHE_LABEL": "Medien & Kreativwirtschaft", "BUNDESLAND_LABEL": "Berlin",
+                 "UNTERNEHMENSGROESSE_LABEL": "Team (2-10)", "country": "DE"}
+        ohne = build_core_funding_table_html(dict(basis))
+        vfx = build_core_funding_table_html(dict(basis, MEDIEN_SPARTE_LABEL="Postproduktion / VFX / Animation"))
+        assert "Games-Förderung" in ohne
+        assert "Games-Förderung" not in vfx
+        assert "DFFF" in vfx and "ProFIT" in vfx
+
+    def test_r1_kerntabelle_versteht_en_label(self):
+        from services.extra_sections import build_core_funding_table_html
+        from services.medien_sparte import LABELS_EN
+        basis = {"BRANCHE_LABEL": "Media", "BUNDESLAND_LABEL": "Berlin",
+                 "UNTERNEHMENSGROESSE_LABEL": "Team (2-10)", "country": "DE",
+                 "MEDIEN_SPARTE_LABEL": LABELS_EN["musik_audio"]}
+        html = build_core_funding_table_html(basis, lang="en")
+        assert "DFFF" not in html and "Games" not in html
+
+    def test_tool_namen_fuer_s3b(self):
+        from services.kuratierte_fakten import tool_namen_strategie
+        namen = tool_namen_strategie(MEDIEN)
+        assert "Runway" in namen and "," in namen
+        assert "Adobe Sensei" not in namen
+
+    def test_tool_namen_nie_leer(self, monkeypatch):
+        import services.tools_recommender as tr
+        from services.kuratierte_fakten import tool_namen_strategie
+        monkeypatch.setattr(tr, "recommend_tools", lambda *a, **k: [])
+        assert "Gattungsbegriff" in tool_namen_strategie(MEDIEN)
+
+    def test_s3b_traegt_die_namensliste(self):
+        from prompts.strategy_prompts import STRATEGY_PROMPTS
+        from prompts.strategy_prompts_en import STRATEGY_PROMPTS_EN
+        assert "{kuratierte_tools_namen}" in STRATEGY_PROMPTS["S3b"]
+        assert "{kuratierte_tools_namen}" in STRATEGY_PROMPTS_EN["S3b"]
+        assert "erfundenen Berichte" in STRATEGY_PROMPTS["S3b"]
+
+    def test_header_regel_fuer_stack_software(self):
+        de = build_tool_fakten_strategie(MEDIEN, lang="de")
+        en = build_tool_fakten_strategie(MEDIEN, lang="en")
+        assert "laut Anbieter prüfen" in de and "einer anderen Zeile" in de
+        assert "check with the vendor" in en
+
+    def test_pipeline_fuellt_namensliste(self):
+        src = (REPO / "services" / "strategy_pipeline.py").read_text(encoding="utf-8")
+        assert 'base_context["kuratierte_tools_namen"]' in src
+
+    def test_waechter_erkennt_erfundenes_werkzeug(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("cr", REPO / "scripts" / "compare_reports.py")
+        cr = importlib.util.module_from_spec(spec); spec.loader.exec_module(cr)
+        pruefe = dict((n, f) for n, _, f in cr.PRUEFUNGEN)["erfundenes_werkzeug"]
+        assert pruefe("Einsatz von KI-Tools wie Adobe Sensei für Bildanalyse")
+        assert pruefe("Runway und Frame.io im Review") is None
+
+
+class TestSofortStartPreis:
+    """R1 S.8 (Sofort-Start) zeigte feste Preise aus dem Code — ohne
+    Prüfdatum. Regel aus KIS-1280 gilt auch hier."""
+
+    def test_ohne_pruefdatum_kein_preis(self):
+        from services.sofort_start_generator import _sofort_preis
+        assert _sofort_preis({"name": "Claude Team", "preis": "25-30 €/Nutzer/Monat"}) == "siehe Anbieterseite"
+        assert _sofort_preis({"name": "Make / n8n", "preis": "ab 9 €/Monat"}, is_en=True) == "see vendor site"
+        assert _sofort_preis({"name": "Unbekanntes Werkzeug", "preis": "1 €"}) == "siehe Anbieterseite"
+
+    def test_geprueftes_werkzeug_zeigt_seed_preis(self):
+        import json
+        from services.sofort_start_generator import _sofort_preis
+        seed = json.loads((REPO / "data" / "tools_seed.json").read_text(encoding="utf-8"))
+        geprueft = next(t for t in seed if t.get("verified_at"))
+        assert _sofort_preis({"name": geprueft["name"], "preis": "x"}) == geprueft["price"]
+
+    def test_seite_traegt_keinen_festen_preis_mehr(self):
+        from services.sofort_start_generator import generate_sofort_start_html
+        for lang, verweis in (("de", "siehe Anbieterseite"), ("en", "see vendor site")):
+            html = generate_sofort_start_html(
+                hauptleistung="Postproduktion", branche="medien", company_size="team",
+                zeitersparnis_prioritaet="Sichtung", stundensatz=95, medien_sparte="post_vfx",
+                lang=lang,
+            )
+            assert "€/Nutzer/Monat" not in html and "ab 9 €/Monat" not in html
+            assert "/user/month" not in html and "from €9/month" not in html
+            assert verweis in html, lang

@@ -401,15 +401,17 @@ async def generate_strategy_report(
         # kannte das Reportdatum nicht und nannte den 02.08.2026 „in wenigen
         # Wochen" (Lauf KIS1272 am 04.09.2026). Beides deterministisch.
         try:
-            from services.kuratierte_fakten import build_tool_fakten_strategie
+            from services.kuratierte_fakten import build_tool_fakten_strategie, tool_namen_strategie
             from services.ai_act_stichtag import art50_prompt_text, risikoklasse_regel
             _kf_lang = "en" if _is_en else "de"
             base_context["kuratierte_tools"] = build_tool_fakten_strategie(briefing_data, lang=_kf_lang)
+            base_context["kuratierte_tools_namen"] = tool_namen_strategie(briefing_data)
             base_context["ai_act_stichtag"] = art50_prompt_text(lang=_kf_lang)
             base_context["ai_act_risikoklasse"] = risikoklasse_regel(_kf_lang)
         except Exception as _kf_exc:  # pragma: no cover - Schutznetz
             logger.warning("[Strategy %d] KIS-1293 Faktenblöcke übersprungen: %s", briefing_id, _kf_exc)
             base_context.setdefault("kuratierte_tools", "")
+            base_context.setdefault("kuratierte_tools_namen", "")
             base_context.setdefault("ai_act_stichtag", "")
             base_context.setdefault("ai_act_risikoklasse", "")
 

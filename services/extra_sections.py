@@ -789,6 +789,17 @@ def build_core_funding_table_html(briefing: Dict[str, Any], lang: str = "de") ->
         and p.get("country_code", "DE").upper() in allowed_countries
     ]
 
+    # KIS-1292/1293: Sparten-Filter — dieselbe Regel wie im Recommender.
+    # Lauf KIS1273 zeigte dem VFX-Studio weiter die Games-Förderung, weil
+    # diese Tabelle ein eigener Pfad ist (Strategiebericht S7 war schon sauber).
+    from services.medien_sparte import passt_zur_sparte, slug as _sparte_slug
+    _sparte = _sparte_slug(briefing.get("MEDIEN_SPARTE_LABEL") or briefing.get("medien_sparte"))
+    if _sparte:
+        filtered = [
+            p for p in filtered
+            if not (p.get("branch_exclusive") and passt_zur_sparte(p, _sparte) is False)
+        ]
+
     # FIX-KIS-1104: Regional filter — exclude state-specific programs from OTHER states.
     # Keep: bundesweit, EU, Länderprogramme (generic), and the user's own state.
     _bl = bundesland.lower()

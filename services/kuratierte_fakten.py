@@ -121,6 +121,9 @@ _KOPF_TOOLS_STRATEGIE_DE = (
     "Erfinde keine eigene Einstufung, keinen Audit-Status und keine Quelle. "
     "Der Vendor-Audit-Status aus Report 1 gilt für die Werkzeuge, die der "
     "Kunde im Fragebogen genannt hat — nie für ein empfohlenes Werkzeug.\n"
+    "- Stack-Software ohne Zeile in dieser Liste (z. B. Microsoft 365 Copilot): "
+    "Datenschutz = 'laut Anbieter prüfen'. Übernimm nie die Hosting-Angabe "
+    "einer anderen Zeile.\n"
     "- Quellen am Ende: nur die Anbieteradressen aus dieser Liste.\n\n"
 )
 _KOPF_TOOLS_STRATEGIE_EN = (
@@ -136,6 +139,9 @@ _KOPF_TOOLS_STRATEGIE_EN = (
     "invent a rating, an audit status or a source. The vendor audit status "
     "from Report 1 applies to the tools the client named in the questionnaire "
     "— never to a recommended tool.\n"
+    "- Stack software without a row in this list (e.g. Microsoft 365 Copilot): "
+    "data protection = 'check with the vendor'. Never copy the hosting note "
+    "of another row.\n"
     "- Sources at the end: only the vendor addresses from this list.\n\n"
 )
 _FALLBACK_TOOLS_DE = (
@@ -172,6 +178,21 @@ def build_tool_fakten_strategie(answers: Dict[str, Any], lang: str = "de",
         return _FALLBACK_TOOLS_EN if en else _FALLBACK_TOOLS_DE
     kopf = _KOPF_TOOLS_STRATEGIE_EN if en else _KOPF_TOOLS_STRATEGIE_DE
     return kopf + "\n".join(zeilen) + "\n" + _FUSS
+
+
+def tool_namen_strategie(answers: Dict[str, Any], max_tools: int = MAX_TOOLS) -> str:
+    """KIS-1293: Nur die Namen — für Sections, die Werkzeuge nebenbei nennen
+    (S3b „KI-Hebel"). Lauf KIS1273 nannte dort „Adobe Sensei" und „Azure
+    Cognitive Services", weil nur S4 den vollen Block bekam."""
+    try:
+        from services.tools_recommender import recommend_tools
+        tools = recommend_tools(answers, max_tools=max_tools) or []
+    except Exception as exc:
+        log.warning("[KIS-1293] Werkzeugnamen nicht lesbar: %s", exc)
+        tools = []
+    namen = [str(t.get("name") or "").strip() for t in tools[:max_tools]]
+    namen = [n for n in namen if n]
+    return ", ".join(namen) if namen else "(keine Liste — nur Stack oder Gattungsbegriff)"
 
 
 def _programm_zeile(p: Dict[str, Any]) -> str:
