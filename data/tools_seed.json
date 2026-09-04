@@ -2,7 +2,7 @@
   {
     "name": "Tally.so",
     "url": "https://tally.so",
-    "trust_url": "https://tally.so/help/privacy",
+    "trust_url": "https://tally.so/help/privacy-policy",
     "category": "Fragebogen / Intake",
     "price": "0–29 €/Monat",
     "gdpr": "EU-Option",
@@ -62,7 +62,7 @@
   {
     "name": "Notion",
     "url": "https://www.notion.so",
-    "trust_url": "https://www.notion.so/privacy",
+    "trust_url": "https://www.notion.so/help/privacy",
     "category": "Wissensmanagement",
     "price": "0–10 €/Monat",
     "gdpr": "EU-Option",

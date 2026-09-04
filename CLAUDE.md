@@ -54,16 +54,21 @@ Merkregeln:
 
 ## Bekannte Punkte (offen, Stand 2026-09-03)
 
-- ENV-Tranche 2: `docs/env-tranche2-2026-09-03.md` nennt 37 sicher
-  löschbare Variablen — gegengeprüft am aktuellen Code. Der ältere
-  `docs/env-audit-2026-09.md` ist an 8 Stellen überholt (KIS-1266 hat
-  `USE_INTERNAL_RESEARCH` und die `RESEARCH_INCLUDE_*`-Listen
-  angeschlossen). Löschen muss Wolf in Railway.
+- ENV-Tranche 2: `docs/env-tranche2-2026-09-03.md` — geprüft wurden die
+  273 Railway-Variablen gegen den Code, nicht umgekehrt. Ergebnis: 4
+  löschen, 1 entscheiden (`POLL_INTERVAL`). Drei Schreibweisen-Fallen:
+  Railway hat `RATE_LIMIT_PER_MINUTE`, `PROMPT_STABILITY_ENABLED`,
+  `POLL_INTERVAL` — der Code liest `REPORT_RATE_LIMIT_PER_MINUTE`,
+  `STABILITY_SCORING_ENABLED`, `WORKER_POLL_INTERVAL`. Alle drei laufen
+  auf ihrem Standardwert. Werkzeug: `scripts/env_unused.py`.
+  Löschen muss Wolf in Railway.
 - Tool-Daten: `data/tools_seed.json` hat 20 von 23 Einträgen ohne
-  `verified_at`. Der Tool-Radar läuft (Issue #1168, 32 Befunde). Seine
-  Tavily-Vorschläge sind für Tools deutlich unschärfer als für
-  Förderprogramme — Tool-Namen wie „Railway", „Runway", „Make" sind
-  mehrdeutig. Vor Übernahme jede Quelle einzeln prüfen.
+  `verified_at`. Der Tool-Radar läuft (Issue #1168). Die
+  Domainbeschränkung (KIS-1273) wirkt: Der Lauf vom 03.09. 22:23 lieferte
+  35 Kandidaten, alle auf der jeweiligen Herstellerdomain. Preise und
+  DSGVO-Status muss trotzdem ein Mensch bestätigen — der Radar meldet
+  nur. Tote Trust-URLs bei Topaz, Simon Says, iconik, Aleph Alpha und
+  Mistral sind offen (kein Ersatz gefunden).
 - `services/funding_engine_v2.py` wurde am 2026-09-03 gelöscht (toter
   Code, 1278 Zeilen, nur von der eigenen Testdatei importiert). Damit
   gibt es zwei Förderquellen statt drei: `funding_programmes_core_2025`
@@ -88,6 +93,10 @@ Merkregeln:
 - `scripts/compare_reports.py alt.pdf neu.pdf` — vergleicht zwei
   Report-Läufe: Kennzahlen, dünne Seiten, Rückfall-Prüfung gegen die
   behobenen Fehler. Exit-Code 1 bei einem Rückfall.
+- `scripts/env_unused.py liste.txt` — prüft eine Liste von ENV-Namen
+  gegen den Laufzeit-Code. Kennt die vier Fallen, an denen die
+  Handprüfung scheitert (Konstanten, dynamische Namen,
+  Teilzeichenketten, `_bool_env`-Helfer).
 - `POST /api/admin/testrun/replay/{briefing_id}` — erzeugt einen Lauf
   mit identischen Antworten (kopiert auch FB2). Admin-Key jetzt per
   Header `X-Admin-Key`; der Query-Parameter bleibt gültig, verträgt aber

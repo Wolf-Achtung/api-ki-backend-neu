@@ -63,19 +63,30 @@ def check_tool(tool: Dict[str, Any], today: date, max_age_days: int = 120) -> Li
     return []
 
 
-def check_url(url: str, timeout: float = 15.0) -> Optional[str]:
-    """None = erreichbar, sonst Fehlerbeschreibung. 403/405/429 = Bot-Schutz, gilt als erreichbar."""
+def check_url(url: str, timeout: float = 15.0) -> Optional[Dict[str, str]]:
+    """None = erreichbar, sonst ``{"art": ..., "detail": ...}``.
+
+    403/405/429 = Bot-Schutz, gilt als erreichbar.
+
+    KIS-1277: Der Lauf vom 03.09.2026 meldete vier Adobe-Seiten als
+    ``dead_url``, Ursache war jeweils ein ReadTimeout. Ein Timeout belegt
+    nichts — die Seite kann laufen und nur den Prüfer abweisen. Ein
+    HTTP 404 belegt, dass die Seite weg ist. Beides in einen Topf zu
+    werfen erzeugt Befunde, die niemand abarbeiten kann: Wolf öffnet die
+    Adobe-Seite im Browser, sie lädt, und der Befund kommt beim nächsten
+    Lauf wieder. Deshalb zwei Kategorien.
+    """
     if not url or not str(url).startswith("http"):
-        return "keine/ungültige URL"
+        return {"art": "dead_url", "detail": "keine/ungültige URL"}
     try:
         import requests
         resp = requests.get(url, timeout=timeout, allow_redirects=True,
                             headers={"User-Agent": "Mozilla/5.0 (ToolsRadar; +ki-sicherheit.jetzt)"})
         if resp.status_code < 400 or resp.status_code in (403, 405, 429):
             return None
-        return f"HTTP {resp.status_code}"
+        return {"art": "dead_url", "detail": f"HTTP {resp.status_code}"}
     except Exception as exc:
-        return f"{type(exc).__name__}"
+        return {"art": "unpruefbar", "detail": type(exc).__name__}
 
 
 def hersteller_domain(url: str) -> str:
@@ -153,23 +164,33 @@ def run_radar(today: date, check_urls: bool = False, max_age_days: int = 120) ->
                 url = str(tool.get(feld) or "")
                 if not url:
                     continue
-                err = check_url(url)
-                if err:
-                    findings.append({"type": "dead_url", "tool": name,
-                                     "detail": f"{feld}: {url}: {err}"})
+                befund = check_url(url)
+                if befund:
+                    findings.append({"type": befund["art"], "tool": name,
+                                     "detail": f"{feld}: {url}: {befund['detail']}"})
     return findings
 
 
 def collect_candidates(tools: List[Dict[str, Any]], findings: List[Dict[str, str]],
                        api_key: str, year: int, *, search=tavily_candidates,
                        limit: int = 12) -> Dict[str, List[Dict[str, str]]]:
-    """Kandidaten nur für Tools mit Befund, höchstens `limit` Suchen je Lauf."""
+    """Kandidaten nur für Tools mit Befund, höchstens `limit` Suchen je Lauf.
+
+    KIS-1277: Tools mit toter URL kommen zuerst. Beim Lauf vom 03.09.2026
+    lief die Reihenfolge nach Datei-Position — die zwölf Suchen gingen an
+    die ersten zwölf Tools, und genau die Tools mit toten Trust-URLs
+    (Topaz, iconik, Aleph Alpha) standen weiter hinten und bekamen
+    nichts. Dabei ist eine tote URL der einzige Befund, den ein Treffer
+    direkt beantwortet: Er nennt die neue Adresse. Ein fehlendes
+    `verified_at` beantwortet nur der Mensch.
+    """
     if not api_key:
         return {}
     domains = {str(t.get("name") or ""): hersteller_domain(t.get("url") or "")
                for t in tools}
-    betroffen = []
-    for f in findings:
+    # sorted() ist stabil: innerhalb einer Gruppe bleibt die Dateireihenfolge.
+    betroffen: List[str] = []
+    for f in sorted(findings, key=lambda x: 0 if x["type"] == "dead_url" else 1):
         if f["tool"] not in betroffen:
             betroffen.append(f["tool"])
     out: Dict[str, List[Dict[str, str]]] = {}
@@ -192,13 +213,18 @@ def render_report(findings: List[Dict[str, str]], today: date,
         lines.append("")
         lines.append("| Typ | Tool | Detail |")
         lines.append("|---|---|---|")
-        order = {"dead_url": 0, "stale": 1}
+        order = {"dead_url": 0, "unpruefbar": 1, "stale": 2}
         for f in sorted(findings, key=lambda x: order.get(x["type"], 9)):
             lines.append(f"| {f['type']} | {f['tool']} | {f['detail']} |")
         lines.append("")
         lines.append("_Hinweis: Preise werden bewusst NICHT automatisch übernommen — "
                      "Web-Treffer nennen Listenpreise, Aktionen oder falsche Währungen. "
                      "Der Radar meldet, der Mensch entscheidet._")
+        if any(f["type"] == "unpruefbar" for f in findings):
+            lines.append("")
+            lines.append("_`unpruefbar` heißt: Der Prüfer kam nicht durch (Timeout, "
+                         "Verbindungsabbruch). Die Seite kann laufen. Nur `dead_url` "
+                         "belegt, dass die Adresse weg ist._")
     if candidates:
         total = sum(len(v) for v in candidates.values())
         lines += ["", "## 🔍 Recherche-Kandidaten (Tavily, ungeprüft)", "",

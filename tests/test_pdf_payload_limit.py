@@ -7,10 +7,15 @@ Tests the ENV-configurable HTML payload limit and slim mode preparation.
 import os
 import sys
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-# Mock requests before importing pdf_client
-sys.modules['requests'] = MagicMock()
+# KIS-1277: Hier stand `sys.modules['requests'] = MagicMock()`. Die Zeile
+# lief beim Einsammeln der Testdateien und ersetzte das echte
+# requests-Modul fuer den GESAMTEN Testlauf. Folge: In jeder spaeteren
+# Datei war `requests.exceptions.ReadTimeout` ein MagicMock, und
+# `raise` darauf ergab einen TypeError statt der erwarteten Ausnahme.
+# requests ist eine echte Abhaengigkeit (requirements.txt) — der Ersatz
+# war nie noetig.
 
 
 class TestPDFPayloadLimit:
