@@ -467,7 +467,7 @@ Die Annahmen müssen die ZAHLEN dieser Section tragen: Menge, Auslastung,
 Preis, Gewinnungsrate. Allgemeine Sätze über Marktumfeld, Teamgröße oder
 Regulierung gehören NICHT hierher — sie stehen bereits in anderen
 Abschnitten und erklären keine einzige Umsatzzahl.
-Richtig: „Je Auftrag rechnen wir mit zwei Tagen Aufwand; die Auslastung
+Richtig: „Je Auftrag sind zwei Tage Aufwand angesetzt; die Auslastung
 liegt bei vier Aufträgen im Monat; der Abo-Preis liegt in der Mitte der
 genannten Spanne."
 Falsch: „Stabiles Marktumfeld in den nächsten 12 Monaten; aktuelle
