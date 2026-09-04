@@ -109,6 +109,23 @@ class TestGegenDenEchtenCode:
     def test_erfundener_name_ist_loeschbar(self):
         assert pruefe(["GIBT_ES_NICHT_XYZ"])["GIBT_ES_NICHT_XYZ"]["art"] == "loeschbar"
 
+    def test_nur_in_settings_eingelesen_faellt_auf(self):
+        """Blinder Fleck 5: settings.py liest RESEARCH_LANG in
+        research.lang ein. Niemand liest dieses Feld — die Variable ist
+        wirkungslos, obwohl sie im Code vorkommt."""
+        assert pruefe(["RESEARCH_LANG"])["RESEARCH_LANG"]["art"] == "nur_settings"
+
+    def test_direkt_gelesener_name_bleibt_gelesen(self):
+        """Gegenprobe: RESEARCH_PROVIDER liest gpt_analyze.py selbst."""
+        assert pruefe(["RESEARCH_PROVIDER"])["RESEARCH_PROVIDER"]["art"] == "gelesen"
+
+    def test_cache_falle_wird_erkannt(self):
+        """Railway hat RESEARCH_CACHE_TTL, services/research_cache.py
+        liest RESEARCH_CACHE_TTL_DAYS."""
+        ergebnis = pruefe(["RESEARCH_CACHE_TTL", "RESEARCH_CACHE_TTL_DAYS"])
+        assert ergebnis["RESEARCH_CACHE_TTL"]["art"] == "nur_settings"
+        assert ergebnis["RESEARCH_CACHE_TTL_DAYS"]["art"] == "gelesen"
+
 
 class TestEinlesen:
     """Railway zeigt die Namen in Spalten — der Einleser darf daran nicht

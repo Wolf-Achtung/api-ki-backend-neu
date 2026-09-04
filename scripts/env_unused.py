@@ -169,6 +169,13 @@ def pruefe(namen: List[str]) -> Dict[str, Dict[str, object]]:
         # dynamischen Gruppe und niemand sieht ihn mehr an.
         if name in PLATTFORM_VARIABLEN:
             art = "plattform"
+        elif laufzeit == ["settings.py"] and als_string:
+            # Blinder Fleck 5: settings.py liest den Wert in ein Feld ein.
+            # Liest niemand dieses Feld, ist die Variable trotz Treffer
+            # wirkungslos. Sieben Variablen lagen am 04.09.2026 so
+            # (ENABLE_PERPLEXITY, PERPLEXITY_MAX_TOKENS, RESEARCH_LANG …):
+            # Der Research-Code liest seine eigenen Namen direkt.
+            art = "nur_settings"
         elif laufzeit and als_string:
             art = "gelesen"
         elif laufzeit:
@@ -197,9 +204,10 @@ def main(argv: List[str] | None = None) -> int:
     namen = lies_namen(args.datei)
     ergebnis = pruefe(namen)
 
-    gruppen: Dict[str, List[str]] = {"loeschbar": [], "nur_nebenpfad": [],
-                                     "nur_bezeichner": [], "dynamisch": [],
-                                     "plattform": [], "gelesen": []}
+    gruppen: Dict[str, List[str]] = {"loeschbar": [], "nur_settings": [],
+                                     "nur_nebenpfad": [], "nur_bezeichner": [],
+                                     "dynamisch": [], "plattform": [],
+                                     "gelesen": []}
     for name, info in ergebnis.items():
         gruppen[str(info["art"])].append(name)
 
@@ -208,6 +216,14 @@ def main(argv: List[str] | None = None) -> int:
     print(f"LOESCHBAR — kein Treffer im ganzen Repo ({len(gruppen['loeschbar'])}):")
     for name in gruppen["loeschbar"]:
         print(f"  {name}")
+
+    print(f"\nNUR SETTINGS — nur in settings.py eingelesen "
+          f"({len(gruppen['nur_settings'])}):")
+    for name in gruppen["nur_settings"]:
+        print(f"  {name}")
+    if gruppen["nur_settings"]:
+        print("  (Pruefen: liest ueberhaupt jemand das Feld, in das der Wert "
+              "geht? Sonst wirkungslos.)")
 
     print(f"\nNUR NEBENPFAD — wirkt im Dienst nicht ({len(gruppen['nur_nebenpfad'])}):")
     for name in gruppen["nur_nebenpfad"]:
