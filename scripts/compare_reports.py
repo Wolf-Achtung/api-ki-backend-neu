@@ -161,6 +161,22 @@ PRUEFUNGEN = [
         "Tabellenzelle bricht buchstabenweise um (KIS-1284)",
         lambda t: _zerhackte_tabelle(t),
     ),
+    (
+        "stichtag_als_zukunft",
+        "Art.-50-Stichtag 02.08.2026 als bevorstehend beschrieben (KIS-1293)",
+        lambda t: (m.group(0)[:80] if (m := re.search(
+            r"Stichtag[^.\n]{0,60}in wenigen Wochen"
+            r"|in wenigen Wochen[^.\n]{0,60}(?:Stichtag|02\.08\.2026)"
+            r"|bevorstehende[nr]? Stichtag"
+            r"|deadline[^.\n]{0,60}in a few weeks|in a few weeks[^.\n]{0,60}deadline", t)) else None),
+    ),
+    (
+        "werkzeug_als_hochrisiko",
+        "Standard-Werkzeug als Hochrisiko-System eingestuft (KIS-1293)",
+        lambda t: (m.group(0)[:100] if (m := re.search(
+            r"(?:Copilot|Runway|Firefly|ChatGPT|Claude|Descript|Sensei|DeepL)"
+            r"[^.\n]{0,160}(?:hochrisk|high-risk|Hochrisiko)", t)) else None),
+    ),
 ]
 
 

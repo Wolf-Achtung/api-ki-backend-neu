@@ -397,6 +397,22 @@ async def generate_strategy_report(
             briefing_data.get("ki_guardrails", "") or ""
         )
 
+        # KIS-1293: S4 bekam keinen Faktenblock und erfand Werkzeuge; S9
+        # kannte das Reportdatum nicht und nannte den 02.08.2026 „in wenigen
+        # Wochen" (Lauf KIS1272 am 04.09.2026). Beides deterministisch.
+        try:
+            from services.kuratierte_fakten import build_tool_fakten_strategie
+            from services.ai_act_stichtag import art50_prompt_text, risikoklasse_regel
+            _kf_lang = "en" if _is_en else "de"
+            base_context["kuratierte_tools"] = build_tool_fakten_strategie(briefing_data, lang=_kf_lang)
+            base_context["ai_act_stichtag"] = art50_prompt_text(lang=_kf_lang)
+            base_context["ai_act_risikoklasse"] = risikoklasse_regel(_kf_lang)
+        except Exception as _kf_exc:  # pragma: no cover - Schutznetz
+            logger.warning("[Strategy %d] KIS-1293 Faktenblöcke übersprungen: %s", briefing_id, _kf_exc)
+            base_context.setdefault("kuratierte_tools", "")
+            base_context.setdefault("ai_act_stichtag", "")
+            base_context.setdefault("ai_act_risikoklasse", "")
+
         # S1 + S2 parallel (independent)
         s1_task = _generate_section("S1", base_context, {
             "staerken_top3": str(report1_data.get("staerken", "")),
@@ -473,6 +489,7 @@ async def generate_strategy_report(
                 get_filtered_funding_programs,
                 format_funding_programs_for_prompt,
             )
+            from services.medien_sparte import slug as _sparte_slug
             # KIS-1098: Normalize size before passing — DB stores "11–100" (en-dash)
             # but funding_recommender's inline normalization only checks hyphen "11-".
             from services.business_case_engine_v2 import normalize_company_size as _norm_size
@@ -486,6 +503,8 @@ async def generate_strategy_report(
                 # KIS-1255 (A3): EN-Report — Feldwerte (Quote/Betrag) übersetzt,
                 # Programm-Namen bleiben unverändert.
                 lang="en" if _is_en else "de",
+                # KIS-1292: Sparte — Filmförderung nur für Film-Sparten.
+                sparte=_sparte_slug(briefing_data.get("medien_sparte")),
             )
             _funding_data_block = format_funding_programs_for_prompt(
                 _filtered_programs, lang="en" if _is_en else "de",

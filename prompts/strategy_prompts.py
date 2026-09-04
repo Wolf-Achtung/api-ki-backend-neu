@@ -501,14 +501,14 @@ LIVE-RECHERCHE — TOOLS:
 
 --- Integration bestehende Software ---
 {research_integration}
-
+{kuratierte_tools}
 AUFGABE:
-1. Empfehle für jedes Handlungsfeld 2-3 konkrete KI-Tools/Plattformen.
+1. Empfehle für jedes Handlungsfeld 2-3 konkrete KI-Tools/Plattformen — nur aus den GEPRÜFTEN WERKZEUG-DATEN oder dem Stack des Kunden.
 2. Für jedes Tool:
    a) Name und Anbieter
    b) Kernfunktion
-   c) Preismodell (monatlich, pro User, etc.)
-   d) DSGVO-Konformität (ja/nein/teilweise)
+   c) Preismodell nur als Art (Abonnement, nutzungsbasiert, im Abo enthalten) — keine Beträge
+   d) Datenschutz: Hosting-Angabe aus den Werkzeug-Daten wörtlich — keine eigene Einstufung, kein Audit-Status
    e) Integrationsmöglichkeit mit {s5_software}
    f) Empfehlung (★★★ / ★★ / ★)
 3. Erstelle eine Vergleichstabelle.
@@ -865,11 +865,9 @@ AUFGABE:
 4. EU AI Act Compliance:
    - Welche der empfohlenen Tools fallen unter den AI Act?
    - Welche Risikoklasse? Welche Pflichten?
-   - FRISTEN (PFLICHT, KIS-1235): Nenne die Transparenzpflichten aus
-     Art. 50 EU AI Act EXPLIZIT mit dem Stichtag 02.08.2026 (Kennzeichnung
-     von KI-Chatbots und KI-generierten Inhalten). Wenn das Reportdatum vor
-     diesem Stichtag liegt, mache die verbleibende Zeit als Handlungsdruck
-     sichtbar (z. B. "in wenigen Wochen"). Keine weiteren Fristen erfinden.
+   - Transparenzpflichten Art. 50 EU AI Act, Stichtag 02.08.2026 — die
+     Zeitlage rechnet der Code (KIS-1293), nicht das Modell: {ai_act_stichtag}
+   - {ai_act_risikoklasse}
 5. Datenschutz-Checkliste für die KI-Implementierung (basierend auf dem Datenschutzregime von {country_name} — siehe DATENSCHUTZ-KONTEXT oben).
 
 DSGVO-HINWEIS-DISZIPLIN (PFLICHT, KIS-1235): Der Warnhinweis zu US-Tools

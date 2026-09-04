@@ -27,6 +27,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from ._normalize import _briefing_to_dict
+# KIS-1292 (Stufe 4): Sparten-Feld in den Werkzeugdaten
+from .medien_sparte import passt_zur_sparte as _passt_zur_sparte, slug as _sparte_slug
 
 # Import analytics layer
 try:
@@ -528,7 +530,8 @@ def get_segment_weight(
     tool: Dict[str, Any],
     size_label: str,
     branch_group: str,
-    ai_act_risk: str
+    ai_act_risk: str,
+    sparte: str = "",
 ) -> float:
     """
     Calculate segment-specific weight for a tool.
@@ -552,6 +555,10 @@ def get_segment_weight(
     # Industry match
     best_industries = [i.lower() for i in tool.get("best_for_industries", [])]
     if branch_group.lower() in best_industries or "alle" in best_industries:
+        weight += 0.15
+
+    # KIS-1292: Sparten-Treffer (nur Eintraege mit ``sparten``-Feld)
+    if _passt_zur_sparte(tool, sparte):
         weight += 0.15
 
     # Smart defaults match
@@ -685,6 +692,9 @@ def recommend_tools(
     groesse = (b.get("unternehmensgroesse") or b.get("groesse") or "").lower()
     hauptleistung = (b.get("hauptleistung") or "").lower()
     ai_act_risk = (b.get("ai_act_risk_level") or b.get("risk_level") or "minimal").lower()
+    # KIS-1292 (Stufe 4): Sparte als Slug — ein Tonstudio bekam bisher
+    # dieselbe Liste wie ein Games-Studio, weil nur ``branche`` zaehlte.
+    sparte = _sparte_slug(b.get("medien_sparte"))
 
     # KIS-1142 Punkt 6 Variante B: budget-aware pre-filter.
     # Drops tools whose minimum monthly entry cost exceeds what the user's
@@ -724,6 +734,10 @@ def recommend_tools(
         if not branche or any(branche.startswith(bi) or bi == "alle" for bi in industries):
             score += 2
         if not groesse or (size_label in sizes or "alle" in sizes):
+            score += 2
+        # KIS-1292: Werkzeuge, die ihre Sparte nennen, steigen bei Treffer
+        # auf — ohne Treffer bleibt der Wert, nichts faellt heraus.
+        if _passt_zur_sparte(t, sparte):
             score += 2
 
         if "fragebogen" in cat or "intake" in cat or "automation" in cat:
@@ -774,7 +788,7 @@ def recommend_tools(
             trend_direction = tool_trend.trend_direction
 
         # Calculate segment weight
-        segment_weight = get_segment_weight(t, size_label, branche, ai_act_risk)
+        segment_weight = get_segment_weight(t, size_label, branche, ai_act_risk, sparte=sparte)
 
         # Calculate final score
         final_score = calculate_final_score(

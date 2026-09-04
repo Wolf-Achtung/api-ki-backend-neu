@@ -82,3 +82,35 @@ def aus_antworten(answers: Optional[dict], lang: str = "de") -> str:
     if not answers:
         return ""
     return label(answers.get("medien_sparte"), lang=lang)
+
+
+def slug_aus_antworten(answers: Optional[dict]) -> str:
+    """Slug direkt aus einem Antwort-Dict — fuer Filter, nie fuer den Bericht."""
+    if not answers:
+        return ""
+    return slug(answers.get("medien_sparte"))
+
+
+def passt_zur_sparte(eintrag: Optional[dict], sparte: Optional[str]) -> Optional[bool]:
+    """KIS-1292 (Stufe 4): Traegt ein Daten-Eintrag ein Feld ``sparten``?
+
+    Rueckgabe:
+      * ``None``  — keine Aussage: der Eintrag hat kein ``sparten``-Feld,
+        oder der Kunde hat keine Sparte angegeben. Der Aufrufer laesst
+        dann alles wie bisher.
+      * ``True``  — die Sparte des Kunden steht in der Liste.
+      * ``False`` — der Eintrag nennt Sparten, die des Kunden ist nicht dabei.
+
+    Ein leeres ``sparten`` gilt als „nicht getaggt" (None), damit ein
+    vergessenes Feld nie stillschweigend alles ausfiltert.
+    """
+    s = slug(sparte)
+    if not s or not eintrag:
+        return None
+    roh = eintrag.get("sparten")
+    if not roh or not isinstance(roh, (list, tuple)):
+        return None
+    getaggt = {slug(x) for x in roh if slug(x)}
+    if not getaggt:
+        return None
+    return s in getaggt

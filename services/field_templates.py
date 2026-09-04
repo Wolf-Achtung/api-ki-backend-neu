@@ -355,7 +355,7 @@ FIELD_DESCRIPTIONS_SHORT: dict[str, str] = {
     ),
     "ai_act_kenntnis": (
         "EU-Gesetz zur KI-Regulierung, schrittweise wirksam, "
-        "volle Anwendung ab August 2026."
+        "seit August 2026 weitgehend anwendbar."
     ),
     "ki_hemmnisse": (
         "Mehrfachauswahl möglich — welche Hürden bremsen den KI-Einsatz?"
@@ -381,7 +381,7 @@ FIELD_DESCRIPTIONS_SHORT_EN: dict[str, str] = {
         "Rules for when and how data is deleted or anonymised."
     ),
     "ai_act_kenntnis": (
-        "EU law regulating AI, phased in, fully applicable from August 2026."
+        "EU law regulating AI, phased in, largely applicable since August 2026."
     ),
     "ki_hemmnisse": (
         "Multiple selection possible — which hurdles slow down your AI adoption?"

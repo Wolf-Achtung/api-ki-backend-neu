@@ -491,14 +491,14 @@ LIVE RESEARCH — TOOLS:
 
 --- Integration with existing software ---
 {research_integration}
-
+{kuratierte_tools}
 TASK:
-1. Recommend 2-3 concrete AI tools/platforms for each action area.
+1. Recommend 2-3 concrete AI tools/platforms for each action area — only from the VERIFIED TOOL DATA or the client's stack.
 2. For each tool:
    a) Name and vendor
    b) Core function
-   c) Pricing model (monthly, per user, etc.)
-   d) GDPR compliance (yes/no/partial)
+   c) Pricing model as type only (subscription, usage-based, included) — no amounts
+   d) Data protection: hosting note from the tool data verbatim — no own rating, no audit status
    e) Integration options with {s5_software}
    f) Recommendation (★★★ / ★★ / ★)
 3. Build a comparison table.
@@ -850,11 +850,9 @@ TASK:
 4. EU AI Act compliance:
    - Which of the recommended tools fall under the AI Act?
    - Which risk class? Which obligations?
-   - DEADLINES (MANDATORY, KIS-1235): Name the transparency obligations of
-     Art. 50 EU AI Act EXPLICITLY with the deadline 02.08.2026 (labeling of
-     AI chatbots and AI-generated content). If the report date is before
-     this deadline, make the remaining time visible as pressure to act
-     (e.g. "in a few weeks"). Do not invent any further deadlines.
+   - Transparency obligations Art. 50 EU AI Act, deadline 02.08.2026 — the
+     code computes the timing (KIS-1293), not the model: {ai_act_stichtag}
+   - {ai_act_risikoklasse}
 5. Data protection checklist for the AI implementation (based on the data protection regime of {country_name} — see DATA PROTECTION CONTEXT above).
 
 GDPR-NOTE DISCIPLINE (MANDATORY, KIS-1235): The warning about US tools

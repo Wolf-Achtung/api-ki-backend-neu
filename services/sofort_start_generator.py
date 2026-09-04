@@ -4159,8 +4159,55 @@ FALLSTUDIEN_MEDIEN: List[Dict[str, Any]] = [
         "zitat": "Die Geschichten entstehen wieder im Schnitt – nicht beim Durchsuchen von Festplatten.",
         "dauer_bis_roi": "4 Wochen"
     },
+    # KIS-1292 (Stufe 4): Verlag, Tonstudio und Content Creation hatten bis
+    # hierher keinen eigenen Fall — alle drei landeten beim Werbefilm-Studio.
     {
-        "keywords": ("agentur", "werbung", "corporate", "marketing", "content", "verlag", "musik", "audio", "pr", "webdesign", "design", "social", "tonstudio"),
+        "keywords": ("verlag", "publishing", "buch", "zeitschrift", "redaktion"),
+        "titel": "Fachverlag halbiert die erste Korrekturschleife",
+        "unternehmen": "Fachverlag, 9 Mitarbeitende (Zeitschriften & Sachbuch)",
+        "unternehmen_solo": "Kleinverlag mit einer Person und festem Lektorats-Netzwerk",
+        "ausgangslage": "Jedes Manuskript wandert zwei- bis dreimal zwischen Lektorat und Autor:in; Klappentext, Schlagworte und Kurzfassungen entstehen je Kanal von Hand",
+        "loesung": "Vorlektorat per Sprachmodell (Rechtschreibung, Struktur, Lücken) mit Freigabe durch das Lektorat, Metadaten-Entwürfe aus dem Manuskript, Rechteklärung für KI-Nutzung im Autorenvertrag",
+        "ergebnis": {
+            "zeitersparnis": "45 Stunden/Monat (Team)",
+            "kosteneinsparung": "~3.800 €/Monat",
+            "qualitaet": "Erste Korrekturschleife von 10 auf 5 Tage; jeder Titel am Erscheinungstag in allen Kanälen beschrieben"
+        },
+        "zitat": "Das Lektorat liest wieder den Inhalt – nicht die Kommafehler.",
+        "dauer_bis_roi": "5 Wochen"
+    },
+    {
+        "keywords": ("musik", "audio", "tonstudio", "sound", "synchron", "hörbuch"),
+        "titel": "Tonstudio findet jeden Take in Sekunden",
+        "unternehmen": "Tonstudio, 6 Mitarbeitende (Synchron, Hörbuch, Podcast)",
+        "unternehmen_solo": "Solo-Tonstudio mit Sprecher:innen-Pool",
+        "ausgangslage": "Pro Stunde Rohaufnahme zwei Stunden Sichten und Aufräumen; Takes sind nur über Dateinamen auffindbar; Stimmsynthese ohne geklärte Einwilligung ist ein Risiko",
+        "loesung": "Automatische Transkription mit Take-Marker beim Import, Vorreinigung (Rauschen, Atmer) als erster Durchgang, Einwilligungs-Formular für synthetische Stimmen vor jedem Projekt",
+        "ergebnis": {
+            "zeitersparnis": "40 Stunden/Monat (Team)",
+            "kosteneinsparung": "~3.400 €/Monat",
+            "qualitaet": "Take-Suche in Sekunden statt Minuten; Mischung beginnt am selben Tag wie die Aufnahme; jede Stimme mit dokumentierter Einwilligung"
+        },
+        "zitat": "Wir mischen wieder – statt Dateien zu durchsuchen.",
+        "dauer_bis_roi": "4 Wochen"
+    },
+    {
+        "keywords": ("content", "creator", "social", "youtube", "newsletter"),
+        "titel": "Content-Team macht aus einem Dreh zehn Formate",
+        "unternehmen": "Content-Studio, 4 Mitarbeitende (Social, Podcast, Newsletter)",
+        "unternehmen_solo": "Solo-Creator:in mit eigenem Kanal und Kundenaufträgen",
+        "ausgangslage": "Jeder Dreh muss in Kurzvideo, Podcast-Ausschnitt und Newsletter zerlegt werden; Untertitel, Titel und Beschreibungen entstehen je Plattform von Hand; die Kennzeichnung synthetischer Inhalte ist unklar",
+        "loesung": "KI-Schnitt in Kurzformate mit Auswahl durch das Team, automatische Untertitel und Beschreibungs-Entwürfe, feste Kennzeichnungsregel für KI-Anteile vor jeder Veröffentlichung",
+        "ergebnis": {
+            "zeitersparnis": "35 Stunden/Monat (Team)",
+            "kosteneinsparung": "~2.700 €/Monat",
+            "qualitaet": "Zehn Formate pro Dreh statt vier; jeder Post vor Veröffentlichung korrekt gekennzeichnet"
+        },
+        "zitat": "Die Handschrift bleibt unsere – die Fleißarbeit macht die Maschine.",
+        "dauer_bis_roi": "3 Wochen"
+    },
+    {
+        "keywords": ("agentur", "werbung", "corporate", "marketing", "webdesign", "design", "kreativ"),
         "titel": "Werbefilm-Studio verdoppelt seine Pitch-Schlagzahl",
         "unternehmen": "Werbefilm-Studio, 5 Kreative (Markenkunden & Sender)",
         "unternehmen_solo": "Solo-Creative-Producer:in für Markenfilme",
@@ -4211,7 +4258,52 @@ FALLSTUDIEN_MEDIEN_EN: List[Dict[str, Any]] = [
         "dauer_bis_roi": "4 weeks"
     },
     {
-        "keywords": ("agentur", "werbung", "corporate", "marketing", "content", "verlag", "musik", "audio", "pr", "webdesign", "design", "social", "tonstudio"),
+        "keywords": ("verlag", "publishing", "buch", "zeitschrift", "redaktion"),
+        "titel": "Specialist publisher halves its first correction loop",
+        "unternehmen": "Specialist publisher, 9 employees (journals & non-fiction)",
+        "unternehmen_solo": "One-person publisher with a fixed network of editors",
+        "ausgangslage": "Every manuscript goes back and forth two or three times between editors and author; blurbs, keywords and summaries are written by hand for each channel",
+        "loesung": "AI pre-editing (spelling, structure, gaps) with sign-off by the editors, metadata drafts generated from the manuscript, AI-use rights cleared in the author contract",
+        "ergebnis": {
+            "zeitersparnis": "45 hours/month (team)",
+            "kosteneinsparung": "~3,800 €/month",
+            "qualitaet": "First correction loop down from 10 to 5 days; every title fully described in all channels on publication day"
+        },
+        "zitat": "The editors read the content again – not the comma errors.",
+        "dauer_bis_roi": "5 weeks"
+    },
+    {
+        "keywords": ("musik", "audio", "tonstudio", "sound", "synchron", "hörbuch"),
+        "titel": "Recording studio finds every take in seconds",
+        "unternehmen": "Recording studio, 6 employees (dubbing, audiobooks, podcasts)",
+        "unternehmen_solo": "Solo recording studio with a pool of voice actors",
+        "ausgangslage": "Two hours of reviewing and tidying per hour of raw audio; takes can only be found by file name; voice synthesis without cleared consent is a risk",
+        "loesung": "Automatic transcription with take markers on ingest, pre-cleaning (noise, breaths) as a first pass, consent form for synthetic voices before every project",
+        "ergebnis": {
+            "zeitersparnis": "40 hours/month (team)",
+            "kosteneinsparung": "~3,400 €/month",
+            "qualitaet": "Take search in seconds instead of minutes; mixing starts the same day as the recording; every voice with documented consent"
+        },
+        "zitat": "We mix again – instead of searching through files.",
+        "dauer_bis_roi": "4 weeks"
+    },
+    {
+        "keywords": ("content", "creator", "social", "youtube", "newsletter"),
+        "titel": "Content team turns one shoot into ten formats",
+        "unternehmen": "Content studio, 4 employees (social, podcast, newsletter)",
+        "unternehmen_solo": "Solo creator with an own channel and client work",
+        "ausgangslage": "Every shoot has to be split into short video, podcast clip and newsletter; subtitles, titles and descriptions are written by hand per platform; labelling of synthetic content is unclear",
+        "loesung": "AI cut-down into short formats with selection by the team, automatic subtitles and description drafts, a fixed labelling rule for AI content before every publication",
+        "ergebnis": {
+            "zeitersparnis": "35 hours/month (team)",
+            "kosteneinsparung": "~2,700 €/month",
+            "qualitaet": "Ten formats per shoot instead of four; every post correctly labelled before publication"
+        },
+        "zitat": "The style stays ours – the machine does the legwork.",
+        "dauer_bis_roi": "3 weeks"
+    },
+    {
+        "keywords": ("agentur", "werbung", "corporate", "marketing", "webdesign", "design", "kreativ"),
         "titel": "Commercial film studio doubles its pitch rate",
         "unternehmen": "Commercial film studio, 5 creatives (brand clients & broadcasters)",
         "unternehmen_solo": "Solo creative producer for brand films",
@@ -4258,8 +4350,15 @@ FALLSTUDIE_DEFAULT_EN: Dict[str, Any] = {
 
 
 def _pick_medien_fallstudie(sparte: str, size_key: str, lang: str = "de") -> Dict[str, Any]:
-    """Wählt den passenden Medien-Case nach Sparte (Fallback: Produktion)."""
-    s = (sparte or "").lower()
+    """Wählt den passenden Medien-Case nach Sparte (Fallback: Produktion).
+
+    KIS-1292: Erst den Slug bestimmen (``medien_sparte.slug`` versteht
+    Rohwert und Label), dann die Stichworte gegen den Slug prüfen. Das
+    Label „Film-/TV-Produktion" traf vorher über „pr" auch die Agentur.
+    """
+    from services.medien_sparte import slug as _slug
+    roh = (sparte or "").lower()
+    s = _slug(roh) or roh
     _pool = (
         FALLSTUDIEN_MEDIEN_EN
         if (lang or "").strip().lower().startswith("en")

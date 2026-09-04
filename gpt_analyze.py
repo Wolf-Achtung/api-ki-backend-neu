@@ -9636,9 +9636,12 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         # KIS-1273 (Aufgabe 2a): lang durchreichen — bei EN werden NUR die
         # Feldwerte (Quote/Betrag/Relevanz) übersetzt, Programm-NAMEN bleiben
         # per Shield unangetastet. DE-Pfad byte-identisch (Default "de").
+        # KIS-1292: Sparte durchreichen — Filmförderung nur für Film-Sparten.
+        from services.medien_sparte import slug as _sparte_slug
         _funding_progs = get_filtered_funding_programs(
             bundesland=_bl_code, size=_size_bucket, branch=_branch, country=_country,
             lang=str(briefing.get("lang") or "de"),
+            sparte=_sparte_slug(briefing.get("medien_sparte")),
         )
         if _funding_progs:
             _prog_lines = []
