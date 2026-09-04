@@ -20,6 +20,7 @@ import json
 import logging
 import os
 from dataclasses import dataclass, field, asdict
+from datetime import date as _date, datetime as _datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 log = logging.getLogger(__name__)
@@ -48,10 +49,41 @@ FUNDING_DATA_PATH = os.getenv("FUNDING_DATA_PATH", "data/funding_programmes_core
 NICHT_BEANTRAGBAR_STATUS = frozenset({"expired", "paused"})
 
 
-def ist_beantragbar(programm: Dict[str, Any]) -> bool:
-    """True, wenn ein Programm aktuell beantragt werden kann."""
-    return str(programm.get("status", "active")).strip().lower() \
-        not in NICHT_BEANTRAGBAR_STATUS
+def frist_verstrichen(programm: Dict[str, Any], heute: Optional[_date] = None) -> bool:
+    """True, wenn das Feld ``deadline`` ein Datum in der Vergangenheit nennt.
+
+    KIS-1281 Stufe 3: Der Status allein reicht nicht. Ein Programm kann
+    auf ``active`` stehen und trotzdem eine abgelaufene Frist tragen —
+    dann empfiehlt der Report etwas, das niemand mehr beantragen kann.
+    Dieselbe Fehlerklasse wie ZIM (KIS-1268), nur an einem anderen Feld.
+
+    Textangaben wie „laufend", „4 Termine/Jahr" oder „Calls ab Herbst
+    2026" sind keine Frist im Sinne dieser Regel und gelten als offen —
+    wer sie anders liest, wirft die halbe Filmförderung aus dem Report.
+    """
+    roh = str(programm.get("deadline") or "").strip()
+    if not roh:
+        return False
+    heute = heute or _date.today()
+    for fmt in ("%d.%m.%Y", "%Y-%m-%d", "%d.%m.%y"):
+        try:
+            return _datetime.strptime(roh, fmt).date() < heute
+        except ValueError:
+            continue
+    return False
+
+
+def ist_beantragbar(programm: Dict[str, Any],
+                    heute: Optional[_date] = None) -> bool:
+    """True, wenn ein Programm aktuell beantragt werden kann.
+
+    Zwei Gründe schliessen aus: der Status (``expired``, ``paused``) und
+    eine verstrichene Frist. Beide gehören hierher — die Regel steht mit
+    Absicht an genau einer Stelle (KIS-1270).
+    """
+    if str(programm.get("status", "active")).strip().lower() in NICHT_BEANTRAGBAR_STATUS:
+        return False
+    return not frist_verstrichen(programm, heute)
 
 
 # =============================================================================

@@ -69,6 +69,26 @@ class FeedbackPayload(BaseModel):
         None, description="Free-form report comment"
     )
 
+    # KIS-1281 Stufe 4: Welche Empfehlung hat getragen?
+    #
+    # Bisher fliesst aus dem Feedback nichts in die Empfehlungen zurueck.
+    # Diese zwei Felder schliessen den Kreis: Nach dreissig Reports weiss
+    # man, welche Werkzeuge und Programme tatsaechlich eingefuehrt bzw.
+    # beantragt wurden — und damit, welche Empfehlungen tragen.
+    #
+    # Freitext mit Absicht: Eine Auswahlliste haette die Antwort auf das
+    # begrenzt, was der Report vorgeschlagen hat. Gerade die Werkzeuge,
+    # die jemand STATT der Empfehlung genommen hat, sind die
+    # interessanten. Auswertung: scripts/empfehlungs_resonanz.py
+    tools_adopted: Optional[str] = Field(
+        None, max_length=2000,
+        description="Welche empfohlenen Werkzeuge wurden eingeführt?"
+    )
+    funding_applied: Optional[str] = Field(
+        None, max_length=2000,
+        description="Welche Förderprogramme wurden beantragt?"
+    )
+
     # Overall assessment
     overall_helpfulness_score: Optional[int] = Field(
         None, ge=1, le=10, description="Overall helpfulness (1-10)"
