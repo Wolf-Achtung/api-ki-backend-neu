@@ -30,68 +30,100 @@ def _kandidaten():
 
 
 class TestKandidatenliste:
-    def test_alle_eintraege_offen_und_ohne_preis(self):
+    def test_jeder_eintrag_ist_entschieden(self):
+        """Faktencheck vom 05.09.2026 (Perplexity, nur Anbieterseiten) ist
+        eingearbeitet: jede Zeile traegt ein Urteil, abgelehnte eine Begruendung,
+        aufgenommene die belegten Felder."""
         k = _kandidaten()
         for e in k["werkzeuge"] + k["programme"]:
-            assert e["bestaetigt"] is None, e.get("name") or e.get("id")
+            assert e["bestaetigt"] in (True, False), e.get("name") or e.get("id")
+            if e["bestaetigt"] is False:
+                assert e.get("_entscheidung"), e.get("name") or e.get("id")
         for w in k["werkzeuge"]:
-            assert w["preis"] == "" and w["host"] == "" and w["gdpr"] == ""
             assert set(w["sparten"]) <= GUELTIG and w["url"].startswith("https://")
-            assert w["pruefen"], w["name"]
+            if w["bestaetigt"]:
+                assert w["host"] and w["gdpr"], w["name"]
         for p in k["programme"]:
             assert set(p["sparten"]) <= GUELTIG and p["url"].startswith("https://")
+            if p["bestaetigt"]:
+                assert p["focus"] and p["funding_rate"], p["id"]
 
-    def test_keine_dubletten_zum_seed(self):
-        seed = {t["name"].lower() for t in json.loads((REPO / "data" / "tools_seed.json").read_text(encoding="utf-8"))}
+    def test_aufgenommene_stehen_im_seed_mit_pruefdatum(self):
+        seed = {t["name"].lower(): t for t in json.loads((REPO / "data" / "tools_seed.json").read_text(encoding="utf-8"))}
+        alias = {"deepl write": "deepl write pro"}
         for w in _kandidaten()["werkzeuge"]:
-            assert w["name"].lower() not in seed, w["name"]
+            name = alias.get(w["name"].lower(), w["name"].lower())
+            if w["bestaetigt"]:
+                assert name in seed, w["name"]
+                assert seed[name]["verified_at"] == "2026-09-05" and seed[name]["sparten"], w["name"]
+            else:
+                assert name not in seed, w["name"]
+
+    def test_abgelehnte_programme_fehlen_und_digitalbonus_ist_aktiv(self):
+        progs = {p["id"]: p for p in json.loads((REPO / "data" / "funding_programmes_core_2025.json").read_text(encoding="utf-8"))}
+        assert "musikfonds" not in progs
+        assert progs["initiative_musik"]["sparten"] == ["musik_audio"] and progs["initiative_musik"]["branch_exclusive"] is True
+        assert progs["deutscher_verlagspreis"]["funding_type"] == "Preisgeld"
+        assert progs["digitalbonus_bayern"]["status"] == "active" and progs["digitalbonus_bayern"]["deadline"] == "31.12.2027"
 
 
 class TestUebernahme:
     @pytest.fixture
     def kopie(self, tmp_path):
-        for f in ("kandidaten_stufe4.json", "tools_seed.json", "funding_programmes_core_2025.json"):
+        """Eigene Kandidatenliste mit zwei offenen Zeilen — die echte Liste
+        ist seit dem Faktencheck entschieden und taugt nicht mehr als Fixture."""
+        for f in ("tools_seed.json", "funding_programmes_core_2025.json"):
             shutil.copy(REPO / "data" / f, tmp_path / f)
+        kand = {
+            "werkzeuge": [
+                {"name": "Testwerkzeug", "url": "https://x.example", "trust_url": "https://x.example/privacy",
+                 "category": "Test", "sparten": ["games"], "host": "", "gdpr": "", "preis": "", "bestaetigt": None},
+            ],
+            "programme": [
+                {"id": "testprogramm", "title": "Testprogramm", "url": "https://y.example", "provider": "Test",
+                 "region": "Deutschland (bundesweit)", "sparten": ["musik_audio"],
+                 "funding_rate": "", "max_amount": "", "deadline": "", "focus": "", "bestaetigt": None},
+            ],
+        }
+        (tmp_path / "kandidaten.json").write_text(json.dumps(kand), encoding="utf-8")
         return tmp_path
+
+    def _lauf(self, ku, kopie, **kw):
+        return ku.uebernehmen(kandidaten=kopie / "kandidaten.json", tools=kopie / "tools_seed.json",
+                              funding=kopie / "funding_programmes_core_2025.json", **kw)
 
     def test_nichts_bestaetigt_nichts_geschrieben(self, kopie):
         ku = _skript()
         vorher = (kopie / "tools_seed.json").read_text(encoding="utf-8")
-        b = ku.uebernehmen(kandidaten=kopie / "kandidaten_stufe4.json", tools=kopie / "tools_seed.json",
-                           funding=kopie / "funding_programmes_core_2025.json")
-        assert b["werkzeuge"] == [] and b["programme"] == [] and len(b["offen"]) == 15
+        b = self._lauf(ku, kopie)
+        assert b["werkzeuge"] == [] and b["programme"] == [] and len(b["offen"]) == 2
         assert (kopie / "tools_seed.json").read_text(encoding="utf-8") == vorher
 
     def test_bestaetigt_ohne_hostangabe_bricht_ab(self, kopie):
         ku = _skript()
-        k = json.loads((kopie / "kandidaten_stufe4.json").read_text(encoding="utf-8"))
+        k = json.loads((kopie / "kandidaten.json").read_text(encoding="utf-8"))
         k["werkzeuge"][0]["bestaetigt"] = True  # host/gdpr bleiben leer
-        (kopie / "kandidaten_stufe4.json").write_text(json.dumps(k), encoding="utf-8")
+        (kopie / "kandidaten.json").write_text(json.dumps(k), encoding="utf-8")
         with pytest.raises(ValueError, match="Vermutung"):
-            ku.uebernehmen(kandidaten=kopie / "kandidaten_stufe4.json", tools=kopie / "tools_seed.json",
-                           funding=kopie / "funding_programmes_core_2025.json")
+            self._lauf(ku, kopie)
 
     def test_bestaetigt_mit_angaben_landet_im_seed(self, kopie):
         ku = _skript()
-        k = json.loads((kopie / "kandidaten_stufe4.json").read_text(encoding="utf-8"))
-        w = next(x for x in k["werkzeuge"] if x["name"] == "Auphonic")
-        w.update({"bestaetigt": True, "host": "EU", "gdpr": "EU-Anbieter (AT), AVV verfügbar", "preis": ""})
-        p = k["programme"][0]
-        p.update({"bestaetigt": True, "focus": "Infrastrukturförderung für Unternehmen der Musikwirtschaft", "funding_rate": "bis 50 %"})
-        (kopie / "kandidaten_stufe4.json").write_text(json.dumps(k), encoding="utf-8")
-        b = ku.uebernehmen(datum="2026-09-05", kandidaten=kopie / "kandidaten_stufe4.json",
-                           tools=kopie / "tools_seed.json", funding=kopie / "funding_programmes_core_2025.json")
-        assert b["werkzeuge"] == ["Auphonic"] and b["programme"] == ["initiative_musik"]
+        k = json.loads((kopie / "kandidaten.json").read_text(encoding="utf-8"))
+        k["werkzeuge"][0].update({"bestaetigt": True, "host": "EU", "gdpr": "EU-Anbieter (AT), AVV verfügbar", "preis": ""})
+        k["programme"][0].update({"bestaetigt": True, "focus": "Testförderung", "funding_rate": "bis 50 %"})
+        (kopie / "kandidaten.json").write_text(json.dumps(k), encoding="utf-8")
+        b = self._lauf(ku, kopie, datum="2026-09-05")
+        assert b["werkzeuge"] == ["Testwerkzeug"] and b["programme"] == ["testprogramm"]
         seed = json.loads((kopie / "tools_seed.json").read_text(encoding="utf-8"))
-        neu = next(t for t in seed if t["name"] == "Auphonic")
-        assert neu["verified_at"] == "2026-09-05" and neu["price"] == "" and neu["sparten"] == ["musik_audio", "content_creation", "produktion"]
+        neu = next(t for t in seed if t["name"] == "Testwerkzeug")
+        assert neu["verified_at"] == "2026-09-05" and neu["price"] == "" and neu["sparten"] == ["games"]
         progs = json.loads((kopie / "funding_programmes_core_2025.json").read_text(encoding="utf-8"))
-        pn = next(x for x in progs if x["id"] == "initiative_musik")
+        pn = next(x for x in progs if x["id"] == "testprogramm")
         assert pn["branch_exclusive"] is True and pn["sparten"] == ["musik_audio"] and pn["verified_at"] == "2026-09-05"
         # zweiter Lauf: idempotent
-        b2 = ku.uebernehmen(datum="2026-09-05", kandidaten=kopie / "kandidaten_stufe4.json",
-                            tools=kopie / "tools_seed.json", funding=kopie / "funding_programmes_core_2025.json")
-        assert b2["werkzeuge"] == [] and "Auphonic" in b2["uebersprungen"]
+        b2 = self._lauf(ku, kopie, datum="2026-09-05")
+        assert b2["werkzeuge"] == [] and "Testwerkzeug" in b2["uebersprungen"]
 
     def test_neuer_eintrag_besteht_sparten_gate_regeln(self, kopie):
         """Ein bestätigter Eintrag ohne Preis zeigt im Report 'siehe Anbieterseite' —

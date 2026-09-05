@@ -7,20 +7,51 @@
       "url": "https://languagetool.org/de",
       "trust_url": "https://languagetool.org/legal/privacy",
       "category": "Korrektur / Stil",
-      "sparten": ["verlag_publishing", "agentur_design", "content_creation"],
-      "vermutung": {"sitz": "Deutschland (Potsdam)", "host": "EU", "gdpr": "EU-Anbieter (DE), AVV prüfen", "preisart": "Free / Abonnement"},
-      "pruefen": ["Impressum: Sitz und Firma", "Datenschutz: AVV oder DPA für Geschäftskunden?", "Preise: Free-Stufe und Team-Abo?"],
-      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+      "sparten": [
+        "verlag_publishing",
+        "agentur_design",
+        "content_creation"
+      ],
+      "vermutung": {
+        "sitz": "Deutschland (Potsdam)",
+        "host": "EU",
+        "gdpr": "EU-Anbieter (DE), AVV prüfen",
+        "preisart": "Free / Abonnement"
+      },
+      "pruefen": [
+        "Impressum: Sitz und Firma",
+        "Datenschutz: AVV oder DPA für Geschäftskunden?",
+        "Preise: Free-Stufe und Team-Abo?"
+      ],
+      "host": "EU (Hetzner/AWS DE, Google IE); US-Subprozessoren (Learneo, OpenAI)",
+      "gdpr": "EU-Anbieter (DE), DPA für Team-Plan",
+      "preis": "",
+      "bestaetigt": true
     },
     {
       "name": "DeepL Write",
       "url": "https://www.deepl.com/de/write",
       "trust_url": "https://www.deepl.com/de/privacy",
       "category": "Umformulierung / Stil",
-      "sparten": ["verlag_publishing", "agentur_design", "content_creation"],
-      "vermutung": {"sitz": "Deutschland (Köln)", "host": "EU", "gdpr": "EU-Anbieter (DE), AVV verfügbar", "preisart": "Teil von DeepL Pro"},
-      "pruefen": ["Ist Write in DeepL Pro enthalten oder eigenes Abo?", "Datenschutz: AVV-Seite vorhanden?"],
-      "host": "", "gdpr": "", "preis": "", "bestaetigt": null,
+      "sparten": [
+        "verlag_publishing",
+        "agentur_design",
+        "content_creation"
+      ],
+      "vermutung": {
+        "sitz": "Deutschland (Köln)",
+        "host": "EU",
+        "gdpr": "EU-Anbieter (DE), AVV verfügbar",
+        "preisart": "Teil von DeepL Pro"
+      },
+      "pruefen": [
+        "Ist Write in DeepL Pro enthalten oder eigenes Abo?",
+        "Datenschutz: AVV-Seite vorhanden?"
+      ],
+      "host": "EU (EWR); Verarbeitung vorübergehend",
+      "gdpr": "EU-Anbieter (DE), AVV nach Art. 28 DSGVO (Pro)",
+      "preis": "",
+      "bestaetigt": true,
       "_hinweis": "DeepL Pro steht schon im Seed. Wenn Write darin enthalten ist: NICHT als eigenen Eintrag bestätigen, sondern 'bestaetigt': false."
     },
     {
@@ -28,60 +59,150 @@
       "url": "https://www.duden.de/mentor",
       "trust_url": "https://www.duden.de/datenschutz",
       "category": "Korrektur nach Duden",
-      "sparten": ["verlag_publishing"],
-      "vermutung": {"sitz": "Deutschland (Cornelsen, Berlin)", "host": "EU", "gdpr": "EU-Anbieter (DE), AVV prüfen", "preisart": "Abonnement"},
-      "pruefen": ["Impressum: Cornelsen Verlag?", "Gibt es eine Unternehmenslizenz?", "Datenschutz: AVV?"],
-      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+      "sparten": [
+        "verlag_publishing"
+      ],
+      "vermutung": {
+        "sitz": "Deutschland (Cornelsen, Berlin)",
+        "host": "EU",
+        "gdpr": "EU-Anbieter (DE), AVV prüfen",
+        "preisart": "Abonnement"
+      },
+      "pruefen": [
+        "Impressum: Cornelsen Verlag?",
+        "Gibt es eine Unternehmenslizenz?",
+        "Datenschutz: AVV?"
+      ],
+      "host": "EU (AWS Frankfurt); KI-Assistent über Telekom (DE) / Microsoft (US)",
+      "gdpr": "EU-Anbieter (DE, Cornelsen), AVV für Unternehmenskunden",
+      "preis": "ab 5,50–8,30 €/Lizenz/Monat (Unternehmen, zzgl. MwSt.)",
+      "bestaetigt": true
     },
     {
       "name": "Auphonic",
       "url": "https://auphonic.com/",
       "trust_url": "https://auphonic.com/privacy",
       "category": "Podcast-Nachbearbeitung / Pegel / Rauschen",
-      "sparten": ["musik_audio", "content_creation", "produktion"],
-      "vermutung": {"sitz": "Österreich (Wien)", "host": "EU", "gdpr": "EU-Anbieter (AT), AVV prüfen", "preisart": "Free-Stunden / Abonnement / Guthaben"},
-      "pruefen": ["Impressum: Auphonic GmbH, Wien?", "Datenschutz: AVV/DPA?", "Preise: Modell (Stunden-Guthaben oder Abo)?"],
-      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+      "sparten": [
+        "musik_audio",
+        "content_creation",
+        "produktion"
+      ],
+      "vermutung": {
+        "sitz": "Österreich (Wien)",
+        "host": "EU",
+        "gdpr": "EU-Anbieter (AT), AVV prüfen",
+        "preisart": "Free-Stunden / Abonnement / Guthaben"
+      },
+      "pruefen": [
+        "Impressum: Auphonic GmbH, Wien?",
+        "Datenschutz: AVV/DPA?",
+        "Preise: Modell (Stunden-Guthaben oder Abo)?"
+      ],
+      "host": "EU (Hetzner DE, Cloudflare R2 EU)",
+      "gdpr": "EU-Anbieter (AT), DPA auf Anfrage",
+      "preis": "",
+      "bestaetigt": true
     },
     {
       "name": "iZotope RX",
       "url": "https://www.izotope.com/en/products/rx.html",
       "trust_url": "https://www.izotope.com/en/privacy-policy.html",
       "category": "Audio-Restauration / Rauschentfernung",
-      "sparten": ["musik_audio", "post_vfx", "produktion"],
-      "vermutung": {"sitz": "USA", "host": "lokal (Desktop-App)", "gdpr": "US-Anbieter, Verarbeitung lokal", "preisart": "Einmallizenz / Abonnement"},
-      "pruefen": ["Verarbeitet RX lokal ohne Cloud-Upload?", "Preise: Einmallizenz oder Abo?"],
-      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+      "sparten": [
+        "musik_audio",
+        "post_vfx",
+        "produktion"
+      ],
+      "vermutung": {
+        "sitz": "USA",
+        "host": "lokal (Desktop-App)",
+        "gdpr": "US-Anbieter, Verarbeitung lokal",
+        "preisart": "Einmallizenz / Abonnement"
+      },
+      "pruefen": [
+        "Verarbeitet RX lokal ohne Cloud-Upload?",
+        "Preise: Einmallizenz oder Abo?"
+      ],
+      "host": "lokal (Desktop-App); Nutzungsdaten an US-Dienste, Cloud-Upload nicht belegt",
+      "gdpr": "US-Anbieter (Native Instruments), kein AVV gefunden",
+      "preis": "1.399 US-$ (RX 12 Advanced, Einmallizenz)",
+      "bestaetigt": true
     },
     {
       "name": "Adobe Podcast Enhance",
       "url": "https://podcast.adobe.com/enhance",
       "trust_url": "https://www.adobe.com/de/privacy.html",
       "category": "Sprachverbesserung (Cloud)",
-      "sparten": ["musik_audio", "content_creation"],
-      "vermutung": {"sitz": "USA", "host": "US (Cloud)", "gdpr": "US (Adobe-AVV vorhanden)", "preisart": "Free / Teil des Creative-Cloud-Abos"},
-      "pruefen": ["Ist Enhance kostenlos oder im CC-Abo?", "Werden Dateien in die Cloud geladen?"],
-      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+      "sparten": [
+        "musik_audio",
+        "content_creation"
+      ],
+      "vermutung": {
+        "sitz": "USA",
+        "host": "US (Cloud)",
+        "gdpr": "US (Adobe-AVV vorhanden)",
+        "preisart": "Free / Teil des Creative-Cloud-Abos"
+      },
+      "pruefen": [
+        "Ist Enhance kostenlos oder im CC-Abo?",
+        "Werden Dateien in die Cloud geladen?"
+      ],
+      "host": "US (Cloud)",
+      "gdpr": "US (Adobe-AVV / EU-DPA vorhanden)",
+      "preis": "",
+      "bestaetigt": true
     },
     {
       "name": "Lokalise",
       "url": "https://lokalise.com/",
       "trust_url": "https://lokalise.com/privacy-policy",
       "category": "Lokalisierungs-Pipeline / KI-Übersetzung",
-      "sparten": ["games", "content_creation"],
-      "vermutung": {"sitz": "unsicher (EU-Gründung, Sitz prüfen)", "host": "unsicher", "gdpr": "prüfen", "preisart": "Abonnement je Sitz"},
-      "pruefen": ["Impressum/Footer: Firma und Land", "Datenschutz: DPA-Seite?", "Preise: pro Sitz?"],
-      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+      "sparten": [
+        "games",
+        "content_creation"
+      ],
+      "vermutung": {
+        "sitz": "unsicher (EU-Gründung, Sitz prüfen)",
+        "host": "unsicher",
+        "gdpr": "prüfen",
+        "preisart": "Abonnement je Sitz"
+      },
+      "pruefen": [
+        "Impressum/Footer: Firma und Land",
+        "Datenschutz: DPA-Seite?",
+        "Preise: pro Sitz?"
+      ],
+      "host": "",
+      "gdpr": "",
+      "preis": "",
+      "bestaetigt": false,
+      "_entscheidung": "Crowdin gewählt: dort EU-Rechenzentrum und signierte DPA belegt; bei Lokalise Verarbeitungsort nur 'USA und andere Länder'"
     },
     {
       "name": "Crowdin",
       "url": "https://crowdin.com/",
       "trust_url": "https://crowdin.com/privacy",
       "category": "Lokalisierungs-Pipeline / KI-Übersetzung",
-      "sparten": ["games", "content_creation"],
-      "vermutung": {"sitz": "unsicher (US-Gesellschaft, EU-Team)", "host": "unsicher", "gdpr": "prüfen", "preisart": "Free / Abonnement"},
-      "pruefen": ["Footer: Firma und Land", "Datenschutz: DPA?", "Preise: Modell"],
-      "host": "", "gdpr": "", "preis": "", "bestaetigt": null,
+      "sparten": [
+        "games",
+        "content_creation"
+      ],
+      "vermutung": {
+        "sitz": "unsicher (US-Gesellschaft, EU-Team)",
+        "host": "unsicher",
+        "gdpr": "prüfen",
+        "preisart": "Free / Abonnement"
+      },
+      "pruefen": [
+        "Footer: Firma und Land",
+        "Datenschutz: DPA?",
+        "Preise: Modell"
+      ],
+      "host": "US (AWS us-east-1); EU-Rechenzentrum (IE) nur Enterprise",
+      "gdpr": "EU-Anbieter (EE), DPA vorhanden",
+      "preis": "ab 50 US-$/Monat (Pro)",
+      "bestaetigt": true,
       "_hinweis": "Lokalise ODER Crowdin reicht — beide bestätigen nur, wenn beide klar sind."
     },
     {
@@ -89,40 +210,102 @@
       "url": "https://www.scenario.com/",
       "trust_url": "https://www.scenario.com/privacy",
       "category": "Asset-Varianten aus eigenem Stil (Games)",
-      "sparten": ["games", "agentur_design"],
-      "vermutung": {"sitz": "unsicher (USA/Frankreich)", "host": "US (Cloud)", "gdpr": "prüfen", "preisart": "Abonnement"},
-      "pruefen": ["Footer: Firma und Land", "Rechte an trainierten Modellen und Ausgaben?", "Datenschutz: DPA?"],
-      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+      "sparten": [
+        "games",
+        "agentur_design"
+      ],
+      "vermutung": {
+        "sitz": "unsicher (USA/Frankreich)",
+        "host": "US (Cloud)",
+        "gdpr": "prüfen",
+        "preisart": "Abonnement"
+      },
+      "pruefen": [
+        "Footer: Firma und Land",
+        "Rechte an trainierten Modellen und Ausgaben?",
+        "Datenschutz: DPA?"
+      ],
+      "host": "",
+      "gdpr": "",
+      "preis": "",
+      "bestaetigt": false,
+      "_entscheidung": "Verarbeitungsort nicht belegt, keine öffentliche DPA; Self-Serve erlaubt Training auf Kundendaten"
     },
     {
       "name": "Inworld AI",
       "url": "https://inworld.ai/",
       "trust_url": "https://inworld.ai/privacy",
       "category": "NPC-Dialoge / Charakter-KI (Games)",
-      "sparten": ["games"],
-      "vermutung": {"sitz": "USA", "host": "US (Cloud)", "gdpr": "US (AVV prüfen)", "preisart": "nutzungsbasiert"},
-      "pruefen": ["Footer: Firma und Land", "Datenschutz: DPA?", "Store-Deklaration für KI-Inhalte nötig?"],
-      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+      "sparten": [
+        "games"
+      ],
+      "vermutung": {
+        "sitz": "USA",
+        "host": "US (Cloud)",
+        "gdpr": "US (AVV prüfen)",
+        "preisart": "nutzungsbasiert"
+      },
+      "pruefen": [
+        "Footer: Firma und Land",
+        "Datenschutz: DPA?",
+        "Store-Deklaration für KI-Inhalte nötig?"
+      ],
+      "host": "",
+      "gdpr": "",
+      "preis": "",
+      "bestaetigt": false,
+      "_entscheidung": "Verarbeitungsort und DPA nicht belegt"
     },
     {
       "name": "Opus Clip",
       "url": "https://www.opus.pro/",
       "trust_url": "https://www.opus.pro/privacy",
       "category": "Kurzformate aus Langvideo",
-      "sparten": ["content_creation", "agentur_design"],
-      "vermutung": {"sitz": "USA", "host": "US (Cloud)", "gdpr": "US (AVV prüfen)", "preisart": "Free / Abonnement"},
-      "pruefen": ["Footer: Firma und Land", "Datenschutz: DPA?", "Preise: Modell"],
-      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+      "sparten": [
+        "content_creation",
+        "agentur_design"
+      ],
+      "vermutung": {
+        "sitz": "USA",
+        "host": "US (Cloud)",
+        "gdpr": "US (AVV prüfen)",
+        "preisart": "Free / Abonnement"
+      },
+      "pruefen": [
+        "Footer: Firma und Land",
+        "Datenschutz: DPA?",
+        "Preise: Modell"
+      ],
+      "host": "",
+      "gdpr": "",
+      "preis": "",
+      "bestaetigt": false,
+      "_entscheidung": "Verarbeitungsort nur 'USA', keine DPA-Seite; Descript und Runway decken den Zweck"
     },
     {
       "name": "Canva Magic Studio",
       "url": "https://www.canva.com/de_de/magic-studio/",
       "trust_url": "https://www.canva.com/de_de/policies/privacy-policy/",
       "category": "Grafik / Varianten / Präsentation",
-      "sparten": ["content_creation", "agentur_design", "verlag_publishing"],
-      "vermutung": {"sitz": "Australien", "host": "US/AU (Cloud)", "gdpr": "AU-Anbieter, AVV prüfen", "preisart": "Free / Abonnement je Nutzer"},
-      "pruefen": ["Datenschutz: DPA für Teams?", "Preise: Modell"],
-      "host": "", "gdpr": "", "preis": "", "bestaetigt": null
+      "sparten": [
+        "content_creation",
+        "agentur_design",
+        "verlag_publishing"
+      ],
+      "vermutung": {
+        "sitz": "Australien",
+        "host": "US/AU (Cloud)",
+        "gdpr": "AU-Anbieter, AVV prüfen",
+        "preisart": "Free / Abonnement je Nutzer"
+      },
+      "pruefen": [
+        "Datenschutz: DPA für Teams?",
+        "Preise: Modell"
+      ],
+      "host": "US/AU/EU u. a. (nicht wählbar)",
+      "gdpr": "AU-Anbieter, DPA vorhanden",
+      "preis": "",
+      "bestaetigt": true
     }
   ],
   "programme": [
@@ -132,10 +315,24 @@
       "url": "https://www.initiative-musik.de/foerderung/",
       "provider": "Initiative Musik gGmbH (BKM)",
       "region": "Deutschland (bundesweit)",
-      "sparten": ["musik_audio"],
-      "vermutung": {"antragsberechtigt": "Unternehmen der Musikwirtschaft, Künstler:innen, Spielstätten", "frist": "mehrere Runden/Jahr", "quote": "Zuschuss, projektabhängig"},
-      "pruefen": ["Ist ein Tonstudio als Unternehmen der Musikwirtschaft antragsberechtigt?", "Welches Teilprogramm passt (Infrastruktur, Export)?", "Nächste Frist?"],
-      "funding_rate": "", "max_amount": "", "deadline": "", "focus": "", "bestaetigt": null
+      "sparten": [
+        "musik_audio"
+      ],
+      "vermutung": {
+        "antragsberechtigt": "Unternehmen der Musikwirtschaft, Künstler:innen, Spielstätten",
+        "frist": "mehrere Runden/Jahr",
+        "quote": "Zuschuss, projektabhängig"
+      },
+      "pruefen": [
+        "Ist ein Tonstudio als Unternehmen der Musikwirtschaft antragsberechtigt?",
+        "Welches Teilprogramm passt (Infrastruktur, Export)?",
+        "Nächste Frist?"
+      ],
+      "funding_rate": "bis 60 % (degressiv)",
+      "max_amount": "20.000 € je Antrag, 35.000 € je Jahr",
+      "deadline": "",
+      "focus": "Exportvorhaben von KMU und Selbständigen der Musikwirtschaft (Labels, Verlage, Produzent:innen, Dienstleister mit internationaler Ausrichtung); nicht rückzahlbarer Zuschuss",
+      "bestaetigt": true
     },
     {
       "id": "musikfonds",
@@ -143,10 +340,24 @@
       "url": "https://www.musikfonds.de/",
       "provider": "Musikfonds e. V. (BKM)",
       "region": "Deutschland (bundesweit)",
-      "sparten": ["musik_audio"],
-      "vermutung": {"antragsberechtigt": "Künstler:innen, Ensembles, Initiativen — Unternehmen prüfen", "frist": "2 Runden/Jahr", "quote": "Zuschuss"},
-      "pruefen": ["Sind Unternehmen antragsberechtigt oder nur Künstler:innen?", "Nächste Frist?"],
-      "funding_rate": "", "max_amount": "", "deadline": "", "focus": "", "bestaetigt": null
+      "sparten": [
+        "musik_audio"
+      ],
+      "vermutung": {
+        "antragsberechtigt": "Künstler:innen, Ensembles, Initiativen — Unternehmen prüfen",
+        "frist": "2 Runden/Jahr",
+        "quote": "Zuschuss"
+      },
+      "pruefen": [
+        "Sind Unternehmen antragsberechtigt oder nur Künstler:innen?",
+        "Nächste Frist?"
+      ],
+      "funding_rate": "",
+      "max_amount": "",
+      "deadline": "",
+      "focus": "",
+      "bestaetigt": false,
+      "_entscheidung": "Fördert künstlerische Musikprojekte (Werk – Interpretation – Veranstaltung); Antragsberechtigung von Unternehmen nicht belegt"
     },
     {
       "id": "deutscher_verlagspreis",
@@ -154,11 +365,26 @@
       "url": "https://www.deutscher-verlagspreis.de/",
       "provider": "BKM / Kurt Wolff Stiftung",
       "region": "Deutschland (bundesweit)",
-      "sparten": ["verlag_publishing"],
-      "vermutung": {"antragsberechtigt": "unabhängige Verlage bis zu einer Umsatzgrenze", "frist": "jährliche Bewerbungsphase", "quote": "Preisgeld, keine Projektförderung"},
-      "pruefen": ["Bewerbungszeitraum?", "Umsatzgrenze?", "Preisgeld-Kategorien?"],
-      "funding_rate": "", "max_amount": "", "deadline": "", "focus": "", "bestaetigt": null,
+      "sparten": [
+        "verlag_publishing"
+      ],
+      "vermutung": {
+        "antragsberechtigt": "unabhängige Verlage bis zu einer Umsatzgrenze",
+        "frist": "jährliche Bewerbungsphase",
+        "quote": "Preisgeld, keine Projektförderung"
+      },
+      "pruefen": [
+        "Bewerbungszeitraum?",
+        "Umsatzgrenze?",
+        "Preisgeld-Kategorien?"
+      ],
+      "funding_rate": "Preisgeld",
+      "max_amount": "Gütesiegel 18.000 €, Spitzenpreis 50.000 €",
+      "deadline": "",
+      "focus": "Auszeichnung unabhängiger Buchverlage (Sitz in Deutschland, konzernunabhängig, seit 3 Jahren, Ø-Umsatz bis 3 Mio. €/Jahr); Preisgeld, keine Projektförderung",
+      "bestaetigt": true,
       "_hinweis": "Ein Preis, keine Projektförderung. Im Report als 'Preis (Bewerbung möglich)' kennzeichnen."
     }
-  ]
+  ],
+  "_ergebnis": "Faktencheck 05.09.2026 übernommen: Werkzeuge ['LanguageTool', 'DeepL Write Pro', 'Duden-Mentor', 'Auphonic', 'iZotope RX', 'Adobe Podcast Enhance', 'Crowdin', 'Canva Magic Studio']; Programme ['initiative_musik', 'deutscher_verlagspreis']; Digitalbonus Bayern expired → active"
 }

@@ -57,11 +57,19 @@ def _parse_date(value: Any) -> Optional[date]:
 
 
 def _blacklist_terms() -> List[str]:
+    """Nur die Basis-Blacklist (tote Programme). Digitalbonus Bayern steht
+    im Enforcer bedingt auf der Liste — es wird ausserhalb Bayerns
+    gefiltert, ist aber kein totes Programm (KIS-1296: Laufzeit bis
+    31.12.2027, am 05.09.2026 belegt)."""
     try:
-        from b25_enforcer import FUNDING_BLACKLIST
-        return [t.lower() for t in FUNDING_BLACKLIST]
+        from b25_enforcer import _FUNDING_BLACKLIST_BASE
+        return [t.lower() for t in _FUNDING_BLACKLIST_BASE]
     except Exception:
-        return ["go-digital"]
+        try:
+            from b25_enforcer import FUNDING_BLACKLIST
+            return [t.lower() for t in FUNDING_BLACKLIST if "digitalbonus" not in t.lower() and "digital-bonus" not in t.lower()]
+        except Exception:
+            return ["go-digital"]
 
 
 # ---------------------------------------------------------------------------

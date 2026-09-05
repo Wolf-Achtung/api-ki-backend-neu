@@ -124,11 +124,14 @@ class TestPruefdatumGesetzt:
 
     def test_geaenderte_eintraege_tragen_das_pruefdatum(self):
         geaendert = {"profit_berlin", "kfw_digital_innovation", "kompass",
-                     "invest_bw_digital_ki", "digi4kmu_at", "aws_digi_invest",
-                     "digitalbonus_bayern", "zim"}
+                     "invest_bw_digital_ki", "digi4kmu_at", "aws_digi_invest", "zim"}
         for p in _progs(KERN):
             if p["id"] in geaendert:
                 assert p["verified_at"] == "2026-09-03", p["id"]
+            # KIS-1296: Digitalbonus Bayern am 05.09.2026 nachgeprueft — laeuft
+            # wieder (Laufzeit bis 31.12.2027, monatliches Kontingent).
+            if p["id"] == "digitalbonus_bayern":
+                assert p["verified_at"] == "2026-09-05" and p["status"] == "active"
 
 
 class TestRadarBleibtRuhigUndErinnert:

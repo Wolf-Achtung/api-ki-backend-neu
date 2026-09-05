@@ -65,14 +65,19 @@ Merkregeln:
   `ENABLE_TAVILY`/`ENABLE_PERPLEXITY` sind wirkungslos — beide Dienste
   schalten über die Anwesenheit ihres API-Schlüssels. Werkzeug:
   `scripts/env_unused.py`. Löschen muss Wolf in Railway.
-- Tool-Daten: `data/tools_seed.json` hat 20 von 23 Einträgen ohne
-  `verified_at`. Der Tool-Radar läuft (Issue #1168). Die
+- Tool-Daten: `data/tools_seed.json` hat 31 Einträge, 11 mit
+  `verified_at` (8 davon aus dem Faktencheck vom 05.09.2026, KIS-1296:
+  LanguageTool, DeepL Write Pro, Duden-Mentor, Auphonic, iZotope RX,
+  Adobe Podcast Enhance, Crowdin, Canva Magic Studio). Abgelehnt, weil
+  Verarbeitungsort oder DPA nicht belegt: Lokalise, Scenario, Inworld,
+  Opus Clip (Begründung in `data/kandidaten_stufe4.json`). Der
+  Tool-Radar läuft (Issue #1168). Die
   Domainbeschränkung (KIS-1273) wirkt: Der Lauf vom 03.09. 22:23 lieferte
   35 Kandidaten, alle auf der jeweiligen Herstellerdomain. Preise und
   DSGVO-Status muss trotzdem ein Mensch bestätigen — der Radar meldet
   nur. Alle zwölf toten Trust-URLs sind ersetzt (KIS-1277/1278);
   Adobe-Befunde sind Timeouts, keine toten Seiten.
-- Zwei Tool-Listen: `data/tools_seed.json` (23 Einträge, der Radar prüft
+- Zwei Tool-Listen: `data/tools_seed.json` (31 Einträge, der Radar prüft
   sie) und `DEFAULT_TOOLS` in `services/tools_recommender.py` (12
   Einträge, Notfall-Ausweichliste, ungeprüft). Wo sich beide
   überschneiden, hält `tests/test_kis1278_zweite_toolliste.py` sie
@@ -81,8 +86,11 @@ Merkregeln:
 - Der Werkzeug-Block im R1-Report (`VERIFIED_TOOLS_HTML`, KIS-1280)
   rendert `tools_seed.json` deterministisch. **Regel: Ein Preis
   erscheint nur mit `verified_at`.** Ohne Prüfdatum steht der Verweis
-  auf die Anbieterseite. Stand 04.09.2026 haben 20 von 23 Einträgen kein
-  Prüfdatum — die Lücke ist im Report sichtbar, mit Absicht.
+  auf die Anbieterseite. Stand 05.09.2026 haben 20 von 31 Einträgen kein
+  Prüfdatum — die Lücke ist im Report sichtbar, mit Absicht. Nächster
+  Prüflauf: `docs/perplexity-briefing-stufe4.md` als Vorlage, Ergebnis
+  über `data/kandidaten_stufe4.json` und
+  `scripts/kandidaten_uebernehmen.py`.
   Kill-Switch: `VERIFIED_TOOLS_BOX_ENABLED=0`.
 - Zwei tote Tool-Pfade (nicht gelöscht, aber ohne Wirkung):
   `services/tools_html_output.py` hat keinen Aufrufer, und
@@ -95,9 +103,15 @@ Merkregeln:
   dazu `data/funding_programs.json` als Fallback in
   `services/research_pipeline.py`. Die Statusregel liegt in
   `funding_recommender.ist_beantragbar`.
-- Zwei Förderdaten-Punkte ohne Beleg (als Notiz im Datensatz vermerkt):
-  „aws digi Invest" als eigenständiges Programm, und der Status von
-  Digitalbonus Bayern (steht als `expired`, Seite wieder erreichbar).
+- Ein Förderdaten-Punkt ohne Beleg (als Notiz im Datensatz vermerkt):
+  „aws digi Invest" als eigenständiges Programm. Digitalbonus Bayern ist
+  seit 05.09.2026 belegt wieder `active` (Laufzeit bis 31.12.2027,
+  monatliches Kontingent); der Förder-Radar prüft nur noch die
+  Basis-Blacklist, denn der Enforcer filtert Digitalbonus außerhalb
+  Bayerns bedingt, nicht als totes Programm. Neu seit dem Faktencheck:
+  Initiative Musik (Exportförderung, `musik_audio`) und Deutscher
+  Verlagspreis (Preisgeld, `verlag_publishing`). Musikfonds abgelehnt:
+  fördert Kunstprojekte, Antragsrecht von Unternehmen nicht belegt.
 - ZIM steht bis zur Wiedervorlage am 15.01.2027 auf `paused` und fällt
   aus allen Empfehlungen. Der Förder-Radar erinnert ab diesem Datum.
 - Perplexity liefert die Markt-Box, die das DE-Template nicht rendert:
