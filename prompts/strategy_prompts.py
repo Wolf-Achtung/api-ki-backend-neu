@@ -224,6 +224,7 @@ WERKZEUGE (VERBINDLICH): Produktnamen nur aus dieser Liste oder aus dem Stack de
 IST-ZUSTAND (VERBINDLICH): Behaupte keinen KI-Einsatz, den die Eingaben nicht nennen. „Erste KI-Anwendungen integriert" nur, wenn laufende KI-Projekte oder genutzte KI-Werkzeuge im Input stehen; sonst „bislang ohne strukturierten KI-Einsatz". Genutzte Software laut Strategie-Fragebogen: {s5_software}. KI-Erfahrung: {s8_erfahrung}. Stehen dort KI-Werkzeuge (ChatGPT, Claude, Perplexity, Copilot …), nutzt der Kunde KI bereits punktuell — die Spalte „Ihr Unternehmen" sagt dann „punktuell, ohne Prozess", nie „0 %" oder „keine Nutzung" (Lauf KIS1277).
 
 BENCHMARK-ZAHLEN SIND BELEGT ODER RICHTWERTE (VERBINDLICH, KIS-1305): Jeder Prozentwert in der Benchmark-Tabelle nennt in derselben Zeile seine Quelle aus der Recherche (Herausgeber und Jahr, z. B. „Bitkom 2025"). Liegt in der Recherche keine benannte Quelle vor, steht kein Prozentwert, sondern eine Einordnung in Worten („weit verbreitet", „Mehrheit der Betriebe") mit dem Zusatz „Richtwert". Nie „Studie" oder „Branchendurchschnitt" ohne Namen. Die Werte 75 % oder 96 % ohne Quelle sind ein Rückfall (Lauf KIS1277, S. 8).
+REGION UND STACK (VERBINDLICH, KIS-1312): Eine Quelle beschreibt die Region, die sie selbst nennt — eine österreichische Studie (RTR) sagt nichts über „bayerische Medienhäuser" (Lauf KIS1281, S. 8). In der Spalte „Ihr Unternehmen" stehen nur Werkzeuge aus {s5_software} oder aus den KI-Projekten des Kunden; Lauf KIS1281 schrieb dort „Runway, Descript" — Descript hatte der Kunde nie genannt.
 
 LIVE-RECHERCHE-ERGEBNISSE:
 --- Markttrends ---
@@ -454,7 +455,7 @@ Für JEDE der 3 Strategien liefere:
    {kuratierte_tools_namen}. Sonst Gattungsbegriff („Transkriptionsdienst").
    Keine Werkzeugpreise, keine Datenschutz-Einstufungen.
 6. Erster Validierungsschritt — 1 konkreter Test (maximal 2 Wochen, maximal 500 €)
-7. Umsatzprojektion — konservative Schätzung: Monatsumsatz nach 6 Monaten.
+7. Umsatzprojektion — konservative Schätzung: Monatsumsatz nach 6 Monaten. Die Projektion muss zu Preis × Menge passen: Bei Jahreslizenzen den Jahresbetrag durch zwölf teilen — Lauf KIS1281 nannte „25.000 € im Monat bei 1–2 Jahreslizenzen zu 20.000–40.000 €" (KIS-1312).
    PFLICHT: Nenne im selben Satz die Menge, aus der sich die Zahl ergibt
    (Aufträge je Monat, Abonnenten, Auslastung, Workshop-Termine).
    Richtig: „voraussichtlich 10.000 € im Monat, bei 4–6 Aufträgen".
@@ -560,7 +561,7 @@ WICHTIG: '{vendor_audit_status}' bezieht sich NUR auf die EU-Konformität der ge
 Wenn ein Tool (z.B. ChatGPT) im Report 1 als RED/nicht konform bewertet wurde:
 - Erwähne den DSGVO-Vorbehalt bei der ERSTEN Nennung im Kapitel — nicht bei jeder weiteren (KIS-1238: der Einschub stand 7× im Bericht).
 - Empfehle es NICHT als Hauptempfehlung.
-- Priorisiere EU-gehostete Alternativen (z.B. Aleph Alpha, DeepL, Amberscript). Claude, ChatGPT, Perplexity, Gemini, Midjourney und Runway sind US-Anbieter — nie als „EU-konform" bezeichnen (KIS-1302).
+- Priorisiere EU-gehostete Alternativen (z.B. Aleph Alpha, DeepL, Amberscript). Claude, ChatGPT, Perplexity, Gemini, Midjourney, Runway, Adobe Firefly, Descript und ElevenLabs sind US-Anbieter — nie als „EU-konform" bezeichnen (KIS-1302).
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
@@ -878,7 +879,7 @@ TOOL-EMPFEHLUNGEN (Zusammenfassung):
 WERKZEUGE UND HOSTING IN DIESER SECTION (VERBINDLICH, KIS-1302):
 - Werkzeugnamen nur aus dieser Liste oder aus dem Stack des Kunden: {kuratierte_tools_namen}.
 - Die Hosting-Angabe je Werkzeug steht in der gepflegten Liste unten; übernimm sie wörtlich. Ein Werkzeug gilt nur dann als „EU-gehostet" oder „EU-konform", wenn seine Zeile EU als Hosting nennt. „lokal" (Desktop-Installation, etwa DaVinci Resolve oder Topaz Video AI) ist kein EU-Hosting: Diese Werkzeuge heißen „lokal installiert", nie „EU-gehostet" (Lauf KIS1277, S. 36).
-- ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney und Runway sind US-Anbieter: nie als „EU-konform" oder „EU-gehostet" bezeichnen — wenn nötig „US-Anbieter, AVV prüfen". Lauf KIS1275 empfahl „EU-konforme Tools wie Microsoft 365 Copilot, Runway und Amberscript" — Runway ist US. Microsoft 365 Copilot hat keine Zeile in der Liste: Datenschutz „laut Anbieter prüfen", nie „EU-konform" (Lauf KIS1278, Risikotabelle).
+- ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney, Runway, Adobe Firefly, Descript und ElevenLabs sind US-Anbieter: nie als „EU-konform" oder „EU-gehostet" bezeichnen — wenn nötig „US-Anbieter, AVV prüfen". Lauf KIS1275 empfahl „EU-konforme Tools wie Microsoft 365 Copilot, Runway und Amberscript" — Runway ist US. Microsoft 365 Copilot hat keine Zeile in der Liste: Datenschutz „laut Anbieter prüfen", nie „EU-konform" (Lauf KIS1278, Risikotabelle).
 {kuratierte_tools}
 
 ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.

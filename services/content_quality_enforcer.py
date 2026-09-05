@@ -1105,12 +1105,15 @@ FRAGMENT_PATTERNS = [
      'Maßnahme: Siehe detaillierte Beschreibung in der Roadmap.'),
 
     # "...eines kompakten." → Artikel + Adjektiv ohne Nomen
-    (r'([A-ZÄÖÜ][^.!?]{10,50})\s+(eines|einer|einem)\s+[a-zäöüß]+\s*\.',
+    # KIS-1312: Eine Präposition vor dem Artikel fällt mit — sonst bleibt
+    # „… schwerer zu korrigieren sind als bei – siehe Roadmap für Details."
+    # (Lauf KIS1281, R1 S. 29).
+    (r'([A-ZÄÖÜ][^.!?]{10,50}?)(?:\s+(?:als\s+bei|als|bei|wie|mit|in|auf|zu))?\s+(eines|einer|einem)\s+[a-zäöüß]+\s*\.',
      r'\1 – siehe Roadmap für Details.'),
 
-    
+
     # Generische Fragment-Erkennung: Satz endet mit Artikel
-    (r'([A-ZÄÖÜ][^.!?]{10,50})\s+(eines|einer|einem|von|für|zur|zum)\s*\.', 
+    (r'([A-ZÄÖÜ][^.!?]{10,50}?)(?:\s+(?:als\s+bei|als|bei|wie|mit|in|auf))?\s+(eines|einer|einem|von|für|zur|zum)\s*\.',
      r'\1 – siehe Roadmap für Details.'),
 ]
 
@@ -2045,7 +2048,13 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\bÜbersichtliche\s+Übersichts\b', 'Übersichtliche Übersicht'),
     
     # v14.32: Verbkonjugation nach "Sie" korrigieren (Sie + -st → Sie + -en)
-    (r'\bSie ([\w]+)st\b', r'Sie \1en'),  # Allgemeines Pattern
+    # KIS-1312: Das Muster hielt „Prüfen Sie zuerst" für eine Du-Form und
+    # machte „Sie zueren" daraus (Lauf KIS1281, R1 S. 27). Adverbien und
+    # Substantive auf -st sind keine Verben.
+    (r'\bSie (?!(?i:zuerst|erst|selbst|meist|fast|zunächst|höchst|ernst|sonst|längst|zuletzt|zumeist|'
+     r'nächst|best|schnellst|Angst|Kunst|Dienst|Herbst|Text|Test|Rest|Post|West|Ost|Frust|Lust|Gunst|'
+     r'Wurst|Obst|Rost|Trost|Geist|Christ|Last|Gast|Ast|Mast|Kost|Verlust|Kontext|Protest)\b)([\w]+)st\b',
+     r'Sie \1en'),  # Allgemeines Pattern
     # Spezifische häufige Fälle:
     (r'\bSie einhältst\b', 'Sie einhalten'),
     (r'\bSie prüfst\b', 'Sie prüfen'),
@@ -2312,7 +2321,9 @@ GRAMMAR_FIX_PATTERNS = [
     # KIS-1311: Dezimalpunkt in deutschen Beträgen — „zwischen 0.5 und 2 Mio. €"
     # (R1 Förderkapitel, Lauf KIS1280). Nur einstellige Ziffernpaare, damit
     # „10.000 bis 50.000 €" unberührt bleibt.
-    (r'(?<![\d.])(\d)\.(\d)(?![\d.])(?=\s*(?:und|bis|–|-|Mio|Mrd))', r'\1,\2'),
+    # KIS-1312: auch „22.5 %" (Lauf KIS1281, R1 S. 26) — zwei Ziffern vor dem
+    # Punkt, eine danach, Prozentzeichen als Kontext.
+    (r'(?<![\d.])(\d{1,2})\.(\d)(?![\d.])(?=\s*(?:und|bis|–|-|Mio|Mrd|%))', r'\1,\2'),
 
     # FIX-GRAMMAR-T1: ROI ist maskulin — "ein attraktives ROI" → "einen attraktiven ROI"
     (r'ein\s+sehr\s+attraktives\s+ROI', 'einen sehr attraktiven ROI'),

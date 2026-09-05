@@ -810,6 +810,13 @@ _CONTEXT_LABEL_PATTERNS = [
     r'<p[^>]*>\s*(?:Typische Tools im Einsatz|Charakteristika|'
     r'Fokus-Priorit\xe4ten|In Ihrer aktuellen Gr\xf6\xdfe nicht sinnvoll)\s*:?\s*</p>',
     r'<ul[^>]*>\s*<li>\s*\((?:Keine Angaben|No data available)\)\s*</li>\s*</ul>',
+    # KIS-1312: Der Kontextblock kam als Fließtext-Vorspann zurück — „Typische
+    # Workflows umfassen Content-Erstellung, Projektmanagement …" und „Ihr
+    # Unternehmen operiert als KMU mit 11–100 Mitarbeitenden, begrenztem CAPEX
+    # und OPEX" vor dem KI-Rechte-Kapitel (Lauf KIS1281, R1 S. 23).
+    r'<p[^>]*>\s*(?:<strong>)?\s*(?:Typische Workflows umfassen|Typical workflows include)[^<]{0,600}</p>',
+    r'<p[^>]*>\s*(?:<strong>)?\s*(?:Ihr Unternehmen operiert als|Your company operates as)[^<]{0,600}'
+    r'(?:CAPEX|OPEX|Prozessstandardisierung|process standardi[sz]ation)[^<]{0,300}</p>',
 ]
 
 _CONTEXT_LABEL_RES = [re.compile(p, re.IGNORECASE | re.DOTALL) for p in _CONTEXT_LABEL_PATTERNS]

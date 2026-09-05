@@ -108,7 +108,10 @@ class _TableParser(HTMLParser):
             # KIS1280 verloren die <li> dabei jede Grenze („… als Quick Win
             # Einrichtung eines Steuerungskreises Kick-off-Kommunikation …",
             # Strategie S. 22). Ein Semikolon hält die Punkte lesbar.
-            self._current_text = self._current_text.rstrip() + "; "
+            # KIS-1312: Ein Listenpunkt endet oft mit Punkt — „Richtlinie.; Start
+            # von …" (Lauf KIS1281, Strategie S. 23). Der Punkt fällt vor dem
+            # Semikolon weg.
+            self._current_text = self._current_text.rstrip().rstrip(".") + "; "
 
     def handle_data(self, data):
         if self._in_cell:
@@ -248,6 +251,11 @@ _SCENARIO_KEYWORDS = {
 def _scenario_card_html(label: str, main_value: str, desc: str) -> str:
     """Build a single scenario card with color-coded inline styles."""
     color, bg = _SCENARIO_COLORS.get(label, ("#6B7280", "#f9fafb"))
+    # KIS-1312: Die Karte zeigt den ROI. Schreibt das Modell die Zelle ohne
+    # Prozentzeichen („-18", Lauf KIS1281 Strategie S. 21), steht auf der
+    # Karte eine nackte Zahl. Eine reine Zahl bekommt das Zeichen.
+    if re.fullmatch(r"[-−+]?\d{1,3}(?:[.,]\d)?", (main_value or "").strip()):
+        main_value = (main_value or "").strip() + " %"
     is_rec = label == "Realistisch"
     shadow = "box-shadow:0 4px 12px rgba(59,130,246,0.15);" if is_rec else ""
     cls = "scenario-card recommended" if is_rec else "scenario-card"

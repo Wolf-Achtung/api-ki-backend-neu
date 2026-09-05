@@ -452,6 +452,51 @@ verlor 3-Schritte-Prozess und Checkliste. Lokal reproduziert mit
   Amberscript statt Otter.
 - Test: `tests/test_kis1302_testlauf_1275.py`.
 
+## Eine Siezen-Regel kennt kein Adverb (KIS-1312)
+
+Testlauf KIS1281 (05.09.2026, Build 2126, Motion-Profil nach KIS-1311): Alles
+aus KIS-1311 ist im PDF — Anwender-Pfad, Runway im Vendor-Audit, „Förderantrag
+vorbereiten", Roadmap-Karten mit Trennern, EIC-Passung „niedrig", „0,5 und
+2 Mio. €", kein falsches Jahr im Ausblick. Restbefunde:
+
+- **„Prüfen Sie zueren, ob"** (R1 S. 27): Die Siezen-Regel `Sie (\w+)st` →
+  `Sie \1en` hielt „zuerst" für eine Du-Form. Jetzt mit Ausnahmeliste
+  (zuerst, erst, selbst, meist, fast, zunächst, Kunst, Text …). **Wer eine
+  Endungsregel baut, listet die Wörter, die die Endung tragen, ohne Verb zu
+  sein.**
+- **„… sind als bei – siehe Roadmap für Details."** (R1 S. 29): Der
+  Fragment-Reparateur ersetzt „Artikel + Adjektiv + Punkt", ließ aber die
+  Präposition davor stehen. Jetzt fällt „als bei/bei/als/wie/mit" mit.
+- **Sofort-Start:** „… Prozess in Medien & Kreativwirtschaft" statt des
+  Fachgebiets, dazu „Microsoft Copilot + Azure OpenAI" und n8n für ein
+  Motion-Studio. `_fachgebiet_kurz` (Doppelpunkt, Satz, Wortgrenze) gilt
+  jetzt für alle Stufen; Medienbetriebe bekommen `TOOL_EMPFEHLUNGEN_MEDIEN`
+  (Amberscript, DaVinci Resolve). Die 23-Tage-Challenge für Anwender bleibt
+  generisch („E-Mail-zu-Zusammenfassung-Workflow") — eigene Medien-Fassung
+  offen.
+- **Kontext-Echo als Prosa** (R1 S. 23): „Typische Workflows umfassen …",
+  „Ihr Unternehmen operiert als KMU mit 11–100 Mitarbeitenden, begrenztem
+  CAPEX und OPEX" — der Kontextblock kam diesmal nicht als Liste, sondern als
+  Vorspann. Zwei Absatzmuster in `pipeline_sanitizers`, Prompt-Regel dazu.
+- **Szenario-Karten ohne Prozent** (Strategie S. 21): Das Modell schrieb
+  „-18" ohne Zeichen, der Zahlen-Ersetzer greift nur mit `%`. Die Karte
+  ergänzt es bei einer nackten Zahl. `.;` in den Roadmap-Karten: Punkt fällt
+  vor dem Semikolon.
+- **Adobe Firefly als „EU-konform"** (S3): Wächter und Prompt-Listen kannten
+  nur sechs US-Namen. Jetzt auch Firefly, Descript, ElevenLabs.
+- **Region der Quelle** (S2): „75 % der bayerischen Medienhäuser (RTR 2025)"
+  — RTR ist die österreichische Regulierungsbehörde. Regel: Eine Quelle
+  beschreibt die Region, die sie selbst nennt. Spalte „Ihr Unternehmen" nur
+  aus dem Stack (dort stand Descript).
+- **Umsatzprojektion** (S3b): „25.000 € im Monat bei 1–2 Jahreslizenzen zu
+  20.000–40.000 €". Regel: Preis × Menge, Jahresbeträge durch zwölf.
+- Offen, nur beobachtet: R1 S. 21 leer (53 Zeichen) — die Vendor-Prüfung
+  mit vier Anbietern endet am Seitenende, die drei generischen
+  Empfehlungs-Punkte („Zertifizierungsnachweise …") fehlen seit jeher im
+  PDF, lokal sind sie im HTML. Ursache offen. Digitalbonus-Grenze „unter 50
+  Mitarbeitende" kommt aus dem Modell, nicht aus den Daten.
+- Test: `tests/test_kis1312_testlauf_1281.py`.
+
 ## Ein Teilwort ist kein Stichwort (KIS-1311)
 
 Testlauf KIS1280 (05.09.2026, Build 2038): erster Lauf mit dem

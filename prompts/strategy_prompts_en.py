@@ -228,6 +228,7 @@ TOOLS (BINDING): Product names only from this list or from the customer's existi
 CURRENT STATE (BINDING): Do not claim AI usage the inputs do not mention. "First AI applications in place" only if running AI projects or AI tools in use appear in the input; otherwise "no structured AI usage yet". Software in use per the strategy questionnaire: {s5_software}. AI experience: {s8_erfahrung}. If AI tools appear there (ChatGPT, Claude, Perplexity, Copilot …), the client already uses AI ad hoc — the "Your company" column then says "ad hoc, no process", never "0 %" or "no usage".
 
 BENCHMARK FIGURES ARE SOURCED OR GUIDE VALUES (BINDING, KIS-1305): Every percentage in the benchmark table names its research source in the same row (publisher and year, e.g. "Bitkom 2025"). Without a named source in the research, write no percentage — use a verbal classification ("widespread", "majority of firms") marked "guide value". Never "study" or "industry average" without a name.
+REGION AND STACK (BINDING, KIS-1312): A source describes the region it names itself — an Austrian study (RTR) says nothing about Bavarian media houses. The column "your company" lists only tools from {s5_software} or the customer's AI projects.
 
 LIVE RESEARCH RESULTS:
 --- Market trends ---
@@ -458,7 +459,7 @@ For EACH of the 3 strategies deliver:
    {kuratierte_tools_namen}. Otherwise use a generic term ("transcription service").
    No tool prices, no data protection ratings.
 6. First validation step — 1 concrete test (max. 2 weeks, max. 500 €)
-7. Revenue projection — conservative estimate: monthly revenue after 6 months
+7. Revenue projection — conservative estimate: monthly revenue after 6 months. The projection must match price × volume: for annual licences divide the yearly amount by twelve (KIS-1312)
 
 Close with a recommendation: which strategy first, why, and how the three build on each other.
 
@@ -549,7 +550,7 @@ IMPORTANT: '{vendor_audit_status}' refers ONLY to the EU compliance of the AI to
 If a tool (e.g. ChatGPT) was rated RED/non-compliant in Report 1:
 - Mention the GDPR caveat at the FIRST mention in the chapter — not at every subsequent one (KIS-1238: the caveat appeared 7 times in the report).
 - Do NOT make it the primary recommendation.
-- Prioritize EU-hosted alternatives (e.g. Aleph Alpha, DeepL, Amberscript). Claude, ChatGPT, Perplexity, Gemini, Midjourney and Runway are US vendors — never call them "EU-compliant" (KIS-1302).
+- Prioritize EU-hosted alternatives (e.g. Aleph Alpha, DeepL, Amberscript). Claude, ChatGPT, Perplexity, Gemini, Midjourney, Runway, Adobe Firefly, Descript and ElevenLabs are US vendors — never call them "EU-compliant" (KIS-1302).
 
 TRADE-OFFS (MANDATORY): Name at least one real trade-off for every major recommendation. Examples: speed vs. quality, automation vs. control, data protection vs. convenience, standardization vs. individuality, investment today vs. benefit later. State trade-offs briefly in the body text, without an extra box. FORBIDDEN: presenting measures as free, risk-free or without tension.
 
@@ -861,7 +862,7 @@ TOOL RECOMMENDATIONS (summary):
 TOOLS AND HOSTING IN THIS SECTION (BINDING, KIS-1302):
 - Tool names only from this list or from the customer's stack: {kuratierte_tools_namen}.
 - The hosting entry per tool is in the curated list below; copy it verbatim. A tool counts as "EU-hosted" or "EU-compliant" only if its row names EU as hosting. "local" (desktop installation, e.g. DaVinci Resolve or Topaz Video AI) is not EU hosting: call these tools "installed locally", never "EU-hosted".
-- ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney and Runway are US vendors: never call them "EU-compliant" or "EU-hosted" — if needed, "US vendor, check DPA". Microsoft 365 Copilot has no row in the list: data protection "check with the vendor", never "EU-compliant".
+- ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney, Runway, Adobe Firefly, Descript and ElevenLabs are US vendors: never call them "EU-compliant" or "EU-hosted" — if needed, "US vendor, check DPA". Microsoft 365 Copilot has no row in the list: data protection "check with the vendor", never "EU-compliant".
 {kuratierte_tools}
 
 NO FALSE PRECISION (BINDING): Do not state exact figures, deadlines, market shares, percentages, tool prices or funding amounts unless they appear explicitly in the input or the research. Where exact data is missing, use a range, a qualitative classification or careful wording instead. FORBIDDEN: invented percentages, month counts, euro amounts, rankings or seemingly exact benchmarks.

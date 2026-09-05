@@ -1401,6 +1401,43 @@ TOOL_EMPFEHLUNGEN_EXPERT = {
 # WARNUNGEN / DON'Ts
 # =============================================================================
 
+# KIS-1312: Sofort-Start-Werkzeuge für Medienbetriebe (Einsteiger und
+# Anwender). Namen wie in data/tools_seed.json, damit _sofort_preis den
+# geprüften Preis findet; Hosting wörtlich aus der Liste.
+TOOL_EMPFEHLUNGEN_MEDIEN = [
+    {
+        "name": "Amberscript",
+        "preis": "siehe Anbieterseite",
+        "url": "https://www.amberscript.com",
+        "nutzen": "Transkription und Untertitel aus Interview- und Rohmaterial",
+        "empfehlung": "EU-Anbieter (NL), AVV verfügbar — erster Baustein für Untertitel je Format",
+    },
+    {
+        "name": "DaVinci Resolve (Neural Engine)",
+        "preis": "siehe Anbieterseite",
+        "url": "https://www.blackmagicdesign.com/products/davinciresolve",
+        "nutzen": "Schnitt, Grading und KI-Funktionen lokal auf dem Rechner",
+        "empfehlung": "Lokal installiert — Kundenmaterial verlässt das Haus nicht",
+    },
+]
+
+TOOL_EMPFEHLUNGEN_MEDIEN_EN = [
+    {
+        "name": "Amberscript",
+        "preis": "see vendor site",
+        "url": "https://www.amberscript.com",
+        "nutzen": "Transcription and subtitles from interview and raw footage",
+        "empfehlung": "EU vendor (NL), DPA available — first building block for subtitles per format",
+    },
+    {
+        "name": "DaVinci Resolve (Neural Engine)",
+        "preis": "see vendor site",
+        "url": "https://www.blackmagicdesign.com/products/davinciresolve",
+        "nutzen": "Editing, grading and AI features locally on your machine",
+        "empfehlung": "Installed locally — client material never leaves the building",
+    },
+]
+
 WARNUNGEN = [
     {
         "icon": "🔒",
@@ -1476,6 +1513,24 @@ CHECKLISTE_START_INTERMEDIATE = [
     {"text": "Workflow-Automatisierung skizzieren (z.B. Make/n8n)", "dauer": "20 Min"},
     {"text": "Zeitersparnis pro Woche schätzen und dokumentieren", "dauer": "10 Min"},
 ]
+
+def _fachgebiet_kurz(hauptleistung: str, fallback: str = "", max_len: int = 80) -> str:
+    """KIS-1312: Kurzes Fachgebiet aus der Hauptleistung für Einschübe wie
+    „… Prozess in {Fachgebiet}". Erst der Teil vor dem Doppelpunkt oder der
+    erste Satz; passt der nicht in ``max_len``, ein Wortgrenzen-Schnitt mit
+    Auslassungszeichen. Lauf KIS1281 (R1 S. 6) zeigte statt der Hauptleistung
+    den Branchennamen („… Prozess in Medien & Kreativwirtschaft")."""
+    t = re.sub(r"\s+", " ", str(hauptleistung or "")).strip()
+    if not t:
+        return fallback
+    kopf = re.split(r"\s*:\s*", t, maxsplit=1)[0]
+    if len(kopf) > max_len or kopf == t:
+        kopf = re.split(r"(?<=[a-zäöüß])[.!?]\s", t, maxsplit=1)[0]
+    kopf = kopf.strip().rstrip(".;,:")
+    if len(kopf) <= max_len:
+        return kopf or fallback
+    return kopf[:max_len].rsplit(" ", 1)[0].rstrip(".;,:") + " …"
+
 
 def _einschub_kuerzen(text: str, max_len: int = 80) -> str:
     """KIS-1311: Freitext für einen Klammer-Einschub an einer Satz- oder
@@ -2093,6 +2148,11 @@ def generate_sofort_start_html(
         tools = TOOL_EMPFEHLUNGEN_INTERMEDIATE.get(size_key, TOOL_EMPFEHLUNGEN_INTERMEDIATE["solo"])
     else:
         tools = TOOL_EMPFEHLUNGEN.get(size_key, TOOL_EMPFEHLUNGEN["solo"])
+    # KIS-1312: Medienbetriebe bekommen Produktionswerkzeuge statt Büro-KI.
+    # Lauf KIS1281 empfahl einem Motion-Design-Studio auf der Sofort-Start-Seite
+    # „Microsoft Copilot + Azure OpenAI" und „n8n / Make Enterprise".
+    if branche_key == "medien" and expertise_level != "expert":
+        tools = TOOL_EMPFEHLUNGEN_MEDIEN_EN if is_en else TOOL_EMPFEHLUNGEN_MEDIEN
     # KIS-1251: EN-Fassung der Tool-Felder (Preis/Nutzen)
     if is_en:
         tools = [_translate_tool_en(t) for t in tools]
@@ -2206,9 +2266,11 @@ def generate_sofort_start_html(
                 f"Definieren Sie ein messbares Optimierungsziel für die nächsten 30 Tage."
             )
     elif expertise_level == "intermediate":
+        # KIS-1312: kurzes Fachgebiet statt der ganzen Hauptleistung (drei
+        # Sätze) oder des Branchennamens.
         erster_schritt = (
             f"Identifizieren Sie den zeitintensivsten wiederkehrenden Prozess in "
-            f"{_hl_clean or 'Ihrem Arbeitsalltag'} und erstellen Sie einen strukturierten "
+            f"{_fachgebiet_kurz(_hl_clean, 'Ihrem Arbeitsalltag')} und erstellen Sie einen strukturierten "
             f"Prompt, der diesen Prozess in 3 Schritte zerlegt. Testen Sie das Ergebnis "
             f"mit einem realen Beispiel."
         )
@@ -2218,7 +2280,7 @@ def generate_sofort_start_html(
         if _hl_clean:
             erster_schritt = (
                 f"Testen Sie ChatGPT mit einer typischen Aufgabe aus Ihrem Bereich "
-                f"({_hl_clean}). Nutzen Sie dafür die Copy-Paste Prompts auf der nächsten Seite."
+                f"({_fachgebiet_kurz(_hl_clean)}). Nutzen Sie dafür die Copy-Paste Prompts auf der nächsten Seite."
             )
     
     # KIS-1251: lang-abhängige Scaffolding-Strings + Zahlformat
@@ -2338,9 +2400,8 @@ def generate_sofort_start_html(
         # KOMPLETTE Hauptleistung (mehrere Sätze) in "…{X}-Experte" injiziert
         # und erzeugte kaputte Sätze wie "erfahrener Finanzberatung für
         # KMU.Das Unternehmen bietet …an.-Experte" (Status-Report S. 7).
-        _fachgebiet = re.split(r'(?<=[a-zäöüß])[.!?]', _hl_clean, maxsplit=1)[0].strip() if _hl_clean else ""
-        if not _fachgebiet or len(_fachgebiet) > 80:
-            _fachgebiet = (_fachgebiet[:77].rsplit(" ", 1)[0] + "…") if len(_fachgebiet) > 80 else str(branche_data["name"])
+        # KIS-1312: dieselbe Kürzung wie im Anwender-Pfad (Doppelpunkt, Satz, Wortgrenze).
+        _fachgebiet = _fachgebiet_kurz(_hl_clean, str(branche_data["name"]))
         # KIS-1251: EN-Fallback statt deutschem Branchen-Namen
         if is_en and _fachgebiet == str(branche_data["name"]):
             _fachgebiet = "your field"
