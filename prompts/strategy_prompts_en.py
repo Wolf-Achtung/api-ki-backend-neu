@@ -150,6 +150,7 @@ STRATEGY_PROMPTS_EN = {
     "S1": """Write the section "Starting Point — Your AI Readiness Profile" for the AI strategy report.
 
 TOOLS (BINDING, KIS-1306): Product names only from this list or from the customer's existing stack: {kuratierte_tools_namen}. Never name discontinued or unlisted brands (e.g. "Adobe Sensei") — generic terms ("editing software with AI features") are fine.
+IN USE OR RECOMMENDED (BINDING, KIS-1311): Only tools named in the customer's software ({s5_software}) or AI projects ({ki_projekte}) count as "in use" or "your team already works with". Everything else from the list is a recommendation ("worth adding", "could complement"). Never attribute a listed tool to the customer's staff.
 
 COMPANY DATA:
 - Company name: {firmenname}
@@ -542,7 +543,8 @@ DIVERSITY RULES:
 
 VENDOR AUDIT FROM REPORT 1 (MANDATORY for tool recommendations):
 The AI Readiness Report rated {vendor_audit_red_count} tools as not EU-compliant
-and {vendor_audit_green_count} as compliant. Vendor audit compliance status (of the AI tools in use): {vendor_audit_status}.
+and {vendor_audit_green_count} as compliant. Vendor audit compliance status (of the AI tools in use): {vendor_audit_status}. Audited vendors: {vendor_audit_tools}.
+STATUS ONLY FOR AUDITED VENDORS (BINDING, KIS-1311): The status applies solely to the vendors listed under "Audited vendors". Never attach it to another name. For a stack tool without a row in the curated list (e.g. Notion, Google Workspace, Adobe Premiere Pro) the data-protection column reads "check with the vendor" — no hosting claim from memory.
 IMPORTANT: '{vendor_audit_status}' refers ONLY to the EU compliance of the AI tools in use, NOT to the overall AI readiness score. NEVER write 'overall status' — phrase it as 'vendor audit status: {vendor_audit_status}' or 'tool compliance status: {vendor_audit_status}'. Never present the raw value without that clear label.
 If a tool (e.g. ChatGPT) was rated RED/non-compliant in Report 1:
 - Mention the GDPR caveat at the FIRST mention in the chapter — not at every subsequent one (KIS-1238: the caveat appeared 7 times in the report).
@@ -789,7 +791,7 @@ TASK:
    b) Funding amount (EXACTLY as in the verified list)
    c) Funding rate (EXACTLY as in the verified list)
    d) Application deadline (if known)
-   e) Fit for {firmenname} (high/medium/low)
+   e) Fit for {firmenname} (high/medium/low). Rule (KIS-1311): if the programme note says "consortium", "scale-up", "deep tech" or "highly competitive", the fit for a business without an R&D share is "low" at most.
    f) Link/contact (EXACTLY as in the verified list)
 3. Show the individual programs with their respective funding amounts. Do NOT calculate a cross-program total — programs cannot be combined and an added-up total would be misleading.
 4. Give a recommended course of action: which program to apply for first?

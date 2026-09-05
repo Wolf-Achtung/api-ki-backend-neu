@@ -126,7 +126,7 @@ kennst, nenne keins.
 
 VENDOR-KONSISTENZ (PFLICHT bei Tool-Empfehlungen in S4 und S8):
 Der KI-Readiness Report hat {vendor_audit_red_count} Tools als nicht EU-konform
-(RED) bewertet und {vendor_audit_green_count} als konform (GREEN).
+(RED) bewertet und {vendor_audit_green_count} als konform (GREEN). Geprüft wurden: {vendor_audit_tools}.
 Vendor-Audit Compliance-Status (genutzter KI-Tools): {vendor_audit_status}.
 WICHTIG: Der Wert '{vendor_audit_status}' bezieht sich ausschließlich auf den Vendor-Audit-Compliance-Status der genutzten KI-Tools (z.B. 0 von N Tools EU-konform), NICHT auf den Gesamt-KI-Readiness-Score des Unternehmens. Formuliere dies IMMER als 'Vendor-Audit-Status', 'Tool-Compliance-Status' oder 'Konformitätsstatus der genutzten Tools'. Übernimm den Status wörtlich als '{vendor_audit_status}' — verwende NIE englische Rohwerte wie fail/pass/warn im deutschen Text (KIS-1238: 'ist fail' stand wörtlich im Bericht). Der KI-Readiness-Score des Unternehmens kann gleichzeitig hoch sein (z.B. 89/100), obwohl der Tool-Compliance-Status '{vendor_audit_status}' ist.
 Wenn ein Tool im Report 1 als RED bewertet wurde (z.B. ChatGPT),
@@ -146,6 +146,7 @@ STRATEGY_PROMPTS = {
     "S1": """Erstelle die Section "Ausgangslage — Ihr KI-Readiness-Profil" für den KI-Strategiebericht.
 
 WERKZEUGE (VERBINDLICH, KIS-1306): Produktnamen nur aus dieser Liste oder aus dem Stack des Kunden: {kuratierte_tools_namen}. Abgekündigte oder nicht gelistete Marken (z. B. „Adobe Sensei") nie nennen — Gattungsbegriffe („Schnittsoftware mit KI-Funktionen") sind erlaubt. Lauf KIS1278 nannte in dieser Section „Adobe Sensei oder RunwayML".
+GENUTZT ODER EMPFOHLEN (VERBINDLICH, KIS-1311): Als „im Einsatz", „genutzt" oder „Ihre Mitarbeitenden arbeiten mit" gilt nur, was in der Software des Kunden steht ({s5_software}) oder in seinen KI-Projekten ({ki_projekte}). Alles andere aus der Liste ist eine Empfehlung („kommt infrage", „könnte ergänzen"). Lauf KIS1280 schrieb einem Studio mit After Effects, Premiere, Runway und ChatGPT „erste Erfahrungen mit Canva Magic Studio" und „Nutzung von Amberscript oder DeepL Pro" zu — beides hatte der Kunde nie genannt.
 
 UNTERNEHMENSDATEN:
 - Firmenname: {firmenname}
@@ -553,7 +554,8 @@ DIVERSITÄTS-REGELN:
 
 VENDOR-AUDIT AUS REPORT 1 (PFLICHT bei Tool-Empfehlungen):
 Der KI-Readiness Report hat {vendor_audit_red_count} Tools als nicht EU-konform bewertet
-und {vendor_audit_green_count} als konform. Vendor-Audit Compliance-Status (genutzter KI-Tools): {vendor_audit_status}.
+und {vendor_audit_green_count} als konform. Vendor-Audit Compliance-Status (genutzter KI-Tools): {vendor_audit_status}. Geprüft wurden: {vendor_audit_tools}.
+STATUS NUR FÜR GEPRÜFTE ANBIETER (VERBINDLICH, KIS-1311): Der Status gilt ausschließlich für die Anbieter in „Geprüft wurden". Nenne beim Status keinen anderen Namen — Lauf KIS1280 schrieb „Der Vendor-Audit-Status … ist nicht bestanden. Insbesondere ChatGPT und Runway", Runway war nicht geprüft. Für ein Werkzeug aus dem Stack ohne Zeile in der gepflegten Liste (etwa Notion, Google Workspace, Adobe Premiere Pro) lautet die Datenschutz-Spalte „laut Anbieter prüfen" — keine Hosting-Angabe aus dem Gedächtnis.
 WICHTIG: '{vendor_audit_status}' bezieht sich NUR auf die EU-Konformität der genutzten KI-Tools, NICHT auf den Gesamt-KI-Readiness-Score. Schreibe NIEMALS 'Gesamtstatus' — formuliere 'Vendor-Audit-Status: {vendor_audit_status}' oder 'Tool-Compliance-Status: {vendor_audit_status}'. Verwende NIE englische Rohwerte wie fail/pass/warn im deutschen Text.
 Wenn ein Tool (z.B. ChatGPT) im Report 1 als RED/nicht konform bewertet wurde:
 - Erwähne den DSGVO-Vorbehalt bei der ERSTEN Nennung im Kapitel — nicht bei jeder weiteren (KIS-1238: der Einschub stand 7× im Bericht).
@@ -635,6 +637,7 @@ AUFGABE:
 3. Beschreibe den Break-Even-Zeitpunkt (realistisch: Monat {breakeven_realistisch}).
 4. Bewerte, ob das angegebene Budget ({s1_budget_label}) ausreicht.
 5. Gib eine klare Investitionsempfehlung.
+6. Quellenzeile ohne Jahreszahl: „Unternehmensdaten, KI-Readiness Report, interne Kalkulation". Lauf KIS1280 schrieb „Investitionsplan 2024" — es gibt kein datiertes Dokument dieses Namens (KIS-1311).
 
 WICHTIG: Alle Zahlen EXAKT aus den Vorgaben übernehmen. NICHT selbst rechnen!
 
@@ -805,7 +808,7 @@ AUFGABE:
    b) Förderhöhe (EXAKT wie in der verifizierten Liste)
    c) Förderquote (EXAKT wie in der verifizierten Liste)
    d) Antragsfrist (falls bekannt)
-   e) Passung für {firmenname} (hoch/mittel/niedrig)
+   e) Passung für {firmenname} (hoch/mittel/niedrig). Regel (KIS-1311): Steht im Hinweis des Programms „Konsortial", „Scale-up", „Deep Tech" oder „hochkompetitiv", ist die Passung für einen Betrieb ohne Forschungsanteil höchstens „niedrig" — Lauf KIS1280 gab dem EIC Accelerator und DIGITAL Europe für ein Motion-Design-Studio „hoch".
    f) Link/Kontakt (EXAKT wie in der verifizierten Liste)
 3. Zeige die Einzelprogramme mit jeweiligem Förderbetrag. Berechne KEINE programmübergreifende Gesamtsumme — Programme sind nicht kumulierbar und eine addierte Summe wäre irreführend.
 4. Gib eine Handlungsempfehlung: Welches Programm zuerst beantragen?

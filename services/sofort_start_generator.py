@@ -1477,8 +1477,22 @@ CHECKLISTE_START_INTERMEDIATE = [
     {"text": "Zeitersparnis pro Woche schätzen und dokumentieren", "dauer": "10 Min"},
 ]
 
+def _einschub_kuerzen(text: str, max_len: int = 80) -> str:
+    """KIS-1311: Freitext für einen Klammer-Einschub an einer Satz- oder
+    Kommagrenze kürzen, nie mitten im Wort oder Teilsatz."""
+    t = re.sub(r"\s+", " ", str(text or "")).strip()
+    if len(t) <= max_len:
+        return t.rstrip(".;,")
+    kopf = t[:max_len]
+    for trenner in (". ", "; ", ", "):
+        pos = kopf.rfind(trenner)
+        if pos >= 20:
+            return kopf[:pos].rstrip(".;,")
+    return kopf.rsplit(" ", 1)[0].rstrip(".;,") + " …"
+
+
 CHECKLISTE_START_EXPERT = [
-    {"text": "Bestehenden KI-Stack auf größten Engpass analysieren", "dauer": "30 Min"},
+    {"text": "Bestehende KI-Werkzeuge auf den größten Engpass analysieren", "dauer": "30 Min"},
     {"text": "Messbares Optimierungsziel definieren (Latenz/Kosten/Qualität)", "dauer": "15 Min"},
     {"text": "Monitoring-Setup prüfen oder einrichten (Langfuse/Helicone)", "dauer": "30 Min"},
     {"text": "Prompt-Versionierung und Evaluierungsprozess dokumentieren", "dauer": "20 Min"},
@@ -2174,8 +2188,13 @@ def generate_sofort_start_html(
                 )
     elif expertise_level == "expert":
         if _ki_proj_clean:
+            # KIS-1311: Der Einschub schnitt bei 80 Zeichen mitten im Satz
+            # („…, das Social-Team schreibt)", KIS1280 S. 6). Jetzt endet er
+            # an einer Satz- oder Kommagrenze; „KI-Werkzeuge" statt „KI-Stack",
+            # damit der Anglizismus-Ersetzer keinen Genusbruch hinterlässt
+            # („Ihren bestehenden KI-Systemlandschaft").
             erster_schritt = (
-                f"Analysieren Sie Ihren bestehenden KI-Stack ({_ki_proj_clean[:80]}) auf den "
+                f"Analysieren Sie Ihre bestehenden KI-Werkzeuge ({_einschub_kuerzen(_ki_proj_clean)}) auf den "
                 f"größten Engpass: Ist es Latenz, Kosten, Output-Qualität oder Governance? "
                 f"Definieren Sie ein messbares Optimierungsziel für die nächsten 30 Tage."
             )

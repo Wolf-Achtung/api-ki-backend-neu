@@ -71,6 +71,9 @@ class _TableParser(HTMLParser):
         self._current_text = ""
 
     def handle_starttag(self, tag, attrs):
+        if tag == "br" and self._in_cell:
+            self._current_text += "; "
+            return
         if tag == "table":
             self._in_table += 1
         elif tag == "tr" and self._in_table == 1:
@@ -81,6 +84,13 @@ class _TableParser(HTMLParser):
             self._cell_tag = tag
             self._current_text = ""
 
+    def handle_startendtag(self, tag, attrs):
+        # KIS-1311: <br> und <br/> innerhalb einer Zelle sind Trenner.
+        if tag == "br" and self._in_cell:
+            self._current_text += "; "
+        else:
+            self.handle_starttag(tag, attrs)
+
     def handle_endtag(self, tag):
         if tag == "table":
             self._in_table -= 1
@@ -90,7 +100,15 @@ class _TableParser(HTMLParser):
                 self.rows.append(self._current_row)
         elif tag in ("td", "th") and self._in_cell:
             self._in_cell = False
-            self._current_row.append((self._cell_tag, self._current_text.strip()))
+            text = re.sub(r"\s*;\s*(?:;\s*)+", "; ", self._current_text).strip().strip(";").strip()
+            self._current_row.append((self._cell_tag, text))
+        elif tag in ("li", "p", "br") and self._in_cell:
+            # KIS-1311: Listen in Tabellenzellen. Die Roadmap-Tabelle (S6) und
+            # der Investitionsplan (S5) werden zu Phasen-Karten; bis Lauf
+            # KIS1280 verloren die <li> dabei jede Grenze („… als Quick Win
+            # Einrichtung eines Steuerungskreises Kick-off-Kommunikation …",
+            # Strategie S. 22). Ein Semikolon hält die Punkte lesbar.
+            self._current_text = self._current_text.rstrip() + "; "
 
     def handle_data(self, data):
         if self._in_cell:

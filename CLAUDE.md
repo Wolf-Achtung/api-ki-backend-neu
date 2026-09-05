@@ -452,6 +452,61 @@ verlor 3-Schritte-Prozess und Checkliste. Lokal reproduziert mit
   Amberscript statt Otter.
 - Test: `tests/test_kis1302_testlauf_1275.py`.
 
+## Ein Teilwort ist kein Stichwort (KIS-1311)
+
+Testlauf KIS1280 (05.09.2026, Build 2038): erster Lauf mit dem
+Motion/Social-Profil München (KIS-1309), Score 84, Content Creation. Die
+Sparten-Logik griff (Fallstudie Content Creation, Digitalbonus Bayern,
+Vergleichsregion Bayern, Kennzeichnungspflicht in allen drei Reports). Die
+Befunde lagen daneben:
+
+- **Expertise-Stufe:** `expertise_detector` prüfte Stichwörter als
+  Teilzeichenkette — `"rag" in "Hintergrund-Loops"` und
+  `"api" in "Captions"` zählten je +3. Ein Studio mit „Erste Tools im
+  Einsatz" bekam vier Seiten für Entwickler: Enterprise-LLM-Ops-Kit,
+  Prompt-Engineering-Patterns, LiteLLM/Langfuse, 23-Tage-Challenge mit
+  Semantic Caching. Fünf Gold-Profile waren über „rag" (Auftrag, Frage,
+  Vertrag) ebenfalls „expert". Jetzt Wortgrenzen (`_enthaelt_stichwort`);
+  Bindestrich und Schrägstrich bleiben Grenzen („RAG-System", „OpenAI API").
+  **Wer eine Stichwortliste gegen Freitext prüft, prüft an Wortgrenzen.**
+- **Starter-Kit:** Schritt 6 der KMU-Checkliste hieß fest „ZIM-Antrag
+  vorbereiten" — in jedem KMU-Report, ZIM ist pausiert. Die
+  KMU-Ausweichliste führte dazu „AI Act Compliance Support (BMWK,
+  30.000 €)", ein Programm, das es nicht gibt. Beides ersetzt; das
+  Programm kommt aus dem Förderkapitel.
+- **Vendor-Audit:** `_KNOWN_VENDOR_META` kannte kein Medienwerkzeug. Der
+  Kunde nutzte Runway produktiv, geprüft wurden ChatGPT und „Notion AI"
+  (der Kunde hatte „Notion" genannt). Jetzt Runway, ElevenLabs, Descript,
+  Firefly, Canva, Amberscript, DaVinci mit Hosting wie in `tools_seed.json`;
+  Erkennung an Wortgrenzen. Der Strategiebericht bekommt die geprüften
+  Namen als `{vendor_audit_tools}` — bis dahin heftete S4 den Status
+  „nicht bestanden" an Runway, das nie geprüft war.
+- **Genutzt oder empfohlen:** S1 schrieb dem Studio „erste Erfahrungen mit
+  Canva Magic Studio" und „Nutzung von Amberscript oder DeepL Pro" zu —
+  alles aus dem Faktenblock, nichts aus dem Stack. Regel in S1 (DE/EN):
+  „im Einsatz" nur für `{s5_software}` und `{ki_projekte}`.
+- **Roadmap-Karten:** `html_enhancer._TableParser` warf beim Umbau der
+  Phasen-Tabelle (S5/S6) zu Karten jede `<li>`-Grenze weg — „… als Quick
+  Win Einrichtung eines Steuerungskreises Kick-off-Kommunikation …" in
+  allen Läufen seit KIS1275. Listenpunkte und `<br>` werden zu „; ".
+- **Förder-Passung:** S7 gab EIC Accelerator und DIGITAL Europe für ein
+  Motion-Design-Studio „hoch". Der Faktenblock trägt jetzt `notes`
+  („Konsortial-Projekte", „für innovative Scale-ups"), die Prompt-Regel
+  deckelt solche Programme auf „niedrig". Die R1-Tabelle zeigt beide für
+  KMU weiter — Entscheidung über einen Filter offen.
+- Kleinigkeiten mit Netz: „die Governance-Score" →
+  `strategy_sanitizer.score_genus_korrigieren`; „zwischen 0.5 und 2 Mio. €"
+  → Dezimalkomma in `GRAMMAR_FIX_PATTERNS`; Sofort-Start-Einschub endet an
+  einer Satzgrenze statt bei 80 Zeichen (`_einschub_kuerzen`); der
+  12-Monats-Ausblick bekommt `{{report_jahr}}` (er schrieb im September 2026
+  „ob 2025 als Jahr des Einzelauftrags … in die Bücher eingeht"); S5 nennt
+  keine Jahreszahl in der Quellenzeile („Investitionsplan 2024").
+- Wächter `veraltete_jahreszahl` (Planungssatz mit Jahr vor dem
+  Reportdatum). Offen, nur beobachtet: DeepL Pro als „Untertitel- und
+  Schnittfassungs-Werkzeug" (R1 S. 13), DaVinci-Vorlagen für ein
+  Premiere-Studio (Quick Win 1), Canva als „US-Anbieter" (S8; Liste sagt AU).
+- Test: `tests/test_kis1311_testlauf_1280.py`.
+
 ## Testlauf KIS1279 (KIS-1307)
 
 Build 1900 vom 05.09.2026, nach KIS-1306: Alle sieben Punkte aus KIS-1306

@@ -49,6 +49,24 @@ EXPERTISE_LABELS: Dict[str, str] = {
 }
 
 
+def _enthaelt_stichwort(text: str, stichwoerter: list) -> bool:
+    """KIS-1311: Wortgrenzen statt Teilzeichenketten.
+
+    Lauf KIS1280 (Motion-Design-Studio, „Erste Tools im Einsatz") bekam das
+    Enterprise-LLM-Ops-Kit, die Prompt-Engineering-Patterns und die
+    23-Tage-Challenge für Entwickler: ``"rag" in "Hintergrund-Loops"`` und
+    ``"api" in "Captions"`` zählten je +3. In den Gold-Profilen traf „rag"
+    auch „Auftrag", „Frage" und „Vertrag". Bindestrich und Schrägstrich
+    bleiben Grenzen („RAG-System", „OpenAI API", „LLM-Pipeline").
+    """
+    if not text:
+        return False
+    for kw in stichwoerter:
+        if re.search(r"(?<![a-z0-9äöüß])" + re.escape(kw) + r"(?![a-z0-9äöüß])", text):
+            return True
+    return False
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -88,11 +106,11 @@ def detect_expertise_level(answers: Dict[str, Any]) -> str:
         score += 1
 
     # --- API / developer keywords in ki_projekte ---
-    if any(kw in ki_projekte for kw in EXPERT_API_KEYWORDS):
+    if _enthaelt_stichwort(ki_projekte, EXPERT_API_KEYWORDS):
         score += 3
 
     # --- Expert keywords in hauptleistung ---
-    if any(kw in hauptleistung for kw in EXPERT_HAUPTLEISTUNG_KEYWORDS):
+    if _enthaelt_stichwort(hauptleistung, EXPERT_HAUPTLEISTUNG_KEYWORDS):
         score += 2
 
     # --- digitalisierungsgrad >= 7 ---
@@ -109,7 +127,7 @@ def detect_expertise_level(answers: Dict[str, Any]) -> str:
         score += 1
 
     # --- Known AI tool usage (at least intermediate signal) ---
-    if any(kw in combined_tools for kw in INTERMEDIATE_TOOL_KEYWORDS):
+    if _enthaelt_stichwort(combined_tools, INTERMEDIATE_TOOL_KEYWORDS):
         score += 1
 
     # --- Thresholds ---

@@ -228,7 +228,36 @@ PRUEFUNGEN = [
         "Leerzeichen vor dem Satzpunkt — ein Wort wurde entfernt (KIS-1307)",
         lambda t: _wort_vor_punkt_fehlt(t),
     ),
+    (
+        "veraltete_jahreszahl",
+        "Planung nennt ein Jahr vor dem Reportdatum (KIS-1311)",
+        lambda t: _veraltete_jahreszahl(t),
+    ),
 ]
+
+
+# KIS-1311: R1 S. 29 (Lauf KIS1280, September 2026): „Die Entscheidung, ob 2025
+# als Jahr des Einzelauftrags … in die Bücher eingeht" — im 12-Monats-Ausblick.
+# Strategie S. 21: „Quelle: … Investitionsplan 2024". Beides Planungssätze mit
+# einem Jahr, das beim Lesen schon vorbei ist. Rückblicke („seit 2024") sind
+# kein Befund — nur die drei Muster.
+_JAHR_PLANUNG_RE = re.compile(
+    r"\bob (20\d{2}) als (?:erstes )?Jahr"
+    r"|\bInvestitionsplan (20\d{2})\b"
+    r"|\b(?:Roadmap|Budget|Planung|Ausblick) (?:für )?(20\d{2})\b"
+)
+
+
+def _veraltete_jahreszahl(text: str) -> Optional[str]:
+    m = _REPORT_DATUM_RE.search(text)
+    if not m:
+        return None
+    reportjahr = int(m.group(3))
+    for f in _JAHR_PLANUNG_RE.finditer(_zellen_zusammenfuegen(text)):
+        jahr = int(next(g for g in f.groups() if g))
+        if jahr < reportjahr:
+            return f.group(0)
+    return None
 
 
 # KIS-1307: R1 S. 11 (Lauf KIS1279): „… das lokale oder vertraglich abgesicherte

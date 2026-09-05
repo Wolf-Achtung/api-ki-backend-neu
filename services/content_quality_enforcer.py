@@ -2309,6 +2309,11 @@ GRAMMAR_FIX_PATTERNS = [
     (r' und\.</p>', '.</p>'),  # "und.</p>" → ".</p>"
     (r' und\.<', '.<'),  # "und." vor Tag → "."
 
+    # KIS-1311: Dezimalpunkt in deutschen Beträgen — „zwischen 0.5 und 2 Mio. €"
+    # (R1 Förderkapitel, Lauf KIS1280). Nur einstellige Ziffernpaare, damit
+    # „10.000 bis 50.000 €" unberührt bleibt.
+    (r'(?<![\d.])(\d)\.(\d)(?![\d.])(?=\s*(?:und|bis|–|-|Mio|Mrd))', r'\1,\2'),
+
     # FIX-GRAMMAR-T1: ROI ist maskulin — "ein attraktives ROI" → "einen attraktiven ROI"
     (r'ein\s+sehr\s+attraktives\s+ROI', 'einen sehr attraktiven ROI'),
     (r'ein\s+attraktives\s+ROI', 'einen attraktiven ROI'),

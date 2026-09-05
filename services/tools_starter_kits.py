@@ -270,21 +270,24 @@ FUNDING_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
             "application_complexity": "medium",
         },
     ],
+    # KIS-1311: ZIM (pausiert bis 15.01.2027) und ein erfundenes Programm
+    # „AI Act Compliance Support" standen hier als KMU-Ausweichliste. Sie
+    # greift nur, wenn das Förderkapitel fehlt — dann aber mit echten Programmen.
     "kmu": [
         {
-            "program_id": "zim",
-            "name": "ZIM",
-            "provider": "BMWK",
-            "max_amount": "380.000 €",
-            "fit_reason": "Für größere KI-Innovationsprojekte",
-            "application_complexity": "high",
+            "program_id": "unternehmensberater_foerderung",
+            "name": "Förderung unternehmerischen Know-hows",
+            "provider": "BAFA",
+            "max_amount": "1.750 €",
+            "fit_reason": "Beratungsförderung für KMU (bundesweit)",
+            "application_complexity": "low",
         },
         {
-            "program_id": "ai_act_compliance",
-            "name": "AI Act Compliance Support",
-            "provider": "BMWK",
-            "max_amount": "30.000 €",
-            "fit_reason": "Beratungsförderung für AI Act Compliance",
+            "program_id": "kfw_digitalisierung",
+            "name": "KfW-Förderkredite Digitalisierung & Innovation",
+            "provider": "KfW",
+            "max_amount": "variabel",
+            "fit_reason": "Zinsvergünstigte Finanzierung für Digitalisierungsvorhaben",
             "application_complexity": "medium",
         },
     ],
@@ -410,9 +413,12 @@ CHECKLIST_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
             "estimated_hours": 8,
         },
         {
+            # KIS-1311: ZIM steht bis 15.01.2027 auf „paused" — der feste
+            # Schritt nannte es trotzdem in jedem KMU-Report (KIS1280, S. 15).
+            # Das Programm kommt aus dem Förderkapitel, nicht aus der Vorlage.
             "step": 6,
-            "title": "ZIM-Antrag vorbereiten",
-            "description": "Innovationsprojekt für ZIM-Förderung strukturieren",
+            "title": "Förderantrag vorbereiten",
+            "description": "Programm aus dem Förderkapitel wählen und das Vorhaben als Projektbeschreibung strukturieren",
             "category": "funding",
             "estimated_hours": 24,
         },
@@ -906,8 +912,8 @@ _KIT_TEXT_EN: Dict[str, str] = {
     "KI-Richtlinien, Rollen und Verantwortlichkeiten dokumentieren": "Document AI policies, roles and responsibilities",
     "AI Act Compliance prüfen": "Check AI Act compliance",
     "Risikoeinstufung und Compliance-Anforderungen klären": "Clarify risk classification and compliance requirements",
-    "ZIM-Antrag vorbereiten": "Prepare a ZIM application",
-    "Innovationsprojekt für ZIM-Förderung strukturieren": "Structure an innovation project for ZIM funding",
+    "Förderantrag vorbereiten": "Prepare a funding application",
+    "Programm aus dem Förderkapitel wählen und das Vorhaben als Projektbeschreibung strukturieren": "Pick a programme from the funding chapter and structure the project description",
     "Schulungskonzept erstellen": "Create a training concept",
     "Rollenspezifische Trainings für Fachbereiche planen": "Plan role-specific trainings for departments",
     # --- Investment ranges ---
