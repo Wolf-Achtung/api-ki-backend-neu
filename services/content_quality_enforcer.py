@@ -472,8 +472,13 @@ def cap_repeated_sentences(sections: dict) -> dict:
     removed = 0
     for key in keys:
         val = sections.get(key)
+        # KIS-1313: Die Copy-Paste-Prompts der Sofort-Start-Seite tragen
+        # denselben Kontext-Vorspann viermal — mit Absicht, der Leser kopiert
+        # jeden Kasten einzeln. Der Cap schnitt ihn ab dem dritten Kasten weg
+        # („Redaktion, Lektorat, Satz … im Haus. Generiere 10 Headline-Varianten",
+        # Lauf KIS1282, R1 S. 7).
         if (not isinstance(val, str) or len(val) < 200 or key.startswith("_")
-                or "PROMPT" in key or _is_shadow_alias(key, sections)):
+                or "PROMPT" in key or "SOFORT_START" in key or _is_shadow_alias(key, sections)):
             continue
         changed = val
         for part in _HTML_TAG_SPLIT_RE.split(val):
@@ -846,6 +851,10 @@ TEXT_GLITCH_REPLACEMENTS = [
     (r'Ressourcen:\s*0\b', '', 'zero resources'),
     (r'Ressourcen\s*:\s*0\b', '', 'zero resources with space'),
     (r'\bRessourcen\s+0\b', '', 'zero resources no colon'),
+    # KIS-1313: „Heft-Texten -Entwurf", „Kennzeichnung -Entwurf" (Lauf KIS1282,
+    # R1 S. 14/30) — das „KI" vor dem Bindestrich ging verloren.
+    (r'(?<=\s)-Entwurf\b', 'KI-Entwurf', 'orphaned -Entwurf'),
+    (r'(?<=\s)-Entwürfe\b', 'KI-Entwürfe', 'orphaned -Entwürfe'),
     # Empty placeholder patterns
     (r'Mitarbeiter:\s*0\b', '', 'zero employees'),
     (r'Mitarbeiter\s*:\s*0\b', '', 'zero employees with space'),

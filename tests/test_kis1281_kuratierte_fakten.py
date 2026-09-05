@@ -101,7 +101,8 @@ class TestGrounding:
 
     def test_beide_sektionen_bekommen_einen_block(self):
         g = build_kuratierte_grounding(BEISPIEL)
-        assert set(g) == {"tools_empfehlungen", "foerderpotenzial"}
+        # KIS-1313: Quick Wins und KI-Systemlandschaft bekommen den Werkzeugblock dazu.
+        assert set(g) == {"tools_empfehlungen", "foerderpotenzial", "quick_wins", "ki_stack_summary"}
 
     def test_abschaltbar(self, monkeypatch):
         import services.kuratierte_fakten as m

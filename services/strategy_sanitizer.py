@@ -334,6 +334,73 @@ def score_genus_korrigieren(html: str) -> tuple:
     return neu, n
 
 
+# ── KIS-1313: Benchmark-Prozente ohne Beleg in der Recherche ──────────
+
+# Lauf KIS1282, S2: „ca. 35–45 % der Medienbetriebe nutzen KI-Tools in
+# Redaktion und Lektorat — RTR 2025, Bertelsmann 2025" und „60–65 % der
+# Verlage setzen KI-Übersetzungstools ein — RTR 2025". Die Recherche
+# enthielt keine dieser Zahlen; die Quellen waren Film-Artikel. Regel
+# (KIS-1294): Eine Zahl ohne Messung heißt „Richtwert". Der Prompt sagt das,
+# das Modell hält sich nicht daran — hier das Netz: Jeder Prozentwert in S2,
+# dessen Zahl nicht in der Recherche steht, bekommt den Zusatz.
+_S2_PROZENT_RE = re.compile(r"(?<![\d,.])(\d{1,3})(?:\s?[–-]\s?(\d{1,3}))?\s?%")
+_RICHTWERT_NAH_RE = re.compile(r"Richtwert|guide value|Sch[äa]tz", re.IGNORECASE)
+
+
+def research_text_aus_kontext(research_context: Optional[dict]) -> str:
+    """Alle Recherche-Ergebnisse als ein Text (Schlüssel → {"results": str})."""
+    if not isinstance(research_context, dict):
+        return ""
+    teile = []
+    for v in research_context.values():
+        if isinstance(v, dict):
+            teile.append(str(v.get("results") or v.get("text") or ""))
+        elif isinstance(v, str):
+            teile.append(v)
+    return " ".join(t for t in teile if t)
+
+
+def benchmark_prozent_richtwert(html: str, research_text: str, lang: str = "de") -> tuple:
+    """Hängt „(Richtwert)" an Prozentwerte, deren Zahl nicht in der Recherche
+    vorkommt. Nur Textknoten, keine Tags. Liefert (html, Anzahl)."""
+    if not html or "%" not in html:
+        return html, 0
+    zusatz = " (guide value)" if lang == "en" else " (Richtwert)"
+    belegt_cache: dict[str, bool] = {}
+
+    def _belegt(zahl: str) -> bool:
+        if zahl in belegt_cache:
+            return bool(belegt_cache[zahl])
+        ok = bool(research_text) and bool(
+            re.search(r"(?<![\d,.])" + re.escape(zahl) + r"(?:[,.]\d+)?\s?(?:%|Prozent|percent)", research_text)
+        )
+        belegt_cache[zahl] = ok
+        return ok
+
+    count = 0
+    teile = re.split(r"(<[^>]+>)", html)
+    for i, teil in enumerate(teile):
+        if not teil or teil.startswith("<") or "%" not in teil:
+            continue
+
+        def _ersatz(m: "re.Match[str]") -> str:
+            nonlocal count
+            zahlen = [z for z in (m.group(1), m.group(2)) if z]
+            if any(_belegt(z) for z in zahlen):
+                return str(m.group(0))
+            nach = teil[m.end():m.end() + 30]
+            vor = teil[max(0, m.start() - 30):m.start()]
+            if _RICHTWERT_NAH_RE.search(nach) or _RICHTWERT_NAH_RE.search(vor):
+                return str(m.group(0))
+            count += 1
+            return str(m.group(0)) + zusatz
+
+        teile[i] = _S2_PROZENT_RE.sub(_ersatz, teil)
+    if count:
+        log.info("[KIS-1313][RICHTWERT] %d Prozentwert(e) ohne Beleg in der Recherche markiert", count)
+    return "".join(teile), count
+
+
 # ── Hauptfunktion ────────────────────────────────────────────────────
 
 _EXEC_FUNDING_NEUTRAL = (
@@ -388,6 +455,7 @@ def sanitize_strategy_sections(
     """
     all_warnings = []
     patches_applied = 0
+    _research_text = research_text_aus_kontext(research_context)
 
     strategy_keys = [k for k in sections if isinstance(sections[k], str) and len(sections[k]) > 100]
 
@@ -495,6 +563,18 @@ def sanitize_strategy_sections(
         if _sg:
             sections[key] = html
             patches_applied += _sg
+
+        # Pass 6c (KIS-1313): Benchmark-Prozente in S2 ohne Beleg in der
+        # Recherche heißen „Richtwert".
+        # Nur wenn der Aufrufer die Recherche mitgibt — ohne sie bleibt das
+        # Verhalten älterer Aufrufer und Tests unverändert.
+        if key.lower().startswith("s2") and research_context is not None:
+            _lang2 ="en" if re.search(r"\bcompetitor|\bbenchmark figures|\bmarket\b", html, re.IGNORECASE) and not re.search(r"Wettbewerb", html) else "de"
+            html, _rw = benchmark_prozent_richtwert(html, _research_text, _lang2)
+            if _rw:
+                sections[key] = html
+                patches_applied += _rw
+                all_warnings.append(f"{key}: {_rw} Prozentwert(e) ohne Recherche-Beleg als Richtwert markiert (KIS-1313)")
 
         # Pass 7 (KIS-1306): Abgelaufene Fristen im Förderkapitel (S7).
         if key.lower().startswith("s7"):

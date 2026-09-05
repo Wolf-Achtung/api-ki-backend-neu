@@ -112,26 +112,43 @@ BRANCHE_MAP = {
 # (Förderlandschaft ist Filmförderung statt BAFA/KfW, Trends sind
 # Produktions-/Post-Workflows statt Büro-Automatisierung).
 
+# KIS-1313: Die Vorlagen fragten fest nach Film und Postproduktion — der
+# Verlag-Lauf KIS1282 bekam als Quellen „Wie KI die Welt der Film- und
+# TV-Produktion verändert" und „KI-Agenten in der Postproduktion". Jetzt
+# steht die Sparte in der Abfrage; ohne Sparte bleibt der Film-Wortlaut.
 BRANCH_QUERY_OVERRIDES: Dict[str, Dict[str, Dict[str, str]]] = {
     "medien": {
         "markt_trends": {
-            "template": "KI Filmproduktion Postproduktion Medienbranche Deutschland Trends 2026",
+            "template": "KI {sparte} Medienbranche Deutschland Trends 2026",
             "fallback": "generative KI Medien Kreativwirtschaft Deutschland Trends 2026",
         },
         "wettbewerb_benchmark": {
-            "template": "KI Einsatz Film TV Produktion Studios Benchmark Studie Deutschland",
+            "template": "KI Einsatz {sparte} Benchmark Studie Deutschland",
             "fallback": "AI adoption media entertainment industry study 2026",
         },
         "foerdermittel": {
-            "template": "Filmförderung Medienförderung {bundesland} Digital Innovation Games 2026 aktuell",
+            "template": "Medienförderung {sparte} {bundesland} Digital Innovation 2026 aktuell",
             "fallback": "Filmförderung Deutschland Länder DFFF FFA Games-Förderung 2026 Übersicht",
         },
         "foerdermittel_eu": {
-            "template": "Creative Europe MEDIA funding audiovisual innovation AI 2026",
+            "template": "Creative Europe MEDIA funding {sparte} innovation AI 2026",
             "fallback": "EU funding audiovisual media sector 2026",
         },
     },
 }
+
+_SPARTE_RECHERCHE_FALLBACK = "Film Postproduktion"
+
+
+def _sparte_fuer_recherche(briefing_data: Dict[str, Any]) -> str:
+    """KIS-1313: Sparten-Label als Suchbegriff; Rückfall auf den bisherigen
+    Film-Wortlaut, damit Läufe ohne Sparte unverändert suchen."""
+    try:
+        from services.medien_sparte import aus_antworten, label as _label
+        lbl = aus_antworten(briefing_data) or _label(briefing_data.get("MEDIEN_SPARTE_LABEL"))
+    except Exception:
+        lbl = ""
+    return lbl or _SPARTE_RECHERCHE_FALLBACK
 
 
 # =============================================================================
@@ -169,6 +186,8 @@ async def execute_research(
         "handlungsfeld_1": handlungsfelder[0] if len(handlungsfelder) > 0 else "KI Automatisierung",
         "handlungsfeld_2": handlungsfelder[1] if len(handlungsfelder) > 1 else "Digitalisierung",
         "bestehende_software": strategy_questions.get("s5_software") or "Microsoft 365",
+        # KIS-1313: Sparte in den Medien-Abfragen (Verlag statt Film).
+        "sparte": _sparte_fuer_recherche(briefing_data),
     }
 
     # 2. Build queries from templates

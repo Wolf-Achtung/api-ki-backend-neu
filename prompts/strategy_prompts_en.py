@@ -135,7 +135,9 @@ can be high (e.g. 89/100) at the same time as the tool compliance status is
 '{vendor_audit_status}'.
 If a tool was rated RED in Report 1 (e.g. ChatGPT), point out the GDPR
 limitation when it is mentioned and prioritize EU-compliant alternatives.
-Never make a RED-rated tool the primary recommendation."""
+Never make a RED-rated tool the primary recommendation.
+IN USE OR RECOMMENDED (BINDING, KIS-1313, applies in every section): Only tools named in the customer's software ({s5_software}) or AI projects ({ki_projekte}) count as "in use", "already in place" or belong in the column "your company". Every other tool is a recommendation ("worth adding", "could complement").
+"""
 
 
 # =============================================================================
@@ -906,7 +908,7 @@ Write for a managing director with no prior AI knowledge. Explain technical term
 (a) CONCRETE COUNTERMEASURES: Phrase every mitigation strategy as a concrete action step. NOT "implement risk management", BUT e.g. "Define a list of data types that must never be entered into AI tools, and communicate it to everyone involved."
 (b) LINK TO ACTION AREAS: Link every top risk to the matching action area from S3. Format: "(→ action area: [name from S3])". Use {s3_handlungsfelder} as the reference.
 (c) STOP SIGNALS: For each top risk, add a concrete stop signal — how do you notice things are going wrong? Examples: "More than 3 customer complaints about faulty AI output in one month", "Employees regularly bypass the AI policy". Stop signals must be observable and grounded in daily work.
-Add a "Stop signal" column to the risk matrix table.
+Add a "Stop signal" column to the risk matrix table. The table has exactly four columns: risk, likelihood, impact, stop signal. Mitigation and the link to the action field go as text below the table, never as further columns (KIS-1313).
 CONSTRAINT: Existing Risk Engine v3 data unchanged. Enrich only the LLM narrative.
 
 SPRINT 2 — OPT-B6 STRENGTHEN COMPLIANCE DEPTH (MANDATORY):
