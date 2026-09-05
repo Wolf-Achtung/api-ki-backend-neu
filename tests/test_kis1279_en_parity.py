@@ -33,7 +33,10 @@ class TestStrategyLangMirroring:
         idx_mirror = src.find(
             'briefing_data["lang"] = str(getattr(briefing, "lang", "de") or "de").lower()'
         )
-        idx_task = src.find("background_tasks.add_task")
+        # KIS-1299: Die Fragebogen-2-Route hat einen eigenen, frueheren
+        # add_task (Admin-Briefing-Mail) — gemeint ist der Pipeline-Start
+        # nach der answers-Kopie.
+        idx_task = src.find("background_tasks.add_task", max(idx_data, 0))
         assert idx_data != -1, "briefing_data-Kopie fehlt"
         assert idx_mirror != -1, "lang-Spiegelung fehlt (KIS-1279)"
         assert idx_data < idx_mirror < idx_task, (

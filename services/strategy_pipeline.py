@@ -1496,6 +1496,31 @@ def _send_coach_reminder_email(briefing_id: int, db_session: Any) -> None:
 # ADMIN BRIEFING EMAIL (Fragebogen-Daten)
 # =============================================================================
 
+def fb2_vorhanden(strategy_answers: Any) -> bool:
+    """KIS-1299: Traegt der Strategie-Fragebogen mindestens eine Antwort?"""
+    if not isinstance(strategy_answers, dict):
+        return False
+    for k, v in strategy_answers.items():
+        if not str(k).startswith("s") or k in ("status",):
+            continue
+        if isinstance(v, (list, tuple, set)):
+            if any(str(x).strip() for x in v):
+                return True
+        elif v not in (None, "", 0, False) and str(v).strip():
+            return True
+    return False
+
+
+def _admin_briefing_subject(briefing_id: int, kis_number: str, branche: str,
+                            segment: str, region: str, strategy_answers: Any) -> str:
+    """Betreff nennt, ob Fragebogen 2 drin ist — der Formular-Pfad schickt
+    die Mail zweimal (nach FB1, nach FB2), im Posteingang muss man die
+    vollstaendige Fassung sofort erkennen."""
+    stufe = "FB1+FB2" if fb2_vorhanden(strategy_answers) else "nur FB1"
+    return (f"[KIS-Admin] Briefing #{briefing_id} / {kis_number} ({stufe}) "
+            f"— {branche} / {segment} / {region}")
+
+
 def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
     """Send admin email with all questionnaire data (R1 + Strategy) after strategy generation.
 
@@ -1595,7 +1620,7 @@ def _send_admin_briefing_email(briefing_id: int, db_session: Any) -> None:
     }
 
     # --- Build subject ---
-    subject = f"[KIS-Admin] Briefing #{briefing_id} / {kis_number} \u2014 {branche} / {segment} / {region}"
+    subject = _admin_briefing_subject(briefing_id, kis_number, branche, segment, region, strategy_answers)
 
     # --- Render HTML ---
     html_body = render_admin_briefing_email(

@@ -443,6 +443,19 @@ Deckblatt des Strategieberichts verlor seinen Score (Lauf 1269).
   Vorher `…/api/healthz` abfragen: Ein Deploy mitten in der Generierung
   bricht sie ab. `?force=true` hebt die 30-Minuten-Sperre auf.
 
+- `POST /api/strategy/admin/briefing-mail/{briefing_id}` (KIS-1299) —
+  schickt das Briefing-PDF mit Fragebogen 1 und 2 an
+  bewertung@ki-sicherheit.jetzt. Admin-Key per Header `X-Admin-Key`.
+  Das ist der Weg zu den Rohantworten eines Laufs: Der
+  Admin-JSON-Endpunkt ist in Produktion aus (`ENABLE_ADMIN_ROUTES=0`).
+  Der Formular-Pfad schickt diese Mail seit KIS-1299 selbst nach Abgabe
+  des Strategie-Fragebogens; der Betreff nennt „FB1+FB2" oder „nur FB1".
+
+  ```bash
+  curl -X POST -H 'X-Admin-Key: $STRATEGY_ADMIN_KEY' \
+    'https://api-ki-backend-neu-production.up.railway.app/api/strategy/admin/briefing-mail/1157'
+  ```
+
   **Zwei Nummern, eine Falle:** Die `<id>` ist die Briefing-ID aus der
   Datenbank. Die Nummer im PDF-Dateinamen (`KIS1272`) ist die Briefing-ID
   **plus 117** (`REPORT_DISPLAY_OFFSET`, `utils/report_display_id.py`).
