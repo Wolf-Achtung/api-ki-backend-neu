@@ -17,6 +17,7 @@ Endpoints:
 """
 from __future__ import annotations
 
+import asyncio
 import hmac
 import logging
 import os
@@ -228,32 +229,31 @@ def _validate_questions(q: StrategyQuestionsCreate) -> Optional[str]:
 # ENDPOINTS: QUESTIONS
 # =============================================================================
 
-def _admin_briefing_mail_task(briefing_id: int) -> None:
-    """KIS-1299: Admin-Briefing-Mail (Fragebogen 1 + 2) nach Abgabe des
-    Strategie-Fragebogens im Formular-Pfad.
+async def _admin_briefing_mail_nach_fb2(briefing_id: int, db: Session) -> None:
+    """KIS-1299/KIS-1303: Admin-Briefing-Mail (Fragebogen 1 + 2) nach Abgabe
+    des Strategie-Fragebogens im Formular-Pfad.
 
-    Der Chat-Pfad schickt diese Mail am Chat-Ende (routes/chat.py). Der
-    Formular-Pfad speicherte nur — Testlauf KIS1274: das Briefing-PDF an
-    bewertung@ trug nur Fragebogen 1. Eigene DB-Session, weil die
-    Request-Session beim Hintergrund-Task schon geschlossen ist.
+    KIS-1299 hängte den Versand als BackgroundTask an die Antwort. Lauf
+    KIS1275 (05.09.2026): keine Mail, keine Spur — erst der Admin-Endpunkt
+    lieferte das PDF. Der Chat-Pfad (routes/chat.py) und der Admin-Endpunkt
+    rufen dieselbe Funktion synchron im Request auf, und beide liefern.
+    Deshalb jetzt genauso: im Request, in einem Thread (PDF-Rendering und
+    Resend dauern ein paar Sekunden, der Event-Loop bleibt frei). Fehler
+    brechen den Request nie.
     """
-    from core.db import SessionLocal
-    db = SessionLocal()
     try:
         from services.strategy_pipeline import _send_admin_briefing_email
-        _send_admin_briefing_email(briefing_id, db)
-    except Exception as exc:  # Fire-and-forget: nie den Request brechen
-        log.warning("[KIS-1299] Admin-Briefing-Mail nach FB2 fehlgeschlagen (briefing_id=%d): %s",
-                    briefing_id, exc)
-    finally:
-        db.close()
+        await asyncio.to_thread(_send_admin_briefing_email, briefing_id, db)
+        log.info("[KIS-1303] Admin-Briefing-Mail nach FB2 ausgelöst: briefing_id=%d", briefing_id)
+    except Exception as exc:
+        log.warning("[KIS-1303] Admin-Briefing-Mail nach FB2 fehlgeschlagen (briefing_id=%d): %s",
+                    briefing_id, exc, exc_info=True)
 
 
 @router.post("/questions/{briefing_id}", response_model=StrategyQuestionsResponse)
 async def save_strategy_questions(
     briefing_id: int,
     questions: StrategyQuestionsCreate,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     principal: AuthenticatedPrincipal = Depends(step5_principal),
 ):
@@ -338,8 +338,9 @@ async def save_strategy_questions(
 
     db.commit()
 
-    # KIS-1299: Briefing-PDF mit beiden Fragebögen an die Admin-Adresse.
-    background_tasks.add_task(_admin_briefing_mail_task, briefing_id)
+    # KIS-1299/KIS-1303: Briefing-PDF mit beiden Fragebögen an die
+    # Admin-Adresse — synchron im Request, nicht als BackgroundTask.
+    await _admin_briefing_mail_nach_fb2(briefing_id, db)
 
     return StrategyQuestionsResponse(
         briefing_id=briefing_id,

@@ -36,19 +36,45 @@ class TestBetreff:
 
 
 class TestFormularPfadSchicktDieMail:
-    def test_fragebogen_2_route_hat_hintergrund_task(self):
+    """KIS-1303: Der BackgroundTask aus KIS-1299 lief in Lauf KIS1275 ins
+    Leere. Jetzt synchron im Request (Thread), wie Chat-Pfad und
+    Admin-Endpunkt — die beiden Wege, die nachweislich liefern."""
+
+    def test_fragebogen_2_route_sendet_im_request(self):
         src = (REPO / "routes" / "strategy.py").read_text(encoding="utf-8")
         route = src[src.find('@router.post("/questions/{briefing_id}"'):]
-        kopf = route[:route.find("db.commit()")]
-        assert "background_tasks: BackgroundTasks" in kopf
         rumpf = route[:route.find("@router.get")]
-        assert "background_tasks.add_task(_admin_briefing_mail_task, briefing_id)" in rumpf
+        assert "await _admin_briefing_mail_nach_fb2(briefing_id, db)" in rumpf
+        assert rumpf.find("db.commit()") < rumpf.find("_admin_briefing_mail_nach_fb2(briefing_id, db)")
+        assert "background_tasks.add_task(_admin_briefing_mail_task" not in rumpf
+        assert "BackgroundTasks" not in rumpf[:rumpf.find("db.commit()")]
 
-    def test_task_nutzt_eigene_session_und_bricht_nie(self):
+    def test_versand_im_thread_und_bricht_nie(self):
         src = (REPO / "routes" / "strategy.py").read_text(encoding="utf-8")
-        task = src[src.find("def _admin_briefing_mail_task"):src.find('@router.post("/questions/{briefing_id}"')]
-        assert "SessionLocal()" in task and "finally:" in task and "db.close()" in task
-        assert "except Exception" in task
+        fn = src[src.find("async def _admin_briefing_mail_nach_fb2"):src.find('@router.post("/questions/{briefing_id}"')]
+        assert "asyncio.to_thread(_send_admin_briefing_email, briefing_id, db)" in fn
+        assert "except Exception" in fn and "exc_info=True" in fn
+        assert "\nimport asyncio\n" in src
+
+    def test_helfer_ruft_versand_mit_session(self, monkeypatch):
+        import asyncio
+        import routes.strategy as rs
+        import services.strategy_pipeline as sp
+        aufrufe = []
+        monkeypatch.setattr(sp, "_send_admin_briefing_email", lambda bid, db: aufrufe.append((bid, db)))
+        asyncio.run(rs._admin_briefing_mail_nach_fb2(1158, "DB"))
+        assert aufrufe == [(1158, "DB")]
+
+    def test_helfer_schluckt_fehler(self, monkeypatch):
+        import asyncio
+        import routes.strategy as rs
+        import services.strategy_pipeline as sp
+
+        def kaputt(bid, db):
+            raise RuntimeError("Resend down")
+
+        monkeypatch.setattr(sp, "_send_admin_briefing_email", kaputt)
+        asyncio.run(rs._admin_briefing_mail_nach_fb2(1158, None))  # darf nicht werfen
 
     def test_nachsende_endpunkt_mit_admin_key(self):
         src = (REPO / "routes" / "strategy.py").read_text(encoding="utf-8")
