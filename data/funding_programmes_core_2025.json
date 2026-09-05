@@ -588,12 +588,13 @@
     "title": "DFFF – Deutscher Filmförderfonds",
     "region": "Deutschland (bundesweit)",
     "country_code": "DE",
-    "status": "active",
+    "status": "paused",
+    "recheck_after": "2026-11-01",
     "funding_type": "Zuschuss",
     "funding_rate": "30% der dt. Herstellungskosten",
     "max_amount": "DFFF I bis 5 Mio €, DFFF II bis 25 Mio €",
     "focus": "Kinofilmproduktion; KI-gestützte Produktionsschritte sind förderfähige Herstellungskosten",
-    "notes": "BKM/FFA; laufende Einreichung bis 6 Wochen vor Drehbeginn; DFFF/GMPF-Fusion Mitte 2026 angekündigt — Richtlinienstand prüfen",
+    "notes": "Antragsstopp seit 20.08.2026: Das Antragsvolumen 2026 von DFFF und GMPF (30 Mio €) ist ausgeschöpft, Anträge für Drehbeginn 2026 nimmt die FFA nicht mehr an. Anträge für Drehbeginn 2027 voraussichtlich ab November 2026 über das FFA-Serviceportal. Belegt 05.09.2026 auf ffa.de/dfff-i.html (Update 20.08.2026). Keine Fusion: DFFF und GMPF bleiben getrennte Programme unter dem Oberbegriff Anreizförderung, eigene DFFF-Richtlinie 2026 (01.01.–31.12.2026). Sonst: BKM/FFA, Einreichung bis 6 Wochen vor Drehbeginn.",
     "priority": 1,
     "provider": "BKM / FFA",
     "relevance_ki": "Mittel",
@@ -602,13 +603,13 @@
       "kmu"
     ],
     "url": "https://www.ffa.de/dfff-i.html",
-    "deadline": "laufend",
-    "deadline_notes": null,
+    "deadline": "ANTRAGSSTOPP 2026 — Anträge für Drehbeginn 2027 voraussichtlich ab November 2026",
+    "deadline_notes": "Antragsvolumen 2026 seit 20.08.2026 ausgeschöpft; Einreichverfahren 2027 kündigt die FFA an (voraussichtlich ab November 2026)",
     "branches": [
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22",
+    "verified_at": "2026-09-05",
     "sparten": [
       "produktion",
       "post_vfx"
@@ -652,12 +653,13 @@
     "title": "German Motion Picture Fund (GMPF)",
     "region": "Deutschland (bundesweit)",
     "country_code": "DE",
-    "status": "active",
+    "status": "paused",
+    "recheck_after": "2026-11-01",
     "funding_type": "Zuschuss",
     "funding_rate": "30% der dt. Herstellungskosten",
     "max_amount": "Serien bis 20 Mio €/Staffel",
     "focus": "High-End-Serien und Filme mit hohem VFX-/Postproduktionsanteil",
-    "notes": "BKM-Richtlinie, FFA-verwaltet; KI-gestützte VFX-Workflows förderfähig",
+    "notes": "Antragsstopp seit 20.08.2026: Das Antragsvolumen 2026 von DFFF und GMPF (30 Mio €) ist ausgeschöpft, Anträge für Drehbeginn 2026 nimmt die FFA nicht mehr an. Anträge für Drehbeginn 2027 voraussichtlich ab November 2026 über das FFA-Serviceportal. Belegt 05.09.2026 auf ffa.de/german-motion-picture-fund-gmpf.html (Update 20.08.2026). Keine Fusion mit dem DFFF: eigene GMPF-Richtlinie 2026 (01.01.–31.12.2026). Sonst: BKM-Richtlinie, FFA-verwaltet; KI-gestützte VFX-Workflows förderfähig.",
     "priority": 2,
     "provider": "BKM / FFA",
     "relevance_ki": "Mittel",
@@ -666,13 +668,13 @@
       "kmu"
     ],
     "url": "https://www.ffa.de/german-motion-picture-fund-gmpf.html",
-    "deadline": "laufend",
-    "deadline_notes": null,
+    "deadline": "ANTRAGSSTOPP 2026 — Anträge für Drehbeginn 2027 voraussichtlich ab November 2026",
+    "deadline_notes": "Antragsvolumen 2026 seit 20.08.2026 ausgeschöpft; Einreichverfahren 2027 kündigt die FFA an (voraussichtlich ab November 2026)",
     "branches": [
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22",
+    "verified_at": "2026-09-05",
     "sparten": [
       "produktion",
       "post_vfx"

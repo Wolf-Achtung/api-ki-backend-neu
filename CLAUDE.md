@@ -1,6 +1,6 @@
 # Steckbrief api-ki-backend-neu
 
-Letzter Wartungs-Durchgang: **2026-09-03**.
+Letzter Wartungs-Durchgang: **2026-09-05**.
 Dieser Steckbrief listet die betriebskritischen Fakten. Details stehen in
 `.env.example` und in den verlinkten Dateien.
 
@@ -97,12 +97,17 @@ Merkregeln:
   `TOOLS_FUNDING_ALIGNMENT_HTML` wird erzeugt, sitzt aber in Anhang A12
   — kein Anhang erscheint in den Berichten.
 - Toter Code gelöscht: `services/funding_engine_v2.py` (1278 Zeilen,
-  2026-09-03) und `services/funding_parser.py` (101 Zeilen, 2026-09-04,
-  kein Aufrufer). Es bleiben zwei Förderquellen:
-  `funding_programmes_core_2025` (Kern) und `data/funding/funding_de.json`,
-  dazu `data/funding_programs.json` als Fallback in
+  2026-09-03), `services/funding_parser.py` (101 Zeilen, 2026-09-04) und
+  `services/funding_service.py` samt `data/funding/funding_de.json`,
+  `funding_eu.json`, `config.json` (2026-09-05, KIS-1297 — kein Report
+  las sie, die monatliche Routine pflegte sie trotzdem). Es bleiben drei
+  Förderquellen: `data/funding_programmes_core_2025.json` (alle
+  deutschen Reports), `data/funding/funding_de_en.json` und
+  `funding_eu_core_en.json` (englische Reports), dazu
+  `data/funding_programs.json` als Fallback in
   `services/research_pipeline.py`. Die Statusregel liegt in
-  `funding_recommender.ist_beantragbar`.
+  `funding_recommender.ist_beantragbar` und gilt seit KIS-1297 auch im
+  EN-Pfad (`funding_service_en`).
 - Ein Förderdaten-Punkt ohne Beleg (als Notiz im Datensatz vermerkt):
   „aws digi Invest" als eigenständiges Programm. Digitalbonus Bayern ist
   seit 05.09.2026 belegt wieder `active` (Laufzeit bis 31.12.2027,
@@ -115,6 +120,13 @@ Merkregeln:
   fördert Kunstprojekte, Antragsrecht von Unternehmen nicht belegt.
 - ZIM steht bis zur Wiedervorlage am 15.01.2027 auf `paused` und fällt
   aus allen Empfehlungen. Der Förder-Radar erinnert ab diesem Datum.
+- DFFF und GMPF stehen seit 05.09.2026 auf `paused` (Wiedervorlage
+  01.11.2026): Die FFA nimmt seit 20.08.2026 keine Anträge für Drehbeginn
+  2026 mehr an, das Einreichverfahren 2027 öffnet voraussichtlich im
+  November (Beleg: `docs/FOERDER_VERIFIKATION_2026-09-05.md`). Keine
+  Fusion — beide bleiben getrennte Programme mit eigener Richtlinie 2026.
+  Film- und VFX-Kunden sehen bis dahin die regionalen Filmförderer,
+  Filmerbe, kulturelle Filmförderung, Creative Europe MEDIA, Eurimages.
 - Perplexity liefert die Markt-Box, die das DE-Template nicht rendert:
   zwei Aufrufe je Report ohne sichtbaren Nutzen. Entscheidung offen.
 - `routes/appetizer.py` bleibt aktiv (Wolf plant eine Einbindung), hat
@@ -333,6 +345,33 @@ durch alles, was ohne Netz entscheidet: Label, Fallstudie, R1-Fördertabelle,
 Förderempfehlung, Werkzeugliste und Faktenblock, System-Prompt,
 Options-Labels, Platin-Kette. Wer Stufe 1 bis 4 anfasst, sieht es hier
 zuerst. Die Profile nutzen das Vokabular aus `chat_normalizer.ENUM_VALUES`.
+
+## Förder-Frischecheck (KIS-1297)
+
+Die monatliche Routine „Förder-Aktualitäts-Check" (Claude Code Remote,
+jeden 5. um 07:00 UTC) lief am 05.09.2026 an der falschen Datei und
+konnte ihr Ergebnis nicht pushen. Befund und Regeln:
+
+- `scripts/check_funding_freshness.py` prüft drei Dateien: core_2025
+  (`verified_at`), `funding_de_en.json` und `funding_eu_core_en.json`
+  (`last_verified`). Bis KIS-1297 fehlte core_2025 — die Datei, aus der
+  jeder deutsche Report liest, wurde nie als veraltet gemeldet.
+- **Belegregel der Routine:** Status, Frist, Fördersatz oder Obergrenze
+  ändern sich nur nach tatsächlich gelesener amtlicher Seite, URL in
+  `notes`. Eine fehlgeschlagene Suche ist kein Beleg — der Eintrag
+  bleibt und landet im Bericht unter „unbelegt, Handprüfung". Die
+  Routine vom 05.09. meldete „nächstes Fenster 09.10.2026"; die FFA
+  nennt kein Datum.
+- Die Routine pusht nur, wenn ihre Umgebung das Repo als Quelle trägt
+  (Push 403 am 05.09.2026). Scheitert der Push, schreibt sie den
+  vollständigen Diff in den Bericht. Nie mergen — ein Merge deployt.
+- Externe Fakten kommen nur über Wolf (Perplexity-Briefing, nur
+  Anbieter- oder Amtsseiten); der Egress-Proxy blockt jede Anbieterseite.
+  Ergebnis als Tabelle mit Zitat, URL und Seitendatum, dann als
+  `docs/FOERDER_VERIFIKATION_<Datum>.md` ins Repo.
+- Tests: `tests/test_kis1297_foerder_frischecheck.py`. Das Sparten-Gate
+  zieht den Film-Marker seither aus den Daten (`_exklusiv_passend`,
+  `_exklusiv_fremd`), nicht aus einem festen Programmnamen.
 
 ## Textknoten sind nicht nur Text (KIS-1285)
 

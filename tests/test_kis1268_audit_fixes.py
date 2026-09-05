@@ -153,7 +153,8 @@ class TestGamechangerContactBox:
 class TestRuntimeFundingHygiene:
 
     def test_no_dead_programmes_in_runtime_files(self):
-        for path in ("data/funding/funding_de.json", "data/funding/funding_de_en.json"):
+        # KIS-1297: funding_de.json geloescht (kein Report las sie)
+        for path in ("data/funding/funding_de_en.json",):
             d = json.load(open(path, encoding="utf-8"))
             ids = {p.get("id") for p in d["programmes"]}
             assert "go_digital" not in ids, path

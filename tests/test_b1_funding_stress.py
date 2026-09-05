@@ -410,36 +410,36 @@ class TestB1AFundingLoadTest:
         return result
 
     def _generate_de_funding(self, profile: Dict, result: FundingTestResult) -> FundingTestResult:
-        """Generate German funding."""
-        try:
-            from services.funding_service import get_funding_recommendations
+        """Generate German funding.
 
-            answers = profile.get("answers", {})
-            funding_result = get_funding_recommendations(
-                country_code="DE",
-                answers=answers,
-                lang="de"
-            )
+        KIS-1297: Der DE-Pfad laeuft ueber den Produktionspfad
+        (funding_recommender + R1-Kerntabelle aus extra_sections). Der
+        fruehere services/funding_service.py las data/funding/funding_de.json —
+        eine Datei, die kein Report nutzte; beide sind geloescht.
+        """
+        from services.extra_sections import build_core_funding_table_html
+        from services.funding_recommender import get_filtered_funding_programs
 
-            result.funding_html = funding_result.programmes_html or ""
-            result.foerderprogramme_html = funding_result.potential_html or ""
-            result.programs_count = len(funding_result.programmes)
+        answers = profile.get("answers", {})
+        size = str(answers.get("unternehmensgroesse") or "team")
+        bundesland = str(answers.get("bundesland") or "")
+        branch = str(answers.get("branche") or "")
 
-            # Count eligible vs not eligible
-            for prog in funding_result.programmes:
-                if hasattr(prog, 'eligible') and prog.eligible:
-                    result.eligible_count += 1
-                else:
-                    result.not_eligible_count += 1
-
-                # Track regions
-                region = getattr(prog, 'region', 'DE')
-                result.region_distribution[region] = result.region_distribution.get(region, 0) + 1
-
-        except ImportError:
-            result.warnings.append("funding_service not available")
-            # Fallback to basic check
-            result.success = True
+        programs = get_filtered_funding_programs(
+            bundesland=bundesland, size=size, branch=branch, limit=8)
+        result.funding_html = build_core_funding_table_html({
+            "BRANCHE_LABEL": branch,
+            "BUNDESLAND_LABEL": bundesland,
+            "UNTERNEHMENSGROESSE_LABEL": size,
+            "country": "DE",
+        })
+        result.foerderprogramme_html = result.funding_html
+        result.programs_count = len(programs)
+        # Der Recommender liefert nur beantragbare Programme (ist_beantragbar)
+        result.eligible_count = len(programs)
+        for _ in programs:
+            # bundesweite wie Landesprogramme sind deutsche Programme
+            result.region_distribution["DE"] = result.region_distribution.get("DE", 0) + 1
 
         return result
 
@@ -565,15 +565,23 @@ class TestB1BFundingConsistency:
                         result.issues.append(f"Non-EU region in EU-Core: {prog.get('name_en')}")
 
             else:
-                from services.funding_service import get_funding_recommendations
-                funding = get_funding_recommendations("DE", profile.get("answers", {}), "de")
+                # KIS-1297: Produktionspfad statt des geloeschten funding_service
+                from services.funding_recommender import (
+                    get_filtered_funding_programs, load_funding_programs,
+                )
+                answers = profile.get("answers", {})
+                programs = get_filtered_funding_programs(
+                    bundesland=str(answers.get("bundesland") or ""), size=str(size),
+                    branch=str(answers.get("branche") or ""), limit=8)
+                rohdaten = {p.get("title") or p.get("name"): p for p in load_funding_programs()}
 
                 # Check size filtering
-                for prog in funding.programmes:
-                    suitable = getattr(prog, 'suitable_for', [])
+                for prog in programs:
+                    roh = rohdaten.get(prog.get("name")) or {}
+                    suitable = roh.get("suitable_for") or roh.get("size_match") or []
                     if suitable and size not in suitable:
                         result.segment_filtering_correct = False
-                        result.issues.append(f"Program {prog.name_de} not suitable for {size}")
+                        result.issues.append(f"Program {prog.get('name')} not suitable for {size}")
 
         except ImportError as e:
             result.issues.append(f"Import error: {e}")

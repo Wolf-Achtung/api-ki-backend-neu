@@ -42,6 +42,31 @@ SPARTEN_WERKZEUG = {
 FILM_SPARTEN = {"produktion", "post_vfx"}
 LISTENFELDER = ("ki_einsatz", "datenquellen", "anwendungsfaelle", "vorhandene_tools", "trainings_interessen")
 
+# KIS-1297: Der Film-Marker kommt aus den Daten, nicht aus dem Test. Bis zum
+# 20.08.2026 war das der DFFF; seit dem Antragsstopp (paused bis zur
+# Wiedervorlage 01.11.2026) tragen andere Film-Programme die Pruefung.
+FUND = json.loads((REPO / "data" / "funding_programmes_core_2025.json").read_text(encoding="utf-8"))
+
+
+def _beantragbar(p: dict) -> bool:
+    from services.funding_recommender import ist_beantragbar
+    return ist_beantragbar(p)
+
+
+PAUSIERT_TITEL = [p["title"] for p in FUND if not _beantragbar(p)]
+
+
+def _exklusiv_passend(sparte: str) -> list:
+    """Beantragbare exklusive Programme, die die Sparte nennen."""
+    return [p["title"] for p in FUND if p.get("branch_exclusive") and p.get("sparten")
+            and sparte in p["sparten"] and _beantragbar(p)]
+
+
+def _exklusiv_fremd(sparte: str) -> list:
+    """Exklusive Programme, die die Sparte NICHT nennen — duerfen nie erscheinen."""
+    return [p["title"] for p in FUND if p.get("branch_exclusive") and p.get("sparten")
+            and sparte not in p["sparten"]]
+
 
 def _profil(sparte: str) -> dict:
     return json.loads((PROFIL_DIR / f"medien_{sparte}_sparte.json").read_text(encoding="utf-8"))
@@ -105,10 +130,12 @@ class TestSpartenGate:
             "MEDIEN_SPARTE_LABEL": p["MEDIEN_SPARTE_LABEL"],
         })
         assert "<table" in html
-        if sparte in FILM_SPARTEN and p["answers"]["unternehmensgroesse"] != "1":
-            assert "DFFF" in html
-        else:
-            assert "DFFF" not in html and "GMPF" not in html
+        fremd = [t for t in _exklusiv_fremd(sparte) if t in html]
+        assert not fremd, (sparte, fremd)
+        if sparte in FILM_SPARTEN:
+            assert any(t in html for t in _exklusiv_passend(sparte)), (sparte, _exklusiv_passend(sparte))
+        # Antragsstopp (DFFF/GMPF seit 20.08.2026, ZIM) erscheint nirgends
+        assert not any(t in html for t in PAUSIERT_TITEL), sparte
         if sparte == "games":
             assert "Games-Förderung" in html
         else:
@@ -121,8 +148,9 @@ class TestSpartenGate:
         namen = [x["name"] for x in get_filtered_funding_programs(
             bundesland=a["bundesland"], size=size, branch="medien", limit=40, sparte=sparte)]
         assert namen
-        if sparte not in FILM_SPARTEN:
-            assert not any("DFFF" in n or "GMPF" in n for n in namen), namen
+        fremd = set(namen) & set(_exklusiv_fremd(sparte))
+        assert not fremd, (sparte, fremd)
+        assert not any(n in PAUSIERT_TITEL for n in namen), namen
 
     def test_werkzeuge_und_faktenblock(self, sparte):
         from services.tools_recommender import recommend_tools

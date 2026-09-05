@@ -156,7 +156,10 @@ class TestNachlaufKIS1273:
         vfx = build_core_funding_table_html(dict(basis, MEDIEN_SPARTE_LABEL="Postproduktion / VFX / Animation"))
         assert "Games-Förderung" in ohne
         assert "Games-Förderung" not in vfx
-        assert "DFFF" in vfx and "ProFIT" in vfx
+        # KIS-1297: DFFF steht seit dem Antragsstopp (20.08.2026) auf paused;
+        # das Filmerbe-Programm ist der beantragbare Film-Marker.
+        assert "Filmerbe" in vfx and "ProFIT" in vfx
+        assert "DFFF" not in vfx and "GMPF" not in vfx
 
     def test_r1_kerntabelle_versteht_en_label(self):
         from services.extra_sections import build_core_funding_table_html
@@ -165,7 +168,7 @@ class TestNachlaufKIS1273:
                  "UNTERNEHMENSGROESSE_LABEL": "Team (2-10)", "country": "DE",
                  "MEDIEN_SPARTE_LABEL": LABELS_EN["musik_audio"]}
         html = build_core_funding_table_html(basis, lang="en")
-        assert "DFFF" not in html and "Games" not in html
+        assert "Filmerbe" not in html and "Games" not in html
 
     def test_tool_namen_fuer_s3b(self):
         from services.kuratierte_fakten import tool_namen_strategie

@@ -20,6 +20,7 @@ from services.funding_types import (
     FundingRenderContext,
     FundingScope,
 )
+from services.funding_recommender import ist_beantragbar
 from services.funding_renderer import render_funding_html
 
 logger = logging.getLogger(__name__)
@@ -151,6 +152,13 @@ def _match_programmes(
     matched: List[Dict[str, Any]] = []
 
     for prog in programmes:
+        # KIS-1297: Dieselbe Statusregel wie im deutschen Report — ein
+        # Programm im Antragsstopp (paused) oder ausgelaufen (expired) faellt
+        # heraus. Bis hierher kannte der EN-Pfad kein Statusfeld; ZIM stand
+        # mit priority 3 weiter in der englischen Foerderbox.
+        if not ist_beantragbar(prog):
+            continue
+
         # Check if programme is suitable for company size
         suitable_for = prog.get("suitable_for", [])
         if company_size not in suitable_for:
@@ -402,6 +410,8 @@ def _match_eu_core_programmes(
     allowed_targets = target_map.get(target_group, ["SMEs"])
 
     for prog in programmes:
+        if not ist_beantragbar(prog):  # KIS-1297: eine Statusregel fuer alle Pfade
+            continue
         prog_targets = prog.get("target_groups_en", [])
 
         # Check if any of our allowed targets match the programme's target groups

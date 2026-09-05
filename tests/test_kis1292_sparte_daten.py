@@ -117,16 +117,23 @@ def _programme(sparte: str = "", bundesland: str = "nw", size: str = "team"):
         bundesland=bundesland, size=size, branch="medien", limit=40, sparte=sparte)]
 
 
+def _film_only() -> set:
+    """KIS-1297: Marker aus den Daten — DFFF/GMPF stehen seit dem Antragsstopp
+    vom 20.08.2026 auf paused und tragen die Pruefung nicht mehr."""
+    from services.funding_recommender import ist_beantragbar
+    return {p["title"] for p in FUND if p.get("branch_exclusive") and p.get("sparten")
+            and set(p["sparten"]) <= {"produktion", "post_vfx"} and ist_beantragbar(p)}
+
+
 class TestFoerderung:
     def test_ohne_sparte_bleibt_alles(self):
         namen = _programme("")
-        assert "DFFF – Deutscher Filmförderfonds" in namen
+        assert _film_only() & set(namen), (namen, _film_only())
         assert "Games-Förderung des Bundes (BMFTR)" in namen
 
     def test_tonstudio_bekommt_keine_kinofilmfoerderung(self):
         namen = _programme("musik_audio")
-        assert "DFFF – Deutscher Filmförderfonds" not in namen
-        assert "German Motion Picture Fund (GMPF)" not in namen
+        assert not (_film_only() & set(namen)), namen
         assert "Games-Förderung des Bundes (BMFTR)" not in namen
         # NRW nennt Audio/Podcast ausdruecklich — bleibt fuer den Tonstudio-Kunden
         assert "Film- und Medienstiftung NRW" in namen
@@ -135,7 +142,7 @@ class TestFoerderung:
         namen = _programme("games", bundesland="by")
         assert "Games-Förderung des Bundes (BMFTR)" in namen
         assert "FFF Bayern – Film-, Games- und XR-Förderung" in namen
-        assert "DFFF – Deutscher Filmförderfonds" not in namen
+        assert not (_film_only() & set(namen)), namen
 
     def test_verlag_bekommt_nur_passende_exklusive_programme(self):
         """Seit dem Faktencheck 05.09.2026 gibt es ein Verlags-Programm
