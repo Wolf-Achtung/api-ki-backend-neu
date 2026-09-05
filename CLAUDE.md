@@ -499,6 +499,11 @@ Deckblatt des Strategieberichts verlor seinen Score (Lauf 1269).
   Admin-JSON-Endpunkt ist in Produktion aus (`ENABLE_ADMIN_ROUTES=0`).
   Der Formular-Pfad schickt diese Mail seit KIS-1299 selbst nach Abgabe
   des Strategie-Fragebogens; der Betreff nennt „FB1+FB2" oder „nur FB1".
+  **KIS-1303:** Als BackgroundTask kam sie in Lauf KIS1275 nie an (keine
+  Spur im Postfach, Admin-Endpunkt lieferte). Jetzt synchron im Request
+  über `asyncio.to_thread` — derselbe Weg wie Chat-Pfad und
+  Admin-Endpunkt. Bleibt sie aus, in den Railway-Logs nach
+  `ADMIN-BRIEFING-<id>` und `KIS-1303` suchen.
 
   ```bash
   curl -X POST -H 'X-Admin-Key: $STRATEGY_ADMIN_KEY' \
