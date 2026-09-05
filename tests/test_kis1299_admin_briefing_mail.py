@@ -62,3 +62,24 @@ class TestFormularPfadSchicktDieMail:
     def test_steckbrief_nennt_den_endpunkt(self):
         md = (REPO / "CLAUDE.md").read_text(encoding="utf-8")
         assert "/api/strategy/admin/briefing-mail/" in md
+
+
+class TestBriefingZeigtDieSparteAlsLabel:
+    """KIS-1301: Das nachgesendete Briefing KIS1274 zeigte
+    "Medien sparte: post vfx" — Roh-Slug statt Label."""
+
+    def test_sparte_wird_uebersetzt(self):
+        from services.email_templates import _prettify_enum_value, _R1_LABELS
+        assert _prettify_enum_value("post_vfx", "medien_sparte") == "Postproduktion / VFX / Animation"
+        assert _prettify_enum_value("musik_audio", "medien_sparte").startswith("Musik")
+        assert _R1_LABELS["medien_sparte"] == "Medien-Sparte"
+
+    def test_unbekannte_sparte_bleibt_lesbar(self):
+        from services.email_templates import _prettify_enum_value
+        assert _prettify_enum_value("irgendwas", "medien_sparte")  # nie leer
+
+    def test_im_gerenderten_pdf_html(self):
+        from services.email_templates import _render_pdf_questionnaire_tables
+        html = _render_pdf_questionnaire_tables({"medien_sparte": "post_vfx", "risikofreude": "3"}, {}, "—")
+        assert "Medien-Sparte" in html and "Postproduktion / VFX / Animation" in html
+        assert "post vfx" not in html and "post_vfx" not in html
