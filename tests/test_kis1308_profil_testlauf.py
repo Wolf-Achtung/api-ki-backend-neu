@@ -48,6 +48,33 @@ class TestProfil:
         assert aus_antworten(profil["answers"]) == "Verlag / Publishing / Redaktion"
 
 
+class TestMotionSocialProfil:
+    """KIS-1309: Motion-Design- und Social-Media-Studio in München — dritter
+    Sparten-Pfad (Content Creation), Bild-/Video-Werkzeuge mit
+    Kennzeichnungspflicht, Digitalbonus Bayern."""
+
+    @pytest.fixture(scope="class")
+    def motion(self):
+        p = ROOT / "data" / "test_profiles_gold" / "medien_motion_social_muenchen_testlauf.json"
+        return json.loads(p.read_text(encoding="utf-8"))
+
+    def test_einspielbar(self, motion):
+        from routes.admin_testrun import profil_pruefen
+        assert profil_pruefen(motion["answers"], motion["strategy_answers"]) == []
+
+    def test_pfad_und_sparte(self, motion):
+        from services.medien_sparte import aus_antworten
+        a = motion["answers"]
+        assert aus_antworten(a) == "Content Creation / Social Media"
+        assert a["bundesland"] == "by" and a["unternehmensgroesse"] == "11–100"
+        assert "kennzeichnung" in a["ki_guardrails"].lower()
+        assert "expected_validation" in motion
+
+    def test_kein_firmenname(self, motion):
+        text = json.dumps(motion, ensure_ascii=False).lower()
+        assert not re.search(r'"(firmenname|company_name|unternehmensname|firma)"', text)
+
+
 class TestPruefung:
     def test_pflichtfeld_fehlt(self, profil):
         from routes.admin_testrun import profil_pruefen
