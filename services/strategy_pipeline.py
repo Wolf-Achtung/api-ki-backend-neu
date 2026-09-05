@@ -1194,9 +1194,20 @@ def _titel_aus_html(html: str, max_len: int = 90) -> List[str]:
     for m in re.finditer(r"<(?:h3|h4|strong)[^>]*>(.*?)</(?:h3|h4|strong)>", html or "", re.DOTALL | re.IGNORECASE):
         t = re.sub(r"<[^>]+>", "", m.group(1))
         t = re.sub(r"\s+", " ", t).strip(" :–-")
+        # KIS-1304: Kapitel-Etiketten sind keine Handlungsfelder — S1 schrieb
+        # „Größter Hebel ist der Bereich Strategische Handlungsfelder" (KIS1276).
+        if _GENERISCHE_UEBERSCHRIFT.search(t):
+            continue
         if 6 <= len(t) <= max_len and t not in titel:
             titel.append(t)
     return titel
+
+
+_GENERISCHE_UEBERSCHRIFT = re.compile(
+    r"Handlungsfeld|Empfehlung|Übersicht|Überblick|Zusammenfassung|Priorit|Nächste Schritte|"
+    r"Auf einen Blick|Executive|Action areas|Recommendation|Summary|Overview|Next steps",
+    re.IGNORECASE,
+)
 
 
 # KIS-1302: S1 und S3 bekamen „Stärken" und „Handlungsfelder" aus Feldern,

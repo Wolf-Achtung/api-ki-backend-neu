@@ -319,6 +319,29 @@
     ]
   },
   {
+    "name": "DaVinci Resolve (Neural Engine)",
+    "url": "https://www.blackmagicdesign.com/products/davinciresolve",
+    "trust_url": "https://www.blackmagicdesign.com/privacy",
+    "category": "Schnitt / Grading / KI-Funktionen (Neural Engine)",
+    "price": "Free / Studio Einmalkauf",
+    "gdpr": "lokal (Desktop-App); Blackmagic Cloud optional",
+    "host": "lokal",
+    "best_for_size": [
+      "solo",
+      "team",
+      "kmu"
+    ],
+    "best_for_industries": [
+      "medien"
+    ],
+    "verified_at": null,
+    "sparten": [
+      "post_vfx",
+      "produktion",
+      "content_creation"
+    ]
+  },
+  {
     "name": "Amberscript",
     "url": "https://www.amberscript.com",
     "trust_url": "https://www.amberscript.com/en/privacy-policy/",

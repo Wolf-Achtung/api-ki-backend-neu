@@ -700,10 +700,18 @@ def recommend_tools(
     # Drops tools whose minimum monthly entry cost exceeds what the user's
     # budget band can reasonably absorb per tool. Applied before scoring so
     # segment weighting doesn't silently rank an unaffordable tool to the top.
-    _budget_band = (b.get("investitionsbudget") or "").strip().lower()
+    # KIS-1304: Fragebogen 2 (s1_budget) hat Vorrang — dieselbe Regel wie
+    # Budget-Gate und Spannungs-Box. Lauf KIS1276: FB1 sagte 2.000–10.000 €,
+    # FB2 10.000–50.000 €; der Filter nahm FB1 und warf Amberscript, Descript
+    # und Runway hinaus. Übrig blieben Canva, LanguageTool und Duden — für
+    # ein VFX-Studio. Werkzeuge der eigenen Sparte fallen nie am Budget:
+    # sie erscheinen mit Preis, und der Kunde entscheidet.
+    _sa = b.get("_strategy_answers") if isinstance(b.get("_strategy_answers"), dict) else {}
+    _budget_band = (str((_sa or {}).get("s1_budget") or "") or str(b.get("investitionsbudget") or "")).strip().lower()
     if _budget_band and _BUDGET_BAND_MAX_MONTHLY.get(_budget_band) is not None:
         _before = len(tools)
-        tools = [t for t in tools if _fits_budget(t, _budget_band)]
+        tools = [t for t in tools
+                 if _fits_budget(t, _budget_band) or _passt_zur_sparte(t, sparte)]
         if _before != len(tools):
             log.info(
                 "[tools_recommender] budget filter (%s): %d → %d tools",
@@ -816,11 +824,19 @@ def recommend_tools(
 
         ranked.append(tool_result)
 
-    # Sort by final score (or legacy score if no analytics)
+    # Sort by final score (or legacy score if no analytics).
+    # KIS-1304: Werkzeuge der eigenen Sparte stehen immer vorn. Die Sparte
+    # gab bisher nur +2 im Legacy-Score; der Analytics-Score (Konfidenz,
+    # Trend) hob geprüfte, aber sparten-fremde Werkzeuge darüber — ein
+    # VFX-Studio bekam Canva, LanguageTool und Duden vor Topaz und
+    # Amberscript (R1 S. 15/16 in den Läufen KIS1274 bis KIS1276).
+    def _sparte_rang(x: Dict[str, Any]) -> int:
+        return 1 if (sparte and _passt_zur_sparte(x, sparte)) else 0
+
     if _HAS_ANALYTICS and TOOLS_ENGINE_ENABLED:
-        ranked.sort(key=lambda x: x.get("_final_score", 0), reverse=True)
+        ranked.sort(key=lambda x: (_sparte_rang(x), x.get("_final_score", 0)), reverse=True)
     else:
-        ranked.sort(key=lambda x: x.get("_score", 0), reverse=True)
+        ranked.sort(key=lambda x: (_sparte_rang(x), x.get("_score", 0)), reverse=True)
 
     # Apply segment-specific limit
     return ranked[:tools_limit]
