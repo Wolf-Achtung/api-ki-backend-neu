@@ -1626,6 +1626,13 @@ def apply_stray_prefix_remover(sections: dict) -> dict:
 # 4. SIEZEN-GUARD EXTENSION: Erweiterte du→Sie Patterns
 # =============================================================================
 
+# KIS-1305: „Engine" → „System" ist eine Anglizismus-Regel für Fließtext. In
+# Produktnamen verfälscht sie den Namen: Lauf KIS1277 zeigte „DaVinci Resolve
+# (Neural System)" (R1 S. 15/16) und „DaVinci Neural System" im Starter-Kit.
+# Vor diesen Wörtern bleibt „Engine" stehen (Lookbehind, auch für den Solo-
+# Blacklist-Pfad in report_healer.final_solo_terminology_cleanup).
+PRODUKTNAME_ENGINE_SCHUTZ = r'(?<!Neural )(?<!Unreal )(?<!Unity )(?<!Godot )(?<!Render )'
+
 EXTENDED_SIEZEN_PATTERNS = [
     # Possessive "dein/deine"
     (r'[Ff]ür deine', 'Für Ihre'),  # v14.18: 'Für deine Situation' -> 'Für Ihre Situation'
@@ -2086,7 +2093,9 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'\bSkaliert\b', 'Erweitert'),  # Am Satzanfang
     (r'\bSkalieren\b', 'Erweitern'),
     (r'\bSkalieren\b', 'Erweitern'),
-    (r'\bEngine\b', 'System'),
+    # KIS-1305: Produktnamen bleiben — „DaVinci Resolve (Neural Engine)" wurde
+    # im Lauf KIS1277 zu „Neural System" (R1 S. 15/16, Starter-Kit).
+    (PRODUKTNAME_ENGINE_SCHUTZ + r'\bEngine\b', 'System'),
     # v14.35: Framework-Familie komplett
     (r'\bFrameworks\b', 'Konzepte'),  # v14.35: Plural zuerst (greedy)
     (r'\bFramework\b', 'Konzept'),
@@ -2262,7 +2271,7 @@ GRAMMAR_FIX_PATTERNS = [
     (r'Assessment-Frameworks', 'Bewertungskonzepte'),  # v14.35
     (r'Business-Case-Frameworks', 'Business-Case-Vorlagen'),  # v14.35
     (r'\bPipeline\b', 'Ablauf'),
-    (r'\bEngine\b', 'System'),
+    (PRODUKTNAME_ENGINE_SCHUTZ + r'\bEngine\b', 'System'),  # KIS-1305: nie in Produktnamen
     (r'\.\. ', '. '),
 
     # v14.35: Fragment-Fixes (erweitert)

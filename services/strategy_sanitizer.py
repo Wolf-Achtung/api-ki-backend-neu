@@ -216,6 +216,45 @@ def _apply_plain_language(html: str, section_key: str) -> tuple:
     return new_html, fixes
 
 
+# ── KIS-1305: Verordnungsnummer des AI Act ───────────────────────────
+
+AI_ACT_VERORDNUNG = "(EU) 2024/1689"
+# „EU AI Act (Verordnung 2021/0691)", „KI-Verordnung (EU) 2021/0206",
+# „AI Act, Regulation (EU) 2023/1234" — die Nummer folgt dem Namen innerhalb
+# weniger Zeichen. Nur Jahr/Nummer-Paare werden angefasst, nie Artikel.
+_AI_ACT_NUMMER_RE = re.compile(
+    r"((?:EU[\s-]*AI[\s-]*Act|AI[\s-]*Act|KI-Verordnung|AI Regulation)"
+    r"[^.\n<>]{0,25}?(?:Verordnung|Regulation|VO)?\s*\(?(?:EU\)?\s*)?)"
+    r"(\d{4}/\d{3,4})",
+    re.IGNORECASE,
+)
+
+
+def ai_act_verordnungsnummer_korrigieren(html: str) -> tuple:
+    """Ersetzt eine falsche Verordnungsnummer neben „AI Act" durch
+    (EU) 2024/1689. Liefert (html, Anzahl Ersetzungen)."""
+    if not html or not re.search(r"\d{4}/\d{3,4}", html):
+        return html, 0
+    count = 0
+
+    def _fix(m: "re.Match[str]") -> str:
+        nonlocal count
+        if m.group(2) == "2024/1689":
+            return str(m.group(0))
+        count += 1
+        prefix = str(m.group(1))
+        # „(Verordnung 2021/0691)" → „(Verordnung (EU) 2024/1689)"; steht
+        # „(EU)" schon davor, nur die Nummer tauschen.
+        if re.search(r"\(?EU\)?\s*$", prefix):
+            return prefix + "2024/1689"
+        return prefix + AI_ACT_VERORDNUNG
+
+    html = _AI_ACT_NUMMER_RE.sub(_fix, html)
+    if count:
+        log.info("[KIS-1305][AI-ACT-NUMMER] %d falsche Verordnungsnummer(n) ersetzt", count)
+    return html, count
+
+
 # ── Hauptfunktion ────────────────────────────────────────────────────
 
 _EXEC_FUNDING_NEUTRAL = (
@@ -360,6 +399,16 @@ def sanitize_strategy_sections(
             annahme_patches = 1
             patches_applied += 1
             all_warnings.append(f"{key}: Szenario-Box Doppel-Annahme bereinigt (1027.4-3C)")
+
+        # Pass 6 (KIS-1305): Verordnungsnummer des AI Act. Lauf KIS1277, S8
+        # Quellenzeile: „EU AI Act (Verordnung 2021/0691)" — die Nummer ist
+        # erfunden. Die KI-Verordnung ist (EU) 2024/1689; jede andere Nummer
+        # neben „AI Act"/„KI-Verordnung" wird ersetzt.
+        html, _vn = ai_act_verordnungsnummer_korrigieren(html)
+        if _vn:
+            sections[key] = html
+            patches_applied += _vn
+            all_warnings.append(f"{key}: {_vn} falsche AI-Act-Verordnungsnummer(n) ersetzt (KIS-1305)")
 
     report = {
         'warnings': all_warnings,

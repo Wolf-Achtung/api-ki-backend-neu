@@ -452,6 +452,51 @@ verlor 3-Schritte-Prozess und Checkliste. Lokal reproduziert mit
   Amberscript statt Otter.
 - Test: `tests/test_kis1302_testlauf_1275.py`.
 
+## Eine Regel trifft auch den Produktnamen (KIS-1305)
+
+Testlauf KIS1277 (05.09.2026, nach KIS-1304): R1 nannte „DaVinci Resolve
+(Neural System)" (S. 15/16) — die Anglizismus-Regel `Engine → System` in
+`content_quality_enforcer` (Grammatik- und Siezen-Fixer) kennt keine
+Produktnamen. Jetzt schützt `PRODUKTNAME_ENGINE_SCHUTZ` (Lookbehind: Neural,
+Unreal, Unity, Godot, Render) beide Stellen und den Solo-Blacklist-Pfad in
+`report_healer`. **Wer eine Wort-Ersetzung einbaut, prüft sie gegen
+`data/tools_seed.json`.**
+
+- **Enhancer lief nie für den Strategiebericht:** `_transform_sources`
+  brach ab, sobald „sources-footer" im Dokument stand — das Template trägt
+  die CSS-Regel `.sources-footer`, also immer. Der `<div class="sources">`
+  aus S4 blieb eine nackte Werkzeugliste (allein auf S. 21 in KIS1275,
+  1276 und 1277), der `<p>Quellen: …</p>` aus S1 ein ungestylter Absatz.
+  Jetzt wird nur übersprungen, was schon ein Footer ist. Der Faktenblock
+  verlangt die Quellen zusätzlich als eine Zeile.
+- **Budget:** Die Persönliche Einschätzung erklärte trotz Hinweis das
+  FB1-Band für „maßgeblich" (R1 S. 33). Im geteilten Kontext trägt
+  `investitionsbudget` jetzt selbst den FB2-Wert; die alte Angabe heißt
+  `investitionsbudget_readiness_fragebogen_ueberholt`. Der Advisor-Prompt
+  bekommt `{{INVESTITIONSBUDGET}}` mit Regel.
+- **S1-Anker:** `_extract_top_handlungsfeld` nahm die erste `<h3>` aus S3 —
+  den Sektionstitel „Strategische Handlungsfelder" („Genau hier setzt das
+  Top-Handlungsfeld an: strategische Handlungsfelder", S. 3 in 1276 und
+  1277). Etiketten werden übersprungen, Rückfall ist das erste abgeleitete
+  Feld aus den Dimensions-Scores.
+- **Verwaiste Einwort-Absätze:** Der 12-Monats-Ausblick endete mit
+  „Jahresabschluss." (R1 S. 31); die Liste dazu fehlte, die Ursache blieb
+  lokal nicht reproduzierbar. `_strip_trailing_orphan_headings` entfernt
+  jetzt auch einen Absatz aus einem Wort am Sektionsende.
+- **AI-Act-Nummer:** S8 zitierte „Verordnung 2021/0691". Die KI-Verordnung
+  ist (EU) 2024/1689; `strategy_sanitizer.ai_act_verordnungsnummer_korrigieren`
+  ersetzt jede andere Nummer neben „AI Act"/„KI-Verordnung".
+- **Hosting `lokal` ≠ EU-gehostet:** S8 empfahl „EU-gehostete Tools wie
+  Amberscript … und DaVinci Resolve". Regel in S4, S8 und Faktenblock:
+  „lokal installiert". Wächter `lokal_als_eu_gehostet`.
+- **Benchmarks in S2:** „Über 75 %", „Nahezu 96 %" (der BDZV-Wert aus
+  KIS-1294) ohne Quelle, Spalte „Ihr Unternehmen 0 %" bei einem Kunden mit
+  ChatGPT, Claude und Perplexity im Stack. S2 bekommt `{s5_software}` und
+  `{s8_erfahrung}`; jeder Prozentwert nennt seine Quelle in der Zeile,
+  sonst Einordnung in Worten als Richtwert.
+- Wächter neu: `ai_act_verordnungsnummer`, `lokal_als_eu_gehostet`,
+  `einwort_absatz_am_kapitelende`. Test: `tests/test_kis1305_testlauf_1277.py`.
+
 ## Der Replay kennt keine Fragebogen-2-Route (KIS-1304)
 
 Testlauf KIS1276 (05.09.2026): Die [KIS-Admin]-Briefing-Mail (FB1+FB2)

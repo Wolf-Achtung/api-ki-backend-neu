@@ -14529,12 +14529,22 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             # KIS-1304: FB2-Budget sichtbar machen — Underscore-Schlüssel sind
             # hier ausgeblendet, die Prompts sahen nur das FB1-Budget.
             _bud_eff = _budget_effektiv(briefing)
-            if _bud_eff and _bud_eff != str(_ctx_answers.get("investitionsbudget", "") or ""):
+            _bud_fb1 = str(_ctx_answers.get("investitionsbudget", "") or "")
+            if _bud_eff and _bud_eff != _bud_fb1:
+                # KIS-1305: Die Persönliche Einschätzung (Lauf KIS1277, R1
+                # S. 33) erklärte trotz Hinweis das FB1-Band für „maßgeblich".
+                # Jetzt trägt der Schlüssel „investitionsbudget" selbst den
+                # gültigen Wert; die alte Angabe heißt ausdrücklich „überholt".
+                _ctx_answers["investitionsbudget"] = _bud_eff
                 _ctx_answers["investitionsbudget_strategie_fragebogen"] = _bud_eff
+                _ctx_answers["investitionsbudget_readiness_fragebogen_ueberholt"] = _bud_fb1
                 _ctx_answers["investitionsbudget_hinweis"] = (
-                    "Es gilt die spätere Angabe aus dem Strategie-Fragebogen "
-                    f"({_bud_eff}); der Readiness-Fragebogen nannte "
-                    f"{_ctx_answers.get('investitionsbudget', '')}."
+                    f"Maßgeblich ist {_bud_eff} (Strategie-Fragebogen, spätere "
+                    f"Angabe). Die frühere Angabe {_bud_fb1} aus dem "
+                    "Readiness-Fragebogen ist überholt: nie als 'maßgeblich', "
+                    "'Ausgangspunkt' oder Planungsgrundlage nennen. Wer die "
+                    "Differenz erwähnt, benennt sie in einem Satz und rechnet "
+                    f"mit {_bud_eff}."
                 )
             _SHARED_CONTEXT_PREFIX = (
                 "REFERENZKONTEXT (identisch für alle Abschnitte dieses Reports — "

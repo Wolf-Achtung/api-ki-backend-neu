@@ -218,7 +218,9 @@ VERGLEICHSREGION (VERBINDLICH): Benchmarks, Wettbewerber-Spalten und Standortaus
 
 WERKZEUGE (VERBINDLICH): Produktnamen nur aus dieser Liste oder aus dem Stack des Kunden: {kuratierte_tools_namen}. Abgekündigte oder nicht gelistete Marken (z. B. „Adobe Sensei") nie nennen — Gattungsbegriffe („Schnittsoftware mit KI-Funktionen") sind erlaubt.
 
-IST-ZUSTAND (VERBINDLICH): Behaupte keinen KI-Einsatz, den die Eingaben nicht nennen. „Erste KI-Anwendungen integriert" nur, wenn laufende KI-Projekte oder genutzte KI-Werkzeuge im Input stehen; sonst „bislang ohne strukturierten KI-Einsatz".
+IST-ZUSTAND (VERBINDLICH): Behaupte keinen KI-Einsatz, den die Eingaben nicht nennen. „Erste KI-Anwendungen integriert" nur, wenn laufende KI-Projekte oder genutzte KI-Werkzeuge im Input stehen; sonst „bislang ohne strukturierten KI-Einsatz". Genutzte Software laut Strategie-Fragebogen: {s5_software}. KI-Erfahrung: {s8_erfahrung}. Stehen dort KI-Werkzeuge (ChatGPT, Claude, Perplexity, Copilot …), nutzt der Kunde KI bereits punktuell — die Spalte „Ihr Unternehmen" sagt dann „punktuell, ohne Prozess", nie „0 %" oder „keine Nutzung" (Lauf KIS1277).
+
+BENCHMARK-ZAHLEN SIND BELEGT ODER RICHTWERTE (VERBINDLICH, KIS-1305): Jeder Prozentwert in der Benchmark-Tabelle nennt in derselben Zeile seine Quelle aus der Recherche (Herausgeber und Jahr, z. B. „Bitkom 2025"). Liegt in der Recherche keine benannte Quelle vor, steht kein Prozentwert, sondern eine Einordnung in Worten („weit verbreitet", „Mehrheit der Betriebe") mit dem Zusatz „Richtwert". Nie „Studie" oder „Branchendurchschnitt" ohne Namen. Die Werte 75 % oder 96 % ohne Quelle sind ein Rückfall (Lauf KIS1277, S. 8).
 
 LIVE-RECHERCHE-ERGEBNISSE:
 --- Markttrends ---
@@ -523,7 +525,7 @@ AUFGABE:
    a) Name und Anbieter
    b) Kernfunktion
    c) Preismodell nur als Art (Abonnement, nutzungsbasiert, im Abo enthalten) — keine Beträge
-   d) Datenschutz: Hosting-Angabe aus den Werkzeug-Daten wörtlich — keine eigene Einstufung, kein Audit-Status
+   d) Datenschutz: Hosting-Angabe aus den Werkzeug-Daten wörtlich — keine eigene Einstufung, kein Audit-Status. „lokal" heißt „lokal installiert", nicht „EU-gehostet"
    e) Integrationsmöglichkeit mit {s5_software}
    f) Empfehlung (★★★ / ★★ / ★)
 3. Erstelle eine Vergleichstabelle.
@@ -867,7 +869,7 @@ TOOL-EMPFEHLUNGEN (Zusammenfassung):
 
 WERKZEUGE UND HOSTING IN DIESER SECTION (VERBINDLICH, KIS-1302):
 - Werkzeugnamen nur aus dieser Liste oder aus dem Stack des Kunden: {kuratierte_tools_namen}.
-- Die Hosting-Angabe je Werkzeug steht in der gepflegten Liste unten; übernimm sie wörtlich. Ein Werkzeug gilt nur dann als „EU-gehostet" oder „EU-konform", wenn seine Zeile EU als Hosting nennt.
+- Die Hosting-Angabe je Werkzeug steht in der gepflegten Liste unten; übernimm sie wörtlich. Ein Werkzeug gilt nur dann als „EU-gehostet" oder „EU-konform", wenn seine Zeile EU als Hosting nennt. „lokal" (Desktop-Installation, etwa DaVinci Resolve oder Topaz Video AI) ist kein EU-Hosting: Diese Werkzeuge heißen „lokal installiert", nie „EU-gehostet" (Lauf KIS1277, S. 36).
 - ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney und Runway sind US-Anbieter: nie als „EU-konform" oder „EU-gehostet" bezeichnen — wenn nötig „US-Anbieter, AVV prüfen". Lauf KIS1275 empfahl „EU-konforme Tools wie Microsoft 365 Copilot, Runway und Amberscript" — Runway ist US.
 {kuratierte_tools}
 

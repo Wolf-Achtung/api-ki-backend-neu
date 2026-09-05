@@ -222,7 +222,9 @@ REFERENCE REGION (BINDING): Benchmarks, competitor columns and location statemen
 
 TOOLS (BINDING): Product names only from this list or from the customer's existing stack: {kuratierte_tools_namen}. Never name discontinued or unlisted brands (e.g. "Adobe Sensei") — generic terms ("editing software with AI features") are fine.
 
-CURRENT STATE (BINDING): Do not claim AI usage the inputs do not mention. "First AI applications in place" only if running AI projects or AI tools in use appear in the input; otherwise "no structured AI usage yet".
+CURRENT STATE (BINDING): Do not claim AI usage the inputs do not mention. "First AI applications in place" only if running AI projects or AI tools in use appear in the input; otherwise "no structured AI usage yet". Software in use per the strategy questionnaire: {s5_software}. AI experience: {s8_erfahrung}. If AI tools appear there (ChatGPT, Claude, Perplexity, Copilot …), the client already uses AI ad hoc — the "Your company" column then says "ad hoc, no process", never "0 %" or "no usage".
+
+BENCHMARK FIGURES ARE SOURCED OR GUIDE VALUES (BINDING, KIS-1305): Every percentage in the benchmark table names its research source in the same row (publisher and year, e.g. "Bitkom 2025"). Without a named source in the research, write no percentage — use a verbal classification ("widespread", "majority of firms") marked "guide value". Never "study" or "industry average" without a name.
 
 LIVE RESEARCH RESULTS:
 --- Market trends ---
@@ -512,7 +514,7 @@ TASK:
    a) Name and vendor
    b) Core function
    c) Pricing model as type only (subscription, usage-based, included) — no amounts
-   d) Data protection: hosting note from the tool data verbatim — no own rating, no audit status
+   d) Data protection: hosting note from the tool data verbatim — no own rating, no audit status. "local" means "installed locally", not "EU-hosted"
    e) Integration options with {s5_software}
    f) Recommendation (★★★ / ★★ / ★)
 3. Build a comparison table.
@@ -851,7 +853,7 @@ TOOL RECOMMENDATIONS (summary):
 
 TOOLS AND HOSTING IN THIS SECTION (BINDING, KIS-1302):
 - Tool names only from this list or from the customer's stack: {kuratierte_tools_namen}.
-- The hosting entry per tool is in the curated list below; copy it verbatim. A tool counts as "EU-hosted" or "EU-compliant" only if its row names EU as hosting.
+- The hosting entry per tool is in the curated list below; copy it verbatim. A tool counts as "EU-hosted" or "EU-compliant" only if its row names EU as hosting. "local" (desktop installation, e.g. DaVinci Resolve or Topaz Video AI) is not EU hosting: call these tools "installed locally", never "EU-hosted".
 - ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney and Runway are US vendors: never call them "EU-compliant" or "EU-hosted" — if needed, "US vendor, check DPA".
 {kuratierte_tools}
 

@@ -1165,6 +1165,7 @@ def final_solo_terminology_cleanup(
         return 0
 
     total_fixes = 0
+    from services.content_quality_enforcer import PRODUKTNAME_ENGINE_SCHUTZ
 
     # Iterate all sections and apply replacements
     for key in list(sections.keys()):
@@ -1183,7 +1184,11 @@ def final_solo_terminology_cleanup(
 
         # Step 2: Apply blacklist enforcement with word boundaries
         for term in SOLO_BLACKLIST_TERMS:
-            pattern = re.compile(r'\b' + re.escape(term) + r'\b', re.IGNORECASE)
+            # KIS-1305: „Engine" nie in Produktnamen („DaVinci Resolve
+            # (Neural Engine)", „Unreal Engine") — dieselbe Schutzregel wie im
+            # Grammatik-Fixer (content_quality_enforcer.PRODUKTNAME_ENGINE_SCHUTZ).
+            _schutz = PRODUKTNAME_ENGINE_SCHUTZ if term == "Engine" else ""
+            pattern = re.compile(_schutz + r'\b' + re.escape(term) + r'\b', re.IGNORECASE)
             fallback = SOLO_BLACKLIST_FALLBACKS.get(term, "")
 
             def _replace_match(m: re.Match[str]) -> str:
@@ -3380,7 +3385,11 @@ _DET_PLACEHOLDER = '<i data-ksj-det="{idx}"></i>'
 _TRAILING_ORPHAN_HEADING_RE = re.compile(
     r"(?:<h[2-6][^>]*>(?:(?!</h[2-6]>).)*</h[2-6]>\s*"
     r"|<(?:ul|ol)[^>]*>\s*</(?:ul|ol)>\s*"
-    r"|<p[^>]*>\s*</p>\s*)+"
+    r"|<p[^>]*>\s*</p>\s*"
+    # KIS-1305: Ein Absatz aus einem einzigen Wort am Sektionsende ist eine
+    # verwaiste Überschrift, kein Inhalt — R1 S. 31 (Lauf KIS1277) endete
+    # der 12-Monats-Ausblick mit „Jahresabschluss.", die Liste dazu fehlte.
+    r"|<p[^>]*>\s*(?:<(?:strong|b|em)>)?\s*[A-Za-zÄÖÜäöüß][\wäöüß-]{2,40}[.:]?\s*(?:</(?:strong|b|em)>)?\s*</p>\s*)+"
     r"(?P<tail>(?:\s*</(?:div|section)>)*\s*)$",
     re.DOTALL | re.IGNORECASE,
 )

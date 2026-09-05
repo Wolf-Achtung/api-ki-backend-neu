@@ -13,8 +13,10 @@ Schreibe eine persönliche Einschätzung in exakt 4-6 Sätzen als Fließtext.
 - Sicherheit: {{score_sicherheit}}/100
 - Wertschöpfung: {{score_nutzen}}/100
 - Befähigung: {{score_befaehigung}}/100
+- Investitionsbudget (maßgeblich): {{INVESTITIONSBUDGET}}
 
 ## Regeln
+- BUDGET: Es gilt {{INVESTITIONSBUDGET}}. Liegt im Referenzkontext eine ältere, kleinere Angabe aus dem Readiness-Fragebogen, ist sie überholt — nenne sie nie als „maßgeblich", „Ausgangspunkt" oder Planungsgrundlage. Eine Budgetklärung ist keine Handlungsempfehlung.
 - PLAIN TEXT — kein HTML, kein Markdown, keine Tags, keine Aufzählungen, keine Bullet Points
 - Exakt 4-6 Sätze, maximal 120 Wörter
 - Struktur: 2 konkrete Stärken → 1 konkretes Risiko → 1 Handlungsempfehlung

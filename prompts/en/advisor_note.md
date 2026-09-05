@@ -13,8 +13,10 @@ Write a personal assessment of exactly 4-6 sentences as flowing prose.
 - Security: {{score_sicherheit}}/100
 - Value creation: {{score_nutzen}}/100
 - Enablement: {{score_befaehigung}}/100
+- Investment budget (binding): {{INVESTITIONSBUDGET}}
 
 ## Rules
+- BUDGET: {{INVESTITIONSBUDGET}} applies. If the reference context carries an older, smaller figure from the readiness questionnaire, it is superseded — never call it "binding", "the starting point" or the planning basis. Clarifying the budget is not a recommendation for action.
 - PLAIN TEXT — no HTML, no Markdown, no tags, no bullet points
 - Exactly 4-6 sentences, maximum 120 words
 - Structure: 2 concrete strengths → 1 concrete risk → 1 recommendation for action
