@@ -6,6 +6,8 @@ Läuft NACH der LLM-Generierung, VOR dem Renderer.
 
 import re
 import logging
+from datetime import date
+from typing import Optional
 
 log = logging.getLogger(__name__)
 
@@ -255,6 +257,66 @@ def ai_act_verordnungsnummer_korrigieren(html: str) -> tuple:
     return html, count
 
 
+# ── KIS-1306: Abgelaufene Fristen im Förderkapitel ────────────────────
+
+_MONATE_DE = ("januar", "februar", "märz", "april", "mai", "juni", "juli",
+              "august", "september", "oktober", "november", "dezember")
+_MONATE_EN = ("january", "february", "march", "april", "may", "june", "july",
+              "august", "september", "october", "november", "december")
+_FRIST_DATUM_RE = re.compile(r"\b(\d{2})\.(\d{2})\.(\d{4})\b")
+_FRIST_MONAT_RE = re.compile(
+    r"(Einreichfrist|Antragsfrist|Frist|Deadline|submission deadline)\s+"
+    r"(?:im|bis|zum|am|in|by|until)\s+(" + "|".join(_MONATE_DE + _MONATE_EN) + r")\s+(\d{4})\b",
+    re.IGNORECASE,
+)
+
+
+def abgelaufene_fristen_korrigieren(html: str, report_date: Optional[date] = None,
+                                     lang: str = "de") -> tuple:
+    """Ersetzt Datumsangaben im Förderkapitel, die vor dem Reportdatum liegen,
+    durch „Aktuell prüfen". Lauf KIS1278 (05.09.2026): Die S7-Tabelle nannte
+    „14.07.2026 (Einreichfrist Filmförderung 2026)" und der Praxis-Tipp die
+    „Einreichfrist im Juli 2026" — beide aus der Recherche, beide vorbei.
+    Liefert (html, Anzahl Ersetzungen)."""
+    if not html:
+        return html, 0
+    heute = report_date or date.today()
+    ersatz = "check current call" if lang == "en" else "Aktuell prüfen"
+    count = 0
+
+    def _datum(m: "re.Match[str]") -> str:
+        nonlocal count
+        try:
+            d = date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+        except ValueError:
+            return str(m.group(0))
+        if d >= heute:
+            return str(m.group(0))
+        count += 1
+        return ersatz
+
+    html = _FRIST_DATUM_RE.sub(_datum, html)
+    # „14.07.2026 (Einreichfrist …)" → „Aktuell prüfen (Einreichfrist …)":
+    # der Klammerzusatz erklärt nichts mehr, weg damit.
+    html = re.sub(re.escape(ersatz) + r"\s*\((?:Einreich|Antrags)?frist[^)]{0,60}\)", ersatz, html, flags=re.IGNORECASE)
+
+    def _monat(m: "re.Match[str]") -> str:
+        nonlocal count
+        name = m.group(2).lower()
+        idx = (_MONATE_DE.index(name) if name in _MONATE_DE else _MONATE_EN.index(name)) + 1
+        jahr = int(m.group(3))
+        if (jahr, idx) >= (heute.year, heute.month):
+            return str(m.group(0))
+        count += 1
+        return ("next call (check with the funder)" if lang == "en"
+                else "nächsten Einreichtermin (beim Fördergeber prüfen)")
+
+    html = _FRIST_MONAT_RE.sub(_monat, html)
+    if count:
+        log.info("[KIS-1306][FRIST] %d abgelaufene Frist(en) im Förderkapitel ersetzt", count)
+    return html, count
+
+
 # ── Hauptfunktion ────────────────────────────────────────────────────
 
 _EXEC_FUNDING_NEUTRAL = (
@@ -293,7 +355,8 @@ def _neutralize_exec_funding_claims(html: str) -> tuple:
 def sanitize_strategy_sections(
     sections: dict,
     research_context: dict = None,
-    report_year: int = 2026
+    report_year: int = 2026,
+    report_date: Optional[date] = None,
 ) -> dict:
     """
     Haupteinstieg: Scannt alle Strategy-Sektionen auf Fakten-Plausibilität.
@@ -409,6 +472,15 @@ def sanitize_strategy_sections(
             sections[key] = html
             patches_applied += _vn
             all_warnings.append(f"{key}: {_vn} falsche AI-Act-Verordnungsnummer(n) ersetzt (KIS-1305)")
+
+        # Pass 7 (KIS-1306): Abgelaufene Fristen im Förderkapitel (S7).
+        if key.lower().startswith("s7"):
+            _lang = "en" if re.search(r"\bfunding\b|\bdeadline\b", html, re.IGNORECASE) and not re.search(r"Förder", html) else "de"
+            html, _fr = abgelaufene_fristen_korrigieren(html, report_date, _lang)
+            if _fr:
+                sections[key] = html
+                patches_applied += _fr
+                all_warnings.append(f"{key}: {_fr} abgelaufene Frist(en) ersetzt (KIS-1306)")
 
     report = {
         'warnings': all_warnings,

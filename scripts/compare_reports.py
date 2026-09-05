@@ -218,6 +218,11 @@ PRUEFUNGEN = [
         "Kapitel endet mit einem einzelnen Wort — Rest einer Überschrift ohne Inhalt (KIS-1305)",
         lambda t: _einwort_absatz_am_kapitelende(t),
     ),
+    (
+        "abgelaufene_frist",
+        "Förderfrist liegt vor dem Reportdatum (KIS-1306)",
+        lambda t: _abgelaufene_frist(t),
+    ),
 ]
 
 
@@ -397,8 +402,56 @@ def _satzabbruch_vor_block(text: str) -> Optional[str]:
             continue
         if len(vorher) < 60 or vorher[-1] in ".!?:;)»”\"":
             continue
-        if _BLOCKSTART_RE.match(zeilen[i + 1].strip()):
-            return z[-80:] + " → " + zeilen[i + 1].strip()[:20]
+        folge = zeilen[i + 1].strip()
+        if not _BLOCKSTART_RE.match(folge):
+            continue
+        # KIS-1306: „… Break-Even-Zeiten zwischen" + „Monat 8 und 17." ist ein
+        # umgebrochener Satz, kein Phasenblock (Strategie S. 21, Lauf KIS1278).
+        # Ein Blockanfang trägt Doppelpunkt, Gedankenstrich oder Klammer
+        # („Monate 1–3 – Fundament", „Q1 (Monate 1–3):"); ein Satzrest endet
+        # mit Punkt und ist kurz.
+        if folge.startswith(("Monat", "Month")) and not re.search(r"[:–—(]", folge):
+            continue
+        if len(folge) < 45 and folge.endswith(".") and not re.search(r"[:–—(]", folge):
+            continue
+        return z[-80:] + " → " + folge[:20]
+    return None
+
+
+# KIS-1306: Strategie S. 27/29 (Lauf KIS1278 vom 05.09.2026): Medienboard mit
+# „14.07.2026 (Einreichfrist Filmförderung 2026)" und Praxis-Tipp „Einreichfrist
+# im Juli 2026" — beide vor dem Reportdatum. Das Reportdatum steht im
+# Seitenfuß („Report-ID: KIS-1278 • 05.09.2026").
+_REPORT_DATUM_RE = re.compile(r"Report-ID:[^\n]*?•\s*(\d{2})\.(\d{2})\.(\d{4})")
+_FRIST_DATUM_RE = re.compile(
+    r"(?:Frist|frist|Deadline|deadline|Einreich)[^.\n]{0,40}?(\d{2})\.(\d{2})\.(\d{4})"
+    r"|(\d{2})\.(\d{2})\.(\d{4})\s*\((?:Einreich|Antrags)?[Ff]rist"
+)
+_FRIST_MONAT_RE = re.compile(
+    r"(?:Einreichfrist|Antragsfrist|Frist|Deadline)\s+(?:im|bis|zum|am|in|by)\s+"
+    r"(Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember"
+    r"|January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})"
+)
+_MONATSNAMEN = ("januar", "februar", "märz", "april", "mai", "juni", "juli", "august",
+                "september", "oktober", "november", "dezember", "january", "february",
+                "march", "april", "may", "june", "july", "august", "september", "october",
+                "november", "december")
+
+
+def _abgelaufene_frist(text: str) -> Optional[str]:
+    m = _REPORT_DATUM_RE.search(text)
+    if not m:
+        return None
+    heute = (int(m.group(3)), int(m.group(2)), int(m.group(1)))
+    flach = _zellen_zusammenfuegen(text)
+    for f in _FRIST_DATUM_RE.finditer(flach):
+        t, mo, j = (f.group(1), f.group(2), f.group(3)) if f.group(1) else (f.group(4), f.group(5), f.group(6))
+        if (int(j), int(mo), int(t)) < heute:
+            return re.sub(r"\s+", " ", f.group(0))[:80]
+    for f in _FRIST_MONAT_RE.finditer(flach):
+        idx = _MONATSNAMEN.index(f.group(1).lower()) % 12 + 1
+        if (int(f.group(2)), idx) < (heute[0], heute[1]):
+            return f.group(0)[:80]
     return None
 
 

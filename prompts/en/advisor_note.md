@@ -16,7 +16,7 @@ Write a personal assessment of exactly 4-6 sentences as flowing prose.
 - Investment budget (binding): {{INVESTITIONSBUDGET}}
 
 ## Rules
-- BUDGET: {{INVESTITIONSBUDGET}} applies. If the reference context carries an older, smaller figure from the readiness questionnaire, it is superseded — never call it "binding", "the starting point" or the planning basis. Clarifying the budget is not a recommendation for action.
+- BUDGET: {{INVESTITIONSBUDGET}} applies. If the reference context carries an older, smaller figure from the readiness questionnaire, it is superseded — do not mention it at all; the report's tension box already covers the difference. Clarifying the budget is not a recommendation for action.
 - PLAIN TEXT — no HTML, no Markdown, no tags, no bullet points
 - Exactly 4-6 sentences, maximum 120 words
 - Structure: 2 concrete strengths → 1 concrete risk → 1 recommendation for action

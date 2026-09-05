@@ -145,6 +145,8 @@ STRATEGY_PROMPTS = {
     # =========================================================================
     "S1": """Erstelle die Section "Ausgangslage — Ihr KI-Readiness-Profil" für den KI-Strategiebericht.
 
+WERKZEUGE (VERBINDLICH, KIS-1306): Produktnamen nur aus dieser Liste oder aus dem Stack des Kunden: {kuratierte_tools_namen}. Abgekündigte oder nicht gelistete Marken (z. B. „Adobe Sensei") nie nennen — Gattungsbegriffe („Schnittsoftware mit KI-Funktionen") sind erlaubt. Lauf KIS1278 nannte in dieser Section „Adobe Sensei oder RunwayML".
+
 UNTERNEHMENSDATEN:
 - Firmenname: {firmenname}
 - Branche: {branche}
@@ -287,6 +289,8 @@ Quellenangaben am Ende als <div class="sources">.""",
     # S3: Strategische Handlungsfelder
     # =========================================================================
     "S3": """Erstelle die Section "Strategische Handlungsfelder" für den KI-Strategiebericht.
+
+WERKZEUGE (VERBINDLICH, KIS-1306): Produktnamen nur aus dieser Liste oder aus dem Stack des Kunden: {kuratierte_tools_namen}. Abgekündigte oder nicht gelistete Marken (z. B. „Adobe Sensei") nie nennen — Gattungsbegriffe sind erlaubt. Keine Datenschutz- oder Hosting-Einstufung in dieser Section — die steht in Kapitel 4.
 
 UNTERNEHMENSDATEN:
 - Firmenname: {firmenname}
@@ -779,6 +783,7 @@ KRITISCH:
 - Erfinde KEINE zusätzlichen Programme, die nicht in der Liste stehen.
 - Programme mit dem Vermerk "bereits validiert" oder "aus Report 1" wurden bereits im KI-Status-Report empfohlen und MÜSSEN hier ebenfalls erscheinen, um Cross-Report-Konsistenz zu gewährleisten.
 - Wenn keine Programme aufgelistet sind, weise darauf hin, dass aktuell keine passenden Programme identifiziert wurden.
+- FRISTEN (KIS-1306): Eine Frist kommt nur aus den FÖRDERDATEN oben („mehrere Termine/Jahr" bleibt so). Aus der Recherche nie ein Datum als Frist übernehmen — Lauf KIS1278 nannte „14.07.2026 (Einreichfrist Filmförderung 2026)", ein Termin vor dem Reportdatum. Steht kein Datum in den Förderdaten, schreibe „Aktuell prüfen" und nenne im Praxis-Tipp keinen Monat.
 
 ERGÄNZENDE RECHERCHE (nur als Zusatzinfo, NICHT als Programmquelle verwenden):
 {research_foerdermittel}
@@ -870,7 +875,7 @@ TOOL-EMPFEHLUNGEN (Zusammenfassung):
 WERKZEUGE UND HOSTING IN DIESER SECTION (VERBINDLICH, KIS-1302):
 - Werkzeugnamen nur aus dieser Liste oder aus dem Stack des Kunden: {kuratierte_tools_namen}.
 - Die Hosting-Angabe je Werkzeug steht in der gepflegten Liste unten; übernimm sie wörtlich. Ein Werkzeug gilt nur dann als „EU-gehostet" oder „EU-konform", wenn seine Zeile EU als Hosting nennt. „lokal" (Desktop-Installation, etwa DaVinci Resolve oder Topaz Video AI) ist kein EU-Hosting: Diese Werkzeuge heißen „lokal installiert", nie „EU-gehostet" (Lauf KIS1277, S. 36).
-- ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney und Runway sind US-Anbieter: nie als „EU-konform" oder „EU-gehostet" bezeichnen — wenn nötig „US-Anbieter, AVV prüfen". Lauf KIS1275 empfahl „EU-konforme Tools wie Microsoft 365 Copilot, Runway und Amberscript" — Runway ist US.
+- ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney und Runway sind US-Anbieter: nie als „EU-konform" oder „EU-gehostet" bezeichnen — wenn nötig „US-Anbieter, AVV prüfen". Lauf KIS1275 empfahl „EU-konforme Tools wie Microsoft 365 Copilot, Runway und Amberscript" — Runway ist US. Microsoft 365 Copilot hat keine Zeile in der Liste: Datenschutz „laut Anbieter prüfen", nie „EU-konform" (Lauf KIS1278, Risikotabelle).
 {kuratierte_tools}
 
 ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.

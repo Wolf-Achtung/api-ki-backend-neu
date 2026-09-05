@@ -2216,6 +2216,17 @@ GRAMMAR_FIX_PATTERNS = [
     (r'\bden\s+(\w+)en\s+(KI-)?Systemlandschaft\b', r'die \1e \2Systemlandschaft'),
     (r'\bden\s+(KI-)?Systemlandschaft\b', r'die \1Systemlandschaft'),
 
+    # KIS-1306: Genus nach Rollout→Einführung reparieren. „Ein verfrühter
+    # Rollout" wurde zu „Ein verfrühter Einführung", „ein verzögerter Rollout"
+    # zu „ein verzögerter Einführung" (R1 S. 29, Lauf KIS1278). Einführung ist
+    # feminin: Artikel und Adjektivendungen im Nominativ/Akkusativ anpassen.
+    (r'\b([Ee]|[Kk]e)in(?:en)?((?:\s+\w+e[nr])*)\s+Einführung\b',
+     lambda m: m.group(1) + "ine" + re.sub(r'e[nr]\b', 'e', m.group(2)) + " Einführung"),
+    (r'\b([Dd])en((?:\s+\w+en)*)\s+Einführung\b',
+     lambda m: m.group(1) + "ie" + re.sub(r'en\b', 'e', m.group(2)) + " Einführung"),
+    (r'\b([Dd])em((?:\s+\w+en)*)\s+Einführung\b', r'\1er\2 Einführung'),
+    (r'\b([Dd])es((?:\s+\w+en)*)\s+Einführungen\b', r'\1er\2 Einführung'),
+
     # "Einzelunternehmer in der Branche beratung" → korrekte Großschreibung
     (r'in der Branche ([a-zäöü]+)', lambda m: f'in der Branche {m.group(1).title()}'),
 
@@ -3178,8 +3189,22 @@ def strip_trailing_sentence_fragments(sections: dict) -> dict:
             # (Duplikat-Text im gerenderten HTML, Browser schluckt den Bogus-Tag).
             tag_name = m.group(2)
 
+            # KIS-1306: Der Punkt einer Abkürzung ist kein Satzende. Der Split
+            # an „max. " und „ggf. " machte aus „(max. 500 Wörter) + Detail-
+            # Anhang" ein „(max." (R1 S. 8) und aus „… prüfen und ggf.
+            # nachholen: Perplexity AI" ein „… prüfen und ggf." (Vendor-Audit,
+            # R1 S. 21) — in jedem Lauf seit KIS1275. Abkürzungen werden vor
+            # dem Split maskiert und danach zurückgesetzt.
+            _abk = regex_module.compile(
+                r'\b(max|min|ca|inkl|bzw|ggf|vs|std|Nr|Abs|Art|evtl|etc|vgl|sog|z|B|u|a|d|h|Std|Mio|Mrd|Tsd|Nr)\.(?=\s)',
+                regex_module.IGNORECASE,
+            )
+            _MASK = '\u2063'  # unsichtbarer Trenner
+            masked = _abk.sub(lambda a: a.group(1) + _MASK, full_content)
+
             # Find the last proper sentence ending
-            sentences = regex_module.split(r'([.!?])\s+', full_content)
+            sentences = regex_module.split(r'([.!?])\s+', masked)
+            sentences = [s.replace(_MASK, '.') for s in sentences]
             if len(sentences) >= 3:  # At least one complete sentence
                 # Check if trailing part is short fragment
                 trailing = sentences[-1] if sentences[-1] else ''
