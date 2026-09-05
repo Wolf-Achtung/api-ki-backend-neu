@@ -132,7 +132,7 @@ WICHTIG: Der Wert '{vendor_audit_status}' bezieht sich ausschließlich auf den V
 Wenn ein Tool im Report 1 als RED bewertet wurde (z.B. ChatGPT),
 weise bei Erwähnung auf die DSGVO-Einschränkung hin und priorisiere
 EU-konforme Alternativen. Empfehle kein RED-bewertetes Tool als Hauptempfehlung.
-GENUTZT ODER EMPFOHLEN (VERBINDLICH, KIS-1313, gilt in jeder Section): Als „im Einsatz", „genutzt", „bereits vorhanden" oder in der Spalte „Ihr Unternehmen" gilt nur, was in der Software des Kunden steht ({s5_software}) oder in seinen KI-Projekten ({ki_projekte}). Jedes andere Werkzeug ist eine Empfehlung („kommt infrage", „könnte ergänzen"). Lauf KIS1282 schrieb einem Verlag mit DeepL Pro und ChatGPT „DeepL Pro, Duden-Mentor im Einsatz" und „Das Unternehmen nutzt diese Tools bereits punktuell".
+GENUTZT ODER EMPFOHLEN (VERBINDLICH, KIS-1313, gilt in jeder Section): Als „im Einsatz", „genutzt", „bereits vorhanden" oder in der Spalte „Ihr Unternehmen" gilt nur, was in der Software des Kunden steht ({s5_software}) oder in seinen KI-Projekten ({ki_projekte}). Jedes andere Werkzeug ist eine Empfehlung („kommt infrage", „könnte ergänzen"). Lauf KIS1282 schrieb einem Verlag mit DeepL Pro und ChatGPT „DeepL Pro, Duden-Mentor im Einsatz" und „Das Unternehmen nutzt diese Tools bereits punktuell". Ein ähnlicher Name ist kein Stack-Werkzeug (KIS-1314): DeepL Pro (Übersetzung) im Stack macht DeepL Write Pro (Stilprüfung) nicht zu „bereits in Ihrem Stack vorhanden" — Lauf KIS1284 schrieb genau das. Gleiches gilt für ChatGPT ↔ OpenAI API, Adobe InDesign ↔ Adobe Firefly, Microsoft 365 ↔ Microsoft 365 Copilot: Das zweite Werkzeug bleibt eine Empfehlung.
 """
 
 
@@ -544,7 +544,7 @@ BESTEHENDER SOFTWARE-STACK (KRITISCH):
 Der Kunde nutzt bereits folgende Software: {s5_software}
 REGELN:
 - Alle Tool-Empfehlungen MÜSSEN auf dem bestehenden Stack aufbauen.
-- Empfehle Erweiterungen/Add-ons für die bestehende Software (z.B. Microsoft Copilot wenn M365 vorhanden, Slack-Bots wenn Slack vorhanden).
+- Empfehle Erweiterungen/Add-ons für die bestehende Software (z.B. Microsoft Copilot wenn M365 vorhanden, Slack-Bots wenn Slack vorhanden) — aber nur solche, die in der Werkzeugliste stehen oder die der Hersteller unter genau diesem Namen anbietet. Erfinde keinen Produktnamen (KIS-1314): Lauf KIS1284 empfahl eine „Adobe ChatGPT-Plugin-Erweiterung" für InDesign, die es nicht gibt. Bist du dir bei einem Add-on nicht sicher, formuliere ohne Produktnamen („eine Anbindung von ChatGPT an InDesign prüfen").
 - Empfehle KEINE Konkurrenzprodukte zum bestehenden Stack (NICHT Google Workspace wenn M365 vorhanden, NICHT Teams wenn Slack vorhanden, NICHT Slack wenn Teams vorhanden).
 - Wenn ein Wechsel objektiv sinnvoll wäre, formuliere es als "Alternative zu prüfen", NICHT als Hauptempfehlung.
 - Nenne konkrete Integrationsmöglichkeiten mit dem bestehenden Stack.

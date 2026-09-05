@@ -136,7 +136,7 @@ can be high (e.g. 89/100) at the same time as the tool compliance status is
 If a tool was rated RED in Report 1 (e.g. ChatGPT), point out the GDPR
 limitation when it is mentioned and prioritize EU-compliant alternatives.
 Never make a RED-rated tool the primary recommendation.
-IN USE OR RECOMMENDED (BINDING, KIS-1313, applies in every section): Only tools named in the customer's software ({s5_software}) or AI projects ({ki_projekte}) count as "in use", "already in place" or belong in the column "your company". Every other tool is a recommendation ("worth adding", "could complement").
+IN USE OR RECOMMENDED (BINDING, KIS-1313, applies in every section): Only tools named in the customer's software ({s5_software}) or AI projects ({ki_projekte}) count as "in use", "already in place" or belong in the column "your company". Every other tool is a recommendation ("worth adding", "could complement"). A similar name is not a stack tool (KIS-1314): DeepL Pro (translation) in the stack does not make DeepL Write Pro (style checking) "already in your stack"; the same holds for ChatGPT vs. OpenAI API, Adobe InDesign vs. Adobe Firefly, Microsoft 365 vs. Microsoft 365 Copilot — the second tool stays a recommendation.
 """
 
 
@@ -533,7 +533,7 @@ EXISTING SOFTWARE STACK (CRITICAL):
 The client already uses the following software: {s5_software}
 RULES:
 - Every tool recommendation MUST build on the existing stack.
-- Recommend extensions/add-ons for the existing software (e.g. Microsoft Copilot if M365 is in place, Slack bots if Slack is in place).
+- Recommend extensions/add-ons for the existing software (e.g. Microsoft Copilot if M365 is in place, Slack bots if Slack is in place) — but only add-ons that appear in the tool list or that the vendor offers under exactly that name. Never invent a product name (KIS-1314): if unsure about an add-on, phrase it without a product name ("check whether ChatGPT can be connected to InDesign").
 - Do NOT recommend products that compete with the existing stack (NOT Google Workspace if M365 is in place, NOT Teams if Slack is in place, NOT Slack if Teams is in place).
 - If a switch would objectively make sense, present it as an "alternative worth evaluating", NOT as the primary recommendation.
 - Name concrete integration options with the existing stack.
