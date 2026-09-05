@@ -9937,6 +9937,11 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "score_nutzen": scores.get("value", 0),
         "score_befaehigung": scores.get("enablement", 0),
         "score_gesamt": scores.get("overall", 0),
+        # KIS-1311: Das Reportjahr als Anker. Der 12-Monats-Ausblick schrieb
+        # im September 2026 „ob 2025 als Jahr des Einzelauftrags … in die
+        # Bücher eingeht" (Lauf KIS1280) — der Prompt nannte kein Datum.
+        "report_jahr": datetime.now().year,
+        "report_jahr_naechstes": datetime.now().year + 1,
         # score_gesamt_display: includes quality bonus (+2) for prompt display
         # Must match calc_quality_bonus() typical output to avoid cover vs section mismatch
         "score_gesamt_display": min(int(scores.get("overall", 0) or 0) + 2, 98),

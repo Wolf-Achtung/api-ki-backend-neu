@@ -267,6 +267,15 @@ async def generate_strategy_report(
         _vendor_audit_red = str(_r1_sections.get("VENDOR_AUDIT_RED", 0) or 0)
         _vendor_audit_green = str(_r1_sections.get("VENDOR_AUDIT_GREEN", 0) or 0)
         _vendor_audit_status = str(_r1_sections.get("VENDOR_AUDIT_STATUS", "") or "")
+        # KIS-1311: Die Namen der geprüften Anbieter. Ohne sie heftete S4 den
+        # Status „nicht bestanden" an Runway (Lauf KIS1280), das Report 1 gar
+        # nicht geprüft hatte. Quelle: die <h4>-Titel der Anbieter-Details.
+        _vendor_audit_tools = ", ".join(dict.fromkeys(
+            re.sub(r"\s+", " ", n).strip()
+            for n in re.findall(r"<h4[^>]*>([^<]{2,80})</h4>",
+                                str(_r1_sections.get("VENDOR_AUDIT_HTML", "") or ""))
+            if n.strip()
+        )) or ("none listed" if _is_en else "keine Angabe")
         # KIS-1235: Englischer Status ("fail") landete wörtlich im deutschen
         # Fließtext ("Der Vendor-Audit-Status … lautet fail.") — eindeutschen.
         # KIS-1255 (A5): Umgekehrt landete "nicht bestanden" im EN-Report —
@@ -346,6 +355,7 @@ async def generate_strategy_report(
             "vendor_audit_red_count": _vendor_audit_red,
             "vendor_audit_green_count": _vendor_audit_green,
             "vendor_audit_status": _vendor_audit_status,
+            "vendor_audit_tools": _vendor_audit_tools,
             # Strategy questions
             # FIX-KIS-1192-ITEM-K: s1_budget wird vor LLM-Prompt-Übergabe
             # formatiert (sonst leaked Raw-Token "2000_10000" in Strategy

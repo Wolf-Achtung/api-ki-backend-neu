@@ -317,6 +317,23 @@ def abgelaufene_fristen_korrigieren(html: str, report_date: Optional[date] = Non
     return html, count
 
 
+# ── KIS-1311: Genus von „Score" ───────────────────────────────────────
+
+# „die Governance-Score zeigt", „Die Compliance-Score" (Strategie S. 10/11,
+# Lauf KIS1280). Score ist maskulin; nur Artikel direkt vor dem Wort.
+_SCORE_GENUS_RE = re.compile(r"\b([Dd])ie(\s+(?:[A-Za-zÄÖÜäöüß]+-)?Score)(?![\wäöüß-])")
+
+
+def score_genus_korrigieren(html: str) -> tuple:
+    """„die X-Score" → „der X-Score". Liefert (html, Anzahl)."""
+    if not html or "Score" not in html:
+        return html, 0
+    neu, n = _SCORE_GENUS_RE.subn(r"\1er\2", html)
+    if n:
+        log.info('[KIS-1311][SCORE-GENUS] %d Artikel vor "Score" korrigiert', n)
+    return neu, n
+
+
 # ── Hauptfunktion ────────────────────────────────────────────────────
 
 _EXEC_FUNDING_NEUTRAL = (
@@ -472,6 +489,12 @@ def sanitize_strategy_sections(
             sections[key] = html
             patches_applied += _vn
             all_warnings.append(f"{key}: {_vn} falsche AI-Act-Verordnungsnummer(n) ersetzt (KIS-1305)")
+
+        # Pass 6b (KIS-1311): „die Governance-Score" → „der Governance-Score".
+        html, _sg = score_genus_korrigieren(html)
+        if _sg:
+            sections[key] = html
+            patches_applied += _sg
 
         # Pass 7 (KIS-1306): Abgelaufene Fristen im Förderkapitel (S7).
         if key.lower().startswith("s7"):

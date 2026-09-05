@@ -55,6 +55,8 @@ FAKTEN- UND ANNAHMEN-TRENNUNG (VERBINDLICH):
 - Harte Eingabedaten, Scores, deterministische Zahlen und explizite Nutzerangaben als Tatsachen behandeln.
 - Schlussfolgerungen aus mehreren Signalen als Einordnung formulieren, nicht als gesicherte Tatsache.
 - Branchenübliche Muster, Benchmarks oder fehlende Detailinformationen nur als Annahme oder plausible Ableitung formulieren.
+JAHRESANKER (VERBINDLICH, KIS-1311): Der Report entsteht im Jahr {{report_jahr}}; die zwölf Monate reichen bis ins Jahr {{report_jahr_naechstes}}. Nenne keine andere Jahreszahl als diese beiden — kein „ob 2025 als Jahr des …", kein Rückgriff auf ein früheres Jahr für die Bilanz am Jahresende.
+
 SCORE-REGEL (VERBINDLICH): Der Gesamtscore beträgt {{score_gesamt}}/100
 (Governance {{score_governance}}, Sicherheit {{score_sicherheit}},
 Wertschöpfung {{score_nutzen}}, Befähigung {{score_befaehigung}}). Nenne als

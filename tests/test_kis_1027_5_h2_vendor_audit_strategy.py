@@ -36,7 +36,7 @@ def test_extract_vendors_without_strategy_baseline():
     names = sorted(v["name"] for v in vendors)
     assert "ChatGPT (OpenAI)" in names
     assert "Claude (Anthropic)" in names
-    assert "Notion AI" in names
+    assert any(n.startswith("Notion") for n in names)  # KIS-1311: „Notion (inkl. Notion AI)"
     # Perplexity nicht in briefing → fehlt erwartungsgemäß
     assert "Perplexity AI" not in names
 
@@ -56,7 +56,7 @@ def test_strategy_answers_merge_adds_perplexity():
     # Tools aus beiden Quellen vorhanden
     assert "ChatGPT (OpenAI)" in names
     assert "Claude (Anthropic)" in names
-    assert "Notion AI" in names
+    assert any(n.startswith("Notion") for n in names)  # KIS-1311: „Notion (inkl. Notion AI)"
     # GitHub Copilot (per "copilot"-Alias)
     assert "Microsoft Copilot" in names
 

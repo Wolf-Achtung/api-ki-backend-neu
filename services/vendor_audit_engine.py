@@ -908,7 +908,9 @@ _KNOWN_VENDOR_META = {
     "copilot": {"name": "Microsoft Copilot", "category": "LLM", "host": "EU available", "gdpr": "DPA + EU Data Boundary", "vendor_risk": 2, "eu_hosting": True},
     "midjourney": {"name": "Midjourney", "category": "Image Gen", "host": "US", "gdpr": "Limited", "vendor_risk": 4, "eu_hosting": False},
     "deepl": {"name": "DeepL", "category": "Translation", "host": "DE", "gdpr": "Full DSGVO", "vendor_risk": 1, "eu_hosting": True},
-    "notion": {"name": "Notion AI", "category": "Productivity", "host": "US", "gdpr": "DPA available", "vendor_risk": 3, "eu_hosting": False},
+    # KIS-1311: Der Kunde nennt „Notion" — geprüft wird der Anbieter samt
+    # seiner KI-Funktion, nicht ein Produkt, das er nie genannt hat.
+    "notion": {"name": "Notion (inkl. Notion AI)", "category": "Productivity", "host": "US", "gdpr": "DPA available", "vendor_risk": 3, "eu_hosting": False},
     "huggingface": {"name": "Hugging Face", "category": "ML Platform", "host": "US/EU", "gdpr": "Self-hosted option", "vendor_risk": 2, "eu_hosting": True},
     # KIS-1250: Lauf 1238 empfahl ~8 Tools, auditierte aber nur 1 — jede im
     # Report empfohlene Tool-Klasse muss im Katalog stehen (Kernversprechen).
@@ -922,6 +924,16 @@ _KNOWN_VENDOR_META = {
     "aleph alpha": {"name": "Aleph Alpha", "category": "LLM", "host": "DE", "gdpr": "Full DSGVO", "vendor_risk": 1, "eu_hosting": True},
     "azure openai": {"name": "Azure OpenAI (Microsoft)", "category": "LLM API", "host": "EU available", "gdpr": "DPA + EU Data Boundary", "vendor_risk": 2, "eu_hosting": True},
     "langfuse": {"name": "Langfuse", "category": "LLM-Observability", "host": "DE (self-host möglich)", "gdpr": "Full DSGVO", "vendor_risk": 2, "eu_hosting": True},
+    # KIS-1311: Medien-Werkzeuge. Lauf KIS1280 (Motion-Design-Studio) nutzte
+    # Runway produktiv — das Audit prüfte ChatGPT und „Notion AI", Runway
+    # fehlte. Hosting und AVV-Angaben wie in data/tools_seed.json.
+    "runway": {"name": "Runway", "category": "Generative Video / Bild", "host": "US", "gdpr": "AVV prüfen", "vendor_risk": 3, "eu_hosting": False},
+    "elevenlabs": {"name": "ElevenLabs", "category": "Synthetische Stimmen", "host": "US", "gdpr": "AVV prüfen", "vendor_risk": 3, "eu_hosting": False},
+    "descript": {"name": "Descript", "category": "Video-/Podcast-Editing", "host": "US", "gdpr": "AVV prüfen", "vendor_risk": 3, "eu_hosting": False},
+    "firefly": {"name": "Adobe Firefly", "category": "Bildgenerierung", "host": "US", "gdpr": "DPA available", "vendor_risk": 2, "eu_hosting": False},
+    "canva": {"name": "Canva Magic Studio", "category": "Grafik / Varianten", "host": "US/AU/EU (nicht wählbar)", "gdpr": "DPA available", "vendor_risk": 2, "eu_hosting": False},
+    "amberscript": {"name": "Amberscript", "category": "Transkription", "host": "NL/EU", "gdpr": "Full DSGVO", "vendor_risk": 1, "eu_hosting": True},
+    "davinci": {"name": "DaVinci Resolve (Neural Engine)", "category": "Schnitt / Grading (lokal)", "host": "lokal", "gdpr": "Lokal — keine Cloud-Pflicht", "vendor_risk": 1, "eu_hosting": True},
 }
 
 
@@ -971,7 +983,11 @@ def _extract_vendors_from_briefing(
             if not il:
                 continue
             for key, meta in _KNOWN_VENDOR_META.items():
-                if key in il and meta["name"] not in seen:
+                # KIS-1311: Wortgrenzen wie in _extract_vendors_from_sections —
+                # „canva" darf nicht in „Canvas" feuern, „make.com" braucht den Punkt.
+                if meta["name"] in seen:
+                    continue
+                if re.search(r"(?<![a-z0-9])" + re.escape(key) + r"(?![a-z0-9])", il):
                     vendors.append(dict(meta))
                     seen.add(meta["name"])
     return vendors

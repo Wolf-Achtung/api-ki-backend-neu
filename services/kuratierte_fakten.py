@@ -225,12 +225,16 @@ def _programm_zeile(p: Dict[str, Any]) -> str:
     # Die Feldnamen der Kernmatrix. Genau diese Angaben darf das Modell
     # uebernehmen — deshalb muessen sie im Block stehen, sonst fuellt es
     # die Luecke aus dem Trainingswissen.
+    # KIS-1311: „notes" trägt die Eignungsgrenze („Konsortial-Projekte",
+    # „für innovative Scale-ups") — ohne sie gab S7 dem EIC Accelerator für
+    # ein Motion-Design-Studio die Passung „hoch" (Lauf KIS1280).
     for schluessel, etikett in (("region", ""),
                                 ("funding_type", ""),
                                 ("funding_rate", "Quote"),
                                 ("max_amount", "bis"),
                                 ("deadline", "Frist"),
-                                ("focus", "Schwerpunkt")):
+                                ("focus", "Schwerpunkt"),
+                                ("notes", "Hinweis")):
         wert = str(p.get(schluessel) or "").strip()
         if not wert or wert.lower() == "none":
             continue
