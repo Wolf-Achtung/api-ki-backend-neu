@@ -7,6 +7,10 @@
   "UNTERNEHMENSGROESSE_LABEL": "11–100 (KMU)",
   "MEDIEN_SPARTE_LABEL": "Verlag / Publishing / Redaktion",
   "HAUPTLEISTUNG": "Fachverlag für Technik und Handwerk: sechs Fachzeitschriften, Sachbücher und ein Online-Portal mit Abo. Redaktion, Lektorat, Satz, Anzeigenvertrieb und Abo-Verwaltung im Haus.",
+  "expected_validation": {
+    "funding_flow": "DE",
+    "guardrails": true
+  },
   "answers": {
     "branche": "medien",
     "medien_sparte": "verlag_publishing",
