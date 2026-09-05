@@ -620,6 +620,21 @@ Deckblatt des Strategieberichts verlor seinen Score (Lauf 1269).
   Vorher `…/api/healthz` abfragen: Ein Deploy mitten in der Generierung
   bricht sie ab. `?force=true` hebt die 30-Minuten-Sperre auf.
 
+- `POST /api/admin/testrun/profile` (KIS-1308) — legt aus einem Profil im
+  Format der Gold-Profile (`answers` + `strategy_answers`) ein neues
+  Briefing samt Fragebogen 2 an und stellt es in die Warteschlange; der
+  Strategiebericht startet wie beim Replay automatisch
+  (`source='admin_profile'`). Prüfung vorab: Pflichtfelder, Enum-Werte,
+  Bundesland-Code, FB2-Regeln. Aufruf über das Skript:
+
+  ```bash
+  export STRATEGY_ADMIN_KEY=…
+  python scripts/testlauf_profil.py data/test_profiles_gold/medien_verlag_bayern_kmu_testlauf.json --email wolf@hohl.rocks
+  ```
+
+  `--check` prüft nur. Das Profil `medien_verlag_bayern_kmu_testlauf`
+  (Fachverlag, Bayern, 11–100 Mitarbeitende, FB2-Budget über FB1) ist der
+  erste Lauf außerhalb des Post/VFX-Pfads der Läufe KIS1272–1279.
 - `POST /api/strategy/admin/briefing-mail/{briefing_id}` (KIS-1299) —
   schickt das Briefing-PDF mit Fragebogen 1 und 2 an
   bewertung@ki-sicherheit.jetzt. Admin-Key per Header `X-Admin-Key`.
