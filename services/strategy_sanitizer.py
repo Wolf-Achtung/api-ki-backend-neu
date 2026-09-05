@@ -366,11 +366,11 @@ def benchmark_prozent_richtwert(html: str, research_text: str, lang: str = "de")
     if not html or "%" not in html:
         return html, 0
     zusatz = " (guide value)" if lang == "en" else " (Richtwert)"
-    belegt_cache: dict = {}
+    belegt_cache: dict[str, bool] = {}
 
     def _belegt(zahl: str) -> bool:
         if zahl in belegt_cache:
-            return belegt_cache[zahl]
+            return bool(belegt_cache[zahl])
         ok = bool(research_text) and bool(
             re.search(r"(?<![\d,.])" + re.escape(zahl) + r"(?:[,.]\d+)?\s?(?:%|Prozent|percent)", research_text)
         )
