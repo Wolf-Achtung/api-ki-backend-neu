@@ -452,6 +452,19 @@ verlor 3-Schritte-Prozess und Checkliste. Lokal reproduziert mit
   Amberscript statt Otter.
 - Test: `tests/test_kis1302_testlauf_1275.py`.
 
+## Testlauf KIS1279 (KIS-1307)
+
+Build 1900 vom 05.09.2026, nach KIS-1306: Alle sieben Punkte aus KIS-1306
+sind im PDF behoben, `compare_reports` meldet keinen Rückfall, keine dünnen
+Seiten, Kennzahlen unverändert. Ein Restbefund ohne Ursache: R1 S. 11
+„… vertraglich abgesicherte Datenhaltung ." — das Verb fehlt. Healer und
+alle Enforcer lokal mit 30 Verb-Kandidaten geprüft, nichts löscht das Wort.
+Wächter `wort_vor_punkt_fehlt` (Leerzeichen vor Satzpunkt) meldet das
+Muster; in KIS1275 bis KIS1278 kommt es nicht vor. Beobachtung: S2 nennt
+Benchmarks jetzt mit Quelle und übernimmt dabei die Region der Quelle
+(„Medienhäuser in Bayern"), mit dem Zusatz „für Berlin vergleichbar" —
+zulässig, aber die Vergleichsregion-Regel gilt weiter.
+
 ## Ein Abkürzungspunkt ist kein Satzende (KIS-1306)
 
 Testlauf KIS1278 (05.09.2026, Build 1822, nach KIS-1305): Alle acht Punkte
