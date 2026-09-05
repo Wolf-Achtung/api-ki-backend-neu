@@ -270,7 +270,9 @@ class TestFundingTermsEN:
         for german in ("förderfähig", "Sehr hoch", "Mittel bis hoch",
                        "KI-Projekte", "explizit gefördert"):
             assert german not in html, f"deutscher Rest in EN-Tabelle: {german}"
-        assert "Very high" in html
+        # KIS-1300: ProFIT trug bis 05.09.2026 "Sehr hoch" — nach der
+        # IBB-Richtlinie 2026 ist es "Mittel". Die Uebersetzung prueft BAFA.
+        assert "High" in html
 
     def test_de_funding_table_unchanged(self):
         from services.extra_sections import build_core_funding_table_html
@@ -278,7 +280,7 @@ class TestFundingTermsEN:
                     "UNTERNEHMENSGROESSE_LABEL": "2-10 (Kleines Team)"}
         html = build_core_funding_table_html(briefing, lang="de")
         assert "<th>KI-Relevanz</th>" in html
-        assert "Sehr hoch" in html  # deutsche Rohwerte bleiben
+        assert "Hoch" in html  # deutsche Rohwerte bleiben (KIS-1300: BAFA statt ProFIT)
 
 
 # =============================================================================

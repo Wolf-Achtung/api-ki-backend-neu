@@ -366,7 +366,7 @@ class TestFundingNameShield:
         html = build_core_funding_table_html(briefing, lang="de")
         assert "<th>KI-Relevanz</th>" in html
         assert "BAFA – Förderung von Unternehmensberatungen für KMU" in html
-        assert "Sehr hoch" in html
+        assert "Hoch" in html  # KIS-1300: ProFIT ist seit 05.09.2026 "Mittel"
 
 
 # =============================================================================
