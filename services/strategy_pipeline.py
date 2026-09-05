@@ -636,7 +636,8 @@ async def generate_strategy_report(
         # base_context only (R1 dim scores + Strategy questions are already
         # populated there).
         exec_task = _generate_section("EXEC", base_context, {
-            "top_handlungsfeld": _extract_top_handlungsfeld(sections["S3"]),
+            "top_handlungsfeld": _extract_top_handlungsfeld(
+                sections["S3"], fallback=_felder_text.split(",")[0] if _felder_text else ""),
             "anzahl_felder": str(len(handlungsfelder)),
             "quick_win": _extract_quick_win(sections["S3"]),
             "summe_foerder": _extract_foerder_summe(sections["S7"]),
@@ -1282,18 +1283,31 @@ def _extract_handlungsfelder(s3_html: str) -> str:
     return _extract_summary(s3_html, max_words=300)
 
 
-def _extract_top_handlungsfeld(s3_html: str) -> str:
-    """Extract the top action field (first heading after S3 content)."""
-    if not s3_html:
-        return "KI-Automatisierung"
-    # Try to find first h3 or strong tag
-    match = re.search(r"<h3[^>]*>(.*?)</h3>", s3_html)
-    if match:
-        return re.sub(r"<[^>]+>", "", match.group(1)).strip()
-    match = re.search(r"<strong>(.*?)</strong>", s3_html)
-    if match:
-        return re.sub(r"<[^>]+>", "", match.group(1)).strip()
-    return _extract_summary(s3_html, max_words=10)
+def _extract_top_handlungsfeld(s3_html: str, fallback: str = "") -> str:
+    """Das erste echte Handlungsfeld aus S3 — die erste Überschrift, die kein
+    Kapitel-Etikett ist.
+
+    KIS-1305: Die erste <h3> in S3 heißt oft „Strategische Handlungsfelder"
+    (der Sektionstitel). Bis Lauf KIS1277 landete genau das als
+    {top_handlungsfeld} in der Executive Summary: „Genau hier setzt das
+    Top-Handlungsfeld an: strategische Handlungsfelder, in denen …" (S. 3).
+    Etiketten laut _GENERISCHE_UEBERSCHRIFT werden übersprungen; ohne Treffer
+    gilt das erste abgeleitete Feld (fallback), nie ein fester Platzhalter."""
+    if s3_html:
+        for m in re.finditer(r"<h[34][^>]*>(.*?)</h[34]>", s3_html, re.DOTALL | re.IGNORECASE):
+            t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", m.group(1))).strip(" :–-")
+            t = re.sub(r"^(?:Handlungsfeld\s*)?\d+[.:)]\s*", "", t).strip()
+            if 4 <= len(t) <= 90 and not _GENERISCHE_UEBERSCHRIFT.search(t):
+                return t
+        for m in re.finditer(r"<strong>(.*?)</strong>", s3_html, re.DOTALL | re.IGNORECASE):
+            t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", m.group(1))).strip(" :–-")
+            t = re.sub(r"^(?:Handlungsfeld\s*)?\d+[.:)]\s*", "", t).strip()
+            if 4 <= len(t) <= 90 and not _GENERISCHE_UEBERSCHRIFT.search(t):
+                return t
+    fb = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", str(fallback or ""))).strip()
+    if fb and not _GENERISCHE_UEBERSCHRIFT.search(fb):
+        return fb
+    return _extract_summary(s3_html, max_words=10) if s3_html else "KI-gestützte Prozessautomatisierung"
 
 
 def _extract_quick_win(s3_html: str) -> str:

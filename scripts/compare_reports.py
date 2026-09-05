@@ -203,7 +203,82 @@ PRUEFUNGEN = [
         "US-Anbieter als EU-konform oder EU-gehostet bezeichnet (KIS-1298)",
         lambda t: _us_werkzeug_als_eu(t),
     ),
+    (
+        "ai_act_verordnungsnummer",
+        "AI Act mit erfundener Verordnungsnummer statt (EU) 2024/1689 (KIS-1305)",
+        lambda t: _ai_act_verordnungsnummer(t),
+    ),
+    (
+        "lokal_als_eu_gehostet",
+        "Lokal installiertes Werkzeug als EU-gehostet bezeichnet (KIS-1305)",
+        lambda t: _lokal_als_eu_gehostet(t),
+    ),
+    (
+        "einwort_absatz_am_kapitelende",
+        "Kapitel endet mit einem einzelnen Wort — Rest einer Überschrift ohne Inhalt (KIS-1305)",
+        lambda t: _einwort_absatz_am_kapitelende(t),
+    ),
 ]
+
+
+# KIS-1305: Strategie S. 37 (Lauf KIS1277): „EU AI Act (Verordnung 2021/0691)".
+# Die KI-Verordnung ist (EU) 2024/1689; jede andere Jahr/Nummer-Angabe neben
+# dem Namen ist erfunden (2021/0206 war der Kommissionsvorschlag).
+_AI_ACT_NUMMER_RE = re.compile(
+    r"(?:AI[\s-]*Act|KI-Verordnung|AI Regulation)[^.\n]{0,30}?(?:Verordnung|Regulation|VO)?\s*\(?(?:EU\)?\s*)?(\d{4}/\d{3,4})",
+    re.IGNORECASE,
+)
+
+
+def _ai_act_verordnungsnummer(text: str) -> Optional[str]:
+    text = _zellen_zusammenfuegen(text)
+    for m in _AI_ACT_NUMMER_RE.finditer(text):
+        if m.group(1) != "2024/1689":
+            return re.sub(r"\s+", " ", m.group(0))[:100]
+    return None
+
+
+# KIS-1305: Strategie S. 36 (Lauf KIS1277): „EU-gehostete Tools wie Amberscript
+# für Transkription und DaVinci Resolve für Postproduktion". DaVinci Resolve
+# und Topaz Video AI laufen lokal — kein Hosting, also auch kein EU-Hosting.
+_LOKALE_WERKZEUGE = r"DaVinci(?: Resolve)?|Topaz(?: Video AI)?|iZotope(?: RX)?"
+_LOKAL_ALS_EU_RE = re.compile(
+    r"(?:EU-gehostet\w*|EU-Hosting|EU-hosted)(?:(?!\bUS\b|\blokal\w*|\blocal\w*|\bzu\b|\bstatt\b|\banstelle\b)[^.!?\n]){0,120}?\b(?:" + _LOKALE_WERKZEUGE + r")\b"
+    r"|\b(?:" + _LOKALE_WERKZEUGE + r")\b(?:(?!\blokal\w*|\blocal\w*|\bnicht\b|\bkein\b)[^.!?·|\n]){0,80}?(?:EU-gehostet|EU-Hosting|EU-hosted|EU / EU|EU-Server)",
+    re.IGNORECASE,
+)
+
+
+def _lokal_als_eu_gehostet(text: str) -> Optional[str]:
+    text = _zellen_zusammenfuegen(text)
+    treffer = [re.sub(r"\s+", " ", m.group(0))[:120] for m in _LOKAL_ALS_EU_RE.finditer(text)]
+    if not treffer:
+        return None
+    return " | ".join(dict.fromkeys(treffer))
+
+
+# KIS-1305: R1 S. 31 (Lauf KIS1277): Der 12-Monats-Ausblick endete mit der
+# Zeile „Jahresabschluss." — eine Überschrift, deren Liste fehlte. Im
+# Seitentext: eine Zeile aus einem einzigen Wort mit Punkt, davor ein
+# vollständiger Satz, danach ein Kapitelanfang oder der Seitenfuß.
+_EINWORT_RE = re.compile(r"^[A-ZÄÖÜ][a-zäöüß-]{5,40}\.$")
+_KAPITELANFANG_RE = re.compile(r"^(?:Auf einen Blick:|At a glance:|Seite \d+ / \d+|Page \d+ / \d+|===== SEITE)")
+
+
+def _einwort_absatz_am_kapitelende(text: str) -> Optional[str]:
+    zeilen = [z.strip() for z in text.split("\n")]
+    for i in range(1, len(zeilen) - 1):
+        if not _EINWORT_RE.match(zeilen[i]):
+            continue
+        vorher = zeilen[i - 1]
+        if len(vorher) < 40 or vorher[-1] not in ".!?":
+            continue
+        j = i + 1
+        while j < len(zeilen) and not zeilen[j]:
+            j += 1
+        if j < len(zeilen) and _KAPITELANFANG_RE.match(zeilen[j]):
+            return zeilen[i]
+    return None
 
 
 # KIS-1298: Lauf KIS1274, R1 S. 24 und 26 — "Ein pragmatischer 3-Schritte-

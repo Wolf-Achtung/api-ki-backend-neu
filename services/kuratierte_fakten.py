@@ -131,7 +131,11 @@ _KOPF_TOOLS_STRATEGIE_DE = (
     "- 'Nicht bestanden' aus dem Vendor-Audit steht nur bei Werkzeugen, die der "
     "Kunde im Fragebogen genannt hat, und heißt 'mit AVV nutzbar' — nie bei "
     "Runway, Make oder einem anderen empfohlenen Werkzeug.\n"
-    "- Quellen am Ende: nur die Anbieteradressen aus dieser Liste.\n\n"
+    "- Hosting 'lokal' (Desktop-App) ist kein EU-Hosting: schreibe 'lokal "
+    "installiert', nie 'EU-gehostet'.\n"
+    "- Quellen am Ende: nur die Anbieteradressen aus dieser Liste, als EINE "
+    "Zeile <div class=\"sources\"><p>Quellen: Name (Adresse) · Name (Adresse)</p></div> "
+    "— keine Liste, kein Punkt je Werkzeug.\n\n"
 )
 _KOPF_TOOLS_STRATEGIE_EN = (
     "\n\n=== VERIFIED TOOL DATA (BINDING FOR THIS SECTION) ===\n"
@@ -156,7 +160,11 @@ _KOPF_TOOLS_STRATEGIE_EN = (
     "- 'Failed' from the vendor audit applies only to tools the client named in "
     "the questionnaire and means 'usable with a DPA' — never to Runway, Make or "
     "any other recommended tool.\n"
-    "- Sources at the end: only the vendor addresses from this list.\n\n"
+    "- Hosting 'local' (desktop app) is not EU hosting: write 'installed "
+    "locally', never 'EU-hosted'.\n"
+    "- Sources at the end: only the vendor addresses from this list, as ONE "
+    "line <div class=\"sources\"><p>Sources: Name (address) · Name (address)</p></div> "
+    "— no bullet list, no item per tool.\n\n"
 )
 _FALLBACK_TOOLS_DE = (
     "\n\n=== WERKZEUG-DATEN ===\nKein Faktenblock verfügbar. Nenne als konkrete "

@@ -560,9 +560,15 @@ def _compact_source_lists(html: str) -> str:
 
 
 def _transform_sources(html: str) -> str:
-    """Wrap Quellen paragraphs and <div class="sources"> in sources-footer."""
-    if 'sources-footer' in html:
-        return html
+    """Wrap Quellen paragraphs and <div class="sources"> in sources-footer.
+
+    KIS-1305: Bis Lauf KIS1277 brach die Funktion ab, sobald „sources-footer"
+    irgendwo im Dokument stand — und das steht es immer, denn das Template
+    trägt die CSS-Regel ``.sources-footer``. Für den Strategiebericht lief
+    die Umwandlung deshalb nie: Der ``<div class="sources">`` aus S4 blieb
+    eine nackte Liste (zehn Werkzeugnamen allein auf S. 21), der
+    ``<p>Quellen: …</p>`` aus S1 ein ungestylter Absatz. Jetzt wird nur
+    übersprungen, was schon ein Footer ist."""
 
     def _div(m: "re.Match[str]") -> str:  # type: ignore[type-arg, unused-ignore]
         inner = m.group(1)
@@ -578,13 +584,22 @@ def _transform_sources(html: str) -> str:
             if not head:
                 head = "Sources" if re.search(r"(?i)\bsources?\b", inner) else "Quellen"
             inner = f"<strong>{head}:</strong> " + " · ".join(clean) + "."
+        else:
+            # Ein einzelner Absatz im Block: nicht in ein zweites <p> schachteln.
+            _only_p = re.fullmatch(r"\s*<p[^>]*>([\s\S]*?)</p>\s*", inner)
+            if _only_p:
+                inner = _only_p.group(1).strip()
         return f'<div class="sources-footer" style="{_S_SOURCES}"><p>{inner}</p></div>'
 
+    def _p(m: "re.Match[str]") -> str:  # type: ignore[type-arg, unused-ignore]
+        # Bereits eingepackte Absätze (aus _div oder einem früheren Lauf)
+        # nicht ein zweites Mal umhüllen.
+        if re.search(r'sources-footer"[^>]*>\s*$', m.string[max(0, m.start() - 300):m.start()]):
+            return str(m.group(0))
+        return f'<div class="sources-footer" style="{_S_SOURCES}"><p>{m.group(1)}</p></div>'
+
     html = _RE_QUELLEN_DIV.sub(_div, html)
-    html = _RE_QUELLEN_P.sub(
-        f'<div class="sources-footer" style="{_S_SOURCES}"><p>\\1</p></div>',
-        html
-    )
+    html = _RE_QUELLEN_P.sub(_p, html)
     return html
 
 
