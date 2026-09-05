@@ -75,6 +75,16 @@ def _prettify_enum_value(val: Any, field: str = "") -> str:
         _hy = re.fullmatch(r"(\d+)\s*-\s*(\d+)", s)
         if _hy:
             return f"{_hy.group(1)}\u2013{_hy.group(2)}{_RANGE_UNIT_SUFFIX[field]}"
+    # KIS-1301: Die Sparte hat ihr Label in services/medien_sparte — die
+    # Chat-Anzeige-Map kennt sie nicht, das Briefing zeigte "post vfx".
+    if field == "medien_sparte":
+        try:
+            from services.medien_sparte import label as _sparte_label
+            _sl = _sparte_label(s)
+            if _sl:
+                return _sl
+        except Exception:  # pragma: no cover - Schutznetz
+            pass
     # Only touch pure enum tokens: lowercase, no spaces, [a-z0-9_] only.
     if not s or s != s.lower() or not re.fullmatch(r"[a-z0-9_]+", s):
         # KIS-1248: Komma-gejointe Listen ohne Leerzeichen lesbar machen
@@ -861,6 +871,8 @@ _R1_LABELS: Dict[str, str] = {
     "benchmark_wettbewerb": "Benchmark Wettbewerb",
     "innovationsprozess": "Innovationsprozess",
     "risikofreude": "Risikofreude",
+    # KIS-1301: Briefing KIS1274 zeigte "Medien sparte: post vfx" (Roh-Slug).
+    "medien_sparte": "Medien-Sparte",
     "datenschutz": "Datenschutz (Zustimmung)",
     "country": "Land",
 }
