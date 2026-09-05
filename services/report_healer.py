@@ -870,7 +870,11 @@ def sanitize_template_phrases(html: str) -> Tuple[str, int]:
     if not html:
         return html, 0
 
-    result = html
+    # KIS-1314: Copy-Paste-Prompt-Kästen (Sofort-Start) tragen „[NAME]",
+    # „[DATUM]" mit Absicht — BRACKET_PLACEHOLDER_GENERIC machte daraus
+    # „Reihe / Zeitschrift:" (Lauf KIS1284, R1 S. 8).
+    from services.prompt_kaesten import entmaskiere, maskiere
+    result, _kaesten = maskiere(html)
     removed_count = 0
 
     for bp in BOILERPLATE_PATTERNS:
@@ -907,7 +911,7 @@ def sanitize_template_phrases(html: str) -> Tuple[str, int]:
     result = re.sub(r"<p>\s*</p>", "", result)
     result = re.sub(r"\n{3,}", "\n\n", result)
 
-    return result, removed_count
+    return entmaskiere(result, _kaesten), removed_count
 
 
 # =============================================================================
@@ -4390,6 +4394,9 @@ def heal_final_html(
     log.info("[HEALER-POST] Starting heal_final_html: len=%d, segment=%s (canonical=%s)", len(html), segment, canonical_segment)
 
     # Fix A: Remove prompt/template artifacts (TASK 1 - robust patterns)
+    # KIS-1314: Copy-Paste-Prompt-Kästen behalten ihre Platzhalter.
+    from services.prompt_kaesten import entmaskiere, maskiere
+    result, _kaesten = maskiere(result)
     try:
         for bp in BOILERPLATE_PATTERNS:
             try:
@@ -4406,6 +4413,7 @@ def heal_final_html(
                 pass
     except Exception as e:
         log.warning("[HEALER-POST] Fix A error: %s", e)
+    result = entmaskiere(result, _kaesten)
 
     # Fix B: SOLO blacklist enforcement (TASK 2 + TASK 3 FINAL FIX)
     # KIS-1275: DE-only — die Ersatz-Maps sind deutsche Begriffe.

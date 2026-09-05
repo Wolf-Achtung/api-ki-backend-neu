@@ -2060,9 +2060,14 @@ EXTENDED_SIEZEN_PATTERNS = [
     # KIS-1312: Das Muster hielt „Prüfen Sie zuerst" für eine Du-Form und
     # machte „Sie zueren" daraus (Lauf KIS1281, R1 S. 27). Adverbien und
     # Substantive auf -st sind keine Verben.
+    # KIS-1314: „den Sie bewusst zugunsten" → „Sie bewusen" (Lauf KIS1284,
+    # R1 S. 29). Partizipien und Adjektive auf -st ergänzt.
     (r'\bSie (?!(?i:zuerst|erst|selbst|meist|fast|zunächst|höchst|ernst|sonst|längst|zuletzt|zumeist|'
      r'nächst|best|schnellst|Angst|Kunst|Dienst|Herbst|Text|Test|Rest|Post|West|Ost|Frust|Lust|Gunst|'
-     r'Wurst|Obst|Rost|Trost|Geist|Christ|Last|Gast|Ast|Mast|Kost|Verlust|Kontext|Protest)\b)([\w]+)st\b',
+     r'Wurst|Obst|Rost|Trost|Geist|Christ|Last|Gast|Ast|Mast|Kost|Verlust|Kontext|Protest|'
+     r'bewusst|äußerst|jüngst|robust|gewusst|wüst|Durst|Frost|Forst|Hast|Dunst|Palast|Kontrast|'
+     r'Manifest|Podcast|Broadcast|Forecast|Host|Boost|Request|Trust|August|Vertrauensverlust|'
+     r'Zeitverlust|Datenverlust|Umsatzverlust)\b)([\w]+)st\b',
      r'Sie \1en'),  # Allgemeines Pattern
     # Spezifische häufige Fälle:
     (r'\bSie einhältst\b', 'Sie einhalten'),
@@ -3067,7 +3072,11 @@ _FINAL_TEMPLATE_PHRASES = [
     r'^\s*Prompt:',
     r'^\s*Aufgabe:',
     # Common LLM artifacts
-    r'(?i)\bals\s+KI(?:-Assistent)?\b',
+    # KIS-1314: „als KI" ist eine Selbstbezeichnung des Modells — „als
+    # KI-Entwurf" ist eine Kennzeichnung. Ohne den Lookahead wurde aus
+    # „Kennzeichne jede Fassung als KI-Entwurf" ein „Fassung -Entwurf"
+    # (Lauf KIS1282, R1 S. 14) bzw. „Fassung KI-Entwurf" (KIS1284, S. 8).
+    r'(?i)\bals\s+KI(?:-Assistent)?\b(?![-\w])',
     r'(?i)\bals\s+Sprachmodell\b',
     r'(?i)\bich\s+(?:kann|darf)\s+(?:nicht|keine)\b.*?(?:rechtliche|medizinische)\s+Beratung',
 ]
@@ -3088,7 +3097,10 @@ def strip_template_phrases_final(sections: dict) -> dict:
             continue
 
         original = value
-        html = value
+        # KIS-1314: Copy-Paste-Prompt-Kästen tragen ihre Platzhalter mit
+        # Absicht — sie werden vor dem Filter maskiert.
+        from services.prompt_kaesten import entmaskiere, maskiere
+        html, _kaesten = maskiere(value)
 
         for pattern in _FINAL_TEMPLATE_PHRASES:
             try:
@@ -3114,6 +3126,7 @@ def strip_template_phrases_final(sections: dict) -> dict:
         html = regex_module.sub(r'<li[^>]*>\s*</li>', '', html)
         html = regex_module.sub(r'<div[^>]*>\s*</div>', '', html)
         html = regex_module.sub(r'\s{3,}', '  ', html)
+        html = entmaskiere(html, _kaesten)
 
         if html != original:
             sections[key] = html

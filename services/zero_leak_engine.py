@@ -938,7 +938,8 @@ ALL_LEAK_PHRASES: List[str] = (
 FUZZY_LEAK_PATTERNS: List[Tuple[str, str]] = [
     # AI references
     (r'(ich\s+bin\s+(?:ein|eine)\s+(?:KI|AI|künstliche))', ""),
-    (r'(als\s+(?:KI|AI|Sprach)\s*(?:modell|assistent)?)', ""),
+    # KIS-1314: nie in „als KI-Entwurf" oder „als KI-System" greifen.
+    (r'(als\s+(?:KI|AI|Sprach)\s*(?:modell|assistent)?)(?![\w-])', ""),
     (r'(kann.*?ich.*?helfen)', ""),
     (r'(wenden.*?(?:sich|Sie).*?an)', ""),
     (r'(support.*?team)', ""),

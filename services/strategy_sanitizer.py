@@ -232,10 +232,20 @@ _AI_ACT_NUMMER_RE = re.compile(
 )
 
 
+AI_ACT_CELEX = "32024R1689"
+# EUR-Lex-Adresse: „…/TXT/?uri=CELEX%3A32021R0691" oder „CELEX:32021R0691",
+# innerhalb desselben Links oder Klammerausdrucks nach dem Namen.
+_AI_ACT_CELEX_RE = re.compile(
+    r"((?:EU[\s-]*AI[\s-]*Act|AI[\s-]*Act|KI-Verordnung|AI Regulation)"
+    r"[^<>\n]{0,160}?CELEX(?:%3A|:))(3\d{4}R\d{4})",
+    re.IGNORECASE,
+)
+
+
 def ai_act_verordnungsnummer_korrigieren(html: str) -> tuple:
     """Ersetzt eine falsche Verordnungsnummer neben „AI Act" durch
     (EU) 2024/1689. Liefert (html, Anzahl Ersetzungen)."""
-    if not html or not re.search(r"\d{4}/\d{3,4}", html):
+    if not html or not re.search(r"\d{4}/\d{3,4}|CELEX", html, re.IGNORECASE):
         return html, 0
     count = 0
 
@@ -252,6 +262,17 @@ def ai_act_verordnungsnummer_korrigieren(html: str) -> tuple:
         return prefix + AI_ACT_VERORDNUNG
 
     html = _AI_ACT_NUMMER_RE.sub(_fix, html)
+
+    # KIS-1314: Lauf KIS1284 (Strategie S. 31) verlinkte den AI Act auf
+    # EUR-Lex mit CELEX 32021R0691 — die KI-Verordnung ist 32024R1689.
+    def _fix_celex(m: "re.Match[str]") -> str:
+        nonlocal count
+        if m.group(2).upper() == AI_ACT_CELEX:
+            return str(m.group(0))
+        count += 1
+        return str(m.group(1)) + AI_ACT_CELEX
+
+    html = _AI_ACT_CELEX_RE.sub(_fix_celex, html)
     if count:
         log.info("[KIS-1305][AI-ACT-NUMMER] %d falsche Verordnungsnummer(n) ersetzt", count)
     return html, count

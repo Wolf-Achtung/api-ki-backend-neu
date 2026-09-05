@@ -452,6 +452,50 @@ verlor 3-Schritte-Prozess und Checkliste. Lokal reproduziert mit
   Amberscript statt Otter.
 - Test: `tests/test_kis1302_testlauf_1275.py`.
 
+## Ein Platzhalter im Prompt-Kasten ist kein Prompt-Rest (KIS-1314)
+
+Testlauf KIS1284 (05.09.2026, Build 2251, zweiter Verlag-Lauf nach KIS-1313):
+Alles aus KIS-1313 ist im PDF — Verlag-Prompts mit Vorspann, DeepL Write Pro
+und LanguageTool im Sofort-Start, Verlag-Starter-Kit, Verlagsquellen in der
+Recherche (Börsenverein, Retresco, MVFP), Prozentwerte mit Beleg, vier
+Spalten in der Risikomatrix, „1 Anbieter ist EU-konform". Kennzahlen
+unverändert (Score 84), kein Wächter-Treffer. Restbefunde:
+
+- **„Reihe / Zeitschrift: Liefere:"** (R1 S. 8): Der Copy-Paste-Prompt hatte
+  „[NAME]" als Ausfüllstelle. Der Healer (`BRACKET_PLACEHOLDER_GENERIC`)
+  löscht jeden Platzhalter mit „name", „datum", „firma" — in beiden
+  Pfaden, vor und nach dem Rendern. Die vier Prompt-Kästen tragen jetzt
+  `data-ksj-prompt="1"`; `services/prompt_kaesten.py` maskiert sie vor den
+  Filtern (Healer Fix A, `heal_final_html`, `strip_template_phrases_final`)
+  und setzt sie danach wieder ein. **Wer einen Textfilter über ganze
+  Sektionen laufen lässt, maskiert die Kästen.** Außerhalb der Kästen
+  fällt „[NAME]" weiter.
+- **„Kennzeichne jede Fassung KI-Entwurf."** (R1 S. 8): Der
+  Selbstbezeichnungs-Filter `\bals\s+KI\b` in `_FINAL_TEMPLATE_PHRASES`
+  traf „als KI-Entwurf" — das war die Ursache der „-Entwurf"-Glitches aus
+  KIS1282, die KIS-1313 nur am Symptom flickte. Jetzt Lookahead
+  `(?![-\w])`, ebenso im Fuzzy-Muster von `zero_leak_engine`.
+- **„Sie bewusen"** (R1 S. 29): Siezen-Ausnahmeliste um Partizipien und
+  Adjektive auf -st ergänzt (bewusst, äußerst, jüngst, robust, gewusst …).
+- **CELEX** (Strategie S. 31): „EU AI Act (…CELEX%3A32021R0691)". Der
+  Sanitizer kannte nur „2021/0691"; jetzt auch die EUR-Lex-Kennung
+  (`_AI_ACT_CELEX_RE` → `32024R1689`), der Wächter ebenso.
+- **DeepL Pro ≠ DeepL Write Pro** (Strategie S. 17/18): „bereits in Ihrem
+  Stack vorhanden". Regel im System-Prompt (DE/EN): Ein ähnlicher Name ist
+  kein Stack-Werkzeug (auch ChatGPT ↔ OpenAI API, InDesign ↔ Firefly,
+  M365 ↔ Copilot).
+- **„Adobe ChatGPT-Plugin-Erweiterung"** (Strategie S. 19): Der S4-Prompt
+  verlangte „Erweiterungen/Add-ons für die bestehende Software" ohne
+  Namensregel. Jetzt: nur Add-ons aus der Liste oder unter dem
+  Herstellernamen, sonst ohne Produktnamen formulieren. Wächter
+  `erfundenes_werkzeug` kennt das Muster.
+- Offen, nur beobachtet: „Pufferfür Testphasen" (R1 S. 27, fehlendes
+  Leerzeichen aus dem Modell); Notion/Obsidian als Wissensbasis für einen
+  Verlag (R1 S. 11); „Kostenrahmen bis 500 €" für einen
+  Plattform-Prototyp (Strategie S. 15); „Fürsprecher … gewinnen lassen"
+  (S. 35); 30-Tage-Challenge für Einsteiger weiter generisch.
+- Test: `tests/test_kis1314_testlauf_1284.py`.
+
 ## Die Sparte schlägt die Branche (KIS-1313)
 
 Testlauf KIS1282 (05.09.2026, Build 2201): erster Lauf mit dem

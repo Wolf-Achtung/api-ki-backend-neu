@@ -175,9 +175,12 @@ PRUEFUNGEN = [
         "Werkzeug ausserhalb der gepflegten Liste empfohlen (KIS-1293)",
         # KIS-1302: Otter/Fathom/Fireflies sind echte US-Dienste ohne Zeile in
         # tools_seed.json — R1 S. 10 (Lauf KIS1275) empfahl „Otter" als Quick Win.
+        # KIS-1314: „Adobe ChatGPT-Plugin-Erweiterung … in Adobe InDesign"
+        # (Lauf KIS1284, Strategie S. 19) — ein Produkt, das es nicht gibt.
         lambda t: (m.group(0) if (m := re.search(
             r"Adobe Sensei|Legiscope|TrustArc|OpenDP|\bAIVA\b|Azure Cognitive Services"
-            r"|\bOtter(?:\.ai)?\b|\bFathom\b|\bFireflies(?:\.ai)?\b", t)) else None),
+            r"|\bOtter(?:\.ai)?\b|\bFathom\b|\bFireflies(?:\.ai)?\b"
+            r"|Adobe ChatGPT[\w-]*|ChatGPT-Plugin-Erweiterung|InDesign[- ]KI-Plugin", t)) else None),
     ),
     (
         "satzabbruch_vor_block",
@@ -286,11 +289,22 @@ _AI_ACT_NUMMER_RE = re.compile(
 )
 
 
+# KIS-1314: Strategie S. 31 (Lauf KIS1284): „EU AI Act (https://eur-lex.europa.eu/
+# legal-content/DE/TXT/?uri=CELEX%3A32021R0691)" — die KI-Verordnung ist 32024R1689.
+_AI_ACT_CELEX_RE = re.compile(
+    r"(?:AI[\s-]*Act|KI-Verordnung|AI Regulation)[^\n]{0,160}?CELEX(?:%3A|:)\s?(3\d{4}R\d{4})",
+    re.IGNORECASE,
+)
+
+
 def _ai_act_verordnungsnummer(text: str) -> Optional[str]:
     text = _zellen_zusammenfuegen(text)
     for m in _AI_ACT_NUMMER_RE.finditer(text):
         if m.group(1) != "2024/1689":
             return re.sub(r"\s+", " ", m.group(0))[:100]
+    for m in _AI_ACT_CELEX_RE.finditer(text):
+        if m.group(1).upper() != "32024R1689":
+            return re.sub(r"\s+", " ", m.group(0))[-100:]
     return None
 
 
