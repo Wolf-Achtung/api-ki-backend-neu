@@ -91,7 +91,11 @@ class TestAntragsstoppDfffGmpf:
             "MEDIEN_SPARTE_LABEL": "Film-/TV-Produktion",
         })
         assert "<table" in html
-        assert "DFFF" not in html and "GMPF" not in html
+        # KIS-1298: Die Tabelle selbst bleibt frei von pausierten Programmen;
+        # darunter steht ein Hinweis mit Wiedervorlage (kein Betrag, keine Quote).
+        tabelle, _, hinweis = html.partition('class="small muted funding-paused-note"')
+        assert "DFFF" not in tabelle and "GMPF" not in tabelle
+        assert "DFFF" in hinweis and "01.11.2026" in hinweis and "€" not in hinweis
 
 
 class TestEnPfadKenntDieStatusregel:

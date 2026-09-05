@@ -480,6 +480,9 @@ async def generate_strategy_report(
             "s3_handlungsfelder": _extract_handlungsfelder(sections["S3"]),
             "s4_tools_summary": _extract_summary(sections["S4"]),
             "s5_budget_summary": _extract_summary(sections["S5"]),
+            # KIS-1298: Stop-Regeln muessen sich auf das Ziel aus Report 1
+            # beziehen (Lauf KIS1274: "unter 100 Stunden" bei Ziel 25 h).
+            "canon_hours_month": str(report1_sections.get("CANON_HOURS_MONTH", "") or "25"),
         })
 
         # --- S7: KIS-1093-B — Structured JSON funding data for S7 prompt ---

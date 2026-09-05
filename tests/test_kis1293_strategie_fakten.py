@@ -154,6 +154,9 @@ class TestNachlaufKIS1273:
                  "UNTERNEHMENSGROESSE_LABEL": "Team (2-10)", "country": "DE"}
         ohne = build_core_funding_table_html(dict(basis))
         vfx = build_core_funding_table_html(dict(basis, MEDIEN_SPARTE_LABEL="Postproduktion / VFX / Animation"))
+        # KIS-1298: Hinweiszeile zu ausgesetzten Programmen (DFFF/GMPF) steht
+        # unter der Tabelle — hier zaehlt nur die Tabelle.
+        vfx = vfx.partition('class="small muted funding-paused-note"')[0]
         assert "Games-Förderung" in ohne
         assert "Games-Förderung" not in vfx
         # KIS-1297: DFFF steht seit dem Antragsstopp (20.08.2026) auf paused;

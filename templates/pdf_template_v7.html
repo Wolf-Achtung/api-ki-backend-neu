@@ -1943,9 +1943,9 @@ h1, h2, h3, h4 {
     <div class="chapter-banner chapter-banner--r1 chapter-banner--unnumbered" style="background:linear-gradient(135deg,#1a3a2a 0%,#2a5f3d 100%);-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <div class="chapter-banner__content">
             <p class="chapter-banner__category" style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin:0 0 4px;">UMSETZUNG</p>
-            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">30-Tage KI-Challenge</h2>
+            <h2 class="chapter-banner__title" style="font-size:18px;font-weight:500;color:#ffffff;margin:0 0 2px;">{{ CHALLENGE_DAYS|default('30') }}-Tage KI-Challenge</h2>
             <div class="chapter-banner__accent" style="width:32px;height:2px;background:#c8954c;margin:4px 0 8px;print-color-adjust:exact;-webkit-print-color-adjust:exact;"></div>
-            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">30 Tage, kleine Schritte, große Wirkung</p>
+            <p class="chapter-banner__subtitle" style="font-size:12px;color:rgba(255,255,255,0.6);margin:0;">{{ CHALLENGE_DAYS|default('30') }} Tage, kleine Schritte, große Wirkung</p>
         </div>
     </div>
     <div class="section-body">{{ CHALLENGE_30_TAGE_HTML|safe }}</div>

@@ -11920,10 +11920,16 @@ def _get_fallback_content_impl(section_key: str, briefing: Dict[str, Any], score
                 return str(val) + " Monate" if str(val).strip() else "n.&thinsp;v."
 
         # Format ROI values (German decimals)
+        # KIS-1298: dieselbe Rundung wie ROI_12M_DISPLAY_DE (roi_anzeige) —
+        # Lauf KIS1274 zeigte "1,2 %" im Deckblatt und "1 %" in der Uebersicht.
         def _fmt_roi_pct(val) -> str:
             if val is None or val == "—" or val == "":
                 return "n.&thinsp;v."
             try:
+                from services.roi_anzeige import als_prozent as _als_prozent
+                _txt = _als_prozent(val)
+                if _txt:
+                    return _txt
                 return f"{float(val):.0f}".replace(".", ",") + " %"
             except (ValueError, TypeError):
                 return str(val) if str(val).strip() else "n.&thinsp;v."
@@ -14970,9 +14976,15 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             # KIS-1251 (Punkt 3): EN-Fassung der 30-Tage-Challenge
             lang=str(briefing.get("lang") or sections.get("LANG") or "de").lower(),
         )
+        # KIS-1298: Kapitel-Banner nennt dieselbe Tageszahl wie der Inhalt.
+        # Lauf KIS1274: Banner "30-Tage KI-Challenge", darunter "Ihre 23-Tage
+        # KI-Challenge" (Grundlagen-Woche uebersprungen).
+        _ch_m = re.search(r"(?:Ihre|Your) (\d+)-(?:Tage|day)", sections["CHALLENGE_30_TAGE_HTML"] or "")
+        sections["CHALLENGE_DAYS"] = _ch_m.group(1) if _ch_m else "30"
     except Exception as e:
         log.warning("[30-TAGE-CHALLENGE] ⚠️ Failed: %s", e)
         sections["CHALLENGE_30_TAGE_HTML"] = ""
+        sections.setdefault("CHALLENGE_DAYS", "30")
 
 
 
@@ -17424,42 +17436,23 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
     # for DE companies. The LLM sometimes hallucinates AT/CH/GB programs.
     _report_country = (answers.get("country") or "DE").upper()
     if _report_country == "DE" and sections.get("FOERDERPOTENZIAL_HTML"):
-        import re as _re_fund
-        _FOREIGN_PROGRAM_PATTERNS = [
-            r'<[^>]*>[^<]*(?:aws\s+digi|Forschungsprämie|digi4KMU|Innosuisse|Innovate\s+UK)[^<]*</[^>]+>',
-        ]
-        _FOREIGN_LINE_MARKERS = [
-            "aws digi", "Forschungsprämie", "forschungsprämie",
-            "digi4KMU", "digi4kmu", "Innosuisse", "innosuisse",
-            "Innovate UK", "innovate uk",
-            "Österreich", "österreich", "Schweiz", "schweiz",
-        ]
-        # FIX-KIS-1098-R1-FUNDING-2: Also catch LLM-hallucinated generic placeholders
-        _GENERIC_PLACEHOLDER_MARKERS = [
-            "Ihr Bundesland", "Ihr_Bundesland", "ihr bundesland",
-            "Digitalprämie", "digitalprämie",
-            "Landesprogramm Digital", "landesprogramm digital",
-        ]
-        _FOREIGN_LINE_MARKERS.extend(_GENERIC_PLACEHOLDER_MARKERS)
-        _fp_html = sections["FOERDERPOTENZIAL_HTML"]
-        _fp_lines = _fp_html.split("\n")
-        _fp_cleaned = []
-        _fp_removed = 0
-        for _line in _fp_lines:
-            if any(_marker in _line for _marker in _FOREIGN_LINE_MARKERS):
-                # Skip lines mentioning foreign programs (but keep table structure)
-                if "<tr" in _line.lower() or "<li" in _line.lower() or "<td" in _line.lower():
-                    _fp_removed += 1
-                    continue
-                # For prose lines, only skip if the foreign program is the main subject
-                if any(_line.strip().startswith(f"<") or _marker in _line[:80]
-                       for _marker in _FOREIGN_LINE_MARKERS if _marker in _line):
-                    _fp_removed += 1
-                    continue
-            _fp_cleaned.append(_line)
+        # KIS-1298: Platzhalter ERSETZEN, nur Fremdprogramme loeschen. Die
+        # alte Zeilenloeschung (FIX-KIS-1098-R1-FUNDING-2) nahm bei
+        # "Digitalprämie" ganze Listen und Abschnitte mit (Laeufe KIS1269
+        # bis KIS1274: "folgende Kategorien infrage:" ohne Liste).
+        from services.foerder_platzhalter import ersetze_platzhalter, entferne_fremdprogramme
+        _bl_ersatz = (
+            str(answers.get("BUNDESLAND_LABEL") or "").strip()
+            or BUNDESLAND_MAPPING.get(str(answers.get("bundesland", "")).lower(), "")
+        )
+        _fp_html, _n_ersetzt = ersetze_platzhalter(sections["FOERDERPOTENZIAL_HTML"], _bl_ersatz)
+        _fp_html, _fp_removed = entferne_fremdprogramme(_fp_html)
+        if _n_ersetzt:
+            log.info("[KIS-1298] %d Förder-Platzhalter ersetzt statt Zeile geloescht", _n_ersetzt)
         if _fp_removed > 0:
-            sections["FOERDERPOTENZIAL_HTML"] = "\n".join(_fp_cleaned)
             log.info("[FIX-KIS-1098-R1-FUNDING] Removed %d lines with foreign programs from FOERDERPOTENZIAL_HTML", _fp_removed)
+        if _n_ersetzt or _fp_removed:
+            sections["FOERDERPOTENZIAL_HTML"] = _fp_html
 
     sections["SOURCES_BOX_HTML"] = _build_sources_box_html(sections, sections["research_last_updated"])
 
@@ -20542,21 +20535,33 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         # bei 2.000–10.000 € Budget, ohne ein Wort dazu.
         # =================================================================
         try:
-            _bg_raw = str(answers.get('investitionsbudget', '') or '').strip().lower()
             _bg_capex = int(float(sections.get('CANON_CAPEX_EUR') or sections.get('CAPEX_REALISTISCH_EUR') or 0))
-            _bg_max = 0
-            _bg_label = ''
             def _bg_fmt(n):
                 return f"{int(n):,}".replace(",", ".")
-            _bg_m = re.fullmatch(r'(\d+)_(\d+)', _bg_raw)
-            if _bg_m:
-                _bg_max = int(_bg_m.group(2))
-                _bg_label = f"{_bg_fmt(_bg_m.group(1))}\u2013{_bg_fmt(_bg_m.group(2))} \u20ac"
-            elif _bg_raw.startswith('unter_'):
-                _bg_tail = _bg_raw.split('_', 1)[1].replace('k', '000')
-                if _bg_tail.isdigit():
-                    _bg_max = int(_bg_tail)
-                    _bg_label = f"unter {_bg_fmt(_bg_max)} \u20ac"
+            def _bg_parse(raw):
+                """(Obergrenze, Label) aus einem Budget-Enum wie '2000_10000'."""
+                raw = str(raw or '').strip().lower()
+                m = re.fullmatch(r'(\d+)_(\d+)', raw)
+                if m:
+                    return int(m.group(2)), f"{_bg_fmt(m.group(1))}\u2013{_bg_fmt(m.group(2))} \u20ac"
+                if raw.startswith('unter_'):
+                    tail = raw.split('_', 1)[1].replace('k', '000')
+                    if tail.isdigit():
+                        return int(tail), f"unter {_bg_fmt(tail)} \u20ac"
+                return 0, ''
+            # KIS-1298: Eine Budgetregel fuer beide Berichte. Die Spannungs-Box
+            # (KIS-1267) sagt "es gilt die spaetere Angabe aus dem Strategie-
+            # Fragebogen"; diese Box rechnete trotzdem mit Fragebogen 1 und
+            # nannte 24.000 \u20ac "ueberschritten", waehrend der Strategiebericht
+            # dasselbe Budget "ausreichend" nannte (Lauf KIS1274).
+            _bg_fb1 = str(answers.get('investitionsbudget', '') or '').strip().lower()
+            _bg_fb2 = str((answers.get('_strategy_answers') or {}).get('s1_budget', '') or '').strip().lower()
+            _bg_max, _bg_label = _bg_parse(_bg_fb2 or _bg_fb1)
+            if _bg_fb2 and _bg_fb1 and _bg_fb2 != _bg_fb1:
+                _fb1_max, _fb1_label = _bg_parse(_bg_fb1)
+                if _fb1_label:
+                    _bg_label = (f"{_bg_label} (Strategie-Fragebogen; im Readiness-Fragebogen "
+                                 f"{_fb1_label} \u2014 es gilt die sp\u00e4tere Angabe)")
             if _bg_max and _bg_capex > _bg_max:
                 _bg_box = (
                     '<div class="hinweis-box budget-gate" style="margin-top:14px;padding:12px 16px;'
