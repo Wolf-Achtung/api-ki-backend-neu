@@ -150,7 +150,7 @@ optional und entfällt nur für nachweislich EU-konforme Alternativen.
 - Recherche/Einordnung: Perplexity (DSGVO-Vorbehalt — siehe Vendor-Audit)
 - Text/Struktur/Review: ChatGPT (DSGVO-Vorbehalt — siehe Vendor-Audit), Claude (DSGVO-Vorbehalt — siehe Vendor-Audit)
 - Wissensbasis/Notizen: Notion, Obsidian
-- Meeting/Audio-Notizen: Otter (oder ähnliche)
+- Meeting/Audio-Notizen: Amberscript (EU-Hosting) oder die Transkription der eigenen Konferenzsoftware
 {% endif %}
 
 ## FINAL CHECK (vor Ausgabe)

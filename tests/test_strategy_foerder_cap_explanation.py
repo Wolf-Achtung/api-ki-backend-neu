@@ -48,10 +48,14 @@ def test_cap_box_mentions_concrete_programmes():
     # stand im KMU-Lauf 1119 nie in Kapitel 7; die Exec Summary verwies
     # damit auf ein unbelegtes Programm. Jetzt segmentneutral
     # (Bundes- plus Landesförderung).
+    # KIS-1302: „regionale Digitalprämien" ebenfalls raus — Berlin hat keine
+    # (Lauf KIS1275, Strategie S. 4). Die Box verweist auf die Tabelle in
+    # Kapitel 7 statt ein Landesprogramm zu erfinden.
     src = _decoded_source()
     assert "BAFA" in src
     assert "KOMPASS" not in src
-    assert "Digitalprämien" in src
+    assert "Digitalprämien" not in src
+    assert "digital bonus" not in src
     assert "Bundes- mit einer" in src
 
 

@@ -415,10 +415,18 @@ async def generate_strategy_report(
             base_context.setdefault("ai_act_stichtag", "")
             base_context.setdefault("ai_act_risikoklasse", "")
 
+        # KIS-1302: Analysis.meta kennt weder „staerken" noch „handlungsfelder"
+        # — beide Felder kamen leer im Prompt an, und S1 schrieb „das einzige
+        # identifizierte Handlungsfeld: strategische Handlungsfelder" (Lauf
+        # KIS1275, S. 3). Jetzt aus den Dimensions-Scores abgeleitet.
+        _staerken_text = _r1_staerken_text(report1_data, _is_en)
+        _felder_text = _r1_handlungsfelder_text(report1_data, handlungsfelder, _is_en)
+        logger.info("[Strategy %d] S1-Anker: Stärken=%r Felder=%r", briefing_id, _staerken_text, _felder_text)
+
         # S1 + S2 parallel (independent)
         s1_task = _generate_section("S1", base_context, {
-            "staerken_top3": str(report1_data.get("staerken", "")),
-            "handlungsfelder_top3": str(report1_data.get("handlungsfelder", "")),
+            "staerken_top3": _staerken_text,
+            "handlungsfelder_top3": _felder_text,
             "potenziale_summary": str(report2_data.get("potenziale", "")),
         })
         s2_task = _generate_section("S2", base_context, {
@@ -433,8 +441,8 @@ async def generate_strategy_report(
         # S3 (needs S2)
         sections["S3"] = await _generate_section("S3", base_context, {
             "s2_trends_summary": _extract_summary(sections["S2"]),
-            "staerken_top3": str(report1_data.get("staerken", "")),
-            "handlungsfelder_top3": str(report1_data.get("handlungsfelder", "")),
+            "staerken_top3": _staerken_text,
+            "handlungsfelder_top3": _felder_text,
             "potenziale_summary": str(report2_data.get("potenziale", "")),
         })
 
@@ -1160,7 +1168,11 @@ def _derive_handlungsfelder(report1_data: Dict[str, Any], report2_data: Dict[str
                 felder.extend(val[:3])
                 break
             elif val and isinstance(val, str):
-                felder.append(val)
+                # KIS-1302: „recommendations" ist HTML — vorher landete das
+                # ganze Kapitel als ein „Handlungsfeld" in Recherche und
+                # Budget. Jetzt die Überschriften daraus.
+                felder.extend(_titel_aus_html(val)[:3])
+                break
 
     # From Report 2 potenziale
     potenziale = report2_data.get("potenziale")
@@ -1174,6 +1186,73 @@ def _derive_handlungsfelder(report1_data: Dict[str, Any], report2_data: Dict[str
         felder = ["KI-gestützte Prozessautomatisierung", "Datenanalyse & Business Intelligence", "Kundenservice-Optimierung"]
 
     return felder[:5]  # Max 5 fields
+
+
+def _titel_aus_html(html: str, max_len: int = 90) -> List[str]:
+    """Überschriften (h3/h4/strong) aus einem HTML-Kapitel, ohne Tags."""
+    titel: List[str] = []
+    for m in re.finditer(r"<(?:h3|h4|strong)[^>]*>(.*?)</(?:h3|h4|strong)>", html or "", re.DOTALL | re.IGNORECASE):
+        t = re.sub(r"<[^>]+>", "", m.group(1))
+        t = re.sub(r"\s+", " ", t).strip(" :–-")
+        if 6 <= len(t) <= max_len and t not in titel:
+            titel.append(t)
+    return titel
+
+
+# KIS-1302: S1 und S3 bekamen „Stärken" und „Handlungsfelder" aus Feldern,
+# die Analysis.meta nie hatte. Die Dimensions-Scores hat meta immer.
+_DIMENSIONEN = (
+    ("governance", "Governance & Spielregeln", "Governance & rules"),
+    ("security", "Sicherheit & Datenschutz", "Security & data protection"),
+    ("value", "Wertschöpfung", "Value creation"),
+    ("enablement", "Befähigung & Kompetenz", "Enablement & skills"),
+)
+
+
+def _dimension_scores(report1_data: Dict[str, Any]) -> List[tuple]:
+    scores = report1_data.get("scores") if isinstance(report1_data, dict) else None
+    if not isinstance(scores, dict):
+        return []
+    out = []
+    for key, de, en in _DIMENSIONEN:
+        try:
+            val = int(float(scores.get(key) or 0))
+        except (TypeError, ValueError):
+            continue
+        if val > 0:
+            out.append((val, de, en))
+    return out
+
+
+def _r1_staerken_text(report1_data: Dict[str, Any], is_en: bool = False) -> str:
+    """Die zwei stärksten Dimensionen als Text, z. B. „Wertschöpfung (88/100), …"."""
+    explizit = str(report1_data.get("staerken", "") or "").strip()
+    if explizit:
+        return explizit
+    dims = sorted(_dimension_scores(report1_data), reverse=True)[:2]
+    if not dims:
+        return "(keine Angabe)" if not is_en else "(not stated)"
+    return ", ".join(f"{en if is_en else de} ({val}/100)" for val, de, en in dims)
+
+
+def _r1_handlungsfelder_text(report1_data: Dict[str, Any], felder: List[str], is_en: bool = False) -> str:
+    """Handlungsfelder: schwächste Dimensionen plus die abgeleiteten Felder.
+    Nie leer und nie eine Sektions-Überschrift — sonst erfindet S1 ein
+    „einziges Handlungsfeld"."""
+    explizit = str(report1_data.get("handlungsfelder", "") or "").strip()
+    if explizit:
+        return explizit
+    teile: List[str] = []
+    dims = sorted(_dimension_scores(report1_data))[:2]
+    teile.extend(f"{en if is_en else de} ({val}/100)" for val, de, en in dims)
+    for f in felder or []:
+        f = re.sub(r"<[^>]+>", " ", str(f))
+        f = re.sub(r"\s+", " ", f).strip()
+        if f and f not in teile and len(f) <= 120:
+            teile.append(f)
+    if not teile:
+        return "(keine Angabe)" if not is_en else "(not stated)"
+    return ", ".join(teile[:4])
 
 
 def _extract_summary(section_html: str, max_words: int = 200) -> str:
