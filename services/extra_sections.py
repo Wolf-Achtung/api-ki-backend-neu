@@ -958,6 +958,32 @@ def build_core_funding_table_html(briefing: Dict[str, Any], lang: str = "de") ->
     html_parts.append('    </tbody>')
     html_parts.append('  </table>')
     html_parts.append('  ')
+    # KIS-1298: Ausgesetzte Programme der eigenen Sparte nennen, statt sie
+    # stumm verschwinden zu lassen. Ein Filmkunde sieht seit dem 20.08.2026
+    # keinen DFFF mehr — ohne diese Zeile wuesste er nicht, warum. Keine
+    # Empfehlung: kein Betrag, keine Quote, nur Status und Wiedervorlage.
+    _pausiert = [
+        p for p in all_programmes
+        if str(p.get("status", "")).strip().lower() == "paused"
+        and p.get("recheck_after")
+        and p.get("branch_exclusive") and p.get("sparten")
+        and _sparte and passt_zur_sparte(p, _sparte) is True
+        and size_group in p.get("suitable_for", [])
+    ]
+    if _pausiert:
+        _namen = ", ".join(str(p.get("title") or "") for p in _pausiert)
+        _wv = sorted(str(p.get("recheck_after")) for p in _pausiert)[0]
+        try:
+            _wv_de = "%s.%s.%s" % (_wv[8:10], _wv[5:7], _wv[0:4])
+        except Exception:
+            _wv_de = _wv
+        if _is_en:
+            _pause_txt = (f"Currently suspended (application stop, next review {_wv_de}): {_namen}. "
+                          "Not included above until the funding body reopens applications.")
+        else:
+            _pause_txt = (f"Derzeit ausgesetzt (Antragsstopp, Wiedervorlage {_wv_de}): {_namen}. "
+                          "Bis der Fördergeber wieder Anträge annimmt, stehen sie nicht in der Tabelle.")
+        html_parts.append(f'  <p class="small muted funding-paused-note">{_pause_txt}</p>')
     # KIS-1232: Anzeige-Label ohne Persona-Enum — vorher stand im PDF
     # "(11–100 (kmu))" (rohes Segment-Kürzel in Doppelklammern).
     _size_display = re.sub(

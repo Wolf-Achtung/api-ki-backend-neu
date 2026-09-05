@@ -41,6 +41,13 @@ _SCHWACHE_VERBEN = (
     "nennen", "zeigen", "prüfen", "pruefen", "planen", "raten", "meinen",
     "halten", "legen", "stellen", "führen", "fuehren", "arbeiten",
     "beobachten", "bewerten", "berechnen", "verwenden", "nutzen",
+    # KIS-1298: Lauf KIS1274 Strategiebericht Kap. 6: "Dabei berücksichtigen ich".
+    "berücksichtigen", "beruecksichtigen", "analysieren", "priorisieren",
+    "kalkulieren", "schätzen", "schaetzen", "betrachten", "definieren",
+    "etablieren", "unterstützen", "unterstuetzen", "begleiten", "ergänzen",
+    "ergaenzen", "entwickeln", "brauchen", "beginnen", "starten",
+    "fokussieren", "adressieren", "formulieren", "erreichen", "vermeiden",
+    "sichern", "messen", "erarbeiten", "wählen", "waehlen", "zählen", "zaehlen",
 )
 
 # (Muster, Ersatz, Beschreibung) — dasselbe Format wie solo_final_pass.

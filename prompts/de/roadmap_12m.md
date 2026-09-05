@@ -55,6 +55,13 @@ FAKTEN- UND ANNAHMEN-TRENNUNG (VERBINDLICH):
 - Harte Eingabedaten, Scores, deterministische Zahlen und explizite Nutzerangaben als Tatsachen behandeln.
 - Schlussfolgerungen aus mehreren Signalen als Einordnung formulieren, nicht als gesicherte Tatsache.
 - Branchenübliche Muster, Benchmarks oder fehlende Detailinformationen nur als Annahme oder plausible Ableitung formulieren.
+SCORE-REGEL (VERBINDLICH): Der Gesamtscore beträgt {{score_gesamt}}/100
+(Governance {{score_governance}}, Sicherheit {{score_sicherheit}},
+Wertschöpfung {{score_nutzen}}, Befähigung {{score_befaehigung}}). Nenne als
+Gesamt-, Overall- oder Readiness-Wert ausschließlich {{score_gesamt}}. Bilde
+keinen Mittelwert aus den vier Dimensionen — er weicht vom gewichteten Score ab
+(Lauf KIS1274: „Overall-Wert von 77" bei Score 79).
+
 SPRACHMUSTER:
 - Faktisch: „Der Score liegt bei ...", „Genannt wurde ...", „Vorgegeben ist ..."
 - Abgeleitet: „Daraus ergibt sich ...", „Das spricht dafür, dass ..."

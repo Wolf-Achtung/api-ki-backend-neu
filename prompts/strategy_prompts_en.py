@@ -218,6 +218,12 @@ COMPANY DATA:
 - Segment: {segment}
 - State/region: {bundesland}
 
+REFERENCE REGION (BINDING): Benchmarks, competitor columns and location statements refer to {bundesland} or to the country as a whole. Never use another state or region as the reference.
+
+TOOLS (BINDING): Product names only from this list or from the customer's existing stack: {kuratierte_tools_namen}. Never name discontinued or unlisted brands (e.g. "Adobe Sensei") — generic terms ("editing software with AI features") are fine.
+
+CURRENT STATE (BINDING): Do not claim AI usage the inputs do not mention. "First AI applications in place" only if running AI projects or AI tools in use appear in the input; otherwise "no structured AI usage yet".
+
 LIVE RESEARCH RESULTS:
 --- Market trends ---
 {research_markt_trends}
@@ -398,6 +404,8 @@ FROM REPORT 1:
 - Time savings: {canon_hours_month} hours/month
 - Hourly rate: {canon_rate_eur} €
 - CAPEX: {canon_capex_eur} €
+
+SCALE (BINDING): Prices, package sizes and revenue projections must match the order of magnitude of annual revenue ({jahresumsatz_label}) and the core service. Above €1m annual revenue: no micro packages below €1,000 and no strategy that leaves the core business (e.g. no proprietary software platform for a production company). Each strategy extends the core service ({hauptleistung}) — it does not replace it.
 
 STRATEGY QUESTIONS (FB2):
 - Budget (12 months): {s1_budget}
@@ -662,6 +670,10 @@ COMPANY DATA:
 - Timeframe: {s2_zeitrahmen}
 - Bottleneck: {s4_engpass}
 - Decision horizon: {s7_entscheidung}
+
+METRICS (BINDING): The time-savings target from report 1 is {canon_hours_month} hours/month. Every threshold in if-then sentences refers to this target (e.g. "below half of {canon_hours_month} hours"), never to an arbitrary number of hours. For teams below 10 people count people ("fewer than two employees"), not percentages of staff.
+
+TOOLS IN THIS SECTION (BINDING): Name tools only from {kuratierte_tools_namen} or from the customer's stack. No data-protection or hosting rating in this section ("EU-compliant", "EU-hosted") — that belongs to chapter 4 and is taken from the curated list there.
 
 ACTION AREAS:
 {s3_handlungsfelder}

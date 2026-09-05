@@ -373,6 +373,36 @@ konnte ihr Ergebnis nicht pushen. Befund und Regeln:
   zieht den Film-Marker seither aus den Daten (`_exklusiv_passend`,
   `_exklusiv_fremd`), nicht aus einem festen Programmnamen.
 
+## Filter löschen, was sie nicht kennen (KIS-1298)
+
+Testlauf KIS1274 (05.09.2026): R1-Förderkapitel und KI-Rechte-Kapitel
+kündigten Listen an, die nicht folgten („folgende Kategorien infrage:",
+dann nichts). Ursache im Förderkapitel: Ein Filter gegen erfundene
+Programme löschte jede HTML-Zeile mit „Digitalprämie" oder „Ihr
+Bundesland" — seit Lauf KIS1269 in jedem Report. Ursache im
+Rechte-Kapitel noch offen.
+
+- `services/foerder_platzhalter.py` ersetzt Platzhalter (echtes Bundesland,
+  „Landesprogramme zur Digitalisierung") und löscht nur noch Zeilen mit
+  Fremdprogrammen (AT/CH/UK). **Regel: Ein Filter ersetzt, er löscht nie
+  eine ganze Zeile wegen eines Wortes.**
+- Wächter in `scripts/compare_reports.py`: „Ankündigung ohne Liste" und
+  „US-Werkzeug als EU-konform" (Claude, ChatGPT, Perplexity, Runway,
+  Gemini, Midjourney). Der zweite fand den Fehler rückwirkend in fünf
+  Strategieberichten (KIS1264, 1267, 1269, 1270, 1274).
+- Prompt-Anker statt Modellrechnung: Gesamtscore im 12-Monats-Ausblick
+  (das Modell bildete den Mittelwert der Dimensionen: 77 statt 79),
+  Zeitersparnis-Ziel in S6 (Stop-Regel „unter 100 Stunden" bei Ziel 25),
+  Vergleichsregion und Werkzeugnamen in S2 („Wettbewerber in Bayern",
+  „Adobe Sensei"), Umsatzmaßstab in S3b (Kleinstpakete bei über 10 Mio. €).
+- Eine Budgetregel: Gate im Business Case nimmt das Budget aus
+  Fragebogen 2, wenn es vorliegt, und nennt beide Angaben.
+- Fördertabelle R1 nennt ausgesetzte Programme der eigenen Sparte in einer
+  Hinweiszeile (`funding-paused-note`, Status und Wiedervorlage, kein
+  Betrag). Tests, die „kein DFFF" prüfen, schneiden diese Zeile ab.
+- Challenge-Banner nimmt die Tageszahl aus dem Inhalt (`CHALLENGE_DAYS`).
+- Test: `tests/test_kis1298_testlauf_1274.py`.
+
 ## Textknoten sind nicht nur Text (KIS-1285)
 
 `_TAG_SPLIT_RE` teilt HTML an Tags. Was dazwischen liegt, gilt als Text —

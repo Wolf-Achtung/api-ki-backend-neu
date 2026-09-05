@@ -130,6 +130,9 @@ class TestSpartenGate:
             "MEDIEN_SPARTE_LABEL": p["MEDIEN_SPARTE_LABEL"],
         })
         assert "<table" in html
+        # KIS-1298: Hinweiszeile zu ausgesetzten Programmen der eigenen Sparte
+        # steht unter der Tabelle und zaehlt hier nicht als Empfehlung.
+        html = html.partition('class="small muted funding-paused-note"')[0]
         fremd = [t for t in _exklusiv_fremd(sparte) if t in html]
         assert not fremd, (sparte, fremd)
         if sparte in FILM_SPARTEN:

@@ -214,6 +214,12 @@ UNTERNEHMENSDATEN:
 - Segment: {segment}
 - Bundesland: {bundesland}
 
+VERGLEICHSREGION (VERBINDLICH): Benchmarks, Wettbewerber-Spalten und Standortaussagen beziehen sich auf {bundesland} oder auf Deutschland gesamt. Nie ein anderes Bundesland als Referenz (Lauf KIS1274: Kunde in Berlin, Tabelle „Wettbewerber in Bayern").
+
+WERKZEUGE (VERBINDLICH): Produktnamen nur aus dieser Liste oder aus dem Stack des Kunden: {kuratierte_tools_namen}. Abgekündigte oder nicht gelistete Marken (z. B. „Adobe Sensei") nie nennen — Gattungsbegriffe („Schnittsoftware mit KI-Funktionen") sind erlaubt.
+
+IST-ZUSTAND (VERBINDLICH): Behaupte keinen KI-Einsatz, den die Eingaben nicht nennen. „Erste KI-Anwendungen integriert" nur, wenn laufende KI-Projekte oder genutzte KI-Werkzeuge im Input stehen; sonst „bislang ohne strukturierten KI-Einsatz".
+
 LIVE-RECHERCHE-ERGEBNISSE:
 --- Markttrends ---
 {research_markt_trends}
@@ -407,6 +413,8 @@ STRATEGIE-FRAGEN (FB2):
 EINSCHRÄNKUNGEN (BINDEND):
 - KI-Guardrails: {ki_guardrails}
 - Vorhandene Software: {s5_software}
+
+MASSSTAB (VERBINDLICH): Preise, Paketgrößen und Umsatzprojektionen müssen zur Größenordnung von Jahresumsatz ({jahresumsatz_label}) und Hauptleistung passen. Bei einem Jahresumsatz über 1 Mio. € keine Kleinstpakete unter 1.000 € und keine Strategie, die das Kerngeschäft verlässt (z. B. keine eigene Software-Plattform für eine Produktionsfirma). Jede Strategie erweitert die Hauptleistung ({hauptleistung}) — sie ersetzt sie nicht.
 
 AUFGABE:
 Erstelle genau 3 KI-gestützte Umsatzstrategien, die über reine Kosteneinsparung hinausgehen und NEUEN Umsatz generieren.
@@ -713,6 +721,10 @@ AUFGABE:
 5. Für jede Phase: Konkrete Meilensteine, Verantwortlichkeiten, Budget.
 6. Berücksichtige den Engpass: {s4_engpass}.
 7. Berücksichtige den Entscheidungshorizont: {s7_entscheidung}.
+
+MESSGRÖSSEN (VERBINDLICH): Das Zeitersparnis-Ziel aus Report 1 beträgt {canon_hours_month} Stunden/Monat. Jede Schwelle in Wenn-Dann-Sätzen bezieht sich auf dieses Ziel (z. B. „unter der Hälfte von {canon_hours_month} Stunden"), nie auf eine frei gewählte Stundenzahl. Bei Teams unter 10 Personen zähle Personen („weniger als zwei Mitarbeitende"), keine Prozentanteile der Belegschaft.
+
+WERKZEUGE IN DIESER SECTION (VERBINDLICH): Nenne Werkzeuge nur aus {kuratierte_tools_namen} oder aus dem Stack des Kunden. Keine Datenschutz- oder Hosting-Einstufung in dieser Section („EU-konform", „EU-gehostet") — die steht in Kapitel 4 und wird dort aus der gepflegten Liste übernommen.
 
 BEDINGTE STEUERUNGSHINWEISE (OPTIONAL, MAX. 1 ABSATZ — OPT-A5):
 Ergänze am Ende der Roadmap einen kurzen Absatz mit einem konditionalen Steuerungshinweis:

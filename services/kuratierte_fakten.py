@@ -124,6 +124,13 @@ _KOPF_TOOLS_STRATEGIE_DE = (
     "- Stack-Software ohne Zeile in dieser Liste (z. B. Microsoft 365 Copilot): "
     "Datenschutz = 'laut Anbieter prüfen'. Übernimm nie die Hosting-Angabe "
     "einer anderen Zeile.\n"
+    "- US-Anbieter aus dem Stack (ChatGPT/OpenAI, Claude/Anthropic, Perplexity, "
+    "Gemini, Midjourney): Datenschutz = 'US-Anbieter, AVV prüfen'. Nenne sie nie "
+    "'EU-konform', 'EU-gehostet' oder 'EU / EU'. Eine EU-Alternative ist nur ein "
+    "Werkzeug, dessen Zeile in dieser Liste EU als Hosting nennt.\n"
+    "- 'Nicht bestanden' aus dem Vendor-Audit steht nur bei Werkzeugen, die der "
+    "Kunde im Fragebogen genannt hat, und heißt 'mit AVV nutzbar' — nie bei "
+    "Runway, Make oder einem anderen empfohlenen Werkzeug.\n"
     "- Quellen am Ende: nur die Anbieteradressen aus dieser Liste.\n\n"
 )
 _KOPF_TOOLS_STRATEGIE_EN = (
@@ -142,6 +149,13 @@ _KOPF_TOOLS_STRATEGIE_EN = (
     "- Stack software without a row in this list (e.g. Microsoft 365 Copilot): "
     "data protection = 'check with the vendor'. Never copy the hosting note "
     "of another row.\n"
+    "- US vendors from the stack (ChatGPT/OpenAI, Claude/Anthropic, Perplexity, "
+    "Gemini, Midjourney): data protection = 'US vendor, check DPA'. Never call "
+    "them 'EU-compliant', 'EU-hosted' or 'EU / EU'. An EU alternative is only a "
+    "tool whose row in this list names EU hosting.\n"
+    "- 'Failed' from the vendor audit applies only to tools the client named in "
+    "the questionnaire and means 'usable with a DPA' — never to Runway, Make or "
+    "any other recommended tool.\n"
     "- Sources at the end: only the vendor addresses from this list.\n\n"
 )
 _FALLBACK_TOOLS_DE = (

@@ -183,7 +183,72 @@ PRUEFUNGEN = [
             r"(?:Copilot|Runway|Firefly|ChatGPT|Claude|Descript|Sensei|DeepL)"
             r"[^.\n]{0,160}(?:hochrisk|high-risk|Hochrisiko)", t)) else None),
     ),
+    (
+        "ankuendigung_ohne_liste",
+        "Satz kündigt eine Liste an, danach folgt keine (KIS-1298)",
+        lambda t: _ankuendigung_ohne_liste(t),
+    ),
+    (
+        "us_werkzeug_als_eu",
+        "US-Anbieter als EU-konform oder EU-gehostet bezeichnet (KIS-1298)",
+        lambda t: _us_werkzeug_als_eu(t),
+    ),
 ]
+
+
+# KIS-1298: Lauf KIS1274, R1 S. 24 und 26 — "Ein pragmatischer 3-Schritte-
+# Prozess unterstützt Ihre Organisation dabei:" und "kommen vor allem
+# folgende Kategorien infrage:" standen ohne Liste im PDF. Ein Filter hatte
+# die Zeilen entfernt. Im Seitentext heisst das: Eine laengere Zeile endet
+# auf Doppelpunkt, und die naechste ist eine Ueberschrift, ein Hinweis oder
+# der Seitenfuss statt eines Listenpunkts.
+_ANKUENDIGUNG_FOLGE = re.compile(
+    r"^(?:\d+\.\s+\S|Wichtig:|Hinweis:|Checkliste|Keine Rechtsberatung|Seite \d+ / \d+"
+    r"|Important:|Note:|Checklist|No legal advice|Page \d+ / \d+)"
+)
+
+
+def _ankuendigung_ohne_liste(text: str) -> Optional[str]:
+    zeilen = [z.strip() for z in text.split("\n")]
+    for i, zeile in enumerate(zeilen):
+        if len(zeile) < 25 or not zeile.endswith(":") or zeile.isupper():
+            continue
+        j = i + 1
+        while j < len(zeilen) and not zeilen[j]:
+            j += 1
+        if j >= len(zeilen) or _ANKUENDIGUNG_FOLGE.match(zeilen[j]):
+            return zeile[-80:]
+    return None
+
+
+# KIS-1298: Strategiebericht KIS1274 nannte Claude "EU-konforme Alternative"
+# (Hosting "EU / EU-Anbieter") und Runway "EU-konform" — beide US-Anbieter,
+# R1 stufte Claude im selben Lauf rot ein. Ein "US" zwischen Name und
+# EU-Begriff (Tabellenzeile "US / US (AVV prüfen)") entwarnt.
+_US_ANBIETER = ("ChatGPT", "OpenAI", "Claude", "Anthropic", "Perplexity", "Runway",
+                "Gemini", "Midjourney")
+_EU_BEGRIFF = (r"EU-konform|EU-gehostet|EU-Hosting|EU / EU|EU-Anbieter|EU-Server"
+               r"|EU-compliant|EU-hosted|EU-based provider")
+_US_NAMEN = "|".join(_US_ANBIETER)
+# Vorwaerts: "Claude (Anthropic) als EU-konforme Alternative", Tabellenzeile
+# "Claude … EU / EU Anbieter". Kein Satzende dazwischen — sonst traefe
+# "ChatGPT ist nicht DSGVO-konform. Priorisieren Sie EU-konforme …".
+# Woerter wie "aber", "statt", "priorisieren" markieren den Gegensatz.
+_GEGENSATZ = r"\baber\b|\bstatt\b|\bstattdessen\b|\banstelle\b|\bdaher\b|priorisier|bevorzug|\binstead\b|\brather\b|\bprefer"
+_US_ALS_EU_RE = re.compile(
+    r"\b(?:" + _US_NAMEN + r")\b(?:(?!\bUS\b|" + _GEGENSATZ + r")[^.!?]){0,140}?(?:" + _EU_BEGRIFF + r")"
+    # Rueckwaerts: "EU-gehostete Alternativen wie Claude" — aber nicht
+    # "EU-konforme Alternativen zu ChatGPT" (zu/statt/anstelle/für).
+    r"|(?:" + _EU_BEGRIFF + r")(?:(?!\bUS\b|\bzu\b|\bstatt\b|\banstelle\b|\bfür\b|\bto\b|\bof\b)[^.!?\n]){0,80}?\b(?:" + _US_NAMEN + r")\b",
+    re.IGNORECASE,
+)
+
+
+def _us_werkzeug_als_eu(text: str) -> Optional[str]:
+    m = _US_ALS_EU_RE.search(text)
+    if not m:
+        return None
+    return re.sub(r"\s+", " ", m.group(0))[:120]
 
 
 # KIS-1284: Zu schmale Tabellenspalten brachen Wörter ohne Trennstrich
