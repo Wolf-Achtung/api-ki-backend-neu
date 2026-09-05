@@ -824,11 +824,19 @@ def recommend_tools(
 
         ranked.append(tool_result)
 
-    # Sort by final score (or legacy score if no analytics)
+    # Sort by final score (or legacy score if no analytics).
+    # KIS-1304: Werkzeuge der eigenen Sparte stehen immer vorn. Die Sparte
+    # gab bisher nur +2 im Legacy-Score; der Analytics-Score (Konfidenz,
+    # Trend) hob geprüfte, aber sparten-fremde Werkzeuge darüber — ein
+    # VFX-Studio bekam Canva, LanguageTool und Duden vor Topaz und
+    # Amberscript (R1 S. 15/16 in den Läufen KIS1274 bis KIS1276).
+    def _sparte_rang(x: Dict[str, Any]) -> int:
+        return 1 if (sparte and _passt_zur_sparte(x, sparte)) else 0
+
     if _HAS_ANALYTICS and TOOLS_ENGINE_ENABLED:
-        ranked.sort(key=lambda x: x.get("_final_score", 0), reverse=True)
+        ranked.sort(key=lambda x: (_sparte_rang(x), x.get("_final_score", 0)), reverse=True)
     else:
-        ranked.sort(key=lambda x: x.get("_score", 0), reverse=True)
+        ranked.sort(key=lambda x: (_sparte_rang(x), x.get("_score", 0)), reverse=True)
 
     # Apply segment-specific limit
     return ranked[:tools_limit]
