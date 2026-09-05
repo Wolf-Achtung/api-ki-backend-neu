@@ -1421,6 +1421,140 @@ TOOL_EMPFEHLUNGEN_MEDIEN = [
     },
 ]
 
+# KIS-1313: Innerhalb der Medienbranche entscheidet die Sparte. Ein Verlag
+# (Lauf KIS1282) bekam Amberscript und DaVinci Resolve — Werkzeuge für Ton
+# und Bewegtbild. Namen wie in data/tools_seed.json.
+SPARTEN_TOOLS_MEDIEN: Dict[str, List[Dict[str, str]]] = {
+    "verlag_publishing": [
+        {
+            "name": "DeepL Write Pro",
+            "preis": "siehe Anbieterseite",
+            "url": "https://www.deepl.com/write",
+            "nutzen": "Erste Korrekturschleife für Manuskripte und Meldungen",
+            "empfehlung": "EU-Anbieter (DE), AVV verfügbar — Vorlektorat mit Freigabe durch das Lektorat",
+        },
+        {
+            "name": "LanguageTool",
+            "preis": "siehe Anbieterseite",
+            "url": "https://languagetool.org/de",
+            "nutzen": "Rechtschreibung, Grammatik und Stil im Redaktionssystem und Browser",
+            "empfehlung": "EU-Anbieter (DE), DPA für Team-Plan — Ergänzung für Portal und Newsletter",
+        },
+    ],
+    "musik_audio": [
+        {
+            "name": "Auphonic",
+            "preis": "siehe Anbieterseite",
+            "url": "https://auphonic.com",
+            "nutzen": "Lautheit, Pegel und Rauschminderung für Podcast und Sprachaufnahmen",
+            "empfehlung": "EU-Anbieter (AT) — erster Baustein für die Aufbereitung",
+        },
+        {
+            "name": "iZotope RX",
+            "preis": "siehe Anbieterseite",
+            "url": "https://www.izotope.com/en/products/rx.html",
+            "nutzen": "Audio-Restauration lokal auf dem Rechner",
+            "empfehlung": "Lokal installiert — Aufnahmen verlassen das Haus nicht",
+        },
+    ],
+    "agentur_design": [
+        {
+            "name": "Canva Magic Studio",
+            "preis": "siehe Anbieterseite",
+            "url": "https://www.canva.com/de_de/magic-studio/",
+            "nutzen": "Varianten, Formate und Präsentationen aus einer Vorlage",
+            "empfehlung": "AU-Anbieter, DPA vorhanden — Kennzeichnung der KI-Anteile bleibt Pflicht",
+        },
+        {
+            "name": "Adobe Firefly",
+            "preis": "siehe Anbieterseite",
+            "url": "https://www.adobe.com/de/products/firefly.html",
+            "nutzen": "Bildgenerierung mit kommerzieller Absicherung in der Adobe-Umgebung",
+            "empfehlung": "US-Anbieter, AVV vorhanden — Entwürfe gekennzeichnet freigeben",
+        },
+    ],
+}
+
+SPARTEN_TOOLS_MEDIEN_EN: Dict[str, List[Dict[str, str]]] = {
+    "verlag_publishing": [
+        {"name": "DeepL Write Pro", "preis": "see vendor site", "url": "https://www.deepl.com/write",
+         "nutzen": "First proofreading pass for manuscripts and news items",
+         "empfehlung": "EU vendor (DE), DPA available — pre-editing with sign-off by the editorial team"},
+        {"name": "LanguageTool", "preis": "see vendor site", "url": "https://languagetool.org",
+         "nutzen": "Spelling, grammar and style in the editorial system and browser",
+         "empfehlung": "EU vendor (DE), DPA for team plan — complement for portal and newsletter"},
+    ],
+    "musik_audio": [
+        {"name": "Auphonic", "preis": "see vendor site", "url": "https://auphonic.com",
+         "nutzen": "Loudness, levels and noise reduction for podcasts and voice recordings",
+         "empfehlung": "EU vendor (AT) — first building block for processing"},
+        {"name": "iZotope RX", "preis": "see vendor site", "url": "https://www.izotope.com/en/products/rx.html",
+         "nutzen": "Audio restoration locally on your machine",
+         "empfehlung": "Installed locally — recordings never leave the building"},
+    ],
+    "agentur_design": [
+        {"name": "Canva Magic Studio", "preis": "see vendor site", "url": "https://www.canva.com/magic-studio/",
+         "nutzen": "Variants, formats and presentations from one template",
+         "empfehlung": "AU vendor, DPA available — labelling AI parts stays mandatory"},
+        {"name": "Adobe Firefly", "preis": "see vendor site", "url": "https://www.adobe.com/products/firefly.html",
+         "nutzen": "Image generation with commercial safety inside the Adobe environment",
+         "empfehlung": "US vendor, DPA available — release drafts with labelling"},
+    ],
+}
+
+# KIS-1313: Copy-Paste-Prompts je Sparte (Einsteiger). Die Medien-Prompts
+# (Headline, Creative Brief, Skript-Outline) passen zu Agentur und Bewegtbild,
+# nicht zu einem Fachverlag mit Lektorat, Portal und Katalog.
+SPARTEN_PROMPTS_MEDIEN: Dict[str, List[Dict[str, str]]] = {
+    "verlag_publishing": [
+        {
+            "titel": "Erste Korrekturschleife im Lektorat",
+            "prompt": """Prüfe den folgenden Textauszug auf Rechtschreibung, Grammatik, Zeichensetzung und unklare Sätze. Ändere nichts am Inhalt und an Fachbegriffen.
+
+Text: [AUSZUG — nur mit freigegebenem Tool mit AVV, keine unveröffentlichten Autorenmanuskripte in öffentliche Tools]
+Zielgruppe: [Handwerksbetriebe / Fachleser]
+
+Liefere:
+1. Den korrigierten Text
+2. Eine Liste aller Änderungen mit Begründung
+3. Drei Stellen, die ein Redakteur fachlich prüfen sollte
+
+Dieser Text ist ein KI-Entwurf und geht vor Veröffentlichung an das Lektorat.""",
+            "zeitersparnis": "30-60 Min pro Manuskript",
+        },
+        {
+            "titel": "Kurzfassungen für Newsletter und Portal",
+            "prompt": """Erstelle aus dem folgenden Artikel drei Kurzfassungen:
+
+Artikel: [TEXT]
+Zielgruppe: [WER liest das]
+
+1. Newsletter-Teaser: 40 Wörter, endet mit einem Grund weiterzulesen
+2. Portal-Meldung: 120 Wörter, sachlich, mit Zwischenüberschrift
+3. Social-Post: 280 Zeichen, ohne Ausrufezeichen
+
+Kennzeichne jede Fassung als KI-Entwurf. Erfinde keine Zahlen, die nicht im Artikel stehen.""",
+            "zeitersparnis": "20-30 Min pro Artikel",
+        },
+        {
+            "titel": "Schlagworte und Metadaten je Titel",
+            "prompt": """Erstelle für den folgenden Titel die Metadaten für Katalog und Buchhandel:
+
+Titel und Klappentext: [TEXT]
+Reihe / Zeitschrift: [NAME]
+
+Liefere:
+1. Acht Schlagworte, vom allgemeinen zum speziellen
+2. Eine Kurzbeschreibung in zwei Sätzen für den Buchhandel
+3. Drei Zielgruppen mit je einem Satz Begründung
+4. Einen Vorschlag für die Warengruppe
+
+Alles als Entwurf zur Prüfung durch die Redaktion.""",
+            "zeitersparnis": "15-20 Min pro Titel",
+        },
+    ],
+}
+
 TOOL_EMPFEHLUNGEN_MEDIEN_EN = [
     {
         "name": "Amberscript",
@@ -2131,6 +2265,12 @@ def generate_sofort_start_html(
 
     branche_key = get_branche_key(branche)
     branche_data = BRANCHE_PROMPTS.get(branche_key, BRANCHE_PROMPTS["default"])
+    # KIS-1313: Sparten-Slug für Werkzeuge und Prompts (Label oder Slug erlaubt).
+    try:
+        from services.medien_sparte import slug as _medien_slug
+        _sparte_slug = _medien_slug(medien_sparte) if branche_key == "medien" else ""
+    except Exception:
+        _sparte_slug = ""
 
     # Company size normalisieren
     size_key = "solo"
@@ -2153,6 +2293,11 @@ def generate_sofort_start_html(
     # „Microsoft Copilot + Azure OpenAI" und „n8n / Make Enterprise".
     if branche_key == "medien" and expertise_level != "expert":
         tools = TOOL_EMPFEHLUNGEN_MEDIEN_EN if is_en else TOOL_EMPFEHLUNGEN_MEDIEN
+        # KIS-1313: Sparte vor Branche — Verlag, Musik/Audio und Agentur haben
+        # eigene Werkzeuge.
+        _sparten_tools = (SPARTEN_TOOLS_MEDIEN_EN if is_en else SPARTEN_TOOLS_MEDIEN).get(_sparte_slug)
+        if _sparten_tools:
+            tools = _sparten_tools
     # KIS-1251: EN-Fassung der Tool-Felder (Preis/Nutzen)
     if is_en:
         tools = [_translate_tool_en(t) for t in tools]
@@ -2371,7 +2516,11 @@ def generate_sofort_start_html(
                 f"{_shorten_for_injection_en(_hl_clean, max_len=120)}.\n\n"
             )
         else:
-            _hl_context_prefix = f"Kontext: Mein Unternehmen ist spezialisiert auf {_hl_clean}.\n\n"
+            # KIS-1313: kurzes Fachgebiet statt der ganzen Hauptleistung — der
+            # Vorspann stand viermal identisch in den Prompt-Kästen, ein
+            # Satz-Deduplizierer schnitt ihn ab („Redaktion, Lektorat, Satz …
+            # im Haus. Generiere 10 Headline-Varianten", Lauf KIS1282, R1 S. 7).
+            _hl_context_prefix = f"Kontext: Mein Unternehmen ist spezialisiert auf {_fachgebiet_kurz(_hl_clean)}.\n\n"
 
     if expertise_level == "expert":
         # Expert: Prompt-Engineering-Patterns statt generische Prompts
@@ -2505,6 +2654,9 @@ def generate_sofort_start_html(
             cast(List[Dict[str, Any]], BEGINNER_PROMPTS_EN) if is_en
             else cast(List[Dict[str, Any]], branche_data["prompts"])
         )
+        # KIS-1313: Sparten-Prompts (DE) vor den Branchen-Prompts.
+        if not is_en and _sparte_slug in SPARTEN_PROMPTS_MEDIEN:
+            prompts_list = cast(List[Dict[str, Any]], SPARTEN_PROMPTS_MEDIEN[_sparte_slug])
         for i, prompt_data in enumerate(prompts_list, 1):
             _raw_prompt = _hl_context_prefix + prompt_data["prompt"] if _hl_context_prefix else prompt_data["prompt"]
             prompt_text = _raw_prompt

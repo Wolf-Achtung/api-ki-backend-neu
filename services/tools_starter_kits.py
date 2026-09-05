@@ -436,6 +436,97 @@ CHECKLIST_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
 # KIS-1132: EXPERT TOOL TEMPLATES (overrides for expert users)
 # =============================================================================
 
+# KIS-1313: Sparten-Kits innerhalb der Medienbranche. Das Medien-Kit ist
+# auf Bewegtbild und Ton geschnitten; ein Fachverlag (Lauf KIS1282) bekam
+# Transkription, Frame.io und Media-Asset-Management. Eine Liste je Sparte
+# für alle Größen — die Werkzeugnamen stehen in data/tools_seed.json.
+TOOL_TEMPLATES_MEDIA_SPARTE: Dict[str, List[Dict[str, Any]]] = {
+    "verlag_publishing": [
+        {
+            "name": "Vorlektorat-KI (z. B. DeepL Write Pro, LanguageTool)",
+            "category": "Lektorat",
+            "purpose": "Erste Korrekturschleife mit Freigabe durch das Lektorat, KI-Entwurf gekennzeichnet",
+            "priority": 1,
+            "estimated_setup_days": 2,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Metadaten & Verschlagwortung (z. B. Aleph Alpha PhariaAI)",
+            "category": "Metadaten / Archiv",
+            "purpose": "Schlagworte, Kurzbeschreibungen je Titel und Erschließung des Archivs",
+            "priority": 1,
+            "estimated_setup_days": 5,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Redaktionssystem-Anbindung (z. B. WoodWing, InDesign-Plugins)",
+            "category": "Redaktionssystem",
+            "purpose": "KI-Entwürfe ohne Medienbruch in Satz, Portal und Newsletter",
+            "priority": 1,
+            "estimated_setup_days": 5,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Rechte-Register (z. B. SharePoint, Notion)",
+            "category": "Governance / Rechte",
+            "purpose": "Autorenrechte, KI-Kennzeichnung und Freigabestatus je Titel",
+            "priority": 2,
+            "estimated_setup_days": 3,
+            "funding_eligible": False,
+        },
+        {
+            "name": "Workflow-Automation (z. B. Make, n8n)",
+            "category": "Workflow-Automation",
+            "purpose": "Manuskripteingang, Kurzfassungen und Freigaben automatisieren",
+            "priority": 2,
+            "estimated_setup_days": 5,
+            "funding_eligible": True,
+        },
+    ],
+    "musik_audio": [
+        {
+            "name": "Audio-Restauration (z. B. iZotope RX, lokal)",
+            "category": "Audio / Postproduktion",
+            "purpose": "Rauschen, Klicks und Raumanteile entfernen, bevor gemischt wird",
+            "priority": 1,
+            "estimated_setup_days": 1,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Mastering & Podcast-Aufbereitung (z. B. Auphonic)",
+            "category": "Audio / Mastering",
+            "purpose": "Lautheit, Pegel und Kapitelmarken automatisiert, EU-Anbieter",
+            "priority": 1,
+            "estimated_setup_days": 1,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Transkription & Untertitel (z. B. Amberscript)",
+            "category": "Transkription / Untertitelung",
+            "purpose": "Sprachaufnahmen durchsuchbar machen, Untertitel-Entwürfe",
+            "priority": 1,
+            "estimated_setup_days": 1,
+            "funding_eligible": True,
+        },
+        {
+            "name": "Rechte-Register (z. B. SharePoint, Notion)",
+            "category": "Governance / Rechte",
+            "purpose": "Einwilligungen für Stimmen, Lizenzen und Kennzeichnungsstatus je Produktion",
+            "priority": 2,
+            "estimated_setup_days": 3,
+            "funding_eligible": False,
+        },
+        {
+            "name": "Workflow-Automation (z. B. Make, n8n)",
+            "category": "Workflow-Automation",
+            "purpose": "Materialeingang, Metadaten und Freigaben automatisieren",
+            "priority": 2,
+            "estimated_setup_days": 5,
+            "funding_eligible": True,
+        },
+    ],
+}
+
 # KIS-1246 (Medien-Vertikale): Branchen-spezifische Kits statt generischer
 # Büro-Tools — im Lauf 1129 empfahl das Team-Kit einer Filmproduktion
 # "CRM-System" und "Projekt-Management" statt Produktions-Tools.
@@ -1000,8 +1091,17 @@ def generate_starter_kit(
     _is_media_branch = any(
         k in branch_group.lower() for k in ("medien", "kreativ", "entertainment", "film")
     )
+    # KIS-1313: Die Sparte entscheidet innerhalb der Medienbranche — ein
+    # Verlag bekam das Video-Kit (Transkription, Frame.io, MAM), Lauf KIS1282.
+    try:
+        from services.medien_sparte import slug as _sparte_slug
+        _sparte = _sparte_slug(ctx.get("medien_sparte") or ctx.get("MEDIEN_SPARTE_LABEL"))
+    except Exception:
+        _sparte = ""
     if expertise_level == "expert":
         tool_templates = TOOL_TEMPLATES_EXPERT.get(size_label, TOOL_TEMPLATES_EXPERT["solo"])
+    elif _is_media_branch and _sparte in TOOL_TEMPLATES_MEDIA_SPARTE:
+        tool_templates = TOOL_TEMPLATES_MEDIA_SPARTE[_sparte]
     elif _is_media_branch:
         tool_templates = TOOL_TEMPLATES_MEDIA.get(size_label, TOOL_TEMPLATES_MEDIA["team"])
     else:

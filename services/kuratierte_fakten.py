@@ -277,6 +277,12 @@ def build_kuratierte_grounding(answers: Dict[str, Any]) -> Dict[str, str]:
         tools = build_tool_fakten(answers)
         if tools:
             grounding["tools_empfehlungen"] = tools
+            # KIS-1313: Quick Wins und KI-Systemlandschaft nannten Claude,
+            # Notion und „Anthropic Claude-API" für einen Verlag mit DeepL Pro
+            # und ChatGPT (Lauf KIS1282) — beide Sections hatten keinen
+            # Faktenblock.
+            grounding["quick_wins"] = tools
+            grounding["ki_stack_summary"] = tools
         foerder = build_foerder_fakten(answers)
         if foerder:
             grounding["foerderpotenzial"] = foerder

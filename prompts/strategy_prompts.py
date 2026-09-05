@@ -131,7 +131,9 @@ Vendor-Audit Compliance-Status (genutzter KI-Tools): {vendor_audit_status}.
 WICHTIG: Der Wert '{vendor_audit_status}' bezieht sich ausschließlich auf den Vendor-Audit-Compliance-Status der genutzten KI-Tools (z.B. 0 von N Tools EU-konform), NICHT auf den Gesamt-KI-Readiness-Score des Unternehmens. Formuliere dies IMMER als 'Vendor-Audit-Status', 'Tool-Compliance-Status' oder 'Konformitätsstatus der genutzten Tools'. Übernimm den Status wörtlich als '{vendor_audit_status}' — verwende NIE englische Rohwerte wie fail/pass/warn im deutschen Text (KIS-1238: 'ist fail' stand wörtlich im Bericht). Der KI-Readiness-Score des Unternehmens kann gleichzeitig hoch sein (z.B. 89/100), obwohl der Tool-Compliance-Status '{vendor_audit_status}' ist.
 Wenn ein Tool im Report 1 als RED bewertet wurde (z.B. ChatGPT),
 weise bei Erwähnung auf die DSGVO-Einschränkung hin und priorisiere
-EU-konforme Alternativen. Empfehle kein RED-bewertetes Tool als Hauptempfehlung."""
+EU-konforme Alternativen. Empfehle kein RED-bewertetes Tool als Hauptempfehlung.
+GENUTZT ODER EMPFOHLEN (VERBINDLICH, KIS-1313, gilt in jeder Section): Als „im Einsatz", „genutzt", „bereits vorhanden" oder in der Spalte „Ihr Unternehmen" gilt nur, was in der Software des Kunden steht ({s5_software}) oder in seinen KI-Projekten ({ki_projekte}). Jedes andere Werkzeug ist eine Empfehlung („kommt infrage", „könnte ergänzen"). Lauf KIS1282 schrieb einem Verlag mit DeepL Pro und ChatGPT „DeepL Pro, Duden-Mentor im Einsatz" und „Das Unternehmen nutzt diese Tools bereits punktuell".
+"""
 
 
 # =============================================================================
@@ -923,7 +925,7 @@ Formuliere verständlich für einen GF ohne KI-Vorwissen. Fachbegriffe bei erste
 (a) KONKRETE GEGENMASSNAHMEN: Jede Mitigationsstrategie als konkreten Handlungsschritt formulieren. NICHT „Risikomanagement implementieren", SONDERN z.B. „Definieren Sie eine Liste von Datentypen, die nie in KI-Tools eingegeben werden dürfen, und kommunizieren Sie diese an alle Beteiligten."
 (b) VERKNÜPFUNG ZU HANDLUNGSFELDERN: Jedes Top-Risiko mit dem passenden Handlungsfeld aus S3 verknüpfen. Format: „(→ Handlungsfeld: [Name aus S3])". Nutze {s3_handlungsfelder} als Referenz.
 (c) STOP-SIGNALE: Ergänze pro Top-Risiko ein konkretes Stop-Signal — woran erkennt man, dass es schiefläuft? Beispiele: „Mehr als 3 Kundenbeschwerden über fehlerhafte KI-Ausgaben in einem Monat", „Mitarbeitende umgehen die KI-Richtlinie regelmäßig". Stop-Signale müssen beobachtbar und alltagsnah sein.
-In der Risikomatrix-Tabelle eine Spalte „Stop-Signal" ergänzen.
+In der Risikomatrix-Tabelle eine Spalte „Stop-Signal" ergänzen. Die Tabelle hat genau vier Spalten: Risiko, Eintritt, Auswirkung, Stop-Signal. Mitigationsstrategie und Verknüpfung zum Handlungsfeld stehen als Text unter der Tabelle, nie als weitere Spalten — Lauf KIS1282 baute eine Sechs-Spalten-Tabelle über drei Seiten (KIS-1313).
 CONSTRAINT: Bestehende Risk Engine v3 Daten unverändert. Nur LLM-Narrativ anreichern.
 
 SPRINT 2 — OPT-B6 COMPLIANCE-TIEFE STÄRKEN (PFLICHT):

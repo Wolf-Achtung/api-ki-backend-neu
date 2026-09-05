@@ -1265,7 +1265,7 @@ def _generate_summary(
         return (
             f"Vendor-Audit für {total} Tools/Anbieter abgeschlossen. "
             f"Ergebnis: {green} grün (niedriges Risiko), {yellow} gelb (mittleres Risiko), {red} rot (hohes Risiko). "
-            f"{eu_compliant} Anbieter sind EU-konform. "
+            f"{eu_compliant} Anbieter {'ist' if eu_compliant == 1 else 'sind'} EU-konform. "
             f"{status} "
             f"Der Audit-Status bezieht sich auf den Konformitätsstatus der "
             f"gelisteten Tools, nicht auf den Gesamt-KI-Readiness-Status "

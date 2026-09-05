@@ -452,6 +452,53 @@ verlor 3-Schritte-Prozess und Checkliste. Lokal reproduziert mit
   Amberscript statt Otter.
 - Test: `tests/test_kis1302_testlauf_1275.py`.
 
+## Die Sparte schlägt die Branche (KIS-1313)
+
+Testlauf KIS1282 (05.09.2026, Build 2201): erster Lauf mit dem
+Verlag-Profil (KIS-1308), Score 84, Governance 87. Der Verlag-Pfad greift:
+Fallstudie „Fachverlag halbiert die erste Korrekturschleife", Werkzeugblock
+mit DeepL Pro, Trint, Aleph Alpha und LanguageTool, Hinweiszeile zum
+pausierten Verlagspreis, Budget aus Fragebogen 2 in beiden Berichten,
+Fachgebiet im Sofort-Start, Umsatzprojektionen rechnen (Preis × Menge). Was
+noch die Branche statt der Sparte sah:
+
+- **Sofort-Start:** Amberscript und DaVinci Resolve für einen Verlag (die
+  Medien-Werkzeuge aus KIS-1312 waren Bewegtbild), dazu die Medien-Prompts
+  Headline, Creative Brief, Skript-Outline. Jetzt `SPARTEN_TOOLS_MEDIEN`
+  (Verlag: DeepL Write Pro, LanguageTool; Musik/Audio: Auphonic, iZotope RX;
+  Agentur: Canva, Firefly) und `SPARTEN_PROMPTS_MEDIEN` (Verlag: erste
+  Korrekturschleife, Kurzfassungen, Metadaten je Titel).
+- **Starter-Kit:** Transkription, Frame.io, Media-Asset-Management. Jetzt
+  `TOOL_TEMPLATES_MEDIA_SPARTE` (Verlag, Musik/Audio); die Sparte kommt aus
+  `medien_sparte` im Briefing.
+- **Prompt-Vorspann gekappt:** „Redaktion, Lektorat, Satz … im Haus.
+  Generiere 10 Headline-Varianten" (R1 S. 7). Der Satz-Deduplizierer
+  (KIS-1254) entfernt jeden Satz ab dem dritten Vorkommen — der
+  Kontext-Vorspann steht mit Absicht in jedem Prompt-Kasten.
+  `SOFORT_START_HTML` ist jetzt ausgenommen, der Vorspann nennt das kurze
+  Fachgebiet. **Wer einen Text mit Absicht wiederholt, prüft den Cap.**
+- **Recherche fragt nach Film:** Die Medien-Overrides in `live_research`
+  suchten fest „KI Filmproduktion Postproduktion" — die Quellen des
+  Verlag-Laufs waren Film-Artikel (Bertelsmann „Film- und TV-Produktion",
+  OMR „Postproduktion"). Jetzt `{sparte}` in den drei Vorlagen, Rückfall
+  „Film Postproduktion", wenn keine Sparte vorliegt.
+- **Benchmark-Prozente ohne Beleg:** „ca. 35–45 % der Medienbetriebe … RTR
+  2025, Bertelsmann 2025" (S2). Die Prompt-Regel (KIS-1305) hielt nicht.
+  Jetzt `strategy_sanitizer.benchmark_prozent_richtwert`: Ein Prozentwert in
+  S2, dessen Zahl nicht in der Recherche steht, bekommt „(Richtwert)". Dafür
+  bekommt der Sanitizer die Recherche mit (`research_context`).
+- **Genutzt oder empfohlen** gilt jetzt im System-Prompt für jede Section —
+  S2 und S3 nannten Duden-Mentor als „im Einsatz".
+- Quick Wins und KI-Systemlandschaft bekommen den Faktenblock (Claude, Notion
+  und „Anthropic Claude-API" für einen Verlag mit DeepL Pro und ChatGPT).
+- Kleinigkeiten: „-Entwurf" ohne „KI" (Glitch-Liste), „1 Anbieter sind
+  EU-konform", S8-Risikomatrix auf vier Spalten begrenzt (sechs Spalten über
+  drei Seiten), Wächter kennt die Verneinung („nicht EU-konform").
+- Offen, nur beobachtet: Die 30-Tage-Challenge für Einsteiger bleibt
+  generisch; Digitalbonus-Grenze und De-minimis-Schwelle kommen aus dem
+  Modell; die Förder-Box auf Strategie S. 3/4 läuft auf eine dünne Seite.
+- Test: `tests/test_kis1313_testlauf_1282.py`.
+
 ## Eine Siezen-Regel kennt kein Adverb (KIS-1312)
 
 Testlauf KIS1281 (05.09.2026, Build 2126, Motion-Profil nach KIS-1311): Alles

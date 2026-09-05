@@ -387,7 +387,10 @@ _US_NAMEN = "|".join(_US_ANBIETER)
 # "Claude … EU / EU Anbieter". Kein Satzende dazwischen — sonst traefe
 # "ChatGPT ist nicht DSGVO-konform. Priorisieren Sie EU-konforme …".
 # Woerter wie "aber", "statt", "priorisieren" markieren den Gegensatz.
-_GEGENSATZ = r"\baber\b|\bstatt\b|\bstattdessen\b|\banstelle\b|\bdaher\b|priorisier|bevorzug|\binstead\b|\brather\b|\bprefer"
+# KIS-1313: „ChatGPT … nicht EU-konform gehostet" ist die richtige Aussage
+# (Lauf KIS1282, Strategie S. 32) — eine Verneinung beendet die Suche.
+_GEGENSATZ = (r"\baber\b|\bstatt\b|\bstattdessen\b|\banstelle\b|\bdaher\b|priorisier|bevorzug"
+              r"|\bnicht\b|\bkein\w*|\bnot\b|\bno\b|\binstead\b|\brather\b|\bprefer")
 # KIS-1302: Steht zwischen US-Name und EU-Begriff ein EU-Werkzeug („Runway
 # … und Amberscript für EU-konform"), gilt die Aussage dem EU-Werkzeug.
 # Der Feldtrenner „·" des R1-Werkzeugblocks beendet die Suche („US-
