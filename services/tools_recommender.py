@@ -700,10 +700,18 @@ def recommend_tools(
     # Drops tools whose minimum monthly entry cost exceeds what the user's
     # budget band can reasonably absorb per tool. Applied before scoring so
     # segment weighting doesn't silently rank an unaffordable tool to the top.
-    _budget_band = (b.get("investitionsbudget") or "").strip().lower()
+    # KIS-1304: Fragebogen 2 (s1_budget) hat Vorrang — dieselbe Regel wie
+    # Budget-Gate und Spannungs-Box. Lauf KIS1276: FB1 sagte 2.000–10.000 €,
+    # FB2 10.000–50.000 €; der Filter nahm FB1 und warf Amberscript, Descript
+    # und Runway hinaus. Übrig blieben Canva, LanguageTool und Duden — für
+    # ein VFX-Studio. Werkzeuge der eigenen Sparte fallen nie am Budget:
+    # sie erscheinen mit Preis, und der Kunde entscheidet.
+    _sa = b.get("_strategy_answers") if isinstance(b.get("_strategy_answers"), dict) else {}
+    _budget_band = (str((_sa or {}).get("s1_budget") or "") or str(b.get("investitionsbudget") or "")).strip().lower()
     if _budget_band and _BUDGET_BAND_MAX_MONTHLY.get(_budget_band) is not None:
         _before = len(tools)
-        tools = [t for t in tools if _fits_budget(t, _budget_band)]
+        tools = [t for t in tools
+                 if _fits_budget(t, _budget_band) or _passt_zur_sparte(t, sparte)]
         if _before != len(tools):
             log.info(
                 "[tools_recommender] budget filter (%s): %d → %d tools",

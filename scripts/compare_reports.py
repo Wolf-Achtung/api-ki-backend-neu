@@ -187,9 +187,11 @@ PRUEFUNGEN = [
     (
         "werkzeug_als_hochrisiko",
         "Standard-Werkzeug als Hochrisiko-System eingestuft (KIS-1293)",
+        # KIS-1304: „… fallen nicht unter die Hochrisiko-Systeme" ist die
+        # richtige Aussage, kein Befund (Lauf KIS1276, Strategie S. 33).
         lambda t: (m.group(0)[:100] if (m := re.search(
             r"(?:Copilot|Runway|Firefly|ChatGPT|Claude|Descript|Sensei|DeepL)"
-            r"[^.\n]{0,160}(?:hochrisk|high-risk|Hochrisiko)", t)) else None),
+            r"(?:(?!\bnicht\b|\bkein[e]?\b|\bnot\b|\bno\b)[^.\n]){0,160}(?:hochrisk|high-risk|Hochrisiko)", t)) else None),
     ),
     (
         "ankuendigung_ohne_liste",
@@ -222,7 +224,10 @@ def _ankuendigung_ohne_liste(text: str) -> Optional[str]:
         if len(zeile) < 25 or not zeile.endswith(":") or zeile.isupper():
             continue
         j = i + 1
-        while j < len(zeilen) and not zeilen[j]:
+        # KIS-1304: Seitenfuß, Seitenkopf und Leerzeilen überspringen — die
+        # Liste folgt oft auf der nächsten Seite (Lauf KIS1276, R1 S. 27/28).
+        while j < len(zeilen) and (not zeilen[j] or re.match(
+                r"^(?:Seite \d+ / \d+|Page \d+ / \d+|Report-ID:|===== SEITE)", zeilen[j])):
             j += 1
         if j >= len(zeilen):
             return zeile[-80:]
@@ -260,7 +265,9 @@ _US_ALS_EU_RE = re.compile(
     r"\b(?:" + _US_NAMEN + r")\b(?:(?!\bUS\b|Subprozessor|sub-?processor|" + _GEGENSATZ + r"|" + _EU_WERKZEUGE + r")[^.!?·|]){0,140}?(?:" + _EU_BEGRIFF + r")"
     # Rueckwaerts: "EU-gehostete Alternativen wie Claude" — aber nicht
     # "EU-konforme Alternativen zu ChatGPT" (zu/statt/anstelle/für).
-    r"|(?:" + _EU_BEGRIFF + r")(?:(?!\bUS\b|\bzu\b|\bstatt\b|\banstelle\b|\bfür\b|\bto\b|\bof\b)[^.!?\n]){0,80}?\b(?:" + _US_NAMEN + r")\b",
+    # KIS-1304: „EU / EU-Server · Kann mit Microsoft 365, OpenAI API verbunden
+    # werden" ist die Integrationsspalte, keine Hosting-Aussage über OpenAI.
+    r"|(?:" + _EU_BEGRIFF + r")(?:(?!\bUS\b|\bzu\b|\bstatt\b|\banstelle\b|\bfür\b|\bmit\b|verbunden|integr|\bto\b|\bof\b|\bwith\b|connect)[^.!?\n]){0,80}?\b(?:" + _US_NAMEN + r")\b",
     re.IGNORECASE,
 )
 

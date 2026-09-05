@@ -1475,6 +1475,24 @@ _SECTION_MAX_TOKENS = {
 }
 
 
+def _budget_effektiv(briefing: Any) -> str:
+    """KIS-1304: Das wirksame Investitionsbudget für Prompts.
+
+    Fragebogen 2 (``_strategy_answers.s1_budget``) hat Vorrang vor
+    Fragebogen 1 — dieselbe Regel wie im Budget-Gate (KIS-1298) und in
+    der Spannungs-Box (KIS-1267). Lauf KIS1276: Der Business Case nannte
+    „Budgetrahmen von 2.000–10.000 €" (FB1), obwohl FB2 10.000–50.000 €
+    sagte; die Prompts sahen nur FB1, weil der geteilte Kontext
+    Underscore-Schlüssel ausblendet.
+    """
+    if not isinstance(briefing, dict):
+        return ""
+    fb1 = str(briefing.get("investitionsbudget", "") or "").strip()
+    sa = briefing.get("_strategy_answers")
+    fb2 = str((sa or {}).get("s1_budget", "") or "").strip() if isinstance(sa, dict) else ""
+    return fb2 or fb1
+
+
 def _llm_params_for(section_key: str) -> Dict[str, Any]:
     """
     Liefert Modell, Temperatur und Max-Tokens für einen logischen Abschnitt.
@@ -9607,7 +9625,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
         "bundesland_label": briefing.get("BUNDESLAND_LABEL") or BUNDESLAND_MAPPING.get(str(bundesland_raw).lower(), bundesland_raw) if bundesland_raw else "",
         "HAUPTLEISTUNG": hauptleistung_raw,
         "JAHRESUMSATZ_LABEL": briefing.get("JAHRESUMSATZ_LABEL", briefing.get("jahresumsatz", "")),
-        "INVESTITIONSBUDGET": briefing.get("investitionsbudget", ""),  # For gamechanger.md
+        "INVESTITIONSBUDGET": _budget_effektiv(briefing),  # For gamechanger.md — KIS-1304: FB2 hat Vorrang
     })
     # FIX-A3b: Inject canonical BAFA values into prompt vars for foerderpotenzial prompt
     try:
@@ -9762,7 +9780,7 @@ def _build_prompt_vars(briefing: Dict[str, Any], scores: Dict[str, Any]) -> Dict
     # ===== BLOCK 4: Resources =====
     # Budget and time availability
     base_vars.update({
-        "INVESTITIONSBUDGET": briefing.get("investitionsbudget", ""),
+        "INVESTITIONSBUDGET": _budget_effektiv(briefing),  # KIS-1304: FB2 hat Vorrang
         "ZEITBUDGET": briefing.get("zeitbudget", ""),
     })
     
@@ -14508,6 +14526,16 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
     if os.getenv("ANTHROPIC_PROMPT_CACHING", "1").strip().lower() not in ("0", "false", "no", "off"):
         try:
             _ctx_answers = {k: v for k, v in briefing.items() if not str(k).startswith("_")}
+            # KIS-1304: FB2-Budget sichtbar machen — Underscore-Schlüssel sind
+            # hier ausgeblendet, die Prompts sahen nur das FB1-Budget.
+            _bud_eff = _budget_effektiv(briefing)
+            if _bud_eff and _bud_eff != str(_ctx_answers.get("investitionsbudget", "") or ""):
+                _ctx_answers["investitionsbudget_strategie_fragebogen"] = _bud_eff
+                _ctx_answers["investitionsbudget_hinweis"] = (
+                    "Es gilt die spätere Angabe aus dem Strategie-Fragebogen "
+                    f"({_bud_eff}); der Readiness-Fragebogen nannte "
+                    f"{_ctx_answers.get('investitionsbudget', '')}."
+                )
             _SHARED_CONTEXT_PREFIX = (
                 "REFERENZKONTEXT (identisch für alle Abschnitte dieses Reports — "
                 "dient nur als Hintergrund, die eigentliche Aufgabe folgt danach):\n"
@@ -24053,12 +24081,26 @@ def _send_emails(db: Session, rep: Report, br: Briefing, pdf_url: Optional[str],
         _briefing_created = getattr(br, "created_at", None)
         _briefing_datum = _briefing_created.strftime("%d.%m.%Y %H:%M") if _briefing_created else ""
 
+        # KIS-1304: Liegt Fragebogen 2 schon vor (Replay kopiert ihn, Chat
+        # erhebt ihn vor R1), trägt das Briefing-PDF beide Fragebögen.
+        # Lauf KIS1276: Die Admin-Mail nach R1 zeigte nur FB1, obwohl der
+        # Report selbst schon mit dem FB2-Budget rechnete.
+        _briefing_strategy_answers: Dict[str, Any] = {}
+        try:
+            from models import StrategyQuestion as _SQBrief
+            _sq_brief = db.query(_SQBrief).filter(_SQBrief.briefing_id == br.id).first()
+            if _sq_brief is not None:
+                _briefing_strategy_answers = _sq_brief.to_dict()
+        except Exception as _sq_brief_exc:
+            log.debug("[%s] Briefing-PDF: FB2 nicht ladbar: %s", run_id, _sq_brief_exc)
+
         _briefing_html = render_briefing_pdf_html(
             display_id=_briefing_display_id,
             datum=_briefing_datum,
             answers=_briefing_answers,
             scores=_briefing_scores,
             sections=_briefing_sections,
+            strategy_answers=_briefing_strategy_answers,
         )
 
         from services.pdf_client import render_pdf_from_html
@@ -24366,6 +24408,18 @@ def _auto_trigger_strategy_replay(briefing_id: int, run_id: str) -> None:
         _briefing_data = dict(br.answers or {})
         _sq_dict = sq.to_dict()
         _r1_meta = (analysis.meta if analysis else {}) or {}
+
+        # KIS-1304: Die [KIS-Admin]-Briefing-Mail (FB1+FB2) kam bei Replays
+        # nie — der Formular-Pfad (KIS-1299/1303) und der Chat-Pfad schicken
+        # sie, der Replay springt beide über. Läufe KIS1275 und KIS1276
+        # lieferten deshalb nur das FB1-Briefing aus der R1-Mail.
+        try:
+            from services.strategy_pipeline import _send_admin_briefing_email
+            _send_admin_briefing_email(briefing_id, _db)
+            log.info("[REPLAY-STRATEGY] Admin-Briefing-Mail (FB1+FB2) für Replay-Briefing %d gesendet", briefing_id)
+        except Exception as _mail_exc:  # pragma: no cover - fail-open
+            log.warning("[REPLAY-STRATEGY] Admin-Briefing-Mail fehlgeschlagen (briefing_id=%d): %s",
+                        briefing_id, _mail_exc)
 
         def _run() -> None:
             import asyncio as _aio

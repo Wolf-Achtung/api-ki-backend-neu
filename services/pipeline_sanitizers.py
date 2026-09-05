@@ -781,6 +781,21 @@ _CONTEXT_LABEL_PATTERNS = [
     # L2: Catch raw strategic context bullets leaked into output
     r'<(?:p|li|div)[^>]*>\s*(?:Kundenakquise\s+via\s+Netzwerk|Erstgespr\xe4che\s+und\s+Bedarfsanalyse)[^<]{0,200}</(?:p|li|div)>',
     r'<(?:ul|ol)[^>]*>\s*(?:<li[^>]*>\s*(?:Kundenakquise|Erstgespr|Projektbasiert|Wissensmanagement)[^<]{0,200}</li>\s*){2,}</(?:ul|ol)>',
+    # KIS-1304: Die Liste HINTER dem Label gehört zum Kontextblock. Bisher
+    # fiel nur das Label („Typische Workflows:"), die Liste blieb — R1 S. 23
+    # in den Läufen KIS1275/1276 zeigte 20 nackte Kontextzeilen vor dem
+    # KI-Rechte-Kapitel („Kreative Blockaden …", „Budget CAPEX max: 50.000 €").
+    r'<(?:p|h4)[^>]*>\s*(?:<strong>)?\s*(?:Typische (?:Tools im Einsatz|Workflows)|'
+    r'H\xe4ufigste Pain Points|Charakteristika|Fokus-Priorit\xe4ten|'
+    r'In Ihrer aktuellen Gr\xf6\xdfe nicht sinnvoll|'
+    r'Typical (?:Tools in Use|Workflows)|Common Pain Points|'
+    r'Characteristics|Focus Priorities|Not recommended for your current size'
+    r')\s*:?\s*(?:</strong>)?\s*</(?:p|h4)>\s*<(?:ul|ol)[^>]*>.*?</(?:ul|ol)>',
+    r'<h4[^>]*>[^<]*(?:Branchen-Context|Gr\xf6\xdfen-Context|Industry Context|Size Context|'
+    r'Kernleistung \(Hauptleistung\)|Core Service \(Main Offering\))[^<]*</h4>',
+    r'<(?:ul|ol)[^>]*>(?:(?!</(?:ul|ol)>).)*?(?:Budget (?:CAPEX|OPEX) max|Tool-Zoo|Kreative Blockaden:|'
+    r'Asset-Chaos:|Tight Deadlines:|Content-Erstellung: Texte|Logic Pro / Ableton|Figma f\xfcr UI/UX|'
+    r'<li>\s*(?:Kollaboration verbessern|Wissensmanagement aufbauen)\s*</li>)(?:(?!</(?:ul|ol)>).)*?</(?:ul|ol)>',
     r'<p[^>]*>\s*<strong>\s*(?:Typische (?:Tools im Einsatz|Workflows)|'
     r'H\xe4ufigste Pain Points|Charakteristika|Fokus-Priorit\xe4ten|'
     r'In Ihrer aktuellen Gr\xf6\xdfe nicht sinnvoll|'
@@ -827,6 +842,14 @@ def strip_context_block_leaks(html: str, section_name: str = "") -> tuple:
     result = _CONTEXT_HR_RE.sub("", result)
     result = re.sub(r'<(?:div|section)[^>]*>\s*</(?:div|section)>', "", result)
     result = re.sub(r'\n\s*\n\s*\n', "\n\n", result)
+
+    # KIS-1304: Das KI-Rechte-Kapitel beginnt laut Prompt mit <section>.
+    # Was davor steht, ist Echo des Kontextblocks (Lauf KIS1275/1276).
+    if "ki_rechte" in str(section_name or "").lower():
+        _sec = re.search(r'<section\b', result, re.IGNORECASE)
+        if _sec and _sec.start() > 0 and re.search(r'<(?:ul|ol|li|p)\b', result[:_sec.start()], re.IGNORECASE):
+            removals += 1
+            result = result[_sec.start():]
 
     # -- O7: Tool/Communication context-block sanitizer --
     _tool_phrases = [

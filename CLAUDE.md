@@ -452,6 +452,39 @@ verlor 3-Schritte-Prozess und Checkliste. Lokal reproduziert mit
   Amberscript statt Otter.
 - Test: `tests/test_kis1302_testlauf_1275.py`.
 
+## Der Replay kennt keine Fragebogen-2-Route (KIS-1304)
+
+Testlauf KIS1276 (05.09.2026): Die [KIS-Admin]-Briefing-Mail (FB1+FB2)
+kam trotz KIS-1303 nicht. Testläufe sind Replays
+(`/api/admin/testrun/replay`): Der Replay kopiert Fragebogen 2 **vor**
+Report 1, und `_auto_trigger_strategy_replay` startet den Strategiebericht
+direkt — Fragebogen-2-Route (KIS-1299/1303) und Chat-Abschluss, die beide
+die Mail schicken, laufen dabei nie. Jetzt schickt der Replay-Trigger die
+Mail selbst, und die R1-Admin-Mail hängt das Briefing mit FB2 an, sobald
+FB2 vorliegt. **Wer einen Weg baut, der Fragebogen 2 speichert, schickt
+die Mail** — es gibt drei Wege, keinen gemeinsamen Haken.
+
+- **Budget:** Fragebogen 2 hat Vorrang (`_budget_effektiv`). Prompts und
+  geteilter Kontext sahen nur FB1, weil Underscore-Schlüssel ausgeblendet
+  sind; der Business Case nannte deshalb „Budgetrahmen 2.000–10.000 €".
+  Der Werkzeug-Filter (`tools_recommender`) nahm ebenfalls FB1 und warf
+  Amberscript, Descript und Runway hinaus — übrig blieben Canva und Duden
+  für ein VFX-Studio. Werkzeuge der eigenen Sparte fallen nie am Budget.
+- **Kontextblock-Echo:** Der Prompt-Enhancer legt Branchen- und
+  Größenkontext als HTML-Listen in den Prompt; das KI-Rechte-Kapitel gab
+  sie aus. `strip_context_block_leaks` (FIX-C1) nahm nur die Labels, die
+  Listen blieben (R1 S. 23 in KIS1275 und KIS1276). Jetzt fallen Label
+  und Liste zusammen, und im KI-Rechte-Kapitel alles vor `<section>`.
+- Quellenliste aus reinen Links wird im Enhancer zur Zeile (Strategie
+  S. 19/20 und 34/35 waren fast leer). Kapitel-Etiketten
+  („Strategische Handlungsfelder") sind keine Handlungsfelder für S1.
+- Wächter: „nicht unter die Hochrisiko-Systeme" ist kein Befund; eine
+  Liste nach dem Seitenfuß auch nicht.
+- Seed: DaVinci Resolve (Neural Engine) mit Hosting `lokal`, ohne
+  Prüfdatum — der Report empfahl es aus dem Branchenkontext, die
+  Faktenliste kannte es nicht.
+- Test: `tests/test_kis1304_testlauf_1276.py`.
+
 ## Textknoten sind nicht nur Text (KIS-1285)
 
 `_TAG_SPLIT_RE` teilt HTML an Tags. Was dazwischen liegt, gilt als Text —

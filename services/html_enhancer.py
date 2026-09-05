@@ -518,6 +518,13 @@ _RE_QUELLEN_LIST = re.compile(
 )
 
 
+_RE_LINK_ONLY_LIST = re.compile(
+    r'(?:<p>\s*(?:<strong>)?\s*(?:Quellen|Sources)\s*[^<]{0,40}(?:</strong>)?\s*</p>\s*)?'
+    r'<ul[^>]*>((?:\s*<li[^>]*>\s*<a\b[^>]*>[^<]{1,80}</a>\s*\.?\s*</li>\s*){2,})</ul>',
+    re.IGNORECASE,
+)
+
+
 def _compact_source_lists(html: str) -> str:
     """KIS-1256: Quellen-Bullet-Listen am Kapitelende zu einem kompakten
     Inline-Block zusammenfassen. Die Listen (6-8 Zeilen) liefen regelmaessig
@@ -541,6 +548,12 @@ def _compact_source_lists(html: str) -> str:
         )
 
     html = _RE_QUELLEN_LIST.sub(_join, html)
+    # KIS-1304: Die Quellenliste aus dem Faktenblock („Quellen am Ende: nur die
+    # Anbieteradressen") kommt ohne Überschrift als Liste von Links — acht
+    # Werkzeugnamen untereinander, Strategie S. 19/20 und S. 34/35 im Lauf
+    # KIS1276. Eine Liste, deren Punkte nur aus Links bestehen, ist eine
+    # Quellenzeile.
+    html = _RE_LINK_ONLY_LIST.sub(_join, html)
     if compacted:
         log.info("[KIS-1256][QUELLEN-KOMPAKT] %d Quellen-Liste(n) zusammengefasst", compacted)
     return html

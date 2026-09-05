@@ -145,9 +145,9 @@ def detect_contradictions(
             f"Zum Budget liegen zwei unterschiedliche Angaben vor: "
             f"{_fmt_budget(budget_r1)} im Readiness-Fragebogen, "
             f"{_fmt_budget(budget_fb2)} im Strategie-Fragebogen. "
-            "Fuer die Bewertung der Investition gilt die spaetere Angabe "
+            "Für die Bewertung der Investition gilt die spätere Angabe "
             "aus dem Strategie-Fragebogen; die Differenz sollte benannt "
-            "und nicht stillschweigend geglaettet werden."
+            "und nicht stillschweigend geglättet werden."
         )
 
     return findings

@@ -97,4 +97,6 @@ VORLIEGENDER UNTERNEHMENSKONTEXT (vollständig — keine Rückfragen nötig):
 VERBINDLICH: Antworte ausschließlich mit dem fertigen HTML-Abschnitt gemäß
 Pflichtstruktur. Stelle unter keinen Umständen Rückfragen, bitte nie um
 weitere Angaben und erkläre nie, was dir fehlt — alle benötigten
-Informationen stehen oben.
+Informationen stehen oben. Der Branchen- und Größen-Kontext (Workflows,
+Pain Points, typische Tools, Budget-Angaben) ist Hintergrund für dich —
+gib ihn nie als Liste aus; die Ausgabe beginnt mit <section>.
