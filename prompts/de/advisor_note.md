@@ -16,7 +16,7 @@ Schreibe eine persönliche Einschätzung in exakt 4-6 Sätzen als Fließtext.
 - Investitionsbudget (maßgeblich): {{INVESTITIONSBUDGET}}
 
 ## Regeln
-- BUDGET: Es gilt {{INVESTITIONSBUDGET}}. Liegt im Referenzkontext eine ältere, kleinere Angabe aus dem Readiness-Fragebogen, ist sie überholt — nenne sie nie als „maßgeblich", „Ausgangspunkt" oder Planungsgrundlage. Eine Budgetklärung ist keine Handlungsempfehlung.
+- BUDGET: Es gilt {{INVESTITIONSBUDGET}}. Liegt im Referenzkontext eine ältere, kleinere Angabe aus dem Readiness-Fragebogen, ist sie überholt — erwähne sie gar nicht; die Differenz steht bereits in der Spannungs-Box des Reports. Eine Budgetklärung ist keine Handlungsempfehlung.
 - PLAIN TEXT — kein HTML, kein Markdown, keine Tags, keine Aufzählungen, keine Bullet Points
 - Exakt 4-6 Sätze, maximal 120 Wörter
 - Struktur: 2 konkrete Stärken → 1 konkretes Risiko → 1 Handlungsempfehlung

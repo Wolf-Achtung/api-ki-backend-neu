@@ -149,6 +149,8 @@ STRATEGY_PROMPTS_EN = {
     # =========================================================================
     "S1": """Write the section "Starting Point — Your AI Readiness Profile" for the AI strategy report.
 
+TOOLS (BINDING, KIS-1306): Product names only from this list or from the customer's existing stack: {kuratierte_tools_namen}. Never name discontinued or unlisted brands (e.g. "Adobe Sensei") — generic terms ("editing software with AI features") are fine.
+
 COMPANY DATA:
 - Company name: {firmenname}
 - Industry: {branche}
@@ -291,6 +293,8 @@ Sources at the end as <div class="sources">.""",
     # S3: Strategic Action Areas
     # =========================================================================
     "S3": """Write the section "Strategic Action Areas" for the AI strategy report.
+
+TOOLS (BINDING, KIS-1306): Product names only from this list or from the customer's existing stack: {kuratierte_tools_namen}. Never name discontinued or unlisted brands (e.g. "Adobe Sensei") — generic terms are fine. No data-protection or hosting rating in this section — that belongs to chapter 4.
 
 COMPANY DATA:
 - Company name: {firmenname}
@@ -763,6 +767,7 @@ CRITICAL:
 - Do NOT invent additional programs that are not in the list.
 - Programs marked "already validated" or "from Report 1" were already recommended in the AI status report and MUST appear here as well to ensure cross-report consistency.
 - If no programs are listed, note that no suitable programs have been identified at this time.
+- DEADLINES (KIS-1306): A deadline comes only from the FUNDING DATA above ("several calls per year" stays as is). Never take a date from the research as a deadline. If the funding data carries no date, write "check current call" and name no month in the practice tip.
 
 SUPPLEMENTARY RESEARCH (background only — do NOT use as a source of programs):
 {research_foerdermittel}
@@ -854,7 +859,7 @@ TOOL RECOMMENDATIONS (summary):
 TOOLS AND HOSTING IN THIS SECTION (BINDING, KIS-1302):
 - Tool names only from this list or from the customer's stack: {kuratierte_tools_namen}.
 - The hosting entry per tool is in the curated list below; copy it verbatim. A tool counts as "EU-hosted" or "EU-compliant" only if its row names EU as hosting. "local" (desktop installation, e.g. DaVinci Resolve or Topaz Video AI) is not EU hosting: call these tools "installed locally", never "EU-hosted".
-- ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney and Runway are US vendors: never call them "EU-compliant" or "EU-hosted" — if needed, "US vendor, check DPA".
+- ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney and Runway are US vendors: never call them "EU-compliant" or "EU-hosted" — if needed, "US vendor, check DPA". Microsoft 365 Copilot has no row in the list: data protection "check with the vendor", never "EU-compliant".
 {kuratierte_tools}
 
 NO FALSE PRECISION (BINDING): Do not state exact figures, deadlines, market shares, percentages, tool prices or funding amounts unless they appear explicitly in the input or the research. Where exact data is missing, use a range, a qualitative classification or careful wording instead. FORBIDDEN: invented percentages, month counts, euro amounts, rankings or seemingly exact benchmarks.

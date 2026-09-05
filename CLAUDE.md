@@ -452,6 +452,43 @@ verlor 3-Schritte-Prozess und Checkliste. Lokal reproduziert mit
   Amberscript statt Otter.
 - Test: `tests/test_kis1302_testlauf_1275.py`.
 
+## Ein Abkürzungspunkt ist kein Satzende (KIS-1306)
+
+Testlauf KIS1278 (05.09.2026, Build 1822, nach KIS-1305): Alle acht Punkte
+aus KIS-1305 sind im PDF behoben. Restbefunde:
+
+- **Fragment-Stripper:** `content_quality_enforcer.strip_trailing_sentence_fragments`
+  teilte an `[.!?]\s+` — auch an „max. " und „ggf. ". Ergebnis in jedem
+  Lauf seit KIS1275: „Format: Executive Summary (max." (R1 S. 8) und
+  „… prüfen und ggf." im Vendor-Audit (R1 S. 21; der Rest „nachholen:
+  Perplexity AI" war unter 30 Zeichen und galt als Fragment). KIS-1239
+  hatte nur den FIX-G-Trim gegen Abkürzungen gesichert. Jetzt maskiert der
+  Stripper Abkürzungen vor dem Split. **Wer an Satzgrenzen schneidet,
+  prüft `_TRIM_ABBREVS`.**
+- **Genus nach Ersetzung:** `Rollout → Einführung` (Anglizismus-Regel)
+  hinterließ „Ein verfrühter Einführung", „ein verzögerter Einführung"
+  (R1 S. 29). Vier Grammatik-Muster ziehen Artikel und Adjektiv nach
+  (wie KIS-1230 für „Systemlandschaft").
+- **S1 ohne Werkzeugregel:** „Adobe Sensei oder RunwayML" auf Strategie
+  S. 5 — die Regel aus S2/S3b/S6/S8 fehlte in S1 und S3. Jetzt in beiden
+  (DE/EN).
+- **Abgelaufene Frist:** S7 nannte für das Medienboard „14.07.2026
+  (Einreichfrist Filmförderung 2026)" und im Praxis-Tipp „Einreichfrist im
+  Juli 2026" — aus der Recherche, nicht aus den Förderdaten („mehrere
+  Termine/Jahr"). Prompt-Regel plus
+  `strategy_sanitizer.abgelaufene_fristen_korrigieren` (nur S7, Datum vor
+  Reportdatum → „Aktuell prüfen"). Wächter `abgelaufene_frist` liest das
+  Reportdatum aus dem Seitenfuß.
+- S8-Risikotabelle nannte Microsoft 365 Copilot „EU-konform" — Regel: kein
+  Eintrag in der Liste heißt „laut Anbieter prüfen".
+- Persönliche Einschätzung nannte das FB2-Budget jetzt korrekt, widmete der
+  Differenz aber einen ganzen Absatz. Regel: alte Angabe gar nicht nennen,
+  die Spannungs-Box hat sie schon.
+- Wächter `satzabbruch_vor_block` hielt „… zwischen" / „Monat 8 und 17."
+  für einen Phasenblock: Ein Blockanfang trägt Doppelpunkt, Gedankenstrich
+  oder Klammer.
+- Test: `tests/test_kis1306_testlauf_1278.py`.
+
 ## Eine Regel trifft auch den Produktnamen (KIS-1305)
 
 Testlauf KIS1277 (05.09.2026, nach KIS-1304): R1 nannte „DaVinci Resolve
