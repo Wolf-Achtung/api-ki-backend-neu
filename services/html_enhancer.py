@@ -551,10 +551,23 @@ def _transform_sources(html: str) -> str:
     if 'sources-footer' in html:
         return html
 
-    html = _RE_QUELLEN_DIV.sub(
-        f'<div class="sources-footer" style="{_S_SOURCES}"><p>\\1</p></div>',
-        html
-    )
+    def _div(m: "re.Match[str]") -> str:  # type: ignore[type-arg, unused-ignore]
+        inner = m.group(1)
+        # KIS-1302: Eine Liste im Quellenblock (S4, Lauf KIS1275: acht
+        # Werkzeugnamen untereinander) wird zur Zeile — sie lief sonst als
+        # einzige Zeile auf eine fast leere Folgeseite (Strategie S. 21).
+        items = re.findall(r"<li[^>]*>([\s\S]*?)</li>", inner)
+        clean = [re.sub(r"\s+", " ", i).strip().rstrip(".;") for i in items]
+        clean = [c for c in clean if re.sub(r"<[^>]+>", "", c).strip()]
+        if clean:
+            rest = re.sub(r"<(?:ul|ol)[^>]*>[\s\S]*?</(?:ul|ol)>", "", inner)
+            head = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", rest)).strip().rstrip(": ")
+            if not head:
+                head = "Sources" if re.search(r"(?i)\bsources?\b", inner) else "Quellen"
+            inner = f"<strong>{head}:</strong> " + " · ".join(clean) + "."
+        return f'<div class="sources-footer" style="{_S_SOURCES}"><p>{inner}</p></div>'
+
+    html = _RE_QUELLEN_DIV.sub(_div, html)
     html = _RE_QUELLEN_P.sub(
         f'<div class="sources-footer" style="{_S_SOURCES}"><p>\\1</p></div>',
         html

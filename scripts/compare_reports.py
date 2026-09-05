@@ -173,8 +173,16 @@ PRUEFUNGEN = [
     (
         "erfundenes_werkzeug",
         "Werkzeug ausserhalb der gepflegten Liste empfohlen (KIS-1293)",
+        # KIS-1302: Otter/Fathom/Fireflies sind echte US-Dienste ohne Zeile in
+        # tools_seed.json — R1 S. 10 (Lauf KIS1275) empfahl „Otter" als Quick Win.
         lambda t: (m.group(0) if (m := re.search(
-            r"Adobe Sensei|Legiscope|TrustArc|OpenDP|\bAIVA\b|Azure Cognitive Services", t)) else None),
+            r"Adobe Sensei|Legiscope|TrustArc|OpenDP|\bAIVA\b|Azure Cognitive Services"
+            r"|\bOtter(?:\.ai)?\b|\bFathom\b|\bFireflies(?:\.ai)?\b", t)) else None),
+    ),
+    (
+        "satzabbruch_vor_block",
+        "Absatz endet mitten im Satz, direkt davor ein Quartals-/Phasenblock (KIS-1302)",
+        lambda t: _satzabbruch_vor_block(t),
     ),
     (
         "werkzeug_als_hochrisiko",
@@ -216,7 +224,14 @@ def _ankuendigung_ohne_liste(text: str) -> Optional[str]:
         j = i + 1
         while j < len(zeilen) and not zeilen[j]:
             j += 1
-        if j >= len(zeilen) or _ANKUENDIGUNG_FOLGE.match(zeilen[j]):
+        if j >= len(zeilen):
+            return zeile[-80:]
+        # KIS-1302: „1. Phase 1 – Aufbau von KI-Know-how und Schulung: …" ist
+        # ein nummerierter Listenpunkt, keine Kapitelüberschrift (Lauf
+        # KIS1275, Strategie S. 15 nach „Empfehlung zur Reihenfolge:").
+        if re.match(r"^\d+\.\s+\S", zeilen[j]) and len(zeilen[j]) >= 45:
+            continue
+        if _ANKUENDIGUNG_FOLGE.match(zeilen[j]):
             return zeile[-80:]
     return None
 
@@ -235,8 +250,14 @@ _US_NAMEN = "|".join(_US_ANBIETER)
 # "ChatGPT ist nicht DSGVO-konform. Priorisieren Sie EU-konforme …".
 # Woerter wie "aber", "statt", "priorisieren" markieren den Gegensatz.
 _GEGENSATZ = r"\baber\b|\bstatt\b|\bstattdessen\b|\banstelle\b|\bdaher\b|priorisier|bevorzug|\binstead\b|\brather\b|\bprefer"
+# KIS-1302: Steht zwischen US-Name und EU-Begriff ein EU-Werkzeug („Runway
+# … und Amberscript für EU-konform"), gilt die Aussage dem EU-Werkzeug.
+# Der Feldtrenner „·" des R1-Werkzeugblocks beendet die Suche („US-
+# Subprozessoren (Learneo, OpenAI) · EU-Anbieter" ist eine Feldliste,
+# kein Satz).
+_EU_WERKZEUGE = r"Amberscript|Aleph Alpha|DeepL|Mistral|LanguageTool|Auphonic|Duden|Make \(Integromat\)|\bMake\b"
 _US_ALS_EU_RE = re.compile(
-    r"\b(?:" + _US_NAMEN + r")\b(?:(?!\bUS\b|" + _GEGENSATZ + r")[^.!?]){0,140}?(?:" + _EU_BEGRIFF + r")"
+    r"\b(?:" + _US_NAMEN + r")\b(?:(?!\bUS\b|Subprozessor|sub-?processor|" + _GEGENSATZ + r"|" + _EU_WERKZEUGE + r")[^.!?·|]){0,140}?(?:" + _EU_BEGRIFF + r")"
     # Rueckwaerts: "EU-gehostete Alternativen wie Claude" — aber nicht
     # "EU-konforme Alternativen zu ChatGPT" (zu/statt/anstelle/für).
     r"|(?:" + _EU_BEGRIFF + r")(?:(?!\bUS\b|\bzu\b|\bstatt\b|\banstelle\b|\bfür\b|\bto\b|\bof\b)[^.!?\n]){0,80}?\b(?:" + _US_NAMEN + r")\b",
@@ -244,11 +265,59 @@ _US_ALS_EU_RE = re.compile(
 )
 
 
+def _zellen_zusammenfuegen(text: str) -> str:
+    """Tabellenzellen im PDF-Text: weiche Trennstriche raus, „EU-\\nkonforme"
+    wieder ein Wort, kurze Zeilen (Zellenumbrüche) zu einer Zeile. Der
+    S8-Satz in Lauf KIS1275 stand so: „Priori\\xadsieren Sie EU-\\nkonforme
+    Tools wie\\nMicrosoft 365\\nCopilot, Runway\\nund Ambers\\xadcript."."""
+    text = text.replace("­", "")
+    text = re.sub(r"-\n(?=[a-zäöüß])", "-", text)
+    out: List[str] = []
+    anhaengen = False  # eine kurze Zeile zieht auch die nächste zu sich
+    for z in text.split("\n"):
+        s = z.strip()
+        kurz = 0 < len(s) < 25
+        if out and out[-1] and s and (anhaengen or kurz):
+            out[-1] = out[-1] + " " + s
+        else:
+            out.append(z)
+        anhaengen = kurz
+    return "\n".join(out)
+
+
 def _us_werkzeug_als_eu(text: str) -> Optional[str]:
-    m = _US_ALS_EU_RE.search(text)
-    if not m:
+    # KIS-1302: alle Treffer melden — der erste (ein Falschtreffer im
+    # Werkzeugblock) verdeckte in Lauf KIS1275 den echten Fehler in S8.
+    text = _zellen_zusammenfuegen(text)
+    treffer = [re.sub(r"\s+", " ", m.group(0))[:120] for m in _US_ALS_EU_RE.finditer(text)]
+    if not treffer:
         return None
-    return re.sub(r"\s+", " ", m.group(0))[:120]
+    return " | ".join(dict.fromkeys(treffer))
+
+
+# KIS-1302: R1 S. 28 (Lauf KIS1275): „… überhaupt weiter Material zur Verfügung"
+# und direkt darunter „Q1 (Monate 1–3)". Ein Absatz, der ohne Satzzeichen
+# endet, gefolgt von einem Quartals- oder Phasenblock.
+_BLOCKSTART_RE = re.compile(r"^(?:Q[1-4]\b|Phase\s+\d|Monat(?:e)?\s+\d|Quarter\s+[1-4]|Months?\s+\d)")
+
+
+def _satzabbruch_vor_block(text: str) -> Optional[str]:
+    """Nur Fortsetzungszeilen eines Absatzes zählen: Die Zeile davor ist lang
+    und endet ohne Satzzeichen. Eine Überschrift wie „90-Tage-Fahrplan –
+    Entscheidungsfassung" vor „Phase 1" folgt auf einen fertigen Satz."""
+    zeilen = [z.rstrip() for z in text.split("\n")]
+    for i in range(1, len(zeilen) - 1):
+        z = zeilen[i].strip()
+        vorher = zeilen[i - 1].strip()
+        if len(z) < 30 or z[-1] in ".!?:;)»”\"" or z.isupper():
+            continue
+        if not re.search(r"[a-zäöüß]$", z):
+            continue
+        if len(vorher) < 60 or vorher[-1] in ".!?:;)»”\"":
+            continue
+        if _BLOCKSTART_RE.match(zeilen[i + 1].strip()):
+            return z[-80:] + " → " + zeilen[i + 1].strip()[:20]
+    return None
 
 
 # KIS-1284: Zu schmale Tabellenspalten brachen Wörter ohne Trennstrich

@@ -541,7 +541,7 @@ IMPORTANT: '{vendor_audit_status}' refers ONLY to the EU compliance of the AI to
 If a tool (e.g. ChatGPT) was rated RED/non-compliant in Report 1:
 - Mention the GDPR caveat at the FIRST mention in the chapter — not at every subsequent one (KIS-1238: the caveat appeared 7 times in the report).
 - Do NOT make it the primary recommendation.
-- Prioritize EU-compliant alternatives (e.g. Claude, Aleph Alpha, DeepL).
+- Prioritize EU-hosted alternatives (e.g. Aleph Alpha, DeepL, Amberscript). Claude, ChatGPT, Perplexity, Gemini, Midjourney and Runway are US vendors — never call them "EU-compliant" (KIS-1302).
 
 TRADE-OFFS (MANDATORY): Name at least one real trade-off for every major recommendation. Examples: speed vs. quality, automation vs. control, data protection vs. convenience, standardization vs. individuality, investment today vs. benefit later. State trade-offs briefly in the body text, without an extra box. FORBIDDEN: presenting measures as free, risk-free or without tension.
 
@@ -848,6 +848,12 @@ ACTION AREAS:
 
 TOOL RECOMMENDATIONS (summary):
 {s4_tools_summary}
+
+TOOLS AND HOSTING IN THIS SECTION (BINDING, KIS-1302):
+- Tool names only from this list or from the customer's stack: {kuratierte_tools_namen}.
+- The hosting entry per tool is in the curated list below; copy it verbatim. A tool counts as "EU-hosted" or "EU-compliant" only if its row names EU as hosting.
+- ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney and Runway are US vendors: never call them "EU-compliant" or "EU-hosted" — if needed, "US vendor, check DPA".
+{kuratierte_tools}
 
 NO FALSE PRECISION (BINDING): Do not state exact figures, deadlines, market shares, percentages, tool prices or funding amounts unless they appear explicitly in the input or the research. Where exact data is missing, use a range, a qualitative classification or careful wording instead. FORBIDDEN: invented percentages, month counts, euro amounts, rankings or seemingly exact benchmarks.
 

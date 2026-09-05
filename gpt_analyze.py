@@ -12538,7 +12538,7 @@ Für jeden Typ: Fixe Struktur + KI-generierbare Abschnitte identifizieren.'''
                 solution="Automatische Transkription spart Zeit und verbessert Nachvollziehbarkeit.",
                 setup_duration="2-3 Stunden",
                 steps=[
-                    "Tool auswählen (30min): z.B. Otter.ai, Fathom",
+                    "Tool auswählen (30min): z.B. Amberscript (EU-Hosting) oder die Transkription Ihrer Konferenzsoftware",
                     "Test-Meeting (1h): Erste Aufnahme & KI-Auswertung",
                     "Template verfeinern (1h): Anpassung an Ihre Bedürfnisse"
                 ],
@@ -17417,9 +17417,14 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
                 _llm_html,
                 flags=_re_tbl.DOTALL,
             )
-            # Also strip any leftover <h3> headings that referenced the removed table
+            # Also strip any leftover <h3> headings that referenced the removed table.
+            # KIS-1302: nur Überblicks-Überschriften. Die alte Fassung traf
+            # „Fördermittel" und „Förderschwerpunkt" — genau die Pflicht-
+            # Überschriften 2 und 3 aus prompts/de/foerderpotenzial.md, die
+            # in Lauf KIS1275 deshalb fehlten. Nummerierte Überschriften
+            # gehören immer zur Prompt-Struktur und bleiben.
             _llm_html = _re_tbl.sub(
-                r'<h3[^>]*>[^<]*(?:Förder(?:programm|mittel)|Förderschwerpunkt|Programmüberblick|Kernprogramme)[^<]*</h3>\s*',
+                r'<h3[^>]*>(?!\s*\d+\.)[^<]*(?:Programmüberblick|Programmübersicht|Kernprogramme|im Überblick|Übersicht der)[^<]*</h3>\s*',
                 '',
                 _llm_html,
                 flags=_re_tbl.IGNORECASE,
@@ -21221,8 +21226,10 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             # KIS-1246: h2-h4 statt nur h3 — im Lauf 1129 überlebte die
             # Duplikat-Überschrift als Nicht-h3-Variante ("fp_prose head:
             # Kernprogramme für Ihr Profil …") und erschien doppelt im PDF.
+            # KIS-1302: nur Überblicks-Überschriften; nummerierte Pflicht-
+            # Überschriften des Prompts („2. Wie Fördermittel …") bleiben.
             _fp_prose = _re_kis1104.sub(
-                r'<h[234][^>]*>(?:(?!</h[234]>).)*?(?:Kernprogramme|Förder(?:programm|mittel)|Programmüberblick|Core programmes|Funding programm?es?)(?:(?!</h[234]>).)*?</h[234]>\s*',
+                r'<h[234][^>]*>(?!\s*(?:<strong[^>]*>\s*)?\d+\.)(?:(?!</h[234]>).)*?(?:Kernprogramme|Programmüberblick|Programmübersicht|im Überblick|Übersicht der|Core programmes|Programme overview|at a glance)(?:(?!</h[234]>).)*?</h[234]>\s*',
                 '', _fp_prose, flags=_re_kis1104.IGNORECASE | _re_kis1104.DOTALL,
             )
             # Auch <p><strong>-Pseudo-Überschriften und nackten Text am

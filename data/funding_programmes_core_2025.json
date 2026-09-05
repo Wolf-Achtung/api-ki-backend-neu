@@ -982,7 +982,7 @@
     "funding_rate": "call-spezifisch 60–80%",
     "max_amount": "call-abhängig (z. B. Games/XR bis 200.000 €)",
     "focus": "Entwicklung, Vertrieb, Innovation für den audiovisuellen Sektor; Games/XR-Call jährlich",
-    "notes": "Programmperiode bis 2027 (ab 2028 'MEDIA+'); Calls öffnen im Herbst — 2026er Development-Deadlines überwiegend vorbei",
+    "notes": "Programmperiode bis 2027 (ab 2028 'MEDIA+'). Stand 05.09.2026 (Funding & Tenders Portal, Wolf/Perplexity): 2027-Calls (CREA-MEDIA-2027-*) noch nicht veröffentlicht; 2026er Calls öffneten am 30.09.2025. Geschlossen: Slate Development 2026 (03.12.2025), Video Games and Immersive Content 2026 (11.02.2026, bis 200.000 € je Projekt). Offen: Mini-Slate Development 2026 bis 17.09.2026, 17:00 Brüssel. Quellen: https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-details/CREA-MEDIA-2026-DEVMINISLATE ; https://ec.europa.eu/info/funding-tenders/opportunities/docs/2021-2027/crea/wp-call/2026/call-fiche_crea-media-2026-devvgim_en.pdf",
     "priority": 2,
     "provider": "EU Commission",
     "relevance_ki": "Mittel",
@@ -991,13 +991,14 @@
       "kmu"
     ],
     "url": "https://culture.ec.europa.eu/creative-europe",
-    "deadline": "Calls ab Herbst 2026",
-    "deadline_notes": null,
+    "deadline": "Mini-Slate Development 2026: 17.09.2026; Calls 2027 noch offen",
+    "deadline_notes": "Mini-Slate Development 2026 (CREA-MEDIA-2026-DEVMINISLATE) bis 17.09.2026, 17:00 Uhr Brüssel. Slate Development und Games/XR 2026 sind geschlossen; die 2027-Runde war am 05.09.2026 nicht veröffentlicht — nach dem Muster der Vorjahre Öffnung Ende September/Oktober, Prüfung ab Mitte Oktober.",
+    "recheck_after": "2026-10-15",
     "branches": [
       "medien"
     ],
     "branch_exclusive": true,
-    "verified_at": "2026-07-22",
+    "verified_at": "2026-09-05",
     "sparten": [
       "produktion",
       "post_vfx",

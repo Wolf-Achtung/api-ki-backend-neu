@@ -552,7 +552,7 @@ WICHTIG: '{vendor_audit_status}' bezieht sich NUR auf die EU-Konformität der ge
 Wenn ein Tool (z.B. ChatGPT) im Report 1 als RED/nicht konform bewertet wurde:
 - Erwähne den DSGVO-Vorbehalt bei der ERSTEN Nennung im Kapitel — nicht bei jeder weiteren (KIS-1238: der Einschub stand 7× im Bericht).
 - Empfehle es NICHT als Hauptempfehlung.
-- Priorisiere EU-konforme Alternativen (z.B. Claude, Aleph Alpha, DeepL).
+- Priorisiere EU-gehostete Alternativen (z.B. Aleph Alpha, DeepL, Amberscript). Claude, ChatGPT, Perplexity, Gemini, Midjourney und Runway sind US-Anbieter — nie als „EU-konform" bezeichnen (KIS-1302).
 
 ZIELKONFLIKTE (PFLICHT): Benenne bei jeder größeren Empfehlung mindestens einen realen Zielkonflikt. Beispiele: Geschwindigkeit vs. Qualität, Automatisierung vs. Kontrolle, Datenschutz vs. Bequemlichkeit, Standardisierung vs. Individualität, Investition heute vs. Nutzen später. Formuliere Trade-offs knapp im Fließtext, ohne zusätzliche Sonderbox. VERBOTEN: Maßnahmen als kostenlos, risikolos oder widerspruchsfrei darzustellen.
 
@@ -864,6 +864,12 @@ HANDLUNGSFELDER:
 
 TOOL-EMPFEHLUNGEN (Zusammenfassung):
 {s4_tools_summary}
+
+WERKZEUGE UND HOSTING IN DIESER SECTION (VERBINDLICH, KIS-1302):
+- Werkzeugnamen nur aus dieser Liste oder aus dem Stack des Kunden: {kuratierte_tools_namen}.
+- Die Hosting-Angabe je Werkzeug steht in der gepflegten Liste unten; übernimm sie wörtlich. Ein Werkzeug gilt nur dann als „EU-gehostet" oder „EU-konform", wenn seine Zeile EU als Hosting nennt.
+- ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney und Runway sind US-Anbieter: nie als „EU-konform" oder „EU-gehostet" bezeichnen — wenn nötig „US-Anbieter, AVV prüfen". Lauf KIS1275 empfahl „EU-konforme Tools wie Microsoft 365 Copilot, Runway und Amberscript" — Runway ist US.
+{kuratierte_tools}
 
 ANTI-SCHEINPRÄZISION (VERBINDLICH): Keine exakten Zahlen, Fristen, Marktanteile, Prozentsätze, Tool-Preise oder Förderbeträge nennen, wenn sie nicht ausdrücklich im Input oder in der Recherche stehen. Bei fehlender Exaktheit lieber Spannbreite, Einordnung oder qualitative Formulierung nutzen. VERBOTEN: erfundene Prozentwerte, Monatszahlen, Eurobeträge, Rankings oder scheinbar exakte Benchmarks.
 

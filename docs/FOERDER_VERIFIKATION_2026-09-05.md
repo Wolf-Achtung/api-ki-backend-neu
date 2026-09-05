@@ -79,10 +79,29 @@ Frist 31.12.2027, Prüfdatum 05.09.2026. Für die meisten Medienkunden ist
 ProFIT damit kein Weg, die Einführung von KI-Werkzeugen zu finanzieren —
 nur eigene Entwicklungsprojekte.
 
+## Nachtrag: Creative Europe MEDIA (Wolf, Perplexity, nur ec.europa.eu und eacea.ec.europa.eu, 05.09.2026)
+
+Anlass: Der Datensatz sagte „Calls ab Herbst 2026" ohne Datum; Report 1
+zeigte dem VFX-Studio „Games/XR Call jährlich" ohne Frist.
+
+| Call | Kennung | Status | Beleg (Zitat) | URL |
+|---|---|---|---|---|
+| Video Games and Immersive Content Development 2026 | CREA-MEDIA-2026-DEVVGIM | Closed | „Opening date: 30 September 2025 … Deadline date: 11 February 2026, 17:00:00 Brussels time … EUR 200 000 per project" | ec.europa.eu/info/funding-tenders/…/topic-details/CREA-MEDIA-2026-DEVVGIM; Call-Fiche PDF |
+| European Slate Development 2026 | CREA-MEDIA-2026-DEVSLATE | Closed | „Opening date: 30 September 2025 … Deadline date: 03 December 2025" | …/topic-details/CREA-MEDIA-2026-DEVSLATE |
+| European Mini-Slate Development 2026 | CREA-MEDIA-2026-DEVMINISLATE | Offen | „the Call opened on 28/04/2026 … Deadline date: 17 September 2026, 17:00:00 Brussels time" | …/topic-details/CREA-MEDIA-2026-DEVMINISLATE |
+| Alle 2027-Calls | CREA-MEDIA-2027-* | Nicht belegt | Portal-Suche: „No results found"; Themenseiten laden keinen Inhalt; culture.ec.europa.eu/funding/calls filtert nur bis 2026 | Funding & Tenders Portal, Calls-for-proposals-Suche |
+
+Folge in `data/funding_programmes_core_2025.json` (`creative_europe_media`):
+`deadline` nennt die Mini-Slate-Frist 17.09.2026, `deadline_notes` die
+geschlossenen 2026er Calls und die offene 2027-Runde, `verified_at`
+05.09.2026, `recheck_after` 15.10.2026 — die Routine vom 05.11. prüft
+dann, ob die 2027-Calls offen sind (Muster: Öffnung Ende September).
+Nicht eingetragen: ein Datum für 2027, denn es gibt keins.
+
 ## Offen (Handprüfung)
 
-- Creative Europe MEDIA Games/XR (DEVVGIM): nächste Development-Runde ab
-  Herbst 2026 — Cut-off-Datum auf eacea.ec.europa.eu prüfen.
+- Creative Europe MEDIA 2027-Calls: ab Mitte Oktober auf dem Funding &
+  Tenders Portal prüfen (siehe Nachtrag).
 - Drei Einträge ohne Prüfdatum, bewusst zurückgestellt (Sammel- und
   Rahmenprogramme): `digital_verwaltung_itsec`, `esf_plus_digital_skills`,
   `interreg`.

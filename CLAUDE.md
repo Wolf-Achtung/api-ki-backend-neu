@@ -379,8 +379,9 @@ Testlauf KIS1274 (05.09.2026): R1-Förderkapitel und KI-Rechte-Kapitel
 kündigten Listen an, die nicht folgten („folgende Kategorien infrage:",
 dann nichts). Ursache im Förderkapitel: Ein Filter gegen erfundene
 Programme löschte jede HTML-Zeile mit „Digitalprämie" oder „Ihr
-Bundesland" — seit Lauf KIS1269 in jedem Report. Ursache im
-Rechte-Kapitel noch offen.
+Bundesland" — seit Lauf KIS1269 in jedem Report. Die zweite Ursache
+(beide Kapitel) fand erst Lauf KIS1275: der Healer-Budget-Trim, siehe
+KIS-1302.
 
 - `services/foerder_platzhalter.py` ersetzt Platzhalter (echtes Bundesland,
   „Landesprogramme zur Digitalisierung") und löscht nur noch Zeilen mit
@@ -402,6 +403,54 @@ Rechte-Kapitel noch offen.
   Betrag). Tests, die „kein DFFF" prüfen, schneiden diese Zeile ab.
 - Challenge-Banner nimmt die Tageszahl aus dem Inhalt (`CHALLENGE_DAYS`).
 - Test: `tests/test_kis1298_testlauf_1274.py`.
+
+## Der Healer kürzt, was er nicht kennt (KIS-1302)
+
+Testlauf KIS1275 (05.09.2026, nach KIS-1298): Das R1-Förderkapitel verlor
+weiter die Listen der Abschnitte 2, 3 und 5, die Überschriften 2 und 3
+gleich mit, und endete mit einer Überschrift „5.". Das KI-Rechte-Kapitel
+verlor 3-Schritte-Prozess und Checkliste. Lokal reproduziert mit
+`report_healer.heal_report_html` (Segment `team`).
+
+- `apply_segment_budget` (FIX-G) zählte die **deterministische
+  Fördertabelle** (rund 5.000 Zeichen, vorn in `FOERDERPOTENZIAL_HTML`
+  injiziert) gegen das Budget der LLM-Prosa (12.000). Strategie 2 behielt
+  die ersten fünf `<li>` der **ganzen Sektion** — bei vier Listen blieb
+  die erste, die anderen wurden leer. Der Clean-Ending-Check (B38a/B39)
+  schnitt die verwaiste Überschrift an der ersten „Satzgrenze": „5.".
+  Jetzt: Tabellen, `card-nobreak` und `funding-paused-note` werden vor
+  der Messung maskiert und nie gekürzt; jede Liste behält ihre ersten
+  fünf Punkte; eine Überschrift ohne Inhalt am Ende fällt ganz weg
+  (`_strip_trailing_orphan_headings`).
+- `KI_RECHTE_KENNZEICHNUNG_HTML` hatte kein Budget und fiel auf
+  `_default` (team 5.000) — der Prompt erlaubt 450 Wörter plus zwei
+  Listen. Jetzt 5.500/7.000/8.000. **Wer eine Sektion neu einhängt, trägt
+  sie in `SEGMENT_BUDGETS` ein**, sonst kürzt der Default.
+- Der h3-Filter in `gpt_analyze` (Reste der gestrippten LLM-Tabelle)
+  traf „Fördermittel" und „Förderschwerpunkt" — die Pflicht-Überschriften
+  2 und 3 aus `prompts/de/foerderpotenzial.md`. Jetzt nur noch
+  Überblicks-Überschriften, nummerierte nie.
+- Strategiebericht: S8 bekam keinen Faktenblock und nannte Runway
+  „EU-konform"; der S4-Prompt selbst führte Claude als „EU-konforme
+  Alternative". S8 hat jetzt `{kuratierte_tools}` mit Hosting-Regel; die
+  Exec Summary bekommt Stärken und Handlungsfelder aus den
+  Dimensions-Scores (`_r1_staerken_text`, `_r1_handlungsfelder_text`) —
+  `Analysis.meta` hatte die Felder nie, und S1 schrieb „das einzige
+  identifizierte Handlungsfeld: strategische Handlungsfelder". Die
+  Förder-Box auf S. 4 verweist auf Kapitel 7 statt auf „regionale
+  Digitalprämien" (Berlin hat keine).
+- Quellenblock (`div.sources`) mit Liste wird im Enhancer zur Zeile —
+  acht Werkzeugnamen untereinander füllten Strategie S. 21 allein.
+- Wächter neu: „Satzabbruch vor Quartals-/Phasenblock" (R1 S. 28:
+  „… Material zur Verfügung" → „Q1"). Ursache offen — der Text fehlt
+  ohne Spur eines Filters; nächster Lauf zeigt, ob es wiederkommt.
+  `us_werkzeug_als_eu` meldet alle Treffer (der erste verdeckte den
+  echten in S8) und kennt EU-Werkzeuge sowie den Feldtrenner „·".
+- Creative Europe MEDIA: Mini-Slate 2026 bis 17.09.2026, 2027-Calls am
+  05.09.2026 nicht veröffentlicht (`recheck_after` 15.10.2026, Beleg in
+  `docs/FOERDER_VERIFIKATION_2026-09-05.md`). Quick-Win-Prompt nennt
+  Amberscript statt Otter.
+- Test: `tests/test_kis1302_testlauf_1275.py`.
 
 ## Textknoten sind nicht nur Text (KIS-1285)
 

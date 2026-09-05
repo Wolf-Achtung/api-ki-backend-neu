@@ -3009,6 +3009,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
         "GAMECHANGER_HTML": 6500,  # FIX-B36a: was 1500 (!)
         "FOERDERPOTENZIAL_HTML": 6500,  # FIX-B36a: was 5000
+        "KI_RECHTE_KENNZEICHNUNG_HTML": 5500,  # KIS-1302: fiel auf _default, Listen verloren
         "ORG_CHANGE_HTML": 5500,  # FIX-B36a: was 4000
         "BUSINESS_CASE_HTML": 10000,  # FIX-629b
         "PILOT_PLAN_HTML": 3000,  # FIX-B36a: was 1200
@@ -3124,6 +3125,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
         "GAMECHANGER_HTML": 10000,
         "FOERDERPOTENZIAL_HTML": 12000,  # FIX-B22-P2: was 10000
+        "KI_RECHTE_KENNZEICHNUNG_HTML": 7000,  # KIS-1302: Prompt erlaubt 450 Wörter + zwei Listen
         "ORG_CHANGE_HTML": 9000,  # FIX-629
         "BUSINESS_CASE_HTML": 8000,  # FIX-629
         "PILOT_PLAN_HTML": 4000,  # FIX-B36a: was 1800
@@ -3242,6 +3244,7 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
         "RISKS_HTML": 35000,  # B9: Cards+SVG+Heatmap = ~29KB
         "GAMECHANGER_HTML": 12000,
         "FOERDERPOTENZIAL_HTML": 16000,  # FIX-A: was 12000, LLM delivers ~14.6K (4 sections)
+        "KI_RECHTE_KENNZEICHNUNG_HTML": 8000,  # KIS-1302
         "ORG_CHANGE_HTML": 10000,  # FIX-629b
         "BUSINESS_CASE_HTML": 10000,  # FIX-629b
         "PILOT_PLAN_HTML": 5000,  # FIX-B36a: was 2000, observed 4835 chars → trimmed to 1845 (62% lost!)
@@ -3356,6 +3359,74 @@ SEGMENT_BUDGETS: Dict[str, Dict[str, int]] = {
 }
 
 
+# KIS-1302: Lauf KIS1275 — das R1-Förderkapitel verlor die Listen der
+# Abschnitte 2, 3 und 5 und endete mit einer Überschrift „5.". Ursache: Das
+# Budget zählte die deterministische Fördertabelle (rund 5.000 Zeichen)
+# gegen die LLM-Prosa, Strategie 2 behielt die ersten fünf <li> der GANZEN
+# Sektion (nicht je Liste), und der Clean-Ending-Schnitt traf in die letzte
+# Überschrift. Drei Regeln:
+#   1. Deterministische Blöcke (Tabellen, Hinweis-Karten, Pausen-Hinweis)
+#      zählen nicht gegen das Budget und werden nie gekürzt.
+#   2. Eine Liste behält ihre ersten fünf Punkte — jede Liste, nie null.
+#   3. Eine Überschrift ohne Inhalt am Sektionsende fällt ganz weg, sie wird
+#      nicht zu „5." zerschnitten.
+_DET_BLOCK_RE = re.compile(
+    r"<table\b[^>]*>.*?</table>"
+    r"|<div class=\"card-nobreak\">.*?</div>"
+    r"|<p class=\"small muted funding-paused-note\">.*?</p>",
+    re.DOTALL | re.IGNORECASE,
+)
+_DET_PLACEHOLDER = '<i data-ksj-det="{idx}"></i>'
+_TRAILING_ORPHAN_HEADING_RE = re.compile(
+    r"(?:<h[2-6][^>]*>(?:(?!</h[2-6]>).)*</h[2-6]>\s*"
+    r"|<(?:ul|ol)[^>]*>\s*</(?:ul|ol)>\s*"
+    r"|<p[^>]*>\s*</p>\s*)+"
+    r"(?P<tail>(?:\s*</(?:div|section)>)*\s*)$",
+    re.DOTALL | re.IGNORECASE,
+)
+_LIST_BLOCK_RE = re.compile(r"<(ul|ol)\b[^>]*>(.*?)</\1>", re.DOTALL | re.IGNORECASE)
+_LI_RE = re.compile(r"<li\b[^>]*>.*?</li>", re.DOTALL | re.IGNORECASE)
+
+
+def _mask_deterministic_blocks(html: str) -> Tuple[str, List[str]]:
+    """Ersetzt Tabellen und Hinweis-Karten durch leere Marker-Tags."""
+    blocks: List[str] = []
+
+    def _mask(m: "re.Match[str]") -> str:
+        blocks.append(m.group(0))
+        return _DET_PLACEHOLDER.format(idx=len(blocks) - 1)
+
+    return _DET_BLOCK_RE.sub(_mask, html), blocks
+
+
+def _unmask_deterministic_blocks(html: str, blocks: List[str]) -> str:
+    for idx, block in enumerate(blocks):
+        html = html.replace(_DET_PLACEHOLDER.format(idx=idx), block)
+    return html
+
+
+def _cap_list_items(html: str, keep: int = 5) -> str:
+    """Kürzt jede Liste auf ihre ersten ``keep`` Punkte. Keine Liste wird leer."""
+
+    def _cap(m: "re.Match[str]") -> str:
+        items = _LI_RE.findall(m.group(2))
+        if len(items) <= keep:
+            return m.group(0)
+        head = m.group(0)[: m.group(0).lower().index(">") + 1]
+        return head + "".join(items[:keep]) + f"</{m.group(1)}>"
+
+    return _LIST_BLOCK_RE.sub(_cap, html)
+
+
+def _strip_trailing_orphan_headings(html: str) -> str:
+    """Entfernt Überschriften und leere Listen, hinter denen kein Inhalt mehr
+    kommt (Rest eines Budget-Schnitts). Schließende div/section bleiben."""
+    m = _TRAILING_ORPHAN_HEADING_RE.search(html)
+    if not m:
+        return html
+    return html[: m.start()].rstrip() + m.group("tail")
+
+
 def apply_segment_budget(
     sections: Dict[str, str],
     segment: Literal["solo", "team", "kmu"]
@@ -3408,7 +3479,9 @@ def apply_segment_budget(
             sp = SIZE_PROFILES.get(segment, {})
             sp_budgets = sp.get("section_budgets", sp)  # Fallback auf sp selbst falls kein Nesting
             budget = sp_budgets.get(section_name, sp_budgets.get(section_name.upper() + "_HTML", default_budget))
-        current_len = len(html)
+        # KIS-1302: Deterministische Blöcke zählen nicht gegen das Budget.
+        processed, _det_blocks = _mask_deterministic_blocks(html)
+        current_len = len(processed)
 
         if current_len <= budget:
             result[section_name] = html
@@ -3416,11 +3489,9 @@ def apply_segment_budget(
 
         # Over budget - need to trim
         log.info(
-            "[FIX-G] Section '%s' over budget: %d > %d chars",
-            section_name, current_len, budget
+            "[FIX-G] Section '%s' over budget: %d > %d chars (ohne %d deterministische Blöcke)",
+            section_name, current_len, budget, len(_det_blocks)
         )
-
-        processed = html
 
         # Strategy 1: Remove "nice-to-have" phrases
         nice_to_have_patterns = [
@@ -3432,15 +3503,12 @@ def apply_segment_budget(
             if len(processed) > budget:
                 processed = re.sub(pattern, "", processed, flags=re.IGNORECASE)
 
-        # Strategy 2: Shorten bullet lists (keep first 3-5 items)
+        # Strategy 2: Shorten bullet lists — KIS-1302: je Liste die ersten
+        # fünf Punkte behalten. Vorher galt „erste fünf <li> der Sektion":
+        # Bei vier Listen blieb nur die erste, der Rest verlor jeden Punkt
+        # (Lauf KIS1275, R1 S. 27: „kommen … in Frage:" ohne Liste).
         if len(processed) > budget:
-            # Find all <li> items and keep only first N
-            li_pattern = re.compile(r"<li[^>]*>.*?</li>", re.DOTALL)
-            lists_found = list(li_pattern.finditer(processed))
-            if len(lists_found) > 5:
-                # Remove excess list items
-                for li in reversed(lists_found[5:]):
-                    processed = processed[:li.start()] + processed[li.end():]
+            processed = _cap_list_items(processed, keep=5)
 
         # Strategy 3: Truncate long paragraphs
         if len(processed) > budget:
@@ -3484,6 +3552,10 @@ def apply_segment_budget(
                 "[FIX-G] Section '%s' sentence-trimmed: %d -> %d chars (budget=%d)",
                 section_name, current_len, len(processed), budget
             )
+
+        # KIS-1302: Eine Überschrift, deren Liste der Schnitt genommen hat,
+        # fällt ganz weg — sonst kürzt der Clean-Ending-Check sie zu „5.".
+        processed = _strip_trailing_orphan_headings(processed)
 
         # FIX-B38a: Clean Ending Check — korrigierte Trigger-Bedingung
         # B36b prüfte endswith('...') — triggerte NIE, weil:
@@ -3550,7 +3622,8 @@ def apply_segment_budget(
                 section_name, current_len, len(processed)
             )
 
-        result[section_name] = processed
+        # KIS-1302: Tabellen und Hinweis-Karten unverändert zurücksetzen.
+        result[section_name] = _unmask_deterministic_blocks(processed, _det_blocks)
 
     # === FIX-B39: Clean-Ending-Check für ALLE Sections ===
     # B38a fixte nur Sections nach FIX-G Trimming (over-budget).
@@ -3579,6 +3652,11 @@ def apply_segment_budget(
         if _b39_key in _b39_skip_sections:
             continue
 
+        # KIS-1302: verwaiste Überschrift am Ende ganz entfernen statt anschneiden
+        _b39_stripped = _strip_trailing_orphan_headings(_b39_content)
+        if _b39_stripped != _b39_content:
+            _b39_content = _b39_stripped
+            result[_b39_key] = _b39_content
         _b39_text = re.sub(r'</?\w+[^>]*>', '', _b39_content).rstrip()
         if not _b39_text:
             continue
