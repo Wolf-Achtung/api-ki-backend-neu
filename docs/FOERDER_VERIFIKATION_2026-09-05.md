@@ -54,6 +54,31 @@ Bericht, Commit verloren) sowie Interreg „bis 80 %" — „70–85 %" bleibt, 
   Einreichverfahren 2027 geöffnet hat, dann `status: active` und
   `deadline` neu setzen.
 
+## Nachtrag: ProFIT (Wolf, Perplexity, nur ibb.de, 05.09.2026)
+
+Anlass: Die deutsche Datei sagte „bis 80 % Zuschuss, Rest Darlehen", die
+englische „bis 50 % Zuschuss". Beide waren falsch. Der Strategiebericht
+KIS1274 versprach daraus „Förderquoten bis 80 %" für die Einführung von
+KI-Werkzeugen.
+
+| Frage | Antwort (Zitat Richtlinie ProFIT, Stand 01.01.2026) | Fundstelle |
+|---|---|---|
+| Zuschuss industrielle Forschung | Kleine Unternehmen 70 %, mittlere 60 % (Einzelprojekt); im Verbund „KMU und Forschungseinrichtung": „80 % (Zuschussquote)" kleine, „75 %" mittlere | Anhang 1, S. 13 ff. |
+| Zuschuss experimentelle Entwicklung | Regulär Darlehen: „als Darlehen vorrangig für KMU in den Phasen der experimentellen Entwicklung …"; Zuschuss nur „im Rahmen von thematischen Aufrufen (Calls)". Produktseite: „nur bei KMU max. 80 % als Darlehen" | Ziffer 5.2, Produktseite |
+| Höchstbeträge | „Zuschüsse … auf insgesamt 500.000 EUR je Projekt bzw. Projektpartner begrenzt", „Darlehen beträgt maximal 1.000.000 EUR je Projekt" | Ziffer 5.2.1, S. 6 |
+| Geltung | „treten am 01.01.2026 in Kraft", „mit Ablauf des 31. Dezember 2027 außer Kraft" (Anträge bis dahin) | Ziffer 8, S. 12 |
+| KI-Werkzeuge einführen ohne Forschungsanteil | Nicht belegt. „Nicht erfasst sind routinemäßige Änderungen an bestehenden Produkten, Prozessen oder Dienstleistungen." Projekte „müssen erkennbare technische Risiken beinhalten … und zu technisch innovativen Lösungen mit Alleinstellungsmerkmale führen." | Ziffer 2.1.2, S. 2–3; Ziffer 4.1/4.2, S. 4 |
+
+Quelle: https://www.ibb.de/media/dokumente/foerderprogramme/wirtschaftsfoerderung/profit/profit-projektfoerderung/profit_richtlinie.pdf
+und https://www.ibb.de/de/foerderprogramme/pro-fit-projektfinanzierung.html
+
+Folge in den Daten (beide Dateien): Fördersatz differenziert, Höchstbeträge,
+Fokus „F&E mit technischem Risiko — Einführung vorhandener Werkzeuge nicht
+förderfähig", KI-Relevanz von „Sehr hoch" auf „Mittel", Priorität 1 → 2,
+Frist 31.12.2027, Prüfdatum 05.09.2026. Für die meisten Medienkunden ist
+ProFIT damit kein Weg, die Einführung von KI-Werkzeugen zu finanzieren —
+nur eigene Entwicklungsprojekte.
+
 ## Offen (Handprüfung)
 
 - Creative Europe MEDIA Games/XR (DEVVGIM): nächste Development-Runde ab

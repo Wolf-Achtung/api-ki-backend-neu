@@ -285,21 +285,21 @@
     "country_code": "DE",
     "status": "active",
     "funding_type": "Zuschuss + Darlehen",
-    "funding_rate": "bis 80% (Zuschuss), Rest Darlehen",
-    "max_amount": "variabel, projektabhängig",
-    "focus": "F&E, Innovation, Digitalisierung, KI-Projekte",
+    "funding_rate": "Zuschuss 60–70 % (Einzelprojekt), bis 80 % nur kleine Unternehmen im Verbund mit Forschungseinrichtung; experimentelle Entwicklung: Darlehen bis 80 %",
+    "max_amount": "Zuschuss bis 500.000 € je Projekt/Partner, Darlehen bis 1 Mio €",
+    "focus": "F&E-Projekte mit technischem Risiko und Alleinstellungsmerkmal (industrielle Forschung, experimentelle Entwicklung); die Einführung vorhandener Standardsoftware oder KI-Werkzeuge ist nicht förderfähig",
     "suitable_for": [
       "team",
       "kmu"
     ],
-    "notes": "Berlin-spezifisch, für innovative F&E-Projekte mit Technologie-Schwerpunkt",
-    "relevance_ki": "Sehr hoch – KI-Projekte explizit förderfähig",
-    "priority": 1,
+    "notes": "Belegt 05.09.2026 (ibb.de, Richtlinie ProFIT, Stand 01.01.2026): Zuschuss in der industriellen Forschung 70 % (kleine) / 60 % (mittlere Unternehmen), im Verbund mit Forschungseinrichtung 80 % / 75 %; experimentelle Entwicklung regulär als Darlehen bis 80 %, Zuschuss nur in thematischen Calls. Zuschuss max. 500.000 € je Projekt bzw. Partner, Darlehen max. 1 Mio €. Projekte brauchen erkennbare technische Risiken und eine innovative Lösung mit Alleinstellungsmerkmal — routinemäßige Änderungen und die Einführung bestehender Werkzeuge sind ausgeschlossen. Richtlinie gilt 01.01.2026 bis 31.12.2027 (Anträge bis dahin).",
+    "relevance_ki": "Mittel – nur eigene KI-Entwicklung mit technischem Risiko, nicht die Einführung von KI-Werkzeugen",
+    "priority": 2,
     "url": "https://www.ibb.de/de/foerderprogramme/pro-fit-projektfinanzierung.html",
     "provider": "IBB (Investitionsbank Berlin)",
-    "deadline": null,
-    "deadline_notes": "Laufend verfügbar für Berliner Unternehmen. Zuschüsse und zinsgünstige Darlehen für FuE und Innovation.",
-    "verified_at": "2026-09-03"
+    "deadline": "31.12.2027",
+    "deadline_notes": "Laufende Antragstellung; Richtlinie 2026 gilt für Anträge bis 31.12.2027.",
+    "verified_at": "2026-09-05"
   },
   {
     "id": "bafa_beratung",

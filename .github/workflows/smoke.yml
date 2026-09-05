@@ -7,7 +7,7 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,10 +27,22 @@ jobs:
           fi
           echo "::notice ::Using \$BASE_URL for smoke tests"
 
-      - name: Ping /api/healthz
+      # KIS-1300: Ein Push auf main loest den Railway-Deploy aus. Der Smoke
+      # lief eine Minute nach dem Merge gegen den Neustart und scheiterte
+      # mit curl-Exit 22 (Lauf 7787595, 05.09.2026 13:42 UTC). Deshalb bis
+      # zu vier Minuten auf /api/healthz warten, bevor geprueft wird.
+      - name: Wait for /api/healthz (deploy window)
         run: |
-          set -e
-          curl -fsS "$BASE_URL/api/healthz" -o /dev/null
+          for i in $(seq 1 24); do
+            if curl -fsS --max-time 10 "$BASE_URL/api/healthz" -o /dev/null; then
+              echo "healthz ok after $i attempt(s)"
+              exit 0
+            fi
+            echo "healthz not ready (attempt $i/24), waiting 10s"
+            sleep 10
+          done
+          echo "::error ::/api/healthz not reachable within 4 minutes"
+          exit 22
 
       - name: Ping /api/smoke
         run: |

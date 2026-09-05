@@ -67,20 +67,20 @@
         "Berlin"
       ],
       "funding_type_en": "Grant + Loan",
-      "funding_rate_en": "up to 50% grant (plus subsidised loans)",
+      "funding_rate_en": "grant 60–70% (single project), up to 80% only for small companies in a consortium with a research institution; experimental development: loan up to 80%",
       "max_amount": 500000,
       "max_amount_en": "grant up to €500,000, loans up to €1m",
-      "focus_en": "R&D, innovation, digitalization, AI projects",
-      "summary_en": "Berlin's primary R&D and innovation funding program for technology-focused projects including AI and digitalization initiatives.",
+      "focus_en": "R&D projects with technical risk and a unique selling point (industrial research, experimental development); rolling out existing standard software or AI tools is not eligible",
+      "summary_en": "Berlin's R&D funding programme (IBB). Grants for industrial research; experimental development regularly as a loan, grants only in thematic calls. Projects must carry recognisable technical risk and lead to an innovative solution with a unique selling point — routine changes and the introduction of existing tools are excluded.",
       "suitable_for": [
         "team",
         "kmu"
       ],
-      "notes_en": "New guideline since 1 Jan 2026: grant ceiling raised from €400k to €500k, simplified reporting, longer loan terms (early-stage up to 10 years, unsecured).",
-      "relevance_ki": "high",
-      "priority": 1,
-      "url": "https://www.ibb.de",
-      "last_verified": "2026-08-05"
+      "notes_en": "Verified 5 Sep 2026 on ibb.de (ProFIT guideline dated 1 Jan 2026): grant 70% (small) / 60% (medium) in industrial research, 80% / 75% in a consortium with a research institution; experimental development as a loan up to 80%, grants only in thematic calls. Grant max. €500,000 per project or partner, loan max. €1m. Guideline valid 1 Jan 2026 to 31 Dec 2027.",
+      "relevance_ki": "medium",
+      "priority": 2,
+      "url": "https://www.ibb.de/de/foerderprogramme/pro-fit-projektfinanzierung.html",
+      "last_verified": "2026-09-05"
     },
     {
       "id": "coaching_bonus_berlin",
