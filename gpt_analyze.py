@@ -24395,7 +24395,9 @@ def _auto_trigger_strategy_replay(briefing_id: int, run_id: str) -> None:
     try:
         from models import Briefing, StrategyQuestion, StrategyReport, Analysis
         br = _db.get(Briefing, briefing_id)
-        if not br or getattr(br, "source", "") != "admin_replay":
+        # KIS-1308: auch Testläufe aus einem Profil (source='admin_profile',
+        # routes/admin_testrun.py) bekommen den Strategiebericht automatisch.
+        if not br or getattr(br, "source", "") not in ("admin_replay", "admin_profile"):
             return
         sq = (_db.query(StrategyQuestion)
               .filter(StrategyQuestion.briefing_id == briefing_id).first())
