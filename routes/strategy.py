@@ -228,10 +228,32 @@ def _validate_questions(q: StrategyQuestionsCreate) -> Optional[str]:
 # ENDPOINTS: QUESTIONS
 # =============================================================================
 
+def _admin_briefing_mail_task(briefing_id: int) -> None:
+    """KIS-1299: Admin-Briefing-Mail (Fragebogen 1 + 2) nach Abgabe des
+    Strategie-Fragebogens im Formular-Pfad.
+
+    Der Chat-Pfad schickt diese Mail am Chat-Ende (routes/chat.py). Der
+    Formular-Pfad speicherte nur — Testlauf KIS1274: das Briefing-PDF an
+    bewertung@ trug nur Fragebogen 1. Eigene DB-Session, weil die
+    Request-Session beim Hintergrund-Task schon geschlossen ist.
+    """
+    from core.db import SessionLocal
+    db = SessionLocal()
+    try:
+        from services.strategy_pipeline import _send_admin_briefing_email
+        _send_admin_briefing_email(briefing_id, db)
+    except Exception as exc:  # Fire-and-forget: nie den Request brechen
+        log.warning("[KIS-1299] Admin-Briefing-Mail nach FB2 fehlgeschlagen (briefing_id=%d): %s",
+                    briefing_id, exc)
+    finally:
+        db.close()
+
+
 @router.post("/questions/{briefing_id}", response_model=StrategyQuestionsResponse)
 async def save_strategy_questions(
     briefing_id: int,
     questions: StrategyQuestionsCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     principal: AuthenticatedPrincipal = Depends(step5_principal),
 ):
@@ -315,6 +337,9 @@ async def save_strategy_questions(
         log.info("[Strategy] Created strategy_reports entry for briefing_id=%d", briefing_id)
 
     db.commit()
+
+    # KIS-1299: Briefing-PDF mit beiden Fragebögen an die Admin-Adresse.
+    background_tasks.add_task(_admin_briefing_mail_task, briefing_id)
 
     return StrategyQuestionsResponse(
         briefing_id=briefing_id,
@@ -643,6 +668,35 @@ async def admin_unlock_strategy(
     log.info("[Strategy] Admin unlocked briefing_id=%d (beta)", briefing_id)
 
     return {"briefing_id": briefing_id, "payment_status": "beta", "message": "Beta freigeschaltet"}
+
+
+@router.post("/admin/briefing-mail/{briefing_id}")
+async def admin_resend_briefing_mail(
+    briefing_id: int,
+    _admin: None = Depends(require_admin_key),
+    db: Session = Depends(get_db),
+):
+    """KIS-1299: Briefing-PDF (Fragebogen 1 + 2) für eine Briefing-ID
+    nachträglich an bewertung@ki-sicherheit.jetzt schicken.
+
+    Der Admin-JSON-Endpunkt ist in Produktion abgeschaltet
+    (ENABLE_ADMIN_ROUTES=0); Rohantworten gibt es so als lesbares PDF.
+    Briefing-ID ist die Datenbank-ID, nicht die KIS-Nummer aus dem
+    PDF-Namen (KIS = ID + REPORT_DISPLAY_OFFSET).
+    """
+    briefing = db.query(Briefing).filter(Briefing.id == briefing_id).first()
+    if not briefing:
+        raise HTTPException(status_code=404, detail="Briefing nicht gefunden")
+    sq = db.query(StrategyQuestion).filter(StrategyQuestion.briefing_id == briefing_id).first()
+    from services.strategy_pipeline import _send_admin_briefing_email
+    _send_admin_briefing_email(briefing_id, db)
+    log.info("[KIS-1299] Admin-Briefing-Mail nachgesendet für briefing_id=%d (FB2=%s)",
+             briefing_id, bool(sq))
+    return {
+        "briefing_id": briefing_id,
+        "fragebogen_2": bool(sq),
+        "message": "Briefing-PDF an die Admin-Adresse gesendet (sofern E-Mails aktiv sind)",
+    }
 
 
 @router.post("/admin/reset-status/{briefing_id}")
