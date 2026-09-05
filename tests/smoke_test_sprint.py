@@ -290,9 +290,9 @@ def test_funding():
 
     # Check funding JSON files exist
     funding_files = [
-        "data/funding/funding_de.json",
+        "data/funding_programmes_core_2025.json",
         "data/funding/funding_de_en.json",
-        "data/funding/funding_eu_core.json",
+        "data/funding/funding_eu_core_en.json",
     ]
 
     for path in funding_files:

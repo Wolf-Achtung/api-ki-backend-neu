@@ -132,7 +132,7 @@
       "notes_en": "Funds technology transfer with research institutions in Berlin/Brandenburg (incl. AI projects). Programme runs until 31 Dec 2026 — applications only possible this year; project start only after approval.",
       "relevance_ki": "high",
       "priority": 2,
-      "url": "https://www.berlin.de/sen/wirtschaft/wirtschaft/foerderprogramme/transfer-bonus/",
+      "url": "https://www.ibb.de/de/foerderprogramme/transfer-bonus.html",
       "last_verified": "2026-08-05"
     },
     {
@@ -158,7 +158,7 @@
       "notes_en": "Only external R&D/development services (prototyping, testing, design); pure software development is NOT eligible. Applications go to Projektträger Bayern (PTB).",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.bayern-innovativ.de/innovationsgutschein",
+      "url": "https://www.bayern-innovativ.de/leistungen/projekttraeger/projekttraeger-bayern/innovationsgutschein-bayern",
       "last_verified": "2026-08-05"
     },
     {
@@ -182,6 +182,8 @@
         "kmu"
       ],
       "notes_en": "⚠️ Temporary application freeze since 7 July 2026 (federal budget exhausted, all project forms). Resumption depends on the 2027 federal budget, targeted for early 2027 — no new applications until then.",
+      "status": "paused",
+      "recheck_after": "2027-01-15",
       "relevance_ki": "high",
       "priority": 3,
       "url": "https://www.zim.de",
@@ -253,7 +255,7 @@
       "max_amount": 5000000,
       "max_amount_en": "DFFF I up to €5m; DFFF II (VFX/production services) up to €25m",
       "focus_en": "Theatrical film production; digitalized production processes eligible",
-      "summary_en": "Federal grant (BKM, administered by the FFA) reimbursing 30% of German production spend since the 2025 film law reform; rolling applications up to 6 weeks before principal photography. A merged DFFF/GMPF 'incentive funding' guideline was announced for mid-2026 — check ffa.de for the current state.",
+      "summary_en": "Federal grant (BKM, administered by the FFA) reimbursing 30% of German production spend since the 2025 film law reform; rolling applications up to 6 weeks before principal photography. DFFF and GMPF remain two separate programmes under the umbrella term 'incentive funding' (no merger); the DFFF guideline 2026 runs from 1 Jan to 31 Dec 2026.",
       "suitable_for": [
         "team",
         "kmu"
@@ -261,11 +263,13 @@
       "branchen": [
         "medien"
       ],
-      "notes_en": "BKM programme administered by FFA; rolling submission until 6 weeks before principal photography. NEW: FFA service portal open since 22 July 2026 for DFFF I/GMPF applications — email applications only until 31 Aug 2026, portal-only from 1 Sep 2026 (portal.ffa.de). Incentive funding (DFFF I/II + GMPF) doubled to ~€250m/year.",
+      "notes_en": "⚠️ Application freeze since 20 Aug 2026: the 2026 application volume of DFFF and GMPF (€30m) is exhausted; the FFA no longer accepts applications for productions starting in 2026. Applications for productions starting in 2027 are expected to open in November 2026 via the FFA service portal. Verified 5 Sep 2026 on ffa.de/dfff-i.html (update of 20 Aug 2026).",
+      "status": "paused",
+      "recheck_after": "2026-11-01",
       "relevance_ki": "medium",
       "priority": 1,
-      "url": "https://www.dfff-ffa.de",
-      "last_verified": "2026-08-05"
+      "url": "https://www.ffa.de/dfff-i.html",
+      "last_verified": "2026-09-05"
     },
     {
       "id": "ffa_produktion",
@@ -311,7 +315,7 @@
       "max_amount": 20000000,
       "max_amount_en": "series up to €20m per season; non-theatrical films up to €5m",
       "focus_en": "High-end series and films with a high VFX/post-production share",
-      "summary_en": "Guideline of the Federal Commissioner for Culture and the Media (BKM), administered by the FFA — relevant for high-end series and VFX/post-heavy productions; from 2026 a joint budget with the DFFF (approx. €250m/year).",
+      "summary_en": "Guideline of the Federal Commissioner for Culture and the Media (BKM), administered by the FFA — relevant for high-end series and VFX/post-heavy productions. Separate programme from the DFFF (no merger); the GMPF guideline 2026 runs from 1 Jan to 31 Dec 2026.",
       "suitable_for": [
         "team",
         "kmu"
@@ -319,11 +323,13 @@
       "branchen": [
         "medien"
       ],
-      "notes_en": "BKM guideline administered by FFA; for high-end series and VFX/post-heavy productions. Shared budget with DFFF (~€250m/year, doubling confirmed, budget freeze lifted); applications via the FFA service portal since 22 July 2026 (email transition only until 31 Aug 2026).",
+      "notes_en": "⚠️ Application freeze since 20 Aug 2026: the 2026 application volume of DFFF and GMPF (€30m) is exhausted; the FFA no longer accepts applications for productions starting in 2026. Applications for productions starting in 2027 are expected to open in November 2026 via the FFA service portal. Verified 5 Sep 2026 on ffa.de/german-motion-picture-fund-gmpf.html (update of 20 Aug 2026).",
+      "status": "paused",
+      "recheck_after": "2026-11-01",
       "relevance_ki": "medium",
       "priority": 2,
-      "url": "https://www.bmwk.de",
-      "last_verified": "2026-08-05"
+      "url": "https://www.ffa.de/german-motion-picture-fund-gmpf.html",
+      "last_verified": "2026-09-05"
     },
     {
       "id": "games_bund",

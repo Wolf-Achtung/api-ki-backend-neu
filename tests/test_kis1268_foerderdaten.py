@@ -19,7 +19,9 @@ import pytest
 REPO = Path(__file__).resolve().parent.parent
 KERN = REPO / "data" / "funding_programmes_core_2025.json"
 FALLBACK = REPO / "data" / "funding_programs.json"
-DE = REPO / "data" / "funding" / "funding_de.json"
+# KIS-1297: data/funding/funding_de.json las kein Report — geloescht. Die
+# zweite gepflegte Datei ist jetzt die englische Programmliste.
+DE = REPO / "data" / "funding" / "funding_de_en.json"
 
 
 def _progs(pfad: Path):
@@ -79,7 +81,7 @@ class TestZimAntragsstopp:
 
     def _zim(self, pfad: Path):
         for p in _progs(pfad):
-            if "ZIM" in str(p.get("title") or p.get("name") or ""):
+            if "ZIM" in str(p.get("title") or p.get("name") or p.get("name_de") or ""):
                 return p
         return None
 

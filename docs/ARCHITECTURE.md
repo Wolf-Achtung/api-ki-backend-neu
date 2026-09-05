@@ -70,13 +70,14 @@
   - size_mismatches
 - hard_stop_if_invalid() prevents bad reports
 
-### 6. Funding Service (services/funding_service.py)
-- Multi-country/EU support
-- Size-aware filtering
-- Routing logic:
-  - DE (lang=de) → funding_de
-  - EN + country=DE → funding_de_en
-  - EN + country≠DE → funding_eu_core
+### 6. Funding (services/funding_recommender.py, services/funding_service_en.py)
+- Size-, region- and sparte-aware filtering; one status rule (`ist_beantragbar`)
+- Routing logic (see docs/FUNDING_ROUTING.md):
+  - DE (lang=de) → data/funding_programmes_core_2025.json
+  - EN + country=DE → data/funding/funding_de_en.json
+  - EN + country≠DE → data/funding/funding_eu_core_en.json
+- `services/funding_service.py` and `data/funding/funding_de.json` were
+  removed on 2026-09-05 (no report read them)
 
 ## Data Flow
 
