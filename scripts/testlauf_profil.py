@@ -7,10 +7,11 @@ Schickt ein Profil im Format der Gold-Profile an
 mit derselben Regel wie der Endpunkt, damit ein Tippfehler nicht erst in
 Produktion auffällt.
 
-Beispiel:
+Beispiel (im Repo-Verzeichnis, mit ``python3`` — braucht nur die
+Standardbibliothek, kein installiertes Backend):
 
     export STRATEGY_ADMIN_KEY=…
-    python scripts/testlauf_profil.py data/test_profiles_gold/medien_verlag_bayern_kmu_testlauf.json \
+    python3 scripts/testlauf_profil.py data/test_profiles_gold/medien_verlag_bayern_kmu_testlauf.json \
         --email wolf@hohl.rocks
 
 ``--check`` prüft nur, ohne zu senden. ``--base-url`` überschreibt die
@@ -20,7 +21,9 @@ mitten in der Generierung bricht sie ab.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
+import logging
 import os
 import sys
 import urllib.error
@@ -45,18 +48,30 @@ def main() -> int:
     strategy = None if args.no_strategy else profil.get("strategy_answers")
 
     sys.path.insert(0, str(ROOT))
-    # Lokal ohne App-Settings (JWT_SECRET, DATABASE_URL) prüft profil_pruefen
-    # nur Fragebogen 1; Fragebogen 2 prüft dann der Endpunkt selbst.
-    from routes.admin_testrun import profil_pruefen
+    # KIS-1310: Die Prüfung braucht kein FastAPI und keine App-Settings
+    # (services/profil_pruefung.py). Lokal prüft sie Fragebogen 1 vollständig;
+    # Fragebogen 2 prüft der Endpunkt selbst, wenn routes.strategy hier
+    # nicht ladbar ist. Import-Warnungen anderer Module (tavily, httpx)
+    # bleiben still — sie betreffen das Senden nicht.
+    logging.disable(logging.WARNING)
+    try:
+        from services.profil_pruefung import profil_pruefen
+    except Exception as exc:  # Repo unvollständig oder falsches Verzeichnis
+        print(f"Vorab-Prüfung übersprungen ({type(exc).__name__}: {exc}) — der Endpunkt prüft.")
+        profil_pruefen = None
 
-    fehler = profil_pruefen(answers, strategy)
-    if fehler:
-        print("Profil nicht einspielbar:")
-        for f in fehler:
-            print("  -", f)
-        return 1
-    print(f"Profil geprüft: {profil.get('profile_id', Path(args.profil).stem)} — "
-          f"{len(answers)} Antworten, FB2: {'ja' if strategy else 'nein'}")
+    if profil_pruefen is not None:
+        fehler = profil_pruefen(answers, strategy)
+        if fehler:
+            print("Profil nicht einspielbar:")
+            for f in fehler:
+                print("  -", f)
+            return 1
+        fb2_hinweis = ""
+        if strategy and importlib.util.find_spec("fastapi") is None:
+            fb2_hinweis = " (Fragebogen 2 prüft der Endpunkt — FastAPI fehlt lokal)"
+        print(f"Profil geprüft: {profil.get('profile_id', Path(args.profil).stem)} — "
+              f"{len(answers)} Antworten, FB2: {'ja' if strategy else 'nein'}{fb2_hinweis}")
     if args.check:
         return 0
 

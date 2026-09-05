@@ -628,13 +628,23 @@ Deckblatt des Strategieberichts verlor seinen Score (Lauf 1269).
   Bundesland-Code, FB2-Regeln. Aufruf über das Skript:
 
   ```bash
+  cd ~/api-ki-backend-neu && git pull
   export STRATEGY_ADMIN_KEY=…
-  python scripts/testlauf_profil.py data/test_profiles_gold/medien_verlag_bayern_kmu_testlauf.json --email wolf@hohl.rocks
+  python3 scripts/testlauf_profil.py data/test_profiles_gold/medien_verlag_bayern_kmu_testlauf.json --email wolf@hohl.rocks
   ```
 
-  `--check` prüft nur. Das Profil `medien_verlag_bayern_kmu_testlauf`
-  (Fachverlag, Bayern, 11–100 Mitarbeitende, FB2-Budget über FB1) ist der
-  erste Lauf außerhalb des Post/VFX-Pfads der Läufe KIS1272–1279.
+  `--check` prüft nur. Das Skript braucht nur die Standardbibliothek
+  (KIS-1310): Die Prüfung liegt in `services/profil_pruefung.py`, ohne
+  FastAPI und ohne App-Settings; der Endpunkt re-exportiert sie. Fehlt
+  FastAPI lokal, prüft der Endpunkt Fragebogen 2 selbst — das Skript sagt
+  das. Der erste Lauf auf dem Mac scheiterte an `routes.admin_testrun`
+  (`No module named 'fastapi'`); Test:
+  `tests/test_kis1310_skript_ohne_backend.py` startet das Skript mit
+  `python3 -I -S`. Zwei Profile: `medien_verlag_bayern_kmu_testlauf`
+  (Fachverlag, Bayern, 11–100 Mitarbeitende, FB2-Budget über FB1) und
+  `medien_motion_social_muenchen_testlauf` (Motion-Design/Social-Media,
+  München, Content Creation) — beide außerhalb des Post/VFX-Pfads der
+  Läufe KIS1272–1279.
 - `POST /api/strategy/admin/briefing-mail/{briefing_id}` (KIS-1299) —
   schickt das Briefing-PDF mit Fragebogen 1 und 2 an
   bewertung@ki-sicherheit.jetzt. Admin-Key per Header `X-Admin-Key`.
