@@ -26,7 +26,7 @@ def profil():
 
 class TestProfil:
     def test_profil_ist_einspielbar(self, profil):
-        from routes.admin_testrun import profil_pruefen
+        from services.profil_pruefung import profil_pruefen
         assert profil_pruefen(profil["answers"], profil["strategy_answers"]) == []
 
     def test_profil_ist_ein_anderer_pfad(self, profil):
@@ -59,7 +59,7 @@ class TestMotionSocialProfil:
         return json.loads(p.read_text(encoding="utf-8"))
 
     def test_einspielbar(self, motion):
-        from routes.admin_testrun import profil_pruefen
+        from services.profil_pruefung import profil_pruefen
         assert profil_pruefen(motion["answers"], motion["strategy_answers"]) == []
 
     def test_pfad_und_sparte(self, motion):
@@ -77,26 +77,26 @@ class TestMotionSocialProfil:
 
 class TestPruefung:
     def test_pflichtfeld_fehlt(self, profil):
-        from routes.admin_testrun import profil_pruefen
+        from services.profil_pruefung import profil_pruefen
         a = dict(profil["answers"])
         a.pop("hauptleistung")
         fehler = profil_pruefen(a, None)
         assert any("hauptleistung" in f for f in fehler)
 
     def test_unbekannter_enum_wert(self, profil):
-        from routes.admin_testrun import profil_pruefen
+        from services.profil_pruefung import profil_pruefen
         a = dict(profil["answers"])
         a["bundesland"] = "bayern"
         assert any("bundesland" in f for f in profil_pruefen(a, None))
 
     def test_fb2_regeln(self, profil):
-        from routes.admin_testrun import profil_pruefen
+        from services.profil_pruefung import profil_pruefen
         s = dict(profil["strategy_answers"])
         s["s1_budget"] = "viel"
         assert any("s1_budget" in f for f in profil_pruefen(profil["answers"], s))
 
     def test_slider_bereich(self, profil):
-        from routes.admin_testrun import profil_pruefen
+        from services.profil_pruefung import profil_pruefen
         a = dict(profil["answers"])
         a["digitalisierungsgrad"] = 12
         assert any("digitalisierungsgrad" in f for f in profil_pruefen(a, None))
