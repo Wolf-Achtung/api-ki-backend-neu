@@ -64,6 +64,9 @@ class TestKandidatenliste:
         assert "musikfonds" not in progs
         assert progs["initiative_musik"]["sparten"] == ["musik_audio"] and progs["initiative_musik"]["branch_exclusive"] is True
         assert progs["deutscher_verlagspreis"]["funding_type"] == "Preisgeld"
+        # Entscheidung Wolf 05.09.2026: bis zur Wiedervorlage 01.06.2027 pausiert
+        assert progs["deutscher_verlagspreis"]["status"] == "paused"
+        assert progs["deutscher_verlagspreis"]["recheck_after"] == "2027-06-01"
         assert progs["digitalbonus_bayern"]["status"] == "active" and progs["digitalbonus_bayern"]["deadline"] == "31.12.2027"
 
 

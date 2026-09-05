@@ -110,7 +110,8 @@ Merkregeln:
   Basis-Blacklist, denn der Enforcer filtert Digitalbonus außerhalb
   Bayerns bedingt, nicht als totes Programm. Neu seit dem Faktencheck:
   Initiative Musik (Exportförderung, `musik_audio`) und Deutscher
-  Verlagspreis (Preisgeld, `verlag_publishing`). Musikfonds abgelehnt:
+  Verlagspreis (Preisgeld, `verlag_publishing`; bis zur Wiedervorlage am
+  01.06.2027 auf `paused`, Bewerbung nur im Juli). Musikfonds abgelehnt:
   fördert Kunstprojekte, Antragsrecht von Unternehmen nicht belegt.
 - ZIM steht bis zur Wiedervorlage am 15.01.2027 auf `paused` und fällt
   aus allen Empfehlungen. Der Förder-Radar erinnert ab diesem Datum.
