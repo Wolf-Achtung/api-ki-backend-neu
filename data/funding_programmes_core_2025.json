@@ -236,24 +236,24 @@
     "title": "Digitalbonus Bayern",
     "region": "Deutschland (Bayern)",
     "country_code": "DE",
-    "status": "expired",
+    "status": "active",
     "funding_type": "Zuschuss",
-    "funding_rate": "bis 50%",
-    "max_amount": "Standard: bis 10.000 € / Plus: bis 50.000 €",
+    "funding_rate": "bis 50 %",
+    "max_amount": "7.500 € (Standard), 30.000 € (Plus)",
     "focus": "Digitalisierung, IT-Sicherheit, KI-Einführung, Hard-/Software",
     "suitable_for": [
       "solo",
       "team",
       "kmu"
     ],
-    "notes": "Status 'expired' aus fruehrerer Pruefung uebernommen. Die offizielle Programmseite ist am 03.09.2026 wieder erreichbar — Programmstatus vor Wiederaufnahme in Reports gegen die Richtlinie pruefen.",
+    "notes": "Belegt 05.09.2026 (FAQ, Förderprogramm). Nur Gewerbebetriebe mit Betriebsstätte in Bayern, < 50 MA; Freie Berufe und gGmbH nicht antragsberechtigt.",
     "relevance_ki": "Sehr hoch – explizit für Digitalisierung und KI-Einführung",
     "priority": 1,
     "url": "https://www.stmwi.bayern.de/foerderungen/digitalbonus-bayern/",
     "provider": "Bayerisches Staatsministerium für Wirtschaft",
-    "deadline": null,
-    "deadline_notes": "Laufend verfügbar. Standard: bis 10.000€ (50%), Plus: bis 50.000€ (50%). Antrag über Bezirksregierung. [KIS-1263] Laut Runtime-Blacklist (b25_enforcer, FIX-B26) ausgelaufen — bei Neuauflage status=active setzen.",
-    "verified_at": "2026-09-03"
+    "deadline": "31.12.2027",
+    "deadline_notes": "monatliches Antragskontingent, Start am ersten Werktag 10 Uhr; Laufzeit bis 31.12.2027",
+    "verified_at": "2026-09-05"
   },
   {
     "id": "invest_bw_digital_ki",
@@ -1030,6 +1030,70 @@
     "verified_at": "2026-07-23",
     "sparten": [
       "produktion"
+    ]
+  },
+  {
+    "id": "initiative_musik",
+    "title": "Initiative Musik – Internationale Exportförderung für Musikunternehmen",
+    "region": "Deutschland (bundesweit)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Zuschuss",
+    "funding_rate": "bis 60 % (degressiv)",
+    "max_amount": "20.000 € je Antrag, 35.000 € je Jahr",
+    "focus": "Exportvorhaben von KMU und Selbständigen der Musikwirtschaft (Labels, Verlage, Produzent:innen, Dienstleister mit internationaler Ausrichtung); nicht rückzahlbarer Zuschuss",
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
+    "notes": "Belegt 05.09.2026 (Programmbeschreibung, FAQ). Clubs, Festivals, Veranstalter nicht antragsberechtigt.",
+    "priority": 2,
+    "provider": "Initiative Musik gGmbH (BKM)",
+    "recheck_after": "2027-01-15",
+    "relevance_ki": "mittel",
+    "url": "https://www.initiative-musik.de/exportfoerderung/",
+    "verified_at": "2026-09-05",
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "deadline": "",
+    "deadline_notes": "bis zu 3 Runden/Jahr; Runde 2026-03: 31.08.–21.09.2026",
+    "sparten": [
+      "musik_audio"
+    ]
+  },
+  {
+    "id": "deutscher_verlagspreis",
+    "title": "Deutscher Verlagspreis",
+    "region": "Deutschland (bundesweit)",
+    "country_code": "DE",
+    "status": "active",
+    "funding_type": "Preisgeld",
+    "funding_rate": "Preisgeld",
+    "max_amount": "Gütesiegel 18.000 €, Spitzenpreis 50.000 €",
+    "focus": "Auszeichnung unabhängiger Buchverlage (Sitz in Deutschland, konzernunabhängig, seit 3 Jahren, Ø-Umsatz bis 3 Mio. €/Jahr); Preisgeld, keine Projektförderung",
+    "suitable_for": [
+      "solo",
+      "team",
+      "kmu"
+    ],
+    "notes": "Belegt 05.09.2026. Ein Preis, keine Projektförderung — im Report als Bewerbungsoption nennen, nie als Zuschuss.",
+    "priority": 3,
+    "provider": "BKM / Kurt Wolff Stiftung",
+    "recheck_after": "2027-01-15",
+    "relevance_ki": "niedrig",
+    "url": "https://www.deutscher-verlagspreis.de/teilnahme",
+    "verified_at": "2026-09-05",
+    "branches": [
+      "medien"
+    ],
+    "branch_exclusive": true,
+    "deadline": "",
+    "deadline_notes": "Bewerbung jährlich im Juli; 2026: 10.–24.07. (abgelaufen), nächste Runde voraussichtlich Juli 2027",
+    "sparten": [
+      "verlag_publishing"
     ]
   }
 ]

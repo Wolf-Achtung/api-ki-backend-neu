@@ -137,10 +137,13 @@ class TestFoerderung:
         assert "FFF Bayern – Film-, Games- und XR-Förderung" in namen
         assert "DFFF – Deutscher Filmförderfonds" not in namen
 
-    def test_verlag_bekommt_nur_generische_programme(self):
+    def test_verlag_bekommt_nur_passende_exklusive_programme(self):
+        """Seit dem Faktencheck 05.09.2026 gibt es ein Verlags-Programm
+        (Deutscher Verlagspreis). Exklusive Programme ohne Verlags-Sparte
+        (Filmförderung) bleiben draussen."""
         namen = _programme("verlag_publishing")
-        exklusiv = {p["title"] for p in FUND if p.get("sparten")}
-        assert not (set(namen) & exklusiv), set(namen) & exklusiv
+        fremd = {p["title"] for p in FUND if p.get("sparten") and "verlag_publishing" not in p["sparten"]}
+        assert not (set(namen) & fremd), set(namen) & fremd
         assert namen, "generische Programme muessen bleiben"
 
     def test_generische_programme_ungeruehrt(self):

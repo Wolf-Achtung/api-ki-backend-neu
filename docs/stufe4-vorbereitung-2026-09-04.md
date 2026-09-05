@@ -149,3 +149,34 @@ Entscheidung offen: beleben (dann mit Sparten-Schlüsseln) oder löschen.
 3. Stufe 5: Benchmarks — eine Quelle oder „Richtwert".
 4. Stufe 6: ein Golden-Profil je Sparte mit gesetztem `medien_sparte`,
    damit ein Rückfall in Stufe 1 bis 4 laut wird.
+
+## 7. Ergebnis der Handprüfung (05.09.2026)
+
+Der Egress-Proxy der Sitzung blockt jede Anbieterseite. Die Prüfung
+lief deshalb über ein Briefing für Perplexity
+(`docs/perplexity-briefing-stufe4.md`), das nur Primärquellen mit URL
+zulässt. Entscheidung je Zeile nach der Regel: Verarbeitungsort und
+Datenschutzlage müssen belegt sein, sonst keine Empfehlung.
+
+| Kandidat | Urteil | Grund |
+|---|---|---|
+| LanguageTool | aufgenommen | LanguageTooler GmbH (DE), DPA für Team-Plan, EU-Hosting mit US-Subprozessoren |
+| DeepL Write Pro | aufgenommen | eigener Pro-Tarif, DeepL SE (DE), AVV nach Art. 28 |
+| Duden-Mentor | aufgenommen | Cornelsen (DE), AWS Frankfurt, AVV, Unternehmenspreise auf der Seite |
+| Auphonic | aufgenommen | Auphonic GmbH (AT), Hetzner DE, DPA auf Anfrage |
+| iZotope RX | aufgenommen | Desktop-App, Einmallizenz auf der Seite; kein AVV, Hosting-Hinweis nennt das |
+| Adobe Podcast Enhance | aufgenommen | Adobe-DPA, Free-Stufe; Cloud |
+| Crowdin | aufgenommen | Crowdin OÜ (EE), signierte DPA, EU-Rechenzentrum (Enterprise), Preise auf der Seite |
+| Canva Magic Studio | aufgenommen | DPA vorhanden, im Abo enthalten; Hosting nicht wählbar |
+| Lokalise | abgelehnt | Crowdin gewählt; Verarbeitungsort nur „USA und andere Länder" |
+| Scenario | abgelehnt | Verarbeitungsort nicht belegt, keine öffentliche DPA, Training auf Kundendaten im Self-Serve |
+| Inworld AI | abgelehnt | Verarbeitungsort und DPA nicht belegt |
+| Opus Clip | abgelehnt | nur „USA", keine DPA-Seite; Descript und Runway decken den Zweck |
+| Initiative Musik (Exportförderung) | aufgenommen | KMU der Musikwirtschaft antragsberechtigt, bis 60 %, 20.000 € je Antrag, 3 Runden/Jahr |
+| Musikfonds | abgelehnt | Kunstprojekte; Antragsrecht von Unternehmen nicht belegt |
+| Deutscher Verlagspreis | aufgenommen als Preis | Bewerbung jährlich im Juli, Gütesiegel 18.000 €; keine Projektförderung |
+| Digitalbonus Bayern | wieder aktiv | Laufzeit bis 31.12.2027, monatliches Kontingent, bis 50 % |
+
+Preise stehen nur dort, wo die Preisseite des Anbieters sie nennt
+(Duden-Mentor, iZotope RX, Crowdin). Alle anderen zeigen „siehe
+Anbieterseite". Stand: 31 Werkzeuge, 11 geprüft.
