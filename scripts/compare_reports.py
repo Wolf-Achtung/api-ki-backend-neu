@@ -376,8 +376,10 @@ def _ankuendigung_ohne_liste(text: str) -> Optional[str]:
 # (Hosting "EU / EU-Anbieter") und Runway "EU-konform" — beide US-Anbieter,
 # R1 stufte Claude im selben Lauf rot ein. Ein "US" zwischen Name und
 # EU-Begriff (Tabellenzeile "US / US (AVV prüfen)") entwarnt.
+# KIS-1312: Adobe Firefly, Descript und ElevenLabs sind US-Anbieter (tools_seed);
+# Strategie S. 12 (Lauf KIS1281) nannte „EU-konforme Werkzeuge wie Adobe Firefly".
 _US_ANBIETER = ("ChatGPT", "OpenAI", "Claude", "Anthropic", "Perplexity", "Runway",
-                "Gemini", "Midjourney")
+                "Gemini", "Midjourney", "Adobe Firefly", "Firefly", "Descript", "ElevenLabs")
 _EU_BEGRIFF = (r"EU-konform|EU-gehostet|EU-Hosting|EU / EU|EU-Anbieter|EU-Server"
                r"|EU-compliant|EU-hosted|EU-based provider")
 _US_NAMEN = "|".join(_US_ANBIETER)

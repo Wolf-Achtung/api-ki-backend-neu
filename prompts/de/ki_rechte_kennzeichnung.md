@@ -99,4 +99,4 @@ Pflichtstruktur. Stelle unter keinen Umständen Rückfragen, bitte nie um
 weitere Angaben und erkläre nie, was dir fehlt — alle benötigten
 Informationen stehen oben. Der Branchen- und Größen-Kontext (Workflows,
 Pain Points, typische Tools, Budget-Angaben) ist Hintergrund für dich —
-gib ihn nie als Liste aus; die Ausgabe beginnt mit <section>.
+gib ihn nie als Liste aus und nie als Vorspann in Prosa („Typische Workflows umfassen …", „Ihr Unternehmen operiert als KMU mit …" — Lauf KIS1281, KIS-1312); die Ausgabe beginnt mit <section>.
