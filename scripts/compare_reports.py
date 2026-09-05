@@ -223,7 +223,29 @@ PRUEFUNGEN = [
         "Förderfrist liegt vor dem Reportdatum (KIS-1306)",
         lambda t: _abgelaufene_frist(t),
     ),
+    (
+        "wort_vor_punkt_fehlt",
+        "Leerzeichen vor dem Satzpunkt — ein Wort wurde entfernt (KIS-1307)",
+        lambda t: _wort_vor_punkt_fehlt(t),
+    ),
 ]
+
+
+# KIS-1307: R1 S. 11 (Lauf KIS1279): „… das lokale oder vertraglich abgesicherte
+# Datenhaltung ." — das Verb fehlt, der Punkt steht mit Leerzeichen allein.
+# Spur einer Wort-Löschung durch einen Ersetzer; lokal nicht reproduzierbar.
+# In den Läufen KIS1275 bis KIS1278 kommt das Muster nirgends vor.
+# Mindestens drei Buchstaben vor dem Leerzeichen — Einheiten wie „95 €/h ."
+# sind kein Befund.
+_WORT_VOR_PUNKT_RE = re.compile(r"[a-zäöüß]{3,} \.(?=\s|$)")
+
+
+def _wort_vor_punkt_fehlt(text: str) -> Optional[str]:
+    for zeile in text.split("\n"):
+        m = _WORT_VOR_PUNKT_RE.search(zeile)
+        if m:
+            return zeile.strip()[-80:]
+    return None
 
 
 # KIS-1305: Strategie S. 37 (Lauf KIS1277): „EU AI Act (Verordnung 2021/0691)".
