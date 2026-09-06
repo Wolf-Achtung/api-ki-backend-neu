@@ -466,6 +466,41 @@ Bewertungen, Freitext nur wenn vorhanden, HTML-Fassung mit Inline-Styles
 (`build_notification_html`) plus Textfassung. Das Formular selbst sagt seit
 dem Frontend-PR #167 „Seit August 2026" (Art. 4 gilt seit 02.08.2026).
 
+## Der Entscheidungsblock braucht drei Netze (KIS-1321)
+
+Testlauf KIS1290 (06.09.2026, Build 1510, Motion-Profil nach KIS-1320):
+DSGVO-Note stabil (Mittel, C), Satzzeichen sauber, Quellen mit Etikett, kein
+Wächter-Treffer, Kennzahlen unverändert. Restbefunde:
+
+- **„Ihre Entscheidung in 3 Punkten."** (R1 S. 4) — wieder ohne die drei
+  Punkte, diesmal auch ohne die Investitions-Zeile aus KIS-1244. Das Netz aus
+  KIS-1316 lief vor dem Healer (`heal_report_html`, FIX-G/B38a/
+  FIX-EXEC-DECISION-CLEAN); alle Nachlauf-Pässe lokal mit einem Modell-Block
+  geprüft, keiner streicht ihn. Jetzt drei Netze mit Log:
+  `[KIS-1321][DECISION-STAGE] stage=pre-render|post-healer` (Sektion) und
+  `[KIS-1321][DECISION-FINAL] li=N` (fertiges HTML, ersetzt die Box, wenn sie
+  weniger als drei Punkte trägt). **Nächster Lauf: Steht bei DECISION-FINAL
+  `li=3` und das PDF zeigt trotzdem nichts, liegt es an Chromium** (siehe
+  CSS-Historie `.exec-decision-box` im Template, KIS-1027/1199/1216) — dann
+  hilft die Web-Version des Reports als Gegenprobe.
+- **„Die Ablauf, die heute …"** (R1 S. 27): `Pipeline→Ablauf` steht in drei
+  Listen (`ANGLIZISMEN`, `EXTENDED_SIEZEN_PATTERNS`, `GRAMMAR_FIX_PATTERNS`),
+  die Genus-Regel nur in der ersten. Jetzt in allen, plus Relativpronomen vor
+  kleingeschriebenem Wort („Ablauf, die heute" → „der"; „Ablauf, die Regeln"
+  bleibt). **Wer eine Ersetzung in mehreren Listen führt, führt die
+  Nachziehregel in allen.**
+- **„die das Studio bereits nutzen"** (R1 S. 27): Singular-Subjekt mit Adverb
+  vor dem Pluralverb — Grammatik-Muster.
+- **Vendor-Etikett** (Strategie S. 10/19, dritter Lauf): „Vendor-Audit-Status
+  „nicht bestanden"" kam aus dem Kontext `{vendor_audit_status}`
+  (`strategy_pipeline`), das Modell übernahm es wörtlich. Jetzt „rot (nur mit
+  AVV und Leitplanken einsetzbar)" — die Lesart aus Report 1.
+- Nur beobachtet: „Textabschnitter" (R1 S. 28), „erweitert nicht mit dem
+  Anspruch" (S. 30, Skalierung→Erweiterung trifft das Verb), „erfüllt
+  zukünftige regulatorische Anforderungen" (Strategie S. 34), Strategie S. 16
+  dünn (nur Annahmen-Absatz), S2-Quellen als URL-Liste ohne Etikett.
+- Test: `tests/test_kis1321_testlauf_1290.py`.
+
 ## Eine Note darf nicht vom Wort abhängen (KIS-1320)
 
 Testlauf KIS1289 (06.09.2026, Build 1422, Motion-Profil nach KIS-1319): Alle
