@@ -615,6 +615,13 @@ def _transform_sources(html: str) -> str:
             _only_p = re.fullmatch(r"\s*<p[^>]*>([\s\S]*?)</p>\s*", inner)
             if _only_p:
                 inner = _only_p.group(1).strip()
+        # KIS-1322: Quellenblock ohne Etikett ("Metricool 2026 ...; EU AI Act",
+        # Lauf KIS1291, Strategie S. 14) bekommt das Etikett vorangestellt.
+        _plain = re.sub(r"<[^>]+>", " ", inner).strip()
+        if _plain and not re.match(r"(?i)\s*(?:Quellen?|Sources?)\s*:", _plain):
+            _en = bool(re.search(r"(?i)\b(?:report|analysis|internal|study|survey|market)\b", _plain)) \
+                and not re.search(r"(?i)\b(?:Bericht|Analyse|interne?|Studie)\b", _plain)
+            inner = f"<strong>{'Sources' if _en else 'Quellen'}:</strong> " + inner.strip()
         return f'<div class="sources-footer" style="{_S_SOURCES}"><p>{inner}</p></div>'
 
     def _p(m: "re.Match[str]") -> str:  # type: ignore[type-arg, unused-ignore]
