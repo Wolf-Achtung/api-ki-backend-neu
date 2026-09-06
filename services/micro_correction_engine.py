@@ -628,6 +628,11 @@ class MicroCorrectionEngine:
         if not self.enabled or not text:
             return text, report
 
+        # KIS-1323: Copy-Paste-Prompt-Kästen bleiben unangetastet (sie duzen
+        # das Modell und tragen Ausfüllstellen mit Absicht).
+        from services.prompt_kaesten import entmaskiere as _pk_entmaskiere, maskiere as _pk_maskiere
+        text, _pk_kaesten = _pk_maskiere(text)
+
         # D1: Spelling corrections
         text = self._apply_spelling_corrections(text, report)
 
@@ -655,7 +660,7 @@ class MicroCorrectionEngine:
             report.tone_normalizations,
         )
 
-        return text, report
+        return _pk_entmaskiere(text, _pk_kaesten), report
 
     def _apply_spelling_corrections(
         self, text: str, report: MicroCorrectionReport

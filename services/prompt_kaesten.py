@@ -17,7 +17,7 @@ verschachtelte `<div>` — das Muster endet am ersten `</div>`.
 from __future__ import annotations
 
 import re
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 
 PROMPT_KASTEN_MARKER = 'data-ksj-prompt="1"'
 
@@ -46,3 +46,17 @@ def entmaskiere(html: str, kaesten: List[str]) -> str:
     if not kaesten or not html:
         return html
     return _PLATZHALTER_RE.sub(lambda m: kaesten[int(m.group(1))], html)
+
+
+def geschuetzt(html: str, fn: Callable[[str], str]) -> str:
+    """Wendet `fn` auf den Text außerhalb der Prompt-Kästen an.
+
+    KIS-1323: Lauf KIS1292 zeigte „Reihe / Zeitschrift: Liefere:" (der
+    Platzhalter-Wächter vor dem Hard-Stop) und „Strukturiere Ihre Antwort"
+    (vier Siezen-Filter) — beide liefen ohne Maske. Ein Prompt spricht das
+    Modell mit „du" an und trägt seine Ausfüllstellen mit Absicht.
+    """
+    if not html or PROMPT_KASTEN_MARKER not in html:
+        return fn(html)
+    maskiert, kaesten = maskiere(html)
+    return entmaskiere(fn(maskiert), kaesten)

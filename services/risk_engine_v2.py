@@ -529,15 +529,27 @@ def extract_dsgvo_risk_from_sections(
         _personen = ("kundendaten", "personaldaten", "nutzungsdaten", "crm", "mitarbeiter", "patienten", "mandanten")
         if any(any(p in str(q).lower() for p in _personen) for q in _quellen):
             risk_factors.append("Personenbezogene Daten im Datenbestand (Kunden-, Nutzungs- oder Personaldaten)")
-        _luecken = 0
-        for _k in ("folgenabschaetzung", "meldewege", "loeschregeln", "datenschutzbeauftragter", "technische_massnahmen"):
+        # KIS-1323: Der Faktor nennt die tatsächlichen Lücken. Lauf KIS1292
+        # (Verlag, Löschregeln „Ja, dokumentiert") las im PDF trotzdem
+        # „(Folgenabschätzung, Meldewege, Löschregeln)" — ein fester Text.
+        _luecken_labels = {
+            "folgenabschaetzung": "Folgenabschätzung",
+            "meldewege": "Meldewege",
+            "loeschregeln": "Löschregeln",
+            "datenschutzbeauftragter": "Datenschutzbeauftragter",
+            "technische_massnahmen": "technische Maßnahmen",
+        }
+        _luecken: list = []
+        for _k, _label in _luecken_labels.items():
             _v = str(briefing.get(_k) or "").strip().lower()
             if not _v:
                 continue
-            if _v.startswith("nein") or _v in ("teilweise", "keine", "geplant", "in_planung", "unbekannt"):
-                _luecken += 1
-        if _luecken >= 2:
-            risk_factors.append("Datenschutz-Organisation lückenhaft (Folgenabschätzung, Meldewege, Löschregeln)")
+            if _v.startswith("nein") or _v in ("keine", "unbekannt"):
+                _luecken.append(f"{_label} fehlt")
+            elif _v in ("teilweise", "geplant", "in_planung"):
+                _luecken.append(f"{_label} nur teilweise")
+        if len(_luecken) >= 2:
+            risk_factors.append(f"Datenschutz-Organisation lückenhaft ({', '.join(_luecken)})")
     else:
         # Rückfall: Sektionstext, wenn der Fragebogen keine Datenschutz-Angaben trägt.
         risks_html = sections.get("RISKS_HTML", "")

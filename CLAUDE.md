@@ -466,6 +466,67 @@ Bewertungen, Freitext nur wenn vorhanden, HTML-Fassung mit Inline-Styles
 (`build_notification_html`) plus Textfassung. Das Formular selbst sagt seit
 dem Frontend-PR #167 „Seit August 2026" (Art. 4 gilt seit 02.08.2026).
 
+## Der Prompt-Kasten braucht die Maske überall (KIS-1323)
+
+Testlauf KIS1292 (06.09.2026, Build 1621, erster Verlag-Lauf seit KIS-1314):
+Kennzahlen wie KIS1284 (Score 84, Governance 87), kein Rückfall, Verlag-Pfad
+greift (Fallstudie, DeepL Write Pro und LanguageTool im Sofort-Start,
+Verlag-Starter-Kit, Verlagspreis-Hinweiszeile, Budget aus Fragebogen 2 im
+Förderkapitel). Restbefunde im Code:
+
+- **„Reihe / Zeitschrift: Liefere:"** (R1 S. 7, zweiter Lauf): KIS-1314
+  maskierte den Healer — nicht den Platzhalter-Wächter vor dem Hard-Stop
+  (`[FIX-PLACEHOLDER-GUARD]`, `\[(Placeholder|Name|Beispiel)\]` mit
+  IGNORECASE). **„Strukturiere Ihre Antwort"** (S. 7): vier Siezen-Filter
+  (`apply_extended_siezen`, `convert_duz_to_sie`,
+  `micro_correction_engine.correct`, `_fix_duzen_to_siezen`) liefen ohne
+  Maske; ein Prompt duzt das Modell mit Absicht. Alle fünf maskieren jetzt,
+  dazu die Hard-Stop-Prüfung (`check_section_for_placeholders`) — sonst
+  hätte der maskierte Wächter den Lauf am „[NAME]" gestoppt.
+  `prompt_kaesten.geschuetzt(html, fn)` für neue Filter. Wächter
+  `prompt_kasten_verfaelscht`.
+- **„Gesparte Zeit."** (R1 S. 18, Erfolgs-Tracking, seit jeher):
+  `strip_trailing_sentence_fragments` hielt den Doppelpunkt eines Etiketts
+  vor dem Wert für ein hängendes Fragment. Ein Etikett bis vier Wörter
+  behält ihn. Wächter `etikett_punkt_statt_doppelpunkt`.
+- **„nicht im Archiv – siehe Roadmap für Details."** (R1 S. 28): Der
+  Fragment-Reparateur läuft mit IGNORECASE — „eines Fachverlags." galt als
+  Artikel + Adjektiv. Das Wort nach dem Artikel prüft jetzt `(?-i:…)`
+  schreibungsgenau. **Ein Muster, das Groß- von Kleinschreibung
+  unterscheiden muss, darf nicht unter IGNORECASE laufen.**
+- **DSGVO-Faktor** (R1 S. 19): „(Folgenabschätzung, Meldewege, Löschregeln)"
+  war fester Text — der Verlag hat Löschregeln dokumentiert. Der Faktor nennt
+  jetzt die tatsächlichen Lücken („Folgenabschätzung fehlt, Meldewege nur
+  teilweise …").
+- **Werkzeugtabelle** (R1 S. 15): Canva und Firefly zuerst, DeepL Write Pro
+  fehlte — alle Verlag-Werkzeuge hatten Rang 1, die Seed-Reihenfolge
+  entschied. `_sparte_rang`: erstgenannte Sparte im Feld `sparten` = 2.
+  **Die Reihenfolge im Feld `sparten` ist die Nähe zur Sparte.**
+- **Starter-Kit „10.000–50.000 €/Jahr"** (R1 S. 16) bei FB2 „über
+  50.000 €": `_estimate_investment` war reine Größenschätzung.
+  `_budget_investment` nimmt das Band aus Fragebogen 2, dann 1.
+- **„(ROI, siehe Business Case) nach 12 Monaten aus dem Business Case"**
+  (R1 S. 26): Nachlauf in `remove_roi_from_section`.
+- **Umsatzprojektion** (Strategie S. 14/16): „7.500 € bei 2 Abonnenten" bei
+  „Jahresabo 3.000–5.000 €" — Sanitizer und Wächter kannten „Abonnent" nur
+  mit „Jahres" davor und die Tabellenzelle nicht ohne Präposition. Dazu
+  „1.500 € monatlich, bei 3–4 Kunden" bei 500 € je Quartal:
+  `umsatz_quartalspaket_korrigieren` (Kunden × Quartalspreis / 3), Wächter
+  `umsatz_quartalspaket_rechnung`.
+- **30-Tage-Challenge** für den Verlag (dritter Lauf generisch):
+  `CHALLENGE_30_TAGE_VERLAG` für Einsteiger und Anwender (Korrekturschleife,
+  Kurzfassungen, Metadaten, Kennzeichnung, Rechte-Register, Archiv-Frage);
+  Musik/Audio bleibt generisch.
+- Kleinigkeiten: „Redaktionleitung" (Strategie S. 11), „Die EU AI Act" (KPA
+  S. 2, die KPA läuft nicht durch den Grammatik-Fixer — eigener Schritt in
+  `gamechanger_deep_dive`), „interne Unternehmensdaten Ihr Unternehmen"
+  (S. 13) → `strategy_sanitizer.tippfehler_korrigieren`.
+- Nur beobachtet: R1 S. 21 dünn (343 Zeichen, Vendor-Empfehlungen allein
+  auf der Seite); zwei „Annahmen:"-Absätze in S1 (Strategie S. 7); Notion/
+  Obsidian als Vorlagenablage für ein M365-Haus (R1 S. 10); „Rollout" im
+  Förderkapitel; Digitalbonus-Grenze „unter 50 Mitarbeitende" aus dem Modell.
+- Test: `tests/test_kis1323_testlauf_1292.py`.
+
 ## Nachlauf KIS1291 (KIS-1322)
 
 Testlauf KIS1291 (06.09.2026, Build 1544, Motion-Profil nach KIS-1321): Der
