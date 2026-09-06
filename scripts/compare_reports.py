@@ -258,6 +258,24 @@ PRUEFUNGEN = [
         "Etikett vor einem Wert endet mit Punkt statt Doppelpunkt (KIS-1323)",
         lambda t: (m.group(0) if (m := re.search(r"\bGesparte Zeit\.", t)) else None),
     ),
+    (
+        "kasus_nach_ersetzung",
+        "Ersetzung ohne Kasus — 'von bewährte Methoden' (KIS-1327)",
+        lambda t: (m.group(0) if (m := re.search(
+            r"\b(?:von|mit|zu|bei|nach|aus|an|in|auf|unter|zwischen|der|den)\s+bewährte\s+Methoden?\b", t)) else None),
+    ),
+    (
+        "wort_vor_verb_fehlt",
+        "'derzeit nicht ist' — ein Wort wurde entfernt (KIS-1327)",
+        lambda t: (m.group(0) if (m := re.search(
+            r"\b(?:derzeit|aktuell|bisher|bislang|noch|heute)\s+nicht\s+(?:ist|sind|wird|werden)\s*[.,;]", t)) else None),
+    ),
+    (
+        "dezimalpunkt_im_preis",
+        "Preis mit Dezimalpunkt statt Komma — '5.50–8.30 €' (KIS-1327)",
+        lambda t: (m.group(0) if (m := re.search(
+            r"\b\d{1,3}\.\d{2}(?:\s*[–-]\s*\d{1,3}\.\d{2})?\s*€", t)) else None),
+    ),
 ]
 
 

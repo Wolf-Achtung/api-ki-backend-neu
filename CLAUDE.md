@@ -466,6 +466,50 @@ Bewertungen, Freitext nur wenn vorhanden, HTML-Fassung mit Inline-Styles
 (`build_notification_html`) plus Textfassung. Das Formular selbst sagt seit
 dem Frontend-PR #167 „Seit August 2026" (Art. 4 gilt seit 02.08.2026).
 
+## Ein Wortfilter, der Wörter löscht, hinterlässt Lücken (KIS-1327)
+
+Testlauf KIS1296 (06.09.2026, Build 1921, Verlag-Profil nach KIS-1326): Kein
+Rückfall, Kennzahlen unverändert, keine dünne Seite außer dem Deckblatt (die
+Förder-Box auf Strategie S. 4 ist erstmals nicht mehr dünn), beide
+KIS-1326-Punkte im PDF („Quellen:" überall, alle drei Umsatzprojektionen
+rechnen), DeepL Write Pro in den Top-3, Briefing-Pipeline-Qualität A. Vier
+Befunde lagen im Code — zwei davon seit Wochen „nur beobachtet", weil kein
+lokaler Einzelfilter sie reproduzierte. **Der Grund: Sie liegen im
+N4.3-Governance-Layer (`services/n43_integration.py`), der sechs Engines
+hintereinander über alle Sektionen laufen lässt.** Wer einen Befund nicht
+mit den Sektionsfiltern findet, prüft als Nächstes `process_n43_governance`.
+
+- **„… Rechteübertragung derzeit nicht ist."** (R1 S. 22): Der Safety-Layer
+  (`safety_assurance_layer_v3`) führte „garantiert", „zweifellos" als
+  „Toxizität" und heilte sie durch „[entfernt - unangemessener Inhalt]" —
+  den Klammer-Platzhalter löscht der Healer danach. Dieselbe Ursache hinter
+  „… abgesicherte Datenhaltung ." aus KIS-1307 (dort „garantiert." am
+  Satzende). Die Muster sind raus, in allen fünf Sprachen; die Ersetzung
+  läuft über `re.sub` statt über gespeicherte Offsets (der zweite Treffer
+  landete mitten im ersten Platzhalter). Wächter `wort_vor_verb_fehlt`.
+- **Duden-Mentor „5.50–8.30 €"** (R1 S. 14, seit KIS1293): Der
+  Konsistenz-Kernel (`consistency_kernel_v7`) normalisiert die Sektionen
+  für den Modellvergleich (Leerraum, Dezimalkomma → Punkt) — und gab die
+  normalisierte Fassung als Ergebnis zurück, für jede Sektion. Jetzt merged
+  er die Originale. Wächter `dezimalpunkt_im_preis`.
+- **„von bewährte Methoden"** (Strategie S. 10): `_PLAIN_LANGUAGE_RULES`
+  ersetzte „Best Practices" ohne Kasus. Dativ nach Präposition und Artikel
+  zuerst. **Wer ein Substantiv mit Adjektiv einsetzt, prüft den Kasus** (wie
+  KIS-1306 für den Genus). Wächter `kasus_nach_ersetzung`.
+- **„Wenn-Dann-Steuerung:"** allein am Seitenende (Strategie S. 25/26):
+  `html_enhancer._keep_label_with_list` setzt `break-after:avoid` auf kurze
+  Doppelpunkt-Absätze vor Liste oder Tabelle.
+- **„Wert-Score von 84 von 100 Punkten"** (R1 S. 29, Wertschöpfung ist 85):
+  Ursache nicht sicher — der Sweep (`_final_score_sweep`, „Score von <alt>",
+  „(<alt>/100") und der Body-Enforcer („NN von 100 Punkten" → Gesamt) hätten
+  es beide gekonnt. Beide prüfen jetzt `_score_ist_dimensionswert` (Dimension
+  in den 40 Zeichen davor, Satzgrenze beendet den Kontext).
+- Nur beobachtet: Microsoft 365 Copilot als erstes Werkzeug in S4 (Add-on
+  zum Stack, „laut Anbieter prüfen"), „fünf Handlungsfelder" (S3) gegen „drei"
+  (S1), „mit Redaktioneller Kuratierung", Digitalbonus-Grenze aus dem Modell,
+  „(ROI, siehe Business Case)." als Satzrest im Förderkapitel.
+- Test: `tests/test_kis1327_testlauf_1296.py`.
+
 ## Ein Jahrespreis hat nicht immer vier Ziffern (KIS-1326)
 
 Testlauf KIS1295 (06.09.2026, Build 1833, Verlag-Profil nach KIS-1325): Alle

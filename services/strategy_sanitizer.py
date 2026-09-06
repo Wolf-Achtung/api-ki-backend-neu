@@ -189,7 +189,16 @@ _PLAIN_LANGUAGE_RULES = [
     (r'\bUse\s+Cases?\b', 'Anwendungsbeispiele', 0),
     (r'\bUse\s+Case\b', 'Anwendungsbeispiel', 0),
     (r'\bStakeholder[ns]?\b', 'Beteiligte', 0),
-    (r'\bBest\s+Practices?\b', 'bewährte Methoden', 0),
+    # KIS-1327: Kasus mitziehen — „von Best Practices profitieren" wurde
+    # „von bewährte Methoden profitieren" (Lauf KIS1296, Strategie S. 10).
+    # Dativ/Genitiv nach Präposition oder Artikel, dann erst die Grundform.
+    (r'\b((?i:von|mit|zu|bei|nach|aus|an|in|auf|unter|zwischen|der|den|dieser|diesen|unseren|Ihren|allen))\s+Best\s+Practices\b',
+     r'\1 bewährten Methoden', 0),
+    (r'\b((?i:der|dieser|unserer|Ihrer|einer|jeder))\s+Best\s+Practice\b',
+     r'\1 bewährten Methode', 0),
+    (r'\b((?i:von|mit|zu|bei|nach|aus|an|in|auf|unter))\s+Best\s+Practice\b',
+     r'\1 bewährter Methode', 0),
+    (r'\bBest\s+Practices\b', 'bewährte Methoden', 0),
     (r'\bBest\s+Practice\b', 'bewährte Methode', 0),
     (r'\bOnboarding[s]?\b', 'Einarbeitung', re.IGNORECASE),
     (r'\bEnd-to-End\b', 'durchgängig', re.IGNORECASE),
