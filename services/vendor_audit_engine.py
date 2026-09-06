@@ -1552,6 +1552,7 @@ def vendor_audit_report_to_html(
             "no_flags": "No issues found",
             "dpa_yes": "DPA Available",
             "dpa_no": "No DPA",
+            "dpa_local": "No DPA needed (local)",  # KIS-1316
             "notes": "Notes",
             "ai_act": "AI Act Relevance",
             "dsgvo_risk": "GDPR Risk",
@@ -1581,6 +1582,7 @@ def vendor_audit_report_to_html(
             # einen AVV an — abschließen muss ihn der Nutzer selbst.
             "dpa_yes": "AVV verfügbar — Abschluss prüfen",
             "dpa_no": "Kein AVV verfügbar",
+            "dpa_local": "Kein AVV nötig (lokal)",  # KIS-1316
             "notes": "Hinweise",
             "ai_act": "AI Act Relevanz",
             "dsgvo_risk": "DSGVO-Risiko",
@@ -1753,7 +1755,7 @@ def vendor_audit_report_to_html(
 
                     <div style="margin-bottom:8px;word-break:normal;overflow-wrap:break-word;hyphens:none;-webkit-hyphens:none;">
                         <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">📍 {entry.data_location}</span>
-                        <span style="font-size:8px;padding:2px 6px;background:{"#dcfce7" if entry.has_dpa else "#fef2f2"};color:{"#166534" if entry.has_dpa else "#991b1b"};border-radius:3px;border:1px solid {"#86efac" if entry.has_dpa else "#fca5a5"};display:inline-block;margin:2px;">📄 {labels["dpa_yes"] if entry.has_dpa else labels["dpa_no"]}</span>
+                        <span style="font-size:8px;padding:2px 6px;background:{"#dcfce7" if entry.has_dpa else "#fef2f2"};color:{"#166534" if entry.has_dpa else "#991b1b"};border-radius:3px;border:1px solid {"#86efac" if entry.has_dpa else "#fca5a5"};display:inline-block;margin:2px;">📄 {labels["dpa_local"] if entry.jurisdiction == "Lokal" else (labels["dpa_yes"] if entry.has_dpa else labels["dpa_no"])}</span>
                         <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">🔒 {_security_label.get(entry.security_posture.lower(), entry.security_posture.title())}</span>
                         <span style="font-size:8px;padding:2px 6px;background:#f8fafc;color:#64748b;border-radius:3px;border:1px solid #e2e8f0;display:inline-block;margin:2px;">⚖️ {labels["ai_act"]}: {_relevance_label.get(entry.ai_act_relevance, entry.ai_act_relevance)}</span>
                     </div>

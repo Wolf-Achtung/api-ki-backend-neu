@@ -1643,7 +1643,9 @@ def apply_stray_prefix_remover(sections: dict) -> dict:
 # (Neural System)" (R1 S. 15/16) und „DaVinci Neural System" im Starter-Kit.
 # Vor diesen Wörtern bleibt „Engine" stehen (Lookbehind, auch für den Solo-
 # Blacklist-Pfad in report_healer.final_solo_terminology_cleanup).
-PRODUKTNAME_ENGINE_SCHUTZ = r'(?<!Neural )(?<!Unreal )(?<!Unity )(?<!Godot )(?<!Render )'
+# KIS-1316: auch mit Bindestrich — „Neural-Engine-Funktionen" wurde zu
+# „Neural-System-Funktionen" (Lauf KIS1286, R1 S. 14).
+PRODUKTNAME_ENGINE_SCHUTZ = r'(?<!Neural )(?<!Neural-)(?<!Unreal )(?<!Unity )(?<!Godot )(?<!Render )'
 
 EXTENDED_SIEZEN_PATTERNS = [
     # Possessive "dein/deine"

@@ -452,6 +452,54 @@ verlor 3-Schritte-Prozess und Checkliste. Lokal reproduziert mit
   Amberscript statt Otter.
 - Test: `tests/test_kis1302_testlauf_1275.py`.
 
+## Der Entscheidungsblock braucht ein Netz (KIS-1316)
+
+Testlauf KIS1286 (06.09.2026, Build 1222, Motion-Profil nach KIS-1315):
+Kennzahlen unverändert, kein Rückfall, alle KIS-1315-Punkte im PDF
+(Medien-Challenge, DaVinci grün und lokal, kein US-Werkzeug in
+EU-Aufzählungen, Validierungsaufwand je Strategie, Jahresabo-Rechnung
+stimmt). Restbefunde:
+
+- **„Ihre Entscheidung in 3 Punkten."** (R1 S. 4) ohne die drei Punkte —
+  in fünf von sechs Läufen seit KIS1280 (nur KIS1285 hatte sie). Alle
+  Sektionsfilter lokal mit einem korrekten Block geprüft, keiner streicht
+  ihn; die Ursache hängt an der Modellausgabe. Jetzt zwei Netze:
+  `[KIS-1316][DECISION-GEN]` loggt direkt nach der Generierung, wie viele
+  `<li>` das Modell geliefert hat, und `_ensure_decision_block` baut vor
+  dem Rendern Tun / Lassen / Risiko & Stop-Signal deterministisch aus dem
+  Zeitfresser, wenn sie fehlen. **Nächster Lauf: In den Railway-Logs nach
+  `DECISION-GEN` und `DECISION-FALLBACK` suchen** — steht bei GEN schon
+  `li=0`, liegt es am Modell; steht dort `li=3` und FALLBACK greift
+  trotzdem, streicht ein Filter dazwischen.
+- **Kernbotschaft** (R1 S. 3) war in jedem Lauf derselbe Boilerplate-Satz.
+  Jetzt aus den Dimensions-Scores: stärkste Dimension, größter Hebel.
+- **„Neural-System-Funktionen"** (R1 S. 14): `PRODUKTNAME_ENGINE_SCHUTZ`
+  kennt den Bindestrich.
+- **DaVinci lokal mit „AVV verfügbar"** (R1 S. 20): Label „Kein AVV nötig
+  (lokal)" für Jurisdiktion `Lokal`.
+- **„EU-konformem Vendor-Audit-Status. Die Umstellung auf Werkzeuge wie
+  Adobe Firefly"** (Strategie S. 11): Die Aufzählung folgt dem EU-Bezug erst
+  im nächsten Satz; `_EU_AUFZAEHLUNG_RE` hat dafür einen zweiten Kopf. Die
+  Liste endet vor „für/zur/bei/in" — sonst wurde „Text- und Bildbearbeitung"
+  als Aufzählung zerlegt.
+- **„<li>Runway</li>"** (S4) → `nackte_werkzeug_punkte_entfernen` (nur
+  reine Werkzeugnamen, nie Aufgaben). **„Die von Ihnen empfohlenen Tools"**
+  (S8) → `von_ihnen_empfohlen_korrigieren`. Wächter und Sanitizer kennen
+  Adobe Premiere Pro und After Effects als US-Werkzeuge („EU-konforme
+  Hosting-Option", S4).
+- Test: `tests/test_kis1316_testlauf_1286.py`.
+
+## Wann ein Lauf „final" ist
+
+Seit KIS1285 sind Kennzahlen, Wächter und alle deterministischen Bausteine
+über drei Läufe stabil. Was von Lauf zu Lauf noch wechselt, ist
+Modellsprache — pro Lauf drei bis fünf neue Formulierungen, jede einzeln
+klein. Freigabe-Kriterium, damit die Schleife endet: `compare_reports`
+meldet keinen Rückfall, keine dünne Seite außer dem Deckblatt, und der
+Befund enthält keinen Punkt, der in Code oder Daten liegt. Ein Lauf, der
+das erfüllt, ist final; Modellformulierungen darüber hinaus werden nur
+noch als Wächter nachgezogen, nicht mehr je Lauf.
+
 ## Eine Prompt-Regel, die vier Läufe nicht hält, wird Code (KIS-1315)
 
 Testlauf KIS1285 (06.09.2026, Build 1144, Motion-Profil nach KIS-1314):

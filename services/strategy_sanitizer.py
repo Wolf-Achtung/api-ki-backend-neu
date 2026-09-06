@@ -402,13 +402,58 @@ _BRUCH_WORTE = {
 _US_WERKZEUGE_RE = re.compile(
     r"\b(?:ChatGPT(?:\s*/\s*OpenAI)?|OpenAI(?:\s+API)?|Claude|Anthropic|Perplexity(?:\s+AI)?|Runway(?:ML)?|"
     r"Gemini|Midjourney|Adobe Firefly|Firefly|Descript|ElevenLabs|Canva(?:\s+Magic\s+Studio)?|"
-    r"Microsoft 365 Copilot|Copilot|Notion(?:\s+AI)?|Frame\.io)\b"
+    r"Microsoft 365 Copilot|Copilot|Notion(?:\s+AI)?|Frame\.io|"
+    r"Adobe Premiere Pro(?:\s*\(Speech to Text\))?|Adobe After Effects)\b"
 )
 _EU_AUFZAEHLUNG_RE = re.compile(
     r"(EU-(?:konform|gehostet|basiert)\w*\s+(?:KI-)?(?:Werkzeuge?n?|Tools?|Alternativen?|Lösungen|Anbieter|Dienste?)"
-    r"\s+(?:wie|etwa|z\.\s?B\.|beispielsweise|such as|like)\s+)([^.;:<\n]+?)(?=[.;:<\n]| ist\b| sind\b| bietet| bieten| ermöglich| statt\b| anstelle\b)",
+    r"\s+(?:wie|etwa|z\.\s?B\.|beispielsweise|such as|like)\s+"
+    # KIS-1316: „… mit EU-konformem Vendor-Audit-Status. Die Umstellung auf
+    # Werkzeuge wie Adobe Firefly oder DeepL Pro" (Lauf KIS1286, S3) — die
+    # Aufzählung folgt dem EU-Bezug im nächsten Satz.
+    r"|EU-konform\w*[^<]{0,160}?(?:Umstellung|Wechsel|Migration)\s+(?:auf|zu)\s+(?:EU-konforme?n?\s+|datenschutzkonforme?n?\s+)?"
+    r"(?:Werkzeuge?n?|Tools?|Alternativen?)\s+(?:wie|etwa|z\.\s?B\.)\s+)"
+    r"([^.;:<\n]+?)(?=[.;:<\n]| ist\b| sind\b| kann\b| bietet| bieten| ermöglich| statt\b| anstelle\b"
+    r"| für\b| zur\b| zum\b| bei\b| in\b| um\b| als\b)",
     re.IGNORECASE,
 )
+
+# KIS-1316: „Die von Ihnen empfohlenen Tools" (Lauf KIS1286, S8) — der Kunde
+# empfiehlt nichts, der Bericht tut es.
+_VON_IHNEN_EMPFOHLEN_RE = re.compile(r"\b(?:die|der|das|den|dem)?\s*von Ihnen empfohlene(n|s|r)?\b", re.IGNORECASE)
+# KIS-1316: Ein Listenpunkt, der nur aus einem Werkzeugnamen besteht
+# („<li>Runway</li>", Lauf KIS1286, S4 S. 19) — Rest einer gekappten Zeile.
+_NACKTER_LI_RE = re.compile(r"<li\b[^>]*>\s*(?:<(?:strong|b|em)>)?\s*([^<>]{1,40}?)\s*(?:</(?:strong|b|em)>)?\s*</li>", re.IGNORECASE)
+
+
+def nackte_werkzeug_punkte_entfernen(html: str) -> tuple:
+    """Entfernt <li>, deren Text nur ein Werkzeugname ohne Satz ist."""
+    if not html or "<li" not in html:
+        return html, 0
+    count = 0
+
+    def _fix(m: "re.Match[str]") -> str:
+        nonlocal count
+        text = m.group(1).strip()
+        if len(text.split()) <= 2 and not re.search(r"[:.!?\d]", text) and _US_WERKZEUGE_RE.fullmatch(text):
+            count += 1
+            return ""
+        return str(m.group(0))
+
+    return _NACKTER_LI_RE.sub(_fix, html), count
+
+
+def von_ihnen_empfohlen_korrigieren(html: str) -> tuple:
+    if not html or "von Ihnen empfohlen" not in html:
+        return html, 0
+
+    def _fix(m: "re.Match[str]") -> str:
+        art = m.group(0).strip().split(" ")[0]
+        art = art + " " if art.lower() in ("die", "der", "das", "den", "dem") else ""
+        return f"{art}empfohlene{m.group(1) or ''}"
+
+    return _VON_IHNEN_EMPFOHLEN_RE.subn(_fix, html)
+
 
 
 def us_werkzeug_aus_eu_aufzaehlung(html: str) -> tuple:
@@ -720,6 +765,19 @@ def sanitize_strategy_sections(
             sections[key] = html
             patches_applied += _qs
             all_warnings.append(f"{key}: {_qs} veralteter Quellen-Stand entfernt (KIS-1315)")
+
+        # Pass 6g (KIS-1316): „Die von Ihnen empfohlenen Tools" → „Die empfohlenen Tools".
+        html, _ve = von_ihnen_empfohlen_korrigieren(html)
+        if _ve:
+            sections[key] = html
+            patches_applied += _ve
+
+        # Pass 6h (KIS-1316): „<li>Runway</li>" — Listenpunkt ohne Satz.
+        html, _nl = nackte_werkzeug_punkte_entfernen(html)
+        if _nl:
+            sections[key] = html
+            patches_applied += _nl
+            all_warnings.append(f"{key}: {_nl} nackte(r) Werkzeug-Listenpunkt(e) entfernt (KIS-1316)")
 
         # Pass 6c (KIS-1313): Benchmark-Prozente in S2 ohne Beleg in der
         # Recherche heißen „Richtwert".
