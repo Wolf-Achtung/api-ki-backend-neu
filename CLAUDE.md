@@ -466,6 +466,30 @@ Bewertungen, Freitext nur wenn vorhanden, HTML-Fassung mit Inline-Styles
 (`build_notification_html`) plus Textfassung. Das Formular selbst sagt seit
 dem Frontend-PR #167 „Seit August 2026" (Art. 4 gilt seit 02.08.2026).
 
+## Nachlauf KIS1291 (KIS-1322)
+
+Testlauf KIS1291 (06.09.2026, Build 1544, Motion-Profil nach KIS-1321): Der
+Entscheidungsblock steht mit vier Punkten im PDF, das Log sagt
+`[KIS-1321][DECISION-FINAL] li=4` — das dritte Netz trägt. Genus „Der Ablauf,
+der", Vendor-Etikett „rot (nur mit AVV und Leitplanken einsetzbar)", DSGVO-Note
+stabil, kein Wächter-Treffer, Kennzahlen unverändert. Restbefunde:
+
+- **„ein stabile Ablauf"** (R1 S. 27): Die Genus-Regel setzte nur den Artikel
+  (eine → ein), die Adjektiv-Endung blieb. Jetzt „ein stabiler Ablauf" in
+  allen drei Listen.
+- **„für den Motion Designer, der Runway für Hintergrund-Loops nutzen"** (R1
+  S. 26): Relativsatz mit „der" ist Singular — Grammatik-Muster; „die Kunden
+  nutzen" bleibt.
+- **„Return on Investment (ROI (siehe Business Case) nach 12 Monaten"** (R1
+  S. 25): `remove_roi_from_section` traf „ROI) von 22 %" hinter der Klammer.
+  Jetzt „(ROI, siehe Business Case)".
+- **Quellenblock ohne Etikett** (Strategie S. 14): `<div class="sources">` mit
+  Fließtext bekommt im Enhancer „Quellen:"/„Sources:" vorangestellt.
+- Nur beobachtet: „Der vorliegende Business Case … setzen" (R1 S. 27),
+  Runway zweimal in der Tool-Tabelle (Strategie S. 19), „Fehlerquote
+  Untertitel >95 % korrekt" (KPA S. 4), Strategie S. 17 dünn (Tabellenrest).
+- Test: `tests/test_kis1322_testlauf_1291.py`.
+
 ## Der Entscheidungsblock braucht drei Netze (KIS-1321)
 
 Testlauf KIS1290 (06.09.2026, Build 1510, Motion-Profil nach KIS-1320):

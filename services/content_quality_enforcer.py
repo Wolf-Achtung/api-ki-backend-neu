@@ -95,6 +95,8 @@ SOLO_TERM_REPLACEMENTS = [
     # (Plural "Abläufe" und Komposita wie "Ablaufplanung" bleiben unberührt.)
     (r'\b([Dd])ie(\s+(?:[a-zäöüß]+e\s+){0,2})([A-Za-zäöüß]*[Aa]blauf)\b', r'\1er\2\3', 'Genus: die→der vor Ablauf'),
     (r'\b([Ee])ine(\s+(?:[a-zäöüß]+e\s+){0,2})([A-Za-zäöüß]*[Aa]blauf)\b', r'\1in\2\3', 'Genus: eine→ein vor Ablauf'),
+    # KIS-1322: 'ein stabile Ablauf' (Lauf KIS1291, R1 S. 27) - Adjektiv-Endung nach ein.
+    (r'\b([Ee])in ([a-zäöüß]+)e ([A-Za-zäöüß]*[Aa]blauf)\b', r'\1in \2er \3', 'Genus: Adjektiv nach ein vor Ablauf'),
 
     # Deployment/Rollout terms
     (r'\bDeployment\b', 'Einrichtung', 'Deployment→Einrichtung'),
@@ -1028,6 +1030,12 @@ def remove_roi_from_section(html: str, section_name: str) -> tuple[str, int]:
             # Substantiv weiter, damit der Satz grammatisch bleibt.
             if "rendite" in match.group().lower():
                 replacement = "Rendite (siehe Business Case)"
+            elif re.match(r"ROI\)", match.group()):
+                # KIS-1322: Treffer hinter einer Klammer ("(ROI) von 22 %") -
+                # "ROI (siehe ...)" zerriss sie (Lauf KIS1291, R1 S. 25).
+                replacement = "ROI, siehe Business Case)"
+            elif match.start() > 0 and result[match.start() - 1] == "(":
+                replacement = "ROI, siehe Business Case"
             else:
                 replacement = "ROI (siehe Business Case)"
             result = result[:match.start()] + replacement + result[match.end():]
@@ -2135,6 +2143,7 @@ EXTENDED_SIEZEN_PATTERNS = [
     # einem kleingeschriebenen Wort (ein Artikel vor einem Substantiv bleibt).
     (r'\b([Dd])ie(\s+(?:[a-zäöüß]+e\s+){0,2})([A-Za-zäöüß]*[Aa]blauf)\b', r'\1er\2\3'),
     (r'\b([Ee])ine(\s+(?:[a-zäöüß]+e\s+){0,2})([A-Za-zäöüß]*[Aa]blauf)\b', r'\1in\2\3'),
+    (r'\b([Ee])in ([a-zäöüß]+)e ([A-Za-zäöüß]*[Aa]blauf)\b', r'\1in \2er \3'),  # KIS-1322
     (r'\b([Aa]blauf), die (?=[a-zäöüß])', r'\1, der '),
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Standardisiere\b', r'\1Standardisieren Sie'),  # v14.20
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Strukturiere\b', r'\1Strukturieren Sie'),  # v14.20
@@ -2319,6 +2328,7 @@ GRAMMAR_FIX_PATTERNS = [
     # KIS-1321: Genus nach Pipeline→Ablauf (siehe EXTENDED_SIEZEN_PATTERNS).
     (r'\b([Dd])ie(\s+(?:[a-zäöüß]+e\s+){0,2})([A-Za-zäöüß]*[Aa]blauf)\b', r'\1er\2\3'),
     (r'\b([Ee])ine(\s+(?:[a-zäöüß]+e\s+){0,2})([A-Za-zäöüß]*[Aa]blauf)\b', r'\1in\2\3'),
+    (r'\b([Ee])in ([a-zäöüß]+)e ([A-Za-zäöüß]*[Aa]blauf)\b', r'\1in \2er \3'),  # KIS-1322
     (r'\b([Aa]blauf), die (?=[a-zäöüß])', r'\1, der '),
     (PRODUKTNAME_ENGINE_SCHUTZ + r'\bEngine\b', 'System'),  # KIS-1305: nie in Produktnamen
     (r'\.\. ', '. '),
@@ -2385,6 +2395,10 @@ GRAMMAR_FIX_PATTERNS = [
     # Subjekte mit unbestimmtem Artikel oder „jede/r/s".
     (r'\b(ein|eine|jeder|jede|jedes) ((?:Motion |Sound |Art )?(?:Designer(?:in)?|Mitarbeiter(?:in)?|Redakteur(?:in)?|Cutter(?:in)?|Editor(?:in)?|Teammitglied|Kollege|Kollegin|Kunde|Kundin)) (nutzen|setzen|schreiben|erstellen|prüfen)\b',
      lambda m: f'{m.group(1)} {m.group(2)} {m.group(3)[:-2]}t'),
+    # KIS-1322: 'fuer den Motion Designer, der Runway fuer Hintergrund-Loops nutzen'
+    # (Lauf KIS1291, R1 S. 26) - Relativsatz mit 'der' ist Singular.
+    (r', der ((?:[\w\-/]+ ){1,6}?)(nutzen|setzen|erstellen|schreiben|prüfen)(?=[,.;])',
+     lambda m: f', der {m.group(1)}{m.group(2)[:-2]}t'),
     (r'\b(jeder|jede|jedes) (\w+) eigene (\w+) (nutzen|setzen)\b',
      lambda m: f'{m.group(1)} {m.group(2)} eigene {m.group(3)} {m.group(4)[:-2]}t'),
 
