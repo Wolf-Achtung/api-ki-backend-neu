@@ -456,8 +456,8 @@ Für JEDE der 3 Strategien liefere:
    Produkte NUR Werkzeuge aus dieser Liste oder aus dem Stack des Kunden:
    {kuratierte_tools_namen}. Sonst Gattungsbegriff („Transkriptionsdienst").
    Keine Werkzeugpreise, keine Datenschutz-Einstufungen.
-6. Erster Validierungsschritt — 1 konkreter Test (maximal 2 Wochen, maximal 500 €)
-7. Umsatzprojektion — konservative Schätzung: Monatsumsatz nach 6 Monaten. Die Projektion muss zu Preis × Menge passen: Bei Jahreslizenzen den Jahresbetrag durch zwölf teilen — Lauf KIS1281 nannte „25.000 € im Monat bei 1–2 Jahreslizenzen zu 20.000–40.000 €" (KIS-1312).
+6. Erster Validierungsschritt — 1 konkreter Test (maximal 2 Wochen, maximal 500 €). Nenne den tatsächlichen Aufwand des Tests (etwa „zwei Tage Arbeitszeit, rund 200 € Lizenzkosten"), nicht dreimal die Obergrenze — Lauf KIS1285 schrieb bei allen drei Strategien „ca. 500 €", auch für einen Plattform-Prototyp (KIS-1315).
+7. Umsatzprojektion — konservative Schätzung: Monatsumsatz nach 6 Monaten. Die Projektion muss zu Preis × Menge passen: Bei Jahreslizenzen den Jahresbetrag durch zwölf teilen — Lauf KIS1281 nannte „25.000 € im Monat bei 1–2 Jahreslizenzen zu 20.000–40.000 €" (KIS-1312). Rechne vor: „Jahresabo 30.000 € × 2 Abonnenten = 60.000 € im Jahr = 5.000 € im Monat" — Lauf KIS1285 schrieb „15.000 € monatlich bei 1–2 Jahresabonnenten" (KIS-1315).
    PFLICHT: Nenne im selben Satz die Menge, aus der sich die Zahl ergibt
    (Aufträge je Monat, Abonnenten, Auslastung, Workshop-Termine).
    Richtig: „voraussichtlich 10.000 € im Monat, bei 4–6 Aufträgen".
@@ -761,6 +761,8 @@ Segment-gerecht in die Roadmap integrieren:
 (e) QUICK-WIN-KOMMUNIKATION: Erste Erfolge aus Phase 1 als Change-Beschleuniger einsetzen.
 CONSTRAINT: Kein separates Change-Kapitel — in bestehende Phasen-Struktur einweben. Bei Solo-Segment: Kein formales Change Management, nur persönliche Motivation.
 
+QUELLENZEILE OHNE JAHRESZAHL (VERBINDLICH, KIS-1315): „Quelle: Handlungsfelder, Tool-Empfehlungen und Budgetvorgaben dieses Strategieberichts" — ohne „Stand 20xx". Lauf KIS1285 schrieb „Stand 2024" in einem Bericht vom September 2026; es gibt kein datiertes Dokument dieses Namens.
+
 TRADE-OFF-ZEILE (PFLICHT IN TABELLEN): Erweitere jede priorisierte Maßnahme um ein kurzes Feld „Zielkonflikt". Beispiele für Werte: - „Tempo vs. Kontrolltiefe" - „Niedrige Einstiegshürde vs. begrenzter Hebel" - „DSGVO-Sicherheit vs. geringere Tool-Auswahl" - „Standardisierung vs. Individualität" - „Investition heute vs. Nutzen später" - „Automatisierung vs. Kontrolle" Halte das Feld auf maximal 4-6 Wörter. Kein generischer Fülltext.
 
 SZENARIO-SPALTE (PFLICHT IN ROADMAP-TABELLEN): Erweitere Roadmap- und Priorisierungstabellen um eine kompakte Spalte „Pfad" mit genau einem der drei Werte: - „Minimal" — der sichere Einstieg, geringster Aufwand - „Standard" — die empfohlene Umsetzung bei normalem Verlauf - „Ausbau" — der ambitionierte Pfad bei hoher Umsetzungsreife Ordne jede Maßnahme genau einem Pfad zu. Keine neuen Rechenmodelle, keine neuen Zahlen — nur eine Einordnung.
@@ -880,6 +882,7 @@ TOOL-EMPFEHLUNGEN (Zusammenfassung):
 
 WERKZEUGE UND HOSTING IN DIESER SECTION (VERBINDLICH, KIS-1302):
 - Werkzeugnamen nur aus dieser Liste oder aus dem Stack des Kunden: {kuratierte_tools_namen}.
+- „Eingesetzt" oder „im Einsatz" sind nur Werkzeuge aus {s5_software} oder aus den KI-Projekten des Kunden; alles aus der Liste heißt „empfohlen" (KIS-1315). Lauf KIS1285 schrieb im AI-Act-Absatz „die eingesetzten KI-Werkzeuge wie Amberscript, DeepL Pro … und LanguageTool" — keines davon nutzte der Kunde. Eine Aufzählung nach „EU-konforme Werkzeuge wie" enthält nie einen US-Anbieter.
 - Die Hosting-Angabe je Werkzeug steht in der gepflegten Liste unten; übernimm sie wörtlich. Ein Werkzeug gilt nur dann als „EU-gehostet" oder „EU-konform", wenn seine Zeile EU als Hosting nennt. „lokal" (Desktop-Installation, etwa DaVinci Resolve oder Topaz Video AI) ist kein EU-Hosting: Diese Werkzeuge heißen „lokal installiert", nie „EU-gehostet" (Lauf KIS1277, S. 36).
 - ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney, Runway, Adobe Firefly, Descript und ElevenLabs sind US-Anbieter: nie als „EU-konform" oder „EU-gehostet" bezeichnen — wenn nötig „US-Anbieter, AVV prüfen". Lauf KIS1275 empfahl „EU-konforme Tools wie Microsoft 365 Copilot, Runway und Amberscript" — Runway ist US. Microsoft 365 Copilot hat keine Zeile in der Liste: Datenschutz „laut Anbieter prüfen", nie „EU-konform" (Lauf KIS1278, Risikotabelle).
 {kuratierte_tools}

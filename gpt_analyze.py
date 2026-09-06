@@ -15018,6 +15018,9 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
             stundensatz=float(_sofort_rate) if _sofort_rate else 0.0,
             # KIS-1251 (Punkt 3): EN-Fassung der 30-Tage-Challenge
             lang=str(briefing.get("lang") or sections.get("LANG") or "de").lower(),
+            # KIS-1315: Medien-Fassung der Anwender-Challenge
+            is_media="medien" in str(sofort_branche or "").lower(),
+            medien_sparte=str(briefing.get("medien_sparte", "") or ""),
         )
         # KIS-1298: Kapitel-Banner nennt dieselbe Tageszahl wie der Inhalt.
         # Lauf KIS1274: Banner "30-Tage KI-Challenge", darunter "Ihre 23-Tage

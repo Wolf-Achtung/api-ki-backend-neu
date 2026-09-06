@@ -99,7 +99,8 @@ class TestSofortStart:
         text = re.sub(r"<[^>]+>", " ", html)
         assert "Amberscript" in text and "DaVinci Resolve" in text
         assert "Microsoft Copilot + Azure OpenAI" not in text and "n8n / Make Enterprise" not in text
-        assert "Prozess in Motion-Design- und Social-Media-Studio" in text
+        # KIS-1315: Fachgebiet in Klammern, Satz mit Artikel.
+        assert "Prozess in Ihrem Betrieb (Motion-Design- und Social-Media-Studio)" in text
         assert "Prozess in Medien & Kreativwirtschaft" not in text
 
     def test_experte_behaelt_sein_kit(self, motion):

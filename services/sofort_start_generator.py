@@ -2413,9 +2413,14 @@ def generate_sofort_start_html(
     elif expertise_level == "intermediate":
         # KIS-1312: kurzes Fachgebiet statt der ganzen Hauptleistung (drei
         # Sätze) oder des Branchennamens.
+        # KIS-1315: „Prozess in Motion-Design- und Social-Media-Studio" (Lauf
+        # KIS1285, R1 S. 6) — das Fachgebiet steht in Klammern, der Satz
+        # bekommt seinen Artikel.
+        _fach = _fachgebiet_kurz(_hl_clean, "")
+        _wo = f"in Ihrem Betrieb ({_fach})" if _fach else "in Ihrem Arbeitsalltag"
         erster_schritt = (
-            f"Identifizieren Sie den zeitintensivsten wiederkehrenden Prozess in "
-            f"{_fachgebiet_kurz(_hl_clean, 'Ihrem Arbeitsalltag')} und erstellen Sie einen strukturierten "
+            f"Identifizieren Sie den zeitintensivsten wiederkehrenden Prozess {_wo} "
+            f"und erstellen Sie einen strukturierten "
             f"Prompt, der diesen Prozess in 3 Schritte zerlegt. Testen Sie das Ergebnis "
             f"mit einem realen Beispiel."
         )
@@ -3602,6 +3607,77 @@ ZEITBUDGET_CONFIG = {
 }
 
 # Angepasste Challenges je nach Zeitbudget
+# KIS-1315: Medien-Fassung der Anwender-Challenge (Bewegtbild, Social,
+# Postproduktion). Die generische Fassung schickte ein Motion-Studio in den
+# „E-Mail-zu-Zusammenfassung-Workflow" (Läufe KIS1281 und KIS1285). Verlag
+# und Musik/Audio behalten die generische Fassung — ihre Aufgaben sind
+# andere.
+CHALLENGE_30_TAGE_INTERMEDIATE_MEDIEN = {
+    "woche_1": {
+        "titel": "Workflow-Analyse",
+        "ziel": "Zeitfresser in der Produktion finden und die Master-Fassung als Quelle festlegen",
+        "tage": [
+            {"tag": 1, "aufgabe": "Top-5-Zeitfresser je Kundenkanal auflisten (Untertitel, Formatvarianten, Feedback-Runden)", "dauer": "15 Min", "kategorie": "Analyse"},
+            {"tag": 2, "aufgabe": "Für #1 Zeitfresser: Master-Fassung eines aktuellen Videos als Quelle aller Formate definieren", "dauer": "25 Min", "kategorie": "Praxis"},
+            {"tag": 3, "aufgabe": "Automatische Untertitel an einem Interview testen (Amberscript oder Premiere Speech to Text)", "dauer": "25 Min", "kategorie": "Praxis"},
+            {"tag": 4, "aufgabe": "Untertitel-Timing und Schreibweisen gegen die Hand-Fassung prüfen", "dauer": "30 Min", "kategorie": "Qualität"},
+            {"tag": 5, "aufgabe": "Export-Presets 9:16, 1:1 und 16:9 aus dem Master anlegen", "dauer": "25 Min", "kategorie": "Fortgeschritten"},
+            {"tag": 6, "aufgabe": "Prompt-Vorlage für Caption-Varianten je Plattform speichern", "dauer": "15 Min", "kategorie": "Optimierung"},
+            {"tag": 7, "aufgabe": "Woche 1 Review: Welcher Schritt spart am meisten Zeit?", "dauer": "15 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_2": {
+        "titel": "Automatisierung & Kennzeichnung",
+        "ziel": "Untertitel, Übersetzung und Freigabe als festen Ablauf aufsetzen",
+        "tage": [
+            {"tag": 8, "aufgabe": "Kennzeichnungsregel für KI-Anteile (Loops, Captions, Untertitel) schriftlich festlegen", "dauer": "30 Min", "kategorie": "Governance"},
+            {"tag": 9, "aufgabe": "Freigabe-Checkliste vor Versand im Projektmanagement-Tool anlegen", "dauer": "30 Min", "kategorie": "Setup"},
+            {"tag": 10, "aufgabe": "Übersetzung der Untertitel testen (DeepL Pro) und Fachbegriffe im Glossar sichern", "dauer": "30 Min", "kategorie": "Praxis"},
+            {"tag": 11, "aufgabe": "Qualitätskriterien für automatische Untertitel und Schnittfassungen definieren", "dauer": "20 Min", "kategorie": "Qualität"},
+            {"tag": 12, "aufgabe": "Rechte-Register starten: Asset, Tool, Lizenz und Einwilligung je Projekt", "dauer": "25 Min", "kategorie": "Governance"},
+            {"tag": 13, "aufgabe": "Prompt-Bibliothek mit Top-5-Prompts anlegen (Captions, Skript-Outline, Kurzfassung)", "dauer": "20 Min", "kategorie": "Optimierung"},
+            {"tag": 14, "aufgabe": "Woche 2 Review: Zeitersparnis pro Workflow dokumentieren", "dauer": "15 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_3": {
+        "titel": "Vertiefung & Qualität",
+        "ziel": "Tonalität je Kanal, Konzeptarbeit mit KI, Anbindung an Schnitt und Review",
+        "tage": [
+            {"tag": 15, "aufgabe": "System-Prompt mit Tonalität und Markenregeln je Kundenkanal einrichten", "dauer": "30 Min", "kategorie": "Fortgeschritten"},
+            {"tag": 16, "aufgabe": "KI als Sparringspartner für Konzept und Storyboard nutzen", "dauer": "30 Min", "kategorie": "Praxis"},
+            {"tag": 17, "aufgabe": "Vorlage für Erklärfilm-Skript oder Creative Brief mit KI erstellen", "dauer": "30 Min", "kategorie": "Praxis"},
+            {"tag": 18, "aufgabe": "Qualitäts-Checkliste: Wann ist ein KI-Entwurf freigabefähig?", "dauer": "20 Min", "kategorie": "Qualität"},
+            {"tag": 19, "aufgabe": "Workflow-Integration: Untertitel-Export an Schnittsystem und Review-Tool anbinden", "dauer": "45 Min", "kategorie": "Fortgeschritten"},
+            {"tag": 20, "aufgabe": "Art Direction und Social-Team einweisen: besten Use Case demonstrieren", "dauer": "30 Min", "kategorie": "Sharing"},
+            {"tag": 21, "aufgabe": "Woche 3 Review: Top-3-Use-Cases nach Zeitersparnis ranken", "dauer": "20 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_4": {
+        "titel": "Skalierung & Standardisierung",
+        "ziel": "Vom Master bis zur Mehrformat-Ausspielung als Produktionsstandard",
+        "tage": [
+            {"tag": 22, "aufgabe": "Standard-Prompts und Export-Presets dokumentieren und mit dem Team teilen", "dauer": "25 Min", "kategorie": "Sharing"},
+            {"tag": 23, "aufgabe": "KI-Nutzungsregeln aufschreiben: Kundenmaterial unter NDA nur in Tools mit AVV", "dauer": "20 Min", "kategorie": "Governance"},
+            {"tag": 24, "aufgabe": "Ein Projekt komplett vom Master bis zur Mehrformat-Ausspielung im KI-Workflow durchführen", "dauer": "45 Min", "kategorie": "Praxis"},
+            {"tag": 25, "aufgabe": "Feedback-Loop: Untertitel- und Caption-Qualität systematisch verbessern", "dauer": "25 Min", "kategorie": "Optimierung"},
+            {"tag": 26, "aufgabe": "Tool-Stack evaluieren: Was behalten, was ersetzen, was braucht einen AVV?", "dauer": "20 Min", "kategorie": "Analyse"},
+            {"tag": 27, "aufgabe": "Automatisierungs-Roadmap für die nächsten 3 Monate (nächster Schritt: Archiv-Verschlagwortung)", "dauer": "30 Min", "kategorie": "Planung"},
+            {"tag": 28, "aufgabe": "Budgetplanung: Lizenzen und Zeitinvest für das nächste Quartal", "dauer": "20 Min", "kategorie": "Planung"},
+        ]
+    },
+    "abschluss": {
+        "titel": "Abschluss & Nächste Phase",
+        "ziel": "Ergebnisse sichern und Ausbau planen",
+        "tage": [
+            {"tag": 29, "aufgabe": "ROI berechnen: Zeitersparnis × Stundensatz", "dauer": "20 Min", "kategorie": "Reflexion"},
+            {"tag": 30, "aufgabe": "Nächste 30 Tage planen: Welche Workflows werden Produktionsstandard?", "dauer": "30 Min", "kategorie": "Planung"},
+        ]
+    },
+}
+
+# Sparten, deren Anwender-Challenge nicht um Bewegtbild kreist.
+_CHALLENGE_MEDIEN_AUSNAHMEN = ("verlag_publishing", "musik_audio")
+
 CHALLENGE_LIGHT = {
     "woche_1": {
         "titel": "Erste Schritte",
@@ -3949,6 +4025,8 @@ def generate_30_tage_challenge_html_v2(
     hours_per_week: float = 0.0,  # KIS-1134-FX-2: Prognose-Werte
     stundensatz: float = 0.0,  # KIS-1134-FX-2: Für €-Berechnung
     lang: str = "de",  # KIS-1251: EN-Fassung bei lang=en
+    is_media: bool = False,  # KIS-1315: Medien-Fassung der Anwender-Challenge
+    medien_sparte: str = "",  # KIS-1315: Verlag und Musik/Audio bleiben generisch
 ) -> str:
     """
     Generiert die 30-Tage Challenge angepasst ans Zeitbudget und Kompetenz-Level.
@@ -3975,6 +4053,13 @@ def generate_30_tage_challenge_html_v2(
         challenge_data = CHALLENGE_30_TAGE_EXPERT_EN if is_en else CHALLENGE_30_TAGE_EXPERT
     elif expertise_level == "intermediate":
         challenge_data = CHALLENGE_30_TAGE_INTERMEDIATE_EN if is_en else CHALLENGE_30_TAGE_INTERMEDIATE
+        # KIS-1315: Medienbetriebe (Bewegtbild, Social, Postproduktion) bekommen
+        # eigene Aufgaben; Verlag und Musik/Audio bleiben bei der generischen
+        # Fassung. EN vorerst generisch.
+        if is_media and not is_en:
+            from services.medien_sparte import slug as _medien_slug_ch
+            if _medien_slug_ch(medien_sparte) not in _CHALLENGE_MEDIEN_AUSNAHMEN:
+                challenge_data = CHALLENGE_30_TAGE_INTERMEDIATE_MEDIEN
     elif zeit_config["intensitaet"] == "light":
         challenge_data = CHALLENGE_LIGHT_EN if is_en else CHALLENGE_LIGHT
         show_prio = True

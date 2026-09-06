@@ -460,8 +460,8 @@ For EACH of the 3 strategies deliver:
    products ONLY tools from this list or from the client's stack:
    {kuratierte_tools_namen}. Otherwise use a generic term ("transcription service").
    No tool prices, no data protection ratings.
-6. First validation step — 1 concrete test (max. 2 weeks, max. 500 €)
-7. Revenue projection — conservative estimate: monthly revenue after 6 months. The projection must match price × volume: for annual licences divide the yearly amount by twelve (KIS-1312)
+6. First validation step — 1 concrete test (max. 2 weeks, max. 500 €). State the actual effort of the test (e.g. "two days of work, about 200 € in licences"), not the cap three times (KIS-1315).
+7. Revenue projection — conservative estimate: monthly revenue after 6 months. The projection must match price × volume: for annual licences divide the yearly amount by twelve (KIS-1312). Show the arithmetic: "annual subscription 30,000 € × 2 subscribers = 60,000 € per year = 5,000 € per month" (KIS-1315)
 
 Close with a recommendation: which strategy first, why, and how the three build on each other.
 
@@ -744,6 +744,8 @@ Integrate into the roadmap, appropriate to the segment:
 (e) QUICK-WIN COMMUNICATION: Use early successes from phase 1 as change accelerators.
 CONSTRAINT: No separate change chapter — weave it into the existing phase structure. For the solo segment: no formal change management, only personal motivation.
 
+SOURCE LINE WITHOUT A YEAR (BINDING, KIS-1315): "Source: action fields, tool recommendations and budget of this strategy report" — never "as of 20xx"; there is no dated document of that name.
+
 TRADE-OFF FIELD (MANDATORY IN TABLES): Add a short "Trade-off" field to every prioritized measure. Example values: - "Speed vs. depth of control" - "Low entry barrier vs. limited leverage" - "GDPR safety vs. smaller tool selection" - "Standardization vs. individuality" - "Investment today vs. benefit later" - "Automation vs. control" Keep the field to 4-6 words. No generic filler.
 
 SCENARIO COLUMN (MANDATORY IN ROADMAP TABLES): Add a compact "Path" column to roadmap and prioritization tables with exactly one of three values: - "Minimal" — the safe entry, lowest effort - "Standard" — the recommended implementation under normal conditions - "Scale-up" — the ambitious path at high implementation maturity Assign each measure to exactly one path. No new calculation models, no new figures — classification only.
@@ -862,6 +864,7 @@ TOOL RECOMMENDATIONS (summary):
 {s4_tools_summary}
 
 TOOLS AND HOSTING IN THIS SECTION (BINDING, KIS-1302):
+- "In use" or "deployed" applies only to tools from {s5_software} or the customer's AI projects; everything from the list is "recommended" (KIS-1315). A list after "EU-compliant tools such as" never contains a US provider.
 - Tool names only from this list or from the customer's stack: {kuratierte_tools_namen}.
 - The hosting entry per tool is in the curated list below; copy it verbatim. A tool counts as "EU-hosted" or "EU-compliant" only if its row names EU as hosting. "local" (desktop installation, e.g. DaVinci Resolve or Topaz Video AI) is not EU hosting: call these tools "installed locally", never "EU-hosted".
 - ChatGPT/OpenAI, Claude/Anthropic, Perplexity, Gemini, Midjourney, Runway, Adobe Firefly, Descript and ElevenLabs are US vendors: never call them "EU-compliant" or "EU-hosted" — if needed, "US vendor, check DPA". Microsoft 365 Copilot has no row in the list: data protection "check with the vendor", never "EU-compliant".

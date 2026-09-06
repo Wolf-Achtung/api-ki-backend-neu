@@ -381,6 +381,117 @@ def research_text_aus_kontext(research_context: Optional[dict]) -> str:
     return " ".join(t for t in teile if t)
 
 
+_BRUCH_WORTE = {
+    "75": r"drei von vier|3 von 4|three (?:in|out of) four|drei Viertel|three[- ]quarters",
+    "80": r"vier von fünf|4 von 5|four (?:in|out of) five",
+    "90": r"neun von zehn|9 von 10|nine (?:in|out of) ten",
+    "67": r"zwei Drittel|two[- ]thirds",
+    "66": r"zwei Drittel|two[- ]thirds",
+    "60": r"drei von fünf|3 von 5|three (?:in|out of) five",
+    "50": r"jede[rs]? zweite|die Hälfte|1 von 2|one in two|half of",
+    "40": r"zwei von fünf|2 von 5|two (?:in|out of) five",
+    "33": r"jede[rs]? dritte|ein Drittel|1 von 3|one in three|a third",
+    "25": r"jede[rs]? vierte|ein Viertel|1 von 4|one in four|a quarter",
+    "20": r"jede[rs]? fünfte|ein Fünftel|1 von 5|one in five",
+    "10": r"jede[rs]? zehnte|ein Zehntel|1 von 10|one in ten",
+}
+
+# KIS-1315: „EU-konforme Werkzeuge wie DeepL Pro oder Adobe Firefly" (Lauf
+# KIS1285, S3). Die Prompt-Regel hielt in vier Läufen nicht; jetzt fällt ein
+# US-Werkzeug deterministisch aus der Aufzählung hinter „EU-konform… wie".
+_US_WERKZEUGE_RE = re.compile(
+    r"\b(?:ChatGPT(?:\s*/\s*OpenAI)?|OpenAI(?:\s+API)?|Claude|Anthropic|Perplexity(?:\s+AI)?|Runway(?:ML)?|"
+    r"Gemini|Midjourney|Adobe Firefly|Firefly|Descript|ElevenLabs|Canva(?:\s+Magic\s+Studio)?|"
+    r"Microsoft 365 Copilot|Copilot|Notion(?:\s+AI)?|Frame\.io)\b"
+)
+_EU_AUFZAEHLUNG_RE = re.compile(
+    r"(EU-(?:konform|gehostet|basiert)\w*\s+(?:KI-)?(?:Werkzeuge?n?|Tools?|Alternativen?|Lösungen|Anbieter|Dienste?)"
+    r"\s+(?:wie|etwa|z\.\s?B\.|beispielsweise|such as|like)\s+)([^.;:<\n]+?)(?=[.;:<\n]| ist\b| sind\b| bietet| bieten| ermöglich| statt\b| anstelle\b)",
+    re.IGNORECASE,
+)
+
+
+def us_werkzeug_aus_eu_aufzaehlung(html: str) -> tuple:
+    """Streicht US-Werkzeuge aus einer Aufzählung nach „EU-konforme Werkzeuge
+    wie …". Bleibt nichts übrig, fällt das „wie …" ganz. Liefert (html, n)."""
+    if not html or "EU-" not in html:
+        return html, 0
+    count = 0
+
+    def _fix(m: "re.Match[str]") -> str:
+        nonlocal count
+        kopf, liste = m.group(1), m.group(2)
+        if not _US_WERKZEUGE_RE.search(liste):
+            return str(m.group(0))
+        teile = [t.strip() for t in re.split(r",|\s+oder\s+|\s+und\s+|\s+or\s+|\s+and\s+", liste) if t.strip()]
+        rest = [t for t in teile if not _US_WERKZEUGE_RE.search(t)]
+        if len(rest) == len(teile):
+            return str(m.group(0))
+        count += 1
+        if not rest:
+            # „EU-konforme Werkzeuge wie X" → „EU-konforme Werkzeuge"
+            return re.sub(r"\s+(?:wie|etwa|z\.\s?B\.|beispielsweise|such as|like)\s+$", "", kopf)
+        konj = " oder " if re.search(r"\s+oder\s+|\s+or\s+", liste) else " und "
+        if re.search(r"\s+or\s+|\s+and\s+|such as|like", m.group(0)) and not re.search(r"wie|etwa|z\.\s?B\.", kopf):
+            konj = " or " if " or " in liste else " and "
+        neu = rest[0] if len(rest) == 1 else ", ".join(rest[:-1]) + konj + rest[-1]
+        return kopf + neu
+
+    html = _EU_AUFZAEHLUNG_RE.sub(_fix, html)
+    if count:
+        log.info("[KIS-1315][US-AUS-EU] %d US-Werkzeug(e) aus EU-Aufzählung gestrichen", count)
+    return html, count
+
+
+# KIS-1315: „Die erwartete jährliche Zeitersparnis von 50 Stunden pro Monat"
+# (Lauf KIS1285, S5) — jährlich und pro Monat im selben Satz.
+_JAEHRLICH_PRO_MONAT_RE = re.compile(
+    r"\bjährliche[nrs]?\s+(Zeitersparnis|Einsparung|Ersparnis|Zeitgewinn)\s+von\s+(\d[\d.]*)\s+Stunden\s+pro\s+Monat"
+    r"|\bannual\s+(time\s+saving|saving)s?\s+of\s+(\d[\d.]*)\s+hours\s+per\s+month",
+    re.IGNORECASE,
+)
+
+
+def jaehrlich_pro_monat_korrigieren(html: str) -> tuple:
+    if not html or "pro Monat" not in html and "per month" not in html:
+        return html, 0
+    count = 0
+
+    def _fix(m: "re.Match[str]") -> str:
+        nonlocal count
+        count += 1
+        if m.group(1):
+            return f"{m.group(1)} von {m.group(2)} Stunden pro Monat"
+        return f"{m.group(3)} of {m.group(4)} hours per month"
+
+    return _JAEHRLICH_PRO_MONAT_RE.sub(_fix, html), count
+
+
+# KIS-1315: „Quelle: … des KI-Strategieberichts für Ihr Unternehmen, Stand
+# 2024." (Lauf KIS1285, S6, Report vom 06.09.2026). Ein Stand vor dem
+# Reportjahr in einer Quellenzeile ist erfunden — es gibt kein datiertes
+# Dokument dieses Namens.
+_QUELLEN_STAND_RE = re.compile(
+    r"(<p[^>]*>(?:(?!</p>).)*?\b(?:Quellen?|Sources?)\s*:(?:(?!</p>).)*?)(,?\s*\(?(?:Stand|as of|status)\s+(20\d{2})\)?)",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def quellen_stand_jahr_korrigieren(html: str, report_year: int) -> tuple:
+    if not html or not report_year or not re.search(r"\b(?:Stand|as of)\s+20\d{2}", html, re.IGNORECASE):
+        return html, 0
+    count = 0
+
+    def _fix(m: "re.Match[str]") -> str:
+        nonlocal count
+        if int(m.group(3)) >= report_year:
+            return str(m.group(0))
+        count += 1
+        return str(m.group(1))
+
+    return _QUELLEN_STAND_RE.sub(_fix, html), count
+
+
 def benchmark_prozent_richtwert(html: str, research_text: str, lang: str = "de") -> tuple:
     """Hängt „(Richtwert)" an Prozentwerte, deren Zahl nicht in der Recherche
     vorkommt. Nur Textknoten, keine Tags. Liefert (html, Anzahl)."""
@@ -395,6 +506,11 @@ def benchmark_prozent_richtwert(html: str, research_text: str, lang: str = "de")
         ok = bool(research_text) and bool(
             re.search(r"(?<![\d,.])" + re.escape(zahl) + r"(?:[,.]\d+)?\s?(?:%|Prozent|percent)", research_text)
         )
+        # KIS-1315: Die Recherche sagt „drei von vier", das Modell schreibt
+        # „75 %" — Lauf KIS1285 (S2) bekam dafür „75 % (Richtwert)" neben der
+        # Quelle Metricool 2026. Bruchangaben zählen als Beleg.
+        if not ok and research_text and zahl in _BRUCH_WORTE:
+            ok = bool(re.search(_BRUCH_WORTE[zahl], research_text, re.IGNORECASE))
         belegt_cache[zahl] = ok
         return ok
 
@@ -584,6 +700,26 @@ def sanitize_strategy_sections(
         if _sg:
             sections[key] = html
             patches_applied += _sg
+
+        # Pass 6d (KIS-1315): US-Werkzeug aus „EU-konforme Werkzeuge wie …".
+        html, _ue = us_werkzeug_aus_eu_aufzaehlung(html)
+        if _ue:
+            sections[key] = html
+            patches_applied += _ue
+            all_warnings.append(f"{key}: {_ue} US-Werkzeug(e) aus EU-Aufzählung gestrichen (KIS-1315)")
+
+        # Pass 6e (KIS-1315): „jährliche Zeitersparnis von 50 Stunden pro Monat".
+        html, _jm = jaehrlich_pro_monat_korrigieren(html)
+        if _jm:
+            sections[key] = html
+            patches_applied += _jm
+
+        # Pass 6f (KIS-1315): „Quelle: …, Stand 2024" vor dem Reportjahr.
+        html, _qs = quellen_stand_jahr_korrigieren(html, int(report_year or 0))
+        if _qs:
+            sections[key] = html
+            patches_applied += _qs
+            all_warnings.append(f"{key}: {_qs} veralteter Quellen-Stand entfernt (KIS-1315)")
 
         # Pass 6c (KIS-1313): Benchmark-Prozente in S2 ohne Beleg in der
         # Recherche heißen „Richtwert".
