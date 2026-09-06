@@ -2397,6 +2397,50 @@ def calc_quality_bonus(sections: dict) -> int:
 
 
 # === [FIX-B24-P0] Final Score Sweep — patcht pre-quality Score überall ===
+_DECISION_LABEL_RE = re.compile(r"<li\b[^>]*>\s*<strong>\s*(?:Tun|Lassen|Risiko)", re.IGNORECASE)
+
+
+def _ensure_decision_block(sections: dict, lang: str = "de") -> bool:
+    """KIS-1316: Der Entscheidungsblock (Tun / Lassen / Risiko & Stop-Signal)
+    fehlte in fünf von sechs Läufen im PDF — der Titel „Ihre Entscheidung in
+    3 Punkten" stand allein. Fehlen die drei Punkte kurz vor dem Rendern,
+    baut diese Funktion sie deterministisch aus den Fragebogen-Angaben.
+    Liefert True, wenn ersetzt wurde."""
+    html = str(sections.get("EXECUTIVE_DECISION_HTML") or "")
+    if len(_DECISION_LABEL_RE.findall(html)) >= 3:
+        return False
+    is_en = str(lang or "de").lower().startswith("en")
+    zeitfresser = re.sub(r"\s+", " ", str(sections.get("zeitersparnis_prioritaet") or "")).strip()
+    if len(zeitfresser) > 90:
+        zeitfresser = zeitfresser[:90].rsplit(" ", 1)[0].rstrip(",;") + " …"
+    zeitfresser = zeitfresser.rstrip(".")
+    if is_en:
+        tun = (f"The named time sink (\"{zeitfresser}\") gets a standard workflow (input → AI draft → review → approval), piloted on one clearly delimited process first."
+               if zeitfresser else "A standard workflow (input → AI draft → review → approval) is set up and piloted on the most time-consuming recurring process first.")
+        lassen = "Ad-hoc prompts and parallel tool experiments without a documented standard stop until the first workflow runs stably."
+        risiko = "If the pilot shows no measurable relief after 14 days, it is simplified or stopped — details per the business case."
+        titel, l_tun, l_lassen, l_risiko = "Your decision in 3 points", "Do:", "Stop:", "Risk &amp; stop signal:"
+    else:
+        tun = (f"Der genannte Zeitfresser („{zeitfresser}“) bekommt einen Standard-Workflow (Input → KI-Entwurf → Review → Freigabe), zuerst erprobt an einem klar abgegrenzten Prozess."
+               if zeitfresser else "Ein Standard-Workflow (Input → KI-Entwurf → Review → Freigabe) wird etabliert und zuerst am zeitintensivsten wiederkehrenden Prozess erprobt.")
+        lassen = "Ad-hoc-Prompts und parallele Tool-Experimente ohne dokumentierten Standard entfallen, bis der erste Workflow stabil läuft."
+        risiko = "Zeigt der Pilot nach 14 Tagen keinen messbaren Entlastungseffekt, wird vereinfacht oder gestoppt — Details laut Business Case."
+        titel, l_tun, l_lassen, l_risiko = "Ihre Entscheidung in 3 Punkten", "Tun:", "Lassen:", "Risiko &amp; Stop-Signal:"
+    neu = (
+        '<div class="exec-decision-box">\n'
+        f"  <p><strong>{titel}</strong></p>\n  <ul>\n"
+        f"    <li><strong>{l_tun}</strong> {tun}</li>\n"
+        f"    <li><strong>{l_lassen}</strong> {lassen}</li>\n"
+        f"    <li><strong>{l_risiko}</strong> {risiko}</li>\n"
+        "  </ul>\n</div>"
+    )
+    log.warning("[KIS-1316][DECISION-FALLBACK] Entscheidungsblock ohne drei Punkte (li=%d, len=%d) — deterministisch ersetzt",
+                len(re.findall(r"<li\b", html)), len(html))
+    sections["EXECUTIVE_DECISION_HTML"] = neu
+    sections["executive_decision"] = neu
+    return True
+
+
 def _final_score_sweep(sections: dict, final_score: int, pre_quality_score: int) -> dict:
     """
     [FIX-B24-P0] Replace pre-quality score_gesamt references in ALL sections.
@@ -14594,6 +14638,13 @@ def _generate_content_sections(briefing: Dict[str, Any], scores: Dict[str, Any])
                 sections[key] = result
                 # Logischer Key für Validator / interne Checks
                 sections[section_name] = result
+                # KIS-1316: Der Entscheidungsblock (Tun/Lassen/Stop-Signal) fehlte
+                # in fünf von sechs Läufen im PDF — nur der Titel blieb. Das Log
+                # zeigt, ob das Modell die drei Punkte geliefert hat.
+                if section_name == "executive_decision":
+                    log.info("[KIS-1316][DECISION-GEN] li=%d len=%d head=%r",
+                             len(re.findall(r"<li\b", result or "")), len(result or ""),
+                             re.sub(r"\s+", " ", (result or "")[:160]))
             except Exception as exc:
                 log.error("❌ Section %s failed: %s", section_name, exc)
                 err_html = f"<p><em>[{section_name} – Error: {exc}]</em></p>"
@@ -18293,12 +18344,24 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         roi_12m = answers.get("ROI_12M") or sections.get("ROI_12M", 0)
 
         # Build ≤600 char intro based on score and language
+        # KIS-1316: Kernbotschaft aus den Dimensions-Scores statt Boilerplate
+        # („Dieser KI-Readiness-Report für … analysiert Ihren aktuellen
+        # KI-Reifegrad" stand in jedem Lauf gleich auf S. 3).
+        _dim_labels = (
+            {"governance": "Governance", "security": "Security", "value": "Value creation", "enablement": "Enablement"}
+            if report_lang == "en" else
+            {"governance": "Governance", "security": "Sicherheit", "value": "Wertschöpfung", "enablement": "Befähigung"}
+        )
+        _dims = {k: int(scores.get(k) or 0) for k in _dim_labels if scores.get(k) is not None}
+        _dim_top = max(_dims, key=_dims.get) if _dims else ""
+        _dim_low = min(_dims, key=_dims.get) if _dims else ""
         if report_lang == "en":
+            _dim_txt = (f"Strongest dimension: {_dim_labels[_dim_top]} ({_dims[_dim_top]}/100), biggest lever: "
+                        f"{_dim_labels[_dim_low]} ({_dims[_dim_low]}/100). ") if _dims and _dim_top != _dim_low else ""
             intro_template = (
-                f"This AI Readiness Report analyzes your current AI maturity ({overall_score}/100 = {score_rating}) "
-                f"and provides actionable recommendations for {company_size} focusing on {display_label_fc}. "
-                f"Focus areas: Security, Efficiency, and Funding opportunities. "
-                f"ROI details and payback analysis are provided in the Business Case."
+                f"Your result: {overall_score}/100 ({score_rating}). {_dim_txt}"
+                f"This report delivers three quick wins, a 90-day plan and the matching funding programmes for {display_label_fc}; "
+                f"ROI and payback are in the Business Case."
             )
             decisions = [
                 "Start with 1 Quick Win within 14 days to validate AI benefits",
@@ -18306,11 +18369,12 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
                 "Check Funding section for eligible EU/national programs"
             ]
         else:
+            _dim_txt = (f"Stärkste Dimension: {_dim_labels[_dim_top]} ({_dims[_dim_top]}/100), größter Hebel: "
+                        f"{_dim_labels[_dim_low]} ({_dims[_dim_low]}/100). ") if _dims and _dim_top != _dim_low else ""
             intro_template = (
-                f"Dieser KI-Readiness-Report für {display_label_fc} analysiert Ihren aktuellen KI-Reifegrad ({overall_score}/100 = {score_rating}) "
-                f"und liefert konkrete Handlungsempfehlungen für {company_size} mit Fokus auf Ihren Geschäftsbereich. "
-                f"Schwerpunkte: Sicherheit, Effizienz und Förderpotenziale. "
-                f"ROI-Details und Payback-Analyse finden Sie im Business Case."
+                f"Ihr Ergebnis: {overall_score}/100 ({score_rating}). {_dim_txt}"
+                f"Dieser Report liefert drei Quick Wins, einen 90-Tage-Plan und die passenden Förderprogramme für {display_label_fc}; "
+                f"ROI und Amortisation stehen im Business Case."
             )
             decisions = [
                 f"Starten Sie mit 1 Quick Win für {display_label_fc} innerhalb von 14 Tagen",
@@ -20524,6 +20588,8 @@ Digitalisierungs- und KI-Vorhaben relevant sein
         # eine Investitions-Zeile ergänzen, wenn das LLM keine liefert.
         # =================================================================
         try:
+            # KIS-1316: Fehlen Tun/Lassen/Stop-Signal, deterministisch ersetzen.
+            _ensure_decision_block(sections, str(sections.get("LANG") or "de"))
             _dec_html = sections.get('EXECUTIVE_DECISION_HTML', '') or ''
             if _dec_html and 'Startinvestition' not in _dec_html:
                 _dec_capex = int(float(sections.get('CANON_CAPEX_EUR') or sections.get('CAPEX_REALISTISCH_EUR') or 0))
