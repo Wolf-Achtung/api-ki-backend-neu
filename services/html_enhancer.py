@@ -1099,8 +1099,36 @@ def enhance_strategy_html(html: str, lang: "str | None" = None) -> str:
     # 9. KIS-1257: Spaltenbreiten inhaltsproportional ausbalancieren
     html = _balance_column_widths(html)
 
+    # 10. KIS-1327: Etikett bleibt bei seiner Liste
+    html = _keep_label_with_list(html)
+
     log.info("[HTML-ENHANCE] Strategy: %d \u2192 %d chars", original_len, len(html))
     return html
+
+
+# KIS-1327: \u201eWenn-Dann-Steuerung:" stand allein am Seitenende, die beiden
+# S\u00e4tze dazu auf der n\u00e4chsten Seite (Lauf KIS1296, Strategie S. 25/26). Ein
+# kurzer Absatz mit Doppelpunkt, dem direkt eine Liste oder Tabelle folgt,
+# bekommt break-after:avoid \u2014 Chromium h\u00e4lt ihn dann beim ersten Punkt.
+_LABEL_BEFORE_LIST_RE = re.compile(
+    r"(<p\b)([^>]*)(>\s*(?:<strong>)?[^<]{2,60}:\s*(?:</strong>)?\s*</p>)(\s*<(?:ul|ol|table)\b)",
+    re.IGNORECASE,
+)
+
+
+def _keep_label_with_list(html: str) -> str:
+    def _fix(m: "re.Match[str]") -> str:  # type: ignore[type-arg, unused-ignore]
+        attrs = m.group(2)
+        if "break-after" in attrs:
+            return str(m.group(0))
+        css = "break-after:avoid;page-break-after:avoid;"
+        if 'style="' in attrs:
+            attrs = attrs.replace('style="', f'style="{css}', 1)
+        else:
+            attrs = f'{attrs} style="{css}"'
+        return f"{m.group(1)}{attrs}{m.group(3)}{m.group(4)}"
+
+    return _LABEL_BEFORE_LIST_RE.sub(_fix, html)
 
 
 def enhance_kpa_html(html: str, lang: "str | None" = None) -> str:

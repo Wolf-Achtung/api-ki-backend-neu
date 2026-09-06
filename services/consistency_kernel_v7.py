@@ -350,8 +350,12 @@ class ConsistencyKernelV7:
         self._report.healed = resolved > 0
 
         # Step 7: Merge outputs
+        # KIS-1327: Die normalisierten Fassungen (Leerraum gerafft, Dezimalkomma
+        # zu Punkt) dienen nur dem Vergleich. Bis Lauf KIS1296 gingen sie als
+        # Sektionen zurück in den Report — „5,50–8,30 €" wurde „5.50–8.30 €"
+        # (Duden-Mentor, R1 S. 14, seit KIS1293 beobachtet, Ursache offen).
         merged_sections = self._merge_outputs(
-            normalized_claude, normalized_gpt
+            self.claude_output, self.gpt_output
         )
 
         # Calculate overall alignment

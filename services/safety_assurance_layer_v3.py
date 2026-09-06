@@ -85,31 +85,32 @@ class ContentType(Enum):
 
 
 # Toxicity patterns by language
+# KIS-1327: Die dritte Zeile je Sprache („garantiert", „zweifellos", „guaranteed"
+# …) war kein Schimpfwort, wurde aber wie eines geheilt: Ersatz durch
+# „[entfernt - unangemessener Inhalt]", den der Healer als Klammer-Platzhalter
+# löscht. Ergebnis in Lauf KIS1296 (R1 S. 22): „… Rechteübertragung derzeit
+# nicht ist." und in Lauf KIS1279 (KIS-1307): „… abgesicherte Datenhaltung ."
+# Überzogene Sicherheit ist Sache der Prompts, nicht eines Wortfilters.
 TOXICITY_PATTERNS: Dict[SupportedLanguage, List[str]] = {
     SupportedLanguage.DE: [
         r"\b(dumm|idiot|inkompetent|unfähig|versager|katastroph)\b",
         r"\b(schrecklich|furchtbar|miserabel|desaströs)\b",
-        r"\b(garantiert|zweifellos|absolut sicher|100%ig)\b",  # Overconfident claims
     ],
     SupportedLanguage.EN: [
         r"\b(stupid|idiot|incompetent|failure|disaster)\b",
         r"\b(terrible|awful|miserable|disastrous)\b",
-        r"\b(guaranteed|undoubtedly|absolutely certain|100%)\b",
     ],
     SupportedLanguage.FR: [
         r"\b(stupide|idiot|incompétent|incapable|échec)\b",
         r"\b(terrible|affreux|misérable|désastreux)\b",
-        r"\b(garanti|indubitablement|absolument certain)\b",
     ],
     SupportedLanguage.IT: [
         r"\b(stupido|idiota|incompetente|incapace|fallimento)\b",
         r"\b(terribile|orribile|miserabile|disastroso)\b",
-        r"\b(garantito|indubbiamente|assolutamente certo)\b",
     ],
     SupportedLanguage.ES: [
         r"\b(estúpido|idiota|incompetente|incapaz|fracaso)\b",
         r"\b(terrible|horrible|miserable|desastroso)\b",
-        r"\b(garantizado|indudablemente|absolutamente seguro)\b",
     ],
 }
 
@@ -501,32 +502,31 @@ class SafetyAssuranceLayerV3:
 
         filtered = content
         count = 0
+        replacement = HEALING_TEMPLATES[SafetyViolationType.TOXICITY].get(
+            self._language, "[removed]"
+        )
+
+        # KIS-1327: Ersetzung über re.sub statt über gespeicherte Positionen —
+        # nach dem ersten Treffer stimmten die Offsets der weiteren nicht mehr
+        # („[entfernt - unangemessen[entfernt - unangemessener Inhalt]").
+        def _heal(match: "re.Match[str]") -> str:
+            nonlocal count
+            violation = SafetyViolation(
+                violation_id=self._get_violation_id(),
+                violation_type=SafetyViolationType.TOXICITY,
+                severity=SafetySeverity.HIGH,
+                section=section_key,
+                description=f"Toxic content detected: {match.group()[:50]}",
+                original_text=match.group(),
+                suggested_fix=replacement,
+            )
+            violation.healed = True
+            count += 1
+            self._violations.append(violation)
+            return replacement
 
         for pattern in patterns:
-            matches = list(re.finditer(pattern, filtered, re.IGNORECASE))
-            for match in matches:
-                # Create violation
-                violation = SafetyViolation(
-                    violation_id=self._get_violation_id(),
-                    violation_type=SafetyViolationType.TOXICITY,
-                    severity=SafetySeverity.HIGH,
-                    section=section_key,
-                    description=f"Toxic content detected: {match.group()[:50]}",
-                    original_text=match.group(),
-                    suggested_fix=HEALING_TEMPLATES[SafetyViolationType.TOXICITY].get(
-                        self._language, "[removed]"
-                    ),
-                )
-
-                # Auto-heal
-                replacement = HEALING_TEMPLATES[SafetyViolationType.TOXICITY].get(
-                    self._language, "[removed]"
-                )
-                filtered = filtered[:match.start()] + replacement + filtered[match.end():]
-                violation.healed = True
-                count += 1
-
-                self._violations.append(violation)
+            filtered = re.sub(pattern, _heal, filtered, flags=re.IGNORECASE)
 
         return filtered, count
 

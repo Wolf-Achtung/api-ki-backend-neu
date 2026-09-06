@@ -2399,6 +2399,23 @@ def calc_quality_bonus(sections: dict) -> int:
         return 1
 
 
+# KIS-1327: Ein Dimensions-Score ist kein Gesamtscore. „Wert-Score von 85 von
+# 100 Punkten" (12-Monats-Ausblick) darf weder der Sweep (Pattern 5: „Score
+# von <alt>") noch der Body-Enforcer („NN von 100 Punkten" → Gesamt) auf den
+# Gesamtscore setzen. Lauf KIS1296, R1 S. 29: „Wert-Score von 84" bei
+# Wertschöpfung 85. Die Regel prüft die 40 Zeichen vor der Fundstelle.
+_DIMENSION_KONTEXT_RE = re.compile(
+    r"(?:Governance|Sicherheit|Security|Wertsch|Wert-|Value|Bef(?:ä|ae)higung|Enablement)[^<\n.;!?]{0,40}$",
+    re.IGNORECASE,
+)
+
+
+def _score_ist_dimensionswert(text: str, pos: int) -> bool:
+    """True, wenn vor Position ``pos`` (innerhalb von 40 Zeichen, ohne Tag-
+    oder Zeilengrenze) eine Dimension genannt ist."""
+    return bool(_DIMENSION_KONTEXT_RE.search(text[max(0, pos - 60):pos]))
+
+
 # === [FIX-B24-P0] Final Score Sweep — patcht pre-quality Score überall ===
 _KERN_DIM_LABELS = {
     "de": {"governance": "Governance", "security": "Sicherheit", "value": "Wertschöpfung", "enablement": "Befähigung"},
@@ -2572,8 +2589,15 @@ def _final_score_sweep(sections: dict, final_score: int, pre_quality_score: int)
 
         original = html
 
+        # KIS-1327: Pattern 1 und 8 nur, wenn keine Dimension davorsteht —
+        # „Sicherheit (82/100)" ist bei pre_quality=82 kein Gesamtscore.
+        def _ohne_dimension(m: "re.Match[str]") -> str:
+            if _score_ist_dimensionswert(m.string, m.start()):
+                return str(m.group(0))
+            return str(m.group(0)).replace(_pre, _fin, 1)
+
         # Pattern 1: "(90/100" → "(91/100"
-        html = html.replace(f'({_pre}/100', f'({_fin}/100')
+        html = re.sub(rf'\({_pre}/100', _ohne_dimension, html)
 
         # Pattern 2: "90.0/100" → "91.0/100"
         html = html.replace(f'{_pre_f}/100', f'{_fin_f}/100')
@@ -2589,12 +2613,13 @@ def _final_score_sweep(sections: dict, final_score: int, pre_quality_score: int)
             html
         )
 
-        # Pattern 5: "Score von 90" → "Score von 91"
-        html = re.sub(
-            rf'(Score\s+von\s+){_pre}\b',
-            rf'\g<1>{_fin}',
-            html
-        )
+        # Pattern 5: "Score von 90" → "Score von 91" — KIS-1327: nicht, wenn
+        # eine Dimension davorsteht („Wert-Score von 85").
+        def _p5(m: "re.Match[str]") -> str:
+            if _score_ist_dimensionswert(m.string, m.start()):
+                return str(m.group(0))
+            return f"{m.group(1)}{_fin}"
+        html = re.sub(rf'(Score\s+von\s+){_pre}\b', _p5, html)
 
         # Pattern 6: "Gesamt-Score: 90" → "Gesamt-Score: 91"
         html = re.sub(
@@ -2611,7 +2636,7 @@ def _final_score_sweep(sections: dict, final_score: int, pre_quality_score: int)
         )
 
         # Pattern 8: bare "90/100" anywhere (catch-all for score display)
-        html = html.replace(f'{_pre}/100', f'{_fin}/100')
+        html = re.sub(rf'(?<!\d){_pre}/100', _ohne_dimension, html)
 
         if html != original:
             sections[key] = html
@@ -16258,10 +16283,13 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                 # "(XX/100)" after Gesamt-Score context
                 (_re_b729.compile(r'(Gesamt-?[Ss]core[^<\n]{0,80}\()(\d{1,3})(\s*/\s*100\s*\))'), str(_bt_overall)),
                 # "Score von XX Punkten" (generic → overall)
+                # KIS-1327: Die beiden generischen Muster greifen nicht, wenn
+                # eine Dimension davorsteht („Wert-Score von 85 von 100 Punkten").
                 (_re_b729.compile(r'(\bScore\s+von\s+)(\d{1,3})(\s+Punkt)'), str(_bt_overall)),
                 # "XX von 100 Punkten" (generic → overall)
                 (_re_b729.compile(r'(\b)(\d{1,3})(\s+von\s+100\s+Punkt)'), str(_bt_overall)),
             ]
+            _bt_generisch = {id(_bt_patterns[-1][0]), id(_bt_patterns[-2][0])}
             _bt_fixed_total = 0
             for _bt_sk in list(sections.keys()):
                 _bt_sv = sections.get(_bt_sk, "")
@@ -16276,7 +16304,11 @@ Gib den erweiterten HTML-Inhalt aus (mindestens {_heal_target_words} Wörter):
                     continue
                 _bt_orig = _bt_sv
                 for _bt_pat, _bt_repl in _bt_patterns:
-                    def _bt_replace(m: re.Match[str], r: str = _bt_repl) -> str:
+                    _bt_gen = id(_bt_pat) in _bt_generisch
+
+                    def _bt_replace(m: re.Match[str], r: str = _bt_repl, g: bool = _bt_gen) -> str:
+                        if g and _score_ist_dimensionswert(m.string, m.start()):
+                            return str(m.group(0))
                         return f"{m.group(1)}{r}{m.group(3)}" if str(m.group(2)) != r else m.group(0)
                     _bt_sv = _bt_pat.sub(_bt_replace, _bt_sv)
                 if _bt_sv != _bt_orig:
