@@ -621,14 +621,18 @@ def entscheider_neutral(html: str) -> tuple:
 # monatlich bei 1–2 Jahreslizenzen" (Lauf KIS1287, S3b) — nach KIS-1312 und
 # KIS-1315 der dritte Lauf mit falscher Division. Die Rechnung wird Code:
 # Monatsumsatz = Abonnenten (Obergrenze) × Jahrespreis (Untergrenze) / 12.
+# KIS-1326: „Jahresabo zwischen 600 € und 900 €" und die Tabellenzelle
+# „600–900 € Jahresabo" (Lauf KIS1295, Strategie S. 15/16: „5.000 € im Monat,
+# bei 8–10 Jahresabonnenten", richtig sind 500 €) — alle vier Formen
+# verlangten vier Ziffern, ein dreistelliger Jahrespreis fiel durch.
 _JAHRESPREIS_RE = re.compile(
-    r"Jahres(?:abo(?:nnement)?|lizenz)\w*\s+(?:ab|von|zu|für|zwischen)\s+([\d.]{4,})\s*€"
-    r"|([\d.]{4,})\s*€(?:\s*[–-]\s*[\d.]{4,}\s*€)?\s+Jahres(?:abo(?:nnement)?|lizenz)"
+    r"Jahres(?:abo(?:nnement)?|lizenz)\w*\s+(?:ab|von|zu|für|zwischen)\s+([\d.]{3,})\s*€"
+    r"|([\d.]{3,})\s*(?:€\s*)?(?:[–-]\s*[\d.]{3,}\s*)?€\s+Jahres(?:abo(?:nnement)?|lizenz)"
     # KIS-1323: Tabellenzelle „Jahresabo 3.000–5.000 €" — ohne Präposition.
-    r"|Jahres(?:abo(?:nnement)?|lizenz)\w*\s+([\d.]{4,})\s*(?:[–-]\s*[\d.]{4,}\s*)?€"
+    r"|Jahres(?:abo(?:nnement)?|lizenz)\w*\s+([\d.]{3,})\s*(?:[–-]\s*[\d.]{3,}\s*)?€"
     # KIS-1325: „3.000–5.000 € pro Jahr, Abo" (Lauf KIS1294, Strategie S. 16,
     # Tabellenzelle) — der Preis nennt das Jahr hinter dem Betrag.
-    r"|([\d.]{4,})\s*(?:[–-]\s*[\d.]{4,}\s*)?€\s+(?:pro Jahr|je Jahr|im Jahr|jährlich|/\s*Jahr|p\.\s?a\.)",
+    r"|([\d.]{3,})\s*(?:[–-]\s*[\d.]{3,}\s*)?€\s+(?:pro Jahr|je Jahr|im Jahr|jährlich|/\s*Jahr|p\.\s?a\.)",
     re.IGNORECASE,
 )
 # KIS-1319: „20.000 € im Monat, bei 1–2 Jahreslizenzen" (Komma) und die
@@ -682,7 +686,9 @@ def _preis_im_block(text: str) -> "tuple[int, int] | None":
     seg_m = _PREISMODELL_RE.search(text)
     seg = seg_m.group(1) if seg_m and seg_m.group(1).strip() else text
     kandidaten = []
-    for muster, teiler, minimum in ((_JAHRESPREIS_RE, 12, 1000), (_QUARTALSPREIS_RE, 3, 100), (_MONATSPREIS_RE, 1, 50)):
+    # KIS-1326: Jahres-Minimum 100 statt 1.000 — ein Archiv-Abo für 600 €
+    # im Jahr ist ein Jahrespreis.
+    for muster, teiler, minimum in ((_JAHRESPREIS_RE, 12, 100), (_QUARTALSPREIS_RE, 3, 100), (_MONATSPREIS_RE, 1, 50)):
         m = muster.search(seg)
         if not m:
             continue

@@ -1123,7 +1123,7 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
 
     # 5a. Post-process LLM HTML to use CSS design classes (styled tables, etc.)
     from services.html_enhancer import enhance_kpa_html
-    html = enhance_kpa_html(html)
+    html = enhance_kpa_html(html, lang=_briefing_lang)  # KIS-1326
 
     # 5b. Embed logos as base64 for PDF service compatibility
     # (PDF service has no access to local files — must inline before sending)

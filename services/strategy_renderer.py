@@ -738,8 +738,10 @@ def render_strategy_html(sr: Any, db_session: Any) -> str:
         pass
 
     # Post-process LLM HTML to use CSS design classes (KPI cards, timelines, etc.)
+    # KIS-1326: Sprache mitgeben — das Etikett „Quellen:"/„Sources:" kommt
+    # aus dem Report, nicht aus einer Wortliste.
     from services.html_enhancer import enhance_strategy_html
-    html = enhance_strategy_html(html)
+    html = enhance_strategy_html(html, lang="en" if _ctx_en else "de")
 
     # Safety net: enforce canonical budget values in final HTML
     if calculated_values:

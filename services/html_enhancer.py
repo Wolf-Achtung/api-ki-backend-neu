@@ -589,8 +589,14 @@ def _compact_source_lists(html: str) -> str:
     return html
 
 
-def _transform_sources(html: str) -> str:
+def _transform_sources(html: str, lang: "str | None" = None) -> str:
     """Wrap Quellen paragraphs and <div class="sources"> in sources-footer.
+
+    KIS-1326: ``lang`` entscheidet das Etikett eines Quellenblocks ohne
+    Etikett („Quellen:" / „Sources:"). Ohne ``lang`` bleibt die Wortliste
+    als Rückfall — Lauf KIS1295 (Strategie S. 13) bekam „Sources: KI-Readiness
+    Report 1; Marktanalyse …", weil „Report" als Englisch zählte und
+    „Marktanalyse" an der Wortgrenze vor „Analyse" scheiterte.
 
     KIS-1305: Bis Lauf KIS1277 brach die Funktion ab, sobald „sources-footer"
     irgendwo im Dokument stand — und das steht es immer, denn das Template
@@ -623,8 +629,14 @@ def _transform_sources(html: str) -> str:
         # Lauf KIS1291, Strategie S. 14) bekommt das Etikett vorangestellt.
         _plain = re.sub(r"<[^>]+>", " ", inner).strip()
         if _plain and not re.match(r"(?i)\s*(?:Quellen?|Sources?)\s*:", _plain):
-            _en = bool(re.search(r"(?i)\b(?:report|analysis|internal|study|survey|market)\b", _plain)) \
-                and not re.search(r"(?i)\b(?:Bericht|Analyse|interne?|Studie)\b", _plain)
+            if lang:
+                _en = str(lang).lower().startswith("en")
+            else:
+                # Rückfall ohne Sprache: Englisch nur, wenn englische Wörter
+                # stehen und kein deutsches — deutsche Marker auch als
+                # Wortende („Marktanalyse", „Trendbericht", „KI-Nutzung").
+                _en = bool(re.search(r"(?i)\b(?:report|analysis|internal|study|survey|market)\b", _plain)) \
+                    and not re.search(r"(?i)(?:Bericht|Analyse|\binterne?|Studie|Nutzung|Kalkulation|Unternehmensdaten|\bund\b|\bfür\b)\b", _plain)
             inner = f"<strong>{'Sources' if _en else 'Quellen'}:</strong> " + inner.strip()
         return f'<div class="sources-footer" style="{_S_SOURCES}"><p>{inner}</p></div>'
 
@@ -1045,11 +1057,12 @@ def _enhance_action_cards(html: str) -> str:
 # PUBLIC API
 # =============================================================================
 
-def enhance_strategy_html(html: str) -> str:
+def enhance_strategy_html(html: str, lang: "str | None" = None) -> str:
     """Post-process Strategy report HTML to use CSS classes + inline styles.
 
     Applied AFTER template rendering, BEFORE budget enforcement.
     Order matters: specific table transforms before fallback styling.
+    KIS-1326: ``lang`` wählt das Etikett für Quellenblöcke ohne Etikett.
     """
     original_len = len(html)
 
@@ -1060,7 +1073,7 @@ def enhance_strategy_html(html: str) -> str:
     html = _transform_inline_kpis(html)
 
     # 3. Sources footer (Rule 4)
-    html = _transform_sources(html)
+    html = _transform_sources(html, lang=lang)
 
     # 3.5 KIS-1256: Quellen-Bullet-Listen kompaktieren (fast leere Folgeseiten)
     html = _compact_source_lists(html)
@@ -1090,7 +1103,7 @@ def enhance_strategy_html(html: str) -> str:
     return html
 
 
-def enhance_kpa_html(html: str) -> str:
+def enhance_kpa_html(html: str, lang: "str | None" = None) -> str:
     """Post-process KPA (Gamechanger Deep Dive) HTML to use CSS classes + inline styles.
 
     Same core transforms as Strategy but simpler (fewer section types).
@@ -1101,7 +1114,7 @@ def enhance_kpa_html(html: str) -> str:
     html = _transform_tables(html)
 
     # 2. Sources footer
-    html = _transform_sources(html)
+    html = _transform_sources(html, lang=lang)
 
     # 2.5 KIS-1256: Quellen-Bullet-Listen kompaktieren
     html = _compact_source_lists(html)

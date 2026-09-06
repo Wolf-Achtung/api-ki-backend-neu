@@ -466,6 +466,37 @@ Bewertungen, Freitext nur wenn vorhanden, HTML-Fassung mit Inline-Styles
 (`build_notification_html`) plus Textfassung. Das Formular selbst sagt seit
 dem Frontend-PR #167 „Seit August 2026" (Art. 4 gilt seit 02.08.2026).
 
+## Ein Jahrespreis hat nicht immer vier Ziffern (KIS-1326)
+
+Testlauf KIS1295 (06.09.2026, Build 1833, Verlag-Profil nach KIS-1325): Alle
+KIS-1325-Punkte im PDF — Investitions-Zeile im Ersatzblock (R1 S. 4),
+Nebensatz hinter der EU-Aufzählung intakt, kein „:;", Vendor-Empfehlungen vor
+den Details. Kennzahlen unverändert, kein Rückfall, kein Wächter-Treffer,
+Briefing identisch. Zwei Restbefunde lagen im Code:
+
+- **„5.000 € im Monat, bei 8–10 Jahresabonnenten"** (Strategie S. 15/16) bei
+  „Jahresabo zwischen 600 € und 900 €" — richtig sind 500 €. Alle vier
+  Jahrespreis-Formen in `_JAHRESPREIS_RE` verlangten `[\d.]{4,}`, das
+  Jahres-Minimum in `_preis_im_block` lag bei 1.000 €; der Wächter
+  `_JAHRESABO_PREIS_RE` genauso. Jetzt drei Ziffern und Minimum 100, dazu
+  die Tabellenzelle „600–900 € Jahresabo" (Bereich ohne zweites €). **Wer
+  eine Schwelle für Zahlen setzt, prüft sie gegen den kleinsten echten
+  Wert** — ein Archiv-Abo kostet 600 € im Jahr.
+- **„Sources: KI-Readiness Report 1; Marktanalyse …"** (Strategie S. 13,
+  deutscher Bericht): Das KIS-1322-Etikett kam aus einer Wortliste —
+  „Report" zählte als Englisch, „Marktanalyse" scheiterte an der Wortgrenze
+  vor „Analyse". Jetzt geben `strategy_renderer` und `gamechanger_deep_dive`
+  die Report-Sprache an `enhance_strategy_html`/`enhance_kpa_html` weiter
+  (`lang`), `_transform_sources` setzt das Etikett danach. Ohne `lang` bleibt
+  die Wortliste als Rückfall, mit deutschen Markern auch am Wortende.
+  **Die Sprache steht im Briefing — kein Filter rät sie aus dem Text.**
+- Nur beobachtet: Duden-Mentor „5.50–8.30 €" (Ursache weiter offen),
+  Strategie S. 4 (Förder-Box-Überlauf, 249 Zeichen, seit KIS1282), Perplexity
+  als Recherche-Werkzeug im Quick Win 2, DeepL Write Pro fehlt in den Top-3
+  (Modell), Duden-Mentor zweimal in der S4-Tabelle, KPA „der EU AI
+  Act-Regelungen", „Quick Win Erste spürbare …" (Etikett ohne Trenner).
+- Test: `tests/test_kis1326_testlauf_1295.py`.
+
 ## Eine Aufzählung endet am ersten kleinen Wort (KIS-1325)
 
 Testlauf KIS1294 (06.09.2026, Build 1754, Verlag-Profil nach KIS-1324): Alle
