@@ -111,7 +111,11 @@ class _TableParser(HTMLParser):
             # KIS-1312: Ein Listenpunkt endet oft mit Punkt — „Richtlinie.; Start
             # von …" (Lauf KIS1281, Strategie S. 23). Der Punkt fällt vor dem
             # Semikolon weg.
-            self._current_text = self._current_text.rstrip().rstrip(".") + "; "
+            # KIS-1324: Ein Etikett vor der Liste endet mit Doppelpunkt —
+            # „Bewältigung der Top-3-Widerstände:; 1. Angst" (Lauf KIS1293,
+            # Strategie S. 24). Nach einem Doppelpunkt nur ein Leerzeichen.
+            _t = self._current_text.rstrip()
+            self._current_text = (_t + " ") if _t.endswith(":") else (_t.rstrip(".") + "; ")
 
     def handle_data(self, data):
         if self._in_cell:
