@@ -2397,6 +2397,44 @@ def calc_quality_bonus(sections: dict) -> int:
 
 
 # === [FIX-B24-P0] Final Score Sweep — patcht pre-quality Score überall ===
+_KERN_DIM_LABELS = {
+    "de": {"governance": "Governance", "security": "Sicherheit", "value": "Wertschöpfung", "enablement": "Befähigung"},
+    "en": {"governance": "Governance", "security": "Security", "value": "Value creation", "enablement": "Enablement"},
+}
+
+
+def _kernbotschaft(overall_score: int, score_rating: str, dims: dict, display_label: str, lang: str = "de") -> str:
+    """KIS-1316/1317: Kernbotschaft aus den Dimensions-Scores statt Boilerplate.
+    `dims` hat die Schlüssel governance/security/value/enablement (int oder
+    leer). Zwei Stellen bauen den Text (Erstaufbau und FIX-B24-Rebuild) —
+    Lauf KIS1287 zeigte, dass die zweite den alten Satz zurückschrieb."""
+    is_en = str(lang or "de").lower().startswith("en")
+    labels = _KERN_DIM_LABELS["en" if is_en else "de"]
+    werte = {}
+    for k in labels:
+        try:
+            v = int(float(dims.get(k) or 0))
+        except (TypeError, ValueError):
+            v = 0
+        if v > 0:
+            werte[k] = v
+    dim_txt = ""
+    if werte:
+        top = max(werte, key=werte.get)
+        low = min(werte, key=werte.get)
+        if top != low:
+            dim_txt = (f"Strongest dimension: {labels[top]} ({werte[top]}/100), biggest lever: {labels[low]} ({werte[low]}/100). "
+                       if is_en else
+                       f"Stärkste Dimension: {labels[top]} ({werte[top]}/100), größter Hebel: {labels[low]} ({werte[low]}/100). ")
+    if is_en:
+        return (f"Your result: {overall_score}/100 ({score_rating}). {dim_txt}"
+                f"This report delivers three quick wins, a 90-day plan and the matching funding programmes for {display_label}; "
+                f"ROI and payback are in the Business Case.")
+    return (f"Ihr Ergebnis: {overall_score}/100 ({score_rating}). {dim_txt}"
+            f"Dieser Report liefert drei Quick Wins, einen 90-Tage-Plan und die passenden Förderprogramme für {display_label}; "
+            f"ROI und Amortisation stehen im Business Case.")
+
+
 _DECISION_LABEL_RE = re.compile(r"<li\b[^>]*>\s*<strong>\s*(?:Tun|Lassen|Risiko)", re.IGNORECASE)
 
 
@@ -18347,35 +18385,15 @@ Gib NUR das angeforderte HTML-Fragment aus - keine Fragen, keine Hilfsangebote, 
         # KIS-1316: Kernbotschaft aus den Dimensions-Scores statt Boilerplate
         # („Dieser KI-Readiness-Report für … analysiert Ihren aktuellen
         # KI-Reifegrad" stand in jedem Lauf gleich auf S. 3).
-        _dim_labels = (
-            {"governance": "Governance", "security": "Security", "value": "Value creation", "enablement": "Enablement"}
-            if report_lang == "en" else
-            {"governance": "Governance", "security": "Sicherheit", "value": "Wertschöpfung", "enablement": "Befähigung"}
-        )
-        _dims = {k: int(scores.get(k) or 0) for k in _dim_labels if scores.get(k) is not None}
-        _dim_top = max(_dims, key=_dims.get) if _dims else ""
-        _dim_low = min(_dims, key=_dims.get) if _dims else ""
+        intro_template = _kernbotschaft(overall_score, score_rating, scores if isinstance(scores, dict) else {},
+                                        display_label_fc, report_lang)
         if report_lang == "en":
-            _dim_txt = (f"Strongest dimension: {_dim_labels[_dim_top]} ({_dims[_dim_top]}/100), biggest lever: "
-                        f"{_dim_labels[_dim_low]} ({_dims[_dim_low]}/100). ") if _dims and _dim_top != _dim_low else ""
-            intro_template = (
-                f"Your result: {overall_score}/100 ({score_rating}). {_dim_txt}"
-                f"This report delivers three quick wins, a 90-day plan and the matching funding programmes for {display_label_fc}; "
-                f"ROI and payback are in the Business Case."
-            )
             decisions = [
                 "Start with 1 Quick Win within 14 days to validate AI benefits",
                 "Review 90-Day Roadmap for structured implementation phases",
                 "Check Funding section for eligible EU/national programs"
             ]
         else:
-            _dim_txt = (f"Stärkste Dimension: {_dim_labels[_dim_top]} ({_dims[_dim_top]}/100), größter Hebel: "
-                        f"{_dim_labels[_dim_low]} ({_dims[_dim_low]}/100). ") if _dims and _dim_top != _dim_low else ""
-            intro_template = (
-                f"Ihr Ergebnis: {overall_score}/100 ({score_rating}). {_dim_txt}"
-                f"Dieser Report liefert drei Quick Wins, einen 90-Tage-Plan und die passenden Förderprogramme für {display_label_fc}; "
-                f"ROI und Amortisation stehen im Business Case."
-            )
             decisions = [
                 f"Starten Sie mit 1 Quick Win für {display_label_fc} innerhalb von 14 Tagen",
                 f"Prüfen Sie die 90-Tage-Roadmap für {display_label_fc}",
@@ -21189,26 +21207,15 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             except Exception:
                 pass  # Keep existing score_rating
 
-            if _b24_report_lang == "en":
-                _b24_intro = (
-                    f"This AI Readiness Report analyzes your current AI maturity "
-                    f"({_b24_final_score}/100 = {_b24_score_rating}) "
-                    f"and provides actionable recommendations for {_b24_company_size} "
-                    f"focusing on {_b24_hauptleistung}. "
-                    f"Focus areas: Security, Efficiency, and Funding opportunities. "
-                    f"ROI details and payback analysis are provided in the Business Case."
-                )
-            else:
-                _b24_intro = (
-                    f"Dieser KI-Readiness-Report für {_b24_hauptleistung} analysiert "
-                    f"Ihren aktuellen KI-Reifegrad ({_b24_final_score}/100 = {_b24_score_rating}) "
-                    f"und liefert konkrete Handlungsempfehlungen für {_b24_company_size} "
-                    f"mit Fokus auf Ihren Geschäftsbereich. "
-                    f"Schwerpunkte: Sicherheit, Effizienz und Förderpotenziale. "
-                    f"ROI-Details und Payback-Analyse finden Sie im Business Case."
-                )
+            # KIS-1317: dieselbe Kernbotschaft wie beim Erstaufbau — der Rebuild
+            # schrieb in Lauf KIS1287 den alten Boilerplate-Satz zurück.
+            _b24_intro = _kernbotschaft(
+                _b24_final_score, _b24_score_rating,
+                {"governance": sections.get("score_governance"), "security": sections.get("score_sicherheit"),
+                 "value": sections.get("score_nutzen"), "enablement": sections.get("score_befaehigung")},
+                _b24_hauptleistung, _b24_report_lang,
+            )
             _b24_intro_clean = _b24_intro[:600]
-            _b24_intro_clean = re.sub(r'(\w)\s*(Schwerpunkte:)', r'\1. \2', _b24_intro_clean)
             sections["FINAL_CHECK_INTRO"] = _b24_intro_clean
             log.info(f"[FIX-B24-P0] FINAL_CHECK_INTRO rebuilt with final score {_b24_final_score} "
                      f"(was {_b24_pre_quality}, rating={_b24_score_rating})")

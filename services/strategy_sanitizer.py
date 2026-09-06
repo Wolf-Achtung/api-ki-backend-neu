@@ -537,6 +537,52 @@ def quellen_stand_jahr_korrigieren(html: str, report_year: int) -> tuple:
     return _QUELLEN_STAND_RE.sub(_fix, html), count
 
 
+# KIS-1317: „Jahreslizenz zwischen 30.000 € und 40.000 €" und „25.000 €
+# monatlich bei 1–2 Jahreslizenzen" (Lauf KIS1287, S3b) — nach KIS-1312 und
+# KIS-1315 der dritte Lauf mit falscher Division. Die Rechnung wird Code:
+# Monatsumsatz = Abonnenten (Obergrenze) × Jahrespreis (Untergrenze) / 12.
+_JAHRESPREIS_RE = re.compile(
+    r"Jahres(?:abo(?:nnement)?|lizenz)\w*\s+(?:ab|von|zu|für|zwischen)\s+([\d.]{4,})\s*€"
+    r"|([\d.]{4,})\s*€(?:\s*[–-]\s*[\d.]{4,}\s*€)?\s+Jahres(?:abo(?:nnement)?|lizenz)",
+    re.IGNORECASE,
+)
+_MONATSUMSATZ_RE = re.compile(
+    r"([\d.]{4,})(\s*€\s+(?:(?:monatlich|im Monat|pro Monat)\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+Jahres(?:abonnent|lizenz|kund))",
+    re.IGNORECASE,
+)
+
+
+def umsatz_jahresabo_korrigieren(html: str) -> tuple:
+    """Rechnet einen Monatsumsatz nach, der zu Jahresabonnenten × Jahrespreis
+    nicht passt, und ersetzt ihn. Liefert (html, Anzahl)."""
+    if not html or "Jahres" not in html:
+        return html, 0
+    text = re.sub(r"<[^>]+>", " ", html)
+    preis_m = _JAHRESPREIS_RE.search(text)
+    if not preis_m:
+        return html, 0
+    preis = int((preis_m.group(1) or preis_m.group(2)).replace(".", ""))
+    if preis < 1000:
+        return html, 0
+    count = 0
+
+    def _fix(m: "re.Match[str]") -> str:
+        nonlocal count
+        monat = int(m.group(1).replace(".", ""))
+        n_max = int(m.group(4) or m.group(3))
+        soll = n_max * preis / 12
+        if monat <= soll * 1.5:
+            return str(m.group(0))
+        korr = int(round(soll / 100.0) * 100)
+        count += 1
+        return f"{korr:,}".replace(",", ".") + m.group(2)
+
+    html = _MONATSUMSATZ_RE.sub(_fix, html)
+    if count:
+        log.info("[KIS-1317][JAHRESABO] %d Monatsumsatz/-umsätze nachgerechnet (Jahrespreis %d €)", count, preis)
+    return html, count
+
+
 def benchmark_prozent_richtwert(html: str, research_text: str, lang: str = "de") -> tuple:
     """Hängt „(Richtwert)" an Prozentwerte, deren Zahl nicht in der Recherche
     vorkommt. Nur Textknoten, keine Tags. Liefert (html, Anzahl)."""
@@ -778,6 +824,14 @@ def sanitize_strategy_sections(
             sections[key] = html
             patches_applied += _nl
             all_warnings.append(f"{key}: {_nl} nackte(r) Werkzeug-Listenpunkt(e) entfernt (KIS-1316)")
+
+        # Pass 6i (KIS-1317): Monatsumsatz bei Jahresabonnenten nachrechnen (S3b).
+        if key.lower().startswith("s3b"):
+            html, _ja = umsatz_jahresabo_korrigieren(html)
+            if _ja:
+                sections[key] = html
+                patches_applied += _ja
+                all_warnings.append(f"{key}: {_ja} Monatsumsatz bei Jahresabo nachgerechnet (KIS-1317)")
 
         # Pass 6c (KIS-1313): Benchmark-Prozente in S2 ohne Beleg in der
         # Recherche heißen „Richtwert".
