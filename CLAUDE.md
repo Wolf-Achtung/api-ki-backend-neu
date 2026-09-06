@@ -452,6 +452,20 @@ verlor 3-Schritte-Prozess und Checkliste. Lokal reproduziert mit
   Amberscript statt Otter.
 - Test: `tests/test_kis1302_testlauf_1275.py`.
 
+## Feedback-Mail lesbar (KIS-1318)
+
+Wolfs erstes Formular-Feedback (06.09.2026, KIS-1287) kam als Textwand mit
+den Codes des Formulars („yes_interested", „quick_wins", „kmu") und ohne
+`tools_adopted` und `funding_applied` — die beiden Felder aus KIS-1281
+(Stufe 4), die als einzige Neues von außen hereinbringen. Jetzt in
+`services/feedback.py`: Betreff „Feedback · 6/10 · KIS-1287 · E-Mail", Labels
+wie im Formular (`_LABELS`, Spiegel von `make-ki-frontend/feedback/
+feedback.html` — **wer dort eine Option ergänzt, ergänzt sie hier**, Test
+`tests/test_kis1318_feedback_mail.py` hält die Werte gleich), Balken für
+Bewertungen, Freitext nur wenn vorhanden, HTML-Fassung mit Inline-Styles
+(`build_notification_html`) plus Textfassung. Das Formular selbst sagt seit
+dem Frontend-PR #167 „Seit August 2026" (Art. 4 gilt seit 02.08.2026).
+
 ## Freigabe-Lauf KIS1287 (KIS-1317)
 
 Build 1254 vom 06.09.2026, Motion-Profil nach KIS-1316: Entscheidungsblock
