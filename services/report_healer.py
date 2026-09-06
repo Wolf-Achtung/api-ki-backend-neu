@@ -97,7 +97,10 @@ _BC_EMPTY_VALUE_PATTERNS: List[Tuple[str, str]] = [
     # KIS-1262 druckte "Investitionsbudget liegt bei 2.000-10.000 n. v."
     # statt "... 2.000-10.000 EUR." Jetzt schuetzt der Lookbehind die Stelle
     # unmittelbar vor dem Euro-Zeichen mit — ein echter Betrag bleibt stehen.
-    (r'(?<![\d\s])\s*€\s*\.(?!\d)', ' n.&thinsp;v.'),
+    # KIS-1328: „zwischen 2 und 10 Mio. €. Für …" wurde „10 Mio. n. v." (Lauf
+    # KIS1297, R1 S. 25) — vor dem Leerzeichen stand der Punkt von „Mio.".
+    # Punkt, Klammer und Prozent vor dem Euro-Zeichen sind ein echter Betrag.
+    (r'(?<![\d\s.)%])\s*€\s*\.(?!\d)', ' n.&thinsp;v.'),
     # "bei %" or "bei  %" → "bei n. v."
     (r'bei\s+<strong>\s*&nbsp;\s*%\s*</strong>', 'bei <strong>n.&thinsp;v.</strong>'),
     (r'bei\s+<strong>\s*%\s*</strong>', 'bei <strong>n.&thinsp;v.</strong>'),

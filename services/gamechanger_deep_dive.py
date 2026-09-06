@@ -1117,6 +1117,11 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
     for _k, _v in list(sections.items()):
         if isinstance(_v, str) and "ie EU AI Act" in _v:
             sections[_k] = re.sub(r"\b([Dd])ie EU AI Act\b", r"\1er EU AI Act", _v)
+    # 4e. KIS-1328: „Budget: bis 10.000€" (Lauf KIS1297, KPA S. 3) — Ziffer
+    # direkt vor € bekommt ein Leerzeichen, wie im Status-Report.
+    for _k, _v in list(sections.items()):
+        if isinstance(_v, str) and "€" in _v:
+            sections[_k] = re.sub(r"(\d)€", r"\1 €", _v)
 
     # 5. Render HTML
     html = render_deep_dive_html(sections, context)

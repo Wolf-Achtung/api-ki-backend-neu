@@ -1040,6 +1040,12 @@ def remove_roi_from_section(html: str, section_name: str) -> tuple[str, int]:
                 replacement = "ROI, siehe Business Case)"
             elif match.start() > 0 and result[match.start() - 1] == "(":
                 replacement = "ROI, siehe Business Case"
+            elif "(" in match.group() and ")" not in match.group():
+                # KIS-1328: „ROI (22 % nach 12 Monaten)" — die Klammer öffnet
+                # im Treffer und schließt dahinter; der Ersatz lässt sie offen,
+                # sonst steht „ROI (siehe Business Case) nach 12 Monaten)"
+                # (Lauf KIS1297, R1 S. 26).
+                replacement = "ROI (siehe Business Case"
             else:
                 replacement = "ROI (siehe Business Case)"
             result = result[:match.start()] + replacement + result[match.end():]
