@@ -452,6 +452,35 @@ verlor 3-Schritte-Prozess und Checkliste. Lokal reproduziert mit
   Amberscript statt Otter.
 - Test: `tests/test_kis1302_testlauf_1275.py`.
 
+## Freigabe-Lauf KIS1287 (KIS-1317)
+
+Build 1254 vom 06.09.2026, Motion-Profil nach KIS-1316: Entscheidungsblock
+mit drei Punkten, DaVinci „Kein AVV nötig (lokal)", kein Rückfall, Kennzahlen
+unverändert, KPA sauber. Vier Restbefunde lagen im Code, danach gilt das
+Freigabe-Kriterium als erfüllt:
+
+- **Kernbotschaft** (R1 S. 3) war weiter der alte Satz: `[FIX-B24-P0]` baut
+  `FINAL_CHECK_INTRO` nach dem Score-Sweep neu — eine zweite Stelle, die
+  KIS-1316 nicht kannte. Jetzt liefert `_kernbotschaft` beide. **Wer einen
+  festen Satz ändert, sucht ihn im ganzen Repo**, nicht nur an der ersten
+  Fundstelle.
+- **Jahreslizenz-Rechnung** (Strategie S. 15, „25.000 € monatlich bei 1–2
+  Jahreslizenzen" bei 30.000–40.000 €/Jahr): dritter Lauf, in dem die
+  Prompt-Regel nicht hielt. `strategy_sanitizer.umsatz_jahresabo_korrigieren`
+  rechnet in S3b nach (Abonnenten-Obergrenze × Jahrespreis-Untergrenze / 12,
+  auf Hunderter gerundet) und ersetzt Fließtext und Tabelle. Der Wächter
+  kennt „zwischen" und die Tabellenform „30.000 € – 40.000 € Jahreslizenz".
+- **Wächter-Fehlalarme:** `satzabbruch_vor_block` hielt „Erfolge aus /
+  Phase 1 kommunizieren" für einen Phasenblock — das Zeichen muss direkt
+  hinter dem Etikett stehen. `us_werkzeug_als_eu` schlug mit Adobe Premiere
+  in der Hauptliste an, sobald Amberscript im selben Satz stand; Premiere
+  hat jetzt ein eigenes enges Muster (`_ADOBE_EU_RE`).
+- Nur beobachtet (Modellsprache): „wird der Einführung gestoppt" (R1 S. 11),
+  „Pilotkunde nutzen" (R1 S. 30), Descript als Top-3-Werkzeug für
+  Interview-Rohschnitt (R1 S. 14), Premiere mit „EU-Optionen verfügbar" aus
+  dem Gedächtnis (Strategie S. 18).
+- Test: `tests/test_kis1317_testlauf_1287.py`.
+
 ## Der Entscheidungsblock braucht ein Netz (KIS-1316)
 
 Testlauf KIS1286 (06.09.2026, Build 1222, Motion-Profil nach KIS-1315):

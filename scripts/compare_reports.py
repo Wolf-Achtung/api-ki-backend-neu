@@ -261,11 +261,16 @@ _JAHR_PLANUNG_RE = re.compile(
 # KIS-1315: Strategie S. 15 (Lauf KIS1285): „Jahresabonnement ab 30.000 €" und
 # „15.000 € monatlich bei 1–2 Jahresabonnenten" — zwei Abonnenten ergeben
 # 5.000 € im Monat. Die Prompt-Regel aus KIS-1312 hielt nicht.
+# KIS-1317: auch „Jahreslizenz zwischen 30.000 € und 40.000 €" und die
+# Tabellenform „30.000 € – 40.000 € Jahreslizenz" (Lauf KIS1287, S3b:
+# „25.000 € monatlich bei 1–2 Jahreslizenzen").
 _JAHRESABO_PREIS_RE = re.compile(
-    r"Jahres(?:abo(?:nnement)?|lizenz)\w*\s+(?:ab|von|zu|für)\s+([\d.]{4,})\s*€", re.IGNORECASE
+    r"Jahres(?:abo(?:nnement)?|lizenz)\w*\s+(?:ab|von|zu|für|zwischen)\s+([\d.]{4,})\s*€"
+    r"|([\d.]{4,})\s*€(?:\s*[–-]\s*[\d.]{4,}\s*€)?\s+Jahres(?:abo(?:nnement)?|lizenz)",
+    re.IGNORECASE,
 )
 _MONATSUMSATZ_ABO_RE = re.compile(
-    r"([\d.]{4,})\s*€\s+(?:monatlich|im Monat|pro Monat)\s+bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+Jahres(?:abonnent|lizenz|kund)",
+    r"([\d.]{4,})\s*€\s+(?:(?:monatlich|im Monat|pro Monat)\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+Jahres(?:abonnent|lizenz|kund)",
     re.IGNORECASE,
 )
 
@@ -275,12 +280,12 @@ def _umsatz_jahresabo_rechnung(text: str) -> Optional[str]:
     preis = _JAHRESABO_PREIS_RE.search(t)
     if not preis:
         return None
-    p = int(preis.group(1).replace(".", ""))
+    p = int((preis.group(1) or preis.group(2)).replace(".", ""))
     for m in _MONATSUMSATZ_ABO_RE.finditer(t):
         monat = int(m.group(1).replace(".", ""))
         n_max = int(m.group(3) or m.group(2))
         if monat > n_max * p / 12 * 1.5:
-            return f"{m.group(0)} (Jahresabo ab {preis.group(1)} €)"[:120]
+            return f"{m.group(0)} (Jahresabo ab {preis.group(1) or preis.group(2)} €)"[:120]
     return None
 
 
@@ -426,10 +431,18 @@ def _ankuendigung_ohne_liste(text: str) -> Optional[str]:
 # KIS-1312: Adobe Firefly, Descript und ElevenLabs sind US-Anbieter (tools_seed);
 # Strategie S. 12 (Lauf KIS1281) nannte „EU-konforme Werkzeuge wie Adobe Firefly".
 _US_ANBIETER = ("ChatGPT", "OpenAI", "Claude", "Anthropic", "Perplexity", "Runway",
-                "Gemini", "Midjourney", "Adobe Firefly", "Firefly", "Descript", "ElevenLabs",
-                # KIS-1316: „Adobe Premiere Pro … über eine EU-konforme Hosting-Option"
-                # (Lauf KIS1286, S4) — Adobe-Cloud ist US, Zeile fehlt in der Liste.
-                "Adobe Premiere Pro", "Adobe After Effects")
+                "Gemini", "Midjourney", "Adobe Firefly", "Firefly", "Descript", "ElevenLabs")
+# KIS-1316/1317: „Adobe Premiere Pro … über eine EU-konforme Hosting-Option"
+# (Lauf KIS1286, S4). In der Hauptliste erzeugte Premiere Fehlalarme, sobald
+# ein EU-Werkzeug im selben Satz stand („Amberscript … EU-gehostet ist und
+# sich gut in Adobe Premiere Pro integrieren lässt", Lauf KIS1287) oder die
+# Tabellenzeile darunter begann. Deshalb ein eigenes, enges Muster: Premiere
+# zuerst, dann die EU-Behauptung, kein EU-Werkzeug dazwischen.
+_ADOBE_EU_RE = re.compile(
+    r"Adobe (?:Premiere Pro|After Effects)(?:(?!Amberscript|DeepL|LanguageTool|Aleph|\bnicht\b)[^.!?\n|·]){0,120}?"
+    r"EU-(?:konform\w*|gehostet\w*)",
+    re.IGNORECASE,
+)
 _EU_BEGRIFF = (r"EU-konform|EU-gehostet|EU-Hosting|EU / EU|EU-Anbieter|EU-Server"
                r"|EU-compliant|EU-hosted|EU-based provider")
 _US_NAMEN = "|".join(_US_ANBIETER)
@@ -486,6 +499,7 @@ def _us_werkzeug_als_eu(text: str) -> Optional[str]:
     # oder Adobe Firefly" (Lauf KIS1285, Strategie S. 12).
     text = re.sub(r"[ \t]*\n[ \t]*", " ", _zellen_zusammenfuegen(text))
     treffer = [re.sub(r"\s+", " ", m.group(0))[:120] for m in _US_ALS_EU_RE.finditer(text)]
+    treffer += [re.sub(r"\s+", " ", m.group(0))[:120] for m in _ADOBE_EU_RE.finditer(text)]
     if not treffer:
         return None
     return " | ".join(dict.fromkeys(treffer))
@@ -512,14 +526,18 @@ def _satzabbruch_vor_block(text: str) -> Optional[str]:
         if len(vorher) < 60 or vorher[-1] in ".!?:;)»”\"":
             continue
         folge = zeilen[i + 1].strip()
-        if not _BLOCKSTART_RE.match(folge):
+        _bm = _BLOCKSTART_RE.match(folge)
+        if not _bm:
             continue
         # KIS-1306: „… Break-Even-Zeiten zwischen" + „Monat 8 und 17." ist ein
         # umgebrochener Satz, kein Phasenblock (Strategie S. 21, Lauf KIS1278).
         # Ein Blockanfang trägt Doppelpunkt, Gedankenstrich oder Klammer
         # („Monate 1–3 – Fundament", „Q1 (Monate 1–3):"); ein Satzrest endet
         # mit Punkt und ist kurz.
-        if folge.startswith(("Monat", "Month")) and not re.search(r"[:–—(]", folge):
+        # KIS-1317: „Erfolge aus" + „Phase 1 kommunizieren, Widerstände …"
+        # (Lauf KIS1287, Roadmap-Karte) — das Zeichen muss direkt hinter dem
+        # Etikett stehen, nicht irgendwo in der Zeile.
+        if not re.match(r"\s*[:–—(]", folge[_bm.end():]):
             continue
         if len(folge) < 45 and folge.endswith(".") and not re.search(r"[:–—(]", folge):
             continue
