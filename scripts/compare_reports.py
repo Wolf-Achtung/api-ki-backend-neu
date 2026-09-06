@@ -283,13 +283,16 @@ _JAHR_PLANUNG_RE = re.compile(
 # KIS-1317: auch „Jahreslizenz zwischen 30.000 € und 40.000 €" und die
 # Tabellenform „30.000 € – 40.000 € Jahreslizenz" (Lauf KIS1287, S3b:
 # „25.000 € monatlich bei 1–2 Jahreslizenzen").
+# KIS-1326: dreistellige Jahrespreise („Jahresabo zwischen 600 € und 900 €",
+# „600–900 € Jahresabo", Lauf KIS1295, Strategie S. 15/16) — der Wächter
+# schwieg wie der Sanitizer.
 _JAHRESABO_PREIS_RE = re.compile(
-    r"Jahres(?:abo(?:nnement)?|lizenz)\w*\s+(?:ab|von|zu|für|zwischen)\s+([\d.]{4,})\s*€"
-    r"|([\d.]{4,})\s*€(?:\s*[–-]\s*[\d.]{4,}\s*€)?\s+Jahres(?:abo(?:nnement)?|lizenz)"
+    r"Jahres(?:abo(?:nnement)?|lizenz)\w*\s+(?:ab|von|zu|für|zwischen)\s+([\d.]{3,})\s*€"
+    r"|([\d.]{3,})\s*(?:€\s*)?(?:[–-]\s*[\d.]{3,}\s*)?€\s+Jahres(?:abo(?:nnement)?|lizenz)"
     # KIS-1323: Tabellenzelle „Jahresabo 3.000–5.000 €" ohne Präposition.
-    r"|Jahres(?:abo(?:nnement)?|lizenz)\w*\s+([\d.]{4,})\s*(?:[–-]\s*[\d.]{4,}\s*)?€"
+    r"|Jahres(?:abo(?:nnement)?|lizenz)\w*\s+([\d.]{3,})\s*(?:[–-]\s*[\d.]{3,}\s*)?€"
     # KIS-1325: „3.000–5.000 € pro Jahr, Abo" (Lauf KIS1294, Strategie S. 16).
-    r"|([\d.]{4,})\s*(?:[–-]\s*[\d.]{4,}\s*)?€\s+(?:pro Jahr|je Jahr|im Jahr|jährlich|/\s*Jahr|p\.\s?a\.)",
+    r"|([\d.]{3,})\s*(?:[–-]\s*[\d.]{3,}\s*)?€\s+(?:pro Jahr|je Jahr|im Jahr|jährlich|/\s*Jahr|p\.\s?a\.)",
     re.IGNORECASE,
 )
 # KIS-1319: Komma vor „bei" und Tabellenzelle „bei 1–2 Lizenzen" (Lauf
@@ -333,7 +336,7 @@ _PROJEKTION_W_RE = re.compile(
 
 def _naechster_preis(fenster: str) -> Optional[tuple]:
     kandidaten = []
-    for muster, teiler, minimum, art in ((_JAHRESABO_PREIS_RE, 12, 1000, "Jahresabo"),
+    for muster, teiler, minimum, art in ((_JAHRESABO_PREIS_RE, 12, 100, "Jahresabo"),
                                          (_QUARTALSPREIS_RE, 3, 100, "Quartalspaket"),
                                          (_MONATSPREIS_W_RE, 1, 50, "Monatspreis")):
         for m in muster.finditer(fenster):
