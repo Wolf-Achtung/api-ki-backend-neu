@@ -1112,6 +1112,12 @@ def generate_gamechanger_report(briefing_id: int) -> Dict[str, Any]:
     from services.pipeline_sanitizers import sanitize_non_latin_sections
     sections = sanitize_non_latin_sections(sections)
 
+    # 4d. KIS-1323: „Die EU AI Act verlangt …" (Lauf KIS1292, KPA S. 2) — die
+    # KPA läuft nicht durch den Grammatik-Fixer des Status-Reports.
+    for _k, _v in list(sections.items()):
+        if isinstance(_v, str) and "ie EU AI Act" in _v:
+            sections[_k] = re.sub(r"\b([Dd])ie EU AI Act\b", r"\1er EU AI Act", _v)
+
     # 5. Render HTML
     html = render_deep_dive_html(sections, context)
 

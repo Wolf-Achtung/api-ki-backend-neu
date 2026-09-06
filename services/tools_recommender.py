@@ -831,7 +831,15 @@ def recommend_tools(
     # VFX-Studio bekam Canva, LanguageTool und Duden vor Topaz und
     # Amberscript (R1 S. 15/16 in den Läufen KIS1274 bis KIS1276).
     def _sparte_rang(x: Dict[str, Any]) -> int:
-        return 1 if (sparte and _passt_zur_sparte(x, sparte)) else 0
+        # KIS-1323: Die Reihenfolge im Feld ``sparten`` ist die Nähe zur
+        # Sparte. Lauf KIS1292 (Verlag) begann die Werkzeugtabelle mit Canva
+        # und Firefly (Verlag an dritter bzw. zweiter Stelle), DeepL Write Pro
+        # fehlte — alle Verlag-Werkzeuge hatten denselben Rang, die Seed-
+        # Reihenfolge entschied. Erstgenannte Sparte: 2, sonst Treffer: 1.
+        if not (sparte and _passt_zur_sparte(x, sparte)):
+            return 0
+        _sp = x.get("sparten") or []
+        return 2 if _sp and str(_sp[0]).strip().lower() == sparte else 1
 
     if _HAS_ANALYTICS and TOOLS_ENGINE_ENABLED:
         ranked.sort(key=lambda x: (_sparte_rang(x), x.get("_final_score", 0)), reverse=True)

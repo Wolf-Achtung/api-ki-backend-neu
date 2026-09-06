@@ -860,6 +860,8 @@ TEXT_GLITCH_REPLACEMENTS = [
     # KIS-1320: „nicht durch Zurückhaltation" (Lauf KIS1289, R1 S. 30) — kein
     # Filter erzeugt das Wort, alle Einzelfunktionen lokal geprüft.
     (r'\bZurückhaltation\b', 'Zurückhaltung', 'corrupted Zurückhaltung'),
+    # KIS-1323: „Redaktionleitung" (Lauf KIS1292, Strategie S. 11).
+    (r'\bRedaktionleitung\b', 'Redaktionsleitung', 'missing Fugen-s'),
     # Empty placeholder patterns
     (r'Mitarbeiter:\s*0\b', '', 'zero employees'),
     (r'Mitarbeiter\s*:\s*0\b', '', 'zero employees with space'),
@@ -1041,7 +1043,14 @@ def remove_roi_from_section(html: str, section_name: str) -> tuple[str, int]:
             result = result[:match.start()] + replacement + result[match.end():]
             removal_count += 1
             log.info(f"[ROI-FILTER] {section_name}: Removed '{match.group()}' → '{replacement}'")
-    
+
+    # KIS-1323: „(ROI, siehe Business Case) nach 12 Monaten aus dem Business
+    # Case" (Lauf KIS1292, R1 S. 26) — der Verweis steht schon in der Klammer.
+    if removal_count:
+        result = re.sub(
+            r'(siehe Business Case\)(?:\s+nach\s+\d+\s+Monaten)?)\s+aus\s+dem\s+Business\s+Case\b',
+            r'\1', result)
+
     return result, removal_count
 
 
@@ -1121,14 +1130,20 @@ FRAGMENT_PATTERNS = [
      'Entwicklung einer KI-Strategie.'),
 
     # "Maßnahme: Pilotierung eines klar." → Artikel + abgebrochenes Adjektiv
-    (r'Maßnahme:\s*[A-ZÄÖÜ][a-zäöüß]+\s+eine[sr]?\s+[a-zäöüß]+\s*\.',
+    (r'Maßnahme:\s*[A-ZÄÖÜ][a-zäöüß]+\s+eine[sr]?\s+(?-i:[a-zäöüß]+)\s*\.',
      'Maßnahme: Siehe detaillierte Beschreibung in der Roadmap.'),
 
     # "...eines kompakten." → Artikel + Adjektiv ohne Nomen
     # KIS-1312: Eine Präposition vor dem Artikel fällt mit — sonst bleibt
     # „… schwerer zu korrigieren sind als bei – siehe Roadmap für Details."
     # (Lauf KIS1281, R1 S. 29).
-    (r'([A-ZÄÖÜ][^.!?]{10,50}?)(?:\s+(?:als\s+bei|als|bei|wie|mit|in|auf|zu))?\s+(eines|einer|einem)\s+[a-zäöüß]+\s*\.',
+    # KIS-1323: Die Muster laufen mit IGNORECASE — „eines Fachverlags." galt
+    # damit als Artikel + Adjektiv, und aus „nicht im Archiv eines
+    # Fachverlags." wurde „nicht im Archiv – siehe Roadmap für Details."
+    # (Lauf KIS1292, R1 S. 28). Ein Adjektiv ohne Nomen ist klein
+    # geschrieben; das Wort nach dem Artikel prüft `(?-i:…)` deshalb
+    # schreibungsgenau.
+    (r'([A-ZÄÖÜ][^.!?]{10,50}?)(?:\s+(?:als\s+bei|als|bei|wie|mit|in|auf|zu))?\s+(eines|einer|einem)\s+(?-i:[a-zäöüß]+)\s*\.',
      r'\1 – siehe Roadmap für Details.'),
 
 
@@ -2159,17 +2174,19 @@ def apply_extended_siezen(html: str) -> tuple[str, int]:
     """
     if not html:
         return html, 0
-    
+
     replacements = 0
-    result = html
-    
+    # KIS-1323: Prompt-Kästen duzen das Modell mit Absicht — maskiert.
+    from services.prompt_kaesten import entmaskiere, maskiere
+    result, _kaesten = maskiere(html)
+
     for pattern, replacement in EXTENDED_SIEZEN_PATTERNS:
         matches = len(re.findall(pattern, result))
         if matches > 0:
             result = re.sub(pattern, replacement, result)
             replacements += matches
-    
-    return result, replacements
+
+    return entmaskiere(result, _kaesten), replacements
 
 
 def apply_extended_siezen_guard(sections: dict) -> dict:
@@ -2406,6 +2423,10 @@ GRAMMAR_FIX_PATTERNS = [
     # — Reste einer Endung nach der Einheit. Satz umgestellt statt gelöscht.
     (r'(\d+)\s*Stunden/Monat(?:er|en|es|e)\s+(\w+)\b',
      r'\2 von \1 Stunden/Monat'),
+
+    # KIS-1323: „Die EU AI Act verlangt …" (Lauf KIS1292, KPA S. 2) — der
+    # Act ist maskulin; „die KI-Verordnung" bleibt.
+    (r'\b(d)ie EU AI Act\b', lambda m: f"{m.group(1)}er EU AI Act"),
 
     # KIS-1011-B1: "Ich haben" → "Ich habe" (defensive grammar fix)
     # Negative lookbehind prevents false positives like "die ich haben möchte"
@@ -3343,6 +3364,14 @@ def strip_trailing_sentence_fragments(sections: dict) -> dict:
             if _full.lstrip().startswith(':'):
                 _rest = html[m.end():].lstrip()
                 if regex_module.match(r'<(ul|ol|table|dl)\b', _rest, regex_module.IGNORECASE):
+                    return _full
+                # KIS-1323: Ein kurzes Etikett („Gesparte Zeit:" vor dem
+                # Wert, Erfolgs-Tracking der 30-Tage-Challenge) ist kein
+                # hängendes Fragment — der Doppelpunkt bleibt (Lauf KIS1292,
+                # R1 S. 18: „Gesparte Zeit." in allen vier Wochen).
+                _vor = html[:m.start()]
+                _etikett = _vor[_vor.rfind('>') + 1:].strip()
+                if _etikett and len(_etikett) <= 40 and len(_etikett.split()) <= 4:
                     return _full
             return f'.</{_tag}>'
         html = regex_module.sub(

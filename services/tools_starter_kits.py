@@ -1011,6 +1011,8 @@ _KIT_TEXT_EN: Dict[str, str] = {
     "500–2.000 €/Jahr": "€500–2,000/year",
     "2.000–10.000 €/Jahr": "€2,000–10,000/year",
     "10.000–50.000 €/Jahr": "€10,000–50,000/year",
+    "unter 2.000 €/Jahr": "under €2,000/year",
+    "über 50.000 €/Jahr": "over €50,000/year",
     "variabel": "variable",
 }
 
@@ -1147,7 +1149,11 @@ def generate_starter_kit(
     estimated_total_days = total_setup_days + int(total_checklist_hours / 8)
 
     # Estimate investment
-    estimated_investment = _estimate_investment(size_label)
+    # KIS-1323: Das genannte Budget schlägt die Größenschätzung. Lauf KIS1292
+    # (Verlag, Fragebogen 2 „über 50.000 €") las im Starter-Kit weiter
+    # „10.000–50.000 €/Jahr" — die KMU-Voreinstellung, zufällig gleich dem
+    # überholten Band aus Fragebogen 1.
+    estimated_investment = _budget_investment(ctx) or _estimate_investment(size_label)
     if _is_en:
         estimated_investment = _kit_en(estimated_investment)
 
@@ -1243,6 +1249,23 @@ def _generate_kit_name(size_label: str, branch: str, lang: str, expertise_level:
     if _is_en:
         return f"{base_name} kit for {branch}"
     return f"{base_name} Kit für {branch}"
+
+
+_BUDGET_BAND_TEXT = {
+    "unter_2000": "unter 2.000 €/Jahr",
+    "2000_10000": "2.000–10.000 €/Jahr",
+    "10000_50000": "10.000–50.000 €/Jahr",
+    "ueber_50000": "über 50.000 €/Jahr",
+}
+
+
+def _budget_investment(ctx: Dict[str, Any]) -> str:
+    """KIS-1323: Budget aus den Antworten — Fragebogen 2 (``s1_budget``) vor
+    Fragebogen 1 (``investitionsbudget``), dieselbe Regel wie im Business Case
+    und im Werkzeug-Filter. Leer, wenn kein Band vorliegt."""
+    _sa = ctx.get("_strategy_answers") if isinstance(ctx.get("_strategy_answers"), dict) else {}
+    band = (str((_sa or {}).get("s1_budget") or "") or str(ctx.get("investitionsbudget") or "")).strip().lower()
+    return _BUDGET_BAND_TEXT.get(band, "")
 
 
 def _estimate_investment(size_label: str) -> str:

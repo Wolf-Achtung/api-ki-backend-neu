@@ -610,16 +610,52 @@ def entscheider_neutral(html: str) -> tuple:
 # Monatsumsatz = Abonnenten (Obergrenze) × Jahrespreis (Untergrenze) / 12.
 _JAHRESPREIS_RE = re.compile(
     r"Jahres(?:abo(?:nnement)?|lizenz)\w*\s+(?:ab|von|zu|für|zwischen)\s+([\d.]{4,})\s*€"
-    r"|([\d.]{4,})\s*€(?:\s*[–-]\s*[\d.]{4,}\s*€)?\s+Jahres(?:abo(?:nnement)?|lizenz)",
+    r"|([\d.]{4,})\s*€(?:\s*[–-]\s*[\d.]{4,}\s*€)?\s+Jahres(?:abo(?:nnement)?|lizenz)"
+    # KIS-1323: Tabellenzelle „Jahresabo 3.000–5.000 €" — ohne Präposition.
+    r"|Jahres(?:abo(?:nnement)?|lizenz)\w*\s+([\d.]{4,})\s*(?:[–-]\s*[\d.]{4,}\s*)?€",
     re.IGNORECASE,
 )
 # KIS-1319: „20.000 € im Monat, bei 1–2 Jahreslizenzen" (Komma) und die
 # Tabellenzelle „20.000 € bei 1–2 Lizenzen" (ohne „Jahres") — Lauf KIS1288,
 # Strategie S. 15/16, bei „Jahreslizenz ab 50.000 €".
+# KIS-1323: „7.500 € bei 2 Abonnenten" (Lauf KIS1292, Strategie S. 16, bei
+# „Jahresabo 3.000–5.000 €") — ein Abonnent ohne „Jahres" davor.
 _MONATSUMSATZ_RE = re.compile(
-    r"([\d.]{4,})(\s*€\s+(?:(?:monatlich|im Monat|pro Monat),?\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+(?:Jahres(?:abonnent|lizenz|kund)|Lizenz))",
+    r"([\d.]{4,})(\s*€\s+(?:(?:monatlich|im Monat|pro Monat),?\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+(?:Jahres(?:abonnent|lizenz|kund)|Lizenz|Abonnent))",
     re.IGNORECASE,
 )
+# KIS-1323: Quartalspaket — „Paketpreis von 500 € pro Quartal … 1.500 €
+# monatlich, bei 3–4 Kunden" (Lauf KIS1292, Strategie S. 14/16): vier Kunden
+# zu 500 € je Quartal sind 667 € im Monat.
+_QUARTALSPREIS_RE = re.compile(
+    r"([\d.]{3,})\s*€\s+(?:pro|je|im)\s+Quartal|Quartalspaket\w*\s+(?:ab|von|zu|für)?\s*([\d.]{3,})\s*€",
+    re.IGNORECASE,
+)
+_MONATSUMSATZ_KUNDEN_RE = re.compile(
+    r"([\d.]{3,})(\s*€\s+(?:(?:monatlich|im Monat|pro Monat),?\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+Kund)",
+    re.IGNORECASE,
+)
+
+
+def _monatsumsatz_nachrechnen(html: str, muster: "re.Pattern[str]", preis: int,
+                              teiler: int, tag: str) -> tuple:
+    count = 0
+
+    def _fix(m: "re.Match[str]") -> str:
+        nonlocal count
+        monat = int(m.group(1).replace(".", ""))
+        n_max = int(m.group(4) or m.group(3))
+        soll = n_max * preis / teiler
+        if monat <= soll * 1.5:
+            return str(m.group(0))
+        korr = int(round(soll / 100.0) * 100)
+        count += 1
+        return f"{korr:,}".replace(",", ".") + m.group(2)
+
+    html = muster.sub(_fix, html)
+    if count:
+        log.info("[%s] %d Monatsumsatz/-umsätze nachgerechnet (Preis %d €, Teiler %d)", tag, count, preis, teiler)
+    return html, count
 
 
 def umsatz_jahresabo_korrigieren(html: str) -> tuple:
@@ -631,25 +667,45 @@ def umsatz_jahresabo_korrigieren(html: str) -> tuple:
     preis_m = _JAHRESPREIS_RE.search(text)
     if not preis_m:
         return html, 0
-    preis = int((preis_m.group(1) or preis_m.group(2)).replace(".", ""))
+    preis = int(next(g for g in preis_m.groups() if g).replace(".", ""))
     if preis < 1000:
         return html, 0
+    return _monatsumsatz_nachrechnen(html, _MONATSUMSATZ_RE, preis, 12, "KIS-1317][JAHRESABO")
+
+
+def umsatz_quartalspaket_korrigieren(html: str) -> tuple:
+    """KIS-1323: Monatsumsatz bei Kunden eines Quartalspakets nachrechnen
+    (Kunden-Obergrenze × Quartalspreis / 3). Liefert (html, Anzahl)."""
+    if not html or "Quartal" not in html:
+        return html, 0
+    text = re.sub(r"<[^>]+>", " ", html)
+    preis_m = _QUARTALSPREIS_RE.search(text)
+    if not preis_m:
+        return html, 0
+    preis = int(next(g for g in preis_m.groups() if g).replace(".", ""))
+    if preis < 100:
+        return html, 0
+    return _monatsumsatz_nachrechnen(html, _MONATSUMSATZ_KUNDEN_RE, preis, 3, "KIS-1323][QUARTALSPAKET")
+
+
+# KIS-1323: Tippfehler und Reste aus dem Modell, die in Lauf KIS1292 standen
+# („Redaktionleitung", Strategie S. 11; „interne Unternehmensdaten Ihr
+# Unternehmen", S. 13 — ein Platzhalter, den das Modell wörtlich füllte).
+_TIPPFEHLER = (
+    (re.compile(r"\bRedaktionleitung\b"), "Redaktionsleitung"),
+    (re.compile(r"\bEskaltionskriterien\b"), "Eskalationskriterien"),
+    (re.compile(r"\b([Dd])ie EU AI Act\b"), r"\1er EU AI Act"),
+    (re.compile(r"\b(Unternehmensdaten) Ihr Unternehmen\b"), r"\1"),
+)
+
+
+def tippfehler_korrigieren(html: str) -> tuple:
+    if not html:
+        return html, 0
     count = 0
-
-    def _fix(m: "re.Match[str]") -> str:
-        nonlocal count
-        monat = int(m.group(1).replace(".", ""))
-        n_max = int(m.group(4) or m.group(3))
-        soll = n_max * preis / 12
-        if monat <= soll * 1.5:
-            return str(m.group(0))
-        korr = int(round(soll / 100.0) * 100)
-        count += 1
-        return f"{korr:,}".replace(",", ".") + m.group(2)
-
-    html = _MONATSUMSATZ_RE.sub(_fix, html)
-    if count:
-        log.info("[KIS-1317][JAHRESABO] %d Monatsumsatz/-umsätze nachgerechnet (Jahrespreis %d €)", count, preis)
+    for muster, ersatz in _TIPPFEHLER:
+        html, n = muster.subn(ersatz, html)
+        count += n
     return html, count
 
 
@@ -920,6 +976,19 @@ def sanitize_strategy_sections(
                 sections[key] = html
                 patches_applied += _ja
                 all_warnings.append(f"{key}: {_ja} Monatsumsatz bei Jahresabo nachgerechnet (KIS-1317)")
+            # Pass 6i2 (KIS-1323): Quartalspaket × Kunden / 3.
+            html, _qp = umsatz_quartalspaket_korrigieren(html)
+            if _qp:
+                sections[key] = html
+                patches_applied += _qp
+                all_warnings.append(f"{key}: {_qp} Monatsumsatz bei Quartalspaket nachgerechnet (KIS-1323)")
+
+        # Pass 6j (KIS-1323): Tippfehler aus dem Modell.
+        html, _tf = tippfehler_korrigieren(html)
+        if _tf:
+            sections[key] = html
+            patches_applied += _tf
+            all_warnings.append(f"{key}: {_tf} Tippfehler korrigiert (KIS-1323)")
 
         # Pass 6c (KIS-1313): Benchmark-Prozente in S2 ohne Beleg in der
         # Recherche heißen „Richtwert".

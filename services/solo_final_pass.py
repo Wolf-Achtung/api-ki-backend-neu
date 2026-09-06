@@ -384,7 +384,11 @@ def convert_duz_to_sie(html: str, run_id: str = "") -> Tuple[str, int]:
     if not html:
         return html, 0
 
+    # KIS-1323: Copy-Paste-Prompt-Kästen duzen das Modell mit Absicht.
+    from services.prompt_kaesten import entmaskiere, maskiere
+    html, _kaesten = maskiere(html)
     result, count = _apply_replacements_to_html(html, DUZ_TO_SIE_REPLACEMENTS, "DUZ-SIE")
+    result = entmaskiere(result, _kaesten)
 
     if count > 0:
         log.info("[FIX-554][DUZ-SIE] Converted %d Duz-forms to Sie (run=%s)", count, run_id)

@@ -243,6 +243,21 @@ PRUEFUNGEN = [
         "Planung nennt ein Jahr vor dem Reportdatum (KIS-1311)",
         lambda t: _veraltete_jahreszahl(t),
     ),
+    (
+        "umsatz_quartalspaket_rechnung",
+        "Monatsumsatz passt nicht zu Kunden × Quartalspreis / 3 (KIS-1323)",
+        lambda t: _umsatz_quartalspaket_rechnung(t),
+    ),
+    (
+        "prompt_kasten_verfaelscht",
+        "Copy-Paste-Prompt ohne Platzhalter oder gesiezt (KIS-1323)",
+        lambda t: _prompt_kasten_verfaelscht(t),
+    ),
+    (
+        "etikett_punkt_statt_doppelpunkt",
+        "Etikett vor einem Wert endet mit Punkt statt Doppelpunkt (KIS-1323)",
+        lambda t: (m.group(0) if (m := re.search(r"\bGesparte Zeit\.", t)) else None),
+    ),
 ]
 
 
@@ -270,13 +285,26 @@ _JAHR_PLANUNG_RE = re.compile(
 # „25.000 € monatlich bei 1–2 Jahreslizenzen").
 _JAHRESABO_PREIS_RE = re.compile(
     r"Jahres(?:abo(?:nnement)?|lizenz)\w*\s+(?:ab|von|zu|für|zwischen)\s+([\d.]{4,})\s*€"
-    r"|([\d.]{4,})\s*€(?:\s*[–-]\s*[\d.]{4,}\s*€)?\s+Jahres(?:abo(?:nnement)?|lizenz)",
+    r"|([\d.]{4,})\s*€(?:\s*[–-]\s*[\d.]{4,}\s*€)?\s+Jahres(?:abo(?:nnement)?|lizenz)"
+    # KIS-1323: Tabellenzelle „Jahresabo 3.000–5.000 €" ohne Präposition.
+    r"|Jahres(?:abo(?:nnement)?|lizenz)\w*\s+([\d.]{4,})\s*(?:[–-]\s*[\d.]{4,}\s*)?€",
     re.IGNORECASE,
 )
 # KIS-1319: Komma vor „bei" und Tabellenzelle „bei 1–2 Lizenzen" (Lauf
 # KIS1288: „20.000 € im Monat, bei 1–2 Jahreslizenzen" bei „ab 50.000 €").
+# KIS-1323: „7.500 € bei 2 Abonnenten" (Lauf KIS1292, Strategie S. 16).
 _MONATSUMSATZ_ABO_RE = re.compile(
-    r"([\d.]{4,})\s*€\s+(?:(?:monatlich|im Monat|pro Monat),?\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+(?:Jahres(?:abonnent|lizenz|kund)|Lizenz)",
+    r"([\d.]{4,})\s*€\s+(?:(?:monatlich|im Monat|pro Monat),?\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+(?:Jahres(?:abonnent|lizenz|kund)|Lizenz|Abonnent)",
+    re.IGNORECASE,
+)
+# KIS-1323: Quartalspaket — „500 € pro Quartal … 1.500 € monatlich, bei 3–4
+# Kunden" (Lauf KIS1292, Strategie S. 14): vier Kunden × 500 € / 3 = 667 €.
+_QUARTALSPREIS_RE = re.compile(
+    r"([\d.]{3,})\s*€\s+(?:pro|je|im)\s+Quartal|Quartalspaket\w*\s+(?:ab|von|zu|für)?\s*([\d.]{3,})\s*€",
+    re.IGNORECASE,
+)
+_MONATSUMSATZ_KUNDEN_RE = re.compile(
+    r"([\d.]{3,})\s*€\s+(?:(?:monatlich|im Monat|pro Monat),?\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+Kund",
     re.IGNORECASE,
 )
 
@@ -286,13 +314,45 @@ def _umsatz_jahresabo_rechnung(text: str) -> Optional[str]:
     preis = _JAHRESABO_PREIS_RE.search(t)
     if not preis:
         return None
-    p = int((preis.group(1) or preis.group(2)).replace(".", ""))
+    p_txt = next(g for g in preis.groups() if g)
+    p = int(p_txt.replace(".", ""))
     for m in _MONATSUMSATZ_ABO_RE.finditer(t):
         monat = int(m.group(1).replace(".", ""))
         n_max = int(m.group(3) or m.group(2))
         if monat > n_max * p / 12 * 1.5:
-            return f"{m.group(0)} (Jahresabo ab {preis.group(1) or preis.group(2)} €)"[:120]
+            return f"{m.group(0)} (Jahresabo ab {p_txt} €)"[:120]
     return None
+
+
+def _umsatz_quartalspaket_rechnung(text: str) -> Optional[str]:
+    t = re.sub(r"[ \t]*\n[ \t]*", " ", _zellen_zusammenfuegen(text))
+    preis = _QUARTALSPREIS_RE.search(t)
+    if not preis:
+        return None
+    p_txt = next(g for g in preis.groups() if g)
+    p = int(p_txt.replace(".", ""))
+    if p < 100:
+        return None
+    for m in _MONATSUMSATZ_KUNDEN_RE.finditer(t):
+        monat = int(m.group(1).replace(".", ""))
+        n_max = int(m.group(3) or m.group(2))
+        if monat > n_max * p / 3 * 1.5:
+            return f"{m.group(0)} (Quartalspaket {p_txt} €)"[:120]
+    return None
+
+
+# KIS-1323: Der Copy-Paste-Prompt-Kasten verlor seinen Platzhalter („Reihe /
+# Zeitschrift: Liefere:") und wurde gesiezt („Strukturiere Ihre Antwort") —
+# Lauf KIS1292, R1 S. 7. Ein Prompt duzt das Modell und trägt seine
+# Ausfüllstellen mit Absicht.
+_PROMPT_KASTEN_RE = re.compile(
+    r"Zeitschrift:\s*Liefere:|Strukturiere\s+Ihre\s+Antwort"
+)
+
+
+def _prompt_kasten_verfaelscht(text: str) -> Optional[str]:
+    m = _PROMPT_KASTEN_RE.search(text)
+    return m.group(0)[:80] if m else None
 
 
 def _veraltete_jahreszahl(text: str) -> Optional[str]:

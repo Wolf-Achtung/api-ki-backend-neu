@@ -3678,6 +3678,74 @@ CHALLENGE_30_TAGE_INTERMEDIATE_MEDIEN = {
 # Sparten, deren Anwender-Challenge nicht um Bewegtbild kreist.
 _CHALLENGE_MEDIEN_AUSNAHMEN = ("verlag_publishing", "musik_audio")
 
+# KIS-1323: Verlag-Fassung — Einsteiger und Anwender. Drei Verlag-Läufe
+# (KIS1282, KIS1284, KIS1292) bekamen die generische Fassung („Eine echte
+# E-Mail mit KI formulieren", „Meeting-Vorbereitung"); die Aufgaben des
+# Hauses sind Korrekturschleife, Kurzfassungen, Metadaten, Kennzeichnung.
+# Werkzeuge nur aus der Verlag-Liste (DeepL Write Pro, LanguageTool).
+CHALLENGE_30_TAGE_VERLAG = {
+    "woche_1": {
+        "titel": "Erste Schritte im Lektorat",
+        "ziel": "Ein freigegebenes Werkzeug an echten Texten testen",
+        "tage": [
+            {"tag": 1, "aufgabe": "Freigegebenes Werkzeug mit AVV festlegen (DeepL Write Pro oder LanguageTool) und Konto anlegen", "dauer": "15 Min", "kategorie": "Setup"},
+            {"tag": 2, "aufgabe": "Ersten Prompt aus diesem Report an einer freigegebenen Meldung testen", "dauer": "15 Min", "kategorie": "Praxis"},
+            {"tag": 3, "aufgabe": "Erste Korrekturschleife: einen Textauszug prüfen lassen, Änderungsliste lesen", "dauer": "25 Min", "kategorie": "Praxis"},
+            {"tag": 4, "aufgabe": "Ergebnis mit der Hand-Korrektur vergleichen: Was fand das Werkzeug, was nicht?", "dauer": "20 Min", "kategorie": "Qualität"},
+            {"tag": 5, "aufgabe": "Kurzfassung eines Artikels für den Newsletter erzeugen lassen", "dauer": "20 Min", "kategorie": "Praxis"},
+            {"tag": 6, "aufgabe": "Kennzeichnungsregel für KI-Entwürfe notieren: Wo steht das Etikett?", "dauer": "15 Min", "kategorie": "Governance"},
+            {"tag": 7, "aufgabe": "Woche 1 Review: Wo lag die Zeitersparnis?", "dauer": "15 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_2": {
+        "titel": "Routinen in der Redaktion",
+        "ziel": "Korrekturschleife, Kurzfassungen und Metadaten als feste Schritte",
+        "tage": [
+            {"tag": 8, "aufgabe": "Prompt-Vorlage für die Korrekturschleife speichern (Kontext, Zielgruppe, Liefere-Liste)", "dauer": "20 Min", "kategorie": "Optimierung"},
+            {"tag": 9, "aufgabe": "Metadaten je Titel: acht Schlagworte vorschlagen lassen und gegen das Vokabular prüfen", "dauer": "25 Min", "kategorie": "Praxis"},
+            {"tag": 10, "aufgabe": "Drei Kurzfassungen (Teaser, Portal, Social) aus einem Artikel erstellen", "dauer": "25 Min", "kategorie": "Praxis"},
+            {"tag": 11, "aufgabe": "Regel schriftlich festhalten: keine unveröffentlichten Manuskripte in öffentliche Werkzeuge", "dauer": "15 Min", "kategorie": "Governance"},
+            {"tag": 12, "aufgabe": "Glossar der Fachbegriffe anlegen, die das Werkzeug nicht ändern darf", "dauer": "20 Min", "kategorie": "Setup"},
+            {"tag": 13, "aufgabe": "Freigabe-Checkliste vor Veröffentlichung: Prüfung, Redakteur, Kennzeichnung", "dauer": "20 Min", "kategorie": "Governance"},
+            {"tag": 14, "aufgabe": "Woche 2 Review: Zeitersparnis je Arbeitsschritt notieren", "dauer": "15 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_3": {
+        "titel": "Qualität und Rechte",
+        "ziel": "Fehlerquote messen, Rechte-Register starten, Archiv befragen",
+        "tage": [
+            {"tag": 15, "aufgabe": "Zehn Manuskriptseiten durch die Korrekturschleife geben und die Fehlerquote zählen", "dauer": "30 Min", "kategorie": "Qualität"},
+            {"tag": 16, "aufgabe": "KI als Sparringspartner für ein Heft-Thema: Welche Fragen stellen Leser?", "dauer": "25 Min", "kategorie": "Praxis"},
+            {"tag": 17, "aufgabe": "Klappentext und Buchhandels-Beschreibung als Entwurf erzeugen und prüfen", "dauer": "25 Min", "kategorie": "Praxis"},
+            {"tag": 18, "aufgabe": "Rechte-Register starten: Titel, Werkzeug, Lizenz, Freigabestatus", "dauer": "25 Min", "kategorie": "Governance"},
+            {"tag": 19, "aufgabe": "Archiv-Frage testen: eine Fachfrage an einen Jahrgang stellen und die Quelle prüfen", "dauer": "30 Min", "kategorie": "Fortgeschritten"},
+            {"tag": 20, "aufgabe": "Dem Lektorat den besten Anwendungsfall zeigen", "dauer": "30 Min", "kategorie": "Sharing"},
+            {"tag": 21, "aufgabe": "Woche 3 Review: Top-3-Anwendungsfälle nach Zeitersparnis ordnen", "dauer": "20 Min", "kategorie": "Reflexion"},
+        ]
+    },
+    "woche_4": {
+        "titel": "Standard für alle Titel",
+        "ziel": "Vom Test zum Redaktionsstandard",
+        "tage": [
+            {"tag": 22, "aufgabe": "Prompt-Bibliothek mit Redaktion und Lektorat teilen", "dauer": "20 Min", "kategorie": "Sharing"},
+            {"tag": 23, "aufgabe": "Kennzeichnung in Heft, Portal und Newsletter an einem Beispiel umsetzen", "dauer": "25 Min", "kategorie": "Governance"},
+            {"tag": 24, "aufgabe": "Ein Heft von der Korrekturschleife bis zur Kurzfassung im KI-Ablauf begleiten", "dauer": "45 Min", "kategorie": "Praxis"},
+            {"tag": 25, "aufgabe": "Qualitätskontrolle: Fachfehler dokumentieren, die das Werkzeug nicht sieht", "dauer": "25 Min", "kategorie": "Qualität"},
+            {"tag": 26, "aufgabe": "Werkzeugliste prüfen: Was bleibt, was braucht einen AVV, was fällt weg?", "dauer": "20 Min", "kategorie": "Analyse"},
+            {"tag": 27, "aufgabe": "Nächste 3 Monate planen: welcher Titel, welcher Arbeitsschritt als Nächstes", "dauer": "30 Min", "kategorie": "Planung"},
+            {"tag": 28, "aufgabe": "Budget für Lizenzen und Schulung für das nächste Quartal aufstellen", "dauer": "20 Min", "kategorie": "Planung"},
+        ]
+    },
+    "abschluss": {
+        "titel": "Abschluss & Nächste Phase",
+        "ziel": "Ergebnisse sichern und Ausbau planen",
+        "tage": [
+            {"tag": 29, "aufgabe": "ROI berechnen: Zeitersparnis × Stundensatz", "dauer": "20 Min", "kategorie": "Reflexion"},
+            {"tag": 30, "aufgabe": "Nächste 30 Tage planen: Welche Schritte werden Redaktionsstandard?", "dauer": "30 Min", "kategorie": "Planung"},
+        ]
+    },
+}
+
 CHALLENGE_LIGHT = {
     "woche_1": {
         "titel": "Erste Schritte",
@@ -4058,13 +4126,24 @@ def generate_30_tage_challenge_html_v2(
         # Fassung. EN vorerst generisch.
         if is_media and not is_en:
             from services.medien_sparte import slug as _medien_slug_ch
-            if _medien_slug_ch(medien_sparte) not in _CHALLENGE_MEDIEN_AUSNAHMEN:
+            _slug_ch = _medien_slug_ch(medien_sparte)
+            if _slug_ch == "verlag_publishing":
+                # KIS-1323: Verlag-Fassung (Korrekturschleife, Kurzfassungen,
+                # Metadaten, Kennzeichnung).
+                challenge_data = CHALLENGE_30_TAGE_VERLAG
+            elif _slug_ch not in _CHALLENGE_MEDIEN_AUSNAHMEN:
                 challenge_data = CHALLENGE_30_TAGE_INTERMEDIATE_MEDIEN
     elif zeit_config["intensitaet"] == "light":
         challenge_data = CHALLENGE_LIGHT_EN if is_en else CHALLENGE_LIGHT
         show_prio = True
     else:
         challenge_data = CHALLENGE_30_TAGE_EN if is_en else CHALLENGE_30_TAGE
+        # KIS-1323: Einsteiger im Verlag bekommen dieselbe Verlag-Fassung —
+        # drei Läufe lang stand hier „Eine echte E-Mail mit KI formulieren".
+        if is_media and not is_en:
+            from services.medien_sparte import slug as _medien_slug_ch
+            if _medien_slug_ch(medien_sparte) == "verlag_publishing":
+                challenge_data = CHALLENGE_30_TAGE_VERLAG
 
     # KIS-1142 Punkt 6 Variante C: trim weeks flagged as out-of-scale for
     # the user's company size. No-op until _CHALLENGE_WEEKS_SKIP_BY_SIZE

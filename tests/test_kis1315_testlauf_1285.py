@@ -151,10 +151,12 @@ class TestSofortStartUndChallenge:
         assert "E-Mail-zu-Zusammenfassung" not in t
         assert re.search(r"Ihre 23-Tage", t)
 
-    def test_verlag_und_generisch_unveraendert(self):
+    def test_musik_und_generisch_unveraendert(self):
+        # KIS-1323: Der Verlag hat seit Lauf KIS1292 eine eigene Fassung;
+        # Musik/Audio und die Nicht-Medien-Fassung bleiben generisch.
         from services.sofort_start_generator import generate_30_tage_challenge_html_v2
         c = generate_30_tage_challenge_html_v2(company_size="kmu", zeitbudget="5_10", expertise_level="intermediate",
-                                               is_media=True, medien_sparte="verlag_publishing")
+                                               is_media=True, medien_sparte="musik_audio")
         assert "E-Mail-zu-Zusammenfassung" in c
         c = generate_30_tage_challenge_html_v2(company_size="kmu", zeitbudget="5_10", expertise_level="intermediate")
         assert "E-Mail-zu-Zusammenfassung" in c

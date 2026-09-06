@@ -844,6 +844,9 @@ def check_section_for_placeholders(section_name: str, content: str, gate: Report
     if not content or not isinstance(content, str):
         return False
 
+    # KIS-1323: Platzhalter im Prompt-Kasten sind Ausfüllstellen, kein Leck.
+    from services.prompt_kaesten import maskiere as _pk_maskiere
+    content, _ = _pk_maskiere(content)
     matches = PLACEHOLDER_PATTERN.findall(content)
     if matches:
         for match in matches[:200]:  # Log first 3 matches
@@ -6747,7 +6750,10 @@ def _fix_duzen_to_siezen(html_content: str) -> str:
 
     log.info("[SIEZEN-GUARD] Starting du→Sie conversion (length: %d chars)", len(html_content))
 
-    output = html_content
+    # KIS-1323: Ein Copy-Paste-Prompt spricht das Modell mit „du" an
+    # („Strukturiere deine Antwort") — der Kasten bleibt außen vor.
+    from services.prompt_kaesten import entmaskiere as _pk_entmaskiere, maskiere as _pk_maskiere
+    output, _pk_kaesten = _pk_maskiere(html_content)
     replacements_made = 0
 
     # Du-Form → Sie-Form replacement pairs (case-insensitive patterns)
@@ -6871,7 +6877,7 @@ def _fix_duzen_to_siezen(html_content: str) -> str:
     else:
         log.debug("[SIEZEN-GUARD] No du-forms found")
 
-    return output
+    return _pk_entmaskiere(output, _pk_kaesten)
 
 
 # -------------------- Maßnahme 3 v12.0: Empfehlungen Formatter v4.0 (Robust) ----------------
@@ -20993,12 +20999,17 @@ Digitalisierungs- und KI-Vorhaben relevant sein
             r"Template-Marker",
             re.IGNORECASE,
         )
+        # KIS-1323: Copy-Paste-Prompt-Kästen tragen „[NAME]" mit Absicht.
+        # Dieser Wächter lief ohne Maske und machte aus „Reihe / Zeitschrift:
+        # [NAME]" ein „Reihe / Zeitschrift: Liefere:" (Lauf KIS1292, R1 S. 7)
+        # — KIS-1314 hatte nur den Healer maskiert.
+        from services.prompt_kaesten import geschuetzt as _ph_geschuetzt
         for _ph_key, _ph_val in sections.items():
             if not isinstance(_ph_val, str) or len(_ph_val) < 20:
                 continue
             if _ph_key.startswith("_") or _ph_key in ("LANG", "report_date", "report_year"):
                 continue
-            _ph_new = _ph_pattern.sub("", _ph_val)
+            _ph_new = _ph_geschuetzt(_ph_val, lambda _h: _ph_pattern.sub("", _h))
             if _ph_new != _ph_val:
                 sections[_ph_key] = _ph_new
                 _ph_cleaned += 1
