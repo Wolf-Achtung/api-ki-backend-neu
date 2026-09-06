@@ -287,8 +287,14 @@ async def generate_strategy_report(
                 "nicht bestanden": "failed",
             }.get(_vendor_audit_status.strip().lower(), _vendor_audit_status)
         else:
+            # KIS-1321: „nicht bestanden" landete in drei Läufen (KIS1288–1290)
+            # als Etikett im Fließtext („Vendor-Audit-Status nicht bestanden").
+            # Report 1 sagt „rot — mit AVV und Leitplanken regelkonform
+            # einsetzbar"; das Etikett trägt die Lesart jetzt mit.
             _vendor_audit_status = {
-                "pass": "bestanden", "warn": "mit Auflagen", "fail": "nicht bestanden",
+                "pass": "grün (bestanden)", "warn": "gelb (mit Auflagen)",
+                "fail": "rot (nur mit AVV und Leitplanken einsetzbar)",
+                "nicht bestanden": "rot (nur mit AVV und Leitplanken einsetzbar)",
             }.get(_vendor_audit_status.strip().lower(), _vendor_audit_status)
 
         _COUNTRY_NAME_MAP = {

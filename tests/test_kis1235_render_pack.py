@@ -274,7 +274,9 @@ class TestVendorStatusGerman:
         import inspect
         from services import strategy_pipeline as sp
         src = inspect.getsource(sp)
-        assert '"fail": "nicht bestanden"' in src
+        # KIS-1321: Das Etikett trägt die Lesart mit („rot (nur mit AVV …)").
+        assert '"fail": "rot (nur mit AVV und Leitplanken einsetzbar)"' in src
+        assert '"fail": "failed"' in src
 
 
 # =========================================================================

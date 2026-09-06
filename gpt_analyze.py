@@ -2438,15 +2438,10 @@ def _kernbotschaft(overall_score: int, score_rating: str, dims: dict, display_la
 _DECISION_LABEL_RE = re.compile(r"<li\b[^>]*>\s*<strong>\s*(?:Tun|Lassen|Risiko)", re.IGNORECASE)
 
 
-def _ensure_decision_block(sections: dict, lang: str = "de") -> bool:
-    """KIS-1316: Der Entscheidungsblock (Tun / Lassen / Risiko & Stop-Signal)
-    fehlte in fünf von sechs Läufen im PDF — der Titel „Ihre Entscheidung in
-    3 Punkten" stand allein. Fehlen die drei Punkte kurz vor dem Rendern,
-    baut diese Funktion sie deterministisch aus den Fragebogen-Angaben.
-    Liefert True, wenn ersetzt wurde."""
-    html = str(sections.get("EXECUTIVE_DECISION_HTML") or "")
-    if len(_DECISION_LABEL_RE.findall(html)) >= 3:
-        return False
+def _decision_fallback_html(sections: dict, lang: str = "de") -> str:
+    """KIS-1321: Baut den Entscheidungsblock deterministisch aus den
+    Fragebogen-Angaben — genutzt vom Sektions-Netz (`_ensure_decision_block`)
+    und vom Netz auf dem fertigen HTML (`_ensure_decision_block_final`)."""
     is_en = str(lang or "de").lower().startswith("en")
     zeitfresser = re.sub(r"\s+", " ", str(sections.get("zeitersparnis_prioritaet") or "")).strip()
     if len(zeitfresser) > 90:
@@ -2472,11 +2467,62 @@ def _ensure_decision_block(sections: dict, lang: str = "de") -> bool:
         f"    <li><strong>{l_risiko}</strong> {risiko}</li>\n"
         "  </ul>\n</div>"
     )
-    log.warning("[KIS-1316][DECISION-FALLBACK] Entscheidungsblock ohne drei Punkte (li=%d, len=%d) — deterministisch ersetzt",
-                len(re.findall(r"<li\b", html)), len(html))
+    return neu
+
+
+def _ensure_decision_block(sections: dict, lang: str = "de", stage: str = "pre-render") -> bool:
+    """KIS-1316: Der Entscheidungsblock (Tun / Lassen / Risiko & Stop-Signal)
+    fehlte in fünf von sechs Läufen im PDF — der Titel „Ihre Entscheidung in
+    3 Punkten" stand allein. Fehlen die drei Punkte, baut diese Funktion sie
+    deterministisch aus den Fragebogen-Angaben. Liefert True, wenn ersetzt.
+    KIS-1321: läuft zweimal — vor dem Healer und danach (Lauf KIS1290:
+    Titel mit Punkt, keine Liste, auch die Investitions-Zeile fehlte)."""
+    html = str(sections.get("EXECUTIVE_DECISION_HTML") or "")
+    n_li = len(_DECISION_LABEL_RE.findall(html))
+    log.info("[KIS-1321][DECISION-STAGE] stage=%s labels=%d li=%d len=%d",
+             stage, n_li, len(re.findall(r"<li\b", html)), len(html))
+    if n_li >= 3:
+        return False
+    neu = _decision_fallback_html(sections, lang)
+    log.warning("[KIS-1316][DECISION-FALLBACK] stage=%s Entscheidungsblock ohne drei Punkte (li=%d, len=%d) — deterministisch ersetzt",
+                stage, len(re.findall(r"<li\b", html)), len(html))
     sections["EXECUTIVE_DECISION_HTML"] = neu
     sections["executive_decision"] = neu
     return True
+
+
+_DECISION_BOX_RE = re.compile(
+    r'<div class="exec-decision-box"[^>]*>.*?</div>', re.DOTALL | re.IGNORECASE
+)
+
+
+def _ensure_decision_block_final(final_html: str, sections: dict, lang: str = "de") -> tuple:
+    """KIS-1321: Letztes Netz auf dem gerenderten HTML. Lauf KIS1290 (R1 S. 4)
+    zeigte nur „Ihre Entscheidung in 3 Punkten." — kein Punkt, keine
+    Investitions-Zeile, obwohl das Sektions-Netz vor dem Rendern lief. Trägt
+    die Box im fertigen HTML weniger als drei Punkte, wird sie ersetzt.
+    Liefert (html, ersetzt)."""
+    if not final_html or "exec-decision-box" not in final_html:
+        log.info("[KIS-1321][DECISION-FINAL] keine Box im HTML")
+        return final_html, False
+    m = _DECISION_BOX_RE.search(final_html)
+    box = m.group(0) if m else ""
+    n_li = len(re.findall(r"<li\b", box))
+    log.info("[KIS-1321][DECISION-FINAL] li=%d len=%d", n_li, len(box))
+    if n_li >= 3 or not m:
+        return final_html, False
+    if "<div" in box[10:]:
+        # Verschachtelte Box: das Muster endet am ersten </div>; hier nicht
+        # ersetzen, sonst blieben alte Punkte hinter dem neuen Block stehen.
+        log.warning("[KIS-1321][DECISION-FINAL] verschachtelte Box (li=%d) — nicht ersetzt", n_li)
+        return final_html, False
+    neu = _decision_fallback_html(sections, lang)
+    # Investitions-Zeile (KIS-1244) aus der alten Box mitnehmen, falls vorhanden.
+    inv = re.search(r"<li>\s*<strong>\s*(?:Investition|Investment):.*?</li>", box, re.DOTALL | re.IGNORECASE)
+    if inv:
+        neu = neu.replace("  </ul>", "    " + inv.group(0) + "\n  </ul>", 1)
+    log.warning("[KIS-1321][DECISION-FINAL] Box mit %d Punkt(en) im fertigen HTML — deterministisch ersetzt", n_li)
+    return final_html[:m.start()] + neu + final_html[m.end():], True
 
 
 def _final_score_sweep(sections: dict, final_score: int, pre_quality_score: int) -> dict:
@@ -23012,6 +23058,12 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         # Replace sections with healed version
         sections = healing_result.sections
 
+        # KIS-1321: Der Healer läuft nach dem ersten Netz — zweiter Blick.
+        try:
+            _ensure_decision_block(sections, str(sections.get("LANG") or "de"), stage="post-healer")
+        except Exception as _dec2_exc:  # pragma: no cover
+            log.warning("[KIS-1321][DECISION-STAGE] post-healer übersprungen: %s", _dec2_exc)
+
         # Sprint 1027.3 / Item H: Post-Healer-Section-Snapshot.
         # Vor _healer_stats-Injection, damit der Snapshot reine
         # Healed-Sections enthält und nicht das Stats-Meta-Key.
@@ -23793,6 +23845,11 @@ NUR HTML ausgeben. Keine Erklärungen, keine Markdown-Fences."""
         # No-op, sonst deutscht er das Ergebnis des EN-Sprachgates wieder ein
         # ("Good governance" → "Good Spielregeln"). DE unverändert.
         final_html, final_stats = apply_size_final_pass(final_html, segment=_segment, run_id=run_id, lang=report_lang)
+        # KIS-1321: Letztes Netz für den Entscheidungsblock auf dem fertigen HTML.
+        try:
+            final_html, _dec_final = _ensure_decision_block_final(final_html, sections, report_lang)
+        except Exception as _decf_exc:  # pragma: no cover
+            log.warning(f"[{run_id}] [KIS-1321][DECISION-FINAL] übersprungen: {_decf_exc}")
         result["html"] = final_html
         if final_stats.get("total", 0) > 0:
             log.info(

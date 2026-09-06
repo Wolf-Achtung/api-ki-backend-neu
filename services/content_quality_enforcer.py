@@ -2130,6 +2130,12 @@ EXTENDED_SIEZEN_PATTERNS = [
     (r'Assessment-Frameworks', 'Bewertungskonzepte'),  # v14.35: Zusammensetzung
     (r'Business-Case-Frameworks', 'Business-Case-Vorlagen'),  # v14.35: Zusammensetzung
     (r'\bPipeline\b', 'Ablauf'),
+    # KIS-1321: „Die Pipeline, die heute …" → „Die Ablauf, die heute" (Lauf
+    # KIS1290, R1 S. 27). Genus nachziehen — Artikel und Relativpronomen vor
+    # einem kleingeschriebenen Wort (ein Artikel vor einem Substantiv bleibt).
+    (r'\b([Dd])ie(\s+(?:[a-zäöüß]+e\s+){0,2})([A-Za-zäöüß]*[Aa]blauf)\b', r'\1er\2\3'),
+    (r'\b([Ee])ine(\s+(?:[a-zäöüß]+e\s+){0,2})([A-Za-zäöüß]*[Aa]blauf)\b', r'\1in\2\3'),
+    (r'\b([Aa]blauf), die (?=[a-zäöüß])', r'\1, der '),
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Standardisiere\b', r'\1Standardisieren Sie'),  # v14.20
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Strukturiere\b', r'\1Strukturieren Sie'),  # v14.20
     (r'(^|[.!?:]\s*|<li>\s*|<p>\s*)Verbinde\b', r'\1Verbinden Sie'),  # v14.20
@@ -2310,6 +2316,10 @@ GRAMMAR_FIX_PATTERNS = [
     (r'Assessment-Frameworks', 'Bewertungskonzepte'),  # v14.35
     (r'Business-Case-Frameworks', 'Business-Case-Vorlagen'),  # v14.35
     (r'\bPipeline\b', 'Ablauf'),
+    # KIS-1321: Genus nach Pipeline→Ablauf (siehe EXTENDED_SIEZEN_PATTERNS).
+    (r'\b([Dd])ie(\s+(?:[a-zäöüß]+e\s+){0,2})([A-Za-zäöüß]*[Aa]blauf)\b', r'\1er\2\3'),
+    (r'\b([Ee])ine(\s+(?:[a-zäöüß]+e\s+){0,2})([A-Za-zäöüß]*[Aa]blauf)\b', r'\1in\2\3'),
+    (r'\b([Aa]blauf), die (?=[a-zäöüß])', r'\1, der '),
     (PRODUKTNAME_ENGINE_SCHUTZ + r'\bEngine\b', 'System'),  # KIS-1305: nie in Produktnamen
     (r'\.\. ', '. '),
 
@@ -2356,6 +2366,10 @@ GRAMMAR_FIX_PATTERNS = [
     # Covers: "Ihr Team nutzen", "Der Kollege nutzen", "Ein Mitarbeiter nutzen", etc.
     (r'\b(Ihr|Der|Die|Das|Ein) (Team|Kollege|Mitarbeiter|Chef|Geschäftsführer) nutzen\b',
      r'\1 \2 nutzt'),
+    # KIS-1321: „die das Studio bereits nutzen" (Lauf KIS1290, R1 S. 27) —
+    # Singular-Subjekt mit Adverb vor dem Pluralverb.
+    (r'\b(das|Ihr|dieses|ein) (Studio|Team|Unternehmen|Haus|Büro) (bereits|schon|heute|aktuell|derzeit) (nutzen|setzen)\b',
+     lambda m: f'{m.group(1)} {m.group(2)} {m.group(3)} {m.group(4)[:-2]}t'),
 
     # NEU-2 (Session 28, KIS-1012): Compound-noun singular subjects + "nutzen" → "nutzt"
     # Covers: "Ihr Motion-Design-Team nutzen", "Das Pilotteam nutzen", "Ihr Kernteam nutzen"
