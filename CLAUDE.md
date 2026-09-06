@@ -466,6 +466,48 @@ Bewertungen, Freitext nur wenn vorhanden, HTML-Fassung mit Inline-Styles
 (`build_notification_html`) plus Textfassung. Das Formular selbst sagt seit
 dem Frontend-PR #167 „Seit August 2026" (Art. 4 gilt seit 02.08.2026).
 
+## Nachlauf KIS1288 (KIS-1319)
+
+Build 1336 vom 06.09.2026, Motion-Profil nach KIS-1317: Kennzahlen
+unverändert, kein Rückfall, keine dünne Seite außer dem Deckblatt.
+Kernbotschaft aus den Scores, Entscheidungsblock mit drei Punkten, DaVinci
+lokal. Was noch im Code lag:
+
+- **Vendor-Audit** (R1 S. 20): „Für LLM-Anbieter existieren keine
+  gleichwertigen EU-Alternativen" war ein fester Satz, während
+  `tools_seed.json` Aleph Alpha und Mistral führt — seit KIS-1315 nur
+  beobachtet. `_RECOMMENDATION_HINT_DE/EN` nennt sie jetzt; zwei Sätze mit
+  Punkt, damit `us_werkzeug_als_eu` den US-Namen nicht mit dem EU-Begriff
+  verbindet.
+- **Jahreslizenz** (Strategie S. 15/16): „20.000 € im Monat, bei 1–2
+  Jahreslizenzen" bei „Jahreslizenz ab 50.000 €" — das Komma vor „bei" und
+  die Tabellenzelle „bei 1–2 Lizenzen" (ohne „Jahres") kannten Sanitizer
+  und Wächter nicht. **Ein Muster, das ein Zeichen zu eng sitzt, schweigt
+  beim nächsten Lauf.**
+- **Wächter-Fehlalarm** `us_werkzeug_als_eu` (Strategie S. 19): „Starten Sie
+  mit Amberscript …, da es Ihre Adobe Premiere Pro Umgebung direkt ergänzt
+  und EU-gehostet ist" — das „es" ist Amberscript. Steht ein EU-Werkzeug im
+  selben Satz vor Adobe, gilt die Aussage ihm.
+- **Quellenjahr** (Strategie S. 7): „Quellen: KI-Readiness-Analyse 2024".
+  Der eigene Report trägt das Reportjahr (`quellen_stand_jahr_korrigieren`,
+  Wächter `veraltete_jahreszahl`). Fremde Quellen behalten ihr Jahr.
+- **KPA** (S. 2): „die regulatorischen Anforderungen des EU AI Act werden in
+  den nächsten Monaten wirksam" — die vier `gc_*`-Prompts hatten keine
+  Zeitlage. Jetzt `AI_ACT_STICHTAG` aus `ai_act_stichtag.art50_satz` im
+  KPA-Kontext, genannt in `gc_strategic_analysis` und `gc_risk_assessment`.
+- Kleinigkeiten mit Netz: „Adobe Premiere Pro (Neural Engine)" →
+  `fremde_engine_entfernen` (die Engine gehört zu DaVinci; Wächter
+  `erfundenes_werkzeug` kennt das Muster); „als alleinige Entscheiderin"
+  (Modell rät ein Geschlecht aus „Entscheide allein") →
+  `entscheider_neutral`; „50 Stunden/Monater Einsparung", „ein Motion
+  Designer nutzen Runway", „jedes Teammitglied eigene Standards setzen"
+  (R1 S. 27/28) → drei Grammatik-Muster; kein Filter erzeugte sie, alle
+  Einzelfunktionen lokal geprüft.
+- Nur beobachtet: „Nach zwölf Monaten steht ein ROI (siehe Business Case)
+  zu Buche" (R1 S. 25, Zahl-Ersetzung im Satz); Descript als
+  Kollaborations-Werkzeug (R1 S. 13); S. 22 Quellenzeile ohne Etikett.
+- Test: `tests/test_kis1319_testlauf_1288.py`.
+
 ## Freigabe-Lauf KIS1287 (KIS-1317)
 
 Build 1254 vom 06.09.2026, Motion-Profil nach KIS-1316: Entscheidungsblock

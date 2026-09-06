@@ -180,7 +180,9 @@ PRUEFUNGEN = [
         lambda t: (m.group(0) if (m := re.search(
             r"Adobe Sensei|Legiscope|TrustArc|OpenDP|\bAIVA\b|Azure Cognitive Services"
             r"|\bOtter(?:\.ai)?\b|\bFathom\b|\bFireflies(?:\.ai)?\b"
-            r"|Adobe ChatGPT[\w-]*|ChatGPT-Plugin-Erweiterung|InDesign[- ]KI-Plugin", t)) else None),
+            r"|Adobe ChatGPT[\w-]*|ChatGPT-Plugin-Erweiterung|InDesign[- ]KI-Plugin"
+            # KIS-1319: „Adobe Premiere Pro (Neural Engine)" — die Engine gehört zu DaVinci.
+            r"|(?:Premiere Pro|After Effects) \(Neural Engine\)", t)) else None),
     ),
     (
         "umsatz_jahresabo_rechnung",
@@ -255,6 +257,8 @@ _JAHR_PLANUNG_RE = re.compile(
     r"|\b(?:Roadmap|Budget|Planung|Ausblick) (?:für )?(20\d{2})\b"
     # KIS-1315: „Quelle: … des KI-Strategieberichts, Stand 2024." (Lauf KIS1285, S6)
     r"|\bStand (20\d{2})\b"
+    # KIS-1319: „Quellen: KI-Readiness-Analyse 2024" (Lauf KIS1288, Strategie S. 7)
+    r"|\bKI-Readiness[- ](?:Analyse|Report|Assessment) (20\d{2})\b"
 )
 
 
@@ -269,8 +273,10 @@ _JAHRESABO_PREIS_RE = re.compile(
     r"|([\d.]{4,})\s*€(?:\s*[–-]\s*[\d.]{4,}\s*€)?\s+Jahres(?:abo(?:nnement)?|lizenz)",
     re.IGNORECASE,
 )
+# KIS-1319: Komma vor „bei" und Tabellenzelle „bei 1–2 Lizenzen" (Lauf
+# KIS1288: „20.000 € im Monat, bei 1–2 Jahreslizenzen" bei „ab 50.000 €").
 _MONATSUMSATZ_ABO_RE = re.compile(
-    r"([\d.]{4,})\s*€\s+(?:(?:monatlich|im Monat|pro Monat)\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+Jahres(?:abonnent|lizenz|kund)",
+    r"([\d.]{4,})\s*€\s+(?:(?:monatlich|im Monat|pro Monat),?\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+(?:Jahres(?:abonnent|lizenz|kund)|Lizenz)",
     re.IGNORECASE,
 )
 
@@ -499,7 +505,15 @@ def _us_werkzeug_als_eu(text: str) -> Optional[str]:
     # oder Adobe Firefly" (Lauf KIS1285, Strategie S. 12).
     text = re.sub(r"[ \t]*\n[ \t]*", " ", _zellen_zusammenfuegen(text))
     treffer = [re.sub(r"\s+", " ", m.group(0))[:120] for m in _US_ALS_EU_RE.finditer(text)]
-    treffer += [re.sub(r"\s+", " ", m.group(0))[:120] for m in _ADOBE_EU_RE.finditer(text)]
+    # KIS-1319: „Starten Sie mit Amberscript …, da es Ihre Adobe Premiere Pro
+    # Umgebung direkt ergänzt und EU-gehostet ist" (Lauf KIS1288, S. 19) —
+    # das „es" ist Amberscript. Steht ein EU-Werkzeug im selben Satz vor
+    # Adobe, gilt die Aussage ihm.
+    for m in _ADOBE_EU_RE.finditer(text):
+        satzanfang = max(text.rfind(c, 0, m.start()) for c in ".!?|·")
+        if re.search(_EU_WERKZEUGE, text[satzanfang + 1:m.start()], re.IGNORECASE):
+            continue
+        treffer.append(re.sub(r"\s+", " ", m.group(0))[:120])
     if not treffer:
         return None
     return " | ".join(dict.fromkeys(treffer))
