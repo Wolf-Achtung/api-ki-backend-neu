@@ -183,6 +183,11 @@ PRUEFUNGEN = [
             r"|Adobe ChatGPT[\w-]*|ChatGPT-Plugin-Erweiterung|InDesign[- ]KI-Plugin", t)) else None),
     ),
     (
+        "umsatz_jahresabo_rechnung",
+        "Monatsumsatz passt nicht zu Jahresabo-Preis × Abonnenten / 12 (KIS-1315)",
+        lambda t: _umsatz_jahresabo_rechnung(t),
+    ),
+    (
         "satzabbruch_vor_block",
         "Absatz endet mitten im Satz, direkt davor ein Quartals-/Phasenblock (KIS-1302)",
         lambda t: _satzabbruch_vor_block(t),
@@ -248,7 +253,35 @@ _JAHR_PLANUNG_RE = re.compile(
     r"\bob (20\d{2}) als (?:erstes )?Jahr"
     r"|\bInvestitionsplan (20\d{2})\b"
     r"|\b(?:Roadmap|Budget|Planung|Ausblick) (?:für )?(20\d{2})\b"
+    # KIS-1315: „Quelle: … des KI-Strategieberichts, Stand 2024." (Lauf KIS1285, S6)
+    r"|\bStand (20\d{2})\b"
 )
+
+
+# KIS-1315: Strategie S. 15 (Lauf KIS1285): „Jahresabonnement ab 30.000 €" und
+# „15.000 € monatlich bei 1–2 Jahresabonnenten" — zwei Abonnenten ergeben
+# 5.000 € im Monat. Die Prompt-Regel aus KIS-1312 hielt nicht.
+_JAHRESABO_PREIS_RE = re.compile(
+    r"Jahres(?:abo(?:nnement)?|lizenz)\w*\s+(?:ab|von|zu|für)\s+([\d.]{4,})\s*€", re.IGNORECASE
+)
+_MONATSUMSATZ_ABO_RE = re.compile(
+    r"([\d.]{4,})\s*€\s+(?:monatlich|im Monat|pro Monat)\s+bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+Jahres(?:abonnent|lizenz|kund)",
+    re.IGNORECASE,
+)
+
+
+def _umsatz_jahresabo_rechnung(text: str) -> Optional[str]:
+    t = re.sub(r"[ \t]*\n[ \t]*", " ", _zellen_zusammenfuegen(text))
+    preis = _JAHRESABO_PREIS_RE.search(t)
+    if not preis:
+        return None
+    p = int(preis.group(1).replace(".", ""))
+    for m in _MONATSUMSATZ_ABO_RE.finditer(t):
+        monat = int(m.group(1).replace(".", ""))
+        n_max = int(m.group(3) or m.group(2))
+        if monat > n_max * p / 12 * 1.5:
+            return f"{m.group(0)} (Jahresabo ab {preis.group(1)} €)"[:120]
+    return None
 
 
 def _veraltete_jahreszahl(text: str) -> Optional[str]:
@@ -445,7 +478,10 @@ def _zellen_zusammenfuegen(text: str) -> str:
 def _us_werkzeug_als_eu(text: str) -> Optional[str]:
     # KIS-1302: alle Treffer melden — der erste (ein Falschtreffer im
     # Werkzeugblock) verdeckte in Lauf KIS1275 den echten Fehler in S8.
-    text = _zellen_zusammenfuegen(text)
+    # KIS-1315: Der PDF-Text bricht Zeilen mit „\n" — der zweite Zweig des
+    # Musters stoppte daran und übersah „EU-konforme\nWerkzeuge wie DeepL Pro
+    # oder Adobe Firefly" (Lauf KIS1285, Strategie S. 12).
+    text = re.sub(r"[ \t]*\n[ \t]*", " ", _zellen_zusammenfuegen(text))
     treffer = [re.sub(r"\s+", " ", m.group(0))[:120] for m in _US_ALS_EU_RE.finditer(text)]
     if not treffer:
         return None

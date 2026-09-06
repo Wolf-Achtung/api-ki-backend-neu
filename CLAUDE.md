@@ -452,6 +452,58 @@ verlor 3-Schritte-Prozess und Checkliste. Lokal reproduziert mit
   Amberscript statt Otter.
 - Test: `tests/test_kis1302_testlauf_1275.py`.
 
+## Eine Prompt-Regel, die vier Läufe nicht hält, wird Code (KIS-1315)
+
+Testlauf KIS1285 (06.09.2026, Build 1144, Motion-Profil nach KIS-1314):
+Kennzahlen unverändert (Score 84), kein Rückfall, alle KIS-1312/1314-Punkte
+im PDF. Restbefunde:
+
+- **„EU-konforme Werkzeuge wie DeepL Pro oder Adobe Firefly"** (Strategie
+  S. 12): dieselbe Verwechslung wie in KIS1281 (S3), trotz Regel in vier
+  Prompts. Jetzt `strategy_sanitizer.us_werkzeug_aus_eu_aufzaehlung`: Ein
+  US-Werkzeug fällt aus der Aufzählung hinter „EU-konform… wie", bleibt
+  nichts übrig, fällt das „wie …". Der Wächter `us_werkzeug_als_eu` hatte
+  geschwiegen — der PDF-Text bricht Zeilen mit `\n`, der zweite Zweig des
+  Musters stoppte daran. **Ein Wächter, der auf PDF-Text läuft, normalisiert
+  Zeilenumbrüche.**
+- **„75 % (Richtwert) … Metricool 2026"** (S2): Die Recherche sagt „drei von
+  vier". `_BRUCH_WORTE` in `benchmark_prozent_richtwert` zählt Bruchangaben
+  als Beleg (drei von vier, jeder zweite, zwei Drittel …).
+- **„15.000 € monatlich bei 1–2 Jahresabonnenten"** bei „Jahresabo ab
+  30.000 €" (S3b): Regel aus KIS-1312 hielt nicht. Prompt rechnet jetzt vor
+  („× 2 = 60.000 € im Jahr = 5.000 € im Monat"); Wächter
+  `umsatz_jahresabo_rechnung` (Monatsumsatz > Abonnenten × Preis / 12 × 1,5).
+  Dazu: „ca. 500 €" stand dreimal als Validierungsbudget — der Prompt nannte
+  die Obergrenze, jetzt verlangt er den tatsächlichen Aufwand.
+- **„jährliche Zeitersparnis von 50 Stunden pro Monat"** (S5) →
+  `jaehrlich_pro_monat_korrigieren`. **„Quelle: …, Stand 2024"** (S6, Report
+  vom September 2026) → `quellen_stand_jahr_korrigieren` (nur in Quellenzeilen,
+  nur Jahr vor dem Reportjahr), Prompt-Regel wie in S5, Wächter
+  `veraltete_jahreszahl` kennt „Stand 20xx".
+- **DaVinci Resolve im Vendor-Audit** (R1 S. 20): „Unbekannt · EU-only · Kein
+  AVV verfügbar · AI Act Relevanz: hoch · GELB" für eine Desktop-Installation.
+  `_generate_vendor_entry` gibt für Hosting `lokal` jetzt einen festen
+  Eintrag: Jurisdiktion „Lokal", Datenstandort „Lokal (Desktop)", grün, kein
+  AVV nötig. `JURISDICTIONS` und `DATA_LOCATIONS` kennen den Wert — ohne
+  ihn setzt `__post_init__` still „Unknown".
+- **23-Tage-Challenge für Anwender** (R1 S. 16, dritter Lauf mit
+  „E-Mail-zu-Zusammenfassung-Workflow"): `CHALLENGE_30_TAGE_INTERMEDIATE_MEDIEN`
+  (Master-Fassung, Untertitel, Export-Presets, Kennzeichnungsregel,
+  Rechte-Register …). Greift für Medienbetriebe außer Verlag und Musik/Audio
+  (`_CHALLENGE_MEDIEN_AUSNAHMEN`), nur DE; `gpt_analyze` reicht `is_media` und
+  `medien_sparte` durch.
+- **S8 „eingesetzte KI-Werkzeuge wie Amberscript … LanguageTool"**: Regel
+  „eingesetzt nur für `{s5_software}`" jetzt auch im S8-Prompt (DE/EN).
+- Sofort-Start: „Prozess in Motion-Design- und Social-Media-Studio" →
+  „in Ihrem Betrieb (…)".
+- Offen, nur beobachtet: Strategie S. 4 (Förder-Box) und S. 7 (zwei Zeilen
+  Quellen-Überlauf von S1) sind dünne Seiten; Descript (US) im Quick Win 3
+  für NDA-Material; R1 S. 20 „für LLM-Anbieter existieren keine
+  gleichwertigen EU-Alternativen" (Aleph Alpha und Mistral stehen in der
+  Liste); S4 ordnet DeepL Pro und LanguageTool der „datenbasierten
+  Content-Planung" zu.
+- Test: `tests/test_kis1315_testlauf_1285.py`.
+
 ## Ein Platzhalter im Prompt-Kasten ist kein Prompt-Rest (KIS-1314)
 
 Testlauf KIS1284 (05.09.2026, Build 2251, zweiter Verlag-Lauf nach KIS-1313):

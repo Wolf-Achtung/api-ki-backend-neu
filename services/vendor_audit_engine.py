@@ -48,10 +48,10 @@ VENDOR_CATEGORY_RED_THRESHOLD = 4  # vendor_risk_score >= 4 = RED
 VENDOR_CATEGORY_YELLOW_THRESHOLD = 3  # vendor_risk_score = 3 = YELLOW
 
 # Jurisdiction classifications
-JURISDICTIONS = ["EU", "US", "UK", "CH", "Other"]
+JURISDICTIONS = ["EU", "US", "UK", "CH", "Other", "Lokal"]  # KIS-1315: Desktop-Software
 
 # Data location classifications
-DATA_LOCATIONS = ["EU-only", "EU+US", "Global", "Unknown"]
+DATA_LOCATIONS = ["EU-only", "EU+US", "Global", "Unknown", "Lokal (Desktop)"]
 
 # Security posture levels
 SECURITY_POSTURES = ["weak", "medium", "strong"]
@@ -1092,6 +1092,28 @@ def _generate_vendor_entry(
     gdpr = vendor_info.get("gdpr", "")
     tools_vendor_risk = vendor_info.get("vendor_risk", 3)
     eu_hosting = vendor_info.get("eu_hosting")
+
+    # KIS-1315: Desktop-Software ohne Cloud-Pflicht (DaVinci Resolve, Topaz)
+    # hat keinen Datenstandort und braucht keinen AVV. Lauf KIS1285 (R1 S. 20)
+    # zeigte DaVinci als „Unbekannt · EU-only · Kein AVV verfügbar · AI Act
+    # Relevanz: hoch · GELB".
+    if str(host).strip().lower().startswith(("lokal", "local")):
+        return VendorAuditEntry(
+            name=name,
+            category=category,
+            jurisdiction="Lokal",
+            data_location="Lokal (Desktop)",
+            subprocessors=[],
+            has_dpa=True,
+            ai_act_relevance="low",
+            dsgvo_risk_level="low",
+            security_posture="medium",
+            certifications=[],
+            vendor_risk_score=1,
+            audit_flags=[],
+            overall_category="green",
+            notes="Lokal installiert — Daten verlassen den Rechner nicht, kein AVV nötig.",
+        )
 
     # Determine attributes
     jurisdiction = _determine_jurisdiction(name, host, gdpr)
