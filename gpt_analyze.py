@@ -2462,12 +2462,33 @@ def _decision_fallback_html(sections: dict, lang: str = "de") -> str:
         lassen = "Ad-hoc-Prompts und parallele Tool-Experimente ohne dokumentierten Standard entfallen, bis der erste Workflow stabil läuft."
         risiko = "Zeigt der Pilot nach 14 Tagen keinen messbaren Entlastungseffekt, wird vereinfacht oder gestoppt — Details laut Business Case."
         titel, l_tun, l_lassen, l_risiko = "Ihre Entscheidung in 3 Punkten", "Tun:", "Lassen:", "Risiko &amp; Stop-Signal:"
+    # KIS-1325: Die Investitions-Zeile (KIS-1244) entsteht vor dem Healer —
+    # greift danach das Netz, fehlte sie (Lauf KIS1294, R1 S. 4). Der
+    # Ersatzblock trägt sie deshalb selbst.
+    invest_li = ""
+    try:
+        _capex = int(float(sections.get("CANON_CAPEX_EUR") or sections.get("CAPEX_REALISTISCH_EUR") or 0))
+        _opex = int(float(sections.get("CANON_OPEX_MONTH_EUR") or sections.get("OPEX_REALISTISCH_EUR") or 0))
+    except (TypeError, ValueError):
+        _capex, _opex = 0, 0
+    if _capex > 0:
+        if is_en:
+            _fmt = lambda n: f"{n:,}"  # noqa: E731
+            invest_li = (f"    <li><strong>Investment:</strong> initial investment approx. €{_fmt(_capex)} (one-off, spread over 12 months)"
+                         + (f", plus approx. €{_fmt(_opex)}/month running tool costs" if _opex > 0 else "")
+                         + " — details in the business case.</li>\n")
+        else:
+            _fmt = lambda n: f"{n:,}".replace(",", ".")  # noqa: E731
+            invest_li = (f"    <li><strong>Investition:</strong> Startinvestition ca. {_fmt(_capex)} € (einmalig, über 12 Monate verteilt)"
+                         + (f", dazu ca. {_fmt(_opex)} €/Monat laufende Tool-Kosten" if _opex > 0 else "")
+                         + " — Details im Business Case.</li>\n")
     neu = (
         '<div class="exec-decision-box">\n'
         f"  <p><strong>{titel}</strong></p>\n  <ul>\n"
         f"    <li><strong>{l_tun}</strong> {tun}</li>\n"
         f"    <li><strong>{l_lassen}</strong> {lassen}</li>\n"
         f"    <li><strong>{l_risiko}</strong> {risiko}</li>\n"
+        f"{invest_li}"
         "  </ul>\n</div>"
     )
     return neu

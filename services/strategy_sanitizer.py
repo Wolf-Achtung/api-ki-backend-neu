@@ -413,14 +413,27 @@ _EU_AUFZAEHLUNG_RE = re.compile(
     # Aufzählung folgt dem EU-Bezug im nächsten Satz.
     r"|EU-konform\w*[^<]{0,160}?(?:Umstellung|Wechsel|Migration)\s+(?:auf|zu)\s+(?:EU-konforme?n?\s+|datenschutzkonforme?n?\s+)?"
     r"(?:Werkzeuge?n?|Tools?|Alternativen?)\s+(?:wie|etwa|z\.\s?B\.)\s+)"
-    r"([^.;:<\n]+?)(?=[.;:<\n]| ist\b| sind\b| kann\b| bietet| bieten| ermöglich| statt\b| anstelle\b"
-    r"| für\b| zur\b| zum\b| bei\b| in\b| um\b| als\b)",
+    # KIS-1325: Die Aufzählung besteht aus Werkzeugnamen (Großbuchstabe oder
+    # Ziffer am Wortanfang), getrennt durch Komma, „oder", „und". Das erste
+    # kleingeschriebene Wort beendet sie. Bis dahin fraß das Muster den
+    # Nebensatz mit: „… PhariaAI minimiert Datenschutzrisiken, während
+    # US-Anbieter wie ChatGPT/OpenAI nur mit AVV und strengen Leitplanken
+    # nutzbar sind" → „… PhariaAI minimiert Datenschutzrisiken und strengen
+    # Leitplanken nutzbar sind" (Lauf KIS1294, Strategie S. 30).
+    r"((?-i:[A-ZÄÖÜ0-9][\w.\-/]*(?:\s+(?:/\s+)?[A-ZÄÖÜ0-9][\w.\-/]*)*)"
+    r"(?:\s*,\s*(?-i:[A-ZÄÖÜ0-9][\w.\-/]*(?:\s+(?:/\s+)?[A-ZÄÖÜ0-9][\w.\-/]*)*)"
+    r"|\s+(?:oder|und|or|and|sowie)\s+(?-i:[A-ZÄÖÜ0-9][\w.\-/]*(?:\s+(?:/\s+)?[A-ZÄÖÜ0-9][\w.\-/]*)*))*)",
     re.IGNORECASE,
 )
 
 # KIS-1316: „Die von Ihnen empfohlenen Tools" (Lauf KIS1286, S8) — der Kunde
 # empfiehlt nichts, der Bericht tut es.
-_VON_IHNEN_EMPFOHLEN_RE = re.compile(r"\b(?:die|der|das|den|dem)?\s*von Ihnen empfohlene(n|s|r)?\b", re.IGNORECASE)
+# KIS-1325: „Die von Ihrem Unternehmen empfohlenen KI-Werkzeuge" (Lauf
+# KIS1294, S8) — dieselbe Verwechslung mit anderem Wortlaut.
+_VON_IHNEN_EMPFOHLEN_RE = re.compile(
+    r"\b(?:die|der|das|den|dem)?\s*von (?:Ihnen|Ihrem Unternehmen|Ihrem Betrieb|Ihrer Firma|Ihrem Haus) empfohlene(n|s|r)?\b",
+    re.IGNORECASE,
+)
 # KIS-1316: Ein Listenpunkt, der nur aus einem Werkzeugnamen besteht
 # („<li>Runway</li>", Lauf KIS1286, S4 S. 19) — Rest einer gekappten Zeile.
 _NACKTER_LI_RE = re.compile(r"<li\b[^>]*>\s*(?:<(?:strong|b|em)>)?\s*([^<>]{1,40}?)\s*(?:</(?:strong|b|em)>)?\s*</li>", re.IGNORECASE)
@@ -444,7 +457,7 @@ def nackte_werkzeug_punkte_entfernen(html: str) -> tuple:
 
 
 def von_ihnen_empfohlen_korrigieren(html: str) -> tuple:
-    if not html or "von Ihnen empfohlen" not in html:
+    if not html or not _VON_IHNEN_EMPFOHLEN_RE.search(html):
         return html, 0
 
     def _fix(m: "re.Match[str]") -> str:
@@ -612,7 +625,10 @@ _JAHRESPREIS_RE = re.compile(
     r"Jahres(?:abo(?:nnement)?|lizenz)\w*\s+(?:ab|von|zu|für|zwischen)\s+([\d.]{4,})\s*€"
     r"|([\d.]{4,})\s*€(?:\s*[–-]\s*[\d.]{4,}\s*€)?\s+Jahres(?:abo(?:nnement)?|lizenz)"
     # KIS-1323: Tabellenzelle „Jahresabo 3.000–5.000 €" — ohne Präposition.
-    r"|Jahres(?:abo(?:nnement)?|lizenz)\w*\s+([\d.]{4,})\s*(?:[–-]\s*[\d.]{4,}\s*)?€",
+    r"|Jahres(?:abo(?:nnement)?|lizenz)\w*\s+([\d.]{4,})\s*(?:[–-]\s*[\d.]{4,}\s*)?€"
+    # KIS-1325: „3.000–5.000 € pro Jahr, Abo" (Lauf KIS1294, Strategie S. 16,
+    # Tabellenzelle) — der Preis nennt das Jahr hinter dem Betrag.
+    r"|([\d.]{4,})\s*(?:[–-]\s*[\d.]{4,}\s*)?€\s+(?:pro Jahr|je Jahr|im Jahr|jährlich|/\s*Jahr|p\.\s?a\.)",
     re.IGNORECASE,
 )
 # KIS-1319: „20.000 € im Monat, bei 1–2 Jahreslizenzen" (Komma) und die
@@ -637,14 +653,19 @@ _MONATSUMSATZ_KUNDEN_RE = re.compile(
 )
 # KIS-1324: Monatspreis („Premium-Abo ab 600 € monatlich") — Teiler 1.
 _MONATSPREIS_RE = re.compile(
-    r"([\d.]{3,})\s*€\s+(?:monatlich|pro Monat|im Monat|/\s*Monat)\b(?!,?\s+bei\b)",
+    r"([\d.]{3,})\s*€\s+(?:monatlich|pro Monat|im Monat|/\s*Monat)\b(?!,?\s+bei\b)"
+    # KIS-1325: „Monatliches Abo zwischen 500 € und 1.000 € pro Betrieb"
+    # (Lauf KIS1294, Strategie S. 16) — das Wort „monatlich" steht vorn.
+    r"|Monatlich\w*\s+(?:Abo\w*|Preis\w*|Gebühr\w*|Lizenz\w*|Paket\w*)?\s*(?:ab|von|zu|für|zwischen)?\s*([\d.]{3,})\s*€",
     re.IGNORECASE,
 )
 # KIS-1324: Eine Projektion — „12.000 € monatlich bei 20 Premium-Abonnenten",
 # „7.500 € bei 2 Abonnenten", „1.500 € bei 3–4 Kunden".
+# KIS-1325: „3.600 € im Monat, bei 3–4 Quartalspaketen" (Lauf KIS1294) — die
+# Einheit ist das Paket.
 _PROJEKTION_RE = re.compile(
     r"([\d.]{3,})(\s*€\s+(?:(?:monatlich|im Monat|pro Monat),?\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+"
-    r"(?:[\w-]+-)?(?:Jahres)?(?:Abonnent|Lizenz|Kund|Nutzer))",
+    r"(?:[\w-]+-)?(?:Jahres|Quartals|Monats)?(?:Abonnent|Lizenz|Kund|Nutzer|Paket))",
     re.IGNORECASE,
 )
 _PREISMODELL_RE = re.compile(

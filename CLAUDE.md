@@ -466,6 +466,36 @@ Bewertungen, Freitext nur wenn vorhanden, HTML-Fassung mit Inline-Styles
 (`build_notification_html`) plus Textfassung. Das Formular selbst sagt seit
 dem Frontend-PR #167 „Seit August 2026" (Art. 4 gilt seit 02.08.2026).
 
+## Eine Aufzählung endet am ersten kleinen Wort (KIS-1325)
+
+Testlauf KIS1294 (06.09.2026, Build 1754, Verlag-Profil nach KIS-1324): Alle
+KIS-1324-Punkte im PDF — Vendor-Empfehlungen (jetzt alle drei) vor den
+Anbieter-Details, keine dünne Seite mehr, „KI-Entwürfen", kein „:;" in den
+Roadmap-Karten. Kennzahlen unverändert, KPA ohne Befund. Restbefunde:
+
+- **„… PhariaAI minimiert Datenschutzrisiken und strengen Leitplanken
+  nutzbar sind"** (Strategie S. 30): `us_werkzeug_aus_eu_aufzaehlung`
+  las den Nebensatz „, während US-Anbieter wie ChatGPT/OpenAI nur mit AVV"
+  als Teil der Aufzählung und strich ihn. Die Aufzählung besteht jetzt aus
+  Werkzeugnamen (Großbuchstabe oder Ziffer am Wortanfang, `(?-i:…)`),
+  getrennt durch Komma, „oder", „und"; das erste kleine Wort beendet sie.
+  **Ein Filter, der eine Liste kürzt, muss wissen, wo die Liste endet.**
+- **Umsatzprojektion** (Strategie S. 16): „8.000 € im Monat, bei 2
+  Jahresabonnenten" bei „3.000–5.000 € pro Jahr, Abo" und „3.600 € bei 3–4
+  Quartalspaketen" bei „1.200 € pro Quartal" — Preisform „pro Jahr" hinter
+  dem Betrag, „Monatliches Abo zwischen …" und die Einheit „Paket" fehlten
+  in Sanitizer und Wächter. Der Wächter fand die zweite Zeile trotzdem, mit
+  falschem Etikett (nächstliegender Preis war das Quartal der Zeile davor).
+- **„Die von Ihrem Unternehmen empfohlenen KI-Werkzeuge"** (S8):
+  `von_ihnen_empfohlen_korrigieren` kennt die Variante.
+- **Entscheidungsblock ohne Investitions-Zeile** (R1 S. 4): Das Netz aus
+  KIS-1321 griff (Text aus `_decision_fallback_html`), die Zeile aus KIS-1244
+  entsteht aber vor dem Healer. Der Ersatzblock trägt sie jetzt selbst.
+- Nur beobachtet: Duden-Mentor-Preis weiter „5.50–8.30 €" (Ursache offen);
+  Modellsprache „Quick Win Kurzfristig empfehle ich" (S1), „Ein Titel …
+  nutzen andere Fachbegriffe", „totes Lagerbestand" (R1 12-Monats-Ausblick).
+- Test: `tests/test_kis1325_testlauf_1294.py`.
+
 ## Ein Preis gilt nur für seine Strategie (KIS-1324)
 
 Testlauf KIS1293 (06.09.2026, Build 1717, Verlag-Profil nach KIS-1323): Alle
