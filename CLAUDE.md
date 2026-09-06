@@ -466,6 +466,42 @@ Bewertungen, Freitext nur wenn vorhanden, HTML-Fassung mit Inline-Styles
 (`build_notification_html`) plus Textfassung. Das Formular selbst sagt seit
 dem Frontend-PR #167 „Seit August 2026" (Art. 4 gilt seit 02.08.2026).
 
+## Der Verlag-Pfad ist final (KIS-1328)
+
+Testlauf KIS1297 (06.09.2026, Build 2002, Verlag-Profil nach KIS-1327): Kein
+Rückfall (26 Wächter still), Kennzahlen unverändert, keine dünne Seite außer
+dem Deckblatt, Briefing identisch. Alle drei Gegenproben aus KIS-1327 im PDF:
+Duden-Mentor „5,50–8,30 €", KI-Rechte-Kapitel ohne fehlendes Wort, alle
+Umsatzprojektionen rechnen (4.200 € bei 3–5 Jahreslizenzen zu 10.000 € ist
+die Sanitizer-Rundung). Damit erfüllt der Verlag-Pfad das Freigabe-Kriterium
+wie das Motion-Profil seit KIS1291. Was noch im Code lag, ist klein:
+
+- **„zwischen 2 und 10 Mio. n. v."** (R1 S. 25): Der Leer-Wert-Filter des
+  Healers (`_BC_EMPTY_VALUE_PATTERNS`) hielt „Mio. €." für ein leeres
+  Euro-Feld — der Lookbehind aus KIS-1267 schützte Ziffer und Leerzeichen,
+  nicht den Punkt von „Mio.". Jetzt auch Punkt, Klammer und Prozent. Der
+  Wächter `euro_verschluckt` kennt „Mio./Mrd./Tsd." vor „n. v.".
+- **Roter Vorspann** „Redaktion, Lektorat, Satz, … im Haus." unter der
+  Kapitelüberschrift KI-Rechte (R1 S. 22, Läufe KIS1294/1295/1297): Echo
+  der Hauptleistung vor `<section>`. Der KIS-1304-Filter verlangte ein
+  Listen- oder Absatz-Tag davor. Jetzt fällt jeder kurze Text ohne
+  Überschrift vor `<section>` (Rückfall: vor der ersten `<h2>`/`<h3>`).
+- **„ROI (siehe Business Case) nach 12 Monaten)"** (R1 S. 26): Der Treffer
+  „ROI (22 %" öffnete eine Klammer, die erst hinter dem Treffer schließt.
+  Der Ersatz lässt sie jetzt offen.
+- **„bis 10.000€"** (KPA S. 3): Ziffer vor € bekommt in der KPA ein
+  Leerzeichen; der Status-Report hatte die Regel, die KPA nicht.
+- Nur beobachtet (Modellsprache): „vier prioritäre Handlungsfelder" bei fünf
+  (S3), Microsoft 365 Copilot als erstes Werkzeug (S4), „Phase 1" als
+  Kartentitel (S5), „das Produkt tatsächlich nutzen" nach Singular-Subjekt
+  (R1 S. 28), „Schatten-KI Nutzung" ohne Bindestrich (KPA).
+- Test: `tests/test_kis1328_testlauf_1297.py`.
+
+**Regel ab jetzt:** Modellformulierungen werden nur noch als Wächter
+nachgezogen, nicht mehr je Lauf. Ein neuer Lauf braucht einen neuen Anlass
+(Profil, Sparte, Code-Änderung) — nicht die Hoffnung auf einen anderen
+Modelltext.
+
 ## Ein Wortfilter, der Wörter löscht, hinterlässt Lücken (KIS-1327)
 
 Testlauf KIS1296 (06.09.2026, Build 1921, Verlag-Profil nach KIS-1326): Kein

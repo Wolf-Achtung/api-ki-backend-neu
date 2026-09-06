@@ -132,8 +132,9 @@ PRUEFUNGEN = [
     (
         "euro_verschluckt",
         "Betrag endet auf 'n. v.' statt auf € (KIS-1267)",
+        # KIS-1328: auch „10 Mio. n. v." (Lauf KIS1297, R1 S. 25).
         lambda t: (m.group(0) if (m := re.search(
-            r"\d[\d.]*\s*[–-]?\s*[\d.]*\s*n\.\s?v\.", t)) else None),
+            r"\d[\d.]*\s*[–-]?\s*[\d.]*\s*(?:(?:Mio|Mrd|Tsd)\.\s*)?n\.\s?v\.", t)) else None),
     ),
     (
         "bundesland_platzhalter",

@@ -852,11 +852,22 @@ def strip_context_block_leaks(html: str, section_name: str = "") -> tuple:
 
     # KIS-1304: Das KI-Rechte-Kapitel beginnt laut Prompt mit <section>.
     # Was davor steht, ist Echo des Kontextblocks (Lauf KIS1275/1276).
+    # KIS-1328: Das Echo kam auch ohne Listen-Tag — ein einzelner Satz aus
+    # der Hauptleistung („Redaktion, Lektorat, Satz, … im Haus.") stand als
+    # roter Vorspann unter der Kapitelüberschrift (Läufe KIS1294/1295/1297,
+    # R1 S. 22). Jetzt fällt alles vor <section>, sobald dort Text ohne
+    # Überschrift steht; fehlt <section>, gilt dasselbe vor der ersten <h2>/<h3>.
     if "ki_rechte" in str(section_name or "").lower():
         _sec = re.search(r'<section\b', result, re.IGNORECASE)
-        if _sec and _sec.start() > 0 and re.search(r'<(?:ul|ol|li|p)\b', result[:_sec.start()], re.IGNORECASE):
-            removals += 1
-            result = result[_sec.start():]
+        if not _sec:
+            _sec = re.search(r'<h[23]\b', result, re.IGNORECASE)
+        if _sec and _sec.start() > 0:
+            _vor = result[:_sec.start()]
+            _vor_text = re.sub(r'<[^>]+>', ' ', _vor)
+            _vor_text = re.sub(r'\s+', ' ', _vor_text).strip()
+            if _vor_text and len(_vor_text) <= 400 and not re.search(r'<h[1-6]\b', _vor, re.IGNORECASE):
+                removals += 1
+                result = result[_sec.start():]
 
     # -- O7: Tool/Communication context-block sanitizer --
     _tool_phrases = [
