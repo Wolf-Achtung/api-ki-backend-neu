@@ -309,36 +309,59 @@ _MONATSUMSATZ_KUNDEN_RE = re.compile(
 )
 
 
-def _umsatz_jahresabo_rechnung(text: str) -> Optional[str]:
-    t = re.sub(r"[ \t]*\n[ \t]*", " ", _zellen_zusammenfuegen(text))
-    preis = _JAHRESABO_PREIS_RE.search(t)
-    if not preis:
+# KIS-1324: Der Preis gilt nur für die Projektion seiner Strategie. Lauf
+# KIS1293: Jahrespreis 3.600 € (Strategie 2) neben „12.000 € bei 20
+# Premium-Abonnenten" (Strategie 3, 600 € monatlich) — der alte Wächter
+# hätte den richtigen Wert gemeldet. Jetzt zählt die nächstliegende
+# Preisangabe vor der Projektion (Fenster 600 Zeichen); Jahres → /12,
+# Quartal → /3, Monat → /1.
+_MONATSPREIS_W_RE = re.compile(
+    r"([\d.]{3,})\s*€\s+(?:monatlich|pro Monat|im Monat|/\s*Monat)\b(?!,?\s+bei\b)",
+    re.IGNORECASE,
+)
+_PROJEKTION_W_RE = re.compile(
+    r"([\d.]{3,})\s*€\s+(?:(?:monatlich|im Monat|pro Monat),?\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+"
+    r"(?:[\w-]+-)?(?:Jahres)?(?:Abonnent|Lizenz|Kund|Nutzer)",
+    re.IGNORECASE,
+)
+
+
+def _naechster_preis(fenster: str) -> Optional[tuple]:
+    kandidaten = []
+    for muster, teiler, minimum, art in ((_JAHRESABO_PREIS_RE, 12, 1000, "Jahresabo"),
+                                         (_QUARTALSPREIS_RE, 3, 100, "Quartalspaket"),
+                                         (_MONATSPREIS_W_RE, 1, 50, "Monatspreis")):
+        for m in muster.finditer(fenster):
+            p_txt = next(g for g in m.groups() if g)
+            p = int(p_txt.replace(".", ""))
+            if p >= minimum:
+                kandidaten.append((m.start(), p, teiler, art, p_txt))
+    if not kandidaten:
         return None
-    p_txt = next(g for g in preis.groups() if g)
-    p = int(p_txt.replace(".", ""))
-    for m in _MONATSUMSATZ_ABO_RE.finditer(t):
+    _, p, teiler, art, p_txt = max(kandidaten)
+    return p, teiler, art, p_txt
+
+
+def _umsatz_projektion_rechnung(text: str, nur_teiler: Optional[tuple] = None) -> Optional[str]:
+    t = re.sub(r"[ \t]*\n[ \t]*", " ", _zellen_zusammenfuegen(text))
+    for m in _PROJEKTION_W_RE.finditer(t):
+        preis = _naechster_preis(t[max(0, m.start() - 600):m.start()])
+        if not preis or (nur_teiler and preis[1] not in nur_teiler):
+            continue
+        p, teiler, art, p_txt = preis
         monat = int(m.group(1).replace(".", ""))
         n_max = int(m.group(3) or m.group(2))
-        if monat > n_max * p / 12 * 1.5:
-            return f"{m.group(0)} (Jahresabo ab {p_txt} €)"[:120]
+        if monat > n_max * p / teiler * 1.5:
+            return f"{m.group(0)} ({art} {p_txt} €)"[:120]
     return None
+
+
+def _umsatz_jahresabo_rechnung(text: str) -> Optional[str]:
+    return _umsatz_projektion_rechnung(text, nur_teiler=(12,))
 
 
 def _umsatz_quartalspaket_rechnung(text: str) -> Optional[str]:
-    t = re.sub(r"[ \t]*\n[ \t]*", " ", _zellen_zusammenfuegen(text))
-    preis = _QUARTALSPREIS_RE.search(t)
-    if not preis:
-        return None
-    p_txt = next(g for g in preis.groups() if g)
-    p = int(p_txt.replace(".", ""))
-    if p < 100:
-        return None
-    for m in _MONATSUMSATZ_KUNDEN_RE.finditer(t):
-        monat = int(m.group(1).replace(".", ""))
-        n_max = int(m.group(3) or m.group(2))
-        if monat > n_max * p / 3 * 1.5:
-            return f"{m.group(0)} (Quartalspaket {p_txt} €)"[:120]
-    return None
+    return _umsatz_projektion_rechnung(text, nur_teiler=(3, 1))
 
 
 # KIS-1323: Der Copy-Paste-Prompt-Kasten verlor seinen Platzhalter („Reihe /
@@ -532,7 +555,9 @@ _US_ALS_EU_RE = re.compile(
     # "EU-konforme Alternativen zu ChatGPT" (zu/statt/anstelle/für).
     # KIS-1304: „EU / EU-Server · Kann mit Microsoft 365, OpenAI API verbunden
     # werden" ist die Integrationsspalte, keine Hosting-Aussage über OpenAI.
-    r"|(?:" + _EU_BEGRIFF + r")(?:(?!\bUS\b|\bzu\b|\bstatt\b|\banstelle\b|\bfür\b|\bmit\b|verbunden|integr|\bto\b|\bof\b|\bwith\b|connect)[^.!?\n]){0,80}?\b(?:" + _US_NAMEN + r")\b",
+    # KIS-1324: „EU-gehostete Alternative zur OpenAI API" (Lauf KIS1293,
+    # Strategie S. 17) — „zur"/„zum" wie „zu".
+    r"|(?:" + _EU_BEGRIFF + r")(?:(?!\bUS\b|\bzu[rm]?\b|\bstatt\b|\banstelle\b|\bfür\b|\bmit\b|verbunden|integr|\bto\b|\bof\b|\bwith\b|connect)[^.!?\n]){0,80}?\b(?:" + _US_NAMEN + r")\b",
     re.IGNORECASE,
 )
 

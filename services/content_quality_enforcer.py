@@ -862,6 +862,8 @@ TEXT_GLITCH_REPLACEMENTS = [
     (r'\bZurückhaltation\b', 'Zurückhaltung', 'corrupted Zurückhaltung'),
     # KIS-1323: „Redaktionleitung" (Lauf KIS1292, Strategie S. 11).
     (r'\bRedaktionleitung\b', 'Redaktionsleitung', 'missing Fugen-s'),
+    # KIS-1324: „Kennzeichnung von KI-Entwürften" (Lauf KIS1293, R1 S. 14).
+    (r'\bEntwürften\b', 'Entwürfen', 'corrupted Entwürfen'),
     # Empty placeholder patterns
     (r'Mitarbeiter:\s*0\b', '', 'zero employees'),
     (r'Mitarbeiter\s*:\s*0\b', '', 'zero employees with space'),

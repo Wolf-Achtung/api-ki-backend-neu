@@ -1723,6 +1723,21 @@ def vendor_audit_report_to_html(
             '</div>'
         )
 
+    # Recommendations Section
+    # KIS-1324: vor den Anbieter-Details. Mit zwei Anbietern endeten die
+    # Details in vier Läufen (KIS1289–1293) genau am Seitenende, und die
+    # drei Zeilen Empfehlung standen allein auf R1 S. 21 (343 Zeichen).
+    # Die Empfehlung gehört zur Zusammenfassung; die Karten dürfen umbrechen.
+    if report.recommendations:
+        html_parts.append(f'''
+            <div class="vendor-recommendations-section" style="margin-bottom:20px;padding:16px;background:#f0fdf4;border-radius:12px;border:1px solid #22c55e44;page-break-inside:avoid;">
+                <p style="font-weight:700;font-size:12pt;color:#166534;margin:0 0 12px 0;">💡 {labels["recommendations"]}</p>
+                <ul style="margin:0;padding:0 0 0 16px;font-size:10pt;color:#1e293b;">
+        ''')
+        for rec in report.recommendations:
+            html_parts.append(f'<li style="margin-bottom:6px;">{rec}</li>')
+        html_parts.append('</ul></div>')
+
     # Vendor Details Section
     if report.entries:
         html_parts.append(f'''
@@ -1827,17 +1842,6 @@ def vendor_audit_report_to_html(
             html_parts.append('</div>')
 
         html_parts.append('</div>')
-
-    # Recommendations Section
-    if report.recommendations:
-        html_parts.append(f'''
-            <div class="vendor-recommendations-section" style="padding:16px;background:#f0fdf4;border-radius:12px;border:1px solid #22c55e44;">
-                <p style="font-weight:700;font-size:12pt;color:#166534;margin:0 0 12px 0;">💡 {labels["recommendations"]}</p>
-                <ul style="margin:0;padding:0 0 0 16px;font-size:10pt;color:#1e293b;">
-        ''')
-        for rec in report.recommendations:
-            html_parts.append(f'<li style="margin-bottom:6px;">{rec}</li>')
-        html_parts.append('</ul></div>')
 
     html_parts.append('</div>')
 

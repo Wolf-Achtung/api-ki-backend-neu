@@ -466,6 +466,41 @@ Bewertungen, Freitext nur wenn vorhanden, HTML-Fassung mit Inline-Styles
 (`build_notification_html`) plus Textfassung. Das Formular selbst sagt seit
 dem Frontend-PR #167 „Seit August 2026" (Art. 4 gilt seit 02.08.2026).
 
+## Ein Preis gilt nur für seine Strategie (KIS-1324)
+
+Testlauf KIS1293 (06.09.2026, Build 1717, Verlag-Profil nach KIS-1323): Alle
+neun KIS-1323-Punkte im PDF — „[NAME]" und „deine Antwort" im Prompt-Kasten,
+„Gesparte Zeit:", DSGVO-Faktor mit den echten Lücken, DeepL Pro zuerst in der
+Werkzeugtabelle, Starter-Kit „über 50.000 €/Jahr", Verlag-Challenge, „Der EU
+AI Act" in der KPA. Kennzahlen unverändert, kein Rückfall. Restbefunde:
+
+- **„6.000 € bei 20 Abonnenten"** (Strategie S. 16) bei „Premium-Abo ab
+  600 € monatlich", der Text darüber „12.000 €": KIS-1323 hatte „Abonnent"
+  ohne „Jahres" freigegeben — und der Sanitizer nahm den ersten Jahrespreis
+  der Sektion (Strategie 2, 3.600 €) für jede Projektion. Jetzt
+  `umsatz_projektion_korrigieren`: Preis und Projektion aus demselben Block
+  (Textabschnitt „Strategie N" oder Tabellenzeile), Preisart aus dem
+  Preismodell (Jahres → /12, Quartal → /3, Monat → /1). Der Wächter nimmt die
+  nächstliegende Preisangabe vor der Projektion. **Eine Rechnung, die zwei
+  Zahlen verbindet, holt beide aus demselben Absatz.**
+- **Wächter-Fehlalarm** `us_werkzeug_als_eu`: „EU-gehostete Alternative zur
+  OpenAI API" — „zur"/„zum" fehlten neben „zu".
+- **„Top-3-Widerstände:; 1. Angst"** (Strategie S. 24): Der Karten-Umbau
+  setzt nach einem Etikett mit Doppelpunkt kein Semikolon mehr.
+- **R1 S. 21** (vierter Lauf dünn): Die Vendor-Empfehlungen stehen jetzt vor
+  den Anbieter-Details — die Karten dürfen umbrechen, die drei Zeilen
+  Empfehlung nicht allein auf einer Seite stehen.
+- Kleinigkeiten: „KI-Entwürften" (R1 S. 14), „KPA-Use-Cases" (Strategie
+  S. 34, interne Abkürzung).
+- Nur beobachtet: Duden-Mentor-Preis „5.50–8.30 €" mit Dezimalpunkt (R1
+  S. 14) — der Seed sagt „5,50–8,30", `recommend_tools` und der
+  Werkzeug-Block liefern das Komma, kein lokaler Filter mit ein bis drei
+  Argumenten ändert es; Ursache offen. Dazu Modellsprache: „AVV … in
+  Vorbereitung" (S2, erfundener Status), „Vendor-Audit-Status der genutzten
+  KI-Tools ist rot" (S2, DeepL ist grün), R1 S. 31 Überschrift „Erster
+  realistischer Schritt" am Seitenende.
+- Test: `tests/test_kis1324_testlauf_1293.py`.
+
 ## Der Prompt-Kasten braucht die Maske überall (KIS-1323)
 
 Testlauf KIS1292 (06.09.2026, Build 1621, erster Verlag-Lauf seit KIS-1314):
