@@ -466,6 +466,38 @@ Bewertungen, Freitext nur wenn vorhanden, HTML-Fassung mit Inline-Styles
 (`build_notification_html`) plus Textfassung. Das Formular selbst sagt seit
 dem Frontend-PR #167 „Seit August 2026" (Art. 4 gilt seit 02.08.2026).
 
+## Eine Note darf nicht vom Wort abhängen (KIS-1320)
+
+Testlauf KIS1289 (06.09.2026, Build 1422, Motion-Profil nach KIS-1319): Alle
+KIS-1319-Punkte im PDF — Vendor-Hinweis mit Aleph Alpha und Mistral,
+Jahreslizenz-Rechnung stimmt (7.500 € bei 1–2 Lizenzen zu 30.000–45.000 €),
+KPA „seit August 2026", Quellenzeile ohne erfundenes Jahr, kein
+Wächter-Fehlalarm. Kennzahlen unverändert, kein Rückfall. Restbefunde:
+
+- **DSGVO-Risikostufe** (R1 S. 18): „Mittel", Note C — Lauf KIS1288 mit
+  identischen Antworten hatte „Niedrig", Note B. `risk_engine_v2.
+  extract_dsgvo_risk_from_sections` zählte das Wort „personenbezogen" in der
+  generierten Risiko-Sektion als Faktor. Jetzt entscheiden die Antworten:
+  personenbezogene Datenquellen (Kunden-, Nutzungs-, Personaldaten) und eine
+  lückenhafte Datenschutz-Organisation (mindestens zwei von
+  Folgenabschätzung, Meldewege, Löschregeln, DSB, technische Maßnahmen auf
+  „nein"/„teilweise"). Der Textpfad bleibt nur als Rückfall ohne Antworten.
+  **Eine prüfbare Tatsache kommt aus den Daten, nie aus dem Modelltext**
+  (Regel aus KIS-1281, hier zum ersten Mal in der Risikobewertung).
+- **Satzzeichen** (Strategie S. 10): „Impact: ● hoch , Umsetzungskomplexität:
+  ● mittel ." — `satzzeichen_abstand_korrigieren` entfernt Leerzeichen vor
+  Komma und Punkt, auch über eine Tag-Grenze, nie vor einer Ziffer.
+- **Quellen-Etikett** (Strategie S. 21, zweiter Lauf): Der S5-Prompt gab die
+  Quellenzeile als Beispiel ohne „Quellen:" vor — das Modell übernahm das
+  wörtlich, der Enhancer erkannte keine Quellenzeile.
+- „Zurückhaltation" (R1 S. 30) → Glitch-Liste.
+- Nur beobachtet (Modellsprache): „starken Governance-Wert von 74/100" (R1
+  S. 32, die schwächste Dimension); Runway mit „Vendor-Audit-Status nicht
+  bestanden" (Strategie S. 17, Runway war geprüft, das Label heißt „rot");
+  „Landesinitiativen Bayern … Digitalplan Bayern und Mittelstandspakt Bayern"
+  (R1 S. 26, kein Programm aus den Daten); „Eskaltionskriterien" (KPA S. 4).
+- Test: `tests/test_kis1320_testlauf_1289.py`.
+
 ## Nachlauf KIS1288 (KIS-1319)
 
 Build 1336 vom 06.09.2026, Motion-Profil nach KIS-1317: Kennzahlen

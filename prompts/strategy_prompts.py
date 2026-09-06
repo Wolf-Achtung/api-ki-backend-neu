@@ -640,7 +640,7 @@ AUFGABE:
 3. Beschreibe den Break-Even-Zeitpunkt (realistisch: Monat {breakeven_realistisch}).
 4. Bewerte, ob das angegebene Budget ({s1_budget_label}) ausreicht.
 5. Gib eine klare Investitionsempfehlung.
-6. Quellenzeile ohne Jahreszahl: „Unternehmensdaten, KI-Readiness Report, interne Kalkulation". Lauf KIS1280 schrieb „Investitionsplan 2024" — es gibt kein datiertes Dokument dieses Namens (KIS-1311).
+6. Quellenzeile ohne Jahreszahl, mit Etikett: „Quellen: Unternehmensdaten, KI-Readiness Report, interne Kalkulation". Lauf KIS1280 schrieb „Investitionsplan 2024" — es gibt kein datiertes Dokument dieses Namens (KIS-1311). Läufe KIS1288/1289 ließen das Etikett „Quellen:" weg (KIS-1320).
 
 WICHTIG: Alle Zahlen EXAKT aus den Vorgaben übernehmen. NICHT selbst rechnen!
 

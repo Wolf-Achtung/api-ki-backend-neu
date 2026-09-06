@@ -573,6 +573,21 @@ _ENTSCHEIDER_RE = re.compile(
 )
 
 
+# KIS-1320 (Lauf KIS1289, Strategie S. 10): „Impact: ● hoch , Umsetzungs-
+# komplexität: ● mittel ." — Leerzeichen vor Komma und Punkt, auch über eine
+# Tag-Grenze („</span> ,"). Nur nach Buchstaben, Prozent oder Klammer, nie
+# vor einer Ziffer (Dezimalzahlen, Aufzählungen „1. 2.").
+_SATZZEICHEN_ABSTAND_RE = re.compile(
+    r"(?<=[\wäöüÄÖÜß%)])((?:</(?:span|strong|em|b|i)>)*)(?:\s|&nbsp;)+((?:</(?:span|strong|em|b|i)>)*)([,.;:])(?=\s|<|$)(?!\s*\d)"
+)
+
+
+def satzzeichen_abstand_korrigieren(html: str) -> tuple:
+    if not html or not re.search(r"\s[,.;:](?:\s|<|$)", html):
+        return html, 0
+    return _SATZZEICHEN_ABSTAND_RE.subn(r"\1\2\3", html)
+
+
 def fremde_engine_entfernen(html: str) -> tuple:
     if not html or "Neural Engine" not in html:
         return html, 0
@@ -878,6 +893,12 @@ def sanitize_strategy_sections(
         if _en:
             sections[key] = html
             patches_applied += _en
+
+        # Pass 6f3 (KIS-1320): Leerzeichen vor Satzzeichen.
+        html, _sz = satzzeichen_abstand_korrigieren(html)
+        if _sz:
+            sections[key] = html
+            patches_applied += _sz
 
         # Pass 6g (KIS-1316): „Die von Ihnen empfohlenen Tools" → „Die empfohlenen Tools".
         html, _ve = von_ihnen_empfohlen_korrigieren(html)

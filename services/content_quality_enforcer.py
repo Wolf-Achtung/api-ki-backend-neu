@@ -855,6 +855,9 @@ TEXT_GLITCH_REPLACEMENTS = [
     # R1 S. 14/30) — das „KI" vor dem Bindestrich ging verloren.
     (r'(?<=\s)-Entwurf\b', 'KI-Entwurf', 'orphaned -Entwurf'),
     (r'(?<=\s)-Entwürfe\b', 'KI-Entwürfe', 'orphaned -Entwürfe'),
+    # KIS-1320: „nicht durch Zurückhaltation" (Lauf KIS1289, R1 S. 30) — kein
+    # Filter erzeugt das Wort, alle Einzelfunktionen lokal geprüft.
+    (r'\bZurückhaltation\b', 'Zurückhaltung', 'corrupted Zurückhaltung'),
     # Empty placeholder patterns
     (r'Mitarbeiter:\s*0\b', '', 'zero employees'),
     (r'Mitarbeiter\s*:\s*0\b', '', 'zero employees with space'),
