@@ -514,15 +514,40 @@ def extract_dsgvo_risk_from_sections(
         if briefing.get("profiling") or "profiling" in str(briefing.get("ki_ziele", "")).lower():
             risk_factors.append("Profiling-Aktivitäten")
 
-    # Check sections for DSGVO indicators
-    risks_html = sections.get("RISKS_HTML", "")
-    if risks_html:
-        risks_lower = risks_html.lower()
-        if "personenbezogen" in risks_lower:
-            if "personenbezogene Daten" not in risk_factors:
-                risk_factors.append("Verarbeitung personenbezogener Daten")
-        if "betroffenenrecht" in risks_lower or "auskunft" in risks_lower:
-            risk_factors.append("Betroffenenrechte relevant")
+    # KIS-1320: Der Fragebogen entscheidet, nicht der Modelltext. Lauf
+    # KIS1288 gab Note B, Lauf KIS1289 mit identischen Antworten Note C —
+    # der Unterschied war das Wort „personenbezogen" in der generierten
+    # Risiko-Sektion. Jetzt zählen Datenquellen und Datenschutz-Organisation
+    # aus den Antworten; der Textpfad bleibt nur als Rückfall ohne Antworten.
+    _fb_keys = ("datenquellen", "folgenabschaetzung", "meldewege", "loeschregeln",
+                "datenschutzbeauftragter", "technische_massnahmen")
+    _fb_vorhanden = bool(briefing) and any(briefing.get(k) not in (None, "", []) for k in _fb_keys)
+    if _fb_vorhanden:
+        _quellen = briefing.get("datenquellen") or []
+        if isinstance(_quellen, str):
+            _quellen = [_quellen]
+        _personen = ("kundendaten", "personaldaten", "nutzungsdaten", "crm", "mitarbeiter", "patienten", "mandanten")
+        if any(any(p in str(q).lower() for p in _personen) for q in _quellen):
+            risk_factors.append("Personenbezogene Daten im Datenbestand (Kunden-, Nutzungs- oder Personaldaten)")
+        _luecken = 0
+        for _k in ("folgenabschaetzung", "meldewege", "loeschregeln", "datenschutzbeauftragter", "technische_massnahmen"):
+            _v = str(briefing.get(_k) or "").strip().lower()
+            if not _v:
+                continue
+            if _v.startswith("nein") or _v in ("teilweise", "keine", "geplant", "in_planung", "unbekannt"):
+                _luecken += 1
+        if _luecken >= 2:
+            risk_factors.append("Datenschutz-Organisation lückenhaft (Folgenabschätzung, Meldewege, Löschregeln)")
+    else:
+        # Rückfall: Sektionstext, wenn der Fragebogen keine Datenschutz-Angaben trägt.
+        risks_html = sections.get("RISKS_HTML", "")
+        if risks_html:
+            risks_lower = risks_html.lower()
+            if "personenbezogen" in risks_lower:
+                if "personenbezogene Daten" not in risk_factors:
+                    risk_factors.append("Verarbeitung personenbezogener Daten")
+            if "betroffenenrecht" in risks_lower or "auskunft" in risks_lower:
+                risk_factors.append("Betroffenenrechte relevant")
 
     result["dsgvo_risk_factors"] = risk_factors
 
