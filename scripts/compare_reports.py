@@ -287,7 +287,9 @@ _JAHRESABO_PREIS_RE = re.compile(
     r"Jahres(?:abo(?:nnement)?|lizenz)\w*\s+(?:ab|von|zu|für|zwischen)\s+([\d.]{4,})\s*€"
     r"|([\d.]{4,})\s*€(?:\s*[–-]\s*[\d.]{4,}\s*€)?\s+Jahres(?:abo(?:nnement)?|lizenz)"
     # KIS-1323: Tabellenzelle „Jahresabo 3.000–5.000 €" ohne Präposition.
-    r"|Jahres(?:abo(?:nnement)?|lizenz)\w*\s+([\d.]{4,})\s*(?:[–-]\s*[\d.]{4,}\s*)?€",
+    r"|Jahres(?:abo(?:nnement)?|lizenz)\w*\s+([\d.]{4,})\s*(?:[–-]\s*[\d.]{4,}\s*)?€"
+    # KIS-1325: „3.000–5.000 € pro Jahr, Abo" (Lauf KIS1294, Strategie S. 16).
+    r"|([\d.]{4,})\s*(?:[–-]\s*[\d.]{4,}\s*)?€\s+(?:pro Jahr|je Jahr|im Jahr|jährlich|/\s*Jahr|p\.\s?a\.)",
     re.IGNORECASE,
 )
 # KIS-1319: Komma vor „bei" und Tabellenzelle „bei 1–2 Lizenzen" (Lauf
@@ -316,12 +318,15 @@ _MONATSUMSATZ_KUNDEN_RE = re.compile(
 # Preisangabe vor der Projektion (Fenster 600 Zeichen); Jahres → /12,
 # Quartal → /3, Monat → /1.
 _MONATSPREIS_W_RE = re.compile(
-    r"([\d.]{3,})\s*€\s+(?:monatlich|pro Monat|im Monat|/\s*Monat)\b(?!,?\s+bei\b)",
+    r"([\d.]{3,})\s*€\s+(?:monatlich|pro Monat|im Monat|/\s*Monat)\b(?!,?\s+bei\b)"
+    # KIS-1325: „Monatliches Abo zwischen 500 € und 1.000 €" (Lauf KIS1294).
+    r"|Monatlich\w*\s+(?:Abo\w*|Preis\w*|Gebühr\w*|Lizenz\w*|Paket\w*)?\s*(?:ab|von|zu|für|zwischen)?\s*([\d.]{3,})\s*€",
     re.IGNORECASE,
 )
 _PROJEKTION_W_RE = re.compile(
     r"([\d.]{3,})\s*€\s+(?:(?:monatlich|im Monat|pro Monat),?\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+"
-    r"(?:[\w-]+-)?(?:Jahres)?(?:Abonnent|Lizenz|Kund|Nutzer)",
+    # KIS-1325: „bei 3–4 Quartalspaketen" (Lauf KIS1294, Strategie S. 16).
+    r"(?:[\w-]+-)?(?:Jahres|Quartals|Monats)?(?:Abonnent|Lizenz|Kund|Nutzer|Paket)",
     re.IGNORECASE,
 )
 
