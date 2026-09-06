@@ -2362,6 +2362,20 @@ GRAMMAR_FIX_PATTERNS = [
     (r'\b((?:Ihr|Das|Ein)\s+\S*(?:Team|Unternehmen|System|Management|Pilotteam|Kernteam))\s+nutzen\b',
      lambda m: f'{m.group(1)} nutzt'),
 
+    # KIS-1319: „ein Motion Designer nutzen Runway" und „jedes Teammitglied
+    # eigene Standards setzen" (Lauf KIS1288, R1 S. 28) — Singular-Subjekt
+    # mit Pluralverb, kein Filter dazwischen nachweisbar. Nur Personen-
+    # Subjekte mit unbestimmtem Artikel oder „jede/r/s".
+    (r'\b(ein|eine|jeder|jede|jedes) ((?:Motion |Sound |Art )?(?:Designer(?:in)?|Mitarbeiter(?:in)?|Redakteur(?:in)?|Cutter(?:in)?|Editor(?:in)?|Teammitglied|Kollege|Kollegin|Kunde|Kundin)) (nutzen|setzen|schreiben|erstellen|prüfen)\b',
+     lambda m: f'{m.group(1)} {m.group(2)} {m.group(3)[:-2]}t'),
+    (r'\b(jeder|jede|jedes) (\w+) eigene (\w+) (nutzen|setzen)\b',
+     lambda m: f'{m.group(1)} {m.group(2)} eigene {m.group(3)} {m.group(4)[:-2]}t'),
+
+    # KIS-1319: „die 50 Stunden/Monater Einsparung" (Lauf KIS1288, R1 S. 27)
+    # — Reste einer Endung nach der Einheit. Satz umgestellt statt gelöscht.
+    (r'(\d+)\s*Stunden/Monat(?:er|en|es|e)\s+(\w+)\b',
+     r'\2 von \1 Stunden/Monat'),
+
     # KIS-1011-B1: "Ich haben" → "Ich habe" (defensive grammar fix)
     # Negative lookbehind prevents false positives like "die ich haben möchte"
     (r'(?<![a-zäöü])\bIch haben\b', 'Ich habe'),

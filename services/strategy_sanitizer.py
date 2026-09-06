@@ -522,8 +522,18 @@ _QUELLEN_STAND_RE = re.compile(
 )
 
 
+# KIS-1319: „Quellen: KI-Readiness-Analyse 2024, EU AI Act, …" (Lauf KIS1288,
+# Strategie S. 7). Der eigene Report trägt das Reportjahr — jede andere
+# Jahreszahl hinter seinem Namen ist erfunden.
+_QUELLEN_EIGENER_REPORT_RE = re.compile(
+    r"(<p[^>]*>(?:(?!</p>).)*?\b(?:Quellen?|Sources?)\s*:(?:(?!</p>).)*?"
+    r"\bKI-Readiness[- ](?:Analyse|Report|Assessment|Score)(?:\s+1)?\s+)(20\d{2})\b",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
 def quellen_stand_jahr_korrigieren(html: str, report_year: int) -> tuple:
-    if not html or not report_year or not re.search(r"\b(?:Stand|as of)\s+20\d{2}", html, re.IGNORECASE):
+    if not html or not report_year:
         return html, 0
     count = 0
 
@@ -534,7 +544,49 @@ def quellen_stand_jahr_korrigieren(html: str, report_year: int) -> tuple:
         count += 1
         return str(m.group(1))
 
-    return _QUELLEN_STAND_RE.sub(_fix, html), count
+    if re.search(r"\b(?:Stand|as of)\s+20\d{2}", html, re.IGNORECASE):
+        html = _QUELLEN_STAND_RE.sub(_fix, html)
+
+    def _fix_eigen(m: "re.Match[str]") -> str:
+        nonlocal count
+        if int(m.group(2)) >= report_year:
+            return str(m.group(0))
+        count += 1
+        return f"{m.group(1)}{report_year}"
+
+    if "KI-Readiness" in html:
+        html = _QUELLEN_EIGENER_REPORT_RE.sub(_fix_eigen, html)
+    return html, count
+
+
+# KIS-1319 (Lauf KIS1288, Strategie S. 15 und S. 23): „Adobe Premiere Pro
+# (Neural Engine)" — die Neural Engine gehört zu DaVinci Resolve; „das Sie
+# als alleinige Entscheiderin steuern" — das Modell rät ein Geschlecht aus
+# „Entscheide allein". Beides deterministisch ersetzbar.
+_FREMDE_ENGINE_RE = re.compile(
+    r"(Adobe (?:Premiere Pro|After Effects)|Premiere Pro|After Effects)\s*\(Neural Engine\)"
+)
+_ENTSCHEIDER_RE = re.compile(
+    r"\bals alleinige[rn]? (?:Entscheider(?:in)?|Entscheidungsträger(?:in)?)\b"
+    r"|\bas (?:the )?sole decision[- ]maker\b",
+    re.IGNORECASE,
+)
+
+
+def fremde_engine_entfernen(html: str) -> tuple:
+    if not html or "Neural Engine" not in html:
+        return html, 0
+    return _FREMDE_ENGINE_RE.subn(r"\1", html)
+
+
+def entscheider_neutral(html: str) -> tuple:
+    if not html or not re.search(r"Entscheid|decision", html, re.IGNORECASE):
+        return html, 0
+
+    def _fix(m: "re.Match[str]") -> str:
+        return "as the sole decision-making authority" if m.group(0).lower().startswith("as") else "als alleinige Entscheidungsinstanz"
+
+    return _ENTSCHEIDER_RE.subn(_fix, html)
 
 
 # KIS-1317: „Jahreslizenz zwischen 30.000 € und 40.000 €" und „25.000 €
@@ -546,8 +598,11 @@ _JAHRESPREIS_RE = re.compile(
     r"|([\d.]{4,})\s*€(?:\s*[–-]\s*[\d.]{4,}\s*€)?\s+Jahres(?:abo(?:nnement)?|lizenz)",
     re.IGNORECASE,
 )
+# KIS-1319: „20.000 € im Monat, bei 1–2 Jahreslizenzen" (Komma) und die
+# Tabellenzelle „20.000 € bei 1–2 Lizenzen" (ohne „Jahres") — Lauf KIS1288,
+# Strategie S. 15/16, bei „Jahreslizenz ab 50.000 €".
 _MONATSUMSATZ_RE = re.compile(
-    r"([\d.]{4,})(\s*€\s+(?:(?:monatlich|im Monat|pro Monat)\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+Jahres(?:abonnent|lizenz|kund))",
+    r"([\d.]{4,})(\s*€\s+(?:(?:monatlich|im Monat|pro Monat),?\s+)?bei\s+(\d+)(?:\s?[–-]\s?(\d+))?\s+(?:Jahres(?:abonnent|lizenz|kund)|Lizenz))",
     re.IGNORECASE,
 )
 
@@ -811,6 +866,18 @@ def sanitize_strategy_sections(
             sections[key] = html
             patches_applied += _qs
             all_warnings.append(f"{key}: {_qs} veralteter Quellen-Stand entfernt (KIS-1315)")
+
+        # Pass 6f2 (KIS-1319): „Adobe Premiere Pro (Neural Engine)" und
+        # „als alleinige Entscheiderin".
+        html, _fe = fremde_engine_entfernen(html)
+        if _fe:
+            sections[key] = html
+            patches_applied += _fe
+            all_warnings.append(f"{key}: {_fe}× fremde Engine am Produktnamen entfernt (KIS-1319)")
+        html, _en = entscheider_neutral(html)
+        if _en:
+            sections[key] = html
+            patches_applied += _en
 
         # Pass 6g (KIS-1316): „Die von Ihnen empfohlenen Tools" → „Die empfohlenen Tools".
         html, _ve = von_ihnen_empfohlen_korrigieren(html)

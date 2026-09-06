@@ -1195,8 +1195,11 @@ def _generate_recommendations(
     if red_vendors:
         names = ", ".join([e.name for e in red_vendors[:2]])
         # KIS-1142 P2: "sicherstellen" → "prüfen" (konstatieren statt befehlen).
+        # KIS-1319: „keine gleichwertigen EU-Alternativen" stand seit jeher
+        # fest im Text, während die gepflegte Liste Aleph Alpha und Mistral
+        # führt (Lauf KIS1288, R1 S. 20). Der Hinweis nennt sie jetzt.
         recommendations.append(
-            f"Hochrisiko-Anbieter prüfen, Risikominimierung durch AVV/DPA einordnen: {names}. Hinweis: Für LLM-Anbieter (OpenAI, Anthropic) existieren aktuell keine gleichwertigen EU-Alternativen — Fokus auf vertragliche Absicherung und Datenminimierung."
+            f"Hochrisiko-Anbieter prüfen, Risikominimierung durch AVV/DPA einordnen: {names}. {_RECOMMENDATION_HINT_DE}"
         )
 
     # Check for unknown data locations
@@ -1322,15 +1325,19 @@ _RECOMMENDATION_STATIC_EN = {
         "Evaluate at least one EU-compliant vendor as an alternative",
 }
 
+# KIS-1319: Die frühere Fassung („keine gleichwertigen EU-Alternativen")
+# widersprach der gepflegten Werkzeugliste. Zwei Sätze mit Punkt dazwischen,
+# damit der Wächter `us_werkzeug_als_eu` den US-Namen nicht mit dem
+# EU-Begriff verbindet.
 _RECOMMENDATION_HINT_DE = (
-    "Hinweis: Für LLM-Anbieter (OpenAI, Anthropic) existieren aktuell keine "
-    "gleichwertigen EU-Alternativen — Fokus auf vertragliche Absicherung und "
-    "Datenminimierung."
+    "Hinweis: Bei US-LLM-Anbietern (OpenAI, Anthropic) zählen AVV und "
+    "Datenminimierung. Aleph Alpha und Mistral sind EU-Anbieter und als "
+    "Alternative prüfbar — mit eigenem Funktionsvergleich."
 )
 _RECOMMENDATION_HINT_EN = (
-    "Note: for LLM providers (OpenAI, Anthropic) there are currently no "
-    "equivalent EU alternatives — focus on contractual safeguards and data "
-    "minimisation."
+    "Note: with US LLM providers (OpenAI, Anthropic), a DPA and data "
+    "minimisation are key. Aleph Alpha and Mistral are EU providers worth "
+    "evaluating as alternatives — with your own feature comparison."
 )
 
 

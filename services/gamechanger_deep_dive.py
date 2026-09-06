@@ -140,6 +140,16 @@ def build_gamechanger_context(report1_sections: Dict[str, Any],
         except Exception:  # pragma: no cover - Schutznetz
             return ''
 
+    def _art50_satz_fuer(_briefing: dict, _r1: dict) -> str:
+        try:
+            from services.ai_act_stichtag import art50_satz
+            _lang = str(
+                (_briefing or {}).get('lang') or (_r1 or {}).get('LANG') or 'de'
+            )
+            return art50_satz(_lang)
+        except Exception:  # pragma: no cover - Schutznetz
+            return ''
+
     segment_info = {
         'COMPANY_SIZE': company_size,
         'UNTERNEHMENSGROESSE_LABEL': size_label,
@@ -155,6 +165,10 @@ def build_gamechanger_context(report1_sections: Dict[str, Any],
         # (Branchen-Audit 04.09.2026). Label aus dem gemeinsamen Baustein,
         # Sprache aus dem Briefing.
         'MEDIEN_SPARTE_LABEL': _sparte_label_fuer(briefing, report1_sections),
+        # KIS-1319: Die KPA schrieb „die regulatorischen Anforderungen des EU
+        # AI Act werden in den nächsten Monaten wirksam" (Lauf KIS1288, S. 2)
+        # — Art. 50 gilt seit dem 02.08.2026. Die Zeitlage rechnet der Code.
+        'AI_ACT_STICHTAG': _art50_satz_fuer(briefing, report1_sections),
         # Company name / identifier for display (NOT hauptleistung!)
         'kundencode': (
             report1_sections.get('kundencode')
@@ -804,6 +818,7 @@ def _generate_gc_section(prompt_name: str, context: Dict[str, Any]) -> str:
         'UNTERNEHMENSGROESSE_LABEL': context.get('UNTERNEHMENSGROESSE_LABEL', ''),
         'BRANCHE_LABEL': context.get('BRANCHE_LABEL', ''),
         'MEDIEN_SPARTE_LABEL': context.get('MEDIEN_SPARTE_LABEL', ''),
+        'AI_ACT_STICHTAG': context.get('AI_ACT_STICHTAG', ''),
         'HAUPTLEISTUNG': context.get('HAUPTLEISTUNG', ''),
         'gamechanger_decision': context.get('gamechanger_decision', ''),
         'GAMECHANGER_HTML': context.get('GAMECHANGER_HTML', ''),

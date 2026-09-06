@@ -23,7 +23,8 @@ des identifizierten KI-Potenzials — nicht allgemeine KI-Risiken.
 - **Unternehmensgröße:** {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
 - **Branche:** {{BRANCHE_LABEL}}
 {% if MEDIEN_SPARTE_LABEL %}- **Sparte:** {{MEDIEN_SPARTE_LABEL}} — Beispiele, Werkzeuge und Risiken auf diese Sparte zuschneiden.
-{% endif %}
+{% endif %}- **EU AI Act, Art. 50 (Kennzeichnung):** Die Transparenzpflichten {{AI_ACT_STICHTAG}}. Nie als bevorstehend beschreiben — nicht „werden in den nächsten Monaten wirksam", nicht „ab 2026".
+
 - **Hauptleistung:** {{HAUPTLEISTUNG}}
 - **Strategische KI-Potenzial-Entscheidung:** {{gamechanger_decision}}
 - **KI-Potenzial-Inhalt:** {{GAMECHANGER_HTML}}

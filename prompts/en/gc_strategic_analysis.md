@@ -28,7 +28,8 @@ into a standalone, deepened analysis.
 - **Company size:** {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
 - **Industry:** {{BRANCHE_LABEL}}
 {% if MEDIEN_SPARTE_LABEL %}- **Segment:** {{MEDIEN_SPARTE_LABEL}} — tailor examples, tools and risks to this segment.
-{% endif %}
+{% endif %}- **EU AI Act, Art. 50 (labelling):** The transparency obligations {{AI_ACT_STICHTAG}}. Never describe them as upcoming — not "will take effect in the coming months", not "from 2026".
+
 - **Core offering:** {{HAUPTLEISTUNG}}
 - **Named top time sinks:** {{TOP_ZEITFRESSER}}
 - **Time-saving priority:** {{ZEITERSPARNIS_PRIORITAET}}

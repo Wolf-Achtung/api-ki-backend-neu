@@ -28,7 +28,8 @@ zu einer eigenständigen, vertieften Analyse.
 - **Unternehmensgröße:** {{COMPANY_SIZE}} ({{UNTERNEHMENSGROESSE_LABEL}})
 - **Branche:** {{BRANCHE_LABEL}}
 {% if MEDIEN_SPARTE_LABEL %}- **Sparte:** {{MEDIEN_SPARTE_LABEL}} — Beispiele, Werkzeuge und Risiken auf diese Sparte zuschneiden.
-{% endif %}
+{% endif %}- **EU AI Act, Art. 50 (Kennzeichnung):** Die Transparenzpflichten {{AI_ACT_STICHTAG}}. Nie als bevorstehend beschreiben — nicht „werden in den nächsten Monaten wirksam", nicht „ab 2026".
+
 - **Hauptleistung:** {{HAUPTLEISTUNG}}
 - **Benannte Top-Zeitfresser:** {{TOP_ZEITFRESSER}}
 - **Zeitersparnis-Priorität:** {{ZEITERSPARNIS_PRIORITAET}}
