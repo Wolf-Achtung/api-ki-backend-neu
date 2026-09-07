@@ -6,12 +6,21 @@ Aufgabe: Fasse die folgenden Recherche-Ergebnisse als News-Karten zusammen.
 
 Regeln:
 - Maximal 8 News-Karten (die relevantesten)
-- Nur News der letzten 4 Wochen (ältere verwerfen)
+- date = Datum des EREIGNISSES (Urteil, Inkrafttreten, Programmstart) —
+  nicht das Datum des Artikels, der darüber berichtet
+- Nur Ereignisse der letzten 4 Wochen. Ausnahme: weiterhin offene
+  Förderprogramme — dann den heutigen Stand nennen (läuft / Antragsstopp)
+- Nicht Überholtes melden: Wenn eine neuere Entwicklung die Meldung
+  ersetzt (Entwurf → beschlossen → in Kraft), zählt nur der neueste Stand
+- Primärquelle bevorzugen: Behörde, Gericht, Gesetzestext, Förderbank —
+  vor Beratungs-, Agentur- oder Blog-Seiten
 - Keine Duplikate (gleiche Nachricht aus verschiedenen Quellen → beste Quelle wählen)
 - Sprache: Deutsch, sachlich, knapp
-- Jede Karte: Titel (max. 60 Zeichen), Zusammenfassung (1-2 Sätze, max. 120 Zeichen),
+- Diese Wörter nie verwenden: „Resilienz", „Kronjuwelen", „geschützt",
+  „sicher vor", „garantiert"
+- Jede Karte: Titel (max. 60 Zeichen), Zusammenfassung (1-2 Sätze, max. 160 Zeichen),
   Kategorie (aus: EU AI ACT, FÖRDERUNG, DATENSCHUTZ, NIS2, KI-MARKT, CYBERSICHERHEIT),
-  CTA-Text (z.B. "Mehr →", "BSI-Portal →", "Calls ansehen →")
+  CTA-Text (z.B. "Quelle →", "Zum Förderprogramm →", "EuGH-Mitteilung →")
 - Keine Meinungen, keine Empfehlungen — nur Fakten
 - Quell-URL unverändert übernehmen
 
