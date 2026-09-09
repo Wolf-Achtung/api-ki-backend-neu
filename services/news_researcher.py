@@ -183,37 +183,71 @@ def summarize_news(raw_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Step 3: HTML snippet generation
 # ---------------------------------------------------------------------------
+# Mapping der internen Recherche-Kategorien auf die Kategorien der
+# Aktuell-Seite (aktuell/index.html im Repo ki-sicherheit). Die Seite kennt:
+# KI-REGULIERUNG, KI-FÖRDERUNG, DATENSCHUTZ, KI-TOOLS, CYBERSICHERHEIT.
+SEITEN_KATEGORIE: Dict[str, str] = {
+    "EU AI ACT": "KI-REGULIERUNG",
+    "FÖRDERUNG": "KI-FÖRDERUNG",
+    "DATENSCHUTZ": "DATENSCHUTZ",
+    "NIS2": "CYBERSICHERHEIT",
+    "CYBERSICHERHEIT": "CYBERSICHERHEIT",
+    "KI-MARKT": "KI-TOOLS",
+    "MEDIEN & KI": "KI-TOOLS",
+}
+
+_MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
+           "August", "September", "Oktober", "November", "Dezember"]
+
+
+def _datum_deutsch(raw: str) -> str:
+    """ISO-Datum in Seitenformat ("17. August 2026"); Unbekanntes bleibt roh."""
+    teile = raw.strip().split("-")
+    try:
+        if len(teile) == 3:
+            jahr, monat, tag = int(teile[0]), int(teile[1]), int(teile[2])
+            return f"{tag}. {_MONATE[monat - 1]} {jahr}"
+        if len(teile) == 2:
+            jahr, monat = int(teile[0]), int(teile[1])
+            return f"{_MONATE[monat - 1]} {jahr}"
+    except (ValueError, IndexError):
+        pass
+    return raw
+
+
 def generate_html_snippets(news_items: List[Dict[str, Any]]) -> str:
-    """Generate copy-paste-ready HTML blocks matching the Aktuell page design."""
+    """Copy-paste-fertige news-card-Bloecke im Format der Aktuell-Seite.
+
+    Kein Inline-Styling: Die Seite stylt ueber css/news.css. Das Markup
+    entspricht 1:1 den bestehenden <article class="news-card">-Karten,
+    damit der Draft ohne Nacharbeit eingefuegt werden kann.
+    """
     snippets: List[str] = []
 
     for item in news_items:
-        color = TAG_COLORS.get(item.get("category", ""), "#6b7280")
         title = _escape_html(item.get("title", ""))
         summary = _escape_html(item.get("summary", ""))
-        date = _escape_html(item.get("date", ""))
-        category = _escape_html(item.get("category", ""))
+        date = _datum_deutsch(str(item.get("date", "")))
+        roh_kategorie = str(item.get("category", ""))
+        category = _escape_html(SEITEN_KATEGORIE.get(roh_kategorie, roh_kategorie))
         source_url = _escape_html(item.get("source_url", ""))
-        cta_text = _escape_html(item.get("cta_text", "Mehr →"))
+        cta_text = _escape_html(item.get("cta_text", "Quelle →"))
 
         snippet = (
-            f'<!-- NEWS: {date} — {category} -->\n'
-            f'<div style="margin-bottom: 2rem;">\n'
-            f'  <time style="color: #6b7280; font-size: 0.85rem;">{date}</time>\n'
-            f'  <span style="display: inline-block; background: {color}; color: white;\n'
-            f'    font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px;\n'
-            f'    font-weight: 600; letter-spacing: 0.05em;">{category}</span>\n'
-            f'  <h3 style="margin: 0.5rem 0 0.25rem; font-size: 1.05rem;">\n'
-            f'    {title}\n'
-            f'  </h3>\n'
-            f'  <p style="color: #4a5568; margin: 0 0 0.5rem; font-size: 0.95rem;">\n'
-            f'    {summary}\n'
-            f'  </p>\n'
-            f'  <a href="{source_url}" target="_blank" rel="noopener"\n'
-            f'    style="color: #2b6cb0; text-decoration: none; font-weight: 500;">\n'
-            f'    {cta_text}\n'
-            f'  </a>\n'
-            f'</div>'
+            f'      <!-- NEWS: {date} — {category} -->\n'
+            f'      <article class="news-card">\n'
+            f'        <div class="news-card-header">\n'
+            f'          <span class="news-date">{date}</span>\n'
+            f'          <span class="news-badge news-badge--new">NEU</span>\n'
+            f'        </div>\n'
+            f'        <span class="news-category">{category}</span>\n'
+            f'        <h2><a href="{source_url}" target="_blank" rel="noopener">{title}</a></h2>\n'
+            f'        <p>{summary}</p>\n'
+            f'        <div class="news-card-footer">\n'
+            f'          <span class="news-readtime">Kurzmeldung</span>\n'
+            f'          <a href="{source_url}" target="_blank" rel="noopener" class="news-link">{cta_text}</a>\n'
+            f'        </div>\n'
+            f'      </article>'
         )
         snippets.append(snippet)
 
@@ -222,15 +256,23 @@ def generate_html_snippets(news_items: List[Dict[str, Any]]) -> str:
         f'<!--\n'
         f'  ═══════════════════════════════════════════════\n'
         f'  NEWS-DRAFT vom {today}\n'
-        f'  Recherchiert via Tavily · Zusammengefasst via GPT-4o\n'
+        f'  Recherchiert via Tavily · Zusammengefasst via LLM\n'
         f'\n'
-        f'  BITTE PRÜFEN:\n'
-        f'  ✓ Sind die Fakten korrekt?\n'
+        f'  BITTE PRÜFEN (Lehren aus dem Lauf vom 07.09.2026):\n'
+        f'  ✓ Stimmt das EREIGNIS-Datum (Urteil, Inkrafttreten, Start)?\n'
+        f'  ✓ Ist die Meldung von einem späteren Ereignis überholt\n'
+        f'    (Entwurf → beschlossen → in Kraft)?\n'
+        f'  ✓ Ist die Quelle eine Primärquelle (Behörde, Gericht,\n'
+        f'    Förderbank) — nicht ein Beratungs-Blog?\n'
+        f'  ✓ Passt die Kategorie (Urheberrecht ist KI-REGULIERUNG,\n'
+        f'    nicht DATENSCHUTZ)?\n'
         f'  ✓ Sind die Links erreichbar?\n'
-        f'  ✓ Ist etwas dabei, das nicht auf die Seite passt?\n'
         f'\n'
-        f'  Geprüfte Karten in aktuell/index.html einfügen\n'
-        f'  (im Bereich <div class="news-list"> nach dem letzten Eintrag)\n'
+        f'  Geprüfte Karten in ki-sicherheit/aktuell/index.html einfügen:\n'
+        f'  in <section class="news-grid">, OBERHALB des obersten\n'
+        f'  Monats-Kommentars (neueste zuerst). Monats-Kommentar\n'
+        f'  <!-- ==== MONAT JAHR ==== --> ergänzen, ältere NEU-Badges\n'
+        f'  entfernen.\n'
         f'  ═══════════════════════════════════════════════\n'
         f'-->\n'
     )
